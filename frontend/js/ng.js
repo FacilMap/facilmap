@@ -58,8 +58,9 @@
 		$scope.saveViewName = null;
 		$scope.currentMarker = null;
 		$scope.messages = [ ];
+		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
 
-		socket.emit("setPadId", location.href.match(/[^\/]*$/)[0]);
+		socket.emit("setPadId", location.pathname.match(/[^\/]*$/)[0]);
 
 		bindSocketToScope($scope, socket);
 
@@ -81,6 +82,17 @@
 		});
 
 		$scope.$watch("views", updateMenu);
+
+		$scope.savePadData = function() {
+			var padData = $.extend({ }, $scope.padData);
+			delete padData.defaultView;
+			socket.emit("editPad", padData, function(err) {
+				if(err)
+					$scope.dialogError = err;
+				else
+					$scope.closeDialog();
+			});
+		};
 
 		fp.onClickMarker = function(marker) {
 			$scope.$apply(function() {
@@ -190,7 +202,7 @@
 		$scope.round = function(number, digits) {
 			var fac = Math.pow(10, digits);
 			return Math.round(number*fac)/fac;
-		}
+		};
 	});
 
 	function bindSocketToScope($scope, socket) {

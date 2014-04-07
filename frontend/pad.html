@@ -20,8 +20,8 @@
 				<li><a href="#" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
 				<li><a href="#" ng-click="openDialog('manage-views-dialog')">Manage views</a></li>
 			</ul></li>
-			<li><a href="#">Pad settings</a></li>
-			<li><a href="#">Layers</a></li>
+			<li><a href="#" ng-click="openDialog('pad-settings-dialog')">Pad settings</a></li>
+			<!--<li><a href="#">Layers</a></li>-->
 		</ul>
 
 		<div id="messages">
@@ -74,6 +74,22 @@
 				</dl>
 				<div>
 					<button ng-click="saveMarker(currentMarker)">Save</button>
+				</div>
+			</form>
+		</div>
+
+		<div id="pad-settings-dialog" title="Pad settings" fp-dialog>
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<dl>
+					<dt>Link</dt>
+					<dd>{{padUrl}}</dd>
+
+					<dt><label for="pad-name-input">Pad name</label></dt>
+					<dd><input id="pad-name-input" value="{{padData.name}}" ng-model="padData.name" /></dd>
+				</dl>
+				<div>
+					<button ng-click="savePadData()">Save</button>
 				</div>
 			</form>
 		</div>
