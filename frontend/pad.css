@@ -10,8 +10,12 @@ html,body {
 	left: 0;
 }
 
+#map.fp-clickHandler {
+	cursor: crosshair;
+}
+
 #map-disabled-cover {
-	z-index: 100000;
+	z-index: 10001;
 	background-color: #888;
 	opacity: 0.7;
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
@@ -26,12 +30,35 @@ html,body {
 	right: 10px;
 }
 
+.error,.success,.warning,.info {
+	padding: 8px;
+	border-radius: 3px;
+	border: 1px solid;
+	font-weight: bold;
+}
+
 .error {
 	background-color: #f2dede;
 	color: #a94442;
-	border: 1px solid #ebccd1;
-	padding: 8px 5px;
-	border-radius: 3px;
+	border-color: #ebccd1;
+}
+
+.success {
+	background-color: #dff0d8;
+	border-color: #d6e9c6;
+	color: #3c763d;
+}
+
+.info {
+	background-color: #d9edf7;
+	border-color: #bce8f1;
+	color: #31708f;
+}
+
+.warning {
+	background-color: #fcf8e3;
+	border-color: #faebcc;
+	color: #8a6d3b;
 }
 
 dl {
@@ -64,4 +91,32 @@ table td.button {
 
 table td.button button {
 	white-space: nowrap;
+}
+
+#messages {
+	position: absolute;
+	top: 10px;
+	width: 50%;
+	left: 25%;
+	z-index: 10002;
+}
+
+#messages p {
+	font-size: 1.5em;
+	margin:0 0 10px 0;
+	position: relative;
+	box-shadow: 0 0 15px;
+	border-radius: 5px;
+}
+
+#messages .close-button {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	color: inherit;
+	text-decoration: none;
+}
+
+textarea {
+	height: 5em;
 }

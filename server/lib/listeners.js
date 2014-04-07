@@ -19,7 +19,7 @@ function getPadListeners(padId, position) {
 
 	var ret = [ ];
 	listeners[padId].forEach(function(it) {
-		if(utils.isInBbox(position, it.bbox))
+		if(it.bbox && utils.isInBbox(position, it.bbox))
 			ret.push(it);
 	});
 	return ret;

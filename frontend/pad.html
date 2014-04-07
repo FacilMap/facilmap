@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="facilpad" ng-controller="PadCtrl">
 	<head>
+		<meta charset="utf-8">
 		<title>{{padData.name}}</title>
 		<script src="js/pad.js"></script>
 		<style type="text/css">
@@ -13,14 +14,19 @@
 
 		<ul id="toolbox">
 			<li><a href="#" ng-click="addMarker()">Add marker</a></li>
-			<li><a href="#" ng-click="addLine()">Add line</a></li>
-			<li><a href="#">Display settings</a></li>
+			<!--<li><a href="#" ng-click="addLine()">Add line</a></li>-->
 			<li><a href="#">Views</a><ul>
 				<li ng-repeat="(id, view) in views"><a href="#" ng-click="displayView(view)">{{view.name}}</a></li>
 				<li><a href="#" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
 				<li><a href="#" ng-click="openDialog('manage-views-dialog')">Manage views</a></li>
 			</ul></li>
+			<li><a href="#">Pad settings</a></li>
+			<li><a href="#">Layers</a></li>
 		</ul>
+
+		<div id="messages">
+			<p ng-repeat="message in messages" class="{{message.type}}">{{message.message}} <a href="#" class="close-button" ng-click="closeMessage(message)">×</a></p>
+		</div>
 
 		<div id="save-view-dialog" title="Save current view" fp-dialog>
 			<form>
@@ -44,6 +50,32 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
+
+		<div id="view-marker-dialog" fp-dialog>
+			<h2>{{currentMarker.name}}</h2>
+			<p>{{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
+			<div ng-bind-html="currentMarker.descriptionHtml"></div>
+			<div>
+				<button ng-click="closeDialog(); openDialog('edit-marker-dialog')">Edit</button>
+				<button ng-click="closeDialog(); deleteMarker(currentMarker)">Remove</button>
+			</div>
+		</div>
+
+		<div id="edit-marker-dialog" title="Edit marker" fp-dialog>
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<dl>
+					<dt><label for="edit-marker-name">Name</label></dt>
+					<dd><input id="edit-marker-name" value="{{currentMarker.name}}" ng-model="currentMarker.name" /></dd>
+
+					<dt><label for="edit-marker-description">Description</label></dt>
+					<dd><textarea id="edit-marker-description" ng-model="currentMarker.description">{{currentMarker.description}}</textarea></dd>
+				</dl>
+				<div>
+					<button ng-click="saveMarker(currentMarker)">Save</button>
+				</div>
+			</form>
 		</div>
 	</body>
 </html>

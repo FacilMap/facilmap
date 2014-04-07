@@ -115,7 +115,7 @@ function updateMarker(markerId, data, callback) {
 }
 
 function deleteMarker(markerId, callback) {
-	Marker.remove({ _id: markerId }, data, callback);
+	Marker.remove({ _id: markerId }, callback);
 }
 
 function getPadLines(padId, bbox) {

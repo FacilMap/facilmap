@@ -6,6 +6,7 @@
   "dependencies": {
     "mongoose": "x.x.x",
     "socket.io": "x.x.x",
-	"async" : "x.x.x"
+	"async" : "x.x.x",
+	"marked" : "x.x.x"
   }
 }

@@ -41,7 +41,7 @@
 		}
 	});
 
-	facilpadApp.controller("PadCtrl", function($scope, socket) {
+	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce) {
 
 		$("#toolbox").menu();
 		function updateMenu() {
@@ -56,10 +56,16 @@
 		$scope.dialog = null;
 		$scope.dialogError = null;
 		$scope.saveViewName = null;
+		$scope.currentMarker = null;
+		$scope.messages = [ ];
 
 		socket.emit("setPadId", location.href.match(/[^\/]*$/)[0]);
 
 		bindSocketToScope($scope, socket);
+
+		fp.onMove = function(bbox) {
+			socket.emit("updateBbox", bbox);
+		};
 
 		$scope.$watch("padData", function(newValue) {
 			if(newValue == null || $scope.loaded)
@@ -69,14 +75,51 @@
 			$scope.loaded = true;
 		});
 
+		$scope.$watch("currentMarker.descriptionRendered", function(newValue) {
+			if($scope.currentMarker != null)
+				$scope.currentMarker.descriptionHtml = $sce.trustAsHtml(newValue);
+		});
+
 		$scope.$watch("views", updateMenu);
 
-		$scope.addMarker = function() {
-
+		fp.onClickMarker = function(marker) {
+			$scope.$apply(function() {
+				$scope.currentMarker = marker;
+				$scope.openDialog("view-marker-dialog");
+			});
 		};
 
-		$scope.addLine = function() {
+		$scope.addMarker = function() {
+			var message = $scope.showMessage("info", "Please click on the map to add a marker.");
+			fp.addClickListener(function(pos) {
+				$scope.$apply(function() {
+					$scope.closeMessage(message);
 
+					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
+						if(err)
+							return $scope.showMessage("error", err);
+
+						$scope.currentMarker = marker;
+						$scope.openDialog("edit-marker-dialog");
+					});
+				});
+			});
+		};
+
+		$scope.saveMarker = function(marker) {
+			socket.emit("editMarker", marker, function(err) {
+				if(err)
+					$scope.dialogError = err;
+				else
+					$scope.closeDialog();
+			})
+		};
+
+		$scope.deleteMarker = function(marker) {
+			socket.emit("deleteMarker", marker, function(err) {
+				if(err)
+					$scope.showMessage("error", err);
+			});
 		};
 
 		$scope.displayView = function(view) {
@@ -119,6 +162,35 @@
 		$scope.closeDialog = function() {
 			$scope.dialog.dialog("close");
 		};
+
+		$scope.showMessage = function(type, message, lifetime) {
+			var messageObj = {
+				type: type,
+				message: message
+			};
+			$scope.messages.push(messageObj);
+
+			if(lifetime) {
+				$timeout(function() {
+					$scope.closeMessage(messageObj);
+				}, lifetime);
+			}
+
+			return messageObj;
+		};
+
+		$scope.closeMessage = function(message) {
+			var idx = $scope.messages.indexOf(message);
+			if(idx == -1)
+				return;
+
+			$scope.messages = $scope.messages.slice(0, idx).concat($scope.messages.slice(idx+1));
+		};
+
+		$scope.round = function(number, digits) {
+			var fac = Math.pow(10, digits);
+			return Math.round(number*fac)/fac;
+		}
 	});
 
 	function bindSocketToScope($scope, socket) {
@@ -128,10 +200,23 @@
 
 		socket.on("marker", function(data) {
 			$scope.markers[data.id] = data;
+
+			if($scope.currentMarker && $scope.currentMarker.id == data.id) {
+				$scope.currentMarker = data;
+			}
+
+			fp.addMarker(data);
 		});
 
 		socket.on("deleteMarker", function(data) {
 			delete $scope.markers[data.id];
+
+			if($scope.currentMarker && $scope.currentMarker.id == data.id) {
+				$scope.currentMarker = null;
+				$scope.closeDialog();
+			}
+
+			fp.deleteMarker(data);
 		});
 
 		socket.on("line", function(data) {
@@ -149,6 +234,12 @@
 		socket.on("deleteView", function(data) {
 			delete $scope.views[data.id];
 		});
+
+		socket.on("disconnect", function() {
+			$scope.loaded = false;
+
+			$scope.showMessage("error", "The connection to the server was lost.");
+		})
 	}
 
 })(FacilPad, jQuery);

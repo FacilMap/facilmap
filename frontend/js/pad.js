@@ -1,7 +1,12 @@
 var FacilPad = {
 	SERVER : "http://localhost:40829",
 	map : null,
-	socket : null
+	socket : null,
+	layerMarkers : null,
+	clickListeners : [ ],
+	onMove : null,
+	markersById : { },
+	onClickMarker : null
 };
 
 (function(fp) {
@@ -38,6 +43,27 @@ var FacilPad = {
 	function loadMap(callback) {
 		fp.map = new FacilMap.Map("map");
 		fp.map.addAllAvailableLayers();
+
+		fp.layerMarkers = new FacilMap.Layer.Markers("Markers", { displayInLayerSwitcher: false });
+		fp.map.addLayer(fp.layerMarkers);
+
+		fp.map.events.register("click", map, function(e) {
+			var listener = fp.clickListeners.shift();
+			if(!listener)
+				return;
+
+			if(fp.clickListeners.length == 0)
+				$(fp.map.div).removeClass("fp-clickHandler");
+
+			var coords = fp.map.getLonLatFromViewPortPx(e.xy).clone().transform(fp.map.getProjectionObject(), _p());
+			listener(coords);
+		});
+
+		fp.map.events.register("moveend", this, function(){
+			var x = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
+			fp.onMove({ top: x.top, left: x.left, bottom: x.bottom, right: x.right });
+		});
+
 		callback();
 	}
 
@@ -104,6 +130,30 @@ var FacilPad = {
 					fp.map.layers[i].setVisibility(view.layers.indexOf(fp.map.layers[i].permalinkName) != -1 || view.layers.indexOf(fp.map.layers[i].name) != -1);
 			}
 		}
-	}
+	};
+
+	fp.addMarker = function(marker) {
+		fp.deleteMarker(marker);
+
+		var markerObj = fp.layerMarkers.createMarker(new OpenLayers.LonLat(marker.position.lon, marker.position.lat));
+		markerObj.events.register("click", markerObj, function(e) {
+			fp.onClickMarker(marker);
+		});
+		fp.markersById[marker.id] = markerObj;
+	};
+
+	fp.deleteMarker = function(marker) {
+		var markerObj = fp.markersById[marker.id];
+		if(!markerObj)
+			return;
+
+		delete fp.markersById[marker.id];
+		fp.layerMarkers.removeMarker(markerObj);
+	};
+
+	fp.addClickListener = function(listener) {
+		fp.clickListeners.push(listener);
+		$(fp.map.div).addClass("fp-clickHandler");
+	};
 
 })(FacilPad);

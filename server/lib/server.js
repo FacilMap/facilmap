@@ -3,6 +3,7 @@ var socketIo = require("socket.io");
 var config = require("../config");
 var listeners = require("./listeners");
 var database = require("./database");
+var marked = require("marked");
 
 var app = http.createServer();
 app.listen(config.port, config.host);
@@ -61,12 +62,15 @@ function disconnect(socket) {
 }
 
 function addMarker(socket, data, callback) {
-	database.createMarker(socket.padId, data, function(err) {
+	database.createMarker(socket.padId, data, function(err, data) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(socket.padId, data.position, "marker", _fixId(data));
-		callback();
+		console.log(data, data.id);
+
+		data = _fixId(data);
+		listeners.notifyPadListeners(socket.padId, data.position, "marker", data);
+		callback(null, data);
 	});
 }
 
@@ -91,13 +95,14 @@ function deleteMarker(socket, data, callback) {
 }
 
 function addLine(socket, data, callback) {
-	database.createLine(socket.padId, data, function(err) {
+	database.createLine(socket.padId, data, function(err, data) {
 		if(err)
 			return callback(err);
 
+		data = _fixId(data);
 		// Todo: Coordinates
-		listeners.notifyPadListeners(socket.padId, null, "line", _fixId(data));
-		callback();
+		listeners.notifyPadListeners(socket.padId, null, "line", data);
+		callback(null, data);
 	});
 }
 
@@ -127,12 +132,13 @@ function addView(socket, data, callback) {
 	if(data.name == null || data.name.trim().length == 0)
 		return callback("No name provided.");
 
-	database.createView(socket.padId, data, function(err) {
+	database.createView(socket.padId, data, function(err, data) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(socket.padId, null, "view", _fixId(data));
-		callback();
+		data = _fixId(data);
+		listeners.notifyPadListeners(socket.padId, null, "view", data);
+		callback(null, data);
 	});
 }
 
@@ -182,6 +188,10 @@ function _fixId(data) {
 	if(ret.defaultView) {
 		ret.defaultView.id = ret.defaultView._id;
 		delete ret.defaultView._id;
+	}
+
+	if(ret.description) {
+		ret.descriptionRendered = marked(ret.description);
 	}
 
 	return ret;
