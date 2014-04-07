@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html ng-app="facilpad" ng-controller="PadCtrl">
+	<head>
+		<title>{{padData.name}}</title>
+		<script src="js/pad.js"></script>
+		<style type="text/css">
+			@import "pad.css";
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<div id="map-disabled-cover" ng-hide="!error &amp;&amp; loaded"></div>
+
+		<ul id="toolbox">
+			<li><a href="#" ng-click="addMarker()">Add marker</a></li>
+			<li><a href="#" ng-click="addLine()">Add line</a></li>
+			<li><a href="#">Display settings</a></li>
+			<li><a href="#">Views</a><ul>
+				<li ng-repeat="(id, view) in views"><a href="#" ng-click="displayView(view)">{{view.name}}</a></li>
+				<li><a href="#" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
+				<li><a href="#" ng-click="openDialog('manage-views-dialog')">Manage views</a></li>
+			</ul></li>
+		</ul>
+
+		<div id="save-view-dialog" title="Save current view" fp-dialog>
+			<form>
+				<p class="error" ng-hide="!dialogError">{{dialogError}}</p>
+				<dl>
+					<dt><label for="save-view-name">Name</label></dt>
+					<dd><input id="save-view-name" ng-model="saveViewName"></dd>
+				</dl>
+				<div><button ng-click="saveView()">Save</button></div>
+			</form>
+		</div>
+
+		<div id="manage-views-dialog" title="Manage views" fp-dialog>
+			<p class="error" ng-hide="!dialogError">{{dialogError}}</p>
+			<table>
+				<tbody>
+					<tr ng-class="{selected: view.id == padData.defaultView.id}" ng-repeat="view in views">
+						<td><a href="#" ng-click="displayView(view)">{{view.name}}</a></td>
+						<td class="button"><button ng-hide="view.id == padData.defaultView.id" ng-click="setDefaultView(view)">Make default</button></td>
+						<td class="button"><button ng-click="deleteView(view)">Delete</button></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>
