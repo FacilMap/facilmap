@@ -13,7 +13,7 @@
 			Loading...
 		</div>
 		<div id="map"></div>
-		<div id="map-disabled-cover" ng-hide="!error &amp;&amp; loaded"></div>
+		<div id="map-disabled-cover" ng-show="!loaded || error"></div>
 
 		<ul id="toolbox">
 			<li><a href="javascript:" ng-click="addMarker()">Add marker</a></li>

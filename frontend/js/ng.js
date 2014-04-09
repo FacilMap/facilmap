@@ -59,6 +59,7 @@
 		$scope.currentMarker = null;
 		$scope.messages = [ ];
 		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
+		$scope.error = false;
 
 		socket.emit("setPadId", location.pathname.match(/[^\/]*$/)[0]);
 
@@ -288,7 +289,7 @@
 		});
 
 		socket.on("disconnect", function() {
-			$scope.loaded = false;
+			$scope.error = true;
 
 			$scope.showMessage("error", "The connection to the server was lost.");
 		})
