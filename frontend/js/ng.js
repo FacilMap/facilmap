@@ -36,7 +36,7 @@
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
-				$(element).dialog({autoOpen: false, modal: true});
+				$(element).dialog({ autoOpen: false, modal: true, height: "auto", width: 600 });
 			}
 		}
 	});

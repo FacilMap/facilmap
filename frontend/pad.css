@@ -72,9 +72,25 @@ dt {
 	float: left;
 	clear: left;
 	font-weight: bold;
-	margin: 0;
+	margin: 5px 0 0 0;
 	padding: 0;
 	width: 30%;
+}
+
+dd {
+	width: 70%;
+	margin: 5px 0 0 30%;
+	padding: 0;
+}
+
+dd input, dd textarea {
+	width: 100%;
+}
+
+dl:after {
+	clear: left;
+	display: block;
+	content: " ";
 }
 
 tr.selected td {
