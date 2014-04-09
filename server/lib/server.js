@@ -3,12 +3,22 @@ var socketIo = require("socket.io");
 var config = require("../config");
 var listeners = require("./listeners");
 var database = require("./database");
+var domain = require("domain");
 
 var app = http.createServer();
 app.listen(config.port, config.host);
 var io = socketIo.listen(app);
 
 io.sockets.on("connection", function(socket) {
+	var d = domain.create();
+	d.add(socket);
+
+	d.on("error", function(err) {
+		console.error("Error! Disconnecting client.");
+		console.error(err.stack);
+		socket.disconnect();
+	});
+
 	socket.on("setPadId", setPadId.bind(null, socket));
 	socket.on("updateBbox", updateBbox.bind(null, socket));
 	socket.on("disconnect", disconnect.bind(null, socket));
