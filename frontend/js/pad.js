@@ -5,6 +5,7 @@ var FacilPad = {
 	layerMarkers : null,
 	clickListeners : [ ],
 	onMove : null,
+	onMoveEnd : null,
 	markersById : { },
 	onClickMarker : null
 };
@@ -30,13 +31,14 @@ var FacilPad = {
 			"FacilMap" : loadJavaScript.bind(null, "https://api.facilmap.org/facilmap_ol_src.js"),
 			"angular" : loadJavaScript.bind(null, "lib/angular-1.2.16.min.js"),
 			"socketIo" : loadJavaScript.bind(null, fp.SERVER+"/socket.io/socket.io.js"),
+			"marked" : loadJavaScript.bind(null, "lib/marked-0.3.2.min.js"),
 
 			"loadMap" : [ "FacilMap", loadMap ],
 			"jQuery" : [ "FacilMap", function(next) {
 				jQuery = $ = FacilMap.$;
 				next();
 			}],
-			"ng" : [ "angular", "jQuery", "socketIo", "loadMap", loadJavaScript.bind(null, "js/ng.js") ]
+			"ng" : [ "angular", "jQuery", "socketIo", "loadMap", "marked", loadJavaScript.bind(null, "js/ng.js") ]
 		});
 	});
 
@@ -55,13 +57,16 @@ var FacilPad = {
 			if(fp.clickListeners.length == 0)
 				$(fp.map.div).removeClass("fp-clickHandler");
 
-			var coords = fp.map.getLonLatFromViewPortPx(e.xy).clone().transform(fp.map.getProjectionObject(), _p());
-			listener(coords);
+			listener(fp.xyToPos(e.xy));
+		});
+
+		fp.map.events.register("move", this, function() {
+			fp.onMove();
 		});
 
 		fp.map.events.register("moveend", this, function(){
 			var x = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
-			fp.onMove({ top: x.top, left: x.left, bottom: x.bottom, right: x.right });
+			fp.onMoveEnd({ top: x.top, left: x.left, bottom: x.bottom, right: x.right });
 		});
 
 		callback();
@@ -154,6 +159,15 @@ var FacilPad = {
 	fp.addClickListener = function(listener) {
 		fp.clickListeners.push(listener);
 		$(fp.map.div).addClass("fp-clickHandler");
+	};
+
+	fp.xyToPos = function(xy) {
+		return fp.map.getLonLatFromViewPortPx(xy).clone().transform(fp.map.getProjectionObject(), _p());
+	};
+
+	fp.posToXy = function(pos) {
+		var lonlat = new OpenLayers.LonLat(pos.lon, pos.lat).transform(_p(), fp.map.getProjectionObject());
+		return fp.map.getViewPortPxFromLonLat(lonlat);
 	};
 
 })(FacilPad);

@@ -1,6 +1,6 @@
-(function(fp, $) {
+(function(fp, $, undefined) {
 
-	var facilpadApp = angular.module("facilpad", []);
+	var facilpadApp = angular.module("facilpad", [ ]);
 
 	function wrapApply($scope, f) {
 		return function() {
@@ -41,7 +41,7 @@
 		}
 	});
 
-	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce) {
+	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		$("#toolbox").menu();
 		function updateMenu() {
@@ -64,7 +64,24 @@
 
 		bindSocketToScope($scope, socket);
 
-		fp.onMove = function(bbox) {
+		$scope.onMove = function() {
+			if($scope.currentMarker) {
+				$scope.currentMarker.xy = fp.posToXy($scope.currentMarker.position);
+			}
+		};
+
+		fp.onMove = wrapApply($scope, $scope.onMove);
+
+		$scope.$watch("markers[currentMarker.id]", function() {
+			if($scope.currentMarker != null)
+				$scope.currentMarker = $scope.markers[$scope.currentMarker.id];
+		});
+
+		$scope.$watch("currentMarker", function() {
+			$scope.onMove();
+		});
+
+		fp.onMoveEnd = function(bbox) {
 			socket.emit("updateBbox", bbox);
 		};
 
@@ -72,16 +89,27 @@
 			if(newValue == null || $scope.loaded)
 				return;
 
-			FacilPad.displayView(newValue.defaultView);
-			$scope.loaded = true;
+			setTimeout(function() { // Avoid error with onMove being executed while inside $apply()
+				FacilPad.displayView(newValue.defaultView);
+				$scope.loaded = true;
+			}, 0);
 		});
 
-		$scope.$watch("currentMarker.descriptionRendered", function(newValue) {
+		$scope.$watch("currentMarker", function() {
 			if($scope.currentMarker != null)
-				$scope.currentMarker.descriptionHtml = $sce.trustAsHtml(newValue);
+				$scope.currentMarker.descriptionHtml = $scope.marked($scope.currentMarker.description);
+		});
+
+		$scope.$watch("currentMarker.description", function() {
+			if($scope.currentMarker != null)
+				$scope.currentMarker.descriptionHtml = $scope.marked($scope.currentMarker.description);
 		});
 
 		$scope.$watch("views", updateMenu);
+
+		$scope.marked = function(text) {
+			return text != null ? $sce.trustAsHtml(marked(text)) : null;
+		};
 
 		$scope.savePadData = function() {
 			var padData = $.extend({ }, $scope.padData);
@@ -94,12 +122,15 @@
 			});
 		};
 
-		fp.onClickMarker = function(marker) {
-			$scope.$apply(function() {
+		fp.onClickMarker = wrapApply($scope, function(marker) {
+			if($scope.currentMarker && $scope.currentMarker.id == marker.id) {
+				$scope.currentMarker = null;
+				$scope.currentMarkerBkp = null;
+			} else {
 				$scope.currentMarker = marker;
-				$scope.openDialog("view-marker-dialog");
-			});
-		};
+				$scope.currentMarkerBkp = angular.copy(marker);
+			}
+		});
 
 		$scope.addMarker = function() {
 			var message = $scope.showMessage("info", "Please click on the map to add a marker.");
@@ -164,15 +195,28 @@
 		};
 
 		$scope.openDialog = function(id) {
-			$scope.dialog = $("#"+id).dialog("open").bind("dialogclose", function() {
-				$("#"+id+" form").each(function(){ this.reset(); });
+			var el = $("#"+id);
+
+			var preserve = el.attr("fp-preserve");
+			if(preserve)
+				$scope.dialogBkp = angular.copy($parse(preserve)($scope));
+
+			$scope.dialog = el.dialog("open").bind("dialogclose", wrapApply($scope, function() {
 				$scope.dialog = null;
 				$scope.dialogError = null;
-			});
+
+				if(preserve && $scope.dialogBkp !== undefined) // undefined is set in closeDialog()
+					$parse(preserve + " = fpPreserveRestore")($scope, { fpPreserveRestore: $scope.dialogBkp });
+			}));
 		};
 
-		$scope.closeDialog = function() {
-			$scope.dialog.dialog("close");
+		$scope.closeDialog = function(restorePreserved) {
+			if(!restorePreserved)
+				$scope.dialogBkp = undefined;
+
+			setTimeout(function() { // dialogclose event handler calls $apply
+				$scope.dialog.dialog("close");
+			}, 0);
 		};
 
 		$scope.showMessage = function(type, message, lifetime) {
@@ -207,15 +251,12 @@
 
 	function bindSocketToScope($scope, socket) {
 		socket.on("padData", function(data) {
+			console.log(data);
 			$scope.padData = data;
 		});
 
 		socket.on("marker", function(data) {
 			$scope.markers[data.id] = data;
-
-			if($scope.currentMarker && $scope.currentMarker.id == data.id) {
-				$scope.currentMarker = data;
-			}
 
 			fp.addMarker(data);
 		});
@@ -223,7 +264,7 @@
 		socket.on("deleteMarker", function(data) {
 			delete $scope.markers[data.id];
 
-			if($scope.currentMarker && $scope.currentMarker.id == data.id) {
+			if($scope.currentMarker && $scope.currentMarker.id == data.id && $scope.dialog && $scope.dialog.attr("id") == "edit-marker-dialog") {
 				$scope.currentMarker = null;
 				$scope.closeDialog();
 			}

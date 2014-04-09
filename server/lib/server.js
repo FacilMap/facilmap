@@ -3,7 +3,6 @@ var socketIo = require("socket.io");
 var config = require("../config");
 var listeners = require("./listeners");
 var database = require("./database");
-var marked = require("marked");
 
 var app = http.createServer();
 app.listen(config.port, config.host);
@@ -188,10 +187,6 @@ function _fixId(data) {
 	if(ret.defaultView) {
 		ret.defaultView.id = ret.defaultView._id;
 		delete ret.defaultView._id;
-	}
-
-	if(ret.description) {
-		ret.descriptionRendered = marked(ret.description);
 	}
 
 	return ret;
