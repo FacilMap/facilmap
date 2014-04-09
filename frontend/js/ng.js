@@ -251,7 +251,6 @@
 
 	function bindSocketToScope($scope, socket) {
 		socket.on("padData", function(data) {
-			console.log(data);
 			$scope.padData = data;
 		});
 

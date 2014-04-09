@@ -9,6 +9,9 @@
 		</style>
 	</head>
 	<body>
+		<div ng-hide="loaded" style="position:absolute; top:0; left:0; right:0; bottom:0; padding:10px; background: #fff; z-index:100000; font-size:1.5em; font-weight:bold;">
+			Loading...
+		</div>
 		<div id="map"></div>
 		<div id="map-disabled-cover" ng-hide="!error &amp;&amp; loaded"></div>
 
