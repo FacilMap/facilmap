@@ -90,9 +90,9 @@
 			if(newValue == null || $scope.loaded)
 				return;
 
+			$scope.loaded = true;
 			setTimeout(function() { // Avoid error with onMove being executed while inside $apply()
 				FacilPad.displayView(newValue.defaultView);
-				$scope.loaded = true;
 			}, 0);
 		});
 
