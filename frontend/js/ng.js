@@ -1,4 +1,4 @@
-(function(fp, $, undefined) {
+(function(fp, $, ng, undefined) {
 
 	var facilpadApp = angular.module("facilpad", [ ]);
 
@@ -295,4 +295,8 @@
 		})
 	}
 
-})(FacilPad, jQuery);
+	$(function() {
+		ng.bootstrap(document, [ "facilpad" ]);
+	});
+
+})(FacilPad, jQuery, angular);
