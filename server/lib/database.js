@@ -1,142 +1,134 @@
-var mongoose = require("mongoose");
-var config = require("../config");
-
-mongoose.connect(config.db);
-
-var ObjectId = mongoose.Schema.Types.ObjectId;
-
-var positionType = {
-	lon: Number,
-	lat: Number
-};
-
-var bboxType = {
-	top: Number,
-	right: Number,
-	bottom: Number,
-	left: Number
-};
-
-var markerSchema = mongoose.Schema({
-	_pad : { type: String, ref: "Pad" },
-	position : positionType,
-	name : String,
-	description : String,
-	style : String
-});
-
-var lineSchema = mongoose.Schema({
-	_pad : { type: String, ref: "Pad" },
-	points : [positionType],
-	actualPoints : [positionType],
-	routingType : String,
-	colour : String,
-	width : Number,
-	description : String,
-	name : String
-});
-
-var viewSchema = mongoose.Schema({
-	_pad : { type: String, ref: "Pad" },
-	name : String,
-	baseLayer : String,
-	layers : [String],
-	view : bboxType
-});
-
-var padSchema = mongoose.Schema({
-	_id : String,
-	defaultView : { type: ObjectId, ref: "View" },
-	name: { type: String, default: "New FacilPad" }
-});
-
-var Marker = mongoose.model("Marker", markerSchema);
-var Line = mongoose.model("Line", markerSchema);
-var View = mongoose.model("View", viewSchema);
-var Pad = mongoose.model("Pad", padSchema);
+var backend = require("./databaseBackendMongodb");
+var listeners = require("./listeners");
 
 function getPadData(padId, callback) {
-	Pad.findById(padId).populate("defaultView").exec(function(err, pad) {
-		if(!err && pad == null) {
-			Pad.create({ _id: padId }, function(err) {
-				if(err)
-					return callback;
+	backend.getPadData(padId, function(err, data) {
+		if(err || data != null)
+			return callback(err, data);
 
-				getPadData(padId, callback);
-			});
-		}
-		else
-			callback(err, pad);
+		backend.createPad(padId, callback);
 	});
 }
 
 function updatePadData(padId, data, callback) {
-	Pad.findByIdAndUpdate(padId, data).populate("defaultView").exec(callback);
+	backend.updatePadData(padId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(padId, null, "padData", data);
+		callback(null, data);
+	});
 }
 
 function getViews(padId) {
-	return View.find({ "_pad" : padId }).stream();
+	return backend.getViews(padId);
 }
 
 function createView(padId, data, callback) {
-	data._pad = padId;
-	View.create(data, callback);
+	if(data.name == null || data.name.trim().length == 0)
+		return callback("No name provided.");
+
+	backend.createView(padId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data._pad, null, "view", data);
+		callback(null, data);
+	});
 }
 
 function updateView(viewId, data, callback) {
-	View.findByIdAndUpdate(viewId, data, callback);
+	if(data.name == null || data.name.trim().length == 0)
+		return callback("No name provided.");
+
+	backend.updateView(viewId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data._pad, null, "view", data);
+		callback(null, data);
+	});
 }
 
 function deleteView(viewId, callback) {
-	View.remove({ _id: viewId }, callback);
+	backend.deleteView(viewId, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data._pad, null, "deleteView", { id: data.id });
+		callback(null, data);
+	});
 }
 
 function getPadMarkers(padId, bbox) {
-	var condition = {
-		"_pad" : padId,
-		"position.lat" : { $lte: bbox.top, $gte: bbox.bottom }
-	};
-
-	if(bbox.right < bbox.left) // Bbox spans over lon=180
-		condition["position.lon"] = { $or: [ { $gte: bbox.left }, { $lte: bbox.right } ] };
-	else
-		condition["position.lon"] = { $gte: bbox.left, $lte: bbox.right };
-
-	return Marker.find(condition).stream();
+	return backend.getPadMarkers(padId, bbox);
 }
 
 function createMarker(padId, data, callback) {
-	data._pad = padId;
-	Marker.create(data, callback);
+	backend.createMarker(padId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(padId, data.position, "marker", data);
+		callback(null, data);
+	});
 }
 
 function updateMarker(markerId, data, callback) {
-	Marker.findByIdAndUpdate(markerId, data, callback);
+	backend.updateMarker(markerId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data._pad, data.position, "marker", data);
+		callback(null, data);
+	});
 }
 
 function deleteMarker(markerId, callback) {
-	Marker.remove({ _id: markerId }, callback);
+	backend.deleteMarker(markerId, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data._pad, data.position, "deleteMarker", { id: data.id });
+		callback(null, data);
+	});
 }
 
 function getPadLines(padId, bbox) {
-	var condition = { // TODO
-		"_pad" : padId
-	};
-
-	return Line.find(condition).stream();
+	return backend.getPadLines(padId, bbox);
 }
 
 function createLine(padId, data, callback) {
-	data._pad = padId;
-	Line.create(data, callback);
+	backend.createLine(padId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		// Todo: Coordinates
+		listeners.notifyPadListeners(data._pad, null, "line", data);
+		callback(null, data);
+	});
 }
 
-function updateLine(lineId, data, callback) {
-	Line.findByIdAndUpdate(lineId, data, callback);
+function updateLine(data, callback) {
+	backend.updateLine(data.id, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		// Todo: Coordinates
+		listeners.notifyPadListeners(data._pad, null, "line", data);
+		callback(null, data);
+	});
 }
 
 function deleteLine(lineId, callback) {
-	Line.remove({ _id: lineId }, callback);
+	backend.deleteLine(lineId, function(err, data) {
+		if(err)
+			return callback(err);
+
+		// Todo: Coordinates
+		listeners.notifyPadListeners(data._pad, null, "deleteLine", { id: data.id });
+		callback(null, data);
+	});
 }
 
 module.exports = {
