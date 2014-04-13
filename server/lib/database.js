@@ -22,7 +22,7 @@ var markerSchema = mongoose.Schema({
 	position : positionType,
 	name : String,
 	description : String,
-	symbol : String
+	style : String
 });
 
 var lineSchema = mongoose.Schema({

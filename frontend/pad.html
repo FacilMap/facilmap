@@ -74,6 +74,14 @@
 					<dt><label for="edit-marker-name">Name</label></dt>
 					<dd><input id="edit-marker-name" ng-model="currentMarker.name" /></dd>
 
+					<dt><label for="edit-marker-style">Style</label></dt>
+					<dd><select id="edit-marker-style" ng-model="currentMarker.style">
+						<option value="red">Red</option>
+						<option value="green">Green</option>
+						<option value="blue">Blue</option>
+						<option value="gold">Yellow</option>
+					</select></dd>
+
 					<dt><label for="edit-marker-description">Description</label></dt>
 					<dd><textarea id="edit-marker-description" ng-model="currentMarker.description"></textarea></dd>
 				</dl>

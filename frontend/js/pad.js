@@ -140,7 +140,9 @@ var FacilPad = {
 	fp.addMarker = function(marker) {
 		fp.deleteMarker(marker);
 
-		var markerObj = fp.layerMarkers.createMarker(new OpenLayers.LonLat(marker.position.lon, marker.position.lat));
+		var icon = new OpenLayers.Icon("img/marker-"+marker.style+".png", new OpenLayers.Size(21,25), new OpenLayers.Pixel(-9, -25));
+
+		var markerObj = fp.layerMarkers.createMarker(new OpenLayers.LonLat(marker.position.lon, marker.position.lat), null, null, icon);
 		markerObj.events.register("click", markerObj, function(e) {
 			fp.onClickMarker(marker);
 		});

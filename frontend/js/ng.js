@@ -82,6 +82,11 @@
 			$scope.onMove();
 		});
 
+		$scope.$watch("currentMarker.style", function() {
+			if($scope.currentMarker != null)
+				fp.addMarker($scope.currentMarker);
+		});
+
 		fp.onMoveEnd = function(bbox) {
 			socket.emit("updateBbox", bbox);
 		};
@@ -139,7 +144,7 @@
 				$scope.$apply(function() {
 					$scope.closeMessage(message);
 
-					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
+					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat }, style: 'red' }, function(err, marker) {
 						if(err)
 							return $scope.showMessage("error", err);
 
