@@ -29,12 +29,14 @@ var markerSchema = mongoose.Schema({
 var lineSchema = mongoose.Schema({
 	_pad : { type: String, ref: "Pad" },
 	points : [positionType],
-	actualPoints : [positionType],
 	mode : String,
 	colour : { type: String, default: "0000ff" },
 	width : { type: Number, default: 3 },
 	description : String,
-	name : { type: String, default: "Untitled line" }
+	name : { type: String, default: "Untitled line" },
+	actualPoints : [positionType],
+	distance : Number,
+	time : Number
 });
 
 var viewSchema = mongoose.Schema({

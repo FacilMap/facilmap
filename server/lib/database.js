@@ -1,6 +1,7 @@
 var backend = require("./databaseBackendMongodb");
 var listeners = require("./listeners");
 var routing = require("./routing");
+var utils = require("./utils");
 
 function getPadData(padId, callback) {
 	backend.getPadData(padId, function(err, data) {
@@ -143,15 +144,17 @@ function deleteLine(lineId, callback) {
 
 function _calculateRouting(line, callback) {
 	if(line.points && line.points.length >= 2 && line.mode) {
-		routing.calculateRouting(line.points, line.mode, function(err, actualPoints) {
+		routing.calculateRouting(line.points, line.mode, function(err, routeData) {
 			if(err)
 				return callback(err);
 
-			line.actualPoints = actualPoints;
+			utils.extend(line, routeData);
 			callback(null, line);
 		});
 	} else {
 		line.actualPoints = line.points;
+		line.distance = utils.calculateDistance(line.points);
+		line.time = null;
 		callback(null, line);
 	}
 }

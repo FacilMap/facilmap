@@ -156,6 +156,7 @@
 		};
 
 		fp.onClickMarker = wrapApply($scope, function(marker) {
+			$scope.currentLine = null;
 			if($scope.currentMarker && $scope.currentMarker.id == marker.id)
 				$scope.currentMarker = null;
 			else
@@ -163,6 +164,7 @@
 		});
 
 		fp.onClickLine = function(line, clickPos) {
+			$scope.currentMarker = null;
 			$scope.currentLine = line;
 			$scope.currentLine.clickPos = clickPos;
 			$scope.onMove();
@@ -213,7 +215,6 @@
 
 						// Finish drawing
 						socket.emit("editLine", { id: line.id, points: line.points }, function(err, line) {
-							console.log("editLine");
 							if(err)
 								return $scope.showMessage("error", err);
 
@@ -330,6 +331,28 @@
 			var fac = Math.pow(10, digits);
 			return Math.round(number*fac)/fac;
 		};
+
+		$scope.formatTime = function(seconds) {
+			var hours = Math.floor(seconds/3600);
+			var minutes = Math.floor((seconds%3600)/60);
+			if(minutes < 10)
+				minutes = "0" + minutes;
+			return hours + ":" + minutes;
+		};
+
+		$scope.routingMode = function(mode) {
+			switch(mode) {
+				case "fastest":
+				case "shortest":
+					return " by car";
+				case "bicycle":
+					return " by bicycle";
+				case "pedestrian":
+					return " by foot";
+				default:
+					return "";
+			}
+		}
 	});
 
 	function bindSocketToScope($scope, socket) {

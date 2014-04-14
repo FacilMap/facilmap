@@ -58,7 +58,7 @@
 		<div id="view-marker-popup" ng-show="currentMarker" ng-style="{ top: currentMarker.xy.y + 'px', left: currentMarker.xy.x + 'px' }">
 			<div class="content">
 				<h2>{{currentMarker.name}}</h2>
-				<p class="pos">{{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
+				<p class="pos">Coordinates: {{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
 				<div ng-bind-html="currentMarker.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
@@ -70,6 +70,7 @@
 		<div id="view-line-popup" ng-show="currentLine" ng-style="{ top: currentLine.clickXy.y + 'px', left: currentLine.clickXy.x + 'px' }">
 			<div class="content">
 				<h2>{{currentLine.name}}</h2>
+				<p class="distance">Distance: {{round(currentLine.distance, 2)}} km <span ng-show="currentLine.time != null">({{formatTime(currentLine.time)}} h{{routingMode(currentLine.mode)}})</span></p>
 				<div ng-bind-html="currentLine.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
@@ -113,10 +114,10 @@
 					<dt><label for="edit-line-mode">Routing mode</label></dt>
 					<dd><select id="edit-line-mode" ng-model="currentLine.mode">
 						<option value="">None</option>
-						<option value="car-fastest">Car (fastest)</option>
-						<option value="car-shortest">Car (shortest)</option>
+						<option value="fastest">Car (fastest)</option>
+						<option value="shortest">Car (shortest)</option>
 						<option value="bicycle">Bicycle</option>
-						<option value="foot">Pedestrian</option>
+						<option value="pedestrian">Pedestrian</option>
 					</select></dd>
 
 					<dt><label for="edit-line-description">Description</label></dt>

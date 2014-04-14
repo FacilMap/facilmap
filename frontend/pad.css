@@ -195,3 +195,7 @@ textarea {
 	color: inherit;
 	text-decoration: none;
 }
+
+.pos,.distance {
+	font-style: italic;
+}
