@@ -65,6 +65,7 @@
 		$scope.messages = [ ];
 		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
 		$scope.error = false;
+		$scope.drawing = false;
 
 		socket.emit("setPadId", location.pathname.match(/[^\/]*$/)[0]);
 
@@ -96,12 +97,6 @@
 		$scope.$watch("lines[currentLine.id]", function() {
 			if($scope.currentLine != null)
 				$scope.currentLine = $.extend($scope.lines[$scope.currentLine.id], { clickPos : $scope.currentLine.clickPos, clickXy : $scope.currentLine.clickXy });
-		});
-
-		$scope.$watch("currentLine.actualPoints.length", function() {
-			// For drawing
-			if($scope.currentLine != null)
-				fp.addLine($scope.currentLine);
 		});
 
 		fp.onMoveEnd = function(bbox) {
@@ -206,6 +201,7 @@
 		$scope.addLine = function() {
 			socket.emit("addLine", { points: [ ] }, function(err, line) {
 				$scope.currentLine = line;
+				$scope.drawing = true;
 				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.");
 
 				var lastPos = null;
@@ -213,17 +209,22 @@
 					if(lastPos && pos.lon == lastPos.lon && pos.lat == lastPos.lat) {
 						$scope.closeMessage(message);
 
+						$scope.drawing = false;
+
 						// Finish drawing
 						socket.emit("editLine", { id: line.id, points: line.points }, function(err, line) {
 							if(err)
 								return $scope.showMessage("error", err);
 
 							$scope.currentLine = line;
+							$scope.currentLine.clickPos = pos;
+							$scope.onMove();
 							$scope.openDialog("edit-line-dialog");
 						});
 					} else {
 						line.points.push(pos);
 						line.actualPoints.push(pos);
+						fp.addLine(line);
 						fp.addClickListener(clickListener);
 						lastPos = pos;
 					}
