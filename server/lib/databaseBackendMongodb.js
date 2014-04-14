@@ -30,7 +30,7 @@ var lineSchema = mongoose.Schema({
 	_pad : { type: String, ref: "Pad" },
 	points : [positionType],
 	actualPoints : [positionType],
-	routingType : String,
+	mode : String,
 	colour : { type: String, default: "0000ff" },
 	width : { type: Number, default: 3 },
 	description : String,
@@ -52,7 +52,7 @@ var padSchema = mongoose.Schema({
 });
 
 var Marker = mongoose.model("Marker", markerSchema);
-var Line = mongoose.model("Line", markerSchema);
+var Line = mongoose.model("Line", lineSchema);
 var View = mongoose.model("View", viewSchema);
 var Pad = mongoose.model("Pad", padSchema);
 

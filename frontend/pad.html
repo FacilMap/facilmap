@@ -17,7 +17,7 @@
 
 		<ul id="toolbox">
 			<li><a href="javascript:" ng-click="addMarker()">Add marker</a></li>
-			<!--<li><a href="javascript:" ng-click="addLine()">Add line</a></li>-->
+			<li><a href="javascript:" ng-click="addLine()">Add line</a></li>
 			<li><a href="javascript:">Views</a><ul>
 				<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
 				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
@@ -58,13 +58,24 @@
 		<div id="view-marker-popup" ng-show="currentMarker" ng-style="{ top: currentMarker.xy.y + 'px', left: currentMarker.xy.x + 'px' }">
 			<div class="content">
 				<h2>{{currentMarker.name}}</h2>
-				<p>{{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
+				<p class="pos">{{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
 				<div ng-bind-html="currentMarker.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-marker-dialog')">Edit</button>
 			</div>
 			<a href="javascript:" ng-click="currentMarker=null" class="close-button">×</a>
+		</div>
+
+		<div id="view-line-popup" ng-show="currentLine" ng-style="{ top: currentLine.clickXy.y + 'px', left: currentLine.clickXy.x + 'px' }">
+			<div class="content">
+				<h2>{{currentLine.name}}</h2>
+				<div ng-bind-html="currentLine.descriptionHtml"></div>
+			</div>
+			<div class="buttons">
+				<button ng-click="openDialog('edit-line-dialog')">Edit</button>
+			</div>
+			<a href="javascript:" ng-click="currentLine=null" class="close-button">×</a>
 		</div>
 
 		<div id="edit-marker-dialog" title="Edit marker" fp-dialog fp-preserve="markers[currentMarker.id]">
@@ -88,6 +99,32 @@
 				<div>
 					<button ng-click="saveMarker(currentMarker)">Save</button>
 					<button ng-click="deleteMarker(currentMarker)">Remove</button>
+				</div>
+			</form>
+		</div>
+
+		<div id="edit-line-dialog" title="Edit line" fp-dialog fp-preserve="lines[currentLine.id]">
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<dl>
+					<dt><label for="edit-line-name">Name</label></dt>
+					<dd><input id="edit-line-name" ng-model="currentLine.name" /></dd>
+
+					<dt><label for="edit-line-mode">Routing mode</label></dt>
+					<dd><select id="edit-line-mode" ng-model="currentLine.mode">
+						<option value="">None</option>
+						<option value="car-fastest">Car (fastest)</option>
+						<option value="car-shortest">Car (shortest)</option>
+						<option value="bicycle">Bicycle</option>
+						<option value="foot">Pedestrian</option>
+					</select></dd>
+
+					<dt><label for="edit-line-description">Description</label></dt>
+					<dd><textarea id="edit-line-description" ng-model="currentLine.description"></textarea></dd>
+				</dl>
+				<div>
+					<button ng-click="saveLine(currentLine)">Save</button>
+					<button ng-click="deleteLine(currentLine)">Remove</button>
 				</div>
 			</form>
 		</div>

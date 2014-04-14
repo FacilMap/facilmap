@@ -12,6 +12,10 @@
 		}
 	}
 
+	Function.prototype.fpWrapApply = function($scope) {
+		return wrapApply($scope, this);
+	};
+
 	// From http://stackoverflow.com/a/11277751/242365
 	facilpadApp.factory("socket", function($rootScope) {
 		var socket = io.connect(fp.SERVER);
@@ -57,6 +61,7 @@
 		$scope.dialogError = null;
 		$scope.saveViewName = null;
 		$scope.currentMarker = null;
+		$scope.currentLine = null;
 		$scope.messages = [ ];
 		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
 		$scope.error = false;
@@ -66,9 +71,10 @@
 		bindSocketToScope($scope, socket);
 
 		$scope.onMove = function() {
-			if($scope.currentMarker) {
+			if($scope.currentMarker)
 				$scope.currentMarker.xy = fp.posToXy($scope.currentMarker.position);
-			}
+			if($scope.currentLine && $scope.currentLine.clickPos)
+				$scope.currentLine.clickXy = fp.posToXy($scope.currentLine.clickPos);
 		};
 
 		fp.onMove = wrapApply($scope, $scope.onMove);
@@ -85,6 +91,17 @@
 		$scope.$watch("currentMarker.style", function() {
 			if($scope.currentMarker != null)
 				fp.addMarker($scope.currentMarker);
+		});
+
+		$scope.$watch("lines[currentLine.id]", function() {
+			if($scope.currentLine != null)
+				$scope.currentLine = $.extend($scope.lines[$scope.currentLine.id], { clickPos : $scope.currentLine.clickPos, clickXy : $scope.currentLine.clickXy });
+		});
+
+		$scope.$watch("currentLine.actualPoints.length", function() {
+			// For drawing
+			if($scope.currentLine != null)
+				fp.addLine($scope.currentLine);
 		});
 
 		fp.onMoveEnd = function(bbox) {
@@ -111,6 +128,16 @@
 				$scope.currentMarker.descriptionHtml = $scope.marked($scope.currentMarker.description);
 		});
 
+		$scope.$watch("currentLine", function() {
+			if($scope.currentLine != null)
+				$scope.currentLine.descriptionHtml = $scope.marked($scope.currentLine.description);
+		});
+
+		$scope.$watch("currentLine.description", function() {
+			if($scope.currentLine != null)
+				$scope.currentLine.descriptionHtml = $scope.marked($scope.currentLine.description);
+		});
+
 		$scope.$watch("views", updateMenu);
 
 		$scope.marked = function(text) {
@@ -129,14 +156,17 @@
 		};
 
 		fp.onClickMarker = wrapApply($scope, function(marker) {
-			if($scope.currentMarker && $scope.currentMarker.id == marker.id) {
+			if($scope.currentMarker && $scope.currentMarker.id == marker.id)
 				$scope.currentMarker = null;
-				$scope.currentMarkerBkp = null;
-			} else {
+			else
 				$scope.currentMarker = marker;
-				$scope.currentMarkerBkp = angular.copy(marker);
-			}
 		});
+
+		fp.onClickLine = function(line, clickPos) {
+			$scope.currentLine = line;
+			$scope.currentLine.clickPos = clickPos;
+			$scope.onMove();
+		}.fpWrapApply($scope);
 
 		$scope.addMarker = function() {
 			var message = $scope.showMessage("info", "Please click on the map to add a marker.");
@@ -144,7 +174,7 @@
 				$scope.$apply(function() {
 					$scope.closeMessage(message);
 
-					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat }, style: 'red' }, function(err, marker) {
+					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
 						if(err)
 							return $scope.showMessage("error", err);
 
@@ -166,6 +196,53 @@
 
 		$scope.deleteMarker = function(marker) {
 			socket.emit("deleteMarker", marker, function(err) {
+				if(err)
+					$scope.showMessage("error", err);
+			});
+		};
+
+		$scope.addLine = function() {
+			socket.emit("addLine", { points: [ ] }, function(err, line) {
+				$scope.currentLine = line;
+				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.");
+
+				var lastPos = null;
+				var clickListener = function(pos) {
+					if(lastPos && pos.lon == lastPos.lon && pos.lat == lastPos.lat) {
+						$scope.closeMessage(message);
+
+						// Finish drawing
+						socket.emit("editLine", { id: line.id, points: line.points }, function(err, line) {
+							console.log("editLine");
+							if(err)
+								return $scope.showMessage("error", err);
+
+							$scope.currentLine = line;
+							$scope.openDialog("edit-line-dialog");
+						});
+					} else {
+						line.points.push(pos);
+						line.actualPoints.push(pos);
+						fp.addClickListener(clickListener);
+						lastPos = pos;
+					}
+				}.fpWrapApply($scope);
+
+				fp.addClickListener(clickListener);
+			});
+		};
+
+		$scope.saveLine = function(line) {
+			socket.emit("editLine", line, function(err) {
+				if(err)
+					$scope.dialogError = err;
+				else
+					$scope.closeDialog();
+			})
+		};
+
+		$scope.deleteLine = function(line) {
+			socket.emit("deleteLine", line, function(err) {
 				if(err)
 					$scope.showMessage("error", err);
 			});
@@ -279,10 +356,19 @@
 
 		socket.on("line", function(data) {
 			$scope.lines[data.id] = data;
+
+			fp.addLine(data);
 		});
 
 		socket.on("deleteLine", function(data) {
 			delete $scope.lines[data.id];
+
+			if($scope.currentLine && $scope.currentLine.id == data.id && $scope.dialog && $scope.dialog.attr("id") == "edit-line-dialog") {
+				$scope.currentLine = null;
+				$scope.closeDialog();
+			}
+
+			fp.deleteLine(data);
 		});
 
 		socket.on("view", function(data) {

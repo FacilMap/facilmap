@@ -10,6 +10,10 @@ html,body {
 	left: 0;
 }
 
+#map.fp-overFeature {
+	cursor: pointer;
+}
+
 #map.fp-clickHandler {
 	cursor: crosshair;
 }
@@ -137,7 +141,7 @@ textarea {
 	height: 5em;
 }
 
-#view-marker-popup {
+#view-marker-popup,#view-line-popup {
 	background: #fff;
 	position:absolute;
 	width: 350px;
@@ -148,7 +152,7 @@ textarea {
 	margin-left: -28px;
 }
 
-#view-marker-popup .content {
+#view-marker-popup .content,#view-line-popup .content {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -158,7 +162,7 @@ textarea {
 	overflow: auto;
 }
 
-#view-marker-popup:before {
+#view-marker-popup:before,#view-line-popup:before {
 	content:"";
 	position:absolute;
 	top:-50px;
@@ -173,7 +177,7 @@ textarea {
 	width:0;
 }
 
-#view-marker-popup .buttons {
+#view-marker-popup .buttons,#view-line-popup .buttons {
 	position: absolute;
 	background: #fff;
 	bottom: 0;
@@ -182,7 +186,7 @@ textarea {
 	box-shadow: 0 0 10px #fff;
 }
 
-#view-marker-popup .close-button {
+#view-marker-popup .close-button,#view-line-popup .close-button {
 	position: absolute;
 	top: 10px;
 	right: 20px;

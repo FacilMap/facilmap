@@ -7,7 +7,9 @@ var FacilPad = {
 	onMove : null,
 	onMoveEnd : null,
 	markersById : { },
-	onClickMarker : null
+	onClickMarker : null,
+	linesById : { },
+	onClickLine : null
 };
 
 (function(fp) {
@@ -46,18 +48,41 @@ var FacilPad = {
 		fp.map = new FacilMap.Map("map");
 		fp.map.addAllAvailableLayers();
 
-		fp.layerMarkers = new FacilMap.Layer.Markers("Markers", { displayInLayerSwitcher: false });
-		fp.map.addLayer(fp.layerMarkers);
+		//fp.layerMarkers = new FacilMap.Layer.Markers("Markers", { displayInLayerSwitcher: false });
+		//fp.map.addLayer(fp.layerMarkers);
+
+		fp.layerLines = new OpenLayers.Layer.Vector("Lines", { displayInLayerSwitcher: false, visibility: true });
+		fp.map.addLayer(fp.layerLines);
+
+		fp.featureHandler = new OpenLayers.Handler.Feature(null, fp.layerLines, {
+			"over" : function() {
+				$(fp.map.div).addClass("fp-overFeature");
+			},
+			"out" : function() {
+				$(fp.map.div).removeClass("fp-overFeature");
+			},
+			"click" : function(obj) {
+				obj.fpOnClick(fp.xyToPos(fp.featureHandler.fpXy));
+			}
+		}, { map: fp.map });
+		var handleBkp = fp.featureHandler.handle;
+		fp.featureHandler.handle = function(e) {
+			if(e.type == "click")
+				this.fpXy = new OpenLayers.Pixel(e.x, e.y);
+
+			return handleBkp.apply(this, arguments);
+		};
+		fp.featureHandler.activate();
 
 		fp.map.events.register("click", map, function(e) {
 			var listener = fp.clickListeners.shift();
-			if(!listener)
-				return;
 
-			if(fp.clickListeners.length == 0)
+			if(fp.clickListeners.length == 0) {
 				$(fp.map.div).removeClass("fp-clickHandler");
+				fp.featureHandler.activate();
+			}
 
-			listener(fp.xyToPos(e.xy));
+			listener && listener(fp.xyToPos(e.xy));
 		});
 
 		fp.map.events.register("move", this, function() {
@@ -111,7 +136,7 @@ var FacilPad = {
 			layers: [ ]
 		};
 		for(var i=0; i<fp.map.layers.length; i++) {
-			if(!fp.map.layers[i].isBaseLayer && fp.map.layers[i].visibility)
+			if(!fp.map.layers[i].isBaseLayer && fp.map.layers[i].displayInLayerSwitcher && fp.map.layers[i].visibility)
 				ret.layers.push(fp.map.layers[i].permalinkName || fp.map.layers[i].name);
 		}
 		return ret;
@@ -131,7 +156,7 @@ var FacilPad = {
 				fp.map.setBaseLayer(matching_layers[0]);
 
 			for(var i=0; i<fp.map.layers.length; i++) {
-				if(!fp.map.layers[i].isBaseLayer)
+				if(!fp.map.layers[i].isBaseLayer && fp.map.layers[i].displayInLayerSwitcher)
 					fp.map.layers[i].setVisibility(view.layers.indexOf(fp.map.layers[i].permalinkName) != -1 || view.layers.indexOf(fp.map.layers[i].name) != -1);
 			}
 		}
@@ -140,13 +165,19 @@ var FacilPad = {
 	fp.addMarker = function(marker) {
 		fp.deleteMarker(marker);
 
-		var icon = new OpenLayers.Icon("img/marker-"+marker.style+".png", new OpenLayers.Size(21,25), new OpenLayers.Pixel(-9, -25));
-
-		var markerObj = fp.layerMarkers.createMarker(new OpenLayers.LonLat(marker.position.lon, marker.position.lat), null, null, icon);
-		markerObj.events.register("click", markerObj, function(e) {
+		var style = {
+			externalGraphic: "img/marker-"+marker.style+".png",
+			graphicWidth: 21,
+			graphicHeight: 25,
+			graphicXOffset: -9,
+			graphicYOffset: -25
+		};
+		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.position.lon, marker.position.lat).transform(_p(), fp.map.getProjectionObject()), null, style);
+		feature.fpOnClick = function() {
 			fp.onClickMarker(marker);
-		});
-		fp.markersById[marker.id] = markerObj;
+		};
+		fp.layerLines.addFeatures([ feature ]);
+		fp.markersById[marker.id] = feature;
 	};
 
 	fp.deleteMarker = function(marker) {
@@ -155,10 +186,44 @@ var FacilPad = {
 			return;
 
 		delete fp.markersById[marker.id];
-		fp.layerMarkers.removeMarker(markerObj);
+		fp.layerLines.removeFeatures([ markerObj ]);
+	};
+
+	fp.addLine = function(line) {
+		fp.deleteLine(line);
+
+		if(line.actualPoints.length < 2)
+			return;
+
+		var style = {
+			strokeColor : '#'+line.colour,
+			strokeWidth : line.width,
+			strokeOpacity : 0.5
+		};
+
+		var points = [ ];
+		for(var i=0; i<line.actualPoints.length; i++) {
+			points.push(new OpenLayers.Geometry.Point(line.actualPoints[i].lon, line.actualPoints[i].lat));
+		}
+		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(_p(), fp.map.getProjectionObject()), null, style);
+		feature.fpOnClick = function(clickPos) {
+			fp.onClickLine(line, clickPos);
+		};
+		fp.layerLines.addFeatures([ feature ]);
+		fp.linesById[line.id] = feature;
+	};
+
+	fp.deleteLine = function(line) {
+		var lineObj = fp.linesById[line.id];
+		if(!lineObj)
+			return;
+
+		delete fp.linesById[line.id];
+		fp.layerLines.removeFeatures([lineObj]);
 	};
 
 	fp.addClickListener = function(listener) {
+		fp.featureHandler.deactivate();
 		fp.clickListeners.push(listener);
 		$(fp.map.div).addClass("fp-clickHandler");
 	};

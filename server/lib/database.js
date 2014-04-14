@@ -1,5 +1,6 @@
 var backend = require("./databaseBackendMongodb");
 var listeners = require("./listeners");
+var routing = require("./routing");
 
 function getPadData(padId, callback) {
 	backend.getPadData(padId, function(err, data) {
@@ -99,24 +100,33 @@ function getPadLines(padId, bbox) {
 }
 
 function createLine(padId, data, callback) {
-	backend.createLine(padId, data, function(err, data) {
+	_calculateRouting(data, function(err, data) {
 		if(err)
 			return callback(err);
 
-		// Todo: Coordinates
-		listeners.notifyPadListeners(data._pad, null, "line", data);
-		callback(null, data);
+		backend.createLine(padId, data, function(err, data) {
+			if(err)
+				return callback(err);
+
+			console.log("AAAAAAA", data.id);
+
+			// Todo: Coordinates
+			listeners.notifyPadListeners(data._pad, null, "line", data);
+			callback(null, data);
+		});
 	});
 }
 
-function updateLine(data, callback) {
-	backend.updateLine(data.id, data, function(err, data) {
-		if(err)
-			return callback(err);
+function updateLine(lineId, data, callback) {
+	_calculateRouting(data, function(err, data) {
+		backend.updateLine(lineId, data, function(err, data) {
+			if(err)
+				return callback(err);
 
-		// Todo: Coordinates
-		listeners.notifyPadListeners(data._pad, null, "line", data);
-		callback(null, data);
+			// Todo: Coordinates
+			listeners.notifyPadListeners(data._pad, null, "line", data);
+			callback(null, data);
+		});
 	});
 }
 
@@ -129,6 +139,21 @@ function deleteLine(lineId, callback) {
 		listeners.notifyPadListeners(data._pad, null, "deleteLine", { id: data.id });
 		callback(null, data);
 	});
+}
+
+function _calculateRouting(line, callback) {
+	if(line.points && line.points.length >= 2 && line.mode) {
+		routing.calculateRouting(line.points, line.mode, function(err, actualPoints) {
+			if(err)
+				return callback(err);
+
+			line.actualPoints = actualPoints;
+			callback(null, line);
+		});
+	} else {
+		line.actualPoints = line.points;
+		callback(null, line);
+	}
 }
 
 module.exports = {
