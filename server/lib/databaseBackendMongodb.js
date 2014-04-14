@@ -31,7 +31,7 @@ var lineSchema = mongoose.Schema({
 	points : [positionType],
 	mode : String,
 	colour : { type: String, default: "0000ff" },
-	width : { type: Number, default: 3 },
+	width : { type: Number, default: 4 },
 	description : String,
 	name : { type: String, default: "Untitled line" },
 	actualPoints : [positionType],

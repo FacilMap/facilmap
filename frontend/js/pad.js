@@ -198,7 +198,7 @@ var FacilPad = {
 		var style = {
 			strokeColor : '#'+line.colour,
 			strokeWidth : line.width,
-			strokeOpacity : 0.5
+			strokeOpacity : 0.7
 		};
 
 		var points = [ ];
