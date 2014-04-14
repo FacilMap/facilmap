@@ -355,6 +355,9 @@
 		};
 
 		$scope.oppositeColour = function(colour) {
+			if(!colour)
+				return "000000";
+
 			var d1 = parseInt(colour.substr(0, 2), 16);
 			var d2 = parseInt(colour.substr(2, 2), 16);
 			var d3 = parseInt(colour.substr(4, 2), 16);
