@@ -352,7 +352,14 @@
 				default:
 					return "";
 			}
-		}
+		};
+
+		$scope.oppositeColour = function(colour) {
+			var d1 = parseInt(colour.substr(0, 2), 16);
+			var d2 = parseInt(colour.substr(2, 2), 16);
+			var d3 = parseInt(colour.substr(4, 2), 16);
+			return ((d1+d2+d3)/3 <= 64) ? "ffffff" : "000000";
+		};
 	});
 
 	function bindSocketToScope($scope, socket) {

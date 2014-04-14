@@ -199,3 +199,7 @@ textarea {
 .pos,.distance {
 	font-style: italic;
 }
+
+#edit-line-colour {
+	width: auto;
+}

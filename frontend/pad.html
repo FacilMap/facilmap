@@ -120,6 +120,9 @@
 						<option value="pedestrian">Pedestrian</option>
 					</select></dd>
 
+					<dt><label for="edit-line-colour">Colour</label></dt>
+					<dd><input id="edit-line-colour" ng-model="currentLine.colour" ng-style="{ 'background-color': '#'+currentLine.colour, color: '#'+oppositeColour(currentLine.colour) }"></dd>
+
 					<dt><label for="edit-line-description">Description</label></dt>
 					<dd><textarea id="edit-line-description" ng-model="currentLine.description"></textarea></dd>
 				</dl>
