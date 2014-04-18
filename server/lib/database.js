@@ -175,6 +175,7 @@ function _getLineDataFunc(line) {
 }
 
 module.exports = {
+	connect : backend.connect,
 	getPadData : getPadData,
 	updatePadData : updatePadData,
 	getViews : getViews,

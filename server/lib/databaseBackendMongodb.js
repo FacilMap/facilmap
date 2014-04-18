@@ -2,7 +2,15 @@ var mongoose = require("mongoose");
 var config = require("../config");
 var utils = require("./utils");
 
-mongoose.connect(config.db);
+function connect(callback) {
+	var connectionString = "mongodb://"
+		+ (config.db.user ? encodeURIComponent(config.db.user) + ":" + encodeURIComponent(config.db.password) + "@" : "")
+		+ config.db.host
+		+ (config.db.port ? ":" + config.db.port : "")
+		+ "/" + config.db.database;
+	mongoose.connect(connectionString);
+	callback();
+}
 
 var ObjectId = mongoose.Schema.Types.ObjectId;
 
@@ -160,6 +168,7 @@ function _fixIdStream(stream) {
 }
 
 module.exports = {
+	connect : connect,
 	getPadData : getPadData,
 	createPad : createPad,
 	updatePadData : updatePadData,
