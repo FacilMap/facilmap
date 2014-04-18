@@ -99,8 +99,10 @@ io.sockets.on("connection", function(socket) {
 });
 
 function _sendData(socket, eventName, err, data) {
-	if(err)
+	if(err) {
+		console.warn(err, err.stack);
 		return socket.emit("error", err);
+	}
 
 	socket.emit(eventName, data);
 }
@@ -110,6 +112,7 @@ function _sendStreamData(socket, eventName, stream) {
 		if(data != null)
 			socket.emit(eventName, data);
 	}).on("error", function(err) {
+		console.warn(err, err.stack);
 		socket.emit("error", err);
 	})
 }

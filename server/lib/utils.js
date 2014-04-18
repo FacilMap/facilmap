@@ -12,7 +12,9 @@ function isInBbox(position, bbox) {
 function filterStream(inStream, filterFunction) {
 	var ret = new stream.Readable({ objectMode: true });
 	inStream.on("data", function(data) {
-		ret.push(filterFunction(data));
+		var data = filterFunction(data);
+		if(data != null)
+			ret.push(data);
 	}).on("end", function() {
 		ret.push();
 	}).on("error", function(err) {
