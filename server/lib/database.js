@@ -17,7 +17,8 @@ function updatePadData(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(padId, null, "padData", data);
+
+		listeners.notifyPadListeners(padId, "padData", data);
 		callback(null, data);
 	});
 }
@@ -34,7 +35,7 @@ function createView(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, null, "view", data);
+		listeners.notifyPadListeners(data._pad, "view", data);
 		callback(null, data);
 	});
 }
@@ -47,7 +48,7 @@ function updateView(viewId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, null, "view", data);
+		listeners.notifyPadListeners(data._pad, "view", data);
 		callback(null, data);
 	});
 }
@@ -57,7 +58,7 @@ function deleteView(viewId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, null, "deleteView", { id: data.id });
+		listeners.notifyPadListeners(data._pad, "deleteView", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -71,7 +72,7 @@ function createMarker(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(padId, data.position, "marker", data);
+		listeners.notifyPadListeners(padId, "marker", _getMarkerDataFunc(data));
 		callback(null, data);
 	});
 }
@@ -81,7 +82,7 @@ function updateMarker(markerId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, data.position, "marker", data);
+		listeners.notifyPadListeners(data._pad, "marker", _getMarkerDataFunc(data));
 		callback(null, data);
 	});
 }
@@ -91,7 +92,7 @@ function deleteMarker(markerId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, data.position, "deleteMarker", { id: data.id });
+		listeners.notifyPadListeners(data._pad, "deleteMarker", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -109,10 +110,7 @@ function createLine(padId, data, callback) {
 			if(err)
 				return callback(err);
 
-			console.log("AAAAAAA", data.id);
-
-			// Todo: Coordinates
-			listeners.notifyPadListeners(data._pad, null, "line", data);
+			listeners.notifyPadListeners(data._pad, "line", _getLineDataFunc(data));
 			callback(null, data);
 		});
 	});
@@ -124,8 +122,7 @@ function updateLine(lineId, data, callback) {
 			if(err)
 				return callback(err);
 
-			// Todo: Coordinates
-			listeners.notifyPadListeners(data._pad, null, "line", data);
+			listeners.notifyPadListeners(data._pad, "line", _getLineDataFunc(data));
 			callback(null, data);
 		});
 	});
@@ -136,8 +133,7 @@ function deleteLine(lineId, callback) {
 		if(err)
 			return callback(err);
 
-		// Todo: Coordinates
-		listeners.notifyPadListeners(data._pad, null, "deleteLine", { id: data.id });
+		listeners.notifyPadListeners(data._pad, "deleteLine", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -157,6 +153,25 @@ function _calculateRouting(line, callback) {
 		line.time = null;
 		callback(null, line);
 	}
+}
+
+function _getMarkerDataFunc(marker) {
+	return function(bbox) {
+		if(!utils.isInBbox(marker.position, bbox))
+			return null;
+
+		return marker;
+	};
+}
+
+function _getLineDataFunc(line) {
+	return function(bbox) {
+		var strippedLine = routing.prepareLineForBoundingBox(line, bbox);
+		if(strippedLine.actualPoints.length <= 1)
+			return null;
+
+		return strippedLine;
+	};
 }
 
 module.exports = {

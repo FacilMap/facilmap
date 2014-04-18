@@ -91,7 +91,7 @@ var FacilPad = {
 
 		fp.map.events.register("moveend", this, function(){
 			var x = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
-			fp.onMoveEnd({ top: x.top, left: x.left, bottom: x.bottom, right: x.right });
+			fp.onMoveEnd({ top: x.top, left: x.left, bottom: x.bottom, right: x.right, resolution: fp.getResolution() });
 		});
 
 		callback();
@@ -235,6 +235,12 @@ var FacilPad = {
 	fp.posToXy = function(pos) {
 		var lonlat = new OpenLayers.LonLat(pos.lon, pos.lat).transform(_p(), fp.map.getProjectionObject());
 		return fp.map.getViewPortPxFromLonLat(lonlat);
+	};
+
+	fp.getResolution = function() {
+		var xy = fp.posToXy(new OpenLayers.LonLat(0, 0));
+		xy.x += 1;
+		return fp.xyToPos(xy).lon;
 	};
 
 })(FacilPad);

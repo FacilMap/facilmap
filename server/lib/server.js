@@ -4,6 +4,8 @@ var config = require("../config");
 var listeners = require("./listeners");
 var database = require("./database");
 var domain = require("domain");
+var utils = require("./utils");
+var routing = require("./routing");
 
 var app = http.createServer();
 app.listen(config.port, config.host);
@@ -38,7 +40,12 @@ io.sockets.on("connection", function(socket) {
 			// TODO: Only get objects for difference to last bbox
 
 			_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
-			_sendStreamData(socket, "line", database.getPadLines(socket.padId, socket.bbox));
+			_sendStreamData(socket, "line", utils.filterStream(database.getPadLines(socket.padId, socket.bbox), function(line) {
+				var strippedLine = routing.prepareLineForBoundingBox(line, bbox);
+				if(strippedLine.actualPoints.length < 2)
+					return null;
+				return strippedLine;
+			}));
 		},
 
 		disconnect : function() {
@@ -100,7 +107,8 @@ function _sendData(socket, eventName, err, data) {
 
 function _sendStreamData(socket, eventName, stream) {
 	stream.on("data", function(data) {
-		socket.emit(eventName, data);
+		if(data != null)
+			socket.emit(eventName, data);
 	}).on("error", function(err) {
 		socket.emit("error", err);
 	})

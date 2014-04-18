@@ -3,26 +3,16 @@ var utils = require("./utils");
 
 var listeners = { };
 
-function notifyPadListeners(padId, position, eventType, data) {
-	getPadListeners(padId, position).forEach(function(it) {
-		it.emit(eventType, data);
+function notifyPadListeners(padId, eventType, getData) {
+	var isFunc = (typeof getData == "function");
+
+	( listeners[padId] || [ ]).forEach(function(listener) {
+		var data = isFunc ? getData(listener.bbox) : getData;
+		if(data == null)
+			return;
+
+		listener.emit(eventType, data);
 	});
-}
-
-function getPadListeners(padId, position) {
-	if(listeners[padId] == null)
-		return [ ];
-
-	if(position == null) {
-		return [ ].concat(listeners[padId]);
-	}
-
-	var ret = [ ];
-	listeners[padId].forEach(function(it) {
-		if(it.bbox && utils.isInBbox(position, it.bbox))
-			ret.push(it);
-	});
-	return ret;
 }
 
 function addPadListener(listener) {
@@ -46,7 +36,6 @@ function removePadListener(listener) {
 
 module.exports = {
 	notifyPadListeners : notifyPadListeners,
-	getPadListeners : getPadListeners,
 	addPadListener : addPadListener,
 	removePadListener: removePadListener
 };
