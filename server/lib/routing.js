@@ -51,7 +51,7 @@ function prepareLineForBoundingBox(line, bbox) {
 
 function prepareForBoundingBox(posList, bbox) {
 	posList = _stripPointsOutsideBbox(posList, bbox);
-	posList = _stripPointsToMinimumDistance(posList, bbox.resolution);
+	posList = _stripPointsToMinimumDistance(posList, bbox.resolution*4);
 	return posList;
 }
 
