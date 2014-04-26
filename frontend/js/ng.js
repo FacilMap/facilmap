@@ -47,7 +47,7 @@
 
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
-		$("#toolbox").menu();
+		setTimeout(function() { $("#toolbox").menu(); }, 0);
 		function updateMenu() {
 			setTimeout(function() { $("#toolbox").menu("destroy").menu(); }, 0);
 		}
@@ -67,6 +67,7 @@
 		$scope.error = null;
 		$scope.drawing = false;
 		$scope.bbox = null;
+		$scope.layers = fp.getLayerInfo();
 
 		socket.emit("setPadId", FacilPad.padId);
 
@@ -100,6 +101,10 @@
 				$scope.currentLine = $.extend($scope.lines[$scope.currentLine.id], { clickPos : $scope.currentLine.clickPos, clickXy : $scope.currentLine.clickXy });
 		});
 
+		$scope.$watch("layers", function() {
+			updateMenu();
+		});
+
 		fp.onMoveEnd = function(bbox) {
 			socket.emit("updateBbox", bbox);
 
@@ -118,9 +123,7 @@
 				return;
 
 			$scope.loaded = true;
-			setTimeout(function() { // Avoid error with onMove being executed while inside $apply()
-				FacilPad.displayView(newValue.defaultView);
-			}, 0);
+			FacilPad.displayView(newValue.defaultView);
 		});
 
 		$scope.$watch("currentMarker", function() {
@@ -385,6 +388,11 @@
 			var d2 = parseInt(colour.substr(2, 2), 16);
 			var d3 = parseInt(colour.substr(4, 2), 16);
 			return ((d1+d2+d3)/3 <= 64) ? "ffffff" : "000000";
+		};
+
+		$scope.setLayer = function(layer) {
+			fp.showLayer(layer.permalinkName, !layer.visibility);
+			$scope.layers = fp.getLayerInfo();
 		};
 	});
 

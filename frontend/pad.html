@@ -23,8 +23,15 @@
 				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
 				<li><a href="javascript:" ng-click="openDialog('manage-views-dialog')">Manage views</a></li>
 			</ul></li>
+			<li><a href="javascript:">Layers</a><ul>
+				<li ng-repeat="layer in layers">
+					<a href="javascript:" ng-click="setLayer(layer)">
+						<input type="{{layer.isBaseLayer ? 'radio' : 'checkbox'}}" ng-checked="layer.visibility" />
+						{{layer.name}}
+					</a>
+				</li>
+			</ul></li>
 			<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')">Pad settings</a></li>
-			<!--<li><a href="javascript:">Layers</a></li>-->
 		</ul>
 
 		<div id="messages">
