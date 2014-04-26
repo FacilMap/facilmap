@@ -38,7 +38,10 @@
 					<dt><label for="save-view-name">Name</label></dt>
 					<dd><input id="save-view-name" ng-model="saveViewName"></dd>
 				</dl>
-				<div><button ng-click="saveView()">Save</button></div>
+				<div>
+					<button type="submit" ng-click="saveView()">Save</button>
+					<button ng-click="saveView(true)">Save and make default view</button>
+				</div>
 			</form>
 		</div>
 

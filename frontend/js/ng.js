@@ -254,14 +254,25 @@
 			fp.displayView(view);
 		};
 
-		$scope.saveView = function() {
+		$scope.saveView = function(makeDefault) {
 			var view = fp.getCurrentView();
 			view.name = $scope.saveViewName;
-			socket.emit("addView", view, function(err) {
+			socket.emit("addView", view, function(err, view) {
 				if(err)
-					$scope.dialogError = err;
-				else
+					return $scope.dialogError = err;
+
+				if(makeDefault) {
+					socket.emit("editPad", { defaultView: view.id }, function(err) {
+						if(err)
+							return $scope.dialogError = err;
+
+						$scope.saveViewName = null;
+						$scope.closeDialog();
+					});
+				} else {
+					$scope.saveViewName = null;
 					$scope.closeDialog();
+				}
 			});
 		};
 
