@@ -110,11 +110,11 @@ function getPadLines(padId, bbox) {
 }
 
 function createLine(padId, data, callback) {
-	_calculateRouting(data, function(err, data, actualPoints) {
+	backend.createLine(padId, data, function(err, data) {
 		if(err)
 			return callback(err);
 
-		backend.createLine(padId, data, function(err, data) {
+		_calculateRouting(data, function(err, data, actualPoints) {
 			if(err)
 				return callback(err);
 
@@ -130,11 +130,11 @@ function createLine(padId, data, callback) {
 }
 
 function updateLine(lineId, data, callback) {
-	_calculateRouting(data, function(err, data, actualPoints) {
-		backend.updateLine(lineId, data, function(err, data) {
-			if(err)
-				return callback(err);
+	backend.updateLine(lineId, data, function(err, data) {
+		if(err)
+			return callback(err);
 
+		_calculateRouting(data, function(err, data, actualPoints) {
 			backend.setLinePoints(lineId, actualPoints, function(err) {
 				if(err)
 					return callback;
