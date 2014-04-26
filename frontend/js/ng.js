@@ -64,10 +64,11 @@
 		$scope.currentLine = null;
 		$scope.messages = [ ];
 		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
-		$scope.error = false;
+		$scope.error = null;
 		$scope.drawing = false;
+		$scope.bbox = null;
 
-		socket.emit("setPadId", location.pathname.match(/[^\/]*$/)[0]);
+		socket.emit("setPadId", FacilPad.padId);
 
 		bindSocketToScope($scope, socket);
 
@@ -101,9 +102,18 @@
 
 		fp.onMoveEnd = function(bbox) {
 			socket.emit("updateBbox", bbox);
+
+			$scope.$apply(function() {
+				$scope.bbox = bbox;
+			});
 		};
 
 		$scope.$watch("padData", function(newValue) {
+			if($scope.error) {
+				$scope.closeMessage($scope.error);
+				$scope.error = null;
+			}
+
 			if(newValue == null || $scope.loaded)
 				return;
 
@@ -425,10 +435,16 @@
 		});
 
 		socket.on("disconnect", function() {
-			$scope.error = true;
+			$scope.error = $scope.showMessage("error", "The connection to the server was lost.");
+			$scope.markers = { };
+			$scope.lines = { };
+			$scope.views = { };
+		});
 
-			$scope.showMessage("error", "The connection to the server was lost.");
-		})
+		socket.on("reconnect", function() {
+			socket.emit("setPadId", FacilPad.padId);
+			socket.emit("updateBbox", $scope.bbox);
+		});
 	}
 
 	$(function() {

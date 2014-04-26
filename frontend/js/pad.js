@@ -237,10 +237,6 @@ var FacilPad = {
 		return fp.map.getViewPortPxFromLonLat(lonlat);
 	};
 
-	fp.getResolution = function() {
-		var xy = fp.posToXy(new OpenLayers.LonLat(0, 0));
-		xy.x += 1;
-		return fp.xyToPos(xy).lon;
-	};
+	fp.padId = location.pathname.match(/[^\/]*$/)[0];
 
 })(FacilPad);
