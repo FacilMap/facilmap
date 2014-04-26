@@ -27,6 +27,60 @@ function filterStream(inStream, filterFunction) {
 	return ret;
 }
 
+function filterStreamAsync(inStream, filterFunction) {
+	var error = false;
+
+	var ret = new stream.Readable({ objectMode: true });
+
+	var running = false;
+	var queue = [ ];
+
+	function handleQueue() {
+		if(error || running)
+			return;
+
+		if(queue.length > 0) {
+			var next = queue.shift();
+			if(next == null) {
+				ret.push();
+			} else {
+				running = true;
+				filterFunction(next, function(err, newData) {
+					running = false;
+
+					if(error)
+						return;
+
+					if(err) {
+						error = true;
+						ret.emit("error", err);
+					} else if(newData != null) {
+						ret.push(newData);
+					}
+
+					setImmediate(handleQueue);
+				});
+			}
+		}
+	}
+
+	inStream.on("data", function(data) {
+		if(data != null)
+			queue.push(data);
+		handleQueue();
+	}).on("end", function() {
+		queue.push(null);
+		handleQueue();
+	}).on("error", function(err) {
+		ret.emit("error", err);
+	});
+
+	ret._read = function() {
+	};
+
+	return ret;
+}
+
 function extend(obj1, obj2) {
 	for(var i=1; i<arguments.length; i++) {
 		for(var j in arguments[i]) {
@@ -62,6 +116,7 @@ function calculateDistance(posList) {
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
+	filterStreamAsync : filterStreamAsync,
 	extend : extend,
 	calculateDistance : calculateDistance
 };

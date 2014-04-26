@@ -210,6 +210,7 @@
 
 		$scope.addLine = function() {
 			socket.emit("addLine", { points: [ ] }, function(err, line) {
+				line.actualPoints = [ ];
 				$scope.currentLine = line;
 				$scope.drawing = true;
 				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.");

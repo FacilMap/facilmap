@@ -4,6 +4,13 @@ var utils = require("./utils");
 var ROUTING_URL = "http://open.mapquestapi.com/directions/v2/route";
 var API_KEY = "Fmjtd%7Cluur2qubl9%2C80%3Do5-9aangr";
 
+// The OpenLayers resolution for zoom level 1 is 0.7031249999891753
+// and for zoom level 20 0.0000013411044763239684
+// This is the distance of one pixel on the map in degrees
+// The resolution for zoom level 19 is the resolution for zoom level 20 times 2, and so on.
+// As we don’t need one route point per pixel, we raise the value a bit
+var RESOLUTION_20 = 0.0000013411044763239684 * 4;
+
 function calculateRouting(points, mode, callback) {
 	var json = {
 		locations : [ ],
@@ -38,78 +45,74 @@ function calculateRouting(points, mode, callback) {
 		for(var i=0; i<body.route.shape.shapePoints.length; i+=2) {
 			ret.actualPoints.push({ lat: 1*body.route.shape.shapePoints[i], lon: 1*body.route.shape.shapePoints[i+1] });
 		}
+		_calculateZoomLevels(ret.actualPoints);
 
 		callback(null, ret);
 	});
 }
 
-function prepareLineForBoundingBox(line, bbox) {
-	var ret = utils.extend({ }, line);
-	ret.actualPoints = prepareForBoundingBox(line.actualPoints, bbox);
-	return ret;
-}
+function _calculateZoomLevels(points) {
+	var segments = [ ];
+	var dist = 0;
+	for(var i=0; i<points.length; i++) {
+		if(i > 0)
+			dist += _distance(points[i-1], points[i]);
+		segments[i] = dist / RESOLUTION_20;
 
-function prepareForBoundingBox(posList, bbox) {
-	posList = _stripPointsOutsideBbox(posList, bbox);
-	posList = _stripPointsToMinimumDistance(posList, bbox.resolution*4);
-	return posList;
-}
+		points[i].zoom = null;
 
-function _stripPointsOutsideBbox(posList, bbox) {
-	var inBbox = [ ];
-	for(var i=0; i<posList.length; i++) {
-		inBbox[i] = utils.isInBbox(posList[i], bbox);
-	}
-
-	var ret = [ ];
-	for(var i=0; i<posList.length; i++) {
-		if(inBbox[i] || inBbox[i-1] || inBbox[i+1])
-			ret.push(posList[i]);
-	}
-	return ret;
-}
-
-function _stripPointsToMinimumDistance(posList, minDist) {
-	if(posList.length <= 2 || minDist == null || minDist <= 0)
-		return posList;
-
-	function dist(pos1, pos2) {
-		return Math.sqrt(Math.pow(pos1.lon-pos2.lon, 2) + Math.pow(pos1.lat-pos2.lat, 2));
-	}
-
-	function percentagePos(pos1, pos2, percentage) {
-		return {
-			lat : pos1.lat + percentage * (pos2.lat - pos1.lat),
-			lon : pos1.lon + percentage * (pos2.lon - pos1.lon)
-		};
-	}
-
-	var ret = [ posList[0] ];
-
-	var currentDist = 0;
-	var lastPoint = ret[0];
-	for(var i=1; i<posList.length; i++) {
-		var thisDist = dist(lastPoint, posList[i]);
-		if(currentDist + thisDist < minDist) {
-			currentDist += thisDist;
-			lastPoint = posList[i];
-		} else {
-			// Add the point where currentDist is exactly minDist
-			lastPoint = percentagePos(lastPoint, posList[i], (minDist-currentDist) / thisDist);
-			ret.push(lastPoint);
-			//ret.push(posList[i])
-			currentDist = 0;
-
-			// And then do the same thing with this point again
-			i--;
+		if(i != 0 && i != points.length-1) {
+			var lastSegments = segments[i-1];
+			var thisSegments = segments[i];
+			for(var j = 0; j < 20; j++) {
+				lastSegments = Math.floor(lastSegments / 2);
+				thisSegments = Math.floor(thisSegments / 2);
+				if(lastSegments == thisSegments) {
+					points[i].zoom = 20 - j;
+					break;
+				}
+			}
 		}
+
+		if(points[i].zoom == null)
+			points[i].zoom = 1;
 	}
+}
 
-	ret.push(posList[posList.length-1]);
+function _distance(pos1, pos2) {
+	return Math.sqrt(Math.pow(pos1.lon-pos2.lon, 2) + Math.pow(pos1.lat-pos2.lat, 2));
+}
 
+function prepareForBoundingBox(points, bbox) {
+	points = _filterByZoom(points, bbox.zoom);
+	points = _filterByBbox(points, bbox);
+	return points;
+}
+
+function _filterByZoom(points, zoom) {
+	var ret = [ ];
+	for(var i=0; i<points.length; i++) {
+		if(points[i].zoom <= zoom)
+			ret.push(points[i]);
+	}
+	return ret;
+}
+
+function _filterByBbox(points, bbox) {
+	var ret = [ ];
+	var lastIn = false;
+	for(var i=0; i<points.length; i++) {
+		var isIn = utils.isInBbox(points[i], bbox);
+		if(isIn && !lastIn && i >= 1) {
+			ret.push(points[i-1]);
+		}
+		if(isIn || lastIn)
+			ret.push(points[i]);
+
+		lastIn = isIn;
+	}
 	return ret;
 }
 
 exports.calculateRouting = calculateRouting;
 exports.prepareForBoundingBox = prepareForBoundingBox;
-exports.prepareLineForBoundingBox = prepareLineForBoundingBox;

@@ -91,7 +91,7 @@ var FacilPad = {
 
 		fp.map.events.register("moveend", this, function(){
 			var x = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
-			fp.onMoveEnd({ top: x.top, left: x.left, bottom: x.bottom, right: x.right, resolution: fp.getResolution() });
+			fp.onMoveEnd({ top: x.top, left: x.left, bottom: x.bottom, right: x.right, zoom: fp.map.getZoom() });
 		});
 
 		callback();
@@ -192,7 +192,7 @@ var FacilPad = {
 	fp.addLine = function(line) {
 		fp.deleteLine(line);
 
-		if(line.actualPoints.length < 2)
+		if(!line.actualPoints || line.actualPoints.length < 2)
 			return;
 
 		var style = {

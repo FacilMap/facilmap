@@ -42,10 +42,17 @@ var lineSchema = mongoose.Schema({
 	width : { type: Number, default: 4 },
 	description : String,
 	name : { type: String, default: "Untitled line" },
-	actualPoints : [positionType],
 	distance : Number,
 	time : Number
 });
+
+var linePointsSchema = mongoose.Schema(utils.extend({ }, positionType, {
+	zoom : Number,
+	idx : Number,
+	_line : { type: ObjectId, ref: "Line" }
+}));
+
+linePointsSchema.index({ _id: 1, idx: 1 });
 
 var viewSchema = mongoose.Schema({
 	_pad : { type: String, ref: "Pad" },
@@ -63,6 +70,7 @@ var padSchema = mongoose.Schema({
 
 var Marker = mongoose.model("Marker", markerSchema);
 var Line = mongoose.model("Line", lineSchema);
+var LinePoints = mongoose.model("LinePoints", linePointsSchema);
 var View = mongoose.model("View", viewSchema);
 var Pad = mongoose.model("Pad", padSchema);
 
@@ -96,15 +104,12 @@ function deleteView(viewId, callback) {
 }
 
 function getPadMarkers(padId, bbox) {
+	var bboxCondition = _makeBboxCondition(bbox);
 	var condition = {
 		"_pad" : padId,
-		"position.lat" : { $lte: bbox.top, $gte: bbox.bottom }
+		"position.lat" : bboxCondition.lat,
+		"position.lon" : bboxCondition.lon
 	};
-
-	if(bbox.right < bbox.left) // Bbox spans over lon=180
-		condition["position.lon"] = { $or: [ { $gte: bbox.left }, { $lte: bbox.right } ] };
-	else
-		condition["position.lon"] = { $gte: bbox.left, $lte: bbox.right };
 
 	return _fixIdStream(Marker.find(condition).stream());
 }
@@ -122,7 +127,7 @@ function deleteMarker(markerId, callback) {
 	Marker.findByIdAndRemove(markerId, _fixIdCallback(callback));
 }
 
-function getPadLines(padId, bbox) {
+function getPadLines(padId, bboxWithZoom) {
 	var condition = { // TODO
 		"_pad" : padId
 	};
@@ -141,6 +146,39 @@ function updateLine(lineId, data, callback) {
 
 function deleteLine(lineId, callback) {
 	Line.findByIdAndRemove(lineId, _fixIdCallback(callback));
+}
+
+function getLinePointsByBbox(lineId, bboxWithZoom, callback) {
+	var bboxCondition = _makeBboxCondition(bboxWithZoom);
+	var condition = {
+		"_line" : lineId,
+		"zoom" : { $lte: bboxWithZoom.zoom },
+		"lat" : bboxCondition.lat,
+		"lon" : bboxCondition.lon
+	};
+
+	LinePoints.find(condition, "idx zoom", { sort: "idx" }).exec(callback);
+}
+
+function getLinePointsByIdx(lineId, indexes, callback) {
+	LinePoints.find({ _line: lineId, idx: { $in: indexes } }).select("lon lat").sort("idx").exec(callback);
+}
+
+function setLinePoints(lineId, points, callback) {
+	LinePoints.remove({ _line: lineId }, function(err) {
+		if(err)
+			return callback(err);
+
+		var create = [ ];
+		for(var i=0; i<points.length; i++) {
+			create.push(utils.extend({ }, points[i], { _line: lineId, idx: i }));
+		}
+
+		if(create.length > 0)
+			LinePoints.create(create, callback);
+		else
+			callback();
+	});
 }
 
 function _fixId(data) {
@@ -167,6 +205,19 @@ function _fixIdStream(stream) {
 	return utils.filterStream(stream, _fixId);
 }
 
+function _makeBboxCondition(bbox) {
+	var condition = {
+		"lat" : { $lte: bbox.top, $gte: bbox.bottom }
+	};
+
+	if(bbox.right < bbox.left) // Bbox spans over lon=180
+		condition["lon"] = { $or: [ { $gte: bbox.left }, { $lte: bbox.right } ] };
+	else
+		condition["lon"] = { $gte: bbox.left, $lte: bbox.right };
+
+	return condition;
+}
+
 module.exports = {
 	connect : connect,
 	getPadData : getPadData,
@@ -183,5 +234,8 @@ module.exports = {
 	getPadLines : getPadLines,
 	createLine : createLine,
 	updateLine : updateLine,
-	deleteLine : deleteLine
+	deleteLine : deleteLine,
+	getLinePointsByBbox : getLinePointsByBbox,
+	getLinePointsByIdx : getLinePointsByIdx,
+	setLinePoints : setLinePoints
 };
