@@ -32,8 +32,8 @@ function calculateRouting(points, mode, callback) {
 
 		if(!body || !body.route)
 			return callback("Invalid response from routing server.");
-		if(body.route.routeError.message)
-			return callback(body.route.routeError.message);
+		if(body.route.routeError.message || (body.info.statuscode != 0 && body.info.messages.length > 0))
+			return callback(body.route.routeError.message || body.info.messages.join(" "));
 		if(!body.route.shape || !body.route.shape.shapePoints)
 			return callback("Invalid response from routing server.");
 
