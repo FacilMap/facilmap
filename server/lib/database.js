@@ -135,6 +135,9 @@ function updateLine(lineId, data, callback) {
 			return callback(err);
 
 		_calculateRouting(data, function(err, data, actualPoints) {
+			if(err)
+				return callback(err);
+
 			backend.setLinePoints(lineId, actualPoints, function(err) {
 				if(err)
 					return callback;
