@@ -41,11 +41,15 @@ var FacilPad = {
 			"marked" : loadJavaScript.bind(null, "lib/marked-0.3.2.min.js"),
 			"jqSpinner" : [ "jQuery", loadJavaScript.bind(null, "lib/jquery.ui.spinner-1.10.4.min.js") ],
 
-			"loadMap" : [ "FacilMap", loadMap ],
 			"jQuery" : [ "FacilMap", function(next) {
 				jQuery = $ = FacilMap.$;
 				next();
 			}],
+			"ready" : [ "jQuery", function(next) {
+				$(document).ready(function() { next(); })
+			}],
+
+			"loadMap" : [ "FacilMap", "ready", "jQuery", loadMap ],
 			"ng" : [ "angular", "jQuery", "socketIo", "loadMap", "marked", "jqSpinner", loadJavaScript.bind(null, "js/ng.js") ]
 		});
 	});
@@ -53,6 +57,8 @@ var FacilPad = {
 	function loadMap(callback) {
 		var fm = FacilMap;
 		var ol = OpenLayers;
+
+		$("button,input[type=submit],input[type=button],input[type=reset]").button();
 
 		fp.map = new FacilMap.Map("map");
 
