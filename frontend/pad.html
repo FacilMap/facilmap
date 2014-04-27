@@ -6,6 +6,7 @@
 		<script src="js/pad.js"></script>
 		<style type="text/css">
 			@import "pad.css";
+			@import "lib/jquery.ui.spinner-1.10.4.min.css";
 		</style>
 	</head>
 	<body>
@@ -134,7 +135,7 @@
 					<dd><input id="edit-line-colour" ng-model="currentLine.colour" ng-style="{ 'background-color': '#'+currentLine.colour, color: '#'+oppositeColour(currentLine.colour) }"></dd>
 
 					<dt><label for="edit-line-width">Width</label></dt>
-					<dd><input id="edit-line-width" ng-model="currentLine.width" /></dd>
+					<dd><input id="edit-line-width" ng-model="currentLine.width" fp-spinner /></dd>
 
 					<dt><label for="edit-line-description">Description</label></dt>
 					<dd><textarea id="edit-line-description" ng-model="currentLine.description"></textarea></dd>

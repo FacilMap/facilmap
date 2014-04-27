@@ -35,7 +35,7 @@ var FacilPad = {
 			"socketIo" : loadJavaScript.bind(null, fp.SERVER+"/socket.io/socket.io.js"),
 			"marked" : loadJavaScript.bind(null, "lib/marked-0.3.2.min.js"),
 			//"jqColourPicker" : [ "jQuery", loadJavaScript.bind(null, "lib/jquery.colourPicker.min.js") ],
-			//"jqSpinner" : [ "jQuery", loadJavaScript.bind(null, "lib/jquery.ui.spinner-1.10.4.js") ],
+			"jqSpinner" : [ "jQuery", loadJavaScript.bind(null, "lib/jquery.ui.spinner-1.10.4.min.js") ],
 
 			"loadMap" : [ "FacilMap", loadMap ],
 			"jQuery" : [ "FacilMap", function(next) {
@@ -64,7 +64,7 @@ var FacilPad = {
 
 				next();
 			}],*/
-			"ng" : [ "angular", "jQuery", "socketIo", "loadMap", "marked", /*"initColourPicker", "jqSpinner",*/ loadJavaScript.bind(null, "js/ng.js") ]
+			"ng" : [ "angular", "jQuery", "socketIo", "loadMap", "marked", /*"initColourPicker",*/ "jqSpinner", loadJavaScript.bind(null, "js/ng.js") ]
 		});
 	});
 

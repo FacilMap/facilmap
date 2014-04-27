@@ -45,6 +45,15 @@
 		}
 	});
 
+	facilpadApp.directive("fpSpinner", function() {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				$(element).spinner();
+			}
+		}
+	});
+
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		setTimeout(function() { $("#toolbox").menu(); }, 0);
