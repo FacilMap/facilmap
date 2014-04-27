@@ -56,6 +56,9 @@ var FacilPad = {
 
 		fp.map = new FacilMap.Map("map");
 
+		// Deal with z-indexes: Popups should be below map controls
+		$("#view-marker-popup,#view-line-popup").appendTo(fp.map.viewPortDiv);
+
 		fp.map.addLayer(new fm.Layer.OSM.Mapnik(ol.i18n("Mapnik"), { permalinkName : "Mpnk" }));
 		fp.map.addLayer(new fm.Layer.OSM.MapSurfer.Road(ol.i18n("MapSurfer Road"), { permalinkName : "MSfR" }));
 		fp.map.addLayer(new fm.Layer.OSM.CycleMap(ol.i18n("OpenCycleMap"), { permalinkName : "OCyc" }));

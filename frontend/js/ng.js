@@ -54,7 +54,7 @@
 		}
 	});
 
-	facilpadApp.directive("fpColourPicker", function($compile) {
+	facilpadApp.directive("fpColourPicker", function() {
 		var colourPicker = $("#colour-picker").hide();
 
 		function textColour(colour) {
@@ -97,6 +97,37 @@
 				});
 			}
 		}
+	});
+
+	facilpadApp.directive("fpPopup", function() {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				var el = $(element);
+
+				el.addClass("fp-popup fp-popup-hidden fp-popup-bottom fp-popup-right");
+
+				scope.$watchCollection(attrs.fpPopup, function(v) {
+					if(v == null)
+						el.addClass("fp-popup-hidden");
+					else {
+						el.removeClass("fp-popup-hidden").css({ top: v.y + 'px', left: v.x + 'px' });
+
+						var vpDim = { width: $(window).width(), height: $(window).height() };
+
+						if(el.hasClass("fp-popup-bottom") && v.y + el.outerHeight(true) > vpDim.height)
+							el.removeClass("fp-popup-bottom").addClass("fp-popup-top");
+						if(el.hasClass("fp-popup-top") && v.y + parseInt(el.css("margin-top")) < 0)
+							el.removeClass("fp-popup-top").addClass("fp-popup-bottom");
+
+						if(el.hasClass("fp-popup-left") && v.x + parseInt(el.css("margin-left")) < 0)
+							el.removeClass("fp-popup-left").addClass("fp-popup-right");
+						if(el.hasClass("fp-popup-right") && v.x + el.outerWidth(true) > vpDim.width)
+							el.removeClass("fp-popup-right").addClass("fp-popup-left");
+					}
+				});
+			}
+		};
 	});
 
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {

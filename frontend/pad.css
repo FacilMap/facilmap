@@ -19,7 +19,6 @@ html,body {
 }
 
 #map-disabled-cover {
-	z-index: 10001;
 	background-color: #888;
 	opacity: 0.7;
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
@@ -118,7 +117,6 @@ table td.button button {
 	top: 10px;
 	width: 50%;
 	left: 25%;
-	z-index: 10002;
 }
 
 #messages p {
@@ -141,18 +139,20 @@ textarea {
 	height: 5em;
 }
 
-#view-marker-popup,#view-line-popup {
+.fp-popup {
 	background: #fff;
 	position:absolute;
 	width: 350px;
 	height: 200px;
 	border-radius: 10px;
 	box-shadow: 0 0 10px #888;
-	margin-top: 50px;
-	margin-left: -28px;
 }
 
-#view-marker-popup .content,#view-line-popup .content {
+.fp-popup-hidden {
+	display: none;
+}
+
+.fp-popup .content {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -162,22 +162,53 @@ textarea {
 	overflow: auto;
 }
 
-#view-marker-popup:before,#view-line-popup:before {
-	content:"";
-	position:absolute;
-	top:-50px;
-	left:30px;
-	border:0;
-	border-left-width:15px; /* vary this value to change the angle of the vertex */
-	border-top-width:50px; /* vary this value to change the height of the triangle. must be equal to the corresponding value in :after */
-	border-style:solid;
-	border-color:transparent #fff;
-	/* reduce the damage in FF3.0 */
-	display:block;
-	width:0;
+.fp-popup:before {
+	content: "";
+	position: absolute;
+	border: 0;
+	border-style: solid;
+	border-color: transparent #fff;
+	display: block;
+	width: 0;
 }
 
-#view-marker-popup .buttons,#view-line-popup .buttons {
+.fp-popup-bottom {
+	margin-top: 50px;
+}
+
+.fp-popup-bottom:before {
+	top: -50px;
+	border-top-width: 50px;
+}
+
+.fp-popup-right {
+	margin-left: -30px;
+}
+
+.fp-popup-right:before {
+	left: 30px;
+	border-left-width: 15px;
+}
+
+.fp-popup-top {
+	margin-top: -264px;
+}
+
+.fp-popup-top:before {
+	bottom: -50px;
+	border-bottom-width: 50px;
+}
+
+.fp-popup-left {
+	margin-left: -319px;
+}
+
+.fp-popup-left:before {
+	right: 30px;
+	border-right-width: 15px;
+}
+
+.fp-popup .buttons {
 	position: absolute;
 	background: #fff;
 	bottom: 0;
@@ -186,7 +217,7 @@ textarea {
 	box-shadow: 0 0 10px #fff;
 }
 
-#view-marker-popup .close-button,#view-line-popup .close-button {
+.fp-popup .close-button {
 	position: absolute;
 	top: 10px;
 	right: 20px;
@@ -214,7 +245,6 @@ textarea {
 	list-style-type: none;
 	margin: 0;
 	position: absolute;
-	z-index: 2000;
 }
 
 #colour-picker li {
@@ -229,4 +259,26 @@ textarea {
 
 #colour-picker li:hover {
 	border-color: #000;
+}
+
+
+/********* z-index **************/
+
+/* jQuery popup has a z-index of 100 */
+/* OpenLayers Controls have z-index: 1008 (inside the map viewport) */
+
+#map-disabled-cover {
+	z-index: 10001;
+}
+
+#messages {
+	z-index: 10002;
+}
+
+#colour-picker {
+	z-index: 150;
+}
+
+#map .fp-popup {
+	z-index: 1007;
 }

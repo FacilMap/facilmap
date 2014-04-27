@@ -66,7 +66,7 @@
 			</table>
 		</div>
 
-		<div id="view-marker-popup" ng-show="currentMarker" ng-style="{ top: currentMarker.xy.y + 'px', left: currentMarker.xy.x + 'px' }">
+		<div id="view-marker-popup" fp-popup="currentMarker.xy">
 			<div class="content">
 				<h2>{{currentMarker.name}}</h2>
 				<p class="pos">Coordinates: {{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
@@ -78,7 +78,7 @@
 			<a href="javascript:" ng-click="currentMarker=null" class="close-button">×</a>
 		</div>
 
-		<div id="view-line-popup" ng-show="currentLine && !drawing" ng-style="{ top: currentLine.clickXy.y + 'px', left: currentLine.clickXy.x + 'px' }">
+		<div id="view-line-popup" fp-popup="currentLine.clickXy">
 			<div class="content">
 				<h2>{{currentLine.name}}</h2>
 				<p class="distance">Distance: {{round(currentLine.distance, 2)}} km <span ng-show="currentLine.time != null">({{formatTime(currentLine.time)}} h{{routingMode(currentLine.mode)}})</span></p>
