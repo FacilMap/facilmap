@@ -80,7 +80,7 @@ var FacilPad = {
 		var handleBkp = fp.featureHandler.handle;
 		fp.featureHandler.handle = function(e) {
 			if(e.type == "click")
-				this.fpXy = new OpenLayers.Pixel(e.x, e.y);
+				this.fpXy = new OpenLayers.Pixel(e.clientX, e.clientY);
 
 			return handleBkp.apply(this, arguments);
 		};
