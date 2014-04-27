@@ -203,3 +203,30 @@ textarea {
 #edit-line-colour {
 	width: auto;
 }
+
+#colour-picker {
+	background: #fafafa;
+	width: 171px;
+	padding: 5px;
+	border: 1px solid #666;
+	border-radius: 10px;
+	box-shadow: 5px 5px 5px rgba(0,0,0,0.3);
+	list-style-type: none;
+	margin: 0;
+	position: absolute;
+	z-index: 2000;
+}
+
+#colour-picker li {
+	display: inline-block;
+	margin: 2px;
+	width: 13px;
+	height: 13px;
+	padding: 0;
+	cursor: pointer;
+	border: 1px solid #aaa;
+}
+
+#colour-picker li:hover {
+	border-color: #000;
+}

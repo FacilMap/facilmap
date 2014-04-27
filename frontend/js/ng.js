@@ -54,6 +54,51 @@
 		}
 	});
 
+	facilpadApp.directive("fpColourPicker", function($compile) {
+		var colourPicker = $("#colour-picker").hide();
+
+		function textColour(colour) {
+			var r = parseInt(colour.substr(0, 2), 16)/255;
+			var g = parseInt(colour.substr(2, 2), 16)/255;
+			var b = parseInt(colour.substr(4, 2), 16)/255;
+			// See http://stackoverflow.com/a/596243/242365
+			return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= 0.5) ? "ffffff" : "000000";
+		}
+
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				scope.$watch(attrs.ngModel, function(v) {
+					var colour = (v && v.match(/^[0-9a-f]{6}$/i) ? v : 'ffffff');
+					element.css({ 'background-color': '#' + colour, 'color' : '#' + textColour(colour)});
+				});
+
+				var handler = function(e) {
+					var target = $(e.target);
+					if(target.is("#colour-picker li")) {
+						element.val(target.attr("data-colour"));
+						element.triggerHandler("input");
+					}
+					if(!target.is("#colour-picker") && !$(document.activeElement).is(element)) {
+						colourPicker.hide();
+						$(document).off("click keyup", handler);
+					}
+				};
+
+				$(element).focus(function() {
+					var link = $(this);
+					var pos = link.offset();
+					colourPicker.show().offset({
+						top: pos.top + link.outerHeight(),
+						left: pos.left
+					});
+
+					$(document).on("click keyup", handler);
+				});
+			}
+		}
+	});
+
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		setTimeout(function() { $("#toolbox").menu(); }, 0);
@@ -77,6 +122,7 @@
 		$scope.drawing = false;
 		$scope.bbox = null;
 		$scope.layers = fp.getLayerInfo();
+		$scope.colours = fp.COLOURS;
 
 		socket.emit("setPadId", FacilPad.padId);
 
@@ -387,16 +433,6 @@
 				default:
 					return "";
 			}
-		};
-
-		$scope.oppositeColour = function(colour) {
-			if(!colour)
-				return "000000";
-
-			var d1 = parseInt(colour.substr(0, 2), 16);
-			var d2 = parseInt(colour.substr(2, 2), 16);
-			var d3 = parseInt(colour.substr(4, 2), 16);
-			return ((d1+d2+d3)/3 <= 64) ? "ffffff" : "000000";
 		};
 
 		$scope.setLayer = function(layer) {

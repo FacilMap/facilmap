@@ -132,7 +132,7 @@
 					</select></dd>
 
 					<dt><label for="edit-line-colour">Colour</label></dt>
-					<dd><input id="edit-line-colour" ng-model="currentLine.colour" ng-style="{ 'background-color': '#'+currentLine.colour, color: '#'+oppositeColour(currentLine.colour) }"></dd>
+					<dd><input id="edit-line-colour" ng-model="currentLine.colour" fp-colour-picker></dd>
 
 					<dt><label for="edit-line-width">Width</label></dt>
 					<dd><input id="edit-line-width" ng-model="currentLine.width" fp-spinner /></dd>
@@ -162,5 +162,9 @@
 				</div>
 			</form>
 		</div>
+
+		<ul id="colour-picker">
+			<li ng-repeat="colour in colours" ng-style="{ 'background-color': '#'+colour }" data-colour="{{colour}}"></li>
+		</ul>
 	</body>
 </html>
