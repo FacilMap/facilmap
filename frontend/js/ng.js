@@ -537,6 +537,27 @@
 			fp.deleteLine(data);
 		});
 
+		socket.on("linePoints", function(data) {
+			var line = $scope.lines[data.id];
+			if(line == null)
+				return console.error("Received line points for non-existing line "+data.id+".");
+
+			if(line.actualPoints == null || data.reset)
+				line.actualPoints = { };
+
+			for(var i=0; i<data.points.length; i++) {
+				line.actualPoints[data.points[i].idx] = data.points[i];
+			}
+
+			line.actualPoints.length = 0;
+			for(var i in line.actualPoints) {
+				if(i != "length" && i >= line.actualPoints.length)
+					line.actualPoints.length = i+1;
+			}
+
+			fp.addLine(line);
+		});
+
 		socket.on("view", function(data) {
 			$scope.views[data.id] = data;
 		});

@@ -2,6 +2,7 @@ var backend = require("./databaseBackendMongodb");
 var listeners = require("./listeners");
 var routing = require("./routing");
 var utils = require("./utils");
+var async = require("async");
 
 function getPadData(padId, callback) {
 	backend.getPadData(padId, function(err, data) {
@@ -16,7 +17,6 @@ function updatePadData(padId, data, callback) {
 	backend.updatePadData(padId, data, function(err, data) {
 		if(err)
 			return callback(err);
-
 
 		listeners.notifyPadListeners(padId, "padData", data);
 		callback(null, data);
@@ -97,16 +97,8 @@ function deleteMarker(markerId, callback) {
 	});
 }
 
-function getPadLines(padId, bbox) {
-	return utils.filterStreamAsync(backend.getPadLines(padId, bbox), function(data, next) {
-		_getLinePoints(data.id, bbox, function(err, points) {
-			if(err)
-				return next(err);
-
-			data.actualPoints = points;
-			next(null, data);
-		});
-	});
+function getPadLines(padId) {
+	return backend.getPadLines(padId);
 }
 
 function createLine(padId, data, callback) {
@@ -121,7 +113,10 @@ function createLine(padId, data, callback) {
 				if(err)
 					return callback;
 
-				listeners.notifyPadListeners(data._pad, "line", _getLineDataFunc(data, actualPoints));
+				listeners.notifyPadListeners(data._pad, "line", data);
+				listeners.notifyPadListeners(data._pad, "linePoints", function(bboxWithZoom) {
+					return { reset: true, id: data.id, points : routing.prepareForBoundingBox(actualPoints, bboxWithZoom) };
+				});
 				callback(null, data);
 			});
 		});
@@ -129,22 +124,36 @@ function createLine(padId, data, callback) {
 }
 
 function updateLine(lineId, data, callback) {
-	_calculateRouting(data, function(err, data, actualPoints) {
+	async.auto({
+		originalLine : backend.getLine.bind(backend, lineId),
+		calculateRouting : [ "originalLine", function(next, res) {
+			if((data.points == null || utils.arraysEqual(data.points, res.originalLine.points)) && (data.mode == null || data.mode == res.originalLine.mode))
+				return next();
+
+			_calculateRouting(data, next); // Also sets data.distance and data.time
+		} ],
+		updateLine : [ "calculateRouting", function(next) {
+			backend.updateLine(lineId, data, next);
+		} ],
+		setLinePoints : [ "calculateRouting", function(next, res) {
+			if(!res.calculateRouting)
+				return next();
+
+			backend.setLinePoints(lineId, res.calculateRouting, next);
+		} ]
+	}, function(err, res) {
 		if(err)
 			return callback(err);
 
-		backend.updateLine(lineId, data, function(err, data) {
-			if(err)
-				return callback(err);
+		listeners.notifyPadListeners(data._pad, "line", data);
 
-			backend.setLinePoints(lineId, actualPoints, function(err) {
-				if(err)
-					return callback;
-
-				listeners.notifyPadListeners(data._pad, "line", _getLineDataFunc(data, actualPoints));
-				callback(null, data);
+		if(res.calculateRouting) {
+			listeners.notifyPadListeners(data._pad, "linePoints", function(bboxWithZoom) {
+				return { reset: true, id: data.id, points : routing.prepareForBoundingBox(res.calculateRouting, bboxWithZoom) };
 			});
-		});
+		}
+
+		callback(null, res.updateLine);
 	});
 }
 
@@ -163,6 +172,20 @@ function deleteLine(lineId, callback) {
 	});
 }
 
+function getLinePoints(padId, bboxWithZoom) {
+	return utils.filterStreamAsync(backend.getPadLines(padId, "id"), function(data, next) {
+		_getLinePoints(data.id, bboxWithZoom, function(err, points) {
+			if(err)
+				return next(err);
+
+			if(points.length >= 2)
+				next(null, { id: data.id, points: points });
+			else
+				next(null, null);
+		});
+	});
+}
+
 function _calculateRouting(line, callback) {
 	if(line.points && line.points.length >= 2 && line.mode) {
 		routing.calculateRouting(line.points, line.mode, function(err, routeData) {
@@ -171,6 +194,8 @@ function _calculateRouting(line, callback) {
 
 			line.distance = routeData.distance;
 			line.time = routeData.time;
+			for(var i=0; i<routeData.actualPoints.length; i++)
+				routeData.actualPoints[i].idx = i;
 			callback(null, line, routeData.actualPoints);
 		});
 	} else {
@@ -179,9 +204,9 @@ function _calculateRouting(line, callback) {
 
 		var actualPoints = [ ];
 		for(var i=0; i<line.points.length; i++) {
-			actualPoints.push(utils.extend({ }, line.points[i], { zoom: 1 }));
+			actualPoints.push(utils.extend({ }, line.points[i], { zoom: 1, idx: i }));
 		}
-		callback(null, line, actualPoints);
+		callback(null, actualPoints);
 	}
 }
 
@@ -191,16 +216,6 @@ function _getMarkerDataFunc(marker) {
 			return null;
 
 		return marker;
-	};
-}
-
-function _getLineDataFunc(line, actualPoints) {
-	return function(bbox) {
-		var points = routing.prepareForBoundingBox(actualPoints, bbox);
-		if(points.length <= 1)
-			return null;
-
-		return utils.extend({ }, line, { actualPoints: points });
 	};
 }
 
@@ -243,5 +258,6 @@ module.exports = {
 	getPadLines : getPadLines,
 	createLine : createLine,
 	updateLine : updateLine,
-	deleteLine : deleteLine
+	deleteLine : deleteLine,
+	getLinePoints : getLinePoints
 };

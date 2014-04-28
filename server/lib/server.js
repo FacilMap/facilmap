@@ -36,6 +36,7 @@ database.connect(function(err) {
 
 				database.getPadData(socket.padId, _sendData.bind(null, socket, "padData"));
 				_sendStreamData(socket, "view", database.getViews(socket.padId));
+				_sendStreamData(socket, "line", database.getPadLines(socket.padId));
 			},
 
 			updateBbox : function(bbox) {
@@ -44,9 +45,7 @@ database.connect(function(err) {
 				// TODO: Only get objects for difference to last bbox
 
 				_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
-				_sendStreamData(socket, "line", utils.filterStream(database.getPadLines(socket.padId, socket.bbox), function(data) {
-					return data.actualPoints.length >= 2 ? data : null;
-				}));
+				_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
 			},
 
 			disconnect : function() {

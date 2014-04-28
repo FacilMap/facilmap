@@ -213,16 +213,21 @@ var FacilPad = {
 		if(!line.actualPoints || line.actualPoints.length < 2)
 			return;
 
+		var points = [ ];
+		for(var i=0; i<line.actualPoints.length; i++) {
+			if(line.actualPoints[i] != null)
+				points.push(new OpenLayers.Geometry.Point(line.actualPoints[i].lon, line.actualPoints[i].lat));
+		}
+
+		if(points.length < 2)
+			return;
+
 		var style = {
 			strokeColor : '#'+line.colour,
 			strokeWidth : line.width,
 			strokeOpacity : 0.7
 		};
 
-		var points = [ ];
-		for(var i=0; i<line.actualPoints.length; i++) {
-			points.push(new OpenLayers.Geometry.Point(line.actualPoints[i].lon, line.actualPoints[i].lat));
-		}
 		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(_p(), fp.map.getProjectionObject()), null, style);
 		feature.fpOnClick = function(clickPos) {
 			fp.mapEvents.trigger("clickLine", [ line, clickPos ]);

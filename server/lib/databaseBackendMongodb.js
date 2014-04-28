@@ -127,12 +127,16 @@ function deleteMarker(markerId, callback) {
 	Marker.findByIdAndRemove(markerId, _fixIdCallback(callback));
 }
 
-function getPadLines(padId, bboxWithZoom) {
-	var condition = { // TODO
+function getPadLines(padId, fields) {
+	var condition = {
 		"_pad" : padId
 	};
 
-	return _fixIdStream(Line.find(condition).stream());
+	return _fixIdStream(Line.find(condition, fields).stream());
+}
+
+function getLine(lineId, callback) {
+	Line.findById(lineId, _fixIdCallback(callback));
 }
 
 function createLine(padId, data, callback) {
@@ -161,7 +165,7 @@ function getLinePointsByBbox(lineId, bboxWithZoom, callback) {
 }
 
 function getLinePointsByIdx(lineId, indexes, callback) {
-	LinePoints.find({ _line: lineId, idx: { $in: indexes } }).select("lon lat").sort("idx").exec(callback);
+	LinePoints.find({ _line: lineId, idx: { $in: indexes } }).select("lon lat idx").sort("idx").exec(callback);
 }
 
 function setLinePoints(lineId, points, callback) {
@@ -171,7 +175,7 @@ function setLinePoints(lineId, points, callback) {
 
 		var create = [ ];
 		for(var i=0; i<points.length; i++) {
-			create.push(utils.extend({ }, points[i], { _line: lineId, idx: i }));
+			create.push(utils.extend({ }, points[i], { _line: lineId }));
 		}
 
 		if(create.length > 0)
@@ -232,6 +236,7 @@ module.exports = {
 	updateMarker : updateMarker,
 	deleteMarker : deleteMarker,
 	getPadLines : getPadLines,
+	getLine : getLine,
 	createLine : createLine,
 	updateLine : updateLine,
 	deleteLine : deleteLine,
