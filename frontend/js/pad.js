@@ -8,13 +8,9 @@ var FacilPad = {
 	map : null,
 	socket : null,
 	layerMarkers : null,
-	clickListeners : [ ],
-	onMove : null,
-	onMoveEnd : null,
 	markersById : { },
-	onClickMarker : null,
 	linesById : { },
-	onClickLine : null
+	mapEvents : null /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove */
 };
 
 (function(fp) {
@@ -58,6 +54,8 @@ var FacilPad = {
 		var fm = FacilMap;
 		var ol = OpenLayers;
 
+		fp.mapEvents = $("<span/>");
+
 		$("button,input[type=submit],input[type=button],input[type=reset]").button();
 
 		fp.map = new FacilMap.Map("map");
@@ -96,23 +94,18 @@ var FacilPad = {
 		fp.featureHandler.activate();
 
 		fp.map.events.register("click", map, function(e) {
-			var listener = fp.clickListeners.shift();
-
-			if(fp.clickListeners.length == 0) {
-				$(fp.map.div).removeClass("fp-clickHandler");
-				fp.featureHandler.activate();
-			}
-
-			listener && listener(fp.xyToPos(e.xy));
+			fp.mapEvents.trigger("click", [ fp.xyToPos(e.xy) ]);
 		});
 
 		fp.map.events.register("move", this, function() {
-			setTimeout(fp.onMove, 0);
+			setTimeout(function() { fp.mapEvents.trigger("move"); }, 0);
 		});
 
-		fp.map.events.register("moveend", this, function(){
+		fp.map.events.register("moveend", this, function() {
 			var x = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
-			setTimeout(fp.onMoveEnd.bind(null, { top: x.top, left: x.left, bottom: x.bottom, right: x.right, zoom: fp.map.getZoom() }), 0);
+			setTimeout(function() {
+				fp.mapEvents.trigger("moveEnd", [ { top: x.top, left: x.left, bottom: x.bottom, right: x.right, zoom: fp.map.getZoom() } ]);
+			}, 0);
 		});
 
 		callback();
@@ -195,7 +188,7 @@ var FacilPad = {
 		};
 		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.position.lon, marker.position.lat).transform(_p(), fp.map.getProjectionObject()), null, style);
 		feature.fpOnClick = function() {
-			fp.onClickMarker(marker);
+			fp.mapEvents.trigger("clickMarker", [ marker ]);
 		};
 		fp.layerLines.addFeatures([ feature ]);
 		fp.markersById[marker.id] = feature;
@@ -228,7 +221,7 @@ var FacilPad = {
 		}
 		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(_p(), fp.map.getProjectionObject()), null, style);
 		feature.fpOnClick = function(clickPos) {
-			fp.onClickLine(line, clickPos);
+			fp.mapEvents.trigger("clickLine", [ line, clickPos ]);
 		};
 		fp.layerLines.addFeatures([ feature ]);
 		fp.linesById[line.id] = feature;
@@ -244,9 +237,14 @@ var FacilPad = {
 	};
 
 	fp.addClickListener = function(listener) {
-		fp.featureHandler.deactivate();
-		fp.clickListeners.push(listener);
+		fp.featureHandler.deactivate(); // Disable clicking on markers and lines
 		$(fp.map.div).addClass("fp-clickHandler");
+
+		fp.mapEvents.one("click", function(e, pos) {
+			$(fp.map.div).removeClass("fp-clickHandler");
+			fp.featureHandler.activate();
+			listener(pos);
+		});
 	};
 
 	fp.xyToPos = function(xy) {

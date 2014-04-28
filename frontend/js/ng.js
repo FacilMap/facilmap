@@ -166,7 +166,7 @@
 				$scope.currentLine.clickXy = fp.posToXy($scope.currentLine.clickPos);
 		};
 
-		fp.onMove = wrapApply($scope, $scope.onMove);
+		fp.mapEvents.on("move", $scope.onMove.fpWrapApply($scope));
 
 		$scope.$watch("markers[currentMarker.id]", function() {
 			if($scope.currentMarker != null)
@@ -191,13 +191,13 @@
 			updateMenu();
 		});
 
-		fp.onMoveEnd = function(bbox) {
+		fp.mapEvents.on("moveEnd", function(e, bbox) {
 			socket.emit("updateBbox", bbox);
 
 			$scope.$apply(function() {
 				$scope.bbox = bbox;
 			});
-		};
+		});
 
 		$scope.$watch("padData", function(newValue) {
 			if($scope.error) {
@@ -249,36 +249,40 @@
 			});
 		};
 
-		fp.onClickMarker = wrapApply($scope, function(marker) {
+		fp.mapEvents.on("clickMarker", function(e, marker) {
+			if($scope.drawing)
+				return;
+
 			$scope.currentLine = null;
 			if($scope.currentMarker && $scope.currentMarker.id == marker.id)
 				$scope.currentMarker = null;
 			else
 				$scope.currentMarker = marker;
-		});
+		}.fpWrapApply($scope));
 
-		fp.onClickLine = function(line, clickPos) {
+		fp.mapEvents.on("clickLine", function(e, line, clickPos) {
+			if($scope.drawing)
+				return;
+
 			$scope.currentMarker = null;
 			$scope.currentLine = line;
 			$scope.currentLine.clickPos = clickPos;
 			$scope.onMove();
-		}.fpWrapApply($scope);
+		}.fpWrapApply($scope));
 
 		$scope.addMarker = function() {
 			var message = $scope.showMessage("info", "Please click on the map to add a marker.");
 			fp.addClickListener(function(pos) {
-				$scope.$apply(function() {
-					$scope.closeMessage(message);
+				$scope.closeMessage(message);
 
-					socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
-						if(err)
-							return $scope.showMessage("error", err);
+				socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
+					if(err)
+						return $scope.showMessage("error", err);
 
-						$scope.currentMarker = marker;
-						$scope.openDialog("edit-marker-dialog");
-					});
+					$scope.currentMarker = marker;
+					$scope.openDialog("edit-marker-dialog");
 				});
-			});
+			}.fpWrapApply($scope));
 		};
 
 		$scope.saveMarker = function(marker) {
