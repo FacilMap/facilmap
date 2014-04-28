@@ -36,7 +36,11 @@
 		</ul>
 
 		<div id="messages">
-			<p ng-repeat="message in messages" class="{{message.type}}">{{message.message}} <a href="javascript:" class="close-button" ng-click="closeMessage(message)">×</a></p>
+			<p ng-repeat="message in messages" class="{{message.type}}">
+				{{message.message}}
+				<span ng-repeat="button in message.buttons">&nbsp;<a href="javascript:" ng-click="button.click()">{{button.label}}</a></span>
+				<a href="javascript:" class="close-button" ng-click="closeMessage(message)">×</a>
+			</p>
 		</div>
 
 		<div id="save-view-dialog" title="Save current view" fp-dialog>

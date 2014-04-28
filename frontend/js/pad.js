@@ -244,11 +244,22 @@ var FacilPad = {
 		fp.featureHandler.deactivate(); // Disable clicking on markers and lines
 		$(fp.map.div).addClass("fp-clickHandler");
 
-		fp.mapEvents.one("click", function(e, pos) {
-			$(fp.map.div).removeClass("fp-clickHandler");
-			fp.featureHandler.activate();
+		var ret = {
+			cancel: function() {
+				fp.mapEvents.off("click", handler);
+				$(fp.map.div).removeClass("fp-clickHandler");
+				fp.featureHandler.activate();
+			}
+		};
+
+		function handler(e, pos) {
+			ret.cancel();
 			listener(pos);
-		});
+		}
+
+		fp.mapEvents.on("click", handler);
+
+		return ret;
 	};
 
 	fp.xyToPos = function(xy) {

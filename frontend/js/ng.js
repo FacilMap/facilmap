@@ -150,7 +150,6 @@
 		$scope.messages = [ ];
 		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
 		$scope.error = null;
-		$scope.drawing = false;
 		$scope.bbox = null;
 		$scope.layers = fp.getLayerInfo();
 		$scope.colours = fp.COLOURS;
@@ -250,9 +249,6 @@
 		};
 
 		fp.mapEvents.on("clickMarker", function(e, marker) {
-			if($scope.drawing)
-				return;
-
 			$scope.currentLine = null;
 			if($scope.currentMarker && $scope.currentMarker.id == marker.id)
 				$scope.currentMarker = null;
@@ -261,9 +257,6 @@
 		}.fpWrapApply($scope));
 
 		fp.mapEvents.on("clickLine", function(e, line, clickPos) {
-			if($scope.drawing)
-				return;
-
 			$scope.currentMarker = null;
 			$scope.currentLine = line;
 			$scope.currentLine.clickPos = clickPos;
@@ -271,8 +264,13 @@
 		}.fpWrapApply($scope));
 
 		$scope.addMarker = function() {
-			var message = $scope.showMessage("info", "Please click on the map to add a marker.");
-			fp.addClickListener(function(pos) {
+			var message = $scope.showMessage("info", "Please click on the map to add a marker.", [
+				{ label: "Cancel", click: function() {
+					$scope.closeMessage(message);
+					listener.cancel();
+				}}
+			]);
+			var listener = fp.addClickListener(function(pos) {
 				$scope.closeMessage(message);
 
 				socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
@@ -305,45 +303,59 @@
 			socket.emit("addLine", { points: [ ] }, function(err, line) {
 				line.actualPoints = [ ];
 				$scope.currentLine = line;
-				$scope.drawing = true;
-				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.");
+				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.", [
+					{ label: "Finish", click: finishLine.bind(null, true) },
+					{ label: "Cancel", click: finishLine.bind(null, false) }
+				]);
 
-				var lastPos = null;
-				var clickListener = function(pos) {
-					if(lastPos && pos.lon == lastPos.lon && pos.lat == lastPos.lat) {
-						$scope.closeMessage(message);
-						fp.mapEvents.off("mouseMove", mouseMoveListener);
+				var handler = null;
 
-						$scope.drawing = false;
+				function addPoint(pos) {
+					line.points.push(pos);
+					line.actualPoints = [ ].concat(line.points, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
+					fp.addLine(line);
+					handler = fp.addClickListener(mapClick);
+				}
 
-						// Finish drawing
+				function finishLine(save) {
+					$scope.closeMessage(message);
+					fp.mapEvents.off("mouseMove", mouseMove);
+					handler && handler.cancel();
+
+					if(save && line.points.length >= 2) {
 						socket.emit("editLine", { id: line.id, points: line.points }, function(err, line) {
 							if(err)
 								return $scope.showMessage("error", err);
 
 							$scope.currentLine = line;
-							$scope.currentLine.clickPos = pos;
+							$scope.currentLine.clickPos = line.points[line.points.length-1];
 							$scope.onMove();
 							$scope.openDialog("edit-line-dialog");
 						});
 					} else {
-						line.points.push(pos);
-						line.actualPoints = [ ].concat(line.points, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
-						fp.addLine(line);
-						fp.addClickListener(clickListener);
-						lastPos = pos;
+						socket.emit("deleteLine", { id: line.id }, function(err) {
+							if(err)
+								return $scope.showMessage("error", err);
+						});
 					}
+				}
+
+				var mapClick = function(pos) {
+					if(line.points.length > 0 && pos.lon == line.points[line.points.length-1].lon && pos.lat == line.points[line.points.length-1].lat)
+						finishLine(true);
+					else
+						addPoint(pos);
 				}.fpWrapApply($scope);
 
-				var mouseMoveListener = function(e, pos) {
+				var mouseMove = function(e, pos) {
 					if(line.actualPoints.length > 0) {
 						line.actualPoints[line.actualPoints.length-1] = pos;
 						fp.addLine(line);
 					}
-				};
+				}.fpWrapApply($scope);
 
-				fp.addClickListener(clickListener);
-				fp.mapEvents.on("mouseMove", mouseMoveListener);
+				handler = fp.addClickListener(mapClick);
+				fp.mapEvents.on("mouseMove", mouseMove);
 			});
 		};
 
@@ -428,10 +440,11 @@
 			}, 0);
 		};
 
-		$scope.showMessage = function(type, message, lifetime) {
+		$scope.showMessage = function(type, message, buttons, lifetime) {
 			var messageObj = {
 				type: type,
-				message: message
+				message: message,
+				buttons: buttons
 			};
 			$scope.messages.push(messageObj);
 
