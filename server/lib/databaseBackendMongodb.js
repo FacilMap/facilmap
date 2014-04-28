@@ -104,12 +104,9 @@ function deleteView(viewId, callback) {
 }
 
 function getPadMarkers(padId, bbox) {
-	var bboxCondition = _makeBboxCondition(bbox);
-	var condition = {
-		"_pad" : padId,
-		"position.lat" : bboxCondition.lat,
-		"position.lon" : bboxCondition.lon
-	};
+	var condition = { $and: [ _makeBboxCondition(bbox, "position."), {
+		"_pad" : padId
+	} ] };
 
 	return _fixIdStream(Marker.find(condition).stream());
 }
@@ -153,13 +150,10 @@ function deleteLine(lineId, callback) {
 }
 
 function getLinePointsByBbox(lineId, bboxWithZoom, callback) {
-	var bboxCondition = _makeBboxCondition(bboxWithZoom);
-	var condition = {
+	var condition = { $and: [ _makeBboxCondition(bboxWithZoom), {
 		"_line" : lineId,
-		"zoom" : { $lte: bboxWithZoom.zoom },
-		"lat" : bboxCondition.lat,
-		"lon" : bboxCondition.lon
-	};
+		"zoom" : { $lte: bboxWithZoom.zoom }
+	} ] };
 
 	LinePoints.find(condition, "idx zoom", { sort: "idx" }).exec(callback);
 }
@@ -209,17 +203,35 @@ function _fixIdStream(stream) {
 	return utils.filterStream(stream, _fixId);
 }
 
-function _makeBboxCondition(bbox) {
-	var condition = {
-		"lat" : { $lte: bbox.top, $gte: bbox.bottom }
-	};
+function _makeBboxCondition(bbox, prefix) {
+	prefix = prefix || "";
+
+	function cond(key, value) {
+		var ret = { };
+		ret[prefix+key] = value;
+		return ret;
+	}
+
+	var conditions = [ ];
+	conditions.push(cond("lat", { $lte: bbox.top, $gte: bbox.bottom }));
 
 	if(bbox.right < bbox.left) // Bbox spans over lon=180
-		condition["lon"] = { $or: [ { $gte: bbox.left }, { $lte: bbox.right } ] };
+		conditions.push({ $or: [ cond("lon", { $gte: bbox.left }), cond("lon", { $lte: bbox.right }) ] });
 	else
-		condition["lon"] = { $gte: bbox.left, $lte: bbox.right };
+		conditions.push(cond("lon", { $gte: bbox.left, $lte: bbox.right }));
 
-	return condition;
+	if(bbox.except) {
+		var exceptConditions = [ ];
+		exceptConditions.push({ $or: [ cond("lat", { $gt: bbox.except.top }), cond("lat", { $lt: bbox.except.bottom }) ] });
+
+		if(bbox.except.right < bbox.except.left)
+			exceptConditions.push(cond("lon", { $lt: bbox.except.left, $gt: bbox.except.right }));
+		else
+			exceptConditions.push({ $or: [ cond("lon", { $lt: bbox.except.left }), cond("lon", { $gt: bbox.except.right }) ] });
+		conditions.push({ $or: exceptConditions });
+	}
+
+	return { $and : conditions };
 }
 
 module.exports = {

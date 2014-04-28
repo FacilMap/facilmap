@@ -40,12 +40,14 @@ database.connect(function(err) {
 			},
 
 			updateBbox : function(bbox) {
+				var bboxWithExcept = utils.extend({ }, bbox);
+				if(socket.bbox && bbox.zoom == socket.bbox.zoom)
+					bboxWithExcept.except = socket.bbox;
+
 				socket.bbox = bbox;
 
-				// TODO: Only get objects for difference to last bbox
-
-				_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
-				_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
+				_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, bboxWithExcept));
+				_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, bboxWithExcept));
 			},
 
 			disconnect : function() {
