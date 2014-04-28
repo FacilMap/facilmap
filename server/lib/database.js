@@ -111,7 +111,7 @@ function createLine(padId, data, callback) {
 
 			backend.setLinePoints(data.id, actualPoints, function(err) {
 				if(err)
-					return callback;
+					return callback(err);
 
 				listeners.notifyPadListeners(data._pad, "line", data);
 				listeners.notifyPadListeners(data._pad, "linePoints", function(bboxWithZoom) {
