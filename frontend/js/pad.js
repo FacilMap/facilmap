@@ -108,6 +108,10 @@ var FacilPad = {
 			}, 0);
 		});
 
+		fp.map.events.register("mousemove", this, function(e) {
+			fp.mapEvents.trigger("mouseMove", [ fp.xyToPos(e.xy) ]);
+		});
+
 		callback();
 	}
 

@@ -312,6 +312,7 @@
 				var clickListener = function(pos) {
 					if(lastPos && pos.lon == lastPos.lon && pos.lat == lastPos.lat) {
 						$scope.closeMessage(message);
+						fp.mapEvents.off("mouseMove", mouseMoveListener);
 
 						$scope.drawing = false;
 
@@ -327,14 +328,22 @@
 						});
 					} else {
 						line.points.push(pos);
-						line.actualPoints.push(pos);
+						line.actualPoints = [ ].concat(line.points, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
 						fp.addLine(line);
 						fp.addClickListener(clickListener);
 						lastPos = pos;
 					}
 				}.fpWrapApply($scope);
 
+				var mouseMoveListener = function(e, pos) {
+					if(line.actualPoints.length > 0) {
+						line.actualPoints[line.actualPoints.length-1] = pos;
+						fp.addLine(line);
+					}
+				};
+
 				fp.addClickListener(clickListener);
+				fp.mapEvents.on("mouseMove", mouseMoveListener);
 			});
 		};
 
