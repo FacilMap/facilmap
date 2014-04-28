@@ -102,7 +102,7 @@ function getPadLines(padId) {
 }
 
 function createLine(padId, data, callback) {
-	_calculateRouting(data, function(err, data, actualPoints) {
+	_calculateRouting(data, function(err, actualPoints) { // Also sets data.distance and data.time
 		if(err)
 			return callback(err);
 		backend.createLine(padId, data, function(err, data) {
@@ -196,7 +196,7 @@ function _calculateRouting(line, callback) {
 			line.time = routeData.time;
 			for(var i=0; i<routeData.actualPoints.length; i++)
 				routeData.actualPoints[i].idx = i;
-			callback(null, line, routeData.actualPoints);
+			callback(null, routeData.actualPoints);
 		});
 	} else {
 		line.distance = utils.calculateDistance(line.points);
