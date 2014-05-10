@@ -82,7 +82,13 @@ function filterStreamAsync(inStream, filterFunction) {
 }
 
 function extend(obj1, obj2) {
+	if(obj1 == null)
+		return null;
+
 	for(var i=1; i<arguments.length; i++) {
+		if(arguments[i] == null)
+			continue;
+
 		for(var j in arguments[i]) {
 			obj1[j] = arguments[i][j];
 		}
