@@ -17,12 +17,12 @@
 		<div id="map-disabled-cover" ng-show="!loaded || error"></div>
 
 		<ul id="toolbox">
-			<li><a href="javascript:" ng-click="addMarker()">Add marker</a></li>
-			<li><a href="javascript:" ng-click="addLine()">Add line</a></li>
+			<li><a href="javascript:" ng-click="addMarker()" ng-hide="readonly">Add marker</a></li>
+			<li><a href="javascript:" ng-click="addLine()" ng-hide="readonly">Add line</a></li>
 			<li><a href="javascript:">Views</a><ul>
 				<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
-				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')">Save current view</a></li>
-				<li><a href="javascript:" ng-click="openDialog('manage-views-dialog')">Manage views</a></li>
+				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')" ng-hide="readonly">Save current view</a></li>
+				<li><a href="javascript:" ng-click="openDialog('manage-views-dialog')" ng-hide="readonly">Manage views</a></li>
 			</ul></li>
 			<li><a href="javascript:">Layers</a><ul>
 				<li ng-repeat="layer in layers">
@@ -32,7 +32,7 @@
 					</a>
 				</li>
 			</ul></li>
-			<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')">Pad settings</a></li>
+			<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')" ng-hide="readonly">Pad settings</a></li>
 		</ul>
 
 		<div id="messages">
@@ -77,7 +77,7 @@
 				<div ng-bind-html="currentMarker.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
-				<button ng-click="openDialog('edit-marker-dialog')">Edit</button>
+				<button ng-click="openDialog('edit-marker-dialog')" ng-hide="readonly">Edit</button>
 			</div>
 			<a href="javascript:" ng-click="currentMarker=null" class="close-button">×</a>
 		</div>
@@ -89,7 +89,7 @@
 				<div ng-bind-html="currentLine.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
-				<button ng-click="openDialog('edit-line-dialog')">Edit</button>
+				<button ng-click="openDialog('edit-line-dialog')" ng-hide="readonly">Edit</button>
 			</div>
 			<a href="javascript:" ng-click="currentLine=null" class="close-button">×</a>
 		</div>
@@ -156,7 +156,10 @@
 				<p class="error" ng-show="dialogError">{{dialogError}}</p>
 				<dl>
 					<dt>Link</dt>
-					<dd>{{padUrl}}</dd>
+					<dd>{{urlPrefix}}{{padId}}</dd>
+
+					<dt>Read-only link</dt>
+					<dd>{{urlPrefix}}{{padData.id}}</dd>
 
 					<dt><label for="pad-name-input">Pad name</label></dt>
 					<dd><input id="pad-name-input" ng-model="padData.name" /></dd>

@@ -124,11 +124,22 @@ function arraysEqual(a, b) {
 	return true;
 }
 
+var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function generateRandomId(length) {
+	var randomPadId = "";
+	for(var i=0; i<length; i++) {
+		randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+	}
+	return randomPadId;
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
 	filterStreamAsync : filterStreamAsync,
 	extend : extend,
 	calculateDistance : calculateDistance,
-	arraysEqual : arraysEqual
+	arraysEqual : arraysEqual,
+	generateRandomId : generateRandomId
 };

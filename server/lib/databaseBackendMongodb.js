@@ -65,8 +65,11 @@ var viewSchema = mongoose.Schema({
 var padSchema = mongoose.Schema({
 	_id : String,
 	defaultView : { type: ObjectId, ref: "View" },
-	name: { type: String, default: "New FacilPad" }
+	name: { type: String, default: "New FacilPad" },
+	writeId : String
 });
+
+padSchema.index({ writeId: 1 });
 
 var Marker = mongoose.model("Marker", markerSchema);
 var Line = mongoose.model("Line", lineSchema);
@@ -78,8 +81,12 @@ function getPadData(padId, callback) {
 	Pad.findById(padId).populate("defaultView").exec(_fixIdCallback(callback));
 }
 
-function createPad(padId, callback) {
-	Pad.create({ _id: padId }, _fixIdCallback(callback));
+function getPadDataByWriteId(writeId, callback) {
+	Pad.findOne({ writeId: writeId }).populate("defaultView").exec(_fixIdCallback(callback));
+}
+
+function createPad(padId, writeId, callback) {
+	Pad.create({ _id: padId, writeId: writeId }, _fixIdCallback(callback));
 }
 
 function updatePadData(padId, data, callback) {
@@ -185,6 +192,9 @@ function _fixId(data) {
 		data.id = data._id;
 		delete data._id;
 
+		if(data.writeId)
+			delete data.writeId;
+
 		if(data.defaultView) {
 			data.defaultView.id = data.defaultView._id;
 			delete data.defaultView._id;
@@ -234,9 +244,45 @@ function _makeBboxCondition(bbox, prefix) {
 	return { $and : conditions };
 }
 
+function _fixWriteId() {
+	var s = Pad.find({ }).stream();
+	s.on("data", function(data) {
+		console.log(data._id, data.writeId);
+
+		if(data.writeId == null) {
+			data.writeId = data._id;
+			data._id = utils.generateRandomId(10);
+
+			Pad.findByIdAndRemove(data.writeId, function(err) { err && console.log(err); });
+			Pad.create(data, function(err) { err && console.log(err); });
+		}
+
+		Marker.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
+		Line.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
+		View.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
+	});
+}
+
+function _removeEmpty() {
+	var s = Pad.find({ }).stream();
+	s.on("data", function(data) {
+		Marker.count({ _pad: data._id }, function(err, count1) {
+			View.count({ _pad: data._id }, function(err, count2) {
+				Line.count({ _pad: data._id }, function(err, count3) {
+					if(count1 + count2 + count3 == 0) {
+						Pad.findByIdAndRemove(data._id, function(err) { err && console.log(err); });
+						console.log(data._id);
+					}
+				});
+			});
+		});
+	});
+}
+
 module.exports = {
 	connect : connect,
 	getPadData : getPadData,
+	getPadDataByWriteId : getPadDataByWriteId,
 	createPad : createPad,
 	updatePadData : updatePadData,
 	getViews : getViews,
@@ -254,5 +300,7 @@ module.exports = {
 	deleteLine : deleteLine,
 	getLinePointsByBbox : getLinePointsByBbox,
 	getLinePointsByIdx : getLinePointsByIdx,
-	setLinePoints : setLinePoints
+	setLinePoints : setLinePoints,
+	_fixWriteId : _fixWriteId,
+	_removeEmpty : _removeEmpty
 };

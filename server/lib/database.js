@@ -5,11 +5,18 @@ var utils = require("./utils");
 var async = require("async");
 
 function getPadData(padId, callback) {
-	backend.getPadData(padId, function(err, data) {
+	backend.getPadDataByWriteId(padId, function(err, data) {
 		if(err || data != null)
-			return callback(err, data);
+			return callback(err, utils.extend(data, { writable: true }));
 
-		backend.createPad(padId, callback);
+		backend.getPadData(padId, function(err, data) {
+			if(err || data != null)
+				return callback(err, utils.extend(data, { writable: false }));
+
+			backend.createPad(utils.generateRandomId(10), padId, function(err, data) {
+				callback(err, utils.extend(data, { writable: true }));
+			});
+		});
 	});
 }
 

@@ -31,12 +31,20 @@ database.connect(function(err) {
 					return;
 				}
 
-				socket.padId = padId;
-				listeners.addPadListener(socket);
+				socket.padId = true;
 
-				database.getPadData(socket.padId, _sendData.bind(null, socket, "padData"));
-				_sendStreamData(socket, "view", database.getViews(socket.padId));
-				_sendStreamData(socket, "line", database.getPadLines(socket.padId));
+				database.getPadData(padId, function(err, data) {
+					if(err)
+						return _sendData(socket, "padData", err);
+
+					socket.padId = data.id;
+					socket.writable = data.writable;
+					listeners.addPadListener(socket);
+
+					_sendData(socket, "padData", null, data);
+					_sendStreamData(socket, "view", database.getViews(socket.padId));
+					_sendStreamData(socket, "line", database.getPadLines(socket.padId));
+				});
 			},
 
 			updateBbox : function(bbox) {
@@ -56,42 +64,72 @@ database.connect(function(err) {
 			},
 
 			editPad : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.updatePadData(socket.padId, data, callback);
 			},
 
 			addMarker : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.createMarker(socket.padId, data, callback);
 			},
 
 			editMarker : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.updateMarker(data.id, data, callback);
 			},
 
 			deleteMarker : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.deleteMarker(data.id, callback);
 			},
 
 			addLine : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.createLine(socket.padId, data, callback);
 			},
 
 			editLine : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.updateLine(data.id, data, callback);
 			},
 
 			deleteLine : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+				
 				database.deleteLine(data.id, callback);
 			},
 
 			addView : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+
 				database.createView(socket.padId, data, callback);
 			},
 
 			editView : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+
 				database.updateView(data.id, data, callback);
 			},
 
 			deleteView : function(data, callback) {
+				if(!socket.writable)
+					return callback(new Error("In read-only mode."));
+
 				database.deleteView(data.id, callback);
 			}
 		};

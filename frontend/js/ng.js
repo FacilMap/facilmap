@@ -148,11 +148,13 @@
 		$scope.currentMarker = null;
 		$scope.currentLine = null;
 		$scope.messages = [ ];
-		$scope.padUrl = location.protocol + "//" + location.host + location.pathname;
+		$scope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
+		$scope.padId = fp.padId;
 		$scope.error = null;
 		$scope.bbox = null;
 		$scope.layers = fp.getLayerInfo();
 		$scope.colours = fp.COLOURS;
+		$scope.readonly = null;
 
 		socket.emit("setPadId", FacilPad.padId);
 
@@ -501,6 +503,9 @@
 	function bindSocketToScope($scope, socket) {
 		socket.on("padData", function(data) {
 			$scope.padData = data;
+
+			if(data.writable != null)
+				$scope.readonly = !data.writable;
 		});
 
 		socket.on("marker", function(data) {
