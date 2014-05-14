@@ -183,6 +183,7 @@ var FacilPad = {
 			graphicYOffset: -25
 		};
 		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.position.lon, marker.position.lat).transform(_p(), fp.map.getProjectionObject()), null, style);
+		feature.fpMarker = marker;
 		feature.fpOnClick = function() {
 			fp.mapEvents.trigger("clickMarker", [ marker ]);
 		};
@@ -254,7 +255,9 @@ var FacilPad = {
 			listener(pos);
 		}
 
-		fp.mapEvents.on("click", handler);
+		setTimeout(function() {
+			fp.mapEvents.on("click", handler);
+		}, 0);
 
 		return ret;
 	};

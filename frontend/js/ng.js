@@ -310,6 +310,28 @@
 			})
 		};
 
+		$scope.moveMarker = function(marker) {
+			var message = $scope.showMessage("info", "Click somewhere on the map to reposition the marker there.", [
+				{ label: "Cancel", click: function() {
+					$scope.closeMessage(message);
+					listener.cancel();
+				}}
+			]);
+
+			$scope.currentMarker = null;
+
+			var listener = fp.addClickListener(function(pos) {
+				$scope.closeMessage(message);
+
+				socket.emit("editMarker", { id: marker.id, position: pos }, function(err) {
+					if(err)
+						return $scope.showMessage("error", err);
+
+					$scope.currentMarker = $scope.markers[marker.id];
+				});
+			});
+		};
+
 		$scope.deleteMarker = function(marker) {
 			socket.emit("deleteMarker", marker, function(err) {
 				if(err)
