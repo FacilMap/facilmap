@@ -7,7 +7,6 @@ var FacilPad = {
 		"036400", "34696d", "00009b", "303498", "000000", "330001", "643403", "663234", "343300", "013300", "003532", "010066", "340096" ],
 	map : null,
 	socket : null,
-	layerMarkers : null,
 	markersById : { },
 	linesById : { },
 	mapEvents : null /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove */
@@ -81,16 +80,9 @@ var FacilPad = {
 				$(fp.map.div).removeClass("fp-overFeature");
 			},
 			"click" : function(obj) {
-				obj.fpOnClick(fp.xyToPos(fp.featureHandler.fpXy));
+				obj.fpOnClick(fp.xyToPos(fp.featureHandler.up));
 			}
 		}, { map: fp.map });
-		var handleBkp = fp.featureHandler.handle;
-		fp.featureHandler.handle = function(e) {
-			if(e.type == "click")
-				this.fpXy = new OpenLayers.Pixel(e.clientX, e.clientY);
-
-			return handleBkp.apply(this, arguments);
-		};
 		fp.featureHandler.activate();
 
 		fp.map.events.register("click", map, function(e) {
