@@ -130,6 +130,22 @@
 		};
 	});
 
+	facilpadApp.directive("fpTitle", function() {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				if(!$(element).is("title"))
+					return;
+
+				scope.$watch(attrs.fpTitle, function(v) {
+					// We have to call history.replaceState() in order for the new title to end up in the browser history
+					window.history && history.replaceState({ }, v);
+					document.title = v;
+				});
+			}
+		};
+	});
+
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		setTimeout(function() { $("#toolbox").menu(); }, 0);
