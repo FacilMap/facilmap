@@ -244,41 +244,6 @@ function _makeBboxCondition(bbox, prefix) {
 	return { $and : conditions };
 }
 
-function _fixWriteId() {
-	var s = Pad.find({ }).stream();
-	s.on("data", function(data) {
-		console.log(data._id, data.writeId);
-
-		if(data.writeId == null) {
-			data.writeId = data._id;
-			data._id = utils.generateRandomId(10);
-
-			Pad.findByIdAndRemove(data.writeId, function(err) { err && console.log(err); });
-			Pad.create(data, function(err) { err && console.log(err); });
-		}
-
-		Marker.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
-		Line.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
-		View.update({ _pad: data.writeId }, { _pad: data._id }, { multi: true }, function(err) { err && console.log(err); });
-	});
-}
-
-function _removeEmpty() {
-	var s = Pad.find({ }).stream();
-	s.on("data", function(data) {
-		Marker.count({ _pad: data._id }, function(err, count1) {
-			View.count({ _pad: data._id }, function(err, count2) {
-				Line.count({ _pad: data._id }, function(err, count3) {
-					if(count1 + count2 + count3 == 0) {
-						Pad.findByIdAndRemove(data._id, function(err) { err && console.log(err); });
-						console.log(data._id);
-					}
-				});
-			});
-		});
-	});
-}
-
 module.exports = {
 	connect : connect,
 	getPadData : getPadData,
@@ -300,7 +265,5 @@ module.exports = {
 	deleteLine : deleteLine,
 	getLinePointsByBbox : getLinePointsByBbox,
 	getLinePointsByIdx : getLinePointsByIdx,
-	setLinePoints : setLinePoints,
-	_fixWriteId : _fixWriteId,
-	_removeEmpty : _removeEmpty
+	setLinePoints : setLinePoints
 };
