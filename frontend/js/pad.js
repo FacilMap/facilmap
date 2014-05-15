@@ -104,6 +104,30 @@ var FacilPad = {
 			fp.mapEvents.trigger("mouseMove", [ fp.xyToPos(e.xy) ]);
 		});
 
+
+		function _wrapFeatureFunc(superFunc) {
+			return function(feature) {
+				if(this.filterFunc(feature))
+					return superFunc.apply(this, arguments);
+			};
+		}
+
+		fp.DragFeature = new OpenLayers.Class(OpenLayers.Control.DragFeature, {
+			filterFunc : null,
+
+			initialize : function(layer, filterFunc, options) {
+				this.filterFunc = filterFunc || function(feature) { return true; };
+
+				OpenLayers.Control.DragFeature.prototype.initialize.apply(this, [ layer, options ]);
+			},
+
+			clickFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.clickFeature),
+			clickoutFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.clickoutFeature),
+			overFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.overFeature),
+			outFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.outFeature)
+		});
+
+
 		callback();
 	}
 
@@ -290,6 +314,54 @@ var FacilPad = {
 			fp.map.setBaseLayer(layers[0]);
 		else
 			layers[0].setVisibility(show);
+	};
+
+	fp.makeLineMovable = function(line) {
+		fp.featureHandler.deactivate();
+
+		line.actualPoints = line.points;
+		fp.addLine(line);
+
+		var markers = [ ];
+		drawMarkers();
+
+		var drag = new fp.DragFeature(fp.layerLines, function(feature) {
+			return feature.fpMarker && feature.fpMarker.id.match(/^linePoint/);
+		}, {
+			onDrag : function(feature) {
+				line.points[feature.fpMarker.i] = new OpenLayers.LonLat(feature.geometry.x, feature.geometry.y).transform(fp.map.getProjectionObject(), _p());
+				fp.addLine(line);
+			}
+		});
+		fp.map.addControl(drag);
+		drag.activate();
+
+		return {
+			done : function() {
+				end();
+			}
+		};
+
+		function drawMarkers(end) {
+			for(var i=0; i<markers.length; i++)
+				fp.deleteMarker(markers[i]);
+			markers = [ ];
+
+			if(!end) {
+				for(var i=0; i<line.points.length; i++) {
+					var marker = { id: "linePoint"+i, position: line.points[i], style: "gold", i: i };
+					markers.push(marker);
+					fp.addMarker(marker);
+				}
+			}
+		}
+
+		function end() {
+			drawMarkers(true);
+			drag.deactivate();
+			fp.map.removeControl(drag);
+			fp.featureHandler.activate();
+		}
 	};
 
 	fp.padId = location.pathname.match(/[^\/]*$/)[0];

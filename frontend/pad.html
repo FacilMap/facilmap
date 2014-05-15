@@ -92,6 +92,8 @@
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-line-dialog')" ng-hide="readonly">Edit</button>
+				<button ng-click="moveLine(currentLine)">Move</button>
+				<button ng-click="deleteLine(currentLine)">Remove</button>
 			</div>
 			<a href="javascript:" ng-click="currentLine=null" class="close-button">×</a>
 		</div>
@@ -147,7 +149,6 @@
 				</dl>
 				<div>
 					<button ng-click="saveLine(currentLine)">Save</button>
-					<button ng-click="deleteLine(currentLine)">Remove</button>
 				</div>
 			</form>
 		</div>

@@ -415,6 +415,36 @@
 			})
 		};
 
+		$scope.moveLine = function(line) {
+			$scope.currentLine = null;
+
+			var pointsBkp = [ ].concat(line.points);
+			var actualPointsBkp = $.extend({ }, line.actualPoints);
+			var movable = fp.makeLineMovable(line);
+
+			var message = $scope.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
+				{ label: "Finish", click: function() {
+					movable.done();
+
+					line.actualPoints = { };
+					socket.emit("editLine", { id: line.id, points: line.points }, function(err) {
+						if(err)
+							$scope.showMessage("error", err);
+
+						$scope.closeMessage(message);
+					});
+				}},
+				{ label: "Cancel", click: function() {
+					$scope.closeMessage(message);
+					movable.done();
+
+					line.points = pointsBkp;
+					line.actualPoints = actualPointsBkp;
+					fp.addLine(line);
+				}}
+			]);
+		};
+
 		$scope.deleteLine = function(line) {
 			socket.emit("deleteLine", line, function(err) {
 				if(err)
