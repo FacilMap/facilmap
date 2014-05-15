@@ -316,8 +316,10 @@ var FacilPad = {
 			layers[0].setVisibility(show);
 	};
 
-	fp.makeLineMovable = function(line) {
+	fp.makeLineMovable = function(origLine) {
 		fp.featureHandler.deactivate();
+
+		var line = $.extend(true, { }, origLine);
 
 		line.actualPoints = line.points;
 		fp.addLine(line);
@@ -339,6 +341,7 @@ var FacilPad = {
 		return {
 			done : function() {
 				end();
+				return line.points;
 			}
 		};
 

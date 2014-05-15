@@ -417,32 +417,34 @@
 
 		$scope.moveLine = function(line) {
 			$scope.currentLine = null;
+			$scope.movingLineId = line.id;
 
-			var pointsBkp = [ ].concat(line.points);
-			var actualPointsBkp = $.extend({ }, line.actualPoints);
 			var movable = fp.makeLineMovable(line);
 
 			var message = $scope.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
-				{ label: "Finish", click: function() {
-					movable.done();
+				{ label: "Finish", click: done.bind(null, true) },
+				{ label: "Cancel", click: done.bind(null, false) }
+			]);
 
+			function done(save) {
+				var newPoints = movable.done();
+				$scope.movingLineId = null;
+				fp.addLine(line);
+
+				if(!save) {
+					$scope.closeMessage(message);
+				}
+
+				if(save) {
 					line.actualPoints = { };
-					socket.emit("editLine", { id: line.id, points: line.points }, function(err) {
+					socket.emit("editLine", { id: line.id, points: newPoints }, function(err) {
+						$scope.closeMessage(message);
+
 						if(err)
 							$scope.showMessage("error", err);
-
-						$scope.closeMessage(message);
 					});
-				}},
-				{ label: "Cancel", click: function() {
-					$scope.closeMessage(message);
-					movable.done();
-
-					line.points = pointsBkp;
-					line.actualPoints = actualPointsBkp;
-					fp.addLine(line);
-				}}
-			]);
+				}
+			}
 		};
 
 		$scope.deleteLine = function(line) {
@@ -604,7 +606,8 @@
 
 			$scope.lines[data.id] = data;
 
-			fp.addLine(data);
+			if($scope.movingLineId != data.id)
+				fp.addLine(data);
 		});
 
 		socket.on("deleteLine", function(data) {
@@ -631,7 +634,8 @@
 					line.actualPoints.length = i+1;
 			}
 
-			fp.addLine(line);
+			if($scope.movingLineId != data.id)
+				fp.addLine(line);
 		});
 
 		socket.on("view", function(data) {
