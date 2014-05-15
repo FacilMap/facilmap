@@ -37,7 +37,7 @@ var markerSchema = mongoose.Schema({
 var lineSchema = mongoose.Schema({
 	_pad : { type: String, ref: "Pad" },
 	points : [positionType],
-	mode : String,
+	mode : { type: String, default: "" },
 	colour : { type: String, default: "0000ff" },
 	width : { type: Number, default: 4 },
 	description : String,

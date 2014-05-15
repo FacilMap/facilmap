@@ -119,17 +119,6 @@ function calculateDistance(posList) {
 	return ret;
 }
 
-function arraysEqual(a, b) {
-	if (a === b) return true;
-	if (a == null || b == null) return false;
-	if (a.length != b.length) return false;
-
-	for (var i = 0; i < a.length; ++i) {
-		if (a[i] !== b[i]) return false;
-	}
-	return true;
-}
-
 var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 function generateRandomId(length) {
@@ -146,6 +135,5 @@ module.exports = {
 	filterStreamAsync : filterStreamAsync,
 	extend : extend,
 	calculateDistance : calculateDistance,
-	arraysEqual : arraysEqual,
 	generateRandomId : generateRandomId
 };

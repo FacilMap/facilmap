@@ -7,6 +7,7 @@
     "mongoose": "x.x.x",
     "socket.io": "x.x.x",
 	"async" : "x.x.x",
-	"request" : "x.x.x"
+	"request" : "x.x.x",
+	"underscore" : "x.x.x"
   }
 }

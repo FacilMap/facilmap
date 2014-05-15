@@ -192,6 +192,9 @@
 
 		$scope.$watch("currentMarker", function() {
 			$scope.onMove();
+
+			if($scope.currentMarker == null && $scope.dialog && $scope.dialog.attr("id") == "edit-marker-dialog")
+				$scope.closeDialog();
 		});
 
 		$scope.$watch("currentMarker.style", function() {
@@ -201,7 +204,12 @@
 
 		$scope.$watch("lines[currentLine.id]", function() {
 			if($scope.currentLine != null)
-				$scope.currentLine = $.extend($scope.lines[$scope.currentLine.id], { clickPos : $scope.currentLine.clickPos, clickXy : $scope.currentLine.clickXy });
+				$scope.currentLine = $scope.lines[$scope.currentLine.id];
+		});
+
+		$scope.$watch("currentLine", function() {
+			if($scope.currentLine == null && $scope.dialog && $scope.dialog.attr("id") == "edit-line-dialog")
+				$scope.closeDialog();
 		});
 
 		$scope.$watch("layers", function() {
@@ -367,7 +375,6 @@
 							if(err)
 								return $scope.showMessage("error", err);
 
-							$scope.currentLine = line;
 							$scope.currentLine.clickPos = line.points[line.points.length-1];
 							$scope.onMove();
 							$scope.openDialog("edit-line-dialog");
@@ -555,15 +562,16 @@
 		socket.on("deleteMarker", function(data) {
 			delete $scope.markers[data.id];
 
-			if($scope.currentMarker && $scope.currentMarker.id == data.id && $scope.dialog && $scope.dialog.attr("id") == "edit-marker-dialog") {
-				$scope.currentMarker = null;
-				$scope.closeDialog();
-			}
-
 			fp.deleteMarker(data);
 		});
 
 		socket.on("line", function(data) {
+			if($scope.lines[data.id]) {
+				data.actualPoints = $scope.lines[data.id].actualPoints;
+				data.clickPos = $scope.lines[data.id].clickPos;
+				data.clickXy = $scope.lines[data.id].clickXy;
+			}
+
 			$scope.lines[data.id] = data;
 
 			fp.addLine(data);
@@ -571,11 +579,6 @@
 
 		socket.on("deleteLine", function(data) {
 			delete $scope.lines[data.id];
-
-			if($scope.currentLine && $scope.currentLine.id == data.id && $scope.dialog && $scope.dialog.attr("id") == "edit-line-dialog") {
-				$scope.currentLine = null;
-				$scope.closeDialog();
-			}
 
 			fp.deleteLine(data);
 		});

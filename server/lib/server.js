@@ -44,6 +44,11 @@ database.connect(function(err) {
 					_sendData(socket, "padData", null, data);
 					_sendStreamData(socket, "view", database.getViews(socket.padId));
 					_sendStreamData(socket, "line", database.getPadLines(socket.padId));
+
+					if(socket.bbox) { // In case bbox is set while fetching pad data
+						_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
+						_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
+					}
 				});
 			},
 
@@ -54,8 +59,10 @@ database.connect(function(err) {
 
 				socket.bbox = bbox;
 
-				_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, bboxWithExcept));
-				_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, bboxWithExcept));
+				if(socket.padId && socket.padId !== true) {
+					_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, bboxWithExcept));
+					_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, bboxWithExcept));
+				}
 			},
 
 			disconnect : function() {

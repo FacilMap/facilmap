@@ -3,6 +3,7 @@ var listeners = require("./listeners");
 var routing = require("./routing");
 var utils = require("./utils");
 var async = require("async");
+var underscore = require("underscore");
 
 function getPadData(padId, callback) {
 	backend.getPadDataByWriteId(padId, function(err, data) {
@@ -134,7 +135,13 @@ function updateLine(lineId, data, callback) {
 	async.auto({
 		originalLine : backend.getLine.bind(backend, lineId),
 		calculateRouting : [ "originalLine", function(next, res) {
-			if((data.points == null || utils.arraysEqual(data.points, res.originalLine.points)) && (data.mode == null || data.mode == res.originalLine.mode))
+			if(data.points == null)
+				data.points = res.originalLine.points;
+
+			if(data.mode == null)
+				data.mode = res.originalLine.mode || "";
+
+			if(underscore.isEqual(data.points, res.originalLine.points) && data.mode == res.originalLine.mode)
 				return next();
 
 			_calculateRouting(data, next); // Also sets data.distance and data.time
@@ -152,10 +159,10 @@ function updateLine(lineId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "line", data);
+		listeners.notifyPadListeners(res.updateLine._pad, "line", res.updateLine);
 
 		if(res.calculateRouting) {
-			listeners.notifyPadListeners(data._pad, "linePoints", function(bboxWithZoom) {
+			listeners.notifyPadListeners(res.updateLine._pad, "linePoints", function(bboxWithZoom) {
 				return { reset: true, id: data.id, points : routing.prepareForBoundingBox(res.calculateRouting, bboxWithZoom) };
 			});
 		}
