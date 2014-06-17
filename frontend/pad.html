@@ -78,8 +78,8 @@
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-marker-dialog')" ng-hide="readonly">Edit</button>
-				<button ng-click="moveMarker(currentMarker)">Move</button>
-				<button ng-click="deleteMarker(currentMarker)">Remove</button>
+				<button ng-click="moveMarker(currentMarker)" ng-hide="readonly">Move</button>
+				<button ng-click="deleteMarker(currentMarker)" ng-hide="readonly">Remove</button>
 			</div>
 			<a href="javascript:" ng-click="currentMarker=null" class="close-button">×</a>
 		</div>
@@ -92,8 +92,8 @@
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-line-dialog')" ng-hide="readonly">Edit</button>
-				<button ng-click="moveLine(currentLine)">Move</button>
-				<button ng-click="deleteLine(currentLine)">Remove</button>
+				<button ng-click="moveLine(currentLine)" ng-hide="readonly">Move</button>
+				<button ng-click="deleteLine(currentLine)" ng-hide="readonly">Remove</button>
 			</div>
 			<a href="javascript:" ng-click="currentLine=null" class="close-button">×</a>
 		</div>
