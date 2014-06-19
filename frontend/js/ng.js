@@ -171,6 +171,7 @@
 		$scope.layers = fp.getLayerInfo();
 		$scope.colours = fp.COLOURS;
 		$scope.readonly = null;
+		$scope.copyPadId = fp.generateRandomPadId();
 
 		socket.emit("setPadId", FacilPad.padId);
 
@@ -491,6 +492,20 @@
 			socket.emit("deleteView", { id: view.id }, function(err) {
 				if(err)
 					$scope.dialogError = err;
+			});
+		};
+
+		$scope.copyPad = function() {
+			socket.emit("copyPad", { toId: $scope.copyPadId }, function(err) {
+				if(err) {
+					$scope.dialogError = err;
+					return;
+				}
+
+				$scope.closeDialog();
+				var url = $scope.urlPrefix + $scope.copyPadId;
+				$scope.showMessage("success", "The pad has been copied to", [ { label: url, url: url } ]);
+				$scope.copyPadId = fp.generateRandomPadId();
 			});
 		};
 

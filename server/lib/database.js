@@ -113,19 +113,13 @@ function createLine(padId, data, callback) {
 	_calculateRouting(data, function(err, actualPoints) { // Also sets data.distance and data.time
 		if(err)
 			return callback(err);
-		backend.createLine(padId, data, function(err, data) {
+
+		_createLine(padId, data, function(err, data) {
 			if(err)
 				return callback(err);
 
-			backend.setLinePoints(data.id, actualPoints, function(err) {
-				if(err)
-					return callback(err);
-
-				listeners.notifyPadListeners(data._pad, "line", data);
-				listeners.notifyPadListeners(data._pad, "linePoints", function(bboxWithZoom) {
-					return { reset: true, id: data.id, points : routing.prepareForBoundingBox(actualPoints, bboxWithZoom) };
-				});
-				callback(null, data);
+			_setLinePoints(padId, data.id, actualPoints, function(err) {
+				callback(err, data);
 			});
 		});
 	});
@@ -147,27 +141,49 @@ function updateLine(lineId, data, callback) {
 			_calculateRouting(data, next); // Also sets data.distance and data.time
 		} ],
 		updateLine : [ "calculateRouting", function(next) {
-			backend.updateLine(lineId, data, next);
+			_updateLine(lineId, data, next);
 		} ],
-		setLinePoints : [ "calculateRouting", function(next, res) {
+		setLinePoints : [ "originalLine", "calculateRouting", function(next, res) {
 			if(!res.calculateRouting)
 				return next();
 
-			backend.setLinePoints(lineId, res.calculateRouting, next);
+			_setLinePoints(res.originalLine._pad, lineId, res.calculateRouting, next);
 		} ]
 	}, function(err, res) {
+		callback(err, res.updateLine);
+	});
+}
+
+function _createLine(padId, data, callback) {
+	backend.createLine(padId, data, function(err, data) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(res.updateLine._pad, "line", res.updateLine);
+		listeners.notifyPadListeners(data._pad, "line", data);
+		callback(null, data);
+	});
+}
 
-		if(res.calculateRouting) {
-			listeners.notifyPadListeners(res.updateLine._pad, "linePoints", function(bboxWithZoom) {
-				return { reset: true, id: data.id, points : routing.prepareForBoundingBox(res.calculateRouting, bboxWithZoom) };
-			});
-		}
+function _updateLine(lineId, data, callback) {
+	backend.updateLine(lineId, data, function(err, data) {
+		if(err)
+			return callback(err);
 
-		callback(null, res.updateLine);
+		listeners.notifyPadListeners(data._pad, "line", data);
+		callback(null, data);
+	});
+}
+
+function _setLinePoints(padId, lineId, points, callback) {
+	backend.setLinePoints(lineId, points, function(err) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(padId, "linePoints", function(bboxWithZoom) {
+			return { reset: true, id: lineId, points : routing.prepareForBoundingBox(points, bboxWithZoom) };
+		});
+
+		callback(null);
 	});
 }
 
@@ -198,6 +214,72 @@ function getLinePoints(padId, bboxWithZoom) {
 				next(null, null);
 		});
 	});
+}
+
+function copyPad(fromPadId, toPadId, callback) {
+	function _handleStream(stream, next, cb) {
+		stream.on("data", function(data) {
+			stream.pause();
+			cb(data, function() {
+				stream.resume();
+			});
+		});
+
+		stream.on("error", next);
+		stream.on("end", next);
+	}
+
+	async.auto({
+		fromPadData : function(next) {
+			backend.getPadData(fromPadId, next);
+		},
+		toPadData : function(next) {
+			getPadData(toPadId, next);
+		},
+		padsExist : [ "fromPadData", "toPadData", function(next, r) {
+			if(!r.fromPadData)
+				return next(new Error("Pad "+fromPadId+" does not exist."));
+			if(!r.toPadData.writable)
+				return next(new Error("Destination pad is read-only."));
+
+			toPadId = r.toPadData.id;
+
+			next();
+		}],
+		copyMarkers : [ "padsExist", function(next) {
+			_handleStream(getPadMarkers(fromPadId, null), next, function(marker, cb) {
+				createMarker(toPadId, marker, cb);
+			});
+		}],
+		copyLines : [ "padsExist", function(next) {
+			_handleStream(getPadLines(fromPadId), next, function(line, cb) {
+				async.auto({
+					createLine : function(next) {
+						_createLine(toPadId, line, next);
+					},
+					getLinePoints : function(next) {
+						backend.getLinePoints(line.id, next);
+					},
+					setLinePoints : [ "createLine", "getLinePoints", function(next, r) {
+						_setLinePoints(toPadId, r.createLine.id, r.getLinePoints, next);
+					} ]
+				}, cb);
+			});
+		}],
+		copyViews : [ "padsExist", function(next, r) {
+			_handleStream(getViews(fromPadId), next, function(view, cb) {
+				createView(toPadId, view, function(err, newView) {
+					if(err)
+						return cb(err);
+
+					if(r.fromPadData.defaultView && r.fromPadData.defaultView.id == view.id && r.toPadData.defaultView == null)
+						updatePadData(toPadId, { defaultView: newView.id }, cb);
+					else
+						cb();
+				});
+			});
+		}]
+	}, callback);
 }
 
 function _calculateRouting(line, callback) {
@@ -273,5 +355,6 @@ module.exports = {
 	createLine : createLine,
 	updateLine : updateLine,
 	deleteLine : deleteLine,
-	getLinePoints : getLinePoints
+	getLinePoints : getLinePoints,
+	copyPad : copyPad
 };

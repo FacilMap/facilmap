@@ -144,7 +144,7 @@ function getLine(lineId, callback) {
 }
 
 function createLine(padId, data, callback) {
-	data._pad = padId;
+	data = utils.extend({ }, data, { _pad: padId });
 	Line.create(data, _fixIdCallback(callback));
 }
 
@@ -156,17 +156,21 @@ function deleteLine(lineId, callback) {
 	Line.findByIdAndRemove(lineId, _fixIdCallback(callback));
 }
 
+function getLinePoints(lineId, callback) {
+	LinePoints.find({ _line: lineId }).sort("idx").exec(_linePointsCallback(callback));
+}
+
 function getLinePointsByBbox(lineId, bboxWithZoom, callback) {
 	var condition = { $and: [ _makeBboxCondition(bboxWithZoom), {
 		"_line" : lineId,
 		"zoom" : { $lte: bboxWithZoom.zoom }
 	} ] };
 
-	LinePoints.find(condition, "idx zoom", { sort: "idx" }).exec(callback);
+	LinePoints.find(condition, "idx zoom", { sort: "idx" }).exec(_linePointsCallback(callback));
 }
 
 function getLinePointsByIdx(lineId, indexes, callback) {
-	LinePoints.find({ _line: lineId, idx: { $in: indexes } }).select("lon lat idx").sort("idx").exec(callback);
+	LinePoints.find({ _line: lineId, idx: { $in: indexes } }).select("lon lat idx").sort("idx").exec(_linePointsCallback(callback));
 }
 
 function setLinePoints(lineId, points, callback) {
@@ -199,6 +203,11 @@ function _fixId(data) {
 			data.defaultView.id = data.defaultView._id;
 			delete data.defaultView._id;
 		}
+
+		if(data.points) {
+			for(var i=0; i<data.points.length; i++)
+				delete data.points[i]._id;
+		}
 	}
 	return data;
 }
@@ -213,7 +222,25 @@ function _fixIdStream(stream) {
 	return utils.filterStream(stream, _fixId);
 }
 
+function _linePointsCallback(callback) {
+	return function(err, linePoints) {
+		if(err)
+			return callback(err);
+
+		var ret = [ ];
+		for(var i=0; i<linePoints.length; i++) {
+			var c = JSON.parse(JSON.stringify(linePoints[i]));
+			delete c._id;
+			ret.push(c);
+		}
+		callback(null, ret);
+	};
+}
+
 function _makeBboxCondition(bbox, prefix) {
+	if(!bbox)
+		return { };
+
 	prefix = prefix || "";
 
 	function cond(key, value) {
@@ -263,6 +290,7 @@ module.exports = {
 	createLine : createLine,
 	updateLine : updateLine,
 	deleteLine : deleteLine,
+	getLinePoints : getLinePoints,
 	getLinePointsByBbox : getLinePointsByBbox,
 	getLinePointsByIdx : getLinePointsByIdx,
 	setLinePoints : setLinePoints

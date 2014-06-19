@@ -138,6 +138,10 @@ database.connect(function(err) {
 					return callback(new Error("In read-only mode."));
 
 				database.deleteView(data.id, callback);
+			},
+
+			copyPad : function(data, callback) {
+				database.copyPad(socket.padId, data.toId, callback);
 			}
 		};
 

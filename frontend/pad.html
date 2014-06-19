@@ -32,13 +32,16 @@
 					</a>
 				</li>
 			</ul></li>
-			<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')" ng-hide="readonly">Pad settings</a></li>
+			<li><a href="javascript:">Tools</a><ul>
+				<li><a href="javascript:" ng-click="openDialog('copy-pad-dialog')" ng-hide="readonly">Copy pad</a></li>
+				<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')" ng-hide="readonly">Pad settings</a></li>
+			</ul></li>
 		</ul>
 
 		<div id="messages">
 			<p ng-repeat="message in messages" class="{{message.type}}">
 				{{message.message}}
-				<span ng-repeat="button in message.buttons">&nbsp;<a href="javascript:" ng-click="button.click()">{{button.label}}</a></span>
+				<span ng-repeat="button in message.buttons">&nbsp;<a href="{{button.url || 'javascript:'}}" ng-click="button.click && button.click()">{{button.label}}</a></span>
 				<a href="javascript:" class="close-button" ng-click="closeMessage(message)">×</a>
 			</p>
 		</div>
@@ -168,6 +171,19 @@
 				</dl>
 				<div>
 					<button ng-click="savePadData()">Save</button>
+				</div>
+			</form>
+		</div>
+
+		<div id="copy-pad-dialog" title="Copy pad" fp-dialog>
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<dl>
+					<dt>Copy to</dt>
+					<dd>{{urlPrefix}}<input ng-model="copyPadId" class="inline" /></dd>
+				</dl>
+				<div>
+					<button ng-click="copyPad()">Copy</button>
 				</div>
 			</form>
 		</div>

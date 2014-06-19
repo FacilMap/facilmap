@@ -367,6 +367,17 @@ var FacilPad = {
 		}
 	};
 
+	var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	var LENGTH = 12;
+
+	fp.generateRandomPadId = function() {
+		var randomPadId = "";
+		for(var i=0; i<LENGTH; i++) {
+			randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+		}
+		return randomPadId;
+	};
+
 	fp.padId = location.pathname.match(/[^\/]*$/)[0];
 
 })(FacilPad);

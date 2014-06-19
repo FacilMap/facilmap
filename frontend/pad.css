@@ -90,6 +90,10 @@ dd input, dd textarea {
 	width: 100%;
 }
 
+dd input.inline {
+	width: 10em;
+}
+
 dl:after {
 	clear: left;
 	display: block;
