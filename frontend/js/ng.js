@@ -4,6 +4,10 @@
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 	});
 
+	marked.setOptions({
+		breaks: true
+	});
+
 	function wrapApply($scope, f) {
 		return function() {
 			var context = this;
