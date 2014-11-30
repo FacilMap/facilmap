@@ -1,6 +1,8 @@
 (function(fp, $, ng, undefined) {
 
-	var facilpadApp = angular.module("facilpad", [ ]);
+	var facilpadApp = angular.module("facilpad", [ ]).config(function($compileProvider) {
+		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
+	});
 
 	function wrapApply($scope, f) {
 		return function() {
