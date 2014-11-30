@@ -2,6 +2,8 @@ var mongoose = require("mongoose");
 var config = require("../config");
 var utils = require("./utils");
 
+var OLD_MARKER_COLOURS = { blue: "8da8f6", green: "90ee90", gold: "ffd700", red: "ff0000" };
+
 function connect(callback) {
 	var connectionString = "mongodb://"
 		+ (config.db.user ? encodeURIComponent(config.db.user) + ":" + encodeURIComponent(config.db.password) + "@" : "")
@@ -31,7 +33,7 @@ var markerSchema = mongoose.Schema({
 	position : positionType,
 	name : { type: String, default: "Untitled marker" },
 	description : String,
-	style : { type: String, default: "red" }
+	colour : { type: String, default: "ff0000" }
 });
 
 var lineSchema = mongoose.Schema({
@@ -207,6 +209,12 @@ function _fixId(data) {
 		if(data.points) {
 			for(var i=0; i<data.points.length; i++)
 				delete data.points[i]._id;
+		}
+
+		// Backwards compatibility for markers
+		if(data.style) {
+			data.colour = OLD_MARKER_COLOURS[data.style];
+			delete data.style;
 		}
 	}
 	return data;

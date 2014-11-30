@@ -200,7 +200,7 @@ var FacilPad = {
 		fp.deleteMarker(marker);
 
 		var style = {
-			externalGraphic: "img/marker-"+marker.style+".png",
+			externalGraphic: fp.createMarkerGraphic(marker.colour),
 			graphicWidth: 21,
 			graphicHeight: 25,
 			graphicXOffset: -9,
@@ -352,7 +352,7 @@ var FacilPad = {
 
 			if(!end) {
 				for(var i=0; i<line.points.length; i++) {
-					var marker = { id: "linePoint"+i, position: line.points[i], style: "gold", i: i };
+					var marker = { id: "linePoint"+i, position: line.points[i], colour: "ffd700", i: i };
 					markers.push(marker);
 					fp.addMarker(marker);
 				}
@@ -376,6 +376,31 @@ var FacilPad = {
 			randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
 		}
 		return randomPadId;
+	};
+
+	fp.createMarkerGraphic = function(colour) {
+		var borderColour = fp.makeTextColour(colour, 0.3);
+
+		var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
+			'<svg xmlns="http://www.w3.org/2000/svg" width="21" height="25" version="1.1">' +
+			'<g transform="matrix(0.962318,0,0,0.962318,0.35255058,-988.3149)">' +
+			'<path style="fill:#' + colour + ';stroke:#' + borderColour + ';stroke-width:1" d="m 0.31494999,1035.8432 10.20437901,-8.1661 10.20438,8.1661 -10.20438,16.204 z" />' +
+			'<path style="fill:#' + borderColour + ';stroke:none" d="m 361.63462,62.160149 c 0,10.181526 -8.25375,18.435283 -18.43528,18.435283 -10.18153,0 -18.43528,-8.253757 -18.43528,-18.435283 0,-10.181526 8.25375,-18.435284 18.43528,-18.435284 10.18153,0 18.43528,8.253758 18.43528,18.435284 z" transform="matrix(0.1366727,0,0,0.1366727,-36.38665,1028.6074)" />' +
+			'</g>' +
+			'</svg>';
+
+		return "data:image/svg+xml;base64,"+btoa(svg);
+	};
+
+	fp.makeTextColour = function(backgroundColour, threshold) {
+		if(threshold == null)
+			threshold = 0.5;
+
+		var r = parseInt(backgroundColour.substr(0, 2), 16)/255;
+		var g = parseInt(backgroundColour.substr(2, 2), 16)/255;
+		var b = parseInt(backgroundColour.substr(4, 2), 16)/255;
+		// See http://stackoverflow.com/a/596243/242365
+		return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= threshold) ? "ffffff" : "000000";
 	};
 
 	fp.padId = location.pathname.match(/[^\/]*$/)[0];

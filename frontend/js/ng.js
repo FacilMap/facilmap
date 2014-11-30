@@ -57,20 +57,12 @@
 	facilpadApp.directive("fpColourPicker", function() {
 		var colourPicker = $("#colour-picker").hide();
 
-		function textColour(colour) {
-			var r = parseInt(colour.substr(0, 2), 16)/255;
-			var g = parseInt(colour.substr(2, 2), 16)/255;
-			var b = parseInt(colour.substr(4, 2), 16)/255;
-			// See http://stackoverflow.com/a/596243/242365
-			return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= 0.5) ? "ffffff" : "000000";
-		}
-
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
 				scope.$watch(attrs.ngModel, function(v) {
 					var colour = (v && v.match(/^[0-9a-f]{6}$/i) ? v : 'ffffff');
-					element.css({ 'background-color': '#' + colour, 'color' : '#' + textColour(colour)});
+					element.css({ 'background-color': '#' + colour, 'color' : '#' + fp.makeTextColour(colour)});
 				});
 
 				var handler = function(e) {
@@ -198,7 +190,7 @@
 				$scope.closeDialog();
 		});
 
-		$scope.$watch("currentMarker.style", function() {
+		$scope.$watch("currentMarker.colour", function() {
 			if($scope.currentMarker != null)
 				fp.addMarker($scope.currentMarker);
 		});
