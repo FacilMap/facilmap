@@ -129,11 +129,57 @@ function generateRandomId(length) {
 	return randomPadId;
 }
 
+var FAILURE = { };
+
+function stripObject(obj, structure) {
+	return _stripObject(obj, structure) !== FAILURE;
+}
+
+function _stripObject(obj, type) {
+	if(obj === undefined)
+		return obj;
+	else if(obj === null)
+		return obj;
+	else if(type instanceof Array) {
+		if(!(obj instanceof Array))
+			return FAILURE;
+
+		for(var i=0; i<obj.length; i++) {
+			if((obj[i] = _stripObject(obj[i], type[0])) === FAILURE)
+				return FAILURE;
+		}
+		return obj;
+	}
+	else if(typeof type == "function")
+		return (obj instanceof type) ? obj : FAILURE;
+	else if(type instanceof Object) {
+		if(!(obj instanceof Object))
+			return FAILURE;
+
+		for(var i in obj) {
+			if(type[i] == null || obj[i] === undefined)
+				delete obj[i];
+			else if((obj[i] = _stripObject(obj[i], type[i])) === FAILURE)
+				return FAILURE;
+		}
+		return obj;
+	}
+	else if(type == "number" && typeof obj == "string")
+		return isNaN(obj = 1*obj) ? FAILURE : obj;
+	else if(type == "string" && typeof obj == "number")
+		return ""+obj;
+	else if(typeof type == "string")
+		return (typeof obj == type) ? obj : FAILURE;
+	else
+		return FAILURE;
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
 	filterStreamAsync : filterStreamAsync,
 	extend : extend,
 	calculateDistance : calculateDistance,
-	generateRandomId : generateRandomId
+	generateRandomId : generateRandomId,
+	stripObject : stripObject
 };

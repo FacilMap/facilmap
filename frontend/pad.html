@@ -17,8 +17,7 @@
 		<div id="map-disabled-cover" ng-show="!loaded || error"></div>
 
 		<ul id="toolbox">
-			<li><a href="javascript:" ng-click="addMarker()" ng-hide="readonly">Add marker</a></li>
-			<li><a href="javascript:" ng-click="addLine()" ng-hide="readonly">Add line</a></li>
+			<li ng-repeat="type in types" fp-variable-menu-item><a href="javascript:" ng-click="addObject(type)" ng-hide="readonly">Add {{type.name}}</a></li>
 			<li><a href="javascript:">Views</a><ul>
 				<li ng-repeat="(id, view) in views" fp-variable-menu-item><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
 				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')" ng-hide="readonly">Save current view</a></li>
@@ -33,8 +32,9 @@
 				</li>
 			</ul></li>
 			<li><a href="javascript:">Tools</a><ul>
-				<li><a href="javascript:" ng-click="openDialog('copy-pad-dialog')" ng-hide="readonly">Copy pad</a></li>
+				<!--<li><a href="javascript:" ng-click="openDialog('copy-pad-dialog')" ng-hide="readonly">Copy pad</a></li>-->
 				<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')" ng-hide="readonly">Pad settings</a></li>
+				<!--<li><a href="javascript:" ng-click="openDialog('object-types-dialog')" ng-hide="readonly">Object types</a></li>-->
 			</ul></li>
 		</ul>
 
@@ -76,7 +76,7 @@
 		<div id="view-marker-popup" fp-popup="currentMarker.xy">
 			<div class="content">
 				<h2>{{currentMarker.name}}</h2>
-				<p class="pos">Coordinates: {{round(currentMarker.position.lat, 5)}}, {{round(currentMarker.position.lon, 5)}}</p>
+				<p class="pos">Coordinates: {{round(currentMarker.lat, 5)}}, {{round(currentMarker.lon, 5)}}</p>
 				<div ng-bind-html="currentMarker.descriptionHtml"></div>
 			</div>
 			<div class="buttons">
@@ -167,6 +167,34 @@
 				<div>
 					<button ng-click="savePadData()">Save</button>
 				</div>
+			</form>
+		</div>
+
+		<div id="object-types-dialog" title="Object types" fp-dialog fp-preserve="padData">
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th colspan="2">Edit</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="type in types">
+							<td>{{type.name}}</td>
+							<td>{{type.type}}</td>
+							<td class="button"><button ng-click="editType(type)">Edit</button></td>
+							<td class="button"><button ng-click="removeType(type)">Remove</button></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="3"><button ng-click="createType()">Create</button></td>
+						</tr>
+					</tfoot>
+				</table>
 			</form>
 		</div>
 

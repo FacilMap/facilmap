@@ -164,15 +164,16 @@ var FacilPad = {
 	}
 
 	fp.getCurrentView = function() {
-		var ret = {
-			view: fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p()),
-			baseLayer: fp.map.baseLayer.permalinkName,
-			layers: [ ]
-		};
+		var ret = fp.map.getExtent().clone().transform(fp.map.getProjectionObject(), _p());
+
+		ret.baseLayer = fp.map.baseLayer.permalinkName;
+		ret.layers = [ ];
+
 		for(var i=0; i<fp.map.layers.length; i++) {
 			if(!fp.map.layers[i].isBaseLayer && fp.map.layers[i].displayInLayerSwitcher && fp.map.layers[i].visibility)
 				ret.layers.push(fp.map.layers[i].permalinkName || fp.map.layers[i].name);
 		}
+
 		return ret;
 	};
 
@@ -180,7 +181,7 @@ var FacilPad = {
 		if(view == null) {
 			fp.map.zoomToMaxExtent();
 		} else {
-			var bbox = OpenLayers.Bounds.prototype.clone.apply(view.view).transform(_p(), fp.map.getProjectionObject());
+			var bbox = OpenLayers.Bounds.prototype.clone.apply(view).transform(_p(), fp.map.getProjectionObject());
 			fp.map.zoomToExtent(bbox);
 
 			var matching_layers = fp.map.getLayersBy("permalinkName", view.baseLayer);
@@ -206,7 +207,7 @@ var FacilPad = {
 			graphicXOffset: -9,
 			graphicYOffset: -25
 		};
-		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.position.lon, marker.position.lat).transform(_p(), fp.map.getProjectionObject()), null, style);
+		var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.lon, marker.lat).transform(_p(), fp.map.getProjectionObject()), null, style);
 		feature.fpMarker = marker;
 		feature.fpOnClick = function() {
 			fp.mapEvents.trigger("clickMarker", [ marker ]);
@@ -352,7 +353,7 @@ var FacilPad = {
 
 			if(!end) {
 				for(var i=0; i<line.points.length; i++) {
-					var marker = { id: "linePoint"+i, position: line.points[i], colour: "ffd700", i: i };
+					var marker = { id: "linePoint"+i, lat: line.points[i].lat, lon: line.points[i].lon, colour: "ffd700", i: i };
 					markers.push(marker);
 					fp.addMarker(marker);
 				}

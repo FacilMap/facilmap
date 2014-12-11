@@ -4,7 +4,7 @@
   "author": "Candid Dauth <cdauth@cdauth.eu>",
   "version": "0.0.1",
   "dependencies": {
-    "mongoose": "x.x.x",
+    "sequelize": "x.x.x",
     "socket.io": "x.x.x",
 	"async" : "x.x.x",
 	"request" : "x.x.x",

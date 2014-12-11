@@ -1,21 +1,33 @@
-var backend = require("./databaseBackendMongodb");
+var backend = require("./databaseBackendSequelize");
 var listeners = require("./listeners");
 var routing = require("./routing");
 var utils = require("./utils");
 var async = require("async");
 var underscore = require("underscore");
 
+var DEFAULT_TYPES = [
+	{ name: "marker", type: "marker", fields: { description: { type: "textarea" } } },
+	{ name: "line", type: "line", fields: { description: { type: "textarea" } } }
+];
+
 function getPadData(padId, callback) {
 	backend.getPadDataByWriteId(padId, function(err, data) {
 		if(err || data != null)
-			return callback(err, utils.extend(data, { writable: true }));
+			return callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
 
 		backend.getPadData(padId, function(err, data) {
 			if(err || data != null)
-				return callback(err, utils.extend(data, { writable: false }));
+				return callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: false, writeId: null }));
 
 			backend.createPad(utils.generateRandomId(10), padId, function(err, data) {
-				callback(err, utils.extend(data, { writable: true }));
+				if(err)
+					return callback(err);
+
+				async.each(DEFAULT_TYPES, function(it, next) {
+					backend.createType(data.id, it, next);
+				}, function(err) {
+					callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
+				});
 			});
 		});
 	});
@@ -43,7 +55,7 @@ function createView(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "view", data);
+		listeners.notifyPadListeners(data.PadId, "view", data);
 		callback(null, data);
 	});
 }
@@ -56,7 +68,7 @@ function updateView(viewId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "view", data);
+		listeners.notifyPadListeners(data.PadId, "view", data);
 		callback(null, data);
 	});
 }
@@ -66,7 +78,47 @@ function deleteView(viewId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "deleteView", { id: data.id });
+		listeners.notifyPadListeners(data.PadId, "deleteView", { id: data.id });
+		callback(null, data);
+	});
+}
+
+function getTypes(padId) {
+	return backend.getTypes(padId);
+}
+
+function createType(padId, data, callback) {
+	if(data.name == null || data.name.trim().length == 0)
+		return callback("No name provided.");
+
+	backend.createType(padId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data.PadId, "type", data);
+		callback(null, data);
+	});
+}
+
+function updateType(typeId, data, callback) {
+	if(data.name == null || data.name.trim().length == 0)
+		return callback("No name provided.");
+
+	backend.updateType(typeId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data.PadId, "type", data);
+		callback(null, data);
+	});
+}
+
+function deleteType(typeId, callback) {
+	backend.deleteView(typeId, function(err, data) {
+		if(err)
+			return callback(err);
+
+		listeners.notifyPadListeners(data.PadId, "deleteType", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -90,7 +142,7 @@ function updateMarker(markerId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "marker", _getMarkerDataFunc(data));
+		listeners.notifyPadListeners(data.PadId, "marker", _getMarkerDataFunc(data));
 		callback(null, data);
 	});
 }
@@ -100,7 +152,7 @@ function deleteMarker(markerId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "deleteMarker", { id: data.id });
+		listeners.notifyPadListeners(data.PadId, "deleteMarker", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -147,7 +199,7 @@ function updateLine(lineId, data, callback) {
 			if(!res.calculateRouting)
 				return next();
 
-			_setLinePoints(res.originalLine._pad, lineId, res.calculateRouting, next);
+			_setLinePoints(res.originalLine.PadId, lineId, res.calculateRouting, next);
 		} ]
 	}, function(err, res) {
 		callback(err, res.updateLine);
@@ -159,7 +211,7 @@ function _createLine(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "line", data);
+		listeners.notifyPadListeners(data.PadId, "line", data);
 		callback(null, data);
 	});
 }
@@ -169,7 +221,7 @@ function _updateLine(lineId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data._pad, "line", data);
+		listeners.notifyPadListeners(data.PadId, "line", data);
 		callback(null, data);
 	});
 }
@@ -196,7 +248,7 @@ function deleteLine(lineId, callback) {
 			if(err)
 				return callback;
 
-			listeners.notifyPadListeners(data._pad, "deleteLine", { id: data.id });
+			listeners.notifyPadListeners(data.PadId, "deleteLine", { id: data.id });
 			callback(null, data);
 		});
 	});
@@ -216,7 +268,7 @@ function getLinePoints(padId, bboxWithZoom) {
 	});
 }
 
-function copyPad(fromPadId, toPadId, callback) {
+/*function copyPad(fromPadId, toPadId, callback) {
 	function _handleStream(stream, next, cb) {
 		stream.on("data", function(data) {
 			stream.pause();
@@ -280,7 +332,7 @@ function copyPad(fromPadId, toPadId, callback) {
 			});
 		}]
 	}, callback);
-}
+}*/
 
 function _calculateRouting(line, callback) {
 	if(line.points && line.points.length >= 2 && line.mode) {
@@ -308,7 +360,7 @@ function _calculateRouting(line, callback) {
 
 function _getMarkerDataFunc(marker) {
 	return function(bbox) {
-		if(!utils.isInBbox(marker.position, bbox))
+		if(!utils.isInBbox(marker, bbox))
 			return null;
 
 		return marker;
@@ -347,6 +399,10 @@ module.exports = {
 	createView : createView,
 	updateView : updateView,
 	deleteView : deleteView,
+	getTypes : getTypes,
+	createType : createType,
+	updateType : updateType,
+	deleteType : deleteType,
 	getPadMarkers : getPadMarkers,
 	createMarker : createMarker,
 	updateMarker : updateMarker,
@@ -356,5 +412,6 @@ module.exports = {
 	updateLine : updateLine,
 	deleteLine : deleteLine,
 	getLinePoints : getLinePoints,
-	copyPad : copyPad
+	//copyPad : copyPad,
+	_defaultTypes : DEFAULT_TYPES
 };

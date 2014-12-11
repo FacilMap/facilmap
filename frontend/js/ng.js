@@ -171,6 +171,7 @@
 		$scope.markers = { };
 		$scope.lines = { };
 		$scope.views = { };
+		$scope.types = { };
 		$scope.dialog = null;
 		$scope.dialogError = null;
 		$scope.saveViewName = null;
@@ -192,7 +193,7 @@
 
 		$scope.onMove = function() {
 			if($scope.currentMarker)
-				$scope.currentMarker.xy = fp.posToXy($scope.currentMarker.position);
+				$scope.currentMarker.xy = fp.posToXy($scope.currentMarker);
 			if($scope.currentLine && $scope.currentLine.clickPos)
 				$scope.currentLine.clickXy = fp.posToXy($scope.currentLine.clickPos);
 		};
@@ -297,7 +298,14 @@
 			$scope.onMove();
 		}.fpWrapApply($scope));
 
-		$scope.addMarker = function() {
+		$scope.addObject = function(type) {
+			if(type.type == "marker")
+				$scope.addMarker(type);
+			else if(type.type == "line")
+				$scope.addLine(type);
+		};
+
+		$scope.addMarker = function(type) {
 			var message = $scope.showMessage("info", "Please click on the map to add a marker.", [
 				{ label: "Cancel", click: function() {
 					$scope.closeMessage(message);
@@ -307,7 +315,7 @@
 			var listener = fp.addClickListener(function(pos) {
 				$scope.closeMessage(message);
 
-				socket.emit("addMarker", { position: { lon: pos.lon, lat: pos.lat } }, function(err, marker) {
+				socket.emit("addMarker", { lon: pos.lon, lat: pos.lat, typeId: type.id }, function(err, marker) {
 					if(err)
 						return $scope.showMessage("error", err);
 
@@ -339,7 +347,7 @@
 			var listener = fp.addClickListener(function(pos) {
 				$scope.closeMessage(message);
 
-				socket.emit("editMarker", { id: marker.id, position: pos }, function(err) {
+				socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lon }, function(err) {
 					if(err)
 						return $scope.showMessage("error", err);
 
@@ -355,8 +363,11 @@
 			});
 		};
 
-		$scope.addLine = function() {
-			socket.emit("addLine", { points: [ ] }, function(err, line) {
+		$scope.addLine = function(type) {
+			socket.emit("addLine", { points: [ ], typeId: type.id }, function(err, line) {
+				if(err)
+					return $scope.showMessage("error", err);
+
 				line.actualPoints = [ ];
 				$scope.currentLine = line;
 				var message = $scope.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.", [
@@ -474,7 +485,7 @@
 					return $scope.dialogError = err;
 
 				if(makeDefault) {
-					socket.emit("editPad", { defaultView: view.id }, function(err) {
+					socket.emit("editPad", { defaultViewId: view.id }, function(err) {
 						if(err)
 							return $scope.dialogError = err;
 
@@ -489,7 +500,7 @@
 		};
 
 		$scope.setDefaultView = function(view) {
-			socket.emit("editPad", { defaultView: view.id }, function(err) {
+			socket.emit("editPad", { defaultViewId: view.id }, function(err) {
 				if(err)
 					$scope.dialogError = err;
 			});
@@ -500,6 +511,14 @@
 				if(err)
 					$scope.dialogError = err;
 			});
+		};
+
+		$scope.editType = function(type) {
+			// TODO
+		};
+
+		$scope.removeType = function(type) {
+			// TODO
 		};
 
 		$scope.copyPad = function() {
@@ -668,6 +687,14 @@
 			delete $scope.views[data.id];
 			if($scope.padData.defaultViewId == data.id)
 				$scope.padData.defaultViewId = null;
+		});
+
+		socket.on("type", function(data) {
+			$scope.types[data.id] = data;
+		});
+
+		socket.on("deleteType", function(data) {
+			delete $scope.types[data.id];
 		});
 
 		socket.on("disconnect", function() {
