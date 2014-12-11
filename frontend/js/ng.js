@@ -152,12 +152,19 @@
 		};
 	});
 
+	facilpadApp.directive("fpVariableMenuItem", function() {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				if($("#toolbox").hasClass("ui-menu"))
+					setTimeout(function() { $("#toolbox").menu("destroy").menu() }, 0);
+			}
+		}
+	});
+
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		setTimeout(function() { $("#toolbox").menu(); }, 0);
-		function updateMenu() {
-			setTimeout(function() { $("#toolbox").menu("destroy").menu(); }, 0);
-		}
 
 		$scope.padData = null;
 		$scope.loaded = false;
@@ -219,10 +226,6 @@
 				$scope.closeDialog();
 		});
 
-		$scope.$watch("layers", function() {
-			updateMenu();
-		});
-
 		fp.mapEvents.on("moveEnd", function(e, bbox) {
 			socket.emit("updateBbox", bbox);
 
@@ -263,8 +266,6 @@
 			if($scope.currentLine != null)
 				$scope.currentLine.descriptionHtml = $scope.marked($scope.currentLine.description);
 		});
-
-		$scope.$watch("views", updateMenu);
 
 		$scope.marked = function(text) {
 			return text != null ? $sce.trustAsHtml(marked(text)) : null;

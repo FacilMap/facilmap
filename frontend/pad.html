@@ -20,12 +20,12 @@
 			<li><a href="javascript:" ng-click="addMarker()" ng-hide="readonly">Add marker</a></li>
 			<li><a href="javascript:" ng-click="addLine()" ng-hide="readonly">Add line</a></li>
 			<li><a href="javascript:">Views</a><ul>
-				<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
+				<li ng-repeat="(id, view) in views" fp-variable-menu-item><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
 				<li><a href="javascript:" ng-click="openDialog('save-view-dialog')" ng-hide="readonly">Save current view</a></li>
 				<li><a href="javascript:" ng-click="openDialog('manage-views-dialog')" ng-hide="readonly">Manage views</a></li>
 			</ul></li>
 			<li><a href="javascript:">Layers</a><ul>
-				<li ng-repeat="layer in layers">
+				<li ng-repeat="layer in layers" fp-variable-menu-item>
 					<a href="javascript:" ng-click="setLayer(layer)">
 						<input type="{{layer.isBaseLayer ? 'radio' : 'checkbox'}}" ng-checked="layer.visibility" />
 						{{layer.name}}
