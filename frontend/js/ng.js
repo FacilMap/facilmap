@@ -666,6 +666,8 @@
 
 		socket.on("deleteView", function(data) {
 			delete $scope.views[data.id];
+			if($scope.padData.defaultViewId == data.id)
+				$scope.padData.defaultViewId = null;
 		});
 
 		socket.on("disconnect", function() {
