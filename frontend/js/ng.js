@@ -51,11 +51,19 @@
 		}
 	});
 
-	facilpadApp.directive("fpSpinner", function() {
+	facilpadApp.directive("fpSpinner", function($parse) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
-				$(element).spinner();
+				$(element).spinner({
+					spin: function(event, ui) {
+						scope.$apply(function() {
+							scope._spinnerVal = element.val();
+							$parse(attrs.ngModel + "=_spinnerVal")(scope);
+							delete scope._spinnerVal;
+						});
+					}
+				});
 			}
 		}
 	});
