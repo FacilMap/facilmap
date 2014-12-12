@@ -162,6 +162,87 @@
 		}
 	});
 
+	facilpadApp.directive("fpTypeField", function($parse, $compile) {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				if($parse(attrs.fpTypeFieldModel)(scope) == null)
+					$parse(attrs.fpTypeFieldModel+'='+attrs.fpTypeField+'.default')(scope);
+
+				var update = function() {
+					var field = $parse(attrs.fpTypeField)(scope);
+
+					var el;
+					scope.$watch(attrs.fpTypeField)
+					switch(field.type) {
+						case "textarea":
+							el = $('<textarea/>');
+							break;
+						case "dropdown":
+							el = $('<select/>');
+							if(field.options) {
+								for(var i=0; i<field.options.length; i++) {
+									$('<option/>').text(field[i].value).appendTo(el);
+								}
+							}
+							break;
+						case "checkbox":
+							el = $('<input type="checkbox" ng-true-value="1" ng-false-value="0" />');
+							break;
+						case "input":
+						default:
+							el = $('<input type="text"/>');
+							break;
+					}
+
+					el.attr("ng-model", attrs.fpTypeFieldModel);
+
+					if(attrs.fpTypeFieldId)
+						el.attr("id", attrs.fpTypeFieldId);
+
+					el.appendTo(element.empty());
+					$compile(el)(scope);
+				};
+
+				scope.$watch(attrs.fpTypeField+".type", update);
+				if(attrs.fpTypeFieldIgnoreDefault == null)
+					scope.$watch(attrs.fpTypeField+".default", update);
+			}
+		};
+	});
+
+	facilpadApp.directive("fpTypeFieldContent", function($parse) {
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				var update = function() {
+					var field = $parse(attrs.fpTypeFieldContent)(scope);
+					var value = $parse(attrs.fpTypeFieldModel)(scope);
+
+					if(value == null)
+						value = field.default || "";
+					switch(field.type) {
+						case "textarea":
+							element.empty().append(marked(value));
+							break;
+						case "checkbox":
+							element.text(value == "1" ? "✔" : "✘");
+							break;
+						case "dropdown":
+						case "input":
+						default:
+							element.text(value);
+					}
+				};
+
+				scope.$watch(attrs.fpTypeFieldModel, update);
+				scope.$watch(attrs.fpTypeFieldContent+".type", update);
+				if(attrs.fpTypeFieldIgnoreDefault == null)
+					scope.$watch(attrs.fpTypeFieldContent+".default", update);
+			}
+		}
+	});
+
 	facilpadApp.controller("PadCtrl", function($scope, socket, $timeout, $sce, $parse) {
 
 		setTimeout(function() { $("#toolbox").menu(); }, 0);
@@ -177,6 +258,7 @@
 		$scope.saveViewName = null;
 		$scope.currentMarker = null;
 		$scope.currentLine = null;
+		$scope.currentType = null;
 		$scope.messages = [ ];
 		$scope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
 		$scope.padId = fp.padId;
@@ -227,6 +309,16 @@
 				$scope.closeDialog();
 		});
 
+		$scope.$watch("types[currentType.id]", function() {
+			if($scope.currentType != null && $scope.currentType.id != null)
+				$scope.currentType = $scope.types[$scope.currentType.id];
+		});
+
+		$scope.$watch("currentType", function() {
+			if($scope.currentType == null && $scope.dialog && $scope.dialog.attr("id") == "edit-type-dialog")
+				$scope.closeDialog();
+		});
+
 		fp.mapEvents.on("moveEnd", function(e, bbox) {
 			socket.emit("updateBbox", bbox);
 
@@ -247,30 +339,6 @@
 			$scope.loaded = true;
 			FacilPad.displayView(newValue.defaultView);
 		});
-
-		$scope.$watch("currentMarker", function() {
-			if($scope.currentMarker != null)
-				$scope.currentMarker.descriptionHtml = $scope.marked($scope.currentMarker.description);
-		});
-
-		$scope.$watch("currentMarker.description", function() {
-			if($scope.currentMarker != null)
-				$scope.currentMarker.descriptionHtml = $scope.marked($scope.currentMarker.description);
-		});
-
-		$scope.$watch("currentLine", function() {
-			if($scope.currentLine != null)
-				$scope.currentLine.descriptionHtml = $scope.marked($scope.currentLine.description);
-		});
-
-		$scope.$watch("currentLine.description", function() {
-			if($scope.currentLine != null)
-				$scope.currentLine.descriptionHtml = $scope.marked($scope.currentLine.description);
-		});
-
-		$scope.marked = function(text) {
-			return text != null ? $sce.trustAsHtml(marked(text)) : null;
-		};
 
 		$scope.savePadData = function() {
 			var padData = $.extend({ }, $scope.padData);
@@ -513,12 +581,42 @@
 			});
 		};
 
-		$scope.editType = function(type) {
-			// TODO
+		$scope.createType = function() {
+			$scope.editType({
+				fields : [ ]
+			});
 		};
 
-		$scope.removeType = function(type) {
-			// TODO
+		$scope.editType = function(type) {
+			$scope.currentType = type;
+
+			$scope.openDialog("edit-type-dialog");
+		};
+
+		$scope.deleteType = function(type) {
+			socket.emit("deleteType", { id: type.id }, function(err) {
+				if(err)
+					$scope.dialogError = err;
+			});
+		};
+
+		$scope.saveType = function(type) {
+			socket.emit(type.id == null ? "addType" : "editType", type, function(err) {
+				if(err)
+					$scope.dialogError = err;
+				else
+					$scope.currentType = null;
+			});
+		};
+
+		$scope.createTypeField = function(type) {
+			type.fields.push({ name: "", type: "input", default: "" });
+		};
+
+		$scope.deleteTypeField = function(type, field) {
+			var idx = type.fields.indexOf(field);
+			if(idx != -1)
+				type.fields = type.fields.slice(0, idx).concat(type.fields.slice(idx+1));
 		};
 
 		$scope.copyPad = function() {

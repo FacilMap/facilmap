@@ -34,7 +34,7 @@
 			<li><a href="javascript:">Tools</a><ul>
 				<!--<li><a href="javascript:" ng-click="openDialog('copy-pad-dialog')" ng-hide="readonly">Copy pad</a></li>-->
 				<li><a href="javascript:" ng-click="openDialog('pad-settings-dialog')" ng-hide="readonly">Pad settings</a></li>
-				<!--<li><a href="javascript:" ng-click="openDialog('object-types-dialog')" ng-hide="readonly">Object types</a></li>-->
+				<li><a href="javascript:" ng-click="openDialog('object-types-dialog')" ng-hide="readonly">Object types</a></li>
 			</ul></li>
 		</ul>
 
@@ -77,7 +77,10 @@
 			<div class="content">
 				<h2>{{currentMarker.name}}</h2>
 				<p class="pos">Coordinates: {{round(currentMarker.lat, 5)}}, {{round(currentMarker.lon, 5)}}</p>
-				<div ng-bind-html="currentMarker.descriptionHtml"></div>
+				<dl>
+					<dt ng-repeat-start="field in types[currentMarker.typeId].fields">{{field.name}}</dt>
+					<dd ng-repeat-end fp-type-field-content="field" fp-type-field-model="currentMarker.data[field.name]"></dd>
+				</dl>
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-marker-dialog')" ng-hide="readonly">Edit</button>
@@ -91,7 +94,10 @@
 			<div class="content">
 				<h2>{{currentLine.name}}</h2>
 				<p class="distance">Distance: {{round(currentLine.distance, 2)}} km <span ng-show="currentLine.time != null">({{formatTime(currentLine.time)}} h{{routingMode(currentLine.mode)}})</span></p>
-				<div ng-bind-html="currentLine.descriptionHtml"></div>
+				<dl>
+					<dt ng-repeat-start="field in types[currentLine.typeId].fields">{{field.name}}</dt>
+					<dd ng-repeat-end fp-type-field-content="field" fp-type-field-model="currentLine.data[field.name]"></dd>
+				</dl>
 			</div>
 			<div class="buttons">
 				<button ng-click="openDialog('edit-line-dialog')" ng-hide="readonly">Edit</button>
@@ -111,8 +117,8 @@
 					<dt><label for="edit-marker-colour">Colour</label></dt>
 					<dd><input id="edit-marker-colour" ng-model="currentMarker.colour" fp-colour-picker></dd>
 
-					<dt><label for="edit-marker-description">Description</label></dt>
-					<dd><textarea id="edit-marker-description" ng-model="currentMarker.description"></textarea></dd>
+					<dt ng-repeat-start="field in types[currentMarker.typeId].fields"><label for="marker-{{$index}}-input">{{field.name}}</label></dt>
+					<dd ng-repeat-end fp-type-field="field" fp-type-field-model="currentMarker.data[field.name]" fp-type-field-id="marker-{{$index}}-input"></dd>
 				</dl>
 				<div>
 					<button ng-click="saveMarker(currentMarker)">Save</button>
@@ -142,8 +148,8 @@
 					<dt><label for="edit-line-width">Width</label></dt>
 					<dd><input id="edit-line-width" ng-model="currentLine.width" fp-spinner /></dd>
 
-					<dt><label for="edit-line-description">Description</label></dt>
-					<dd><textarea id="edit-line-description" ng-model="currentLine.description"></textarea></dd>
+					<dt ng-repeat-start="field in types[currentLine.typeId].fields"><label for="line-{{$index}}-input">{{field.name}}</label></dt>
+					<dd ng-repeat-end fp-type-field="field" fp-type-field-model="currentLine.data[field.name]" fp-type-field-id="line-{{$index}}-input"></dd>
 				</dl>
 				<div>
 					<button ng-click="saveLine(currentLine)">Save</button>
@@ -170,31 +176,78 @@
 			</form>
 		</div>
 
-		<div id="object-types-dialog" title="Object types" fp-dialog fp-preserve="padData">
+		<div id="object-types-dialog" title="Object types" fp-dialog>
 			<form>
 				<p class="error" ng-show="dialogError">{{dialogError}}</p>
-				<table>
+				<table class="border">
 					<thead>
 						<tr>
 							<th>Name</th>
 							<th>Type</th>
-							<th colspan="2">Edit</th>
+							<th colspan="3">Edit</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr ng-repeat="type in types">
 							<td>{{type.name}}</td>
 							<td>{{type.type}}</td>
-							<td class="button"><button ng-click="editType(type)">Edit</button></td>
-							<td class="button"><button ng-click="removeType(type)">Remove</button></td>
+							<td class="button"><button ng-click="editType(type)">Edit</button><button ng-click="deleteType(type)">Delete</button></td>
 						</tr>
 					</tbody>
 					<tfoot>
 						<tr>
-							<td colspan="3"><button ng-click="createType()">Create</button></td>
+							<td colspan="4"><button ng-click="createType()">Create</button></td>
 						</tr>
 					</tfoot>
 				</table>
+			</form>
+		</div>
+
+		<div id="edit-type-dialog" title="Edit object type" fp-dialog fp-preserve="currentType">
+			<form>
+				<p class="error" ng-show="dialogError">{{dialogError}}</p>
+				<dl>
+					<dt><label for="type-name-input">Name</label></dt>
+					<dd><input id="type-name-input" type="text" ng-model="currentType.name" /></dd>
+
+					<dt><label for="type-type-input">Type</label></dt>
+					<dd><select id="type-type-input" ng-model="currentType.type" ng-disabled="currentType.id != null">
+						<option value="marker">Marker</option>
+						<option value="line">Line</option>
+					</select></dd>
+				</dl>
+				<h2>Fields</h2>
+				<table class="border">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th>Default value</th>
+							<th>Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="field in currentType.fields">
+							<td><input type="text" ng-model="field.name"/></td>
+							<td><select ng-model="field.type">
+								<option value="input">Text field</option>
+								<option value="textarea">Text area</option>
+								<option value="dropdown">Dropdown</option>
+								<option value="checkbox">Checkbox</option>
+							</select></td>
+							<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
+							<td><button ng-click="deleteTypeField(currentType, field)">Delete</button></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="4"><button ng-click="createTypeField(currentType)">+</button></td>
+						</tr>
+					</tfoot>
+				</table>
+				<div>
+					<button ng-click="saveType(currentType)">Save</button>
+				</div>
 			</form>
 		</div>
 

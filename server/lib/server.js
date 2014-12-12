@@ -84,7 +84,7 @@ database.connect(function(err) {
 			},
 
 			addMarker : function(data, callback) {
-				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", typeId: "number" } ))
+				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object } ))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -94,7 +94,7 @@ database.connect(function(err) {
 			},
 
 			editMarker : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string" }))
+				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -114,7 +114,7 @@ database.connect(function(err) {
 			},
 
 			addLine : function(data, callback) {
-				if(!utils.stripObject(data, { points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number" }))
+				if(!utils.stripObject(data, { points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -124,7 +124,7 @@ database.connect(function(err) {
 			},
 
 			editLine : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string" }))
+				if(!utils.stripObject(data, { id: "number", points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -174,7 +174,8 @@ database.connect(function(err) {
 			},
 
 			addType : function(data, callback) {
-				// TODO: Strip object
+				if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", options: [ { value: "string" } ] }] } ))
+					return callback("Invalid parameters.");
 
 				if(!socket.writable)
 					return callback("In read-only mode.");
@@ -183,7 +184,8 @@ database.connect(function(err) {
 			},
 
 			editType : function(data, callback) {
-				// TODO: Strip object
+				if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", options: [ { value: "string" } ] }] } ))
+					return callback("Invalid parameters.");
 
 				if(!socket.writable)
 					return callback("In read-only mode.");

@@ -106,14 +106,27 @@ tr.selected td {
 
 table {
 	width: 100%;
+	border-spacing: 0;
+	border-collapse: collapse;
 }
 
 table td.button {
 	width: 1px;
+	white-space: nowrap;
 }
 
 table td.button button {
 	white-space: nowrap;
+}
+
+table.border td, table.border th {
+	border: 1px solid #ddd;
+	padding: .5em;
+}
+
+table.border input, table.border textarea, table.border select {
+	width: 100%;
+	box-sizing: border-box;
 }
 
 #messages {

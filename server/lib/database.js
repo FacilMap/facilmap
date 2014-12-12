@@ -6,8 +6,8 @@ var async = require("async");
 var underscore = require("underscore");
 
 var DEFAULT_TYPES = [
-	{ name: "marker", type: "marker", fields: { description: { type: "textarea" } } },
-	{ name: "line", type: "line", fields: { description: { type: "textarea" } } }
+	{ name: "marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
+	{ name: "line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
 ];
 
 function getPadData(padId, callback) {
@@ -114,12 +114,19 @@ function updateType(typeId, data, callback) {
 }
 
 function deleteType(typeId, callback) {
-	backend.deleteView(typeId, function(err, data) {
+	backend.isTypeUsed(typeId, function(err, isUsed) {
 		if(err)
 			return callback(err);
+		if(isUsed)
+			return callback("This type is in use.");
 
-		listeners.notifyPadListeners(data.PadId, "deleteType", { id: data.id });
-		callback(null, data);
+		backend.deleteType(typeId, function(err, data) {
+			if(err)
+				return callback(err);
+
+			listeners.notifyPadListeners(data.PadId, "deleteType", { id: data.id });
+			callback(null, data);
+		});
 	});
 }
 
