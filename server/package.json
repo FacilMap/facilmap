@@ -4,10 +4,10 @@
   "author": "Candid Dauth <cdauth@cdauth.eu>",
   "version": "0.0.1",
   "dependencies": {
-    "sequelize": "x.x.x",
-    "socket.io": "x.x.x",
-	"async" : "x.x.x",
-	"request" : "x.x.x",
-	"underscore" : "x.x.x"
+    "sequelize": "2.0.0-rc3",
+    "socket.io": "1.2.x",
+    "async" : "0.9.x",
+    "request" : "2.51.x",
+    "underscore" : "1.7.x"
   }
 }
