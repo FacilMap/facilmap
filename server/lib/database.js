@@ -4,6 +4,7 @@ var routing = require("./routing");
 var utils = require("./utils");
 var async = require("async");
 var underscore = require("underscore");
+var stream = require("stream");
 
 var DEFAULT_TYPES = [
 	{ name: "marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
@@ -109,8 +110,21 @@ function updateType(typeId, data, callback) {
 			return callback(err);
 
 		listeners.notifyPadListeners(data.PadId, "type", data);
-		callback(null, data);
+
+		_updateObjectStyles(data.type == "line" ? backend.getPadLinesByType(data.PadId, typeId) : backend.getPadMarkersByType(data.PadId, typeId), data.type == "line", function(err) {
+			callback(err, data);
+		});
 	});
+}
+
+function _optionsToObj(options, idx) {
+	var ret = { };
+	if(options) {
+		for(var i=0; i<options.length; i++) {
+			ret[options[i].key] = options[i][idx];
+		}
+	}
+	return ret;
 }
 
 function deleteType(typeId, callback) {
@@ -140,11 +154,25 @@ function createMarker(padId, data, callback) {
 			return callback(err);
 
 		listeners.notifyPadListeners(padId, "marker", _getMarkerDataFunc(data));
-		callback(null, data);
+
+		_updateObjectStyles(data, false, function(err) {
+			callback(err, data);
+		});
 	});
 }
 
 function updateMarker(markerId, data, callback) {
+	_updateMarker(markerId, data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		_updateObjectStyles(data, false, function(err) {
+			callback(err, data);
+		});
+	});
+}
+
+function _updateMarker(markerId, data, callback) {
 	backend.updateMarker(markerId, data, function(err, data) {
 		if(err)
 			return callback(err);
@@ -164,23 +192,79 @@ function deleteMarker(markerId, callback) {
 	});
 }
 
+function _updateObjectStyles(objectStream, isLine, callback) {
+	if(!(objectStream instanceof stream.Readable))
+		objectStream = new utils.ArrayStream([ objectStream ]);
+
+	var types = { };
+	utils.asyncStreamEach(objectStream, function(object, next) {
+		async.series([
+			function(next) {
+				if(types[object.typeId])
+					return next();
+
+				backend.getType(object.typeId, function(err, type) {
+					if(type == null)
+						return next("Type "+object.typeId+" does not exist.");
+					types[object.typeId] = type;
+					next(null);
+				});
+			},
+			function(next) {
+				async.each(types[object.typeId].fields, function(field, next) {
+					if(field.type == "dropdown" && (field.controlColour || (isLine && field.controlWidth))) {
+						var _find = function(value) {
+							for(var j=0; j<(field.options || []).length; j++) {
+								if(field.options[j].key == value)
+									return field.options[j];
+							}
+							return null;
+						};
+
+						var option = _find(object.data[field.name]) || _find(field.default);
+
+						var update = { };
+						if(option != null) {
+							if(field.controlColour && object.colour != option.colour)
+								update.colour = option.colour;
+							if(isLine && field.controlWidth && object.width != option.width)
+								update.width = option.width;
+						}
+
+						utils.extend(object, update);
+
+						if(Object.keys(update).length > 0)
+							return (isLine ? _updateLine : _updateMarker)(object.id, update, next);
+						else
+							return next();
+					}
+					next();
+				}, next);
+			}
+		], next);
+	}, callback);
+}
+
 function getPadLines(padId) {
 	return backend.getPadLines(padId);
 }
 
 function createLine(padId, data, callback) {
-	_calculateRouting(data, function(err, actualPoints) { // Also sets data.distance and data.time
-		if(err)
-			return callback(err);
-
-		_createLine(padId, data, function(err, data) {
-			if(err)
-				return callback(err);
-
-			_setLinePoints(padId, data.id, actualPoints, function(err) {
-				callback(err, data);
-			});
-		});
+	async.auto({
+		calculateRouting : function(next) {
+			_calculateRouting(data, next); // Also sets data.distance and data.time
+		},
+		createLine : [ "calculateRouting", function(next) {
+			_createLine(padId, data, next);
+		} ],
+		setLinePoints : [ "createLine", "calculateRouting", function(next, res) {
+			_setLinePoints(padId, res.createLine.id, res.calculateRouting, next);
+		} ],
+		updateLineStyle : [ "createLine", function(next, res) {
+			_updateObjectStyles(res.createLine, true, next); // Modifies res.createLine
+		} ]
+	}, function(err, res) {
+		return callback(err, res.createLine);
 	});
 }
 
@@ -201,6 +285,9 @@ function updateLine(lineId, data, callback) {
 		} ],
 		updateLine : [ "calculateRouting", function(next) {
 			_updateLine(lineId, data, next);
+		} ],
+		updateLineStyle : [ "updateLine", function(next, res) {
+			_updateObjectStyles(res.updateLine, true, next); // Modifies res.updateLine
 		} ],
 		setLinePoints : [ "originalLine", "calculateRouting", function(next, res) {
 			if(!res.calculateRouting)

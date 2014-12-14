@@ -1,4 +1,6 @@
 var stream = require("stream");
+var util = require("util");
+var async = require("async");
 
 function isInBbox(position, bbox) {
 	if(position.lat > bbox.top || position.lat < bbox.bottom)
@@ -174,6 +176,53 @@ function _stripObject(obj, type) {
 		return FAILURE;
 }
 
+function ArrayStream(array) {
+	stream.Readable.call(this, { objectMode: true });
+
+	if(array != null)
+		this.receiveArray(null, array);
+}
+
+util.inherits(ArrayStream, stream.Readable);
+
+ArrayStream.prototype._read = function(size) {
+};
+
+ArrayStream.prototype.receiveArray = function(err, array) {
+	if(err)
+		return this.emit("error", err);
+
+	for(var i=0; i<array.length; i++)
+		this.push(array[i]);
+	this.push();
+};
+
+function asyncStreamEach(stream, handle, callback) {
+	var queue = async.queue(handle, 5);
+
+	var push = function() {
+		if(queue.length() == 0) {
+			var item = stream.read();
+			if(item != null)
+				queue.push(item, push);
+		}
+	};
+
+	stream.on("readable", push);
+
+	stream.on("end", function() {
+		if(queue.running() == 0 && queue.length() == 0)
+			callback();
+		else
+			queue.drain = callback;
+	});
+
+	stream.on("error", function(err) {
+		queue.kill();
+		callback(err);
+	});
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
@@ -181,5 +230,7 @@ module.exports = {
 	extend : extend,
 	calculateDistance : calculateDistance,
 	generateRandomId : generateRandomId,
-	stripObject : stripObject
+	stripObject : stripObject,
+	ArrayStream : ArrayStream,
+	asyncStreamEach : asyncStreamEach
 };

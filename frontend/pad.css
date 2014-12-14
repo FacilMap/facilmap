@@ -100,6 +100,10 @@ dl:after {
 	content: " ";
 }
 
+label.disabled {
+	color: #888;
+}
+
 tr.selected td {
 	font-weight: bold;
 }
@@ -122,6 +126,10 @@ table td.button button {
 table.border td, table.border th {
 	border: 1px solid #ddd;
 	padding: .5em;
+}
+
+table.border thead {
+	background-color: #f8f8f8;
 }
 
 table.border input, table.border textarea, table.border select {

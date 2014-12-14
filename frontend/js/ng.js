@@ -57,11 +57,13 @@
 			link: function(scope, element, attrs) {
 				$(element).spinner({
 					spin: function(event, ui) {
-						scope.$apply(function() {
-							scope._spinnerVal = element.val();
-							$parse(attrs.ngModel + "=_spinnerVal")(scope);
-							delete scope._spinnerVal;
-						});
+						setTimeout(function() {
+							scope.$apply(function() {
+								scope._spinnerVal = element.val();
+								$parse(attrs.ngModel + "=_spinnerVal")(scope);
+								delete scope._spinnerVal;
+							});
+						}, 0);
 					}
 				});
 			}
@@ -182,7 +184,7 @@
 							el = $('<select/>');
 							if(field.options) {
 								for(var i=0; i<field.options.length; i++) {
-									$('<option/>').text(field[i].value).appendTo(el);
+									$('<option/>').attr("value", field.options[i].key).text(field.options[i].value).appendTo(el);
 								}
 							}
 							break;
@@ -205,6 +207,7 @@
 				};
 
 				scope.$watch(attrs.fpTypeField+".type", update);
+				scope.$watch(attrs.fpTypeField+".options", update, true);
 				if(attrs.fpTypeFieldIgnoreDefault == null)
 					scope.$watch(attrs.fpTypeField+".default", update);
 			}
@@ -229,6 +232,20 @@
 							element.text(value == "1" ? "✔" : "✘");
 							break;
 						case "dropdown":
+							function _resolve(value) {
+								for(var i=0; i<(field.options || [ ]).length; i++) {
+									if(field.options[i].key == value) {
+										element.text(field.options[i].value);
+										return true;
+									}
+								}
+								return false;
+							}
+
+							if(!_resolve(value) && !_resolve(field.default))
+								element.text("");
+
+							break;
 						case "input":
 						default:
 							element.text(value);
@@ -237,6 +254,7 @@
 
 				scope.$watch(attrs.fpTypeFieldModel, update);
 				scope.$watch(attrs.fpTypeFieldContent+".type", update);
+				scope.$watch(attrs.fpTypeFieldContent+".options", update, true);
 				if(attrs.fpTypeFieldIgnoreDefault == null)
 					scope.$watch(attrs.fpTypeFieldContent+".default", update);
 			}
@@ -259,6 +277,7 @@
 		$scope.currentMarker = null;
 		$scope.currentLine = null;
 		$scope.currentType = null;
+		$scope.currentField = null;
 		$scope.messages = [ ];
 		$scope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
 		$scope.padId = fp.padId;
@@ -316,6 +335,11 @@
 
 		$scope.$watch("currentType", function() {
 			if($scope.currentType == null && $scope.dialog && $scope.dialog.attr("id") == "edit-type-dialog")
+				$scope.closeDialog();
+		});
+
+		$scope.$watch("currentField", function() {
+			if($scope.currentField == null && $scope.dialog && $scope.dialog.attr("id") == "edit-type-dropdown-dialog")
 				$scope.closeDialog();
 		});
 
@@ -617,6 +641,37 @@
 			var idx = type.fields.indexOf(field);
 			if(idx != -1)
 				type.fields = type.fields.slice(0, idx).concat(type.fields.slice(idx+1));
+		};
+
+		$scope.fieldCanControl = function(type, field, what) {
+			var idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);
+			for(var i=0; i<(type && type.fields && type.fields || [ ]).length; i++) {
+				if(type.fields[i][idx] && type.fields[i] !== field)
+					return false;
+			}
+			return true;
+		};
+
+		$scope.editTypeDropdown = function(type, field) {
+			$scope.currentField = field;
+			$scope.openDialog("edit-type-dropdown-dialog");
+		};
+
+		$scope.addTypeDropdownOption = function(field) {
+			if(field.options == null)
+				field.options = [ ];
+
+			field.options.push({ key: fp.generateRandomPadId(), value: "" });
+		};
+
+		$scope.deleteTypeDropdownOption = function(field, option) {
+			var idx = field.options.indexOf(option);
+			if(idx != -1)
+				field.options = field.options.slice(0, idx).concat(field.options.slice(idx+1));
+		};
+
+		$scope.saveTypeFieldDropdown = function(field) {
+			$scope.currentField = null;
 		};
 
 		$scope.copyPad = function() {

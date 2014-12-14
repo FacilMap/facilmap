@@ -2,8 +2,6 @@ var Sequelize = require("sequelize");
 var config = require("../config");
 var utils = require("./utils");
 var async = require("async");
-var stream = require("stream");
-var util = require("util");
 
 var conn = new Sequelize(config.db.database, config.db.user, config.db.password, {
 	dialect: config.db.type,
@@ -51,23 +49,6 @@ function _makeNotNullForeignKey(type, field, error) {
 		foreignKey: { name: field, allowNull: false }
 	}
 }
-
-function _ArrayStream() {
-	stream.Readable.call(this, { objectMode: true });
-}
-
-util.inherits(_ArrayStream, stream.Readable);
-
-_ArrayStream.prototype._read = function(size) {
-};
-
-_ArrayStream.prototype.receiveArray = function(err, array) {
-	if(err)
-		return this.emit("error", err);
-
-	for(var i=0; i<array.length; i++)
-		this.push(array[i]);
-};
 
 
 /**********/
@@ -242,14 +223,15 @@ function updatePadData(padId, data, callback) {
 }
 
 function _getPadObjects(type, padId, condition) {
-	var ret = new _ArrayStream();
+	var ret = new utils.ArrayStream();
 	Pad.build({ id: padId })["get"+type+"s"](condition).complete(function(err, objs) {
 		if(err)
 			return ret.receiveArray(err);
 
 		objs.forEach(function(it) {
 			if(it[type+"Data"] != null) {
-				it.setDataValue("data", _dataFromArr(it[type+"Data"]));
+				it.data = _dataFromArr(it[type+"Data"]);
+				it.setDataValue("data", it.data); // For JSON.stringify()
 				it.setDataValue(type+"Data", undefined);
 			}
 		});
@@ -272,11 +254,13 @@ function _createPadObjectWithData(type, padId, data, callback) {
 		},
 		data: [ "obj", function(next, res) {
 			if(data.data != null) {
-				res.obj.setDataValue("data", data.data);
+				res.obj.data = data.data;
+				res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
 				_setObjectData(type, res.obj.id, data.data, next);
 			}
 			else {
-				res.obj.setDataValue("data", { });
+				res.obj.data = { };
+				res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
 				next();
 			}
 		} ]
@@ -317,7 +301,8 @@ function _updatePadObjectWithData(type, objId, data, callback) {
 		if(err)
 			return callback(err);
 
-		res.obj.setDataValue("data", data.data != null ? data.data : res.getData);
+		res.obj.data = (data.data != null ? data.data : res.getData);
+		res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
 		callback(null, res.obj);
 	});
 }
@@ -398,6 +383,10 @@ function deleteView(viewId, callback) {
 	_deletePadObject("View", viewId, callback);
 }
 
+function getType(typeId, callback) {
+	return Type.findOne(typeId).complete(callback);
+}
+
 function getTypes(padId) {
 	return _getPadObjects("Type", padId);
 }
@@ -431,6 +420,10 @@ function getPadMarkers(padId, bbox) {
 	return _getPadObjects("Marker", padId, { where: _makeBboxCondition(bbox), include: [ MarkerData ] });
 }
 
+function getPadMarkersByType(padId, typeId) {
+	return _getPadObjects("Marker", padId, { where: { typeId: typeId }, include: [ MarkerData ] });
+}
+
 function createMarker(padId, data, callback) {
 	_createPadObjectWithData("Marker", padId, data, callback);
 }
@@ -449,6 +442,10 @@ function getPadLines(padId, fields) {
 		cond.attributes = (typeof fields == "string" ? fields.split(/\s+/) : fields);
 
 	return _getPadObjects("Line", padId, cond);
+}
+
+function getPadLinesByType(padId, typeId) {
+	return _getPadObjects("Line", padId, { where: { typeId: typeId }, include: [ LineData ] });
 }
 
 function getLine(lineId, callback) {
@@ -547,16 +544,19 @@ module.exports = {
 	createView : createView,
 	updateView : updateView,
 	deleteView : deleteView,
+	getType : getType,
 	getTypes : getTypes,
 	createType : createType,
 	updateType : updateType,
 	deleteType : deleteType,
 	isTypeUsed : isTypeUsed,
 	getPadMarkers : getPadMarkers,
+	getPadMarkersByType : getPadMarkersByType,
 	createMarker : createMarker,
 	updateMarker : updateMarker,
 	deleteMarker : deleteMarker,
 	getPadLines : getPadLines,
+	getPadLinesByType : getPadLinesByType,
 	getLine : getLine,
 	createLine : createLine,
 	updateLine : updateLine,

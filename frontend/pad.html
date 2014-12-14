@@ -78,8 +78,8 @@
 				<h2>{{currentMarker.name}}</h2>
 				<p class="pos">Coordinates: {{round(currentMarker.lat, 5)}}, {{round(currentMarker.lon, 5)}}</p>
 				<dl>
-					<dt ng-repeat-start="field in types[currentMarker.typeId].fields">{{field.name}}</dt>
-					<dd ng-repeat-end fp-type-field-content="field" fp-type-field-model="currentMarker.data[field.name]"></dd>
+					<dt ng-repeat-start="field in types[currentMarker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
+					<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="currentMarker.data[field.name]"></dd>
 				</dl>
 			</div>
 			<div class="buttons">
@@ -95,8 +95,8 @@
 				<h2>{{currentLine.name}}</h2>
 				<p class="distance">Distance: {{round(currentLine.distance, 2)}} km <span ng-show="currentLine.time != null">({{formatTime(currentLine.time)}} h{{routingMode(currentLine.mode)}})</span></p>
 				<dl>
-					<dt ng-repeat-start="field in types[currentLine.typeId].fields">{{field.name}}</dt>
-					<dd ng-repeat-end fp-type-field-content="field" fp-type-field-model="currentLine.data[field.name]"></dd>
+					<dt ng-repeat-start="field in types[currentLine.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
+					<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="currentLine.data[field.name]"></dd>
 				</dl>
 			</div>
 			<div class="buttons">
@@ -117,8 +117,8 @@
 					<dt><label for="edit-marker-colour">Colour</label></dt>
 					<dd><input id="edit-marker-colour" ng-model="currentMarker.colour" fp-colour-picker></dd>
 
-					<dt ng-repeat-start="field in types[currentMarker.typeId].fields"><label for="marker-{{$index}}-input">{{field.name}}</label></dt>
-					<dd ng-repeat-end fp-type-field="field" fp-type-field-model="currentMarker.data[field.name]" fp-type-field-id="marker-{{$index}}-input"></dd>
+					<dt ng-repeat-start="field in types[currentMarker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1"><label for="marker-{{$index}}-input">{{field.name}}</label></dt>
+					<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field="field" fp-type-field-model="currentMarker.data[field.name]" fp-type-field-id="marker-{{$index}}-input"></dd>
 				</dl>
 				<div>
 					<button ng-click="saveMarker(currentMarker)">Save</button>
@@ -148,8 +148,8 @@
 					<dt><label for="edit-line-width">Width</label></dt>
 					<dd><input id="edit-line-width" ng-model="currentLine.width" fp-spinner /></dd>
 
-					<dt ng-repeat-start="field in types[currentLine.typeId].fields"><label for="line-{{$index}}-input">{{field.name}}</label></dt>
-					<dd ng-repeat-end fp-type-field="field" fp-type-field-model="currentLine.data[field.name]" fp-type-field-id="line-{{$index}}-input"></dd>
+					<dt ng-repeat-start="field in types[currentLine.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1"><label for="line-{{$index}}-input">{{field.name}}</label></dt>
+					<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field="field" fp-type-field-model="currentLine.data[field.name]" fp-type-field-id="line-{{$index}}-input"></dd>
 				</dl>
 				<div>
 					<button ng-click="saveLine(currentLine)">Save</button>
@@ -234,7 +234,7 @@
 								<option value="textarea">Text area</option>
 								<option value="dropdown">Dropdown</option>
 								<option value="checkbox">Checkbox</option>
-							</select></td>
+							</select> <button ng-show="field.type == 'dropdown'" ng-click="editTypeDropdown(currentType, field)">Edit</button></td>
 							<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
 							<td><button ng-click="deleteTypeField(currentType, field)">Delete</button></td>
 						</tr>
@@ -248,6 +248,37 @@
 				<div>
 					<button ng-click="saveType(currentType)">Save</button>
 				</div>
+			</form>
+		</div>
+
+		<div id="edit-type-dropdown-dialog" title="Edit dropdown" fp-dialog fp-preserve="currentField">
+			<form>
+				<div><input type="checkbox" id="control-colour-input" ng-model="currentField.controlColour" ng-disabled="!fieldCanControl(currentType, currentField, 'colour')"><label for="control-colour-input" ng-class="{disabled: !fieldCanControl(currentType, currentField, 'colour')}"> Control {{currentType.type}} colour</label></div>
+				<div ng-show="currentType.type == 'line'"><input type="checkbox" id="control-width-input" ng-model="currentField.controlWidth" ng-disabled="!fieldCanControl(currentType, currentField, 'width')"><label for="control-width-input" ng-class="{disabled: !fieldCanControl(currentType, currentField, 'width')}"> Control {{currentType.type}} width</label></div>
+				<table class="border">
+					<thead>
+						<tr>
+							<th>Option</th>
+							<th ng-show="currentField.controlColour">Colour</th>
+							<th ng-show="currentField.controlWidth">Width</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="option in currentField.options">
+							<td><input type="text" ng-model="option.value"></td>
+							<td ng-show="currentField.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker></td>
+							<td ng-show="currentField.controlWidth"><input type="text" ng-model="option.width" fp-spinner></td>
+							<td><button ng-click="deleteTypeDropdownOption(currentField, option)">−</button></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="4"><button ng-click="addTypeDropdownOption(currentField)">+</button></td>
+						</tr>
+					</tfoot>
+				</table>
+				<div><button ng-click="saveTypeFieldDropdown(currentField)">OK</button></div>
 			</form>
 		</div>
 
