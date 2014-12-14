@@ -72,17 +72,21 @@ dl {
 }
 
 dt {
-	float: left;
-	clear: left;
+	display: inline-block;
 	font-weight: bold;
 	margin: 5px 0 0 0;
 	padding: 0;
-	width: 30%;
+	width: 29%;
+}
+
+dt:after {
+	content: ":\a0";
 }
 
 dd {
-	width: 70%;
-	margin: 5px 0 0 30%;
+	display: inline-block;
+	width: 69%;
+	margin: 5px 0 0 0;
 	padding: 0;
 }
 
