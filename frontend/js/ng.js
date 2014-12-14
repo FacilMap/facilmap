@@ -34,8 +34,19 @@
 	    };
 		var emitBkp = socket.emit;
 		socket.emit = function(eventName, data, cb) {
-			if(cb)
-				arguments[2] = wrapApply($rootScope, cb);
+			if(cb) {
+				fp.loadStart();
+				var cb2 = cb;
+				arguments[2] = function() {
+					fp.loadEnd();
+					var context = this;
+					var args = arguments;
+					$rootScope.$apply(function() {
+						cb2.apply(context, args);
+					});
+				};
+			}
+
 			emitBkp.apply(this, arguments);
 		};
 

@@ -291,6 +291,12 @@ textarea {
 	border-color: #000;
 }
 
+.olMap .fmControlLoading {
+	top: 4px;
+	left: 43px;
+	right: auto;
+}
+
 
 /********* z-index **************/
 
@@ -311,4 +317,8 @@ textarea {
 
 #map .fp-popup {
 	z-index: 1007;
+}
+
+.olMap .fmControlLoading {
+	z-index: 10003;
 }

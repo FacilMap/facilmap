@@ -404,6 +404,14 @@ var FacilPad = {
 		return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= threshold) ? "ffffff" : "000000";
 	};
 
+	fp.loadStart = function() {
+		fp.map.getControlsByClass("FacilMap.Control.Loading")[0].loadStart();
+	};
+
+	fp.loadEnd = function() {
+		fp.map.getControlsByClass("FacilMap.Control.Loading")[0].loadEnd();
+	};
+
 	fp.padId = location.pathname.match(/[^\/]*$/)[0];
 
 })(FacilPad);
