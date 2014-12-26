@@ -7,7 +7,7 @@
 		openDialogs = openDialogs.slice(0, idx).concat(openDialogs.slice(idx+1));
 	}
 
-	fp.app.factory("fpDialogs", [ "$compile", "$parse", "$templateCache", "fpUi", function($compile, $parse, $templateCache, fpUi) {
+	fp.app.factory("fpDialogs", [ "$compile", "$parse", "$templateCache", "fpUi", "$timeout", function($compile, $parse, $templateCache, fpUi, $timeout) {
 		return {
 			open: function(template, scope, title, onClose) {
 				var dialogTemplate = $templateCache.get(template);
@@ -20,10 +20,11 @@
 					el.remove();
 					_removeOpenDialog(ret);
 
-					if(onClose)
-						scope.$apply(onClose);
-
-					scope.$evalAsync(scope.$destroy.bind(scope)); // $destroy fails when $digest is in progress
+					$timeout(function() {
+						if(onClose)
+							scope.$apply(onClose);
+						scope.$destroy();
+					});
 				});
 
 				$compile(el)(scope);

@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapPopups", [ "$compile", "$parse", "$templateCache", "fpUi", function($compile, $parse, $templateCache, fpUi) {
+	fp.app.factory("fpMapPopups", [ "$compile", "$parse", "$templateCache", "fpUi", "$timeout", function($compile, $parse, $templateCache, fpUi, $timeout) {
 		return function(map) {
 			var openPopups = [ ];
 
@@ -20,12 +20,14 @@
 					var ret = {
 						pos: pos,
 						close: function() {
-							if(onClose)
-								onClose();
-
 							el.remove();
 							_removeOpenPopup(ret);
-							scope.$evalAsync(scope.$destroy.bind(scope)); // $destroy fails when $digest is in progress
+
+							$timeout(function() {
+								if(onClose)
+									scope.$apply(onClose);
+								scope.$destroy();
+							});
 						},
 						updatePosition: function(pos) {
 							this.pos = pos;
