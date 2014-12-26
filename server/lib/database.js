@@ -56,7 +56,7 @@ function createView(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "view", data);
+		listeners.notifyPadListeners(data.padId, "view", data);
 		callback(null, data);
 	});
 }
@@ -69,7 +69,7 @@ function updateView(viewId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "view", data);
+		listeners.notifyPadListeners(data.padId, "view", data);
 		callback(null, data);
 	});
 }
@@ -79,7 +79,7 @@ function deleteView(viewId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "deleteView", { id: data.id });
+		listeners.notifyPadListeners(data.padId, "deleteView", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -96,7 +96,7 @@ function createType(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "type", data);
+		listeners.notifyPadListeners(data.padId, "type", data);
 		callback(null, data);
 	});
 }
@@ -109,9 +109,9 @@ function updateType(typeId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "type", data);
+		listeners.notifyPadListeners(data.padId, "type", data);
 
-		_updateObjectStyles(data.type == "line" ? backend.getPadLinesByType(data.PadId, typeId) : backend.getPadMarkersByType(data.PadId, typeId), data.type == "line", function(err) {
+		_updateObjectStyles(data.type == "line" ? backend.getPadLinesByType(data.padId, typeId) : backend.getPadMarkersByType(data.padId, typeId), data.type == "line", function(err) {
 			callback(err, data);
 		});
 	});
@@ -138,7 +138,7 @@ function deleteType(typeId, callback) {
 			if(err)
 				return callback(err);
 
-			listeners.notifyPadListeners(data.PadId, "deleteType", { id: data.id });
+			listeners.notifyPadListeners(data.padId, "deleteType", { id: data.id });
 			callback(null, data);
 		});
 	});
@@ -177,7 +177,7 @@ function _updateMarker(markerId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "marker", _getMarkerDataFunc(data));
+		listeners.notifyPadListeners(data.padId, "marker", _getMarkerDataFunc(data));
 		callback(null, data);
 	});
 }
@@ -187,7 +187,7 @@ function deleteMarker(markerId, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "deleteMarker", { id: data.id });
+		listeners.notifyPadListeners(data.padId, "deleteMarker", { id: data.id });
 		callback(null, data);
 	});
 }
@@ -293,7 +293,7 @@ function updateLine(lineId, data, callback) {
 			if(!res.calculateRouting)
 				return next();
 
-			_setLinePoints(res.originalLine.PadId, lineId, res.calculateRouting, next);
+			_setLinePoints(res.originalLine.padId, lineId, res.calculateRouting, next);
 		} ]
 	}, function(err, res) {
 		callback(err, res.updateLine);
@@ -305,7 +305,7 @@ function _createLine(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "line", data);
+		listeners.notifyPadListeners(data.padId, "line", data);
 		callback(null, data);
 	});
 }
@@ -315,7 +315,7 @@ function _updateLine(lineId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(data.PadId, "line", data);
+		listeners.notifyPadListeners(data.padId, "line", data);
 		callback(null, data);
 	});
 }
@@ -342,7 +342,7 @@ function deleteLine(lineId, callback) {
 			if(err)
 				return callback;
 
-			listeners.notifyPadListeners(data.PadId, "deleteLine", { id: data.id });
+			listeners.notifyPadListeners(data.padId, "deleteLine", { id: data.id });
 			callback(null, data);
 		});
 	});

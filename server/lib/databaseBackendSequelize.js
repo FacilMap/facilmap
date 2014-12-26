@@ -73,13 +73,13 @@ var Marker = conn.define("Marker", {
 	colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour }
 });
 
-Pad.hasMany(Marker);
-Marker.belongsTo(Pad, _makeNotNullForeignKey("Pad", "PadId"));
+Pad.hasMany(Marker, { foreignKey: "padId" });
+Marker.belongsTo(Pad, _makeNotNullForeignKey("pad", "padId"));
 
 var MarkerData = conn.define("MarkerData", dataDefinition);
 
-MarkerData.belongsTo(Marker, _makeNotNullForeignKey("Marker", "MarkerId"));
-Marker.hasMany(MarkerData);
+MarkerData.belongsTo(Marker, _makeNotNullForeignKey("marker", "markerId"));
+Marker.hasMany(MarkerData, { foreignKey: "markerId" });
 
 
 /* Lines */
@@ -104,8 +104,8 @@ var Line = conn.define("Line", {
 	time : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
 });
 
-Pad.hasMany(Line);
-Line.belongsTo(Pad, _makeNotNullForeignKey("Pad", "PadId"));
+Pad.hasMany(Line, { foreignKey: "padId" });
+Line.belongsTo(Pad, _makeNotNullForeignKey("pad", "padId"));
 
 var LinePoint = conn.define("LinePoint", {
 	lat: latType,
@@ -114,13 +114,13 @@ var LinePoint = conn.define("LinePoint", {
 	idx: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false }
 });
 
-LinePoint.belongsTo(Line, _makeNotNullForeignKey("Line", "LineId"));
-Line.hasMany(LinePoint);
+LinePoint.belongsTo(Line, _makeNotNullForeignKey("line", "lineId"));
+Line.hasMany(LinePoint, { foreignKey: "lineId" });
 
 var LineData = conn.define("LineData", dataDefinition);
 
-LineData.belongsTo(Line, _makeNotNullForeignKey("Line", "LineId"));
-Line.hasMany(LineData);
+LineData.belongsTo(Line, _makeNotNullForeignKey("line", "lineId"));
+Line.hasMany(LineData, { foreignKey: "lineId" });
 
 
 /* Views */
@@ -144,11 +144,11 @@ var View = conn.define("View", {
 	right : lonType
 });
 
-Pad.hasMany(View);
-View.belongsTo(Pad, { allowNull: false });
+Pad.hasMany(View, { foreignKey: "padId" });
+View.belongsTo(Pad, _makeNotNullForeignKey("pad", "padId"));
 
 Pad.belongsTo(View, { as: "defaultView", foreignKey: "defaultViewId" });
-View.hasOne(Pad, { as: "defaultView", foreignKey: "defaultViewId" });
+View.hasOne(Pad, { foreignKey: "defaultViewId" });
 
 
 /* Types */
@@ -181,8 +181,8 @@ var Type = conn.define("Type", {
 	}
 });
 
-Pad.hasMany(Type);
-Type.belongsTo(Pad, _makeNotNullForeignKey("Pad", "PadId"));
+Pad.hasMany(Type, { foreignKey: "padId" });
+Type.belongsTo(Pad, _makeNotNullForeignKey("pad", "padId"));
 
 Marker.belongsTo(Type, _makeNotNullForeignKey("type", "typeId", true));
 Line.belongsTo(Type, _makeNotNullForeignKey("type", "typeId", true));
@@ -243,7 +243,7 @@ function _getPadObjects(type, padId, condition) {
 
 function _createPadObject(type, padId, data, callback) {
 	var obj = conn.model(type).build(data);
-	obj.PadId = padId;
+	obj.padId = padId;
 	obj.save().complete(callback);
 }
 
@@ -345,7 +345,7 @@ function _dataFromArr(dataArr) {
 
 function _getObjectData(type, objId, callback) {
 	var filter = { };
-	filter[type+"Id"] = objId;
+	filter[type.toLowerCase()+"Id"] = objId;
 
 	conn.model(type+"Data").findAll({ where: filter}).then(function(dataArr) {
 		callback(null, _dataFromArr(dataArr));
@@ -355,7 +355,7 @@ function _getObjectData(type, objId, callback) {
 function _setObjectData(type, objId, data, callback) {
 	var model = conn.model(type+"Data");
 	var idObj = { };
-	idObj[type+"Id"] = objId;
+	idObj[type.toLowerCase()+"Id"] = objId;
 
 	async.series([
 		function(next) {
@@ -487,12 +487,12 @@ function getLinePointsByIdx(lineId, indexes, callback) {
 function setLinePoints(lineId, points, callback) {
 	async.series([
 		function(next) {
-			LinePoint.destroy({ where: { LineId: lineId } }).complete(next);
+			LinePoint.destroy({ where: { lineId: lineId } }).complete(next);
 		},
 		function(next) {
 			var create = [ ];
 			for(var i=0; i<points.length; i++) {
-				create.push(utils.extend({ }, points[i], { LineId: lineId }));
+				create.push(utils.extend({ }, points[i], { lineId: lineId }));
 			}
 
 			LinePoint.bulkCreate(create).complete(next);

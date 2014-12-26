@@ -161,11 +161,11 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 				var ret = [ db._models.Pad.create(data) ];
 
 				markerTypes[data.id] = db._models.Type.build(DEFAULT_MARKER_TYPE);
-				markerTypes[data.id].PadId = data.id;
+				markerTypes[data.id].padId = data.id;
 				ret.push(markerTypes[data.id].save());
 
 				lineTypes[data.id] = db._models.Type.build(DEFAULT_LINE_TYPE);
-				lineTypes[data.id].PadId = data.id;
+				lineTypes[data.id].padId = data.id;
 				ret.push(lineTypes[data.id].save());
 
 				return ret;
@@ -177,7 +177,7 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 				data.lon = (data.position && data.position.lon);
 				delete data.position;
 
-				data.PadId = data._pad;
+				data.padId = data._pad;
 				delete data._pad;
 
 				if(data.style) {
@@ -185,7 +185,7 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 					delete data.style;
 				}
 
-				data.typeId = (markerTypes[data.PadId] && markerTypes[data.PadId].id);
+				data.typeId = (markerTypes[data.padId] && markerTypes[data.padId].id);
 
 				var id = data.id;
 				delete data.id;
@@ -201,20 +201,20 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 					return [ ]; // Saving of marker failed
 
 				var markerData = db._models.MarkerData.build({ name: "Description", value: data.description || "" });
-				markerData.MarkerId = markers[data.id].id;
+				markerData.markerId = markers[data.id].id;
 				return [ markerData.save() ];
 			}, next);
 		},
 		function(next) {
 			migrateData("Line", Line.find().stream(), function(data) {
-				data.PadId = data._pad;
+				data.padId = data._pad;
 				delete data._pad;
 
 				for(var i=0; i<data.points.length; i++) {
 					delete data.points[i]._id;
 				}
 
-				data.typeId = (lineTypes[data.PadId] && lineTypes[data.PadId].id);
+				data.typeId = (lineTypes[data.padId] && lineTypes[data.padId].id);
 
 				var id = data.id;
 				delete data.id;
@@ -230,7 +230,7 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 					return [ ]; // Saving of line failed
 
 				var lineData = db._models.LineData.build({ name: "Description", value: data.description || "" });
-				lineData.LineId = lines[data.id].id;
+				lineData.lineId = lines[data.id].id;
 				return [ lineData.save() ];
 			}, next);
 		},
@@ -239,7 +239,7 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 				delete data.id;
 
 				var linePoint = db._models.LinePoint.build(data);
-				linePoint.LineId = lines[data._line].id;
+				linePoint.lineId = lines[data._line].id;
 				return [ linePoint.save() ];
 			}, next);
 		},
@@ -254,7 +254,7 @@ rl.question("Please enter the MongoDB connection string [mongodb://localhost/fac
 				data.right = data.view.right;
 				delete data.view;
 
-				data.PadId = data._pad;
+				data.padId = data._pad;
 				delete data._pad;
 
 				views[id] = db._models.View.build(data);
