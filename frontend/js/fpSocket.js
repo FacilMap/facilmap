@@ -143,7 +143,7 @@
 			});
 
 			scope.on("reconnect", function() {
-				scope.emit("setPadId", FacilPad.padId);
+				scope.emit("setPadId", scope.padId);
 				scope.emit("updateBbox", scope.bbox);
 			});
 
