@@ -188,7 +188,7 @@ database.connect(function(err) {
 			},
 
 			addType : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", options: [ { key: "string", value: "string", colour: "string" } ] }] } ))
+				if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
