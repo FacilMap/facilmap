@@ -93,7 +93,20 @@ var Line = conn.define("Line", {
 			return points != null ? JSON.parse(points) : points;
 		},
 		set: function(v) {
+			for(var i=0; i<v.length; i++) {
+				v[i].lat = 1*v[i].lat.toFixed(6);
+				v[i].lon = 1*v[i].lon.toFixed(6);
+			}
 			this.setDataValue("points", JSON.stringify(v));
+		},
+		validate: {
+			minTwo: function(val) {
+				var points = JSON.parse(val);
+				if(!Array.isArray(points))
+					throw new Error("points is not an array");
+				if(points.length < 2)
+					throw new Error("A line cannot have less than two points.");
+			}
 		}
 	},
 	mode : { type: Sequelize.ENUM("", "fastest", "shortest", "bicycle", "pedestrian"), allowNull: false, defaultValue: "" },
@@ -448,6 +461,12 @@ function getPadLinesByType(padId, typeId) {
 	return _getPadObjects("Line", padId, { where: { typeId: typeId }, include: [ LineData ] });
 }
 
+function getLineTemplate(data, callback) {
+	var line = JSON.parse(JSON.stringify(Line.build(data)));
+	line.data = data.data || { };
+	callback(null, line);
+}
+
 function getLine(lineId, callback) {
 	Line.findOne({ where: { id: lineId }, include: [ LineData ] }).complete(callback);
 }
@@ -558,6 +577,7 @@ module.exports = {
 	getPadLines : getPadLines,
 	getPadLinesByType : getPadLinesByType,
 	getLine : getLine,
+	getLineTemplate : getLineTemplate,
 	createLine : createLine,
 	updateLine : updateLine,
 	deleteLine : deleteLine,

@@ -120,6 +120,13 @@ database.connect(function(err) {
 				database.deleteMarker(data.id, callback);
 			},
 
+			getLineTemplate : function(data, callback) {
+				if(!utils.stripObject(data, { typeId: "number" }) || data.typeId == null)
+					return callback("Invalid parameters.");
+
+				database.getLineTemplate(data, callback);
+			},
+
 			addLine : function(data, callback) {
 				if(!utils.stripObject(data, { points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");

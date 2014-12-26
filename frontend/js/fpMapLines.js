@@ -60,10 +60,11 @@
 					});
 				},
 				addLine: function(type) {
-					map.socket.emit("addLine", { points: [ ], typeId: type.id }, function(err, line) {
+					map.socket.emit("getLineTemplate", { typeId: type.id }, function(err, line) {
 						if(err)
 							return map.messages.showMessage("error", err);
 
+						line.points = [ ];
 						line.actualPoints = [ ];
 						var message = map.messages.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.", [
 							{ label: "Finish", click: finishLine.bind(null, true) },
@@ -84,19 +85,15 @@
 							message.close();
 							unregister();
 							handler && handler.cancel();
+							map.deleteLine(line);
 
 							if(save && line.points.length >= 2) {
-								map.socket.emit("editLine", { id: line.id, points: line.points }, function(err, line) {
+								map.socket.emit("addLine", { points: line.points, typeId: type.id }, function(err, line) {
 									if(err)
 										return map.messages.showMessage("error", err);
 
 									ret.viewLine(line);
 									ret.editLine(line);
-								});
-							} else {
-								map.socket.emit("deleteLine", { id: line.id }, function(err) {
-									if(err)
-										return map.messages.showMessage("error", err);
 								});
 							}
 						}

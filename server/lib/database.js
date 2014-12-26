@@ -233,7 +233,7 @@ function _updateObjectStyles(objectStream, isLine, callback) {
 
 						utils.extend(object, update);
 
-						if(Object.keys(update).length > 0)
+						if(Object.keys(update).length > 0 && object.id) // Objects from getLineTemplate() do not have an ID
 							return (isLine ? _updateLine : _updateMarker)(object.id, update, next);
 						else
 							return next();
@@ -247,6 +247,17 @@ function _updateObjectStyles(objectStream, isLine, callback) {
 
 function getPadLines(padId) {
 	return backend.getPadLines(padId);
+}
+
+function getLineTemplate(data, callback) {
+	backend.getLineTemplate(data, function(err, line) {
+		if(err)
+			return callback(err);
+
+		_updateObjectStyles(line, true, function(err) {
+			return callback(err, line);
+		});
+	});
 }
 
 function createLine(padId, data, callback) {
@@ -502,6 +513,7 @@ module.exports = {
 	updateMarker : updateMarker,
 	deleteMarker : deleteMarker,
 	getPadLines : getPadLines,
+	getLineTemplate : getLineTemplate,
 	createLine : createLine,
 	updateLine : updateLine,
 	deleteLine : deleteLine,
