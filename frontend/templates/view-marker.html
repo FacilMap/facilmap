@@ -1,0 +1,13 @@
+<div class="content">
+	<h2>{{marker.name}}</h2>
+	<p class="pos">Coordinates: {{round(marker.lat, 5)}}, {{round(marker.lon, 5)}}</p>
+	<dl>
+		<dt ng-repeat-start="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></dd>
+	</dl>
+</div>
+<div class="buttons">
+	<button ng-click="edit()" ng-hide="readonly">Edit</button>
+	<button ng-click="move()" ng-hide="readonly">Move</button>
+	<button ng-click="delete()" ng-hide="readonly">Remove</button>
+</div>

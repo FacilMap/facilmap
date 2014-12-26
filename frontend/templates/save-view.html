@@ -1,0 +1,11 @@
+<form>
+	<p class="error" ng-hide="!error">{{error}}</p>
+	<dl>
+		<dt><label for="save-view-name">Name</label></dt>
+		<dd><input id="save-view-name" ng-model="name"></dd>
+	</dl>
+	<div>
+		<button type="submit" ng-click="save(false)">Save</button>
+		<button ng-click="save(true)">Save and make default view</button>
+	</div>
+</form>

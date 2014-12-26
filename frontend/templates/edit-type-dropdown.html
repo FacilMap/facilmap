@@ -1,0 +1,28 @@
+<form>
+	<div><input type="checkbox" id="control-colour-input" ng-model="field.controlColour" ng-disabled="!canControl('colour')"><label for="control-colour-input" ng-class="{disabled: !canControl('colour')}"> Control {{type.type}} colour</label></div>
+	<div ng-show="type.type == 'line'"><input type="checkbox" id="control-width-input" ng-model="field.controlWidth" ng-disabled="!canControl('width')"><label for="control-width-input" ng-class="{disabled: !canControl('width')}"> Control {{type.type}} width</label></div>
+	<table class="border">
+		<thead>
+			<tr>
+				<th>Option</th>
+				<th ng-show="field.controlColour">Colour</th>
+				<th ng-show="field.controlWidth">Width</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="option in field.options">
+				<td><input type="text" ng-model="option.value"></td>
+				<td ng-show="field.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker></td>
+				<td ng-show="field.controlWidth"><input type="text" ng-model="option.width" fp-spinner></td>
+				<td><button ng-click="deleteOption(option)">−</button></td>
+			</tr>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="4"><button ng-click="addOption()">+</button></td>
+			</tr>
+		</tfoot>
+	</table>
+	<div><button ng-click="save()">OK</button></div>
+</form>

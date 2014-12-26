@@ -1,0 +1,24 @@
+<form>
+	<p class="error" ng-show="error">{{error}}</p>
+	<table class="border">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Type</th>
+				<th colspan="3">Edit</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="type in types">
+				<td>{{type.name}}</td>
+				<td>{{type.type}}</td>
+				<td class="button"><button ng-click="edit(type)">Edit</button><button ng-click="delete(type)">Delete</button></td>
+			</tr>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="4"><button ng-click="create()">Create</button></td>
+			</tr>
+		</tfoot>
+	</table>
+</form>

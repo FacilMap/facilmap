@@ -1,0 +1,7 @@
+<div class="messages">
+	<p ng-repeat="message in messages" class="{{message.type}}">
+		{{message.message}}
+		<span ng-repeat="button in message.buttons">&nbsp;<a href="{{button.url || 'javascript:'}}" ng-click="button.click && button.click()">{{button.label}}</a></span>
+		<a href="javascript:" class="close-button" ng-click="closeMessage(message)">×</a>
+	</p>
+</div>

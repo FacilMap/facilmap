@@ -1,0 +1,45 @@
+<form>
+	<p class="error" ng-show="error">{{error}}</p>
+	<dl>
+		<dt><label for="type-name-input">Name</label></dt>
+		<dd><input id="type-name-input" type="text" ng-model="type.name" /></dd>
+
+		<dt><label for="type-type-input">Type</label></dt>
+		<dd><select id="type-type-input" ng-model="type.type" ng-disabled="type.id != null">
+			<option value="marker">Marker</option>
+			<option value="line">Line</option>
+		</select></dd>
+	</dl>
+	<h2>Fields</h2>
+	<table class="border">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Type</th>
+				<th>Default value</th>
+				<th>Delete</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="field in type.fields">
+				<td><input type="text" ng-model="field.name"/></td>
+				<td><select ng-model="field.type">
+					<option value="input">Text field</option>
+					<option value="textarea">Text area</option>
+					<option value="dropdown">Dropdown</option>
+					<option value="checkbox">Checkbox</option>
+				</select> <button ng-show="field.type == 'dropdown'" ng-click="editDropdown(field)">Edit</button></td>
+				<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
+				<td><button ng-click="deleteField(field)">Delete</button></td>
+			</tr>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="4"><button ng-click="createField()">+</button></td>
+			</tr>
+		</tfoot>
+	</table>
+	<div>
+		<button ng-click="save()">Save</button>
+	</div>
+</form>

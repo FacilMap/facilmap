@@ -1,0 +1,28 @@
+<form>
+	<p class="error" ng-show="error">{{error}}</p>
+	<dl>
+		<dt><label for="edit-line-name">Name</label></dt>
+		<dd><input id="edit-line-name" ng-model="line.name" /></dd>
+
+		<dt><label for="edit-line-mode">Routing mode</label></dt>
+		<dd><select id="edit-line-mode" ng-model="line.mode">
+			<option value="">None</option>
+			<option value="fastest">Car (fastest)</option>
+			<option value="shortest">Car (shortest)</option>
+			<option value="bicycle">Bicycle</option>
+			<option value="pedestrian">Pedestrian</option>
+		</select></dd>
+
+		<dt ng-show="canControl('colour')"><label for="edit-line-colour">Colour</label></dt>
+		<dd ng-show="canControl('colour')"><input id="edit-line-colour" ng-model="line.colour" fp-colour-picker></dd>
+
+		<dt ng-show="canControl('width')"><label for="edit-line-width">Width</label></dt>
+		<dd ng-show="canControl('width')"><input id="edit-line-width" ng-model="line.width" fp-spinner /></dd>
+
+		<dt ng-repeat-start="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1"><label for="line-{{$index}}-input">{{field.name}}</label></dt>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field="field" fp-type-field-model="line.data[field.name]" fp-type-field-id="line-{{$index}}-input"></dd>
+	</dl>
+	<div>
+		<button ng-click="save()">Save</button>
+	</div>
+</form>

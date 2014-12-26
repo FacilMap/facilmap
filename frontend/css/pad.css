@@ -2,7 +2,7 @@ html,body {
 	overflow: hidden;
 }
 
-#map,#map-disabled-cover {
+#map {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -18,16 +18,38 @@ html,body {
 	cursor: crosshair;
 }
 
-#map-disabled-cover {
+.fp-map {
+	position: relative;
+}
+
+.fp-map-disabled-cover {
 	background-color: #888;
 	opacity: 0.7;
 	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
 	filter: alpha(opacity=70);
 	-moz-opacity: 0.7;
 	-khtml-opacity: 0.7;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 }
 
-#toolbox {
+.fp-map-loading {
+	position:absolute;
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	padding:10px;
+	background: #fff;
+	z-index:100000;
+	font-size:1.5em;
+	font-weight:bold;
+}
+
+.fp-toolbox {
 	position: absolute;
 	top: 10px;
 	right: 10px;
@@ -67,8 +89,6 @@ html,body {
 dl {
 	margin: 0;
 	padding: 0;
-	vertical-align: middle;
-	line-height: 2em;
 }
 
 dt {
@@ -77,6 +97,7 @@ dt {
 	margin: 5px 0 0 0;
 	padding: 0;
 	width: 29%;
+	vertical-align: top;
 }
 
 dt:after {
@@ -88,6 +109,15 @@ dd {
 	width: 69%;
 	margin: 5px 0 0 0;
 	padding: 0;
+	vertical-align: top;
+}
+
+dd :first-child {
+	margin-top: 0;
+}
+
+dd :last-child {
+	margin-bottom: 0;
 }
 
 dd input, dd textarea {
@@ -141,14 +171,14 @@ table.border input, table.border textarea, table.border select {
 	box-sizing: border-box;
 }
 
-#messages {
+.messages {
 	position: absolute;
 	top: 10px;
 	width: 50%;
 	left: 25%;
 }
 
-#messages p {
+.messages p {
 	font-size: 1.5em;
 	margin:0 0 10px 0;
 	position: relative;
@@ -156,7 +186,7 @@ table.border input, table.border textarea, table.border select {
 	border-radius: 5px;
 }
 
-#messages .close-button {
+.messages .close-button {
 	position: absolute;
 	top: 5px;
 	right: 5px;
@@ -303,11 +333,11 @@ textarea {
 /* jQuery popup has a z-index of 100 */
 /* OpenLayers Controls have z-index: 1008 (inside the map viewport) */
 
-#map-disabled-cover {
+.fp-map-disabled-cover {
 	z-index: 10001;
 }
 
-#messages {
+.messages {
 	z-index: 10002;
 }
 
@@ -317,8 +347,4 @@ textarea {
 
 #map .fp-popup {
 	z-index: 1007;
-}
-
-.olMap .fmControlLoading {
-	z-index: 10003;
 }

@@ -1,0 +1,16 @@
+<form>
+	<p class="error" ng-show="error">{{error}}</p>
+	<dl>
+		<dt>Link</dt>
+		<dd>{{urlPrefix}}{{padId}}</dd>
+
+		<dt>Read-only link</dt>
+		<dd>{{urlPrefix}}{{padData.id}}</dd>
+
+		<dt><label for="pad-name-input">Pad name</label></dt>
+		<dd><input id="pad-name-input" ng-model="padData.name" /></dd>
+	</dl>
+	<div>
+		<button ng-click="save()">Save</button>
+	</div>
+</form>

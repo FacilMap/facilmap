@@ -1,0 +1,16 @@
+<form>
+	<p class="error" ng-show="error">{{error}}</p>
+	<dl>
+		<dt><label for="edit-marker-name">Name</label></dt>
+		<dd><input id="edit-marker-name" ng-model="marker.name" /></dd>
+
+		<dt ng-show="canControl('colour')"><label for="edit-marker-colour">Colour</label></dt>
+		<dd ng-show="canControl('colour')"><input id="edit-marker-colour" ng-model="marker.colour" fp-colour-picker></dd>
+
+		<dt ng-repeat-start="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1"><label for="marker-{{$index}}-input">{{field.name}}</label></dt>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field="field" fp-type-field-model="marker.data[field.name]" fp-type-field-id="marker-{{$index}}-input"></dd>
+	</dl>
+	<div>
+		<button ng-click="save()">Save</button>
+	</div>
+</form>
