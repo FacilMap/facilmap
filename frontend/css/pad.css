@@ -324,8 +324,9 @@ textarea {
 }
 
 .olMap .fmControlLoading {
-	top: 4px;
-	left: 43px;
+	top: auto;
+	bottom: 7px;
+	left: 102px;
 	right: auto;
 }
 

@@ -1,0 +1,12 @@
+<div class="fp-search" ng-class="{ 'fp-search-has-results': searchResults.length > 0 }">
+	<form ng-submit="search()">
+		<input type="text" ng-model="searchString" placeholder="Search">
+		<a href="javascript:" class="close-button" ng-click="searchString=''; search()">×</a>
+		<button type="submit">Search</button>
+	</form>
+	<div class="fp-search-results" ng-show="searchResults.length > 0">
+		<ul>
+			<li ng-repeat="result in searchResults"><a href="javascript:" ng-click="showResult(result)">{{result.name}}</a></li>
+		</ul>
+	</div>
+</div>

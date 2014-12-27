@@ -9,7 +9,7 @@
 		};
 	} ]);
 
-	fp.app.factory("fpMap", [ "fpUtils", "fpSocket", "fpMapMessages", "fpDialogs", "fpMapMarkers", "fpMapPopups", "$templateCache", "$compile", "fpMapLines", "fpMapTypes", "fpMapViews", "$rootScope", "fpMapPad", "fpMapToolbox", "$timeout", "fpMapLegend", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend) {
+	fp.app.factory("fpMap", [ "fpUtils", "fpSocket", "fpMapMessages", "fpDialogs", "fpMapMarkers", "fpMapPopups", "$templateCache", "$compile", "fpMapLines", "fpMapTypes", "fpMapViews", "$rootScope", "fpMapPad", "fpMapToolbox", "$timeout", "fpMapLegend", "fpMapSearch", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch) {
 		var maps = { };
 
 		var ret = { };
@@ -330,6 +330,7 @@
 
 			fpMapToolbox(map);
 			fpMapLegend(map);
+			fpMapSearch(map);
 
 			map.mapEvents.$on("clickLine", function(e, line, clickPos) {
 				map.popups.closeAll();
