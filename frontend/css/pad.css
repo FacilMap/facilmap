@@ -60,6 +60,7 @@ html,body {
 	border-radius: 3px;
 	border: 1px solid;
 	font-weight: bold;
+	white-space: pre-line;
 }
 
 .error {
@@ -184,6 +185,7 @@ table.border input, table.border textarea, table.border select {
 	position: relative;
 	box-shadow: 0 0 15px;
 	border-radius: 5px;
+	white-space: normal;
 }
 
 .messages .close-button {

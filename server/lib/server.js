@@ -9,7 +9,13 @@ var routing = require("./routing");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
-		return this.message;
+		var str = this.message;
+		if(this.errors) {
+			for(var i=0; i<this.errors.length; i++)
+				str += "\n"+this.errors[i].message;
+		}
+
+		return str;
 	},
 	configurable: true
 });

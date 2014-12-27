@@ -188,6 +188,24 @@ var Type = conn.define("Type", {
 					if(fields[obj[i].name])
 						throw new Error("field name "+obj[i].name+" is not unique.");
 					fields[obj[i].name] = true;
+					if([ "textarea", "dropdown", "checkbox", "input" ].indexOf(obj[i].type) == -1)
+						throw new Error("Invalid field type "+obj[i].type+" for field "+obj[i].name+".");
+					if(obj[i].controlColour) {
+						if(!obj[i].options || obj[i].options.length < 1)
+							throw new Error("No options specified for colour-controlling field "+obj[i].name+".");
+						for(var j=0; j<obj[i].options.length; j++) {
+							if(!obj[i].options[j].colour || !obj[i].options[j].colour.match(/^[a-fA-F0-9]{6}$/))
+								throw new Error("Invalid colour "+obj[i].options[j].colour+" in field "+obj[i].name+".");
+						}
+					}
+					if(obj[i].controlWidth) {
+						if(!obj[i].options || obj[i].options.length < 1)
+							throw new Error("No options specified for width-controlling field "+obj[i].name+".");
+						for(var j=0; j<obj[i].options.length; j++) {
+							if(!obj[i].options[j].width || !(1*obj[i].options[j].width >= 1))
+								throw new Error("Invalid width "+obj[i].options[j].width+" in field "+obj[i].name+".");
+						}
+					}
 				}
 			}
 		}
