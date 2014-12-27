@@ -1,0 +1,7 @@
+<div class="fp-map-legend" ng-show="legendItems.length > 0">
+	<h3 ng-repeat-start="type in legendItems">{{type.name}}</h3>
+	<dl ng-repeat-end>
+		<dt ng-repeat-start="item in type.items" ng-bind-html="makeSymbol(type.type, item)"></dt>
+		<dd ng-repeat-end>{{item.value}}</dd>
+	</dl>
+</div>

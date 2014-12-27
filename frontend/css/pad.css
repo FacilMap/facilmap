@@ -348,3 +348,7 @@ textarea {
 #map .fp-popup {
 	z-index: 1007;
 }
+
+.fp-toolbox {
+	z-index: 1020;
+}

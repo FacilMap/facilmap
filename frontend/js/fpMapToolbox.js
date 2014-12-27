@@ -42,7 +42,7 @@
 
 			scope.editObjectTypes = map.typesUi.editTypes.bind(map.typesUi);
 
-			$compile($($templateCache.get("map-toolbox.html")).insertAfter(map.map.div))(scope);
+			$compile($($templateCache.get("map-toolbox.html")).appendTo(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		}
 	} ]);

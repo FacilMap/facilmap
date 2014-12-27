@@ -1,0 +1,60 @@
+.fp-map-legend {
+	position: absolute;
+	right: 10px;
+	bottom: 90px;
+	border: 1px solid #000;
+	border-radius: 4px;
+	background: #fff;
+	padding: 5px;
+	z-index: 800;
+	overflow-y: auto;
+
+	/* Somehow Chrome shows a horizontal scrollbar with anything else than this */
+	overflow-x: hidden;
+	padding-right: 20px;
+}
+
+.fp-map-legend h3 {
+	font-size: 1em;
+	margin: 0;
+	padding: 0;
+}
+
+.fp-map-legend dt {
+	margin: 0;
+	width: auto;
+	padding-right: .3ex;
+	display: inline;
+}
+
+.fp-map-legend dt:after {
+	content: none;
+}
+
+.fp-map-legend dd {
+	line-height: 1.3em;
+	width: auto;
+	display: inline;
+	vertical-align: middle;
+}
+
+.fp-map-legend dd:after {
+	content: "\a";
+	white-space: pre;
+}
+
+.fp-map-legend dl:after {
+	content: none;
+}
+
+.fp-map-legend-line {
+	display: inline-block;
+	width: 50px;
+	border-radius: 2px;
+	vertical-align: middle;
+}
+
+.fp-map-legend-marker {
+	height: 1.3em;
+	vertical-align: middle;
+}

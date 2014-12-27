@@ -9,7 +9,7 @@
 		};
 	} ]);
 
-	fp.app.factory("fpMap", [ "fpUtils", "fpSocket", "fpMapMessages", "fpDialogs", "fpMapMarkers", "fpMapPopups", "$templateCache", "$compile", "fpMapLines", "fpMapTypes", "fpMapViews", "$rootScope", "fpMapPad", "fpMapToolbox", "$timeout", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout) {
+	fp.app.factory("fpMap", [ "fpUtils", "fpSocket", "fpMapMessages", "fpDialogs", "fpMapMarkers", "fpMapPopups", "$templateCache", "$compile", "fpMapLines", "fpMapTypes", "fpMapViews", "$rootScope", "fpMapPad", "fpMapToolbox", "$timeout", "fpMapLegend", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend) {
 		var maps = { };
 
 		var ret = { };
@@ -329,6 +329,7 @@
 			map.padUi = fpMapPad(map);
 
 			fpMapToolbox(map);
+			fpMapLegend(map);
 
 			map.mapEvents.$on("clickLine", function(e, line, clickPos) {
 				map.popups.closeAll();
