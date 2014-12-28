@@ -84,49 +84,44 @@ function migrateData(title, stream, deal, callback) {
 	console.log("Migrating "+title);
 	console.log();
 
-	var number = 0;
-	var ended = false;
-
-	stream.on("data", function(data) {
+	var queue = async.queue(function(data, next) {
 		data = JSON.parse(JSON.stringify(data));
 		data.id = data._id;
 		delete data._id;
 
 		var queries = deal(data);
-		var outstandingQueries = queries.length;
 
-		if(queries.length == 0)
-			return check();
-
-		number++;
-
-		for(var i=0; i<queries.length; i++) {
-			queries[i].complete(function(err) {
+		async.each(queries, function(it, next) {
+			it.complete(function(err) {
 				err && console.error(err);
-
-				if(--outstandingQueries == 0) {
-					number--;
-					check();
-				}
+				next();
 			});
-		}
-	});
+		}, next);
+	}, 5);
 
-	stream.on("error", function(err) {
-		console.error(err);
-		ended = true;
-		check();
+	var startStop = function() {
+		if(queue.length() == 0)
+			stream.resume();
+		else
+			stream.pause();
+	};
+
+	stream.on("data", function(data) {
+		queue.push(data, startStop);
+		startStop();
 	});
 
 	stream.on("end", function() {
-		ended = true;
-		check();
+		if(queue.running() == 0 && queue.length() == 0)
+			callback();
+		else
+			queue.drain = callback;
 	});
 
-	function check() {
-		if(ended && number == 0)
-			callback();
-	}
+	stream.on("error", function(err) {
+		queue.kill();
+		callback(err);
+	});
 }
 
 var DEFAULT_MARKER_TYPE = db2._defaultTypes[0];
