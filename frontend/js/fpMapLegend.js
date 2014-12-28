@@ -14,7 +14,7 @@
 					ret.css("height", (item.width || 5)+"px");
 				}
 				else
-					ret = $('<img class="fp-map-legend-marker"/>').attr("src", fpUtils.createMarkerGraphic(item.colour));
+					ret = $('<img class="fp-map-legend-marker"/>').attr("src", fpUtils.createMarkerGraphic(item.colour, "legend"));
 
 				return $sce.trustAsHtml($("<div/>").append(ret).html());
 			};

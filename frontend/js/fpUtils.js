@@ -19,11 +19,12 @@
 			return randomPadId;
 		};
 
-		fpUtils.createMarkerGraphic = function(colour) {
+		fpUtils.createMarkerGraphic = function(colour, randomTrash) {
 			var borderColour = fpUtils.makeTextColour(colour, 0.3);
 
 			var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
 				'<svg xmlns="http://www.w3.org/2000/svg" width="21" height="25" version="1.1">' +
+				(randomTrash ? '<!--' + randomTrash + '-->' : '') + // Chrome seems to have a bug where it applies the CSS styles of one image the same code
 				'<g transform="matrix(0.962318,0,0,0.962318,0.35255058,-988.3149)">' +
 				'<path style="fill:#' + colour + ';stroke:#' + borderColour + ';stroke-width:1" d="m 0.31494999,1035.8432 10.20437901,-8.1661 10.20438,8.1661 -10.20438,16.204 z" />' +
 				'<path style="fill:#' + borderColour + ';stroke:none" d="m 361.63462,62.160149 c 0,10.181526 -8.25375,18.435283 -18.43528,18.435283 -10.18153,0 -18.43528,-8.253757 -18.43528,-18.435283 0,-10.181526 8.25375,-18.435284 18.43528,-18.435284 10.18153,0 18.43528,8.253758 18.43528,18.435284 z" transform="matrix(0.1366727,0,0,0.1366727,-36.38665,1028.6074)" />' +
