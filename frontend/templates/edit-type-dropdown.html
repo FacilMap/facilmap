@@ -8,19 +8,22 @@
 				<th ng-show="field.controlColour">Colour</th>
 				<th ng-show="field.controlWidth">Width</th>
 				<th></th>
+				<th class="move"></th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody ui-sortable="sortableOptions" ng-model="field.options">
 			<tr ng-repeat="option in field.options">
 				<td><input type="text" ng-model="option.value"></td>
 				<td ng-show="field.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker></td>
 				<td ng-show="field.controlWidth"><input type="text" ng-model="option.width" fp-spinner></td>
 				<td><button ng-click="deleteOption(option)">−</button></td>
+				<td class="move"><span class="sort-handle ui-icon ui-icon-triangle-2-n-s"></span></td>
 			</tr>
 		</tbody>
 		<tfoot>
 			<tr>
 				<td colspan="4"><button ng-click="addOption()">+</button></td>
+				<td class="move"></td>
 			</tr>
 		</tfoot>
 	</table>

@@ -37,7 +37,7 @@
 						onClose = null;
 
 					el.dialog("close");
-				} };
+				}, el: el };
 				openDialogs.push(ret);
 				return ret;
 			},

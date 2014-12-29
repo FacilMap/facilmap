@@ -18,9 +18,10 @@
 				<th>Type</th>
 				<th>Default value</th>
 				<th>Delete</th>
+				<th class="move"></th>
 			</tr>
 		</thead>
-		<tbody>
+		<tbody ui-sortable="sortableOptions" ng-model="type.fields">
 			<tr ng-repeat="field in type.fields">
 				<td><input type="text" ng-model="field.name"/></td>
 				<td><select ng-model="field.type">
@@ -31,11 +32,13 @@
 				</select> <button ng-show="field.type == 'dropdown'" ng-click="editDropdown(field)">Edit</button></td>
 				<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
 				<td><button ng-click="deleteField(field)">Delete</button></td>
+				<td class="move"><span class="sort-handle ui-icon ui-icon-triangle-2-n-s"></span></td>
 			</tr>
 		</tbody>
 		<tfoot>
 			<tr>
 				<td colspan="4"><button ng-click="createField()">+</button></td>
+				<td class="move"></td>
 			</tr>
 		</tfoot>
 	</table>

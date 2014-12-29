@@ -45,7 +45,7 @@ js() {
 	#
 	#echo 'jQuery = $ = FacilMap.$;'
 
-	for i in angular-1.3.8.min.js jquery.ui.spinner-1.10.4.min.js marked-0.3.2.min.js; do
+	for i in angular-1.3.8.min.js jquery.ui.spinner-1.10.4.min.js jquery.ui.sortable-1.10.4.min.js ui-sortable-0.13.1.js marked-0.3.2.min.js; do
 		header "$i"
 		cat "$i"
 		echo

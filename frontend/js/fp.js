@@ -4,7 +4,7 @@ var FacilPad = {
 
 (function(fp, $, ng, undefined) {
 
-	fp.app = angular.module("facilpad", [ ]).config([ "$compileProvider", function($compileProvider) {
+	fp.app = angular.module("facilpad", [ "ui.sortable" ]).config([ "$compileProvider", function($compileProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 	} ]);
 
@@ -15,6 +15,30 @@ var FacilPad = {
 		$rootScope.round = fpUtils.round;
 		$rootScope.formatTime = fpUtils.formatTime;
 		$rootScope.routingMode = fpUtils.routingMode;
+
+		$rootScope.sortableOptions = {
+			handle: ".sort-handle",
+			axis: "y",
+			cursor: "move",
+			helper: function(e, ui) { // Source: http://www.foliotek.com/devblog/make-table-rows-sortable-using-jquery-ui-sortable/
+				ui.children().each(function() {
+					$(this).width($(this).width());
+				});
+				return ui;
+			},
+			start: function(e, ui) {
+				var elChildren = ui.item.children();
+				ui.placeholder.children().each(function(i) {
+					$(this).width(elChildren.eq(i).width());
+					$(this).height(elChildren.eq(i).height());
+				});
+			},
+			stop: function(e, ui) {
+				ui.item.children().each(function() {
+					$(this).css("width", "");
+				});
+			}
+		};
 	} ]);
 
 	function wrapApply($scope, f) {

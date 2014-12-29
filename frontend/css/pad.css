@@ -163,8 +163,14 @@ table.border td, table.border th {
 	padding: .5em;
 }
 
-table.border thead {
+table.border thead th, table.border thead.td {
 	background-color: #f8f8f8;
+}
+
+table.border td.move,table.border th.move {
+	border: none;
+	padding: 0;
+	background: transparent;
 }
 
 table.border input, table.border textarea, table.border select {
