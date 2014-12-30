@@ -53,23 +53,25 @@
 			map.layerLines = new OpenLayers.Layer.Vector("Lines", { displayInLayerSwitcher: false, visibility: true });
 			map.map.addLayer(map.layerLines);
 
+			var label;
 			map.featureHandler = new OpenLayers.Handler.Feature(null, map.layerLines, {
 				"over" : function(obj) {
 					$(map.map.div).addClass("fp-overFeature");
 
-					if(!obj.fpLabel) {
-						if(obj.fpMarker && obj.fpMarker.name)
-							obj.fpLabel = map.showLabel(obj.fpMarker.name, obj.fpMarker, { x: 10, y: 0 });
-						else if(obj.fpLine && obj.fpLine.name)
-							obj.fpLabel = map.showLabel(obj.fpLine.name, map.xyToPos(map.featureHandler.evt), { x: 15, y: 0 }, true);
-					}
+					if(label)
+						label.close();
+
+					if(obj.fpMarker && obj.fpMarker.name)
+						label = map.showLabel(obj.fpMarker.name, obj.fpMarker, { x: 10, y: 0 });
+					else if(obj.fpLine && obj.fpLine.name)
+						label = map.showLabel(obj.fpLine.name, map.xyToPos(map.featureHandler.evt), { x: 15, y: 0 }, true);
 				},
 				"out" : function(obj) {
 					$(map.map.div).removeClass("fp-overFeature");
 
-					if(obj.fpLabel) {
-						obj.fpLabel.close();
-						obj.fpLabel = null;
+					if(label) {
+						label.close();
+						label = null;
 					}
 				},
 				"click" : function(obj) {
