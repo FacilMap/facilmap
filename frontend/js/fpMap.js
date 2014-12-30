@@ -54,11 +54,23 @@
 			map.map.addLayer(map.layerLines);
 
 			map.featureHandler = new OpenLayers.Handler.Feature(null, map.layerLines, {
-				"over" : function() {
+				"over" : function(obj) {
 					$(map.map.div).addClass("fp-overFeature");
+
+					if(!obj.fpLabel) {
+						if(obj.fpMarker && obj.fpMarker.name)
+							obj.fpLabel = map.showLabel(obj.fpMarker.name, obj.fpMarker, { x: 10, y: 0 });
+						else if(obj.fpLine && obj.fpLine.name)
+							obj.fpLabel = map.showLabel(obj.fpLine.name, map.xyToPos(map.featureHandler.evt), { x: 15, y: 0 }, true);
+					}
 				},
-				"out" : function() {
+				"out" : function(obj) {
 					$(map.map.div).removeClass("fp-overFeature");
+
+					if(obj.fpLabel) {
+						obj.fpLabel.close();
+						obj.fpLabel = null;
+					}
 				},
 				"click" : function(obj) {
 					obj.fpOnClick(map.xyToPos(map.featureHandler.up));
@@ -191,6 +203,7 @@
 				};
 
 				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
+				feature.fpLine = line;
 				feature.fpOnClick = function(clickPos) {
 					map.mapEvents.$emit("clickLine", line, clickPos);
 				};
@@ -318,6 +331,26 @@
 
 			map.loadEnd = function() {
 				map.map.getControlsByClass("FacilMap.Control.Loading")[0].loadEnd();
+			};
+
+			map.showLabel = function(label, pos, offset, updateOnMove) {
+				var xy = map.posToXy(pos);
+				var el = $("<div/>").addClass("fp-map-label").text(label).css({ top: (xy.y+offset.y)+"px", left: (xy.x+offset.x)+"px" }).appendTo(map.map.div);
+
+				var updatePosition = function(e) {
+					el.css({ top: (e.y+offset.y)+"px", left: (e.x+offset.x)+"px" });
+				};
+
+				if(updateOnMove)
+					map.map.events.register("mousemove", null, updatePosition);
+
+				return {
+					close: function() {
+						el.remove();
+						if(updateOnMove)
+							map.map.events.unregister("mousemove", null, updatePosition);
+					}
+				};
 			};
 
 			map.messages = fpMapMessages(map);

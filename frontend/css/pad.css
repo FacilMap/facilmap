@@ -336,6 +336,17 @@ textarea {
 	right: auto;
 }
 
+.fp-map-label {
+	position: absolute;
+	background-color: #fff;
+	z-index: 1010;
+	border: 1px solid #000;
+	border-radius: 5px;
+	padding: 3px 6px;
+	opacity: .5;
+	font-weight: bold;
+}
+
 
 /********* z-index **************/
 
