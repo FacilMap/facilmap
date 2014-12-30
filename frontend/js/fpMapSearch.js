@@ -15,6 +15,9 @@
 					namefinder.find(scope.searchString, function(results) {
 						map.loadEnd();
 						scope.searchResults = results;
+
+						if(results.length > 0)
+							scope.showResult(results[0]);
 					}.fpWrapApply(scope));
 				}
 			};

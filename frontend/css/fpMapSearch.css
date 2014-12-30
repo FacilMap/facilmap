@@ -69,3 +69,10 @@
 	padding: 3px 7px;
 	list-style-type: none;
 }
+
+.fp-search .no-results {
+	font-style: italic;
+	padding: 3px 7px;
+	margin: 0;
+	color: #888;
+}
