@@ -15,7 +15,7 @@
 					if(!dialogTemplate)
 						return;
 
-					var el = $("<div/>").addClass("fp-popup fp-popup-bottom fp-popup-right").html(dialogTemplate).appendTo(map.map.viewPortDiv);
+					var el = $("<div/>").addClass("fp-popup fp-popup-bottom fp-popup-right").html(dialogTemplate).appendTo(map.map.div);
 
 					var ret = {
 						pos: pos,
