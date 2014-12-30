@@ -28,7 +28,7 @@
 			var map = this;
 
 			map.mapEvents = $rootScope.$new(true); /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove */
-			map.socket = fpSocket(map, padId);
+			map.socket = fpSocket(padId);
 			map.socket.id = id; // To be in scope for template
 
 			map.markersById = { };
@@ -370,6 +370,61 @@
 			map.mapEvents.$on("clickLine", function(e, line, clickPos) {
 				map.popups.closeAll();
 				map.linesUi.viewLine(line, clickPos);
+			});
+
+			map.socket.$on("loadStart", function() {
+				map.loadStart();
+			});
+
+			map.socket.$on("loadEnd", function() {
+				map.loadEnd();
+			});
+
+			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
+				if(loaded) {
+					setTimeout(function() {
+						map.displayView(map.socket.padData.defaultView);
+					}, 0);
+					loadedWatcher();
+				}
+			});
+
+			map.socket.on("marker", function(data) {
+				map.addMarker(data);
+			});
+
+			map.socket.on("deleteMarker", function(data) {
+				map.deleteMarker(data);
+			});
+
+			map.socket.on("line", function(data) {
+				setTimeout(function() { // actualPoints needs to be copied over
+					map.addLine(map.socket.lines[data.id]);
+				}, 0);
+			});
+
+			map.socket.on("deleteLine", function(data) {
+				map.deleteLine(data);
+			});
+
+			map.socket.on("linePoints", function(data) {
+				setTimeout(function() {
+					map.addLine(map.socket.lines[data.id]);
+				}, 0);
+			});
+
+			var errorMessage = null;
+			map.socket.$watch("disconnected", function(disconnected) {
+				if(disconnected && !errorMessage)
+					errorMessage = map.messages.showMessage("error", "The connection to the server was lost.");
+				else if(!disconnected && errorMessage) {
+					errorMessage.close();
+					errorMessage = null;
+				}
+			});
+
+			map.mapEvents.$on("moveEnd", function(e, bbox) {
+				map.socket.updateBbox(bbox);
 			});
 		}
 	} ]);

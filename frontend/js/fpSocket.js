@@ -2,7 +2,7 @@
 
 	// From http://stackoverflow.com/a/11277751/242365
 	fp.app.factory("fpSocket", [ "$rootScope", "fpUtils", function($rootScope, fpUtils) {
-		return function(map, padId) {
+		return function(padId) {
 			var scope = $rootScope.$new();
 
 			scope.padData = null;
@@ -21,12 +21,14 @@
 				return socket.on.apply(socket, [ eventName, fn ]);
 		    };
 
+			scope.removeListener = socket.removeListener.bind(socket);
+
 			scope.emit = function(eventName, data, cb) {
 				if(cb) {
-					map.loadStart();
+					scope.$emit("loadStart");
 					var cb2 = cb;
 					arguments[2] = function() {
-						map.loadEnd();
+						scope.$emit("loadEnd");
 						var context = this;
 						var args = arguments;
 						scope.$apply(function() {
@@ -44,15 +46,10 @@
 				if(data.writable != null)
 					scope.readonly = !data.writable;
 
-				if(scope.error) {
-					scope.error.close();
-					scope.error = null;
-				}
+				scope.disconnected = false;
 
-				if(!scope.loaded) {
+				if(!scope.loaded)
 					scope.loaded = true;
-					map.displayView(data.defaultView);
-				}
 			});
 
 			scope.on("marker", function(data) {
@@ -60,34 +57,23 @@
 					scope.markers[data.id] = { };
 
 				scope.markers[data.id] = data;
-
-				map.addMarker(data);
 			});
 
 			scope.on("deleteMarker", function(data) {
 				delete scope.markers[data.id];
-
-				map.deleteMarker(data);
 			});
 
 			scope.on("line", function(data) {
-				if(scope.lines[data.id]) {
+				if(scope.lines[data.id])
 					data.actualPoints = scope.lines[data.id].actualPoints;
-					data.clickPos = scope.lines[data.id].clickPos;
-					data.clickXy = scope.lines[data.id].clickXy;
-				}
 				else
 					scope.lines[data.id] = { };
 
 				scope.lines[data.id] = data;
-
-				map.addLine(scope.lines[data.id]);
 			});
 
 			scope.on("deleteLine", function(data) {
 				delete scope.lines[data.id];
-
-				map.deleteLine(data);
 			});
 
 			scope.on("linePoints", function(data) {
@@ -107,8 +93,6 @@
 					if(i != "length" && i >= line.actualPoints.length)
 						line.actualPoints.length = 1*i+1;
 				}
-
-				map.addLine(scope.lines[data.id]);
 			});
 
 			scope.on("view", function(data) {
@@ -136,7 +120,7 @@
 			});
 
 			scope.on("disconnect", function() {
-				scope.error = map.messages.showMessage("error", "The connection to the server was lost.");
+				scope.disconnected = true;
 				scope.markers = { };
 				scope.lines = { };
 				scope.views = { };
@@ -147,13 +131,11 @@
 				scope.emit("updateBbox", scope.bbox);
 			});
 
-			map.mapEvents.$on("moveEnd", function(e, bbox) {
+			scope.updateBbox = function(bbox) {
 				scope.emit("updateBbox", bbox);
 
-				scope.$apply(function() {
-					scope.bbox = bbox;
-				});
-			});
+				scope.bbox = bbox;
+			};
 
 			scope.emit("setPadId", padId);
 
