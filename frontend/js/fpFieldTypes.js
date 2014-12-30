@@ -25,7 +25,7 @@
 							}
 							break;
 						case "checkbox":
-							el = $('<input type="checkbox" ng-true-value="1" ng-false-value="0" />');
+							el = $('<input type="checkbox" ng-true-value="\'1\'" ng-false-value="\'0\'" />');
 							break;
 						case "input":
 						default:
