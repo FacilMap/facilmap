@@ -92,6 +92,9 @@
 							listener.cancel();
 						}}
 					]);
+
+					map.popups.closeAll();
+
 					var listener = map.addClickListener(function(pos) {
 						message.close();
 

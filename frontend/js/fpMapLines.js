@@ -60,6 +60,8 @@
 					});
 				},
 				addLine: function(type) {
+					map.popups.closeAll();
+
 					map.socket.emit("getLineTemplate", { typeId: type.id }, function(err, line) {
 						if(err)
 							return map.messages.showMessage("error", err);
@@ -124,9 +126,12 @@
 						{ label: "Cancel", click: done.bind(null, false) }
 					]);
 
+					map.popups.closeAll();
+
 					function done(save) {
 						var newPoints = movable.done();
 						map.addLine(line);
+						ret.viewLine(line);
 
 						if(!save) {
 							message.close();
