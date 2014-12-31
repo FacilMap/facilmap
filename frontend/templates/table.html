@@ -2,13 +2,13 @@
 <table ng-if="type.type == 'marker'" class="border">
 	<thead>
 		<tr>
-			<th>Name</th>
+			<th class="sort" ng-click="sort(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
 			<th>Position</th>
-			<th ng-repeat="field in type.fields">{{field.name}}</th>
+			<th class="sort" ng-repeat="field in type.fields" ng-click="sort(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="marker in markers | fpType:type.id">
+		<tr ng-repeat="marker in markers | fpType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
 			<td>{{marker.name}}</td>
 			<td>{{marker.lat}},{{marker.lon}}</td>
 			<td ng-repeat="field in type.fields" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></td>
@@ -18,14 +18,14 @@
 <table ng-repeat-end ng-if="type.type == 'line'" class="border">
 	<thead>
 		<tr>
-			<th>Name</th>
-			<th>Distance</th>
-			<th>Time</th>
-			<th ng-repeat="field in type.fields">{{field.name}}</th>
+			<th class="sort" ng-click="sort(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
+			<th class="sort" ng-click="sort(type, '__distance')">Distance <span ng-class="getSortIcon(type, '__distance')"></span></th>
+			<th class="sort" ng-click="sort(type, '__time')">Time <span ng-class="getSortIcon(type, '__time')"></span></th>
+			<th class="sort" ng-repeat="field in type.fields" ng-click="sort(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="line in lines | fpType:type.id">
+		<tr ng-repeat="line in lines | fpType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
 			<td>{{line.name}}</td>
 			<td>{{round(line.distance, 2)}} km</td>
 			<td><span ng-show="line.time != null">{{formatTime(line.time)}} h ({{routingMode(line.mode)}})</span></td>

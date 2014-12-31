@@ -50,7 +50,7 @@
 		};
 	} ]);
 
-	fp.app.directive("fpTypeFieldContent", [ "$parse", "fpMarked", function($parse, fpMarked) {
+	fp.app.directive("fpTypeFieldContent", [ "$parse", "fpTypeFields", function($parse, fpTypeFields) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
@@ -58,34 +58,7 @@
 					var field = $parse(attrs.fpTypeFieldContent)(scope);
 					var value = $parse(attrs.fpTypeFieldModel)(scope);
 
-					if(value == null)
-						value = field['default'] || "";
-					switch(field.type) {
-						case "textarea":
-							element.empty().append(fpMarked.block(value));
-							break;
-						case "checkbox":
-							element.text(value == "1" ? "✔" : "✘");
-							break;
-						case "dropdown":
-							function _resolve(value) {
-								for(var i=0; i<(field.options || [ ]).length; i++) {
-									if(field.options[i].key == value) {
-										element.text(field.options[i].value);
-										return true;
-									}
-								}
-								return false;
-							}
-
-							if(!_resolve(value) && !_resolve(field['default']))
-								element.text("");
-
-							break;
-						case "input":
-						default:
-							element.empty().append(fpMarked.inline(value));
-					}
+					element.empty().append(fpTypeFields.formatField(field, value));
 				};
 
 				scope.$watch(attrs.fpTypeFieldModel, update);
@@ -96,5 +69,38 @@
 			}
 		}
 	} ]);
+
+	fp.app.factory("fpTypeFields", [ "fpMarked", function(fpMarked) {
+		return {
+			formatField : function(field, value) {
+				if(value == null)
+					value = field['default'] || "";
+				switch(field.type) {
+					case "textarea":
+						return fpMarked.block(value);
+					case "checkbox":
+						return value == "1" ? "✔" : "✘";
+					case "dropdown":
+						var val = null;
+						function _resolve(value) {
+							for(var i=0; i<(field.options || [ ]).length; i++) {
+								if(field.options[i].key == value) {
+									val = field.options[i].value;
+									break;
+								}
+							}
+						}
+
+						_resolve(value);
+						if(val == null)
+							_resolve(field['default']);
+						return val || "";
+					case "input":
+					default:
+						return fpMarked.inline(value);
+				}
+			}
+		}
+	}])
 
 })(FacilPad, jQuery, angular);

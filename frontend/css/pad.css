@@ -147,6 +147,15 @@ table {
 	border-collapse: collapse;
 }
 
+table th.sort {
+	cursor: pointer;
+}
+
+table th.sort .ui-icon {
+	display: inline-block;
+	vertical-align: middle;
+}
+
 table td.button {
 	width: 1px;
 	white-space: nowrap;
