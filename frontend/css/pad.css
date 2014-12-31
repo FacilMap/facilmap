@@ -302,8 +302,13 @@ textarea {
 	text-decoration: none;
 }
 
+.fp-popup .content h2 {
+	margin-bottom: 0;
+}
+
 .pos,.distance {
 	font-style: italic;
+	font-weight: normal;
 }
 
 #edit-line-colour {
