@@ -63,8 +63,10 @@
 
 					if(obj.fpMarker && obj.fpMarker.name)
 						label = map.showLabel(obj.fpMarker.name, obj.fpMarker, { x: 10, y: 0 });
-					else if(obj.fpLine && obj.fpLine.name)
-						label = map.showLabel(obj.fpLine.name, map.xyToPos(map.featureHandler.evt), { x: 15, y: 0 }, true);
+					else if(obj.fpLine && obj.fpLine.name) {
+						var e = map.featureHandler.evt;
+						label = map.showLabel(obj.fpLine.name, map.xyToPos({ x: e.offsetX == null ? e.layerX : e.offsetX, y: e.offsetY == null ? e.layerY : e.offsetY }), { x: 15, y: 0 }, true);
+					}
 				},
 				"out" : function(obj) {
 					$(map.map.div).removeClass("fp-overFeature");
@@ -340,7 +342,7 @@
 				var el = $("<div/>").addClass("fp-map-label").text(label).css({ top: (xy.y+offset.y)+"px", left: (xy.x+offset.x)+"px" }).appendTo(map.map.div);
 
 				var updatePosition = function(e) {
-					el.css({ top: (e.y+offset.y)+"px", left: (e.x+offset.x)+"px" });
+					el.css({ top: ((e.offsetY == null ? e.layerY : e.offsetY)+offset.y)+"px", left: ((e.offsetX == null ? e.layerX : e.offsetX)+offset.x)+"px" });
 				};
 
 				if(updateOnMove)
