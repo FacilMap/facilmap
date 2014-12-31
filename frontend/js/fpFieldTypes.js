@@ -11,7 +11,6 @@
 					var field = $parse(attrs.fpTypeField)(scope);
 
 					var el;
-					scope.$watch(attrs.fpTypeField)
 					switch(field.type) {
 						case "textarea":
 							el = $('<textarea/>');
@@ -63,7 +62,7 @@
 						value = field['default'] || "";
 					switch(field.type) {
 						case "textarea":
-							element.empty().append(fpMarked(value));
+							element.empty().append(fpMarked.block(value));
 							break;
 						case "checkbox":
 							element.text(value == "1" ? "✔" : "✘");
@@ -85,7 +84,7 @@
 							break;
 						case "input":
 						default:
-							element.text(value);
+							element.empty().append(fpMarked.inline(value));
 					}
 				};
 
