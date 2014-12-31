@@ -1,9 +1,9 @@
 <ul class="fp-toolbox">
-	<li ng-repeat="type in types" fp-variable-menu-item><a href="javascript:" ng-click="addObject(type)" ng-hide="readonly">Add {{type.name}}</a></li>
+	<li ng-hide="readonly" ng-repeat="type in types" fp-variable-menu-item><a href="javascript:" ng-click="addObject(type)">Add {{type.name}}</a></li>
 	<li><a href="javascript:">Views</a><ul>
 		<li ng-repeat="(id, view) in views" fp-variable-menu-item><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
-		<li><a href="javascript:" ng-click="saveView()" ng-hide="readonly">Save current view</a></li>
-		<li><a href="javascript:" ng-click="manageViews()" ng-hide="readonly">Manage views</a></li>
+		<li ng-hide="readonly"><a href="javascript:" ng-click="saveView()">Save current view</a></li>
+		<li ng-hide="readonly"><a href="javascript:" ng-click="manageViews()">Manage views</a></li>
 	</ul></li>
 	<li><a href="javascript:">Layers</a><ul>
 		<li ng-repeat="layer in layers" fp-variable-menu-item>
@@ -14,9 +14,9 @@
 		</li>
 	</ul></li>
 	<li><a href="javascript:">Tools</a><ul>
-		<!--<li><a href="javascript:" ng-click="openDialog('copy-pad-dialog')" ng-hide="readonly">Copy pad</a></li>-->
+		<!--<li ng-hide="readonly"><a href="javascript:" ng-click="openDialog('copy-pad-dialog')">Copy pad</a></li>-->
 		<li><a href="javascript:" ng-click="showTable()">Export as table</a></li>
-		<li><a href="javascript:" ng-click="editPadSettings()" ng-hide="readonly">Pad settings</a></li>
-		<li><a href="javascript:" ng-click="editObjectTypes()" ng-hide="readonly">Object types</a></li>
+		<li ng-hide="readonly"><a href="javascript:" ng-click="editPadSettings()">Pad settings</a></li>
+		<li ng-hide="readonly"><a href="javascript:" ng-click="editObjectTypes()">Object types</a></li>
 	</ul></li>
 </ul>
