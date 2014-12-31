@@ -17,7 +17,7 @@
 				var socket = fpSocket($rootScope.padId);
 				socket.updateBbox({ top: 90, left: -180, right: 180, bottom: -90, zoom: 0 });
 
-				fpDialogs.open("table.html", socket, "Table");
+				fpDialogs.open("table.html", socket, "Table", null, true);
 			}
 		};
 	} ]);

@@ -9,12 +9,13 @@
 
 	fp.app.factory("fpDialogs", [ "$compile", "$parse", "$templateCache", "fpUi", "$timeout", function($compile, $parse, $templateCache, fpUi, $timeout) {
 		return {
-			open: function(template, scope, title, onClose) {
+			open: function(template, scope, title, onClose, big) {
 				var dialogTemplate = $templateCache.get(template);
 				if(!dialogTemplate)
 					return;
 
-				var el = $("<div/>").attr("title", title || "").html(dialogTemplate).appendTo("body").dialog({ modal: true, height: "auto", width: 600 });
+				var w = $(window);
+				var el = $("<div/>").attr("title", title || "").html(dialogTemplate).appendTo("body").dialog({ modal: true, height: big ? .8*w.height() : "auto", width: big ? .6*w.width() :.4*w.width() });
 
 				el.bind("dialogclose", function() {
 					el.remove();
