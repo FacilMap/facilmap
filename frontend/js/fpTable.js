@@ -29,7 +29,7 @@
 				socket.updateBbox({ top: 90, left: -180, right: 180, bottom: -90, zoom: 0 });
 
 				socket.sort = function(type, field) {
-					socket.sortOrder[type.id] = (socket.sortField[type.id] == field ? !socket.sortOrder[type.id] : true);
+					socket.sortOrder[type.id] = ((socket.sortField[type.id] == null ? "__name" : socket.sortField[type.id]) == field ? !socket.sortOrder[type.id] : false);
 					socket.sortField[type.id] = field;
 				};
 
@@ -44,7 +44,7 @@
 
 				socket.getSortIcon = function(type, fieldName) {
 					return {
-						'ui-icon': (socket.sortField[type.id] == fieldName || (fieldName == "__name" && socket.sortField[type.id] == null)),
+						'ui-icon': ((socket.sortField[type.id] == null ? "__name" : socket.sortField[type.id]) == fieldName),
 						'ui-icon-triangle-1-s': !socket.sortOrder[type.id],
 						'ui-icon-triangle-1-n': socket.sortOrder[type.id]
 					};
