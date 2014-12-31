@@ -14,7 +14,7 @@
 		}
 	});
 
-	fp.app.factory("fpMapToolbox", [ "$compile", "$templateCache", function($compile, $templateCache) {
+	fp.app.factory("fpMapToolbox", [ "$compile", "$templateCache", "fpTable", function($compile, $templateCache, fpTable) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -41,6 +41,8 @@
 			scope.editPadSettings = map.padUi.editPadSettings.bind(map.padUi);
 
 			scope.editObjectTypes = map.typesUi.editTypes.bind(map.typesUi);
+
+			scope.showTable = fpTable.showTable.bind(fpTable);
 
 			$compile($($templateCache.get("map-toolbox.html")).appendTo(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest

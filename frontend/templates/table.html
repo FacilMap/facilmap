@@ -1,0 +1,35 @@
+<h2 ng-repeat-start="type in types">{{type.name}}</h2>
+<table ng-if="type.type == 'marker'" class="border">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Position</th>
+			<th ng-repeat="field in type.fields">{{field.name}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="marker in markers | fpType:type.id">
+			<td>{{marker.name}}</td>
+			<td>{{marker.lat}},{{marker.lon}}</td>
+			<td ng-repeat="field in type.fields" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></td>
+		</tr>
+	</tbody>
+</table>
+<table ng-repeat-end ng-if="type.type == 'line'" class="border">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Distance</th>
+			<th>Time</th>
+			<th ng-repeat="field in type.fields">{{field.name}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="line in lines | fpType:type.id">
+			<td>{{line.name}}</td>
+			<td>{{round(line.distance, 2)}} km</td>
+			<td><span ng-show="line.time != null">{{formatTime(line.time)}} h ({{routingMode(line.mode)}})</span></td>
+			<td ng-repeat="field in type.fields" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></td>
+		</tr>
+	</tbody>
+</table>

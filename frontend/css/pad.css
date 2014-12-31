@@ -113,11 +113,11 @@ dd {
 	vertical-align: top;
 }
 
-dd :first-child {
+dd :first-child,td :first-child {
 	margin-top: 0;
 }
 
-dd :last-child {
+dd :last-child,td :last-child {
 	margin-bottom: 0;
 }
 

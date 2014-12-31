@@ -12,7 +12,7 @@
 			scope.views = { };
 			scope.types = { };
 
-			var socket = io.connect(fp.SERVER);
+			var socket = io.connect(fp.SERVER, { 'force new connection': true });
 
 			scope.on = function(eventName, fn) {
 				if(fn)

@@ -73,11 +73,11 @@
 			switch(mode) {
 				case "fastest":
 				case "shortest":
-					return " by car";
+					return "by car";
 				case "bicycle":
-					return " by bicycle";
+					return "by bicycle";
 				case "pedestrian":
-					return " by foot";
+					return "by foot";
 				default:
 					return "";
 			}
