@@ -75,7 +75,7 @@
 					}
 				},
 				"click" : function(obj) {
-					obj.fpOnClick(map.xyToPos(map.featureHandler.up));
+					obj.fpOnClick(map.xyToPos(map.featureHandler.up), map.featureHandler.evt);
 				}
 			}, { map: map.map });
 			map.featureHandler.activate();
@@ -167,8 +167,8 @@
 				};
 				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.lon, marker.lat).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
 				feature.fpMarker = marker;
-				feature.fpOnClick = function() {
-					map.mapEvents.$emit("clickMarker", marker);
+				feature.fpOnClick = function(pos, evt) {
+					map.mapEvents.$emit("clickMarker", marker, evt);
 				};
 				map.layerLines.addFeatures([ feature ]);
 				map.markersById[marker.id] = feature;
@@ -206,8 +206,8 @@
 
 				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
 				feature.fpLine = line;
-				feature.fpOnClick = function(clickPos) {
-					map.mapEvents.$emit("clickLine", line, clickPos);
+				feature.fpOnClick = function(clickPos, evt) {
+					map.mapEvents.$emit("clickLine", line, clickPos, evt);
 				};
 				map.layerLines.addFeatures([ feature ]);
 				map.linesById[line.id] = feature;
@@ -366,11 +366,6 @@
 			fpMapToolbox(map);
 			fpMapLegend(map);
 			fpMapSearch(map);
-
-			map.mapEvents.$on("clickLine", function(e, line, clickPos) {
-				map.popups.closeAll();
-				map.linesUi.viewLine(line, clickPos);
-			});
 
 			map.socket.$on("loadStart", function() {
 				map.loadStart();

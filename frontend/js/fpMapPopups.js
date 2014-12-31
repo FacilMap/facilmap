@@ -33,7 +33,8 @@
 							this.pos = pos;
 							_updatePosition();
 						},
-						scope: scope
+						scope: scope,
+						template: template
 					};
 
 					$('<a href="javascript:" class="close-button">×</a>').click(ret.close.bind(ret)).appendTo(el);
