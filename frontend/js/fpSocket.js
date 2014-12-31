@@ -139,6 +139,11 @@
 
 			scope.emit("setPadId", padId);
 
+			scope.$on("$destroy", function() {
+				socket.removeAllListeners();
+				socket.disconnect();
+			});
+
 			return scope;
 		};
 	} ]);

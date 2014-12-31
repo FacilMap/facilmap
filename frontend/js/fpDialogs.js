@@ -37,6 +37,7 @@
 						onClose = null;
 
 					el.dialog("close");
+					scope.$destroy();
 				}, el: el };
 				openDialogs.push(ret);
 				return ret;
