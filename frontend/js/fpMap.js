@@ -50,7 +50,7 @@
 			map.map.addLayer(new fm.Layer.OSM.OpenPTMap(ol.i18n("Public transportation"), { permalinkName : "OPTM", visibility : false }));
 			map.map.addLayer(new fm.Layer.other.Relief(ol.i18n("Relief"), { visibility: false, permalinkName : "Rlie" }));
 
-			map.layerLines = new OpenLayers.Layer.Vector("Lines", { displayInLayerSwitcher: false, visibility: true });
+			map.layerLines = new FacilMap.Layer.Vector("Lines", { displayInLayerSwitcher: false, visibility: true });
 			map.map.addLayer(map.layerLines);
 
 			var label;
@@ -82,6 +82,10 @@
 			}, { map: map.map });
 			map.featureHandler.activate();
 
+			var dragIcon = fpUtils.createMarkerIcon("ffd700");
+			map.dragControl = new FacilMap.Control.DragLine(map.layerLines, dragIcon);
+			map.map.addControl(map.dragControl);
+
 			map.map.events.register("click", map.map, function(e) {
 				map.mapEvents.$emit("click", map.xyToPos(e.xy));
 			});
@@ -107,21 +111,6 @@
 						return superFunc.apply(this, arguments);
 				};
 			}
-
-			map.DragFeature = new OpenLayers.Class(OpenLayers.Control.DragFeature, {
-				filterFunc : null,
-
-				initialize : function(layer, filterFunc, options) {
-					this.filterFunc = filterFunc || function(feature) { return true; };
-
-					OpenLayers.Control.DragFeature.prototype.initialize.apply(this, [ layer, options ]);
-				},
-
-				clickFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.clickFeature),
-				clickoutFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.clickoutFeature),
-				overFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.overFeature),
-				outFeature : _wrapFeatureFunc(OpenLayers.Control.DragFeature.prototype.outFeature)
-			});
 
 			map.getCurrentView = function() {
 				var ret = map.map.getExtent().clone().transform(map.map.getProjectionObject(), fpUtils.proj());
@@ -160,14 +149,7 @@
 			map.addMarker = function(marker) {
 				map.deleteMarker(marker);
 
-				var style = {
-					externalGraphic: fpUtils.createMarkerGraphic(marker.colour),
-					graphicWidth: 21,
-					graphicHeight: 25,
-					graphicXOffset: -9,
-					graphicYOffset: -25
-				};
-				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(marker.lon, marker.lat).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
+				var feature = fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(marker.lon, marker.lat), map.map), fpUtils.createMarkerIcon(marker.colour));
 				feature.fpMarker = marker;
 				feature.fpOnClick = function(pos, evt) {
 					map.mapEvents.$emit("clickMarker", marker, evt);
@@ -282,23 +264,64 @@
 				map.featureHandler.deactivate();
 
 				var line = $.extend(true, { }, origLine);
-
 				line.actualPoints = line.points;
+				var markers = [ ];
+				for(var i=0; i<line.points.length; i++)
+					markers.push(fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(line.points[i].lon, line.points[i].lat), map.map), dragIcon));
+				map.layerLines.addFeatures(markers);
 				map.addLine(line);
 
-				var markers = [ ];
-				drawMarkers();
+				var dragExcludeBkp = map.layerLines._excludeFeature;
+				map.layerLines._excludeFeature = function(feature) {
+					return dragExcludeBkp.apply(this, arguments) || (!feature.fmStartLonLat && feature != map.linesById[line.id] && markers.indexOf(feature) == -1);
+				};
 
-				var drag = new map.DragFeature(map.layerLines, function(feature) {
-					return feature.fpMarker && feature.fpMarker.id.match(/^linePoint/);
-				}, {
-					onDrag : function(feature) {
-						line.points[feature.fpMarker.i] = new OpenLayers.LonLat(feature.geometry.x, feature.geometry.y).transform(map.map.getProjectionObject(), fpUtils.proj());
+				map.dragControl.onDblClick = function(feature) {
+					var idx = markers.indexOf(feature);
+					if(idx != -1) {
+						line.points.splice(idx, 1);
+						map.addLine(line);
+
+						markers.splice(idx, 1);
+						map.layerLines.removeFeatures([ feature ]);
+						feature.destroy();
+					}
+				};
+
+				map.dragControl.onDrag = function(feature) {
+					var idx = markers.indexOf(feature);
+					if(idx != -1) { // Existing marker was dragged
+						var lonlat = fm.Util.fromMapProjection(new ol.LonLat(feature.geometry.x, feature.geometry.y), map.map);
+						line.points[idx] = { lat: lonlat.lat, lon: lonlat.lon };
 						map.addLine(line);
 					}
-				});
-				map.map.addControl(drag);
-				drag.activate();
+					else if(feature.fmStartLonLat) { // New marker
+						var index = fm.Util.lonLatIndexOnLine(feature.fmStartLonLat, feature.fmLine.geometry);
+						if(index != null) {
+							var newIndex = line.points.length;
+							var indexes = [ ];
+							for(var i=0; i<newIndex; i++) {
+								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.points[i].lon, line.points[i].lat), map.map), feature.fmLine.geometry));
+								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.points[i].lon, line.points[i].lat), map.map), feature.fmLine.geometry))
+									newIndex = i;
+							}
+
+							var lonlat = fm.Util.fromMapProjection(feature.fmStartLonLat, map.map);
+							line.points.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
+							markers.splice(newIndex, 0, feature);
+							map.addLine(line);
+						}
+						else
+							console.warn("Index = null", feature.fmStartLonLat);
+					}
+				};
+
+				map.dragControl.onComplete = function(feature) {
+					if(feature.fmStartLonLat)
+						delete feature.fmStartLonLat;
+				};
+
+				map.dragControl.activate();
 
 				return {
 					done : function() {
@@ -307,24 +330,16 @@
 					}
 				};
 
-				function drawMarkers(end) {
-					for(var i=0; i<markers.length; i++)
-						map.deleteMarker(markers[i]);
-					markers = [ ];
-
-					if(!end) {
-						for(var i=0; i<line.points.length; i++) {
-							var marker = { id: "linePoint"+i, lat: line.points[i].lat, lon: line.points[i].lon, colour: "ffd700", i: i };
-							markers.push(marker);
-							map.addMarker(marker);
-						}
-					}
-				}
-
 				function end() {
-					drawMarkers(true);
-					drag.deactivate();
-					map.map.removeControl(drag);
+					if(markers.indexOf(map.dragControl.feature) != -1)
+						map.dragControl._simulateOverFeature(null);
+
+					map.layerLines.removeFeatures(markers);
+					for(var i=0; i<markers.length; i++)
+						markers[i].destroy();
+
+					map.layerLines._excludeFeature = dragExcludeBkp;
+					map.dragControl.deactivate();
 					map.featureHandler.activate();
 				}
 			};

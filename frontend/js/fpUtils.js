@@ -34,6 +34,10 @@
 			return "data:image/svg+xml;base64,"+btoa(svg);
 		};
 
+		fpUtils.createMarkerIcon = function(colour) {
+			return new OpenLayers.Icon(fpUtils.createMarkerGraphic(colour), { w: 21, h: 25 }, { x: -9, y: -25 });
+		};
+
 		fpUtils.makeTextColour = function(backgroundColour, threshold) {
 			if(threshold == null)
 				threshold = 0.5;

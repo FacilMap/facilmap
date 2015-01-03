@@ -10,15 +10,15 @@
 					var popup = map.popups.open("view-marker.html", scope, scope.marker);
 
 					scope.edit = function() {
-						ret.editMarker(marker);
+						ret.editMarker(scope.marker);
 					};
 
 					scope.move = function() {
-						ret.moveMarker(marker);
+						ret.moveMarker(scope.marker);
 					};
 
 					scope['delete'] = function() {
-						ret.deleteMarker(marker);
+						ret.deleteMarker(scope.marker);
 					};
 
 					scope.$watch("markers["+fpUtils.quoteJavaScript(marker.id)+"]", function(newVal) {
@@ -41,7 +41,7 @@
 					scope.dialog = fpDialogs.open("edit-marker.html", scope, "Edit Marker", preserve.revert.bind(preserve));
 
 					scope.canControl = function(what) {
-						return map.typesUi.canControl(scope.types[marker.typeId], what);
+						return map.typesUi.canControl(scope.types[scope.marker.typeId], what);
 					};
 
 					scope.save = function() {

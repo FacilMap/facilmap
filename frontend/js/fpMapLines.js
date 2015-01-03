@@ -13,15 +13,15 @@
 					scope.popup = map.popups.open("view-line.html", scope, clickPos);
 
 					scope.edit = function() {
-						ret.editLine(line);
+						ret.editLine(scope.line);
 					};
 
 					scope.move = function() {
-						ret.moveLine(line);
+						ret.moveLine(scope.line);
 					};
 
 					scope['delete'] = function() {
-						ret.deleteLine(line);
+						ret.deleteLine(scope.line);
 					};
 
 					map.socket.$watch("lines["+fpUtils.quoteJavaScript(line.id)+"]", function(newVal) {
@@ -30,6 +30,11 @@
 						else
 							scope.line = newVal;
 					});
+
+					scope.$watch("line.points", function(newVal, oldVal) {
+						if(!ng.equals(oldVal, newVal))
+							scope.popup.updatePosition(newVal[newVal.length-1]);
+					}, true);
 				},
 				editLine: function(line) {
 					var scope = map.socket.$new();
@@ -42,7 +47,7 @@
 					scope.dialog = fpDialogs.open("edit-line.html", scope, "Edit Line", preserve.revert.bind(preserve));
 
 					scope.canControl = function(what) {
-						return map.typesUi.canControl(scope.types[line.typeId], what);
+						return map.typesUi.canControl(scope.types[scope.line.typeId], what);
 					};
 
 					scope.save = function() {
