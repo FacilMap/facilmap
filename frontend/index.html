@@ -52,12 +52,7 @@
 					}
 				};
 
-				var int = setInterval(function() {
-					if(window.FacilPad) {
-						clearInterval(int);
-						check();
-					}
-				}, 100);
+				var interval = setInterval(check, 100);
 
 				function check() {
 					if(loaded == 0 && !location.pathname.match(/\/$/)) {
@@ -71,6 +66,7 @@
 						$("#map").unwrap();
 						angular.bootstrap(document, [ "facilpad" ]);
 						loaded = 2;
+						clearInterval(interval);
 					}
 				}
 
