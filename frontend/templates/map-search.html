@@ -7,7 +7,7 @@
 	<div class="fp-search-results" ng-show="searchResults">
 		<p class="no-results" ng-show="searchResults.length == 0">No results have been found.</p>
 		<ul ng-show="searchResults.length > 0">
-			<li ng-repeat="result in searchResults"><a href="javascript:" ng-click="showResult(result)">{{result.name}}</a></li>
+			<li ng-repeat="result in searchResults"><a href="javascript:" ng-click="showResult(result)">{{result.name}}</a> <span class="result-type">({{result.info}})</span></li>
 		</ul>
 	</div>
 </div>
