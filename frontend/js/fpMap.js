@@ -38,7 +38,11 @@
 			replaceEl.replaceWith(el);
 			$compile(el)(map.socket);
 
-			map.map = new FacilMap.Map(el[0]);
+			map.map = new FacilMap.Map(el[0], {
+				attributionIcon: new ol.Icon("img/logo.png", new ol.Size(191, 176), new ol.Pixel(-37, -131))
+			});
+
+			$(map.map.attributionIcon.imageDiv).css({ overflow: "hidden", height: "131px" });
 
 			// Map ID is not set yet as scope is not digested. So styles might change.
 			$timeout(map.map.updateSize.bind(map.map));
