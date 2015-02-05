@@ -8,6 +8,19 @@ var FacilPad = {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 	} ]);
 
+	// Dereferrer
+	$(document).on("click", "a", function(e) {
+		var el = $(e.target);
+		var href = el.attr("href");
+		if(href && href.match(/^\s*(https?:)?\/\//i)) {
+			el.attr("href", "deref.html?"+encodeURIComponent(href));
+
+			setTimeout(function() {
+				el.attr("href", href);
+			}, 0);
+		}
+	});
+
 	fp.app.run([ "$rootScope", "fpUtils", function($rootScope, fpUtils) {
 		$rootScope.padId = location.pathname.match(/[^\/]*$/)[0];
 		$rootScope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
