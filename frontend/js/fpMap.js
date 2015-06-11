@@ -258,7 +258,7 @@
 				if(layers.length == 0)
 					return;
 
-				if(layers[0].isBaseLayer && show)
+				if(layers[0].isBaseLayer)
 					map.map.setBaseLayer(layers[0]);
 				else
 					layers[0].setVisibility(show);
