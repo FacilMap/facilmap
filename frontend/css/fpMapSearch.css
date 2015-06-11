@@ -76,3 +76,9 @@
 	margin: 0;
 	color: #888;
 }
+
+@media print {
+	.fp-search {
+		display: none;
+	}
+}

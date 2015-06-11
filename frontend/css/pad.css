@@ -53,6 +53,12 @@ html,body {
 	right: 10px;
 }
 
+@media print {
+	.fp-toolbox {
+		display: none;
+	}
+}
+
 .error,.success,.warning,.info {
 	padding: 8px;
 	border-radius: 3px;
