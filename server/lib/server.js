@@ -107,7 +107,7 @@ database.connect(function(err) {
 			},
 
 			editMarker : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", data: Object }))
+				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -144,7 +144,7 @@ database.connect(function(err) {
 			},
 
 			editLine : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", data: Object }))
+				if(!utils.stripObject(data, { id: "number", points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)

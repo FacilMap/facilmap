@@ -365,6 +365,12 @@ textarea {
 	font-weight: bold;
 }
 
+.type-select {
+	position: absolute;
+	bottom: .5em;
+	right: 1em;
+}
+
 
 /********* z-index **************/
 

@@ -25,4 +25,7 @@
 	<div>
 		<button ng-click="save()">Save</button>
 	</div>
+	<div class="type-select">
+		<select ng-options="type.id as type.name for type in types | fpObjectFilter:{type:'line'}" ng-model="line.typeId"></select>
+	</div>
 </form>

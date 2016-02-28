@@ -132,4 +132,19 @@
 		return fpUtils;
 	} ]);
 
+	fp.app.filter('fpObjectFilter', function($filter){
+		return function(input, query) {
+			if(!query) return input;
+
+			var output = { };
+
+			for(var i in input) {
+				if($filter("filter")([ input[i] ], query).length == 1)
+					output[i] = input[i];
+			}
+
+			return output;
+		};
+	});
+
 })(FacilPad, jQuery, angular);
