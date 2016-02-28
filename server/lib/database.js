@@ -221,7 +221,7 @@ function _updateObjectStyles(objectStream, isLine, callback) {
 							return null;
 						};
 
-						var option = _find(object.data[field.name]) || _find(field.default);
+						var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
 
 						var update = { };
 						if(option != null) {
