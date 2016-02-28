@@ -180,7 +180,7 @@ function ArrayStream(array) {
 	stream.Readable.call(this, { objectMode: true });
 
 	if(array != null)
-		this.receiveArray(null, array);
+		setImmediate(function(){ this.receiveArray(null, array); }.bind(this));
 }
 
 util.inherits(ArrayStream, stream.Readable);
@@ -194,7 +194,7 @@ ArrayStream.prototype.receiveArray = function(err, array) {
 
 	for(var i=0; i<array.length; i++)
 		this.push(array[i]);
-	this.push();
+	this.push(null);
 };
 
 function asyncStreamEach(stream, handle, callback) {
