@@ -32,6 +32,11 @@ database.connect(function(err) {
 		var d = domain.create();
 		d.add(socket);
 
+		d.on("error", function(err) {
+			console.error("Uncaught error in socket:", err.stack);
+			socket.disconnect();
+		});
+
 		var handlers = {
 			error : function(err) {
 				console.error("Error! Disconnecting client.");
@@ -231,8 +236,19 @@ database.connect(function(err) {
 			}*/
 		};
 
-		for(var i in handlers)
-			socket.on(i, handlers[i]);
+		for(var i in handlers) { (function(i) {
+			socket.on(i, function(data, callback) {
+				var d2 = domain.create();
+				d2.run(function() {
+					handlers[i](data, callback);
+				});
+
+				d2.on("error", function(err) {
+					console.error("Uncaught exception in function "+i+":", err.stack);
+					callback(err);
+				});
+			});
+		})(i); }
 	});
 });
 
