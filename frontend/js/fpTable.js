@@ -11,7 +11,7 @@
 		};
 	});
 
-	fp.app.factory("fpTable", [ "fpSocket", "fpDialogs", "$rootScope", "fpTypeFields", function(fpSocket, fpDialogs, $rootScope, fpTypeFields) {
+	fp.app.factory("fpTable", function(fpSocket, fpDialogs, $rootScope, fpTypeFields) {
 		function _getField(type, fieldName) {
 			for(var i=0; i<type.fields.length; i++) {
 				if(type.fields[i].name == fieldName)
@@ -56,6 +56,6 @@
 				fpDialogs.open("table.html", socket, "Table", null, true);
 			}
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

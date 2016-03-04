@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapPopups", [ "$compile", "$parse", "$templateCache", "fpUi", "$timeout", function($compile, $parse, $templateCache, fpUi, $timeout) {
+	fp.app.factory("fpMapPopups", function($compile, $parse, $templateCache, fpUi, $timeout) {
 		return function(map) {
 			var openPopups = [ ];
 
@@ -77,6 +77,6 @@
 				}
 			};
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

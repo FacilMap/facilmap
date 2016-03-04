@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapViews", [ "fpDialogs", function(fpDialogs) {
+	fp.app.factory("fpMapViews", function(fpDialogs) {
 		return function(map) {
 			var ret = {
 				saveView : function() {
@@ -56,6 +56,6 @@
 
 			return ret;
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.directive("fpSpinner", [ "$parse", function($parse) {
+	fp.app.directive("fpSpinner", function($parse) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
@@ -17,9 +17,9 @@
 				});
 			}
 		}
-	} ]);
+	});
 
-	fp.app.directive("fpColourPicker", [ "fpUtils", "$templateCache", "$rootScope", "$compile", function(fpUtils, $templateCache, $rootScope, $compile) {
+	fp.app.directive("fpColourPicker", function(fpUtils, $templateCache, $rootScope, $compile) {
 		var colourPicker = $($templateCache.get("colour-picker.html")).appendTo("body").hide();
 		var scope = $rootScope.$new();
 		scope.colours = [ "ffffff", "ffccc9", "ffce93", "fffc9e", "ffffc7", "9aff99", "96fffb", "cdffff", "cbcefb", "cfcfcf", "fd6864",
@@ -62,7 +62,7 @@
 				});
 			}
 		}
-	} ]);
+	});
 
 	fp.app.directive("fpTitle", function() {
 		return {

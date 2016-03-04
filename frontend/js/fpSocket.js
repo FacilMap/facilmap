@@ -1,7 +1,7 @@
 (function(fp, $, ng, undefined) {
 
 	// From http://stackoverflow.com/a/11277751/242365
-	fp.app.factory("fpSocket", [ "$rootScope", "fpUtils", function($rootScope, fpUtils) {
+	fp.app.factory("fpSocket", function($rootScope, fpUtils) {
 		return function(padId) {
 			var scope = $rootScope.$new();
 
@@ -146,6 +146,6 @@
 
 			return scope;
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

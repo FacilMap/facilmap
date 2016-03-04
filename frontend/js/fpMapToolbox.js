@@ -14,7 +14,7 @@
 		}
 	});
 
-	fp.app.factory("fpMapToolbox", [ "$compile", "$templateCache", "fpTable", function($compile, $templateCache, fpTable) {
+	fp.app.factory("fpMapToolbox", function($compile, $templateCache, fpTable) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -47,6 +47,6 @@
 			$compile($($templateCache.get("map-toolbox.html")).appendTo(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		}
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapTypes", [ "fpDialogs", "fpUtils", function(fpDialogs, fpUtils) {
+	fp.app.factory("fpMapTypes", function(fpDialogs, fpUtils) {
 		return function(map) {
 			var ret = {
 				editTypes : function() {
@@ -101,6 +101,6 @@
 			};
 			return ret;
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

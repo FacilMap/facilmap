@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpUtils", [ "$parse", function($parse) {
+	fp.app.factory("fpUtils", function($parse) {
 
 		var fpUtils = { };
 
@@ -130,7 +130,7 @@
 		};
 
 		return fpUtils;
-	} ]);
+	});
 
 	fp.app.filter('fpObjectFilter', function($filter){
 		return function(input, query) {

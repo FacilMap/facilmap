@@ -9,7 +9,7 @@
 		};
 	} ]);
 
-	fp.app.factory("fpMap", [ "fpUtils", "fpSocket", "fpMapMessages", "fpDialogs", "fpMapMarkers", "fpMapPopups", "$templateCache", "$compile", "fpMapLines", "fpMapTypes", "fpMapViews", "$rootScope", "fpMapPad", "fpMapToolbox", "$timeout", "fpMapLegend", "fpMapSearch", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch) {
+	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch) {
 		var maps = { };
 
 		var ret = { };
@@ -443,6 +443,6 @@
 				map.socket.updateBbox(bbox);
 			});
 		}
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular, FacilMap, OpenLayers);

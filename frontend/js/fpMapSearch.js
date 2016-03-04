@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearch", [ "$rootScope", "$templateCache", "$compile", "fpUtils", function($rootScope, $templateCache, $compile, fpUtils) {
+	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils) {
 		var namefinder = new FacilMap.NameFinder.Nominatim();
 
 		return function(map) {
@@ -30,6 +30,6 @@
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		};
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);
