@@ -337,7 +337,7 @@ function _setLinePoints(padId, lineId, points, callback) {
 			return callback(err);
 
 		listeners.notifyPadListeners(padId, "linePoints", function(bboxWithZoom) {
-			return { reset: true, id: lineId, points : routing.prepareForBoundingBox(points, bboxWithZoom) };
+			return { reset: true, id: lineId, points : (bboxWithZoom ? routing.prepareForBoundingBox(points, bboxWithZoom) : [ ]) };
 		});
 
 		callback(null);
@@ -465,7 +465,7 @@ function _calculateRouting(line, callback) {
 
 function _getMarkerDataFunc(marker) {
 	return function(bbox) {
-		if(!utils.isInBbox(marker, bbox))
+		if(!bbox || !utils.isInBbox(marker, bbox))
 			return null;
 
 		return marker;
