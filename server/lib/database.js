@@ -277,13 +277,13 @@ function createLine(padId, data, callback) {
 		calculateRouting : function(next) {
 			_calculateRouting(data, next); // Also sets data.distance and data.time
 		},
-		createLine : [ "calculateRouting", function(next) {
+		createLine : [ "calculateRouting", function(res, next) {
 			_createLine(padId, data, next);
 		} ],
-		setLinePoints : [ "createLine", "calculateRouting", function(next, res) {
+		setLinePoints : [ "createLine", "calculateRouting", function(res, next) {
 			_setLinePoints(padId, res.createLine.id, res.calculateRouting, next);
 		} ],
-		updateLineStyle : [ "createLine", function(next, res) {
+		updateLineStyle : [ "createLine", function(res, next) {
 			_updateObjectStyles(res.createLine, true, next); // Modifies res.createLine
 		} ]
 	}, function(err, res) {
@@ -294,7 +294,7 @@ function createLine(padId, data, callback) {
 function updateLine(lineId, data, callback) {
 	async.auto({
 		originalLine : backend.getLine.bind(backend, lineId),
-		calculateRouting : [ "originalLine", function(next, res) {
+		calculateRouting : [ "originalLine", function(res, next) {
 			if(data.routePoints == null)
 				data.routePoints = res.originalLine.routePoints;
 
@@ -306,13 +306,13 @@ function updateLine(lineId, data, callback) {
 
 			_calculateRouting(data, next); // Also sets data.distance and data.time
 		} ],
-		updateLine : [ "calculateRouting", function(next) {
+		updateLine : [ "calculateRouting", function(res, next) {
 			_updateLine(lineId, data, next);
 		} ],
-		updateLineStyle : [ "updateLine", function(next, res) {
+		updateLineStyle : [ "updateLine", function(res, next) {
 			_updateObjectStyles(res.updateLine, true, next); // Modifies res.updateLine
 		} ],
-		setLinePoints : [ "originalLine", "calculateRouting", function(next, res) {
+		setLinePoints : [ "originalLine", "calculateRouting", function(res, next) {
 			if(!res.calculateRouting)
 				return next();
 
@@ -405,7 +405,7 @@ function getLinePoints(padId, bboxWithZoom) {
 		toPadData : function(next) {
 			getPadData(toPadId, next);
 		},
-		padsExist : [ "fromPadData", "toPadData", function(next, r) {
+		padsExist : [ "fromPadData", "toPadData", function(r, next) {
 			if(!r.fromPadData)
 				return next(new Error("Pad "+fromPadId+" does not exist."));
 			if(!r.toPadData.writable)
@@ -415,12 +415,12 @@ function getLinePoints(padId, bboxWithZoom) {
 
 			next();
 		}],
-		copyMarkers : [ "padsExist", function(next) {
+		copyMarkers : [ "padsExist", function(r, next) {
 			_handleStream(getPadMarkers(fromPadId, null), next, function(marker, cb) {
 				createMarker(toPadId, marker, cb);
 			});
 		}],
-		copyLines : [ "padsExist", function(next) {
+		copyLines : [ "padsExist", function(r, next) {
 			_handleStream(getPadLines(fromPadId), next, function(line, cb) {
 				async.auto({
 					createLine : function(next) {
@@ -429,13 +429,13 @@ function getLinePoints(padId, bboxWithZoom) {
 					getLinePoints : function(next) {
 						backend.getLinePoints(line.id, next);
 					},
-					setLinePoints : [ "createLine", "getLinePoints", function(next, r) {
+					setLinePoints : [ "createLine", "getLinePoints", function(r, next) {
 						_setLinePoints(toPadId, r.createLine.id, r.getLinePoints, next);
 					} ]
 				}, cb);
 			});
 		}],
-		copyViews : [ "padsExist", function(next, r) {
+		copyViews : [ "padsExist", function(r, next) {
 			_handleStream(getViews(fromPadId), next, function(view, cb) {
 				createView(toPadId, view, function(err, newView) {
 					if(err)

@@ -2,7 +2,7 @@
   "name": "facilmap",
   "version": "0.1.0",
   "devDependencies": {
-    "async": "^1.5.2",
+    "async": "^2.0.1",
     "event-stream": "^3.3.2",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",

@@ -297,7 +297,7 @@ function _createPadObjectWithData(type, padId, data, callback) {
 		obj: function(next) {
 			_createPadObject(type, padId, data, next);
 		},
-		data: [ "obj", function(next, res) {
+		data: [ "obj", function(res, next) {
 			if(data.data != null) {
 				res.obj.data = data.data;
 				res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()

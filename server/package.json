@@ -6,7 +6,7 @@
   "dependencies": {
     "sequelize": "2.0.0-rc3",
     "socket.io": "^1.2.1",
-    "async" : "0.9.x",
+    "async": "^2.0.1",
     "request" : "2.51.x",
     "underscore" : "1.7.x"
     "socket.io": "^1.2.1",

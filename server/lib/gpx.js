@@ -68,7 +68,7 @@ function exportGpx(padId, useTracks, callback) {
 				next(err, types);
 			});
 		},
-		types : [ "typesObj", function(next, res) {
+		types : [ "typesObj", function(res, next) {
 			var types = '';
 			for(var i in res.typesObj) {
 				var type = res.typesObj[i];
@@ -76,7 +76,7 @@ function exportGpx(padId, useTracks, callback) {
 			}
 			next(null, types);
 		} ],
-		markers : [ "typesObj", function(next, res) {
+		markers : [ "typesObj", function(res, next) {
 			var markers = '';
 			utils.asyncStreamEach(database.getPadMarkers(padId), function(marker, next) {
 				markers += '<wpt lat="' + _e(marker.lat) + '" lon="' + _e(marker.lon) + '">\n' +
@@ -91,7 +91,7 @@ function exportGpx(padId, useTracks, callback) {
 				next(err, markers);
 			});
 		} ],
-		lines : [ "typesObj", function(next, res) {
+		lines : [ "typesObj", function(res, next) {
 			var lines = '';
 			utils.asyncStreamEach(database.getPadLinesWithPoints(padId), function(line, next) {
 				var t = (useTracks || line.mode == "track");
