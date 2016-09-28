@@ -65,7 +65,7 @@
 
 			scope.on("line", function(data) {
 				if(scope.lines[data.id])
-					data.actualPoints = scope.lines[data.id].actualPoints;
+					data.trackPoints = scope.lines[data.id].trackPoints;
 				else
 					scope.lines[data.id] = { };
 
@@ -81,17 +81,17 @@
 				if(line == null)
 					return console.error("Received line points for non-existing line "+data.id+".");
 
-				if(line.actualPoints == null || data.reset)
-					line.actualPoints = { };
+				if(line.trackPoints == null || data.reset)
+					line.trackPoints = { };
 
-				for(var i=0; i<data.points.length; i++) {
-					line.actualPoints[data.points[i].idx] = data.points[i];
+				for(var i=0; i<data.trackPoints.length; i++) {
+					line.trackPoints[data.trackPoints[i].idx] = data.trackPoints[i];
 				}
 
-				line.actualPoints.length = 0;
-				for(var i in line.actualPoints) {
-					if(i != "length" && i >= line.actualPoints.length)
-						line.actualPoints.length = 1*i+1;
+				line.trackPoints.length = 0;
+				for(var i in line.trackPoints) {
+					if(i != "length" && i >= line.trackPoints.length)
+						line.trackPoints.length = 1*i+1;
 				}
 			});
 

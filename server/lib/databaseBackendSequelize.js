@@ -85,27 +85,27 @@ Marker.hasMany(MarkerData, { foreignKey: "markerId" });
 /* Lines */
 
 var Line = conn.define("Line", {
-	points : {
+	routePoints : {
 		type: Sequelize.TEXT,
 		allowNull: false,
 		get: function() {
-			var points = this.getDataValue("points");
-			return points != null ? JSON.parse(points) : points;
+			var routePoints = this.getDataValue("routePoints");
+			return routePoints != null ? JSON.parse(routePoints) : routePoints;
 		},
 		set: function(v) {
 			for(var i=0; i<v.length; i++) {
 				v[i].lat = 1*v[i].lat.toFixed(6);
 				v[i].lon = 1*v[i].lon.toFixed(6);
 			}
-			this.setDataValue("points", JSON.stringify(v));
+			this.setDataValue("routePoints", JSON.stringify(v));
 		},
 		validate: {
 			minTwo: function(val) {
-				var points = JSON.parse(val);
-				if(!Array.isArray(points))
-					throw new Error("points is not an array");
-				if(points.length < 2)
-					throw new Error("A line cannot have less than two points.");
+				var routePoints = JSON.parse(val);
+				if(!Array.isArray(routePoints))
+					throw new Error("routePoints is not an array");
+				if(routePoints.length < 2)
+					throw new Error("A line cannot have less than two route points.");
 			}
 		}
 	},
@@ -226,6 +226,20 @@ function connect(callback, force) {
 		},
 		function(next) {
 			conn.sync({ force: !!force }).complete(next);
+		},
+		function(next) {
+			// Migrations
+
+			var queryInterface = conn.getQueryInterface();
+
+			// Rename Line.points to Line.routePoints
+			queryInterface.describeTable('Lines').then(function(attributes) {
+				if(attributes.points) {
+					return queryInterface.renameColumn('Lines', 'points', 'routePoints');
+				}
+			})
+			.then(function() { next(); })
+			.catch(function(err) { next(err); });
 		}
 	], callback);
 }
@@ -521,15 +535,15 @@ function getLinePointsByIdx(lineId, indexes, callback) {
 	}).complete(callback);
 }
 
-function setLinePoints(lineId, points, callback) {
+function setLinePoints(lineId, trackPoints, callback) {
 	async.series([
 		function(next) {
 			LinePoint.destroy({ where: { lineId: lineId } }).complete(next);
 		},
 		function(next) {
 			var create = [ ];
-			for(var i=0; i<points.length; i++) {
-				create.push(utils.extend({ }, points[i], { lineId: lineId }));
+			for(var i=0; i<trackPoints.length; i++) {
+				create.push(utils.extend({ }, trackPoints[i], { lineId: lineId }));
 			}
 
 			LinePoint.bulkCreate(create).complete(next);

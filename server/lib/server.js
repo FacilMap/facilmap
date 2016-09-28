@@ -139,7 +139,7 @@ database.connect(function(err) {
 			},
 
 			addLine : function(data, callback) {
-				if(!utils.stripObject(data, { points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -149,7 +149,7 @@ database.connect(function(err) {
 			},
 
 			editLine : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", points: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+				if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)

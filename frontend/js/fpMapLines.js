@@ -5,7 +5,7 @@
 			var ret = {
 				viewLine: function(line, clickPos) {
 					if(clickPos == null)
-						clickPos = line.points[line.points.length-1];
+						clickPos = line.routePoints[line.routePoints.length-1];
 
 					var scope = map.socket.$new();
 
@@ -31,7 +31,7 @@
 							scope.line = newVal;
 					});
 
-					scope.$watch("line.points", function(newVal, oldVal) {
+					scope.$watch("line.routePoints", function(newVal, oldVal) {
 						if(!ng.equals(oldVal, newVal))
 							scope.popup.updatePosition(newVal[newVal.length-1]);
 					}, true);
@@ -71,8 +71,8 @@
 						if(err)
 							return map.messages.showMessage("error", err);
 
-						line.points = [ ];
-						line.actualPoints = [ ];
+						line.routePoints = [ ];
+						line.trackPoints = [ ];
 						var message = map.messages.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.", [
 							{ label: "Finish", click: finishLine.bind(null, true) },
 							{ label: "Cancel", click: finishLine.bind(null, false) }
@@ -82,8 +82,8 @@
 						var unregister = null;
 
 						function addPoint(pos) {
-							line.points.push(pos);
-							line.actualPoints = [ ].concat(line.points, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
+							line.routePoints.push(pos);
+							line.trackPoints = [ ].concat(line.routePoints, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
 							map.addLine(line);
 							handler = map.addClickListener(mapClick);
 						}
@@ -94,8 +94,8 @@
 							handler && handler.cancel();
 							map.deleteLine(line);
 
-							if(save && line.points.length >= 2) {
-								map.socket.emit("addLine", { points: line.points, typeId: type.id }, function(err, line) {
+							if(save && line.routePoints.length >= 2) {
+								map.socket.emit("addLine", { routePoints: line.routePoints, typeId: type.id }, function(err, line) {
 									if(err)
 										return map.messages.showMessage("error", err);
 
@@ -106,15 +106,15 @@
 						}
 
 						var mapClick = function(pos) {
-							if(line.points.length > 0 && pos.lon == line.points[line.points.length-1].lon && pos.lat == line.points[line.points.length-1].lat)
+							if(line.routePoints.length > 0 && pos.lon == line.routePoints[line.routePoints.length-1].lon && pos.lat == line.routePoints[line.routePoints.length-1].lat)
 								finishLine(true);
 							else
 								addPoint(pos);
 						};
 
 						var mouseMove = function(e, pos) {
-							if(line.actualPoints.length > 0) {
-								line.actualPoints[line.actualPoints.length-1] = pos;
+							if(line.trackPoints.length > 0) {
+								line.trackPoints[line.trackPoints.length-1] = pos;
 								map.addLine(line);
 							}
 						};
@@ -143,8 +143,8 @@
 						}
 
 						if(save) {
-							line.actualPoints = { };
-							map.socket.emit("editLine", { id: line.id, points: newPoints }, function(err) {
+							line.trackPoints = { };
+							map.socket.emit("editLine", { id: line.id, routePoints: newPoints }, function(err) {
 								message.close();
 
 								if(err)

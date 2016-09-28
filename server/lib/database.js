@@ -283,13 +283,13 @@ function updateLine(lineId, data, callback) {
 	async.auto({
 		originalLine : backend.getLine.bind(backend, lineId),
 		calculateRouting : [ "originalLine", function(next, res) {
-			if(data.points == null)
-				data.points = res.originalLine.points;
+			if(data.routePoints == null)
+				data.routePoints = res.originalLine.routePoints;
 
 			if(data.mode == null)
 				data.mode = res.originalLine.mode || "";
 
-			if(underscore.isEqual(data.points, res.originalLine.points) && data.mode == res.originalLine.mode)
+			if(underscore.isEqual(data.routePoints, res.originalLine.routePoints) && data.mode == res.originalLine.mode)
 				return next();
 
 			_calculateRouting(data, next); // Also sets data.distance and data.time
@@ -331,13 +331,13 @@ function _updateLine(lineId, data, callback) {
 	});
 }
 
-function _setLinePoints(padId, lineId, points, callback) {
-	backend.setLinePoints(lineId, points, function(err) {
+function _setLinePoints(padId, lineId, trackPoints, callback) {
+	backend.setLinePoints(lineId, trackPoints, function(err) {
 		if(err)
 			return callback(err);
 
 		listeners.notifyPadListeners(padId, "linePoints", function(bboxWithZoom) {
-			return { reset: true, id: lineId, points : (bboxWithZoom ? routing.prepareForBoundingBox(points, bboxWithZoom) : [ ]) };
+			return { reset: true, id: lineId, trackPoints : (bboxWithZoom ? routing.prepareForBoundingBox(trackPoints, bboxWithZoom) : [ ]) };
 		});
 
 		callback(null);
@@ -361,12 +361,12 @@ function deleteLine(lineId, callback) {
 
 function getLinePoints(padId, bboxWithZoom) {
 	return utils.filterStreamAsync(backend.getPadLines(padId, "id"), function(data, next) {
-		_getLinePoints(data.id, bboxWithZoom, function(err, points) {
+		_getLinePoints(data.id, bboxWithZoom, function(err, trackPoints) {
 			if(err)
 				return next(err);
 
-			if(points.length >= 2)
-				next(null, { id: data.id, points: points });
+			if(trackPoints.length >= 2)
+				next(null, { id: data.id, trackPoints: trackPoints });
 			else
 				next(null, null);
 		});
@@ -440,26 +440,26 @@ function getLinePoints(padId, bboxWithZoom) {
 }*/
 
 function _calculateRouting(line, callback) {
-	if(line.points && line.points.length >= 2 && line.mode) {
-		routing.calculateRouting(line.points, line.mode, function(err, routeData) {
+	if(line.routePoints && line.routePoints.length >= 2 && line.mode) {
+		routing.calculateRouting(line.routePoints, line.mode, function(err, routeData) {
 			if(err)
 				return callback(err);
 
 			line.distance = routeData.distance;
 			line.time = routeData.time;
-			for(var i=0; i<routeData.actualPoints.length; i++)
-				routeData.actualPoints[i].idx = i;
-			callback(null, routeData.actualPoints);
+			for(var i=0; i<routeData.trackPoints.length; i++)
+				routeData.trackPoints[i].idx = i;
+			callback(null, routeData.trackPoints);
 		});
 	} else {
-		line.distance = utils.calculateDistance(line.points);
+		line.distance = utils.calculateDistance(line.routePoints);
 		line.time = null;
 
-		var actualPoints = [ ];
-		for(var i=0; i<line.points.length; i++) {
-			actualPoints.push(utils.extend({ }, line.points[i], { zoom: 1, idx: i }));
+		var trackPoints = [ ];
+		for(var i=0; i<line.routePoints.length; i++) {
+			trackPoints.push(utils.extend({ }, line.routePoints[i], { zoom: 1, idx: i }));
 		}
-		callback(null, actualPoints);
+		callback(null, trackPoints);
 	}
 }
 

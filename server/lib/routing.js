@@ -38,14 +38,14 @@ function calculateRouting(points, mode, callback) {
 			return callback("Invalid response from routing server.");
 
 		var ret = {
-			actualPoints : [ ],
+			trackPoints : [ ],
 			distance : body.route.distance,
 			time : body.route.time
 		};
 		for(var i=0; i<body.route.shape.shapePoints.length; i+=2) {
-			ret.actualPoints.push({ lat: 1*body.route.shape.shapePoints[i], lon: 1*body.route.shape.shapePoints[i+1] });
+			ret.trackPoints.push({ lat: 1*body.route.shape.shapePoints[i], lon: 1*body.route.shape.shapePoints[i+1] });
 		}
-		_calculateZoomLevels(ret.actualPoints);
+		_calculateZoomLevels(ret.trackPoints);
 
 		callback(null, ret);
 	});

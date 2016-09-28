@@ -174,16 +174,16 @@
 			map.addLine = function(line) {
 				map.deleteLine(line);
 
-				if(!line.actualPoints || line.actualPoints.length < 2)
+				if(!line.trackPoints || line.trackPoints.length < 2)
 					return;
 
-				var points = [ ];
-				for(var i=0; i<line.actualPoints.length; i++) {
-					if(line.actualPoints[i] != null)
-						points.push(new OpenLayers.Geometry.Point(line.actualPoints[i].lon, line.actualPoints[i].lat));
+				var trackPoints = [ ];
+				for(var i=0; i<line.trackPoints.length; i++) {
+					if(line.trackPoints[i] != null)
+						trackPoints.push(new OpenLayers.Geometry.Point(line.trackPoints[i].lon, line.trackPoints[i].lat));
 				}
 
-				if(points.length < 2)
+				if(trackPoints.length < 2)
 					return;
 
 				var style = {
@@ -192,7 +192,7 @@
 					strokeOpacity : 0.7
 				};
 
-				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
+				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(trackPoints).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
 				feature.fpLine = line;
 				feature.fpOnClick = function(clickPos, evt) {
 					map.mapEvents.$emit("clickLine", line, clickPos, evt);
@@ -268,10 +268,10 @@
 				map.featureHandler.deactivate();
 
 				var line = $.extend(true, { }, origLine);
-				line.actualPoints = line.points;
+				line.trackPoints = line.routePoints;
 				var markers = [ ];
-				for(var i=0; i<line.points.length; i++)
-					markers.push(fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(line.points[i].lon, line.points[i].lat), map.map), dragIcon));
+				for(var i=0; i<line.routePoints.length; i++)
+					markers.push(fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), dragIcon));
 				map.layerLines.addFeatures(markers);
 				map.addLine(line);
 
@@ -283,7 +283,7 @@
 				map.dragControl.onDblClick = function(feature) {
 					var idx = markers.indexOf(feature);
 					if(idx != -1) {
-						line.points.splice(idx, 1);
+						line.routePoints.splice(idx, 1);
 						map.addLine(line);
 
 						markers.splice(idx, 1);
@@ -296,22 +296,22 @@
 					var idx = markers.indexOf(feature);
 					if(idx != -1) { // Existing marker was dragged
 						var lonlat = fm.Util.fromMapProjection(new ol.LonLat(feature.geometry.x, feature.geometry.y), map.map);
-						line.points[idx] = { lat: lonlat.lat, lon: lonlat.lon };
+						line.routePoints[idx] = { lat: lonlat.lat, lon: lonlat.lon };
 						map.addLine(line);
 					}
 					else if(feature.fmStartLonLat) { // New marker
 						var index = fm.Util.lonLatIndexOnLine(feature.fmStartLonLat, feature.fmLine.geometry);
 						if(index != null) {
-							var newIndex = line.points.length;
+							var newIndex = line.routePoints.length;
 							var indexes = [ ];
 							for(var i=0; i<newIndex; i++) {
-								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.points[i].lon, line.points[i].lat), map.map), feature.fmLine.geometry));
-								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.points[i].lon, line.points[i].lat), map.map), feature.fmLine.geometry))
+								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
+								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
 									newIndex = i;
 							}
 
 							var lonlat = fm.Util.fromMapProjection(feature.fmStartLonLat, map.map);
-							line.points.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
+							line.routePoints.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
 							markers.splice(newIndex, 0, feature);
 							map.addLine(line);
 						}
@@ -330,7 +330,7 @@
 				return {
 					done : function() {
 						end();
-						return line.points;
+						return line.routePoints;
 					}
 				};
 
@@ -414,7 +414,7 @@
 			});
 
 			map.socket.on("line", function(data) {
-				setTimeout(function() { // actualPoints needs to be copied over
+				setTimeout(function() { // trackPoints needs to be copied over
 					map.addLine(map.socket.lines[data.id]);
 				}, 0);
 			});
