@@ -44,6 +44,8 @@
 
 			scope.showTable = fpTable.showTable.bind(fpTable);
 
+			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
+
 			$compile($($templateCache.get("map-toolbox.html")).appendTo(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		}

@@ -9,7 +9,7 @@
 		};
 	} ]);
 
-	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch) {
+	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx) {
 		var maps = { };
 
 		var ret = { };
@@ -383,6 +383,7 @@
 			map.viewsUi = fpMapViews(map);
 			map.typesUi = fpMapTypes(map);
 			map.padUi = fpMapPad(map);
+			map.gpxUi = fpMapGpx(map);
 
 			fpMapToolbox(map);
 			fpMapLegend(map);

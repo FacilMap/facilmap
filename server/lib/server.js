@@ -6,6 +6,7 @@ var database = require("./database");
 var domain = require("domain");
 var utils = require("./utils");
 var routing = require("./routing");
+var gpx = require("./gpx");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -226,9 +227,13 @@ database.connect(function(err) {
 					return callback("In read-only mode.");
 
 				database.deleteType(data.id, callback);
-			}/*,
+			},
 
-			copyPad : function(data, callback) {
+			exportGpx : function(data, callback) {
+				gpx.exportGpx(socket.padId, data.useTracks, callback);
+			}
+
+			/*copyPad : function(data, callback) {
 				if(!utils.stripObject(data, { toId: "string" }))
 					return callback("Invalid parameters.");
 

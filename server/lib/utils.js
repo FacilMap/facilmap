@@ -223,6 +223,24 @@ function asyncStreamEach(stream, handle, callback) {
 	});
 }
 
+function escapeXml(str) {
+	return ("" + str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function isoDate(date) {
+	if(!date)
+		date = new Date();
+
+	function pad(number, length) {
+		number = "" + number;
+		while(number.length < length)
+			number = "0" + number;
+		return number;
+	}
+
+	return pad(date.getUTCFullYear(), 4) + '-' + pad(date.getUTCMonth()+1, 2) + '-' + pad(date.getUTCDate(), 2) + 'T' + pad(date.getUTCHours(), 2) + ':' + pad(date.getUTCMinutes(), 2) + ':' + pad(date.getUTCSeconds(), 2) + 'Z';
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
@@ -232,5 +250,7 @@ module.exports = {
 	generateRandomId : generateRandomId,
 	stripObject : stripObject,
 	ArrayStream : ArrayStream,
-	asyncStreamEach : asyncStreamEach
+	asyncStreamEach : asyncStreamEach,
+	escapeXml : escapeXml,
+	isoDate : isoDate
 };

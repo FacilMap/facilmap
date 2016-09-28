@@ -249,6 +249,18 @@ function getPadLines(padId) {
 	return backend.getPadLines(padId);
 }
 
+function getPadLinesWithPoints(padId, bboxWithZoom) {
+	return utils.filterStreamAsync(backend.getPadLines(padId), function(data, next) {
+		_getLinePoints(data.id, bboxWithZoom, function(err, trackPoints) {
+			if(err)
+				return next(err);
+
+			data.trackPoints = trackPoints;
+			next(null, data);
+		});
+	});
+}
+
 function getLineTemplate(data, callback) {
 	backend.getLineTemplate(data, function(err, line) {
 		if(err)
@@ -513,6 +525,7 @@ module.exports = {
 	updateMarker : updateMarker,
 	deleteMarker : deleteMarker,
 	getPadLines : getPadLines,
+	getPadLinesWithPoints : getPadLinesWithPoints,
 	getLineTemplate : getLineTemplate,
 	createLine : createLine,
 	updateLine : updateLine,

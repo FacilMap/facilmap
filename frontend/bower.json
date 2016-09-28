@@ -18,6 +18,8 @@
     "async": "^1.5.2",
     "tablesorter": "jquery.tablesorter#^2.25.4",
     "marked": "^0.3.5",
-    "angular-ui-sortable": "^0.13.4"
+    "angular-ui-sortable": "^0.13.4",
+    "FileSaver": "https://raw.githubusercontent.com/eligrey/FileSaver.js/master/FileSaver.js",
+    "blob": "*"
   }
 }
