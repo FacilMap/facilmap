@@ -26,7 +26,7 @@
 				map.map.moveTo(result.lonlat.clone().transform(fpUtils.proj(), map.map.getProjectionObject()), result.getZoom(map.map));
 			};
 
-			var el = $($templateCache.get("map-search.html")).appendTo(map.map.div);
+			var el = $($templateCache.get("map/search/search.html")).appendTo(map.map.div);
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		};

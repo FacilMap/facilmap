@@ -27,7 +27,7 @@
 						});
 					};
 
-					scope.dialog = fpDialogs.open("save-view.html", scope, "Save current view");
+					scope.dialog = fpDialogs.open("map/views/save-view.html", scope, "Save current view");
 				},
 				manageViews : function() {
 					var scope = map.socket.$new();
@@ -50,7 +50,7 @@
 						});
 					};
 
-					scope.dialog = fpDialogs.open("manage-views.html", scope, "Manage views");
+					scope.dialog = fpDialogs.open("map/views/manage-views.html", scope, "Manage views");
 				}
 			};
 

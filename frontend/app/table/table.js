@@ -53,7 +53,7 @@
 				socket.sortField = { };
 				socket.sortOrder = { };
 
-				fpDialogs.open("table.html", socket, "Table", null, true);
+				fpDialogs.open("table/table.html", socket, "Table", null, true);
 			}
 		};
 	});

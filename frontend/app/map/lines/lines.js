@@ -10,7 +10,7 @@
 					var scope = map.socket.$new();
 
 					scope.line = line;
-					scope.popup = map.popups.open("view-line.html", scope, clickPos);
+					scope.popup = map.popups.open("map/lines/view-line.html", scope, clickPos);
 
 					scope.edit = function() {
 						ret.editLine(scope.line);
@@ -44,7 +44,7 @@
 						scope.dialog.close(false);
 					});
 
-					scope.dialog = fpDialogs.open("edit-line.html", scope, "Edit Line", preserve.revert.bind(preserve));
+					scope.dialog = fpDialogs.open("map/lines/edit-line.html", scope, "Edit Line", preserve.revert.bind(preserve));
 
 					scope.canControl = function(what) {
 						return map.typesUi.canControl(scope.types[scope.line.typeId], what);

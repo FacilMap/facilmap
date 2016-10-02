@@ -20,7 +20,7 @@
 	});
 
 	fp.app.directive("fpColourPicker", function(fpUtils, $templateCache, $rootScope, $compile) {
-		var colourPicker = $($templateCache.get("colour-picker.html")).appendTo("body").hide();
+		var colourPicker = $($templateCache.get("ui/colour-picker.html")).appendTo("body").hide();
 		var scope = $rootScope.$new();
 		scope.colours = [ "ffffff", "ffccc9", "ffce93", "fffc9e", "ffffc7", "9aff99", "96fffb", "cdffff", "cbcefb", "cfcfcf", "fd6864",
 			"fe996b", "fffe65", "fcff2f", "67fd9a", "38fff8", "68fdff", "9698ed", "c0c0c0", "fe0000", "f8a102", "ffcc67", "f8ff00", "34ff34",

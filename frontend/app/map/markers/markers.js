@@ -7,7 +7,7 @@
 					var scope = map.socket.$new();
 
 					scope.marker = marker;
-					var popup = map.popups.open("view-marker.html", scope, scope.marker);
+					var popup = map.popups.open("map/markers/view-marker.html", scope, scope.marker);
 
 					scope.edit = function() {
 						ret.editMarker(scope.marker);
@@ -38,7 +38,7 @@
 						scope.dialog.close(false);
 					});
 
-					scope.dialog = fpDialogs.open("edit-marker.html", scope, "Edit Marker", preserve.revert.bind(preserve));
+					scope.dialog = fpDialogs.open("map/markers/edit-marker.html", scope, "Edit Marker", preserve.revert.bind(preserve));
 
 					scope.canControl = function(what) {
 						return map.typesUi.canControl(scope.types[scope.marker.typeId], what);

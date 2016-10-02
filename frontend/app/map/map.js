@@ -34,7 +34,7 @@
 			map.markersById = { };
 			map.linesById = { };
 
-			var el = $($templateCache.get("map.html"));
+			var el = $($templateCache.get("map/map.html"));
 			replaceEl.replaceWith(el);
 			$compile(el)(map.socket);
 

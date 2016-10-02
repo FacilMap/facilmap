@@ -6,7 +6,7 @@
 				editTypes : function() {
 					var scope = map.socket.$new();
 
-					var dialog = fpDialogs.open("edit-types.html", scope, "Object types");
+					var dialog = fpDialogs.open("map/types/edit-types.html", scope, "Object types");
 
 					scope.create = function() {
 						scope.edit({
@@ -30,7 +30,7 @@
 					scope.type = type; // In case it is not in global types object
 					var preserve = fpUtils.preserveObject(map.socket, type.id ? "types["+fpUtils.quoteJavaScript(type.id)+"]" : "type", "type");
 
-					var editDialog = fpDialogs.open("edit-type.html", scope, "Edit object type", preserve.revert.bind(preserve));
+					var editDialog = fpDialogs.open("map/types/edit-type.html", scope, "Edit object type", preserve.revert.bind(preserve));
 
 					scope.editDropdown = function(field) {
 						ret.editTypeDropdown(type, field);
@@ -67,7 +67,7 @@
 						dialog.close(false);
 					});
 
-					dialog = fpDialogs.open("edit-type-dropdown.html", scope, "Edit dropdown", preserve.revert.bind(preserve));
+					dialog = fpDialogs.open("map/types/edit-type-dropdown.html", scope, "Edit dropdown", preserve.revert.bind(preserve));
 
 					scope.canControl = function(what) {
 						return ret.canControl(type, what, field);

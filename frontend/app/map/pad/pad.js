@@ -20,7 +20,7 @@
 						});
 					};
 
-					scope.dialog = fpDialogs.open("pad-settings.html", scope, "Pad settings", function() {
+					scope.dialog = fpDialogs.open("map/pad/pad-settings.html", scope, "Pad settings", function() {
 						if(padDataBkp != null)
 							fpUtils.overwriteObject(padDataBkp, scope.padData);
 					});

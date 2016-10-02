@@ -46,7 +46,7 @@
 
 			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
 
-			$compile($($templateCache.get("map-toolbox.html")).appendTo(map.map.div))(scope);
+			$compile($($templateCache.get("map/toolbox/toolbox.html")).appendTo(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		}
 	});

@@ -17,9 +17,9 @@ var combine = require("stream-combiner");
 var sourcemaps = require("gulp-sourcemaps");
 
 var files = [
-	"js/*.js",
-	"css/*.css",
-	"templates/*.html"
+	"app/**/*.js",
+	"app/**/*.css",
+	"app/**/*.html"
 ];
 
 var deps = mainBowerFiles();
@@ -37,7 +37,7 @@ gulp.task("deps", function() {
 	return combine(
 		es.merge([
 			gulp.src(deps, { base: process.cwd() + "/" }),
-			gulp.src("lib/**/*")
+			gulp.src("assets/libs/**/*")
 		]),
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
@@ -62,7 +62,7 @@ gulp.task("deps", function() {
 gulp.task("app", function() {
 	return combine(
 		gulp.src(files, { base: process.cwd() + "/" }),
-		gulpIf("**/*.html", templateCache({ module: "facilpad", base: process.cwd() + "/templates/" })),
+		gulpIf("**/*.html", templateCache({ module: "facilpad", base: process.cwd() + "/app/" })),
 		gulpIf("**/*.js", combine(
 			newer("build/app.js"),
 			sourcemaps.init(),

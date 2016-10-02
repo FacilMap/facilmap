@@ -47,7 +47,7 @@
 
 			scope.$watch("types", update, true);
 
-			var el = $($templateCache.get("map-legend.html")).appendTo(map.map.div)
+			var el = $($templateCache.get("map/legend/legend.html")).appendTo(map.map.div)
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
