@@ -44,7 +44,7 @@ function filterStreamAsync(inStream, filterFunction) {
 		if(queue.length > 0) {
 			var next = queue.shift();
 			if(next == null) {
-				ret.push();
+				ret.push(null);
 			} else {
 				running = true;
 				filterFunction(next, function(err, newData) {
