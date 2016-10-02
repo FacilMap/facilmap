@@ -13,8 +13,10 @@ var DEFAULT_TYPES = [
 
 function getPadData(padId, callback) {
 	backend.getPadDataByWriteId(padId, function(err, data) {
-		if(err || data != null)
-			return callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
+		if(err)
+			return callback(err);
+		else if(data != null)
+			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
 
 		backend.getPadData(padId, function(err, data) {
 			if(err || data != null)

@@ -26,7 +26,13 @@ database.connect(function(err) {
 		throw err;
 
 	var app = http.createServer();
-	app.listen(config.port, config.host);
+	app.listen(config.port, config.host, function(err) {
+		if(err)
+			throw err;
+
+		console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
+	});
+
 	var io = socketIo.listen(app);
 
 	io.sockets.on("connection", function(socket) {
