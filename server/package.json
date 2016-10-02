@@ -7,10 +7,10 @@
     "start": "node lib/server.js"
   },
   "dependencies": {
-    "sequelize": "^3.24.3",
     "async": "^2.0.1",
-    "request" : "2.51.x",
-    "underscore" : "1.7.x"
+    "request": "^2.75.0",
+    "sequelize": "^3.24.3",
     "socket.io": "^1.2.1",
+    "underscore": "^1.8.3"
   }
 }
