@@ -22,7 +22,9 @@ var files = [
 	"app/**/*.html"
 ];
 
-var deps = mainBowerFiles();
+var deps = mainBowerFiles().filter(function(it) {
+	return !it.match(/\/bower_components\/(jquery|jquery-ui)\//);
+});
 
 gulp.task("default", [ "all" ]);
 
