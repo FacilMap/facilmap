@@ -20,6 +20,18 @@
     "marked": "^0.3.6",
     "angular-ui-sortable": "^0.14.3",
     "FileSaver": "https://raw.githubusercontent.com/eligrey/FileSaver.js/master/FileSaver.js",
-    "blob": "*"
+    "blob": "*",
+    "angular-bootstrap": "^2.1.4",
+    "bootstrap": "^3.3.7"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/css/bootstrap.css",
+        "dist/css/bootstrap-theme.css",
+        "dist/js/bootstrap.js",
+        "dist/fonts/glyphicons-halflings-regular.ttf"
+      ]
+    }
   }
 }

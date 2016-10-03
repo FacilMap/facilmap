@@ -4,7 +4,7 @@ var FacilPad = {
 
 (function(fp, $, ng, undefined) {
 
-	fp.app = angular.module("facilpad", [ "ui.sortable" ]).config([ "$compileProvider", function($compileProvider) {
+	fp.app = angular.module("facilpad", [ "ui.sortable", "ui.bootstrap" ]).config([ "$compileProvider", function($compileProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 	} ]);
 

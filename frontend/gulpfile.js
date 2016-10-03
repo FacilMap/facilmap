@@ -44,14 +44,19 @@ gulp.task("deps", function() {
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
 				newer("build/dependencies.js"),
-				sourcemaps.init(),
+				sourcemaps.init({ loadMaps: true }),
 				concat("dependencies.js"),
 				uglify(),
 				sourcemaps.write("./sourcemaps")
 			)),
 			gulpIf("**/*.css", combine(
 				newer("build/dependencies.css"),
-				sourcemaps.init(),
+				gulpIf("**/bower_components/bootstrap/**", combine(
+					replace("src: url('../fonts/glyphicons-halflings-regular.eot');", ""),
+					replace(/src: url\('\.\.\/fonts\/glyphicons-halflings-regular\..*/g, "src: url('../fonts/glyphicons-halflings-regular.ttf') format('truetype');")
+				)),
+				cssBase64({ maxWeightResource: 1000000 }),
+				sourcemaps.init({ loadMaps: true }),
 				concat("dependencies.css"),
 				cleanCss(),
 				sourcemaps.write("./sourcemaps")
