@@ -4,16 +4,16 @@
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
-				$(element).spinner({
-					spin: function(event, ui) {
-						setTimeout(function() {
-							scope.$apply(function() {
-								scope._spinnerVal = element.val();
-								$parse(attrs.ngModel + "=_spinnerVal")(scope);
-								delete scope._spinnerVal;
-							});
-						}, 0);
-					}
+				$(element).TouchSpin({
+					min: 1
+				}).on('change', function() {
+					setTimeout(function() {
+						scope.$apply(function() {
+							scope._spinnerVal = element.val();
+							$parse(attrs.ngModel + "=_spinnerVal")(scope);
+							delete scope._spinnerVal;
+						});
+					}, 0);
 				});
 			}
 		}
