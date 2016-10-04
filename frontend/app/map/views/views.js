@@ -57,7 +57,7 @@
 
 	fp.app.controller("fpMapViewsManageCtrl", function($scope, map) {
 		$scope.display = function(view) {
-
+			map.displayView(view);
 		};
 
 		$scope.makeDefault = function(view) {
