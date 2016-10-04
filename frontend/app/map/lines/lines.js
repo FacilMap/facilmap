@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapLines", [ "fpUtils", "fpDialogs", function(fpUtils, fpDialogs) {
+	fp.app.factory("fpMapLines", function(fpUtils, $uibModal) {
 		return function(map) {
 			var ret = {
 				viewLine: function(line, clickPos) {
@@ -37,32 +37,22 @@
 					}, true);
 				},
 				editLine: function(line) {
-					var scope = map.socket.$new();
-
-					scope.line = line; // In case it is not in global line list yet
-					var preserve = fpUtils.preserveObject(scope, "lines["+fpUtils.quoteJavaScript(line.id)+"]", "line", function() {
-						scope.dialog.close(false);
+					var dialog = $uibModal.open({
+						templateUrl: "map/lines/edit-line.html",
+						scope: map.socket,
+						controller: "fpMapLineEditCtrl",
+						size: "lg",
+						resolve: {
+							line: function() { return line; },
+							map: function() { return map; }
+						}
 					});
 
-					scope.dialog = fpDialogs.open("map/lines/edit-line.html", scope, "Edit Line", preserve.revert.bind(preserve));
-
-					scope.canControl = function(what) {
-						return map.typesUi.canControl(scope.types[scope.line.typeId], what);
-					};
-
-					scope.save = function() {
-						scope.error = null;
-						map.socket.emit("editLine", scope.line, function(err) {
-							if(err)
-								return scope.error = err;
-
-							scope.dialog.close(false);
-						});
-					};
-
-					scope.$watchGroup([ "line.colour", "line.width" ], function() {
-						map.addLine(scope.line);
+					var preserve = fpUtils.preserveObject(map.socket, "lines["+fpUtils.quoteJavaScript(line.id)+"]", "line", function() {
+						dialog.dismiss();
 					});
+
+					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				},
 				addLine: function(type) {
 					map.popups.closeAll();
@@ -181,6 +171,28 @@
 
 			return ret;
 		};
-	} ]);
+	});
+
+	fp.app.controller("fpMapLineEditCtrl", function($scope, map, line) {
+		$scope.line = line;
+
+		$scope.canControl = function(what) {
+			return map.typesUi.canControl($scope.types[$scope.line.typeId], what);
+		};
+
+		$scope.save = function() {
+			$scope.error = null;
+			map.socket.emit("editLine", $scope.line, function(err) {
+				if(err)
+					return $scope.error = err;
+
+				$scope.$close();
+			});
+		};
+
+		$scope.$watchGroup([ "line.colour", "line.width" ], function() {
+			map.addLine($scope.line);
+		});
+	});
 
 })(FacilPad, jQuery, angular);

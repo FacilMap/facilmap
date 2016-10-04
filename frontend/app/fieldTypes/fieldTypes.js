@@ -36,6 +36,8 @@
 
 					if(attrs.fpTypeFieldId)
 						el.attr("id", attrs.fpTypeFieldId);
+					if(attrs.fpTypeFieldClass)
+						el.attr("class", attrs.fpTypeFieldClass);
 
 					el.appendTo(element.empty());
 					$compile(el)(scope);

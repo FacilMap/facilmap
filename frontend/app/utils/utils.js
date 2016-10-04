@@ -147,4 +147,10 @@
 		};
 	});
 
+	fp.app.filter('fpPropertyCount', function($filter) {
+		return function(input, query) {
+			return Object.keys($filter('fpObjectFilter')(input, query)).length;
+		};
+	});
+
 })(FacilPad, jQuery, angular);

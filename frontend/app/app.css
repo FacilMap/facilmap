@@ -317,10 +317,6 @@ textarea {
 	font-weight: normal;
 }
 
-#edit-line-colour {
-	width: auto;
-}
-
 #colour-picker {
 	background: #fafafa;
 	width: 171px;
@@ -386,7 +382,7 @@ textarea {
 }
 
 #colour-picker {
-	z-index: 150;
+	z-index: 1500;
 }
 
 #map .fp-popup {
