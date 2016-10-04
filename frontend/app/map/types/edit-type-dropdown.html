@@ -1,31 +1,50 @@
-<form>
-	<div><input type="checkbox" id="control-colour-input" ng-model="field.controlColour" ng-disabled="!canControl('colour')"><label for="control-colour-input" ng-class="{disabled: !canControl('colour')}"> Control {{type.type}} colour</label></div>
-	<div ng-show="type.type == 'line'"><input type="checkbox" id="control-width-input" ng-model="field.controlWidth" ng-disabled="!canControl('width')"><label for="control-width-input" ng-class="{disabled: !canControl('width')}"> Control {{type.type}} width</label></div>
-	<table class="border">
-		<thead>
-			<tr>
-				<th>Option</th>
-				<th ng-show="field.controlColour">Colour</th>
-				<th ng-show="field.controlWidth">Width</th>
-				<th></th>
-				<th class="move"></th>
-			</tr>
-		</thead>
-		<tbody ui-sortable="sortableOptions" ng-model="field.options">
-			<tr ng-repeat="option in field.options">
-				<td><input type="text" ng-model="option.value"></td>
-				<td ng-show="field.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker></td>
-				<td ng-show="field.controlWidth"><input type="text" ng-model="option.width" fp-spinner></td>
-				<td><button ng-click="deleteOption(option)">−</button></td>
-				<td class="move"><span class="sort-handle ui-icon ui-icon-triangle-2-n-s"></span></td>
-			</tr>
-		</tbody>
-		<tfoot>
-			<tr>
-				<td colspan="4"><button ng-click="addOption()">+</button></td>
-				<td class="move"></td>
-			</tr>
-		</tfoot>
-	</table>
-	<div><button ng-click="save()">OK</button></div>
-</form>
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">Edit dropdown</h3>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal">
+		<div class="checkbox" ng-class="{disabled: !canControl('colour')}">
+			<label>
+				<input type="checkbox" ng-model="field.controlColour" ng-disabled="!canControl('colour')">
+				Control {{type.type}} colour
+			</label>
+		</div>
+		<div class="checkbox" ng-if="type.type == 'line'" ng-class="{disabled: !canControl('width')}">
+			<label>
+				<input type="checkbox" ng-model="field.controlWidth" ng-disabled="!canControl('width')">
+				Control {{type.type}} width
+			</label>
+		</div>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Option</th>
+					<th ng-if="field.controlColour">Colour</th>
+					<th ng-if="field.controlWidth">Width</th>
+					<th></th>
+					<th class="move"></th>
+				</tr>
+			</thead>
+			<tbody ui-sortable="sortableOptions" ng-model="field.options">
+				<tr ng-repeat="option in field.options">
+					<td><input type="text" ng-model="option.value" class="form-control"></td>
+					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker class="form-control"></td>
+					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fp-spinner class="form-control"></td>
+					<td class="td-buttons"><button ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
+					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="4"><button ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
+					<td class="move"></td>
+				</tr>
+			</tfoot>
+		</table>
+	</form>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+	<button type="button" class="btn btn-primary" ng-click="save()">OK</button>
+</div>

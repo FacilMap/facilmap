@@ -145,8 +145,8 @@ dl:after {
 	content: " ";
 }
 
-label.disabled {
-	color: #888;
+.checkbox.disabled label {
+	color: #aaa;
 }
 
 tr.selected td {
@@ -186,6 +186,11 @@ table.border td.move,table.border th.move {
 table.border input, table.border textarea, table.border select {
 	width: 100%;
 	box-sizing: border-box;
+}
+
+.td-buttons {
+	white-space: nowrap;
+	width: 1px;
 }
 
 .messages {

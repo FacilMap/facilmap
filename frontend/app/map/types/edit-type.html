@@ -1,48 +1,70 @@
-<form>
-	<p class="error" ng-show="error">{{error}}</p>
-	<dl>
-		<dt><label for="type-name-input">Name</label></dt>
-		<dd><input id="type-name-input" type="text" ng-model="type.name" /></dd>
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">Edit object type</h3>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal">
+		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
 
-		<dt><label for="type-type-input">Type</label></dt>
-		<dd><select id="type-type-input" ng-model="type.type" ng-disabled="type.id != null">
-			<option value="marker">Marker</option>
-			<option value="line">Line</option>
-		</select></dd>
-	</dl>
-	<h2>Fields</h2>
-	<table class="border">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Type</th>
-				<th>Default value</th>
-				<th>Delete</th>
-				<th class="move"></th>
-			</tr>
-		</thead>
-		<tbody ui-sortable="sortableOptions" ng-model="type.fields">
-			<tr ng-repeat="field in type.fields">
-				<td><input type="text" ng-model="field.name"/></td>
-				<td><select ng-model="field.type">
-					<option value="input">Text field</option>
-					<option value="textarea">Text area</option>
-					<option value="dropdown">Dropdown</option>
-					<option value="checkbox">Checkbox</option>
-				</select> <button ng-show="field.type == 'dropdown'" ng-click="editDropdown(field)">Edit</button></td>
-				<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
-				<td><button ng-click="deleteField(field)">Delete</button></td>
-				<td class="move"><span class="sort-handle ui-icon ui-icon-triangle-2-n-s"></span></td>
-			</tr>
-		</tbody>
-		<tfoot>
-			<tr>
-				<td colspan="4"><button ng-click="createField()">+</button></td>
-				<td class="move"></td>
-			</tr>
-		</tfoot>
-	</table>
-	<div>
-		<button ng-click="save()">Save</button>
-	</div>
-</form>
+		<div class="form-group">
+			<label for="type-name-input" class="col-sm-3 control-label">Name</label>
+			<div class="col-sm-9"><input id="type-name-input" type="text" ng-model="type.name" class="form-control" /></div>
+		</div>
+
+		<div class="form-group">
+			<label for="type-type-input" class="col-sm-3 control-label">Type</label></dt>
+			<div class="col-sm-9"><select id="type-type-input" ng-model="type.type" ng-disabled="type.id != null" class="form-control">
+				<option value="marker">Marker</option>
+				<option value="line">Line</option>
+			</select></div>
+		</div>
+
+		<h2>Fields</h2>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Default value</th>
+					<th>Delete</th>
+					<th class="move"></th>
+				</tr>
+			</thead>
+			<tbody ui-sortable="sortableOptions" ng-model="type.fields">
+				<tr ng-repeat="field in type.fields">
+					<td><input type="text" ng-model="field.name" class="form-control" /></td>
+					<td>
+						<div class="input-group" ng-if="field.type == 'dropdown'">
+							<select ng-model="field.type" class="form-control">
+								<option value="input">Text field</option>
+								<option value="textarea">Text area</option>
+								<option value="dropdown">Dropdown</option>
+								<option value="checkbox">Checkbox</option>
+							</select>
+							<span class="input-group-btn"><button ng-click="editDropdown(field)" class="btn btn-default">Edit</button></span>
+						</div>
+						<select ng-if="field.type != 'dropdown'" ng-model="field.type" class="form-control">
+							<option value="input">Text field</option>
+							<option value="textarea">Text area</option>
+							<option value="dropdown">Dropdown</option>
+							<option value="checkbox">Checkbox</option>
+						</select>
+					</td>
+					<td fp-type-field="field" fp-type-field-model="field.default" fp-type-field-ignore-default></td>
+					<td class="td-buttons"><button ng-click="deleteField(field)" class="btn btn-default">Delete</button></td>
+					<td class="move td-buttons"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="4"><button ng-click="createField()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
+					<td class="move"></td>
+				</tr>
+			</tfoot>
+		</table>
+	</form>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+	<button type="button" class="btn btn-primary" ng-click="save()">Save</button>
+</div>

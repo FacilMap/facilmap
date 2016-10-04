@@ -34,7 +34,7 @@
 
 		<div class="form-group" ng-repeat="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">
 			<label for="line-{{$index}}-input" class="col-sm-3 control-label">{{field.name}}</label>
-			<div class="col-sm-9" fp-type-field="field" fp-type-field-model="line.data[field.name]" fp-type-field-id="line-{{$index}}-input" fp-type-field-class="form-control"></div>
+			<div class="col-sm-9" fp-type-field="field" fp-type-field-model="line.data[field.name]" fp-type-field-id="line-{{$index}}-input"></div>
 		</div>
 	</form>
 </div>

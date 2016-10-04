@@ -13,10 +13,10 @@
 					var el;
 					switch(field.type) {
 						case "textarea":
-							el = $('<textarea/>');
+							el = $('<textarea class="form-control"/>');
 							break;
 						case "dropdown":
-							el = $('<select/>');
+							el = $('<select class="form-control"/>');
 							if(field.options) {
 								for(var i=0; i<field.options.length; i++) {
 									$('<option/>').attr("value", field.options[i].key).text(field.options[i].value).appendTo(el);
@@ -28,7 +28,7 @@
 							break;
 						case "input":
 						default:
-							el = $('<input type="text"/>');
+							el = $('<input type="text" class="form-control"/>');
 							break;
 					}
 
@@ -36,8 +36,6 @@
 
 					if(attrs.fpTypeFieldId)
 						el.attr("id", attrs.fpTypeFieldId);
-					if(attrs.fpTypeFieldClass)
-						el.attr("class", attrs.fpTypeFieldClass);
 
 					el.appendTo(element.empty());
 					$compile(el)(scope);
