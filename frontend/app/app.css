@@ -193,6 +193,10 @@ table.border input, table.border textarea, table.border select {
 	width: 1px;
 }
 
+.modal-fs {
+	width: 95%;
+}
+
 .messages {
 	position: absolute;
 	top: 10px;
