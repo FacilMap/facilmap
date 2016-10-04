@@ -89,8 +89,8 @@ table th.sort {
 	left: 25%;
 }
 
-textarea {
-	height: 5em;
+textarea,textarea.form-control {
+	height: 8em;
 }
 
 .fp-popup {
