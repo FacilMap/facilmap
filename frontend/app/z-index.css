@@ -1,0 +1,22 @@
+/* bootstrap popups have a z-index of 1050 (1060, 1070... for overlaying popups) */
+/* OpenLayers Controls have z-index: 1008 (inside the map viewport) */
+
+.fp-map-disabled-cover {
+	z-index: 10001;
+}
+
+.messages {
+	z-index: 10002;
+}
+
+#colour-picker {
+	z-index: 1500;
+}
+
+#map .fp-popup {
+	z-index: 1007;
+}
+
+.fp-toolbox {
+	z-index: 1020;
+}

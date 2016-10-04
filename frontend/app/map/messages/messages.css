@@ -1,0 +1,10 @@
+.messages {
+	position: absolute;
+	top: 10px;
+	width: 50%;
+	left: 25%;
+}
+
+.messages .btn {
+	margin-top: -6px;
+}
