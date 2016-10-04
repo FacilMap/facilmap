@@ -162,15 +162,6 @@ table th.sort .ui-icon {
 	vertical-align: middle;
 }
 
-table td.button {
-	width: 1px;
-	white-space: nowrap;
-}
-
-table td.button button {
-	white-space: nowrap;
-}
-
 table.border td, table.border th {
 	border: 1px solid #ddd;
 	padding: .5em;

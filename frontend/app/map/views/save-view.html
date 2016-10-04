@@ -1,11 +1,18 @@
-<form>
-	<p class="error" ng-hide="!error">{{error}}</p>
-	<dl>
-		<dt><label for="save-view-name">Name</label></dt>
-		<dd><input id="save-view-name" ng-model="name"></dd>
-	</dl>
-	<div>
-		<button type="submit" ng-click="save(false)">Save</button>
-		<button ng-click="save(true)">Save and make default view</button>
-	</div>
-</form>
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">Save current view</h3>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal">
+		<div uib-alert class="alert-danger" ng-if="error">{{error}}</div>
+		<div. class="form-group">
+			<label for="save-view-name" class="col-sm-3 control-label">Name</label>
+			<div class="col-sm-9"><input id="save-view-name" ng-model="name" class="form-control"></div>
+		</div.>
+	</form>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+	<button type="button" class="btn btn-primary" ng-click="save(false)">Save</button>
+	<button type="button" class="btn btn-success" ng-click="save(true)">Save and make default view</button>
+</div>

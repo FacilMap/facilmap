@@ -1,10 +1,21 @@
-<p class="error" ng-hide="!error">{{error}}</p>
-	<table>
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">Manage Views</h3>
+</div>
+<div class="modal-body">
+	<div uib-alert class="alert-danger" ng-if="error">{{error}}</div>
+	<table class="table table-striped">
 		<tbody>
-			<tr ng-class="{selected: view.id == padData.defaultView.id}" ng-repeat="view in views">
+			<tr ng-class="{success: view.id == padData.defaultView.id}" ng-repeat="view in views">
 				<td><a href="javascript:" ng-click="display(view)">{{view.name}}</a></td>
-				<td class="button"><button ng-hide="view.id == padData.defaultView.id" ng-click="makeDefault(view)">Make default</button></td>
-				<td class="button"><button ng-click="delete(view)">Delete</button></td>
+				<td class="text-right">
+					<button ng-hide="view.id == padData.defaultView.id" ng-click="makeDefault(view)" class="btn btn-default">Make default</button>
+					<button ng-click="delete(view)" class="btn btn-default">Delete</button>
+				</td>
 			</tr>
 		</tbody>
 	</table>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Close</button>
+</div>
