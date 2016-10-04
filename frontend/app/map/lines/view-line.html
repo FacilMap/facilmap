@@ -8,8 +8,8 @@
 		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" class="col-sm-8" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></dd>
 	</dl>
 </div>
-<div class="buttons">
-	<button class="btn btn-default" ng-click="edit()" ng-hide="readonly">Edit</button>
-	<button class="btn btn-default" ng-click="move()" ng-hide="readonly">Move</button>
-	<button class="btn btn-default" ng-click="delete()" ng-hide="readonly">Remove</button>
+<div class="buttons" ng-if="!readonly">
+	<button class="btn btn-default" ng-click="edit()">Edit</button>
+	<button class="btn btn-default" ng-click="move()">Move</button>
+	<button class="btn btn-default" ng-click="delete()">Remove</button>
 </div>
