@@ -37,7 +37,7 @@
 						template: template
 					};
 
-					$('<a href="javascript:" class="close-button">×</a>').click(ret.close.bind(ret)).appendTo(el);
+					$('<a href="javascript:" class="close-button"><span class="glyphicon glyphicon-remove"></span></a>').click(ret.close.bind(ret)).appendTo(el);
 
 					$compile(el[0])(scope);
 					scope.$evalAsync(); // $compile only replaces variables on next digest

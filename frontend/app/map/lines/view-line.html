@@ -1,15 +1,15 @@
-<div class="content">
+<div class="content container-fluid">
 	<h2>{{line.name}}</h2>
-	<dl>
-		<dt class="distance">Distance</dt>
-		<dd class="distance">{{round(line.distance, 2)}} km <span ng-show="line.time != null">({{formatTime(line.time)}} h {{routingMode(line.mode)}})</span></dd>
+	<dl class="row">
+		<dt class="col-sm-4 distance">Distance</dt>
+		<dd class="col-sm-8 distance">{{round(line.distance, 2)}} km <span ng-show="line.time != null">({{formatTime(line.time)}} h {{routingMode(line.mode)}})</span></dd>
 
-		<dt ng-repeat-start="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
-		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></dd>
+		<dt ng-repeat-start="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1" class="col-sm-4">{{field.name}}</dt>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" class="col-sm-8" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></dd>
 	</dl>
 </div>
 <div class="buttons">
-	<button ng-click="edit()" ng-hide="readonly">Edit</button>
-	<button ng-click="move()" ng-hide="readonly">Move</button>
-	<button ng-click="delete()" ng-hide="readonly">Remove</button>
+	<button class="btn btn-default" ng-click="edit()" ng-hide="readonly">Edit</button>
+	<button class="btn btn-default" ng-click="move()" ng-hide="readonly">Move</button>
+	<button class="btn btn-default" ng-click="delete()" ng-hide="readonly">Remove</button>
 </div>

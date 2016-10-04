@@ -1,15 +1,15 @@
-<div class="content">
+<div class="content container-fluid">
 	<h2>{{marker.name}}</h2>
-	<dl>
-		<dt class="pos">Coordinates</dt>
-		<dd class="pos">{{round(marker.lat, 5)}}, {{round(marker.lon, 5)}}</dd>
+	<dl class="row">
+		<dt class="col-sm-4 pos">Coordinates</dt>
+		<dd class="col-sm-8 pos">{{round(marker.lat, 5)}}, {{round(marker.lon, 5)}}</dd>
 
-		<dt ng-repeat-start="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
-		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></dd>
+		<dt ng-repeat-start="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1" class="col-sm-4">{{field.name}}</dt>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" class="col-sm-8" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></dd>
 	</dl>
 </div>
 <div class="buttons">
-	<button ng-click="edit()" ng-hide="readonly">Edit</button>
-	<button ng-click="move()" ng-hide="readonly">Move</button>
-	<button ng-click="delete()" ng-hide="readonly">Remove</button>
+	<button class="btn btn-default" ng-click="edit()" ng-hide="readonly">Edit</button>
+	<button class="btn btn-default" ng-click="move()" ng-hide="readonly">Move</button>
+	<button class="btn btn-default" ng-click="delete()" ng-hide="readonly">Remove</button>
 </div>
