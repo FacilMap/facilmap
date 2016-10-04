@@ -7,8 +7,8 @@ var underscore = require("underscore");
 var stream = require("stream");
 
 var DEFAULT_TYPES = [
-	{ name: "marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
-	{ name: "line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
+	{ name: "Marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
+	{ name: "Line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
 ];
 
 function getPadData(padId, callback) {

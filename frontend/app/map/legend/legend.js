@@ -52,7 +52,7 @@
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			function getMaxHeight() {
-				var toolbox = $(".fp-toolbox", map.map.div);
+				var toolbox = map.toolboxUi.div;
 				return $(map.map.div).outerHeight() - parseInt(el.css("bottom")) - 25 - toolbox.position().top - toolbox.outerHeight(true);
 			}
 

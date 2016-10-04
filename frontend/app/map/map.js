@@ -244,11 +244,11 @@
 			};
 
 			map.getLayerInfo = function() {
-				var ret = [ ];
+				var ret = { base: [ ], overlay: [ ] };
 				map.map.layers.forEach(function(it) {
 					if(!it.displayInLayerSwitcher)
 						return;
-					ret.push({ isBaseLayer: it.isBaseLayer, visibility: it.getVisibility(), name: it.name, permalinkName: it.permalinkName });
+					(it.isBaseLayer ? ret.base : ret.overlay).push({ visibility: it.getVisibility(), name: it.name, permalinkName: it.permalinkName });
 				});
 				return ret;
 			};
@@ -384,8 +384,8 @@
 			map.typesUi = fpMapTypes(map);
 			map.padUi = fpMapPad(map);
 			map.gpxUi = fpMapGpx(map);
+			map.toolboxUi = fpMapToolbox(map);
 
-			fpMapToolbox(map);
 			fpMapLegend(map);
 			fpMapSearch(map);
 

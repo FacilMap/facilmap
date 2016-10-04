@@ -1,23 +1,53 @@
-<ul class="fp-toolbox">
-	<li ng-hide="readonly" ng-repeat="type in types" fp-variable-menu-item><a href="javascript:" ng-click="addObject(type)">Add {{type.name}}</a></li>
-	<li><a href="javascript:">Views</a><ul>
-		<li ng-repeat="(id, view) in views" fp-variable-menu-item><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
-		<li ng-hide="readonly"><a href="javascript:" ng-click="saveView()">Save current view</a></li>
-		<li ng-hide="readonly"><a href="javascript:" ng-click="manageViews()">Manage views</a></li>
-	</ul></li>
-	<li><a href="javascript:">Layers</a><ul>
-		<li ng-repeat="layer in layers" fp-variable-menu-item>
-			<a href="javascript:" ng-click="setLayer(layer)">
-				<input type="{{layer.isBaseLayer ? 'radio' : 'checkbox'}}" ng-checked="layer.visibility" />
-				{{layer.name}}
-			</a>
-		</li>
-	</ul></li>
-	<li><a href="javascript:">Tools</a><ul>
-		<!--<li ng-hide="readonly"><a href="javascript:" ng-click="openDialog('copy-pad-dialog')">Copy pad</a></li>-->
-		<li><a href="javascript:" ng-click="exportGpx()">Export GPX</a></li>
-		<li><a href="javascript:" ng-click="showTable()">View as table</a></li>
-		<li ng-hide="readonly"><a href="javascript:" ng-click="editPadSettings()">Pad settings</a></li>
-		<li ng-hide="readonly"><a href="javascript:" ng-click="editObjectTypes()">Object types</a></li>
-	</ul></li>
-</ul>
+<nav class="navbar navbar-default fp-toolbox">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#fp-toolbox-content" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+		</div>
+        <div class="collapse navbar-collapse" id="fp-toolbox-content">
+			<ul class="nav navbar-nav">
+				<li role="presentation" uib-dropdown ng-if="!readonly">
+					<a href="javascript:" id="toolbox-add-dropdown" uib-dropdown-toggle role="button">Add <span class="caret"></span></a>
+					<ul uib-dropdown-menu aria-labelledby="toolbox-add-dropdown">
+						<li ng-repeat="type in types"><a href="javascript:" ng-click="addObject(type)">{{type.name}}</a></li>
+						<li role="separator" class="divider"></li>
+						<li><a href="javascript:" ng-click="editObjectTypes()">Manage types</a></li>
+					</ul>
+				</li>
+				<li role="presentation" uib-dropdown>
+					<a href="javascript:" id="toolbox-views-dropdown" uib-dropdown-toggle role="button">Saved views <span class="caret"></span></a>
+					<ul uib-dropdown-menu aria-labelledby="toolbox-views-dropdown">
+						<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
+						<li role="separator" class="divider"></li>
+						<li ng-if="!readonly"><a href="javascript:" ng-click="saveView()">Save current view</a></li>
+						<li ng-if="!readonly"><a href="javascript:" ng-click="manageViews()">Manage views</a></li>
+				</ul></li>
+				<li role="presentation" uib-dropdown>
+					<a href="javascript:" id="toolbox-layers-dropdown" uib-dropdown-toggle role="button">Map style <span class="caret"></span></a>
+					<ul uib-dropdown-menu aria-labelledby="toolbox-layers-dropdown">
+						<li ng-repeat="layer in layers.base" ng-class="{active: layer.visibility}">
+							<a href="javascript:" ng-click="setLayer(layer)">{{layer.name}}</a>
+						</li>
+						<li role="separator" class="divider" ng-if="layers.base.length > 0 && layers.overlay.length > 0"></li>
+						<li ng-repeat="layer in layers.overlay" ng-class="{active: layer.visibility}">
+							<a href="javascript:" ng-click="setLayer(layer)">{{layer.name}}</a>
+						</li>
+					</ul>
+				</li>
+				<li role="presentation" uib-dropdown>
+					<a href="javascript:" id="toolbox-tools-dropdown" uib-dropdown-toggle role="button">Tools <span class="caret"></span></a>
+					<ul uib-dropdown-menu aria-labelledby="toolbox-layers-dropdown" class="dropdown-menu-right">
+						<!--<li ng-if="!readonly"><a href="javascript:" ng-click="openDialog('copy-pad-dialog')">Copy pad</a></li>-->
+						<li><a href="javascript:" ng-click="exportGpx()">Export GPX</a></li>
+						<li><a href="javascript:" ng-click="showTable()">View as table</a></li>
+						<li ng-if="!readonly"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
+					</ul>
+				</li>
+			</ul>
+        </div>
+	</div>
+</nav>

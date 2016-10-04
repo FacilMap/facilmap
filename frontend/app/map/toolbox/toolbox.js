@@ -1,19 +1,5 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.directive("fpVariableMenuItem", function() {
-		return {
-			restrict: 'A',
-			link: function(scope, element, attrs) {
-				setTimeout(function() {
-					var toolbox = $(element).closest(".fp-toolbox");
-					if(toolbox.hasClass("ui-menu"))
-						toolbox.menu("destroy");
-					toolbox.menu();
-				}, 0);
-			}
-		}
-	});
-
 	fp.app.factory("fpMapToolbox", function($compile, $templateCache, fpTable) {
 		return function(map) {
 			var scope = map.socket.$new();
@@ -46,8 +32,13 @@
 
 			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
 
-			$compile($($templateCache.get("map/toolbox/toolbox.html")).appendTo(map.map.div))(scope);
+			var ret = {
+				div: $($templateCache.get("map/toolbox/toolbox.html"))
+			};
+			$compile(ret.div.insertBefore(map.map.div))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
+
+			return ret;
 		}
 	});
 
