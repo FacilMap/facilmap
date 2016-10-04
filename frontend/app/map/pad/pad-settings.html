@@ -1,16 +1,28 @@
-<form>
-	<p class="error" ng-show="error">{{error}}</p>
-	<dl>
-		<dt>Link</dt>
-		<dd>{{urlPrefix}}{{padId}}</dd>
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">Pad settings</h3>
+</div>
+<div class="modal-body">
+	<form class="form-horizontal">
+		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
+		
+		<div class="form-group">
+			<label for="pad-link-input" class="col-sm-3 control-label">Link</label>
+			<div class="col-sm-9"><input id="pad-link-input" value="{{urlPrefix}}{{padId}}" class="form-control" readonly /></div>
+		</div>
 
-		<dt>Read-only link</dt>
-		<dd>{{urlPrefix}}{{padData.id}}</dd>
+		<div class="form-group">
+			<label for="pad-rolink-input" class="col-sm-3 control-label">Read-only link</label>
+			<div class="col-sm-9"><input id="pad-rolink-input" value="{{urlPrefix}}{{padData.id}}" class="form-control" readonly /></div>
+		</div>
 
-		<dt><label for="pad-name-input">Pad name</label></dt>
-		<dd><input id="pad-name-input" ng-model="padData.name" /></dd>
-	</dl>
-	<div>
-		<button ng-click="save()">Save</button>
-	</div>
-</form>
+		<div class="form-group">
+			<label for="pad-name-input" class="col-sm-3 control-label">Pad name</label>
+			<div class="col-sm-9"><input id="pad-name-input" ng-model="padData.name" class="form-control" /></div>
+		</div>
+	</form>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+	<button type="button" class="btn btn-primary" ng-click="save()">Save</button>
+</div>

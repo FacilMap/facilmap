@@ -1,29 +1,24 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapPad", [ "fpDialogs", "fpUtils", function(fpDialogs, fpUtils) {
+	fp.app.factory("fpMapPad", function($uibModal, fpUtils) {
 		return function(map) {
 			var ret = {
 				editPadSettings : function() {
-					var scope = map.socket.$new();
-
-					var padDataBkp = ng.copy(scope.padData);
-
-					scope.save = function() {
-						var padData = $.extend({ }, map.socket.padData);
-						delete padData.defaultView;
-						map.socket.emit("editPad", padData, function(err) {
-							if(err)
-								return scope.error = err;
-
-							padDataBkp = null;
-							scope.dialog.close();
-						});
-					};
-
-					scope.dialog = fpDialogs.open("map/pad/pad-settings.html", scope, "Pad settings", function() {
-						if(padDataBkp != null)
-							fpUtils.overwriteObject(padDataBkp, scope.padData);
+					var dialog = $uibModal.open({
+						templateUrl: "map/pad/pad-settings.html",
+						scope: map.socket,
+						controller: "fpMapPadSettingsCtrl",
+						size: "lg",
+						resolve: {
+							map: function() { return map; }
+						}
 					});
+
+					var preserve = fpUtils.preserveObject(map.socket, "padData", "padData", function() {
+						dialog.dismiss();
+					});
+
+					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				}
 			};
 
@@ -46,6 +41,19 @@
 
 			return ret;
 		};
-	} ]);
+	});
+
+	fp.app.controller("fpMapPadSettingsCtrl", function($scope, map) {
+		$scope.save = function() {
+			var padData = $.extend({ }, map.socket.padData);
+			delete padData.defaultView;
+			map.socket.emit("editPad", padData, function(err) {
+				if(err)
+					return $scope.error = err;
+
+				$scope.$close();
+			});
+		};
+	});
 
 })(FacilPad, jQuery, angular);
