@@ -53,6 +53,14 @@
 				return function(it) { return _normaliseNumbers($("<div/>").append(fpTypeFields.formatField(_getField(type, f), it.data[f])).text()); };
 		};
 
+		$scope.getSortClass = function(type, fieldName) {
+			if(($scope.sortField[type.id] == null ? "__name" : $scope.sortField[type.id]) == fieldName) {
+				return $scope.sortOrder[type.id] ? "sort-up" : "sort-down";
+			} else {
+				return "sort-none";
+			}
+		};
+
 		$scope.getSortIcon = function(type, fieldName) {
 			if(($scope.sortField[type.id] == null ? "__name" : $scope.sortField[type.id]) == fieldName) {
 				return {

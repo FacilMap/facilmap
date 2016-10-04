@@ -7,9 +7,9 @@
 	<table ng-if="type.type == 'marker'" class="table table-striped table-bordered table-condensed">
 		<thead>
 			<tr>
-				<th class="sort" ng-click="sort(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
+				<th class="sort" ng-click="sort(type, '__name')" ng-class="getSortClass(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
 				<th>Position</th>
-				<th class="sort" ng-repeat="field in type.fields" ng-click="sort(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
+				<th class="sort" ng-repeat="field in type.fields" ng-click="sort(type, field.name)" ng-class="getSortClass(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -23,10 +23,10 @@
 	<table ng-repeat-end ng-if="type.type == 'line'" class="table table-striped table-bordered table-condensed">
 		<thead>
 			<tr>
-				<th class="sort" ng-click="sort(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
-				<th class="sort" ng-click="sort(type, '__distance')">Distance <span ng-class="getSortIcon(type, '__distance')"></span></th>
-				<th class="sort" ng-click="sort(type, '__time')">Time <span ng-class="getSortIcon(type, '__time')"></span></th>
-				<th class="sort" ng-repeat="field in type.fields" ng-click="sort(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
+				<th class="sort" ng-click="sort(type, '__name')" ng-class="getSortClass(type, '__name')">Name <span ng-class="getSortIcon(type, '__name')"></span></th>
+				<th class="sort" ng-click="sort(type, '__distance')" ng-class="getSortClass(type, '__distance')">Distance <span ng-class="getSortIcon(type, '__distance')"></span></th>
+				<th class="sort" ng-click="sort(type, '__time')" ng-class="getSortClass(type, '__time')">Time <span ng-class="getSortIcon(type, '__time')"></span></th>
+				<th class="sort" ng-repeat="field in type.fields" ng-class="getSortClass(type, field.name)" ng-click="sort(type, field.name)">{{field.name}} <span ng-class="getSortIcon(type, field.name)"></span></th>
 			</tr>
 		</thead>
 		<tbody>

@@ -69,8 +69,12 @@ html,body {
 	color: #aaa;
 }
 
-table th.sort {
-	cursor: pointer;
+table th.sort-none,table th.sort-up {
+	cursor: s-resize;
+}
+
+table th.sort-down {
+	cursor: n-resize;
 }
 
 .td-buttons {
