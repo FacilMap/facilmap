@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapMarkers", [ "fpDialogs", "fpUtils", function(fpDialogs, fpUtils) {
+	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils) {
 		return function(map) {
 			var ret = {
 				viewMarker: function(marker) {
@@ -31,32 +31,22 @@
 					}, true);
 				},
 				editMarker: function(marker) {
-					var scope = map.socket.$new();
-
-					scope.marker = marker; // In case it is not in global markers list yet
-					var preserve = fpUtils.preserveObject(scope, "markers["+fpUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
-						scope.dialog.close(false);
+					var dialog = $uibModal.open({
+						templateUrl: "map/markers/edit-marker.html",
+						scope: map.socket,
+						controller: "fpMapMarkerEditCtrl",
+						size: "lg",
+						resolve: {
+							marker: function() { return marker; },
+							map: function() { return map; }
+						}
 					});
 
-					scope.dialog = fpDialogs.open("map/markers/edit-marker.html", scope, "Edit Marker", preserve.revert.bind(preserve));
-
-					scope.canControl = function(what) {
-						return map.typesUi.canControl(scope.types[scope.marker.typeId], what);
-					};
-
-					scope.save = function() {
-						scope.error = null;
-						map.socket.emit("editMarker", scope.marker, function(err) {
-							if(err)
-								return scope.error = err;
-
-							scope.dialog.close(false);
-						});
-					};
-
-					scope.$watch("marker.colour", function() {
-						map.addMarker(scope.marker);
+					var preserve = fpUtils.preserveObject(map.socket, "markers["+fpUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
+						dialog.dismiss();
 					});
+
+					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				},
 				moveMarker: function(marker) {
 					var message = map.messages.showMessage("info", "Click somewhere on the map to reposition the marker there.", [
@@ -128,6 +118,28 @@
 
 			return ret;
 		};
-	} ]);
+	});
+
+	fp.app.controller("fpMapMarkerEditCtrl", function($scope, map, marker) {
+		$scope.marker = marker;
+
+		$scope.canControl = function(what) {
+			return map.typesUi.canControl($scope.types[$scope.marker.typeId], what);
+		};
+
+		$scope.save = function() {
+			$scope.error = null;
+			map.socket.emit("editMarker", $scope.marker, function(err) {
+				if(err)
+					return $scope.error = err;
+
+				$scope.$close();
+			});
+		};
+
+		$scope.$watch("marker.colour", function() {
+			map.addMarker($scope.marker);
+		});
+	});
 
 })(FacilPad, jQuery, angular);
