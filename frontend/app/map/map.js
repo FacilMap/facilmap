@@ -9,7 +9,7 @@
 		};
 	} ]);
 
-	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx) {
+	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce) {
 		var maps = { };
 
 		var ret = { };
@@ -42,6 +42,7 @@
 				attributionIcon: new ol.Icon("assets/img/logo.png", new ol.Size(191, 176), new ol.Pixel(-37, -131))
 			});
 
+			map.map.getControlsByClass("FacilMap.Control.Attribution").forEach(function(it) { map.map.removeControl(it); });
 			map.map.getControlsByClass("FacilMap.Control.GeoLocation").forEach(function(it) { map.map.removeControl(it); });
 
 			$(map.map.attributionIcon.imageDiv).css({ overflow: "hidden", height: "131px" });
@@ -250,7 +251,7 @@
 				map.map.layers.forEach(function(it) {
 					if(!it.displayInLayerSwitcher)
 						return;
-					(it.isBaseLayer ? ret.base : ret.overlay).push({ visibility: it.getVisibility(), name: it.name, permalinkName: it.permalinkName });
+					(it.isBaseLayer ? ret.base : ret.overlay).push({ visibility: it.getVisibility(), name: it.name, permalinkName: it.permalinkName, attribution: $sce.trustAsHtml(it.attribution) });
 				});
 				return ret;
 			};
@@ -393,6 +394,7 @@
 			map.padUi = fpMapPad(map);
 			map.gpxUi = fpMapGpx(map);
 			map.toolboxUi = fpMapToolbox(map);
+			map.aboutUi = fpMapAbout(map);
 
 			fpMapLegend(map);
 			fpMapSearch(map);

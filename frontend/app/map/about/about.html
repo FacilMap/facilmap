@@ -1,0 +1,14 @@
+<div class="modal-header">
+	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<h3 class="modal-title">About FacilPad</h3>
+</div>
+<div class="modal-body">
+	<h2>Map Styles</h2>
+	<dl class="dl-horizontal">
+		<dt ng-repeat-start="layer in layers.base.concat(layers.overlay)" ng-if="layer.attribution">{{layer.name}}</dt>
+		<dd ng-repeat-end ng-bind-html="layer.attribution" ng-if="layer.attribution"></dd>
+	</dl>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">Close</button>
+</div>

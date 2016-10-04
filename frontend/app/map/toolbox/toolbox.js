@@ -32,6 +32,10 @@
 
 			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
 
+			scope.showAbout = function() {
+				map.aboutUi.showAbout();
+			};
+
 			scope.myLocation = function() {
 				map.myLocation();
 			};
