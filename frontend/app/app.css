@@ -65,127 +65,12 @@ html,body {
 	}
 }
 
-.error,.success,.warning,.info {
-	padding: 8px;
-	border-radius: 3px;
-	border: 1px solid;
-	font-weight: bold;
-	white-space: pre-line;
-}
-
-.error {
-	background-color: #f2dede;
-	color: #a94442;
-	border-color: #ebccd1;
-}
-
-.success {
-	background-color: #dff0d8;
-	border-color: #d6e9c6;
-	color: #3c763d;
-}
-
-.info {
-	background-color: #d9edf7;
-	border-color: #bce8f1;
-	color: #31708f;
-}
-
-.warning {
-	background-color: #fcf8e3;
-	border-color: #faebcc;
-	color: #8a6d3b;
-}
-
-dl {
-	margin: 0;
-	padding: 0;
-}
-
-dt {
-	display: inline-block;
-	font-weight: bold;
-	margin: 5px 0 0 0;
-	padding: 0;
-	width: 29%;
-	vertical-align: top;
-}
-
-dt:after {
-	content: ":\a0";
-}
-
-dd {
-	display: inline-block;
-	width: 69%;
-	margin: 5px 0 0 0;
-	padding: 0;
-	vertical-align: top;
-}
-
-dd :first-child,td :first-child {
-	margin-top: 0;
-}
-
-dd :last-child,td :last-child {
-	margin-bottom: 0;
-}
-
-dd input, dd textarea {
-	width: 100%;
-}
-
-dd input.inline {
-	width: 10em;
-}
-
-dl:after {
-	clear: left;
-	display: block;
-	content: " ";
-}
-
 .checkbox.disabled label {
 	color: #aaa;
 }
 
-tr.selected td {
-	font-weight: bold;
-}
-
-table {
-	width: 100%;
-	border-spacing: 0;
-	border-collapse: collapse;
-}
-
 table th.sort {
 	cursor: pointer;
-}
-
-table th.sort .ui-icon {
-	display: inline-block;
-	vertical-align: middle;
-}
-
-table.border td, table.border th {
-	border: 1px solid #ddd;
-	padding: .5em;
-}
-
-table.border thead th, table.border thead.td {
-	background-color: #f8f8f8;
-}
-
-table.border td.move,table.border th.move {
-	border: none;
-	padding: 0;
-	background: transparent;
-}
-
-table.border input, table.border textarea, table.border select {
-	width: 100%;
-	box-sizing: border-box;
 }
 
 .td-buttons {
@@ -202,23 +87,6 @@ table.border input, table.border textarea, table.border select {
 	top: 10px;
 	width: 50%;
 	left: 25%;
-}
-
-.messages p {
-	font-size: 1.5em;
-	margin:0 0 10px 0;
-	position: relative;
-	box-shadow: 0 0 15px;
-	border-radius: 5px;
-	white-space: normal;
-}
-
-.messages .close-button {
-	position: absolute;
-	top: 5px;
-	right: 5px;
-	color: inherit;
-	text-decoration: none;
 }
 
 textarea {
@@ -354,12 +222,6 @@ textarea {
 	padding: 3px 6px;
 	opacity: .7;
 	font-weight: bold;
-}
-
-.type-select {
-	position: absolute;
-	bottom: .5em;
-	right: 1em;
 }
 
 
