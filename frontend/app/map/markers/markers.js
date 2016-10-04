@@ -63,7 +63,7 @@
 
 						map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lon }, function(err) {
 							if(err)
-								return map.messages.showMessage("error", err);
+								return map.messages.showMessage("danger", err);
 
 							ret.viewMarker(marker);
 						});
@@ -72,7 +72,7 @@
 				deleteMarker: function(marker) {
 					map.socket.emit("deleteMarker", marker, function(err) {
 						if(err)
-							map.messages.showMessage("error", err);
+							map.messages.showMessage("danger", err);
 					});
 				},
 				addMarker: function(type) {
@@ -90,7 +90,7 @@
 
 						map.socket.emit("addMarker", { lon: pos.lon, lat: pos.lat, typeId: type.id }, function(err, marker) {
 							if(err)
-								return map.messages.showMessage("error", err);
+								return map.messages.showMessage("danger", err);
 
 							ret.viewMarker(marker);
 							ret.editMarker(marker);

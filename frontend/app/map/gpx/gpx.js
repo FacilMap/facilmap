@@ -24,7 +24,7 @@
 			    exportGpx : function() {
 				    map.socket.emit("exportGpx", { useTracks: true }, function(err, gpx) {
 					    if(err)
-							return map.messages.showMessage("error", err);
+							return map.messages.showMessage("danger", err);
 
 					    saveAs(new Blob([ gpx ], { type: "application/gpx+xml" }), map.socket.padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + '.gpx');
 				    })

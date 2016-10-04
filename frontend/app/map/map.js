@@ -433,7 +433,7 @@
 			var errorMessage = null;
 			map.socket.$watch("disconnected", function(disconnected) {
 				if(disconnected && !errorMessage)
-					errorMessage = map.messages.showMessage("error", "The connection to the server was lost.");
+					errorMessage = map.messages.showMessage("danger", "The connection to the server was lost.");
 				else if(!disconnected && errorMessage) {
 					errorMessage.close();
 					errorMessage = null;

@@ -59,7 +59,7 @@
 
 					map.socket.emit("getLineTemplate", { typeId: type.id }, function(err, line) {
 						if(err)
-							return map.messages.showMessage("error", err);
+							return map.messages.showMessage("danger", err);
 
 						line.routePoints = [ ];
 						line.trackPoints = [ ];
@@ -87,7 +87,7 @@
 							if(save && line.routePoints.length >= 2) {
 								map.socket.emit("addLine", { routePoints: line.routePoints, typeId: type.id }, function(err, line) {
 									if(err)
-										return map.messages.showMessage("error", err);
+										return map.messages.showMessage("danger", err);
 
 									ret.viewLine(line);
 									ret.editLine(line);
@@ -138,7 +138,7 @@
 								message.close();
 
 								if(err)
-									map.messages.showMessage("error", err);
+									map.messages.showMessage("danger", err);
 							});
 						}
 					}
@@ -146,7 +146,7 @@
 				deleteLine: function(line) {
 					map.socket.emit("deleteLine", line, function(err) {
 						if(err)
-							map.messages.showMessage("error", err);
+							map.messages.showMessage("danger", err);
 					});
 				}
 			};
