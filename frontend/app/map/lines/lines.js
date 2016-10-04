@@ -154,7 +154,7 @@
 			map.mapEvents.$on("clickLine", function(e, line, clickPos, evt) {
 				var one = false;
 				map.popups.getOpenPopups().forEach(function(popup) {
-					if(popup.template == "view-line.html" && popup.scope.line.id == line.id) {
+					if(popup.template == "map/lines/view-line.html" && popup.scope.line.id == line.id) {
 						popup.close();
 						if(popup.pos.lon == clickPos.lon && popup.pos.lat == clickPos.lat)
 							one = true;

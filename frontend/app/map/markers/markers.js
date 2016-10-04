@@ -102,7 +102,7 @@
 			map.mapEvents.$on("clickMarker", function(e, marker, evt) {
 				var one = false;
 				map.popups.getOpenPopups().forEach(function(popup) {
-					if(popup.template == "view-marker.html" && popup.scope.marker.id == marker.id) {
+					if(popup.template == "map/markers/view-marker.html" && popup.scope.marker.id == marker.id) {
 						popup.close();
 						one = true;
 					}
