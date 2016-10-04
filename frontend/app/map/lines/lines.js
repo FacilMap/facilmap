@@ -66,7 +66,7 @@
 						var message = map.messages.showMessage("info", "Please click on the map to draw a line. Double-click to finish it.", [
 							{ label: "Finish", click: finishLine.bind(null, true) },
 							{ label: "Cancel", click: finishLine.bind(null, false) }
-						]);
+						], null, finishLine.bind(null, false, true));
 
 						var handler = null;
 						var unregister = null;
@@ -78,8 +78,10 @@
 							handler = map.addClickListener(mapClick);
 						}
 
-						function finishLine(save) {
-							message.close();
+						function finishLine(save, noClose) {
+							if(!noClose)
+								message.close();
+
 							unregister();
 							handler && handler.cancel();
 							map.deleteLine(line);
@@ -119,23 +121,24 @@
 					var message = map.messages.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
 						{ label: "Finish", click: done.bind(null, true) },
 						{ label: "Cancel", click: done.bind(null, false) }
-					]);
+					], null, done.bind(null, false, true));
 
 					map.popups.closeAll();
 
-					function done(save) {
+					function done(save, noClose) {
 						var newPoints = movable.done();
 						map.addLine(line);
 						ret.viewLine(line);
 
-						if(!save) {
+						if(!save && !noClose) {
 							message.close();
 						}
 
 						if(save) {
 							line.trackPoints = { };
 							map.socket.emit("editLine", { id: line.id, routePoints: newPoints }, function(err) {
-								message.close();
+								if(!noClose)
+									message.close();
 
 								if(err)
 									map.messages.showMessage("danger", err);

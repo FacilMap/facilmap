@@ -54,7 +54,7 @@
 							message.close();
 							listener.cancel();
 						}}
-					]);
+					], null, function() { listener.cancel() });
 
 					map.popups.closeAll();
 
@@ -81,7 +81,7 @@
 							message.close();
 							listener.cancel();
 						}}
-					]);
+					], null, function() { listener.cancel(); });
 
 					map.popups.closeAll();
 

@@ -10,7 +10,7 @@
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			return {
-				showMessage : function(type, message, buttons, lifetime) {
+				showMessage : function(type, message, buttons, lifetime, onclose) {
 					var messageObj = {
 						type: type,
 						message: message,
@@ -19,6 +19,9 @@
 							var idx = scope.messages.indexOf(messageObj);
 							if(idx != -1)
 								scope.messages = scope.messages.slice(0, idx).concat(scope.messages.slice(idx+1));
+
+							onclose && onclose();
+
 							scope.$evalAsync();
 						}
 					};
