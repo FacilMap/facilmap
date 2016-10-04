@@ -32,6 +32,10 @@
 
 			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
 
+			scope.myLocation = function() {
+				map.myLocation();
+			};
+
 			var ret = {
 				div: $($templateCache.get("map/toolbox/toolbox.html"))
 			};

@@ -42,6 +42,8 @@
 				attributionIcon: new ol.Icon("assets/img/logo.png", new ol.Size(191, 176), new ol.Pixel(-37, -131))
 			});
 
+			map.map.getControlsByClass("FacilMap.Control.GeoLocation").forEach(function(it) { map.map.removeControl(it); });
+
 			$(map.map.attributionIcon.imageDiv).css({ overflow: "hidden", height: "131px" });
 
 			// Map ID is not set yet as scope is not digested. So styles might change.
@@ -374,6 +376,12 @@
 							map.map.events.unregister("mousemove", null, updatePosition);
 					}
 				};
+			};
+
+			map.myLocation = function() {
+				navigator.geolocation.getCurrentPosition(function(position) {
+					map.map.setCenter(fm.Util.toMapProjection(new ol.LonLat(position.coords.longitude, position.coords.latitude), map.map), 15);
+				});
 			};
 
 			map.messages = fpMapMessages(map);
