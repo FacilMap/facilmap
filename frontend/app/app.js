@@ -83,7 +83,6 @@ var FacilPad = {
 			});
 		}, 0);
 
-		fpUi.initStyles();
 	} ]);
 
 })(FacilPad, jQuery, angular);

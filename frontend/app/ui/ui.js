@@ -80,12 +80,4 @@
 		};
 	});
 
-	fp.app.factory("fpUi", function() {
-		return {
-			initStyles: function(context) {
-				$("button,input[type=submit],input[type=button],input[type=reset]", context).button();
-			}
-		};
-	});
-
 })(FacilPad, jQuery, angular);
