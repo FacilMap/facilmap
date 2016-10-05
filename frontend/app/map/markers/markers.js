@@ -1,13 +1,12 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils) {
+	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils, $templateCache, $compile, $timeout) {
 		return function(map) {
 			var ret = {
-				viewMarker: function(marker) {
+				renderMarkerPopup: function(marker, el, callback) {
 					var scope = map.socket.$new();
 
 					scope.marker = marker;
-					var popup = map.popups.open("map/markers/view-marker.html", scope, scope.marker);
 
 					scope.edit = function() {
 						ret.editMarker(scope.marker);
@@ -21,14 +20,18 @@
 						ret.deleteMarker(scope.marker);
 					};
 
-					scope.$watch("markers["+fpUtils.quoteJavaScript(marker.id)+"]", function(newVal) {
+					/*scope.$watch("markers["+fpUtils.quoteJavaScript(marker.id)+"]", function(newVal) {
 						if(newVal == null)
 							popup.close();
 						else {
 							scope.marker = newVal;
 							popup.updatePosition(newVal);
 						}
-					}, true);
+					}, true);*/
+
+					el.html($templateCache.get("map/markers/view-marker.html"));
+					$compile(el[0])(scope);
+					$timeout(callback); // $compile only replaces variables on next digest
 				},
 				editMarker: function(marker) {
 					var dialog = $uibModal.open({
@@ -98,23 +101,6 @@
 					});
 				}
 			};
-
-			map.mapEvents.$on("clickMarker", function(e, marker, evt) {
-				var one = false;
-				map.popups.getOpenPopups().forEach(function(popup) {
-					if(popup.template == "map/markers/view-marker.html" && popup.scope.marker.id == marker.id) {
-						popup.close();
-						one = true;
-					}
-				});
-				if(one)
-					return;
-
-				if(!evt.ctrlKey && !evt.shiftKey)
-					map.popups.closeAll();
-
-				ret.viewMarker(marker);
-			});
 
 			return ret;
 		};

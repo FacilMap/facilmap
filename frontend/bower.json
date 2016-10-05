@@ -22,7 +22,9 @@
     "blob": "*",
     "angular-bootstrap": "^2.1.4",
     "bootstrap": "^3.3.7",
-    "bootstrap-touchspin": "^3.1.2"
+    "bootstrap-touchspin": "^3.1.2",
+    "jquery": "^3.1.1",
+    "leaflet": "^1.0.1"
   },
   "overrides": {
     "bootstrap": {

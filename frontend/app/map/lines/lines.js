@@ -1,16 +1,12 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapLines", function(fpUtils, $uibModal) {
+	fp.app.factory("fpMapLines", function(fpUtils, $uibModal, $templateCache, $compile, $timeout) {
 		return function(map) {
 			var ret = {
-				viewLine: function(line, clickPos) {
-					if(clickPos == null)
-						clickPos = line.routePoints[line.routePoints.length-1];
-
+				renderLinePopup: function(line, el, callback) {
 					var scope = map.socket.$new();
 
 					scope.line = line;
-					scope.popup = map.popups.open("map/lines/view-line.html", scope, clickPos);
 
 					scope.edit = function() {
 						ret.editLine(scope.line);
@@ -24,7 +20,7 @@
 						ret.deleteLine(scope.line);
 					};
 
-					map.socket.$watch("lines["+fpUtils.quoteJavaScript(line.id)+"]", function(newVal) {
+					/*map.socket.$watch("lines["+fpUtils.quoteJavaScript(line.id)+"]", function(newVal) {
 						if(newVal == null)
 							scope.popup.close();
 						else
@@ -34,7 +30,11 @@
 					scope.$watch("line.routePoints", function(newVal, oldVal) {
 						if(!ng.equals(oldVal, newVal))
 							scope.popup.updatePosition(newVal[newVal.length-1]);
-					}, true);
+					}, true);*/
+
+					el.html($templateCache.get("map/lines/view-line.html"));
+					$compile(el[0])(scope);
+					$timeout(callback); // $compile only replaces variables on next digest
 				},
 				editLine: function(line) {
 					var dialog = $uibModal.open({
@@ -153,24 +153,6 @@
 					});
 				}
 			};
-
-			map.mapEvents.$on("clickLine", function(e, line, clickPos, evt) {
-				var one = false;
-				map.popups.getOpenPopups().forEach(function(popup) {
-					if(popup.template == "map/lines/view-line.html" && popup.scope.line.id == line.id) {
-						popup.close();
-						if(popup.pos.lon == clickPos.lon && popup.pos.lat == clickPos.lat)
-							one = true;
-					}
-				});
-				if(one)
-					return;
-
-				if(!evt.ctrlKey && !evt.shiftKey)
-					map.popups.closeAll();
-
-				map.linesUi.viewLine(line, clickPos);
-			});
 
 			return ret;
 		};

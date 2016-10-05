@@ -47,13 +47,13 @@
 
 			scope.$watch("types", update, true);
 
-			var el = $($templateCache.get("map/legend/legend.html")).appendTo(map.map.div);
+			var el = $($templateCache.get("map/legend/legend.html")).appendTo(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			function getMaxHeight() {
 				var toolbox = map.toolboxUi.div;
-				return $(map.map.div).outerHeight() - parseInt(el.css("bottom")) - 25 - toolbox.position().top - toolbox.outerHeight(true);
+				return $(map.map.getContainer()).outerHeight() - parseInt(el.css("bottom")) - 25 - toolbox.position().top - toolbox.outerHeight(true);
 			}
 
 			function resize() {

@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title fp-title="padName + ' – FacilPad'">FacilPad</title>
 		<meta name="robots" content="index,nofollow" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="shortcut icon" href="assets/img/favicon.png">
 		<link rel="stylesheet" href="build/all.css">
 		<style type="text/css">
@@ -27,7 +27,7 @@
 		</div>
 		<div id="loading" style="display:none">Loading...</div>
 		<div id="mapContainer" style="display:none">
-			<fp-map id="map" fp-pad-id="{{padId}}"></fp-map>
+			<div id="map" fp-map fp-pad-id="{{padId}}"></div>
 		</div>
 
 		<script>
@@ -74,10 +74,6 @@
 
 				check();
 			})();
-		</script>
-		<script src="https://api.facilmap.org/facilmap_ol.js"></script>
-		<script>
-			jQuery = $ = FacilMap.$;
 		</script>
 		<script src="build/all.js"></script>
 		<script src="http://localhost:40829/socket.io/socket.io.js"></script>

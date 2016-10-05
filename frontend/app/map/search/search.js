@@ -1,7 +1,7 @@
 (function(fp, $, ng, undefined) {
 
 	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils) {
-		var namefinder = new FacilMap.NameFinder.Nominatim();
+		//var namefinder = new FacilMap.NameFinder.Nominatim();
 
 		return function(map) {
 			var scope = $rootScope.$new(true);
@@ -26,7 +26,7 @@
 				map.map.moveTo(result.lonlat.clone().transform(fpUtils.proj(), map.map.getProjectionObject()), result.getZoom(map.map));
 			};
 
-			var el = $($templateCache.get("map/search/search.html")).appendTo(map.map.div);
+			var el = $($templateCache.get("map/search/search.html")).appendTo(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		};

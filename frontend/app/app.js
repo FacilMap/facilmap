@@ -8,6 +8,8 @@ var FacilPad = {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 	} ]);
 
+	fp.app.constant("L", L);
+
 	// Dereferrer
 	$(document).on("click", "a", function(e) {
 		var el = $(e.target);
@@ -71,8 +73,7 @@ var FacilPad = {
 		return wrapApply($scope, this);
 	};
 
-	fp.app.controller("PadCtrl", [ "$scope", "fpUi", "fpMap", "$timeout", function($scope, fpUi, fpMap, $timeout) {
-
+	fp.app.controller("PadCtrl", function($scope, fpMap, $timeout) {
 		$timeout(function() {
 			var map = fpMap.getMap("map");
 
@@ -83,6 +84,6 @@ var FacilPad = {
 			});
 		}, 0);
 
-	} ]);
+	});
 
 })(FacilPad, jQuery, angular);

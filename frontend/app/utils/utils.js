@@ -1,12 +1,8 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpUtils", function($parse) {
+	fp.app.factory("fpUtils", function($parse, L) {
 
 		var fpUtils = { };
-
-		fpUtils.proj = function() {
-			return new OpenLayers.Projection("EPSG:4326");
-		};
 
 		var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		var LENGTH = 12;
@@ -35,7 +31,12 @@
 		};
 
 		fpUtils.createMarkerIcon = function(colour) {
-			return new OpenLayers.Icon(fpUtils.createMarkerGraphic(colour), { w: 21, h: 25 }, { x: -9, y: -25 });
+			return new L.Icon({
+				iconUrl: fpUtils.createMarkerGraphic(colour),
+				iconSize: [21, 25],
+				iconAnchor: [10, 25],
+				popupAnchor: [0, -25]
+			});
 		};
 
 		fpUtils.makeTextColour = function(backgroundColour, threshold) {
@@ -127,6 +128,24 @@
 					bkp = null;
 				}
 			}
+		};
+
+		fpUtils.leafletToFpBbox = function(bbox, zoom) {
+			var ret = {
+				top: bbox.getNorth(),
+				left: Math.max(-180, bbox.getWest()),
+				right: Math.min(180, bbox.getEast()),
+				bottom: bbox.getSouth()
+			};
+
+			if(zoom != null)
+				ret.zoom = zoom;
+
+			return ret;
+		};
+
+		fpUtils.fpToLeafletBbox = function(bbox) {
+			return L.latLngBounds(L.latLng(bbox.bottom, bbox.left), L.latLng(bbox.top, bbox.right));
 		};
 
 		return fpUtils;

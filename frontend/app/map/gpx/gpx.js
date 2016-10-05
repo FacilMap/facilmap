@@ -18,7 +18,7 @@
 		return ret;
 	}
 
-    fp.app.factory("fpMapGpx", function(fpSocket, fpDialogs, $rootScope, fpTypeFields) {
+    fp.app.factory("fpMapGpx", function(fpSocket, $rootScope, fpTypeFields) {
 	    return function(map) {
 		    return {
 			    exportGpx : function() {

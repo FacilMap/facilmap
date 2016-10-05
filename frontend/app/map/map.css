@@ -72,3 +72,28 @@
 	opacity: .7;
 	font-weight: bold;
 }
+
+.fp-attribution-icon {
+	position: absolute;
+	bottom: -45px;
+	left: -37px;
+}
+
+.fp-popup .content {
+	padding-bottom: 1.5em;
+}
+
+.fp-popup .buttons {
+	position: absolute;
+	background: #fff;
+	bottom: 0;
+	left: 0;
+	right: 15px;
+	padding: 5px 10px;
+	box-shadow: 0 0 10px #fff;
+	border-bottom-left-radius: 10px;
+}
+
+.pos,.distance {
+	color: #888;
+}

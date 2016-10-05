@@ -19,9 +19,12 @@
 
 			scope.layers = map.getLayerInfo();
 
+			map.mapEvents.$on("layerchange", function() {
+				scope.layers = map.getLayerInfo();
+			});
+
 			scope.setLayer = function(layer) {
 				map.showLayer(layer.permalinkName, !layer.visibility);
-				scope.layers = map.getLayerInfo();
 			};
 
 			scope.editPadSettings = map.padUi.editPadSettings.bind(map.padUi);
@@ -43,7 +46,7 @@
 			var ret = {
 				div: $($templateCache.get("map/toolbox/toolbox.html"))
 			};
-			$compile(ret.div.insertBefore(map.map.div))(scope);
+			$compile(ret.div.appendTo(map.map.getContainer()))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			return ret;

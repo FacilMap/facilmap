@@ -22,9 +22,7 @@ var files = [
 	"app/**/*.html"
 ];
 
-var deps = mainBowerFiles().filter(function(it) {
-	return !it.match(/\/bower_components\/(jquery|jquery-ui)\//);
-});
+var deps = mainBowerFiles();
 
 gulp.task("default", [ "all" ]);
 
@@ -37,10 +35,7 @@ gulp.task("clean", function() {
 
 gulp.task("deps", function() {
 	return combine(
-		es.merge([
-			gulp.src(deps, { base: process.cwd() + "/" }),
-			gulp.src("assets/libs/**/*")
-		]),
+		gulp.src(deps, { base: process.cwd() + "/" }),
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
 				newer("build/dependencies.js"),

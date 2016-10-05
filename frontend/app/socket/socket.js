@@ -5,6 +5,7 @@
 		return function(padId) {
 			var scope = $rootScope.$new();
 
+			scope.padId = padId;
 			scope.padData = null;
 			scope.readonly = null;
 			scope.markers = { };
@@ -137,7 +138,7 @@
 				scope.bbox = bbox;
 			};
 
-			scope.emit("setPadId", padId);
+			scope.emit("setPadId", scope.padId);
 
 			scope.$on("$destroy", function() {
 				socket.removeAllListeners();

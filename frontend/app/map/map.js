@@ -1,15 +1,15 @@
 (function(fp, $, ng, fm, ol, undefined) {
 
-	fp.app.directive("fpMap", [ "fpMap", function(fpMap) {
+	fp.app.directive("fpMap", function(fpMap) {
 		return {
 			restrict: 'EA',
 			link: function(scope, element, attrs) {
 				fpMap.initMap(element, attrs.id, attrs.fpPadId);
 			}
 		};
-	} ]);
+	});
 
-	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpDialogs, fpMapMarkers, fpMapPopups, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce) {
+	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpMapMarkers, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce, L) {
 		var maps = { };
 
 		var ret = { };
@@ -24,44 +24,81 @@
 
 		return ret;
 
-		function Map(replaceEl, id, padId) {
+		function Map(el, id, padId) {
 			var map = this;
 
-			map.mapEvents = $rootScope.$new(true); /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove */
+			map.mapEvents = $rootScope.$new(true); /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove, layerchange */
 			map.socket = fpSocket(padId);
-			map.socket.id = id; // To be in scope for template
+
+			//map.socket.id = id; // To be in scope for template
 
 			map.markersById = { };
 			map.linesById = { };
 
-			var el = $($templateCache.get("map/map.html"));
-			replaceEl.replaceWith(el);
-			$compile(el)(map.socket);
-
-			map.map = new FacilMap.Map(el[0], {
-				attributionIcon: new ol.Icon("assets/img/logo.png", new ol.Size(191, 176), new ol.Pixel(-37, -131))
+			map.layers = { };
+			[
+				L.gridLayer({
+					fpName: "Empty",
+					fpBase: true,
+					fpKey: "empt"
+				}),
+				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", {
+					fpName: "MapSurfer Road",
+					fpBase: true,
+					fpKey: "MSfR",
+					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+				}),
+				L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+					fpName: "Mapnik",
+					fpBase: true,
+					fpKey: "Mpnk",
+					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+				}),
+				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
+					fpName: "OpenCycleMap",
+					fpBase: true,
+					fpKey: "OCyc",
+					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+				}),
+				L.tileLayer("http://{s}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
+					fpName: "Hike & Bike Map",
+					fpBase: true,
+					fpKey: "HiBi",
+					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+				}),
+				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
+					fpName: "Public transportation",
+					fpKey: "OPTM",
+					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					zIndex: 300
+				}),
+				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
+					fpName: "Relief",
+					fpKey: "Rlie",
+					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies">NASA</a>'),
+					zIndex: 300
+				})
+			].forEach(function(it) {
+				map.layers[it.options.fpKey] = it;
 			});
 
-			map.map.getControlsByClass("FacilMap.Control.Attribution").forEach(function(it) { map.map.removeControl(it); });
-			map.map.getControlsByClass("FacilMap.Control.GeoLocation").forEach(function(it) { map.map.removeControl(it); });
+			map.popupOptions = {
+				maxWidth: 350,
+				maxHeight: 200,
+				className: "fp-popup"
+			};
 
-			$(map.map.attributionIcon.imageDiv).css({ overflow: "hidden", height: "131px" });
+			map.map = L.map(el[0]);
+
+			var tpl = $($templateCache.get("map/map.html"));
+			el.append(tpl);
+			$compile(tpl)(map.socket);
 
 			// Map ID is not set yet as scope is not digested. So styles might change.
-			$timeout(map.map.updateSize.bind(map.map));
+			//$timeout(map.map.updateSize.bind(pad.map));
 
-			map.map.addLayer(new fm.Layer.OSM.MapSurfer.Road(ol.i18n("MapSurfer Road"), { permalinkName : "MSfR" }));
-			map.map.addLayer(new fm.Layer.OSM.Mapnik(ol.i18n("Mapnik"), { permalinkName : "Mpnk" }));
-			map.map.addLayer(new fm.Layer.OSM.CycleMap(ol.i18n("OpenCycleMap"), { permalinkName : "OCyc" }));
-			map.map.addLayer(new fm.Layer.OSM.HikeAndBike(ol.i18n("Hike & Bike Map"), { permalinkName : "HiBi" }));
-			map.map.addLayer(new fm.Layer.OSM.OpenPTMap(ol.i18n("Public transportation"), { permalinkName : "OPTM", visibility : false }));
-			map.map.addLayer(new fm.Layer.other.Relief(ol.i18n("Relief"), { visibility: false, permalinkName : "Rlie" }));
-
-			map.layerLines = new FacilMap.Layer.Vector("Lines", { displayInLayerSwitcher: false, visibility: true });
-			map.map.addLayer(map.layerLines);
-
-			var label;
-			map.featureHandler = new OpenLayers.Handler.Feature(null, map.layerLines, {
+			/*var label;
+			map.featureHandler = new ol.Handler.Feature(null, map.layerLines, {
 				"over" : function(obj) {
 					$(map.map.div).addClass("fp-overFeature");
 
@@ -90,14 +127,22 @@
 			map.featureHandler.activate();
 
 			var dragIcon = fpUtils.createMarkerIcon("ffd700");
-			map.dragControl = new FacilMap.Control.DragLine(map.layerLines, dragIcon);
-			map.map.addControl(map.dragControl);
+			map.dragControl = new fm.Control.DragLine(map.layerLines, dragIcon);
+			map.map.addControl(map.dragControl);*/
 
-			map.map.events.register("click", map.map, function(e) {
-				map.mapEvents.$emit("click", map.xyToPos(e.xy));
+			map.map.on("click", function(e) {
+				map.mapEvents.$emit("click", e.latlng);
 			});
 
-			map.map.events.register("move", this, function() {
+			map.map.on("layeradd", function() {
+				map.mapEvents.$emit("layerchange");
+			});
+
+			map.map.on("layerremove", function() {
+				map.mapEvents.$emit("layerchange");
+			});
+
+			/*map.map.events.register("move", this, function() {
 				setTimeout(function() { map.mapEvents.$emit("move"); }, 0);
 			});
 
@@ -131,47 +176,56 @@
 				}
 
 				return ret;
-			};
+			};*/
 
 			map.displayView = function(view) {
-				if(view == null) {
-					map.map.zoomToMaxExtent();
-				} else {
-					var bbox = OpenLayers.Bounds.prototype.clone.apply(view).transform(fpUtils.proj(), map.map.getProjectionObject());
-					map.map.zoomToExtent(bbox);
+				var layers = [ view && map.layers[view.baseLayer] ? view.baseLayer : Object.keys(map.layers)[0] ].concat(view ? view.layers : [ ]);
+				map.map.eachLayer(function(it) {
+					if(layers.indexOf(it.fpKey) == -1)
+						map.map.removeLayer(it);
+				});
+				layers.forEach(function(it) {
+					if(!map.layers[it])
+						return;
 
-					var matching_layers = map.map.getLayersBy("permalinkName", view.baseLayer);
-					if(matching_layers.length == 0)
-						matching_layers = map.map.getLayersBy("name", view.baseLayer);
-					if(matching_layers.length > 0)
-						map.map.setBaseLayer(matching_layers[0]);
+					if(!map.map.hasLayer(map.layers[it]))
+						map.map.addLayer(map.layers[it]);
+				});
 
-					for(var i=0; i<map.map.layers.length; i++) {
-						if(!map.map.layers[i].isBaseLayer && map.map.layers[i].displayInLayerSwitcher)
-							map.map.layers[i].setVisibility(view.layers.indexOf(map.map.layers[i].permalinkName) != -1 || view.layers.indexOf(map.map.layers[i].name) != -1);
-					}
+				var bounds = fpUtils.fpToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: -180 });
+
+				try {
+					map.map.getCenter(); // Throws exception if map not initialised
+					map.map.flyToBounds(bounds);
+				} catch(e) {
+					map.map.fitBounds(bounds);
 				}
 			};
 
 			map.addMarker = function(marker) {
 				map.deleteMarker(marker);
 
-				var feature = fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(marker.lon, marker.lat), map.map), fpUtils.createMarkerIcon(marker.colour));
-				feature.fpMarker = marker;
-				feature.fpOnClick = function(pos, evt) {
-					map.mapEvents.$emit("clickMarker", marker, evt);
-				};
-				map.layerLines.addFeatures([ feature ]);
-				map.markersById[marker.id] = feature;
+				map.markersById[marker.id] = L.marker([ marker.lat, marker.lon ], {
+					icon: fpUtils.createMarkerIcon(marker.colour)
+				})
+					.addTo(map.map)
+					.bindPopup($("<div/>")[0], map.popupOptions)
+					.on("popupopen", function(e) {
+						map.markersUi.renderMarkerPopup(marker, $(e.popup.getContent()), function() {
+							e.popup.update();
+						});
+					})
+					.on("popupclose", function(e) {
+						ng.element(e.popup.getContent()).scope().$destroy();
+					});
 			};
 
 			map.deleteMarker = function(marker) {
-				var markerObj = map.markersById[marker.id];
-				if(!markerObj)
+				if(!map.markersById[marker.id])
 					return;
 
+				map.markersById[marker.id].removeFrom(map.map);
 				delete map.markersById[marker.id];
-				map.layerLines.removeFeatures([ markerObj ]);
 			};
 
 			map.addLine = function(line) {
@@ -183,25 +237,29 @@
 				var trackPoints = [ ];
 				for(var i=0; i<line.trackPoints.length; i++) {
 					if(line.trackPoints[i] != null)
-						trackPoints.push(new OpenLayers.Geometry.Point(line.trackPoints[i].lon, line.trackPoints[i].lat));
+						trackPoints.push([ line.trackPoints[i].lat, line.trackPoints[i].lon ]);
 				}
 
 				if(trackPoints.length < 2)
 					return;
 
 				var style = {
-					strokeColor : '#'+line.colour,
-					strokeWidth : line.width,
-					strokeOpacity : 0.7
+					color : '#'+line.colour,
+					weight : line.width,
+					opacity : 0.7
 				};
 
-				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(trackPoints).transform(fpUtils.proj(), map.map.getProjectionObject()), null, style);
-				feature.fpLine = line;
-				feature.fpOnClick = function(clickPos, evt) {
-					map.mapEvents.$emit("clickLine", line, clickPos, evt);
-				};
-				map.layerLines.addFeatures([ feature ]);
-				map.linesById[line.id] = feature;
+				map.linesById[line.id] = L.polyline(trackPoints, style)
+					.addTo(map.map)
+					.bindPopup($("<div/>")[0], map.popupOptions)
+					.on("popupopen", function(e) {
+						map.linesUi.renderLinePopup(line, $(e.popup.getContent()), function() {
+							e.popup.update();
+						});
+					})
+					.on("popupclose", function(e) {
+						ng.element(e.popup.getContent()).scope().$destroy();
+					});
 			};
 
 			map.deleteLine = function(line) {
@@ -209,11 +267,11 @@
 				if(!lineObj)
 					return;
 
+				lineObj.removeFrom(map.map);
 				delete map.linesById[line.id];
-				map.layerLines.removeFeatures([lineObj]);
 			};
 
-			map.addClickListener = function(listener) {
+			/*map.addClickListener = function(listener) {
 				map.featureHandler.deactivate(); // Disable clicking on markers and lines
 				$(map.map.div).addClass("fp-clickHandler");
 
@@ -242,32 +300,37 @@
 			};
 
 			map.posToXy = function(pos) {
-				var lonlat = new OpenLayers.LonLat(pos.lon, pos.lat).transform(fpUtils.proj(), map.map.getProjectionObject());
+				var lonlat = new ol.LonLat(pos.lon, pos.lat).transform(fpUtils.proj(), map.map.getProjectionObject());
 				return map.map.getViewPortPxFromLonLat(lonlat);
-			};
+			};*/
 
 			map.getLayerInfo = function() {
 				var ret = { base: [ ], overlay: [ ] };
-				map.map.layers.forEach(function(it) {
-					if(!it.displayInLayerSwitcher)
-						return;
-					(it.isBaseLayer ? ret.base : ret.overlay).push({ visibility: it.getVisibility(), name: it.name, permalinkName: it.permalinkName, attribution: $sce.trustAsHtml(it.attribution) });
-				});
+				for(var i in map.layers) {
+					var it = map.layers[i];
+					(it.options.fpBase ? ret.base : ret.overlay).push({ visibility: map.map.hasLayer(it), name: it.options.fpName, permalinkName: it.options.fpKey, attribution: it.options.attribution });
+				}
 				return ret;
 			};
 
-			map.showLayer = function(permalinkName, show) {
-				var layers = map.map.getLayersBy("permalinkName", permalinkName);
-				if(layers.length == 0)
+			map.showLayer = function(key, show) {
+				if(!map.layers[key])
 					return;
 
-				if(layers[0].isBaseLayer)
-					map.map.setBaseLayer(layers[0]);
-				else
-					layers[0].setVisibility(show);
+				if(!map.layers[key].options.fpBase) {
+					if(!map.map.hasLayer(map.layers[key]) != !show)
+						show ? map.map.addLayer(map.layers[key]) : map.map.removeLayer(map.layers[key]);
+				} else if(!map.map.hasLayer(map.layers[key])) {
+					map.map.eachLayer(function(it) {
+						if(it.options.fpBase)
+							map.map.removeLayer(it);
+					});
+
+					map.map.addLayer(map.layers[key]);
+				}
 			};
 
-			map.makeLineMovable = function(origLine) {
+			/*map.makeLineMovable = function(origLine) {
 				map.featureHandler.deactivate();
 
 				var line = $.extend(true, { }, origLine);
@@ -308,8 +371,8 @@
 							var newIndex = line.routePoints.length;
 							var indexes = [ ];
 							for(var i=0; i<newIndex; i++) {
-								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
-								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new OpenLayers.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
+								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
+								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
 									newIndex = i;
 							}
 
@@ -377,16 +440,13 @@
 							map.map.events.unregister("mousemove", null, updatePosition);
 					}
 				};
-			};
+			};*/
 
 			map.myLocation = function() {
-				navigator.geolocation.getCurrentPosition(function(position) {
-					map.map.setCenter(fm.Util.toMapProjection(new ol.LonLat(position.coords.longitude, position.coords.latitude), map.map), 15);
-				});
+				map.map.locate({setView: true, maxZoom: 16});
 			};
 
 			map.messages = fpMapMessages(map);
-			map.popups = fpMapPopups(map);
 			map.markersUi = fpMapMarkers(map);
 			map.linesUi = fpMapLines(map);
 			map.viewsUi = fpMapViews(map);
@@ -397,15 +457,15 @@
 			map.aboutUi = fpMapAbout(map);
 
 			fpMapLegend(map);
-			fpMapSearch(map);
+			//fpMapSearch(map);
 
-			map.socket.$on("loadStart", function() {
+			/*map.socket.$on("loadStart", function() {
 				map.loadStart();
 			});
 
 			map.socket.$on("loadEnd", function() {
 				map.loadEnd();
-			});
+			});*/
 
 			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
 				if(loaded) {
@@ -450,10 +510,10 @@
 				}
 			});
 
-			map.mapEvents.$on("moveEnd", function(e, bbox) {
-				map.socket.updateBbox(bbox);
+			map.map.on("moveend", function() {
+				map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
 			});
 		}
 	});
 
-})(FacilPad, jQuery, angular, FacilMap, OpenLayers);
+})(FacilPad, jQuery, angular, null, null);
