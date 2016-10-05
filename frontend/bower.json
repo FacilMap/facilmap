@@ -16,7 +16,6 @@
   "dependencies": {
     "angular": "^1.5.8",
     "async": "^2.0.1",
-    "tablesorter": "jquery.tablesorter#^2.25.4",
     "marked": "^0.3.6",
     "angular-ui-sortable": "^0.14.3",
     "FileSaver": "https://raw.githubusercontent.com/eligrey/FileSaver.js/master/FileSaver.js",
