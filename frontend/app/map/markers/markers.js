@@ -140,6 +140,8 @@
 							if(err)
 								return map.messages.showMessage("danger", err);
 
+							markersUi._addMarker(marker);
+
 							markersById[marker.id].openPopup();
 							markersUi.editMarker(marker);
 						});
