@@ -24,7 +24,7 @@
 			var linesUi = {
 				_addLine: function(line) {
 					var trackPoints = [ ];
-					var p = (editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
+					var p = (editingLineId != null && editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
 					for(var i=0; i<p.length; i++) {
 						if(p[i] != null)
 							trackPoints.push(L.latLng(p[i].lat, p[i].lon));
@@ -59,7 +59,7 @@
 
 					linesById[line.id].setLatLngs(trackPoints).setStyle(style);
 
-					if(linesById[line.id].isPopupOpen()) {
+					if(line.id != null && linesById[line.id].isPopupOpen()) {
 						if(same)
 							linesUi._renderLinePopup(line);
 						else
