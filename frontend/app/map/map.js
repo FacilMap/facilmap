@@ -94,6 +94,20 @@
 			el.append(tpl);
 			$compile(tpl)(map.socket);
 
+			map.map.almostOver.options.distance = 10;
+
+			map.map.on('almost:over', function() {
+				$(map.map.getContainer()).addClass("fp-almostover");
+			});
+
+			map.map.on('almost:out', function() {
+				$(map.map.getContainer()).removeClass("fp-almostover");
+			});
+
+			map.map.on('almost:click', function(e) {
+				e.layer.fire('click', e, true);
+			});
+
 			// Map ID is not set yet as scope is not digested. So styles might change.
 			//$timeout(map.map.updateSize.bind(pad.map));
 
@@ -260,6 +274,8 @@
 					.on("popupclose", function(e) {
 						ng.element(e.popup.getContent()).scope().$destroy();
 					});
+
+				map.map.almostOver.addLayer(map.linesById[line.id]);
 			};
 
 			map.deleteLine = function(line) {
@@ -267,6 +283,7 @@
 				if(!lineObj)
 					return;
 
+				map.map.almostOver.removeLayer(lineObj);
 				lineObj.removeFrom(map.map);
 				delete map.linesById[line.id];
 			};

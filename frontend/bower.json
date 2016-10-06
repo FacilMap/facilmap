@@ -24,7 +24,9 @@
     "bootstrap": "^3.3.7",
     "bootstrap-touchspin": "^3.1.2",
     "jquery": "^3.1.1",
-    "leaflet": "^1.0.1"
+    "leaflet": "^1.0.1",
+    "leaflet-geometry-util": "https://github.com/makinacorpus/Leaflet.GeometryUtil/raw/master/src/leaflet.geometryutil.js",
+    "leaflet-almostover": "https://github.com/makinacorpus/Leaflet.AlmostOver/raw/gh-pages/src/leaflet.almostover.js"
   },
   "overrides": {
     "bootstrap": {
