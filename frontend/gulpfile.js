@@ -90,12 +90,14 @@ gulp.task("all", [ "deps", "app" ], function(callback) {
 				es.merge(
 					combine(
 						gulp.src([ "build/dependencies.js", "build/app.js" ]),
+						newer("build/all.js"),
 						sourcemaps.init({ loadMaps: true }),
 						concat("all.js"),
 						sourcemaps.write("./sourcemaps")
 					),
 					combine(
 						gulp.src([ "build/dependencies.css", "build/app.css" ]),
+						newer("build/all.css"),
 						sourcemaps.init({ loadMaps: true }),
 						concat("all.css"),
 						sourcemaps.write("./sourcemaps")
