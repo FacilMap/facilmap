@@ -181,26 +181,26 @@
 					if(this.filterFunc(feature))
 						return superFunc.apply(this, arguments);
 				};
-			}
+			}*/
 
 			map.getCurrentView = function() {
-				var ret = map.map.getExtent().clone().transform(map.map.getProjectionObject(), fpUtils.proj());
-
-				ret.baseLayer = map.map.baseLayer.permalinkName;
+				var ret = fpUtils.leafletToFpBbox(map.map.getBounds());
 				ret.layers = [ ];
 
-				for(var i=0; i<map.map.layers.length; i++) {
-					if(!map.map.layers[i].isBaseLayer && map.map.layers[i].displayInLayerSwitcher && map.map.layers[i].visibility)
-						ret.layers.push(map.map.layers[i].permalinkName || map.map.layers[i].name);
-				}
+				map.map.eachLayer(function(it) {
+					if(it.options.fpBase)
+						ret.baseLayer = it.options.fpKey;
+					else if(it.options.fpKey)
+						ret.layers.push(it.options.fpKey);
+				});
 
 				return ret;
-			};*/
+			};
 
 			map.displayView = function(view) {
 				var layers = [ view && map.layers[view.baseLayer] ? view.baseLayer : Object.keys(map.layers)[0] ].concat(view ? view.layers : [ ]);
 				map.map.eachLayer(function(it) {
-					if(layers.indexOf(it.fpKey) == -1)
+					if(it.options.fpKey && layers.indexOf(it.options.fpKey) == -1)
 						map.map.removeLayer(it);
 				});
 				layers.forEach(function(it) {
