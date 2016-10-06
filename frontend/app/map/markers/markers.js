@@ -31,7 +31,8 @@
 
 					el.html($templateCache.get("map/markers/view-marker.html"));
 					$compile(el[0])(scope);
-					$timeout(callback); // $compile only replaces variables on next digest
+
+					$timeout(function() { $timeout(callback); }); // $compile only replaces variables on next digest
 				},
 				editMarker: function(marker) {
 					var dialog = $uibModal.open({

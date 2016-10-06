@@ -34,7 +34,8 @@
 
 					el.html($templateCache.get("map/lines/view-line.html"));
 					$compile(el[0])(scope);
-					$timeout(callback); // $compile only replaces variables on next digest
+
+					$timeout(function() { $timeout(callback); }); // $compile only replaces variables on next digest
 				},
 				editLine: function(line) {
 					var dialog = $uibModal.open({

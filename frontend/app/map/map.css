@@ -83,19 +83,56 @@
 	left: -37px;
 }
 
+.fp-popup .leaflet-popup-content {
+	margin: 0;
+}
+
+.fp-popup p {
+	/* Restore bootstrap style, is overridden by leaflet */
+	margin: 0 0 10px;
+}
+
 .fp-popup .content {
+	height: 200px;
+	overflow: auto;
+
+	/* Make space for buttons at the bottom */
 	padding-bottom: 1.5em;
+
+	/* Replace padding by margin to move horizontal scrollbar a bit to the left so that it can be covered by .buttons */
+	/* Make space for close button on the top and don't cover round corners on top and bottom */
+	padding-left: 0;
+	margin: 20px 0 7px 15px;
+}
+
+.fp-popup .content h2 {
+	margin-top: 0;
 }
 
 .fp-popup .buttons {
 	position: absolute;
 	background: #fff;
 	bottom: 0;
-	left: 0;
-	right: 15px;
-	padding: 5px 10px;
+	left: 15px;
+	right: 16px;
+	padding: 5px 0;
 	box-shadow: 0 0 10px #fff;
 	border-bottom-left-radius: 10px;
+}
+
+/* Copy dl-horizontal styles, modify sizing, also apply for small screens (as popup size is always the same) */
+.fp-popup .dl-horizontal dt {
+	float: left;
+	width: 29%;
+	overflow: hidden;
+	clear: left;
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fp-popup .dl-horizontal dd {
+	margin-left: 33%;
 }
 
 .pos,.distance {

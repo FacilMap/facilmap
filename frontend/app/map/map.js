@@ -83,8 +83,8 @@
 			});
 
 			map.popupOptions = {
+				minWidth: 350,
 				maxWidth: 350,
-				maxHeight: 200,
 				className: "fp-popup"
 			};
 
