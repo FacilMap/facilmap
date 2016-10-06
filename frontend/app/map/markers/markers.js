@@ -15,7 +15,7 @@
 			var markersUi = {
 				_addMarker : function(marker) {
 					if(!markersById[marker.id]) {
-						markersById[marker.id] = L.marker([ 0, 0 ]).addTo(map.map)
+						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fpUtils.createMarkerIcon(marker.colour)}).addTo(map.map)
 							.bindPopup($("<div/>")[0], map.popupOptions)
 							.on("popupopen", function(e) {
 								markersUi._renderMarkerPopup(marker);
