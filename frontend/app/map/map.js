@@ -32,7 +32,6 @@
 
 			//map.socket.id = id; // To be in scope for template
 
-			map.markersById = { };
 			map.linesById = { };
 
 			map.layers = { };
@@ -46,37 +45,43 @@
 					fpName: "MapSurfer Road",
 					fpBase: true,
 					fpKey: "MSfR",
-					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 					fpName: "Mapnik",
 					fpBase: true,
 					fpKey: "Mpnk",
-					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
 					fpName: "OpenCycleMap",
 					fpBase: true,
 					fpKey: "OCyc",
-					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					noWrap: true
 				}),
 				L.tileLayer("http://{s}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 					fpName: "Hike & Bike Map",
 					fpBase: true,
 					fpKey: "HiBi",
-					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>')
+					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					noWrap: true
 				}),
 				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
 					fpName: "Public transportation",
 					fpKey: "OPTM",
 					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
-					zIndex: 300
+					zIndex: 300,
+					noWrap: true
 				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
 					fpName: "Relief",
 					fpKey: "Rlie",
 					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies">NASA</a>'),
-					zIndex: 300
+					zIndex: 300,
+					noWrap: true
 				})
 			].forEach(function(it) {
 				map.layers[it.options.fpKey] = it;
@@ -216,32 +221,6 @@
 				}
 			};
 
-			map.addMarker = function(marker) {
-				map.deleteMarker(marker);
-
-				map.markersById[marker.id] = L.marker([ marker.lat, marker.lon ], {
-					icon: fpUtils.createMarkerIcon(marker.colour)
-				})
-					.addTo(map.map)
-					.bindPopup($("<div/>")[0], map.popupOptions)
-					.on("popupopen", function(e) {
-						map.markersUi.renderMarkerPopup(marker, $(e.popup.getContent()), function() {
-							e.popup.update();
-						});
-					})
-					.on("popupclose", function(e) {
-						ng.element(e.popup.getContent()).scope().$destroy();
-					});
-			};
-
-			map.deleteMarker = function(marker) {
-				if(!map.markersById[marker.id])
-					return;
-
-				map.markersById[marker.id].removeFrom(map.map);
-				delete map.markersById[marker.id];
-			};
-
 			map.addLine = function(line) {
 				map.deleteLine(line);
 
@@ -288,31 +267,30 @@
 				delete map.linesById[line.id];
 			};
 
-			/*map.addClickListener = function(listener) {
-				map.featureHandler.deactivate(); // Disable clicking on markers and lines
-				$(map.map.div).addClass("fp-clickHandler");
+			map.map.createPane("fpClickListener");
+			$(map.map.getPane("fpClickListener")).css("z-index", 620);
+			var transparentLayer = L.imageOverlay('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', [[90,-180],[-90,180]], {
+				className: "fp-clickHandler",
+				pane: "fpClickListener",
+				interactive: true
+			});
 
-				var unregister;
+			map.addClickListener = function(listener) {
+				transparentLayer.addTo(map.map).on("click", l);
 
-				var ret = {
-					cancel: function() {
-						unregister();
-						$(map.map.div).removeClass("fp-clickHandler");
-						map.featureHandler.activate();
-					}
+				function l(e) {
+					transparentLayer.removeFrom(map.map).off("click", l);
+
+					if(e)
+						listener({ lat: e.latlng.lat, lon: e.latlng.lng });
+				}
+
+				return {
+					cancel: l
 				};
-
-				setTimeout(function() {
-					unregister = map.mapEvents.$on("click", function(e, pos) {
-						ret.cancel();
-						listener(pos);
-					});
-				}, 0);
-
-				return ret;
 			};
 
-			map.xyToPos = function(xy) {
+			/*map.xyToPos = function(xy) {
 				return map.map.getLonLatFromViewPortPx(xy).clone().transform(map.map.getProjectionObject(), fpUtils.proj());
 			};
 
@@ -491,14 +469,6 @@
 					}, 0);
 					loadedWatcher();
 				}
-			});
-
-			map.socket.on("marker", function(data) {
-				map.addMarker(data);
-			});
-
-			map.socket.on("deleteMarker", function(data) {
-				map.deleteMarker(data);
 			});
 
 			map.socket.on("line", function(data) {

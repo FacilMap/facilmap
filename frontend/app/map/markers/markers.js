@@ -1,38 +1,69 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils, $templateCache, $compile, $timeout) {
+	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils, $templateCache, $compile, $timeout, L) {
 		return function(map) {
-			var ret = {
-				renderMarkerPopup: function(marker, el, callback) {
+			var markersById = { };
+
+			map.socket.on("marker", function(data) {
+				markersUi._addMarker(data);
+			});
+
+			map.socket.on("deleteMarker", function(data) {
+				markersUi._deleteMarker(data);
+			});
+
+			var markersUi = {
+				_addMarker : function(marker) {
+					if(!markersById[marker.id]) {
+						markersById[marker.id] = L.marker([ 0, 0 ]).addTo(map.map)
+							.bindPopup($("<div/>")[0], map.popupOptions)
+							.on("popupopen", function(e) {
+								markersUi._renderMarkerPopup(marker);
+							})
+							.on("popupclose", function(e) {
+								ng.element(e.popup.getContent()).scope().$destroy();
+							});
+					}
+
+					markersById[marker.id]
+						.setLatLng([ marker.lat, marker.lon ])
+						.setIcon(fpUtils.createMarkerIcon(marker.colour));
+
+					if(markersById[marker.id].isPopupOpen())
+						markersUi._renderMarkerPopup(marker);
+				},
+				_deleteMarker : function(marker) {
+					if(!markersById[marker.id])
+						return;
+
+					markersById[marker.id].removeFrom(map.map);
+					delete markersById[marker.id];
+				},
+				_renderMarkerPopup: function(marker) {
 					var scope = map.socket.$new();
 
 					scope.marker = marker;
 
 					scope.edit = function() {
-						ret.editMarker(scope.marker);
+						markersUi.editMarker(scope.marker);
 					};
 
 					scope.move = function() {
-						ret.moveMarker(scope.marker);
+						markersUi.moveMarker(scope.marker);
 					};
 
 					scope['delete'] = function() {
-						ret.deleteMarker(scope.marker);
+						markersUi.deleteMarker(scope.marker);
 					};
 
-					/*scope.$watch("markers["+fpUtils.quoteJavaScript(marker.id)+"]", function(newVal) {
-						if(newVal == null)
-							popup.close();
-						else {
-							scope.marker = newVal;
-							popup.updatePosition(newVal);
-						}
-					}, true);*/
+					var popup = markersById[marker.id].getPopup();
+					var el = popup.getContent();
+					$(el).html($templateCache.get("map/markers/view-marker.html"));
+					$compile(el)(scope);
 
-					el.html($templateCache.get("map/markers/view-marker.html"));
-					$compile(el[0])(scope);
-
-					$timeout(function() { $timeout(callback); }); // $compile only replaces variables on next digest
+					$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
+						popup.update();
+					}); });
 				},
 				editMarker: function(marker) {
 					var dialog = $uibModal.open({
@@ -53,25 +84,33 @@
 					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				},
 				moveMarker: function(marker) {
-					var message = map.messages.showMessage("info", "Click somewhere on the map to reposition the marker there.", [
-						{ label: "Cancel", click: function() {
-							message.close();
-							listener.cancel();
-						}}
-					], null, function() { listener.cancel() });
+					if(!markersById[marker.id])
+						return;
 
-					map.popups.closeAll();
-
-					var listener = map.addClickListener(function(pos) {
+					function _finish(save) {
 						message.close();
 
-						map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lon }, function(err) {
-							if(err)
-								return map.messages.showMessage("danger", err);
+						markersById[marker.id].dragging.disable();
 
-							ret.viewMarker(marker);
-						});
-					});
+						if(save) {
+							var pos = markersById[marker.id].getLatLng();
+							map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lng }, function(err) {
+								if(err)
+									return map.messages.showMessage("danger", err);
+
+								markersById[marker.id].openPopup();
+							});
+						}
+					}
+
+					map.map.closePopup();
+
+					var message = map.messages.showMessage("info", "Drag the marker or click somewhere on the map to reposition it there.", [
+						{ label: "Save", click: _finish.bind(null, true) },
+						{ label: "Cancel", click: _finish}
+					], null, _finish);
+
+					markersById[marker.id].dragging.enable();
 				},
 				deleteMarker: function(marker) {
 					map.socket.emit("deleteMarker", marker, function(err) {
@@ -87,7 +126,7 @@
 						}}
 					], null, function() { listener.cancel(); });
 
-					map.popups.closeAll();
+					map.map.closePopup();
 
 					var listener = map.addClickListener(function(pos) {
 						message.close();
@@ -96,14 +135,14 @@
 							if(err)
 								return map.messages.showMessage("danger", err);
 
-							ret.viewMarker(marker);
-							ret.editMarker(marker);
+							markersById[marker.id].openPopup();
+							markersUi.editMarker(marker);
 						});
 					});
 				}
 			};
 
-			return ret;
+			return markersUi;
 		};
 	});
 
@@ -125,7 +164,7 @@
 		};
 
 		$scope.$watch("marker.colour", function() {
-			map.addMarker($scope.marker);
+			map.markersUi._addMarker($scope.marker);
 		});
 	});
 

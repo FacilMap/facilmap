@@ -15,12 +15,12 @@
 						type: type,
 						message: message,
 						buttons: buttons,
-						close: function() {
+						close: function(callOnClose) {
 							var idx = scope.messages.indexOf(messageObj);
 							if(idx != -1)
 								scope.messages = scope.messages.slice(0, idx).concat(scope.messages.slice(idx+1));
 
-							onclose && onclose();
+							callOnClose && onclose && onclose();
 
 							scope.$evalAsync();
 						}

@@ -6,16 +6,16 @@
 	cursor: pointer;
 }
 
-#map.fp-clickHandler {
-	cursor: crosshair;
-}
-
 .fp-map {
 	position: relative;
 }
 
 .fp-almostover {
 	cursor: pointer !important;
+}
+
+.leaflet-fpClickListener-pane .leaflet-interactive {
+	cursor: crosshair;
 }
 
 .fp-map-disabled-cover {
