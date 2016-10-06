@@ -22,8 +22,6 @@ var files = [
 	"app/**/*.html"
 ];
 
-var deps = mainBowerFiles();
-
 gulp.task("default", [ "all" ]);
 
 gulp.task("clean", function() {
@@ -35,7 +33,7 @@ gulp.task("clean", function() {
 
 gulp.task("deps", function() {
 	return combine(
-		gulp.src(deps, { base: process.cwd() + "/" }),
+		gulp.src(mainBowerFiles(), { base: process.cwd() + "/" }),
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
 				newer("build/dependencies.js"),
@@ -120,5 +118,5 @@ gulp.task("all", [ "deps", "app" ], function(callback) {
 });
 
 gulp.task("watch", [ "all" ], function() {
-	gulp.watch([ "index.html" ].concat(files), [ "all" ]);
+	gulp.watch([ "index.html", "bower.json" ].concat(files), [ "all" ]);
 });
