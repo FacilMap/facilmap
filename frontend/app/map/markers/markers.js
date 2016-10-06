@@ -61,6 +61,11 @@
 					$(el).html($templateCache.get("map/markers/view-marker.html"));
 					$compile(el)(scope);
 
+					// Prevent popup close on button click
+					$("button", el).click(function(e) {
+						e.preventDefault();
+					});
+
 					$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
 						popup.update();
 					}); });
