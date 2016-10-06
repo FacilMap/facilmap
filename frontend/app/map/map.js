@@ -141,11 +141,9 @@
 					obj.fpOnClick(map.xyToPos(map.featureHandler.up), map.featureHandler.evt);
 				}
 			}, { map: map.map });
-			map.featureHandler.activate();
+			map.featureHandler.activate();*/
 
-			var dragIcon = fpUtils.createMarkerIcon("ffd700");
-			map.dragControl = new fm.Control.DragLine(map.layerLines, dragIcon);
-			map.map.addControl(map.dragControl);*/
+			map.dragIcon = fpUtils.createMarkerIcon("ffd700");
 
 			map.map.on("click", function(e) {
 				map.mapEvents.$emit("click", e.latlng);
@@ -289,91 +287,7 @@
 				}
 			};
 
-			/*map.makeLineMovable = function(origLine) {
-				map.featureHandler.deactivate();
-
-				var line = $.extend(true, { }, origLine);
-				line.trackPoints = line.routePoints;
-				var markers = [ ];
-				for(var i=0; i<line.routePoints.length; i++)
-					markers.push(fm.Util.createIconVector(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), dragIcon));
-				map.layerLines.addFeatures(markers);
-				map.addLine(line);
-
-				var dragExcludeBkp = map.layerLines._excludeFeature;
-				map.layerLines._excludeFeature = function(feature) {
-					return dragExcludeBkp.apply(this, arguments) || (!feature.fmStartLonLat && feature != map.linesById[line.id] && markers.indexOf(feature) == -1);
-				};
-
-				map.dragControl.onDblClick = function(feature) {
-					var idx = markers.indexOf(feature);
-					if(idx != -1) {
-						line.routePoints.splice(idx, 1);
-						map.addLine(line);
-
-						markers.splice(idx, 1);
-						map.layerLines.removeFeatures([ feature ]);
-						feature.destroy();
-					}
-				};
-
-				map.dragControl.onDrag = function(feature) {
-					var idx = markers.indexOf(feature);
-					if(idx != -1) { // Existing marker was dragged
-						var lonlat = fm.Util.fromMapProjection(new ol.LonLat(feature.geometry.x, feature.geometry.y), map.map);
-						line.routePoints[idx] = { lat: lonlat.lat, lon: lonlat.lon };
-						map.addLine(line);
-					}
-					else if(feature.fmStartLonLat) { // New marker
-						var index = fm.Util.lonLatIndexOnLine(feature.fmStartLonLat, feature.fmLine.geometry);
-						if(index != null) {
-							var newIndex = line.routePoints.length;
-							var indexes = [ ];
-							for(var i=0; i<newIndex; i++) {
-								indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
-								if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
-									newIndex = i;
-							}
-
-							var lonlat = fm.Util.fromMapProjection(feature.fmStartLonLat, map.map);
-							line.routePoints.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
-							markers.splice(newIndex, 0, feature);
-							map.addLine(line);
-						}
-						else
-							console.warn("Index = null", feature.fmStartLonLat);
-					}
-				};
-
-				map.dragControl.onComplete = function(feature) {
-					if(feature.fmStartLonLat)
-						delete feature.fmStartLonLat;
-				};
-
-				map.dragControl.activate();
-
-				return {
-					done : function() {
-						end();
-						return line.routePoints;
-					}
-				};
-
-				function end() {
-					if(markers.indexOf(map.dragControl.feature) != -1)
-						map.dragControl._simulateOverFeature(null);
-
-					map.layerLines.removeFeatures(markers);
-					for(var i=0; i<markers.length; i++)
-						markers[i].destroy();
-
-					map.layerLines._excludeFeature = dragExcludeBkp;
-					map.dragControl.deactivate();
-					map.featureHandler.activate();
-				}
-			};
-
-			map.loadStart = function() {
+			/*map.loadStart = function() {
 				map.map.getControlsByClass("FacilMap.Control.Loading")[0].loadStart();
 			};
 

@@ -3,6 +3,7 @@
 	fp.app.factory("fpMapLines", function(fpUtils, $uibModal, $templateCache, $compile, $timeout) {
 		return function(map) {
 			var linesById = { };
+			var editingLineId = null;
 
 			map.socket.on("line", function(data) {
 				setTimeout(function() { // trackPoints needs to be copied over
@@ -23,9 +24,10 @@
 			var linesUi = {
 				_addLine: function(line) {
 					var trackPoints = [ ];
-					for(var i=0; i<(line.trackPoints || [ ]).length; i++) {
-						if(line.trackPoints[i] != null)
-							trackPoints.push(L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon));
+					var p = (editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
+					for(var i=0; i<p.length; i++) {
+						if(p[i] != null)
+							trackPoints.push(L.latLng(p[i].lat, p[i].lon));
 					}
 
 					if(trackPoints.length < 2)
@@ -103,6 +105,86 @@
 					$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
 						popup.update();
 					}); });
+				},
+				_makeLineMovable: function(line) {
+					var markers = [ ];
+					var routePointsBkp = ng.copy(line.routePoints);
+
+					var unregisterWatcher = map.socket.$watch(function() { return map.socket.lines[line.id].routePoints; }, function() {
+						if(ng.equals(routePointsBkp, map.socket.lines[line.id].routePoints))
+							map.socket.lines[line.id].routePoints = line.routePoints;
+						else
+							routePointsBkp = ng.copy(line.routePoints);
+
+						line = map.socket.lines[line.id];
+						end();
+						start();
+					});
+
+					function start() {
+						editingLineId = line.id;
+
+						line.routePoints.forEach(function(it) {
+							var marker = L.marker([ it.lat, it.lon ], {
+								icon: map.dragIcon,
+								draggable: true
+							}).addTo(map.map)
+								.on("dblclick", function() {
+									var idx = markers.indexOf(marker);
+									markers.splice(idx, 1);
+									line.routePoints.splice(idx, 1);
+									marker.remove();
+									linesUi._addLine(line);
+								})
+								.on("drag", function() {
+									var idx = markers.indexOf(marker);
+									var latlng = marker.getLatLng();
+									line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
+									linesUi._addLine(line);
+								});
+
+
+							markers.push(marker);
+						});
+
+						linesUi._addLine(line);
+					}
+
+						/*else if(feature.fmStartLonLat) { // New marker
+							var index = fm.Util.lonLatIndexOnLine(feature.fmStartLonLat, feature.fmLine.geometry);
+							if(index != null) {
+								var newIndex = line.routePoints.length;
+								var indexes = [ ];
+								for(var i=0; i<newIndex; i++) {
+									indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
+									if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
+										newIndex = i;
+								}
+
+								var lonlat = fm.Util.fromMapProjection(feature.fmStartLonLat, map.map);
+								line.routePoints.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
+								markers.splice(newIndex, 0, feature);
+								map.addLine(line);
+							}
+							else
+								console.warn("Index = null", feature.fmStartLonLat);
+						}*/
+
+					function end() {
+						editingLineId = null;
+
+						for(var i=0; i<markers.length; i++)
+							markers[i].remove();
+						markers = [ ];
+					}
+
+					return {
+						done : function() {
+							unregisterWatcher();
+							end();
+							return line.routePoints;
+						}
+					};
 				},
 				editLine: function(line) {
 					var dialog = $uibModal.open({
@@ -188,30 +270,27 @@
 					});
 				},
 				moveLine: function(line) {
-					var movable = map.makeLineMovable(line);
+					var movable = linesUi._makeLineMovable(line);
 
 					var message = map.messages.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
 						{ label: "Finish", click: done.bind(null, true) },
 						{ label: "Cancel", click: done.bind(null, false) }
 					], null, done.bind(null, false, true));
 
-					map.popups.closeAll();
+					map.map.closePopup();
 
 					function done(save, noClose) {
 						var newPoints = movable.done();
 						linesUi._addLine(line);
-						linesUi.viewLine(line);
+						linesById[line.id].openPopup();
 
-						if(!save && !noClose) {
+						if(!noClose) {
 							message.close();
 						}
 
 						if(save) {
 							line.trackPoints = { };
 							map.socket.emit("editLine", { id: line.id, routePoints: newPoints }, function(err) {
-								if(!noClose)
-									message.close();
-
 								if(err)
 									map.messages.showMessage("danger", err);
 							});
