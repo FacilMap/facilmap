@@ -287,15 +287,25 @@
 				}
 			};
 
-			/*map.loadStart = function() {
-				map.map.getControlsByClass("FacilMap.Control.Loading")[0].loadStart();
+			map.socket.loading = 0;
+
+			map.loadStart = function() {
+				map.socket.loading++;
 			};
 
 			map.loadEnd = function() {
-				map.map.getControlsByClass("FacilMap.Control.Loading")[0].loadEnd();
+				map.socket.loading--;
 			};
 
-			map.showLabel = function(label, pos, offset, updateOnMove) {
+			map.socket.$on("loadStart", function() {
+				map.loadStart();
+			});
+
+			map.socket.$on("loadEnd", function() {
+				map.loadEnd();
+			});
+
+			/*map.showLabel = function(label, pos, offset, updateOnMove) {
 				var xy = map.posToXy(pos);
 				var el = $("<div/>").addClass("fp-map-label").text(label).css({ top: (xy.y+offset.y)+"px", left: (xy.x+offset.x)+"px" }).appendTo(map.map.div);
 
@@ -331,14 +341,6 @@
 
 			fpMapLegend(map);
 			//fpMapSearch(map);
-
-			/*map.socket.$on("loadStart", function() {
-				map.loadStart();
-			});
-
-			map.socket.$on("loadEnd", function() {
-				map.loadEnd();
-			});*/
 
 			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
 				if(loaded) {

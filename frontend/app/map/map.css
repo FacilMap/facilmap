@@ -45,6 +45,17 @@
 	font-weight:bold;
 }
 
+.fp-map-spinner {
+	position:absolute;
+	bottom: 7px;
+	left: 102px;
+	height:28px;
+	width:29px;
+	padding:16px 16px 16px 15px;
+	background:url(../../assets/img/spinner-background.png);
+	box-sizing: content-box;
+}
+
 .olMap .fmControlLoading {
 	top: auto;
 	bottom: 7px;

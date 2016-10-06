@@ -20,3 +20,7 @@
 .fp-toolbox {
 	z-index: 1020;
 }
+
+.fp-map-spinner,.fp-attribution-icon {
+	z-index: 20000;
+}
