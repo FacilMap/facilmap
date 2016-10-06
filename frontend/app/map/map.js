@@ -32,8 +32,6 @@
 
 			//map.socket.id = id; // To be in scope for template
 
-			map.linesById = { };
-
 			map.layers = { };
 			[
 				L.gridLayer({
@@ -221,52 +219,6 @@
 				}
 			};
 
-			map.addLine = function(line) {
-				map.deleteLine(line);
-
-				if(!line.trackPoints || line.trackPoints.length < 2)
-					return;
-
-				var trackPoints = [ ];
-				for(var i=0; i<line.trackPoints.length; i++) {
-					if(line.trackPoints[i] != null)
-						trackPoints.push([ line.trackPoints[i].lat, line.trackPoints[i].lon ]);
-				}
-
-				if(trackPoints.length < 2)
-					return;
-
-				var style = {
-					color : '#'+line.colour,
-					weight : line.width,
-					opacity : 0.7
-				};
-
-				map.linesById[line.id] = L.polyline(trackPoints, style)
-					.addTo(map.map)
-					.bindPopup($("<div/>")[0], map.popupOptions)
-					.on("popupopen", function(e) {
-						map.linesUi.renderLinePopup(line, $(e.popup.getContent()), function() {
-							e.popup.update();
-						});
-					})
-					.on("popupclose", function(e) {
-						ng.element(e.popup.getContent()).scope().$destroy();
-					});
-
-				map.map.almostOver.addLayer(map.linesById[line.id]);
-			};
-
-			map.deleteLine = function(line) {
-				var lineObj = map.linesById[line.id];
-				if(!lineObj)
-					return;
-
-				map.map.almostOver.removeLayer(lineObj);
-				lineObj.removeFrom(map.map);
-				delete map.linesById[line.id];
-			};
-
 			map.map.createPane("fpClickListener");
 			$(map.map.getPane("fpClickListener")).css("z-index", 620);
 			var transparentLayer = L.imageOverlay('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', [[90,-180],[-90,180]], {
@@ -275,18 +227,30 @@
 				interactive: true
 			});
 
-			map.addClickListener = function(listener) {
-				transparentLayer.addTo(map.map).on("click", l);
+			map.addClickListener = function(listener, moveListener) {
+				transparentLayer.addTo(map.map).on("click", listenClick);
 
-				function l(e) {
-					transparentLayer.removeFrom(map.map).off("click", l);
+				if(moveListener)
+					transparentLayer.on("mousemove", listenMove);
 
-					if(e)
+				function listenMove(e) {
+					moveListener({ lat: e.latlng.lat, lon: e.latlng.lng });
+				}
+
+				function listenClick(e) {
+					transparentLayer.removeFrom(map.map).off("click", listenClick);
+
+					if(moveListener)
+						transparentLayer.off("mousemove", listenMove);
+
+					if(e) {
+						e.originalEvent.preventDefault();
 						listener({ lat: e.latlng.lat, lon: e.latlng.lng });
+					}
 				}
 
 				return {
-					cancel: l
+					cancel: listenClick
 				};
 			};
 
@@ -469,22 +433,6 @@
 					}, 0);
 					loadedWatcher();
 				}
-			});
-
-			map.socket.on("line", function(data) {
-				setTimeout(function() { // trackPoints needs to be copied over
-					map.addLine(map.socket.lines[data.id]);
-				}, 0);
-			});
-
-			map.socket.on("deleteLine", function(data) {
-				map.deleteLine(data);
-			});
-
-			map.socket.on("linePoints", function(data) {
-				setTimeout(function() {
-					map.addLine(map.socket.lines[data.id]);
-				}, 0);
 			});
 
 			var errorMessage = null;

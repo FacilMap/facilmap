@@ -2,40 +2,107 @@
 
 	fp.app.factory("fpMapLines", function(fpUtils, $uibModal, $templateCache, $compile, $timeout) {
 		return function(map) {
-			var ret = {
-				renderLinePopup: function(line, el, callback) {
+			var linesById = { };
+
+			map.socket.on("line", function(data) {
+				setTimeout(function() { // trackPoints needs to be copied over
+					linesUi._addLine(map.socket.lines[data.id]);
+				}, 0);
+			});
+
+			map.socket.on("deleteLine", function(data) {
+				linesUi._deleteLine(data);
+			});
+
+			map.socket.on("linePoints", function(data) {
+				setTimeout(function() {
+					linesUi._addLine(map.socket.lines[data.id]);
+				}, 0);
+			});
+
+			var linesUi = {
+				_addLine: function(line) {
+					var trackPoints = [ ];
+					for(var i=0; i<(line.trackPoints || [ ]).length; i++) {
+						if(line.trackPoints[i] != null)
+							trackPoints.push(L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon));
+					}
+
+					if(trackPoints.length < 2)
+						return linesUi._deleteLine(line);
+
+					if(!linesById[line.id]) {
+						linesById[line.id] = L.polyline([ ]).addTo(map.map);
+						map.map.almostOver.addLayer(linesById[line.id]);
+
+						if(line.id != null) { // We don't want a popup for lines that we are drawing right now
+							linesById[line.id]
+								.bindPopup($("<div/>")[0], map.popupOptions)
+								.on("popupopen", function(e) {
+									linesUi._renderLinePopup(line);
+								})
+								.on("popupclose", function(e) {
+									ng.element(e.popup.getContent()).scope().$destroy();
+								});
+						}
+					}
+
+					var style = {
+						color : '#'+line.colour,
+						weight : line.width,
+						opacity : 0.7
+					};
+
+					var same = ng.equals(linesById[line.id].getLatLngs(), trackPoints);
+
+					linesById[line.id].setLatLngs(trackPoints).setStyle(style);
+
+					if(linesById[line.id].isPopupOpen()) {
+						if(same)
+							linesUi._renderLinePopup(line);
+						else
+							linesById[line.id].openPopup();
+					}
+				},
+				_deleteLine: function(line) {
+					var lineObj = linesById[line.id];
+					if(!lineObj)
+						return;
+
+					map.map.almostOver.removeLayer(lineObj);
+					lineObj.removeFrom(map.map);
+					delete linesById[line.id];
+				},
+				_renderLinePopup: function(line) {
 					var scope = map.socket.$new();
 
 					scope.line = line;
 
 					scope.edit = function() {
-						ret.editLine(scope.line);
+						linesUi.editLine(scope.line);
 					};
 
 					scope.move = function() {
-						ret.moveLine(scope.line);
+						linesUi.moveLine(scope.line);
 					};
 
 					scope['delete'] = function() {
-						ret.deleteLine(scope.line);
+						linesUi.deleteLine(scope.line);
 					};
 
-					/*map.socket.$watch("lines["+fpUtils.quoteJavaScript(line.id)+"]", function(newVal) {
-						if(newVal == null)
-							scope.popup.close();
-						else
-							scope.line = newVal;
+					var popup = linesById[line.id].getPopup();
+					var el = popup.getContent();
+					$(el).html($templateCache.get("map/lines/view-line.html"));
+					$compile(el)(scope);
+
+					// Prevent popup close on button click
+					$("button", el).click(function(e) {
+						e.preventDefault();
 					});
 
-					scope.$watch("line.routePoints", function(newVal, oldVal) {
-						if(!ng.equals(oldVal, newVal))
-							scope.popup.updatePosition(newVal[newVal.length-1]);
-					}, true);*/
-
-					el.html($templateCache.get("map/lines/view-line.html"));
-					$compile(el[0])(scope);
-
-					$timeout(function() { $timeout(callback); }); // $compile only replaces variables on next digest
+					$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
+						popup.update();
+					}); });
 				},
 				editLine: function(line) {
 					var dialog = $uibModal.open({
@@ -56,7 +123,7 @@
 					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				},
 				addLine: function(type) {
-					map.popups.closeAll();
+					map.map.closePopup();
 
 					map.socket.emit("getLineTemplate", { typeId: type.id }, function(err, line) {
 						if(err)
@@ -70,30 +137,35 @@
 						], null, finishLine.bind(null, false, true));
 
 						var handler = null;
-						var unregister = null;
 
 						function addPoint(pos) {
 							line.routePoints.push(pos);
 							line.trackPoints = [ ].concat(line.routePoints, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
-							map.addLine(line);
-							handler = map.addClickListener(mapClick);
+							linesUi._addLine(line);
+							handler = map.addClickListener(mapClick, mouseMove);
 						}
 
 						function finishLine(save, noClose) {
 							if(!noClose)
 								message.close();
 
-							unregister();
 							handler && handler.cancel();
-							map.deleteLine(line);
+							linesUi._deleteLine(line);
 
 							if(save && line.routePoints.length >= 2) {
 								map.socket.emit("addLine", { routePoints: line.routePoints, typeId: type.id }, function(err, line) {
 									if(err)
 										return map.messages.showMessage("danger", err);
 
-									ret.viewLine(line);
-									ret.editLine(line);
+									linesUi.editLine(line);
+
+									// We have to wait until the server sends us the trackPoints of the line
+									var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
+										if(exists) {
+											linesById[line.id].openPopup();
+											removeWatcher();
+										}
+									});
 								});
 							}
 						}
@@ -105,15 +177,14 @@
 								addPoint(pos);
 						};
 
-						var mouseMove = function(e, pos) {
+						var mouseMove = function(pos) {
 							if(line.trackPoints.length > 0) {
 								line.trackPoints[line.trackPoints.length-1] = pos;
-								map.addLine(line);
+								linesUi._addLine(line);
 							}
 						};
 
-						handler = map.addClickListener(mapClick);
-						unregister = map.mapEvents.$on("mouseMove", mouseMove);
+						handler = map.addClickListener(mapClick, mouseMove);
 					});
 				},
 				moveLine: function(line) {
@@ -128,8 +199,8 @@
 
 					function done(save, noClose) {
 						var newPoints = movable.done();
-						map.addLine(line);
-						ret.viewLine(line);
+						linesUi._addLine(line);
+						linesUi.viewLine(line);
 
 						if(!save && !noClose) {
 							message.close();
@@ -155,7 +226,7 @@
 				}
 			};
 
-			return ret;
+			return linesUi;
 		};
 	});
 
@@ -177,7 +248,7 @@
 		};
 
 		$scope.$watchGroup([ "line.colour", "line.width" ], function() {
-			map.addLine($scope.line);
+			map.linesUi._addLine($scope.line);
 		});
 	});
 
