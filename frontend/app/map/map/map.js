@@ -97,7 +97,7 @@
 
 			map.map = L.map(el[0]);
 
-			var tpl = $($templateCache.get("map/map.html"));
+			var tpl = $($templateCache.get("map/map/map.html"));
 			el.append(tpl);
 			$compile(tpl)(map.socket);
 

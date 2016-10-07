@@ -15,6 +15,7 @@ var uglify = require("gulp-uglify");
 var mainBowerFiles = require("main-bower-files");
 var combine = require("stream-combiner");
 var sourcemaps = require("gulp-sourcemaps");
+var img64 = require("./gulpfile-img64");
 
 var files = [
 	"app/**/*.js",
@@ -62,7 +63,10 @@ gulp.task("deps", function() {
 gulp.task("app", function() {
 	return combine(
 		gulp.src(files, { base: process.cwd() + "/" }),
-		gulpIf("**/*.html", templateCache({ module: "facilpad", base: process.cwd() + "/app/" })),
+		gulpIf("**/*.html", combine(
+			img64(),
+			templateCache({ module: "facilpad", base: process.cwd() + "/app/" })
+		)),
 		gulpIf("**/*.js", combine(
 			newer("build/app.js"),
 			sourcemaps.init(),

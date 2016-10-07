@@ -6,7 +6,8 @@
 		<meta name="robots" content="index,nofollow" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="shortcut icon" href="assets/img/favicon.png">
-		<link rel="stylesheet" href="build/all.css">
+		<!-- inject:css -->
+		<!-- endinject -->
 		<style type="text/css">
 			#loading {
 				position: absolute;
@@ -75,7 +76,10 @@
 				check();
 			})();
 		</script>
-		<script src="build/all.js"></script>
+
+		<!-- inject:js -->
+		<!-- endinject -->
+
 		<script src="http://localhost:40829/socket.io/socket.io.js"></script>
 	</body>
 </html>
