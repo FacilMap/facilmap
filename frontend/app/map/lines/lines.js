@@ -45,6 +45,18 @@
 								})
 								.on("popupclose", function(e) {
 									ng.element(e.popup.getContent()).scope().$destroy();
+								})
+								.on("fp-almostover", function(e) {
+									if(!linesById[line.id].getTooltip())
+										linesById[line.id].bindTooltip("", $.extend({}, map.tooltipOptions, { permanent: true, offset: [ 20, 0 ] }));
+
+									linesById[line.id].setTooltipContent(fpUtils.quoteHtml(map.socket.lines[line.id].name)).openTooltip(e.latlng);
+								})
+								.on("fp-almostmove", function(e) {
+									linesById[line.id].openTooltip(e.latlng)
+								})
+								.on("fp-almostout", function() {
+									linesById[line.id].closeTooltip();
 								});
 						}
 					}
@@ -174,21 +186,18 @@
 					var temporaryHoverMarker;
 
 					function _over(e) {
-						if(e.layer === linesById[line.id])
-							temporaryHoverMarker.setLatLng(e.latlng).addTo(map.map);
+						temporaryHoverMarker.setLatLng(e.latlng).addTo(map.map);
 					}
 
 					function _move(e) {
-						if(e.layer === linesById[line.id])
-							temporaryHoverMarker.setLatLng(e.latlng);
+						temporaryHoverMarker.setLatLng(e.latlng);
 					}
 
 					function _out(e) {
-						if(e.layer === linesById[line.id])
-							temporaryHoverMarker.remove();
+						temporaryHoverMarker.remove();
 					}
 
-					map.map.on("almost:over", _over).on("almost:move", _move).on("almost:out", _out);
+					linesById[line.id].on("fp-almostover", _over).on("fp-almostmove", _move).on("fp-almostout", _out);
 
 					function makeTemporaryHoverMarker() {
 						temporaryHoverMarker = createTempMarker(true);
@@ -217,7 +226,6 @@
 							unregisterWatcher();
 							removeTempMarkers();
 							temporaryHoverMarker.remove();
-							map.map.off("almost:over", _over).off("almost:move", _move).off("almost:out", _out);
 
 							// Re-add the line witho a popup (because editingLineId is not set anymore)
 							linesUi._deleteLine(line);

@@ -22,6 +22,10 @@
 							})
 							.on("popupclose", function(e) {
 								ng.element(e.popup.getContent()).scope().$destroy();
+							})
+							.bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
+							.on("tooltipopen", function() {
+								markersById[marker.id].setTooltipContent(fpUtils.quoteHtml(map.socket.markers[marker.id].name));
 							});
 					}
 

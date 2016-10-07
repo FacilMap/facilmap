@@ -91,6 +91,10 @@
 				className: "fp-popup"
 			};
 
+			map.tooltipOptions = {
+				direction: "right"
+			};
+
 			map.map = L.map(el[0]);
 
 			var tpl = $($templateCache.get("map/map.html"));
@@ -99,16 +103,22 @@
 
 			map.map.almostOver.options.distance = 10;
 
-			map.map.on('almost:over', function() {
+			map.map.on('almost:over', function(e) {
+				e.layer.fire('fp-almostover', e);
 				$(map.map.getContainer()).addClass("fp-almostover");
 			});
 
-			map.map.on('almost:out', function() {
+			map.map.on('almost:out', function(e) {
+				e.layer.fire('fp-almostout', e);
 				$(map.map.getContainer()).removeClass("fp-almostover");
 			});
 
 			map.map.on('almost:click', function(e) {
 				e.layer.fire('click', e, true);
+			});
+
+			map.map.on('almost:move', function(e) {
+				e.layer.fire('fp-almostmove', e);
 			});
 
 			// Map ID is not set yet as scope is not digested. So styles might change.
@@ -304,26 +314,6 @@
 			map.socket.$on("loadEnd", function() {
 				map.loadEnd();
 			});
-
-			/*map.showLabel = function(label, pos, offset, updateOnMove) {
-				var xy = map.posToXy(pos);
-				var el = $("<div/>").addClass("fp-map-label").text(label).css({ top: (xy.y+offset.y)+"px", left: (xy.x+offset.x)+"px" }).appendTo(map.map.div);
-
-				var updatePosition = function(e) {
-					el.css({ top: ((e.offsetY == null ? e.layerY : e.offsetY)+offset.y)+"px", left: ((e.offsetX == null ? e.layerX : e.offsetX)+offset.x)+"px" });
-				};
-
-				if(updateOnMove)
-					map.map.events.register("mousemove", null, updatePosition);
-
-				return {
-					close: function() {
-						el.remove();
-						if(updateOnMove)
-							map.map.events.unregister("mousemove", null, updatePosition);
-					}
-				};
-			};*/
 
 			map.myLocation = function() {
 				map.map.locate({setView: true, maxZoom: 16});
