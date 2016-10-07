@@ -15,6 +15,7 @@ var uglify = require("gulp-uglify");
 var mainBowerFiles = require("main-bower-files");
 var combine = require("stream-combiner");
 var sourcemaps = require("gulp-sourcemaps");
+var inject = require("gulp-inject");
 var img64 = require("./gulpfile-img64");
 
 var files = [
@@ -23,7 +24,7 @@ var files = [
 	"app/**/*.html"
 ];
 
-gulp.task("default", [ "all" ]);
+gulp.task("default", [ "index" ]);
 
 gulp.task("clean", function() {
 	return combine(
@@ -87,42 +88,37 @@ gulp.task("app", function() {
 	);
 });
 
-gulp.task("all", [ "deps", "app" ], function(callback) {
-	async.series([
-		function(next) {
+gulp.task("all", [ "deps", "app" ], function() {
+	return combine(
+		es.merge(
 			combine(
-				es.merge(
-					combine(
-						gulp.src([ "build/dependencies.js", "build/app.js" ]),
-						newer("build/all.js"),
-						sourcemaps.init({ loadMaps: true }),
-						concat("all.js"),
-						sourcemaps.write("./sourcemaps")
-					),
-					combine(
-						gulp.src([ "build/dependencies.css", "build/app.css" ]),
-						newer("build/all.css"),
-						sourcemaps.init({ loadMaps: true }),
-						concat("all.css"),
-						sourcemaps.write("./sourcemaps")
-					)
-				),
-				gulp.dest("build"),
-				es.wait(next)
-			);
-		}/*, function(next) {
+				gulp.src([ "build/dependencies.js", "build/app.js" ]),
+				newer("build/all.js"),
+				sourcemaps.init({ loadMaps: true }),
+				concat("all.js"),
+				sourcemaps.write("./sourcemaps")
+			),
 			combine(
-				gulp.src("index.html"),
-				replace("<!-- inject:css -->", "<style>" + fs.readFileSync("build/all.css") + "</style>"),
-				replace("<!-- inject:js -->", "<script>" + fs.readFileSync("build/all.js") + "</script>"),
-				replace("<!-- endinject -->", ""),
-				gulp.dest("build"),
-				es.wait(next)
-			);
-		}*/
-	], callback);
+				gulp.src([ "build/dependencies.css", "build/app.css" ]),
+				newer("build/all.css"),
+				sourcemaps.init({ loadMaps: true }),
+				concat("all.css"),
+				sourcemaps.write("./sourcemaps")
+			)
+		),
+		gulp.dest("build")
+	);
 });
 
-gulp.task("watch", [ "all" ], function() {
-	gulp.watch([ "index.html", "bower.json" ].concat(files), [ "all" ]);
+gulp.task("index", [ "all" ], function() {
+	return combine(
+		gulp.src("index.html"),
+		img64(),
+		inject(gulp.src([ "build/all.js", "build/all.css" ], { read: false }), { relative: true, removeTags: true }),
+		gulp.dest("build")
+	);
+});
+
+gulp.task("watch", [ "index" ], function() {
+	gulp.watch([ "index.html", "bower.json" ].concat(files), [ "index" ]);
 });
