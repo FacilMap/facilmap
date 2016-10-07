@@ -1,14 +1,7 @@
-<nav class="navbar navbar-default fp-toolbox">
-	<div class="container-fluid">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#fp-toolbox-content" aria-expanded="false">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-		</div>
-        <div class="collapse navbar-collapse" id="fp-toolbox-content">
+<div class="fp-toolbox">
+	<button class="btn btn-default visible-xs-block mobile-menu-button" ng-click="showXs = !showXs" uib-tooltip="{{showXs ? 'Hide menu' : 'Show menu'}}" tooltip-placement="left"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
+	<nav class="navbar navbar-default" ng-class="{'hidden-xs': !showXs}">
+		<div class="container-fluid" id="fp-toolbox-content">
 			<ul class="nav navbar-nav">
 				<li role="presentation">
 					<a href="javascript:" ng-click="myLocation()" title="Jump to my location"><span class="glyphicon glyphicon-screenshot"></span></a>
@@ -52,6 +45,6 @@
 					</ul>
 				</li>
 			</ul>
-        </div>
-	</div>
-</nav>
+		</div>
+	</nav>
+</div>

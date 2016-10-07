@@ -1,20 +1,28 @@
 .fp-map-legend {
 	position: absolute;
 	right: 10px;
-	bottom: 10px;
+	bottom: 25px;
 	z-index: 800;
+
+	opacity: .7;
+	transition: opacity .7s;
+}
+
+.fp-map-legend .mobile-menu-button {
+	margin-left: auto;
+}
+
+.fp-map-legend .panel {
 	overflow-y: auto;
 
 	/* Somehow Chrome shows a horizontal scrollbar with anything else than this */
 	overflow-x: hidden;
 
-	opacity: .7;
-	transition: opacity .7s;
-
 	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
+	margin-bottom: 0;
 }
 
-.fp-map-legend:hover {
+.fp-map-legend .panel:hover {
 	opacity: 1;
 }
 

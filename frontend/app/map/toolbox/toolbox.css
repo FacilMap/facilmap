@@ -10,6 +10,10 @@
 	opacity: 1;
 }
 
+.fp-toolbox .mobile-menu-button {
+	margin-left: auto;
+}
+
 @media print {
 	.fp-toolbox {
 		display: none;
