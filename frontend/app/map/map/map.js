@@ -95,11 +95,11 @@
 				direction: "right"
 			};
 
-			map.map = L.map(el[0]);
-
 			var tpl = $($templateCache.get("map/map/map.html"));
 			el.append(tpl);
 			$compile(tpl)(map.socket);
+
+			map.map = L.map(el.find(".fp-map")[0]);
 
 			map.map.almostOver.options.distance = 10;
 
@@ -267,7 +267,7 @@
 			map.aboutUi = fpMapAbout(map);
 
 			fpMapLegend(map);
-			//fpMapSearch(map);
+			fpMapSearch(map);
 
 			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
 				if(loaded) {

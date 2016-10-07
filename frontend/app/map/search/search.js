@@ -1,8 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils) {
-		//var namefinder = new FacilMap.NameFinder.Nominatim();
-
+	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils, fpNameFinder) {
 		return function(map) {
 			var scope = $rootScope.$new(true);
 			scope.searchString = "";
@@ -12,21 +10,24 @@
 				scope.searchResults = null;
 				if(scope.searchString.trim() != "") {
 					map.loadStart();
-					namefinder.find(scope.searchString, function(results) {
+					fpNameFinder.find(scope.searchString).then(function(results) {
 						map.loadEnd();
 						scope.searchResults = results;
 
 						if(results.length > 0)
 							scope.showResult(results[0]);
-					}.fpWrapApply(scope));
+					});
 				}
 			};
 
 			scope.showResult = function(result) {
-				map.map.moveTo(result.lonlat.clone().transform(fpUtils.proj(), map.map.getProjectionObject()), result.getZoom(map.map));
+				if(result.boundingbox)
+					map.map.flyToBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]);
+				else
+					map.map.flyTo([ result.lat, result.lon ], result.zoom);
 			};
 
-			var el = $($templateCache.get("map/search/search.html")).appendTo(map.map.getContainer());
+			var el = $($templateCache.get("map/search/search.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 		};

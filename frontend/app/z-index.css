@@ -24,3 +24,7 @@
 .fp-map-spinner,.fp-attribution-icon {
 	z-index: 20000;
 }
+
+.fp-search {
+	z-index: 1010;
+}

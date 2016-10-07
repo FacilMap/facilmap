@@ -1,13 +1,24 @@
-<div class="fp-search" ng-class="{ 'fp-search-has-results': searchResults }">
-	<form ng-submit="search()">
-		<input type="text" ng-model="searchString" placeholder="Search">
-		<a href="javascript:" class="close-button" ng-click="searchString=''; search()">×</a>
-		<button type="submit">Search</button>
-	</form>
-	<div class="fp-search-results" ng-show="searchResults">
-		<p class="no-results" ng-show="searchResults.length == 0">No results have been found.</p>
-		<ul ng-show="searchResults.length > 0">
-			<li ng-repeat="result in searchResults"><a href="javascript:" ng-click="showResult(result)">{{result.name}}</a> <span class="result-type">({{result.info}})</span></li>
-		</ul>
+<div class="fp-search panel panel-default" ng-class="{'fp-hasResults': !!searchResults}">
+	<div class="panel-body">
+		<form ng-submit="search()">
+			<div class="input-group has-feedback">
+				<div class="has-feedback">
+					<input type="search" class="form-control" ng-model="searchString" placeholder="Search">
+					<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><span class="glyphicon glyphicon-remove"></span></a>
+				</div>
+				<span class="input-group-btn">
+					<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
+				</span>
+			</div>
+		</form>
+		<div class="fp-search-results" ng-show="searchResults">
+			<div uib-alert class="alert-danger no-results" ng-if="searchResults.length == 0">No results have been found.</div>
+			<ul class="list-group" ng-if="searchResults.length > 0">
+				<li ng-repeat="result in searchResults" class="list-group-item">
+					<a href="javascript:" ng-click="showResult(result)">{{result.display_name}}</a>
+					<span class="result-type">({{result.type}})</span>
+				</li>
+			</ul>
+		</div>
 	</div>
 </div>

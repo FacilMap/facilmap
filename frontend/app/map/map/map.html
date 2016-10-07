@@ -1,8 +1,10 @@
+<div class="fp-map">
+	<img src="logo.png" class="fp-attribution-icon"/>
+	<div class="fp-map-spinner" ng-show="loading > 0">
+		<img src="spinner.gif" alt="Loading…">
+	</div>
+</div>
 <div class="fp-map-disabled-cover" ng-show="!loaded || disconnected"></div>
 <div class="fp-map-loading" ng-hide="loaded">
 	Loading...
-</div>
-<img src="logo.png" class="fp-attribution-icon"/>
-<div class="fp-map-spinner" ng-show="loading > 0">
-	<img src="spinner.gif" alt="Loading…">
 </div>
