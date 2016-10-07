@@ -1,9 +1,9 @@
-<div class="fp-search panel panel-default" ng-class="{'fp-hasResults': !!searchResults}">
+<div class="fp-search panel panel-default" ng-class="{'fp-hasResults': !!searchResults,'fp-hasFocus': !!hasFocus}">
 	<div class="panel-body">
 		<form ng-submit="search()">
 			<div class="input-group has-feedback">
 				<div class="has-feedback">
-					<input type="search" class="form-control" ng-model="searchString" placeholder="Search">
+					<input type="search" class="form-control" ng-model="searchString" placeholder="Search" ng-focus="hasFocus=true" ng-blur="hasFocus=false">
 					<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><span class="glyphicon glyphicon-remove"></span></a>
 				</div>
 				<span class="input-group-btn">

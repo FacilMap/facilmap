@@ -11,13 +11,13 @@
 	max-width: 30%;
 }
 
-.fp-search:hover {
+.fp-search:hover,.fp-search.fp-hasFocus {
 	opacity: 1;
 	width: 350px;
 	max-width: 40%;
 }
 
-.fp-search:not(:hover):not(.fp-hasResults) {
+.fp-search:not(:hover):not(.fp-hasResults):not(.fp-hasFocus) {
 	background-color: rgba(255, 255, 255, 0);
 	border-color: rgba(255, 255, 255, 0);
 	box-shadow: none;
