@@ -56,27 +56,6 @@
 	box-sizing: content-box;
 }
 
-.olMap .fmControlLoading {
-	top: auto;
-	bottom: 7px;
-	left: 102px;
-	right: auto;
-}
-
-.olMap .fmControlScaleLine {
-	left: 0;
-	right: 0;
-	bottom: 3px;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-.olMap .olControlMousePosition {
-	left: 3px;
-	right: auto;
-}
-
-
 .fp-attribution-icon {
 	position: absolute;
 	bottom: -45px;

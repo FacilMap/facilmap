@@ -27,7 +27,7 @@
 		function Map(el, id, padId) {
 			var map = this;
 
-			map.mapEvents = $rootScope.$new(true); /* Event types: clickMarker, clickLine, click, move, moveEnd, mouseMove, layerchange */
+			map.mapEvents = $rootScope.$new(true); /* Event types: click, layerchange */
 			map.socket = fpSocket(padId);
 
 			//map.socket.id = id; // To be in scope for template
@@ -121,38 +121,6 @@
 				e.layer.fire('fp-almostmove', e);
 			});
 
-			// Map ID is not set yet as scope is not digested. So styles might change.
-			//$timeout(map.map.updateSize.bind(pad.map));
-
-			/*var label;
-			map.featureHandler = new ol.Handler.Feature(null, map.layerLines, {
-				"over" : function(obj) {
-					$(map.map.div).addClass("fp-overFeature");
-
-					if(label)
-						label.close();
-
-					if(obj.fpMarker && obj.fpMarker.name)
-						label = map.showLabel(obj.fpMarker.name, obj.fpMarker, { x: 10, y: 0 });
-					else if(obj.fpLine && obj.fpLine.name) {
-						var e = map.featureHandler.evt;
-						label = map.showLabel(obj.fpLine.name, map.xyToPos({ x: e.offsetX == null ? e.layerX : e.offsetX, y: e.offsetY == null ? e.layerY : e.offsetY }), { x: 15, y: 0 }, true);
-					}
-				},
-				"out" : function(obj) {
-					$(map.map.div).removeClass("fp-overFeature");
-
-					if(label) {
-						label.close();
-						label = null;
-					}
-				},
-				"click" : function(obj) {
-					obj.fpOnClick(map.xyToPos(map.featureHandler.up), map.featureHandler.evt);
-				}
-			}, { map: map.map });
-			map.featureHandler.activate();*/
-
 			map.dragMarkerColour = "ffd700";
 
 			map.map.on("click", function(e) {
@@ -166,28 +134,6 @@
 			map.map.on("layerremove", function() {
 				map.mapEvents.$emit("layerchange");
 			});
-
-			/*map.map.events.register("move", this, function() {
-				setTimeout(function() { map.mapEvents.$emit("move"); }, 0);
-			});
-
-			map.map.events.register("moveend", this, function() {
-				var x = map.map.getExtent().clone().transform(map.map.getProjectionObject(), fpUtils.proj());
-				setTimeout(function() {
-					map.mapEvents.$emit("moveEnd", { top: x.top, left: x.left, bottom: x.bottom, right: x.right, zoom: map.map.getZoom() });
-				}, 0);
-			});
-
-			map.map.events.register("mousemove", this, function(e) {
-				map.mapEvents.$emit("mouseMove", map.xyToPos(e.xy));
-			});
-
-			function _wrapFeatureFunc(superFunc) {
-				return function(feature) {
-					if(this.filterFunc(feature))
-						return superFunc.apply(this, arguments);
-				};
-			}*/
 
 			map.getCurrentView = function() {
 				var ret = fpUtils.leafletToFpBbox(map.map.getBounds());
@@ -261,15 +207,6 @@
 					cancel: listenClick
 				};
 			};
-
-			/*map.xyToPos = function(xy) {
-				return map.map.getLonLatFromViewPortPx(xy).clone().transform(map.map.getProjectionObject(), fpUtils.proj());
-			};
-
-			map.posToXy = function(pos) {
-				var lonlat = new ol.LonLat(pos.lon, pos.lat).transform(fpUtils.proj(), map.map.getProjectionObject());
-				return map.map.getViewPortPxFromLonLat(lonlat);
-			};*/
 
 			map.getLayerInfo = function() {
 				var ret = { base: [ ], overlay: [ ] };
