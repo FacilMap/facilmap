@@ -143,7 +143,7 @@
 			}, { map: map.map });
 			map.featureHandler.activate();*/
 
-			map.dragIcon = fpUtils.createMarkerIcon("ffd700");
+			map.dragMarkerColour = "ffd700";
 
 			map.map.on("click", function(e) {
 				map.mapEvents.$emit("click", e.latlng);

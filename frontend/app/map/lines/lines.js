@@ -37,7 +37,7 @@
 						linesById[line.id] = L.polyline([ ]).addTo(map.map);
 						map.map.almostOver.addLayer(linesById[line.id]);
 
-						if(line.id != null) { // We don't want a popup for lines that we are drawing right now
+						if(line.id != null && line.id != editingLineId) { // We don't want a popup for lines that we are drawing right now
 							linesById[line.id]
 								.bindPopup($("<div/>")[0], map.popupOptions)
 								.on("popupopen", function(e) {
@@ -59,7 +59,7 @@
 
 					linesById[line.id].setLatLngs(trackPoints).setStyle(style);
 
-					if(line.id != null && linesById[line.id].isPopupOpen()) {
+					if(line.id != null && line.id != editingLineId && linesById[line.id].isPopupOpen()) {
 						if(same)
 							linesUi._renderLinePopup(line);
 						else
@@ -108,80 +108,121 @@
 				},
 				_makeLineMovable: function(line) {
 					var markers = [ ];
-					var routePointsBkp = ng.copy(line.routePoints);
 
+					editingLineId = line.id;
+
+					// Re-add the line without a popup (because editingLineId is set)
+					linesUi._deleteLine(line);
+					linesUi._addLine(line);
+
+					// Watch if route points change (because someone else has moved the line while we are moving it
+					var routePointsBkp = ng.copy(line.routePoints);
 					var unregisterWatcher = map.socket.$watch(function() { return map.socket.lines[line.id].routePoints; }, function() {
+						// We do not do a deep watch, as then we will be not notified if someone edits the line without
+						// actually moving it, in which case we still need to redraw it (because it gets redrawn because
+						// the server sends it to us again).
+
+						// The line has been edited, but it has not been moved. Override its points with our current stage again
 						if(ng.equals(routePointsBkp, map.socket.lines[line.id].routePoints))
 							map.socket.lines[line.id].routePoints = line.routePoints;
-						else
+						else // The line has been moved. Override our stage with the new points.
 							routePointsBkp = ng.copy(line.routePoints);
 
 						line = map.socket.lines[line.id];
-						end();
-						start();
+						linesUi._addLine(line);
+						removeTempMarkers();
+						createTempMarkers();
 					});
 
-					function start() {
-						editingLineId = line.id;
-
-						line.routePoints.forEach(function(it) {
-							var marker = L.marker([ it.lat, it.lon ], {
-								icon: map.dragIcon,
-								draggable: true
-							}).addTo(map.map)
-								.on("dblclick", function() {
-									var idx = markers.indexOf(marker);
-									markers.splice(idx, 1);
-									line.routePoints.splice(idx, 1);
-									marker.remove();
-									linesUi._addLine(line);
-								})
-								.on("drag", function() {
-									var idx = markers.indexOf(marker);
-									var latlng = marker.getLatLng();
-									line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
-									linesUi._addLine(line);
-								});
-
-
-							markers.push(marker);
-						});
-
-						linesUi._addLine(line);
+					function createTempMarker(huge) {
+						var marker = L.marker([0,0], {
+							icon: fpUtils.createMarkerIcon(map.dragMarkerColour, huge),
+							draggable: true
+						})
+							.on("dblclick", function() {
+								// Double click on temporary marker: Remove this route point
+								var idx = markers.indexOf(marker);
+								markers.splice(idx, 1);
+								line.routePoints.splice(idx, 1);
+								marker.remove();
+								linesUi._addLine(line);
+							})
+							.on("drag", function() {
+								var idx = markers.indexOf(marker);
+								var latlng = marker.getLatLng();
+								line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
+								linesUi._addLine(line);
+							});
+						return marker;
 					}
 
-						/*else if(feature.fmStartLonLat) { // New marker
-							var index = fm.Util.lonLatIndexOnLine(feature.fmStartLonLat, feature.fmLine.geometry);
-							if(index != null) {
-								var newIndex = line.routePoints.length;
-								var indexes = [ ];
-								for(var i=0; i<newIndex; i++) {
-									indexes.push(fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry));
-									if(index < fm.Util.lonLatIndexOnLine(fm.Util.toMapProjection(new ol.LonLat(line.routePoints[i].lon, line.routePoints[i].lat), map.map), feature.fmLine.geometry))
-										newIndex = i;
-								}
+					function createTempMarkers() {
+						line.routePoints.forEach(function(it) {
+							markers.push(createTempMarker().setLatLng([ it.lat, it.lon ]).addTo(map.map));
+						});
+					}
 
-								var lonlat = fm.Util.fromMapProjection(feature.fmStartLonLat, map.map);
-								line.routePoints.splice(newIndex, 0, { lat: lonlat.lat, lon: lonlat.lon });
-								markers.splice(newIndex, 0, feature);
-								map.addLine(line);
-							}
-							else
-								console.warn("Index = null", feature.fmStartLonLat);
-						}*/
-
-					function end() {
-						editingLineId = null;
-
+					function removeTempMarkers() {
 						for(var i=0; i<markers.length; i++)
 							markers[i].remove();
 						markers = [ ];
 					}
 
+					// This marker is shown when we hover the line. It enables us to create new markers.
+					// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
+					// sure that the mouse is over it and dragging it will work smoothly.
+					var temporaryHoverMarker;
+
+					function _over(e) {
+						if(e.layer === linesById[line.id])
+							temporaryHoverMarker.setLatLng(e.latlng).addTo(map.map);
+					}
+
+					function _move(e) {
+						if(e.layer === linesById[line.id])
+							temporaryHoverMarker.setLatLng(e.latlng);
+					}
+
+					function _out(e) {
+						if(e.layer === linesById[line.id])
+							temporaryHoverMarker.remove();
+					}
+
+					map.map.on("almost:over", _over).on("almost:move", _move).on("almost:out", _out);
+
+					function makeTemporaryHoverMarker() {
+						temporaryHoverMarker = createTempMarker(true);
+
+						temporaryHoverMarker.once("dragstart", function() {
+							temporaryHoverMarker.once("dragend", function() {
+								// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
+								// the dragging gets interrupted
+								this.setIcon(fpUtils.createMarkerIcon("ffd700"));
+							}, temporaryHoverMarker);
+
+							var latlng = temporaryHoverMarker.getLatLng();
+							var idx = fpUtils.getIndexOnLine(map.map, line.routePoints, line.routePoints, latlng);
+							markers.splice(idx, 0, temporaryHoverMarker);
+							line.routePoints.splice(idx, 0, { lat: latlng.lat, lon: latlng.lng });
+
+							makeTemporaryHoverMarker();
+						});
+					}
+
+					makeTemporaryHoverMarker();
+
 					return {
 						done : function() {
+							editingLineId = null;
 							unregisterWatcher();
-							end();
+							removeTempMarkers();
+							temporaryHoverMarker.remove();
+							map.map.off("almost:over", _over).off("almost:move", _move).off("almost:out", _out);
+
+							// Re-add the line witho a popup (because editingLineId is not set anymore)
+							linesUi._deleteLine(line);
+							linesUi._addLine(line);
+
 							return line.routePoints;
 						}
 					};

@@ -15,26 +15,26 @@
 			return randomPadId;
 		};
 
-		fpUtils.createMarkerGraphic = function(colour, randomTrash) {
+		fpUtils.createMarkerGraphic = function(colour, huge, randomTrash) {
 			var borderColour = fpUtils.makeTextColour(colour, 0.3);
 
 			var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
-				'<svg xmlns="http://www.w3.org/2000/svg" width="21" height="25" version="1.1">' +
+				'<svg xmlns="http://www.w3.org/2000/svg" width="' + (huge ? 10000 : 21) + '" height="' + (huge ? 10000 : 25) + '" version="1.1">' +
 				(randomTrash ? '<!--' + randomTrash + '-->' : '') + // Chrome seems to have a bug where it applies the CSS styles of one image the same code
-				'<g transform="matrix(0.962318,0,0,0.962318,0.35255058,-988.3149)">' +
-				'<path style="fill:#' + colour + ';stroke:#' + borderColour + ';stroke-width:1" d="m 0.31494999,1035.8432 10.20437901,-8.1661 10.20438,8.1661 -10.20438,16.204 z" />' +
-				'<path style="fill:#' + borderColour + ';stroke:none" d="m 361.63462,62.160149 c 0,10.181526 -8.25375,18.435283 -18.43528,18.435283 -10.18153,0 -18.43528,-8.253757 -18.43528,-18.435283 0,-10.181526 8.25375,-18.435284 18.43528,-18.435284 10.18153,0 18.43528,8.253758 18.43528,18.435284 z" transform="matrix(0.1366727,0,0,0.1366727,-36.38665,1028.6074)" />' +
-				'</g>' +
+				(huge ? '<g transform="matrix(1,0,0,1,5000,5000)">' : '') +
+				'<path style="fill:#' + colour + ';stroke:#' + borderColour + ';stroke-width:1" d="M 0.65579587,8.5137553 10.493963,0.66460903 20.332132,8.5137553 10.493963,24.088823 Z" />' +
+				'<path style="fill:#' + borderColour + ';stroke:none" d="m 12.953591,9.6886404 c 0,1.3406746 -1.090141,2.4275066 -2.434898,2.4275066 -1.3447591,0 -2.4348995,-1.086832 -2.4348995,-2.4275066 0,-1.3406751 1.0901404,-2.4275068 2.4348995,-2.4275068 1.344757,0 2.434898,1.0868317 2.434898,2.4275068 z" />' +
+				(huge ? '</g>' : '') +
 				'</svg>';
 
 			return "data:image/svg+xml;base64,"+btoa(svg);
 		};
 
-		fpUtils.createMarkerIcon = function(colour) {
+		fpUtils.createMarkerIcon = function(colour, huge) {
 			return new L.Icon({
-				iconUrl: fpUtils.createMarkerGraphic(colour),
-				iconSize: [21, 25],
-				iconAnchor: [10, 25],
+				iconUrl: fpUtils.createMarkerGraphic(colour, huge),
+				iconSize: huge ? [10000, 10000] : [21, 25],
+				iconAnchor: huge ? [5010, 5025] : [10, 25],
 				popupAnchor: [0, -25]
 			});
 		};
@@ -146,6 +146,48 @@
 
 		fpUtils.fpToLeafletBbox = function(bbox) {
 			return L.latLngBounds(L.latLng(bbox.bottom, bbox.left), L.latLng(bbox.top, bbox.right));
+		};
+
+		fpUtils.getClosestIndexOnLine = function(map, trackPoints, point, startI) {
+			var dist = Infinity;
+			var idx = null;
+
+			for(var i=(startI || 0); i<trackPoints.length-1; i++) {
+				var thisDist = L.GeometryUtil.distanceSegment(map, point, trackPoints[i], trackPoints[i+1]);
+				if(thisDist < dist) {
+					dist = thisDist;
+					idx = i;
+				}
+			}
+
+			if(idx == null)
+				return trackPoints.length;
+
+			var closestPointOnSegment = L.GeometryUtil.closestOnSegment(map, point, trackPoints[idx], trackPoints[idx+1]);
+			idx += L.GeometryUtil.distance(map, closestPointOnSegment, trackPoints[idx]) / L.GeometryUtil.distance(map, trackPoints[idx], trackPoints[idx+1]);
+
+			return idx;
+		};
+
+		fpUtils.getIndexOnLine = function(map, trackPoints, routePoints, point) {
+			if(routePoints.length == 0)
+				return 0;
+
+			var idxs = [ ];
+			for(var i=0; i<routePoints.length; i++) {
+				idxs.push(fpUtils.getClosestIndexOnLine(map, trackPoints, routePoints[i], idxs[i-1]));
+			}
+
+			var pointIdx = fpUtils.getClosestIndexOnLine(map, trackPoints, point);
+
+			if(pointIdx == 0)
+				return 0;
+
+			for(var i=0; i<idxs.length; i++) {
+				if(idxs[i] > pointIdx)
+					return i;
+			}
+			return idxs.length;
 		};
 
 		return fpUtils;
