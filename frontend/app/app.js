@@ -4,9 +4,13 @@ var FacilPad = {
 
 (function(fp, $, ng, undefined) {
 
-	fp.app = angular.module("facilpad", [ "ui.sortable", "ui.bootstrap" ]).config([ "$compileProvider", function($compileProvider) {
+	fp.app = angular.module("facilpad", [ "ui.sortable", "ui.bootstrap" ]).config(function($compileProvider, $uibTooltipProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
-	} ]);
+
+		$uibTooltipProvider.options({
+			placement: "bottom"
+		});
+	});
 
 	fp.app.constant("L", L);
 
