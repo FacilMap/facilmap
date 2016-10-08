@@ -22,13 +22,17 @@ Object.defineProperty(Error.prototype, "toJSON", {
 });
 
 database.connect(function(err) {
-	if(err)
-		throw err;
+	if(err) {
+		console.error(err);
+		process.exit(1);
+	}
 
 	var app = http.createServer();
 	app.listen(config.port, config.host, function(err) {
-		if(err)
-			throw err;
+		if(err) {
+			console.error(err);
+			process.exit(1);
+		}
 
 		console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
 	});

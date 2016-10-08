@@ -234,13 +234,20 @@ function connect(callback, force) {
 			// Migrations
 
 			var queryInterface = conn.getQueryInterface();
-
-			// Rename Line.points to Line.routePoints
-			queryInterface.describeTable('Lines').then(function(attributes) {
-				if(attributes.points) {
-					return queryInterface.renameColumn('Lines', 'points', 'routePoints');
-				}
-			})
+			Promise.all([
+				// Rename Line.points to Line.routePoints
+				queryInterface.describeTable('Lines').then(function(attributes) {
+					if(attributes.points) {
+						return queryInterface.renameColumn('Lines', 'points', 'routePoints');
+					}
+				})
+			].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
+				// allow null on Pad.name, Marker.name, Line.name
+				return queryInterface.describeTable(table).then(function(attributes) {
+					if(!attributes.name.allowNull)
+						return queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
+				});
+			})))
 			.then(function() { next(); })
 			.catch(function(err) { next(err); });
 		}
