@@ -28,7 +28,7 @@
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(map.socket, type.id ? "types["+fpUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
+					var preserve = fpUtils.preserveObject(scope, type.id ? "types["+fpUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
 						dialog.dismiss();
 					});
 
