@@ -1,5 +1,6 @@
 var request = require("request");
 var config = require("../config");
+var Promise = require("promise");
 
 var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 var nameFinderUrl = "https://nominatim.openstreetmap.org/search";
@@ -42,55 +43,58 @@ var stateAbbr = {
 	}
 };
 
-function find(query, callback) {
-	query.replace(/^\s+/, "").replace(/\s+$/, "");
+function find(query) {
+	return new Promise(function(resolve, reject) {
+		query.replace(/^\s+/, "").replace(/\s+$/, "");
 
-	var lonlat = isLonLatQuery(query);
-	if(lonlat)
-	{
-		var results = [ {
-			lat: lonlat.lat,
-			lon : lonlat.lon,
-			type : "coordinates",
-			short_name: lonlat.lat + ", " + lonlat.lon,
-			display_name : lonlat.lat + ", " + lonlat.lon,
-			zoom: lonlat.zoom,
-			icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
-		} ];
-		return callback(null, results);
-	}
-
-	request({
-		url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
-		json: true,
-		headers: {
-			'User-Agent': config.userAgent
+		var lonlat = isLonLatQuery(query);
+		if(lonlat)
+		{
+			var results = [ {
+				lat: lonlat.lat,
+				lon : lonlat.lon,
+				type : "coordinates",
+				short_name: lonlat.lat + ", " + lonlat.lon,
+				display_name : lonlat.lat + ", " + lonlat.lon,
+				zoom: lonlat.zoom,
+				icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
+			} ];
+			return resolve(results);
 		}
-	}, function(err, response, body) {
-		if(err)
-			return callback(err);
-		if(!body)
-			return callback("Invalid response from name finder.");
 
-		var results = [ ];
-		body.forEach(function(result) {
-			var displayName = makeDisplayName(result);
-			results.push({
-				short_name: displayName.split(',')[0],
-				display_name: displayName,
-				boundingbox: result.boundingbox,
-				lat: result.lat,
-				lon: result.lon,
-				extratags: result.extratags,
-				geojson: result.geojson,
-				icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
-				type: result.type == "yes" ? result.category : result.type,
-				osm_id: result.osm_id,
-				osm_type: result.osm_type
+		request({
+			url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
+			json: true,
+			headers: {
+				'User-Agent': config.userAgent
+			}
+		}, function(err, response, body) {
+			if(err)
+				return reject(err);
+
+			if(!body)
+				return reject("Invalid response from name finder.");
+
+			var results = [ ];
+			body.forEach(function(result) {
+				var displayName = makeDisplayName(result);
+				results.push({
+					short_name: displayName.split(',')[0],
+					display_name: displayName,
+					boundingbox: result.boundingbox,
+					lat: result.lat,
+					lon: result.lon,
+					extratags: result.extratags,
+					geojson: result.geojson,
+					icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
+					type: result.type == "yes" ? result.category : result.type,
+					osm_id: result.osm_id,
+					osm_type: result.osm_type
+				});
 			});
-		});
 
-		callback(null, results);
+			resolve(results);
+		});
 	});
 }
 

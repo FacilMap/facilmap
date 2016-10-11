@@ -1,7 +1,6 @@
 var database = require("./database");
 var utils = require("./utils");
-
-var async = require("async");
+var Promise = require("promise");
 
 var _e = utils.escapeXml;
 
@@ -46,59 +45,42 @@ function _textToData(fields, text) {
 	return ret;
 }
 
-function exportGpx(padId, useTracks, callback) {
-	async.auto({
-		padData : database.getPadData.bind(database, padId),
-		views : function(next) {
-			console.log("views");
-			var views = '';
-			utils.asyncStreamEach(database.getViews(padId), function(view, next) {
-				views += '<fp:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
-				next();
-			}, function(err) {
-				next(err, views);
-			});
-		},
-		typesObj : function(next) {
-			var types = { };
-			utils.asyncStreamEach(database.getTypes(padId), function(type, next) {
-				types[type.id] = type;
-				next();
-			}, function(err) {
-				next(err, types);
-			});
-		},
-		types : [ "typesObj", function(res, next) {
-			var types = '';
-			for(var i in res.typesObj) {
-				var type = res.typesObj[i];
-				types += '<fp:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
-			}
-			next(null, types);
-		} ],
-		markers : [ "typesObj", function(res, next) {
-			var markers = '';
-			utils.asyncStreamEach(database.getPadMarkers(padId), function(marker, next) {
+function exportGpx(padId, useTracks) {
+	var padDataP = database.getPadData(padId);
+
+	var views = '', markers = '', lines = '', types = '';
+
+	var viewsP = utils.streamEachPromise(database.getViews(padId), function(view) {
+		views += '<fp:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
+	});
+
+	var typesObj = { };
+	var typesObjP = utils.streamEachPromise(database.getTypes(padId), function(type) {
+		typesObj[type.id] = type;
+	});
+
+	var typesMarkersLinesP = typesObjP.then(function() {
+		for(var i in typesObj) {
+			var type = typesObj[i];
+			types += '<fp:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
+		}
+
+		return Promise.all([
+			utils.streamEachPromise(database.getPadMarkers(padId), function(marker) {
 				markers += '<wpt lat="' + _e(marker.lat) + '" lon="' + _e(marker.lon) + '">\n' +
 					'\t<name>' + _e(marker.name) + '</name>\n' +
-					'\t<desc>' + _e(_dataToText(res.typesObj[marker.typeId].fields, marker.data)) + '</desc>\n' +
+					'\t<desc>' + _e(_dataToText(typesObj[marker.typeId].fields, marker.data)) + '</desc>\n' +
 					'\t<extensions>\n' +
 					'\t\t<fp:colour>' + _e(marker.colour) + '</fp:colour>\n' +
 					'\t</extensions>\n' +
 					'</wpt>\n';
-				next();
-			}, function(err) {
-				next(err, markers);
-			});
-		} ],
-		lines : [ "typesObj", function(res, next) {
-			var lines = '';
-			utils.asyncStreamEach(database.getPadLinesWithPoints(padId), function(line, next) {
+			}),
+			utils.streamEachPromise(database.getPadLinesWithPoints(padId), function(line) {
 				var t = (useTracks || line.mode == "track");
 
 				lines += '<' + (t ? 'trk' : 'rte') + '>\n' +
 					'\t<name>' + _e(line.name) + '</name>\n' +
-					'\t<desc>' + _e(_dataToText(res.typesObj[line.typeId].fields, line.data)) + '</desc>\n' +
+					'\t<desc>' + _e(_dataToText(typesObj[line.typeId].fields, line.data)) + '</desc>\n' +
 					'\t<extensions>\n' +
 					'\t\t<fp:colour>' + _e(line.colour) + '</fp:colour>\n' +
 					'\t\t<fp:width>' + _e(line.width) + '</fp:width>\n' +
@@ -119,33 +101,24 @@ function exportGpx(padId, useTracks, callback) {
 				}
 
 				lines += '</' + (t ? 'trk' : 'rte') + '>\n';
+			})
+		]);
+	});
 
-				next();
-			}, function(err) {
-				next(err, lines);
-			});
-		} ]
-	}, function(err, res) {
-		if(err)
-			return callback(err);
-
-		var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+	return Promise.all([ padDataP, viewsP, typesMarkersLinesP ]).then(function(res) {
+		return '<?xml version="1.0" encoding="UTF-8"?>\n' +
 		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilPad" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fp="https://pad.facilmap.org/">\n' +
 			'\t<metadata>\n' +
-			'\t\t<name>' + _e(res.padData.name) + '</name>\n' +
+			'\t\t<name>' + _e(res[0].name) + '</name>\n' +
 			'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +
 			'\t</metadata>\n' +
 			'\t<extensions>\n' +
-			res.views.replace(/^(.)/gm, '\t\t$1') +
-			res.types.replace(/^(.)/gm, '\t\t$1') +
+			views.replace(/^(.)/gm, '\t\t$1') +
+			types.replace(/^(.)/gm, '\t\t$1') +
 			'\t</extensions>\n' +
-			res.markers.replace(/^(.)/gm, '\t$1') +
-			res.lines.replace(/^(.)/gm, '\t$1') +
+			markers.replace(/^(.)/gm, '\t$1') +
+			lines.replace(/^(.)/gm, '\t$1') +
 			'</gpx>';
-
-		console.log(gpx);
-
-		callback(null, gpx);
 	});
 }
 

@@ -2,127 +2,111 @@ var backend = require("./databaseBackendSequelize");
 var listeners = require("./listeners");
 var routing = require("./routing");
 var utils = require("./utils");
-var async = require("async");
 var underscore = require("underscore");
 var stream = require("stream");
+var Promise = require("promise");
 
 var DEFAULT_TYPES = [
 	{ name: "Marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
 	{ name: "Line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
 ];
 
-function padIdExists(padId, callback) {
-	backend.padIdExists(padId, callback);
+function padIdExists(padId) {
+	return backend.padIdExists(padId);
 }
 
-function getPadData(padId, callback) {
-	backend.getPadDataByWriteId(padId, function(err, data) {
-		if(err)
-			return callback(err);
-		else if(data != null)
-			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
+function getPadData(padId) {
+	return backend.getPadDataByWriteId(padId).then(function(data) {
+		if(data != null)
+			return utils.extend(JSON.parse(JSON.stringify(data)), { writable: true });
 
-		backend.getPadData(padId, function(err, data) {
-			if(err)
-				return callback(err);
+		return backend.getPadData(padId).then(function(data) {
+			if(data != null)
+				return utils.extend(JSON.parse(JSON.stringify(data)), { writable: false, writeId: null });
 
-			if(data == null)
-				return callback("This pad does not exist.");
-
-			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: false, writeId: null }));
+			throw "This pad does not exist.";
 		});
 	});
 }
 
-function createPad(data, callback) {
-	if(!data.id || data.id.length == 0)
-		return callback("Invalid read-only ID");
-	if(!data.writeId || data.writeId.length == 0)
-		return callback("Invalid write-only ID");
-	if(data.id == data.writeId)
-		return callback("Read-only and write-only ID cannot be the same.");
+function createPad(data) {
+	return Promise.resolve().then(function() {
+		if(!data.id || data.id.length == 0)
+			throw "Invalid read-only ID";
+		if(!data.writeId || data.writeId.length == 0)
+			throw "Invalid write-only ID";
+		if(data.id == data.writeId)
+			throw "Read-only and write-only ID cannot be the same.";
 
-	async.auto({
-		readExists: function(next) {
-			padIdExists(data.id, next);
-		},
-		writeExists: function(next) {
-			padIdExists(data.writeId, next);
-		}
-	}, function(err, res) {
-		if(err)
-			return callback(err);
+		return Promise.all([
+			padIdExists(data.id).then(function(exists) {
+				if(exists)
+					throw "ID '" + data.id + "' is already taken.";
+			}),
+			padIdExists(data.writeId).then(function(exists) {
+				if(exists)
+					throw "ID '" + data.writeId + "' is already taken.";
+			})
+		])
+	}).then(function() {
+		return backend.createPad(data);
+	}).then(function(newData) {
+		data = newData;
 
-		if(res.readExists)
-			return callback("ID '" + data.id + "' is already taken.");
-		if(res.writeExists)
-			return callback("ID '" + data.writeId + "' is already taken.");
-
-		backend.createPad(data, function(err, data) {
-			if(err)
-				return callback(err);
-
-			async.each(DEFAULT_TYPES, function(it, next) {
-				backend.createType(data.id, it, next);
-			}, function(err) {
-				callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
-			});
-		});
+		return Promise.all(DEFAULT_TYPES.map(function(it) {
+			return backend.createType(data.id, it);
+		}));
+	}).then(function() {
+		return utils.extend(JSON.parse(JSON.stringify(data)), { writable: true });
 	});
 }
 
-function updatePadData(padId, data, callback) {
-	if(data.id != null && data.id != padId && data.id.length == 0)
-		return callback("Invalid read-only ID");
+function updatePadData(padId, data) {
+	return Promise.resolve().then(function() {
+		if(data.id != null && data.id != padId && data.id.length == 0)
+			throw "Invalid read-only ID";
 
-	async.auto({
-		readExists: function(next) {
-			if(data.id != null && data.id != padId)
-				padIdExists(data.id, next);
-			else
-				next();
-		},
-		writeExists: function(next) {
-			if(data.writeId != null) {
-				backend.getPadData(padId, function(err, padData) {
-					if(err || data.writeId == padData.writeId)
-						next(err);
-					else if(data.writeId.length == 0)
-						next("Invalid write-only ID");
-					else if(data.writeId == (data.id != null ? data.id : padId))
-						next("Read-only and write-only ID cannot be the same.");
-					else
-						padIdExists(data.writeId, next);
-				});
-			} else
-				next();
+		var existsPromises = [ ];
+
+		if(data.id != null && data.id != padId) {
+			existsPromises.push(padIdExists(data.id).then(function(exists) {
+				if(exists)
+					throw "ID '" + data.id + "' is already taken.";
+			}));
 		}
-	}, function(err, res) {
-		if(err)
-			return callback(err);
 
-		if(res.readExists)
-			return callback("ID '" + data.id + "' is already taken.");
-		if(res.writeExists)
-			return callback("ID '" + data.writeId + "' is already taken.");
+		if(data.writeId != null) {
+			existsPromises.push(backend.getPadData(padId).then(function(padData) {
+				if(data.writeId != padData.writeId) {
+					if(data.writeId.length == 0)
+						throw "Invalid write-only ID";
+					if(data.writeId == (data.id != null ? data.id : padId))
+						throw "Read-only and write-only ID cannot be the same.";
 
-		backend.updatePadData(padId, data, function(err, data) {
-			if(err)
-				return callback(err);
+					return padIdExists(data.writeId).then(function(exists) {
+						if(exists)
+							throw "ID '" + data.writeId + "' is already taken.";
+					});
+				}
+			}));
+		}
 
-			listeners.notifyPadListeners(padId, "padData", function(listener) {
-				var dataClone = JSON.parse(JSON.stringify(data));
-				if(!listener.writable)
-					dataClone.writeId = null;
+		return Promise.all(existsPromises);
+	}).then(function() {
+		return backend.updatePadData(padId, data);
+	}).then(function(newData) {
+		listeners.notifyPadListeners(padId, "padData", function(listener) {
+			var dataClone = JSON.parse(JSON.stringify(newData));
+			if(!listener.writable)
+				dataClone.writeId = null;
 
-				return dataClone;
-			});
-
-			if(data.id != null && data.id != padId)
-				listeners.changePadId(padId, data.id);
-
-			callback(null, data);
+			return dataClone;
 		});
+
+		if(data.id != null && data.id != padId)
+			listeners.changePadId(padId, data.id);
+
+		return data;
 	});
 }
 
@@ -130,39 +114,37 @@ function getViews(padId) {
 	return backend.getViews(padId);
 }
 
-function createView(padId, data, callback) {
-	if(data.name == null || data.name.trim().length == 0)
-		return callback("No name provided.");
+function createView(padId, data) {
+	return Promise.resolve().then(function() {
+		if(data.name == null || data.name.trim().length == 0)
+			throw "No name provided.";
 
-	backend.createView(padId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+		return backend.createView(padId, data);
+	}).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "view", data);
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function updateView(viewId, data, callback) {
-	if(data.name == null || data.name.trim().length == 0)
-		return callback("No name provided.");
+function updateView(viewId, data) {
+	return Promise.resolve().then(function() {
+		if(data.name == null || data.name.trim().length == 0)
+			throw "No name provided.";
 
-	backend.updateView(viewId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+		return backend.updateView(viewId, data);
+	}).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "view", data);
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function deleteView(viewId, callback) {
-	backend.deleteView(viewId, function(err, data) {
-		if(err)
-			return callback(err);
-
+function deleteView(viewId) {
+	return backend.deleteView(viewId).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "deleteView", { id: data.id });
-		callback(null, data);
+
+		return data;
 	});
 }
 
@@ -170,31 +152,30 @@ function getTypes(padId) {
 	return backend.getTypes(padId);
 }
 
-function createType(padId, data, callback) {
-	if(data.name == null || data.name.trim().length == 0)
-		return callback("No name provided.");
+function createType(padId, data) {
+	return Promise.resolve().then(function() {
+		if(data.name == null || data.name.trim().length == 0)
+			throw "No name provided.";
 
-	backend.createType(padId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+		return backend.createType(padId, data);
+	}).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "type", data);
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function updateType(typeId, data, callback) {
-	if(data.name == null || data.name.trim().length == 0)
-		return callback("No name provided.");
+function updateType(typeId, data) {
+	return Promise.resolve().then(function() {
+		if(data.name == null || data.name.trim().length == 0)
+			throw "No name provided.";
 
-	backend.updateType(typeId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+		return backend.updateType(typeId, data);
+	}).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "type", data);
 
-		_updateObjectStyles(data.type == "line" ? backend.getPadLinesByType(data.padId, typeId) : backend.getPadMarkersByType(data.padId, typeId), data.type == "line", function(err) {
-			callback(err, data);
+		return _updateObjectStyles(data.type == "line" ? backend.getPadLinesByType(data.padId, typeId) : backend.getPadMarkersByType(data.padId, typeId), data.type == "line").then(function() {
+			return data;
 		});
 	});
 }
@@ -209,20 +190,16 @@ function _optionsToObj(options, idx) {
 	return ret;
 }
 
-function deleteType(typeId, callback) {
-	backend.isTypeUsed(typeId, function(err, isUsed) {
-		if(err)
-			return callback(err);
+function deleteType(typeId) {
+	return backend.isTypeUsed(typeId).then(function(isUsed) {
 		if(isUsed)
-			return callback("This type is in use.");
+			throw "This type is in use.";
 
-		backend.deleteType(typeId, function(err, data) {
-			if(err)
-				return callback(err);
+		return backend.deleteType(typeId);
+	}).then(function(data) {
+		listeners.notifyPadListeners(data.padId, "deleteType", { id: data.id });
 
-			listeners.notifyPadListeners(data.padId, "deleteType", { id: data.id });
-			callback(null, data);
-		});
+		return data;
 	});
 }
 
@@ -230,70 +207,58 @@ function getPadMarkers(padId, bbox) {
 	return backend.getPadMarkers(padId, bbox);
 }
 
-function createMarker(padId, data, callback) {
-	backend.createMarker(padId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+function createMarker(padId, data) {
+	return backend.createMarker(padId, data).then(function(data) {
 		listeners.notifyPadListeners(padId, "marker", _getMarkerDataFunc(data));
 
-		_updateObjectStyles(data, false, function(err) {
-			callback(err, data);
+		return _updateObjectStyles(data, false).then(function() {
+			return data;
 		});
 	});
 }
 
-function updateMarker(markerId, data, callback) {
-	_updateMarker(markerId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
-		_updateObjectStyles(data, false, function(err) {
-			callback(err, data);
+function updateMarker(markerId, data) {
+	return _updateMarker(markerId, data).then(function(data) {
+		return _updateObjectStyles(data, false).then(function() {
+			return data;
 		});
 	});
 }
 
-function _updateMarker(markerId, data, callback) {
-	backend.updateMarker(markerId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+function _updateMarker(markerId, data) {
+	return backend.updateMarker(markerId, data).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "marker", _getMarkerDataFunc(data));
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function deleteMarker(markerId, callback) {
-	backend.deleteMarker(markerId, function(err, data) {
-		if(err)
-			return callback(err);
-
+function deleteMarker(markerId) {
+	return backend.deleteMarker(markerId).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "deleteMarker", { id: data.id });
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function _updateObjectStyles(objectStream, isLine, callback) {
+function _updateObjectStyles(objectStream, isLine) {
 	if(!(objectStream instanceof stream.Readable))
 		objectStream = new utils.ArrayStream([ objectStream ]);
 
 	var types = { };
-	utils.asyncStreamEach(objectStream, function(object, next) {
-		async.series([
-			function(next) {
-				if(types[object.typeId])
-					return next();
-
-				backend.getType(object.typeId, function(err, type) {
+	return utils.streamEachPromise(objectStream, function(object) {
+		return Promise.resolve().then(function() {
+			if(!types[object.typeId]) {
+				return backend.getType(object.typeId).then(function(type) {
 					if(type == null)
-						return next("Type "+object.typeId+" does not exist.");
+						throw "Type "+object.typeId+" does not exist.";
+
 					types[object.typeId] = type;
-					next(null);
 				});
-			},
-			function(next) {
-				async.each(types[object.typeId].fields, function(field, next) {
+			}
+		}).then(function() {
+			return Promise.all(types[object.typeId].fields.map(function(field) {
+				return Promise.resolve().then(function() {
 					if(field.type == "dropdown" && (field.controlColour || (isLine && field.controlWidth))) {
 						var _find = function(value) {
 							for(var j=0; j<(field.options || []).length; j++) {
@@ -316,15 +281,14 @@ function _updateObjectStyles(objectStream, isLine, callback) {
 						utils.extend(object, update);
 
 						if(Object.keys(update).length > 0 && object.id) // Objects from getLineTemplate() do not have an ID
-							return (isLine ? _updateLine : _updateMarker)(object.id, update, next);
+							return (isLine ? _updateLine : _updateMarker)(object.id, update);
 						else
-							return next();
+							return Promise.resolve();
 					}
-					next();
-				}, next);
-			}
-		], next);
-	}, callback);
+				});
+			}));
+		});
+	});
 }
 
 function getPadLines(padId) {
@@ -332,137 +296,115 @@ function getPadLines(padId) {
 }
 
 function getPadLinesWithPoints(padId, bboxWithZoom) {
-	return utils.filterStreamAsync(backend.getPadLines(padId), function(data, next) {
-		_getLinePoints(data.id, bboxWithZoom, function(err, trackPoints) {
-			if(err)
-				return next(err);
-
+	return utils.filterStreamPromise(backend.getPadLines(padId), function(data) {
+		return _getLinePoints(data.id, bboxWithZoom).then(function(trackPoints) {
 			data.trackPoints = trackPoints;
-			next(null, data);
+			return data;
 		});
 	});
 }
 
-function getLineTemplate(data, callback) {
-	backend.getLineTemplate(data, function(err, line) {
-		if(err)
-			return callback(err);
-
-		_updateObjectStyles(line, true, function(err) {
-			return callback(err, line);
+function getLineTemplate(data) {
+	return backend.getLineTemplate(data).then(function(line) {
+		return _updateObjectStyles(line, true).then(function() {
+			return line;
 		});
 	});
 }
 
-function createLine(padId, data, callback) {
-	async.auto({
-		calculateRouting : function(next) {
-			_calculateRouting(data, next); // Also sets data.distance and data.time
-		},
-		createLine : [ "calculateRouting", function(res, next) {
-			_createLine(padId, data, next);
-		} ],
-		setLinePoints : [ "createLine", "calculateRouting", function(res, next) {
-			_setLinePoints(padId, res.createLine.id, res.calculateRouting, next);
-		} ],
-		updateLineStyle : [ "createLine", function(res, next) {
-			_updateObjectStyles(res.createLine, true, next); // Modifies res.createLine
-		} ]
-	}, function(err, res) {
-		return callback(err, res.createLine);
+function createLine(padId, data) {
+	var calculateRoutingP = _calculateRouting(data);
+
+	var createLineP = calculateRoutingP.then(function() {
+		return _createLine(padId, data);
+	});
+
+	var setLinePointsP = Promise.all([ calculateRoutingP, createLineP ]).then(function(res) {
+		return _setLinePoints(padId, res[1].id, res[0]);
+	});
+
+	var updateLineStyleP = createLineP.then(function(lineData) {
+		return _updateObjectStyles(lineData, true);
+	});
+
+	return Promise.all([ calculateRoutingP, createLineP, setLinePointsP, updateLineStyleP ]).then(function(res) {
+		return res[1];
 	});
 }
 
-function updateLine(lineId, data, callback) {
-	async.auto({
-		originalLine : backend.getLine.bind(backend, lineId),
-		calculateRouting : [ "originalLine", function(res, next) {
-			if(data.routePoints == null)
-				data.routePoints = res.originalLine.routePoints;
+function updateLine(lineId, data) {
+	var originalLineP = backend.getLine(lineId);
 
-			if(data.mode == null)
-				data.mode = res.originalLine.mode || "";
+	var calculateRoutingP = originalLineP.then(function(originalLine) {
+		if(data.routePoints == null)
+			data.routePoints = originalLine.routePoints;
 
-			if(underscore.isEqual(data.routePoints, res.originalLine.routePoints) && data.mode == res.originalLine.mode)
-				return next();
+		if(data.mode == null)
+			data.mode = originalLine.mode || "";
 
-			_calculateRouting(data, next); // Also sets data.distance and data.time
-		} ],
-		updateLine : [ "calculateRouting", function(res, next) {
-			_updateLine(lineId, data, next);
-		} ],
-		updateLineStyle : [ "updateLine", function(res, next) {
-			_updateObjectStyles(res.updateLine, true, next); // Modifies res.updateLine
-		} ],
-		setLinePoints : [ "originalLine", "calculateRouting", function(res, next) {
-			if(!res.calculateRouting)
-				return next();
+		if(!underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode)
+			return _calculateRouting(data); // Also sets data.distance and data.time
+	});
 
-			_setLinePoints(res.originalLine.padId, lineId, res.calculateRouting, next);
-		} ]
-	}, function(err, res) {
-		callback(err, res.updateLine);
+	var updateLineP = calculateRoutingP.then(function() {
+		return _updateLine(lineId, data);
+	});
+
+	var updateLineStyleP = updateLineP.then(function(newLine) {
+		return _updateObjectStyles(newLine, true); // Modifies res.updateLine
+	});
+
+	var setLinePointsP = Promise.all([ originalLineP, calculateRoutingP ]).then(function(res) {
+		if(res[1])
+			return _setLinePoints(res[0].padId, lineId, res[1]);
+	});
+
+	return Promise.all([ originalLineP, calculateRoutingP, updateLineP, updateLineStyleP, setLinePointsP ]).then(function(res) {
+		return res[2];
 	});
 }
 
-function _createLine(padId, data, callback) {
-	backend.createLine(padId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+function _createLine(padId, data) {
+	return backend.createLine(padId, data).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "line", data);
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function _updateLine(lineId, data, callback) {
-	backend.updateLine(lineId, data, function(err, data) {
-		if(err)
-			return callback(err);
-
+function _updateLine(lineId, data) {
+	return backend.updateLine(lineId, data).then(function(data) {
 		listeners.notifyPadListeners(data.padId, "line", data);
-		callback(null, data);
+
+		return data;
 	});
 }
 
-function _setLinePoints(padId, lineId, trackPoints, callback) {
-	backend.setLinePoints(lineId, trackPoints, function(err) {
-		if(err)
-			return callback(err);
-
+function _setLinePoints(padId, lineId, trackPoints) {
+	return backend.setLinePoints(lineId, trackPoints).then(function() {
 		listeners.notifyPadListeners(padId, "linePoints", function(listener) {
 			return { reset: true, id: lineId, trackPoints : (listener && listener.bbox ? routing.prepareForBoundingBox(trackPoints, listener.bbox) : [ ]) };
 		});
-
-		callback(null);
 	});
 }
 
-function deleteLine(lineId, callback) {
-	backend.deleteLine(lineId, function(err, data) {
-		if(err)
-			return callback(err);
-
-		backend.setLinePoints(lineId, [ ], function(err) {
-			if(err)
-				return callback;
-
-			listeners.notifyPadListeners(data.padId, "deleteLine", { id: data.id });
-			callback(null, data);
+function deleteLine(lineId) {
+	return backend.deleteLine(lineId).then(function(data) {
+		return backend.setLinePoints(lineId, [ ]).then(function() {
+			return data;
 		});
+	}).then(function(data) {
+		listeners.notifyPadListeners(data.padId, "deleteLine", { id: data.id });
+
+		return data;
 	});
 }
 
 function getLinePoints(padId, bboxWithZoom) {
-	return utils.filterStreamAsync(backend.getPadLines(padId, "id"), function(data, next) {
-		_getLinePoints(data.id, bboxWithZoom, function(err, trackPoints) {
-			if(err)
-				return next(err);
-
+	return utils.filterStreamPromise(backend.getPadLines(padId, "id"), function(data) {
+		return _getLinePoints(data.id, bboxWithZoom).then(function(trackPoints) {
 			if(trackPoints.length >= 2)
-				next(null, { id: data.id, trackPoints: trackPoints });
-			else
-				next(null, null);
+				return { id: data.id, trackPoints: trackPoints };
 		});
 	});
 }
@@ -533,17 +475,14 @@ function getLinePoints(padId, bboxWithZoom) {
 	}, callback);
 }*/
 
-function _calculateRouting(line, callback) {
+function _calculateRouting(line) {
 	if(line.routePoints && line.routePoints.length >= 2 && line.mode) {
-		routing.calculateRouting(line.routePoints, line.mode, function(err, routeData) {
-			if(err)
-				return callback(err);
-
+		return routing.calculateRouting(line.routePoints, line.mode).then(function(routeData) {
 			line.distance = routeData.distance;
 			line.time = routeData.time;
 			for(var i=0; i<routeData.trackPoints.length; i++)
 				routeData.trackPoints[i].idx = i;
-			callback(null, routeData.trackPoints);
+			return routeData.trackPoints;
 		});
 	} else {
 		line.distance = utils.calculateDistance(line.routePoints);
@@ -553,7 +492,7 @@ function _calculateRouting(line, callback) {
 		for(var i=0; i<line.routePoints.length; i++) {
 			trackPoints.push(utils.extend({ }, line.routePoints[i], { zoom: 1, idx: i }));
 		}
-		callback(null, trackPoints);
+		return Promise.resolve(trackPoints);
 	}
 }
 
@@ -566,11 +505,8 @@ function _getMarkerDataFunc(marker) {
 	};
 }
 
-function _getLinePoints(lineId, bboxWithZoom, callback) {
-	backend.getLinePointsByBbox(lineId, bboxWithZoom, function(err, data) {
-		if(err)
-			return callback(err);
-
+function _getLinePoints(lineId, bboxWithZoom) {
+	return backend.getLinePointsByBbox(lineId, bboxWithZoom).then(function(data) {
 		// Get one more point outside of the bbox for each segment
 		var indexes = [ ];
 		for(var i=0; i<data.length; i++) {
@@ -584,9 +520,9 @@ function _getLinePoints(lineId, bboxWithZoom, callback) {
 		}
 
 		if(indexes.length == 0)
-			return callback(null, [ ]);
+			return [ ];
 
-		backend.getLinePointsByIdx(lineId, indexes, callback);
+		return backend.getLinePointsByIdx(lineId, indexes);
 	});
 }
 

@@ -8,6 +8,7 @@ var utils = require("./utils");
 var routing = require("./routing");
 var gpx = require("./gpx");
 var search = require("./search");
+var Promise = require("promise");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -22,22 +23,10 @@ Object.defineProperty(Error.prototype, "toJSON", {
 	configurable: true
 });
 
-database.connect(function(err) {
-	if(err) {
-		console.error(err);
-		process.exit(1);
-	}
+var dbP = database.connect();
 
-	var app = http.createServer();
-	app.listen(config.port, config.host, function(err) {
-		if(err) {
-			console.error(err);
-			process.exit(1);
-		}
-
-		console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
-	});
-
+var app = http.createServer();
+var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).then(function() {
 	var io = socketIo.listen(app);
 
 	io.sockets.on("connection", function(socket) {
@@ -62,11 +51,11 @@ database.connect(function(err) {
 
 				socket.padId = true;
 
-				database.getPadData(padId, function(err, data) {
-					if(err)
-						return _sendData(socket, "padData", err);
-
+				database.getPadData(padId).then(function(data) {
 					_setPadId(socket, data);
+				}, function(err) {
+					socket.emit("serverError", err);
+					socket.disconnect();
 				});
 			},
 
@@ -91,172 +80,203 @@ database.connect(function(err) {
 					listeners.removePadListener(socket);
 			},
 
-			createPad : function(data, callback) {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
-					return callback("Invalid parameters.");
+			createPad : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
+						throw "Invalid parameters.";
 
-				if(socket.padId)
-					return callback("Pad already loaded.");
+					if(socket.padId)
+						throw "Pad already loaded.";
 
-				database.createPad(data, function(err, padData) {
-					if(err)
-						return callback(err);
-
+					return database.createPad(data);
+				}).then(function(padData) {
 					_setPadId(socket, padData);
 
-					callback(null, padData);
+					return padData;
 				});
 			},
 
-			editPad : function(data, callback) {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
-					return callback("Invalid parameters.");
+			editPad : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.updatePadData(socket.padId, data, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.updatePadData(socket.padId, data);
+				});
 			},
 
-			addMarker : function(data, callback) {
-				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object } ))
-					return callback("Invalid parameters.");
+			addMarker : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object } ))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.createMarker(socket.padId, data, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.createMarker(socket.padId, data);
+				});
 			},
 
-			editMarker : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object }))
-					return callback("Invalid parameters.");
+			editMarker : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.updateMarker(data.id, data, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.updateMarker(data.id, data);
+				});
 			},
 
-			deleteMarker : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number" }))
-					return callback("Invalid parameters.");
+			deleteMarker : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.deleteMarker(data.id, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.deleteMarker(data.id);
+				});
 			},
 
-			getLineTemplate : function(data, callback) {
-				if(!utils.stripObject(data, { typeId: "number" }) || data.typeId == null)
-					return callback("Invalid parameters.");
+			getLineTemplate : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { typeId: "number" }) || data.typeId == null)
+						throw "Invalid parameters.";
 
-				database.getLineTemplate(data, callback);
+					return database.getLineTemplate(data);
+				});
 			},
 
-			addLine : function(data, callback) {
-				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
-					return callback("Invalid parameters.");
+			addLine : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.createLine(socket.padId, data, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.createLine(socket.padId, data);
+				});
 			},
 
-			editLine : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
-					return callback("Invalid parameters.");
+			editLine : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.updateLine(data.id, data, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.updateLine(data.id, data);
+				});
 			},
 
-			deleteLine : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number" }))
-					return callback("Invalid parameters.");
+			deleteLine : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
-				
-				database.deleteLine(data.id, callback);
+					if(!socket.writable)
+						throw "In read-only mode.";
+
+					return database.deleteLine(data.id);
+				});
 			},
 
-			addView : function(data, callback) {
-				if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
-					return callback("Invalid parameters.");
+			addView : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.createView(socket.padId, data, callback);
+					return database.createView(socket.padId, data);
+				});
 			},
 
-			editView : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
-					return callback("Invalid parameters.");
+			editView : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.updateView(data.id, data, callback);
+					return database.updateView(data.id, data);
+				});
 			},
 
-			deleteView : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number" }))
-					return callback("Invalid parameters.");
+			deleteView : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.deleteView(data.id, callback);
+					return database.deleteView(data.id);
+				});
 			},
 
-			addType : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
-					return callback("Invalid parameters.");
+			addType : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.createType(socket.padId, data, callback);
+					return database.createType(socket.padId, data);
+				});
 			},
 
-			editType : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
-					return callback("Invalid parameters.");
+			editType : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.updateType(data.id, data, callback);
+					return database.updateType(data.id, data);
+				});
 			},
 
-			deleteType : function(data, callback) {
-				if(!utils.stripObject(data, { id: "number" }))
-					return callback("Invalid parameters.");
+			deleteType : function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { id: "number" }))
+						throw "Invalid parameters.";
 
-				if(!socket.writable)
-					return callback("In read-only mode.");
+					if(!socket.writable)
+						throw "In read-only mode.";
 
-				database.deleteType(data.id, callback);
+					return database.deleteType(data.id);
+				});
 			},
 
-			exportGpx : function(data, callback) {
-				if(socket.padId == null)
-					return callback("No pad ID set.");
+			exportGpx : function(data) {
+				return Promise.resolve().then(function() {
+					if(socket.padId == null)
+						throw "No pad ID set.";
 
-				gpx.exportGpx(socket.padId, data.useTracks, callback);
+					return gpx.exportGpx(socket.padId, data.useTracks);
+				});
 			},
 
-			find: function(data, callback) {
-				if(!utils.stripObject(data, { query: "string" }))
-					return callback("Invalid parameters.");
+			find: function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { query: "string" }))
+						throw "Invalid parameters.";
 
-				search.find(data.query, callback);
+					return search.find(data.query);
+				});
 			}
 
 			/*copyPad : function(data, callback) {
@@ -269,13 +289,10 @@ database.connect(function(err) {
 
 		for(var i in handlers) { (function(i) {
 			socket.on(i, function(data, callback) {
-				var d2 = domain.create();
-				d2.run(function() {
-					handlers[i](data, callback);
-				});
-
-				d2.on("error", function(err) {
-					console.error("Uncaught exception in function "+i+":", err.stack);
+				Promise.resolve(data).then(handlers[i]).then(function(res) { // nodeify(callback);
+					callback(null, res);
+				}, function(err) {
+					console.log(err.stack);
 					callback(err);
 				});
 			});
@@ -283,16 +300,12 @@ database.connect(function(err) {
 	});
 });
 
-function _sendData(socket, eventName, err, data) {
-	if(err) {
-		console.warn("_sendData", err, err.stack);
-		socket.emit("serverError", err);
-		socket.disconnect();
-		return;
-	}
-
-	socket.emit(eventName, data);
-}
+Promise.all([ dbP, appP ]).then(function() {
+	console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
+}).catch(function(err) {
+	console.error(err);
+	process.exit(1);
+});
 
 function _sendStreamData(socket, eventName, stream) {
 	stream.on("data", function(data) {
@@ -309,7 +322,7 @@ function _setPadId(socket, data) {
 	socket.writable = data.writable;
 	listeners.addPadListener(socket);
 
-	_sendData(socket, "padData", null, data);
+	socket.emit("padData", data);
 	_sendStreamData(socket, "view", database.getViews(socket.padId));
 	_sendStreamData(socket, "type", database.getTypes(socket.padId));
 	_sendStreamData(socket, "line", database.getPadLines(socket.padId));

@@ -7,7 +7,7 @@
     "start": "node lib/server.js"
   },
   "dependencies": {
-    "async": "^2.0.1",
+    "promise": "^7.1.1",
     "request": "^2.75.0",
     "sequelize": "^3.24.3",
     "socket.io": "^1.2.1",

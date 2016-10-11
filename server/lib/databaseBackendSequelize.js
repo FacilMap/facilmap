@@ -1,7 +1,7 @@
 var Sequelize = require("sequelize");
 var config = require("../config");
 var utils = require("./utils");
-var async = require("async");
+var Promise = require("promise");
 
 var conn = new Sequelize(config.db.database, config.db.user, config.db.password, {
 	dialect: config.db.type,
@@ -222,65 +222,52 @@ Marker.belongsTo(Type, _makeNotNullForeignKey("type", "typeId", true));
 Line.belongsTo(Type, _makeNotNullForeignKey("type", "typeId", true));
 
 
-function connect(callback, force) {
-	async.series([
-		function(next) {
-			_promiseComplete(conn.authenticate(), next);
-		},
-		function(next) {
-			_promiseComplete(conn.sync({ force: !!force }), next);
-		},
-		function(next) {
-			// Migrations
+function connect(force) {
+	conn.authenticate().then(function() {
+		return conn.sync({ force: !!force });
+	}).then(function() {
+		// Migrations
 
-			var queryInterface = conn.getQueryInterface();
-			Promise.all([
-				// Rename Line.points to Line.routePoints
-				queryInterface.describeTable('Lines').then(function(attributes) {
-					if(attributes.points) {
-						return queryInterface.renameColumn('Lines', 'points', 'routePoints');
-					}
-				})
-			].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
-				// allow null on Pad.name, Marker.name, Line.name
-				return queryInterface.describeTable(table).then(function(attributes) {
-					if(!attributes.name.allowNull)
-						return queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
-				});
-			})))
-			.then(function() { next(); })
-			.catch(function(err) { next(err); });
-		}
-	], callback);
+		var queryInterface = conn.getQueryInterface();
+		return Promise.all([
+			// Rename Line.points to Line.routePoints
+			queryInterface.describeTable('Lines').then(function(attributes) {
+				if(attributes.points) {
+					return queryInterface.renameColumn('Lines', 'points', 'routePoints');
+				}
+			})
+		].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
+			// allow null on Pad.name, Marker.name, Line.name
+			return queryInterface.describeTable(table).then(function(attributes) {
+				if(!attributes.name.allowNull)
+					return queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
+			});
+		})));
+	});
 }
 
-function padIdExists(padId, callback) {
-	Pad.count({ where: { $or: [ { id: padId }, { writeId: padId } ] } }).then(function(num) {
-		callback(null, num > 0);
-	}).catch(callback);
+function padIdExists(padId) {
+	return Pad.count({ where: { $or: [ { id: padId }, { writeId: padId } ] } }).then(function(num) {
+		return num > 0;
+	});
 }
 
-function getPadData(padId, callback) {
-	_promiseComplete(Pad.findOne({ where: { id: padId }, include: [ { model: View, as: "defaultView" } ]}), callback);
+function getPadData(padId) {
+	return Pad.findOne({ where: { id: padId }, include: [ { model: View, as: "defaultView" } ]});
 }
 
-function getPadDataByWriteId(writeId, callback) {
-	_promiseComplete(Pad.findOne({ where: { writeId: writeId }, include: [ { model: View, as: "defaultView" } ] }), callback);
+function getPadDataByWriteId(writeId) {
+	return Pad.findOne({ where: { writeId: writeId }, include: [ { model: View, as: "defaultView" } ] });
 }
 
-function createPad(data, callback) {
-	_promiseComplete(Pad.create(data), callback);
+function createPad(data) {
+	return Pad.create(data);
 }
 
-function updatePadData(padId, data, callback) {
-	async.waterfall([
-		function(next) {
-			_promiseComplete(Pad.update(data, { where: { id: padId } }), next);
-		},
-		function(affectedNumber, next) {
-			getPadData(data.id || padId, next);
-		}
-	], callback);
+function updatePadData(padId, data) {
+	return Pad.update(data, { where: { id: padId } }).then(function() {
+		return getPadData(data.id || padId);
+	});
 }
 
 function _getPadObjects(type, padId, condition) {
@@ -302,89 +289,58 @@ function _getPadObjects(type, padId, condition) {
 	return ret;
 }
 
-function _createPadObject(type, padId, data, callback) {
+function _createPadObject(type, padId, data) {
 	var obj = conn.model(type).build(data);
 	obj.padId = padId;
-	_promiseComplete(obj.save(), callback);
+	return obj.save();
 }
 
-function _createPadObjectWithData(type, padId, data, callback) {
-	async.auto({
-		obj: function(next) {
-			_createPadObject(type, padId, data, next);
-		},
-		data: [ "obj", function(res, next) {
-			if(data.data != null) {
-				res.obj.data = data.data;
-				res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
-				_setObjectData(type, res.obj.id, data.data, next);
-			}
-			else {
-				res.obj.data = { };
-				res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
-				next();
-			}
-		} ]
-	}, function(err, res) {
-		callback(err, res.obj);
+function _createPadObjectWithData(type, padId, data) {
+	return _createPadObject(type, padId, data).then(function(obj) {
+		if(data.data != null) {
+			obj.data = data.data;
+			obj.setDataValue("data", obj.data); // For JSON.stringify()
+			return _setObjectData(type, obj.id, data.data).then(function() {
+				return obj;
+			});
+		} else {
+			obj.data = { };
+			obj.setDataValue("data", obj.data); // For JSON.stringify()
+			return obj;
+		}
 	});
 }
 
-function _updatePadObject(type, objId, data, callback) {
-	async.waterfall([
-		function(next) {
-			_promiseComplete(conn.model(type).update(data, { where: { id: objId } }), next);
-		},
-		function(affectedCount, next) {
-			_promiseComplete(conn.model(type).findById(objId), next);
-		}
-	], callback);
-}
-
-function _updatePadObjectWithData(type, objId, data, callback) {
-	async.auto({
-		obj: function(next) {
-			_updatePadObject(type, objId, data, next);
-		},
-		data: function(next) {
-			if(data.data != null)
-				_setObjectData(type, objId, data.data, next);
-			else
-				next();
-		},
-		getData: function(next) {
-			if(data.data == null)
-				_getObjectData(type, objId, next);
-			else
-				next();
-		}
-	}, function(err, res) {
-		if(err)
-			return callback(err);
-
-		res.obj.data = (data.data != null ? data.data : res.getData);
-		res.obj.setDataValue("data", res.obj.data); // For JSON.stringify()
-		callback(null, res.obj);
+function _updatePadObject(type, objId, data) {
+	return conn.model(type).update(data, { where: { id: objId } }).then(function() {
+		return conn.model(type).findById(objId);
 	});
 }
 
-function _deletePadObject(type, objId, callback) {
-	conn.model(type).findById(objId).then(function(obj) {
+function _updatePadObjectWithData(type, objId, data) {
+	return Promise.all([
+		_updatePadObject(type, objId, data),
+		data.data != null ? _setObjectData(type, objId, data.data) : _getObjectData(type, objId)
+	]).then(function(results) {
+		var obj = results[0];
+		obj.data = (data.data != null ? data.data : results[1]);
+		obj.setDataValue("data", obj.data); // For JSON.stringify()
+		return obj;
+	});
+}
+
+function _deletePadObject(type, objId) {
+	return conn.model(type).findById(objId).then(function(obj) {
 		return obj.destroy().then(function() {
-			callback(null, obj);
+			return obj;
 		});
-	}).catch(callback);
+	});
 }
 
-function _deletePadObjectWithData(type, objId, callback) {
-	async.series([
-		function(next) {
-			_setObjectData(type, objId, { }, next);
-		},
-		function(next) {
-			_deletePadObject(type, objId, callback); // Pass on object to callback
-		}
-	], callback);
+function _deletePadObjectWithData(type, objId) {
+	return _setObjectData(type, objId, { }).then(function() {
+		return _deletePadObject(type, objId); // Return the object
+	});
 }
 
 function _dataToArr(data, extend) {
@@ -401,76 +357,67 @@ function _dataFromArr(dataArr) {
 	return data;
 }
 
-function _getObjectData(type, objId, callback) {
+function _getObjectData(type, objId) {
 	var filter = { };
 	filter[type.toLowerCase()+"Id"] = objId;
 
-	conn.model(type+"Data").findAll({ where: filter}).then(function(dataArr) {
-		callback(null, _dataFromArr(dataArr));
-	}, callback);
+	return conn.model(type+"Data").findAll({ where: filter}).then(function(dataArr) {
+		return _dataFromArr(dataArr);
+	});
 }
 
-function _setObjectData(type, objId, data, callback) {
+function _setObjectData(type, objId, data) {
 	var model = conn.model(type+"Data");
 	var idObj = { };
 	idObj[type.toLowerCase()+"Id"] = objId;
 
-	async.series([
-		function(next) {
-			_promiseComplete(model.destroy({ where: idObj}), next);
-		},
-		function(next) {
-			_promiseComplete(model.bulkCreate(_dataToArr(data, idObj)), next);
-		}
-	], callback);
+	return model.destroy({ where: idObj}).then(function() {
+		return model.bulkCreate(_dataToArr(data, idObj));
+	});
 }
 
 function getViews(padId) {
 	return _getPadObjects("View", padId);
 }
 
-function createView(padId, data, callback) {
-	_createPadObject("View", padId, data, callback);
+function createView(padId, data) {
+	return _createPadObject("View", padId, data);
 }
 
-function updateView(viewId, data, callback) {
-	_updatePadObject("View", viewId, data, callback);
+function updateView(viewId, data) {
+	return _updatePadObject("View", viewId, data);
 }
 
-function deleteView(viewId, callback) {
-	_deletePadObject("View", viewId, callback);
+function deleteView(viewId) {
+	return _deletePadObject("View", viewId);
 }
 
-function getType(typeId, callback) {
-	_promiseComplete(Type.findById(typeId), callback);
+function getType(typeId) {
+	return Type.findById(typeId);
 }
 
 function getTypes(padId) {
 	return _getPadObjects("Type", padId);
 }
 
-function createType(padId, data, callback) {
-	_createPadObject("Type", padId, data, callback);
+function createType(padId, data) {
+	return _createPadObject("Type", padId, data);
 }
 
-function updateType(typeId, data, callback) {
-	_updatePadObject("Type", typeId, data, callback);
+function updateType(typeId, data) {
+	return _updatePadObject("Type", typeId, data);
 }
 
-function deleteType(typeId, callback) {
-	_deletePadObject("Type", typeId, callback);
+function deleteType(typeId) {
+	return _deletePadObject("Type", typeId);
 }
 
-function isTypeUsed(typeId, callback) {
-	async.series([
-		function(next) {
-			_promiseComplete(Marker.findOne({ where: { typeId: typeId } }), next);
-		},
-		function(next) {
-			_promiseComplete(Line.findOne({ where: { typeId: typeId } }), next);
-		}
-	], function(err, res) {
-		callback(err, res[0] != null || res[1] != null);
+function isTypeUsed(typeId) {
+	return Promise.all([
+		Marker.findOne({ where: { typeId: typeId } }),
+		Line.findOne({ where: { typeId: typeId } })
+	]).then(function(res) {
+		return res[0] != null || res[1] != null;
 	});
 }
 
@@ -482,16 +429,16 @@ function getPadMarkersByType(padId, typeId) {
 	return _getPadObjects("Marker", padId, { where: { typeId: typeId }, include: [ MarkerData ] });
 }
 
-function createMarker(padId, data, callback) {
-	_createPadObjectWithData("Marker", padId, data, callback);
+function createMarker(padId, data) {
+	return _createPadObjectWithData("Marker", padId, data);
 }
 
-function updateMarker(markerId, data, callback) {
-	_updatePadObjectWithData("Marker", markerId, data, callback);
+function updateMarker(markerId, data) {
+	return _updatePadObjectWithData("Marker", markerId, data);
 }
 
-function deleteMarker(markerId, callback) {
-	_deletePadObjectWithData("Marker", markerId, callback);
+function deleteMarker(markerId) {
+	return _deletePadObjectWithData("Marker", markerId);
 }
 
 function getPadLines(padId, fields) {
@@ -506,62 +453,57 @@ function getPadLinesByType(padId, typeId) {
 	return _getPadObjects("Line", padId, { where: { typeId: typeId }, include: [ LineData ] });
 }
 
-function getLineTemplate(data, callback) {
+function getLineTemplate(data) {
 	var line = JSON.parse(JSON.stringify(Line.build(data)));
 	line.data = data.data || { };
-	callback(null, line);
+	return Promise.resolve(line);
 }
 
-function getLine(lineId, callback) {
-	_promiseComplete(Line.findOne({ where: { id: lineId }, include: [ LineData ] }), callback);
+function getLine(lineId) {
+	return Line.findOne({ where: { id: lineId }, include: [ LineData ] });
 }
 
-function createLine(padId, data, callback) {
-	_createPadObjectWithData("Line", padId, data, callback);
+function createLine(padId, data) {
+	return _createPadObjectWithData("Line", padId, data);
 }
 
-function updateLine(lineId, data, callback) {
-	_updatePadObjectWithData("Line", lineId, data, callback);
+function updateLine(lineId, data) {
+	return _updatePadObjectWithData("Line", lineId, data);
 }
 
-function deleteLine(lineId, callback) {
-	_deletePadObjectWithData("Line", lineId, callback);
+function deleteLine(lineId) {
+	return _deletePadObjectWithData("Line", lineId);
 }
 
-function getLinePoints(lineId, callback) {
-	_promiseComplete(Line.build({ id: lineId }).getLinePoints(), callback);
+function getLinePoints(lineId) {
+	return Line.build({ id: lineId }).getLinePoints();
 }
 
-function getLinePointsByBbox(lineId, bboxWithZoom, callback) {
-	_promiseComplete(Line.build({ id: lineId }).getLinePoints({
+function getLinePointsByBbox(lineId, bboxWithZoom) {
+	return Line.build({ id: lineId }).getLinePoints({
 		where: Sequelize.and(_makeBboxCondition(bboxWithZoom), bboxWithZoom ? { zoom: { lte: bboxWithZoom.zoom } } : null),
 		attributes: [ "idx" ],
 		order: "idx"
-	}), callback);
+	});
 }
 
-function getLinePointsByIdx(lineId, indexes, callback) {
-	_promiseComplete(Line.build({ id: lineId }).getLinePoints({
+function getLinePointsByIdx(lineId, indexes) {
+	return Line.build({ id: lineId }).getLinePoints({
 		where: { idx: indexes },
 		attributes: [ "lon", "lat", "idx" ],
 		order: "idx"
-	}), callback);
+	});
 }
 
-function setLinePoints(lineId, trackPoints, callback) {
-	async.series([
-		function(next) {
-			_promiseComplete(LinePoint.destroy({ where: { lineId: lineId } }), next);
-		},
-		function(next) {
-			var create = [ ];
-			for(var i=0; i<trackPoints.length; i++) {
-				create.push(utils.extend({ }, trackPoints[i], { lineId: lineId }));
-			}
-
-			_promiseComplete(LinePoint.bulkCreate(create), next);
+function setLinePoints(lineId, trackPoints) {
+	return LinePoint.destroy({ where: { lineId: lineId } }).then(function() {
+		var create = [ ];
+		for(var i=0; i<trackPoints.length; i++) {
+			create.push(utils.extend({ }, trackPoints[i], { lineId: lineId }));
 		}
-	], callback);
+
+		return LinePoint.bulkCreate(create);
+	});
 }
 
 function _makeBboxCondition(bbox, prefix) {
@@ -596,14 +538,6 @@ function _makeBboxCondition(bbox, prefix) {
 	}
 
 	return Sequelize.and.apply(Sequelize, conditions);
-}
-
-function _promiseComplete(promise, callback) {
-	promise.then(function() {
-		callback.apply(this, [ null ].concat([].slice.call(arguments)));
-	}, function(err) {
-		callback(err);
-	});
 }
 
 module.exports = {

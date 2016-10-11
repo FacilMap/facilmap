@@ -1,6 +1,6 @@
 var stream = require("stream");
 var util = require("util");
-var async = require("async");
+var Promise = require("promise");
 
 function isInBbox(position, bbox) {
 	if(position.lat > bbox.top || position.lat < bbox.bottom)
@@ -29,7 +29,7 @@ function filterStream(inStream, filterFunction) {
 	return ret;
 }
 
-function filterStreamAsync(inStream, filterFunction) {
+function filterStreamPromise(inStream, filterFunction) {
 	var error = false;
 
 	var ret = new stream.Readable({ objectMode: true });
@@ -47,7 +47,7 @@ function filterStreamAsync(inStream, filterFunction) {
 				ret.push(null);
 			} else {
 				running = true;
-				filterFunction(next, function(err, newData) {
+				Promise.nodeify(filterFunction)(next, function(err, newData) {
 					running = false;
 
 					if(error)
@@ -197,29 +197,44 @@ ArrayStream.prototype.receiveArray = function(err, array) {
 	this.push(null);
 };
 
-function asyncStreamEach(stream, handle, callback) {
-	var queue = async.queue(handle, 5);
+function streamEachPromise(stream, handle) {
+	return new Promise(function(resolve, reject) {
+		var ended = false;
+		var error = false;
+		var reading = false;
 
-	var push = function() {
-		if(queue.length() == 0) {
+		var read = function() {
+			if(error)
+				return reject(error);
+
+			reading = true;
+
 			var item = stream.read();
 			if(item != null)
-				queue.push(item, push);
-		}
-	};
+				Promise.resolve().then(function() { return handle(item) }).then(read, reject);
+			else if(!ended) {
+				reading = false;
+				stream.once("readable", read);
+			}
+			else
+				resolve();
+		};
 
-	stream.on("readable", push);
+		stream.on("end", function() {
+			ended = true;
 
-	stream.on("end", function() {
-		if(queue.running() == 0 && queue.length() == 0)
-			callback();
-		else
-			queue.drain = callback;
-	});
+			if(!reading)
+				read();
+		});
 
-	stream.on("error", function(err) {
-		queue.kill();
-		callback(err);
+		stream.on("error", function(err) {
+			error = err;
+
+			if(!reading)
+				read();
+		});
+
+		read();
 	});
 }
 
@@ -244,13 +259,13 @@ function isoDate(date) {
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
-	filterStreamAsync : filterStreamAsync,
+	filterStreamPromise : filterStreamPromise,
 	extend : extend,
 	calculateDistance : calculateDistance,
 	generateRandomId : generateRandomId,
 	stripObject : stripObject,
 	ArrayStream : ArrayStream,
-	asyncStreamEach : asyncStreamEach,
+	streamEachPromise : streamEachPromise,
 	escapeXml : escapeXml,
 	isoDate : isoDate
 };
