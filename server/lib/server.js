@@ -7,6 +7,7 @@ var domain = require("domain");
 var utils = require("./utils");
 var routing = require("./routing");
 var gpx = require("./gpx");
+var search = require("./search");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -241,6 +242,13 @@ database.connect(function(err) {
 
 			exportGpx : function(data, callback) {
 				gpx.exportGpx(socket.padId, data.useTracks, callback);
+			},
+
+			find: function(data, callback) {
+				if(!utils.stripObject(data, { query: "string" }))
+					return callback("Invalid parameters.");
+
+				search.find(data.query, callback);
 			}
 
 			/*copyPad : function(data, callback) {

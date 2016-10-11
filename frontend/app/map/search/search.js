@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils, fpNameFinder) {
+	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils) {
 		return function(map) {
 			var scope = $rootScope.$new(true);
 			scope.searchString = "";
@@ -29,8 +29,12 @@
 					scope.searchResults = null;
 					if(scope.searchString.trim() != "") {
 						map.loadStart();
-						fpNameFinder.find(scope.searchString).then(function(results) {
+						map.socket.emit("find", { query: scope.searchString }, function(err, results) {
 							map.loadEnd();
+
+							if(err)
+								map.messages.showMessage("danger", err);
+
 							scope.searchResults = results;
 
 							if(results.length > 0)
