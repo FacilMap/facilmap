@@ -62,9 +62,9 @@ function _makeNotNullForeignKey(type, field, error) {
 /* Pads */
 
 var Pad = conn.define("Pad", {
-	id : { type: Sequelize.STRING, allowNull: false, unique: "padId", primaryKey: true, validate: { is: /^.+$/ } },
+	id : { type: Sequelize.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
 	name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilPad"; } },
-	writeId: { type: Sequelize.STRING, allowNull: false, unique: "padId", validate: { is: /^.+$/ } }
+	writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } }
 });
 
 
