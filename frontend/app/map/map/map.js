@@ -19,19 +19,17 @@
 		};
 
 		ret.initMap = function(el, id, padId) {
-			return maps[id] = new Map(el, id, padId);
+			return maps[id] = new Map(el, padId);
 		};
 
 		return ret;
 
-		function Map(el, id, padId) {
+		function Map(el, padId) {
 			var map = this;
 
 			map.el = el;
 			map.mapEvents = $rootScope.$new(true); /* Event types: click, layerchange */
 			map.socket = fpSocket(padId);
-
-			//map.socket.id = id; // To be in scope for template
 
 			map.layers = { };
 			[
@@ -91,9 +89,12 @@
 				direction: "right"
 			};
 
+			var scope = map.socket.$new();
+			scope.loaded = false;
+
 			var tpl = $($templateCache.get("map/map/map.html"));
 			el.append(tpl);
-			$compile(tpl)(map.socket);
+			$compile(tpl)(scope);
 
 			map.map = L.map(el.find(".fp-map")[0]);
 
@@ -268,18 +269,22 @@
 
 			fpMapLegend(map);
 
-			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
-				if(loaded) {
-					setTimeout(function() {
-						map.displayView(map.socket.padData.defaultView);
-					}, 0);
-					loadedWatcher();
-				}
-			});
+			if(padId) {
+				var loadedWatcher = map.socket.$watch("padData", function(padData) {
+					if(padData != null) {
+						loadedWatcher();
+						map.displayView(padData.defaultView);
+						scope.loaded = true;
+					}
+				});
+			} else {
+				map.displayView();
+				scope.loaded = true;
+			}
 
 			var errorMessage = null;
 			map.socket.$watch("disconnected", function(disconnected) {
-				if(disconnected && !errorMessage)
+				if(disconnected && !errorMessage && !map.socket.serverError)
 					errorMessage = map.messages.showMessage("danger", "The connection to the server was lost.");
 				else if(!disconnected && errorMessage) {
 					errorMessage.close();
@@ -287,8 +292,16 @@
 				}
 			});
 
+			map.socket.$watch("serverError", function(serverError) {
+				if(serverError) {
+					errorMessage && errorMessage.close();
+					map.messages.showMessage("danger", serverError);
+				}
+			});
+
 			map.map.on("moveend", function() {
-				map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
+				if(map.socket.padId)
+					map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
 			});
 		}
 	});

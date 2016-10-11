@@ -5,7 +5,6 @@
 		return function(padId) {
 			var scope = $rootScope.$new();
 
-			scope.padId = padId;
 			scope.padData = null;
 			scope.readonly = null;
 			scope.markers = { };
@@ -41,16 +40,21 @@
 				return socket.emit.apply(socket, arguments);
 			};
 
+			scope.on("serverError", function(data) {
+				scope.serverError = data;
+			});
+
 			scope.on("padData", function(data) {
 				scope.padData = data;
 
 				if(data.writable != null)
 					scope.readonly = !data.writable;
 
-				scope.disconnected = false;
+				var id = scope.readonly ? data.id : data.writeId;
+				if(id != null)
+					scope.padId = id;
 
-				if(!scope.loaded)
-					scope.loaded = true;
+				scope.disconnected = false;
 			});
 
 			scope.on("marker", function(data) {
@@ -128,9 +132,22 @@
 			});
 
 			scope.on("reconnect", function() {
-				scope.emit("setPadId", scope.padId);
-				scope.emit("updateBbox", scope.bbox);
+				if(scope.padId)
+					scope.emit("setPadId", scope.padId);
+				else
+					scope.disconnected = false; // Otherwise it gets set when padData arrives
+
+				if(scope.bbox)
+					scope.emit("updateBbox", scope.bbox);
 			});
+
+			scope.setPadId = function(padId) {
+				if(scope.padId != null)
+					return;
+
+				scope.padId = padId;
+				scope.emit("setPadId", padId);
+			};
 
 			scope.updateBbox = function(bbox) {
 				scope.emit("updateBbox", bbox);
@@ -138,7 +155,8 @@
 				scope.bbox = bbox;
 			};
 
-			scope.emit("setPadId", scope.padId);
+			if(padId)
+				scope.setPadId(padId);
 
 			scope.$on("$destroy", function() {
 				socket.removeAllListeners();

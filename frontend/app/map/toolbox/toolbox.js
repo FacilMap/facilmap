@@ -43,6 +43,10 @@
 				map.aboutUi.showAbout();
 			};
 
+			scope.startPad = function() {
+				map.padUi.createPad();
+			};
+
 			var ret = {
 				div: $($templateCache.get("map/toolbox/toolbox.html"))
 			};

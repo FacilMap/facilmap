@@ -7,7 +7,7 @@ function notifyPadListeners(padId, eventType, getData) {
 	var isFunc = (typeof getData == "function");
 
 	( listeners[padId] || [ ]).forEach(function(listener) {
-		var data = isFunc ? getData(listener.bbox) : getData;
+		var data = isFunc ? getData(listener) : getData;
 		if(data == null)
 			return;
 
@@ -34,8 +34,21 @@ function removePadListener(listener) {
 	listeners[listener.padId] = l.slice(0, idx).concat(l.slice(idx+1));
 }
 
+function changePadId(oldPadId, newPadId) {
+	if(oldPadId == newPadId)
+		return;
+
+	listeners[newPadId] = listeners[oldPadId];
+	delete listeners[oldPadId];
+
+	listeners[newPadId].forEach(function(listener) {
+		listener.padId = newPadId;
+	});
+}
+
 module.exports = {
 	notifyPadListeners : notifyPadListeners,
 	addPadListener : addPadListener,
-	removePadListener: removePadListener
+	removePadListener: removePadListener,
+	changePadId: changePadId
 };

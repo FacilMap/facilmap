@@ -16,22 +16,29 @@ function getPadData(padId, callback) {
 		if(err)
 			return callback(err);
 		else if(data != null)
-			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
+			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
 
 		backend.getPadData(padId, function(err, data) {
-			if(err || data != null)
-				return callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: false, writeId: null }));
+			if(err)
+				return callback(err);
 
-			backend.createPad(utils.generateRandomId(10), padId, function(err, data) {
-				if(err)
-					return callback(err);
+			if(data == null)
+				return callback("This pad does not exist.");
 
-				async.each(DEFAULT_TYPES, function(it, next) {
-					backend.createType(data.id, it, next);
-				}, function(err) {
-					callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true, writeId: null }));
-				});
-			});
+			return callback(null, utils.extend(JSON.parse(JSON.stringify(data)), { writable: false, writeId: null }));
+		});
+	});
+}
+
+function createPad(data, callback) {
+	backend.createPad(data, function(err, data) {
+		if(err)
+			return callback(err);
+
+		async.each(DEFAULT_TYPES, function(it, next) {
+			backend.createType(data.id, it, next);
+		}, function(err) {
+			callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
 		});
 	});
 }
@@ -41,7 +48,17 @@ function updatePadData(padId, data, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(padId, "padData", data);
+		listeners.notifyPadListeners(padId, "padData", function(listener) {
+			var dataClone = JSON.parse(JSON.stringify(data));
+			if(!listener.writable)
+				dataClone.writeId = null;
+
+			return dataClone;
+		});
+
+		if(data.id && data.id != padId)
+			listeners.changePadId(padId, data.id);
+
 		callback(null, data);
 	});
 }
@@ -350,8 +367,8 @@ function _setLinePoints(padId, lineId, trackPoints, callback) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(padId, "linePoints", function(bboxWithZoom) {
-			return { reset: true, id: lineId, trackPoints : (bboxWithZoom ? routing.prepareForBoundingBox(trackPoints, bboxWithZoom) : [ ]) };
+		listeners.notifyPadListeners(padId, "linePoints", function(listener) {
+			return { reset: true, id: lineId, trackPoints : (listener && listener.bbox ? routing.prepareForBoundingBox(trackPoints, listener.bbox) : [ ]) };
 		});
 
 		callback(null);
@@ -478,8 +495,8 @@ function _calculateRouting(line, callback) {
 }
 
 function _getMarkerDataFunc(marker) {
-	return function(bbox) {
-		if(!bbox || !utils.isInBbox(marker, bbox))
+	return function(listener) {
+		if(!listener || !listener.bbox || !utils.isInBbox(marker, listener.bbox))
 			return null;
 
 		return marker;
@@ -513,6 +530,7 @@ function _getLinePoints(lineId, bboxWithZoom, callback) {
 module.exports = {
 	connect : backend.connect,
 	getPadData : getPadData,
+	createPad : createPad,
 	updatePadData : updatePadData,
 	getViews : getViews,
 	createView : createView,

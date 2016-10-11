@@ -4,7 +4,7 @@
 		<img src="spinner.gif" alt="Loading…">
 	</div>
 </div>
-<div class="fp-map-disabled-cover" ng-show="!loaded || disconnected"></div>
-<div class="fp-map-loading" ng-hide="loaded">
+<div class="fp-map-disabled-cover" ng-show="disconnected || serverError"></div>
+<div class="fp-map-loading" ng-hide="loaded || serverError">
 	Loading...
 </div>

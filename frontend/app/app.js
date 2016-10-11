@@ -29,7 +29,6 @@ var FacilPad = {
 	});
 
 	fp.app.run([ "$rootScope", "fpUtils", function($rootScope, fpUtils) {
-		$rootScope.padId = location.pathname.match(/[^\/]*$/)[0];
 		$rootScope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
 
 		$rootScope.round = fpUtils.round;
@@ -79,13 +78,18 @@ var FacilPad = {
 	};
 
 	fp.app.controller("PadCtrl", function($scope, fpMap, $timeout) {
+		$scope.padId = location.pathname.match(/[^\/]*$/)[0];
+
 		$timeout(function() {
 			var map = fpMap.getMap("map");
 
-			if(map.socket.padData)
-				$scope.padName = map.socket.padData.name;
 			map.socket.$watch("padData.name", function(newVal) {
 				$scope.padName = newVal;
+			});
+
+			map.socket.$watch("padId", function(padId) {
+				if(padId)
+					history.replaceState(null, "", $scope.urlPrefix + padId);
 			});
 		}, 0);
 

@@ -7,9 +7,12 @@
 		var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		var LENGTH = 12;
 
-		fpUtils.generateRandomPadId = function() {
+		fpUtils.generateRandomPadId = function(length) {
+			if(length == null)
+				length = LENGTH;
+
 			var randomPadId = "";
-			for(var i=0; i<LENGTH; i++) {
+			for(var i=0; i<length; i++) {
 				randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
 			}
 			return randomPadId;

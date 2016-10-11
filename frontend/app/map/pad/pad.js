@@ -3,22 +3,29 @@
 	fp.app.factory("fpMapPad", function($uibModal, fpUtils) {
 		return function(map) {
 			var ret = {
-				editPadSettings : function() {
+				createPad : function() {
+					ret.editPadSettings(true);
+				},
+				editPadSettings : function(create) {
 					var dialog = $uibModal.open({
 						templateUrl: "map/pad/pad-settings.html",
 						scope: map.socket,
 						controller: "fpMapPadSettingsCtrl",
 						size: "lg",
 						resolve: {
-							map: function() { return map; }
+							map: function() { return map; },
+							create: function() { return create; }
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(map.socket, "padData", "padData", function() {
-						dialog.dismiss();
-					});
+					if(!create) {
+						// TODO: use child scope!
+						var preserve = fpUtils.preserveObject(map.socket, "padData", "padData", function() {
+							dialog.dismiss();
+						});
 
-					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
+						dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
+					}
 				}
 			};
 
@@ -43,16 +50,43 @@
 		};
 	});
 
-	fp.app.controller("fpMapPadSettingsCtrl", function($scope, map) {
-		$scope.save = function() {
-			var padData = $.extend({ }, map.socket.padData);
-			delete padData.defaultView;
-			map.socket.emit("editPad", padData, function(err) {
-				if(err)
-					return $scope.error = err;
+	fp.app.controller("fpMapPadSettingsCtrl", function($scope, map, create, fpUtils) {
+		$scope.create = create;
 
-				$scope.$close();
-			});
+		if(create) {
+			$scope.writeId = fpUtils.generateRandomPadId(14);
+			$scope.readId = fpUtils.generateRandomPadId(12);
+			$scope.padName = "New FacilPad";
+		} else {
+			$scope.writeId = map.socket.padData.writeId;
+			$scope.readId = map.socket.padData.id;
+			$scope.padName = map.socket.padData.name;
+		}
+
+		$scope.save = function() {
+			var newData = {
+				name: $scope.padName,
+				id: $scope.readId,
+				writeId: $scope.writeId
+			};
+
+			if(create) {
+				map.socket.emit("createPad", newData, function(err) {
+					if(err)
+						return $scope.error = err;
+
+					map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
+
+					$scope.$close();
+				});
+			} else {
+				map.socket.emit("editPad", newData, function(err) {
+					if(err)
+						return $scope.error = err;
+
+					$scope.$close();
+				});
+			}
 		};
 	});
 

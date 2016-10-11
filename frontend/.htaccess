@@ -1,3 +1,6 @@
 RewriteEngine on
+
+RewriteRule ^$ build/index.html
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^.+$ build/index.html

@@ -2,7 +2,7 @@
 <html ng-controller="PadCtrl">
 	<head>
 		<meta charset="utf-8">
-		<title fp-title="padName + ' – FacilPad'">FacilPad</title>
+		<title fp-title="padName ? padName + ' – FacilPad' : 'FacilPad'">FacilPad</title>
 		<meta name="robots" content="index,nofollow" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -20,61 +20,17 @@
 		</style>
 	</head>
 	<body>
-		<div id="introContainer">
-			<h1>FacilPad</h1>
-			<p>Welcome to FacilPad.</p>
-			<noscript><p><strong>FacilPad requires JavaScript to work.</strong></p></noscript>
-			<p><a id="create-pad-link" rel="nofollow">Create a new pad</a></p>
-		</div>
-		<div id="loading" style="display:none">Loading...</div>
-		<div id="mapContainer" style="display:none">
-			<div id="map" fp-map fp-pad-id="{{padId}}"></div>
-		</div>
+		<noscript><p><strong>FacilPad requires JavaScript to work.</strong></p></noscript>
+		<div id="loading" ng-if="false">Loading...</div>
+		<div id="map" fp-map fp-pad-id="{{padId}}"></div>
 
 		<script>
-			(function() {
-				var loaded = 0;
-
-				var l = document.getElementById("create-pad-link");
-
-				var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-				var LENGTH = 12;
-
-				var randomPadId = "";
-				for(var i=0; i<LENGTH; i++) {
-					randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+			var interval = setInterval(function() {
+				if(window.angular != null && window.io != null) {
+					clearInterval(interval);
+					angular.bootstrap(document, [ "facilpad" ]);
 				}
-
-				l.href = randomPadId;
-
-				l.onclick = function() {
-					if(window.history && history.pushState) {
-						history.pushState(null, null, randomPadId);
-						check();
-						return false;
-					}
-				};
-
-				var interval = setInterval(check, 100);
-
-				function check() {
-					if(loaded == 0 && !location.pathname.match(/\/$/)) {
-						document.getElementById("introContainer").style.display = "none";
-						document.getElementById("loading").style.display = "";
-
-						loaded = 1;
-					}
-					if(loaded == 1 && window.FacilPad != null && window.io != null && $("#map").css("height") == "100%") {
-						$("#introContainer,#loading").remove();
-						$("#map").unwrap();
-						angular.bootstrap(document, [ "facilpad" ]);
-						loaded = 2;
-						clearInterval(interval);
-					}
-				}
-
-				check();
-			})();
+			}, 100);
 		</script>
 
 		<!-- inject:js -->

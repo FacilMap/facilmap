@@ -62,9 +62,9 @@ function _makeNotNullForeignKey(type, field, error) {
 /* Pads */
 
 var Pad = conn.define("Pad", {
-	id : { type: Sequelize.STRING, allowNull: false, unique: "padId", primaryKey: true },
+	id : { type: Sequelize.STRING, allowNull: false, unique: "padId", primaryKey: true, validate: { is: /^.+$/ } },
 	name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilPad"; } },
-	writeId: { type: Sequelize.STRING, allowNull: false, unique: "padId" }
+	writeId: { type: Sequelize.STRING, allowNull: false, unique: "padId", validate: { is: /^.+$/ } }
 });
 
 
@@ -262,8 +262,8 @@ function getPadDataByWriteId(writeId, callback) {
 	_promiseComplete(Pad.findOne({ where: { writeId: writeId }, include: [ { model: View, as: "defaultView" } ] }), callback);
 }
 
-function createPad(padId, writeId, callback) {
-	_promiseComplete(Pad.create({ id: padId, writeId: writeId }), callback);
+function createPad(data, callback) {
+	_promiseComplete(Pad.create(data), callback);
 }
 
 function updatePadData(padId, data, callback) {
@@ -272,7 +272,7 @@ function updatePadData(padId, data, callback) {
 			_promiseComplete(Pad.update(data, { where: { id: padId } }), next);
 		},
 		function(affectedNumber, next) {
-			getPadData(padId, next);
+			getPadData(data.id || padId, next);
 		}
 	], callback);
 }

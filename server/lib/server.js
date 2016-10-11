@@ -66,19 +66,7 @@ database.connect(function(err) {
 					if(err)
 						return _sendData(socket, "padData", err);
 
-					socket.padId = data.id;
-					socket.writable = data.writable;
-					listeners.addPadListener(socket);
-
-					_sendData(socket, "padData", null, data);
-					_sendStreamData(socket, "view", database.getViews(socket.padId));
-					_sendStreamData(socket, "type", database.getTypes(socket.padId));
-					_sendStreamData(socket, "line", database.getPadLines(socket.padId));
-
-					if(socket.bbox) { // In case bbox is set while fetching pad data
-						_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
-						_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
-					}
+					_setPadId(socket, data);
 				});
 			},
 
@@ -103,8 +91,25 @@ database.connect(function(err) {
 					listeners.removePadListener(socket);
 			},
 
+			createPad : function(data, callback) {
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
+					return callback("Invalid parameters.");
+
+				if(socket.padId)
+					return callback("Pad already loaded.");
+
+				database.createPad(data, function(err, padData) {
+					if(err)
+						return callback(err);
+
+					_setPadId(socket, padData);
+
+					callback(null, padData);
+				});
+			},
+
 			editPad : function(data, callback) {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number" }))
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
 					return callback("Invalid parameters.");
 
 				if(!socket.writable)
@@ -241,6 +246,9 @@ database.connect(function(err) {
 			},
 
 			exportGpx : function(data, callback) {
+				if(socket.padId == null)
+					return callback("No pad ID set.");
+
 				gpx.exportGpx(socket.padId, data.useTracks, callback);
 			},
 
@@ -278,7 +286,9 @@ database.connect(function(err) {
 function _sendData(socket, eventName, err, data) {
 	if(err) {
 		console.warn("_sendData", err, err.stack);
-		return socket.emit("error", err);
+		socket.emit("serverError", err);
+		socket.disconnect();
+		return;
 	}
 
 	socket.emit(eventName, data);
@@ -292,4 +302,20 @@ function _sendStreamData(socket, eventName, stream) {
 		console.warn("_sendStreamData", err, err.stack);
 		socket.emit("error", err);
 	})
+}
+
+function _setPadId(socket, data) {
+	socket.padId = data.id;
+	socket.writable = data.writable;
+	listeners.addPadListener(socket);
+
+	_sendData(socket, "padData", null, data);
+	_sendStreamData(socket, "view", database.getViews(socket.padId));
+	_sendStreamData(socket, "type", database.getTypes(socket.padId));
+	_sendStreamData(socket, "line", database.getPadLines(socket.padId));
+
+	if(socket.bbox) { // In case bbox is set while fetching pad data
+		_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
+		_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
+	}
 }
