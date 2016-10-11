@@ -86,7 +86,7 @@
 						scope.activeResult = null;
 						ng.element(e.popup.getContent()).scope().$destroy();
 					})
-					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions))
+					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }))
 				);
 
 				result.marker = L.marker([ result.lat, result.lon ], {
