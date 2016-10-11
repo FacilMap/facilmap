@@ -7,17 +7,7 @@
 			scope.searchResults = null;
 
 			scope.search = function() {
-				scope.searchResults = null;
-				if(scope.searchString.trim() != "") {
-					map.loadStart();
-					fpNameFinder.find(scope.searchString).then(function(results) {
-						map.loadEnd();
-						scope.searchResults = results;
-
-						if(results.length > 0)
-							scope.showResult(results[0]);
-					});
-				}
+				fpMapSearch.search();
 			};
 
 			scope.showResult = function(result) {
@@ -30,6 +20,30 @@
 			var el = $($templateCache.get("map/search/search.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
+
+			var fpMapSearch = {
+				search: function(query) {
+					if(query != null)
+						scope.searchString = query;
+
+					scope.searchResults = null;
+					if(scope.searchString.trim() != "") {
+						map.loadStart();
+						fpNameFinder.find(scope.searchString).then(function(results) {
+							map.loadEnd();
+							scope.searchResults = results;
+
+							if(results.length > 0)
+								scope.showResult(results[0]);
+						});
+					}
+				},
+
+				showFiles: function(files) {
+					console.log("showFiles", files);
+				}
+			};
+			return fpMapSearch;
 		};
 	});
 

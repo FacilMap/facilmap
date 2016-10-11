@@ -33,6 +33,10 @@
 
 			scope.showTable = fpTable.showTable.bind(fpTable);
 
+			scope.importFile = function() {
+				map.importUi.openImportDialog();
+			};
+
 			scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
 
 			scope.showAbout = function() {

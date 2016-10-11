@@ -9,7 +9,7 @@
 		};
 	});
 
-	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpMapMarkers, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce, L) {
+	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpMapMarkers, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce, L, fpMapImport) {
 		var maps = { };
 
 		var ret = { };
@@ -27,6 +27,7 @@
 		function Map(el, id, padId) {
 			var map = this;
 
+			map.el = el;
 			map.mapEvents = $rootScope.$new(true); /* Event types: click, layerchange */
 			map.socket = fpSocket(padId);
 
@@ -260,9 +261,10 @@
 			map.gpxUi = fpMapGpx(map);
 			map.toolboxUi = fpMapToolbox(map);
 			map.aboutUi = fpMapAbout(map);
+			map.importUi = fpMapImport(map);
+			map.searchUi = fpMapSearch(map);
 
 			fpMapLegend(map);
-			fpMapSearch(map);
 
 			var loadedWatcher = map.socket.$watch("loaded", function(loaded) {
 				if(loaded) {
