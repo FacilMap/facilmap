@@ -31,7 +31,9 @@
 
 			scope.editObjectTypes = map.typesUi.editTypes.bind(map.typesUi);
 
-			scope.showTable = fpTable.showTable.bind(fpTable);
+			scope.showTable = function() {
+				fpTable.showTable(map.socket.padId);
+			};
 
 			scope.importFile = function() {
 				map.importUi.openImportDialog();

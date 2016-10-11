@@ -13,8 +13,8 @@
 
 	fp.app.factory("fpTable", function(fpSocket, $rootScope, $uibModal) {
 		return {
-			showTable : function() {
-				var socket = fpSocket($rootScope.padId);
+			showTable : function(padId) {
+				var socket = fpSocket(padId);
 				socket.updateBbox({ top: 90, left: -180, right: 180, bottom: -90, zoom: 0 });
 				
 				$uibModal.open({
