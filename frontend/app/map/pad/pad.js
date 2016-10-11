@@ -88,6 +88,10 @@
 				});
 			}
 		};
+
+		$scope.copy = function(text) {
+			fpUtils.copyToClipboard(text);
+		}
 	});
 
 })(FacilPad, jQuery, angular);

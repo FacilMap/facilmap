@@ -28,7 +28,8 @@
     "leaflet-geometry-util": "https://github.com/makinacorpus/Leaflet.GeometryUtil/raw/master/src/leaflet.geometryutil.js",
     "leaflet-almostover": "https://github.com/makinacorpus/Leaflet.AlmostOver/raw/gh-pages/src/leaflet.almostover.js",
     "linkifyjs": "^2.1.3",
-    "leaflet.locatecontrol": "^0.55.0"
+    "leaflet.locatecontrol": "^0.55.0",
+    "clipboard": "^1.5.12"
   },
   "overrides": {
     "bootstrap": {

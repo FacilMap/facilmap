@@ -12,6 +12,9 @@
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
 					<input id="pad-link-input" ng-model="writeId" class="form-control" />
+					<span class="input-group-btn" ng-if="!create">
+						<button class="btn btn-default" ng-click="copy(urlPrefix + writeId)">Copy</button>
+					</span>
 				</div>
 			</div>
 		</div>
@@ -22,6 +25,9 @@
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
 					<input id="pad-rolink-input" ng-model="readId" class="form-control" />
+					<span class="input-group-btn" ng-if="!create">
+						<button class="btn btn-default" ng-click="copy(urlPrefix + readId)">Copy</button>
+					</span>
 				</div>
 			</div>
 		</div>

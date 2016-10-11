@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpUtils", function($parse, L) {
+	fp.app.factory("fpUtils", function($parse, L, Clipboard) {
 
 		var fpUtils = { };
 
@@ -195,6 +195,17 @@
 					return i;
 			}
 			return idxs.length;
+		};
+
+		fpUtils.copyToClipboard = function(text) {
+			var el = $("<button></button>").css("display", "none").appendTo("body");
+			var c = new Clipboard(el[0], {
+				text: function() {
+					return text;
+				}
+			});
+			el.click().remove();
+			c.destroy();
 		};
 
 		return fpUtils;
