@@ -254,6 +254,12 @@ function connect(callback, force) {
 	], callback);
 }
 
+function padIdExists(padId, callback) {
+	Pad.count({ where: { $or: [ { id: padId }, { writeId: padId } ] } }).then(function(num) {
+		callback(null, num > 0);
+	}).catch(callback);
+}
+
 function getPadData(padId, callback) {
 	_promiseComplete(Pad.findOne({ where: { id: padId }, include: [ { model: View, as: "defaultView" } ]}), callback);
 }
@@ -602,6 +608,7 @@ function _promiseComplete(promise, callback) {
 
 module.exports = {
 	connect : connect,
+	padIdExists : padIdExists,
 	getPadData : getPadData,
 	getPadDataByWriteId : getPadDataByWriteId,
 	createPad : createPad,

@@ -11,6 +11,10 @@ var DEFAULT_TYPES = [
 	{ name: "Line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
 ];
 
+function padIdExists(padId, callback) {
+	backend.padIdExists(padId, callback);
+}
+
 function getPadData(padId, callback) {
 	backend.getPadDataByWriteId(padId, function(err, data) {
 		if(err)
@@ -31,14 +35,38 @@ function getPadData(padId, callback) {
 }
 
 function createPad(data, callback) {
-	backend.createPad(data, function(err, data) {
+	if(!data.id || data.id.length == 0)
+		return callback("Invalid read-only ID");
+	if(!data.writeId || data.writeId.length == 0)
+		return callback("Invalid write-only ID");
+	if(data.id == data.writeId)
+		return callback("Read-only and write-only ID cannot be the same.");
+
+	async.auto({
+		readExists: function(next) {
+			padIdExists(data.id, next);
+		},
+		writeExists: function(next) {
+			padIdExists(data.writeId, next);
+		}
+	}, function(err, res) {
 		if(err)
 			return callback(err);
 
-		async.each(DEFAULT_TYPES, function(it, next) {
-			backend.createType(data.id, it, next);
-		}, function(err) {
-			callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
+		if(res.readExists)
+			return callback("ID '" + data.id + "' is already taken.");
+		if(res.writeExists)
+			return callback("ID '" + data.writeId + "' is already taken.");
+
+		backend.createPad(data, function(err, data) {
+			if(err)
+				return callback(err);
+
+			async.each(DEFAULT_TYPES, function(it, next) {
+				backend.createType(data.id, it, next);
+			}, function(err) {
+				callback(err, utils.extend(JSON.parse(JSON.stringify(data)), { writable: true }));
+			});
 		});
 	});
 }
@@ -530,6 +558,7 @@ function _getLinePoints(lineId, bboxWithZoom, callback) {
 module.exports = {
 	connect : backend.connect,
 	getPadData : getPadData,
+	padIdExists : padIdExists,
 	createPad : createPad,
 	updatePadData : updatePadData,
 	getViews : getViews,
