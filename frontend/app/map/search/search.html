@@ -2,10 +2,10 @@
 	<div class="panel-body">
 		<form ng-submit="search()">
 			<div class="input-group has-feedback">
-				<div class="has-feedback">
-					<input type="search" class="form-control" ng-model="searchString" placeholder="Search" ng-focus="hasFocus=true" ng-blur="hasFocus=false">
-					<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><span class="glyphicon glyphicon-remove"></span></a>
-				</div>
+				<span class="input-group-btn" ng-show="searchString.length > 0">
+					<button type="button" class="btn btn-default" ng-click="searchString=''; search()"><span class="glyphicon glyphicon-remove"></span></button>
+				</span>
+				<input type="search" class="form-control" ng-model="searchString" placeholder="Search" ng-focus="hasFocus=true" ng-blur="hasFocus=false">
 				<span class="input-group-btn">
 					<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
 				</span>

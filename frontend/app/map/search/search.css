@@ -33,11 +33,6 @@
 	margin: 10px 0 0;
 }
 
-.fp-search .reset-button {
-	z-index: 5;
-	pointer-events: auto;
-}
-
 @media print {
 	.fp-search {
 		display: none;
