@@ -72,22 +72,57 @@ function createPad(data, callback) {
 }
 
 function updatePadData(padId, data, callback) {
-	backend.updatePadData(padId, data, function(err, data) {
+	if(data.id != null && data.id != padId && data.id.length == 0)
+		return callback("Invalid read-only ID");
+
+	async.auto({
+		readExists: function(next) {
+			if(data.id != null && data.id != padId)
+				padIdExists(data.id, next);
+			else
+				next();
+		},
+		writeExists: function(next) {
+			if(data.writeId != null) {
+				backend.getPadData(padId, function(err, padData) {
+					if(err || data.writeId == padData.writeId)
+						next(err);
+					else if(data.writeId.length == 0)
+						next("Invalid write-only ID");
+					else if(data.writeId == (data.id != null ? data.id : padId))
+						next("Read-only and write-only ID cannot be the same.");
+					else
+						padIdExists(data.writeId, next);
+				});
+			} else
+				next();
+		}
+	}, function(err, res) {
 		if(err)
 			return callback(err);
 
-		listeners.notifyPadListeners(padId, "padData", function(listener) {
-			var dataClone = JSON.parse(JSON.stringify(data));
-			if(!listener.writable)
-				dataClone.writeId = null;
+		if(res.readExists)
+			return callback("ID '" + data.id + "' is already taken.");
+		if(res.writeExists)
+			return callback("ID '" + data.writeId + "' is already taken.");
 
-			return dataClone;
+		backend.updatePadData(padId, data, function(err, data) {
+			if(err)
+				return callback(err);
+
+			listeners.notifyPadListeners(padId, "padData", function(listener) {
+				var dataClone = JSON.parse(JSON.stringify(data));
+				if(!listener.writable)
+					dataClone.writeId = null;
+
+				return dataClone;
+			});
+
+			if(data.id != null && data.id != padId)
+				listeners.changePadId(padId, data.id);
+
+			callback(null, data);
 		});
-
-		if(data.id && data.id != padId)
-			listeners.changePadId(padId, data.id);
-
-		callback(null, data);
 	});
 }
 
