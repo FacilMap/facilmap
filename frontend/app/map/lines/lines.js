@@ -115,7 +115,12 @@
 					});
 
 					$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
+
+						// Prevent the map to scroll to the popup every time we move it and some more detail of the line gets loaded
+						var autoPanBkp = popup.options.autoPan;
+						popup.options.autoPan = false;
 						popup.update();
+						popup.options.autoPan = autoPanBkp;
 					}); });
 				},
 				_makeLineMovable: function(line) {
