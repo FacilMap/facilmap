@@ -51,14 +51,16 @@ function find(query, callback) {
 			lat: lonlat.lat,
 			lon : lonlat.lon,
 			type : "coordinates",
+			short_name: lonlat.lat + ", " + lonlat.lon,
 			display_name : lonlat.lat + ", " + lonlat.lon,
-			zoom: lonlat.zoom
+			zoom: lonlat.zoom,
+			icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
 		} ];
 		return callback(null, results);
 	}
 
 	request({
-		url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
+		url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
 		json: true
 	}, function(err, response, body) {
 		if(err)
@@ -68,13 +70,17 @@ function find(query, callback) {
 
 		var results = [ ];
 		body.forEach(function(result) {
+			var displayName = makeDisplayName(result);
 			results.push({
-				display_name: makeDisplayName(result),
+				short_name: displayName.split(',')[0],
+				display_name: displayName,
 				boundingbox: result.boundingbox,
+				lat: result.lat,
+				lon: result.lon,
 				extratags: result.extratags,
 				geojson: result.geojson,
-				icon: result.icon,
-				type: result.type,
+				icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
+				type: result.type == "yes" ? result.category : result.type,
 				osm_id: result.osm_id,
 				osm_type: result.osm_type
 			});
@@ -95,7 +101,7 @@ function makeDisplayName(result) {
 	// address notation guidelines
 
 	var type = result.type;
-	var name = result.address[result.type] || result.display_name.split(',')[0] || "";
+	var name = result.namedetails.name;
 	var countryCode = result.address.country_code;
 
 	var road = result.address.road;

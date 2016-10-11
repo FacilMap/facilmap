@@ -26,7 +26,8 @@
     "bootstrap-touchspin": "^3.1.2",
     "leaflet": "^1.0.1",
     "leaflet-geometry-util": "https://github.com/makinacorpus/Leaflet.GeometryUtil/raw/master/src/leaflet.geometryutil.js",
-    "leaflet-almostover": "https://github.com/makinacorpus/Leaflet.AlmostOver/raw/gh-pages/src/leaflet.almostover.js"
+    "leaflet-almostover": "https://github.com/makinacorpus/Leaflet.AlmostOver/raw/gh-pages/src/leaflet.almostover.js",
+    "linkifyjs": "^2.1.3"
   },
   "overrides": {
     "bootstrap": {
@@ -35,6 +36,12 @@
         "dist/css/bootstrap-theme.css",
         "dist/js/bootstrap.js",
         "dist/fonts/glyphicons-halflings-regular.ttf"
+      ]
+    },
+    "linkifyjs": {
+      "main": [
+        "linkify.js",
+        "linkify-string.js"
       ]
     }
   }

@@ -31,7 +31,7 @@
 		};
 
 		fpUtils.createMarkerIcon = function(colour, huge) {
-			return new L.Icon({
+			return L.icon({
 				iconUrl: fpUtils.createMarkerGraphic(colour, huge),
 				iconSize: huge ? [10000, 10000] : [21, 25],
 				iconAnchor: huge ? [5010, 5025] : [10, 25],
@@ -215,6 +215,25 @@
 	fp.app.filter('fpPropertyCount', function($filter) {
 		return function(input, query) {
 			return Object.keys($filter('fpObjectFilter')(input, query)).length;
+		};
+	});
+
+	fp.app.filter('fpRenderOsmTag', function($sce, linkifyStr, fpUtils) {
+		return function(value, key) {
+			if(key.match(/^wikipedia(:|$)/)) {
+				return $sce.trustAsHtml(value.split(";").map(function(it) {
+					var m = it.match(/^(\s*)((([-a-z]+):)?(.*))(\s*)$/);
+					var url = "https://" + (m[4] || "en") + ".wikipedia.org/wiki/" + m[5];
+					return m[1] + '<a href="' + fpUtils.quoteHtml(url) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[6];
+				}).join(";"));
+			} else if(key.match(/^wikidata(:|$)/)) {
+				return $sce.trustAsHtml(value.split(";").map(function(it) {
+					var m = it.match(/^(\s*)(.*?)(\s*)$/);
+					return m[1] + '<a href="https://www.wikidata.org/wiki/' + fpUtils.quoteHtml(m[2]) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[3];
+				}).join(";"));
+			} else {
+				return $sce.trustAsHtml(linkifyStr(value));
+			}
 		};
 	});
 

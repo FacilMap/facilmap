@@ -140,15 +140,18 @@
 					var listener = map.addClickListener(function(pos) {
 						message.close();
 
-						map.socket.emit("addMarker", { lon: pos.lon, lat: pos.lat, typeId: type.id }, function(err, marker) {
-							if(err)
-								return map.messages.showMessage("danger", err);
+						markersUi.createMarker(pos, type);
+					});
+				},
+				createMarker: function(pos, type, properties) {
+					map.socket.emit("addMarker", $.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties), function(err, marker) {
+						if(err)
+							return map.messages.showMessage("danger", err);
 
-							markersUi._addMarker(marker);
+						markersUi._addMarker(marker);
 
-							markersById[marker.id].openPopup();
-							markersUi.editMarker(marker);
-						});
+						markersById[marker.id].openPopup();
+						markersUi.editMarker(marker);
 					});
 				}
 			};

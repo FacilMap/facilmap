@@ -1,0 +1,21 @@
+<div class="content container-fluid">
+	<h2>{{result.short_name}}</h2>
+	<p ng-if="result.display_name != result.short_name">{{result.display_name}} ({{result.type}})</p>
+	<p ng-if="result.display_name == result.short_name">{{result.type}}</p>
+	<dl class="dl-horizontal">
+		<dt class="pos" ng-if="result.type != 'coordinates'">Coordinates</dt>
+		<dd class="pos" ng-if="result.type != 'coordinates'">{{round(result.lat, 5)}}, {{round(result.lon, 5)}}</dd>
+
+		<dt ng-repeat-start="(key, value) in result.extratags">{{key}}</dt>
+		<dd ng-repeat-end ng-bind-html="value | fpRenderOsmTag:key">{{value}}</dd>
+	</dl>
+</div>
+<div class="buttons" ng-if="!readonly">
+	<div uib-dropdown ng-if="(types | fpPropertyCount:{type:'marker'}) > 1">
+		<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
+		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button" uib-dropdown-menu>
+			<li role="menuitem" ng-repeat="type in types | fpObjectFilter:{type:'marker'}"><a href="#" ng-click="addToMap(type)">{{type.name}}</a></li>
+		</ul>
+	</div>
+	<button ng-if="(types | fpPropertyCount:{type:'marker'}) == 1" class="btn btn-default" ng-click="addToMap()">Add to map</button>
+</div>

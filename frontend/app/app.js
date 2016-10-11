@@ -13,6 +13,7 @@ var FacilPad = {
 	});
 
 	fp.app.constant("L", L);
+	fp.app.constant("linkifyStr", linkifyStr);
 
 	// Dereferrer
 	$(document).on("click", "a", function(e) {
