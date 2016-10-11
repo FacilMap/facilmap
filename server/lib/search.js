@@ -1,4 +1,4 @@
-var request = require("request");
+var request = require("request-promise");
 var config = require("../config");
 var Promise = require("promise");
 
@@ -44,13 +44,12 @@ var stateAbbr = {
 };
 
 function find(query) {
-	return new Promise(function(resolve, reject) {
-		query.replace(/^\s+/, "").replace(/\s+$/, "");
+	return Promise.resolve().then(function() {
+		query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
 		var lonlat = isLonLatQuery(query);
-		if(lonlat)
-		{
-			var results = [ {
+		if(lonlat) {
+			return [ {
 				lat: lonlat.lat,
 				lon : lonlat.lon,
 				type : "coordinates",
@@ -59,21 +58,17 @@ function find(query) {
 				zoom: lonlat.zoom,
 				icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
 			} ];
-			return resolve(results);
 		}
 
-		request({
+		return request({
 			url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
 			json: true,
 			headers: {
 				'User-Agent': config.userAgent
 			}
-		}, function(err, response, body) {
-			if(err)
-				return reject(err);
-
+		}).then(function(body) {
 			if(!body)
-				return reject("Invalid response from name finder.");
+				throw "Invalid response from name finder.";
 
 			var results = [ ];
 			body.forEach(function(result) {
@@ -93,7 +88,7 @@ function find(query) {
 				});
 			});
 
-			resolve(results);
+			return results;
 		});
 	});
 }
