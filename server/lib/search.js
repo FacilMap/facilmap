@@ -1,4 +1,5 @@
 var request = require("request");
+var config = require("../config");
 
 var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 var nameFinderUrl = "https://nominatim.openstreetmap.org/search";
@@ -61,7 +62,10 @@ function find(query, callback) {
 
 	request({
 		url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
-		json: true
+		json: true,
+		headers: {
+			'User-Agent': config.userAgent
+		}
 	}, function(err, response, body) {
 		if(err)
 			return callback(err);

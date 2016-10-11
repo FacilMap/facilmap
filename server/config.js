@@ -1,4 +1,5 @@
 module.exports = {
+	userAgent : 'FacilPad (https://pad.facilmap.org/, cdauth@cdauth.eu)',
 	host : null,
 	port : 40829,
 	db : {
