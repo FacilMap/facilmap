@@ -37,41 +37,41 @@
 					fpName: "MapSurfer Road",
 					fpBase: true,
 					fpKey: "MSfR",
-					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 					fpName: "Mapnik",
 					fpBase: true,
 					fpKey: "Mpnk",
-					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
 					fpName: "OpenCycleMap",
 					fpBase: true,
 					fpKey: "OCyc",
-					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("http://{s}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 					fpName: "Hike & Bike Map",
 					fpBase: true,
 					fpKey: "HiBi",
-					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
 					fpName: "Public transportation",
 					fpKey: "OPTM",
-					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
 					fpName: "Relief",
 					fpKey: "Rlie",
-					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies">NASA</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
 					zIndex: 300,
 					noWrap: true
 				})
