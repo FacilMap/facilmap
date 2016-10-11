@@ -3,7 +3,7 @@ var utils = require("./utils");
 var config = require("../config");
 var Promise = require("promise");
 
-var ROUTING_URL = "https://router.project-osrm.org/route/v1";
+var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -19,12 +19,14 @@ var ROUTING_TYPES = {
 	pedestrian: "walking"
 };
 
+var ACCESS_TOKEN = "pk.eyJ1IjoiY2RhdXRoIiwiYSI6ImNpdTYwMmZwMDAwM3AyenBhemM5NHM4ZmgifQ.93z6yuzcsxt3eZk9NxPGHA";
+
 function calculateRouting(points, mode) {
 	var coords = [ ];
 	for(var i=0; i<points.length; i++)
 		coords.push(points[i].lon + "," + points[i].lat);
 
-	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";") + "?alternatives=true&steps=false&geometries=geojson&overview=simplified&annotations=false";
+	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";") + "?alternatives=true&steps=false&geometries=geojson&overview=full&annotations=false&access_token=" + encodeURIComponent(ACCESS_TOKEN);
 	return request.get({
 		url: url,
 		json: true,
