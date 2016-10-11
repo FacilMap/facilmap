@@ -18,7 +18,7 @@
 						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fpUtils.createMarkerIcon(marker.colour)}).addTo(map.map)
 							.bindPopup($("<div/>")[0], map.popupOptions)
 							.on("popupopen", function(e) {
-								markersUi._renderMarkerPopup(marker);
+								markersUi._renderMarkerPopup(map.socket.markers[marker.id]);
 							})
 							.on("popupclose", function(e) {
 								ng.element(e.popup.getContent()).scope().$destroy();

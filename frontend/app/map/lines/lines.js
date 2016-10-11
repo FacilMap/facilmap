@@ -41,7 +41,7 @@
 							linesById[line.id]
 								.bindPopup($("<div/>")[0], map.popupOptions)
 								.on("popupopen", function(e) {
-									linesUi._renderLinePopup(line);
+									linesUi._renderLinePopup(map.socket.lines[line.id]);
 								})
 								.on("popupclose", function(e) {
 									ng.element(e.popup.getContent()).scope().$destroy();
