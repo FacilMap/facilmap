@@ -43,10 +43,6 @@
 				map.aboutUi.showAbout();
 			};
 
-			scope.myLocation = function() {
-				map.myLocation();
-			};
-
 			var ret = {
 				div: $($templateCache.get("map/toolbox/toolbox.html"))
 			};

@@ -99,6 +99,12 @@
 
 			map.map.almostOver.options.distance = 10;
 
+			L.control.locate({
+				flyTo: true,
+				icon: "glyphicon glyphicon-screenshot",
+				iconLoading: "glyphicon glyphicon-screenshot"
+			}).addTo(map.map);
+
 			map.map.on('almost:over', function(e) {
 				e.layer.fire('fp-almostover', e);
 				$(map.map.getContainer()).addClass("fp-almostover");
@@ -247,10 +253,6 @@
 			map.socket.$on("loadEnd", function() {
 				map.loadEnd();
 			});
-
-			map.myLocation = function() {
-				map.map.locate({setView: true, maxZoom: 16});
-			};
 
 			map.messages = fpMapMessages(map);
 			map.markersUi = fpMapMarkers(map);

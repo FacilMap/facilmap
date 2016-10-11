@@ -118,3 +118,7 @@
 .pos,.distance {
 	color: #888;
 }
+
+.leaflet-control-locate a {
+	font-size: inherit;
+}
