@@ -1,10 +1,9 @@
-var request = require("request");
+var request = require("request-promise");
 var utils = require("./utils");
 var config = require("../config");
 var Promise = require("promise");
 
-var ROUTING_URL = "http://open.mapquestapi.com/directions/v2/route";
-var API_KEY = "Fmjtd%7Cluur2qubl9%2C80%3Do5-9aangr";
+var ROUTING_URL = "https://router.project-osrm.org/route/v1";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -13,51 +12,41 @@ var API_KEY = "Fmjtd%7Cluur2qubl9%2C80%3Do5-9aangr";
 // As we don’t need one route point per pixel, we raise the value a bit
 var RESOLUTION_20 = 0.0000013411044763239684 * 4;
 
+var ROUTING_TYPES = {
+	fastest: "driving",
+	shortest: "driving",
+	bicycle: "cycling",
+	pedestrian: "walking"
+};
+
 function calculateRouting(points, mode) {
-	return new Promise(function(resolve, reject) {
-		var json = {
-			locations : [ ],
-			options : {
-				unit : "k",
-				generalize : 0,
-				narrativeType : "none",
-				routeType : mode
-			}
+	var coords = [ ];
+	for(var i=0; i<points.length; i++)
+		coords.push(points[i].lon + "," + points[i].lat);
+
+	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";") + "?alternatives=true&steps=false&geometries=geojson&overview=simplified&annotations=false";
+	return request.get({
+		url: url,
+		json: true,
+		headers: {
+			'User-Agent': config.userAgent
+		}
+	}).then(function(body) {
+		if(!body || (body.code == "OK" && (!body.legs || !body.legs[0])))
+			throw "Invalid response from routing server.";
+
+		if(body.code != 'Ok')
+			throw "Route could not be calculated (" + body.code + ").";
+
+		var ret = {
+			trackPoints : body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
+			distance: body.routes[0].distance/1000,
+			time: body.routes[0].duration
 		};
 
-		for(var i=0; i<points.length; i++)
-			json.locations.push({ latLng : { lat: points[i].lat, lng: points[i].lon }});
+		_calculateZoomLevels(ret.trackPoints);
 
-		var url = ROUTING_URL + "?key="+API_KEY+"&inFormat=json&outFormat=json&json="+encodeURIComponent(JSON.stringify(json));
-		request.get({
-			url: url,
-			json: true,
-			headers: {
-				'User-Agent': config.userAgent
-			}
-		}, function(err, res, body) {
-			if(err)
-				return reject(err);
-
-			if(!body || !body.route)
-				return reject("Invalid response from routing server.");
-			if(body.route.routeError.message || (body.info.statuscode != 0 && body.info.messages.length > 0))
-				return reject(body.route.routeError.message || body.info.messages.join(" "));
-			if(!body.route.shape || !body.route.shape.shapePoints)
-				return reject("Invalid response from routing server.");
-
-			var ret = {
-				trackPoints : [ ],
-				distance : body.route.distance,
-				time : body.route.time
-			};
-			for(var i=0; i<body.route.shape.shapePoints.length; i+=2) {
-				ret.trackPoints.push({ lat: 1*body.route.shape.shapePoints[i], lon: 1*body.route.shape.shapePoints[i+1] });
-			}
-			_calculateZoomLevels(ret.trackPoints);
-
-			resolve(ret);
-		});
+		return ret;
 	});
 }
 

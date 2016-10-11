@@ -9,6 +9,7 @@
   "dependencies": {
     "promise": "^7.1.1",
     "request": "^2.75.0",
+    "request-promise": "^4.1.1",
     "sequelize": "^3.24.3",
     "socket.io": "^1.2.1",
     "underscore": "^1.8.3"
