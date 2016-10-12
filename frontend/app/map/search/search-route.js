@@ -152,20 +152,9 @@
 						.on("click", function() {
 							scope.setActiveRoute(i);
 						})
-						/*.bindPopup($("<div/>")[0], map.popupOptions)
-						.on("popupopen", function(e) {
-							scope.setActiveRoute(i);
-							renderRoutePopup(route, e.popup);
-						}.fpWrapApply(scope))
-						.on("popupclose", function(e) {
-							ng.element(e.popup.getContent()).scope().$destroy();
-						})*/
 						.bindTooltip(route.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
 					layerGroup.addLayer(layer);
-
-					/*if(i == scope.activeRouteIdx)
-						layer.openPopup();*/
 				});
 
 				updateActiveRoute();
@@ -219,9 +208,6 @@
 			function updateActiveRoute() {
 				layerGroup.getLayers().forEach(function(layer, i) {
 					layer.setStyle(i == scope.activeRouteIdx ? activeStyle : inactiveStyle);
-
-					/*if(i == scope.activeRouteIdx)
-						layer.openPopup();*/
 				});
 			}
 
@@ -232,38 +218,6 @@
 			function clearMarkers() {
 				markerGroup.clearLayers();
 			}
-
-			/*function renderRoutePopup(route, popup) {
-				var scope = map.socket.$new();
-
-				scope.route = route;
-
-				scope.addToMap = function(type) {
-					if(type == null) {
-						for(var i in map.socket.types) {
-							if(map.socket.types[i].type == "line") {
-								type = map.socket.types[i];
-								break;
-							}
-						}
-					}
-
-					//map.markersUi.createMarker(result, type, { name: result.display_name });
-				};
-
-				var el = popup.getContent();
-				$(el).html($templateCache.get("map/search/route-popup.html"));
-				$compile(el)(scope);
-
-				// Prevent popup close on button click
-				$("button", el).click(function(e) {
-					e.preventDefault();
-				});
-
-				$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
-					popup.update();
-				}); });
-			}*/
 
 			var routeUi = {
 				show: function() {
