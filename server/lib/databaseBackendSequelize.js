@@ -113,7 +113,7 @@ var Line = conn.define("Line", {
 			}
 		}
 	},
-	mode : { type: Sequelize.ENUM("", "fastest", "shortest", "bicycle", "pedestrian"), allowNull: false, defaultValue: "" },
+	mode : { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: "" },
 	colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "0000ff", validate: validateColour },
 	width : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
 	name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled line"; } },
@@ -230,11 +230,32 @@ function connect(force) {
 
 		var queryInterface = conn.getQueryInterface();
 		return Promise.all([
-			// Rename Line.points to Line.routePoints
 			queryInterface.describeTable('Lines').then(function(attributes) {
+				var promises = [ ];
+
+				// Rename Line.points to Line.routePoints
 				if(attributes.points) {
-					return queryInterface.renameColumn('Lines', 'points', 'routePoints');
+					promises.push(queryInterface.renameColumn('Lines', 'points', 'routePoints'));
 				}
+
+				// Change routing type "shortest" / "fastest" to "car"
+				if(attributes.mode.type.indexOf("shortest") != -1) {
+					promises.push(
+						Promise.resolve().then(function() {
+							return queryInterface.changeColumn('Lines', 'mode', {
+								type: Sequelize.ENUM("", "shortest", "fastest", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: ""
+							});
+						}).then(function() {
+							return Line.update({ mode: "car" }, { where: { mode: { $in: [ "fastest", "shortest" ] } } });
+						}).then(function() {
+							return queryInterface.changeColumn('Lines', 'mode', {
+								type: Sequelize.ENUM("", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: ""
+							});
+						})
+					);
+				}
+
+				return Promise.all(promises);
 			})
 		].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
 			// allow null on Pad.name, Marker.name, Line.name

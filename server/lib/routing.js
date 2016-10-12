@@ -13,8 +13,6 @@ var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 var RESOLUTION_20 = 0.0000013411044763239684 * 4;
 
 var ROUTING_TYPES = {
-	fastest: "driving",
-	shortest: "driving",
 	car: "driving",
 	bicycle: "cycling",
 	pedestrian: "walking"

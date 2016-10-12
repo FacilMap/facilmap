@@ -83,8 +83,6 @@
 
 		fpUtils.routingMode = function(mode) {
 			switch(mode) {
-				case "fastest":
-				case "shortest":
 				case "car":
 					return "by car";
 				case "bicycle":
