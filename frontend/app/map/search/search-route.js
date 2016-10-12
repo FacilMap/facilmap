@@ -263,6 +263,20 @@
 				hide: function() {
 					clearRoutes();
 					el.hide();
+				},
+
+				route: function(queries, calcRoute) {
+					if(queries) {
+						for(var i=0; i<queries.length; i++) {
+							if(scope.destinations.length <= i)
+								scope.addDestination();
+
+							scope.destinations[i].query = queries[i];
+						}
+					}
+
+					if(calcRoute)
+						scope.route();
 				}
 			};
 			routeUi.hide();

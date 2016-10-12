@@ -291,6 +291,23 @@
 			};
 		};
 
+		fpUtils.splitRouteQuery = function(query) {
+			var queries = [ ];
+
+			var spl = query.split(/\s+to\s+/);
+			spl.forEach(function(it, i1) {
+				var spl2 = it.split(/\s+via\s+/);
+
+				spl2.forEach(function(it2, i2) {
+					if(i1 == spl.length-1 && i2 != 0)
+						queries.splice(-1, 0, it2); // vias after the last to should be inserted before the last to (Berlin to Hamburg via Munich should become Berlin, Munich, Hamburg)
+					else
+						queries.push(it2);
+				})
+			});
+			return queries;
+		};
+
 		return fpUtils;
 	});
 

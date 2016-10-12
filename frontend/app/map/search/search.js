@@ -15,6 +15,11 @@
 				clearRenders();
 
 				if(scope.searchString.trim() != "") {
+					if(scope.searchString.match(/ to /)) {
+						scope.showRoutingForm(true);
+						return routeUi.route(null, true);
+					}
+
 					map.loadStart();
 					map.socket.emit("find", { query: scope.searchString }, function(err, results) {
 						map.loadEnd();
@@ -57,6 +62,7 @@
 			scope.showRoutingForm = function() {
 				searchUi.hide();
 				routeUi.show();
+				routeUi.route(fpUtils.splitRouteQuery(scope.searchString), false);
 			};
 
 			scope.$watch("showAll", function() {
