@@ -183,7 +183,7 @@
 
 			var idxs = [ ];
 			for(var i=0; i<routePoints.length; i++) {
-				idxs.push(fpUtils.getClosestIndexOnLine(map, trackPoints, routePoints[i], idxs[i-1]));
+				idxs.push(fpUtils.getClosestIndexOnLine(map, trackPoints, routePoints[i], Math.floor(idxs[i-1])));
 			}
 
 			var pointIdx = fpUtils.getClosestIndexOnLine(map, trackPoints, point);
@@ -213,18 +213,15 @@
 		 * Make sure that a function is not called more often than every <interval> seconds.
 		 * @param interval The minimum interval in milliseconds
 		 * @param cancel If true, a new function call will delay the next call of the function by <interval>.
-		 * @param func The function to call. If it returns a promise, any calls to it will be suspended until the promise is resolved
-		 * @returns {Function} Call this function to call <func>
+		 * @returns {Function} Pass a function to this function that will be called
 		 */
-		fpUtils.minInterval = function(interval, cancel, func) {
+		fpUtils.minInterval = function(interval, cancel) {
 			var timeout = null;
-			var promise = null;
+			var runningPromise = null;
+			var nextFunc = null;
 
-			var ret = function() {
-				if(promise) {
-					promise._fpCall = true;
-					return;
-				}
+			var ret = function(func) {
+				nextFunc = func;
 
 				if(timeout != null && cancel) {
 					clearTimeout(timeout);
@@ -234,21 +231,64 @@
 				if(timeout == null) {
 					timeout = setTimeout(function() {
 						timeout = null;
-						var p = func();
 
-						if(p && p.then) {
-							var handler = function() {
-								var call = promise._fpCall;
-								promise = null;
-								if(call)
-									ret(func);
-							};
-							promise = p.then(handler, handler);
-						}
+						if(runningPromise && runningPromise.then)
+							return ret(nextFunc);
+
+						var f = nextFunc;
+						nextFunc = null;
+						var p = f();
+
+						if(p)
+							runningPromise = p.then(function() { runningPromise = null; });
 					}, interval);
 				}
 			};
 			return ret;
+		};
+
+		fpUtils.temporaryDragMarker = function(map, line, colour, callback) {
+			// This marker is shown when we hover the line. It enables us to create new markers.
+			// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
+			// sure that the mouse is over it and dragging it will work smoothly.
+			var temporaryHoverMarker;
+			function _over(e) {
+				temporaryHoverMarker.setLatLng(e.latlng).addTo(map);
+			}
+
+			function _move(e) {
+				temporaryHoverMarker.setLatLng(e.latlng);
+			}
+
+			function _out(e) {
+				temporaryHoverMarker.remove();
+			}
+
+			line.on("fp-almostover", _over).on("fp-almostmove", _move).on("fp-almostout", _out);
+
+			function makeTemporaryHoverMarker() {
+				temporaryHoverMarker = L.marker([0,0], {
+					icon: fpUtils.createMarkerIcon(colour, true),
+					draggable: true
+				}).once("dragstart", function() {
+					temporaryHoverMarker.once("dragend", function() {
+						// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
+						// the dragging gets interrupted
+						this.setIcon(fpUtils.createMarkerIcon(colour));
+					}, temporaryHoverMarker);
+
+					callback(temporaryHoverMarker);
+
+					makeTemporaryHoverMarker();
+				});
+			}
+
+			makeTemporaryHoverMarker();
+
+			return function() {
+				line.off("fp-almostover", _over).off("fp-almostmove", _move).off("fp-almostout", _out);
+				temporaryHoverMarker.remove();
+			};
 		};
 
 		return fpUtils;

@@ -80,12 +80,10 @@
 				if(!dragging)
 					scope.reset();
 
-				var dest;
+				var points;
 
 				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
-					dest = ng.copy(scope.destinations);
-
-					var points = dest.map(function(destination) {
+					points = scope.destinations.map(function(destination) {
 						if(destination.suggestions.length == null)
 							throw "No place has been found for search term “" + destination.query + "”.";
 
@@ -107,11 +105,8 @@
 
 					scope.routes = routes;
 					scope.activeRouteIdx = 0;
-					scope.loadedDestinations = dest;
+					scope.currentRoutePoints = points;
 					renderRoutes(dragging);
-
-					if(!dragging)
-						renderMarkers();
 				}).catch(function(err) {
 					scope.routeError = err;
 				});
@@ -126,10 +121,9 @@
 				scope.routes = [ ];
 				scope.routeError = null;
 				scope.activeRouteIdx = null;
-				scope.loadedDestinations = null;
+				scope.currentRoutePoints = null;
 
 				clearRoutes();
-				clearMarkers();
 			};
 
 			scope.setActiveRoute = function(routeIdx) {
@@ -142,10 +136,11 @@
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
-			var markerGroup = L.featureGroup([]).addTo(map.map);
+			var markers = [ ];
+			var recalcRoute = fpUtils.minInterval(dragTimeout, false);
 
 			function renderRoutes(dragging) {
-				clearRoutes();
+				clearRoutes(dragging);
 
 				scope.routes.forEach(function(route, i) {
 					var layer = L.polyline(route.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), i == scope.activeRouteIdx ? activeStyle : inactiveStyle)
@@ -155,68 +150,109 @@
 						.bindTooltip(route.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
 					layerGroup.addLayer(layer);
+					map.map.almostOver.addLayer(layer);
 				});
 
 				updateActiveRoute();
 
-				if(!dragging)
+				if(!dragging) {
 					map.map.flyToBounds(layerGroup.getBounds());
+
+					// Render markers
+
+					scope.currentRoutePoints.forEach(function(point, i) {
+						var marker = L.marker([ point.lat, point.lon ], {
+							icon: fpUtils.createMarkerIcon(map.dragMarkerColour),
+							draggable: true
+						}).addTo(map.map);
+
+						registerMarkerHandlers(marker);
+
+						markers.push(marker);
+					});
+
+					updateMarkerColours();
+				}
 			}
 
-			function renderMarkers() {
-				clearMarkers();
-
-				scope.loadedDestinations.forEach(function(destination, i) {
-					var colour = (i == 0 ? map.startMarkerColour : i == scope.loadedDestinations.length-1 ? map.endMarkerColour : map.dragMarkerColour);
-
-					var recalcRoute = fpUtils.minInterval(dragTimeout, false, function() {
-						var latlng = marker.getLatLng();
-
-						var disp = fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5);
-						scope.destinations[i] = {
-							query: disp,
-							suggestionQuery: disp,
-							selectedSuggestionIdx: 0,
-							suggestions: [ {
-								lat: latlng.lat,
-								lon: latlng.lng,
-								display_name: disp,
-								short_name: disp,
-								type: "coordinates"
-							} ]
-						};
+			function registerMarkerHandlers(marker) {
+				marker.on("dblclick", function() {
+					scope.$apply(function() {
+						scope.removeDestination(markers.indexOf(marker));
+					});
+				})
+				.on("drag", function() {
+					recalcRoute(function() {
+						scope.destinations[markers.indexOf(marker)] = makeCoordDestination(marker.getLatLng());
 
 						return scope.route(true);
 					}.fpWrapApply(scope));
+				});
+			}
 
-					var sugg = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
-					var marker = L.marker([ sugg.lat, sugg.lon ], {
-						icon: fpUtils.createMarkerIcon(colour),
-						draggable: true
-					})
-						.on("dblclick", function() {
-							scope.$apply(function() {
-								scope.removeDestination(i);
-							});
-						})
-						.on("drag", recalcRoute);
+			function updateMarkerColours() {
+				markers.forEach(function(marker, i) {
+					var colour = (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour);
 
-					markerGroup.addLayer(marker);
+					marker.setIcon(fpUtils.createMarkerIcon(colour));
 				});
 			}
 
 			function updateActiveRoute() {
 				layerGroup.getLayers().forEach(function(layer, i) {
-					layer.setStyle(i == scope.activeRouteIdx ? activeStyle : inactiveStyle);
+					var active = (i == scope.activeRouteIdx);
+
+					layer.setStyle(active ? activeStyle : inactiveStyle);
+
+					if(active && !layer._fpDragMarker) {
+						layer._fpDragMarker = fpUtils.temporaryDragMarker(map.map, layer, map.dragMarkerColour, function(marker) {
+							var latlng = marker.getLatLng();
+							var idx = fpUtils.getIndexOnLine(map.map, scope.routes[i].trackPoints, scope.currentRoutePoints, { lat: latlng.lat, lon: latlng.lng });
+
+							scope.destinations.splice(idx, 0, makeCoordDestination(latlng));
+							markers.splice(idx, 0, marker);
+
+							registerMarkerHandlers(marker);
+
+							marker.once("dragend", updateMarkerColours);
+
+							scope.route(true);
+						}.fpWrapApply(scope));
+					} else if(!active && layer._fpDragMarker) {
+						layer._fpDragMarker();
+						delete layer._fpDragMarker;
+					}
 				});
 			}
 
-			function clearRoutes() {
+			function clearRoutes(dragging) {
+				layerGroup.eachLayer(function(it) {
+					map.map.almostOver.removeLayer(it);
+				});
 				layerGroup.clearLayers();
+
+				if(!dragging) {
+					markers.forEach(function(marker) {
+						marker.remove();
+					});
+					markers = [ ];
+				}
 			}
 
-			function clearMarkers() {
-				markerGroup.clearLayers();
+			function makeCoordDestination(latlng) {
+				var disp = fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5);
+				return {
+					query: disp,
+					suggestionQuery: disp,
+					selectedSuggestionIdx: 0,
+					suggestions: [ {
+						lat: latlng.lat,
+						lon: latlng.lng,
+						display_name: disp,
+						short_name: disp,
+						type: "coordinates"
+					} ]
+				};
 			}
 
 			var routeUi = {
@@ -226,7 +262,6 @@
 
 				hide: function() {
 					clearRoutes();
-					clearMarkers();
 					el.hide();
 				}
 			};
