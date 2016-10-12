@@ -277,6 +277,15 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 
 					return search.find(data.query);
 				});
+			},
+
+			getRoutes: function(data) {
+				return Promise.resolve().then(function() {
+					if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))
+						throw "Invalid parameters.";
+
+					return routing.calculateRouting(data.destinations, data.mode, true, true);
+				});
 			}
 
 			/*copyPad : function(data, callback) {

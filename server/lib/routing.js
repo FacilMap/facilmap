@@ -15,18 +15,26 @@ var RESOLUTION_20 = 0.0000013411044763239684 * 4;
 var ROUTING_TYPES = {
 	fastest: "driving",
 	shortest: "driving",
+	car: "driving",
 	bicycle: "cycling",
 	pedestrian: "walking"
 };
 
 var ACCESS_TOKEN = "pk.eyJ1IjoiY2RhdXRoIiwiYSI6ImNpdTYwMmZwMDAwM3AyenBhemM5NHM4ZmgifQ.93z6yuzcsxt3eZk9NxPGHA";
 
-function calculateRouting(points, mode) {
+function calculateRouting(points, mode, simple, multiple) {
 	var coords = [ ];
 	for(var i=0; i<points.length; i++)
 		coords.push(points[i].lon + "," + points[i].lat);
 
-	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";") + "?alternatives=true&steps=false&geometries=geojson&overview=full&annotations=false&access_token=" + encodeURIComponent(ACCESS_TOKEN);
+	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";")
+		+ "?alternatives=" + (multiple ? "true" : "false")
+		+ "&steps=false"
+		+ "&geometries=geojson"
+		+ "&overview=" + (simple ? "simplified" : "full")
+		+ "&annotations=false"
+		+ "&access_token=" + encodeURIComponent(ACCESS_TOKEN);
+
 	return request.get({
 		url: url,
 		json: true,
@@ -40,15 +48,19 @@ function calculateRouting(points, mode) {
 		if(body.code != 'Ok')
 			throw "Route could not be calculated (" + body.code + ").";
 
-		var ret = {
-			trackPoints : body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
-			distance: body.routes[0].distance/1000,
-			time: body.routes[0].duration
-		};
+		var ret = [ ];
+		for(var i=0; i<(multiple ? body.routes.length : 1); i++) {
+			ret[i] = {
+				trackPoints : body.routes[i].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
+				distance: body.routes[i].distance/1000,
+				time: body.routes[i].duration
+			};
 
-		_calculateZoomLevels(ret.trackPoints);
+			if(!simple)
+				_calculateZoomLevels(ret[i].trackPoints);
+		}
 
-		return ret;
+		return multiple ? ret : ret[0];
 	});
 }
 

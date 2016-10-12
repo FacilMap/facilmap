@@ -1,6 +1,6 @@
 (function(fp, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils, L, $timeout) {
+	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils, L, $timeout, $q, fpMapSearchRoute) {
 		return function(map) {
 			var iconSuffix = ".n.32.png";
 
@@ -52,6 +52,11 @@
 					renderResult(scope.searchResults[i], false);
 
 				map.map.flyToBounds(layerGroup.getBounds());
+			};
+
+			scope.showRoutingForm = function() {
+				searchUi.hide();
+				routeUi.show();
 			};
 
 			scope.$watch("showAll", function() {
@@ -150,7 +155,15 @@
 				}); });
 			}
 
-			var fpMapSearch = {
+			var searchUi = {
+				show: function() {
+					el.show();
+				},
+
+				hide: function() {
+					el.hide();
+				},
+
 				search: function(query) {
 					if(query != null)
 						scope.searchString = query;
@@ -162,7 +175,10 @@
 					console.log("showFiles", files);
 				}
 			};
-			return fpMapSearch;
+
+			var routeUi = fpMapSearchRoute(map, searchUi);
+
+			return searchUi;
 		};
 	});
 

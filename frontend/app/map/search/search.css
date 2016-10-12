@@ -13,6 +13,9 @@
 
 .fp-search:hover,.fp-search.fp-hasFocus {
 	opacity: 1;
+}
+
+.fp-search/*.fp-hasFocus*/ {
 	width: 350px;
 	max-width: 40%;
 }
@@ -31,6 +34,15 @@
 
 .fp-search .no-results {
 	margin: 10px 0 0;
+}
+
+.fp-search .reset-button {
+	z-index: 5;
+	pointer-events: auto;
+}
+
+.fp-search .active a {
+	color: inherit;
 }
 
 @media print {

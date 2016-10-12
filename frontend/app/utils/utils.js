@@ -85,6 +85,7 @@
 			switch(mode) {
 				case "fastest":
 				case "shortest":
+				case "car":
 					return "by car";
 				case "bicycle":
 					return "by bicycle";
@@ -248,6 +249,33 @@
 			} else {
 				return $sce.trustAsHtml(linkifyStr(value));
 			}
+		};
+	});
+
+	fp.app.filter('fpNumberArray', function() {
+		return function(value, key) {
+			var ret = [ ];
+			for(var i=0; i<value; i++)
+				ret.push(i);
+			return ret;
+		};
+	});
+
+	fp.app.filter('fpRound', function(fpUtils) {
+		return function(value, key) {
+			return fpUtils.round(value, key);
+		};
+	});
+
+	fp.app.filter('fpFormatTime', function(fpUtils) {
+		return function(value, key) {
+			return fpUtils.formatTime(value);
+		};
+	});
+
+	fp.app.filter('fpRoutingMode', function(fpUtils) {
+		return function(value) {
+			return fpUtils.routingMode(value);
 		};
 	});
 

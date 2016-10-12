@@ -21,7 +21,8 @@ var img64 = require("./gulpfile-img64");
 var files = [
 	"app/**/*.js",
 	"app/**/*.css",
-	"app/**/*.html"
+	"app/**/*.html",
+	"assets/**/*.css"
 ];
 
 gulp.task("default", [ "index" ]);
