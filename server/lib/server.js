@@ -279,7 +279,7 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 				});
 			},
 
-			getRoutes: function(data) {
+			getRoute: function(data) {
 				return Promise.resolve().then(function() {
 					if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))
 						throw "Invalid parameters.";

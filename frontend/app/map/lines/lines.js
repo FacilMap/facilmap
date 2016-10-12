@@ -288,22 +288,8 @@
 							handler && handler.cancel();
 							linesUi._deleteLine(line);
 
-							if(save && line.routePoints.length >= 2) {
-								map.socket.emit("addLine", { routePoints: line.routePoints, typeId: type.id }, function(err, line) {
-									if(err)
-										return map.messages.showMessage("danger", err);
-
-									linesUi.editLine(line);
-
-									// We have to wait until the server sends us the trackPoints of the line
-									var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
-										if(exists) {
-											linesById[line.id].openPopup();
-											removeWatcher();
-										}
-									});
-								});
-							}
+							if(save && line.routePoints.length >= 2)
+								linesUi.createLine(type, line.routePoints);
 						}
 
 						var mapClick = function(pos) {
@@ -321,6 +307,22 @@
 						};
 
 						handler = map.addClickListener(mapClick, mouseMove);
+					});
+				},
+				createLine: function(type, routePoints, properties) {
+					map.socket.emit("addLine", $.extend({ routePoints: routePoints, typeId: type.id }, properties), function(err, line) {
+						if(err)
+							return map.messages.showMessage("danger", err);
+
+						linesUi.editLine(line);
+
+						// We have to wait until the server sends us the trackPoints of the line
+						var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
+							if(exists) {
+								linesById[line.id].openPopup();
+								removeWatcher();
+							}
+						});
 					});
 				},
 				moveLine: function(line) {

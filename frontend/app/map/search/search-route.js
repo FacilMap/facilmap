@@ -2,21 +2,15 @@
 
 	fp.app.factory("fpMapSearchRoute", function($rootScope, $templateCache, $compile, fpUtils, L, $timeout, $q) {
 		return function(map, searchUi) {
-			var activeStyle = {
+			var lineStyle = {
 				color : '#0000ff',
 				weight : 8,
 				opacity : 0.7
 			};
 
-			var inactiveStyle = {
-				color : '#0000ff',
-				weight : 6,
-				opacity : 0.3
-			};
-
 			var dragTimeout = 300;
 
-			var scope = $rootScope.$new(true);
+			var scope = map.socket.$new();
 
 			scope.routeMode = 'car';
 			scope.destinations = [ ];
@@ -81,6 +75,7 @@
 					scope.reset();
 
 				var points;
+				var mode = scope.routeMode;
 
 				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
 					points = scope.destinations.map(function(destination) {
@@ -92,75 +87,93 @@
 					});
 
 					return $q(function(resolve, reject) {
-						map.socket.emit("getRoutes", { destinations: points, mode: scope.routeMode }, function(err, res) {
+						map.socket.emit("getRoute", { destinations: points, mode: mode }, function(err, res) {
 							err ? reject(err) : resolve(res);
 						});
 					});
-				}).then(function(routes) {
-					routes.forEach(function(route, i) {
-						route.short_name = "Option " + (i+1);
-						route.display_name = route.short_name + " (" + fpUtils.round(route.distance, 2) + " km, " + fpUtils.formatTime(route.time) + " h)";
-						route.routeMode = scope.routeMode;
-					});
+				}).then(function(route) {
+					console.log(route);
 
-					scope.routes = routes;
-					scope.activeRouteIdx = 0;
-					scope.currentRoutePoints = points;
-					renderRoutes(dragging);
+					route.routePoints = points;
+					route.routeMode = mode;
+
+					scope.routeObj = route;
+					renderRoute(dragging);
 				}).catch(function(err) {
 					scope.routeError = err;
 				});
 			};
 
 			scope.reroute = function() {
-				if(scope.routes || scope.routeError)
+				if(scope.routeObj || scope.routeError)
 					scope.route();
 			};
 
 			scope.reset = function() {
-				scope.routes = [ ];
+				scope.routeObj = null;
 				scope.routeError = null;
-				scope.activeRouteIdx = null;
-				scope.currentRoutePoints = null;
 
-				clearRoutes();
+				clearRoute();
 			};
 
-			scope.setActiveRoute = function(routeIdx) {
-				scope.activeRouteIdx = routeIdx;
-				updateActiveRoute();
+			scope.clear = function() {
+				scope.reset();
+
+				scope.destinations = [ ];
+				scope.addDestination();
+				scope.addDestination();
+			};
+
+			scope.addToMap = function(type) {
+				if(type == null) {
+					for(var i in map.socket.types) {
+						if(map.socket.types[i].type == "line") {
+							type = map.socket.types[i];
+							break;
+						}
+					}
+				}
+
+				map.linesUi.createLine(type, scope.routeObj.routePoints, { mode: scope.routeObj.routeMode });
+
+				scope.clear();
 			};
 
 			var el = $($templateCache.get("map/search/search-route.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
-			var layerGroup = L.featureGroup([]).addTo(map.map);
+			var routeLayer = null;
+			var dragMarker = null;
 			var markers = [ ];
 			var recalcRoute = fpUtils.minInterval(dragTimeout, false);
 
-			function renderRoutes(dragging) {
-				clearRoutes(dragging);
+			function renderRoute(dragging) {
+				clearRoute(dragging);
 
-				scope.routes.forEach(function(route, i) {
-					var layer = L.polyline(route.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), i == scope.activeRouteIdx ? activeStyle : inactiveStyle)
-						.on("click", function() {
-							scope.setActiveRoute(i);
-						})
-						.bindTooltip(route.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
+				routeLayer = L.polyline(scope.routeObj.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), lineStyle).addTo(map.map);
+				map.map.almostOver.addLayer(routeLayer);
 
-					layerGroup.addLayer(layer);
-					map.map.almostOver.addLayer(layer);
-				});
+				dragMarker = fpUtils.temporaryDragMarker(map.map, routeLayer, map.dragMarkerColour, function(marker) {
+					var latlng = marker.getLatLng();
+					var idx = fpUtils.getIndexOnLine(map.map, scope.routeObj.trackPoints, scope.routeObj.routePoints, { lat: latlng.lat, lon: latlng.lng });
 
-				updateActiveRoute();
+					scope.destinations.splice(idx, 0, makeCoordDestination(latlng));
+					markers.splice(idx, 0, marker);
+
+					registerMarkerHandlers(marker);
+
+					marker.once("dragend", updateMarkerColours);
+
+					scope.route(true);
+				}.fpWrapApply(scope));
 
 				if(!dragging) {
-					map.map.flyToBounds(layerGroup.getBounds());
+					map.map.flyToBounds(routeLayer.getBounds());
 
 					// Render markers
 
-					scope.currentRoutePoints.forEach(function(point, i) {
+					scope.routeObj.routePoints.forEach(function(point, i) {
 						var marker = L.marker([ point.lat, point.lon ], {
 							icon: fpUtils.createMarkerIcon(map.dragMarkerColour),
 							draggable: true
@@ -198,38 +211,17 @@
 				});
 			}
 
-			function updateActiveRoute() {
-				layerGroup.getLayers().forEach(function(layer, i) {
-					var active = (i == scope.activeRouteIdx);
+			function clearRoute(dragging) {
+				if(routeLayer) {
+					map.map.almostOver.removeLayer(routeLayer);
+					routeLayer.remove();
+					routeLayer = null;
+				}
 
-					layer.setStyle(active ? activeStyle : inactiveStyle);
-
-					if(active && !layer._fpDragMarker) {
-						layer._fpDragMarker = fpUtils.temporaryDragMarker(map.map, layer, map.dragMarkerColour, function(marker) {
-							var latlng = marker.getLatLng();
-							var idx = fpUtils.getIndexOnLine(map.map, scope.routes[i].trackPoints, scope.currentRoutePoints, { lat: latlng.lat, lon: latlng.lng });
-
-							scope.destinations.splice(idx, 0, makeCoordDestination(latlng));
-							markers.splice(idx, 0, marker);
-
-							registerMarkerHandlers(marker);
-
-							marker.once("dragend", updateMarkerColours);
-
-							scope.route(true);
-						}.fpWrapApply(scope));
-					} else if(!active && layer._fpDragMarker) {
-						layer._fpDragMarker();
-						delete layer._fpDragMarker;
-					}
-				});
-			}
-
-			function clearRoutes(dragging) {
-				layerGroup.eachLayer(function(it) {
-					map.map.almostOver.removeLayer(it);
-				});
-				layerGroup.clearLayers();
+				if(dragMarker) {
+					dragMarker();
+					dragMarker = null;
+				}
 
 				if(!dragging) {
 					markers.forEach(function(marker) {
@@ -261,7 +253,7 @@
 				},
 
 				hide: function() {
-					clearRoutes();
+					clearRoute();
 					el.hide();
 				},
 

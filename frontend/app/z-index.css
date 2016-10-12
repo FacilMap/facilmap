@@ -28,3 +28,7 @@
 .fp-search {
 	z-index: 1010;
 }
+
+.dropdown-menu {
+	z-index: 2000;
+}

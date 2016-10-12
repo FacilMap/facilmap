@@ -45,6 +45,10 @@
 	color: inherit;
 }
 
+.fp-search .form-group {
+	margin-bottom: 7px;
+}
+
 @media print {
 	.fp-search {
 		display: none;

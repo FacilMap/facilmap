@@ -20,13 +20,13 @@ var ROUTING_TYPES = {
 
 var ACCESS_TOKEN = "pk.eyJ1IjoiY2RhdXRoIiwiYSI6ImNpdTYwMmZwMDAwM3AyenBhemM5NHM4ZmgifQ.93z6yuzcsxt3eZk9NxPGHA";
 
-function calculateRouting(points, mode, simple, multiple) {
+function calculateRouting(points, mode, simple) {
 	var coords = [ ];
 	for(var i=0; i<points.length; i++)
 		coords.push(points[i].lon + "," + points[i].lat);
 
 	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";")
-		+ "?alternatives=" + (multiple ? "true" : "false")
+		+ "?alternatives=false"
 		+ "&steps=false"
 		+ "&geometries=geojson"
 		+ "&overview=" + (simple ? "simplified" : "full")
@@ -46,19 +46,16 @@ function calculateRouting(points, mode, simple, multiple) {
 		if(body.code != 'Ok')
 			throw "Route could not be calculated (" + body.code + ").";
 
-		var ret = [ ];
-		for(var i=0; i<(multiple ? body.routes.length : 1); i++) {
-			ret[i] = {
-				trackPoints : body.routes[i].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
-				distance: body.routes[i].distance/1000,
-				time: body.routes[i].duration
-			};
+		var ret = {
+			trackPoints : body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
+			distance: body.routes[0].distance/1000,
+			time: body.routes[0].duration
+		};
 
-			if(!simple)
-				_calculateZoomLevels(ret[i].trackPoints);
-		}
+		if(!simple)
+			_calculateZoomLevels(ret.trackPoints);
 
-		return multiple ? ret : ret[0];
+		return ret;
 	});
 }
 

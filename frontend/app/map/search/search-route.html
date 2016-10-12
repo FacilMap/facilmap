@@ -20,27 +20,38 @@
 				</div>
 			</div>
 			<div class="form-group">
-				<button type="button" class="btn btn-default" ng-click="addDestination()"><span class="glyphicon glyphicon-plus"></span></button>
+				<div class="btn-toolbar">
+					<button type="button" class="btn btn-default" ng-click="addDestination()"><span class="glyphicon glyphicon-plus"></span></button>
 
-				<div class="btn-group">
-					<button type="button" class="btn btn-default" uib-btn-radio="'car'" ng-model="routeMode" tabindex="{{destinations.length+1}}" ng-click="reroute()"><span class="icon-car"></span></button>
-					<button type="button" class="btn btn-default" uib-btn-radio="'bicycle'" ng-model="routeMode" tabindex="{{destinations.length+2}}" ng-click="reroute()"><span class="icon-bicycle"></span></button>
-					<button type="button" class="btn btn-default" uib-btn-radio="'pedestrian'" ng-model="routeMode" tabindex="{{destinations.length+3}}" ng-click="reroute()"><span class="icon-walk"></span></button>
+					<div class="btn-group">
+						<button type="button" class="btn btn-default" uib-btn-radio="'car'" ng-model="routeMode" tabindex="{{destinations.length+1}}" ng-click="reroute()"><span class="icon-car"></span></button>
+						<button type="button" class="btn btn-default" uib-btn-radio="'bicycle'" ng-model="routeMode" tabindex="{{destinations.length+2}}" ng-click="reroute()"><span class="icon-bicycle"></span></button>
+						<button type="button" class="btn btn-default" uib-btn-radio="'pedestrian'" ng-model="routeMode" tabindex="{{destinations.length+3}}" ng-click="reroute()"><span class="icon-walk"></span></button>
+					</div>
+
+					<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+4}}">Go!</button>
+
+					<button type="button" class="btn btn-default pull-right active" ng-click="showSearchForm()"><span class="glyphicon glyphicon-road"></span></button>
 				</div>
-
-				<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+4}}">Go!</button>
-
-				<button type="button" class="btn btn-default pull-right active" ng-click="showSearchForm()"><span class="glyphicon glyphicon-road"></span></button>
 			</div>
 
-			<div class="fp-search-results" ng-show="routes || routeError">
+			<div class="fp-search-results" ng-show="routeObj || routeError">
 				<div uib-alert class="alert-danger no-results" ng-if="routeError">{{routeError}}</div>
 
-				<ul class="list-group" ng-if="routes.length > 0">
-					<li ng-repeat="route in routes" class="list-group-item" ng-class="{ active: activeRouteIdx == $index }">
-						<a href="javascript:" ng-click="setActiveRoute($index)">{{route.display_name}}</a>
-					</li>
-				</ul>
+				<dl ng-show="routeObj">
+					<dt>Distance</dt>
+					<dd>{{routeObj.distance | fpRound:2}} km <span ng-show="routeObj.time != null">({{routeObj.time | fpFormatTime}} h {{routeObj.routeMode | fpRoutingMode}})</span></dd>
+				</dl>
+
+				<div class="fp-search-buttons" ng-show="routeObj && !readonly">
+					<div uib-dropdown ng-if="(types | fpPropertyCount:{type:'line'}) > 1" dropdown-append-to-body="true">
+						<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
+						<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button" uib-dropdown-menu>
+							<li role="menuitem" ng-repeat="type in types | fpObjectFilter:{type:'line'}"><a href="#" ng-click="addToMap(type)">{{type.name}}</a></li>
+						</ul>
+					</div>
+					<button ng-if="(types | fpPropertyCount:{type:'line'}) == 1" type="button" class="btn btn-default" ng-click="addToMap()">Add to map</button>
+				</div>
 			</div>
 		</form>
 	</div>
