@@ -14,6 +14,8 @@
 				opacity : 0.3
 			};
 
+			var dragTimeout = 300;
+
 			var scope = $rootScope.$new(true);
 
 			scope.routeMode = 'car';
@@ -74,11 +76,16 @@
 				});
 			};
 
-			scope.route = function() {
-				scope.reset();
+			scope.route = function(dragging) {
+				if(!dragging)
+					scope.reset();
 
-				$q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
-					var points = scope.destinations.map(function(destination) {
+				var dest;
+
+				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
+					dest = ng.copy(scope.destinations);
+
+					var points = dest.map(function(destination) {
 						if(destination.suggestions.length == null)
 							throw "No place has been found for search term “" + destination.query + "”.";
 
@@ -100,7 +107,11 @@
 
 					scope.routes = routes;
 					scope.activeRouteIdx = 0;
-					renderResults();
+					scope.loadedDestinations = dest;
+					renderRoutes(dragging);
+
+					if(!dragging)
+						renderMarkers();
 				}).catch(function(err) {
 					scope.routeError = err;
 				});
@@ -115,8 +126,10 @@
 				scope.routes = [ ];
 				scope.routeError = null;
 				scope.activeRouteIdx = null;
+				scope.loadedDestinations = null;
 
-				clearRenders();
+				clearRoutes();
+				clearMarkers();
 			};
 
 			scope.setActiveRoute = function(routeIdx) {
@@ -129,11 +142,10 @@
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
+			var markerGroup = L.featureGroup([]).addTo(map.map);
 
-			var activeRouteMarkers = [ ];
-
-			function renderResults() {
-				clearRenders();
+			function renderRoutes(dragging) {
+				clearRoutes();
 
 				scope.routes.forEach(function(route, i) {
 					var layer = L.polyline(route.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), i == scope.activeRouteIdx ? activeStyle : inactiveStyle)
@@ -158,7 +170,50 @@
 
 				updateActiveRoute();
 
-				map.map.flyToBounds(layerGroup.getBounds());
+				if(!dragging)
+					map.map.flyToBounds(layerGroup.getBounds());
+			}
+
+			function renderMarkers() {
+				clearMarkers();
+
+				scope.loadedDestinations.forEach(function(destination, i) {
+					var colour = (i == 0 ? map.startMarkerColour : i == scope.loadedDestinations.length-1 ? map.endMarkerColour : map.dragMarkerColour);
+
+					var recalcRoute = fpUtils.minInterval(dragTimeout, false, function() {
+						var latlng = marker.getLatLng();
+
+						var disp = fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5);
+						scope.destinations[i] = {
+							query: disp,
+							suggestionQuery: disp,
+							selectedSuggestionIdx: 0,
+							suggestions: [ {
+								lat: latlng.lat,
+								lon: latlng.lng,
+								display_name: disp,
+								short_name: disp,
+								type: "coordinates"
+							} ]
+						};
+
+						return scope.route(true);
+					}.fpWrapApply(scope));
+
+					var sugg = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
+					var marker = L.marker([ sugg.lat, sugg.lon ], {
+						icon: fpUtils.createMarkerIcon(colour),
+						draggable: true
+					})
+						.on("dblclick", function() {
+							scope.$apply(function() {
+								scope.removeDestination(i);
+							});
+						})
+						.on("drag", recalcRoute);
+
+					markerGroup.addLayer(marker);
+				});
 			}
 
 			function updateActiveRoute() {
@@ -167,11 +222,15 @@
 
 					/*if(i == scope.activeRouteIdx)
 						layer.openPopup();*/
-				})
+				});
 			}
 
-			function clearRenders() {
+			function clearRoutes() {
 				layerGroup.clearLayers();
+			}
+
+			function clearMarkers() {
+				markerGroup.clearLayers();
 			}
 
 			/*function renderRoutePopup(route, popup) {
@@ -212,7 +271,8 @@
 				},
 
 				hide: function() {
-					clearRenders();
+					clearRoutes();
+					clearMarkers();
 					el.hide();
 				}
 			};

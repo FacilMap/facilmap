@@ -1,6 +1,6 @@
 <div class="fp-search fp-search-route panel panel-default" ng-class="{'fp-hasResults': routes.length > 0}">
 	<div class="panel-body">
-		<form ng-submit="route()" ui-sortable="sortableOptions" ng-model="destinations">
+		<form ng-submit="reset(); route()" ui-sortable="sortableOptions" ng-model="destinations">
 			<div class="form-group" ng-repeat="destination in destinations">
 				<div class="input-group">
 					<span class="input-group-addon">

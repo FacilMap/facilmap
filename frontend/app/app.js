@@ -65,12 +65,12 @@ var FacilPad = {
 		return function() {
 			var context = this;
 			var args = arguments;
-			var func = function() { f.apply(context, args); };
+			var func = function() { return f.apply(context, args); };
 
 			if($scope.$$phase || $scope.$root.$$phase)
-				func();
+				return func();
 			else
-				$scope.$apply(func);
+				return $scope.$apply(func);
 		}
 	}
 

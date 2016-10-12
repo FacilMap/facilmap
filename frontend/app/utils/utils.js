@@ -209,6 +209,48 @@
 			c.destroy();
 		};
 
+		/**
+		 * Make sure that a function is not called more often than every <interval> seconds.
+		 * @param interval The minimum interval in milliseconds
+		 * @param cancel If true, a new function call will delay the next call of the function by <interval>.
+		 * @param func The function to call. If it returns a promise, any calls to it will be suspended until the promise is resolved
+		 * @returns {Function} Call this function to call <func>
+		 */
+		fpUtils.minInterval = function(interval, cancel, func) {
+			var timeout = null;
+			var promise = null;
+
+			var ret = function() {
+				if(promise) {
+					promise._fpCall = true;
+					return;
+				}
+
+				if(timeout != null && cancel) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+
+				if(timeout == null) {
+					timeout = setTimeout(function() {
+						timeout = null;
+						var p = func();
+
+						if(p && p.then) {
+							var handler = function() {
+								var call = promise._fpCall;
+								promise = null;
+								if(call)
+									ret(func);
+							};
+							promise = p.then(handler, handler);
+						}
+					}, interval);
+				}
+			};
+			return ret;
+		};
+
 		return fpUtils;
 	});
 

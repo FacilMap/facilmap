@@ -124,7 +124,9 @@
 				e.layer.fire('fp-almostmove', e);
 			});
 
+			map.startMarkerColour = "00ff00";
 			map.dragMarkerColour = "ffd700";
+			map.endMarkerColour = "ff0000";
 
 			map.map.on("click", function(e) {
 				map.mapEvents.$emit("click", e.latlng);
