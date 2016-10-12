@@ -161,6 +161,7 @@
 				},
 
 				hide: function() {
+					clearRenders();
 					el.hide();
 				},
 

@@ -36,6 +36,7 @@
 
 			scope.removeDestination = function(idx) {
 				scope.destinations.splice(idx, 1);
+				scope.reroute();
 			};
 
 			scope.showSearchForm = function() {
@@ -114,11 +115,13 @@
 				scope.routes = [ ];
 				scope.routeError = null;
 				scope.activeRouteIdx = null;
+
+				clearRenders();
 			};
 
 			scope.setActiveRoute = function(routeIdx) {
 				scope.activeRouteIdx = routeIdx;
-				updateStyle();
+				updateActiveRoute();
 			};
 
 			var el = $($templateCache.get("map/search/search-route.html")).insertAfter(map.map.getContainer());
@@ -127,36 +130,43 @@
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
 
+			var activeRouteMarkers = [ ];
+
 			function renderResults() {
 				clearRenders();
 
 				scope.routes.forEach(function(route, i) {
 					var layer = L.polyline(route.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), i == scope.activeRouteIdx ? activeStyle : inactiveStyle)
-						.bindPopup($("<div/>")[0], map.popupOptions)
+						.on("click", function() {
+							scope.setActiveRoute(i);
+						})
+						/*.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
 							scope.setActiveRoute(i);
 							renderRoutePopup(route, e.popup);
 						}.fpWrapApply(scope))
 						.on("popupclose", function(e) {
 							ng.element(e.popup.getContent()).scope().$destroy();
-						})
+						})*/
 						.bindTooltip(route.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
 					layerGroup.addLayer(layer);
 
-					if(i == scope.activeRouteIdx)
-						layer.openPopup();
+					/*if(i == scope.activeRouteIdx)
+						layer.openPopup();*/
 				});
+
+				updateActiveRoute();
 
 				map.map.flyToBounds(layerGroup.getBounds());
 			}
 
-			function updateStyle() {
+			function updateActiveRoute() {
 				layerGroup.getLayers().forEach(function(layer, i) {
 					layer.setStyle(i == scope.activeRouteIdx ? activeStyle : inactiveStyle);
 
-					if(i == scope.activeRouteIdx)
-						layer.openPopup();
+					/*if(i == scope.activeRouteIdx)
+						layer.openPopup();*/
 				})
 			}
 
@@ -164,7 +174,7 @@
 				layerGroup.clearLayers();
 			}
 
-			function renderRoutePopup(route, popup) {
+			/*function renderRoutePopup(route, popup) {
 				var scope = map.socket.$new();
 
 				scope.route = route;
@@ -194,7 +204,7 @@
 				$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
 					popup.update();
 				}); });
-			}
+			}*/
 
 			var routeUi = {
 				show: function() {
@@ -202,6 +212,7 @@
 				},
 
 				hide: function() {
+					clearRenders();
 					el.hide();
 				}
 			};

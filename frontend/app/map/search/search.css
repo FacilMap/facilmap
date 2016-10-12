@@ -20,7 +20,7 @@
 	max-width: 40%;
 }
 
-.fp-search:not(:hover):not(.fp-hasResults):not(.fp-hasFocus) {
+.fp-search-search:not(:hover):not(.fp-hasResults):not(.fp-hasFocus) {
 	background-color: rgba(255, 255, 255, 0);
 	border-color: rgba(255, 255, 255, 0);
 	box-shadow: none;
@@ -41,7 +41,7 @@
 	pointer-events: auto;
 }
 
-.fp-search .active a {
+.fp-search-results .active a {
 	color: inherit;
 }
 
