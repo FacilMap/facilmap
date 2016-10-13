@@ -343,6 +343,11 @@
 					var m = it.match(/^(\s*)(.*?)(\s*)$/);
 					return m[1] + '<a href="https://www.wikidata.org/wiki/' + fpUtils.quoteHtml(m[2]) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[3];
 				}).join(";"));
+			} else if(key.match(/^wiki:symbol(:$)/)) {
+				return $sce.trustAsHtml(value.split(";").map(function(it) {
+					var m = it.match(/^(\s*)(.*?)(\s*)$/);
+					return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + fpUtils.quoteHtml(m[2]) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[3];
+				})).join(";");
 			} else {
 				return $sce.trustAsHtml(linkifyStr(value));
 			}

@@ -36,6 +36,7 @@ function calculateRouting(points, mode, simple) {
 	return request.get({
 		url: url,
 		json: true,
+		gzip: true,
 		headers: {
 			'User-Agent': config.userAgent
 		}

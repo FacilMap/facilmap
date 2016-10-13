@@ -7,6 +7,8 @@
     "start": "node lib/server.js"
   },
   "dependencies": {
+    "cheerio": "^0.22.0",
+    "compressjs": "^1.0.3",
     "promise": "^7.1.1",
     "request": "^2.75.0",
     "request-promise": "^4.1.1",

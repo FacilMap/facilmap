@@ -1,6 +1,16 @@
 var request = require("request-promise");
 var config = require("../config");
 var Promise = require("promise");
+var cheerio = require("cheerio");
+var zlib = require("zlib");
+var compressjs = require("compressjs");
+
+request = request.defaults({
+	gzip: true,
+	headers: {
+		'User-Agent': config.userAgent
+	}
+});
 
 var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 var nameFinderUrl = "https://nominatim.openstreetmap.org/search";
@@ -60,12 +70,20 @@ function find(query) {
 			} ];
 		}
 
+		var m = query.match(/^(node|way|relation)\s+(\d+)$/);
+		if(m)
+			return loadUrl("https://api.openstreetmap.org/api/0.6/" + m[1] + "/" + m[2] + (m[1] != "node" ? "/full" : ""), true);
+
+		m = query.match(/^trace\s+(\d+)$/);
+		if(m)
+			return loadUrl("https://www.openstreetmap.org/trace/" + m[1] + "/data");
+
+		if(query.match(/^https?:\/\//))
+			return loadUrl(query);
+
 		return request({
 			url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
-			json: true,
-			headers: {
-				'User-Agent': config.userAgent
-			}
+			json: true
 		}).then(function(body) {
 			if(!body)
 				throw "Invalid response from name finder.";
@@ -344,7 +362,7 @@ function isLonLatQuery(query) {
 		return decodeShortLink(query_match[2]);
 	}
 
-	if(query_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]?\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/))
+	if(query_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/))
 	{ // Coordinates
 		return {
 			lat: 1*query_match[2].replace(",", ".").replace(/\s+/, ""),
@@ -434,6 +452,65 @@ function decodeShortLink(encoded) {
 		lon: Math.round(lon*100000)/100000,
 		zoom : zoom
 	};
+}
+
+function loadUrl(url, completeOsmObjects) {
+	return request(url, { encoding: null }).then(function(bodyBuf) {
+		if(!bodyBuf)
+			throw "Invalid response from server.";
+
+		if(bodyBuf[0] == 0x42 && bodyBuf[1] == 0x5a && bodyBuf[2] == 0x68) {// bzip2
+			return new Buffer(compressjs.Bzip2.decompressFile(bodyBuf));
+		}
+		else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
+			return Promise.denodeify(zlib.gunzip.bind(zlib))(bodyBuf);
+		else
+			return bodyBuf;
+	}).then(function(bodyBuf) {
+		var body = bodyBuf.toString();
+
+		if(body.match(/^\s*</)) {
+			var $ = cheerio.load(body, { xmlMode: true });
+			var rootEl = $.root().children();
+
+			if(rootEl.is("osm") && completeOsmObjects) {
+				return _loadSubRelations($).then(function() { return $.xml(); });
+			} else if(rootEl.is("gpx,kml,osm"))
+				return body;
+			else
+				throw "Unknown file format.";
+		} else if(body.match(/^\s*\{/)) {
+			var content = JSON.parse(body);
+			if(content.type)
+				return body;
+			else
+				throw "Unknown file format.";
+		} else {
+			throw "Unknown file format.";
+		}
+	});
+}
+
+function _loadSubRelations($) {
+	var ret = [ ];
+	$("member[type='relation']").each(function() {
+		var relId = $(this).attr("ref");
+		if($("relation[id='" + relId + "']").length == 0) {
+			ret.push(request("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full"));
+		}
+	});
+
+	if(ret.length > 0) {
+		return Promise.all(ret).then(function(relations) {
+			relations.forEach(function(relation) {
+				$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
+			});
+
+			return _loadSubRelations($);
+		});
+	} else {
+		return Promise.resolve();
+	}
 }
 
 module.exports = {

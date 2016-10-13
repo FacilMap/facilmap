@@ -25,28 +25,31 @@
 						map.loadEnd();
 
 						if(err)
-							map.messages.showMessage("danger", err);
+							return map.messages.showMessage("danger", err);
 
-						scope.searchResults = results;
-
-						if(results && results.length > 0)
-							scope.showAll ? scope.showAllResults() : scope.showResult(results[0]);
+						if(typeof results == "string")
+							loadSearchResults(parseFiles([ results ]));
+						else
+							loadSearchResults(results);
 					});
 				}
 			};
 
 			scope.showResult = function(result) {
 				if(scope.showAll) {
-					map.map.flyToBounds(layerGroup.getBounds());
-					result.marker.openPopup();
+					_flyToBounds(layerGroup.getBounds());
+
+					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
 					renderResult(result, true);
 
 					if(result.boundingbox)
-						map.map.flyToBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]);
-					else
+						_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
+					else if(result.lat && result.lon && result.zoom)
 						map.map.flyTo([ result.lat, result.lon ], result.zoom);
+					else if(result.layer)
+						_flyToBounds(result.layer.getBounds());
 				}
 			};
 
@@ -56,7 +59,7 @@
 				for(var i=0; i<scope.searchResults.length; i++)
 					renderResult(scope.searchResults[i], false);
 
-				map.map.flyToBounds(layerGroup.getBounds());
+				_flyToBounds(layerGroup.getBounds());
 			};
 
 			scope.showRoutingForm = function() {
@@ -81,11 +84,107 @@
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
 
+			function _flyToBounds(bounds) {
+				map.map.flyTo(bounds.getCenter(), Math.min(15, map.map.getBoundsZoom(bounds)));
+			}
+
+			function loadSearchResults(results) {
+				clearRenders();
+
+				scope.searchResults = results;
+
+				if(results && results.length > 0)
+					scope.showAll ? scope.showAllResults() : scope.showResult(scope.searchResults[0]);
+			}
+
+			function parseFiles(files) {
+				var ret = [ ];
+				var errors = false;
+				files.forEach(function(file) {
+					var geojson = null;
+
+					if(file.match(/^\s*</)) {
+						var doc = $.parseXML(file);
+						var xml = $(doc).find(":root");
+
+						if(xml.is("gpx"))
+							geojson = toGeoJSON.gpx(xml[0]);
+						else if(xml.is("kml"))
+							geojson = toGeoJSON.kml(xml[0]);
+						else if(xml.is("osm"))
+							geojson = osmtogeojson(doc);
+					} else if(body.match(/^\s*\{/)) {
+						var content = JSON.parse(body);
+						if(content.type)
+							return geojson = content;
+					}
+
+					console.log(geojson);
+
+					if(geojson == null)
+						return errors = true;
+
+					var features;
+					if(geojson.type == "FeatureCollection")
+						features = geojson.features || [ ];
+					else if(geojson.type == "Feature")
+						features = [ geojson ];
+					else
+						features = [ { type: "Feature", geometry: geojson, properties: { } } ];
+
+					features.forEach(function(feature) {
+						var name;
+
+						if(typeof feature.properties != "object")
+							feature.properties = { };
+
+						if(feature.properties.name)
+							name = feature.properties.name;
+						else if(feature.properties.tags.name)
+							name = feature.properties.tags.name;
+						else if(feature.properties.type)
+							name = feature.properties.type + " " + feature.properties.id;
+						else if([ "Polygon", "MultiPolygon" ].indexOf(feature.geometry.type) != -1)
+							name = "Polygon";
+						else if([ "LineString", "MultiLineString" ].indexOf(feature.geometry.type) != -1)
+							name = "Line";
+						else if([ "Point", "MultiPoint" ].indexOf(feature.geometry.type) != -1)
+							name = "Point";
+						else
+							name = feature.geometry.type || "Object";
+
+						ret.push({
+							short_name: name,
+							display_name: name,
+							extratags: feature.properties.tags || _filterAdditionalTags(feature.properties),
+							geojson: feature.geometry,
+							type: feature.properties.type || feature.geometry.type
+						});
+					});
+				});
+
+				if(errors)
+					return map.messages.showMessage("danger", "Some files could not be parsed.");
+
+				return ret;
+			}
+
+			function _filterAdditionalTags(tags) {
+				var ret = { };
+				for(var i in tags) {
+					if(typeof tags[i] == "string" || typeof tags[i] == "number")
+						ret[i] = tags[i];
+				}
+				return ret;
+			}
+
 			function renderResult(result, showPopup) {
-				layerGroup.addLayer(
-					L.geoJson(result.geojson, {
+				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
+					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
-							return null;
+						    return L.marker(latlng, {
+						    	icon: fpUtils.createMarkerIcon("ff0000")
+						    });
 						}
 					})
 					.bindPopup($("<div/>")[0], map.popupOptions)
@@ -97,32 +196,36 @@
 						scope.activeResult = null;
 						ng.element(e.popup.getContent()).scope().$destroy();
 					})
-					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }))
-				);
+					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
-				result.marker = L.marker([ result.lat, result.lon ], {
-					icon: L.icon({
-						iconUrl: result.icon.replace(/\.[a-z]+\.[0-9]+\.png$/, iconSuffix),
-						iconSize: [ 32, 32 ],
-						iconAnchor: [ 16, 16 ],
-						popupAnchor: [ 0, -16 ]
-					})
-				})
-					.bindPopup($("<div/>")[0], map.popupOptions)
-					.on("popupopen", function(e) {
-						scope.activeResult = result;
-						renderResultPopup(result, e.popup);
-					})
-					.on("popupclose", function(e) {
-						scope.activeResult = null;
-						ng.element(e.popup.getContent()).scope().$destroy();
-					})
-					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
+					layerGroup.addLayer(result.layer);
+				}
 
-				layerGroup.addLayer(result.marker);
+				if(result.lat != null && result.lon != null) {
+					result.marker = L.marker([ result.lat, result.lon ], {
+						icon: L.icon({
+							iconUrl: result.icon.replace(/\.[a-z]+\.[0-9]+\.png$/, iconSuffix),
+							iconSize: [ 32, 32 ],
+							iconAnchor: [ 16, 16 ],
+							popupAnchor: [ 0, -16 ]
+						})
+					})
+						.bindPopup($("<div/>")[0], map.popupOptions)
+						.on("popupopen", function(e) {
+							scope.activeResult = result;
+							renderResultPopup(result, e.popup);
+						})
+						.on("popupclose", function(e) {
+							scope.activeResult = null;
+							ng.element(e.popup.getContent()).scope().$destroy();
+						})
+						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
+
+					layerGroup.addLayer(result.marker);
+				}
 
 				if(showPopup)
-					result.marker.openPopup();
+					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 			}
 
 			function clearRenders() {
@@ -179,7 +282,7 @@
 				},
 
 				showFiles: function(files) {
-					console.log("showFiles", files);
+					loadSearchResults(parseFiles(files));
 				}
 			};
 

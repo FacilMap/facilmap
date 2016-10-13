@@ -92,8 +92,6 @@
 						});
 					});
 				}).then(function(route) {
-					console.log(route);
-
 					route.routePoints = points;
 					route.routeMode = mode;
 
