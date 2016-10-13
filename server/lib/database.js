@@ -342,7 +342,7 @@ function updateLine(lineId, data) {
 		if(data.mode == null)
 			data.mode = originalLine.mode || "";
 
-		if(!underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode)
+		if((data.mode == "track" && data.trackPoints) || !underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode)
 			return _calculateRouting(data); // Also sets data.distance and data.time
 	});
 
@@ -365,18 +365,24 @@ function updateLine(lineId, data) {
 }
 
 function _createLine(padId, data) {
-	return backend.createLine(padId, data).then(function(data) {
-		listeners.notifyPadListeners(data.padId, "line", data);
+	var dataCopy = utils.extend({ }, data);
+	delete dataCopy.trackPoints; // They came if mode is track
 
-		return data;
+	return backend.createLine(padId, dataCopy).then(function(newData) {
+		listeners.notifyPadListeners(newData.padId, "line", newData);
+
+		return newData;
 	});
 }
 
 function _updateLine(lineId, data) {
-	return backend.updateLine(lineId, data).then(function(data) {
-		listeners.notifyPadListeners(data.padId, "line", data);
+	var dataCopy = utils.extend({ }, data);
+	delete dataCopy.trackPoints; // They came if mode is track
 
-		return data;
+	return backend.updateLine(lineId, dataCopy).then(function(newData) {
+		listeners.notifyPadListeners(newData.padId, "line", newData);
+
+		return newData;
 	});
 }
 
@@ -476,7 +482,17 @@ function getLinePoints(padId, bboxWithZoom) {
 }*/
 
 function _calculateRouting(line) {
-	if(line.routePoints && line.routePoints.length >= 2 && line.mode) {
+	if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
+		line.distance = utils.calculateDistance(line.trackPoints);
+		line.time = null;
+
+		routing._calculateZoomLevels(line.trackPoints);
+
+		for(var i=0; i<line.trackPoints.length; i++)
+			line.trackPoints[i].idx = i;
+
+		return Promise.resolve(line.trackPoints);
+	} else if(line.routePoints && line.routePoints.length >= 2 && line.mode && line.mode != "track") {
 		return routing.calculateRouting(line.routePoints, line.mode).then(function(routeData) {
 			line.distance = routeData.distance;
 			line.time = routeData.time;

@@ -113,7 +113,7 @@ var Line = conn.define("Line", {
 			}
 		}
 	},
-	mode : { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: "" },
+	mode : { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: false, defaultValue: "" },
 	colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "0000ff", validate: validateColour },
 	width : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
 	name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled line"; } },
@@ -238,7 +238,7 @@ function connect(force) {
 					promises.push(queryInterface.renameColumn('Lines', 'points', 'routePoints'));
 				}
 
-				// Change routing type "shortest" / "fastest" to "car"
+				// Change routing type "shortest" / "fastest" to "car", add type "track"
 				if(attributes.mode.type.indexOf("shortest") != -1) {
 					promises.push(
 						Promise.resolve().then(function() {
@@ -249,7 +249,7 @@ function connect(force) {
 							return Line.update({ mode: "car" }, { where: { mode: { $in: [ "fastest", "shortest" ] } } });
 						}).then(function() {
 							return queryInterface.changeColumn('Lines', 'mode', {
-								type: Sequelize.ENUM("", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: ""
+								type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: false, defaultValue: ""
 							});
 						})
 					);

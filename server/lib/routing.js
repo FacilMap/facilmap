@@ -124,4 +124,5 @@ function _filterByBbox(points, bbox) {
 }
 
 exports.calculateRouting = calculateRouting;
+exports._calculateZoomLevels = _calculateZoomLevels;
 exports.prepareForBoundingBox = prepareForBoundingBox;

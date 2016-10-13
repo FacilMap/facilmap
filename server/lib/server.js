@@ -155,7 +155,7 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 
 			addLine : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+					if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -167,7 +167,7 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 
 			editLine : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+					if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)

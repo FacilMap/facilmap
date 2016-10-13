@@ -374,7 +374,11 @@
 
 		$scope.save = function() {
 			$scope.error = null;
-			map.socket.emit("editLine", $scope.line, function(err) {
+
+			var lineObj = ng.copy($scope.line);
+			delete lineObj.trackPoints;
+
+			map.socket.emit("editLine", lineObj, function(err) {
 				if(err)
 					return $scope.error = err;
 

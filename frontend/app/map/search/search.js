@@ -178,6 +178,17 @@
 				return ret;
 			}
 
+			function _lineStringToTrackPoints(geometry) {
+				var ret = [ ];
+				var coords = (geometry.type == "MultiLineString" ? geometry.coordinates : [ geometry.coordinates ]);
+				coords.forEach(function(linePart) {
+					linePart.forEach(function(latlng) {
+						ret.push({ lat: latlng[1], lon: latlng[0] });
+					});
+				});
+				return ret;
+			}
+
 			function renderResult(result, showPopup) {
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 					result.layer = L.geoJson(result.geojson, {
@@ -193,7 +204,6 @@
 						renderResultPopup(result, e.popup);
 					})
 					.on("popupclose", function(e) {
-						scope.activeResult = null;
 						ng.element(e.popup.getContent()).scope().$destroy();
 					})
 					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
@@ -216,7 +226,6 @@
 							renderResultPopup(result, e.popup);
 						})
 						.on("popupclose", function(e) {
-							scope.activeResult = null;
 							ng.element(e.popup.getContent()).scope().$destroy();
 						})
 						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
@@ -237,17 +246,27 @@
 
 				scope.result = result;
 
+				if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
+					scope.type = "marker";
+				else if([ "LineString", "MultiLineString" ].indexOf(result.geojson && result.geojson.type) != -1)
+					scope.type = "line";
+
 				scope.addToMap = function(type) {
 					if(type == null) {
 						for(var i in map.socket.types) {
-							if(map.socket.types[i].type == "marker") {
+							if(map.socket.types[i].type == scope.type) {
 								type = map.socket.types[i];
 								break;
 							}
 						}
 					}
 
-					map.markersUi.createMarker(result, type, { name: result.display_name });
+					if(scope.type == "marker")
+						map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, { name: result.display_name });
+					else if(scope.type == "line") {
+						var trackPoints = _lineStringToTrackPoints(result.geojson);
+						map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], { trackPoints: trackPoints, mode: "track" });
+					}
 				};
 
 				var el = popup.getContent();
