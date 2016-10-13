@@ -3,13 +3,30 @@
 	<h3 class="modal-title">About FacilPad</h3>
 </div>
 <div class="modal-body">
-	<h2>Icons</h2>
-	<ul>
+	<p>FacilPad is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>. The source code can be found <a href="https://github.com/FacilMap/facilpad" target="_blank">on GitHub</a>.</p>
+	<h4>Programs/libraries</h4>
+	<ul class="list-inline">
+		<li><a href="https://nodejs.org/" target="_blank">Node.js</a></li>
+		<li><a href="http://sequelizejs.com/" target="_blank">Sequelize</a></li>
+		<li><a href="http://socket.io/" target="_blank">socket.io</a></li>
+		<li><a href="https://bower.io/" target="_blank">Bower</a></li>
+		<li><a href="http://gulpjs.com/" target="_blank">gulp.js</a></li>
+		<li><a href="https://jquery.com/" target="_blank">jQuery</a></li>
+		<li><a href="https://angularjs.org/" target="_blank">AngularJS</a></li>
+		<li><a href="https://github.com/chjj/marked" target="_blank">Marked</a></li>
+		<li><a href="https://getbootstrap.com/" target="_blank">Bootstrap</a></li>
+		<li><a href="https://github.com/chjj/marked" target="_blank">AngularUI Bootstrap</a></li>
+		<li><a href="http://leafletjs.com/" target="_blank">Leaflet</a></li>
+		<li><a href="http://project-osrm.org/" target="_blank">OSRM</a></li>
+		<li><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a></li>
+	</ul>
+	<h4>Icons</h4>
+	<ul class="list-inline">
 		<li><a href="https://glyphicons.com/" target="_blank">Glyphicons</a></li>
 		<li><a href="https://zavoloklom.github.io/material-design-iconic-font/index.html" target="_blank">Material Design Iconic Font</a></li>
 		<li><a href="http://fontello.com/" target="_blank">Fontello</a></li>
 	</ul>
-	<h2>Map data</h2>
+	<h4>Map data</h4>
 	<dl class="dl-horizontal">
 		<dt ng-repeat-start="layer in layers.base.concat(layers.overlay)" ng-if="layer.attribution">{{layer.name}}</dt>
 		<dd ng-repeat-end ng-bind-html="layer.attribution" ng-if="layer.attribution"></dd>
