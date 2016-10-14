@@ -31,7 +31,8 @@
     "leaflet.locatecontrol": "^0.55.0",
     "clipboard": "^1.5.12",
     "togeojson": "https://github.com/mapbox/togeojson/raw/master/togeojson.js",
-    "osmtogeojson": "^2.2.12"
+    "osmtogeojson": "^2.2.12",
+    "leaflet-fullHash": "https://raw.githubusercontent.com/KoGor/leaflet-fullHash/master/leaflet-fullHash.js"
   },
   "overrides": {
     "bootstrap": {

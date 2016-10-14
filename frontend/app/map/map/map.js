@@ -106,6 +106,8 @@
 				iconLoading: "glyphicon glyphicon-screenshot"
 			}).addTo(map.map);
 
+			L.hash(map.map, map.layers);
+
 			map.map.on('almost:over', function(e) {
 				e.layer.fire('fp-almostover', e);
 				$(map.map.getContainer()).addClass("fp-almostover");
@@ -275,7 +277,10 @@
 				var loadedWatcher = map.socket.$watch("padData", function(padData) {
 					if(padData != null) {
 						loadedWatcher();
-						map.displayView(padData.defaultView);
+
+						if(!map.map._loaded) // hash control might have set a location already
+							map.displayView(padData.defaultView);
+
 						scope.loaded = true;
 					}
 				});

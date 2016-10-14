@@ -90,7 +90,7 @@ var FacilPad = {
 
 			map.socket.$watch("padId", function(padId) {
 				if(padId)
-					history.replaceState(null, "", $scope.urlPrefix + padId);
+					history.replaceState(null, "", $scope.urlPrefix + padId + location.hash);
 			});
 		}, 0);
 
