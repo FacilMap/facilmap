@@ -11,7 +11,7 @@ COPY ./ ./
 RUN chown -R facilpad:facilpad .
 
 USER facilpad
-RUN npm run deps && npm run clean && npm run build
+RUN npm run deps && npm run clean && npm run build && npm install mysql pg sqlite3 tedious
 
 USER root
 RUN chown -R root:root .
