@@ -13,7 +13,7 @@ request = request.defaults({
 });
 
 var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
-var nameFinderUrl = "https://nominatim.openstreetmap.org/search";
+var nameFinderUrl = "https://nominatim.openstreetmap.org";
 var limit = 25;
 var stateAbbr = {
 	"us" : {
@@ -57,7 +57,7 @@ function find(query, loadUrls) {
 	return Promise.resolve().then(function() {
 		query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
-		var lonlat = isLonLatQuery(query);
+		var lonlat = decodeLonLatUrl(query);
 		if(lonlat) {
 			return [ {
 				lat: lonlat.lat,
@@ -83,34 +83,63 @@ function find(query, loadUrls) {
 				return loadUrl(query);
 		}
 
+		var lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/)
+		if(lonlat_match)
+		{ // Coordinates
+			lonlat = {
+				lat: 1*lonlat_match[2].replace(",", ".").replace(/\s+/, ""),
+				lon : 1*lonlat_match[4].replace(",", ".").replace(/\s+/, ""),
+				zoom : lonlat_match[7] != null ? 1*lonlat_match[7] : null
+			};
+
+			return request({
+				url: nameFinderUrl + "/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1"
+					+ "&lat=" + lonlat.lat
+					+ "&lon=" + lonlat.lon
+					+ "&zoom=" + (lonlat.zoom != null ? lonlat.zoom : 17),
+				json: true
+			}).then(function(body) {
+				if(!body)
+					throw "Invalid response from name finder.";
+
+				body.lat = lonlat.lat;
+				body.lon = lonlat.lon;
+
+				if(lonlat.zoom != null)
+					body.zoom = lonlat.zoom;
+
+				return [ prepareSearchResult(body) ];
+			});
+		}
+
 		return request({
-			url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
+			url: nameFinderUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
 			json: true
 		}).then(function(body) {
 			if(!body)
 				throw "Invalid response from name finder.";
 
-			var results = [ ];
-			body.forEach(function(result) {
-				var displayName = makeDisplayName(result);
-				results.push({
-					short_name: displayName.split(',')[0],
-					display_name: displayName,
-					boundingbox: result.boundingbox,
-					lat: result.lat,
-					lon: result.lon,
-					extratags: result.extratags,
-					geojson: result.geojson,
-					icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
-					type: result.type == "yes" ? result.category : result.type,
-					osm_id: result.osm_id,
-					osm_type: result.osm_type
-				});
-			});
-
-			return results;
+			return body.map(prepareSearchResult);
 		});
 	});
+}
+
+function prepareSearchResult(result) {
+	var displayName = makeDisplayName(result);
+	return {
+		short_name: result.namedetails.name || displayName.split(',')[0],
+		display_name: displayName,
+		boundingbox: result.boundingbox,
+		lat: result.lat,
+		lon: result.lon,
+		zoom: result.zoom,
+		extratags: result.extratags,
+		geojson: result.geojson,
+		icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
+		type: result.type == "yes" ? result.category : result.type,
+		osm_id: result.osm_id,
+		osm_type: result.osm_type
+	};
 }
 
 /**
@@ -351,26 +380,16 @@ function makeDisplayName(result) {
 }
 
 /**
- * Checks whether the given query string is a representation of coordinates, such as
- * 48.123,5.123 or an OSM permalink.
+ * Checks whether the given query string is a representation of coordinates, such an OSM permalink.
  * @param query {String}
  * @return {Object} An object with the properties “lonlat” and “zoom” or null
  */
-function isLonLatQuery(query) {
+function decodeLonLatUrl(query) {
 	var query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 	var query_match,query_match2;
 	if(query_match = query.match(/^http:\/\/(www\.)?osm\.org\/go\/([-A-Za-z0-9_@]+)/))
 	{ // Coordinates, shortlink
 		return decodeShortLink(query_match[2]);
-	}
-
-	if(query_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/))
-	{ // Coordinates
-		return {
-			lat: 1*query_match[2].replace(",", ".").replace(/\s+/, ""),
-			lon : 1*query_match[4].replace(",", ".").replace(/\s+/, ""),
-			zoom : query_match[7] != null ? 1*query_match[7] : 15
-		};
 	}
 
 	function decodeQueryString(str) {

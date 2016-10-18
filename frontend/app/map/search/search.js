@@ -42,12 +42,12 @@
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
-					renderResult(result, true);
+					renderResult(result, true, layerGroup);
 
-					if(result.boundingbox)
-						_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
-					else if(result.lat && result.lon && result.zoom)
+					if(result.lat && result.lon && result.zoom)
 						map.map.flyTo([ result.lat, result.lon ], result.zoom);
+					else if(result.boundingbox)
+						_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
 					else if(result.layer)
 						_flyToBounds(result.layer.getBounds());
 				}
@@ -57,7 +57,7 @@
 				clearRenders();
 
 				for(var i=0; i<scope.searchResults.length; i++)
-					renderResult(scope.searchResults[i], false);
+					renderResult(scope.searchResults[i], false, layerGroup);
 
 				_flyToBounds(layerGroup.getBounds());
 			};
@@ -81,6 +81,28 @@
 			var el = $($templateCache.get("map/search/search.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
+
+			var clickMarker = L.featureGroup([]).addTo(map.map);
+			clickMarker.on("popupclose", function() {
+				clickMarker.clearLayers();
+			});
+
+			map.mapEvents.$on("click", function(e, latlng) {
+				clickMarker.clearLayers();
+
+				map.loadStart();
+				map.socket.emit("find", { query: "geo:" + latlng.lat + "," + latlng.lng + "?z=" + map.map.getZoom(), loadUrls: false }, function(err, results) {
+					map.loadEnd();
+
+					if(err)
+						return map.messages.showMessage("danger", err);
+
+					clickMarker.clearLayers();
+
+					if(results.length > 0)
+						renderResult(results[0], true, clickMarker);
+				});
+			});
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
 
@@ -118,8 +140,6 @@
 						if(content.type)
 							return geojson = content;
 					}
-
-					console.log(geojson);
 
 					if(geojson == null)
 						return errors = true;
@@ -189,7 +209,7 @@
 				return ret;
 			}
 
-			function renderResult(result, showPopup) {
+			function renderResult(result, showPopup, layerGroup) {
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
@@ -233,8 +253,12 @@
 					layerGroup.addLayer(result.marker);
 				}
 
-				if(showPopup)
-					result.marker ? result.marker.openPopup() : result.layer.openPopup();
+				if(showPopup) {
+					if(result.marker)
+						result.marker.openPopup();
+					else if(result.layer)
+						result.layer.openPopup();
+				}
 			}
 
 			function clearRenders() {

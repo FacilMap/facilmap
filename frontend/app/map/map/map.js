@@ -132,7 +132,7 @@
 
 			map.map.on("click", function(e) {
 				map.mapEvents.$emit("click", e.latlng);
-			});
+			}.fpWrapApply($rootScope));
 
 			map.map.on("layeradd", function() {
 				map.mapEvents.$emit("layerchange");
