@@ -1,6 +1,21 @@
 {
-  "name": "facilmap",
-  "version": "0.1.0",
+  "name": "facilpad",
+  "description": "A real-time collaboration map",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "compressjs": "^1.0.3",
+    "promise": "^7.1.1",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1",
+    "sequelize": "^3.24.3",
+    "socket.io": "^1.2.1",
+    "underscore": "^1.8.3"
+  },
   "devDependencies": {
     "async": "^2.0.1",
     "bower": "^1.7.9",
@@ -23,6 +38,5 @@
     "main-bower-files": "^2.13.1",
     "stream-combiner": "^0.2.2",
     "through2": "^2.0.1"
-  },
-  "author": "Candid Dauth"
+  }
 }

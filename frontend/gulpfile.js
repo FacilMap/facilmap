@@ -36,7 +36,7 @@ gulp.task("clean", function() {
 
 gulp.task("deps", function() {
 	return combine(
-		gulp.src(mainBowerFiles(), { base: process.cwd() + "/" }),
+		gulp.src(mainBowerFiles({ paths: { bowerDirectory: '../bower_components', bowerJson: '../bower.json' } }), { base: process.cwd() + "/" }),
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
 				newer("build/dependencies.js"),
