@@ -106,7 +106,7 @@
 				iconLoading: "glyphicon glyphicon-screenshot"
 			}).addTo(map.map);
 
-			L.hash(map.map, map.layers);
+			fpUtils.leafletHash(map.map, map.layers);
 
 			map.map.on('almost:over', function(e) {
 				e.layer.fire('fp-almostover', e);
