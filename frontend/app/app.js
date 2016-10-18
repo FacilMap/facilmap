@@ -1,5 +1,5 @@
 var FacilPad = {
-	SERVER : "http://localhost:40829"
+	SERVER : "/"
 };
 
 (function(fp, $, ng, undefined) {
