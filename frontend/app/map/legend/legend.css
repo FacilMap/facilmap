@@ -1,4 +1,4 @@
-.fp-map-legend {
+.fm-map-legend {
 	position: absolute;
 	right: 10px;
 	bottom: 25px;
@@ -10,11 +10,11 @@
 	transition: opacity .7s;
 }
 
-.fp-map-legend .mobile-menu-button {
+.fm-map-legend .mobile-menu-button {
 	margin-left: auto;
 }
 
-.fp-map-legend .panel {
+.fm-map-legend .panel {
 	overflow-y: auto;
 
 	/* Somehow Chrome shows a horizontal scrollbar with anything else than this */
@@ -24,60 +24,60 @@
 	margin-bottom: 0;
 }
 
-.fp-map-legend:hover {
+.fm-map-legend:hover {
 	opacity: 1;
 }
 
-.fp-map-legend h3 {
+.fm-map-legend h3 {
 	font-size: 1.1em;
 	margin: 0 0 5px 0;
 	padding: 0;
 	font-weight: bold;
 }
 
-.fp-map-legend hr {
+.fm-map-legend hr {
 	margin: 10px -8px;
 }
 
-.fp-map-legend dl {
+.fm-map-legend dl {
 	margin-bottom: 0px;
 }
 
-.fp-map-legend dt {
+.fm-map-legend dt {
 	margin: 0;
 	width: auto;
 	padding-right: .3ex;
 	display: inline;
 }
 
-.fp-map-legend dt:after {
+.fm-map-legend dt:after {
 	content: none;
 }
 
-.fp-map-legend dd {
+.fm-map-legend dd {
 	line-height: 1.3em;
 	width: auto;
 	display: inline;
 	vertical-align: middle;
 }
 
-.fp-map-legend dd:after {
+.fm-map-legend dd:after {
 	content: "\a";
 	white-space: pre;
 }
 
-.fp-map-legend dl:after {
+.fm-map-legend dl:after {
 	content: none;
 }
 
-.fp-map-legend-line {
+.fm-map-legend-line {
 	display: inline-block;
 	width: 50px;
 	border-radius: 2px;
 	vertical-align: middle;
 }
 
-.fp-map-legend-marker {
+.fm-map-legend-marker {
 	height: 1.3em;
 	vertical-align: middle;
 }

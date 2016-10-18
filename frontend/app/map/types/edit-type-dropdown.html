@@ -29,8 +29,8 @@
 			<tbody ui-sortable="sortableOptions" ng-model="field.options">
 				<tr ng-repeat="option in field.options">
 					<td><input type="text" ng-model="option.value" class="form-control"></td>
-					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fp-colour-picker class="form-control"></td>
-					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fp-spinner class="form-control"></td>
+					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
+					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
 					<td class="td-buttons"><button ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
 					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
 				</tr>

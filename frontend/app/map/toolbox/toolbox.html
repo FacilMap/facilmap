@@ -1,7 +1,7 @@
-<div class="fp-toolbox">
+<div class="fm-toolbox">
 	<button class="btn btn-default visible-xs-block mobile-menu-button" ng-click="showXs = !showXs" uib-tooltip="{{showXs ? 'Hide menu' : 'Show menu'}}" tooltip-placement="left"><span class="glyphicon glyphicon-menu-hamburger"></span></button>
 	<nav class="navbar navbar-default" ng-class="{'hidden-xs': !showXs}">
-		<div class="container-fluid" id="fp-toolbox-content">
+		<div class="container-fluid" id="fm-toolbox-content">
 			<ul class="nav navbar-nav">
 				<li role="presentation" ng-if="!padId">
 					<a href="javascript:" ng-click="startPad()">Start collaborative map</a>
@@ -42,7 +42,7 @@
 						<li ng-if="padId"><a href="javascript:" ng-click="exportGpx()">Export GPX</a></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="showTable()">View as table</a></li>
 						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
-						<li><a href="javascript:" ng-click="showAbout()">About FacilPad</a></li>
+						<li><a href="javascript:" ng-click="showAbout()">About FacilMap</a></li>
 					</ul>
 				</li>
 			</ul>

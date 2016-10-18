@@ -1,14 +1,14 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.directive("fpTypeField", [ "$parse", "$compile", function($parse, $compile) {
+	fm.app.directive("fmTypeField", function($parse, $compile) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
-				if($parse(attrs.fpTypeFieldModel)(scope) == null)
-					$parse(attrs.fpTypeFieldModel+'='+attrs.fpTypeField+'.default')(scope);
+				if($parse(attrs.fmTypeFieldModel)(scope) == null)
+					$parse(attrs.fmTypeFieldModel+'='+attrs.fmTypeField+'.default')(scope);
 
 				var update = function() {
-					var field = $parse(attrs.fpTypeField)(scope);
+					var field = $parse(attrs.fmTypeField)(scope);
 
 					var el;
 					switch(field.type) {
@@ -32,52 +32,52 @@
 							break;
 					}
 
-					el.attr("ng-model", attrs.fpTypeFieldModel);
+					el.attr("ng-model", attrs.fmTypeFieldModel);
 
-					if(attrs.fpTypeFieldId)
-						el.attr("id", attrs.fpTypeFieldId);
+					if(attrs.fmTypeFieldId)
+						el.attr("id", attrs.fmTypeFieldId);
 
 					el.appendTo(element.empty());
 					$compile(el)(scope);
 					scope.$evalAsync(); // $compile only replaces variables on next digest
 				};
 
-				scope.$watch(attrs.fpTypeField+".type", update);
-				scope.$watch(attrs.fpTypeField+".options", update, true);
-				if(attrs.fpTypeFieldIgnoreDefault == null)
-					scope.$watch(attrs.fpTypeField+".default", update);
+				scope.$watch(attrs.fmTypeField+".type", update);
+				scope.$watch(attrs.fmTypeField+".options", update, true);
+				if(attrs.fmTypeFieldIgnoreDefault == null)
+					scope.$watch(attrs.fmTypeField+".default", update);
 			}
 		};
-	} ]);
+	});
 
-	fp.app.directive("fpTypeFieldContent", [ "$parse", "fpTypeFields", function($parse, fpTypeFields) {
+	fm.app.directive("fmTypeFieldContent", function($parse, fmTypeFields) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
 				var update = function() {
-					var field = $parse(attrs.fpTypeFieldContent)(scope);
-					var value = $parse(attrs.fpTypeFieldModel)(scope);
+					var field = $parse(attrs.fmTypeFieldContent)(scope);
+					var value = $parse(attrs.fmTypeFieldModel)(scope);
 
-					element.empty().append(fpTypeFields.formatField(field, value));
+					element.empty().append(fmTypeFields.formatField(field, value));
 				};
 
-				scope.$watch(attrs.fpTypeFieldModel, update);
-				scope.$watch(attrs.fpTypeFieldContent+".type", update);
-				scope.$watch(attrs.fpTypeFieldContent+".options", update, true);
-				if(attrs.fpTypeFieldIgnoreDefault == null)
-					scope.$watch(attrs.fpTypeFieldContent+".default", update);
+				scope.$watch(attrs.fmTypeFieldModel, update);
+				scope.$watch(attrs.fmTypeFieldContent+".type", update);
+				scope.$watch(attrs.fmTypeFieldContent+".options", update, true);
+				if(attrs.fmTypeFieldIgnoreDefault == null)
+					scope.$watch(attrs.fmTypeFieldContent+".default", update);
 			}
 		}
-	} ]);
+	});
 
-	fp.app.factory("fpTypeFields", [ "fpMarked", function(fpMarked) {
+	fm.app.factory("fmTypeFields", function(fmMarked) {
 		return {
 			formatField : function(field, value) {
 				if(value == null)
 					value = field['default'] || "";
 				switch(field.type) {
 					case "textarea":
-						return fpMarked.block(value);
+						return fmMarked.block(value);
 					case "checkbox":
 						return value == "1" ? "✔" : "✘";
 					case "dropdown":
@@ -97,10 +97,10 @@
 						return val || "";
 					case "input":
 					default:
-						return fpMarked.inline(value);
+						return fmMarked.inline(value);
 				}
 			}
 		}
-	}])
+	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

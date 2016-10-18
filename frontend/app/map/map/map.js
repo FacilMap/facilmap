@@ -1,15 +1,15 @@
-(function(fp, $, ng, fm, ol, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.directive("fpMap", function(fpMap) {
+	fm.app.directive("facilmap", function(fmMap) {
 		return {
 			restrict: 'EA',
 			link: function(scope, element, attrs) {
-				fpMap.initMap(element, attrs.id, attrs.fpPadId);
+				fmMap.initMap(element, attrs.id, attrs.fmMapId);
 			}
 		};
 	});
 
-	fp.app.factory("fpMap", function(fpUtils, fpSocket, fpMapMessages, fpMapMarkers, $templateCache, $compile, fpMapLines, fpMapTypes, fpMapViews, $rootScope, fpMapPad, fpMapToolbox, $timeout, fpMapLegend, fpMapSearch, fpMapGpx, fpMapAbout, $sce, L, fpMapImport) {
+	fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $templateCache, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, L, fmMapImport) {
 		var maps = { };
 
 		var ret = { };
@@ -29,60 +29,65 @@
 
 			map.el = el;
 			map.mapEvents = $rootScope.$new(true); /* Event types: click, layerchange */
-			map.socket = fpSocket(padId);
+			map.socket = fmSocket(padId);
 
 			map.layers = { };
 			[
+				L.gridLayer({
+					fmName: "Empty",
+					fmBase: true,
+					fmKey: "empt"
+				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", {
-					fpName: "MapSurfer Road",
-					fpBase: true,
-					fpKey: "MSfR",
+					fmName: "MapSurfer Road",
+					fmBase: true,
+					fmKey: "MSfR",
 					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-					fpName: "Mapnik",
-					fpBase: true,
-					fpKey: "Mpnk",
+					fmName: "Mapnik",
+					fmBase: true,
+					fmKey: "Mpnk",
 					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
-					fpName: "OpenCycleMap",
-					fpBase: true,
-					fpKey: "OCyc",
+					fmName: "OpenCycleMap",
+					fmBase: true,
+					fmKey: "OCyc",
 					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("http://{s}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
-					fpName: "Hike & Bike Map",
-					fpBase: true,
-					fpKey: "HiBi",
+					fmName: "Hike & Bike Map",
+					fmBase: true,
+					fmKey: "HiBi",
 					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
-					fpName: "Public transportation",
-					fpKey: "OPTM",
+					fmName: "Public transportation",
+					fmKey: "OPTM",
 					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
-					fpName: "Relief",
-					fpKey: "Rlie",
+					fmName: "Relief",
+					fmKey: "Rlie",
 					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
 					zIndex: 300,
 					noWrap: true
 				})
 			].forEach(function(it) {
-				map.layers[it.options.fpKey] = it;
+				map.layers[it.options.fmKey] = it;
 			});
 
 			map.popupOptions = {
 				minWidth: 350,
 				maxWidth: 350,
-				className: "fp-popup"
+				className: "fm-popup"
 			};
 
 			map.tooltipOptions = {
@@ -96,7 +101,7 @@
 			el.append(tpl);
 			$compile(tpl)(scope);
 
-			map.map = L.map(el.find(".fp-map")[0]);
+			map.map = L.map(el.find(".fm-map")[0]);
 
 			map.map.almostOver.options.distance = 10;
 
@@ -106,16 +111,16 @@
 				iconLoading: "glyphicon glyphicon-screenshot"
 			}).addTo(map.map);
 
-			fpUtils.leafletHash(map.map, map.layers);
+			fmUtils.leafletHash(map.map, map.layers);
 
 			map.map.on('almost:over', function(e) {
-				e.layer.fire('fp-almostover', e);
-				$(map.map.getContainer()).addClass("fp-almostover");
+				e.layer.fire('fm-almostover', e);
+				$(map.map.getContainer()).addClass("fm-almostover");
 			});
 
 			map.map.on('almost:out', function(e) {
-				e.layer.fire('fp-almostout', e);
-				$(map.map.getContainer()).removeClass("fp-almostover");
+				e.layer.fire('fm-almostout', e);
+				$(map.map.getContainer()).removeClass("fm-almostover");
 			});
 
 			map.map.on('almost:click', function(e) {
@@ -123,7 +128,7 @@
 			});
 
 			map.map.on('almost:move', function(e) {
-				e.layer.fire('fp-almostmove', e);
+				e.layer.fire('fm-almostmove', e);
 			});
 
 			map.startMarkerColour = "00ff00";
@@ -132,7 +137,7 @@
 
 			map.map.on("singleclick", function(e) {
 				map.mapEvents.$emit("click", e.latlng);
-			}.fpWrapApply($rootScope));
+			}.fmWrapApply($rootScope));
 
 			map.map.on("layeradd", function() {
 				map.mapEvents.$emit("layerchange");
@@ -143,14 +148,14 @@
 			});
 
 			map.getCurrentView = function() {
-				var ret = fpUtils.leafletToFpBbox(map.map.getBounds());
+				var ret = fmUtils.leafletToFmBbox(map.map.getBounds());
 				ret.layers = [ ];
 
 				map.map.eachLayer(function(it) {
-					if(it.options.fpBase)
-						ret.baseLayer = it.options.fpKey;
-					else if(it.options.fpKey)
-						ret.layers.push(it.options.fpKey);
+					if(it.options.fmBase)
+						ret.baseLayer = it.options.fmKey;
+					else if(it.options.fmKey)
+						ret.layers.push(it.options.fmKey);
 				});
 
 				return ret;
@@ -159,7 +164,7 @@
 			map.displayView = function(view) {
 				var layers = [ view && map.layers[view.baseLayer] ? view.baseLayer : Object.keys(map.layers)[0] ].concat(view ? view.layers : [ ]);
 				map.map.eachLayer(function(it) {
-					if(it.options.fpKey && layers.indexOf(it.options.fpKey) == -1)
+					if(it.options.fmKey && layers.indexOf(it.options.fmKey) == -1)
 						map.map.removeLayer(it);
 				});
 				layers.forEach(function(it) {
@@ -170,7 +175,7 @@
 						map.map.addLayer(map.layers[it]);
 				});
 
-				var bounds = fpUtils.fpToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: -180 });
+				var bounds = fmUtils.fmToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: -180 });
 
 				try {
 					map.map.getCenter(); // Throws exception if map not initialised
@@ -180,11 +185,11 @@
 				}
 			};
 
-			map.map.createPane("fpClickListener");
-			$(map.map.getPane("fpClickListener")).css("z-index", 620);
+			map.map.createPane("fmClickListener");
+			$(map.map.getPane("fmClickListener")).css("z-index", 620);
 			var transparentLayer = L.imageOverlay('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', [[90,-180],[-90,180]], {
-				className: "fp-clickHandler",
-				pane: "fpClickListener",
+				className: "fm-clickHandler",
+				pane: "fmClickListener",
 				interactive: true
 			});
 
@@ -219,7 +224,7 @@
 				var ret = { base: [ ], overlay: [ ] };
 				for(var i in map.layers) {
 					var it = map.layers[i];
-					(it.options.fpBase ? ret.base : ret.overlay).push({ visibility: map.map.hasLayer(it), name: it.options.fpName, permalinkName: it.options.fpKey, attribution: it.options.attribution });
+					(it.options.fmBase ? ret.base : ret.overlay).push({ visibility: map.map.hasLayer(it), name: it.options.fmName, permalinkName: it.options.fmKey, attribution: it.options.attribution });
 				}
 				return ret;
 			};
@@ -228,12 +233,12 @@
 				if(!map.layers[key])
 					return;
 
-				if(!map.layers[key].options.fpBase) {
+				if(!map.layers[key].options.fmBase) {
 					if(!map.map.hasLayer(map.layers[key]) != !show)
 						show ? map.map.addLayer(map.layers[key]) : map.map.removeLayer(map.layers[key]);
 				} else if(!map.map.hasLayer(map.layers[key])) {
 					map.map.eachLayer(function(it) {
-						if(it.options.fpBase)
+						if(it.options.fmBase)
 							map.map.removeLayer(it);
 					});
 
@@ -259,19 +264,19 @@
 				map.loadEnd();
 			});
 
-			map.messages = fpMapMessages(map);
-			map.markersUi = fpMapMarkers(map);
-			map.linesUi = fpMapLines(map);
-			map.viewsUi = fpMapViews(map);
-			map.typesUi = fpMapTypes(map);
-			map.padUi = fpMapPad(map);
-			map.gpxUi = fpMapGpx(map);
-			map.toolboxUi = fpMapToolbox(map);
-			map.aboutUi = fpMapAbout(map);
-			map.importUi = fpMapImport(map);
-			map.searchUi = fpMapSearch(map);
+			map.messages = fmMapMessages(map);
+			map.markersUi = fmMapMarkers(map);
+			map.linesUi = fmMapLines(map);
+			map.viewsUi = fmMapViews(map);
+			map.typesUi = fmMapTypes(map);
+			map.padUi = fmMapPad(map);
+			map.gpxUi = fmMapGpx(map);
+			map.toolboxUi = fmMapToolbox(map);
+			map.aboutUi = fmMapAbout(map);
+			map.importUi = fmMapImport(map);
+			map.searchUi = fmMapSearch(map);
 
-			fpMapLegend(map);
+			fmMapLegend(map);
 
 			if(padId) {
 				var loadedWatcher = map.socket.$watch("padData", function(padData) {
@@ -308,9 +313,9 @@
 
 			map.map.on("moveend", function() {
 				if(map.socket.padId)
-					map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
+					map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 			});
 		}
 	});
 
-})(FacilPad, jQuery, angular, null, null);
+})(FacilMap, jQuery, angular, null);

@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapLines", function(fpUtils, $uibModal, $templateCache, $compile, $timeout) {
+	fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $templateCache, $compile, $timeout) {
 		return function(map) {
 			var linesById = { };
 			var editingLineId = null;
@@ -46,16 +46,16 @@
 								.on("popupclose", function(e) {
 									ng.element(e.popup.getContent()).scope().$destroy();
 								})
-								.on("fp-almostover", function(e) {
+								.on("fm-almostover", function(e) {
 									if(!linesById[line.id].getTooltip())
 										linesById[line.id].bindTooltip("", $.extend({}, map.tooltipOptions, { permanent: true, offset: [ 20, 0 ] }));
 
-									linesById[line.id].setTooltipContent(fpUtils.quoteHtml(map.socket.lines[line.id].name)).openTooltip(e.latlng);
+									linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.socket.lines[line.id].name)).openTooltip(e.latlng);
 								})
-								.on("fp-almostmove", function(e) {
+								.on("fm-almostmove", function(e) {
 									linesById[line.id].openTooltip(e.latlng)
 								})
-								.on("fp-almostout", function() {
+								.on("fm-almostout", function() {
 									linesById[line.id].closeTooltip();
 								});
 						}
@@ -153,7 +153,7 @@
 
 					function createTempMarker(huge) {
 						var marker = L.marker([0,0], {
-							icon: fpUtils.createMarkerIcon(map.dragMarkerColour, huge),
+							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, huge),
 							draggable: true
 						})
 							.on("dblclick", function() {
@@ -202,7 +202,7 @@
 						temporaryHoverMarker.remove();
 					}
 
-					linesById[line.id].on("fp-almostover", _over).on("fp-almostmove", _move).on("fp-almostout", _out);
+					linesById[line.id].on("fm-almostover", _over).on("fm-almostmove", _move).on("fm-almostout", _out);
 
 					function makeTemporaryHoverMarker() {
 						temporaryHoverMarker = createTempMarker(true);
@@ -211,11 +211,11 @@
 							temporaryHoverMarker.once("dragend", function() {
 								// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
 								// the dragging gets interrupted
-								this.setIcon(fpUtils.createMarkerIcon("ffd700"));
+								this.setIcon(fmUtils.createMarkerIcon("ffd700"));
 							}, temporaryHoverMarker);
 
 							var latlng = temporaryHoverMarker.getLatLng();
-							var idx = fpUtils.getIndexOnLine(map.map, line.routePoints, line.routePoints, latlng);
+							var idx = fmUtils.getIndexOnLine(map.map, line.routePoints, line.routePoints, latlng);
 							markers.splice(idx, 0, temporaryHoverMarker);
 							line.routePoints.splice(idx, 0, { lat: latlng.lat, lon: latlng.lng });
 
@@ -244,7 +244,7 @@
 					var dialog = $uibModal.open({
 						templateUrl: "map/lines/edit-line.html",
 						scope: map.socket,
-						controller: "fpMapLineEditCtrl",
+						controller: "fmMapLineEditCtrl",
 						size: "lg",
 						resolve: {
 							line: function() { return line; },
@@ -252,7 +252,8 @@
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(map.socket, "lines["+fpUtils.quoteJavaScript(line.id)+"]", "line", function() {
+					// TODO: use child scope!
+					var preserve = fmUtils.preserveObject(map.socket, "lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
 						dialog.dismiss();
 					});
 
@@ -365,7 +366,7 @@
 		};
 	});
 
-	fp.app.controller("fpMapLineEditCtrl", function($scope, map, line) {
+	fm.app.controller("fmMapLineEditCtrl", function($scope, map, line) {
 		$scope.line = line;
 
 		$scope.canControl = function(what) {
@@ -391,4 +392,4 @@
 		});
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

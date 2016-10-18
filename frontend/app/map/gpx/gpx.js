@@ -1,4 +1,4 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
 	function _parseBbox(bboxStr) {
 		if(!bboxStr)
@@ -18,7 +18,7 @@
 		return ret;
 	}
 
-    fp.app.factory("fpMapGpx", function(fpSocket, $rootScope, fpTypeFields) {
+    fm.app.factory("fmMapGpx", function() {
 	    return function(map) {
 		    return {
 			    exportGpx : function() {
@@ -33,4 +33,4 @@
 	    };
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

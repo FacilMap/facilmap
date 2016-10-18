@@ -51,7 +51,7 @@ function exportGpx(padId, useTracks) {
 	var views = '', markers = '', lines = '', types = '';
 
 	var viewsP = utils.streamEachPromise(database.getViews(padId), function(view) {
-		views += '<fp:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
+		views += '<fm:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
 	});
 
 	var typesObj = { };
@@ -62,7 +62,7 @@ function exportGpx(padId, useTracks) {
 	var typesMarkersLinesP = typesObjP.then(function() {
 		for(var i in typesObj) {
 			var type = typesObj[i];
-			types += '<fp:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
+			types += '<fm:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
 		}
 
 		return Promise.all([
@@ -71,7 +71,7 @@ function exportGpx(padId, useTracks) {
 					'\t<name>' + _e(marker.name) + '</name>\n' +
 					'\t<desc>' + _e(_dataToText(typesObj[marker.typeId].fields, marker.data)) + '</desc>\n' +
 					'\t<extensions>\n' +
-					'\t\t<fp:colour>' + _e(marker.colour) + '</fp:colour>\n' +
+					'\t\t<fm:colour>' + _e(marker.colour) + '</fm:colour>\n' +
 					'\t</extensions>\n' +
 					'</wpt>\n';
 			}),
@@ -82,10 +82,10 @@ function exportGpx(padId, useTracks) {
 					'\t<name>' + _e(line.name) + '</name>\n' +
 					'\t<desc>' + _e(_dataToText(typesObj[line.typeId].fields, line.data)) + '</desc>\n' +
 					'\t<extensions>\n' +
-					'\t\t<fp:colour>' + _e(line.colour) + '</fp:colour>\n' +
-					'\t\t<fp:width>' + _e(line.width) + '</fp:width>\n' +
-					'\t\t<fp:mode>' + _e(line.mode) + '</fp:mode>\n' +
-					(t && line.mode != 'track' ? '\t\t<fp:routePoints>' + _e(JSON.stringify(line.routePoints)) + '</fp:routePoints>\n' : '') +
+					'\t\t<fm:colour>' + _e(line.colour) + '</fm:colour>\n' +
+					'\t\t<fm:width>' + _e(line.width) + '</fm:width>\n' +
+					'\t\t<fm:mode>' + _e(line.mode) + '</fm:mode>\n' +
+					(t && line.mode != 'track' ? '\t\t<fm:routePoints>' + _e(JSON.stringify(line.routePoints)) + '</fm:routePoints>\n' : '') +
 					'\t</extensions>\n';
 
 				if(t) {
@@ -107,7 +107,7 @@ function exportGpx(padId, useTracks) {
 
 	return Promise.all([ padDataP, viewsP, typesMarkersLinesP ]).then(function(res) {
 		return '<?xml version="1.0" encoding="UTF-8"?>\n' +
-		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilPad" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fp="https://pad.facilmap.org/">\n' +
+		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fm="https://pad.facilmap.org/">\n' +
 			'\t<metadata>\n' +
 			'\t\t<name>' + _e(res[0].name) + '</name>\n' +
 			'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +

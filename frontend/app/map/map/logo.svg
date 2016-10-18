@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="logo.svg"
+   sodipodi:docname="logo_inkscape.svg"
    inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilmap/api/src/resources/img/logo_svg.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
@@ -135,9 +135,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="-0.37769262"
-     inkscape:cy="15.295823"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="97.20665"
+     inkscape:cy="71.578505"
      inkscape:document-units="px"
      inkscape:current-layer="g3065"
      showgrid="false"
@@ -220,7 +220,7 @@
                  id="tspan2995"
                  x="99.433052"
                  y="83.994766"
-                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Pad</tspan></text>
+                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Map</tspan></text>
           </g>
         </g>
       </g>

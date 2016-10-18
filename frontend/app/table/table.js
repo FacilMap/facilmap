@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.filter("fpType", function() {
+	fm.app.filter("fmType", function() {
 		return function(input, typeId) {
 			var res = [ ];
 			angular.forEach(input, function(it) {
@@ -11,23 +11,23 @@
 		};
 	});
 
-	fp.app.factory("fpTable", function(fpSocket, $rootScope, $uibModal) {
+	fm.app.factory("fmTable", function(fmSocket, $rootScope, $uibModal) {
 		return {
 			showTable : function(padId) {
-				var socket = fpSocket(padId);
+				var socket = fmSocket(padId);
 				socket.updateBbox({ top: 90, left: -180, right: 180, bottom: -90, zoom: 0 });
 				
 				$uibModal.open({
 					templateUrl: "table/table.html",
 					scope: socket,
-					controller: "fpTableCtrl",
+					controller: "fmTableCtrl",
 					size: "fs"
 				});
 			}
 		};
 	});
 	
-	fp.app.controller("fpTableCtrl", function($scope, fpTypeFields) {
+	fm.app.controller("fmTableCtrl", function($scope, fmTypeFields) {
 		function _getField(type, fieldName) {
 			for(var i=0; i<type.fields.length; i++) {
 				if(type.fields[i].name == fieldName)
@@ -50,7 +50,7 @@
 			if(f == null || f == "__name" || f == "__distance" || f == "__time")
 				return function(it) { return _normaliseNumbers(it[f ? f.replace(/^__/, "") : "name"]) };
 			else
-				return function(it) { return _normaliseNumbers($("<div/>").append(fpTypeFields.formatField(_getField(type, f), it.data[f])).text()); };
+				return function(it) { return _normaliseNumbers($("<div/>").append(fmTypeFields.formatField(_getField(type, f), it.data[f])).text()); };
 		};
 
 		$scope.getSortClass = function(type, fieldName) {
@@ -77,4 +77,4 @@
 		$scope.sortOrder = { };
 	})
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

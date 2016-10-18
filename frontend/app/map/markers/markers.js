@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapMarkers", function($uibModal, fpUtils, $templateCache, $compile, $timeout, L) {
+	fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $templateCache, $compile, $timeout, L) {
 		return function(map) {
 			var markersById = { };
 
@@ -15,7 +15,7 @@
 			var markersUi = {
 				_addMarker : function(marker) {
 					if(!markersById[marker.id]) {
-						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fpUtils.createMarkerIcon(marker.colour)}).addTo(map.map)
+						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour)}).addTo(map.map)
 							.bindPopup($("<div/>")[0], map.popupOptions)
 							.on("popupopen", function(e) {
 								markersUi._renderMarkerPopup(map.socket.markers[marker.id] || marker);
@@ -25,13 +25,13 @@
 							})
 							.bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
 							.on("tooltipopen", function() {
-								markersById[marker.id].setTooltipContent(fpUtils.quoteHtml(map.socket.markers[marker.id].name));
+								markersById[marker.id].setTooltipContent(fmUtils.quoteHtml(map.socket.markers[marker.id].name));
 							});
 					}
 
 					markersById[marker.id]
 						.setLatLng([ marker.lat, marker.lon ])
-						.setIcon(fpUtils.createMarkerIcon(marker.colour));
+						.setIcon(fmUtils.createMarkerIcon(marker.colour));
 
 					if(markersById[marker.id].isPopupOpen())
 						markersUi._renderMarkerPopup(marker);
@@ -78,7 +78,7 @@
 					var dialog = $uibModal.open({
 						templateUrl: "map/markers/edit-marker.html",
 						scope: map.socket,
-						controller: "fpMapMarkerEditCtrl",
+						controller: "fmMapMarkerEditCtrl",
 						size: "lg",
 						resolve: {
 							marker: function() { return marker; },
@@ -86,7 +86,8 @@
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(map.socket, "markers["+fpUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
+					// TODO: use child scope!
+					var preserve = fmUtils.preserveObject(map.socket, "markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
 						dialog.dismiss();
 					});
 
@@ -160,7 +161,7 @@
 		};
 	});
 
-	fp.app.controller("fpMapMarkerEditCtrl", function($scope, map, marker) {
+	fm.app.controller("fmMapMarkerEditCtrl", function($scope, map, marker) {
 		$scope.marker = marker;
 
 		$scope.canControl = function(what) {
@@ -182,4 +183,4 @@
 		});
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

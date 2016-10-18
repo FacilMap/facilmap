@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMarked", function() {
+	fm.app.factory("fmMarked", function() {
 		marked.setOptions({
 			breaks: true,
 			sanitize: true
@@ -21,4 +21,4 @@
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

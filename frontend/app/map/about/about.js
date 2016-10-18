@@ -1,13 +1,13 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapAbout", function($uibModal) {
+	fm.app.factory("fmMapAbout", function($uibModal) {
 		return function(map) {
 			return {
 				showAbout : function() {
 					$uibModal.open({
 						templateUrl: "map/about/about.html",
 						scope: map.socket,
-						controller: "fpMapAboutCtrl",
+						controller: "fmMapAboutCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
@@ -18,8 +18,8 @@
 		};
 	});
 
-	fp.app.controller("fpMapAboutCtrl", function($scope, map) {
+	fm.app.controller("fmMapAboutCtrl", function($scope, map) {
 		$scope.layers = map.getLayerInfo();
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

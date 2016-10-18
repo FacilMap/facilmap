@@ -4,16 +4,16 @@ MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 CMD npm run server
 EXPOSE 8080
 
-RUN useradd -m -d /opt/facilpad -s /bin/bash facilpad
-WORKDIR /opt/facilpad
+RUN useradd -m -d /opt/facilmap -s /bin/bash facilmap
+WORKDIR /opt/facilmap
 
 COPY ./ ./
-RUN chown -R facilpad:facilpad .
+RUN chown -R facilmap:facilmap .
 
-USER facilpad
+USER facilmap
 RUN npm run deps && npm run clean && npm run build && npm install mysql pg sqlite3 tedious
 
 USER root
 RUN chown -R root:root .
 
-USER facilpad
+USER facilmap

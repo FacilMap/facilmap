@@ -5,7 +5,7 @@
 		<dd class="distance">{{round(line.distance, 2)}} km <span ng-show="line.time != null">({{formatTime(line.time)}} h {{routingMode(line.mode)}})</span></dd>
 
 		<dt ng-repeat-start="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
-		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></dd>
+		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></dd>
 	</dl>
 </div>
 <div class="buttons" ng-if="!readonly">

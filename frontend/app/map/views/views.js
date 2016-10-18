@@ -1,13 +1,13 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapViews", function($uibModal) {
+	fm.app.factory("fmMapViews", function($uibModal) {
 		return function(map) {
 			var ret = {
 				saveView : function() {
 					$uibModal.open({
 						templateUrl: "map/views/save-view.html",
 						scope: map.socket,
-						controller: "fpMapViewsSaveCtrl",
+						controller: "fmMapViewsSaveCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
@@ -18,7 +18,7 @@
 					$uibModal.open({
 						templateUrl: "map/views/manage-views.html",
 						scope: map.socket,
-						controller: "fpMapViewsManageCtrl",
+						controller: "fmMapViewsManageCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
@@ -31,7 +31,7 @@
 		};
 	});
 
-	fp.app.controller("fpMapViewsSaveCtrl", function($scope, map) {
+	fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 		$scope.name = null;
 
 		$scope.save = function(makeDefault) {
@@ -55,7 +55,7 @@
 		};
 	});
 
-	fp.app.controller("fpMapViewsManageCtrl", function($scope, map) {
+	fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
 		$scope.display = function(view) {
 			map.displayView(view);
 		};
@@ -75,4 +75,4 @@
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

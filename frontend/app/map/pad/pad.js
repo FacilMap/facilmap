@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapPad", function($uibModal, fpUtils) {
+	fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 		return function(map) {
 			var ret = {
 				createPad : function() {
@@ -10,7 +10,7 @@
 					var dialog = $uibModal.open({
 						templateUrl: "map/pad/pad-settings.html",
 						scope: map.socket,
-						controller: "fpMapPadSettingsCtrl",
+						controller: "fmMapPadSettingsCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; },
@@ -20,7 +20,7 @@
 
 					if(!create) {
 						// TODO: use child scope!
-						var preserve = fpUtils.preserveObject(map.socket, "padData", "padData", function() {
+						var preserve = fmUtils.preserveObject(map.socket, "padData", "padData", function() {
 							dialog.dismiss();
 						});
 
@@ -30,7 +30,7 @@
 			};
 
 			/*
-			$scope.copyPadId = fpUtils.generateRandomPadId();
+			$scope.copyPadId = fmUtils.generateRandomPadId();
 			$scope.copyPad = function() {
 				socket.emit("copyPad", { toId: $scope.copyPadId }, function(err) {
 					if(err) {
@@ -41,7 +41,7 @@
 					$scope.closeDialog();
 					var url = $scope.urlPrefix + $scope.copyPadId;
 					$scope.showMessage("success", "The pad has been copied to", [ { label: url, url: url } ]);
-					$scope.copyPadId = fpUtils.generateRandomPadId();
+					$scope.copyPadId = fmUtils.generateRandomPadId();
 				});
 			};
 			 */
@@ -50,13 +50,13 @@
 		};
 	});
 
-	fp.app.controller("fpMapPadSettingsCtrl", function($scope, map, create, fpUtils) {
+	fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils) {
 		$scope.create = create;
 
 		if(create) {
-			$scope.writeId = fpUtils.generateRandomPadId(14);
-			$scope.readId = fpUtils.generateRandomPadId(12);
-			$scope.padName = "New FacilPad";
+			$scope.writeId = fmUtils.generateRandomPadId(14);
+			$scope.readId = fmUtils.generateRandomPadId(12);
+			$scope.padName = "New FacilMap";
 		} else {
 			$scope.writeId = map.socket.padData.writeId;
 			$scope.readId = map.socket.padData.id;
@@ -75,7 +75,7 @@
 					if(err)
 						return $scope.error = err;
 
-					map.socket.updateBbox(fpUtils.leafletToFpBbox(map.map.getBounds(), map.map.getZoom()));
+					map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 
 					$scope.$close();
 				});
@@ -90,8 +90,8 @@
 		};
 
 		$scope.copy = function(text) {
-			fpUtils.copyToClipboard(text);
+			fmUtils.copyToClipboard(text);
 		}
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

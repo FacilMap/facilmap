@@ -1,4 +1,4 @@
-<div class="fp-search fp-search-route panel panel-default" ng-class="{'fp-hasResults': routes.length > 0}">
+<div class="fm-search fm-search-route panel panel-default" ng-class="{'fm-hasResults': routes.length > 0}">
 	<div class="panel-body">
 		<form ng-submit="reset(); route()" ui-sortable="sortableOptions" ng-model="destinations">
 			<div class="form-group" ng-repeat="destination in destinations">
@@ -35,22 +35,22 @@
 				</div>
 			</div>
 
-			<div class="fp-search-results" ng-show="routeObj || routeError">
+			<div class="fm-search-results" ng-show="routeObj || routeError">
 				<div uib-alert class="alert-danger no-results" ng-if="routeError">{{routeError}}</div>
 
 				<dl ng-show="routeObj">
 					<dt>Distance</dt>
-					<dd>{{routeObj.distance | fpRound:2}} km <span ng-show="routeObj.time != null">({{routeObj.time | fpFormatTime}} h {{routeObj.routeMode | fpRoutingMode}})</span></dd>
+					<dd>{{routeObj.distance | fmRound:2}} km <span ng-show="routeObj.time != null">({{routeObj.time | fmFormatTime}} h {{routeObj.routeMode | fmRoutingMode}})</span></dd>
 				</dl>
 
-				<div class="fp-search-buttons" ng-show="routeObj && !readonly">
-					<div uib-dropdown ng-if="(types | fpPropertyCount:{type:'line'}) > 1" dropdown-append-to-body="true">
+				<div class="fm-search-buttons" ng-show="routeObj && !readonly">
+					<div uib-dropdown ng-if="(types | fmPropertyCount:{type:'line'}) > 1" dropdown-append-to-body="true">
 						<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
 						<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button" uib-dropdown-menu>
-							<li role="menuitem" ng-repeat="type in types | fpObjectFilter:{type:'line'}"><a href="#" ng-click="addToMap(type)">{{type.name}}</a></li>
+							<li role="menuitem" ng-repeat="type in types | fmObjectFilter:{type:'line'}"><a href="#" ng-click="addToMap(type)">{{type.name}}</a></li>
 						</ul>
 					</div>
-					<button ng-if="(types | fpPropertyCount:{type:'line'}) == 1" type="button" class="btn btn-default" ng-click="addToMap()">Add to map</button>
+					<button ng-if="(types | fmPropertyCount:{type:'line'}) == 1" type="button" class="btn btn-default" ng-click="addToMap()">Add to map</button>
 				</div>
 			</div>
 		</form>

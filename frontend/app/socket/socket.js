@@ -1,7 +1,7 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
 	// From http://stackoverflow.com/a/11277751/242365
-	fp.app.factory("fpSocket", function($rootScope, fpUtils) {
+	fm.app.factory("fmSocket", function($rootScope) {
 		return function(padId) {
 			var scope = $rootScope.$new();
 
@@ -12,11 +12,11 @@
 			scope.views = { };
 			scope.types = { };
 
-			var socket = io.connect(fp.SERVER, { 'force new connection': true });
+			var socket = io.connect(fm.SERVER, { 'force new connection': true });
 
 			scope.on = function(eventName, fn) {
 				if(fn)
-					fn = fn.fpWrapApply(scope);
+					fn = fn.fmWrapApply(scope);
 
 				return socket.on.apply(socket, [ eventName, fn ]);
 		    };
@@ -167,4 +167,4 @@
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

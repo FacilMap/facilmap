@@ -1,4 +1,4 @@
-.fp-toolbox {
+.fm-toolbox {
 	position: absolute;
 	top: 10px;
 	right: 10px;
@@ -6,16 +6,16 @@
 	transition: opacity .7s;
 }
 
-.fp-toolbox:hover {
+.fm-toolbox:hover {
 	opacity: 1;
 }
 
-.fp-toolbox .mobile-menu-button {
+.fm-toolbox .mobile-menu-button {
 	margin-left: auto;
 }
 
 @media print {
-	.fp-toolbox {
+	.fm-toolbox {
 		display: none;
 	}
 }

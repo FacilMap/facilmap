@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearch", function($rootScope, $templateCache, $compile, fpUtils, L, $timeout, $q, fpMapSearchRoute) {
+	fm.app.factory("fmMapSearch", function($rootScope, $templateCache, $compile, fmUtils, L, $timeout, $q, fmMapSearchRoute) {
 		return function(map) {
 			var iconSuffix = ".n.32.png";
 
@@ -22,7 +22,7 @@
 						return routeUi.submit();
 					}
 
-					var lonlat = fpUtils.decodeLonLatUrl(scope.searchString);
+					var lonlat = fmUtils.decodeLonLatUrl(scope.searchString);
 					if(lonlat)
 						return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
@@ -76,7 +76,7 @@
 				routeUi.show();
 
 				if(scope.searchString.match(/ to /))
-					routeUi.setQueries(fpUtils.splitRouteQuery(scope.searchString));
+					routeUi.setQueries(fmUtils.splitRouteQuery(scope.searchString));
 				else if(scope.loadedSearchString == scope.searchString)
 					routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
 				else
@@ -115,7 +115,7 @@
 					clickMarker.clearLayers();
 
 					if(results.length > 0)
-						renderResult(fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
+						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
 				});
 			});
 
@@ -229,7 +229,7 @@
 					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
 						    return L.marker(latlng, {
-						    	icon: fpUtils.createMarkerIcon("ff0000")
+						    	icon: fmUtils.createMarkerIcon("ff0000")
 						    });
 						}
 					})
@@ -367,10 +367,10 @@
 				}
 			};
 
-			var routeUi = fpMapSearchRoute(map, searchUi);
+			var routeUi = fmMapSearchRoute(map, searchUi);
 
 			return searchUi;
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

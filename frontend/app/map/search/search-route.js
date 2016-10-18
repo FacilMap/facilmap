@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapSearchRoute", function($rootScope, $templateCache, $compile, fpUtils, L, $timeout, $q) {
+	fm.app.factory("fmMapSearchRoute", function($rootScope, $templateCache, $compile, fmUtils, L, $timeout, $q) {
 		return function(map, searchUi) {
 			var lineStyle = {
 				color : '#0000ff',
@@ -144,7 +144,7 @@
 			var routeLayer = null;
 			var dragMarker = null;
 			var markers = [ ];
-			var recalcRoute = fpUtils.minInterval(dragTimeout, false);
+			var recalcRoute = fmUtils.minInterval(dragTimeout, false);
 
 			function renderRoute(dragging) {
 				clearRoute(dragging);
@@ -152,9 +152,9 @@
 				routeLayer = L.polyline(scope.routeObj.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), lineStyle).addTo(map.map);
 				map.map.almostOver.addLayer(routeLayer);
 
-				dragMarker = fpUtils.temporaryDragMarker(map.map, routeLayer, map.dragMarkerColour, function(marker) {
+				dragMarker = fmUtils.temporaryDragMarker(map.map, routeLayer, map.dragMarkerColour, function(marker) {
 					var latlng = marker.getLatLng();
-					var idx = fpUtils.getIndexOnLine(map.map, scope.routeObj.trackPoints, scope.routeObj.routePoints, { lat: latlng.lat, lon: latlng.lng });
+					var idx = fmUtils.getIndexOnLine(map.map, scope.routeObj.trackPoints, scope.routeObj.routePoints, { lat: latlng.lat, lon: latlng.lng });
 
 					scope.destinations.splice(idx, 0, makeCoordDestination(latlng));
 					markers.splice(idx, 0, marker);
@@ -164,7 +164,7 @@
 					marker.once("dragend", updateMarkerColours);
 
 					scope.route(true);
-				}.fpWrapApply(scope));
+				}.fmWrapApply(scope));
 
 				if(!dragging) {
 					map.map.flyToBounds(routeLayer.getBounds());
@@ -173,7 +173,7 @@
 
 					scope.routeObj.routePoints.forEach(function(point, i) {
 						var marker = L.marker([ point.lat, point.lon ], {
-							icon: fpUtils.createMarkerIcon(map.dragMarkerColour),
+							icon: fmUtils.createMarkerIcon(map.dragMarkerColour),
 							draggable: true
 						}).addTo(map.map);
 
@@ -197,7 +197,7 @@
 						scope.destinations[markers.indexOf(marker)] = makeCoordDestination(marker.getLatLng());
 
 						return scope.route(true);
-					}.fpWrapApply(scope));
+					}.fmWrapApply(scope));
 				});
 			}
 
@@ -205,7 +205,7 @@
 				markers.forEach(function(marker, i) {
 					var colour = (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour);
 
-					marker.setIcon(fpUtils.createMarkerIcon(colour));
+					marker.setIcon(fmUtils.createMarkerIcon(colour));
 				});
 			}
 
@@ -230,7 +230,7 @@
 			}
 
 			function makeCoordDestination(latlng) {
-				var disp = fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5);
+				var disp = fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5);
 				return {
 					query: disp,
 					suggestionQuery: disp,
@@ -301,4 +301,4 @@
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

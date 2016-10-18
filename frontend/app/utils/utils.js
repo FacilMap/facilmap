@@ -1,15 +1,15 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpUtils", function($parse, L, Clipboard) {
+	fm.app.factory("fmUtils", function($parse, L, Clipboard) {
 
-		var fpUtils = { };
+		var fmUtils = { };
 
 		var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		var LENGTH = 12;
 
 		var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 
-		fpUtils.generateRandomPadId = function(length) {
+		fmUtils.generateRandomPadId = function(length) {
 			if(length == null)
 				length = LENGTH;
 
@@ -20,8 +20,8 @@
 			return randomPadId;
 		};
 
-		fpUtils.createMarkerGraphic = function(colour, huge, randomTrash) {
-			var borderColour = fpUtils.makeTextColour(colour, 0.3);
+		fmUtils.createMarkerGraphic = function(colour, huge, randomTrash) {
+			var borderColour = fmUtils.makeTextColour(colour, 0.3);
 
 			var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
 				'<svg xmlns="http://www.w3.org/2000/svg" width="' + (huge ? 10000 : 21) + '" height="' + (huge ? 10000 : 25) + '" version="1.1">' +
@@ -35,16 +35,16 @@
 			return "data:image/svg+xml;base64,"+btoa(svg);
 		};
 
-		fpUtils.createMarkerIcon = function(colour, huge) {
+		fmUtils.createMarkerIcon = function(colour, huge) {
 			return L.icon({
-				iconUrl: fpUtils.createMarkerGraphic(colour, huge),
+				iconUrl: fmUtils.createMarkerGraphic(colour, huge),
 				iconSize: huge ? [10000, 10000] : [21, 25],
 				iconAnchor: huge ? [5010, 5025] : [10, 25],
 				popupAnchor: [0, -25]
 			});
 		};
 
-		fpUtils.makeTextColour = function(backgroundColour, threshold) {
+		fmUtils.makeTextColour = function(backgroundColour, threshold) {
 			if(threshold == null)
 				threshold = 0.5;
 
@@ -55,27 +55,27 @@
 			return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= threshold) ? "ffffff" : "000000";
 		};
 
-		fpUtils.overwriteObject = function(from, to) {
+		fmUtils.overwriteObject = function(from, to) {
 			for(var i in to)
 				delete to[i];
 			for(var i in from)
 				to[i] = from[i];
 		};
 
-		fpUtils.quoteJavaScript = function(str) {
+		fmUtils.quoteJavaScript = function(str) {
 			return "'" + (""+str).replace(/['\\]/g, '\\\1').replace(/\n/g, "\\n") + "'";
 		};
 
-		fpUtils.quoteHtml = function(str) {
+		fmUtils.quoteHtml = function(str) {
 			return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 		};
 
-		fpUtils.round = function(number, digits) {
+		fmUtils.round = function(number, digits) {
 			var fac = Math.pow(10, digits);
 			return Math.round(number*fac)/fac;
 		};
 
-		fpUtils.formatTime = function(seconds) {
+		fmUtils.formatTime = function(seconds) {
 			var hours = Math.floor(seconds/3600);
 			var minutes = Math.floor((seconds%3600)/60);
 			if(minutes < 10)
@@ -83,7 +83,7 @@
 			return hours + ":" + minutes;
 		};
 
-		fpUtils.routingMode = function(mode) {
+		fmUtils.routingMode = function(mode) {
 			switch(mode) {
 				case "car":
 					return "by car";
@@ -96,7 +96,7 @@
 			}
 		};
 
-		fpUtils.preserveObject = function(scope, sourceExpr, targetExpr, onDelete) {
+		fmUtils.preserveObject = function(scope, sourceExpr, targetExpr, onDelete) {
 			var obj,bkp;
 
 			function _update(firstTime) {
@@ -128,7 +128,7 @@
 					if(bkp == null)
 						return;
 
-					fpUtils.overwriteObject(bkp, obj);
+					fmUtils.overwriteObject(bkp, obj);
 					unwatch();
 				},
 				leave : function() {
@@ -138,7 +138,7 @@
 			}
 		};
 
-		fpUtils.leafletToFpBbox = function(bbox, zoom) {
+		fmUtils.leafletToFmBbox = function(bbox, zoom) {
 			var ret = {
 				top: bbox.getNorth(),
 				left: Math.max(-180, bbox.getWest()),
@@ -152,11 +152,11 @@
 			return ret;
 		};
 
-		fpUtils.fpToLeafletBbox = function(bbox) {
+		fmUtils.fmToLeafletBbox = function(bbox) {
 			return L.latLngBounds(L.latLng(bbox.bottom, bbox.left), L.latLng(bbox.top, bbox.right));
 		};
 
-		fpUtils.getClosestIndexOnLine = function(map, trackPoints, point, startI) {
+		fmUtils.getClosestIndexOnLine = function(map, trackPoints, point, startI) {
 			var dist = Infinity;
 			var idx = null;
 
@@ -177,16 +177,16 @@
 			return idx;
 		};
 
-		fpUtils.getIndexOnLine = function(map, trackPoints, routePoints, point) {
+		fmUtils.getIndexOnLine = function(map, trackPoints, routePoints, point) {
 			if(routePoints.length == 0)
 				return 0;
 
 			var idxs = [ ];
 			for(var i=0; i<routePoints.length; i++) {
-				idxs.push(fpUtils.getClosestIndexOnLine(map, trackPoints, routePoints[i], Math.floor(idxs[i-1])));
+				idxs.push(fmUtils.getClosestIndexOnLine(map, trackPoints, routePoints[i], Math.floor(idxs[i-1])));
 			}
 
-			var pointIdx = fpUtils.getClosestIndexOnLine(map, trackPoints, point);
+			var pointIdx = fmUtils.getClosestIndexOnLine(map, trackPoints, point);
 
 			if(pointIdx == 0)
 				return 0;
@@ -198,7 +198,7 @@
 			return idxs.length;
 		};
 
-		fpUtils.copyToClipboard = function(text) {
+		fmUtils.copyToClipboard = function(text) {
 			var el = $("<button></button>").css("display", "none").appendTo("body");
 			var c = new Clipboard(el[0], {
 				text: function() {
@@ -215,7 +215,7 @@
 		 * @param cancel If true, a new function call will delay the next call of the function by <interval>.
 		 * @returns {Function} Pass a function to this function that will be called
 		 */
-		fpUtils.minInterval = function(interval, cancel) {
+		fmUtils.minInterval = function(interval, cancel) {
 			var timeout = null;
 			var runningPromise = null;
 			var nextFunc = null;
@@ -247,7 +247,7 @@
 			return ret;
 		};
 
-		fpUtils.temporaryDragMarker = function(map, line, colour, callback) {
+		fmUtils.temporaryDragMarker = function(map, line, colour, callback) {
 			// This marker is shown when we hover the line. It enables us to create new markers.
 			// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
 			// sure that the mouse is over it and dragging it will work smoothly.
@@ -264,17 +264,17 @@
 				temporaryHoverMarker.remove();
 			}
 
-			line.on("fp-almostover", _over).on("fp-almostmove", _move).on("fp-almostout", _out);
+			line.on("fm-almostover", _over).on("fm-almostmove", _move).on("fm-almostout", _out);
 
 			function makeTemporaryHoverMarker() {
 				temporaryHoverMarker = L.marker([0,0], {
-					icon: fpUtils.createMarkerIcon(colour, true),
+					icon: fmUtils.createMarkerIcon(colour, true),
 					draggable: true
 				}).once("dragstart", function() {
 					temporaryHoverMarker.once("dragend", function() {
 						// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
 						// the dragging gets interrupted
-						this.setIcon(fpUtils.createMarkerIcon(colour));
+						this.setIcon(fmUtils.createMarkerIcon(colour));
 					}, temporaryHoverMarker);
 
 					callback(temporaryHoverMarker);
@@ -286,12 +286,12 @@
 			makeTemporaryHoverMarker();
 
 			return function() {
-				line.off("fp-almostover", _over).off("fp-almostmove", _move).off("fp-almostout", _out);
+				line.off("fm-almostover", _over).off("fm-almostmove", _move).off("fm-almostout", _out);
 				temporaryHoverMarker.remove();
 			};
 		};
 
-		fpUtils.splitRouteQuery = function(query) {
+		fmUtils.splitRouteQuery = function(query) {
 			var queries = [ ];
 
 			var spl = query.split(/\s+to\s+/);
@@ -313,12 +313,12 @@
 		 * @param query {String}
 		 * @return {Object} An object with the properties “lonlat” and “zoom” or null
 		 */
-		fpUtils.decodeLonLatUrl = function(query) {
+		fmUtils.decodeLonLatUrl = function(query) {
 			var query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 			var query_match,query_match2;
 			if(query_match = query.match(/^http:\/\/(www\.)?osm\.org\/go\/([-A-Za-z0-9_@]+)/))
 			{ // Coordinates, shortlink
-				return fpUtils.decodeShortLink(query_match[2]);
+				return fmUtils.decodeShortLink(query_match[2]);
 			}
 
 			function decodeQueryString(str) {
@@ -357,7 +357,7 @@
 		 * @param encoded {String}
 		 * @return {Object} (lonlat: OpenLayers.LonLat, zoom: Number)
 		*/
-		fpUtils.decodeShortLink = function(encoded) {
+		fmUtils.decodeShortLink = function(encoded) {
 			var lon,lat,zoom;
 
 			var m = encoded.match(/^([A-Za-z0-9_@]+)/);
@@ -404,7 +404,7 @@
 			};
 		};
 
-		fpUtils.leafletHash = function(map, layers) {
+		fmUtils.leafletHash = function(map, layers) {
 			var hashControl = new L.Hash(map);
 
 			hashControl.parseHash = function(hash) {
@@ -447,10 +447,10 @@
 			return hashControl;
 		};
 
-		return fpUtils;
+		return fmUtils;
 	});
 
-	fp.app.filter('fpObjectFilter', function($filter){
+	fm.app.filter('fmObjectFilter', function($filter){
 		return function(input, query) {
 			if(!query) return input;
 
@@ -465,29 +465,29 @@
 		};
 	});
 
-	fp.app.filter('fpPropertyCount', function($filter) {
+	fm.app.filter('fmPropertyCount', function($filter) {
 		return function(input, query) {
-			return Object.keys($filter('fpObjectFilter')(input, query)).length;
+			return Object.keys($filter('fmObjectFilter')(input, query)).length;
 		};
 	});
 
-	fp.app.filter('fpRenderOsmTag', function($sce, linkifyStr, fpUtils) {
+	fm.app.filter('fmRenderOsmTag', function($sce, linkifyStr, fmUtils) {
 		return function(value, key) {
 			if(key.match(/^wikipedia(:|$)/)) {
 				return $sce.trustAsHtml(value.split(";").map(function(it) {
 					var m = it.match(/^(\s*)((([-a-z]+):)?(.*))(\s*)$/);
 					var url = "https://" + (m[4] || "en") + ".wikipedia.org/wiki/" + m[5];
-					return m[1] + '<a href="' + fpUtils.quoteHtml(url) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[6];
+					return m[1] + '<a href="' + fmUtils.quoteHtml(url) + '" target="_blank">' + fmUtils.quoteHtml(m[2]) + '</a>' + m[6];
 				}).join(";"));
 			} else if(key.match(/^wikidata(:|$)/)) {
 				return $sce.trustAsHtml(value.split(";").map(function(it) {
 					var m = it.match(/^(\s*)(.*?)(\s*)$/);
-					return m[1] + '<a href="https://www.wikidata.org/wiki/' + fpUtils.quoteHtml(m[2]) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[3];
+					return m[1] + '<a href="https://www.wikidata.org/wiki/' + fmUtils.quoteHtml(m[2]) + '" target="_blank">' + fmUtils.quoteHtml(m[2]) + '</a>' + m[3];
 				}).join(";"));
 			} else if(key.match(/^wiki:symbol(:$)/)) {
 				return $sce.trustAsHtml(value.split(";").map(function(it) {
 					var m = it.match(/^(\s*)(.*?)(\s*)$/);
-					return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + fpUtils.quoteHtml(m[2]) + '" target="_blank">' + fpUtils.quoteHtml(m[2]) + '</a>' + m[3];
+					return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + fmUtils.quoteHtml(m[2]) + '" target="_blank">' + fmUtils.quoteHtml(m[2]) + '</a>' + m[3];
 				})).join(";");
 			} else {
 				return $sce.trustAsHtml(linkifyStr(value));
@@ -495,7 +495,7 @@
 		};
 	});
 
-	fp.app.filter('fpNumberArray', function() {
+	fm.app.filter('fmNumberArray', function() {
 		return function(value, key) {
 			var ret = [ ];
 			for(var i=0; i<value; i++)
@@ -504,22 +504,22 @@
 		};
 	});
 
-	fp.app.filter('fpRound', function(fpUtils) {
+	fm.app.filter('fmRound', function(fmUtils) {
 		return function(value, key) {
-			return fpUtils.round(value, key);
+			return fmUtils.round(value, key);
 		};
 	});
 
-	fp.app.filter('fpFormatTime', function(fpUtils) {
+	fm.app.filter('fmFormatTime', function(fmUtils) {
 		return function(value, key) {
-			return fpUtils.formatTime(value);
+			return fmUtils.formatTime(value);
 		};
 	});
 
-	fp.app.filter('fpRoutingMode', function(fpUtils) {
+	fm.app.filter('fmRoutingMode', function(fmUtils) {
 		return function(value) {
-			return fpUtils.routingMode(value);
+			return fmUtils.routingMode(value);
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

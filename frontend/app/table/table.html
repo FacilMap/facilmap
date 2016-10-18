@@ -13,10 +13,10 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr ng-repeat="marker in markers | fpType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
+			<tr ng-repeat="marker in markers | fmType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
 				<td>{{marker.name}}</td>
 				<td>{{marker.lat}},{{marker.lon}}</td>
-				<td ng-repeat="field in type.fields" fp-type-field-content="field" fp-type-field-model="marker.data[field.name]"></td>
+				<td ng-repeat="field in type.fields" fm-type-field-content="field" fm-type-field-model="marker.data[field.name]"></td>
 			</tr>
 		</tbody>
 	</table>
@@ -30,11 +30,11 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr ng-repeat="line in lines | fpType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
+			<tr ng-repeat="line in lines | fmType:type.id | orderBy : getSortField(type) : sortOrder[type.id]">
 				<td>{{line.name}}</td>
 				<td>{{round(line.distance, 2)}} km</td>
 				<td><span ng-show="line.time != null">{{formatTime(line.time)}} h ({{routingMode(line.mode)}})</span></td>
-				<td ng-repeat="field in type.fields" fp-type-field-content="field" fp-type-field-model="line.data[field.name]"></td>
+				<td ng-repeat="field in type.fields" fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></td>
 			</tr>
 		</tbody>
 	</table>

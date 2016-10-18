@@ -68,7 +68,7 @@ gulp.task("app", function() {
 		gulp.src(files, { base: process.cwd() + "/" }),
 		gulpIf("**/*.html", combine(
 			img64(),
-			templateCache({ module: "facilpad", base: process.cwd() + "/app/" })
+			templateCache({ module: "facilmap", base: process.cwd() + "/app/" })
 		)),
 		gulpIf("**/*.js", combine(
 			newer("build/app.js"),

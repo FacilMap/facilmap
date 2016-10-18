@@ -1,11 +1,11 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapImport", function($q) {
+	fm.app.factory("fmMapImport", function($q) {
 		return function(map) {
 			var fileEl = $('<input type="file" multiple="multiple">').css("display", "none").appendTo("body");
 
 			fileEl.one("change", function() {
-				fpMapImport.importFiles(fileEl.prop("files"));
+				fmMapImport.importFiles(fileEl.prop("files"));
 			});
 
 			map.el.on("dragenter", false);
@@ -13,10 +13,10 @@
 			map.el.on("drop", function(e) {
 				e.preventDefault();
 
-				fpMapImport.importFiles(e.originalEvent.dataTransfer.files);
+				fmMapImport.importFiles(e.originalEvent.dataTransfer.files);
 			});
 
-			var fpMapImport = {
+			var fmMapImport = {
 				openImportDialog: function() {
 					fileEl.click();
 				},
@@ -40,8 +40,8 @@
 				}
 			};
 
-			return fpMapImport;
+			return fmMapImport;
 		}
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

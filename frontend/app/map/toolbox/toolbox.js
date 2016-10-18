@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapToolbox", function($compile, $templateCache, fpTable) {
+	fm.app.factory("fmMapToolbox", function($compile, $templateCache, fmTable) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -32,7 +32,7 @@
 			scope.editObjectTypes = map.typesUi.editTypes.bind(map.typesUi);
 
 			scope.showTable = function() {
-				fpTable.showTable(map.socket.padId);
+				fmTable.showTable(map.socket.padId);
 			};
 
 			scope.importFile = function() {
@@ -59,4 +59,4 @@
 		}
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

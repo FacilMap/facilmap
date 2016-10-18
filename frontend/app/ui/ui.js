@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.directive("fpSpinner", function($parse) {
+	fm.app.directive("fmSpinner", function($parse) {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
@@ -19,7 +19,7 @@
 		}
 	});
 
-	fp.app.directive("fpColourPicker", function(fpUtils, $templateCache, $rootScope, $compile) {
+	fm.app.directive("fmColourPicker", function(fmUtils, $templateCache, $rootScope, $compile) {
 		var colourPicker = $($templateCache.get("ui/colour-picker.html")).appendTo("body").hide();
 		var scope = $rootScope.$new();
 		scope.colours = [ "ffffff", "ffccc9", "ffce93", "fffc9e", "ffffc7", "9aff99", "96fffb", "cdffff", "cbcefb", "cfcfcf", "fd6864",
@@ -35,7 +35,7 @@
 			link: function(scope, element, attrs) {
 				scope.$watch(attrs.ngModel, function(v) {
 					var colour = (v && v.match(/^[0-9a-f]{6}$/i) ? v : 'ffffff');
-					element.css({ 'background-color': '#' + colour, 'color' : '#' + fpUtils.makeTextColour(colour)});
+					element.css({ 'background-color': '#' + colour, 'color' : '#' + fmUtils.makeTextColour(colour)});
 				});
 
 				var handler = function(e) {
@@ -64,14 +64,14 @@
 		}
 	});
 
-	fp.app.directive("fpTitle", function() {
+	fm.app.directive("fmTitle", function() {
 		return {
 			restrict: 'A',
 			link: function(scope, element, attrs) {
 				if(!$(element).is("title"))
 					return;
 
-				scope.$watch(attrs.fpTitle, function(v) {
+				scope.$watch(attrs.fmTitle, function(v) {
 					// We have to call history.replaceState() in order for the new title to end up in the browser history
 					window.history && history.replaceState({ }, v);
 					document.title = v;
@@ -80,4 +80,4 @@
 		};
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

@@ -1,10 +1,10 @@
-var FacilPad = {
+var FacilMap = {
 	SERVER : "/"
 };
 
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app = angular.module("facilpad", [ "ui.sortable", "ui.bootstrap" ]).config(function($compileProvider, $uibTooltipProvider) {
+	fm.app = angular.module("facilmap", [ "ui.sortable", "ui.bootstrap" ]).config(function($compileProvider, $uibTooltipProvider) {
 		$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 
 		$uibTooltipProvider.options({
@@ -12,9 +12,9 @@ var FacilPad = {
 		});
 	});
 
-	fp.app.constant("L", L);
-	fp.app.constant("linkifyStr", linkifyStr);
-	fp.app.constant("Clipboard", Clipboard);
+	fm.app.constant("L", L);
+	fm.app.constant("linkifyStr", linkifyStr);
+	fm.app.constant("Clipboard", Clipboard);
 
 	// Dereferrer
 	$(document).on("click", "a", function(e) {
@@ -29,12 +29,12 @@ var FacilPad = {
 		}
 	});
 
-	fp.app.run([ "$rootScope", "fpUtils", function($rootScope, fpUtils) {
+	fm.app.run(function($rootScope, fmUtils) {
 		$rootScope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
 
-		$rootScope.round = fpUtils.round;
-		$rootScope.formatTime = fpUtils.formatTime;
-		$rootScope.routingMode = fpUtils.routingMode;
+		$rootScope.round = fmUtils.round;
+		$rootScope.formatTime = fmUtils.formatTime;
+		$rootScope.routingMode = fmUtils.routingMode;
 
 		$rootScope.sortableOptions = {
 			handle: ".sort-handle",
@@ -59,7 +59,7 @@ var FacilPad = {
 				});
 			}
 		};
-	} ]);
+	});
 
 	function wrapApply($scope, f) {
 		return function() {
@@ -74,15 +74,15 @@ var FacilPad = {
 		}
 	}
 
-	Function.prototype.fpWrapApply = function($scope) {
+	Function.prototype.fmWrapApply = function($scope) {
 		return wrapApply($scope, this);
 	};
 
-	fp.app.controller("PadCtrl", function($scope, fpMap, $timeout) {
+	fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
 		$scope.padId = location.pathname.match(/[^\/]*$/)[0];
 
 		$timeout(function() {
-			var map = fpMap.getMap("map");
+			var map = fmMap.getMap("map");
 
 			map.socket.$watch("padData.name", function(newVal) {
 				$scope.padName = newVal;
@@ -96,4 +96,4 @@ var FacilPad = {
 
 	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

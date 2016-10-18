@@ -1,13 +1,13 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapTypes", function($uibModal, fpUtils) {
+	fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
 		return function(map) {
 			var ret = {
 				editTypes : function() {
 					$uibModal.open({
 						templateUrl: "map/types/edit-types.html",
 						scope: map.socket,
-						controller: "fpMapTypesEditCtrl",
+						controller: "fmMapTypesEditCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
@@ -21,14 +21,14 @@
 					var dialog = $uibModal.open({
 						templateUrl: "map/types/edit-type.html",
 						scope: scope,
-						controller: "fpMapTypesEditTypeCtrl",
+						controller: "fmMapTypesEditTypeCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(scope, type.id ? "types["+fpUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
+					var preserve = fmUtils.preserveObject(scope, type.id ? "types["+fmUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
 						dialog.dismiss();
 					});
 
@@ -42,14 +42,14 @@
 					var dialog = $uibModal.open({
 						templateUrl: "map/types/edit-type-dropdown.html",
 						scope: scope,
-						controller: "fpMapTypesEditTypeDropdownCtrl",
+						controller: "fmMapTypesEditTypeDropdownCtrl",
 						size: "lg",
 						resolve: {
 							map: function() { return map; }
 						}
 					});
 
-					var preserve = fpUtils.preserveObject(scope, "field", "field", function() {
+					var preserve = fmUtils.preserveObject(scope, "field", "field", function() {
 						dialog.dismiss();
 					});
 
@@ -68,7 +68,7 @@
 		};
 	});
 
-	fp.app.controller('fpMapTypesEditCtrl', function($scope, map) {
+	fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
 		$scope.create = function() {
 			$scope.edit({
 				fields : [ ]
@@ -86,7 +86,7 @@
 		};
 	});
 
-	fp.app.controller('fpMapTypesEditTypeCtrl', function($scope, map) {
+	fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map) {
 		$scope.editDropdown = function(field) {
 			map.typesUi.editTypeDropdown($scope.type, field);
 		};
@@ -112,7 +112,7 @@
 		};
 	});
 
-	fp.app.controller('fpMapTypesEditTypeDropdownCtrl', function($scope, map, fpUtils) {
+	fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtils) {
 		$scope.canControl = function(what) {
 			return map.typesUi.canControl($scope.type, what, $scope.field);
 		};
@@ -121,7 +121,7 @@
 			if($scope.field.options == null)
 				$scope.field.options = [ ];
 
-			$scope.field.options.push({ key: fpUtils.generateRandomPadId(), value: "" });
+			$scope.field.options.push({ key: fmUtils.generateRandomPadId(), value: "" });
 		};
 
 		$scope.deleteOption = function(option) {
@@ -135,4 +135,4 @@
 		};
 	})
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

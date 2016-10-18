@@ -59,7 +59,7 @@ var viewSchema = mongoose.Schema({
 var padSchema = mongoose.Schema({
 	_id : String,
 	defaultView : { type: ObjectId, ref: "View" },
-	name: { type: String, default: "New FacilPad" },
+	name: { type: String, default: "New FacilMap" },
 	writeId : String
 });
 

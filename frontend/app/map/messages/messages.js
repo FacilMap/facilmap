@@ -1,6 +1,6 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapMessages", [ "$rootScope", "$templateCache", "$compile", function($rootScope, $templateCache, $compile) {
+	fm.app.factory("fmMapMessages", function($rootScope, $templateCache, $compile) {
 		return function(map) {
 			var scope = $rootScope.$new(true);
 			scope.messages = [ ];
@@ -40,6 +40,6 @@
 				}
 			};
 		};
-	} ]);
+	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);

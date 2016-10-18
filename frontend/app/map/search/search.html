@@ -1,4 +1,4 @@
-<div class="fp-search fp-search-search panel panel-default" ng-class="{'fp-hasResults': !!searchResults}">
+<div class="fm-search fm-search-search panel panel-default" ng-class="{'fm-hasResults': !!searchResults}">
 	<div class="panel-body">
 		<form ng-submit="search()">
 			<div class="form-group">
@@ -15,7 +15,7 @@
 			</div>
 		</form>
 
-		<div class="fp-search-results" ng-show="searchResults">
+		<div class="fm-search-results" ng-show="searchResults">
 			<div uib-alert class="alert-danger no-results" ng-if="searchResults.length == 0">No results have been found.</div>
 			<ul class="list-group" ng-if="searchResults.length > 0">
 				<li ng-repeat="result in searchResults" class="list-group-item" ng-class="{active: activeResult === result}">
@@ -24,7 +24,7 @@
 				</li>
 			</ul>
 		</div>
-		<div class="fp-search-buttons" ng-show="searchResults.length > 1">
+		<div class="fm-search-buttons" ng-show="searchResults.length > 1">
 			<button class="btn btn-default" ng-model="showAll" uib-btn-checkbox>Show all</button>
 		</div>
 	</div>

@@ -24,25 +24,25 @@
 
 		<div class="form-group" ng-show="canControl('colour')">
 			<label for="edit-line-colour" class="col-sm-3 control-label">Colour</label>
-			<div class="col-sm-9"><input id="edit-line-colour" ng-model="line.colour" fp-colour-picker class="form-control"></div>
+			<div class="col-sm-9"><input id="edit-line-colour" ng-model="line.colour" fm-colour-picker class="form-control"></div>
 		</div>
 
 		<div class="form-group" ng-show="canControl('width')">
 			<label for="edit-line-width" class="col-sm-3 control-label">Width</label>
-			<div class="col-sm-9"><input id="edit-line-width" ng-model="line.width" fp-spinner class="form-control" /></div>
+			<div class="col-sm-9"><input id="edit-line-width" ng-model="line.width" fm-spinner class="form-control" /></div>
 		</div>
 
 		<div class="form-group" ng-repeat="field in types[line.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">
 			<label for="line-{{$index}}-input" class="col-sm-3 control-label">{{field.name}}</label>
-			<div class="col-sm-9" fp-type-field="field" fp-type-field-model="line.data[field.name]" fp-type-field-id="line-{{$index}}-input"></div>
+			<div class="col-sm-9" fm-type-field="field" fm-type-field-model="line.data[field.name]" fm-type-field-id="line-{{$index}}-input"></div>
 		</div>
 	</form>
 </div>
 <div class="modal-footer">
-	<div class="btn-group pull-left" uib-dropdown ng-if="(types | fpPropertyCount:{type:'line'}) > 1">
+	<div class="btn-group pull-left" uib-dropdown ng-if="(types | fmPropertyCount:{type:'line'}) > 1">
 		<button id="change-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Change type <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="change-type-button" uib-dropdown-menu>
-			<li role="menuitem" ng-repeat="type in types | fpObjectFilter:{type:'line'}" ng-class="{active: type.id == line.typeId}"><a href="#" ng-click="line.typeId = type.id">{{type.name}}</a></li>
+			<li role="menuitem" ng-repeat="type in types | fmObjectFilter:{type:'line'}" ng-class="{active: type.id == line.typeId}"><a href="#" ng-click="line.typeId = type.id">{{type.name}}</a></li>
 		</ul>
 	</div>
 

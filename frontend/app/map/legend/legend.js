@@ -1,20 +1,20 @@
-(function(fp, $, ng, undefined) {
+(function(fm, $, ng, undefined) {
 
-	fp.app.factory("fpMapLegend", [ "$sce", "fpUtils", "$templateCache", "$compile", function($sce, fpUtils, $templateCache, $compile) {
+	fm.app.factory("fmMapLegend", function($sce, fmUtils, $templateCache, $compile) {
 		return function(map) {
 			var scope = map.socket.$new();
 
 			scope.makeSymbol = function(type, item) {
 				var ret;
 				if(type == "line") {
-					ret = $('<span class="fp-map-legend-line"></span>');
+					ret = $('<span class="fm-map-legend-line"></span>');
 					ret.css("background-color", "#"+(item.colour || "ffffff"));
-					ret.css("box-shadow", "0 0 1px #"+fpUtils.makeTextColour(item.colour || "ffffff", 0.7));
+					ret.css("box-shadow", "0 0 1px #"+fmUtils.makeTextColour(item.colour || "ffffff", 0.7));
 
 					ret.css("height", (item.width || 5)+"px");
 				}
 				else
-					ret = $('<img class="fp-map-legend-marker"/>').attr("src", fpUtils.createMarkerGraphic(item.colour, null, "legend"));
+					ret = $('<img class="fm-map-legend-marker"/>').attr("src", fmUtils.createMarkerGraphic(item.colour, null, "legend"));
 
 				return $sce.trustAsHtml($("<div/>").append(ret).html());
 			};
@@ -64,6 +64,6 @@
 			scope.$watch(getMaxHeight, resize);
 			$(window).resize(resize);
 		};
-	} ]);
+	});
 
-})(FacilPad, jQuery, angular);
+})(FacilMap, jQuery, angular);
