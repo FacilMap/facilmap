@@ -12,7 +12,6 @@ request = request.defaults({
 	}
 });
 
-var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 var nameFinderUrl = "https://nominatim.openstreetmap.org";
 var limit = 25;
 var stateAbbr = {
@@ -57,19 +56,6 @@ function find(query, loadUrls) {
 	return Promise.resolve().then(function() {
 		query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
-		var lonlat = decodeLonLatUrl(query);
-		if(lonlat) {
-			return [ {
-				lat: lonlat.lat,
-				lon : lonlat.lon,
-				type : "coordinates",
-				short_name: lonlat.lat + ", " + lonlat.lon,
-				display_name : lonlat.lat + ", " + lonlat.lon,
-				zoom: lonlat.zoom,
-				icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
-			} ];
-		}
-
 		if(loadUrls) {
 			var m = query.match(/^(node|way|relation)\s+(\d+)$/);
 			if(m)
@@ -86,7 +72,7 @@ function find(query, loadUrls) {
 		var lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/)
 		if(lonlat_match)
 		{ // Coordinates
-			lonlat = {
+			var lonlat = {
 				lat: 1*lonlat_match[2].replace(",", ".").replace(/\s+/, ""),
 				lon : 1*lonlat_match[4].replace(",", ".").replace(/\s+/, ""),
 				zoom : lonlat_match[7] != null ? 1*lonlat_match[7] : null
@@ -377,102 +363,6 @@ function makeDisplayName(result) {
 		ret.push(country);
 
 	return ret.join(", ");
-}
-
-/**
- * Checks whether the given query string is a representation of coordinates, such an OSM permalink.
- * @param query {String}
- * @return {Object} An object with the properties “lonlat” and “zoom” or null
- */
-function decodeLonLatUrl(query) {
-	var query = query.replace(/^\s+/, "").replace(/\s+$/, "");
-	var query_match,query_match2;
-	if(query_match = query.match(/^http:\/\/(www\.)?osm\.org\/go\/([-A-Za-z0-9_@]+)/))
-	{ // Coordinates, shortlink
-		return decodeShortLink(query_match[2]);
-	}
-
-	function decodeQueryString(str) {
-		var lonMatch,latMatch,leafletMatch;
-
-		if((lonMatch = str.match(/[?&]lat=([^&]+)/)) && (latMatch = str.match(/[?&]lat=([^&]+)/))) {
-			return {
-				lat: 1*decodeURIComponent(latMatch[1]),
-				lon: 1*decodeURIComponent(lonMatch[1]),
-				zoom: 15
-			};
-		}
-
-		if(leafletMatch = str.match(/(^|=)(\d+)\/(-?\d+(\.\d+)?)\/(-?\d+(\.\d+)?)(&|\/|$)/)) {
-			return {
-				lat: leafletMatch[3],
-				lon: leafletMatch[5],
-				zoom: leafletMatch[2]
-			};
-		}
-	}
-
-	if((query_match = query.match(/^https?:\/\/.*#(.*)$/)) && (query_match2 = decodeQueryString(query_match[1]))) {
-		return query_match2;
-	}
-
-	if((query_match = query.match(/^https?:\/\/.*\?([^#]*)/)) && (query_match2 = decodeQueryString(query_match[1]))) {
-		return query_match2;
-	}
-
-	return null;
-};
-
-/**
- * Decodes a string from FacilMap.Util.encodeShortLink().
- * @param encoded {String}
- * @return {Object} (lonlat: OpenLayers.LonLat, zoom: Number)
-*/
-function decodeShortLink(encoded) {
-	var lon,lat,zoom;
-
-	var m = encoded.match(/^([A-Za-z0-9_@]+)/);
-	if(!m) return false;
-	zoom = m[1].length*2+encoded.length-11;
-
-	var c1 = 0;
-	var c2 = 0;
-	for(var i=0,j=54; i<m[1].length; i++,j-=6)
-	{
-		var bits = shortLinkCharArray.indexOf(m[1].charAt(i));
-		if(j <= 30)
-			c1 |= bits >>> (30-j);
-		else if(j > 30)
-			c1 |= bits << (j-30);
-		if(j < 30)
-			c2 |= (bits & (0x3fffffff >>> j)) << j;
-	}
-
-	var x = 0;
-	var y = 0;
-
-	for(var j=29; j>0;)
-	{
-		x = (x << 1) | ((c1 >> j--) & 1);
-		y = (y << 1) | ((c1 >> j--) & 1);
-	}
-	for(var j=29; j>0;)
-	{
-		x = (x << 1) | ((c2 >> j--) & 1);
-		y = (y << 1) | ((c2 >> j--) & 1);
-	}
-
-	x *= 4; // We can’t do <<= 2 here as x and y may be greater than 2³¹ and then the value would become negative
-	y *= 4;
-
-	lon = x*90.0/(1<<30)-180.0;
-	lat = y*45.0/(1<<30)-90.0;
-
-	return {
-		lat : Math.round(lat*100000)/100000,
-		lon: Math.round(lon*100000)/100000,
-		zoom : zoom
-	};
 }
 
 function loadUrl(url, completeOsmObjects) {

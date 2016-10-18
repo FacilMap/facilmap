@@ -20,6 +20,10 @@
 						return routeUi.route(null, true);
 					}
 
+					var lonlat = fpUtils.decodeLonLatUrl(scope.searchString.trim());
+					if(lonlat)
+						return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
+
 					map.loadStart();
 					map.socket.emit("find", { query: scope.searchString, loadUrls: true }, function(err, results) {
 						map.loadEnd();
