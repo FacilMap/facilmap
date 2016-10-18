@@ -272,10 +272,10 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 
 			find: function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { query: "string" }))
+					if(!utils.stripObject(data, { query: "string", loadUrls: "boolean" }))
 						throw "Invalid parameters.";
 
-					return search.find(data.query);
+					return search.find(data.query, data.loadUrls);
 				});
 			},
 

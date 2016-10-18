@@ -53,7 +53,7 @@ var stateAbbr = {
 	}
 };
 
-function find(query) {
+function find(query, loadUrls) {
 	return Promise.resolve().then(function() {
 		query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
@@ -70,16 +70,18 @@ function find(query) {
 			} ];
 		}
 
-		var m = query.match(/^(node|way|relation)\s+(\d+)$/);
-		if(m)
-			return loadUrl("https://api.openstreetmap.org/api/0.6/" + m[1] + "/" + m[2] + (m[1] != "node" ? "/full" : ""), true);
+		if(loadUrls) {
+			var m = query.match(/^(node|way|relation)\s+(\d+)$/);
+			if(m)
+				return loadUrl("https://api.openstreetmap.org/api/0.6/" + m[1] + "/" + m[2] + (m[1] != "node" ? "/full" : ""), true);
 
-		m = query.match(/^trace\s+(\d+)$/);
-		if(m)
-			return loadUrl("https://www.openstreetmap.org/trace/" + m[1] + "/data");
+			m = query.match(/^trace\s+(\d+)$/);
+			if(m)
+				return loadUrl("https://www.openstreetmap.org/trace/" + m[1] + "/data");
 
-		if(query.match(/^https?:\/\//))
-			return loadUrl(query);
+			if(query.match(/^https?:\/\//))
+				return loadUrl(query);
+		}
 
 		return request({
 			url: nameFinderUrl + "?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),

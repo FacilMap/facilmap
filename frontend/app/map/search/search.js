@@ -21,7 +21,7 @@
 					}
 
 					map.loadStart();
-					map.socket.emit("find", { query: scope.searchString }, function(err, results) {
+					map.socket.emit("find", { query: scope.searchString, loadUrls: true }, function(err, results) {
 						map.loadEnd();
 
 						if(err)
