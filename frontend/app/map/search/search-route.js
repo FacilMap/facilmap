@@ -245,28 +245,55 @@
 				};
 			}
 
+			function _setDestination(dest, query, suggestions, selectedSuggestion) {
+				dest.query = query;
+
+				if(suggestions) {
+					dest.suggestions = suggestions;
+					dest.suggestionQuery = query;
+					dest.selectedSuggestionIdx = Math.max(suggestions.indexOf(selectedSuggestion), 0);
+				}
+			}
+
 			var routeUi = {
 				show: function() {
 					el.show();
 				},
 
 				hide: function() {
-					clearRoute();
+					scope.reset();
 					el.hide();
 				},
 
-				route: function(queries, calcRoute) {
-					if(queries) {
-						for(var i=0; i<queries.length; i++) {
-							if(scope.destinations.length <= i)
-								scope.addDestination();
+				setQueries: function(queries) {
+					scope.clear();
 
-							scope.destinations[i].query = queries[i];
-						}
+					for(var i=0; i<queries.length; i++) {
+						if(scope.destinations.length <= i)
+							scope.addDestination();
+
+						$.extend(scope.destinations[i], typeof queries[i] == "object" ? queries[i] : { query: queries[i] });
 					}
+				},
 
-					if(calcRoute)
-						scope.route();
+				setFrom: function(from, suggestions, selectedSuggestion) {
+					console.log("setFrom", from);
+					_setDestination(scope.destinations[0], from, suggestions, selectedSuggestion);
+				},
+
+				addVia: function(via, suggestions, selectedSuggestion) {
+					scope.addDestination();
+					var newDest = scope.destinations.pop();
+					_setDestination(newDest, via, suggestions, selectedSuggestion);
+					scope.destinations.splice(scope.destinations.length-1, 0, newDest);
+				},
+
+				setTo: function(to, suggestions, selectedSuggestion) {
+					_setDestination(scope.destinations[scope.destinations.length-1], to, suggestions, selectedSuggestion);
+				},
+
+				submit: function() {
+					scope.route();
 				}
 			};
 			routeUi.hide();

@@ -6,30 +6,35 @@
 
 			var scope = $rootScope.$new(true);
 			scope.searchString = "";
+			scope.loadedSearchString = "";
 			scope.searchResults = null;
 			scope.showAll = false;
 			scope.activeResult = null;
 
 			scope.search = function() {
 				scope.searchResults = null;
+				scope.loadedSearchString = "";
 				clearRenders();
 
 				if(scope.searchString.trim() != "") {
 					if(scope.searchString.match(/ to /)) {
-						scope.showRoutingForm(true);
-						return routeUi.route(null, true);
+						scope.showRoutingForm();
+						return routeUi.submit();
 					}
 
-					var lonlat = fpUtils.decodeLonLatUrl(scope.searchString.trim());
+					var lonlat = fpUtils.decodeLonLatUrl(scope.searchString);
 					if(lonlat)
 						return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
+					var q = scope.searchString;
 					map.loadStart();
 					map.socket.emit("find", { query: scope.searchString, loadUrls: true }, function(err, results) {
 						map.loadEnd();
 
 						if(err)
 							return map.messages.showMessage("danger", err);
+
+						scope.loadedSearchString = q;
 
 						if(typeof results == "string")
 							loadSearchResults(parseFiles([ results ]));
@@ -46,7 +51,7 @@
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
-					renderResult(result, true, layerGroup);
+					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup);
 
 					if(result.lat && result.lon && result.zoom)
 						map.map.flyTo([ result.lat, result.lon ], result.zoom);
@@ -61,7 +66,7 @@
 				clearRenders();
 
 				for(var i=0; i<scope.searchResults.length; i++)
-					renderResult(scope.searchResults[i], false, layerGroup);
+					renderResult(scope.loadedSearchString, scope.searchResults, scope.searchResults[i], false, layerGroup);
 
 				_flyToBounds(layerGroup.getBounds());
 			};
@@ -69,7 +74,13 @@
 			scope.showRoutingForm = function() {
 				searchUi.hide();
 				routeUi.show();
-				routeUi.route(fpUtils.splitRouteQuery(scope.searchString), false);
+
+				if(scope.searchString.match(/ to /))
+					routeUi.setQueries(fpUtils.splitRouteQuery(scope.searchString));
+				else if(scope.loadedSearchString == scope.searchString)
+					routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
+				else
+					routeUi.setFrom(scope.searchString);
 			};
 
 			scope.$watch("showAll", function() {
@@ -104,7 +115,7 @@
 					clickMarker.clearLayers();
 
 					if(results.length > 0)
-						renderResult(results[0], true, clickMarker);
+						renderResult(fpUtils.round(latlng.lat, 5) + "," + fpUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
 				});
 			});
 
@@ -213,7 +224,7 @@
 				return ret;
 			}
 
-			function renderResult(result, showPopup, layerGroup) {
+			function renderResult(query, results, result, showPopup, layerGroup) {
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
@@ -225,7 +236,7 @@
 					.bindPopup($("<div/>")[0], map.popupOptions)
 					.on("popupopen", function(e) {
 						scope.activeResult = result;
-						renderResultPopup(result, e.popup);
+						renderResultPopup(query, results, result, e.popup);
 					})
 					.on("popupclose", function(e) {
 						ng.element(e.popup.getContent()).scope().$destroy();
@@ -247,7 +258,7 @@
 						.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
 							scope.activeResult = result;
-							renderResultPopup(result, e.popup);
+							renderResultPopup(query, results, result, e.popup);
 						})
 						.on("popupclose", function(e) {
 							ng.element(e.popup.getContent()).scope().$destroy();
@@ -269,7 +280,7 @@
 				layerGroup.clearLayers();
 			}
 
-			function renderResultPopup(result, popup) {
+			function renderResultPopup(query, results, result, popup) {
 				var scope = map.socket.$new();
 
 				scope.result = result;
@@ -297,6 +308,22 @@
 					}
 				};
 
+				scope.useForRoute = function(mode) {
+					searchUi.hide();
+					routeUi.show();
+
+					if(mode == 1)
+						routeUi.setFrom(query, results, result);
+					else if(mode == 2)
+						routeUi.addVia(query, results, result);
+					else if(mode == 3)
+						routeUi.setTo(query, results, result);
+
+					routeUi.submit();
+
+					popup.closePopup();
+				};
+
 				var el = popup.getContent();
 				$(el).html($templateCache.get("map/search/result-popup.html"));
 				$compile(el)(scope);
@@ -314,6 +341,13 @@
 			var searchUi = {
 				show: function() {
 					el.show();
+
+					if(scope.searchResults) {
+						if(scope.showAll)
+							scope.showAllResults();
+						 else if(scope.searchResults.length > 0)
+							scope.showResult(scope.activeResult || scope.searchResults[0]);
+					}
 				},
 
 				hide: function() {
