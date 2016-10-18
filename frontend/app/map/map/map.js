@@ -130,7 +130,7 @@
 			map.dragMarkerColour = "ffd700";
 			map.endMarkerColour = "ff0000";
 
-			map.map.on("click", function(e) {
+			map.map.on("singleclick", function(e) {
 				map.mapEvents.$emit("click", e.latlng);
 			}.fpWrapApply($rootScope));
 
