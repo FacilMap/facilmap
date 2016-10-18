@@ -9,6 +9,10 @@ var routing = require("./routing");
 var gpx = require("./gpx");
 var search = require("./search");
 var Promise = require("promise");
+var express = require("express");
+var path = require("path");
+
+var frontendPath = path.resolve(__dirname + "/../frontend");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -25,9 +29,18 @@ Object.defineProperty(Error.prototype, "toJSON", {
 
 var dbP = database.connect();
 
-var app = http.createServer();
-var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).then(function() {
-	var io = socketIo.listen(app);
+var app = express();
+
+app.use(express.static(frontendPath + "/build/"));
+
+app.get("/:padId", function(req, res) {
+	res.sendFile(frontendPath + "/build/index.html");
+});
+
+var server = http.createServer(app);
+
+var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.host).then(function() {
+	var io = socketIo.listen(server);
 
 	io.sockets.on("connection", function(socket) {
 		var d = domain.create();
@@ -309,7 +322,7 @@ var appP = Promise.denodeify(app.listen.bind(app))(config.port, config.host).the
 	});
 });
 
-Promise.all([ dbP, appP ]).then(function() {
+Promise.all([ dbP, serverP ]).then(function() {
 	console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
 }).catch(function(err) {
 	console.error(err);

@@ -34,6 +34,9 @@
     "osmtogeojson": "^2.2.12",
     "leaflet-fullHash": "https://raw.githubusercontent.com/KoGor/leaflet-fullHash/master/leaflet-fullHash.js"
   },
+  "resolutions": {
+    "leaflet": "^1.0.1"
+  },
   "overrides": {
     "bootstrap": {
       "main": [

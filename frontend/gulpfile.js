@@ -17,6 +17,7 @@ var combine = require("stream-combiner");
 var sourcemaps = require("gulp-sourcemaps");
 var inject = require("gulp-inject");
 var img64 = require("./gulpfile-img64");
+var path = require("path");
 
 var files = [
 	"app/**/*.js",
@@ -36,7 +37,7 @@ gulp.task("clean", function() {
 
 gulp.task("deps", function() {
 	return combine(
-		gulp.src(mainBowerFiles({ paths: { bowerDirectory: '../bower_components', bowerJson: '../bower.json' } }), { base: process.cwd() + "/" }),
+		gulp.src(mainBowerFiles({ paths: { bowerDirectory: __dirname + '/../bower_components', bowerJson: __dirname + '/../bower.json' } }), { base: path.resolve(__dirname + "/..") + "/" }),
 		gulpIf([ "**/*.js", "**/*.css" ], combine(
 			gulpIf("**/*.js", combine(
 				newer("build/dependencies.js"),
@@ -105,7 +106,8 @@ gulp.task("all", [ "deps", "app" ], function() {
 				sourcemaps.init({ loadMaps: true }),
 				concat("all.css"),
 				sourcemaps.write("./sourcemaps")
-			)
+			),
+			gulp.src("deref.html")
 		),
 		gulp.dest("build")
 	);
@@ -115,8 +117,9 @@ gulp.task("index", [ "all" ], function() {
 	return combine(
 		gulp.src("index.html"),
 		img64(),
+		concat("build/index.html"),
 		inject(gulp.src([ "build/all.js", "build/all.css" ], { read: false }), { relative: true, removeTags: true }),
-		gulp.dest("build")
+		gulp.dest(".")
 	);
 });
 
