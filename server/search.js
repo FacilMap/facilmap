@@ -82,7 +82,7 @@ function find(query, loadUrls) {
 				url: nameFinderUrl + "/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1"
 					+ "&lat=" + lonlat.lat
 					+ "&lon=" + lonlat.lon
-					+ "&zoom=" + (lonlat.zoom != null ? lonlat.zoom : 17),
+					+ "&zoom=" + (lonlat.zoom != null ? (lonlat.zoom >= 12 ? lonlat.zoom+2 : lonlat.zoom) : 17),
 				json: true
 			}).then(function(body) {
 				if(!body)
