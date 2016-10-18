@@ -5,7 +5,7 @@
 			var scope = $rootScope.$new(true);
 			scope.messages = [ ];
 
-			var el = $($templateCache.get("map/messages/messages.html")).appendTo(map.map.getContainer());
+			var el = $($templateCache.get("map/messages/messages.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 

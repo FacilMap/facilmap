@@ -4,6 +4,8 @@
 	bottom: 25px;
 	z-index: 800;
 
+	font-size: 12px;
+
 	opacity: .7;
 	transition: opacity .7s;
 }
@@ -22,7 +24,7 @@
 	margin-bottom: 0;
 }
 
-.fp-map-legend .panel:hover {
+.fp-map-legend:hover {
 	opacity: 1;
 }
 
