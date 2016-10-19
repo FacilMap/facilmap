@@ -4,7 +4,7 @@
 		<img src="spinner.gif" alt="Loading…">
 	</div>
 </div>
-<div class="fm-map-disabled-cover" ng-show="disconnected || serverError"></div>
+<div class="fm-map-disabled-cover" ng-show="padId && (disconnected || serverError)"></div>
 <div class="fm-map-loading" ng-hide="loaded || serverError">
 	Loading...
 </div>

@@ -59,16 +59,18 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 			},
 
 			setPadId : function(padId) {
-				if(typeof padId != "string" || socket.padId != null)
-					return;
+				return Promise.resolve().then(function() {
+					if(typeof padId != "string")
+						throw "Invalid pad id";
+					if(socket.padId != null)
+						throw "Pad id already set";
 
-				socket.padId = true;
+					socket.padId = true;
 
-				database.getPadData(padId).then(function(data) {
+					return database.getPadData(padId);
+				}).then(function(data) {
 					_setPadId(socket, data);
-				}, function(err) {
-					socket.emit("serverError", err);
-					socket.disconnect();
+					return data;
 				});
 			},
 
@@ -344,7 +346,6 @@ function _setPadId(socket, data) {
 	socket.writable = data.writable;
 	listeners.addPadListener(socket);
 
-	socket.emit("padData", data);
 	_sendStreamData(socket, "view", database.getViews(socket.padId));
 	_sendStreamData(socket, "type", database.getTypes(socket.padId));
 	_sendStreamData(socket, "line", database.getPadLines(socket.padId));

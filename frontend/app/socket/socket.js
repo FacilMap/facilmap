@@ -40,21 +40,8 @@
 				return socket.emit.apply(socket, arguments);
 			};
 
-			scope.on("serverError", function(data) {
-				scope.serverError = data;
-			});
-
 			scope.on("padData", function(data) {
-				scope.padData = data;
-
-				if(data.writable != null)
-					scope.readonly = !data.writable;
-
-				var id = scope.readonly ? data.id : data.writeId;
-				if(id != null)
-					scope.padId = id;
-
-				scope.disconnected = false;
+				setPadData(data);
 			});
 
 			scope.on("marker", function(data) {
@@ -133,7 +120,7 @@
 
 			scope.on("reconnect", function() {
 				if(scope.padId)
-					scope.emit("setPadId", scope.padId);
+					setPadId(scope.padId);
 				else
 					scope.disconnected = false; // Otherwise it gets set when padData arrives
 
@@ -141,13 +128,37 @@
 					scope.emit("updateBbox", scope.bbox);
 			});
 
+			function setPadData(data) {
+				scope.padData = data;
+
+				if(data.writable != null)
+					scope.readonly = !data.writable;
+
+				var id = scope.readonly ? data.id : data.writeId;
+				if(id != null)
+					scope.padId = id;
+			}
+
 			scope.setPadId = function(padId) {
 				if(scope.padId != null)
 					return;
 
-				scope.padId = padId;
-				scope.emit("setPadId", padId);
+				setPadId(padId);
 			};
+
+			function setPadId(padId) {
+				scope.padId = padId;
+				scope.emit("setPadId", padId, function(err, padData) {
+					if(err) {
+						scope.serverError = err;
+						socket.disconnect();
+						return;
+					}
+
+					setPadData(padData);
+					scope.disconnected = false;
+				});
+			}
 
 			scope.updateBbox = function(bbox) {
 				scope.emit("updateBbox", bbox);
