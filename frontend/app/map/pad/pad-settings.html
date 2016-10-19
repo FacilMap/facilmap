@@ -6,7 +6,7 @@
 	<form class="form-horizontal">
 		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
 		
-		<div class="form-group">
+		<div class="form-group" ng-class="{'has-error': !!writeError}">
 			<label for="pad-link-input" class="col-sm-3 control-label">Edit-only Link</label>
 			<div class="col-sm-9">
 				<div class="input-group">
@@ -16,10 +16,11 @@
 						<button class="btn btn-default" ng-click="copy(urlPrefix + writeId)">Copy</button>
 					</span>
 				</div>
+				<span class="help-block" ng-if="writeError">{{writeError}}</span>
 			</div>
 		</div>
 
-		<div class="form-group">
+		<div class="form-group" ng-class="{'has-error': !!readError}">
 			<label for="pad-rolink-input" class="col-sm-3 control-label">Read-only link</label>
 			<div class="col-sm-9">
 				<div class="input-group">
@@ -29,6 +30,7 @@
 						<button class="btn btn-default" ng-click="copy(urlPrefix + readId)">Copy</button>
 					</span>
 				</div>
+				<span class="help-block" ng-if="readError">{{readError}}</span>
 			</div>
 		</div>
 
@@ -40,5 +42,5 @@
 </div>
 <div class="modal-footer">
 	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="button" class="btn btn-primary" ng-click="save()">{{create ? 'Create' : 'Save'}}</button>
+	<button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError">{{create ? 'Create' : 'Save'}}</button>
 </div>

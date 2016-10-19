@@ -63,6 +63,19 @@
 			$scope.padName = map.socket.padData.name;
 		}
 
+		function validateId(id) {
+			if(id.indexOf("/") != -1)
+				return "May not contain a slash.";
+		}
+
+		$scope.$watch("writeId", function(writeId) {
+			$scope.writeError = validateId(writeId);
+		});
+
+		$scope.$watch("readId", function(readId) {
+			$scope.readError = validateId(readId);
+		});
+
 		$scope.save = function() {
 			var newData = {
 				name: $scope.padName,

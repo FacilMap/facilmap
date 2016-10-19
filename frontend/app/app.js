@@ -79,7 +79,7 @@ var FacilMap = {
 	};
 
 	fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
-		$scope.padId = location.pathname.match(/[^\/]*$/)[0];
+		$scope.padId = decodeURIComponent(location.pathname.match(/[^\/]*$/)[0]);
 
 		$timeout(function() {
 			var map = fmMap.getMap("map");
