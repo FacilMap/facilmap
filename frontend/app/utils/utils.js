@@ -415,13 +415,15 @@
 			}
 
 			function move(e) {
-				console.log(e, pos.distanceTo(e.containerPoint), map.dragging._draggable.options.clickTolerance);
 				if(pos.distanceTo(e.containerPoint) > map.dragging._draggable.options.clickTolerance)
 					clear();
 			}
 
 			map.on("mousedown", function(e) {
 				clear();
+
+				if(e.originalEvent.which != 1) // Only react to left click
+					return;
 
 				pos = e.containerPoint;
 				mouseDownTimeout = setTimeout(function() {
