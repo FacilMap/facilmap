@@ -46,6 +46,11 @@
 				return ret;
 			};
 
+			// hashControl calls hashControl.onHashChange(), which will run hashControl.update() with 100ms delay.
+			// In the meantime, we will already set the map view, which triggers hashControl.onMapMove and replace
+			// the location hash. So we have to call hashControl.update() right now.
+			hashControl.update();
+
 			map.map.on("layeradd", hashControl.onMapMove, hashControl);
 			map.map.on("layerremove", hashControl.onMapMove, hashControl);
 

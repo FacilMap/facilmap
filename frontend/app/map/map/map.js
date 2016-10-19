@@ -291,7 +291,8 @@
 					}
 				});
 			} else {
-				map.displayView();
+				if(!map.map._loaded) // hash control might have set a location already
+					map.displayView();
 				scope.loaded = true;
 			}
 
