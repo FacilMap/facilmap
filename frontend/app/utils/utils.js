@@ -199,7 +199,7 @@
 		};
 
 		fmUtils.copyToClipboard = function(text) {
-			var el = $("<button></button>").css("display", "none").appendTo("body");
+			var el = $('<button type="button"></button>').css("display", "none").appendTo("body");
 			var c = new Clipboard(el[0], {
 				text: function() {
 					return text;

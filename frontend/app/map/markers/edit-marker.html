@@ -1,9 +1,9 @@
 <div class="modal-header">
-	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
 	<h3 class="modal-title">Edit Marker</h3>
 </div>
 <div class="modal-body">
-	<form class="form-horizontal">
+	<form class="form-horizontal" ng-submit="save()">
 		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
 
 		<div class="form-group">
@@ -20,6 +20,8 @@
 			<label for="marker-{{$index}}-input" class="col-sm-3 control-label">{{field.name}}</label>
 			<div class="col-sm-9" fm-type-field="field" fm-type-field-model="marker.data[field.name]" fm-type-field-id="marker-{{$index}}-input"></div>
 		</div>
+
+		<button type="submit" class="hidden"></button>
 	</form>
 </div>
 <div class="modal-footer">

@@ -1,9 +1,9 @@
 <div class="modal-header">
-	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
 	<h3 class="modal-title">Edit dropdown</h3>
 </div>
 <div class="modal-body">
-	<form class="form-horizontal">
+	<form class="form-horizontal" ng-submit="save()">
 		<div class="checkbox" ng-class="{disabled: !canControl('colour')}">
 			<label>
 				<input type="checkbox" ng-model="field.controlColour" ng-disabled="!canControl('colour')">
@@ -31,20 +31,22 @@
 					<td><input type="text" ng-model="option.value" class="form-control"></td>
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
-					<td class="td-buttons"><button ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
+					<td class="td-buttons"><button type="button" ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
 					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
 				</tr>
 			</tbody>
 			<tfoot>
 				<tr>
-					<td colspan="4"><button ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
+					<td colspan="4"><button type="button" ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
 					<td class="move"></td>
 				</tr>
 			</tfoot>
 		</table>
+
+		<button type="submit" class="hidden"></button>
 	</form>
 </div>
 <div class="modal-footer">
 	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="button" class="btn btn-primary" ng-click="save()">OK</button>
+	<button type="submit" class="btn btn-primary" ng-click="save()">OK</button>
 </div>

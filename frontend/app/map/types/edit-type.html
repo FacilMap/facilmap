@@ -1,9 +1,9 @@
 <div class="modal-header">
-	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
 	<h3 class="modal-title">Edit object type</h3>
 </div>
 <div class="modal-body">
-	<form class="form-horizontal">
+	<form class="form-horizontal" ng-submit="save()">
 		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
 
 		<div class="form-group">
@@ -41,7 +41,7 @@
 								<option value="dropdown">Dropdown</option>
 								<option value="checkbox">Checkbox</option>
 							</select>
-							<span class="input-group-btn"><button ng-click="editDropdown(field)" class="btn btn-default">Edit</button></span>
+							<span class="input-group-btn"><button type="button" ng-click="editDropdown(field)" class="btn btn-default">Edit</button></span>
 						</div>
 						<select ng-if="field.type != 'dropdown'" ng-model="field.type" class="form-control">
 							<option value="input">Text field</option>
@@ -51,20 +51,22 @@
 						</select>
 					</td>
 					<td fm-type-field="field" fm-type-field-model="field.default" fm-type-field-ignore-default></td>
-					<td class="td-buttons"><button ng-click="deleteField(field)" class="btn btn-default">Delete</button></td>
+					<td class="td-buttons"><button type="button" ng-click="deleteField(field)" class="btn btn-default">Delete</button></td>
 					<td class="move td-buttons"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
 				</tr>
 			</tbody>
 			<tfoot>
 				<tr>
-					<td colspan="4"><button ng-click="createField()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
+					<td colspan="4"><button type="button" ng-click="createField()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
 					<td class="move"></td>
 				</tr>
 			</tfoot>
 		</table>
+
+		<button type="submit" class="hidden"></button>
 	</form>
 </div>
 <div class="modal-footer">
 	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="button" class="btn btn-primary" ng-click="save()">Save</button>
+	<button type="submit" class="btn btn-primary" ng-click="save()">Save</button>
 </div>

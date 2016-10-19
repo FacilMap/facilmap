@@ -17,7 +17,7 @@
 			<li role="menuitem" ng-repeat="type in types | fmObjectFilter:{type:type}"><a href="javascript:" ng-click="addToMap(type)">{{type.name}}</a></li>
 		</ul>
 	</div>
-	<button ng-if="(types | fmPropertyCount:{type:type}) == 1" class="btn btn-default" ng-click="addToMap()">Add to map</button>
+	<button type="button" ng-if="(types | fmPropertyCount:{type:type}) == 1" class="btn btn-default" ng-click="addToMap()">Add to map</button>
 	<div uib-dropdown>
 		<button type="button" class="btn btn-default" uib-dropdown-toggle>Use as <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu">

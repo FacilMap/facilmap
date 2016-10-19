@@ -1,9 +1,9 @@
 <div class="modal-header">
-	<button class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
 	<h3 class="modal-title">{{create ? 'Start collaborative map' : 'Map settings'}}</h3>
 </div>
 <div class="modal-body">
-	<form class="form-horizontal">
+	<form class="form-horizontal" ng-submit="!writeError && !readError && save()">
 		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
 		
 		<div class="form-group" ng-class="{'has-error': !!writeError}">
@@ -13,7 +13,7 @@
 					<span class="input-group-addon">{{urlPrefix}}</span>
 					<input id="pad-link-input" ng-model="writeId" class="form-control" />
 					<span class="input-group-btn" ng-if="!create">
-						<button class="btn btn-default" ng-click="copy(urlPrefix + writeId)">Copy</button>
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + writeId)">Copy</button>
 					</span>
 				</div>
 				<span class="help-block" ng-if="writeError">{{writeError}}</span>
@@ -27,7 +27,7 @@
 					<span class="input-group-addon">{{urlPrefix}}</span>
 					<input id="pad-rolink-input" ng-model="readId" class="form-control" />
 					<span class="input-group-btn" ng-if="!create">
-						<button class="btn btn-default" ng-click="copy(urlPrefix + readId)">Copy</button>
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + readId)">Copy</button>
 					</span>
 				</div>
 				<span class="help-block" ng-if="readError">{{readError}}</span>
@@ -38,9 +38,11 @@
 			<label for="pad-name-input" class="col-sm-3 control-label">Map name</label>
 			<div class="col-sm-9"><input id="pad-name-input" ng-model="padName" class="form-control" /></div>
 		</div>
+
+		<button type="submit" class="hidden"></button>
 	</form>
 </div>
 <div class="modal-footer">
 	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError">{{create ? 'Create' : 'Save'}}</button>
+	<button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError">{{create ? 'Create' : 'Save'}}</button>
 </div>
