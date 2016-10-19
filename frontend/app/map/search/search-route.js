@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmMapSearchRoute", function($rootScope, $templateCache, $compile, fmUtils, L, $timeout, $q) {
+	fm.app.factory("fmMapSearchRoute", function($rootScope, $templateCache, $compile, fmUtils, L, $timeout, $q, fmSortableOptions) {
 		return function(map, searchUi) {
 			var lineStyle = {
 				color : '#0000ff',
@@ -15,7 +15,7 @@
 			scope.routeMode = 'car';
 			scope.destinations = [ ];
 
-			scope.sortableOptions = ng.copy($rootScope.sortableOptions);
+			scope.sortableOptions = ng.copy(fmSortableOptions);
 			scope.sortableOptions.update = function() {
 				scope.reroute();
 			};

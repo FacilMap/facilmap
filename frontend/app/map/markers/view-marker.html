@@ -2,7 +2,7 @@
 	<h2>{{marker.name}}</h2>
 	<dl class="dl-horizontal">
 		<dt class="pos">Coordinates</dt>
-		<dd class="pos">{{round(marker.lat, 5)}}, {{round(marker.lon, 5)}}</dd>
+		<dd class="pos">{{marker.lat | fmRound:5}}, {{marker.lon | fmRound:5}}</dd>
 
 		<dt ng-repeat-start="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">{{field.name}}</dt>
 		<dd ng-repeat-end ng-show="field.type != 'dropdown' || field.options.length > 1" fm-type-field-content="field" fm-type-field-model="marker.data[field.name]"></dd>

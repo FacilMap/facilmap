@@ -1,5 +1,6 @@
 var FacilMap = {
-	SERVER : "/"
+	SERVER : "/",
+	URL_PREFIX: location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "")
 };
 
 (function(fm, $, ng, undefined) {
@@ -15,6 +16,29 @@ var FacilMap = {
 	fm.app.constant("L", L);
 	fm.app.constant("linkifyStr", linkifyStr);
 	fm.app.constant("Clipboard", Clipboard);
+	fm.app.constant("fmSortableOptions", {
+		handle: ".sort-handle",
+		axis: "y",
+		cursor: "move",
+		helper: function(e, ui) { // Source: http://www.foliotek.com/devblog/make-table-rows-sortable-using-jquery-ui-sortable/
+			ui.children().each(function() {
+				$(this).width($(this).width());
+			});
+			return ui;
+		},
+		start: function(e, ui) {
+			var elChildren = ui.item.children();
+			ui.placeholder.children().each(function(i) {
+				$(this).width(elChildren.eq(i).width());
+				$(this).height(elChildren.eq(i).height());
+			});
+		},
+		stop: function(e, ui) {
+			ui.item.children().each(function() {
+				$(this).css("width", "");
+			});
+		}
+	});
 
 	// Dereferrer
 	$(document).on("click", "a", function(e) {
@@ -27,38 +51,6 @@ var FacilMap = {
 				el.attr("href", href);
 			}, 0);
 		}
-	});
-
-	fm.app.run(function($rootScope, fmUtils) {
-		$rootScope.urlPrefix = location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "");
-
-		$rootScope.round = fmUtils.round;
-		$rootScope.formatTime = fmUtils.formatTime;
-		$rootScope.routingMode = fmUtils.routingMode;
-
-		$rootScope.sortableOptions = {
-			handle: ".sort-handle",
-			axis: "y",
-			cursor: "move",
-			helper: function(e, ui) { // Source: http://www.foliotek.com/devblog/make-table-rows-sortable-using-jquery-ui-sortable/
-				ui.children().each(function() {
-					$(this).width($(this).width());
-				});
-				return ui;
-			},
-			start: function(e, ui) {
-				var elChildren = ui.item.children();
-				ui.placeholder.children().each(function(i) {
-					$(this).width(elChildren.eq(i).width());
-					$(this).height(elChildren.eq(i).height());
-				});
-			},
-			stop: function(e, ui) {
-				ui.item.children().each(function() {
-					$(this).css("width", "");
-				});
-			}
-		};
 	});
 
 	function wrapApply($scope, f) {
@@ -90,7 +82,7 @@ var FacilMap = {
 
 			map.socket.$watch("padId", function(padId) {
 				if(padId)
-					history.replaceState(null, "", $scope.urlPrefix + padId + location.hash);
+					history.replaceState(null, "", fm.URL_PREFIX + padId + location.hash);
 			});
 		}, 0);
 

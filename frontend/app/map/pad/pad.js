@@ -51,6 +51,7 @@
 	});
 
 	fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils) {
+		$scope.urlPrefix = fm.URL_PREFIX;
 		$scope.create = create;
 
 		if(create) {

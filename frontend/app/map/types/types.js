@@ -86,7 +86,9 @@
 		};
 	});
 
-	fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map) {
+	fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOptions) {
+		$scope.sortableOptions = fmSortableOptions;
+
 		$scope.editDropdown = function(field) {
 			map.typesUi.editTypeDropdown($scope.type, field);
 		};
@@ -112,7 +114,9 @@
 		};
 	});
 
-	fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtils) {
+	fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtils, fmSortableOptions) {
+		$scope.sortableOptions = fmSortableOptions;
+
 		$scope.canControl = function(what) {
 			return map.typesUi.canControl($scope.type, what, $scope.field);
 		};
