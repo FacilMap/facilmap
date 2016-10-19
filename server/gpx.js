@@ -107,7 +107,7 @@ function exportGpx(padId, useTracks) {
 
 	return Promise.all([ padDataP, viewsP, typesMarkersLinesP ]).then(function(res) {
 		return '<?xml version="1.0" encoding="UTF-8"?>\n' +
-		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fm="https://pad.facilmap.org/">\n' +
+		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fm="https://facilmap.org/">\n' +
 			'\t<metadata>\n' +
 			'\t\t<name>' + _e(res[0].name) + '</name>\n' +
 			'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +

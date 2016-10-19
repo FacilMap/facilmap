@@ -1,5 +1,5 @@
 module.exports = {
-	userAgent : process.env.USER_AGENT || 'FacilMap (https://pad.facilmap.org/, cdauth@cdauth.eu)',
+	userAgent : process.env.USER_AGENT || 'FacilMap (https://facilmap.org/, cdauth@cdauth.eu)',
 	host : null,
 	port : 8080,
 	db : {
