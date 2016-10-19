@@ -41,7 +41,7 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<div class="btn-group pull-left" uib-dropdown ng-if="(types | fmPropertyCount:{type:'line'}) > 1">
+	<div class="btn-group pull-left" uib-dropdown keyboard-nav="true" ng-if="(types | fmPropertyCount:{type:'line'}) > 1">
 		<button id="change-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Change type <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="change-type-button" uib-dropdown-menu>
 			<li role="menuitem" ng-repeat="type in types | fmObjectFilter:{type:'line'}" ng-class="{active: type.id == line.typeId}"><a href="#" ng-click="line.typeId = type.id">{{type.name}}</a></li>
