@@ -107,7 +107,10 @@ gulp.task("all", [ "deps", "app" ], function() {
 				concat("all.css"),
 				sourcemaps.write("./sourcemaps")
 			),
-			gulp.src("deref.html")
+			combine(
+				gulp.src([ "deref.html", "opensearch.xml" ]),
+				img64()
+			)
 		),
 		gulp.dest("build")
 	);

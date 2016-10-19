@@ -32,7 +32,9 @@ module.exports = function() {
 		}
 
 		if (file.isBuffer()) {
-			var $ = cheerio.load(String(file.contents));
+			var $ = cheerio.load(String(file.contents), {
+				xmlMode: mime.lookup(file.path) == "application/xml"
+			});
 
 			$('img').each(function() {
 				$(this).attr('src', replacePath($(this).attr('src'), file));
@@ -40,6 +42,10 @@ module.exports = function() {
 
 			$('link[rel~=icon]').each(function() {
 				$(this).attr('href', replacePath($(this).attr('href'), file));
+			});
+
+			$('OpenSearchDescription Image').each(function() {
+				$(this).text(replacePath($(this).text(), file));
 			});
 
 			file.contents = new Buffer($.html());
