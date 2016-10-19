@@ -4,6 +4,7 @@ var Promise = require("promise");
 var cheerio = require("cheerio");
 var zlib = require("zlib");
 var compressjs = require("compressjs");
+var utils = require("./utils");
 
 request = request.defaults({
 	gzip: true,
@@ -85,8 +86,18 @@ function find(query, loadUrls) {
 					+ "&zoom=" + (lonlat.zoom != null ? (lonlat.zoom >= 12 ? lonlat.zoom+2 : lonlat.zoom) : 17),
 				json: true
 			}).then(function(body) {
-				if(!body)
-					throw "Invalid response from name finder.";
+				if(!body || body) {
+					var name = utils.round(lonlat.lat, 5) + ", " + utils.round(lonlat.lon, 5);
+					return [ {
+						lat: lonlat.lat,
+						lon : lonlat.lon,
+						type : "coordinates",
+						short_name: name,
+						display_name : name,
+						zoom: lonlat.zoom != null ? lonlat.zoom : 15,
+						icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
+					} ];
+				}
 
 				body.lat = lonlat.lat;
 				body.lon = lonlat.lon;
@@ -104,6 +115,9 @@ function find(query, loadUrls) {
 		}).then(function(body) {
 			if(!body)
 				throw "Invalid response from name finder.";
+
+			if(body.error)
+				throw body.error;
 
 			return body.map(prepareSearchResult);
 		});

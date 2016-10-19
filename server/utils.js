@@ -256,6 +256,11 @@ function isoDate(date) {
 	return pad(date.getUTCFullYear(), 4) + '-' + pad(date.getUTCMonth()+1, 2) + '-' + pad(date.getUTCDate(), 2) + 'T' + pad(date.getUTCHours(), 2) + ':' + pad(date.getUTCMinutes(), 2) + ':' + pad(date.getUTCSeconds(), 2) + 'Z';
 }
 
+function round(number, digits) {
+	var fac = Math.pow(10, digits);
+	return Math.round(number*fac)/fac;
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStream : filterStream,
@@ -267,5 +272,6 @@ module.exports = {
 	ArrayStream : ArrayStream,
 	streamEachPromise : streamEachPromise,
 	escapeXml : escapeXml,
-	isoDate : isoDate
+	isoDate : isoDate,
+	round: round
 };
