@@ -45,9 +45,6 @@
 					if(destination.suggestionQuery == destination.query)
 						return resolve();
 
-					destination.suggestions = [ ];
-					destination.suggestionQuery = null;
-					destination.selectedSuggestionIdx = null;
 					if(destination.query.trim() != "") {
 						var query = destination.query;
 
@@ -60,6 +57,9 @@
 								return reject(err);
 							}
 
+							if(fmUtils.isSearchId(query) && results.length > 0 && results[0].display_name)
+								destination.query = query = results[0].display_name;
+
 							destination.suggestions = results;
 							destination.suggestionQuery = query;
 							destination.selectedSuggestionIdx = 0;
@@ -70,7 +70,7 @@
 				});
 			};
 
-			scope.route = function(dragging) {
+			scope.route = function(dragging, noZoom) {
 				if(!dragging)
 					scope.reset();
 
@@ -79,15 +79,14 @@
 
 				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
 					points = scope.destinations.map(function(destination) {
-						if(destination.suggestions.length == null)
+						if(destination.suggestions.length == 0)
 							throw "No place has been found for search term “" + destination.query + "”.";
 
-						var sug = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
-						return { lat: sug.lat, lon: sug.lon };
+						return destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
 					});
 
 					return $q(function(resolve, reject) {
-						map.socket.emit("getRoute", { destinations: points, mode: mode }, function(err, res) {
+						map.socket.emit("getRoute", { destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode }, function(err, res) {
 							err ? reject(err) : resolve(res);
 						});
 					});
@@ -96,7 +95,10 @@
 					route.routeMode = mode;
 
 					scope.routeObj = route;
-					renderRoute(dragging);
+					scope.routeError = null;
+					renderRoute(dragging, noZoom);
+
+					map.mapEvents.$emit("searchchange");
 				}).catch(function(err) {
 					scope.routeError = err;
 				});
@@ -132,7 +134,7 @@
 					}
 				}
 
-				map.linesUi.createLine(type, scope.routeObj.routePoints, { mode: scope.routeObj.routeMode });
+				map.linesUi.createLine(type, scope.routeObj.routePoints.map(function(point) { return { lat: point.lat, lon: point.lon }; }), { mode: scope.routeObj.routeMode });
 
 				scope.clear();
 			};
@@ -146,7 +148,7 @@
 			var markers = [ ];
 			var recalcRoute = fmUtils.minInterval(dragTimeout, false);
 
-			function renderRoute(dragging) {
+			function renderRoute(dragging, noZoom) {
 				clearRoute(dragging);
 
 				routeLayer = L.polyline(scope.routeObj.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), lineStyle).addTo(map.map);
@@ -167,7 +169,8 @@
 				}.fmWrapApply(scope));
 
 				if(!dragging) {
-					map.map.flyToBounds(routeLayer.getBounds());
+					if(!noZoom)
+						map.map.flyToBounds(routeLayer.getBounds());
 
 					// Render markers
 
@@ -240,7 +243,8 @@
 						lon: latlng.lng,
 						display_name: disp,
 						short_name: disp,
-						type: "coordinates"
+						type: "coordinates",
+						id: disp
 					} ]
 				};
 			}
@@ -277,7 +281,6 @@
 				},
 
 				setFrom: function(from, suggestions, selectedSuggestion) {
-					console.log("setFrom", from);
 					_setDestination(scope.destinations[0], from, suggestions, selectedSuggestion);
 				},
 
@@ -292,8 +295,26 @@
 					_setDestination(scope.destinations[scope.destinations.length-1], to, suggestions, selectedSuggestion);
 				},
 
-				submit: function() {
-					scope.route();
+				setMode: function(mode) {
+					scope.routeMode = mode;
+				},
+
+				getQueries: function() {
+					if(scope.routeObj) {
+						return scope.routeObj.routePoints.map(function(point) {
+							return point.id;
+						});
+					}
+				},
+
+				getMode: function(mode) {
+					if(scope.routeObj) {
+						return scope.routeObj.routeMode;
+					}
+				},
+
+				submit: function(noZoom) {
+					scope.route(noZoom);
 				}
 			};
 			routeUi.hide();

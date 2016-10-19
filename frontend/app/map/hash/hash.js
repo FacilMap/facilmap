@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmMapHash", function() {
+	fm.app.factory("fmMapHash", function($rootScope, fmUtils) {
 		return function(map) {
 			var hashControl = new L.Hash(map.map);
 
@@ -16,21 +16,33 @@
 					args = hash.split("/");
 
 				var ret = L.Hash.parseHash(args.slice(0, 3).join("/"));
-				if(ret) {
-					// This gets called just in L.Hash.update(), so we can already add/remove the layers here
-					var l = args[3] && args[3].split("-");
-					if(l && l.length > 0) {
-						for(var i in map.layers) {
-							if(l.indexOf(i) == -1) {
-								if(map.map.hasLayer(map.layers[i]))
-									map.map.removeLayer(map.layers[i]);
-							} else if(!map.map.hasLayer(map.layers[i]))
-								map.map.addLayer(map.layers[i]);
-						}
+
+				// This gets called just in L.Hash.update(), so we can already add/remove the layers here
+
+				var l = args[3] && args[3].split("-");
+				if(l && l.length > 0) {
+					for(var i in map.layers) {
+						if(l.indexOf(i) == -1) {
+							if(map.map.hasLayer(map.layers[i]))
+								map.map.removeLayer(map.layers[i]);
+						} else if(!map.map.hasLayer(map.layers[i]))
+							map.map.addLayer(map.layers[i]);
 					}
 				}
+
+				var routeParams = args.slice(4);
+				if(routeParams.length >= 2) {
+					var mode = null;
+					if(routeParams.length > 2 && [ "car", "bicycle", "pedestrian" ].indexOf(routeParams[routeParams.length-1]) != -1)
+						mode = routeParams.pop();
+
+					map.searchUi.route(routeParams, mode, !!ret);
+				} else if(routeParams.length == 1) {
+					map.searchUi.search(routeParams[0], !!ret, !fmUtils.isSearchId(routeParams[0]));
+				}
+
 				return ret;
-			};
+			}.fmWrapApply($rootScope);
 
 			hashControl.formatHash = function(mapObj) {
 				var ret = L.Hash.formatHash(mapObj);
@@ -43,6 +55,10 @@
 
 				ret += "/" + l.join("-");
 
+				var searchHash = map.searchUi.getCurrentSearchForHash();
+				if(searchHash)
+					ret += "/" + searchHash.join("/");
+
 				return ret;
 			};
 
@@ -53,6 +69,7 @@
 
 			map.map.on("layeradd", hashControl.onMapMove, hashControl);
 			map.map.on("layerremove", hashControl.onMapMove, hashControl);
+			map.mapEvents.$on("searchchange", hashControl.onMapMove.bind(hashControl));
 
 			function decodeQueryString(str) {
 				var obj = { };
@@ -124,7 +141,7 @@
 					});
 
 					if(obj.c && obj.c.s && obj.c.s.medium)
-						ret.push(obj.c.s.medium);
+						ret.push(obj.c.s.medium != "foot" ? obj.c.s.medium : "pedestrian");
 				}
 
 				return ret;

@@ -70,42 +70,61 @@ function find(query, loadUrls) {
 				return loadUrl(query);
 		}
 
-		var lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/)
-		if(lonlat_match)
-		{ // Coordinates
-			var lonlat = {
-				lat: 1*lonlat_match[2].replace(",", ".").replace(/\s+/, ""),
-				lon : 1*lonlat_match[4].replace(",", ".").replace(/\s+/, ""),
-				zoom : lonlat_match[7] != null ? 1*lonlat_match[7] : null
-			};
+		var lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/);
+		var osm_match = query.match(/^([nwr])(\d+)$/i);
+		if(lonlat_match || osm_match)
+		{ // Reverse search
+			var url = nameFinderUrl + "/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1";
+			var lonlat;
+
+			if(lonlat_match) {
+				lonlat = {
+					lat: 1*lonlat_match[2].replace(",", ".").replace(/\s+/, ""),
+					lon : 1*lonlat_match[4].replace(",", ".").replace(/\s+/, ""),
+					zoom : lonlat_match[7] != null ? 1*lonlat_match[7] : null
+				};
+				url += "&lat=" + lonlat.lat
+					+ "&lon=" + lonlat.lon
+					+ "&zoom=" + (lonlat.zoom != null ? (lonlat.zoom >= 12 ? lonlat.zoom+2 : lonlat.zoom) : 17);
+			} else {
+				url += "&osm_type=" + osm_match[1].toUpperCase()
+					+ "&osm_id=" + osm_match[2]
+			}
 
 			return request({
-				url: nameFinderUrl + "/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1"
-					+ "&lat=" + lonlat.lat
-					+ "&lon=" + lonlat.lon
-					+ "&zoom=" + (lonlat.zoom != null ? (lonlat.zoom >= 12 ? lonlat.zoom+2 : lonlat.zoom) : 17),
+				url: url,
 				json: true
 			}).then(function(body) {
-				if(!body || body) {
-					var name = utils.round(lonlat.lat, 5) + ", " + utils.round(lonlat.lon, 5);
-					return [ {
-						lat: lonlat.lat,
-						lon : lonlat.lon,
-						type : "coordinates",
-						short_name: name,
-						display_name : name,
-						zoom: lonlat.zoom != null ? lonlat.zoom : 15,
-						icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
-					} ];
+				if(!body || body.error) {
+					if(lonlat) {
+						var name = utils.round(lonlat.lat, 5) + ", " + utils.round(lonlat.lon, 5);
+						return [ {
+							lat: lonlat.lat,
+							lon : lonlat.lon,
+							type : "coordinates",
+							short_name: name,
+							display_name : name,
+							zoom: lonlat.zoom != null ? lonlat.zoom : 15,
+							icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
+						} ];
+					} else
+						throw body ? body.error : "Invalid response from name finder";
 				}
 
-				body.lat = lonlat.lat;
-				body.lon = lonlat.lon;
+				if(lonlat) {
+					body.lat = lonlat.lat;
+					body.lon = lonlat.lon;
 
-				if(lonlat.zoom != null)
-					body.zoom = lonlat.zoom;
+					if(lonlat.zoom != null)
+						body.zoom = lonlat.zoom;
+				}
 
-				return [ prepareSearchResult(body) ];
+				var res = prepareSearchResult(body);
+
+				if(lonlat)
+					res.id = query;
+
+				return [ res ];
 			});
 		}
 
@@ -137,8 +156,7 @@ function prepareSearchResult(result) {
 		geojson: result.geojson,
 		icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
 		type: result.type == "yes" ? result.category : result.type,
-		osm_id: result.osm_id,
-		osm_type: result.osm_type
+		id: result.osm_type.charAt(0) + result.osm_id
 	};
 }
 

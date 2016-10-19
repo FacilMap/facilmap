@@ -11,7 +11,7 @@
 			scope.showAll = false;
 			scope.activeResult = null;
 
-			scope.search = function() {
+			scope.search = function(noZoom) {
 				scope.searchResults = null;
 				scope.loadedSearchString = "";
 				clearRenders();
@@ -34,41 +34,54 @@
 						if(err)
 							return map.messages.showMessage("danger", err);
 
+						if(fmUtils.isSearchId(q) && results.length > 0 && results[0].display_name)
+							scope.searchString = q = results[0].display_name;
+
 						scope.loadedSearchString = q;
 
+						map.mapEvents.$emit("searchchange");
+
 						if(typeof results == "string")
-							loadSearchResults(parseFiles([ results ]));
+							loadSearchResults(parseFiles([ results ]), noZoom);
 						else
-							loadSearchResults(results);
+							loadSearchResults(results, noZoom);
 					});
 				}
 			};
 
-			scope.showResult = function(result) {
+			scope.showResult = function(result, noZoom) {
 				if(scope.showAll) {
-					_flyToBounds(layerGroup.getBounds());
+					if(!noZoom)
+						_flyToBounds(layerGroup.getBounds());
 
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
 					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup);
 
-					if(result.lat && result.lon && result.zoom)
-						map.map.flyTo([ result.lat, result.lon ], result.zoom);
-					else if(result.boundingbox)
-						_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
-					else if(result.layer)
-						_flyToBounds(result.layer.getBounds());
+					if(!noZoom) {
+						if(result.lat && result.lon && result.zoom)
+							map.map.flyTo([ result.lat, result.lon ], result.zoom);
+						else if(result.boundingbox)
+							_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
+						else if(result.layer)
+							_flyToBounds(result.layer.getBounds());
+					}
 				}
+
+				map.mapEvents.$emit("searchchange");
 			};
 
-			scope.showAllResults = function() {
+			scope.showAllResults = function(noZoom) {
 				clearRenders();
 
 				for(var i=0; i<scope.searchResults.length; i++)
 					renderResult(scope.loadedSearchString, scope.searchResults, scope.searchResults[i], false, layerGroup);
 
-				_flyToBounds(layerGroup.getBounds());
+				if(!noZoom)
+					_flyToBounds(layerGroup.getBounds());
+
+				map.mapEvents.$emit("searchchange");
 			};
 
 			scope.showRoutingForm = function() {
@@ -125,13 +138,13 @@
 				map.map.flyTo(bounds.getCenter(), Math.min(15, map.map.getBoundsZoom(bounds)));
 			}
 
-			function loadSearchResults(results) {
+			function loadSearchResults(results, noZoom) {
 				clearRenders();
 
 				scope.searchResults = results;
 
 				if(results && results.length > 0)
-					scope.showAll ? scope.showAllResults() : scope.showResult(scope.searchResults[0]);
+					scope.showAll ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults[0], noZoom);
 			}
 
 			function parseFiles(files) {
@@ -355,15 +368,42 @@
 					el.hide();
 				},
 
-				search: function(query) {
+				search: function(query, noZoom, showAll) {
 					if(query != null)
 						scope.searchString = query;
 
-					scope.search();
+					if(showAll != null)
+						scope.showAll = showAll;
+
+					scope.search(noZoom);
 				},
 
 				showFiles: function(files) {
 					loadSearchResults(parseFiles(files));
+				},
+
+				route: function(destinations, mode, noZoom) {
+					searchUi.hide();
+					routeUi.show();
+
+					routeUi.setQueries(destinations);
+					if(mode)
+						routeUi.setMode(mode);
+
+					routeUi.submit(noZoom);
+				},
+
+				getCurrentSearchForHash: function() {
+					if(el.is(":visible")) {
+						if(!scope.showAll && scope.activeResult && scope.activeResult.id)
+							return [ scope.activeResult.id ];
+						else if(scope.loadedSearchString)
+							return [ scope.loadedSearchString ];
+					} else {
+						var queries = routeUi.getQueries();
+						if(queries)
+							return queries.concat([ routeUi.getMode() ]);
+					}
 				}
 			};
 

@@ -435,6 +435,10 @@
 			});
 		};
 
+		fmUtils.isSearchId = function(string) {
+			return string && string.match(/^[nwr]\d+$/i);
+		};
+
 		return fmUtils;
 	});
 
