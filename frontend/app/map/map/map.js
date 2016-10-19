@@ -175,13 +175,13 @@
 						map.map.addLayer(map.layers[it]);
 				});
 
-				var bounds = fmUtils.fmToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: -180 });
+				var bounds = fmUtils.fmToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: 180 });
 
 				try {
 					map.map.getCenter(); // Throws exception if map not initialised
-					map.map.flyToBounds(bounds);
+					map.map.flyTo(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
 				} catch(e) {
-					map.map.fitBounds(bounds);
+					map.map.setView(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
 				}
 			};
 
