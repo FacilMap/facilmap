@@ -447,6 +447,35 @@
 			return hashControl;
 		};
 
+		fmUtils.onLongClick = function(map, callback) {
+			var mouseDownTimeout, pos;
+
+			function clear() {
+				clearTimeout(mouseDownTimeout);
+				mouseDownTimeout = pos = null;
+				map.off("mousemove", move);
+				map.off("mouseup", clear);
+			}
+
+			function move(e) {
+				console.log(e, pos.distanceTo(e.containerPoint), map.dragging._draggable.options.clickTolerance);
+				if(pos.distanceTo(e.containerPoint) > map.dragging._draggable.options.clickTolerance)
+					clear();
+			}
+
+			map.on("mousedown", function(e) {
+				clear();
+
+				pos = e.containerPoint;
+				mouseDownTimeout = setTimeout(function() {
+					callback(e);
+				}, 1000);
+
+				map.on("mousemove", move);
+				map.on("mouseup", clear);
+			});
+		};
+
 		return fmUtils;
 	});
 

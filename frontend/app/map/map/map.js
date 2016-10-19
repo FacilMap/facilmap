@@ -28,7 +28,7 @@
 			var map = this;
 
 			map.el = el;
-			map.mapEvents = $rootScope.$new(true); /* Event types: click, layerchange */
+			map.mapEvents = $rootScope.$new(true); /* Event types: longclick, layerchange */
 			map.socket = fmSocket(padId);
 
 			map.layers = { };
@@ -135,9 +135,16 @@
 			map.dragMarkerColour = "ffd700";
 			map.endMarkerColour = "ff0000";
 
-			map.map.on("singleclick", function(e) {
-				map.mapEvents.$emit("click", e.latlng);
-			}.fmWrapApply($rootScope));
+			if(L.Browser.touch && !L.Browser.pointer) {
+				// Long click will call the contextmenu event
+				map.map.on("contextmenu", function(e) {
+					map.mapEvents.$emit("longclick", e.latlng);
+				}.fmWrapApply(map.mapEvents));
+			} else {
+				fmUtils.onLongClick(map.map, function(e) {
+					map.mapEvents.$emit("longclick", e.latlng);
+				}.fmWrapApply(map.mapEvents));
+			}
 
 			map.map.on("layeradd", function() {
 				map.mapEvents.$emit("layerchange");

@@ -102,7 +102,7 @@
 				clickMarker.clearLayers();
 			});
 
-			map.mapEvents.$on("click", function(e, latlng) {
+			map.mapEvents.$on("longclick", function(e, latlng) {
 				clickMarker.clearLayers();
 
 				map.loadStart();
