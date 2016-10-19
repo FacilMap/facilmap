@@ -35,7 +35,6 @@
 			hashControl.formatHash = function(mapObj) {
 				var ret = L.Hash.formatHash(mapObj);
 
-				console.log(map.layers);
 				var l = [ ];
 				for(var i in map.layers) {
 					if(mapObj.hasLayer(map.layers[i]))

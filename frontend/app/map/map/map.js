@@ -33,11 +33,6 @@
 
 			map.layers = { };
 			[
-				L.gridLayer({
-					fmName: "Empty",
-					fmBase: true,
-					fmKey: "empt"
-				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", {
 					fmName: "MapSurfer Road",
 					fmBase: true,
