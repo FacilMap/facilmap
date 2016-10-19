@@ -9,7 +9,7 @@
 		};
 	});
 
-	fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $templateCache, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, L, fmMapImport) {
+	fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $templateCache, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, L, fmMapImport, fmMapHash) {
 		var maps = { };
 
 		var ret = { };
@@ -110,8 +110,6 @@
 				icon: "glyphicon glyphicon-screenshot",
 				iconLoading: "glyphicon glyphicon-screenshot"
 			}).addTo(map.map);
-
-			fmUtils.leafletHash(map.map, map.layers);
 
 			map.map.on('almost:over', function(e) {
 				e.layer.fire('fm-almostover', e);
@@ -284,6 +282,7 @@
 			map.searchUi = fmMapSearch(map);
 
 			fmMapLegend(map);
+			fmMapHash(map);
 
 			if(padId) {
 				var loadedWatcher = map.socket.$watch("padData", function(padData) {

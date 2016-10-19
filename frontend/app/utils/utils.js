@@ -404,49 +404,6 @@
 			};
 		};
 
-		fmUtils.leafletHash = function(map, layers) {
-			var hashControl = new L.Hash(map);
-
-			hashControl.parseHash = function(hash) {
-				var args = hash.split("/");
-
-				var ret = L.Hash.parseHash(args.slice(0, 3).join("/"));
-				if(ret) {
-					// This gets called just in L.Hash.update(), so we can already add/remove the layers here
-					var l = args[3] && args[3].split("-");
-					if(l && l.length > 0) {
-						for(var i in layers) {
-							if(l.indexOf(i) == -1) {
-								if(map.hasLayer(layers[i]))
-									map.removeLayer(layers[i]);
-							} else if(!map.hasLayer(layers[i]))
-								map.addLayer(layers[i]);
-						}
-					}
-				}
-				return ret;
-			};
-
-			hashControl.formatHash = function(map) {
-				var ret = L.Hash.formatHash(map);
-
-				var l = [ ];
-				for(var i in layers) {
-					if(map.hasLayer(layers[i]))
-						l.push(i);
-				}
-
-				ret += "/" + l.join("-");
-
-				return ret;
-			};
-
-			map.on("layeradd", hashControl.onMapMove, hashControl);
-			map.on("layerremove", hashControl.onMapMove, hashControl);
-
-			return hashControl;
-		};
-
 		fmUtils.onLongClick = function(map, callback) {
 			var mouseDownTimeout, pos;
 
