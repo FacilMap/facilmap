@@ -156,7 +156,7 @@ function prepareSearchResult(result) {
 		geojson: result.geojson,
 		icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
 		type: result.type == "yes" ? result.category : result.type,
-		id: result.osm_type.charAt(0) + result.osm_id
+		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : null
 	};
 }
 
