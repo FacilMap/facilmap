@@ -74,6 +74,13 @@
 					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
+				L.tileLayer("https://www.freietonne.de/seekarte/tah.openstreetmap.org/Tiles/TileCache.php?z={z}&x={x}&y={y}.png", {
+					fmName: "Mapnik Water",
+					fmBase: true,
+					fmKey: "MpnW",
+					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					noWrap: true
+				}),
 				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
 					fmName: "Public transportation",
 					fmKey: "OPTM",
@@ -92,6 +99,13 @@
 					fmName: "Relief",
 					fmKey: "Rlie",
 					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
+					zIndex: 300,
+					noWrap: true
+				}),
+				fmUtils.freieTonne(map, {
+					fmName: "Sea marks",
+					fmKey: "FrTo",
+					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				})

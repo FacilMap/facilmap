@@ -412,7 +412,9 @@ function loadUrl(url, completeOsmObjects) {
 	}).then(function(bodyBuf) {
 		var body = bodyBuf.toString();
 
-		if(body.match(/^\s*</)) {
+		if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
+			return body;
+		else if(body.match(/^\s*</)) {
 			var $ = cheerio.load(body, { xmlMode: true });
 			var rootEl = $.root().children();
 

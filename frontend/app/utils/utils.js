@@ -439,6 +439,68 @@
 			return string && string.match(/^[nwr]\d+$/i);
 		};
 
+		fmUtils.freieTonne = function(map, options) {
+			var layer = L.featureGroup([]);
+			L.setOptions(layer, options);
+
+			function refresh() {
+				var bounds = fmUtils.leafletToFmBbox(map.map.getBounds());
+				var zoom = map.map.getZoom();
+				if(zoom <= 8)
+					layer.clearLayers();
+				else {
+					map.socket.emit("find", {
+						query: "https://www.freietonne.de/seekarte/getOpenLayerPois.php?ldez1=" + bounds.left + "&ldez2=" + bounds.right + "&bdez1=" + bounds.top + "&bdez2=" + bounds.bottom + "&zoom=" + zoom,
+						loadUrls: true
+					}).then(function(content) {
+						layer.clearLayers();
+
+						content.trim().split(/\r\n|\r|\n/).slice(1).forEach(function(line) {
+							var feature = line.split(/\t/);
+							var iconSize = feature[4].split(",").map(function(n) { return 1*n; });
+							var iconOffset = feature[5].split(",").map(function(n, i) { return iconSize[i] + 1*n; });
+
+							var marker = L.marker([ 1*feature[0], 1*feature[1] ], {
+								icon: L.icon({
+									iconUrl: "https://www.freietonne.de/seekarte/" + feature[6],
+									iconSize: iconSize,
+									iconAnchor: iconOffset,
+									popupAnchor: [ -iconOffset[0] + Math.round(iconSize[0]/2), -iconOffset[1] ]
+								})
+							});
+
+							var el = $("<div/>").html(feature[2] + feature[3]);
+							el.find("span:first-child").contents().unwrap().wrap("<h2></h2>");
+							el.find("*").removeAttr("css");
+							el.find("a").contents().unwrap();
+							if(el.text().trim().length > 0)
+								marker.bindPopup(el[0]);
+
+							layer.addLayer(marker);
+						});
+					});
+				}
+			}
+
+			var mapObj = null;
+			layer.on("add", function(e) {
+				mapObj = layer._map;
+				mapObj.on("moveend", refresh);
+				refresh();
+
+				if(options.attribution)
+					mapObj.attributionControl.addAttribution(options.attribution);
+			});
+			layer.on("remove", function(e) {
+				mapObj.off("moveend", refresh);
+
+				if(options.attribution)
+					mapObj.attributionControl.removeAttribution(options.attribution);
+			});
+
+			return layer;
+		};
+
 		return fmUtils;
 	});
 
