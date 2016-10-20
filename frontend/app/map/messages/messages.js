@@ -13,7 +13,7 @@
 				showMessage : function(type, message, buttons, lifetime, onclose) {
 					var messageObj = {
 						type: type,
-						message: message,
+						message: message instanceof Error ? message.name + ": " + message.message : message,
 						buttons: buttons,
 						close: function(callOnClose) {
 							var idx = scope.messages.indexOf(messageObj);
