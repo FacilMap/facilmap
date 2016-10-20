@@ -69,8 +69,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 					return database.getPadData(padId);
 				}).then(function(data) {
-					_setPadId(socket, data);
-					return data;
+					return _setPadId(socket, data);
 				});
 			},
 
@@ -85,8 +84,10 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 				socket.bbox = bbox;
 
 				if(socket.padId && socket.padId !== true) {
-					_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, bboxWithExcept));
-					_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, bboxWithExcept));
+					return utils.promiseAllObject({
+						marker: utils.streamToArrayPromise(database.getPadMarkers(socket.padId, bboxWithExcept)),
+						linePoints: utils.streamToArrayPromise(database.getLinePoints(socket.padId, bboxWithExcept))
+					});
 				}
 			},
 
@@ -105,9 +106,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 					return database.createPad(data);
 				}).then(function(padData) {
-					_setPadId(socket, padData);
-
-					return padData;
+					return _setPadId(socket, padData);
 				});
 			},
 
@@ -346,12 +345,19 @@ function _setPadId(socket, data) {
 	socket.writable = data.writable;
 	listeners.addPadListener(socket);
 
-	_sendStreamData(socket, "view", database.getViews(socket.padId));
-	_sendStreamData(socket, "type", database.getTypes(socket.padId));
-	_sendStreamData(socket, "line", database.getPadLines(socket.padId));
+	var promises = {
+		padData: [ data ],
+		view: utils.streamToArrayPromise(database.getViews(socket.padId)),
+		type: utils.streamToArrayPromise(database.getTypes(socket.padId)),
+		line: utils.streamToArrayPromise(database.getPadLines(socket.padId))
+	};
 
 	if(socket.bbox) { // In case bbox is set while fetching pad data
-		_sendStreamData(socket, "marker", database.getPadMarkers(socket.padId, socket.bbox));
-		_sendStreamData(socket, "linePoints", database.getLinePoints(socket.padId, socket.bbox));
+		utils.extend(promises, {
+			marker: utils.streamToArrayPromise(database.getPadMarkers(socket.padId, socket.bbox)),
+			linePoints: utils.streamToArrayPromise(database.getLinePoints(socket.padId, socket.bbox))
+		});
 	}
+
+	return utils.promiseAllObject(promises);
 }

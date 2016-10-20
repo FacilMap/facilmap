@@ -5,6 +5,8 @@
 		return function(padId) {
 			var socket = io.connect(fm.SERVER, { 'force new connection': true });
 
+			var listeners = [ ];
+
 			var fmSocket = $rootScope.$new();
 			$.extend(fmSocket, {
 				padData: null,
@@ -15,10 +17,12 @@
 				types: { },
 
 				on : function(eventName, fn) {
-					if(fn)
-						fn = fn.fmWrapApply(fmSocket);
+					if(!listeners[eventName]) {
+						listeners[eventName] = [ ];
+						socket.on(eventName, simulateEvent.bind(null, eventName).fmWrapApply(fmSocket));
+					}
 
-					return socket.on.apply(socket, [ eventName, fn ]);
+					listeners[eventName].push(fn);
 			    },
 
 				removeListener: socket.removeListener.bind(socket),
@@ -47,7 +51,9 @@
 
 				updateBbox : function(bbox) {
 					fmSocket.bbox = bbox;
-					return fmSocket.emit("updateBbox", bbox);
+					return fmSocket.emit("updateBbox", bbox).then(function(obj) {
+						receiveMultiple(obj);
+					});
 				}
 			});
 
@@ -169,13 +175,27 @@
 
 			function setPadId(padId) {
 				fmSocket.padId = padId;
-				return fmSocket.emit("setPadId", padId).then(function(padData) {
-					setPadData(padData);
+				return fmSocket.emit("setPadId", padId).then(function(obj) {
 					fmSocket.disconnected = false;
+
+					receiveMultiple(obj);
 				}).catch(function(err) {
 					fmSocket.serverError = err;
 					socket.disconnect();
 				});
+			}
+
+			function receiveMultiple(obj) {
+				for(var i in obj || { })
+					obj[i].forEach(simulateEvent.bind(null, i));
+			}
+
+			function simulateEvent(eventName, data) {
+				if(listeners[eventName]) {
+					listeners[eventName].forEach(function(listener) {
+						listener(data);
+					})
+				}
 			}
 
 			return fmSocket;

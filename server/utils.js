@@ -1,6 +1,8 @@
 var stream = require("stream");
 var util = require("util");
 var Promise = require("promise");
+var es = require("event-stream");
+var combine = require("stream-combiner");
 
 function isInBbox(position, bbox) {
 	if(position.lat > bbox.top || position.lat < bbox.bottom)
@@ -11,76 +13,18 @@ function isInBbox(position, bbox) {
 		return (position.lon > bbox.left && position.lon < bbox.right);
 }
 
-function filterStream(inStream, filterFunction) {
-	var ret = new stream.Readable({ objectMode: true });
-	inStream.on("data", function(data) {
-		var data = filterFunction(data);
-		if(data != null)
-			ret.push(data);
-	}).on("end", function() {
-		ret.push();
-	}).on("error", function(err) {
-		ret.emit("error", err);
-	});
-
-	ret._read = function() {
-	};
-
-	return ret;
-}
-
 function filterStreamPromise(inStream, filterFunction) {
-	var error = false;
-
-	var ret = new stream.Readable({ objectMode: true });
-
-	var running = false;
-	var queue = [ ];
-
-	function handleQueue() {
-		if(error || running)
-			return;
-
-		if(queue.length > 0) {
-			var next = queue.shift();
-			if(next == null) {
-				ret.push(null);
-			} else {
-				running = true;
-				Promise.nodeify(filterFunction)(next, function(err, newData) {
-					running = false;
-
-					if(error)
-						return;
-
-					if(err) {
-						error = true;
-						ret.emit("error", err);
-					} else if(newData != null) {
-						ret.push(newData);
-					}
-
-					setImmediate(handleQueue);
-				});
-			}
-		}
-	}
-
-	inStream.on("data", function(data) {
-		if(data != null)
-			queue.push(data);
-		handleQueue();
-	}).on("end", function() {
-		queue.push(null);
-		handleQueue();
-	}).on("error", function(err) {
-		ret.emit("error", err);
-	});
-
-	ret._read = function() {
-	};
-
-	return ret;
+	return combine(
+		inStream,
+		es.map(function(data, callback) {
+			filterFunction(data).then(function(newData) {
+				if(newData == null)
+					callback();
+				else
+					callback(null, newData);
+			}).catch(callback);
+		})
+	);
 }
 
 function extend(obj1, obj2) {
@@ -261,9 +205,38 @@ function round(number, digits) {
 	return Math.round(number*fac)/fac;
 }
 
+function streamToArrayPromise(stream) {
+	return new Promise(function(resolve, reject) {
+		var writer = es.writeArray(function(err, array) {
+			if(err)
+				reject(err);
+			else
+				resolve(array);
+		});
+
+		stream.pipe(writer);
+		stream.on("error", reject);
+	});
+}
+
+function promiseAllObject(obj) {
+	var keys = [ ];
+	var values = [ ];
+	for(var i in obj) {
+		keys.push(i);
+		values.push(Promise.resolve(obj[i]));
+	}
+
+	return Promise.all(values).then(function(objs) {
+		var ret = { };
+		for(var i=0; i<objs.length; i++)
+			ret[keys[i]] = objs[i];
+		return ret;
+	});
+}
+
 module.exports = {
 	isInBbox : isInBbox,
-	filterStream : filterStream,
 	filterStreamPromise : filterStreamPromise,
 	extend : extend,
 	calculateDistance : calculateDistance,
@@ -273,5 +246,7 @@ module.exports = {
 	streamEachPromise : streamEachPromise,
 	escapeXml : escapeXml,
 	isoDate : isoDate,
-	round: round
+	round: round,
+	streamToArrayPromise: streamToArrayPromise,
+	promiseAllObject: promiseAllObject
 };
