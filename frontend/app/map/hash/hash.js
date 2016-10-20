@@ -148,6 +148,8 @@
 
 				if(typeof obj.q == "string")
 					ret.push(obj.q);
+				else if(typeof obj.s == "string")
+					ret.push(obj.s);
 				else if(typeof obj.q == "object") {
 					Object.keys(obj.q).sort(function(a, b){return a-b}).forEach(function(i) {
 						ret.push(obj.q[i]);

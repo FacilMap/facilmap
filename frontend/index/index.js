@@ -3,6 +3,9 @@
 	fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
 		$scope.padId = decodeURIComponent(location.pathname.match(/[^\/]*$/)[0]);
 
+		if(location.search && (!location.hash || location.hash == "#"))
+			history.replaceState(null, "", fm.URL_PREFIX + ($scope.padId || "") + "#" + location.search.replace(/^\?/, ""));
+
 		$timeout(function() {
 			var map = fmMap.getMap("map");
 
