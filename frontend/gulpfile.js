@@ -23,7 +23,10 @@ var files = [
 	"app/**/*.js",
 	"app/**/*.css",
 	"app/**/*.html",
-	"assets/**/*.css"
+	"assets/**/*.js",
+	"assets/**/*.css",
+	"index/**/*.js",
+	"index/**/*.css"
 ];
 
 gulp.task("default", [ "index" ]);
@@ -108,7 +111,7 @@ gulp.task("all", [ "deps", "app" ], function() {
 				sourcemaps.write("./sourcemaps")
 			),
 			combine(
-				gulp.src([ "deref.html", "opensearch.xml" ]),
+				gulp.src([ "index/deref.html", "index/opensearch.xml" ]),
 				img64()
 			)
 		),
@@ -118,7 +121,7 @@ gulp.task("all", [ "deps", "app" ], function() {
 
 gulp.task("index", [ "all" ], function() {
 	return combine(
-		gulp.src("index.html"),
+		gulp.src("index/index.html", { base: path.resolve(__dirname) }),
 		img64(),
 		concat("build/index.html"),
 		inject(gulp.src([ "build/all.js", "build/all.css" ], { read: false }), { relative: true, removeTags: true }),
@@ -127,5 +130,5 @@ gulp.task("index", [ "all" ], function() {
 });
 
 gulp.task("watch", [ "index" ], function() {
-	gulp.watch([ "index.html", "bower.json" ].concat(files), [ "index" ]);
+	gulp.watch([ "index/index.html", "bower.json" ].concat(files), [ "index" ]);
 });
