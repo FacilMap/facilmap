@@ -41,33 +41,23 @@
 			};
 
 			scope.loadSuggestions = function(destination) {
-				return $q(function(resolve, reject) {
-					if(destination.suggestionQuery == destination.query)
-						return resolve();
+				if(destination.suggestionQuery == destination.query)
+					return $q.resolve();
 
-					if(destination.query.trim() != "") {
-						var query = destination.query;
+				if(destination.query.trim() != "") {
+					var query = destination.query;
 
-						map.loadStart();
-						map.socket.emit("find", { query: query }, function(err, results) {
-							map.loadEnd();
+					return map.socket.emit("find", { query: query }).then(function(results) {
+						if(fmUtils.isSearchId(query) && results.length > 0 && results[0].display_name)
+							destination.query = query = results[0].display_name;
 
-							if(err) {
-								map.messages.showMessage("danger", err);
-								return reject(err);
-							}
-
-							if(fmUtils.isSearchId(query) && results.length > 0 && results[0].display_name)
-								destination.query = query = results[0].display_name;
-
-							destination.suggestions = results;
-							destination.suggestionQuery = query;
-							destination.selectedSuggestionIdx = 0;
-
-							resolve();
-						});
-					}
-				});
+						destination.suggestions = results;
+						destination.suggestionQuery = query;
+						destination.selectedSuggestionIdx = 0;
+					}).catch(function(err) {
+						map.messages.showMessage("danger", err);
+					});
+				}
 			};
 
 			scope.route = function(dragging, noZoom) {
@@ -85,11 +75,7 @@
 						return destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
 					});
 
-					return $q(function(resolve, reject) {
-						map.socket.emit("getRoute", { destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode }, function(err, res) {
-							err ? reject(err) : resolve(res);
-						});
-					});
+					return map.socket.emit("getRoute", { destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
 				}).then(function(route) {
 					route.routePoints = points;
 					route.routeMode = mode;

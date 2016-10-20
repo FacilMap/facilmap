@@ -79,9 +79,8 @@
 
 		$scope['delete'] = function(type) {
 			$scope.error = null;
-			map.socket.emit("deleteType", { id: type.id }, function(err) {
-				if(err)
-					$scope.error = err;
+			map.socket.emit("deleteType", { id: type.id }).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 	});
@@ -105,11 +104,10 @@
 
 		$scope.save = function() {
 			$scope.error = null;
-			map.socket.emit($scope.type.id == null ? "addType" : "editType", $scope.type, function(err) {
-				if(err)
-					return $scope.error = err;
-
+			map.socket.emit($scope.type.id == null ? "addType" : "editType", $scope.type).then(function() {
 				$scope.$close();
+			}).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 	});

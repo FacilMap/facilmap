@@ -22,12 +22,11 @@
 	    return function(map) {
 		    return {
 			    exportGpx : function() {
-				    map.socket.emit("exportGpx", { useTracks: true }, function(err, gpx) {
-					    if(err)
-							return map.messages.showMessage("danger", err);
-
+					map.socket.emit("exportGpx", { useTracks: true }).then(function(gpx) {
 					    saveAs(new Blob([ gpx ], { type: "application/gpx+xml" }), map.socket.padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + '.gpx');
-				    })
+				    }).catch(function(err) {
+				    	map.messages.showMessage("danger", err);
+				    });
 			    }
 		    };
 	    };

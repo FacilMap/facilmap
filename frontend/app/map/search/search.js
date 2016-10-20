@@ -27,13 +27,7 @@
 						return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
 					var q = scope.searchString;
-					map.loadStart();
-					map.socket.emit("find", { query: scope.searchString, loadUrls: true }, function(err, results) {
-						map.loadEnd();
-
-						if(err)
-							return map.messages.showMessage("danger", err);
-
+					map.socket.emit("find", { query: scope.searchString, loadUrls: true }).then(function(results) {
 						if(fmUtils.isSearchId(q) && results.length > 0 && results[0].display_name)
 							scope.searchString = q = results[0].display_name;
 
@@ -45,6 +39,8 @@
 							loadSearchResults(parseFiles([ results ]), noZoom);
 						else
 							loadSearchResults(results, noZoom);
+					}).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				}
 			};
@@ -118,17 +114,13 @@
 			map.mapEvents.$on("longclick", function(e, latlng) {
 				clickMarker.clearLayers();
 
-				map.loadStart();
-				map.socket.emit("find", { query: "geo:" + latlng.lat + "," + latlng.lng + "?z=" + map.map.getZoom(), loadUrls: false }, function(err, results) {
-					map.loadEnd();
-
-					if(err)
-						return map.messages.showMessage("danger", err);
-
+				map.socket.emit("find", { query: "geo:" + latlng.lat + "," + latlng.lng + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
 					clickMarker.clearLayers();
 
 					if(results.length > 0)
 						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
+				}).catch(function(err) {
+					map.messages.showMessage("danger", err);
 				});
 			});
 

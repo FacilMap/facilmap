@@ -262,9 +262,7 @@
 				addLine: function(type) {
 					map.map.closePopup();
 
-					map.socket.emit("getLineTemplate", { typeId: type.id }, function(err, line) {
-						if(err)
-							return map.messages.showMessage("danger", err);
+					map.socket.emit("getLineTemplate", { typeId: type.id }).then(function(line) {
 
 						line.routePoints = [ ];
 						line.trackPoints = [ ];
@@ -308,13 +306,12 @@
 						};
 
 						handler = map.addClickListener(mapClick, mouseMove);
+					}).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				},
 				createLine: function(type, routePoints, properties) {
-					map.socket.emit("addLine", $.extend({ routePoints: routePoints, typeId: type.id }, properties), function(err, line) {
-						if(err)
-							return map.messages.showMessage("danger", err);
-
+					map.socket.emit("addLine", $.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
 						linesUi.editLine(line);
 
 						// We have to wait until the server sends us the trackPoints of the line
@@ -324,6 +321,8 @@
 								removeWatcher();
 							}
 						});
+					}).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				},
 				moveLine: function(line) {
@@ -347,17 +346,15 @@
 
 						if(save) {
 							line.trackPoints = { };
-							map.socket.emit("editLine", { id: line.id, routePoints: newPoints }, function(err) {
-								if(err)
-									map.messages.showMessage("danger", err);
+							map.socket.emit("editLine", { id: line.id, routePoints: newPoints }).catch(function(err) {
+								map.messages.showMessage("danger", err);
 							});
 						}
 					}
 				},
 				deleteLine: function(line) {
-					map.socket.emit("deleteLine", line, function(err) {
-						if(err)
-							map.messages.showMessage("danger", err);
+					map.socket.emit("deleteLine", line).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				}
 			};
@@ -379,11 +376,10 @@
 			var lineObj = ng.copy($scope.line);
 			delete lineObj.trackPoints;
 
-			map.socket.emit("editLine", lineObj, function(err) {
-				if(err)
-					return $scope.error = err;
-
+			map.socket.emit("editLine", lineObj).then(function() {
 				$scope.$close();
+			}).catch(function(err) {
+				return $scope.error = err;
 			});
 		};
 

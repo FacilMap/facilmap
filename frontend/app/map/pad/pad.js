@@ -85,20 +85,18 @@
 			};
 
 			if(create) {
-				map.socket.emit("createPad", newData, function(err) {
-					if(err)
-						return $scope.error = err;
-
+				map.socket.emit("createPad", newData).then(function() {
 					map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 
 					$scope.$close();
+				}).catch(function(err) {
+					$scope.error = err;
 				});
 			} else {
-				map.socket.emit("editPad", newData, function(err) {
-					if(err)
-						return $scope.error = err;
-
+				map.socket.emit("editPad", newData).then(function() {
 					$scope.$close();
+				}).catch(function(err) {
+					$scope.error = err;
 				});
 			}
 		};

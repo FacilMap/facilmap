@@ -104,11 +104,10 @@
 
 						if(save) {
 							var pos = markersById[marker.id].getLatLng();
-							map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lng }, function(err) {
-								if(err)
-									return map.messages.showMessage("danger", err);
-
+							map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
 								markersById[marker.id].openPopup();
+							}).catch(function(err) {
+								map.messages.showMessage("danger", err);
 							});
 						}
 					}
@@ -123,9 +122,8 @@
 					markersById[marker.id].dragging.enable();
 				},
 				deleteMarker: function(marker) {
-					map.socket.emit("deleteMarker", marker, function(err) {
-						if(err)
-							map.messages.showMessage("danger", err);
+					map.socket.emit("deleteMarker", marker).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				},
 				addMarker: function(type) {
@@ -145,14 +143,13 @@
 					});
 				},
 				createMarker: function(pos, type, properties) {
-					map.socket.emit("addMarker", $.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties), function(err, marker) {
-						if(err)
-							return map.messages.showMessage("danger", err);
-
+					map.socket.emit("addMarker", $.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 						markersUi._addMarker(marker);
 
 						markersById[marker.id].openPopup();
 						markersUi.editMarker(marker);
+					}).catch(function(err) {
+						map.messages.showMessage("danger", err);
 					});
 				}
 			};
@@ -170,11 +167,10 @@
 
 		$scope.save = function() {
 			$scope.error = null;
-			map.socket.emit("editMarker", $scope.marker, function(err) {
-				if(err)
-					return $scope.error = err;
-
+			map.socket.emit("editMarker", $scope.marker).then(function() {
 				$scope.$close();
+			}).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 

@@ -37,20 +37,13 @@
 		$scope.save = function(makeDefault) {
 			var view = map.getCurrentView();
 			view.name = $scope.name;
-			map.socket.emit("addView", view, function(err, view) {
-				if(err)
-					return $scope.error = err;
-
-				if(makeDefault) {
-					map.socket.emit("editPad", { defaultViewId: view.id }, function(err) {
-						if(err)
-							return $scope.error = err;
-
-						$scope.$close();
-					});
-				}
-				else
-					$scope.$close();
+			map.socket.emit("addView", view).then(function(view) {
+				if(makeDefault)
+					return map.socket.emit("editPad", { defaultViewId: view.id });
+			}).then(function() {
+				$scope.$close();
+			}).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 	});
@@ -61,16 +54,14 @@
 		};
 
 		$scope.makeDefault = function(view) {
-			map.socket.emit("editPad", { defaultViewId: view.id }, function(err) {
-				if(err)
-					$scope.error = err;
+			map.socket.emit("editPad", { defaultViewId: view.id }).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 
 		$scope['delete'] = function(view) {
-			map.socket.emit("deleteView", { id: view.id }, function(err) {
-				if(err)
-					$scope.error = err;
+			map.socket.emit("deleteView", { id: view.id }).catch(function(err) {
+				$scope.error = err;
 			});
 		};
 	});
