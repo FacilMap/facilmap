@@ -275,24 +275,25 @@
 			map.aboutUi = fmMapAbout(map);
 			map.importUi = fmMapImport(map);
 			map.searchUi = fmMapSearch(map);
+			map.hashUi = fmMapHash(map);
 
 			fmMapLegend(map);
-			fmMapHash(map);
 
 			if(padId) {
 				var loadedWatcher = map.socket.$watch("padData", function(padData) {
 					if(padData != null) {
 						loadedWatcher();
 
-						if(!map.map._loaded) // hash control might have set a location already
+						if(!map.hashUi.hasLocationHash())
 							map.displayView(padData.defaultView);
-
+						map.hashUi.init();
 						scope.loaded = true;
 					}
 				});
 			} else {
-				if(!map.map._loaded) // hash control might have set a location already
+				if(!map.hashUi.hasLocationHash())
 					map.displayView();
+				map.hashUi.init();
 				scope.loaded = true;
 			}
 

@@ -2,9 +2,31 @@
 
 	fm.app.factory("fmMapHash", function($rootScope, fmUtils) {
 		return function(map) {
-			var hashControl = new L.Hash(map.map);
+			var fmMapHash = {
+				hasLocationHash: function() {
+					return !!parseHash(location.hash);
+				},
 
-			hashControl.parseHash = function(hash) {
+				init: function() {
+					var hashControl = new L.Hash(map.map);
+
+					hashControl.parseHash = parseHash.fmWrapApply($rootScope);
+					hashControl.formatHash = formatHash;
+
+					// hashControl calls hashControl.onHashChange(), which will run hashControl.update() with 100ms delay.
+					// In the meantime, we will already set the map view, which triggers hashControl.onMapMove and replace
+					// the location hash. So we have to call hashControl.update() right now.
+					hashControl.update();
+					clearTimeout(hashControl.changeTimeout);
+					hashControl.changeTimeout = null;
+
+					map.map.on("layeradd", hashControl.onMapMove, hashControl);
+					map.map.on("layerremove", hashControl.onMapMove, hashControl);
+					map.mapEvents.$on("searchchange", hashControl.onMapMove.bind(hashControl));
+				}
+			};
+
+			function parseHash(hash) {
 				if(hash.indexOf('#') === 0) {
 					hash = hash.substr(1);
 				}
@@ -42,9 +64,9 @@
 				}
 
 				return ret;
-			}.fmWrapApply($rootScope);
+			}
 
-			hashControl.formatHash = function(mapObj) {
+			function formatHash(mapObj) {
 				var ret = L.Hash.formatHash(mapObj);
 
 				var l = [ ];
@@ -60,16 +82,7 @@
 					ret += "/" + searchHash.join("/");
 
 				return ret;
-			};
-
-			// hashControl calls hashControl.onHashChange(), which will run hashControl.update() with 100ms delay.
-			// In the meantime, we will already set the map view, which triggers hashControl.onMapMove and replace
-			// the location hash. So we have to call hashControl.update() right now.
-			hashControl.update();
-
-			map.map.on("layeradd", hashControl.onMapMove, hashControl);
-			map.map.on("layerremove", hashControl.onMapMove, hashControl);
-			map.mapEvents.$on("searchchange", hashControl.onMapMove.bind(hashControl));
+			}
 
 			function decodeQueryString(str) {
 				var obj = { };
@@ -146,6 +159,8 @@
 
 				return ret;
 			}
+
+			return fmMapHash;
 		};
 	});
 
