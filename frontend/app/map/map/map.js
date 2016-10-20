@@ -47,6 +47,19 @@
 					attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
+				L.tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
+					fmName: "Map1.eu",
+					fmBase: true,
+					fmKey: "Map1",
+					attribution: $sce.trustAsHtml('© <a href="http://map1.eu/" target="_blank">Map1.eu</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					noWrap: true
+				}),
+				L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+					fmName: "OpenTopoMap",
+					fmBase: true,
+					fmKey: "Topo",
+					attribution: $sce.trustAsHtml('© <a href="https://opentopomap.org/" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC-BY-SA</a>) / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>')
+				}),
 				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
 					fmName: "OpenCycleMap",
 					fmBase: true,
@@ -65,6 +78,13 @@
 					fmName: "Public transportation",
 					fmKey: "OPTM",
 					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					zIndex: 300,
+					noWrap: true
+				}),
+				L.tileLayer("http://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
+					fmName: "Hiking paths",
+					fmKey: "Hike",
+					attribution: $sce.trustAsHtml('© <a href="http://osm.lonvia.de/world_hiking.html" target="_blank">Lonvia\'s Hiking Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
