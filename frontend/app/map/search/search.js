@@ -13,6 +13,7 @@
 
 			scope.search = function(noZoom) {
 				scope.searchResults = null;
+				scope.activeResult = null;
 				scope.loadedSearchString = "";
 				clearRenders();
 
@@ -42,18 +43,19 @@
 					}).catch(function(err) {
 						map.messages.showMessage("danger", err);
 					});
-				}
+				} else
+					map.mapEvents.$emit("searchchange");
 			};
 
 			scope.showResult = function(result, noZoom) {
-				if(scope.showAll) {
+				if(scope.showAll && scope.searchResults.length > 1) {
 					if(!noZoom)
 						_flyToBounds(layerGroup.getBounds());
 
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
-					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup);
+					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup, noZoom);
 
 					if(!noZoom) {
 						if(result.lat && result.lon && result.zoom)
@@ -136,7 +138,7 @@
 				scope.searchResults = results;
 
 				if(results && results.length > 0)
-					scope.showAll ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults[0], noZoom);
+					(scope.showAll && results.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults[0], noZoom);
 			}
 
 			function parseFiles(files) {
@@ -229,7 +231,7 @@
 				return ret;
 			}
 
-			function renderResult(query, results, result, showPopup, layerGroup) {
+			function renderResult(query, results, result, showPopup, layerGroup, noZoom) {
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
@@ -274,10 +276,12 @@
 				}
 
 				if(showPopup) {
-					if(result.marker)
-						result.marker.openPopup();
-					else if(result.layer)
-						result.layer.openPopup();
+					var popupLayer = result.marker || result.layer;
+					if(popupLayer) {
+						if(noZoom)
+							popupLayer._popup.options.autoPan = false;
+						popupLayer.openPopup();
+					}
 				}
 			}
 
@@ -340,6 +344,9 @@
 
 				$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
 					popup.update();
+
+					// Might have been set to false in renderResult() if noZoom
+					popup.options.autoPan = true;
 				}); });
 			}
 
@@ -348,7 +355,7 @@
 					el.show();
 
 					if(scope.searchResults) {
-						if(scope.showAll)
+						if(scope.showAll && scope.searchResults.length > 1)
 							scope.showAllResults();
 						 else if(scope.searchResults.length > 0)
 							scope.showResult(scope.activeResult || scope.searchResults[0]);
@@ -387,7 +394,7 @@
 
 				getCurrentSearchForHash: function() {
 					if(el.is(":visible")) {
-						if(!scope.showAll && scope.activeResult && scope.activeResult.id)
+						if(((scope.searchResults && scope.searchResults.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 							return [ scope.activeResult.id ];
 						else if(scope.loadedSearchString)
 							return [ scope.loadedSearchString ];
