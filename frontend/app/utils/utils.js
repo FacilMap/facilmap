@@ -501,6 +501,145 @@
 			return layer;
 		};
 
+		fmUtils.bboxIntersect = function(bbox1, bbox2) {
+			bbox1 = L.latLngBounds(bbox1);
+			bbox2 = L.latLngBounds(bbox2);
+			return L.latLngBounds([
+				[ Math.max(bbox1.getSouth(), bbox2.getSouth()), Math.max(bbox1.getWest(), bbox2.getWest())],
+				[ Math.min(bbox1.getNorth(), bbox2.getNorth()), Math.min(bbox1.getEast(), bbox2.getEast())]
+			]);
+		};
+
+		fmUtils.graticule = function(map, options) {
+			var ret = L.simpleGraticule($.extend({
+				redraw: "moveend",
+				minDistance: 100 // Minimum distance between two lines in pixels
+			}, options));
+
+			/*var redraw = ret.redraw;
+			ret.redraw = function() {
+				var center = this._map.project(this._map.getCenter());
+				var pixelDist = this._map.getSize().x / 20;
+				var dist = Math.abs(this._map.unproject(center.subtract([ pixelDist, 0 ])).lng - this._map.unproject(center.add([ pixelDist, 0 ])).lng);
+
+				if(dist > 45)
+					this.options.interval = 45;
+				else if(dist > 30)
+					this.options.interval = 30;
+				else {
+					var fac = 1;
+					while(dist>1) { fac*=10; dist/=10; }
+					while(dist<=0.1) { fac/=10; dist*=10; }
+
+					// Dist is now some number between 0.1 and 1, so we can round it conveniently and then devide it again by fac to get back to the original dist
+
+					if(dist > 0.5)
+						this.options.interval = 1/fac;
+					else if(dist > 0.2)
+						this.options.interval = 0.5/fac;
+					else if(dist > 0.1)
+						this.options.interval = 0.2/fac;
+					else
+						this.options.interval = 0.1/fac;
+				}
+
+				return redraw.apply(this, arguments);
+			};*/
+
+			ret.constructLines = function() {
+				var bounds = this._map.getBounds();
+
+				// Fix drawing of lines outside of bounds
+				this._bounds = fmUtils.bboxIntersect(bounds, [[-85, -180], [85, 180]]);
+
+				// Fix drawing of labels outside of bounds
+				var getBoundsBkp = this._map.getBounds;
+				this._map.getBounds = function() {
+					return fmUtils.bboxIntersect(getBoundsBkp.apply(this, arguments), [[-85, -180], [85, 180]])
+				};
+
+				// Longitude
+				var center = this._map.project(bounds.getCenter());
+				var dist = niceRound(fmUtils.round(this._map.unproject(center.add([ this.options.minDistance / 2, 0 ])).lng - this._map.unproject(center.subtract([ this.options.minDistance / 2, 0 ])).lng, 12), false);
+				var west = Math.max(bounds.getWest(), -180);
+				var east = Math.min(bounds.getEast(), 180);
+				for (var lng = Math.ceil(fmUtils.round(west/dist, 12))*dist; lng <= east; lng+=dist) {
+					this.addLayer(this.buildXLine(lng));
+					this.addLayer(this.buildLabel('gridlabel-horiz', fmUtils.round(lng, 12)));
+				}
+
+				// Latitude
+				if(bounds.getNorth() > 0) {
+					var lat = Math.max(0, bounds.getSouth());
+					var first = true;
+					while(lat < bounds.getNorth() && lat < 85) {
+						var point = this._map.project([ lat, bounds.getCenter().lng ]);
+						var point2LatLng = this._map.unproject(point.subtract([ 0, this.options.minDistance ]));
+
+						var dist = niceRound(fmUtils.round(point2LatLng.lat - lat, 12), true);
+						var lat = fmUtils.round(first ? Math.ceil(fmUtils.round(lat/dist, 12))*dist : Math.ceil(fmUtils.round(point2LatLng.lat/dist, 12))*dist, 2);
+
+						first = false;
+
+						this.addLayer(this.buildYLine(lat));
+						this.addLayer(this.buildLabel('gridlabel-vert', lat));
+					}
+				}
+				if(bounds.getSouth() < 0) {
+					var lat = Math.min(0, bounds.getNorth());
+					var first = true;
+					while(lat > bounds.getSouth() && lat > -85) {
+						var point = this._map.project([ lat, bounds.getCenter().lng ]);
+						var point2LatLng = this._map.unproject(point.add([ 0, this.options.minDistance ]));
+
+						var dist = niceRound(fmUtils.round(lat - point2LatLng.lat, 12), true);
+						var lat = fmUtils.round(first ? Math.floor(fmUtils.round(lat/dist, 12))*dist : Math.floor(fmUtils.round(point2LatLng.lat/dist, 12))*dist, 2);
+
+						first = false;
+
+						this.addLayer(this.buildYLine(lat));
+						this.addLayer(this.buildLabel('gridlabel-vert', lat));
+					}
+				}
+
+				this._map.getBounds = getBoundsBkp;
+			};
+
+			function niceRound(number, variableDistance) {
+				if(number <= 0 || !isFinite(number))
+					throw "Invalid number " + number;
+				else {
+					if(variableDistance && number >= 5)
+						return 5;
+					if(number <= 10) {
+						var fac = 1;
+						while(number>1) { fac*=10; number/=10; }
+						while(number<=0.1) { fac/=10; number*=10; }
+
+						// Dist is now some number between 0.1 and 1, so we can round it conveniently and then multiply it again by fac to get back to the original dist
+
+						if(number == 0.1)
+							return fmUtils.round(0.1*fac, 12);
+						else if(number <= 0.2)
+							return fmUtils.round(0.2*fac, 12);
+						else if(number <= 0.5)
+							return fmUtils.round(0.5*fac, 12);
+						else
+							return 1*fac;
+					} else if(number <= 30)
+						return 30;
+					else if(number <= 45)
+						return 45;
+					else if(number <= 60)
+						return 60;
+					else
+						return 90;
+				}
+			}
+
+			return ret;
+		};
+
 		return fmUtils;
 	});
 

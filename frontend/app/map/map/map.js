@@ -102,6 +102,12 @@
 					zIndex: 300,
 					noWrap: true
 				}),
+				fmUtils.graticule(map, {
+					fmName: "Graticule",
+					fmKey: "grid",
+					zIndex: 300,
+					noWrap: true
+				}),
 				fmUtils.freieTonne(map, {
 					fmName: "Sea marks",
 					fmKey: "FrTo",
