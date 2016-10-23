@@ -113,14 +113,25 @@
 				clickMarker.clearLayers();
 			});
 
-			map.mapEvents.$on("longclick", function(e, latlng) {
+			map.mapEvents.$on("longmousedown", function(e, latlng) {
+				var mouseUpHasHappened = false;
+				map.map.once("mouseup", function() { setTimeout(function() {
+					mouseUpHasHappened = true;
+					fmUtils.setCloseOnClick(clickMarker, null); // Reset to default
+				}, 0); });
+
 				clickMarker.clearLayers();
 
-				map.socket.emit("find", { query: "geo:" + latlng.lat + "," + latlng.lng + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
+				map.socket.emit("find", { query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
 					clickMarker.clearLayers();
 
-					if(results.length > 0)
+					if(results.length > 0) {
 						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
+
+						// Prevent closing popup on mouseup because of map.options.closePopupOnClick
+						if(!mouseUpHasHappened)
+							fmUtils.setCloseOnClick(clickMarker, false);
+					}
 				}).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});

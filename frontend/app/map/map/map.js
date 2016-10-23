@@ -28,7 +28,7 @@
 			var map = this;
 
 			map.el = el;
-			map.mapEvents = $rootScope.$new(true); /* Event types: longclick, layerchange */
+			map.mapEvents = $rootScope.$new(true); /* Event types: longmousedown, layerchange */
 			map.socket = fmSocket(padId);
 
 			map.layers = { };
@@ -171,11 +171,11 @@
 			if(L.Browser.touch && !L.Browser.pointer) {
 				// Long click will call the contextmenu event
 				map.map.on("contextmenu", function(e) {
-					map.mapEvents.$emit("longclick", e.latlng);
+					map.mapEvents.$emit("longmousedown", e.latlng);
 				}.fmWrapApply(map.mapEvents));
 			} else {
-				fmUtils.onLongClick(map.map, function(e) {
-					map.mapEvents.$emit("longclick", e.latlng);
+				fmUtils.onLongMouseDown(map.map, function(e) {
+					map.mapEvents.$emit("longmousedown", e.latlng);
 				}.fmWrapApply(map.mapEvents));
 			}
 
