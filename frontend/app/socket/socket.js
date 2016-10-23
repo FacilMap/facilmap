@@ -54,6 +54,12 @@
 					return fmSocket.emit("updateBbox", bbox).then(function(obj) {
 						receiveMultiple(obj);
 					});
+				},
+
+				createPad: function(data) {
+					return fmSocket.emit("createPad", data).then(function(obj) {
+						receiveMultiple(obj);
+					});
 				}
 			});
 

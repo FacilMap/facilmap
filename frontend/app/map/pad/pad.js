@@ -85,7 +85,7 @@
 			};
 
 			if(create) {
-				map.socket.emit("createPad", newData).then(function() {
+				map.socket.createPad(newData).then(function() {
 					map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 
 					$scope.$close();
