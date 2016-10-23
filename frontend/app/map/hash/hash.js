@@ -35,7 +35,7 @@
 				if(hash.indexOf("=") != -1 && hash.indexOf("/") == -1)
 					args = oldToNew(hash);
 				else
-					args = hash.split("/");
+					args = hash.split("/").map(decodeURIComponentTolerantly);
 
 				var ret = L.Hash.parseHash(args.slice(0, 3).join("/"));
 
@@ -75,11 +75,13 @@
 						l.push(i);
 				}
 
-				ret += "/" + l.join("-");
+				var additionalParts = [ l.join("-") ];
 
 				var searchHash = map.searchUi.getCurrentSearchForHash();
 				if(searchHash)
-					ret += "/" + searchHash.join("/");
+					additionalParts = additionalParts.concat(searchHash);
+
+				ret += "/" + additionalParts.map(encodeURIComponent).join("/");
 
 				return ret;
 			}
