@@ -149,7 +149,7 @@
 						fmSocket.disconnected = false; // Otherwise it gets set when padData arrives
 
 					if(fmSocket.bbox)
-						fmSocket.emit("updateBbox", fmSocket.bbox);
+						fmSocket.updateBbox(fmSocket.bbox);
 				}
 			};
 
