@@ -182,6 +182,8 @@ var Type = conn.define("Type", {
 	symbolFixed: { type: Sequelize.BOOLEAN, allowNull: true},
 	defaultWidth: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
 	widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
+	defaultMode: { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: true },
+	modeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 
 	fields: {
 		type: Sequelize.TEXT,
@@ -303,7 +305,7 @@ function connect(force) {
 				return Promise.all(promises);
 			}),
 			queryInterface.describeTable('Types').then(function(attributes) {
-				return Promise.all([ 'defaultColour', 'colourFixed', 'defaultSize', 'sizeFixed', 'defaultSymbol', 'symbolFixed', 'defaultWidth', 'widthFixed' ].map(function(col) {
+				return Promise.all([ 'defaultColour', 'colourFixed', 'defaultSize', 'sizeFixed', 'defaultSymbol', 'symbolFixed', 'defaultWidth', 'widthFixed', 'defaultMode', 'modeFixed' ].map(function(col) {
 					if(!attributes[col])
 						return queryInterface.addColumn('Types', col, Type.attributes[col]);
 				}));

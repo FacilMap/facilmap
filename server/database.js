@@ -279,6 +279,8 @@ function _updateObjectStyles(objectStream, isLine) {
 				update.symbol = type.defaultSymbol;
 			if(isLine && type.widthFixed && object.width != type.defaultWidth)
 				update.width = type.defaultWidth;
+			if(isLine && type.modeFixed && object.mode != "track" && object.mode != type.defaultMode)
+				update.mode = type.defaultMode;
 
 			types[object.typeId].fields.forEach(function(field) {
 				if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
@@ -306,12 +308,22 @@ function _updateObjectStyles(objectStream, isLine) {
 				}
 			});
 
+			var ret = [ ];
+
 			if(Object.keys(update).length > 0) {
 				utils.extend(object, update);
 
 				if(object.id) // Objects from getLineTemplate() do not have an ID
-					return (isLine ? _updateLine : _updateMarker)(object.id, update);
+					ret.push((isLine ? _updateLine : _updateMarker)(object.id, update));
+
+				if(object.id && isLine && "mode" in update) {
+					ret.push(_calculateRouting(object).then(function(trackPoints) {
+						return _setLinePoints(object.padId, object.id, trackPoints);
+					}));
+				}
 			}
+
+			return Promise.all(ret);
 		});
 	});
 }
@@ -340,6 +352,8 @@ function getLineTemplate(data) {
 			line.colour = res.type.defaultColour;
 		if(res.type.defaultWidth)
 			line.width = res.type.defaultWidth;
+		if(res.type.defaultMode)
+			res.mode = res.type.defaultMode;
 
 		return _updateObjectStyles(line, true).then(function() {
 			return line;
@@ -349,15 +363,19 @@ function getLineTemplate(data) {
 
 function createLine(padId, data) {
 	var defaultValsP = backend.getType(data.typeId).then(function(type) {
-		if(type.defaultColour)
+		if(type.defaultColour && !("colour" in data))
 			data.colour = type.defaultColour;
-		if(type.defaultWidth)
+		if(type.defaultWidth && !("width" in data))
 			data.width = type.defaultWidth;
+		if(type.defaultMode && !("mode" in data))
+			data.mode = type.defaultMode;
 	});
 
-	var calculateRoutingP = _calculateRouting(data);
+	var calculateRoutingP = defaultValsP.then(function() {
+		return _calculateRouting(data);
+	});
 
-	var createLineP = Promise.all([ defaultValsP, calculateRoutingP ]).then(function() {
+	var createLineP = calculateRoutingP.then(function() {
 		return _createLine(padId, data);
 	});
 

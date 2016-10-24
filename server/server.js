@@ -249,6 +249,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 						defaultSize: "number", sizeFixed: "boolean",
 						defaultSymbol: "string", symbolFixed: "boolean",
 						defaultWidth: "number", widthFixed: "boolean",
+						defaultMode: "string", modeFixed: "boolean",
 						fields: [ {
 							name: "string",
 							type: "string",
@@ -275,6 +276,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 						defaultSize: "number", sizeFixed: "boolean",
 						defaultSymbol: "string", symbolFixed: "boolean",
 						defaultWidth: "number", widthFixed: "boolean",
+						defaultMode: "string", modeFixed: "boolean",
 						fields: [ {
 							name: "string",
 							type: "string",

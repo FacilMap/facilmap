@@ -11,7 +11,7 @@
 			<div class="col-sm-9"><input id="edit-line-name" ng-model="line.name" class="form-control" /></div>
 		</div>
 
-		<div class="form-group">
+		<div class="form-group" ng-show="canControl('mode')">
 			<label for="edit-line-mode" class="col-sm-3 control-label">Routing mode</label>
 			<div class="col-sm-9"><select id="edit-line-mode" ng-model="line.mode" class="form-control" ng-disabled="line.mode == 'track'">
 				<option value="">None</option>
