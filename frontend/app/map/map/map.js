@@ -167,6 +167,7 @@
 			map.startMarkerColour = "00ff00";
 			map.dragMarkerColour = "ffd700";
 			map.endMarkerColour = "ff0000";
+			map.searchMarkerColour = "000000";
 
 			if(L.Browser.touch && !L.Browser.pointer) {
 				// Long click will call the contextmenu event

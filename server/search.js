@@ -105,7 +105,7 @@ function find(query, loadUrls) {
 							short_name: name,
 							display_name : name,
 							zoom: lonlat.zoom != null ? lonlat.zoom : 15,
-							icon: "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png"
+							icon: null
 						} ];
 					} else
 						throw body ? body.error : "Invalid response from name finder";
@@ -154,7 +154,7 @@ function prepareSearchResult(result) {
 		zoom: result.zoom,
 		extratags: result.extratags,
 		geojson: result.geojson,
-		icon: result.icon || "https://nominatim.openstreetmap.org/images/mapicons/poi_place_city.p.20.png",
+		icon: result.icon && result.icon.replace(/^.*\/([a-z0-9_]+)\.[a-z0-9]+\.[0-9]+\.[a-z0-9]+$/i, "$1"),
 		type: result.type == "yes" ? result.category : result.type,
 		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : null
 	};

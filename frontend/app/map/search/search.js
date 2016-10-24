@@ -268,12 +268,7 @@
 
 				if(result.lat != null && result.lon != null) {
 					result.marker = L.marker([ result.lat, result.lon ], {
-						icon: L.icon({
-							iconUrl: result.icon.replace(/\.[a-z]+\.[0-9]+\.png$/, iconSuffix),
-							iconSize: [ 32, 32 ],
-							iconAnchor: [ 16, 16 ],
-							popupAnchor: [ 0, -16 ]
-						})
+						icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon)
 					})
 						.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
