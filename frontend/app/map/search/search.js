@@ -55,7 +55,7 @@
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
-					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup, noZoom);
+					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
 
 					if(!noZoom) {
 						if(result.lat && result.lon && result.zoom)
@@ -73,8 +73,9 @@
 			scope.showAllResults = function(noZoom) {
 				clearRenders();
 
-				for(var i=0; i<scope.searchResults.length; i++)
-					renderResult(scope.loadedSearchString, scope.searchResults, scope.searchResults[i], false, layerGroup);
+				scope.searchResults.forEach(function(result) {
+					renderResult(scope.loadedSearchString, scope.searchResults, result, false, layerGroup, function() { scope.activeResult = result; });
+				});
 
 				if(!noZoom)
 					_flyToBounds(layerGroup.getBounds());
@@ -244,20 +245,20 @@
 				return ret;
 			}
 
-			function renderResult(query, results, result, showPopup, layerGroup, noZoom) {
+			function renderResult(query, results, result, showPopup, layerGroup, onOpen, noZoom) {
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 					result.layer = L.geoJson(result.geojson, {
 						pointToLayer: function(geoJsonPoint, latlng) {
 						    return L.marker(latlng, {
-						    	icon: fmUtils.createMarkerIcon("ff0000")
+						    	icon: fmUtils.createMarkerIcon("ff0000", 35)
 						    });
 						}
 					})
 					.bindPopup($("<div/>")[0], map.popupOptions)
 					.on("popupopen", function(e) {
-						scope.activeResult = result;
 						renderResultPopup(query, results, result, e.popup);
-					})
+						onOpen && onOpen();
+					}.fmWrapApply(scope))
 					.on("popupclose", function(e) {
 						ng.element(e.popup.getContent()).scope().$destroy();
 					})
@@ -272,9 +273,9 @@
 					})
 						.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
-							scope.activeResult = result;
 							renderResultPopup(query, results, result, e.popup);
-						})
+							onOpen && onOpen();
+						}.fmWrapApply(scope))
 						.on("popupclose", function(e) {
 							ng.element(e.popup.getContent()).scope().$destroy();
 						})
