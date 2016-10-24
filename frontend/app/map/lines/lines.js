@@ -241,19 +241,19 @@
 					};
 				},
 				editLine: function(line) {
+					var scope = map.socket.$new();
+
 					var dialog = $uibModal.open({
 						templateUrl: "map/lines/edit-line.html",
-						scope: map.socket,
+						scope: scope,
 						controller: "fmMapLineEditCtrl",
 						size: "lg",
 						resolve: {
-							line: function() { return line; },
 							map: function() { return map; }
 						}
 					});
 
-					// TODO: use child scope!
-					var preserve = fmUtils.preserveObject(map.socket, "lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
+					var preserve = fmUtils.preserveObject(scope, "lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
 						dialog.dismiss();
 					});
 
@@ -363,9 +363,7 @@
 		};
 	});
 
-	fm.app.controller("fmMapLineEditCtrl", function($scope, map, line) {
-		$scope.line = line;
-
+	fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 		$scope.canControl = function(what) {
 			return map.typesUi.canControl($scope.types[$scope.line.typeId], what);
 		};

@@ -7,9 +7,11 @@
 					ret.editPadSettings(true);
 				},
 				editPadSettings : function(create) {
+					var scope = map.socket.$new();
+
 					var dialog = $uibModal.open({
 						templateUrl: "map/pad/pad-settings.html",
-						scope: map.socket,
+						scope: scope,
 						controller: "fmMapPadSettingsCtrl",
 						size: "lg",
 						resolve: {
@@ -19,8 +21,7 @@
 					});
 
 					if(!create) {
-						// TODO: use child scope!
-						var preserve = fmUtils.preserveObject(map.socket, "padData", "padData", function() {
+						var preserve = fmUtils.preserveObject(scope, "padData", "padData", function() {
 							dialog.dismiss();
 						});
 

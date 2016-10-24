@@ -75,19 +75,19 @@
 					}); });
 				},
 				editMarker: function(marker) {
+					var scope = map.socket.$new();
+
 					var dialog = $uibModal.open({
 						templateUrl: "map/markers/edit-marker.html",
-						scope: map.socket,
+						scope: scope,
 						controller: "fmMapMarkerEditCtrl",
 						size: "lg",
 						resolve: {
-							marker: function() { return marker; },
 							map: function() { return map; }
 						}
 					});
 
-					// TODO: use child scope!
-					var preserve = fmUtils.preserveObject(map.socket, "markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
+					var preserve = fmUtils.preserveObject(scope, "markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
 						dialog.dismiss();
 					});
 
@@ -158,9 +158,7 @@
 		};
 	});
 
-	fm.app.controller("fmMapMarkerEditCtrl", function($scope, map, marker) {
-		$scope.marker = marker;
-
+	fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 		$scope.canControl = function(what) {
 			return map.typesUi.canControl($scope.types[$scope.marker.typeId], what);
 		};
