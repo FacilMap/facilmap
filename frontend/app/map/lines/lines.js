@@ -153,7 +153,7 @@
 
 					function createTempMarker(huge) {
 						var marker = L.marker([0,0], {
-							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35, null, 1000),
+							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35, null, huge ? 1000 : null),
 							draggable: true
 						})
 							.on("dblclick", function() {

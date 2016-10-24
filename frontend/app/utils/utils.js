@@ -294,7 +294,7 @@
 
 			function makeTemporaryHoverMarker() {
 				temporaryHoverMarker = L.marker([0,0], {
-					icon: fmUtils.createMarkerIcon(colour, true),
+					icon: fmUtils.createMarkerIcon(colour, 35, null, 1000),
 					draggable: true
 				}).once("dragstart", function() {
 					temporaryHoverMarker.once("dragend", function() {

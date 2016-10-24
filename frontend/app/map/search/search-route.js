@@ -300,7 +300,7 @@
 				},
 
 				submit: function(noZoom) {
-					scope.route(noZoom);
+					scope.route(false, noZoom);
 				}
 			};
 			routeUi.hide();
