@@ -10,6 +10,18 @@
 				Control {{type.type}} colour
 			</label>
 		</div>
+		<div class="checkbox" ng-if="type.type == 'marker'" ng-class="{disabled: !canControl('size')}">
+			<label>
+				<input type="checkbox" ng-model="field.controlSize" ng-disabled="!canControl('size')">
+				Control {{type.type}} size
+			</label>
+		</div>
+		<div class="checkbox" ng-if="type.type == 'marker'" ng-class="{disabled: !canControl('symbol')}">
+			<label>
+				<input type="checkbox" ng-model="field.controlSymbol" ng-disabled="!canControl('symbol')">
+				Control {{type.type}} icon
+			</label>
+		</div>
 		<div class="checkbox" ng-if="type.type == 'line'" ng-class="{disabled: !canControl('width')}">
 			<label>
 				<input type="checkbox" ng-model="field.controlWidth" ng-disabled="!canControl('width')">
@@ -21,6 +33,8 @@
 				<tr>
 					<th>Option</th>
 					<th ng-if="field.controlColour">Colour</th>
+					<th ng-if="field.controlSize">Size</th>
+					<th ng-if="field.controlSymbol">Icon</th>
 					<th ng-if="field.controlWidth">Width</th>
 					<th></th>
 					<th class="move"></th>
@@ -30,6 +44,8 @@
 				<tr ng-repeat="option in field.options">
 					<td><input type="text" ng-model="option.value" class="form-control"></td>
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
+					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
+					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
 					<td class="td-buttons"><button type="button" ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
 					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
@@ -37,8 +53,7 @@
 			</tbody>
 			<tfoot>
 				<tr>
-					<td colspan="4"><button type="button" ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
-					<td class="move"></td>
+					<td><button type="button" ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
 				</tr>
 			</tfoot>
 		</table>

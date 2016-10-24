@@ -42,6 +42,7 @@
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "main-bower-files": "^2.13.1",
+    "svgo": "^0.7.1",
     "through2": "^2.0.1"
   }
 }

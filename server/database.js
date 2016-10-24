@@ -259,7 +259,7 @@ function _updateObjectStyles(objectStream, isLine) {
 		}).then(function() {
 			return Promise.all(types[object.typeId].fields.map(function(field) {
 				return Promise.resolve().then(function() {
-					if(field.type == "dropdown" && (field.controlColour || (isLine && field.controlWidth))) {
+					if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
 						var _find = function(value) {
 							for(var j=0; j<(field.options || []).length; j++) {
 								if(field.options[j].key == value)
@@ -274,6 +274,10 @@ function _updateObjectStyles(objectStream, isLine) {
 						if(option != null) {
 							if(field.controlColour && object.colour != option.colour)
 								update.colour = option.colour;
+							if(!isLine && field.controlSize && object.size != option.size)
+								update.size = option.size;
+							if(!isLine && field.controlSymbol && object.symbol != option.symbol)
+								update.symbol = option.symbol;
 							if(isLine && field.controlWidth && object.width != option.width)
 								update.width = option.width;
 						}

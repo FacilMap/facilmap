@@ -74,7 +74,9 @@ var Marker = conn.define("Marker", {
 	"lat" : getLatType(),
 	"lon" : getLonType(),
 	name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled marker"; } },
-	colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour }
+	colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
+	size : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
+	symbol : { type: Sequelize.TEXT, allogNull: true }
 });
 
 Pad.hasMany(Marker, { foreignKey: "padId" });
@@ -201,6 +203,18 @@ var Type = conn.define("Type", {
 								throw new Error("Invalid colour "+obj[i].options[j].colour+" in field "+obj[i].name+".");
 						}
 					}
+					if(obj[i].controlSize) {
+						if(!obj[i].options || obj[i].options.length < 1)
+							throw new Error("No options specified for size-controlling field "+obj[i].name+".");
+						for(var j=0; j<obj[i].options.length; j++) {
+							if(!obj[i].options[j].size || !isFinite(obj[i].options[j].size) || obj[i].options[j].size < 15)
+								throw new Error("Invalid size "+obj[i].options[j].size+" in field "+obj[i].name+".");
+						}
+					}
+					if(obj[i].controlSymbol) {
+						if(!obj[i].options || obj[i].options.length < 1)
+							throw new Error("No options specified for icon-controlling field "+obj[i].name+".");
+					}
 					if(obj[i].controlWidth) {
 						if(!obj[i].options || obj[i].options.length < 1)
 							throw new Error("No options specified for width-controlling field "+obj[i].name+".");
@@ -254,6 +268,17 @@ function connect(force) {
 						})
 					);
 				}
+
+				return Promise.all(promises);
+			}),
+			queryInterface.describeTable('Markers').then(function(attributes) {
+				var promises = [ ];
+
+				// Add size and symbol columns
+				if(!attributes.size)
+					promises.push(queryInterface.addColumn('Markers', 'size', Marker.attributes.size));
+				if(!attributes.symbol)
+					promises.push(queryInterface.addColumn('Markers', 'symbol', Marker.attributes.symbol));
 
 				return Promise.all(promises);
 			})

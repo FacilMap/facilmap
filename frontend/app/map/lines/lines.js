@@ -153,7 +153,7 @@
 
 					function createTempMarker(huge) {
 						var marker = L.marker([0,0], {
-							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, huge),
+							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35, null, 1000),
 							draggable: true
 						})
 							.on("dblclick", function() {
@@ -211,7 +211,7 @@
 							temporaryHoverMarker.once("dragend", function() {
 								// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
 								// the dragging gets interrupted
-								this.setIcon(fmUtils.createMarkerIcon("ffd700"));
+								this.setIcon(fmUtils.createMarkerIcon("ffd700", 35));
 							}, temporaryHoverMarker);
 
 							var latlng = temporaryHoverMarker.getLatLng();

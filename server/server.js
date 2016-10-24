@@ -124,7 +124,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			addMarker : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object } ))
+					if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", typeId: "number", data: Object } ))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -136,7 +136,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			editMarker : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", typeId: "number", data: Object }))
+					if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", typeId: "number", data: Object }))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -241,7 +241,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			addType : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
+					if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ] }] } ))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -253,7 +253,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			editType : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", width: "number" } ] }] } ))
+					if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ] }] } ))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)

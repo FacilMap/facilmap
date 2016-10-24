@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmUtils", function($parse, L, Clipboard) {
+	fm.app.factory("fmUtils", function($parse, L, Clipboard, fmIcons) {
 
 		var fmUtils = { };
 
@@ -20,27 +20,53 @@
 			return randomPadId;
 		};
 
-		fmUtils.createMarkerGraphic = function(colour, huge, randomTrash) {
+		fmUtils.createSymbol = function(colour, height, symbol) {
+			var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
+			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + height + '" height="' + height + '" version="1.1">' +
+				'<g transform="scale(' + (height / 580) + ')">' + fmIcons[symbol].replace(/#000/g, '#' + colour) + '</g>' +
+			'</svg>';
+
+			return "data:image/svg+xml,"+encodeURIComponent(svg);
+		};
+
+		fmUtils.createMarkerGraphic = function(colour, height, symbol, padding) {
 			var borderColour = fmUtils.makeTextColour(colour, 0.3);
+			height = 1*height;
+			var width = Math.round(height * 23 / 31);
+			padding = padding || 0;
 
 			var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
+				'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + (width + padding*2) + '" height="' + (height + padding*2) + '" version="1.1">' +
+					'<g transform="translate(' + padding + ' ' + padding + ') scale(' + (width / 23) + ' ' + (height / 31) + ')">' +
+						'<path style="stroke:#' + borderColour + ';stroke-linecap:round;fill:#' + colour + '" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z" />' +
+						(symbol && fmIcons[symbol] ?
+							'<g transform="translate(2.9 3.3) scale(' + (17 / 580) + ')">' + fmIcons[symbol].replace(/#000/g, '#' + borderColour) + '</g>' :
+							'<circle style="fill:#' + borderColour + '" cy="11" cx="11.5" r="3" />'
+						) +
+					'</g>' +
+				'</svg>';
+
+			/*var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
 				'<svg xmlns="http://www.w3.org/2000/svg" width="' + (huge ? 10000 : 21) + '" height="' + (huge ? 10000 : 25) + '" version="1.1">' +
 				(randomTrash ? '<!--' + randomTrash + '-->' : '') + // Chrome seems to have a bug where it applies the CSS styles of one image the same code
 				(huge ? '<g transform="matrix(1,0,0,1,5000,5000)">' : '') +
 				'<path style="fill:#' + colour + ';stroke:#' + borderColour + ';stroke-width:1" d="M 0.65579587,8.5137553 10.493963,0.66460903 20.332132,8.5137553 10.493963,24.088823 Z" />' +
 				'<path style="fill:#' + borderColour + ';stroke:none" d="m 12.953591,9.6886404 c 0,1.3406746 -1.090141,2.4275066 -2.434898,2.4275066 -1.3447591,0 -2.4348995,-1.086832 -2.4348995,-2.4275066 0,-1.3406751 1.0901404,-2.4275068 2.4348995,-2.4275068 1.344757,0 2.434898,1.0868317 2.434898,2.4275068 z" />' +
 				(huge ? '</g>' : '') +
-				'</svg>';
+				'</svg>';*/
 
-			return "data:image/svg+xml;base64,"+btoa(svg);
+			return "data:image/svg+xml,"+encodeURIComponent(svg);
 		};
 
-		fmUtils.createMarkerIcon = function(colour, huge) {
+		fmUtils.createMarkerIcon = function(colour, height, symbol, padding) {
+			padding = padding || 0;
+			height = 1*height;
+			var width = height * 23 / 31;
 			return L.icon({
-				iconUrl: fmUtils.createMarkerGraphic(colour, huge),
-				iconSize: huge ? [10000, 10000] : [21, 25],
-				iconAnchor: huge ? [5010, 5025] : [10, 25],
-				popupAnchor: [0, -25]
+				iconUrl: fmUtils.createMarkerGraphic(colour, height, symbol, padding),
+				iconSize: [padding*2 + width, padding*2 + height],
+				iconAnchor: [padding + Math.round(width/2), padding + height],
+				popupAnchor: [0, -height]
 			});
 		};
 

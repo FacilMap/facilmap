@@ -5,7 +5,7 @@
 			restrict: 'A',
 			link: function(scope, element, attrs) {
 				$(element).TouchSpin({
-					min: 1
+					min: attrs.fmSpinnerMin != null ? 1*attrs.fmSpinnerMin : 1
 				}).on('change', function() {
 					setTimeout(function() {
 						scope.$apply(function() {
@@ -62,6 +62,76 @@
 				});
 			}
 		}
+	});
+
+	fm.app.directive("fmIconPicker", function(fmIcons, fmUtils, $compile, $templateCache, $rootScope, $parse) {
+		var pickerScope, picker;
+
+		return {
+			restrict: 'A',
+			link: function(scope, element, attrs) {
+				var watcher,watcher2;
+
+				function init() {
+					if(picker)
+						return;
+
+					pickerScope = $rootScope.$new();
+					pickerScope.icons = fmIcons;
+					picker = $($templateCache.get("ui/icon-picker.html")).appendTo("body");
+					$compile(picker)(pickerScope);
+				}
+
+				function open() {
+					init();
+
+					var $input = $(this);
+					var pos = $input.offset();
+					picker.show().offset({
+						top: pos.top + $input.outerHeight(),
+						left: pos.left
+					}).css("max-width", $input.outerWidth() + "px");
+
+					$(document).on("click keyup", handler);
+
+					watcher = scope.$watch(attrs.ngModel, function(newVal) {
+						pickerScope.selectedSymbol = newVal;
+					});
+
+					pickerScope.setSymbol = function(symbol) {
+						pickerScope.selectedSymbol = symbol;
+						$parse(attrs.ngModel).assign(scope, symbol);
+					};
+				}
+
+				function close() {
+					watcher();
+
+					picker.hide();
+					$(document).off("click keyup", handler);
+				}
+
+				function handler(e) {
+					var target = $(e.target);
+					if(!target.is(picker) && !$(document.activeElement).is(element))
+						close();
+				}
+
+				$(element).focus(open.fmWrapApply(scope));
+			}
+		};
+	});
+
+	fm.app.directive("fmIcon", function(fmUtils) {
+		return {
+			restrict: 'A',
+			scope: {
+				fmIcon: "<"
+			},
+			link: function(scope, element, attrs) {
+				element.attr("src", fmUtils.createSymbol("000000", 25, scope.fmIcon));
+			}
+		};
 	});
 
 	fm.app.directive("fmTitle", function() {

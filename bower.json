@@ -33,7 +33,8 @@
     "togeojson": "https://github.com/mapbox/togeojson/raw/master/togeojson.js",
     "osmtogeojson": "^2.2.12",
     "leaflet-hash": "https://raw.githubusercontent.com/mlevans/leaflet-hash/master/leaflet-hash.js",
-    "Leaflet.SimpleGraticule": "ablakey/Leaflet.SimpleGraticule"
+    "Leaflet.SimpleGraticule": "ablakey/Leaflet.SimpleGraticule",
+    "Open-SVG-Map-Icons": "twain47/Open-SVG-Map-Icons"
   },
   "resolutions": {
     "leaflet": "^1.0.1"

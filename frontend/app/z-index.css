@@ -1,4 +1,5 @@
 /* bootstrap popups have a z-index of 1050 (1060, 1070... for overlaying popups) */
+/* bootstrap popovers have a z-index of 1060, tooltips 1070 (makes no sense...) */
 /* OpenLayers Controls have z-index: 1008 (inside the map viewport) */
 
 .fm-map-disabled-cover {
@@ -9,7 +10,7 @@
 	z-index: 10002;
 }
 
-#colour-picker {
+#colour-picker,#icon-picker {
 	z-index: 1500;
 }
 
@@ -31,4 +32,8 @@
 
 .dropdown-menu {
 	z-index: 2000;
+}
+
+.tooltip {
+	z-index: 3000;
 }

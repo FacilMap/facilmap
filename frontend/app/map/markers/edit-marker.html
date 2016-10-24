@@ -16,6 +16,16 @@
 			<div class="col-sm-9"><input id="edit-marker-colour" ng-model="marker.colour" class="form-control" fm-colour-picker></div>
 		</div>
 
+		<div class="form-group" ng-show="canControl('size')">
+			<label for="edit-marker-size" class="col-sm-3 control-label">Size</label>
+			<div class="col-sm-9"><input id="edit-marker-size" ng-model="marker.size" class="form-control" fm-spinner fm-spinner-min="15"></div>
+		</div>
+
+		<div class="form-group" ng-show="canControl('symbol')">
+			<label for="edit-marker-symbol" class="col-sm-3 control-label">Icon</label>
+			<div class="col-sm-9"><input id="edit-marker-symbol" ng-model="marker.symbol" class="form-control" fm-icon-picker></div>
+		</div>
+
 		<div class="form-group" ng-repeat="field in types[marker.typeId].fields" ng-show="field.type != 'dropdown' || field.options.length > 1">
 			<label for="marker-{{$index}}-input" class="col-sm-3 control-label">{{field.name}}</label>
 			<div class="col-sm-9" fm-type-field="field" fm-type-field-model="marker.data[field.name]" fm-type-field-id="marker-{{$index}}-input"></div>

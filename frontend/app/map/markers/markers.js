@@ -15,7 +15,7 @@
 			var markersUi = {
 				_addMarker : function(marker) {
 					if(!markersById[marker.id]) {
-						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour)}).addTo(map.map)
+						markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.map)
 							.bindPopup($("<div/>")[0], map.popupOptions)
 							.on("popupopen", function(e) {
 								markersUi._renderMarkerPopup(map.socket.markers[marker.id] || marker);
@@ -31,7 +31,7 @@
 
 					markersById[marker.id]
 						.setLatLng([ marker.lat, marker.lon ])
-						.setIcon(fmUtils.createMarkerIcon(marker.colour));
+						.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
 
 					if(markersById[marker.id].isPopupOpen())
 						markersUi._renderMarkerPopup(marker);
@@ -174,9 +174,11 @@
 			});
 		};
 
-		$scope.$watch("marker.colour", function() {
+		$scope.$watchGroup([ "marker.colour", "marker.size", "marker.symbol" ], function() {
 			map.markersUi._addMarker($scope.marker);
 		});
+
+
 	});
 
 })(FacilMap, jQuery, angular);

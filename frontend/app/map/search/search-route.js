@@ -162,7 +162,7 @@
 
 					scope.routeObj.routePoints.forEach(function(point, i) {
 						var marker = L.marker([ point.lat, point.lon ], {
-							icon: fmUtils.createMarkerIcon(map.dragMarkerColour),
+							icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35),
 							draggable: true
 						}).addTo(map.map);
 
@@ -194,7 +194,7 @@
 				markers.forEach(function(marker, i) {
 					var colour = (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour);
 
-					marker.setIcon(fmUtils.createMarkerIcon(colour));
+					marker.setIcon(fmUtils.createMarkerIcon(colour, 35));
 				});
 			}
 

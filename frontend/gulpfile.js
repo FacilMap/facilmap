@@ -18,6 +18,7 @@ var sourcemaps = require("gulp-sourcemaps");
 var inject = require("gulp-inject");
 var img64 = require("./gulpfile-img64");
 var path = require("path");
+var icons = require("./gulpfile-icons");
 
 var files = [
 	"app/**/*.js",
@@ -66,9 +67,9 @@ gulp.task("deps", function() {
 	);
 });
 
-gulp.task("app", function() {
+gulp.task("app", [ "icons" ], function() {
 	return combine(
-		gulp.src(files, { base: process.cwd() + "/" }),
+		gulp.src(files.concat([ "build/icons.js" ]), { base: process.cwd() + "/" }),
 		gulpIf("**/*.html", combine(
 			img64(),
 			templateCache({ module: "facilmap", base: process.cwd() + "/app/" })
@@ -126,6 +127,15 @@ gulp.task("index", [ "all" ], function() {
 		concat("build/index.html"),
 		inject(gulp.src([ "build/all.js", "build/all.css" ], { read: false }), { relative: true, removeTags: true }),
 		gulp.dest(".")
+	);
+});
+
+gulp.task("icons", function() {
+	return combine(
+		gulp.src("../bower_components/Open-SVG-Map-Icons/svg/**/*.svg"),
+		newer("build/icons.js"),
+		icons("icons.js", "angular.module(\"facilmap\").constant(\"fmIcons\", %s);"),
+		gulp.dest("build")
 	);
 });
 
