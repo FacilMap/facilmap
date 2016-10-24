@@ -86,9 +86,11 @@
 				searchUi.hide();
 				routeUi.show();
 
-				if(scope.searchString.match(/ to /))
-					routeUi.setQueries(fmUtils.splitRouteQuery(scope.searchString));
-				else if(scope.loadedSearchString == scope.searchString)
+				if(scope.searchString.match(/ to /)) {
+					var spl = fmUtils.splitRouteQuery(scope.searchString);
+					routeUi.setQueries(spl.queries);
+					routeUi.setMode(spl.mode);
+				} else if(scope.loadedSearchString == scope.searchString)
 					routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
 				else
 					routeUi.setFrom(scope.searchString);
@@ -406,13 +408,13 @@
 				getCurrentSearchForHash: function() {
 					if(el.is(":visible")) {
 						if(((scope.searchResults && scope.searchResults.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
-							return [ scope.activeResult.id ];
+							return scope.activeResult.id;
 						else if(scope.loadedSearchString)
-							return [ scope.loadedSearchString ];
+							return scope.loadedSearchString;
 					} else {
 						var queries = routeUi.getQueries();
 						if(queries)
-							return queries.concat([ routeUi.getMode() ]);
+							return queries.join(" to ") + " by " + routeUi.getMode();
 					}
 				}
 			};

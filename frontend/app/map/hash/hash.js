@@ -52,16 +52,8 @@
 					}
 				}
 
-				var routeParams = args.slice(4);
-				if(routeParams.length >= 2) {
-					var mode = null;
-					if(routeParams.length > 2 && [ "car", "bicycle", "pedestrian" ].indexOf(routeParams[routeParams.length-1]) != -1)
-						mode = routeParams.pop();
-
-					map.searchUi.route(routeParams, mode, !!ret);
-				} else if(routeParams.length == 1) {
-					map.searchUi.search(routeParams[0], !!ret, !fmUtils.isSearchId(routeParams[0]));
-				}
+				if(args[4])
+					map.searchUi.search(args[4], !!ret, !fmUtils.isSearchId(args[4]));
 
 				return ret;
 			}
