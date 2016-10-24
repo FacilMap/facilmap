@@ -4,7 +4,7 @@ html,body {
 	padding: 0;
 }
 
-.checkbox.disabled label {
+.disabled label {
 	color: #aaa;
 }
 

@@ -56,6 +56,9 @@
 					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 				},
 				canControl : function(type, what, ignoreField) {
+					if(type[what+"Fixed"] && ignoreField !== null)
+						return false;
+
 					var idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);
 					for(var i=0; i<(type && type.fields && type.fields || [ ]).length; i++) {
 						if(type.fields[i][idx] && (!ignoreField || type.fields[i] !== ignoreField))
@@ -104,11 +107,21 @@
 
 		$scope.save = function() {
 			$scope.error = null;
+
+			[ "defaultWidth", "defaultSize", "defaultColour" ].forEach(function(prop) {
+				if($scope.type[prop] == "")
+					$scope.type[prop] = null;
+			});
+
 			map.socket.emit($scope.type.id == null ? "addType" : "editType", $scope.type).then(function() {
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;
 			});
+		};
+
+		$scope.canControl = function(what) {
+			return map.typesUi.canControl($scope.type, what, null);
 		};
 	});
 

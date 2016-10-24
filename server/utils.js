@@ -111,7 +111,7 @@ function _stripObject(obj, type) {
 		return obj;
 	}
 	else if(type == "number" && typeof obj == "string")
-		return isNaN(obj = 1*obj) ? FAILURE : obj;
+		return obj == "" ? null : isNaN(obj = 1*obj) ? FAILURE : obj;
 	else if(type == "string" && typeof obj == "number")
 		return ""+obj;
 	else if(typeof type == "string")

@@ -241,7 +241,22 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			addType : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", name: "string", type: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ] }] } ))
+					if(!utils.stripObject(data, {
+						id: "number",
+						name: "string",
+						type: "string",
+						defaultColour: "string", colourFixed: "boolean",
+						defaultSize: "number", sizeFixed: "boolean",
+						defaultSymbol: "string", symbolFixed: "boolean",
+						defaultWidth: "number", widthFixed: "boolean",
+						fields: [ {
+							name: "string",
+							type: "string",
+							default: "string",
+							controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
+							options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
+						}]
+					}))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -253,7 +268,21 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			editType : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", name: "string", fields: [ { name: "string", type: "string", default: "string", controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean", options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ] }] } ))
+					if(!utils.stripObject(data, {
+						id: "number",
+						name: "string",
+						defaultColour: "string", colourFixed: "boolean",
+						defaultSize: "number", sizeFixed: "boolean",
+						defaultSymbol: "string", symbolFixed: "boolean",
+						defaultWidth: "number", widthFixed: "boolean",
+						fields: [ {
+							name: "string",
+							type: "string",
+							default: "string",
+							controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
+							options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
+						}]
+					}))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)

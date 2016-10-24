@@ -174,6 +174,15 @@ Pad.belongsTo(View, { as: "defaultView", foreignKey: "defaultViewId", constraint
 var Type = conn.define("Type", {
 	name: { type: Sequelize.TEXT, allowNull: false },
 	type: { type: Sequelize.ENUM("marker", "line"), allowNull: false },
+	defaultColour: { type: Sequelize.STRING(6), allowNull: true, validate: validateColour },
+	colourFixed: { type: Sequelize.BOOLEAN, allowNull: true },
+	defaultSize: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 15 } },
+	sizeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
+	defaultSymbol: { type: Sequelize.TEXT, allowNull: true},
+	symbolFixed: { type: Sequelize.BOOLEAN, allowNull: true},
+	defaultWidth: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
+	widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
+
 	fields: {
 		type: Sequelize.TEXT,
 		allowNull: false,
@@ -199,7 +208,7 @@ var Type = conn.define("Type", {
 						if(!obj[i].options || obj[i].options.length < 1)
 							throw new Error("No options specified for colour-controlling field "+obj[i].name+".");
 						for(var j=0; j<obj[i].options.length; j++) {
-							if(!obj[i].options[j].colour || !obj[i].options[j].colour.match(/^[a-fA-F0-9]{6}$/))
+							if(!obj[i].options[j].colour || !obj[i].options[j].colour.match(validateColour.is))
 								throw new Error("Invalid colour "+obj[i].options[j].colour+" in field "+obj[i].name+".");
 						}
 					}
@@ -225,6 +234,17 @@ var Type = conn.define("Type", {
 					}
 				}
 			}
+		}
+	}
+}, {
+	validate: {
+		defaultValsNotNull: function() {
+			if(this.colourFixed && this.defaultColour == null)
+				throw "Fixed colour cannot be undefined.";
+			if(this.sizeFixed && this.defaultSize == null)
+				throw "Fixed size cannot be undefined.";
+			if(this.widthFixed && this.defaultWidth == null)
+				throw "Fixed width cannot be undefined.";
 		}
 	}
 });
@@ -281,6 +301,12 @@ function connect(force) {
 					promises.push(queryInterface.addColumn('Markers', 'symbol', Marker.attributes.symbol));
 
 				return Promise.all(promises);
+			}),
+			queryInterface.describeTable('Types').then(function(attributes) {
+				return Promise.all([ 'defaultColour', 'colourFixed', 'defaultSize', 'sizeFixed', 'defaultSymbol', 'symbolFixed', 'defaultWidth', 'widthFixed' ].map(function(col) {
+					if(!attributes[col])
+						return queryInterface.addColumn('Types', col, Type.attributes[col]);
+				}));
 			})
 		].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
 			// allow null on Pad.name, Marker.name, Line.name

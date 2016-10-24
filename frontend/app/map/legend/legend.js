@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmMapLegend", function($sce, fmUtils, $templateCache, $compile) {
+	fm.app.factory("fmMapLegend", function($sce, fmUtils, $templateCache, $compile, fmIcons) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -9,6 +9,20 @@
 				for(var i in scope.types) {
 					var type = scope.types[i];
 					var items = [ ];
+
+					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && fmIcons[type.defaultSymbol]) || (type.type == "line" && type.widthFixed)) {
+						var item = { value: type.name };
+
+						if(type.colourFixed)
+							item.colour = type.defaultColour;
+						if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && fmIcons[type.defaultSymbol])
+							item.symbol = type.defaultSymbol;
+						if(type.type == "line" && type.widthFixed)
+							item.width = type.defaultWidth;
+
+						items.push(item);
+					}
+
 					type.fields.forEach(function(field) {
 						if(!field.type == "dropdown" || (!field.controlColour && (type.type != "marker" || !field.controlSymbol) && (type.type != "line" || !field.controlWidth)))
 							return;

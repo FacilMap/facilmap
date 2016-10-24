@@ -208,7 +208,18 @@ function getPadMarkers(padId, bbox) {
 }
 
 function createMarker(padId, data) {
-	return backend.createMarker(padId, data).then(function(data) {
+	return Promise.resolve().then(function() {
+		return backend.getType(data.typeId);
+	}).then(function(type) {
+		if(type.defaultColour)
+			data.colour = type.defaultColour;
+		if(type.defaultSize)
+			data.size = type.defaultSize;
+		if(type.defaultSymbol)
+			data.symbol = type.defaultSymbol;
+
+		return backend.createMarker(padId, data)
+	}).then(function(data) {
 		listeners.notifyPadListeners(padId, "marker", _getMarkerDataFunc(data));
 
 		return _updateObjectStyles(data, false).then(function() {
@@ -253,44 +264,54 @@ function _updateObjectStyles(objectStream, isLine) {
 					if(type == null)
 						throw "Type "+object.typeId+" does not exist.";
 
-					types[object.typeId] = type;
+					return types[object.typeId] = type;
 				});
-			}
-		}).then(function() {
-			return Promise.all(types[object.typeId].fields.map(function(field) {
-				return Promise.resolve().then(function() {
-					if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
-						var _find = function(value) {
-							for(var j=0; j<(field.options || []).length; j++) {
-								if(field.options[j].key == value)
-									return field.options[j];
-							}
-							return null;
-						};
+			} else
+				return types[object.typeId];
+		}).then(function(type) {
+			var update = { };
 
-						var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
+			if(type.colourFixed && object.colour != type.defaultColour)
+				update.colour = type.defaultColour;
+			if(!isLine && type.sizeFixed && object.size != type.defaultSize)
+				update.size = type.defaultSize;
+			if(!isLine && type.symbolFixed && object.symbol != type.defaultSymbol)
+				update.symbol = type.defaultSymbol;
+			if(isLine && type.widthFixed && object.width != type.defaultWidth)
+				update.width = type.defaultWidth;
 
-						var update = { };
-						if(option != null) {
-							if(field.controlColour && object.colour != option.colour)
-								update.colour = option.colour;
-							if(!isLine && field.controlSize && object.size != option.size)
-								update.size = option.size;
-							if(!isLine && field.controlSymbol && object.symbol != option.symbol)
-								update.symbol = option.symbol;
-							if(isLine && field.controlWidth && object.width != option.width)
-								update.width = option.width;
+			types[object.typeId].fields.forEach(function(field) {
+				if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
+					var _find = function(value) {
+						for(var j=0; j<(field.options || []).length; j++) {
+							if(field.options[j].key == value)
+								return field.options[j];
 						}
+						return null;
+					};
 
-						utils.extend(object, update);
+					var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
 
-						if(Object.keys(update).length > 0 && object.id) // Objects from getLineTemplate() do not have an ID
-							return (isLine ? _updateLine : _updateMarker)(object.id, update);
-						else
-							return Promise.resolve();
+					var update = { };
+					if(option != null) {
+						if(field.controlColour && object.colour != option.colour)
+							update.colour = option.colour;
+						if(!isLine && field.controlSize && object.size != option.size)
+							update.size = option.size;
+						if(!isLine && field.controlSymbol && object.symbol != option.symbol)
+							update.symbol = option.symbol;
+						if(isLine && field.controlWidth && object.width != option.width)
+							update.width = option.width;
 					}
-				});
-			}));
+				}
+			});
+
+			if(Object.keys(update).length > 0) {
+				utils.extend(object, update);
+
+				if(object.id) // Objects from getLineTemplate() do not have an ID
+					return (isLine ? _updateLine : _updateMarker)(object.id, update);
+			}
 		});
 	});
 }
@@ -309,7 +330,17 @@ function getPadLinesWithPoints(padId, bboxWithZoom) {
 }
 
 function getLineTemplate(data) {
-	return backend.getLineTemplate(data).then(function(line) {
+	return utils.promiseAllObject({
+		lineTemplate: backend.getLineTemplate(data),
+		type: backend.getType(data.typeId)
+	}).then(function(res) {
+		var line = res.lineTemplate;
+
+		if(res.type.defaultColour)
+			line.colour = res.type.defaultColour;
+		if(res.type.defaultWidth)
+			line.width = res.type.defaultWidth;
+
 		return _updateObjectStyles(line, true).then(function() {
 			return line;
 		});
@@ -317,9 +348,16 @@ function getLineTemplate(data) {
 }
 
 function createLine(padId, data) {
+	var defaultValsP = backend.getType(data.typeId).then(function(type) {
+		if(type.defaultColour)
+			data.colour = type.defaultColour;
+		if(type.defaultWidth)
+			data.width = type.defaultWidth;
+	});
+
 	var calculateRoutingP = _calculateRouting(data);
 
-	var createLineP = calculateRoutingP.then(function() {
+	var createLineP = Promise.all([ defaultValsP, calculateRoutingP ]).then(function() {
 		return _createLine(padId, data);
 	});
 
@@ -331,8 +369,8 @@ function createLine(padId, data) {
 		return _updateObjectStyles(lineData, true);
 	});
 
-	return Promise.all([ calculateRoutingP, createLineP, setLinePointsP, updateLineStyleP ]).then(function(res) {
-		return res[1];
+	return Promise.all([ defaultValsP, calculateRoutingP, createLineP, setLinePointsP, updateLineStyleP ]).then(function(res) {
+		return res[2];
 	});
 }
 
