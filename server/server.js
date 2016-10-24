@@ -11,6 +11,7 @@ var search = require("./search");
 var Promise = require("promise");
 var express = require("express");
 var path = require("path");
+var compression = require("compression");
 
 var frontendPath = path.resolve(__dirname + "/../frontend");
 
@@ -30,6 +31,8 @@ Object.defineProperty(Error.prototype, "toJSON", {
 var dbP = database.connect();
 
 var app = express();
+
+app.use(compression());
 
 app.use(express.static(frontendPath + "/build/"));
 

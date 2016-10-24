@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "cheerio": "^0.22.0",
+    "compression": "^1.6.2",
     "compressjs": "^1.0.3",
     "event-stream": "^3.3.4",
     "express": "^4.14.0",
