@@ -294,7 +294,6 @@ function _updateObjectStyles(objectStream, isLine) {
 
 					var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
 
-					var update = { };
 					if(option != null) {
 						if(field.controlColour && object.colour != option.colour)
 							update.colour = option.colour;
