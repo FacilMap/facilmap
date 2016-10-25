@@ -34,7 +34,8 @@
     "osmtogeojson": "^2.2.12",
     "leaflet-hash": "https://raw.githubusercontent.com/mlevans/leaflet-hash/master/leaflet-hash.js",
     "Leaflet.SimpleGraticule": "ablakey/Leaflet.SimpleGraticule",
-    "Open-SVG-Map-Icons": "twain47/Open-SVG-Map-Icons"
+    "Open-SVG-Map-Icons": "twain47/Open-SVG-Map-Icons",
+    "filtrex": "https://raw.githubusercontent.com/joewalnes/filtrex/master/filtrex.js"
   },
   "resolutions": {
     "leaflet": "^1.0.1"

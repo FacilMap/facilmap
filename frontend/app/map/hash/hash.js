@@ -23,6 +23,7 @@
 					map.map.on("layeradd", hashControl.onMapMove, hashControl);
 					map.map.on("layerremove", hashControl.onMapMove, hashControl);
 					map.mapEvents.$on("searchchange", hashControl.onMapMove.bind(hashControl));
+					map.socket.on("filter", hashControl.onMapMove.bind(hashControl));
 				}
 			};
 
@@ -52,8 +53,9 @@
 					}
 				}
 
-				if(args[4])
-					map.searchUi.search(args[4], !!ret, !fmUtils.isSearchId(args[4]));
+				map.searchUi.search(args[4] || "", !!ret, !fmUtils.isSearchId(args[4]));
+
+				map.socket.setFilter(args[5] || "");
 
 				return ret;
 			}
@@ -71,7 +73,13 @@
 
 				var searchHash = map.searchUi.getCurrentSearchForHash();
 				if(searchHash)
-					additionalParts = additionalParts.concat(searchHash);
+					additionalParts.push(searchHash);
+
+				if(map.socket.filterExpr) {
+					if(!searchHash)
+						additionalParts.push("");
+					additionalParts.push(map.socket.filterExpr);
+				}
 
 				ret += "/" + additionalParts.map(encodeURIComponent).join("/");
 

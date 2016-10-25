@@ -5,11 +5,22 @@
 			var markersById = { };
 
 			map.socket.on("marker", function(data) {
-				markersUi._addMarker(data);
+				if(map.socket.filterFunc(data))
+					markersUi._addMarker(data);
 			});
 
 			map.socket.on("deleteMarker", function(data) {
 				markersUi._deleteMarker(data);
+			});
+
+			map.socket.on("filter", function() {
+				for(var i in map.socket.markers) {
+					var show = map.socket.filterFunc(map.socket.markers[i]);
+					if(markersById[i] && !show)
+						markersUi._deleteMarker(map.socket.markers[i]);
+					else if(!markersById[i] && show)
+						markersUi._addMarker(map.socket.markers[i]);
+				}
 			});
 
 			var markersUi = {

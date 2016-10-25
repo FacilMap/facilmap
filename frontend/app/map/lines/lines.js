@@ -7,7 +7,8 @@
 
 			map.socket.on("line", function(data) {
 				setTimeout(function() { // trackPoints needs to be copied over
-					linesUi._addLine(map.socket.lines[data.id]);
+					if(map.socket.filterFunc(map.socket.lines[data.id]))
+						linesUi._addLine(map.socket.lines[data.id]);
 				}, 0);
 			});
 
@@ -17,8 +18,19 @@
 
 			map.socket.on("linePoints", function(data) {
 				setTimeout(function() {
-					linesUi._addLine(map.socket.lines[data.id]);
+					if(map.socket.filterFunc(map.socket.lines[data.id]))
+						linesUi._addLine(map.socket.lines[data.id]);
 				}, 0);
+			});
+
+			map.socket.on("filter", function() {
+				for(var i in map.socket.lines) {
+					var show = map.socket.filterFunc(map.socket.lines[i]);
+					if(linesById[i] && !show)
+						linesUi._deleteLine(map.socket.lines[i]);
+					else if(!linesById[i] && show)
+						linesUi._addLine(map.socket.lines[i]);
+				}
 			});
 
 			var linesUi = {

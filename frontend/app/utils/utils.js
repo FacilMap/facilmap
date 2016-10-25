@@ -96,6 +96,10 @@
 			return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 		};
 
+		fmUtils.quoteRegExp = function(str) {
+			return (str+'').replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
+		};
+
 		fmUtils.round = function(number, digits) {
 			var fac = Math.pow(10, digits);
 			return Math.round(number*fac)/fac;

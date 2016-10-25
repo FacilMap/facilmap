@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmMapLegend", function($sce, fmUtils, $templateCache, $compile, fmIcons) {
+	fm.app.factory("fmMapLegend", function($sce, fmUtils, $templateCache, $compile, fmIcons, fmFilter) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -28,7 +28,7 @@
 							return;
 
 						(field.options || [ ]).forEach(function(option) {
-							var item = { value: option.value };
+							var item = { value: option.value, field: field.name };
 							if(field.controlColour)
 								item.colour = option.colour;
 							if(type.type == "marker" && field.controlSymbol)
@@ -40,7 +40,7 @@
 					});
 
 					if(items.length > 0)
-						scope.legendItems.push({ type: type.type, name: type.name, items: items });
+						scope.legendItems.push({ type: type.type, typeId: type.id, name: type.name, items: items });
 				}
 			}
 
@@ -64,6 +64,31 @@
 			resize();
 			scope.$watch(getMaxHeight, resize);
 			$(window).resize(resize);
+
+			scope.isFiltered = function(typeInfo, item) {
+				var obj = { typeId: typeInfo.typeId, data: { } };
+				if(item && item.field)
+					obj.data[item.field] = item.value;
+
+				return !map.socket.filterFunc(obj, true);
+			};
+
+			scope.toggleFilter = function(typeInfo, item) {
+				var filters = { };
+				if(!item || !item.field) // We are toggling the visibility of one whole type
+					filters = !scope.isFiltered(typeInfo, item);
+				else {
+					typeInfo.items.forEach(function(it) {
+						if(it.field && scope.isFiltered(typeInfo, it) == (it != item)) {
+							if(!filters[it.field])
+								filters[it.field] = [ ];
+							filters[it.field].push(it.value);
+						}
+					});
+				}
+
+				map.socket.setFilter(fmFilter.makeTypeFilter(map.socket.filterExpr, typeInfo.typeId, filters));
+			};
 		};
 	});
 

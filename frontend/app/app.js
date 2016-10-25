@@ -16,6 +16,7 @@ var FacilMap = {
 	fm.app.constant("L", L);
 	fm.app.constant("linkifyStr", linkifyStr);
 	fm.app.constant("Clipboard", Clipboard);
+	fm.app.constant("compileExpression", compileExpression);
 	fm.app.constant("fmSortableOptions", {
 		handle: ".sort-handle",
 		axis: "y",

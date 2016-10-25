@@ -1,7 +1,7 @@
 (function(fm, $, ng, undefined) {
 
 	// From http://stackoverflow.com/a/11277751/242365
-	fm.app.factory("fmSocket", function($rootScope, $q) {
+	fm.app.factory("fmSocket", function($rootScope, $q, fmFilter) {
 		return function(padId) {
 			var socket = io.connect(fm.SERVER, { 'force new connection': true });
 
@@ -15,9 +15,11 @@
 				lines: { },
 				views: { },
 				types: { },
+				filterExpr: null,
+				filterFunc: fmFilter.compileExpression(null),
 
 				on : function(eventName, fn) {
-					if(!listeners[eventName]) {
+					if(typeof listeners[eventName] != "object") {
 						listeners[eventName] = [ ];
 						socket.on(eventName, simulateEvent.bind(null, eventName).fmWrapApply(fmSocket));
 					}
@@ -60,6 +62,19 @@
 					return fmSocket.emit("createPad", data).then(function(obj) {
 						receiveMultiple(obj);
 					});
+				},
+
+				setFilter: function(filter) {
+					fmSocket.filterExpr = filter && filter.trim();
+
+					var filterFunc = fmFilter.compileExpression(filter);
+					fmSocket.filterFunc = function(obj, doNotPrepare) {
+						if(!doNotPrepare)
+							obj = fmFilter.prepareObject(obj, obj ? fmSocket.types[obj.typeId] : null);
+						return filterFunc(obj);
+					};
+
+					simulateEvent("filter");
 				}
 			});
 
@@ -197,7 +212,7 @@
 			}
 
 			function simulateEvent(eventName, data) {
-				if(listeners[eventName]) {
+				if(typeof listeners[eventName] == "object") {
 					listeners[eventName].forEach(function(listener) {
 						listener(data);
 					})
