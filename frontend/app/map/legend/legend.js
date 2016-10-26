@@ -9,6 +9,7 @@
 				for(var i in scope.types) {
 					var type = scope.types[i];
 					var items = [ ];
+					var fields = { };
 
 					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && fmIcons[type.defaultSymbol]) || (type.type == "line" && type.widthFixed)) {
 						var item = { value: type.name };
@@ -27,8 +28,10 @@
 						if(!field.type == "dropdown" || (!field.controlColour && (type.type != "marker" || !field.controlSymbol) && (type.type != "line" || !field.controlWidth)))
 							return;
 
+						fields[field.name] = [ ];
+
 						(field.options || [ ]).forEach(function(option) {
-							var item = { value: option.value, field: field.name };
+							var item = { value: option.value, field: field.name, filtered: true };
 							if(field.controlColour)
 								item.colour = option.colour;
 							if(type.type == "marker" && field.controlSymbol)
@@ -36,17 +39,41 @@
 							if(type.type == "line" && field.controlWidth)
 								item.width = option.width;
 							items.push(item);
+							fields[field.name].push(item.value);
 						});
 					});
 
-					if(items.length > 0)
-						scope.legendItems.push({ type: type.type, typeId: type.id, name: type.name, items: items });
+					if(items.length > 0) {
+						var type = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true };
+
+						// Check which fields are filtered
+						_allCombinations(fields, function(data) {
+							if(map.socket.filterFunc({ typeId: type.typeId, data: data }, true)) {
+								type.filtered = false;
+
+								items.forEach(function(it) {
+									if(!it.field)
+										it.filtered = false;
+								});
+
+								for(var i in data) {
+									items.forEach(function(it) {
+										if(it.field == i && it.value == data[i])
+											it.filtered = false;
+									});
+								}
+							}
+						});
+
+						scope.legendItems.push(type);
+					}
 				}
 			}
 
 			update();
 
 			scope.$watch("types", update, true);
+			map.socket.on("filter", update);
 
 			var el = $($templateCache.get("map/legend/legend.html")).insertAfter(map.map.getContainer());
 			$compile(el)(scope);
@@ -61,28 +88,41 @@
 				el.css("max-height", getMaxHeight()+"px");
 			}
 
+			function _allCombinations(fields, cb) {
+				var fieldKeys = Object.keys(fields);
+
+				function rec(i, vals) {
+					if(i == fieldKeys.length)
+						return cb(vals);
+
+					var field = fields[fieldKeys[i]];
+					for(var j=0; j<field.length; j++) {
+						vals[fieldKeys[i]] = field[j];
+						rec(i+1, vals);
+					}
+				}
+
+				rec(0, { });
+			}
+
 			resize();
 			scope.$watch(getMaxHeight, resize);
 			$(window).resize(resize);
 
-			scope.isFiltered = function(typeInfo, item) {
-				var obj = { typeId: typeInfo.typeId, data: { } };
-				if(item && item.field)
-					obj.data[item.field] = item.value;
-
-				return !map.socket.filterFunc(obj, true);
-			};
-
 			scope.toggleFilter = function(typeInfo, item) {
 				var filters = { };
 				if(!item || !item.field) // We are toggling the visibility of one whole type
-					filters = !scope.isFiltered(typeInfo, item);
+					filters = !typeInfo.filtered;
 				else {
 					typeInfo.items.forEach(function(it) {
-						if(it.field && scope.isFiltered(typeInfo, it) == (it != item)) {
+						if(it.field) {
 							if(!filters[it.field])
-								filters[it.field] = [ ];
-							filters[it.field].push(it.value);
+								filters[it.field] = { };
+
+							if(!typeInfo.filtered || it.field == item.field)
+								filters[it.field][it.value] = (it.filtered == (it != item));
+							else // If the whole type is filtered, we have to enable the filters of the other fields, otherwise the type will still be completely filtered
+								filters[it.field][it.value] = false;
 						}
 					});
 				}
