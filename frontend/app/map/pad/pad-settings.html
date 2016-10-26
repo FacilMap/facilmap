@@ -4,7 +4,7 @@
 </div>
 <div class="modal-body">
 	<form class="form-horizontal" ng-submit="!writeError && !readError && save()">
-		<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
+		<div uib-alert class="alert-danger" ng-show="error">{{error.message || error}}</div>
 		
 		<div class="form-group" ng-class="{'has-error': !!writeError}">
 			<label for="pad-link-input" class="col-sm-3 control-label">Edit-only Link</label>

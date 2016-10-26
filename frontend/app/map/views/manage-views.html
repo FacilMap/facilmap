@@ -3,7 +3,7 @@
 	<h3 class="modal-title">Manage Views</h3>
 </div>
 <div class="modal-body">
-	<div uib-alert class="alert-danger" ng-if="error">{{error}}</div>
+	<div uib-alert class="alert-danger" ng-if="error">{{error.message || error}}</div>
 	<table class="table table-striped">
 		<tbody>
 			<tr ng-class="{success: view.id == padData.defaultView.id}" ng-repeat="view in views">

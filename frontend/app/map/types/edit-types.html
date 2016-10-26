@@ -3,7 +3,7 @@
 	<h3 class="modal-title">Object types</h3>
 </div>
 <div class="modal-body">
-	<div uib-alert class="alert-danger" ng-show="error">{{error}}</div>
+	<div uib-alert class="alert-danger" ng-show="error">{{error.message || error}}</div>
 	<table class="table table-striped">
 		<thead>
 			<tr>
