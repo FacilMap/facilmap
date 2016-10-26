@@ -188,7 +188,7 @@
 				map.mapEvents.$emit("layerchange");
 			});
 
-			map.getCurrentView = function() {
+			map.getCurrentView = function(addFilter) {
 				var ret = fmUtils.leafletToFmBbox(map.map.getBounds());
 				ret.layers = [ ];
 
@@ -198,6 +198,9 @@
 					else if(it.options.fmKey)
 						ret.layers.push(it.options.fmKey);
 				});
+
+				if(addFilter)
+					ret.filter = map.socket.filterExpr;
 
 				return ret;
 			};
@@ -224,6 +227,8 @@
 				} catch(e) {
 					map.map.setView(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
 				}
+
+				map.socket.setFilter(view.filter);
 			};
 
 			map.map.createPane("fmClickListener");

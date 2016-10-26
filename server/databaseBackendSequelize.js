@@ -160,7 +160,8 @@ var View = conn.define("View", {
 	top : getLatType(),
 	bottom : getLatType(),
 	left : getLonType(),
-	right : getLonType()
+	right : getLonType(),
+	filter: { type: Sequelize.TEXT, allowNull: true }
 });
 
 Pad.hasMany(View, { foreignKey: "padId" });
@@ -309,6 +310,10 @@ function connect(force) {
 					if(!attributes[col])
 						return queryInterface.addColumn('Types', col, Type.attributes[col]);
 				}));
+			}),
+			queryInterface.describeTable('Views').then(function(attributes) {
+				if(!attributes.filter)
+					return queryInterface.addColumn('Views', 'filter', View.attributes.filter);
 			})
 		].concat([ 'Pads', 'Markers', 'Lines' ].map(function(table) {
 			// allow null on Pad.name, Marker.name, Line.name

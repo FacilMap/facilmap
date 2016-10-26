@@ -208,7 +208,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			addView : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
+					if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)
@@ -220,7 +220,7 @@ var serverP = Promise.denodeify(server.listen.bind(server))(config.port, config.
 
 			editView : function(data) {
 				return Promise.resolve().then(function() {
-					if(!utils.stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number" }))
+					if(!utils.stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
 						throw "Invalid parameters.";
 
 					if(!socket.writable)

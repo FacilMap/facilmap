@@ -3,11 +3,25 @@
 	<h3 class="modal-title">Save current view</h3>
 </div>
 <div class="modal-body">
-	<form class="form-horizontal" ng-submit="save(false)">
-		<div uib-alert class="alert-danger" ng-if="error">{{error}}</div>
+	<form class="form-horizontal" ng-submit="save()">
+		<div uib-alert class="alert-danger" ng-if="error">{{error.message || error}}</div>
 		<div class="form-group">
 			<label for="save-view-name" class="col-sm-3 control-label">Name</label>
 			<div class="col-sm-9"><input id="save-view-name" ng-model="name" class="form-control"></div>
+		</div>
+
+		<div class="checkbox" ng-show="filter">
+			<label>
+				<input type="checkbox" ng-model="saveFilter">
+				Save current filter (<code ng-bind="filter"></code>)
+			</label>
+		</div>
+
+		<div class="checkbox">
+			<label>
+				<input type="checkbox" ng-model="makeDefault">
+				Make default view
+			</label>
 		</div>
 
 		<button type="submit" class="hidden"></button>
@@ -15,6 +29,5 @@
 </div>
 <div class="modal-footer">
 	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="submit" class="btn btn-primary" ng-click="save(false)">Save</button>
-	<button type="button" class="btn btn-success" ng-click="save(true)">Save and make default view</button>
+	<button type="submit" class="btn btn-primary" ng-click="save()">Save</button>
 </div>

@@ -33,12 +33,13 @@
 
 	fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 		$scope.name = null;
+		$scope.filter = map.socket.filterExpr;
 
-		$scope.save = function(makeDefault) {
-			var view = map.getCurrentView();
+		$scope.save = function() {
+			var view = map.getCurrentView($scope.saveFilter);
 			view.name = $scope.name;
 			map.socket.emit("addView", view).then(function(view) {
-				if(makeDefault)
+				if($scope.makeDefault)
 					return map.socket.emit("editPad", { defaultViewId: view.id });
 			}).then(function() {
 				$scope.$close();

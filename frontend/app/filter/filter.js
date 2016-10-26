@@ -1,14 +1,26 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmFilter", function(compileExpression) {
+	fm.app.factory("fmFilter", function(compileExpression, $rootScope, $uibModal) {
 		var currentVal;
 
 		var fmFilter = {
 			customFuncs: {
 				prop: function(obj, key) {
 					return obj && obj[key];
+				},
+
+				random: function() { } // Does not work well with angular digest cycles
+			},
+
+			hasError: function(expr) {
+				try {
+					if(expr && expr.trim())
+						compileExpression(expr, fmFilter.customFuncs);
+				} catch(e) {
+					return e;
 				}
 			},
+
 			compileExpression: function(expr) {
 				if(!expr || !expr.trim())
 					return function() { return true; };
@@ -86,10 +98,34 @@
 				}
 
 				return obj;
+			},
+
+			showFilterDialog: function(currentFilter, types) {
+				var dialog = $uibModal.open({
+					templateUrl: "filter/filter-dialog.html",
+					scope: $rootScope,
+					controller: "fmFilterDialogCtrl",
+					size: "lg",
+					resolve: {
+						currentFilter: function() { return currentFilter; },
+						types: function() { return types; }
+					}
+				});
+
+				return dialog.result;
 			}
 		};
 
 		return fmFilter;
+	});
+
+	fm.app.controller("fmFilterDialogCtrl", function(currentFilter, types, $scope, fmFilter) {
+		$scope.filter = currentFilter;
+		$scope.types = types;
+
+		$scope.$watch("filter", function(newFilter) {
+			$scope.error = fmFilter.hasError(newFilter);
+		})
 	});
 
 })(FacilMap, jQuery, angular);

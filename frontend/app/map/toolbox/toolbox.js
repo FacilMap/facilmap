@@ -1,6 +1,6 @@
 (function(fm, $, ng, undefined) {
 
-	fm.app.factory("fmMapToolbox", function($compile, $templateCache, fmTable) {
+	fm.app.factory("fmMapToolbox", function($compile, $templateCache, fmTable, fmFilter) {
 		return function(map) {
 			var scope = map.socket.$new();
 
@@ -47,6 +47,12 @@
 
 			scope.startPad = function() {
 				map.padUi.createPad();
+			};
+
+			scope.filter = function() {
+				fmFilter.showFilterDialog(map.socket.filterExpr, map.socket.types).then(function(newFilter) {
+					map.socket.setFilter(newFilter);
+				});
 			};
 
 			var ret = {
