@@ -90,7 +90,8 @@
 				if(scope.searchString.match(/ to /)) {
 					var spl = fmUtils.splitRouteQuery(scope.searchString);
 					routeUi.setQueries(spl.queries);
-					routeUi.setMode(spl.mode);
+					if(spl.mode)
+						routeUi.setMode(spl.mode);
 				} else if(scope.loadedSearchString == scope.searchString)
 					routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
 				else
