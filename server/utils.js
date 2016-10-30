@@ -235,6 +235,59 @@ function promiseAllObject(obj) {
 	});
 }
 
+function promiseAuto(obj) {
+	var promises = { };
+
+	function _get(str) {
+		if(!obj[str])
+			throw new Error("Invalid dependency '" + str + "' in promiseAuto().");
+
+		if(promises[str])
+			return promises[str];
+
+		if(obj[str].then)
+			return obj[str];
+
+		var params = getFuncParams(obj[str]);
+		return promises[str] = _getDeps(params).then(function(res) {
+			return obj[str].apply(null, params.map(function(param) { return res[param]; }));
+		});
+	}
+
+	function _getDeps(arr) {
+		var deps = { };
+		arr.forEach(function(it) {
+			deps[it] = _get(it);
+		});
+		return promiseAllObject(deps);
+	}
+
+	return _getDeps(Object.keys(obj));
+}
+
+function getFuncParams(func) {
+	// Taken from angular injector code
+
+	var ARROW_ARG = /^([^\(]+?)\s*=>/;
+	var FN_ARGS = /^[^\(]*\(\s*([^\)]*)\)/m;
+	var FN_ARG_SPLIT = /\s*,\s*/;
+	var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
+	var fnText = (Function.prototype.toString.call(func) + ' ').replace(STRIP_COMMENTS, '');
+	var params = (fnText.match(ARROW_ARG) || fnText.match(FN_ARGS))[1];
+	return params == "" ? [ ] : params.split(FN_ARG_SPLIT);
+}
+
+function modifyFunction(obj, prop, before, after) {
+	var bkp = obj[prop];
+	obj[prop] = function() {
+		before && before.apply(this, arguments);
+		var ret = bkp.apply(this, arguments);
+		after && after.apply(this, arguments);
+		return ret;
+	};
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStreamPromise : filterStreamPromise,
@@ -248,5 +301,7 @@ module.exports = {
 	isoDate : isoDate,
 	round: round,
 	streamToArrayPromise: streamToArrayPromise,
-	promiseAllObject: promiseAllObject
+	promiseAllObject: promiseAllObject,
+	promiseAuto: promiseAuto,
+	modifyFunction: modifyFunction
 };

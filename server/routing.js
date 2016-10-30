@@ -1,7 +1,7 @@
 var request = require("request-promise");
+
 var utils = require("./utils");
 var config = require("../config");
-var Promise = require("promise");
 
 var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 

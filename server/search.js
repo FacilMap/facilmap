@@ -1,9 +1,10 @@
 var request = require("request-promise");
-var config = require("../config");
 var Promise = require("promise");
 var cheerio = require("cheerio");
 var zlib = require("zlib");
 var compressjs = require("compressjs");
+
+var config = require("../config");
 var utils = require("./utils");
 
 request = request.defaults({

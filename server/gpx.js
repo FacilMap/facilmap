@@ -1,6 +1,4 @@
-var database = require("./database");
 var utils = require("./utils");
-var Promise = require("promise");
 
 var _e = utils.escapeXml;
 
@@ -45,28 +43,36 @@ function _textToData(fields, text) {
 	return ret;
 }
 
-function exportGpx(padId, useTracks) {
-	var padDataP = database.getPadData(padId);
+function exportGpx(database, padId, useTracks) {
+	return utils.promiseAuto({
+		padData: database.getPadData(padId),
 
-	var views = '', markers = '', lines = '', types = '';
+		views: () => {
+			var views = '';
+			return utils.streamEachPromise(database.getViews(padId), (view) => {
+				views += '<fm:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
+			}).then(() => views);
+		},
 
-	var viewsP = utils.streamEachPromise(database.getViews(padId), function(view) {
-		views += '<fm:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
-	});
+		typesObj: () => {
+			var typesObj = { };
+			return utils.streamEachPromise(database.getTypes(padId), function(type) {
+				typesObj[type.id] = type;
+			}).then(() => typesObj);
+		},
 
-	var typesObj = { };
-	var typesObjP = utils.streamEachPromise(database.getTypes(padId), function(type) {
-		typesObj[type.id] = type;
-	});
+		types: (typesObj) => {
+			var types = '';
+			for(var i in typesObj) {
+				var type = typesObj[i];
+				types += '<fm:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
+			}
+			return types;
+		},
 
-	var typesMarkersLinesP = typesObjP.then(function() {
-		for(var i in typesObj) {
-			var type = typesObj[i];
-			types += '<fm:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
-		}
-
-		return Promise.all([
-			utils.streamEachPromise(database.getPadMarkers(padId), function(marker) {
+		markers: (typesObj) => {
+			var markers = '';
+			return utils.streamEachPromise(database.getPadMarkers(padId), function(marker) {
 				markers += '<wpt lat="' + _e(marker.lat) + '" lon="' + _e(marker.lon) + '">\n' +
 					'\t<name>' + _e(marker.name) + '</name>\n' +
 					'\t<desc>' + _e(_dataToText(typesObj[marker.typeId].fields, marker.data)) + '</desc>\n' +
@@ -74,8 +80,12 @@ function exportGpx(padId, useTracks) {
 					'\t\t<fm:colour>' + _e(marker.colour) + '</fm:colour>\n' +
 					'\t</extensions>\n' +
 					'</wpt>\n';
-			}),
-			utils.streamEachPromise(database.getPadLinesWithPoints(padId), function(line) {
+			}).then(() => markers);
+		},
+
+		lines: (typesObj) => {
+			var lines = '';
+			return utils.streamEachPromise(database.getPadLinesWithPoints(padId), function(line) {
 				var t = (useTracks || line.mode == "track");
 
 				lines += '<' + (t ? 'trk' : 'rte') + '>\n' +
@@ -101,25 +111,22 @@ function exportGpx(padId, useTracks) {
 				}
 
 				lines += '</' + (t ? 'trk' : 'rte') + '>\n';
-			})
-		]);
-	});
-
-	return Promise.all([ padDataP, viewsP, typesMarkersLinesP ]).then(function(res) {
-		return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+			}).then(() => lines);
+		}
+	}).then((res) => '<?xml version="1.0" encoding="UTF-8"?>\n' +
 		'<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:fm="https://facilmap.org/">\n' +
-			'\t<metadata>\n' +
-			'\t\t<name>' + _e(res[0].name) + '</name>\n' +
-			'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +
-			'\t</metadata>\n' +
-			'\t<extensions>\n' +
-			views.replace(/^(.)/gm, '\t\t$1') +
-			types.replace(/^(.)/gm, '\t\t$1') +
-			'\t</extensions>\n' +
-			markers.replace(/^(.)/gm, '\t$1') +
-			lines.replace(/^(.)/gm, '\t$1') +
-			'</gpx>';
-	});
+		'\t<metadata>\n' +
+		'\t\t<name>' + _e(res.padData.name) + '</name>\n' +
+		'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +
+		'\t</metadata>\n' +
+		'\t<extensions>\n' +
+		res.views.replace(/^(.)/gm, '\t\t$1') +
+		res.types.replace(/^(.)/gm, '\t\t$1') +
+		'\t</extensions>\n' +
+		res.markers.replace(/^(.)/gm, '\t$1') +
+		res.lines.replace(/^(.)/gm, '\t$1') +
+		'</gpx>'
+	);
 }
 
 module.exports = {
