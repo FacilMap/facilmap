@@ -228,7 +228,7 @@
 					map.map.setView(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
 				}
 
-				map.socket.setFilter(view.filter);
+				map.socket.setFilter(view && view.filter);
 			};
 
 			map.map.createPane("fmClickListener");
