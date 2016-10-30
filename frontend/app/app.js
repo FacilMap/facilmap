@@ -48,6 +48,10 @@ var FacilMap = {
 		};
 	});
 
+	fm.app.run(function($rootScope) {
+		$rootScope.confirm = function(msg) { return confirm(msg); };
+	});
+
 	function wrapApply($scope, f) {
 		return function() {
 			var context = this;

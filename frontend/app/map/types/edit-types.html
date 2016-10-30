@@ -18,7 +18,7 @@
 				<td>{{type.type}}</td>
 				<td class="td-buttons">
 					<button type="button" ng-click="edit(type)" class="btn btn-default">Edit</button>
-					<button type="button" ng-click="delete(type)" class="btn btn-default">Delete</button>
+					<button type="button" ng-click="confirm('Do you really want to delete the type “' + type.name + '”?') && delete(type)" class="btn btn-default">Delete</button>
 				</td>
 			</tr>
 		</tbody>

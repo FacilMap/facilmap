@@ -47,7 +47,7 @@
 					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
 					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
-					<td class="td-buttons"><button type="button" ng-click="deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
+					<td class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
 					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
 				</tr>
 			</tbody>
