@@ -94,7 +94,9 @@ module.exports = function(Database) {
 		getLineTemplate(padId, data) {
 			return utils.promiseAuto({
 				lineTemplate: () => {
-					return JSON.parse(JSON.stringify(this._conn.model("Line").build(utils.extend({ }, data, { padId: padId, data: data.data || { } }))));
+					var ret = JSON.parse(JSON.stringify(this._conn.model("Line").build(utils.extend({ }, data, { padId: padId }))));
+					ret.data = data.data || { };
+					return ret;
 				},
 
 				type: this.getType(padId, data.typeId),
@@ -219,7 +221,7 @@ module.exports = function(Database) {
 			}).then((res) => {
 				this.emit("deleteLine", padId, { id: lineId });
 
-				return data;
+				return res.line;
 			});
 		},
 
