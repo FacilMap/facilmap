@@ -14,7 +14,7 @@
 						<li><a href="javascript:" ng-click="editObjectTypes()">Manage types</a></li>
 					</ul>
 				</li>
-				<li role="presentation" uib-dropdown keyboard-nav="true" ng-if="padId">
+				<li role="presentation" uib-dropdown keyboard-nav="true" ng-if="padId && (!readonly || (views | fmPropertyCount) != 0)">
 					<a href="javascript:" id="toolbox-views-dropdown" uib-dropdown-toggle role="button">Saved views <span class="caret"></span></a>
 					<ul uib-dropdown-menu aria-labelledby="toolbox-views-dropdown">
 						<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
