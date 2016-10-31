@@ -110,13 +110,14 @@ module.exports = function(Database) {
 
 				newData: (update) => this.getPadData(data.id || padId),
 
-				/*history: (oldData, update) => {
+				history: (oldData, newData) => {
 					return this.addHistoryEntry(data.id || padId, {
-						type: "pad",
+						type: "Pad",
 						action: "update",
-						objectBefore: oldData
+						objectBefore: oldData,
+						objectAfter: newData
 					});
-				}*/
+				}
 			}).then((res) => {
 				this.emit("padData", padId, res.newData);
 

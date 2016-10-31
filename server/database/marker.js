@@ -62,7 +62,7 @@ module.exports = function(Database) {
 
 		updateMarker(padId, markerId, data, doNotUpdateStyles) {
 			return utils.promiseAuto({
-				update: this._updatePadObject("Marker", padId, markerId, data),
+				update: this._updatePadObject("Marker", padId, markerId, data, doNotUpdateStyles),
 				updateStyles: (update) => {
 					if(!doNotUpdateStyles)
 						return this._updateObjectStyles(update, false);

@@ -55,6 +55,10 @@
 				});
 			};
 
+			scope.showHistory = function() {
+				map.historyUi.openHistoryDialog();
+			};
+
 			var ret = {
 				div: $($templateCache.get("map/toolbox/toolbox.html"))
 			};

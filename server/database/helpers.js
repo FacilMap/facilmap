@@ -171,6 +171,7 @@ module.exports = function(Database) {
 
 		_createPadObject(type, padId, data) {
 			var includeData = [ "Marker", "Line" ].includes(type);
+			var makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
 			return utils.promiseAuto({
 				create: () => {
@@ -186,16 +187,25 @@ module.exports = function(Database) {
 						if(data.data != null)
 							return this._setObjectData(type, create.id, data.data);
 					}
+				},
+				history: (create, data) => {
+					if(makeHistory)
+						return this.addHistoryEntry(padId, { type: type, action: "create", objectId: create.id, objectAfter: create });
 				}
 			}).then(res => res.create);
 		},
 
-		_updatePadObject(type, padId, objId, data) {
+		_updatePadObject(type, padId, objId, data, _noHistory) {
 			var includeData = [ "Marker", "Line" ].includes(type);
+			var makeHistory = !_noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
 
 			return utils.promiseAuto({
+				oldData: () => {
+					if(makeHistory)
+						return this._getPadObject(type, padId, objId);
+				},
 
-				update: () => {
+				update: (oldData) => {
 					return this._conn.model(type).update(data, { where: { id: objId, padId: padId } }).then((res) => {
 						if(res[0] == 0)
 							throw new Error(type + " " + objId + " of pad " + padId + "could not be found.");
@@ -213,12 +223,18 @@ module.exports = function(Database) {
 							return newData.setDataValue("data", newData.data); // For JSON.stringify()
 						});
 					}
+				},
+
+				history: (oldData, newData, updateData) => {
+					if(makeHistory)
+						return this.addHistoryEntry(padId, { type: type, action: "update", objectId: objId, objectBefore: oldData, objectAfter: newData });
 				}
 			}).then(res => res.newData);
 		},
 
 		_deletePadObject(type, padId, objId) {
 			var includeData = [ "Marker", "Line" ].includes(type);
+			var makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
 			return utils.promiseAuto({
 				oldData: () => {
@@ -232,6 +248,11 @@ module.exports = function(Database) {
 
 				destroy: (oldData, destroyData) => {
 					return oldData.destroy();
+				},
+
+				history: (destroy, oldData) => {
+					if(makeHistory)
+						return this.addHistoryEntry(padId, { type: type, action: "delete", objectId: objId, objectBefore: oldData });
 				}
 			}).then(res => res.oldData);
 		},

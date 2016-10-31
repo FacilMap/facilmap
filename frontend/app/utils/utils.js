@@ -702,6 +702,43 @@
 
 		};
 
+		/**
+		 * Converts an object { entry: { subentry: "value" } } into { "entry.subentry": "value" }
+		 * @param obj {Object}
+		 * @return {Object}
+		 */
+		fmUtils.flattenObject = function(obj, _prefix) {
+			var ret = { };
+			_prefix = _prefix || "";
+			for(var i in obj) {
+				if(typeof obj[i] == "object")
+					$.extend(ret, fmUtils.flattenObject(obj[i], _prefix + i + "."));
+				else
+					ret[_prefix + i] = obj[i];
+			}
+
+			return ret;
+		};
+
+		fmUtils.getObjectDiff = function(obj1, obj2) {
+			var flat1 = fmUtils.flattenObject(obj1);
+			var flat2 = fmUtils.flattenObject(obj2);
+
+			var ret = [ ];
+
+			for(var i in flat1) {
+				if(flat1[i] != flat2[i] && !(!flat1[i] && !flat2[i]))
+					ret.push({ index: i, before: flat1[i], after: flat2[i] });
+			}
+
+			for(var i in flat2) {
+				if(!(i in flat1) && !(!flat1[i] && !flat2[i]))
+					ret.push({ index: i, before: undefined, after: flat2[i] });
+			}
+
+			return ret;
+		};
+
 		return fmUtils;
 	});
 
@@ -774,6 +811,12 @@
 	fm.app.filter('fmRoutingMode', function(fmUtils) {
 		return function(value) {
 			return fmUtils.routingMode(value);
+		};
+	});
+
+	fm.app.filter('fmOrderBy', function($filter) {
+		return function(value, key) {
+			return $filter('orderBy')(Object.keys(value).map(function(i) { return value[i]; }), key);
 		};
 	});
 

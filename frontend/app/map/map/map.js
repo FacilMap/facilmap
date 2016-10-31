@@ -9,7 +9,7 @@
 		};
 	});
 
-	fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $templateCache, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, L, fmMapImport, fmMapHash) {
+	fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $templateCache, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, L, fmMapImport, fmMapHash, fmMapHistory) {
 		var maps = { };
 
 		var ret = { };
@@ -322,6 +322,7 @@
 			map.importUi = fmMapImport(map);
 			map.searchUi = fmMapSearch(map);
 			map.hashUi = fmMapHash(map);
+			map.historyUi = fmMapHistory(map);
 
 			fmMapLegend(map);
 

@@ -15,6 +15,7 @@
 				lines: { },
 				views: { },
 				types: { },
+				history: { },
 				filterExpr: null,
 				filterFunc: fmFilter.compileExpression(null),
 
@@ -75,6 +76,25 @@
 					};
 
 					simulateEvent("filter");
+				},
+
+				listenToHistory: function() {
+					return fmSocket.emit("listenToHistory").then(function(obj) {
+						fmSocket.listeningToHistory = true;
+						receiveMultiple(obj);
+					});
+				},
+
+				stopListeningToHistory: function() {
+					fmSocket.listeningToHistory = false;
+					return fmSocket.emit("stopListeningToHistory");
+				},
+
+				revertHistoryEntry: function(data) {
+					return fmSocket.emit("revertHistoryEntry", data).then(function(obj) {
+						fmSocket.history = { };
+						receiveMultiple(obj);
+					});
 				}
 			});
 
@@ -155,6 +175,7 @@
 					fmSocket.markers = { };
 					fmSocket.lines = { };
 					fmSocket.views = { };
+					fmSocket.history = { };
 				},
 
 				connect: function() {
@@ -165,6 +186,14 @@
 
 					if(fmSocket.bbox)
 						fmSocket.updateBbox(fmSocket.bbox);
+
+					if(fmSocket.listeningToHistory) // TODO: Execute after setPadId() returns
+						fmSocket.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
+				},
+
+				history: function(data) {
+					fmSocket.history[data.id] = data;
+					// TODO: Limit to 50 entries
 				}
 			};
 

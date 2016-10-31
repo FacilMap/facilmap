@@ -46,5 +46,6 @@ require("./marker")(Database);
 require("./line")(Database);
 require("./view")(Database);
 require("./type")(Database);
+require("./history")(Database);
 
 module.exports = Database;

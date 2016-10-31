@@ -173,7 +173,7 @@ module.exports = function(Database) {
 					var dataCopy = utils.extend({ }, data);
 					delete dataCopy.trackPoints; // They came if mode is track
 
-					return this._updatePadObject("Line", padId, lineId, dataCopy);
+					return this._updatePadObject("Line", padId, lineId, dataCopy, doNotUpdateStyles);
 				},
 
 				updateStyle: (newLine) => {

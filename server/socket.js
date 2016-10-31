@@ -427,7 +427,7 @@ utils.extend(SocketConnection.prototype, {
 			});
 		},
 
-		/*listenToHistory: function() {
+		listenToHistory: function() {
 			return Promise.resolve().then(() => {
 				if(this.padId == null)
 					throw "No pad ID set.";
@@ -435,8 +435,9 @@ utils.extend(SocketConnection.prototype, {
 				if(this.historyListener)
 					throw "Already listening to history.";
 
-				this.historyListener = this.registerDatabaseHandler("addHistoryEntry", function(data) {
-					this.socket.emit("history", data);
+				this.historyListener = this.registerDatabaseHandler("addHistoryEntry", (padId, data) => {
+					if(padId == this.padId)
+						this.socket.emit("history", data);
 				});
 
 				return utils.promiseAllObject({
@@ -446,14 +447,29 @@ utils.extend(SocketConnection.prototype, {
 		},
 
 		stopListeningToHistory: function() {
-			return Promise.resolve().then(() => {
-				if(!this.historyListener)
-					throw "Not listening to history.";
+			if(!this.historyListener)
+				throw "Not listening to history.";
 
-				this.historyListener(); // Unregister db listener
-				this.historyListener = null;
+			this.historyListener(); // Unregister db listener
+			this.historyListener = null;
+		},
+
+		revertHistoryEntry: function(data) {
+			var listening = !!this.historyListener;
+
+			return Promise.resolve().then(() => {
+				if(!utils.stripObject(data, { id: "number" }))
+					throw "Invalid parameters.";
+
+				if(listening)
+					this.socketHandlers.stopListeningToHistory.call(this);
+
+				return this.database.revertHistoryEntry(this.padId, data.id);
+			}).then(() => {
+				if(listening)
+					return this.socketHandlers.listenToHistory.call(this);
 			});
-		}*/
+		}
 
 		/*copyPad : function(data, callback) {
 			if(!utils.stripObject(data, { toId: "string" }))
