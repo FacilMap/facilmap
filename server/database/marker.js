@@ -30,11 +30,11 @@ module.exports = function(Database) {
 
 	utils.extend(Database.prototype, {
 		getPadMarkers(padId, bbox) {
-			return this._getPadObjects("Marker", padId, { where: this._makeBboxCondition(bbox), include: [ this._conn.model("MarkerData") ] });
+			return this._getPadObjects("Marker", padId, { where: this._makeBboxCondition(bbox) });
 		},
 
 		getPadMarkersByType(padId, typeId) {
-			return this._getPadObjects("Marker", padId, { where: { padId: padId, typeId: typeId }, include: [ this._conn.model("MarkerData") ] });
+			return this._getPadObjects("Marker", padId, { where: { padId: padId, typeId: typeId } });
 		},
 
 		createMarker(padId, data) {
@@ -48,7 +48,7 @@ module.exports = function(Database) {
 					if(type.defaultSymbol)
 						data.symbol = type.defaultSymbol;
 
-					return this._createPadObjectWithData("Marker", padId, data);
+					return this._createPadObject("Marker", padId, data);
 				},
 				styles: (create) => {
 					return this._updateObjectStyles(create, false)
@@ -62,7 +62,7 @@ module.exports = function(Database) {
 
 		updateMarker(padId, markerId, data, doNotUpdateStyles) {
 			return utils.promiseAuto({
-				update: this._updatePadObjectWithData("Marker", padId, markerId, data),
+				update: this._updatePadObject("Marker", padId, markerId, data),
 				updateStyles: (update) => {
 					if(!doNotUpdateStyles)
 						return this._updateObjectStyles(update, false);
@@ -75,7 +75,7 @@ module.exports = function(Database) {
 		},
 
 		deleteMarker(padId, markerId) {
-			this._deletePadObjectWithData("Marker", padId, markerId).then(del => {
+			return this._deletePadObject("Marker", padId, markerId).then(del => {
 				this.emit("deleteMarker", padId, { id: del.id });
 
 				return del;

@@ -103,12 +103,7 @@ module.exports = function(Database) {
 		},
 
 		getType(padId, typeId) {
-			return this._conn.model("Type").findOne({ where: { id: typeId, padId: padId } }).then(res => {
-				if(res == null)
-					throw new Error("Type " + typeId + " of pad " + padId + " could not be found.");
-
-				return res;
-			});
+			return this._getPadObject("Type", padId, typeId);
 		},
 
 		createType(padId, data) {

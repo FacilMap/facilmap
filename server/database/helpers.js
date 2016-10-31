@@ -121,13 +121,41 @@ module.exports = function(Database) {
 			}
 		},
 
+		_padObjectExists(type, padId, id) {
+			return this._conn.model(type).count({ where: { padId: padId, id: id }, limit: 1 }).then(num => num > 0);
+		},
+
+		_getPadObject(type, padId, id) {
+			var includeData = [ "Marker", "Line" ].includes(type);
+
+			var cond = { where: { id: id, padId: padId }, include: includeData ? [ this._conn.model(type + "Data") ] : [ ] };
+			return this._conn.model(type).findOne(cond).then(data => {
+				if(data == null)
+					throw new Error(type + " " + id + " of pad " + padId + " could not be found.");
+
+				if(includeData) {
+					data.data = this._dataFromArr(data[type+"Data"]);
+					data.setDataValue("data", data.data); // For JSON.stringify()
+					data.setDataValue(type+"Data", undefined);
+				}
+
+				return data;
+			});
+		},
+
 		_getPadObjects(type, padId, condition) {
+			var includeData = [ "Marker", "Line" ].includes(type);
+
+			if(includeData) {
+				condition = condition || { };
+				condition.include = [ ...(condition.include || [ ]), this._conn.model(type + "Data") ];
+			}
+
 			var ret = new utils.ArrayStream();
 
-			var o = this._conn.model("Pad").build({ id: padId });
-			this._conn.model("Pad").build({ id: padId })["get"+type+"s"](condition).then((objs) => {
+			this._conn.model("Pad").build({ id: padId })["get" + this._conn.model(type).getTableName()](condition).then((objs) => {
 				objs.forEach((it) => {
-					if(it[type+"Data"] != null) {
+					if(includeData) {
 						it.data = this._dataFromArr(it[type+"Data"]);
 						it.setDataValue("data", it.data); // For JSON.stringify()
 						it.setDataValue(type+"Data", undefined);
@@ -142,63 +170,70 @@ module.exports = function(Database) {
 		},
 
 		_createPadObject(type, padId, data) {
-			var obj = this._conn.model(type).build(data);
-			obj.padId = padId;
-			return obj.save();
-		},
+			var includeData = [ "Marker", "Line" ].includes(type);
 
-		_createPadObjectWithData(type, padId, data) {
-			return this._createPadObject(type, padId, data).then((obj) => {
-				if(data.data != null) {
-					obj.data = data.data;
-					obj.setDataValue("data", obj.data); // For JSON.stringify()
-					return this._setObjectData(type, obj.id, data.data).then(() => {
-						return obj;
-					});
-				} else {
-					obj.data = { };
-					obj.setDataValue("data", obj.data); // For JSON.stringify()
-					return obj;
+			return utils.promiseAuto({
+				create: () => {
+					var obj = this._conn.model(type).build(data);
+					obj.padId = padId;
+					return obj.save();
+				},
+				data: (create) => {
+					if(includeData) {
+						create.data = data.data || { };
+						create.setDataValue("data", create.data); // For JSON.stringify()
+
+						if(data.data != null)
+							return this._setObjectData(type, create.id, data.data);
+					}
 				}
-			});
+			}).then(res => res.create);
 		},
 
 		_updatePadObject(type, padId, objId, data) {
-			return this._conn.model(type).update(data, { where: { id: objId, padId: padId } }).then((res) => {
-				if(res[0] == 0)
-					throw new Error(type + " " + objId + " of pad " + padId + "could not be found.");
+			var includeData = [ "Marker", "Line" ].includes(type);
 
-				return this._conn.model(type).findById(objId);
-			});
-		},
+			return utils.promiseAuto({
 
-		_updatePadObjectWithData(type, padId, objId, data) {
-			return Promise.all([
-				this._updatePadObject(type, padId, objId, data),
-				data.data != null ? this._setObjectData(type, objId, data.data) : this._getObjectData(type, objId)
-			]).then((results) => {
-				var obj = results[0];
-				obj.data = (data.data != null ? data.data : results[1]);
-				obj.setDataValue("data", obj.data); // For JSON.stringify()
-				return obj;
-			});
+				update: () => {
+					return this._conn.model(type).update(data, { where: { id: objId, padId: padId } }).then((res) => {
+						if(res[0] == 0)
+							throw new Error(type + " " + objId + " of pad " + padId + "could not be found.");
+					});
+				},
+
+				newData: (update) => {
+					return this._getPadObject(type, padId, objId);
+				},
+
+				updateData: (newData) => {
+					if(includeData) {
+						return (data.data != null ? this._setObjectData(type, objId, data.data) : this._getObjectData(type, objId)).then((dataData) => {
+							newData.data = (data.data != null ? data.data : dataData);
+							return newData.setDataValue("data", newData.data); // For JSON.stringify()
+						});
+					}
+				}
+			}).then(res => res.newData);
 		},
 
 		_deletePadObject(type, padId, objId) {
-			return this._conn.model(type).findOne({ where: { id: objId, padId: padId }}).then((obj) => {
-				if(obj == null)
-					throw new Error(type + " " + objId + " of pad " + padId + " could not be found.");
+			var includeData = [ "Marker", "Line" ].includes(type);
 
-				return obj.destroy().then(() => {
-					return obj;
-				});
-			});
-		},
+			return utils.promiseAuto({
+				oldData: () => {
+					return this._getPadObject(type, padId, objId);
+				},
 
-		_deletePadObjectWithData(type, padId, objId) {
-			return this._setObjectData(type, objId, { }).then(() => {
-				return this._deletePadObject(type, padId, objId); // Return the object
-			});
+				destroyData: (oldData) => {
+					if(includeData)
+						return this._setObjectData(type, objId, { });
+				},
+
+				destroy: (oldData, destroyData) => {
+					return oldData.destroy();
+				}
+			}).then(res => res.oldData);
 		},
 
 		_dataToArr(data, extend) {

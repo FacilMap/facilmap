@@ -71,15 +71,12 @@ module.exports = function(Database) {
 
 	utils.extend(Database.prototype, {
 		getPadLines(padId, fields) {
-			var cond = { include: [ this._conn.model("LineData") ] };
-			if(fields)
-				cond.attributes = (typeof fields == "string" ? fields.split(/\s+/) : fields);
-
+			var cond = fields ? { attributes: (typeof fields == "string" ? fields.split(/\s+/) : fields) } : { };
 			return this._getPadObjects("Line", padId, cond);
 		},
 
 		getPadLinesByType(padId, typeId) {
-			return this._getPadObjects("Line", padId, { where: { typeId: typeId }, include: [ this._conn.model("LineData") ] });
+			return this._getPadObjects("Line", padId, { where: { typeId: typeId } });
 		},
 
 		getPadLinesWithPoints(padId, bboxWithZoom) {
@@ -117,12 +114,7 @@ module.exports = function(Database) {
 		},
 
 		getLine(padId, lineId) {
-			return this._conn.model("Line").findOne({ where: { id: lineId, padId: padId }, include: [ this._conn.model("LineData") ] }).then(line => {
-				if(line == null)
-					throw new Error("Line " + lineId + " of pad " + padId + " could not be found.");
-
-				return line;
-			});
+			return this._getPadObject("Line", padId, lineId);
 		},
 
 		createLine(padId, data) {
@@ -144,7 +136,7 @@ module.exports = function(Database) {
 					var dataCopy = utils.extend({ }, data);
 					delete dataCopy.trackPoints; // They came if mode is track
 
-					return this._createPadObjectWithData("Line", padId, dataCopy);
+					return this._createPadObject("Line", padId, dataCopy);
 				},
 
 				lineEvent: (createLine) => {
@@ -181,7 +173,7 @@ module.exports = function(Database) {
 					var dataCopy = utils.extend({ }, data);
 					delete dataCopy.trackPoints; // They came if mode is track
 
-					return this._updatePadObjectWithData("Line", padId, lineId, dataCopy);
+					return this._updatePadObject("Line", padId, lineId, dataCopy);
 				},
 
 				updateStyle: (newLine) => {
@@ -216,7 +208,7 @@ module.exports = function(Database) {
 
 		deleteLine(padId, lineId) {
 			return utils.promiseAuto({
-				line: this._deletePadObjectWithData("Line", padId, lineId),
+				line: this._deletePadObject("Line", padId, lineId),
 				points: this._setLinePoints(padId, lineId, [ ], true)
 			}).then((res) => {
 				this.emit("deleteLine", padId, { id: lineId });

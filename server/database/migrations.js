@@ -47,12 +47,12 @@ module.exports = function(Database) {
 
 			var addColMigrations = renameColMigrations.then(() => {
 				return Promise.all([ 'Marker', 'Type' ].map((table) => {
-					queryInterface.describeTable(table+"s").then((attributes) => {
+					var model = this._conn.model(table);
+					queryInterface.describeTable(model.getTableName()).then((attributes) => {
 						var promises = [ ];
-						var model = this._conn.model(table);
 						for(var attribute in model.attributes) {
 							if(!attributes[attribute])
-								promises.push(queryInterface.addColumn(table+"s", attribute, model.attributes[attribute]));
+								promises.push(queryInterface.addColumn(model.getTableName(), attribute, model.attributes[attribute]));
 						}
 						return Promise.all(promises);
 					});
