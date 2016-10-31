@@ -157,7 +157,7 @@
 					fmSocket.views = { };
 				},
 
-				reconnect: function() {
+				connect: function() {
 					if(fmSocket.padId)
 						setPadId(fmSocket.padId);
 					else
@@ -171,12 +171,8 @@
 			for(var i in handlers)
 				fmSocket.on(i, handlers[i]);
 
-			if(padId) {
-				// Run with delay, so that loadStart event handler can register before
-				fmSocket.$applyAsync(function() {
-					fmSocket.setPadId(padId);
-				});
-			}
+			if(padId)
+				fmSocket.padId = padId;
 
 			fmSocket.$on("$destroy", function() {
 				socket.removeAllListeners();
