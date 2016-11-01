@@ -423,7 +423,7 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))
 					throw "Invalid parameters.";
 
-				return routing.calculateRouting(data.destinations, data.mode, true);
+				return routing.calculateRouting(data.destinations, data.mode, false);
 			});
 		},
 
