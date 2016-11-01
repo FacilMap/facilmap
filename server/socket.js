@@ -429,8 +429,8 @@ utils.extend(SocketConnection.prototype, {
 
 		listenToHistory: function() {
 			return Promise.resolve().then(() => {
-				if(this.padId == null)
-					throw "No pad ID set.";
+				if(!this.writable)
+					throw "In read-only mode.";
 
 				if(this.historyListener)
 					throw "Already listening to history.";
@@ -450,6 +450,9 @@ utils.extend(SocketConnection.prototype, {
 			if(!this.historyListener)
 				throw "Not listening to history.";
 
+			if(!this.writable)
+				throw "In read-only mode.";
+
 			this.historyListener(); // Unregister db listener
 			this.historyListener = null;
 		},
@@ -460,6 +463,9 @@ utils.extend(SocketConnection.prototype, {
 			return Promise.resolve().then(() => {
 				if(!utils.stripObject(data, { id: "number" }))
 					throw "Invalid parameters.";
+
+				if(!this.writable)
+					throw "In read-only mode.";
 
 				if(listening)
 					this.socketHandlers.stopListeningToHistory.call(this);
