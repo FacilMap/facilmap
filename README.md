@@ -23,6 +23,8 @@ open-source map based on [OpenStreetMap](https://openstreetmap.org/). Features i
       of the markers and lines automatically, and a legend is generated automatically to explain what the different
       styles stand for.
     * The current map view can be saved for others to open.
+    * Map objects that do not fit a certain filter expression can be hidden (using [Filtrex](https://github.com/joewalnes/filtrex))
+    * There is a modification history and changes can be undone
 * Can be easily run on your server or embedded into your website (see below).
 
 On the client side, FacilMap relies heavily on [AngularJS](https://angularjs.org/), [Leaflet](http://leafletjs.com/)
