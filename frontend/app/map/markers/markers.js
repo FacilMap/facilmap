@@ -125,7 +125,7 @@
 
 					map.map.closePopup();
 
-					var message = map.messages.showMessage("info", "Drag the marker or click somewhere on the map to reposition it there.", [
+					var message = map.messages.showMessage("info", "Drag the marker to reposition it.", [
 						{ label: "Save", click: _finish.bind(null, true) },
 						{ label: "Cancel", click: _finish}
 					], null, _finish);
