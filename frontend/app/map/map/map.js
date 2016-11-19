@@ -231,13 +231,18 @@
 				map.socket.setFilter(view && view.filter);
 			};
 
-			map.map.createPane("fmClickListener");
-			$(map.map.getPane("fmClickListener")).css("z-index", 620);
-			var transparentLayer = L.imageOverlay('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', [[90,-180],[-90,180]], {
-				className: "fm-clickHandler",
-				pane: "fmClickListener",
-				interactive: true
-			});
+			var transparentLayer = new (L.Layer.extend({
+				onAdd: function(map) {
+					// We append this element to the map container, not to the layers pane, so that it doesn't get moved
+					// around and always covers 100% of the map.
+					this._el = $('<div class="fm-clickHandler"></div>').appendTo(map.getContainer())[0];
+					this.addInteractiveTarget(this._el);
+				},
+				onRemove: function(map) {
+					$(this._el.remove());
+					this.removeInteractiveTarget(this._el);
+				}
+			}))();
 
 			map.addClickListener = function(listener, moveListener) {
 				transparentLayer.addTo(map.map).on("click", listenClick);
