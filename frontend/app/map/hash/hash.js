@@ -53,7 +53,7 @@
 					}
 				}
 
-				map.searchUi.search(args[4] || "", !!ret, !fmUtils.isSearchId(args[4]));
+				map.searchUi.search(args[4] || "", !!ret, args[4] ? !fmUtils.isSearchId(args[4]) : null);
 
 				map.socket.setFilter(args[5] || "");
 
