@@ -9,7 +9,7 @@
 					</span>
 					<div class="has-feedback">
 						<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
-						<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''" ng-show="destination.query.length > 0"><span class="icon-clear"></span></a>
+						<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''; reset()" ng-show="destination.query.length > 0"><span class="icon-clear"></span></a>
 					</div>
 					<span class="input-group-btn" uib-dropdown keyboard-nav="true" ng-show="destination.query.length > 0">
 						<button type="button" class="btn btn-default" uib-dropdown-toggle ng-click="loadSuggestions(destination)"><span class="caret"></span></button>
