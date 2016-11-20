@@ -44,7 +44,10 @@
 				if(destination.suggestionQuery == destination.query)
 					return $q.resolve();
 
-				if(destination.query.trim() != "") {
+				if(destination.query.trim() == "") {
+					destination.suggestions = [ ];
+					destination.suggestionQuery = destination.query;
+				} else {
 					var query = destination.query;
 
 					return map.socket.emit("find", { query: query }).then(function(results) {
@@ -64,11 +67,16 @@
 				if(!dragging)
 					scope.reset();
 
+				if(scope.destinations[0].query.trim() == "" || scope.destinations[scope.destinations.length-1].query.trim() == "")
+					return;
+
 				var points;
 				var mode = scope.routeMode;
 
 				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
-					points = scope.destinations.map(function(destination) {
+					points = scope.destinations.filter(function(destination) {
+						return destination.query.trim() != "";
+					}).map(function(destination) {
 						if(destination.suggestions.length == 0)
 							throw "No place has been found for search term “" + destination.query + "”.";
 
