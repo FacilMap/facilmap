@@ -6,7 +6,7 @@
 
 			var scope = $rootScope.$new(true);
 			scope.searchString = "";
-			scope.loadedSearchString = "";
+			scope.submittedSearchString = "";
 			scope.searchResults = null;
 			scope.showAll = false;
 			scope.activeResult = null;
@@ -14,7 +14,7 @@
 			scope.search = function(noZoom) {
 				scope.searchResults = null;
 				scope.activeResult = null;
-				scope.loadedSearchString = "";
+				scope.submittedSearchString = "";
 				clearRenders();
 
 				if(scope.searchString.trim() != "") {
@@ -27,14 +27,15 @@
 					if(lonlat)
 						return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
-					var q = scope.searchString;
+					var q = scope.submittedSearchString = scope.searchString;
+					map.mapEvents.$emit("searchchange");
+
 					map.socket.emit("find", { query: scope.searchString, loadUrls: true }).then(function(results) {
+						if(q != scope.submittedSearchString)
+							return; // Another search has been started in the meantime
+
 						if(fmUtils.isSearchId(q) && results.length > 0 && results[0].display_name)
 							scope.searchString = q = results[0].display_name;
-
-						scope.loadedSearchString = q;
-
-						map.mapEvents.$emit("searchchange");
 
 						if(typeof results == "string")
 							loadSearchResults(parseFiles([ results ]), noZoom);
@@ -55,7 +56,7 @@
 					result.marker ? result.marker.openPopup() : result.layer.openPopup();
 				} else {
 					clearRenders();
-					renderResult(scope.loadedSearchString, scope.searchResults, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
+					renderResult(scope.submittedSearchString, scope.searchResults, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
 
 					if(!noZoom) {
 						if(result.lat && result.lon && result.zoom)
@@ -74,7 +75,7 @@
 				clearRenders();
 
 				scope.searchResults.forEach(function(result) {
-					renderResult(scope.loadedSearchString, scope.searchResults, result, false, layerGroup, function() { scope.activeResult = result; });
+					renderResult(scope.submittedSearchString, scope.searchResults, result, false, layerGroup, function() { scope.activeResult = result; });
 				});
 
 				if(!noZoom)
@@ -92,7 +93,7 @@
 					routeUi.setQueries(spl.queries);
 					if(spl.mode)
 						routeUi.setMode(spl.mode);
-				} else if(scope.loadedSearchString == scope.searchString)
+				} else if(scope.submittedSearchString == scope.searchString)
 					routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
 				else
 					routeUi.setFrom(scope.searchString);
@@ -406,8 +407,8 @@
 					if(el.is(":visible")) {
 						if(((scope.searchResults && scope.searchResults.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 							return scope.activeResult.id;
-						else if(scope.loadedSearchString)
-							return scope.loadedSearchString;
+						else if(scope.submittedSearchString)
+							return scope.submittedSearchString;
 					} else {
 						var queries = routeUi.getQueries();
 						if(queries)
