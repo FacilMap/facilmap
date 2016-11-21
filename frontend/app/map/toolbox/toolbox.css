@@ -14,6 +14,10 @@
 	margin-left: auto;
 }
 
+.fm-toolbox .navbar {
+	margin-bottom: 0; /* So that the legend can calculate the height of the toolbox properly */
+}
+
 @media print {
 	.fm-toolbox {
 		display: none;

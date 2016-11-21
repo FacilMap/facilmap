@@ -7,8 +7,7 @@
 	font-size: 12px;
 
 	opacity: .7;
-	transition: opacity .7s,transform .7s;
-	transform-origin: bottom right;
+	transition: opacity .7s;
 }
 
 .fm-map-legend .mobile-menu-button {
@@ -16,13 +15,11 @@
 }
 
 .fm-map-legend .panel {
-	overflow-y: auto;
-
-	/* Somehow Chrome shows a horizontal scrollbar with anything else than this */
-	overflow-x: hidden;
-
 	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
 	margin-bottom: 0;
+
+	transition: transform .7s;
+	transform-origin: bottom right;
 }
 
 .fm-map-legend:hover {

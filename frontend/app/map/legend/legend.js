@@ -81,23 +81,26 @@
 
 			function getMaxScale() {
 				var mapContainer = $(map.map.getContainer());
-				var toolbox = $(".fm-toolbox-content", map.el);
-				var toolboxHeight = 2 * (toolbox.offset().top - mapContainer.offset().top) + toolbox.outerHeight();
+				var legendContent = el.find(".panel");
+				var toolbox = $(".fm-toolbox", map.el);
+				var toolboxButton = toolbox.find(".mobile-menu-button");
+				var toolboxHeight = 2 * (toolbox.offset().top - mapContainer.offset().top) + (toolboxButton.is(":visible") ? toolboxButton : toolbox).outerHeight();
+				var maxHeight = mapContainer.outerHeight() - parseInt(el.css("bottom")) - toolboxHeight - el.find(".mobile-menu-button").outerHeight(true);
+				var maxWidth = mapContainer.outerWidth() - parseInt(el.css("right")) * 2;
 
-				var maxHeight = mapContainer.outerHeight() - parseInt(el.css("bottom")) - toolboxHeight;
-
-				var currentScaleMatch = el.css("transform").match(/scale\((.*?)\)/);
+				var currentScaleMatch = legendContent.css("transform").match(/scale\((.*?)\)/);
 				var currentScale = parseFloat(currentScaleMatch ? parseFloat(currentScaleMatch[1]) : 1);
-				var currentHeight = el.outerHeight() / currentScale;
+				var currentHeight = legendContent.outerHeight() / currentScale;
+				var currentWidth = legendContent.outerWidth() / currentScale;
 
-				return maxHeight / currentHeight;
+				return Math.min(maxHeight / currentHeight, maxWidth / currentWidth);
 			}
 
 			var style = $("<style></style>").appendTo("head");
 
 			function resize() {
 				var maxScale = getMaxScale();
-				style.text(".fm-map-legend{transform:scale(" + Math.min(maxScale, 1) + ")} .fm-map-legend:hover{transform:scale(" + maxScale + ")}");
+				style.text(".fm-map-legend .panel{transform:scale(" + Math.min(maxScale, 1) + ")} .fm-map-legend .panel:hover{transform:scale(" + maxScale + ")}");
 			}
 
 			function _allCombinations(fields, cb) {
@@ -119,6 +122,7 @@
 
 			resize();
 			scope.$watch(getMaxScale, resize);
+			scope.$watch("showXs", function(s) { s && setTimeout(resize, 0); })
 			$(window).resize(resize);
 
 			scope.toggleFilter = function(typeInfo, item) {
