@@ -4,7 +4,7 @@
 		return function(map) {
 			var fmMapHash = {
 				hasLocationHash: function() {
-					return !!parseHash(location.hash);
+					return !!parseHash(location.hash, true);
 				},
 
 				init: function() {
@@ -27,7 +27,7 @@
 				}
 			};
 
-			function parseHash(hash) {
+			function parseHash(hash, noApply) {
 				if(hash.indexOf('#') === 0) {
 					hash = hash.substr(1);
 				}
@@ -40,22 +40,24 @@
 
 				var ret = L.Hash.parseHash(args.slice(0, 3).join("/"));
 
-				// This gets called just in L.Hash.update(), so we can already add/remove the layers here
+				if(!noApply) {
+					// This gets called just in L.Hash.update(), so we can already add/remove the layers here
 
-				var l = args[3] && args[3].split("-");
-				if(l && l.length > 0) {
-					for(var i in map.layers) {
-						if(l.indexOf(i) == -1) {
-							if(map.map.hasLayer(map.layers[i]))
-								map.map.removeLayer(map.layers[i]);
-						} else if(!map.map.hasLayer(map.layers[i]))
-							map.map.addLayer(map.layers[i]);
+					var l = args[3] && args[3].split("-");
+					if(l && l.length > 0) {
+						for(var i in map.layers) {
+							if(l.indexOf(i) == -1) {
+								if(map.map.hasLayer(map.layers[i]))
+									map.map.removeLayer(map.layers[i]);
+							} else if(!map.map.hasLayer(map.layers[i]))
+								map.map.addLayer(map.layers[i]);
+						}
 					}
+
+					map.searchUi.search(args[4] || "", !!ret, args[4] ? (ret && !fmUtils.isSearchId(args[4])) : null);
+
+					map.socket.setFilter(args[5] || "");
 				}
-
-				map.searchUi.search(args[4] || "", !!ret, args[4] ? (ret && !fmUtils.isSearchId(args[4])) : null);
-
-				map.socket.setFilter(args[5] || "");
 
 				return ret;
 			}
