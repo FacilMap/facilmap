@@ -20,7 +20,7 @@
 			<ul class="list-group" ng-if="searchResults.length > 0">
 				<li ng-repeat="result in searchResults" class="list-group-item" ng-class="{active: activeResult === result}">
 					<a href="javascript:" ng-click="showResult(result)">{{result.display_name}}</a>
-					<span class="result-type">({{result.type}})</span>
+					<span class="result-type" ng-if="result.type">({{result.type}})</span>
 				</li>
 			</ul>
 		</div>

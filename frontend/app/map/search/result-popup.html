@@ -1,7 +1,7 @@
 <div class="content container-fluid">
 	<h2>{{result.short_name}}</h2>
-	<p ng-if="result.display_name != result.short_name">{{result.display_name}} ({{result.type}})</p>
-	<p ng-if="result.display_name == result.short_name">{{result.type}}</p>
+	<p ng-if="result.display_name != result.short_name">{{result.display_name}}<span ng-if="result.type"> ({{result.type}})</span></p>
+	<p ng-if="result.display_name == result.short_name && result.type">{{result.type}}</p>
 	<dl class="dl-horizontal">
 		<dt class="pos" ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
 		<dd class="pos" ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">{{result.lat | fmRound:5}}, {{result.lon | fmRound:5}}</dd>
