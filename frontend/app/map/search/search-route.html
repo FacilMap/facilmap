@@ -5,7 +5,7 @@
 				<div class="input-group">
 					<span class="input-group-addon">
 						<a href="javascript:" class="sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a>
-						<a href="javascript:" ng-click="removeDestination($index)" ng-show="destinations.length > 2"><span class="glyphicon glyphicon-minus"></span></a>
+						<a href="javascript:" ng-click="removeDestination($index)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><span class="glyphicon glyphicon-minus"></span></a>
 					</span>
 					<div class="has-feedback">
 						<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
@@ -21,12 +21,12 @@
 			</div>
 			<div class="form-group">
 				<div class="btn-toolbar">
-					<button type="button" class="btn btn-default" ng-click="addDestination()"><span class="glyphicon glyphicon-plus"></span></button>
+					<button type="button" class="btn btn-default" ng-click="addDestination()" uib-tooltip="Add another destination" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></button>
 
 					<div class="btn-group">
-						<button type="button" class="btn btn-default" uib-btn-radio="'car'" ng-model="routeMode" tabindex="{{destinations.length+1}}" ng-click="reroute()"><span class="icon-car"></span></button>
-						<button type="button" class="btn btn-default" uib-btn-radio="'bicycle'" ng-model="routeMode" tabindex="{{destinations.length+2}}" ng-click="reroute()"><span class="icon-bicycle"></span></button>
-						<button type="button" class="btn btn-default" uib-btn-radio="'pedestrian'" ng-model="routeMode" tabindex="{{destinations.length+3}}" ng-click="reroute()"><span class="icon-walk"></span></button>
+						<button type="button" class="btn btn-default" uib-btn-radio="'car'" ng-model="routeMode" tabindex="{{destinations.length+1}}" ng-click="reroute()" uib-tooltip="Go by car" tooltip-append-to-body="true"><span class="icon-car"></span></button>
+						<button type="button" class="btn btn-default" uib-btn-radio="'bicycle'" ng-model="routeMode" tabindex="{{destinations.length+2}}" ng-click="reroute()" uib-tooltip="Go by bicycle" tooltip-append-to-body="true"><span class="icon-bicycle"></span></button>
+						<button type="button" class="btn btn-default" uib-btn-radio="'pedestrian'" ng-model="routeMode" tabindex="{{destinations.length+3}}" ng-click="reroute()" uib-tooltip="Go by walk" tooltip-append-to-body="true"><span class="icon-walk"></span></button>
 					</div>
 
 					<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+4}}">Go!</button>
