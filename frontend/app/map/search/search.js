@@ -12,10 +12,7 @@
 			scope.activeResult = null;
 
 			scope.search = function(noZoom) {
-				scope.searchResults = null;
-				scope.activeResult = null;
-				scope.submittedSearchString = "";
-				clearRenders();
+				reset();
 
 				if(scope.searchString.trim() != "") {
 					if(scope.searchString.match(/ to /)) {
@@ -296,6 +293,13 @@
 				}
 			}
 
+			function reset() {
+				scope.searchResults = null;
+				scope.activeResult = null;
+				scope.submittedSearchString = "";
+				clearRenders();
+			}
+
 			function clearRenders() {
 				layerGroup.clearLayers();
 			}
@@ -364,18 +368,13 @@
 			var searchUi = {
 				show: function() {
 					el.show();
-
-					if(scope.searchResults) {
-						if(scope.showAll && scope.searchResults.length > 1)
-							scope.showAllResults();
-						 else if(scope.searchResults.length > 0)
-							scope.showResult(scope.activeResult || scope.searchResults[0]);
-					}
+					map.mapEvents.$emit("searchchange");
 				},
 
 				hide: function() {
-					clearRenders();
+					reset();
 					el.hide();
+					map.mapEvents.$emit("searchchange");
 				},
 
 				search: function(query, noZoom, showAll) {
