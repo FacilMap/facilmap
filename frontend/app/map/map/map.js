@@ -322,13 +322,13 @@
 			map.typesUi = fmMapTypes(map);
 			map.padUi = fmMapPad(map);
 			map.gpxUi = fmMapGpx(map);
-			map.toolboxUi = fmMapToolbox(map);
 			map.aboutUi = fmMapAbout(map);
 			map.importUi = fmMapImport(map);
 			map.searchUi = fmMapSearch(map);
 			map.hashUi = fmMapHash(map);
 			map.historyUi = fmMapHistory(map);
 
+			fmMapToolbox(map);
 			fmMapLegend(map);
 
 			if(padId) {

@@ -79,13 +79,25 @@
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 
-			function getMaxHeight() {
-				var toolbox = map.toolboxUi.div;
-				return $(map.map.getContainer()).outerHeight() - parseInt(el.css("bottom")) - 25 - toolbox.position().top - toolbox.outerHeight(true);
+			function getMaxScale() {
+				var mapContainer = $(map.map.getContainer());
+				var toolbox = $(".fm-toolbox-content", map.el);
+				var toolboxHeight = 2 * (toolbox.offset().top - mapContainer.offset().top) + toolbox.outerHeight();
+
+				var maxHeight = mapContainer.outerHeight() - parseInt(el.css("bottom")) - toolboxHeight;
+
+				var currentScaleMatch = el.css("transform").match(/scale\((.*?)\)/);
+				var currentScale = parseFloat(currentScaleMatch ? parseFloat(currentScaleMatch[1]) : 1);
+				var currentHeight = el.outerHeight() / currentScale;
+
+				return maxHeight / currentHeight;
 			}
 
+			var style = $("<style></style>").appendTo("head");
+
 			function resize() {
-				el.css("max-height", getMaxHeight()+"px");
+				var maxScale = getMaxScale();
+				style.text(".fm-map-legend{transform:scale(" + Math.min(maxScale, 1) + ")} .fm-map-legend:hover{transform:scale(" + maxScale + ")}");
 			}
 
 			function _allCombinations(fields, cb) {
@@ -106,7 +118,7 @@
 			}
 
 			resize();
-			scope.$watch(getMaxHeight, resize);
+			scope.$watch(getMaxScale, resize);
 			$(window).resize(resize);
 
 			scope.toggleFilter = function(typeInfo, item) {

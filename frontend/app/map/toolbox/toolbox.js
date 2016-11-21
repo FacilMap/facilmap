@@ -59,13 +59,8 @@
 				map.historyUi.openHistoryDialog();
 			};
 
-			var ret = {
-				div: $($templateCache.get("map/toolbox/toolbox.html"))
-			};
-			$compile(ret.div.insertAfter(map.map.getContainer()))(scope);
+			$compile($($templateCache.get("map/toolbox/toolbox.html")).insertAfter(map.map.getContainer()))(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
-
-			return ret;
 		}
 	});
 
