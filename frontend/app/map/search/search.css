@@ -7,17 +7,12 @@
 	opacity: .7;
 	transition: opacity .7s,width .7s,max-width .7s,background-color .7s,border-color .7s;
 
-	width: 250px;
-	max-width: 30%;
+	width: 70%;
+	max-width: 350px;
 }
 
 .fm-search:hover,.fm-search.fm-hasFocus {
 	opacity: 1;
-}
-
-.fm-search/*.fm-hasFocus*/ {
-	width: 350px;
-	max-width: 40%;
 }
 
 .fm-search-search:not(:hover):not(.fm-hasResults):not(.fm-hasFocus) {
