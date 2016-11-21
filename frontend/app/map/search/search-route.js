@@ -14,6 +14,8 @@
 
 			scope.routeMode = 'car';
 			scope.destinations = [ ];
+			scope.submittedQueries = null;
+			scope.submittedMode = null;
 
 			scope.sortableOptions = ng.copy(fmSortableOptions);
 			scope.sortableOptions.update = function() {
@@ -23,6 +25,8 @@
 			scope.addDestination = function() {
 				scope.destinations.push({
 					query: "",
+					loadingQuery: "",
+					loadedQuery: "",
 					suggestions: [ ]
 				});
 			};
@@ -41,21 +45,22 @@
 			};
 
 			scope.loadSuggestions = function(destination) {
-				if(destination.suggestionQuery == destination.query)
+				if(destination.loadedQuery == destination.query)
 					return $q.resolve();
 
-				if(destination.query.trim() == "") {
-					destination.suggestions = [ ];
-					destination.suggestionQuery = destination.query;
-				} else {
-					var query = destination.query;
+				destination.suggestions = [ ];
+				var query = destination.loadingQuery = destination.query;
 
+				if(destination.query.trim() != "") {
 					return map.socket.emit("find", { query: query }).then(function(results) {
+						if(query != destination.loadingQuery)
+							return; // The destination has changed in the meantime
+
 						if(fmUtils.isSearchId(query) && results.length > 0 && results[0].display_name)
 							destination.query = query = results[0].display_name;
 
 						destination.suggestions = results;
-						destination.suggestionQuery = query;
+						destination.loadedQuery = query;
 						destination.selectedSuggestionIdx = 0;
 					}).catch(function(err) {
 						map.messages.showMessage("danger", err);
@@ -73,6 +78,16 @@
 				var points;
 				var mode = scope.routeMode;
 
+				scope.submittedQueries = scope.destinations.map(function(destination) {
+					if(destination.loadedQuery == destination.query && destination.suggestions.length)
+						return destination.suggestions[destination.selectedSuggestionIdx].id || destination.suggestions[0].id;
+					else
+						return destination.query;
+				});
+				scope.submittedMode = mode;
+
+				map.mapEvents.$emit("searchchange");
+
 				return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
 					points = scope.destinations.filter(function(destination) {
 						return destination.query.trim() != "";
@@ -83,6 +98,12 @@
 						return destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
 					});
 
+					scope.submittedQueries = points.map(function(point) {
+						return point.id;
+					});
+
+					map.mapEvents.$emit("searchchange");
+
 					return map.socket.emit("getRoute", { destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
 				}).then(function(route) {
 					route.routePoints = points;
@@ -91,8 +112,6 @@
 					scope.routeObj = route;
 					scope.routeError = null;
 					renderRoute(dragging, noZoom);
-
-					map.mapEvents.$emit("searchchange");
 				}).catch(function(err) {
 					scope.routeError = err;
 				});
@@ -106,6 +125,8 @@
 			scope.reset = function() {
 				scope.routeObj = null;
 				scope.routeError = null;
+				scope.submittedQueries = null;
+				scope.submittedMode = null;
 
 				clearRoute();
 			};
@@ -230,7 +251,8 @@
 				var disp = fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5);
 				return {
 					query: disp,
-					suggestionQuery: disp,
+					loadingQuery: disp,
+					loadedQuery: disp,
 					selectedSuggestionIdx: 0,
 					suggestions: [ {
 						lat: latlng.lat,
@@ -248,7 +270,7 @@
 
 				if(suggestions) {
 					dest.suggestions = suggestions;
-					dest.suggestionQuery = query;
+					dest.loadingQuery = dest.loadedQuery = query;
 					dest.selectedSuggestionIdx = Math.max(suggestions.indexOf(selectedSuggestion), 0);
 				}
 			}
@@ -294,17 +316,11 @@
 				},
 
 				getQueries: function() {
-					if(scope.routeObj) {
-						return scope.routeObj.routePoints.map(function(point) {
-							return point.id;
-						});
-					}
+					return scope.submittedQueries;
 				},
 
-				getMode: function(mode) {
-					if(scope.routeObj) {
-						return scope.routeObj.routeMode;
-					}
+				getMode: function() {
+					return scope.submittedMode;
 				},
 
 				submit: function(noZoom) {
