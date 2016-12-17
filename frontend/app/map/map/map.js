@@ -60,7 +60,7 @@
 					fmKey: "Topo",
 					attribution: $sce.trustAsHtml('© <a href="https://opentopomap.org/" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC-BY-SA</a>) / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>')
 				}),
-				L.tileLayer("https://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png", {
+				L.tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
 					fmName: "OpenCycleMap",
 					fmBase: true,
 					fmKey: "OCyc",
