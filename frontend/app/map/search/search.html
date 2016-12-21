@@ -1,4 +1,5 @@
-<div class="fm-search fm-search-search panel panel-default" ng-class="{'fm-hasResults': !!searchResults}">
+<button type="button" class="btn btn-default visible-xs-block mobile-menu-button fm-search-mobile-toggle" ng-click="showXs = !showXs" uib-tooltip="{{showXs ? 'Hide search' : 'Show search'}}" tooltip-placement="right"><span class="glyphicon glyphicon-search"></span></button>
+<div class="fm-search fm-search-search panel panel-default" ng-class="{'fm-hasResults': !!searchResults, 'hidden-xs': !showXs}">
 	<div class="panel-body">
 		<form ng-submit="search()">
 			<div class="form-group">

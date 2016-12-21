@@ -366,14 +366,16 @@
 			}
 
 			var searchUi = {
+				_el: el.find(".fm-search"),
+
 				show: function() {
-					el.show();
+					searchUi._el.show();
 					map.mapEvents.$emit("searchchange");
 				},
 
 				hide: function() {
 					reset();
-					el.hide();
+					searchUi._el.hide();
 					map.mapEvents.$emit("searchchange");
 				},
 
@@ -403,7 +405,7 @@
 				},
 
 				getCurrentSearchForHash: function() {
-					if(el.is(":visible")) {
+					if(searchUi._el.is(":visible")) {
 						if(((scope.searchResults && scope.searchResults.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 							return scope.activeResult.id;
 						else if(scope.submittedSearchString)

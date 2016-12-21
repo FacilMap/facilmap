@@ -1,7 +1,13 @@
+.fm-search-mobile-toggle {
+	position: absolute;
+	top: 26px;
+	left: 60px;
+}
+
 .fm-search {
 	position: absolute;
 	top: 10px;
-	left: 60px;
+	left: 52px;
 	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
 
 	opacity: .7;
@@ -9,6 +15,12 @@
 
 	width: 70%;
 	max-width: 350px;
+}
+
+@media (max-width: 767px) {
+	.fm-search {
+		left: 100px;
+	}
 }
 
 .fm-search:hover,.fm-search.fm-hasFocus {
