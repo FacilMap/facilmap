@@ -1,0 +1,23 @@
+version: "2"
+services:
+    facilmap:
+        build: .
+        image: facilmap/facilmap2
+        ports:
+            - "127.0.0.1:8080:8080"
+        environment:
+            DB_TYPE: mariadb
+            DB_HOST: mariadb
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: facilmap
+        links:
+            - mariadb
+        restart: on-failure
+    mariadb:
+        image: mariadb
+        environment:
+            MYSQL_DATABASE: facilmap
+            MYSQL_USER: facilmap
+            MYSQL_PASSWORD: facilmap
+            MYSQL_RANDOM_ROOT_PASSWORD: "true"
