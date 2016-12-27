@@ -1,10 +1,12 @@
-FROM node:latest
+FROM node:7.3-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD npm run server
 EXPOSE 8080
 
-RUN useradd -m -d /opt/facilmap -s /bin/bash facilmap
+RUN apk update && apk add git
+
+RUN adduser -D -h /opt/facilmap -s /bin/bash facilmap
 WORKDIR /opt/facilmap
 
 COPY ./ ./
