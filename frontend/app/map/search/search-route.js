@@ -154,7 +154,7 @@
 				scope.clear();
 			};
 
-			var el = $($templateCache.get("map/search/search-route.html")).appendTo(searchUi._el);
+			var el = $($templateCache.get("map/search/search-route.html")).insertAfter(searchUi._el);
 			$compile(el)(scope);
 			scope.$evalAsync(); // $compile only replaces variables on next digest
 

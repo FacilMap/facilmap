@@ -366,7 +366,7 @@
 			}
 
 			var searchUi = {
-				_el: el.find(".fm-search"),
+				_el: el.filter(".fm-search"),
 
 				show: function() {
 					searchUi._el.show();
