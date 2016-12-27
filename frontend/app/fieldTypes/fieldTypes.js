@@ -38,8 +38,12 @@
 						el.attr("id", attrs.fmTypeFieldId);
 
 					el.appendTo(element.empty());
-					$compile(el)(scope);
-					scope.$evalAsync(); // $compile only replaces variables on next digest
+
+					// For some reason, if we call $compile directly, select boxes will not select the right value
+					// with newer versions of angular
+					scope.$evalAsync(function() {
+						$compile(el)(scope);
+					});
 				};
 
 				scope.$watch(attrs.fmTypeField+".type", update);
