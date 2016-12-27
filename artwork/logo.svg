@@ -9,34 +9,142 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="81.977219"
-   height="46.976002"
+   width="191.3766"
+   height="175.69025"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.5 r10040"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="logo.svg"
-   inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilpad/frontend/img/logo.png"
+   inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilmap/api/src/resources/img/logo_svg.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
-     id="defs4" />
+     id="defs4">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow 5"
+       id="filter3376"
+       x="-0.59999999999999998"
+       width="2.1499999999999999"
+       y="-1.3700000000000001"
+       height="3.7400000000000002">
+      <feFlood
+         flood-opacity="1"
+         flood-color="rgb(255,255,255)"
+         result="flood"
+         id="feFlood3378" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite3380" />
+      <feGaussianBlur
+         in="composite"
+         stdDeviation="5"
+         result="blur"
+         id="feGaussianBlur3382" />
+      <feOffset
+         dx="0"
+         dy="0"
+         result="offset"
+         id="feOffset3384" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite3386" />
+    </filter>
+    <filter
+       height="3.7400000000000002"
+       y="-1.3700000000000001"
+       width="2.1499999999999999"
+       x="-0.59999999999999998"
+       id="filter3388"
+       inkscape:label="Drop Shadow 40"
+       style="color-interpolation-filters:sRGB;">
+      <feFlood
+         id="feFlood3390"
+         result="flood"
+         flood-color="rgb(255,255,255)"
+         flood-opacity="1" />
+      <feComposite
+         id="feComposite3392"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur3394"
+         result="blur"
+         stdDeviation="40" />
+      <feOffset
+         id="feOffset3396"
+         result="offset"
+         dy="0"
+         dx="0" />
+      <feComposite
+         id="feComposite3398"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+    <filter
+       height="3.7400000000000002"
+       y="-1.3700000000000001"
+       width="2.1499999999999999"
+       x="-0.59999999999999998"
+       id="filter3400"
+       inkscape:label="Drop Shadow 15"
+       style="color-interpolation-filters:sRGB;">
+      <feFlood
+         id="feFlood3402"
+         result="flood"
+         flood-color="rgb(255,255,255)"
+         flood-opacity="1" />
+      <feComposite
+         id="feComposite3404"
+         result="composite1"
+         operator="in"
+         in2="SourceGraphic"
+         in="flood" />
+      <feGaussianBlur
+         id="feGaussianBlur3406"
+         result="blur"
+         stdDeviation="15"
+         in="composite" />
+      <feOffset
+         id="feOffset3408"
+         result="offset"
+         dy="0"
+         dx="0" />
+      <feComposite
+         id="feComposite3410"
+         result="composite2"
+         operator="over"
+         in2="offset"
+         in="SourceGraphic" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#000000"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="-271.28511"
-     inkscape:cy="-49.061303"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="22.253333"
+     inkscape:cy="71.578505"
      inkscape:document-units="px"
      inkscape:current-layer="g3065"
      showgrid="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="844"
-     inkscape:window-x="-4"
-     inkscape:window-y="-4"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -59,7 +167,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-43.517933,-50.450203)">
+     transform="translate(9.8894926,13.906917)">
     <g
        id="g3422"
        style="filter:url(#filter3388)"
@@ -78,7 +186,7 @@
              x="39.677933"
              style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#00272a;fill-opacity:1;stroke:none;font-family:Earthbound;-inkscape-font-specification:Earthbound"
              xml:space="preserve"><tspan
-               style="font-size:64px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#00272a;fill-opacity:1;font-family:URW Chancery L;-inkscape-font-specification:URW Chancery L Bold Italic"
+               style="font-size:64px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;fill:#00272a;fill-opacity:1;font-family:'URW Chancery L';-inkscape-font-specification:'URW Chancery L Medium'"
                y="90.130203"
                x="39.677933"
                id="tspan2987"
@@ -112,7 +220,7 @@
                  id="tspan2995"
                  x="99.433052"
                  y="83.994766"
-                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Pad</tspan></text>
+                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Map</tspan></text>
           </g>
         </g>
       </g>

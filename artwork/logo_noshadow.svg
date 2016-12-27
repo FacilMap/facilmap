@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="88.515327"
+   height="46.976002"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="logo_noshadow.svg"
+   inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilmap/api/src/resources/img/logo_svg.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8284272"
+     inkscape:cx="0.68008317"
+     inkscape:cy="7.2213789"
+     inkscape:document-units="px"
+     inkscape:current-layer="g3065"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:snap-global="false" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-43.517933,-50.450203)">
+    <g
+       id="g3422"
+       style="filter:url(#filter3388)"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <g
+         style="filter:url(#filter3400)"
+         id="g3412">
+        <g
+           id="g3065"
+           style="filter:url(#filter3376)">
+          <text
+             sodipodi:linespacing="125%"
+             id="text2985"
+             y="90.130203"
+             x="39.677933"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:24px;line-height:125%;font-family:Earthbound;-inkscape-font-specification:Earthbound;letter-spacing:0px;word-spacing:0px;fill:#00272a;fill-opacity:1;stroke:none"
+             xml:space="preserve"><tspan
+               style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:64px;font-family:'URW Chancery L';-inkscape-font-specification:'URW Chancery L Medium';fill:#00272a;fill-opacity:1"
+               y="90.130203"
+               x="39.677933"
+               id="tspan2987"
+               sodipodi:role="line">F </tspan></text>
+          <g
+             id="g3059">
+            <text
+               xml:space="preserve"
+               style="font-size:20.24188423px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#00272a;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans"
+               x="69.45253"
+               y="85.495247"
+               id="text2989"
+               sodipodi:linespacing="125%"
+               transform="scale(0.9638977,1.0374545)"><tspan
+                 sodipodi:role="line"
+                 id="tspan2991"
+                 x="69.45253"
+                 y="85.495247"
+                 style="font-size:20.24188423px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-0.73265034;writing-mode:lr-tb;text-anchor:start;fill:#00272a;fill-opacity:1;font-family:Open Sans;-inkscape-font-specification:Open Sans">acil</tspan></text>
+            <text
+               xml:space="preserve"
+               style="font-size:26.51581001px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Earthbound;-inkscape-font-specification:Earthbound"
+               x="99.433052"
+               y="83.994766"
+               id="text2993"
+               sodipodi:linespacing="125%"
+               transform="scale(0.94699186,1.0559753)"
+               inkscape:export-xdpi="90"
+               inkscape:export-ydpi="90"><tspan
+                 sodipodi:role="line"
+                 id="tspan2995"
+                 x="99.433052"
+                 y="83.994766"
+                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Map</tspan></text>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

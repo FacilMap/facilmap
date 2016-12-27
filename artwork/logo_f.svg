@@ -9,25 +9,25 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="191.3766"
-   height="175.69025"
+   width="80"
+   height="80"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.5 r10040"
-   sodipodi:docname="logo_inkscape.svg"
-   inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilmap/api/src/resources/img/logo_svg.png"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="logo_f.svg"
+   inkscape:export-filename="/home/candid/Documents/workspace/programming/web/osm/facilpad/artwork/logo_f.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <filter
-       style="color-interpolation-filters:sRGB;"
+       style="color-interpolation-filters:sRGB"
        inkscape:label="Drop Shadow 5"
        id="filter3376"
-       x="-0.59999999999999998"
-       width="2.1499999999999999"
-       y="-1.3700000000000001"
-       height="3.7400000000000002">
+       x="-0.60000002"
+       width="2.1500001"
+       y="-1.37"
+       height="3.74">
       <feFlood
          flood-opacity="1"
          flood-color="rgb(255,255,255)"
@@ -40,7 +40,6 @@
          result="composite1"
          id="feComposite3380" />
       <feGaussianBlur
-         in="composite"
          stdDeviation="5"
          result="blur"
          id="feGaussianBlur3382" />
@@ -57,13 +56,13 @@
          id="feComposite3386" />
     </filter>
     <filter
-       height="3.7400000000000002"
-       y="-1.3700000000000001"
-       width="2.1499999999999999"
-       x="-0.59999999999999998"
+       height="3.74"
+       y="-1.37"
+       width="2.1500001"
+       x="-0.60000002"
        id="filter3388"
        inkscape:label="Drop Shadow 40"
-       style="color-interpolation-filters:sRGB;">
+       style="color-interpolation-filters:sRGB">
       <feFlood
          id="feFlood3390"
          result="flood"
@@ -92,13 +91,13 @@
          in="SourceGraphic" />
     </filter>
     <filter
-       height="3.7400000000000002"
-       y="-1.3700000000000001"
-       width="2.1499999999999999"
-       x="-0.59999999999999998"
+       height="3.74"
+       y="-1.37"
+       width="2.1500001"
+       x="-0.60000002"
        id="filter3400"
        inkscape:label="Drop Shadow 15"
-       style="color-interpolation-filters:sRGB;">
+       style="color-interpolation-filters:sRGB">
       <feFlood
          id="feFlood3402"
          result="flood"
@@ -113,8 +112,7 @@
       <feGaussianBlur
          id="feGaussianBlur3406"
          result="blur"
-         stdDeviation="15"
-         in="composite" />
+         stdDeviation="15" />
       <feOffset
          id="feOffset3408"
          result="offset"
@@ -130,21 +128,21 @@
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#000000"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8284272"
-     inkscape:cx="97.20665"
-     inkscape:cy="71.578505"
+     inkscape:zoom="5.6568544"
+     inkscape:cx="21.084733"
+     inkscape:cy="43.938591"
      inkscape:document-units="px"
      inkscape:current-layer="g3065"
      showgrid="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="844"
-     inkscape:window-x="-4"
-     inkscape:window-y="-4"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -159,7 +157,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -167,7 +165,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(9.8894926,13.906917)">
+     transform="translate(-17.674732,-81.78333)">
     <g
        id="g3422"
        style="filter:url(#filter3388)"
@@ -182,46 +180,15 @@
           <text
              sodipodi:linespacing="125%"
              id="text2985"
-             y="90.130203"
-             x="39.677933"
-             style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#00272a;fill-opacity:1;stroke:none;font-family:Earthbound;-inkscape-font-specification:Earthbound"
+             y="145.44543"
+             x="18.240929"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:37.29563522px;line-height:125%;font-family:Earthbound;-inkscape-font-specification:Earthbound;letter-spacing:0px;word-spacing:0px;fill:#00272a;fill-opacity:1;stroke:none"
              xml:space="preserve"><tspan
-               style="font-size:64px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#00272a;fill-opacity:1;font-family:URW Chancery L;-inkscape-font-specification:URW Chancery L Bold Italic"
-               y="90.130203"
-               x="39.677933"
+               style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:99.45503998px;font-family:'URW Chancery L';-inkscape-font-specification:'URW Chancery L Medium';fill:#00272a;fill-opacity:1"
+               y="145.44543"
+               x="18.240929"
                id="tspan2987"
-               sodipodi:role="line">F</tspan></text>
-          <g
-             id="g3059">
-            <text
-               xml:space="preserve"
-               style="font-size:20.24188423px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#00272a;fill-opacity:1;stroke:none;font-family:Open Sans;-inkscape-font-specification:Open Sans"
-               x="69.45253"
-               y="85.495247"
-               id="text2989"
-               sodipodi:linespacing="125%"
-               transform="scale(0.9638977,1.0374545)"><tspan
-                 sodipodi:role="line"
-                 id="tspan2991"
-                 x="69.45253"
-                 y="85.495247"
-                 style="font-size:20.24188423px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:-0.73265034;writing-mode:lr-tb;text-anchor:start;fill:#00272a;fill-opacity:1;font-family:Open Sans;-inkscape-font-specification:Open Sans">acil</tspan></text>
-            <text
-               xml:space="preserve"
-               style="font-size:26.51581001px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Earthbound;-inkscape-font-specification:Earthbound"
-               x="99.433052"
-               y="83.994766"
-               id="text2993"
-               sodipodi:linespacing="125%"
-               transform="scale(0.94699186,1.0559753)"
-               inkscape:export-xdpi="90"
-               inkscape:export-ydpi="90"><tspan
-                 sodipodi:role="line"
-                 id="tspan2995"
-                 x="99.433052"
-                 y="83.994766"
-                 style="font-size:19.88685036px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;letter-spacing:-1.23147881;font-family:Open Sans;-inkscape-font-specification:Open Sans Bold">Map</tspan></text>
-          </g>
+               sodipodi:role="line">F </tspan></text>
         </g>
       </g>
     </g>
