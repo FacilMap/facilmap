@@ -201,15 +201,14 @@ module.exports = function(Database) {
 
 			return utils.promiseAuto({
 				oldData: () => {
-					if(makeHistory)
-						return this._getPadObject(type, padId, objId);
+					// Fetch the old object for the history, but also to make sure that the object exists. Unfortunately,
+					// we cannot rely on the return value of the update() method, as on some platforms it returns 0 even
+					// if the object was found (but no fields were changed)
+					return this._getPadObject(type, padId, objId);
 				},
 
 				update: (oldData) => {
-					return this._conn.model(type).update(data, { where: { id: objId, padId: padId } }).then((res) => {
-						if(res[0] == 0)
-							throw new Error(type + " " + objId + " of pad " + padId + "could not be found.");
-					});
+					return this._conn.model(type).update(data, { where: { id: objId, padId: padId } });
 				},
 
 				newData: (update) => {
