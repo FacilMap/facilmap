@@ -124,8 +124,7 @@
 					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
-				}
-			)
+				})
 			].forEach(function(it) {
 				map.layers[it.options.fmKey] = it;
 			});
