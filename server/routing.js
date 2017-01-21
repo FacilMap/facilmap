@@ -30,7 +30,6 @@ function calculateRouting(points, mode, simple) {
 		+ "&steps=false"
 		+ "&geometries=geojson"
 		+ "&overview=" + (simple ? "simplified" : "full")
-		+ "&annotations=false"
 		+ "&access_token=" + encodeURIComponent(ACCESS_TOKEN);
 
 	return request.get({
