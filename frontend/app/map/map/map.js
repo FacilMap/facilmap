@@ -13,7 +13,7 @@
 		var maps = { };
 
 		var ret = { };
-		
+
 		ret.getMap = function(id) {
 			return maps[id];
 		};
@@ -100,6 +100,16 @@
 					fmKey: "Rlie",
 					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
 					zIndex: 300,
+					noWrap: true
+				}),
+				L.tileLayer("http://b.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg", {
+					fmName: "WaterColor Map",
+					fmBase: true,
+					fmKey: "MSwc",
+					attribution: $sce.trustAsHtml('Map tiles by <a href="http://stamen.com/">Stamen Design</a>, ',
+					'under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. ',
+					'Data by <a href="http://openstreetmap.org/">OpenStreetMap</a>, ',
+					'under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'),
 					noWrap: true
 				}),
 				fmUtils.graticule(map, {
