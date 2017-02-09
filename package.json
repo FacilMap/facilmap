@@ -43,6 +43,7 @@
     "request-promise": "^4.1.1",
     "sequelize": "^3.24.3",
     "socket.io": "^1.2.1",
+    "socket.io-client": "^1.7.2",
     "stream-combiner": "^0.2.2",
     "underscore": "^1.8.3"
   },

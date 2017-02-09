@@ -1,3 +1,4 @@
+import io from 'socket.io-client';
 import fm from '../app';
 import $ from 'jquery';
 
