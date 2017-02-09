@@ -3,10 +3,12 @@ const copyPlugin = require("copy-webpack-plugin");
 const duplicatePlugin = require("./webpack-duplicates");
 const htmlPlugin = require("html-webpack-plugin");
 const ngAnnotatePlugin = require("ng-annotate-webpack-plugin");
+const path = require("path");
 
 
 const depLoaders = {
-	jquery: "expose-loader?jQuery"
+	jquery: "expose-loader?jQuery",
+	angular: "exports-loader?window.angular"
 };
 
 // Add imports to these modules, as they don't specify their imports properly
@@ -35,6 +37,11 @@ module.exports = {
 	output: {
 		filename: "bundle-[hash].js",
 		path: __dirname + "/build/"
+	},
+	resolve: {
+		alias: {
+			angular: "angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+		}
 	},
 	module: {
 		rules: [
@@ -69,7 +76,7 @@ module.exports = {
 		    jQuery: "jquery",
 		    "window.jQuery": "jquery",
 			L: "leaflet",
-			angular: "exports-loader?window.angular!angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+			angular: "angular"
 		}),
 		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/index/${file}` }))),
 		new webpack.optimize.UglifyJsPlugin({
