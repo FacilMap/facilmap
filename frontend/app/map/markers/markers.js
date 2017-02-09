@@ -122,7 +122,11 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 							markersById[marker.id].openPopup();
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
+
+							markersUi._addMarker(map.socket.markers[marker.id]);
 						});
+					} else {
+						markersUi._addMarker(map.socket.markers[marker.id]);
 					}
 				}
 
