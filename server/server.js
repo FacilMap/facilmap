@@ -1,19 +1,8 @@
-var http = require("http");
-var compression = require("compression");
-var domain = require("domain");
-var Promise = require("promise");
-var express = require("express");
-var path = require("path");
-var webpack = require("webpack");
-var webpackConfig = require("../frontend/webpack.config");
-var webpackMiddleware = require("webpack-dev-middleware");
-
 var config = require("../config");
 var Database = require("./database/database");
 var utils = require("./utils");
 var Socket = require("./socket");
-
-var frontendPath = path.resolve(__dirname + "/../frontend");
+var webserver = require("./webserver");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -32,41 +21,16 @@ process.on('unhandledRejection', (reason, promise) => {
 	console.trace("Unhandled rejection", reason);
 });
 
+const database = new Database();
+
 utils.promiseAuto({
-	database: () => new Database(),
+	databaseConnect: database.connect(),
 
-	databaseConnect: database => database.connect(),
-
-	server: () => {
-		var app = express();
-		app.use(compression());
-
-		app.get("/bundle-:hash.js", function(req, res, next) {
-			res.setHeader('Cache-Control', 'public, max-age=31557600'); // one year
-
-			next();
-		});
-
-		var staticMiddleware = process.env.FM_DEV
-			? webpackMiddleware(webpack(webpackConfig), {
-				publicPath: "/"
-			})
-			: express.static(frontendPath + "/build/");
-
-		app.use(staticMiddleware);
-
-		app.get("/:padId", function(req, res, next) {
-			req.url = req.url.replace(/[^\/]*$/, "");
-			req.originalUrl = req.originalUrl.replace(/[^\/]*$/, "");
-
-			staticMiddleware(req, res, next);
-		});
-
-		var server = http.createServer(app);
-		return Promise.denodeify(server.listen.bind(server))(config.port, config.host).then(() => server);
+	server: (databaseConnect) => {
+		return webserver.init();
 	},
 
-	socket: (server, database) => {
+	socket: (server) => {
 		return new Socket(server, database);
 	}
 }).then(res => {
