@@ -144,6 +144,15 @@ following steps to get it running on Windows:
 7. Run `npm run build`
 8. Run `npm run server`
 
+### Development mode
+
+To run the server in development mode, run `FM_DEV=true npm run server`. This will start a webpack-dev-server that will
+automatically recompile any frontend files when they change.
+
+To additionally enable debug output of various components, additionally prepend the command by `DEBUG=*`. See the
+documentation of [debug](https://github.com/visionmedia/debug). To only enable the debug logging of SQL queries,
+use `DEBUG=sql`.
+
 
 Config
 ------

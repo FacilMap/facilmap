@@ -39,6 +39,7 @@ module.exports = {
 		path: __dirname + "/build/"
 	},
 	resolve: {
+		unsafeCache: true,
 		alias: {
 			angular: "angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
 		}
@@ -83,5 +84,5 @@ module.exports = {
 			sourceMap: true
 		}),
 	],
-	devtool: "source-map"
+	devtool: process.env.FM_DEV ? "cheap-eval-source-map" : "source-map"
 };

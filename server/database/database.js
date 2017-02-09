@@ -1,6 +1,7 @@
 var util = require("util");
 var events = require("events");
 var Sequelize = require("sequelize");
+var debug = require("debug");
 
 var utils = require("../utils");
 var config = require("../../config");
@@ -16,7 +17,8 @@ class Database extends events.EventEmitter {
 			port: config.db.port,
 			define: {
 				timestamps: false
-			}
+			},
+			logging: debug.enabled("sql") ? console.log : false
 		});
 
 		for(let func of this._init)

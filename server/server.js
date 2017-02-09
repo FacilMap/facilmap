@@ -4,6 +4,9 @@ var domain = require("domain");
 var Promise = require("promise");
 var express = require("express");
 var path = require("path");
+var webpack = require("webpack");
+var webpackConfig = require("../frontend/webpack.config");
+var webpackMiddleware = require("webpack-dev-middleware");
 
 var config = require("../config");
 var Database = require("./database/database");
@@ -44,9 +47,19 @@ utils.promiseAuto({
 			next();
 		});
 
-		app.use(express.static(frontendPath + "/build/"));
-		app.get("/:padId", function(req, res) {
-			res.sendFile(frontendPath + "/build/index.html");
+		var staticMiddleware = process.env.FM_DEV
+			? webpackMiddleware(webpack(webpackConfig), {
+				publicPath: "/"
+			})
+			: express.static(frontendPath + "/build/");
+
+		app.use(staticMiddleware);
+
+		app.get("/:padId", function(req, res, next) {
+			req.url = req.url.replace(/[^\/]*$/, "");
+			req.originalUrl = req.originalUrl.replace(/[^\/]*$/, "");
+
+			staticMiddleware(req, res, next);
 		});
 
 		var server = http.createServer(app);
