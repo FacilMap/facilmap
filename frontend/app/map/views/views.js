@@ -1,70 +1,68 @@
-(function(fm, $, ng, undefined) {
+import fm from '../../app';
 
-	fm.app.factory("fmMapViews", function($uibModal) {
-		return function(map) {
-			var ret = {
-				saveView : function() {
-					$uibModal.open({
-						templateUrl: "map/views/save-view.html",
-						scope: map.socket,
-						controller: "fmMapViewsSaveCtrl",
-						size: "lg",
-						resolve: {
-							map: function() { return map; }
-						}
-					});
-				},
-				manageViews : function() {
-					$uibModal.open({
-						templateUrl: "map/views/manage-views.html",
-						scope: map.socket,
-						controller: "fmMapViewsManageCtrl",
-						size: "lg",
-						resolve: {
-							map: function() { return map; }
-						}
-					});
-				}
-			};
-
-			return ret;
-		};
-	});
-
-	fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
-		$scope.name = null;
-		$scope.filter = map.socket.filterExpr;
-
-		$scope.save = function() {
-			var view = map.getCurrentView($scope.saveFilter);
-			view.name = $scope.name;
-			map.socket.emit("addView", view).then(function(view) {
-				if($scope.makeDefault)
-					return map.socket.emit("editPad", { defaultViewId: view.id });
-			}).then(function() {
-				$scope.$close();
-			}).catch(function(err) {
-				$scope.error = err;
-			});
-		};
-	});
-
-	fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
-		$scope.display = function(view) {
-			map.displayView(view);
+fm.app.factory("fmMapViews", function($uibModal) {
+	return function(map) {
+		var ret = {
+			saveView : function() {
+				$uibModal.open({
+					template: require("./save-view.html"),
+					scope: map.socket,
+					controller: "fmMapViewsSaveCtrl",
+					size: "lg",
+					resolve: {
+						map: function() { return map; }
+					}
+				});
+			},
+			manageViews : function() {
+				$uibModal.open({
+					template: require("./manage-views.html"),
+					scope: map.socket,
+					controller: "fmMapViewsManageCtrl",
+					size: "lg",
+					resolve: {
+						map: function() { return map; }
+					}
+				});
+			}
 		};
 
-		$scope.makeDefault = function(view) {
-			map.socket.emit("editPad", { defaultViewId: view.id }).catch(function(err) {
-				$scope.error = err;
-			});
-		};
+		return ret;
+	};
+});
 
-		$scope['delete'] = function(view) {
-			map.socket.emit("deleteView", { id: view.id }).catch(function(err) {
-				$scope.error = err;
-			});
-		};
-	});
+fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
+	$scope.name = null;
+	$scope.filter = map.socket.filterExpr;
 
-})(FacilMap, jQuery, angular);
+	$scope.save = function() {
+		var view = map.getCurrentView($scope.saveFilter);
+		view.name = $scope.name;
+		map.socket.emit("addView", view).then(function(view) {
+			if($scope.makeDefault)
+				return map.socket.emit("editPad", { defaultViewId: view.id });
+		}).then(function() {
+			$scope.$close();
+		}).catch(function(err) {
+			$scope.error = err;
+		});
+	};
+});
+
+fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
+	$scope.display = function(view) {
+		map.displayView(view);
+	};
+
+	$scope.makeDefault = function(view) {
+		map.socket.emit("editPad", { defaultViewId: view.id }).catch(function(err) {
+			$scope.error = err;
+		});
+	};
+
+	$scope['delete'] = function(view) {
+		map.socket.emit("deleteView", { id: view.id }).catch(function(err) {
+			$scope.error = err;
+		});
+	};
+});

@@ -130,9 +130,12 @@ To run the FacilMap server by hand, follow the following steps:
    SQLite, Microsoft SQL Server) set up. (Note that only MySQL has been tested so far.)
 2. Check out this repository (`git clone https://github.com/FacilMap/facilmap2.git`)
 3. Customise [`config.js`](config.js) (see options [below](#config))
-4. Run `npm install mysql`, `npm install pg`, `npm install sqlite3`, or `npm install tedious` (for MSSQL), depending on
-   which database you want to use.
-5. Run `npm start`
+4. Make sure you have yarn installed (`npm install -g yarn`)
+5. If you want to use a database other than MySQL, you will have to install the driver using `yarn add pg` (for
+   PostgreSQL), `yarn add sqlite3`, or `yarn add tedious` (for MSSQL).
+6. Run `npm start`
+
+
 
 Config
 ------

@@ -1,24 +1,24 @@
-(function(fm, $, ng, undefined) {
+import fm from '../app';
+import $ from 'jquery';
+import marked from 'marked';
 
-	fm.app.factory("fmMarked", function() {
-		marked.setOptions({
-			breaks: true,
-			sanitize: true
-		});
-
-		return {
-			block: function(string, options) {
-				var ret = $("<div/>").html(marked(string, options));
-				$("a[href]", ret).attr("target", "_blank");
-				return ret.html();
-			},
-			inline: function(string, options) {
-				var ret = $("<div/>").html(marked(string, options));
-				$("p", ret).replaceWith(function() { return $(this).contents(); });
-				$("a[href]", ret).attr("target", "_blank");
-				return ret.html();
-			}
-		};
+fm.app.factory("fmMarked", function() {
+	marked.setOptions({
+		breaks: true,
+		sanitize: true
 	});
 
-})(FacilMap, jQuery, angular);
+	return {
+		block: function(string, options) {
+			var ret = $("<div/>").html(marked(string, options));
+			$("a[href]", ret).attr("target", "_blank");
+			return ret.html();
+		},
+		inline: function(string, options) {
+			var ret = $("<div/>").html(marked(string, options));
+			$("p", ret).replaceWith(function() { return $(this).contents(); });
+			$("a[href]", ret).attr("target", "_blank");
+			return ret.html();
+		}
+	};
+});
