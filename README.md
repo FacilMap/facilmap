@@ -135,6 +135,14 @@ To run the FacilMap server by hand, follow the following steps:
    PostgreSQL), `yarn add sqlite3`, or `yarn add tedious` (for MSSQL).
 6. Run `npm start`
 
+### Windows
+
+As Windows does not really support running multiple commands in one npm script, instead of step 6, you have to do the
+following steps to get it running on Windows:
+
+6. Run `yarn install`
+7. Run `npm run build`
+8. Run `npm run server`
 
 
 Config
