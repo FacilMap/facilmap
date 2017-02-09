@@ -1,5 +1,6 @@
 const webpack = require("webpack");
 const copyPlugin = require("copy-webpack-plugin");
+const duplicatePlugin = require("./webpack-duplicates");
 const htmlPlugin = require("html-webpack-plugin");
 const ngAnnotatePlugin = require("ng-annotate-webpack-plugin");
 
@@ -56,6 +57,7 @@ module.exports = {
 		],
 	},
 	plugins: [
+		new duplicatePlugin(),
 		new ngAnnotatePlugin({
 			add: true
 		}),
