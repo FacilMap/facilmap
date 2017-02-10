@@ -47,6 +47,7 @@
     "socket.io-client": "^1.7.2",
     "stream-combiner": "^0.2.2",
     "underscore": "^1.8.3",
+    "unzipper": "^0.8.4",
     "webpack-dev-middleware": "^1.10.0"
   },
   "devDependencies": {
