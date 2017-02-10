@@ -3,9 +3,12 @@ var utils = require("./utils");
 var _e = utils.escapeXml;
 
 function _dataToText(fields, data) {
+	if(fields.length == 1 && fields[0].name == "Description")
+		return data["Description"] || "";
+
 	var text = [ ];
 	for(var i=0; i<fields.length; i++) {
-		text.push(fields[i].name + ": " + (data[fields[i]] || ""));
+		text.push(fields[i].name + ": " + (data[fields[i].name] || ""));
 	}
 	return text.join('\n\n');
 }
