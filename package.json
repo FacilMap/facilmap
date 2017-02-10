@@ -2,7 +2,7 @@
   "name": "facilmap2",
   "description": "A real-time collaboration map",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "scripts": {
     "start": "npm run deps && npm run build && npm run server",
     "deps": "npm install yarn && yarn install",
