@@ -1,7 +1,10 @@
+var Promise = require("promise");
 var Sequelize = require("sequelize");
 var stream = require("stream");
 
 var utils = require("../utils");
+
+const ITEMS_PER_BATCH = 5000;
 
 module.exports = function(Database) {
 	utils.extend(Database.prototype, {
@@ -321,6 +324,16 @@ module.exports = function(Database) {
 			}
 
 			return Sequelize.and.apply(Sequelize, conditions);
+		},
+
+		_bulkCreateInBatches(model, data) {
+			let ret = Promise.resolve([]);
+			for(let i=0; i<data.length; i+=ITEMS_PER_BATCH) {
+				ret = ret.then((result) => {
+					return model.bulkCreate(data.slice(i, i+ITEMS_PER_BATCH)).then((result2) => result.concat(result2));
+				});
+			}
+			return ret;
 		}
 	});
 };

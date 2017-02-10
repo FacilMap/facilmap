@@ -1,3 +1,4 @@
+var Promise = require("promise");
 var request = require("request-promise");
 
 var utils = require("./utils");
@@ -20,37 +21,55 @@ var ROUTING_TYPES = {
 
 var ACCESS_TOKEN = "pk.eyJ1IjoiY2RhdXRoIiwiYSI6ImNpdTYwMmZwMDAwM3AyenBhemM5NHM4ZmgifQ.93z6yuzcsxt3eZk9NxPGHA";
 
+var MAX_POINTS_PER_REQUEST = 25;
+
 function calculateRouting(points, mode, simple) {
-	var coords = [ ];
-	for(var i=0; i<points.length; i++)
-		coords.push(points[i].lon + "," + points[i].lat);
+	let coordGroups = [[]];
+	for(let point of points) {
+		if(coordGroups[coordGroups.length-1].length >= MAX_POINTS_PER_REQUEST)
+			coordGroups.push([]);
 
-	var url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";")
-		+ "?alternatives=false"
-		+ "&steps=false"
-		+ "&geometries=geojson"
-		+ "&overview=" + (simple ? "simplified" : "full")
-		+ "&access_token=" + encodeURIComponent(ACCESS_TOKEN);
+		coordGroups[coordGroups.length-1].push(point.lon + "," + point.lat);
+	}
 
-	return request.get({
-		url: url,
-		json: true,
-		gzip: true,
-		headers: {
-			'User-Agent': config.userAgent
-		}
-	}).then(function(body) {
-		if(!body || (body.code == "OK" && (!body.legs || !body.legs[0])))
-			throw "Invalid response from routing server.";
+	return Promise.all(coordGroups.map((coords) => {
+		let url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";")
+			+ "?alternatives=false"
+			+ "&steps=false"
+			+ "&geometries=geojson"
+			+ "&overview=" + (simple ? "simplified" : "full")
+			+ "&access_token=" + encodeURIComponent(ACCESS_TOKEN);
 
-		if(body.code != 'Ok')
-			throw "Route could not be calculated (" + body.code + ").";
-
-		var ret = {
-			trackPoints : body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; }),
-			distance: body.routes[0].distance/1000,
-			time: body.routes[0].duration
+		return request.get({
+			url: url,
+			json: true,
+			gzip: true,
+			headers: {
+				'User-Agent': config.userAgent
+			}
+		});
+	})).then((results) => {
+		let ret = {
+			trackPoints: [],
+			distance: 0,
+			time: 0
 		};
+
+		for(let body of results) {
+			if(!body || (body.code == "OK" && (!body.legs || !body.legs[0])))
+				throw "Invalid response from routing server.";
+
+			if(body.code != 'Ok')
+				throw "Route could not be calculated (" + body.code + ").";
+
+			let trackPoints = body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; });
+			if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon)
+				trackPoints.shift();
+
+			ret.trackPoints.push(...trackPoints);
+			ret.distance += body.routes[0].distance/1000;
+			ret.time += body.routes[0].duration;
+		}
 
 		if(!simple)
 			_calculateZoomLevels(ret.trackPoints);

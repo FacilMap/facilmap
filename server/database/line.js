@@ -199,7 +199,7 @@ module.exports = function(Database) {
 					create.push(utils.extend({ }, trackPoints[i], { lineId: lineId }));
 				}
 
-				return this._conn.model("LinePoint").bulkCreate(create);
+				return this._bulkCreateInBatches(this._conn.model("LinePoint"), create);
 			}).then((points) => {
 				if(!_noEvent)
 					this.emit("linePoints", padId, lineId, points);
