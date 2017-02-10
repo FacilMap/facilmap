@@ -14,7 +14,7 @@
 	transition: opacity .7s,width .7s,max-width .7s,background-color .7s,border-color .7s;
 
 	width: 70%;
-	max-width: 350px;
+	max-width: 365px;
 }
 
 @media (max-width: 767px) {

@@ -39,7 +39,6 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 		scope.removeDestination = function(idx) {
 			scope.destinations.splice(idx, 1);
-			scope.reroute();
 		};
 
 		scope.showSearchForm = function() {
@@ -211,6 +210,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			marker.on("dblclick", function() {
 				scope.$apply(function() {
 					scope.removeDestination(markers.indexOf(marker));
+					scope.reroute();
 				});
 			})
 			.on("drag", function() {

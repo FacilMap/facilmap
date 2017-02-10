@@ -9,7 +9,7 @@
 					</span>
 					<div class="has-feedback">
 						<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
-						<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''; reset()" ng-show="destination.query.length > 0"><span class="icon-clear"></span></a>
+						<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''" ng-show="destination.query.length > 0"><span class="icon-clear"></span></a>
 					</div>
 					<span class="input-group-btn" uib-dropdown keyboard-nav="true" ng-show="destination.query.length > 0">
 						<button type="button" class="btn btn-default" uib-dropdown-toggle ng-click="loadSuggestions(destination)"><span class="caret"></span></button>
@@ -30,6 +30,7 @@
 					</div>
 
 					<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+4}}">Go!</button>
+					<button ng-show="routeObj || routeError" type="button" class="btn btn-link" tabindex="{{destinations.length+5}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><span class="glyphicon glyphicon-remove"></span></button>
 
 					<button type="button" class="btn btn-default pull-right active" ng-click="showSearchForm()" uib-tooltip="Switch to search from" tooltip-append-to-body="true"><span class="glyphicon glyphicon-road"></span></button>
 				</div>
