@@ -13,7 +13,7 @@ COPY ./ ./
 RUN chown -R facilmap:facilmap .
 
 USER facilmap
-RUN npm run deps && npm run clean && npm run build && npm install mysql pg sqlite3 tedious
+RUN npm run deps && npm run clean && npm run build && node_modules/.bin/yarn add mysql pg sqlite3 tedious
 
 USER root
 RUN chown -R root:root .

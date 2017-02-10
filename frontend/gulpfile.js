@@ -57,15 +57,16 @@ gulp.task("icons", ["download-icons"], function() {
 	);
 });
 
-gulp.task("webpack", [ "icons" ], function(callback) {
-    webpackCompiler.run(function(err, stats) {
-        if(err) throw new gutil.PluginError("webpack", err);
-        gutil.log("[webpack]", stats.toString());
-        callback();
+gulp.task("webpack", [ "icons" ], function() {
+	return Promise.denodeify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
+		gutil.log("[webpack]", stats.toString());
+
+		if(stats.compilation.errors && stats.compilation.errors.length > 0)
+			throw new gutil.PluginError("webpack", "There were compilation errors.");
     });
 });
 
-gulp.task("watch", [ "icons" ], function(callback) {
+gulp.task("watch", [ "icons" ], function() {
 	webpackCompiler.watch({
 	}, function(err, stats) {
         gutil.log("[webpack]", err ? err : stats.toString());
