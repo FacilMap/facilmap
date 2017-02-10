@@ -9,6 +9,7 @@ const webpackMiddleware = require("webpack-dev-middleware");
 
 const config = require("../config");
 const database = require("./database/database");
+const gpx = require("./gpx");
 const utils = require("./utils");
 const webpackConfig = require("../frontend/webpack.config");
 
@@ -80,6 +81,24 @@ const webserver = module.exports = {
 
 		// If no file with this name has been found, we render a pad
 		app.get("/:padId", padMiddleware);
+
+		app.get("/:padId/gpx", function(req, res, next) {
+			utils.promiseAuto({
+				padData: database.getPadDataByAnyId(req.params.padId).then((padData) => {
+					if(!padData)
+						throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+					return padData;
+				}),
+				gpx: (padData) => {
+					return gpx.exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1");
+				},
+				response: (padData, gpx) => {
+					res.set("Content-type", "application/gpx+xml");
+					res.attachment(padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + ".gpx");
+					res.send(gpx);
+				}
+			}).catch(next);
+		});
 
 		let server = http.createServer(app);
 		return Promise.denodeify(server.listen.bind(server))(config.port, config.host).then(() => server);

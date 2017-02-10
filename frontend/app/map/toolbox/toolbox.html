@@ -41,7 +41,7 @@
 						<li><a href="javascript:" ng-click="importFile()">Import file</a></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="showHistory()">Show edit history</a></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="filter()">Filter</a></li>
-						<li ng-if="padId"><a href="javascript:" ng-click="exportGpx()">Export GPX</a></li>
+						<li ng-if="padId"><a href="{{padId}}/gpx?useTracks=1">Export GPX</a></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="showTable()">View as table</a></li>
 						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
 						<li><a href="javascript:" ng-click="showAbout()">About FacilMap</a></li>

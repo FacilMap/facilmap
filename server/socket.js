@@ -4,7 +4,6 @@ var domain = require("domain");
 var utils = require("./utils");
 var routing = require("./routing");
 var search = require("./search");
-var gpx = require("./gpx");
 
 class Socket {
 	constructor(server, database) {
@@ -397,15 +396,6 @@ utils.extend(SocketConnection.prototype, {
 					throw "In read-only mode.";
 
 				return this.database.deleteType(this.padId, data.id);
-			});
-		},
-
-		exportGpx : function(data) {
-			return Promise.resolve().then(() => {
-				if(this.padId == null)
-					throw "No pad ID set.";
-
-				return gpx.exportGpx(this.database, this.padId, data.useTracks);
 			});
 		},
 

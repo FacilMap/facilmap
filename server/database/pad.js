@@ -34,6 +34,10 @@ module.exports = function(Database) {
 			return this._conn.model("Pad").findOne({ where: { writeId: writeId }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
 		},
 
+		getPadDataByAnyId(padId) {
+			return this._conn.model("Pad").findOne({ where: { $or: { id: padId, writeId: padId } }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
+		},
+
 		createPad(data) {
 			return utils.promiseAuto({
 				validate: () => {

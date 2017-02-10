@@ -13,7 +13,7 @@ fm.app.directive("facilmap", function(fmMap) {
 	};
 });
 
-fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapGpx, fmMapAbout, $sce, fmMapImport, fmMapHash, fmMapHistory) {
+fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapAbout, $sce, fmMapImport, fmMapHash, fmMapHistory) {
 	var maps = { };
 
 	var ret = { };
@@ -325,7 +325,6 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		map.viewsUi = fmMapViews(map);
 		map.typesUi = fmMapTypes(map);
 		map.padUi = fmMapPad(map);
-		map.gpxUi = fmMapGpx(map);
 		map.aboutUi = fmMapAbout(map);
 		map.importUi = fmMapImport(map);
 		map.searchUi = fmMapSearch(map);

@@ -40,8 +40,6 @@ fm.app.factory("fmMapToolbox", function($compile, fmTable, fmFilter) {
 			map.importUi.openImportDialog();
 		};
 
-		scope.exportGpx = map.gpxUi.exportGpx.bind(map.gpxUi);
-
 		scope.showAbout = function() {
 			map.aboutUi.showAbout();
 		};
