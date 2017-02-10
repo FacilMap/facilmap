@@ -23,6 +23,7 @@
     "compression": "^1.6.2",
     "compressjs": "^1.0.3",
     "debug": "^2.6.0",
+    "ejs": "^2.5.5",
     "event-stream": "^3.3.4",
     "express": "^4.14.0",
     "file-saver": "^1.3.3",

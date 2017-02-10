@@ -187,7 +187,7 @@ utils.extend(SocketConnection.prototype, {
 
 		createPad : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", searchEngines: "boolean", description: "string" }))
 					throw "Invalid parameters.";
 
 				if(this.padId)
@@ -206,7 +206,7 @@ utils.extend(SocketConnection.prototype, {
 
 		editPad : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string" }))
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", searchEngines: "boolean", description: "string" }))
 					throw "Invalid parameters.";
 
 				if(!this.writable)

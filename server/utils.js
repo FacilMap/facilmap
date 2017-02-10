@@ -328,6 +328,53 @@ function modifyFunction(obj, prop, before, after) {
 	};
 }
 
+
+/**
+ * Intercepts the "write" and "end" methods of the given writable stream and buffers the values written to them instead.
+ * When the stream ends, the buffered value is returned and the original "write" and "end" methods are restored.
+ * @param writeStream {stream.Writable}
+ * @returns {Promise.<string>}
+ */
+function interceptWriteStream(writeStream) {
+	return new Promise((resolve, reject) => {
+		let response = "";
+		let writeBkp = writeStream.write;
+		let sendBkp = writeStream.send; // For express response streams
+		let endBkp = writeStream.end;
+
+		writeStream.write = function(chunk, encoding, callback) {
+			response += chunk;
+
+			if(typeof encoding == "function") {
+				encoding();
+			} else if(callback) {
+				callback();
+			}
+			return true;
+		};
+
+		writeStream.send = function(body) {
+			writeStream.end(body);
+		};
+
+		writeStream.end = function(chunk, encoding, callback) {
+			response += chunk;
+
+			writeStream.write = writeBkp;
+			writeStream.send = sendBkp;
+			writeStream.end = endBkp;
+
+			if(typeof encoding == "function") {
+				writeStream.once("finish", encoding);
+			} else if(callback) {
+				writeStream.once("finish", encoding);
+			}
+
+			resolve(response);
+		};
+	});
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStreamPromise : filterStreamPromise,
@@ -343,5 +390,6 @@ module.exports = {
 	streamToArrayPromise: streamToArrayPromise,
 	promiseAllObject: promiseAllObject,
 	promiseAuto: promiseAuto,
-	modifyFunction: modifyFunction
+	modifyFunction: modifyFunction,
+	interceptWriteStream: interceptWriteStream
 };

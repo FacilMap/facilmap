@@ -27,7 +27,7 @@ utils.promiseAuto({
 	databaseConnect: database.connect(),
 
 	server: (databaseConnect) => {
-		return webserver.init();
+		return webserver.init(database);
 	},
 
 	socket: (server) => {

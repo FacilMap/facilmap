@@ -59,10 +59,14 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils)
 		$scope.writeId = fmUtils.generateRandomPadId(14);
 		$scope.readId = fmUtils.generateRandomPadId(12);
 		$scope.padName = "New FacilMap";
+		$scope.searchEngines = false;
+		$scope.description = "";
 	} else {
 		$scope.writeId = map.socket.padData.writeId;
 		$scope.readId = map.socket.padData.id;
 		$scope.padName = map.socket.padData.name;
+		$scope.searchEngines = map.socket.padData.searchEngines;
+		$scope.description = map.socket.padData.description;
 	}
 
 	function validateId(id) {
@@ -82,7 +86,9 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils)
 		var newData = {
 			name: $scope.padName,
 			id: $scope.readId,
-			writeId: $scope.writeId
+			writeId: $scope.writeId,
+			searchEngines: $scope.searchEngines,
+			description: $scope.description
 		};
 
 		if(create) {

@@ -7,7 +7,9 @@ module.exports = function(Database) {
 		this._conn.define("Pad", {
 			id : { type: Sequelize.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
 			name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilMap"; } },
-			writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } }
+			writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
+			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
+			description: { type: Sequelize.STRING, allowNull: false }
 		});
 	});
 

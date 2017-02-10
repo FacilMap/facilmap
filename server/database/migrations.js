@@ -46,9 +46,9 @@ module.exports = function(Database) {
 			}));
 
 			var addColMigrations = renameColMigrations.then(() => {
-				return Promise.all([ 'Marker', 'Type', 'View' ].map((table) => {
+				return Promise.all([ 'Pad', 'Marker', 'Type', 'View' ].map((table) => {
 					var model = this._conn.model(table);
-					queryInterface.describeTable(model.getTableName()).then((attributes) => {
+					return queryInterface.describeTable(model.getTableName()).then((attributes) => {
 						var promises = [ ];
 						for(var attribute in model.attributes) {
 							if(!attributes[attribute])

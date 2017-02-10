@@ -49,7 +49,7 @@ module.exports = {
 			{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
 			{ test: /\.js$/, exclude: /\/node_modules\//, loader: "babel-loader?presets=es2015" },
 			{ test: /\.(png|jpe?g|gif|ttf)$/, loader: "url-loader" },
-			{ test: /\.html$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },
+			{ test: /\.(html|ejs)$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
 
 			{
@@ -70,7 +70,8 @@ module.exports = {
 			add: true
 		}),
 		new htmlPlugin({
-			template: __dirname + '/index/index.html'
+			template: `${__dirname}/index/index.ejs`,
+			filename: "index.ejs"
 		}),
 		new webpack.ProvidePlugin({
 		    $: "jquery",
