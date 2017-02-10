@@ -29,12 +29,22 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	};
 
 	fmUtils.createSymbol = function(colour, height, symbol) {
-		var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
-		'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + height + '" height="' + height + '" version="1.1">' +
-			'<g transform="scale(' + (height / 580) + ')">' + fmIcons[symbol].replace(/#000/g, '#' + colour) + '</g>' +
-		'</svg>';
+		let symbolCode = "";
+		if(symbol && fmIcons[symbol]) {
+			symbolCode = `<g transform="scale(${height / 580})">${fmIcons[symbol].replace(/#000/g, '#' + colour)}</g>`;
+		} else if(symbol && symbol.length == 1) {
+			height*17 / 2*height / (height / 17)
+			symbolCode = `<text x="8.5" y="15" transform="scale(${height / 17})" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#${colour}">${fmUtils.quoteHtml(symbol)}</tspan></text>`;
+		}
 
-		return "data:image/svg+xml,"+encodeURIComponent(svg);
+		let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
+		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" version="1.1">` +
+			symbolCode +
+		`</svg>`;
+
+		console.log(symbol, svg);
+
+		return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 	};
 
 	fmUtils.createMarkerGraphic = function(colour, height, symbol, padding) {
@@ -46,8 +56,8 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		var symbolCode = "";
 		if(symbol && fmIcons[symbol]) {
 			symbolCode = '<g transform="translate(2.9 3.3) scale(' + (17 / 580) + ')">' + fmIcons[symbol].replace(/#000/g, '#' + borderColour) + '</g>';
-		} else if(symbol && symbol.length == "1") {
-			symbolCode = '<text x="11.5" y="18.06" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan>' + fmUtils.quoteHtml(symbol) + '</tspan></text>';
+		} else if(symbol && symbol.length == 1) {
+			symbolCode = '<text x="11.5" y="18.06" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#' + borderColour + '">' + fmUtils.quoteHtml(symbol) + '</tspan></text>';
 		} else {
 			symbolCode = '<circle style="fill:#' + borderColour + '" cy="11" cx="11.5" r="3" />';
 		}
