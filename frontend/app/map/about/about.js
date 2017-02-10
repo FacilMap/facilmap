@@ -1,4 +1,5 @@
 import fm from '../../app';
+import packageJson from '../../../../package.json';
 
 fm.app.factory("fmMapAbout", function($uibModal) {
 	return function(map) {
@@ -20,4 +21,8 @@ fm.app.factory("fmMapAbout", function($uibModal) {
 
 fm.app.controller("fmMapAboutCtrl", function($scope, map) {
 	$scope.layers = map.getLayerInfo();
+
+	$scope.fmVersion = packageJson.version;
+	$scope.fmHomepage = packageJson.homepage;
+	$scope.fmBugTracker = packageJson.bugs.url;
 });

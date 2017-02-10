@@ -23,7 +23,7 @@ fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
 
 	// Dereferrer
 	$(document).on("click", "a", function(e) {
-		var el = $(e.target);
+		var el = $(this);
 		var href = el.attr("href");
 		if(href && href.match(/^\s*(https?:)?\/\//i)) {
 			el.attr("href", "deref.html?"+encodeURIComponent(href));
