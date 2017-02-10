@@ -1,8 +1,18 @@
 {
   "name": "facilmap2",
-  "description": "A real-time collaboration map",
-  "author": "Candid Dauth <cdauth@cdauth.eu>",
   "version": "2.2.0",
+  "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
+  "keywords": ["webpack", "maps", "osm"],
+  "homepage": "https://github.com/FacilMap/facilmap2",
+  "bugs": {
+    "url": "https://github.com/FacilMap/facilmap2/issues"
+  },
+  "license": "AGPL-3.0",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FacilMap/facilmap2.git"
+  },
   "scripts": {
     "start": "npm run deps && npm run build && npm run server",
     "deps": "npm install yarn && yarn install",
