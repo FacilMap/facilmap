@@ -42,8 +42,6 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			symbolCode +
 		`</svg>`;
 
-		console.log(symbol, svg);
-
 		return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 	};
 
