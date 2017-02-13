@@ -358,7 +358,9 @@ function interceptWriteStream(writeStream) {
 		};
 
 		writeStream.end = function(chunk, encoding, callback) {
-			response += chunk;
+			if(chunk) {
+				response += chunk;
+			}
 
 			writeStream.write = writeBkp;
 			writeStream.send = sendBkp;

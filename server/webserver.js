@@ -1,6 +1,7 @@
 const compression = require("compression");
 const ejs = require("ejs");
 const express = require("express");
+const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const Promise = require("promise");
@@ -27,13 +28,17 @@ const webserver = module.exports = {
 		const padMiddleware = function(req, res, next) {
 			utils.promiseAuto({
 				template: () => {
-					// We have to let staticMiddleware create the page for us first, we cannot read it directly from the
-					// file system (as webpackMiddleware might have to inject the bundle files into it).
+					if (process.env.FM_DEV) {
+						let intercept = utils.interceptWriteStream(res);
+						req.url = req.originalUrl = "/index.ejs";
+						staticMiddleware(req, res, next);
+						return intercept;
+					} else {
+						// We don't want express.static's ETag handling, as it sometimes returns an empty template,
+						// so we have to read it directly from the file system
 
-					let intercept = utils.interceptWriteStream(res);
-					req.url = req.originalUrl = "/index.ejs";
-					staticMiddleware(req, res, next);
-					return intercept;
+						return Promise.denodeify(fs.readFile)(`${frontendPath}/build/index.ejs`, "utf8");
+					}
 				},
 
 				padData: () => {
