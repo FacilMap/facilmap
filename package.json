@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "npm run deps && npm run build && npm run server",
-    "deps": "npm install yarn && yarn install",
+    "deps": "yarn install",
     "build": "gulp",
     "server": "node server/server.js",
     "clean": "gulp clean"
@@ -84,7 +84,6 @@
     "svgo": "^0.7.1",
     "through2": "^2.0.1",
     "url-loader": "^0.5.7",
-    "webpack": "^2.2.1",
-    "yarn": "0.18.1"
+    "webpack": "^2.2.1"
   }
 }

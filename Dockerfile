@@ -13,6 +13,7 @@ COPY ./ ./
 RUN chown -R facilmap:facilmap .
 
 USER facilmap
+RUN npm install -g yarn@0.18.1
 RUN npm run deps && npm run clean && npm run build && node_modules/.bin/yarn add mysql pg sqlite3 tedious
 
 USER root
