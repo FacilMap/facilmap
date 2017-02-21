@@ -82,7 +82,7 @@ fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
 
 	$scope['delete'] = function(type) {
 		$scope.error = null;
-		map.socket.emit("deleteType", { id: type.id }).catch(function(err) {
+		map.socket.deleteType({ id: type.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};
@@ -113,7 +113,7 @@ fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOpti
 				$scope.type[prop] = null;
 		});
 
-		map.socket.emit($scope.type.id == null ? "addType" : "editType", $scope.type).then(function() {
+		($scope.type.id == null ? map.socket.addType($scope.type) : map.socket.editType($scope.type)).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;

@@ -1,6 +1,0 @@
-RewriteEngine on
-
-RewriteRule ^$ index.html
-
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^.+$ index.html

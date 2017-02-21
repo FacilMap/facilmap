@@ -1,0 +1,39 @@
+{
+  "name": "facilmap-client",
+  "version": "2.3.0",
+  "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
+  "keywords": [
+    "webpack",
+    "maps",
+    "osm",
+    "facilmap"
+  ],
+  "homepage": "https://github.com/FacilMap/facilmap2",
+  "bugs": {
+    "url": "https://github.com/FacilMap/facilmap2/issues"
+  },
+  "license": "AGPL-3.0",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "main": "./client.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FacilMap/facilmap2.git"
+  },
+  "scripts": {
+    "deps": "yarn install",
+    "build": "webpack",
+    "clean": "rimraf ./build"
+  },
+  "dependencies": {
+    "es6-promise": "^4.0.5",
+    "socket.io-client": "^1.7.3"
+  },
+  "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-preset-es2015": "^6.22.0",
+    "expose-loader": "^0.7.3",
+    "rimraf": "^2.6.0",
+    "webpack": "^2.2.1"
+  }
+}

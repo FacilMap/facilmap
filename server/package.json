@@ -1,0 +1,50 @@
+{
+  "name": "facilmap-server",
+  "version": "2.3.0",
+  "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
+  "keywords": [
+    "webpack",
+    "maps",
+    "osm"
+  ],
+  "homepage": "https://github.com/FacilMap/facilmap2",
+  "bugs": {
+    "url": "https://github.com/FacilMap/facilmap2/issues"
+  },
+  "license": "AGPL-3.0",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FacilMap/facilmap2.git"
+  },
+  "scripts": {
+    "start": "npm run deps && npm run server",
+    "deps": "yarn install",
+    "server": "node ./server.js"
+  },
+  "bin": {
+    "facilmap-server": "./server.js"
+  },
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "compression": "^1.6.2",
+    "compressjs": "^1.0.3",
+    "ejs": "^2.5.5",
+    "event-stream": "^3.3.4",
+    "express": "^4.14.0",
+    "facilmap-frontend": "^2.3.0",
+    "mysql": "^2.13.0",
+    "promise": "^7.1.1",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1",
+    "sequelize": "^3.24.3",
+    "socket.io": "^1.2.1",
+    "stream-combiner": "^0.2.2",
+    "underscore": "^1.8.3",
+    "unzipper": "^0.8.4",
+    "webpack-dev-middleware": "^1.10.1"
+  },
+  "devDependencies": {
+    "webpack": "^2.2.1"
+  }
+}

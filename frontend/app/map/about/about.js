@@ -1,5 +1,5 @@
 import fm from '../../app';
-import packageJson from '../../../../package.json';
+import packageJson from '../../../package.json';
 
 fm.app.factory("fmMapAbout", function($uibModal) {
 	return function(map) {

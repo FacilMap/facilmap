@@ -1,22 +1,26 @@
 FROM node:7.3-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
-CMD npm run server
+CMD yarn run server
 EXPOSE 8080
 
 RUN apk update && apk add git
+RUN npm install -g yarn@0.18.1
 
-RUN adduser -D -h /opt/facilmap -s /bin/bash facilmap
+RUN mkdir -p /opt/facilmap && adduser -D -h /opt/facilmap -s /bin/bash facilmap && chown facilmap:facilmap /opt/facilmap
+
+USER facilmap
 WORKDIR /opt/facilmap
 
 COPY ./ ./
-RUN chown -R facilmap:facilmap .
 
-USER facilmap
-RUN npm install -g yarn@0.18.1
-RUN npm run deps && npm run clean && npm run build && node_modules/.bin/yarn add mysql pg sqlite3 tedious
+WORKDIR /opt/facilmap/server
+
+RUN cd ../client && yarn run deps && yarn build && yarn link && \
+    cd ../frontend && yarn run deps && yarn link facilmap-client && yarn run build && yarn link && \
+    cd ../server && yarn run deps && yarn link facilmap-client facilmap-frontend && yarn add mysql pg sqlite3 tedious
 
 USER root
-RUN chown -R root:root .
+RUN chown -R root:root /opt/facilmap
 
 USER facilmap

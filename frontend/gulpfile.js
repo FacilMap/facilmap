@@ -14,7 +14,10 @@ var webpackConfig = require("./webpack.config.js");
 
 let webpackCompiler = webpack(webpackConfig);
 
-gulp.task("default", [ "webpack" ]);
+const staticFrontendFile = `${__dirname}/build/frontend.js`;
+const staticClientFile = `${__dirname}/build/client.js`;
+
+gulp.task("default", [ "webpack", "symlinks" ]);
 
 gulp.task("clean", function() {
 	return combine(
@@ -63,7 +66,27 @@ gulp.task("webpack", [ "icons" ], function() {
 
 		if(stats.compilation.errors && stats.compilation.errors.length > 0)
 			throw new gutil.PluginError("webpack", "There were compilation errors.");
-    });
+
+		return new Promise((resolve, reject) => {
+			fs.exists(staticFrontendFile, resolve);
+		}).then((exists) => {
+			if(exists)
+				return Promise.denodeify(fs.unlink)(staticFrontendFile);
+		}).then(() => {
+			// Create symlink with fixed file name so that people can include https://facilmap.org/frontend.js
+			return Promise.denodeify(fs.symlink)(`frontend-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
+	    });
+	});
+});
+
+gulp.task("symlinks", [ "webpack" /* To create the build directory */ ], function() {
+	// Create symlink to facilmap-client so that people can include https://facilmap.org/client.js
+	return new Promise((resolve, reject) => {
+		fs.exists(staticClientFile, resolve);
+	}).then((exists) => {
+		if(!exists)
+			return Promise.denodeify(fs.symlink)(require.resolve("facilmap-client/build/client"), staticClientFile);
+	});
 });
 
 gulp.task("watch", [ "icons" ], function() {

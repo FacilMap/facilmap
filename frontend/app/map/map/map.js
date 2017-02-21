@@ -8,7 +8,7 @@ fm.app.directive("facilmap", function(fmMap) {
 	return {
 		restrict: 'EA',
 		link: function(scope, element, attrs) {
-			fmMap.initMap($(element), attrs.id, attrs.fmMapId);
+			fmMap.initMap($(element), attrs.id, attrs.fmServerUrl, attrs.fmMapId);
 		}
 	};
 });
@@ -22,18 +22,18 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		return maps[id];
 	};
 
-	ret.initMap = function(el, id, padId) {
-		return maps[id] = new Map(el, padId);
+	ret.initMap = function(el, id, serverUrl, padId) {
+		return maps[id] = new Map(el, serverUrl, padId);
 	};
 
 	return ret;
 
-	function Map(el, padId) {
+	function Map(el, serverUrl, padId) {
 		var map = this;
 
 		map.el = el;
 		map.mapEvents = $rootScope.$new(true); /* Event types: longmousedown, layerchange */
-		map.socket = fmSocket(padId);
+		map.socket = fmSocket(serverUrl, padId);
 
 		map.layers = { };
 		[

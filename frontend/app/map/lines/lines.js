@@ -277,7 +277,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 			addLine: function(type) {
 				map.map.closePopup();
 
-				map.socket.emit("getLineTemplate", { typeId: type.id }).then(function(line) {
+				map.socket.getLineTemplate({ typeId: type.id }).then(function(line) {
 
 					line.routePoints = [ ];
 					line.trackPoints = [ ];
@@ -326,7 +326,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				});
 			},
 			createLine: function(type, routePoints, properties) {
-				map.socket.emit("addLine", $.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
+				map.socket.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
 					linesUi.editLine(line);
 
 					// We have to wait until the server sends us the trackPoints of the line
@@ -361,14 +361,14 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 					if(save) {
 						line.trackPoints = { };
-						map.socket.emit("editLine", { id: line.id, routePoints: newPoints }).catch(function(err) {
+						map.socket.editLine({ id: line.id, routePoints: newPoints }).catch(function(err) {
 							map.messages.showMessage("danger", err);
 						});
 					}
 				}
 			},
 			deleteLine: function(line) {
-				map.socket.emit("deleteLine", line).catch(function(err) {
+				map.socket.deleteLine(line).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
 			}
@@ -389,7 +389,7 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 		var lineObj = ng.copy($scope.line);
 		delete lineObj.trackPoints;
 
-		map.socket.emit("editLine", lineObj).then(function() {
+		map.socket.editLine(lineObj).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			return $scope.error = err;

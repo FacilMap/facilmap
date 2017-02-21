@@ -54,7 +54,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			var query = destination.loadingQuery = destination.query;
 
 			if(destination.query.trim() != "") {
-				return map.socket.emit("find", { query: query }).then(function(results) {
+				return map.socket.find({ query: query }).then(function(results) {
 					if(query != destination.loadingQuery)
 						return; // The destination has changed in the meantime
 
@@ -106,7 +106,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 				map.mapEvents.$emit("searchchange");
 
-				return map.socket.emit("getRoute", { destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
+				return map.socket.getRoute({ destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
 			}).then(function(route) {
 				route.routePoints = points;
 				route.routeMode = mode;

@@ -5,21 +5,21 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const Promise = require("promise");
-const webpack = require("webpack");
-const webpackMiddleware = require("webpack-dev-middleware");
 
 const config = require("../config");
 const database = require("./database/database");
 const gpx = require("./gpx");
 const utils = require("./utils");
-const webpackConfig = require("../frontend/webpack.config");
 
-const frontendPath = path.resolve(__dirname + "/../frontend");
+const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
+
+if(process.env.FM_DEV)
+	process.chdir(frontendPath); // To make sure that webpack finds all the loaders
 
 const webserver = module.exports = {
 	init(database) {
 		const staticMiddleware = process.env.FM_DEV
-			? webpackMiddleware(webpack(webpackConfig), {
+			? require("webpack-dev-middleware")(require("webpack")(require("facilmap-frontend/webpack.config")), { // require the stuff here so that it doesn't fail if devDependencies are not installed
 				publicPath: "/"
 			})
 			: express.static(frontendPath + "/build/");

@@ -38,9 +38,9 @@ fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 	$scope.save = function() {
 		var view = map.getCurrentView($scope.saveFilter);
 		view.name = $scope.name;
-		map.socket.emit("addView", view).then(function(view) {
+		map.socket.addView(view).then(function(view) {
 			if($scope.makeDefault)
-				return map.socket.emit("editPad", { defaultViewId: view.id });
+				return map.socket.editPad({ defaultViewId: view.id });
 		}).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
@@ -55,13 +55,13 @@ fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
 	};
 
 	$scope.makeDefault = function(view) {
-		map.socket.emit("editPad", { defaultViewId: view.id }).catch(function(err) {
+		map.socket.editPad({ defaultViewId: view.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};
 
 	$scope['delete'] = function(view) {
-		map.socket.emit("deleteView", { id: view.id }).catch(function(err) {
+		map.socket.deleteView({ id: view.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};

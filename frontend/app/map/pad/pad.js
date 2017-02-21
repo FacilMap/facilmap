@@ -33,7 +33,7 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 		/*
 		$scope.copyPadId = fmUtils.generateRandomPadId();
 		$scope.copyPad = function() {
-			socket.emit("copyPad", { toId: $scope.copyPadId }, function(err) {
+			socket.copyPad({ toId: $scope.copyPadId }, function(err) {
 				if(err) {
 					$scope.dialogError = err;
 					return;
@@ -100,7 +100,7 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils)
 				$scope.error = err;
 			});
 		} else {
-			map.socket.emit("editPad", newData).then(function() {
+			map.socket.editPad(newData).then(function() {
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;

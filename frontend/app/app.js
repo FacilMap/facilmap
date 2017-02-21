@@ -5,7 +5,6 @@ import 'angular-ui-bootstrap';
 import 'angular-ui-sortable';
 
 const fm = {
-	SERVER : "/",
 	URL_PREFIX: location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "")
 };
 

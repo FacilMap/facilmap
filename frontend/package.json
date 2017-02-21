@@ -1,8 +1,12 @@
 {
-  "name": "facilmap2",
-  "version": "2.2.0",
+  "name": "facilmap-frontend",
+  "version": "2.3.0",
   "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
-  "keywords": ["webpack", "maps", "osm"],
+  "keywords": [
+    "webpack",
+    "maps",
+    "osm"
+  ],
   "homepage": "https://github.com/FacilMap/facilmap2",
   "bugs": {
     "url": "https://github.com/FacilMap/facilmap2/issues"
@@ -13,11 +17,10 @@
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap2.git"
   },
+  "main": "./entry.js",
   "scripts": {
-    "start": "npm run deps && npm run build && npm run server",
     "deps": "yarn install",
     "build": "gulp",
-    "server": "node server/server.js",
     "clean": "gulp clean"
   },
   "dependencies": {
@@ -28,14 +31,9 @@
     "blob": "^0.0.4",
     "bootstrap": "^3.3.7",
     "bootstrap-touchspin": "^3.1.1",
-    "cheerio": "^0.22.0",
     "clipboard": "^1.5.16",
-    "compression": "^1.6.2",
-    "compressjs": "^1.0.3",
-    "debug": "^2.6.0",
-    "ejs": "^2.5.5",
     "event-stream": "^3.3.4",
-    "express": "^4.14.0",
+    "facilmap-client": "^2.3.0",
     "filtrex": "^0.5.4",
     "jquery": "<3.0.0",
     "jquery-ui": "^1.12.1",
@@ -47,24 +45,12 @@
     "leaflet.locatecontrol": "^0.59.0",
     "linkifyjs": "^2.1.3",
     "marked": "^0.3.6",
-    "mysql": "^2.13.0",
-    "osmtogeojson": "^2.2.12",
-    "promise": "^7.1.1",
-    "request": "^2.75.0",
-    "request-promise": "^4.1.1",
-    "sequelize": "^3.24.3",
-    "socket.io": "^1.2.1",
-    "socket.io-client": "^1.7.2",
-    "stream-combiner": "^0.2.2",
-    "underscore": "^1.8.3",
-    "unzipper": "^0.8.4",
-    "webpack-dev-middleware": "^1.10.0"
+    "osmtogeojson": "^2.2.12"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",
     "babel-preset-es2015": "^6.18.0",
-    "bower": "^1.7.9",
     "cheerio": "^0.22.0",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.26.1",
@@ -79,10 +65,13 @@
     "imports-loader": "^0.7.0",
     "json-loader": "^0.5.4",
     "ng-annotate-webpack-plugin": "^0.1.3",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1",
     "string-replace-loader": "^1.0.5",
     "style-loader": "^0.13.1",
     "svgo": "^0.7.1",
     "through2": "^2.0.1",
+    "unzipper": "^0.8.4",
     "url-loader": "^0.5.7",
     "webpack": "^2.2.1"
   }

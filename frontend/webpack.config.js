@@ -35,7 +35,7 @@ for(let i in addDeps) {
 module.exports = {
 	entry: __dirname + "/index/index.js",
 	output: {
-		filename: "bundle-[hash].js",
+		filename: "frontend-[hash].js",
 		path: __dirname + "/build/"
 	},
 	resolve: {

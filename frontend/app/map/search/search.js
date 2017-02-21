@@ -33,7 +33,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				var q = scope.submittedSearchString = scope.searchString;
 				map.mapEvents.$emit("searchchange");
 
-				map.socket.emit("find", { query: scope.searchString, loadUrls: true }).then(function(results) {
+				map.socket.find({ query: scope.searchString, loadUrls: true }).then(function(results) {
 					if(q != scope.submittedSearchString)
 						return; // Another search has been started in the meantime
 
@@ -130,7 +130,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			clickMarker.clearLayers();
 
-			map.socket.emit("find", { query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
+			map.socket.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
 				clickMarker.clearLayers();
 
 				if(results.length > 0) {

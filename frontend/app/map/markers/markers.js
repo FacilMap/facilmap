@@ -118,7 +118,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 
 					if(save) {
 						var pos = markersById[marker.id].getLatLng();
-						map.socket.emit("editMarker", { id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
+						map.socket.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
 							markersById[marker.id].openPopup();
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
@@ -140,7 +140,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				markersById[marker.id].dragging.enable();
 			},
 			deleteMarker: function(marker) {
-				map.socket.emit("deleteMarker", marker).catch(function(err) {
+				map.socket.deleteMarker(marker).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
 			},
@@ -161,7 +161,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				});
 			},
 			createMarker: function(pos, type, properties) {
-				map.socket.emit("addMarker", $.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
+				map.socket.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 					markersUi._addMarker(marker);
 
 					markersById[marker.id].openPopup();
@@ -183,7 +183,7 @@ fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 
 	$scope.save = function() {
 		$scope.error = null;
-		map.socket.emit("editMarker", $scope.marker).then(function() {
+		map.socket.editMarker($scope.marker).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;
