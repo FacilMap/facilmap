@@ -46,7 +46,8 @@ To run the FacilMap server by hand, follow the following steps:
 2. Install the facilmap server (`npm install -g facilmap-server`).
 3. If you want to use a database other than MySQL, you will have to install the driver using `npm install -g pg` (for
    PostgreSQL), `npm install -g sqlite3`, or `npm install -g tedious` (for MSSQL).
-4. Run `facilmap-server`
+4. Download [config.js](../config.js) and adjust the settings (see below for an explanation of the different parameters)
+5. Run `facilmap-server config.js`
 
 Config
 ------

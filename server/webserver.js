@@ -6,7 +6,7 @@ const http = require("http");
 const path = require("path");
 const Promise = require("promise");
 
-const config = require("../config");
+const config = require(process.env.fmConfig);
 const database = require("./database/database");
 const gpx = require("./gpx");
 const utils = require("./utils");

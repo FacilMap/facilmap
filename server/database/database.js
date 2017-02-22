@@ -4,7 +4,7 @@ var Sequelize = require("sequelize");
 var debug = require("debug");
 
 var utils = require("../utils");
-var config = require("../../config");
+var config = require(process.env.fmConfig);
 
 class Database extends events.EventEmitter {
 

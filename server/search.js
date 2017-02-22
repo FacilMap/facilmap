@@ -4,7 +4,7 @@ var cheerio = require("cheerio");
 var zlib = require("zlib");
 var compressjs = require("compressjs");
 
-var config = require("../config");
+var config = require(process.env.fmConfig);
 var utils = require("./utils");
 
 request = request.defaults({

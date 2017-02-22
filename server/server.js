@@ -1,4 +1,16 @@
-var config = require("../config");
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+
+process.env.fmConfig = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
+
+if(!fs.existsSync(process.env.fmConfig)) {
+	console.error(`Usage: ${process.argv[0]} ${process.argv[1]} <config.js>`);
+	process.exit(1);
+}
+
+var config = require(process.env.fmConfig);
 var Database = require("./database/database");
 var utils = require("./utils");
 var Socket = require("./socket");
