@@ -372,6 +372,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultMode: "string", modeFixed: "boolean",
 					fields: [ {
 						name: "string",
+						oldName: "string",
 						type: "string",
 						default: "string",
 						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
@@ -383,8 +384,25 @@ utils.extend(SocketConnection.prototype, {
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				return this.database.updateType(this.padId, data.id, data);
-			});
+				let rename = {};
+				for(let field of (data.fields || [])) {
+					if(field.oldName && field.oldName != field.name) {
+						if((data.fields || []).filter((field2) => field2.name == field.name).length > 1)
+							throw new Error(`There is already another field with the name ${field.name}.`);
+
+						rename[field.oldName] = field.name;
+					}
+
+					delete field.oldName;
+				}
+
+				return this.database.updateType(this.padId, data.id, data).then((newData) => {
+					if(Object.keys(rename).length > 0)
+						return this.database.renameObjectDataField(this.padId, data.id, rename, newData.type == "line").then(() => newData);
+					else
+						return newData;
+				});
+			})
 		},
 
 		deleteType : function(data) {

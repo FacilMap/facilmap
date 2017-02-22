@@ -18,6 +18,12 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
 				var scope = map.socket.$new();
 				scope.type = type;
 
+				scope.$watch("type.fields", (fields) => {
+					fields.forEach((field) => {
+						field.oldName = field.name;
+					});
+				});
+
 				var dialog = $uibModal.open({
 					template: require("./edit-type.html"),
 					scope: scope,

@@ -1,6 +1,7 @@
 var Promise = require("promise");
 var Sequelize = require("sequelize");
 var stream = require("stream");
+var underscore = require("underscore");
 
 var utils = require("../utils");
 
@@ -211,7 +212,8 @@ module.exports = function(Database) {
 				},
 
 				update: (oldData) => {
-					return this._conn.model(type).update(data, { where: { id: objId, padId: padId } });
+					if(!includeData || !underscore.isEqual(Object.keys(data), ["data"]))
+						return this._conn.model(type).update(data, { where: { id: objId, padId: padId } });
 				},
 
 				newData: (update) => {
@@ -289,6 +291,30 @@ module.exports = function(Database) {
 
 			return model.destroy({ where: idObj}).then(() => {
 				return model.bulkCreate(this._dataToArr(data, idObj));
+			});
+		},
+
+		renameObjectDataField(padId, typeId, rename, isLine) {
+			let objectStream = isLine ? this.getPadLinesByType(padId, typeId) : this.getPadMarkersByType(padId, typeId);
+
+			return utils.streamEachPromise(objectStream, (object) => {
+				let newData = underscore.clone(object.data);
+
+				for(let from in rename) {
+					let to = rename[from];
+
+					if(from != to && (newData[from] || newData[to])) {
+						newData[to] = newData[from];
+						delete newData[from];
+					}
+				}
+
+				if(!underscore.isEqual(object.data, newData)) {
+					if(isLine)
+						return this.updateLine(object.padId, object.id, {data: newData}, true); // Last param true to not create history entry
+					else
+						return this.updateMarker(object.padId, object.id, {data: newData}, true); // Last param true to not create history entry
+				}
 			});
 		},
 
