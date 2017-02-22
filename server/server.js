@@ -3,18 +3,21 @@
 const fs = require("fs");
 const path = require("path");
 
-process.env.fmConfig = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
-
-if(!fs.existsSync(process.env.fmConfig)) {
-	console.error(`Usage: ${process.argv[0]} ${process.argv[1]} <config.js>`);
-	process.exit(1);
-}
-
-var config = require(process.env.fmConfig);
 var Database = require("./database/database");
 var utils = require("./utils");
 var Socket = require("./socket");
 var webserver = require("./webserver");
+
+const configPath = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
+
+if(!fs.existsSync(configPath)) {
+	console.error(`Usage: ${process.argv[0]} ${process.argv[1]} <config.js>`);
+	process.exit(1);
+}
+
+const config = require(configPath);
+
+process.env.fmUserAgent = config.userAgent;
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -33,13 +36,13 @@ process.on('unhandledRejection', (reason, promise) => {
 	console.trace("Unhandled rejection", reason);
 });
 
-const database = new Database();
+const database = new Database(config.db);
 
 utils.promiseAuto({
 	databaseConnect: database.connect(),
 
 	server: (databaseConnect) => {
-		return webserver.init(database);
+		return webserver.init(database, config.port, config.host);
 	},
 
 	socket: (server) => {

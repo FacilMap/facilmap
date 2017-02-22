@@ -4,13 +4,12 @@ var cheerio = require("cheerio");
 var zlib = require("zlib");
 var compressjs = require("compressjs");
 
-var config = require(process.env.fmConfig);
 var utils = require("./utils");
 
 request = request.defaults({
 	gzip: true,
 	headers: {
-		'User-Agent': config.userAgent
+		'User-Agent': process.env.fmUserAgent
 	}
 });
 

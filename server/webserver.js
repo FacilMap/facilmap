@@ -6,7 +6,6 @@ const http = require("http");
 const path = require("path");
 const Promise = require("promise");
 
-const config = require(process.env.fmConfig);
 const database = require("./database/database");
 const gpx = require("./gpx");
 const utils = require("./utils");
@@ -17,7 +16,7 @@ if(process.env.FM_DEV)
 	process.chdir(frontendPath); // To make sure that webpack finds all the loaders
 
 const webserver = module.exports = {
-	init(database) {
+	init(database, port, host) {
 		const staticMiddleware = process.env.FM_DEV
 			? require("webpack-dev-middleware")(require("webpack")(require("facilmap-frontend/webpack.config")), { // require the stuff here so that it doesn't fail if devDependencies are not installed
 				publicPath: "/"
@@ -106,6 +105,6 @@ const webserver = module.exports = {
 		});
 
 		let server = http.createServer(app);
-		return Promise.denodeify(server.listen.bind(server))(config.port, config.host).then(() => server);
+		return Promise.denodeify(server.listen.bind(server))(port, host).then(() => server);
 	}
 };

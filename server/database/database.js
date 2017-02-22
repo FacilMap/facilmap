@@ -4,17 +4,16 @@ var Sequelize = require("sequelize");
 var debug = require("debug");
 
 var utils = require("../utils");
-var config = require(process.env.fmConfig);
 
 class Database extends events.EventEmitter {
 
-	constructor() {
+	constructor(dbConfig) {
 		super();
 
-		this._conn = new Sequelize(config.db.database, config.db.user, config.db.password, {
-			dialect: config.db.type,
-			host: config.db.host,
-			port: config.db.port,
+		this._conn = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.password, {
+			dialect: dbConfig.type,
+			host: dbConfig.host,
+			port: dbConfig.port,
 			define: {
 				timestamps: false
 			},

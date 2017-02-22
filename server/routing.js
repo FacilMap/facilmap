@@ -2,7 +2,6 @@ var Promise = require("promise");
 var request = require("request-promise");
 
 var utils = require("./utils");
-var config = require(process.env.fmConfig);
 
 var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 
@@ -45,7 +44,7 @@ function calculateRouting(points, mode, simple) {
 			json: true,
 			gzip: true,
 			headers: {
-				'User-Agent': config.userAgent
+				'User-Agent': process.env.fmUserAgent
 			}
 		});
 	})).then((results) => {
