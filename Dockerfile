@@ -5,7 +5,7 @@ CMD yarn run server
 EXPOSE 8080
 
 RUN apk update && apk add git
-RUN npm install -g yarn@0.18.1
+RUN npm install -g yarn
 
 RUN mkdir -p /opt/facilmap && adduser -D -h /opt/facilmap -s /bin/bash facilmap && chown facilmap:facilmap /opt/facilmap
 
