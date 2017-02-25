@@ -257,8 +257,11 @@ module.exports = function(Database) {
 
 		_dataToArr(data, extend) {
 			var dataArr = [ ];
-			for(var i in data)
-				dataArr.push(utils.extend({ name: i, value: data[i] }, extend));
+			for(var i in data) {
+				if(data[i] != null) {
+					dataArr.push(utils.extend({ name: i, value: data[i] }, extend));
+				}
+			}
 			return dataArr;
 		},
 
