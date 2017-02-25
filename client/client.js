@@ -28,7 +28,9 @@ class Socket {
 			this.on(i, this._handlers[i].bind(this));
 		}
 
-		this._simulateEvent("loadStart");
+		setTimeout(() => {
+			this._simulateEvent("loadStart");
+		}, 0);
 		let firstConnectHandler = () => {
 			this.removeListener("connect", firstConnectHandler);
 			this._simulateEvent("loadEnd");

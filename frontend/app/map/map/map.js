@@ -311,11 +311,11 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 			map.socket.loading--;
 		};
 
-		map.socket.$on("loadStart", function() {
+		map.socket.on("loadStart", function() {
 			map.loadStart();
 		});
 
-		map.socket.$on("loadEnd", function() {
+		map.socket.on("loadEnd", function() {
 			map.loadEnd();
 		});
 
