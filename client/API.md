@@ -526,8 +526,6 @@ their `idx` property.
       the different options set a specific property on the object
     * `default` (string/boolean): The default value of this field
     * `options` ([object]): If this field is a dropdown, an array of objects with the following properties:
-        * `key` (string): The key of this option. This will be the value in the `data` property of markers and lines.
-          This will be changed soon and the value will the `value` instead (see #43).
         * `value` (string): The value of this option.
         * `colour`, `size`, `symbol`, `width` (string/number): The property value if this field controls that property
 

@@ -142,7 +142,7 @@ fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtil
 		if($scope.field.options == null)
 			$scope.field.options = [ ];
 
-		$scope.field.options.push({ key: fmUtils.generateRandomPadId(), value: "" });
+		$scope.field.options.push({ value: "" });
 	};
 
 	$scope.deleteOption = function(option) {

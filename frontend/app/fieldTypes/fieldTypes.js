@@ -20,7 +20,7 @@ fm.app.directive("fmTypeField", function($parse, $compile) {
 						el = $('<select class="form-control"/>');
 						if(field.options) {
 							for(var i=0; i<field.options.length; i++) {
-								$('<option/>').attr("value", field.options[i].key).text(field.options[i].value).appendTo(el);
+								$('<option/>').text(field.options[i].value).appendTo(el);
 							}
 						}
 						break;
@@ -86,20 +86,7 @@ fm.app.factory("fmTypeFields", function(fmMarked) {
 				case "checkbox":
 					return value == "1" ? "✔" : "✘";
 				case "dropdown":
-					var val = null;
-					function _resolve(value) {
-						for(var i=0; i<(field.options || [ ]).length; i++) {
-							if(field.options[i].key == value) {
-								val = field.options[i].value;
-								break;
-							}
-						}
-					}
-
-					_resolve(value);
-					if(val == null)
-						_resolve(field['default']);
-					return val || "";
+					return value || "";
 				case "input":
 				default:
 					return fmMarked.inline(value);

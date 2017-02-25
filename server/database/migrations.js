@@ -1,4 +1,5 @@
 var Sequelize = require("sequelize");
+var underscore = require("underscore");
 
 var utils = require("../utils");
 
@@ -57,33 +58,60 @@ module.exports = function(Database) {
 						return Promise.all(promises);
 					});
 				}));
-
-				/*queryInterface.describeTable('Markers').then(function(attributes) {
-					var promises = [ ];
-
-					// Add size and symbol columns
-					if(!attributes.size)
-						promises.push(queryInterface.addColumn('Markers', 'size', Marker.attributes.size));
-					if(!attributes.symbol)
-						promises.push(queryInterface.addColumn('Markers', 'symbol', Marker.attributes.symbol));
-
-					return Promise.all(promises);
-				}),
-
-				queryInterface.describeTable('Types').then(function(attributes) {
-					return Promise.all([ 'defaultColour', 'colourFixed', 'defaultSize', 'sizeFixed', 'defaultSymbol', 'symbolFixed', 'defaultWidth', 'widthFixed', 'defaultMode', 'modeFixed' ].map(function(col) {
-						if(!attributes[col])
-							return queryInterface.addColumn('Types', col, Type.attributes[col]);
-					}));
-				}),
-
-				queryInterface.describeTable('Views').then(function(attributes) {
-					if(!attributes.filter)
-						return queryInterface.addColumn('Views', 'filter', View.attributes.filter);
-				})*/
 			});
 
-			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations ]);
+			// Get rid of the dropdown key, save the value in the data instead
+			let dropdownKeyMigration = this.getMeta("dropdownKeysMigrated").then((dropdownKeysMigrated) => {
+				if(dropdownKeysMigrated)
+					return;
+
+				return this._conn.model("Type").findAll().then((types) => {
+					let operations = Promise.resolve();
+					for(let type of types) {
+						let newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
+						let dropdowns = newFields.filter((field) => field.type == "dropdown");
+						if(dropdowns.length > 0) {
+							operations = operations.then(() => {
+								let objectStream = type.type == "line" ? this.getPadLinesByType(type.padId, type.id) : this.getPadMarkersByType(type.padId, type.id);
+
+								return utils.streamEachPromise(objectStream, (object) => {
+									let newData = underscore.clone(object.data);
+									for(let dropdown of dropdowns) {
+										let newVal = (dropdown.options || {}).filter((option) => option.key == newData[dropdown.name])[0];
+										if(newVal)
+											newData[dropdown.name] = newVal.value;
+										else if(newData[dropdown.name])
+											console.log(`Warning: Dropdown key ${newData[dropdown.name]} for field ${dropdown.name} of type ${type.name} of pad ${type.padId} does not exist.`);
+									}
+
+									if(!underscore.isEqual(newData, object.data))
+										return this._updatePadObject(type.type == "line" ? "Line" : "Marker", object.padId, object.id, {data: newData}, true);
+								});
+							}).then(() => {
+								dropdowns.forEach((dropdown) => {
+									if(dropdown.default) {
+										let newDefault = dropdown.options.filter((option) => (option.key == dropdown.default))[0];
+										if(newDefault)
+											dropdown.default = newDefault.value;
+										else
+											console.log(`Warning: Default dropdown key ${dropdown.default} for field ${dropdown.name} of type ${type.name} of pad ${type.padId} does not exist.`);
+									}
+
+									dropdown.options.forEach((option) => {
+										delete option.key;
+									});
+								});
+								return this._updatePadObject("Type", type.padId, type.id, {fields: newFields}, true);
+							});
+						}
+					}
+					return operations;
+				}).then(() => {
+					this.setMeta("dropdownKeysMigrated", true);
+				});
+			});
+
+			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations/*, dropdownKeyMigration*/ ]);
 		}
 	});
 };

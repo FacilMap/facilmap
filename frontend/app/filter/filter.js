@@ -123,21 +123,8 @@ fm.app.factory("fmFilter", function($rootScope, $uibModal, fmUtils) {
 		prepareObject: function(obj, type) {
 			obj = $.extend(true, { }, obj);
 
-			if(type) {
+			if(type)
 				obj.type = type.type;
-
-				// Resolve dropdown keys to their values
-				type.fields.forEach(function(field) {
-					if(field.type == "dropdown") {
-						var val = field.options.filter(function(option) { return obj.data[field.name] == option.key; });
-						if(val.length == 0)
-							val = field.options.filter(function(option) { return option.key == field.default; });
-
-						if(val.length > 0)
-							obj.data[field.name] = val[0].value;
-					}
-				});
-			}
 
 			return obj;
 		},

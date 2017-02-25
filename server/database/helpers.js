@@ -74,13 +74,7 @@ module.exports = function(Database) {
 
 					types[object.typeId].fields.forEach((field) => {
 						if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
-							var _find = (value) => {
-								for(var j=0; j<(field.options || []).length; j++) {
-									if(field.options[j].key == value)
-										return field.options[j];
-								}
-								return null;
-							};
+							var _find = (value) => (field.options.filter((option) => option.value == value)[0] || null);
 
 							var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
 
