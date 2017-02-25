@@ -45,6 +45,9 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
 				scope.type = type;
 				scope.field = field;
 
+				for(let option of (field.options || []))
+					option.oldValue = option.value;
+
 				var dialog = $uibModal.open({
 					template: require("./edit-type-dropdown.html"),
 					scope: scope,

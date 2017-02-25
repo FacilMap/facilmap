@@ -296,13 +296,19 @@ module.exports = function(Database) {
 
 			return utils.streamEachPromise(objectStream, (object) => {
 				let newData = underscore.clone(object.data);
+				let newNames = [ ];
 
-				for(let from in rename) {
-					let to = rename[from];
+				for(let oldName in rename) {
+					if(rename[oldName].name) {
+						newData[rename[oldName].name] = object.data[oldName];
+						newNames.push(oldName);
+						if(!newNames.includes(oldName))
+							delete newData[oldName];
+					}
 
-					if(from != to && (newData[from] || newData[to])) {
-						newData[to] = newData[from];
-						delete newData[from];
+					for(let oldValue in (rename[oldName].values || { })) {
+						if(object.data[oldName] == oldValue)
+							newData[rename[oldName].name || oldName] = rename[oldName].values[oldValue];
 					}
 				}
 

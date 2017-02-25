@@ -384,6 +384,9 @@ Update an existing type.
 
 * `data` ([type](#type-1)). The new type data. Fields that are not defined will not be unmodified. Only `id` needs
   to be defined.
+  To rename a field, set the `oldName` property of the field object to the previous name and the `name` property to the
+  new name. To rename a dropdown entry, set the `oldValue` property to the old value and the `value` property to the new
+  value.
 * _returns_ (Promise<[type](#type-1)>): The new type.
 
 ### `deleteType(data)`
@@ -521,12 +524,15 @@ their `idx` property.
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
     * `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
+    * `oldName` (string): When renaming a field (using [`editType(data)`](#edittypedata)), specify the former name here
     * `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
     * `controlColour`, `controlSize`, `controlSymbol`, `controlWidth` (boolean): If this field is a dropdown, whether
       the different options set a specific property on the object
     * `default` (string/boolean): The default value of this field
     * `options` ([object]): If this field is a dropdown, an array of objects with the following properties:
         * `value` (string): The value of this option.
+        * `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](#edittypedata)), specify the
+          former value here
         * `colour`, `size`, `symbol`, `width` (string/number): The property value if this field controls that property
 
 ### searchResult

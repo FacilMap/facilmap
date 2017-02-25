@@ -376,7 +376,7 @@ utils.extend(SocketConnection.prototype, {
 						type: "string",
 						default: "string",
 						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
-						options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
+						options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
 					}]
 				}))
 					throw "Invalid parameters.";
@@ -386,21 +386,35 @@ utils.extend(SocketConnection.prototype, {
 
 				let rename = {};
 				for(let field of (data.fields || [])) {
-					if(field.oldName && field.oldName != field.name) {
-						if((data.fields || []).filter((field2) => field2.name == field.name).length > 1)
-							throw new Error(`There is already another field with the name ${field.name}.`);
+					if(field.oldName && field.oldName != field.name)
+						rename[field.oldName] = { name: field.name };
 
-						rename[field.oldName] = field.name;
+					if(field.type == "dropdown" && field.options) {
+						console.log("options", field.options);
+						for(let option of field.options) {
+							if(option.oldValue && option.oldValue != option.value) {
+								if(!rename[field.oldName || field.name])
+									rename[field.oldName || field.name] = { };
+								if(!rename[field.oldName || field.name].values)
+									rename[field.oldName || field.name].values = { };
+
+								rename[field.oldName || field.name].values[option.oldValue] = option.value;
+							}
+
+							delete option.oldValue;
+						}
 					}
 
 					delete field.oldName;
 				}
 
-				return this.database.updateType(this.padId, data.id, data).then((newData) => {
+				// We first update the type (without updating the styles). If that succeeds, we rename the data fields.
+				// Only then we update the object styles (as they often depend on the field values).
+				return this.database.updateType(this.padId, data.id, data, false).then((newType) => {
 					if(Object.keys(rename).length > 0)
-						return this.database.renameObjectDataField(this.padId, data.id, rename, newData.type == "line").then(() => newData);
-					else
-						return newData;
+						return this.database.renameObjectDataField(this.padId, data.id, rename, newType.type == "line").then(() => newType);
+				}).then((newType) => {
+					return this.database.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line").then(() => newType);
 				});
 			})
 		},

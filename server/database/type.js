@@ -67,6 +67,16 @@ module.exports = function(Database) {
 										throw new Error("Invalid width "+obj[i].options[j].width+" in field "+obj[i].name+".");
 								}
 							}
+
+							// Validate unique dropdown entries
+							if(obj[i].type == "dropdown") {
+								let existingValues = { };
+								for(let option of (obj[i].options || [])) {
+									if(existingValues[option.value])
+										throw new Error(`Duplicate option "${option.value}" for field "${obj[i].name}".`);
+									existingValues[option.value] = true;
+								}
+							}
 						}
 					}
 				}
@@ -119,7 +129,7 @@ module.exports = function(Database) {
 			});
 		},
 
-		updateType(padId, typeId, data) {
+		updateType(padId, typeId, data, _doNotUpdateStyles) {
 			return Promise.resolve().then(() => {
 				if(data.name == null || data.name.trim().length == 0)
 					throw "No name provided.";
@@ -128,8 +138,13 @@ module.exports = function(Database) {
 			}).then((data) => {
 				this.emit("type", data.padId, data);
 
-				return this._updateObjectStyles(data.type == "line" ? this.getPadLinesByType(data.padId, typeId) : this.getPadMarkersByType(data.padId, typeId), data.type == "line").then(() => data);
+				if(!_doNotUpdateStyles)
+					return this.recalculateObjectStylesForType(data.padId, typeId, data.type == "line").then(() => data);
 			});
+		},
+
+		recalculateObjectStylesForType(padId, typeId, isLine) {
+			return this._updateObjectStyles(isLine ? this.getPadLinesByType(padId, typeId) : this.getPadMarkersByType(padId, typeId), isLine);
 		},
 
 		_optionsToObj(options, idx) {
