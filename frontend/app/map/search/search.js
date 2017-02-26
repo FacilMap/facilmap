@@ -5,6 +5,8 @@ import ng from 'angular';
 import toGeoJSON from '@mapbox/togeojson';
 import osmtogeojson from 'osmtogeojson';
 import '../../../assets/font/fontello.css';
+import 'jquery-ui';
+import 'jquery-ui/ui/widgets/resizable';
 
 fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, $q, fmMapSearchRoute) {
 	return function(map) {
@@ -425,6 +427,16 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		};
 
 		var routeUi = fmMapSearchRoute(map, searchUi);
+
+		el.find(".fm-search-results").resizable({
+			handles: {
+				se: el.find(".fm-search-resize")
+			}
+		}).one("resize", () => {
+			el.filter(".fm-search").addClass("fm-search-resized");
+		}).on("resize", () => {
+			el.find("form").css("width", el.find(".fm-search-results").css("width"));
+		});
 
 		return searchUi;
 	};
