@@ -2671,6 +2671,10 @@ leaflet.locatecontrol@^0.59.0:
   version "0.59.0"
   resolved "https://registry.yarnpkg.com/leaflet.locatecontrol/-/leaflet.locatecontrol-0.59.0.tgz#efa3e5697676cf74afd90a4cd554569bd23fd849"
 
+leaflet.markercluster@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/leaflet.markercluster/-/leaflet.markercluster-1.0.3.tgz#64c779365c0951f4885c3414024a994f3effc708"
+
 leaflet@>=0.7.0, leaflet@^0.7.3, leaflet@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.0.3.tgz#1f401b98b45c8192134c6c8d69686253805007c8"

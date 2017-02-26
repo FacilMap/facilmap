@@ -9,7 +9,8 @@ module.exports = function(Database) {
 			name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilMap"; } },
 			writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
-			description: { type: Sequelize.STRING, allowNull: false }
+			description: { type: Sequelize.STRING, allowNull: false },
+			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, default: false }
 		});
 	});
 

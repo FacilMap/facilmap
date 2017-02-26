@@ -3,6 +3,7 @@ import $ from 'jquery';
 import L from 'leaflet';
 import 'leaflet-almostover';
 import 'leaflet.locatecontrol';
+import 'leaflet.markercluster';
 
 fm.app.directive("facilmap", function(fmMap) {
 	return {
@@ -141,6 +142,26 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		$compile(tpl)(scope);
 
 		map.map = L.map(el.find(".fm-map")[0]);
+
+		map.socket.$watch("padData.clusterMarkers", (clusterMarkers) => {
+			var currentMarkers = map.markerCluster ? map.markerCluster.getLayers() : [ ];
+
+			if(map.markerCluster)
+				map.markerCluster.clearLayers().remove();
+
+			if(clusterMarkers) {
+				map.markerCluster = L.markerClusterGroup({
+					showCoverageOnHover: false,
+					maxClusterRadius: 50
+				});
+			} else
+				map.markerCluster = L.featureGroup();
+
+			map.map.addLayer(map.markerCluster);
+
+			for(let marker of currentMarkers)
+				map.markerCluster.addLayer(marker);
+		});
 
 		map.map.almostOver.options.distance = 10;
 

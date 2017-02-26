@@ -36,13 +36,13 @@
 
 		<div class="form-group">
 			<label for="pad-name-input" class="col-sm-3 control-label">Map name</label>
-			<div class="col-sm-9"><input id="pad-name-input" ng-model="padName" class="form-control" /></div>
+			<div class="col-sm-9"><input id="pad-name-input" ng-model="padData.name" class="form-control" /></div>
 		</div>
 
 		<div class="form-group">
 			<label for="search-engines-input" class="col-sm-3 control-label">Accessible for search engines</label>
 			<div class="col-sm-9">
-				<input type="checkbox" id="search-engines-input" ng-model="searchEngines" />
+				<input type="checkbox" id="search-engines-input" ng-model="padData.searchEngines" />
 				<p class="help-block">If this is enabled, search engines like Google will be allowed to add the read-only version of this map.</p>
 			</div>
 		</div>
@@ -50,8 +50,16 @@
 		<div class="form-group" ng-show="searchEngines">
 			<label for="description-input" class="col-sm-3 control-label">Short description</label>
 			<div class="col-sm-9">
-				<input id="description-input" ng-model="description" class="form-control" />
+				<input id="description-input" ng-model="padData.description" class="form-control" />
 				<p class="help-block">This description will be shown under the result in search engines.</p>
+			</div>
+		</div>
+
+		<div class="form-group">
+			<label for="cluster-markers-input" class="col-sm-3 control-label">Cluster markers</label>
+			<div class="col-sm-9">
+				<input type="checkbox" id="cluster-markers-input" ng-model="padData.clusterMarkers" />
+				<p class="help-block">If enabled, when there are many markers in one area, they will be replaced by a placeholder at low zoom levels. This improves performance on maps with many markers.</p>
 			</div>
 		</div>
 

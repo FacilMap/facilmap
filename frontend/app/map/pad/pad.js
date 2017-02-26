@@ -1,4 +1,5 @@
 import fm from '../../app';
+import $ from 'jquery';
 
 fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 	return function(map) {
@@ -58,15 +59,16 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils)
 	if(create) {
 		$scope.writeId = fmUtils.generateRandomPadId(14);
 		$scope.readId = fmUtils.generateRandomPadId(12);
-		$scope.padName = "New FacilMap";
-		$scope.searchEngines = false;
-		$scope.description = "";
+		$scope.padData = {
+			padName: "New FacilMap",
+			searchEngines: false,
+			description: "",
+			clusterMarkers: false
+		};
 	} else {
-		$scope.writeId = map.socket.padData.writeId;
-		$scope.readId = map.socket.padData.id;
-		$scope.padName = map.socket.padData.name;
-		$scope.searchEngines = map.socket.padData.searchEngines;
-		$scope.description = map.socket.padData.description;
+		// We don't want to edit those in padData directly, as that would change the URL while we type
+		$scope.writeId = $scope.padData.writeId;
+		$scope.readId = $scope.padData.id;
 	}
 
 	function validateId(id) {
@@ -83,14 +85,7 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils)
 	});
 
 	$scope.save = function() {
-		var newData = {
-			name: $scope.padName,
-			id: $scope.readId,
-			writeId: $scope.writeId,
-			searchEngines: $scope.searchEngines,
-			description: $scope.description
-		};
-
+		let newData = $.extend({}, $scope.padData, {id: $scope.readId, writeId: $scope.writeId});
 		if(create) {
 			map.socket.createPad(newData).then(function() {
 				map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));

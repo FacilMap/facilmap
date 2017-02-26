@@ -29,7 +29,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 		var markersUi = {
 			_addMarker : function(marker) {
 				if(!markersById[marker.id]) {
-					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.map)
+					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.markerCluster)
 						.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
 							markersUi._renderMarkerPopup(map.socket.markers[marker.id] || marker);
