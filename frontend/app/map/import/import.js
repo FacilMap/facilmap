@@ -23,6 +23,9 @@ fm.app.factory("fmMapImport", function($q) {
 			},
 
 			importFiles: function(files) {
+				if(!files || files.length == 0)
+					return;
+
 				var readers = [ ];
 
 				for(var i=0; i<files.length; i++) {
