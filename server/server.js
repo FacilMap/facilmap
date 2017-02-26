@@ -3,10 +3,6 @@
 const fs = require("fs");
 const path = require("path");
 
-var Database = require("./database/database");
-var utils = require("./utils");
-var Socket = require("./socket");
-var webserver = require("./webserver");
 
 const configPath = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
 
@@ -18,6 +14,12 @@ if(!fs.existsSync(configPath)) {
 const config = require(configPath);
 
 process.env.fmUserAgent = config.userAgent;
+
+
+var Database = require("./database/database");
+var utils = require("./utils");
+var Socket = require("./socket");
+var webserver = require("./webserver");
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
