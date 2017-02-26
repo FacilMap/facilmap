@@ -13,9 +13,7 @@ WORKDIR /opt/facilmap/server
 
 COPY ./ ../
 
-RUN mkdir -p node_modules ../client/node_modules ../frontend/node_modules ../client/build ../frontend/build ../.cache ../.config ../.yarn && \
-	touch yarn-error.log ../client/yarn-error.log ../frontend/yarn-error.log && \
-	chown facilmap:facilmap node_modules ../client/node_modules ../frontend/node_modules ../client/build ../frontend/build ../.cache ../.config ../.yarn yarn-error.log ../client/yarn-error.log ../frontend/yarn-error.log yarn.lock ../frontend/yarn.lock ../client/yarn.lock package.json ../frontend/package.json ../client/package.json
+RUN chown -R facilmap:facilmap /opt/facilmap
 
 USER facilmap
 
@@ -24,6 +22,6 @@ RUN cd ../client && yarn run deps && yarn build && yarn link && \
     cd ../server && yarn run deps && yarn link facilmap-client facilmap-frontend && yarn add mysql pg sqlite3 tedious
 
 USER root
-RUN chown -R root:root node_modules ../client/node_modules ../frontend/node_modules ../client/build ../frontend/build ../.cache ../.config ../.yarn yarn-error.log ../client/yarn-error.log ../frontend/yarn-error.log yarn.lock ../frontend/yarn.lock ../client/yarn.lock package.json ../frontend/package.json ../client/package.json
+RUN chown -R root:root /opt/facilmap
 
 USER facilmap
