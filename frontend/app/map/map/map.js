@@ -14,7 +14,7 @@ fm.app.directive("facilmap", function(fmMap) {
 	};
 });
 
-fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapAbout, $sce, fmMapImport, fmMapHash, fmMapHistory) {
+fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, fmMapToolbox, $timeout, fmMapLegend, fmMapSearch, fmMapAbout, $sce, fmMapImport, fmMapHash, fmMapHistory, $q) {
 	var maps = { };
 
 	var ret = { };
@@ -230,7 +230,7 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 			return ret;
 		};
 
-		map.displayView = function(view) {
+		map.displayView = function(view, _zoomFactor=0) {
 			var layers = [ view && map.layers[view.baseLayer] ? view.baseLayer : Object.keys(map.layers)[0] ].concat(view ? view.layers : [ ]);
 			map.map.eachLayer(function(it) {
 				if(it.options.fmKey && layers.indexOf(it.options.fmKey) == -1)
@@ -248,9 +248,9 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 
 			try {
 				map.map.getCenter(); // Throws exception if map not initialised
-				map.map.flyTo(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
+				map.map.flyTo(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view)+_zoomFactor);
 			} catch(e) {
-				map.map.setView(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view));
+				map.map.setView(bounds.getCenter(), map.map.getBoundsZoom(bounds, !view)+_zoomFactor);
 			}
 
 			map.socket.setFilter(view && view.filter);
@@ -355,23 +355,43 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		fmMapToolbox(map);
 		fmMapLegend(map);
 
-		if(padId) {
-			var loadedWatcher = map.socket.$watch("padData", function(padData) {
-				if(padData != null) {
-					loadedWatcher();
+		$q.resolve().then(() => {
+			if(padId) {
+				return $q((resolve) => {
+					var loadedWatcher = map.socket.$watch("padData", function(padData) {
+						if(padData != null) {
+							loadedWatcher();
 
-					if(!map.hashUi.hasLocationHash())
-						map.displayView(padData.defaultView);
-					map.hashUi.init();
-					scope.loaded = true;
+							if(!map.hashUi.hasLocationHash())
+								map.displayView(padData.defaultView);
+							resolve();
+						}
+					});
+				});
+			} else {
+				if(!map.hashUi.hasLocationHash()) {
+					return $q.resolve($.get({
+						url: "https://freegeoip.net/json/",
+						dataType: "json"
+					})).then((data) => {
+						let latResolution = Math.pow(10, -`${data.latitude}`.replace(/^[^.]*\.?/, "").length);
+						let lonResolution = Math.pow(10, -`${data.longitude}`.replace(/^[^.]*\.?/, "").length);
+						map.displayView({
+							left: data.longitude-lonResolution,
+							bottom: data.latitude-latResolution,
+							right: data.longitude+lonResolution,
+							top: data.latitude+latResolution
+						}, -2);
+					}).catch((err) => {
+						console.error("Error contacting GeoIP service", err);
+						map.displayView();
+					});
 				}
-			});
-		} else {
-			if(!map.hashUi.hasLocationHash())
-				map.displayView();
+			}
+		}).then(() => {
 			map.hashUi.init();
 			scope.loaded = true;
-		}
+		});
 
 		var errorMessage = null;
 		map.socket.$watch("disconnected", function(disconnected) {
