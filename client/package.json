@@ -1,6 +1,6 @@
 {
   "name": "facilmap-client",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
   "keywords": [
     "webpack",
