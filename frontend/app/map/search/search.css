@@ -45,6 +45,11 @@
 	white-space: nowrap;
 }
 
+.fm-search.fm-hasResults .fm-search-results {
+	min-height: 60px;
+	min-width: 150px;
+}
+
 .fm-search .no-results {
 	margin: 10px 0 0;
 }

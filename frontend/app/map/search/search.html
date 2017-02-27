@@ -16,7 +16,7 @@
 			</div>
 		</form>
 
-		<div class="fm-search-results" ng-show="searchResults">
+		<div class="fm-search-results">
 			<div uib-alert class="alert-danger no-results" ng-if="searchResults.length == 0">No results have been found.</div>
 			<ul class="list-group" ng-if="searchResults.length > 0">
 				<li ng-repeat="result in searchResults" class="list-group-item" ng-class="{active: activeResult === result}">

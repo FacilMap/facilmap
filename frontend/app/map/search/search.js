@@ -431,11 +431,12 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		el.find(".fm-search-results").resizable({
 			handles: {
 				se: el.find(".fm-search-resize")
-			}
+			},
+			minHeight: 0
 		}).one("resize", () => {
 			el.filter(".fm-search").addClass("fm-search-resized");
 		}).on("resize", () => {
-			el.find("form").css("width", el.find(".fm-search-results").css("width"));
+			el.find("form").css("width", `${el.find(".fm-search-results").innerWidth()}px`);
 		});
 
 		return searchUi;
