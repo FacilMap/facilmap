@@ -5,10 +5,11 @@ const Promise = require("promise");
 const commonUtils = require("facilmap-frontend/common/utils");
 const commonFormat = require("facilmap-frontend/common/format");
 
-const utils = require("./utils");
+const utils = require("../utils");
+const webserver = require("../webserver");
 
-const table = module.exports = {
-	createTable(database, padId, template) {
+const table = {
+	createTable(database, padId) {
 		return utils.promiseAuto({
 			padData: database.getPadData(padId),
 
@@ -31,9 +32,11 @@ const table = module.exports = {
 				return utils.streamEachPromise(database.getPadLines(padId), function(line) {
 					types[line.typeId].lines.push(line);
 				});
-			}
+			},
+
+			template: webserver.getFrontendFile("table.ejs")
 		}).then((results) => {
-			return ejs.render(template, {
+			return ejs.render(results.template, {
 				padData: results.padData,
 				types: results.types,
 				utils: commonUtils,
@@ -42,3 +45,5 @@ const table = module.exports = {
 		})
 	}
 };
+
+Object.assign(exports, table);

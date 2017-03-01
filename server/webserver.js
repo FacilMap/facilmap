@@ -7,8 +7,8 @@ const path = require("path");
 const Promise = require("promise");
 
 const database = require("./database/database");
-const gpx = require("./gpx");
-const table = require("./table");
+const gpx = require("./export/gpx");
+const table = require("./export/table");
 const utils = require("./utils");
 
 const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
@@ -16,30 +16,18 @@ const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.jso
 if(process.env.FM_DEV)
 	process.chdir(frontendPath); // To make sure that webpack finds all the loaders
 
-const webserver = module.exports = {
-	init(database, port, host) {
-		const staticMiddleware = process.env.FM_DEV
-			? require("webpack-dev-middleware")(require("webpack")(require("facilmap-frontend/webpack.config")), { // require the stuff here so that it doesn't fail if devDependencies are not installed
-				publicPath: "/"
-			})
-			: express.static(frontendPath + "/build/");
+const staticMiddleware = process.env.FM_DEV
+	? require("webpack-dev-middleware")(require("webpack")(require("facilmap-frontend/webpack.config")), { // require the stuff here so that it doesn't fail if devDependencies are not installed
+		publicPath: "/"
+	})
+	: express.static(frontendPath + "/build/");
 
+const webserver = {
+	init(database, port, host) {
 
 		const padMiddleware = function(req, res, next) {
 			utils.promiseAuto({
-				template: () => {
-					if (process.env.FM_DEV) {
-						let intercept = utils.interceptWriteStream(res);
-						req.url = req.originalUrl = "/index.ejs";
-						staticMiddleware(req, res, next);
-						return intercept;
-					} else {
-						// We don't want express.static's ETag handling, as it sometimes returns an empty template,
-						// so we have to read it directly from the file system
-
-						return Promise.denodeify(fs.readFile)(`${frontendPath}/build/index.ejs`, "utf8");
-					}
-				},
+				template: () => webserver.getFrontendFile("index.ejs"),
 
 				padData: () => {
 					if(req.params && req.params.padId) {
@@ -107,21 +95,7 @@ const webserver = module.exports = {
 		});
 
 		app.get("/:padId/table", function(req, res, next) {
-			Promise.resolve().then(() => {
-				if (process.env.FM_DEV) {
-					let intercept = utils.interceptWriteStream(res);
-					req.url = req.originalUrl = "/table.ejs";
-					staticMiddleware(req, res, next);
-					return intercept;
-				} else {
-					// We don't want express.static's ETag handling, as it sometimes returns an empty template,
-					// so we have to read it directly from the file system
-
-					return Promise.denodeify(fs.readFile)(`${frontendPath}/build/table.ejs`, "utf8");
-				}
-			}).then((template) => {
-				return table.createTable(database, req.params.padId, template);
-			}).then((renderedTable) => {
+			return table.createTable(database, req.params.padId).then((renderedTable) => {
 				res.type("html");
 				res.send(renderedTable);
 			}).catch(next);
@@ -129,5 +103,22 @@ const webserver = module.exports = {
 
 		let server = http.createServer(app);
 		return Promise.denodeify(server.listen.bind(server))(port, host).then(() => server);
+	},
+
+	getFrontendFile(path) {
+		if (process.env.FM_DEV) {
+			return new Promise((resolve, reject) => {
+				staticMiddleware.waitUntilValid(resolve);
+			}).then(() => {
+				return staticMiddleware.fileSystem.readFileSync(staticMiddleware.getFilenameFromUrl(`/${path}`), "utf8");
+			});
+		} else {
+			// We don't want express.static's ETag handling, as it sometimes returns an empty template,
+			// so we have to read it directly from the file system
+
+			return Promise.denodeify(fs.readFile)(`${frontendPath}/build/${path}`, "utf8");
+		}
 	}
 };
+
+Object.assign(exports, webserver);
