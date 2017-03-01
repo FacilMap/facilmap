@@ -1,5 +1,6 @@
 import fm from '../app';
 import $ from 'jquery';
+import commonFormat from '../../common/format';
 
 fm.app.directive("fmTypeField", function($parse, $compile) {
 	return {
@@ -55,7 +56,7 @@ fm.app.directive("fmTypeField", function($parse, $compile) {
 	};
 });
 
-fm.app.directive("fmTypeFieldContent", function($parse, fmTypeFields) {
+fm.app.directive("fmTypeFieldContent", function($parse) {
 	return {
 		restrict: 'A',
 		link: function(scope, element, attrs) {
@@ -63,7 +64,7 @@ fm.app.directive("fmTypeFieldContent", function($parse, fmTypeFields) {
 				var field = $parse(attrs.fmTypeFieldContent)(scope);
 				var value = $parse(attrs.fmTypeFieldModel)(scope);
 
-				element.empty().append(fmTypeFields.formatField(field, value));
+				element.empty().append(commonFormat.formatField(field, value));
 			};
 
 			scope.$watch(attrs.fmTypeFieldModel, update);
@@ -71,26 +72,6 @@ fm.app.directive("fmTypeFieldContent", function($parse, fmTypeFields) {
 			scope.$watch(attrs.fmTypeFieldContent+".options", update, true);
 			if(attrs.fmTypeFieldIgnoreDefault == null)
 				scope.$watch(attrs.fmTypeFieldContent+".default", update);
-		}
-	}
-});
-
-fm.app.factory("fmTypeFields", function(fmMarked) {
-	return {
-		formatField : function(field, value) {
-			if(value == null)
-				value = field['default'] || "";
-			switch(field.type) {
-				case "textarea":
-					return fmMarked.block(value);
-				case "checkbox":
-					return value == "1" ? "✔" : "✘";
-				case "dropdown":
-					return value || "";
-				case "input":
-				default:
-					return fmMarked.inline(value);
-			}
 		}
 	}
 });

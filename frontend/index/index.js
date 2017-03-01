@@ -34,5 +34,3 @@ fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
 		}
 	});
 });
-
-ng.bootstrap(document, [ "facilmap" ]);

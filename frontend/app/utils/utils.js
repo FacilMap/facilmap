@@ -8,6 +8,9 @@ import linkifyStr from 'linkifyjs/string';
 import Clipboard from 'clipboard';
 import SimpleGraticule from 'leaflet-simple-graticule';
 
+import commonFormat from '../../common/format';
+import commonUtils from '../../common/utils';
+
 fm.app.factory("fmUtils", function($parse, fmIcons) {
 
 	var fmUtils = { };
@@ -101,43 +104,13 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			to[i] = from[i];
 	};
 
-	fmUtils.quoteJavaScript = function(str) {
-		return "'" + (""+str).replace(/['\\]/g, '\\$1').replace(/\n/g, "\\n") + "'";
-	};
+	fmUtils.quoteJavaScript = commonUtils.quoteJavaScript;
+	fmUtils.quoteHtml = commonUtils.quoteHtml;
+	fmUtils.quoteRegExp = commonUtils.quoteRegExp;
 
-	fmUtils.quoteHtml = function(str) {
-		return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-	};
-
-	fmUtils.quoteRegExp = function(str) {
-		return (str+'').replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
-	};
-
-	fmUtils.round = function(number, digits) {
-		var fac = Math.pow(10, digits);
-		return Math.round(number*fac)/fac;
-	};
-
-	fmUtils.formatTime = function(seconds) {
-		var hours = Math.floor(seconds/3600);
-		var minutes = Math.floor((seconds%3600)/60);
-		if(minutes < 10)
-			minutes = "0" + minutes;
-		return hours + ":" + minutes;
-	};
-
-	fmUtils.routingMode = function(mode) {
-		switch(mode) {
-			case "car":
-				return "by car";
-			case "bicycle":
-				return "by bicycle";
-			case "pedestrian":
-				return "by foot";
-			default:
-				return "";
-		}
-	};
+	fmUtils.round = commonFormat.round;
+	fmUtils.formatTime = commonFormat.formatTime;
+	fmUtils.routingMode = commonFormat.routingMode;
 
 	fmUtils.preserveObject = function(scope, sourceExpr, targetExpr, onDelete) {
 		var obj,bkp;

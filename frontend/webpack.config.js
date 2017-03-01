@@ -81,7 +81,7 @@ module.exports = {
 			L: "leaflet",
 			angular: "angular"
 		}),
-		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/index/${file}` }))),
+		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` }))),
 		new webpack.optimize.UglifyJsPlugin({
 			sourceMap: true
 		}),
