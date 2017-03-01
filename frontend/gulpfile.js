@@ -74,7 +74,7 @@ gulp.task("webpack", [ "icons" ], function() {
 				return Promise.denodeify(fs.unlink)(staticFrontendFile);
 		}).then(() => {
 			// Create symlink with fixed file name so that people can include https://facilmap.org/frontend.js
-			return Promise.denodeify(fs.symlink)(`frontend-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
+			return Promise.denodeify(fs.symlink)(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
 	    });
 	});
 });

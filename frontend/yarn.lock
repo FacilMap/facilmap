@@ -2538,7 +2538,7 @@ jquery-ui@^1.12.1:
   version "1.12.1"
   resolved "https://registry.yarnpkg.com/jquery-ui/-/jquery-ui-1.12.1.tgz#bcb4045c8dd0539c134bc1488cdd3e768a7a9e51"
 
-jquery@<3.0.0, jquery@>=1.9.0:
+jquery@<3.0.0, jquery@>=1.2.6, jquery@>=1.9.0:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-2.2.4.tgz#2c89d6889b5eac522a7eea32c14521559c6cbf02"
 
@@ -4477,6 +4477,12 @@ svgo@^0.7.0, svgo@^0.7.1:
     mkdirp "~0.5.1"
     sax "~1.2.1"
     whet.extend "~0.9.9"
+
+tablesorter@^2.28.5:
+  version "2.28.5"
+  resolved "https://registry.yarnpkg.com/tablesorter/-/tablesorter-2.28.5.tgz#94b6f8326e9ff8b001ae7cf57804476caf8b3437"
+  dependencies:
+    jquery ">=1.2.6"
 
 tapable@^0.2.5, tapable@~0.2.5:
   version "0.2.6"

@@ -1,0 +1,7 @@
+h2[aria-expanded=true] .glyphicon-chevron-right {
+	transform: rotate(90deg);
+}
+
+table.collapse.in {
+	display: table;
+}

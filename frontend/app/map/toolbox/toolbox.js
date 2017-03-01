@@ -1,7 +1,7 @@
 import fm from '../../app';
 import $ from 'jquery';
 
-fm.app.factory("fmMapToolbox", function($compile, fmTable, fmFilter) {
+fm.app.factory("fmMapToolbox", function($compile, fmFilter) {
 	return function(map) {
 		var scope = map.socket.$new();
 
@@ -31,10 +31,6 @@ fm.app.factory("fmMapToolbox", function($compile, fmTable, fmFilter) {
 		scope.editPadSettings = map.padUi.editPadSettings.bind(map.padUi);
 
 		scope.editObjectTypes = map.typesUi.editTypes.bind(map.typesUi);
-
-		scope.showTable = function() {
-			fmTable.showTable(map.socket.padId);
-		};
 
 		scope.importFile = function() {
 			map.importUi.openImportDialog();

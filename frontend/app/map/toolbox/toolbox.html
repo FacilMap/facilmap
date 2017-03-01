@@ -39,11 +39,14 @@
 					<ul uib-dropdown-menu aria-labelledby="toolbox-layers-dropdown" class="dropdown-menu-right">
 						<!--<li ng-if="!readonly"><a href="javascript:" ng-click="openDialog('copy-pad-dialog')">Copy pad</a></li>-->
 						<li><a href="javascript:" ng-click="importFile()">Import file</a></li>
-						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="showHistory()">Show edit history</a></li>
+						<li ng-if="padId"><a href="{{padData.id}}/gpx?useTracks=1">Export as GPX (tracks)</a></li>
+						<li ng-if="padId"><a href="{{padData.id}}/gpx?useTracks=0">Export as GPX (routes)</a></li>
+						<li ng-if="padId"><a href="{{padData.id}}/table" target="_blank">Export as table</a></li>
+						<li ng-if="padId" role="separator" class="divider"></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="filter()">Filter</a></li>
-						<li ng-if="padId"><a href="{{padId}}/gpx?useTracks=1">Export GPX</a></li>
-						<li ng-if="padId"><a href="javascript:" ng-click="showTable()">View as table</a></li>
 						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
+						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="showHistory()">Show edit history</a></li>
+						<li ng-if="padId" role="separator" class="divider"></li>
 						<li><a href="javascript:" ng-click="showAbout()">About FacilMap</a></li>
 					</ul>
 				</li>

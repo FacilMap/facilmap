@@ -34,9 +34,12 @@ for(let i in addDeps) {
 }
 
 module.exports = {
-	entry: __dirname + "/index/index.js",
+	entry: {
+		index: __dirname + "/index/index.js",
+		table: __dirname + "/table/table.js"
+	},
 	output: {
-		filename: "frontend-[hash].js",
+		filename: "frontend-[name]-[hash].js",
 		path: __dirname + "/build/"
 	},
 	resolve: {
@@ -72,7 +75,13 @@ module.exports = {
 		}),
 		new htmlPlugin({
 			template: `${__dirname}/index/index.ejs`,
-			filename: "index.ejs"
+			filename: "index.ejs",
+			chunks: ["index"]
+		}),
+		new htmlPlugin({
+			template: `${__dirname}/table/table.ejs`,
+			filename: "table.ejs",
+			chunks: ["table"]
 		}),
 		new webpack.ProvidePlugin({
 		    $: "jquery",

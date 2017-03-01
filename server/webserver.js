@@ -8,6 +8,7 @@ const Promise = require("promise");
 
 const database = require("./database/database");
 const gpx = require("./gpx");
+const table = require("./table");
 const utils = require("./utils");
 
 const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
@@ -80,6 +81,7 @@ const webserver = module.exports = {
 
 		app.get("/", padMiddleware);
 		app.get("/index.ejs", padMiddleware);
+		app.get("/table.ejs", padMiddleware);
 
 		app.use(staticMiddleware);
 
@@ -101,6 +103,27 @@ const webserver = module.exports = {
 					res.attachment(padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + ".gpx");
 					res.send(gpx);
 				}
+			}).catch(next);
+		});
+
+		app.get("/:padId/table", function(req, res, next) {
+			Promise.resolve().then(() => {
+				if (process.env.FM_DEV) {
+					let intercept = utils.interceptWriteStream(res);
+					req.url = req.originalUrl = "/table.ejs";
+					staticMiddleware(req, res, next);
+					return intercept;
+				} else {
+					// We don't want express.static's ETag handling, as it sometimes returns an empty template,
+					// so we have to read it directly from the file system
+
+					return Promise.denodeify(fs.readFile)(`${frontendPath}/build/table.ejs`, "utf8");
+				}
+			}).then((template) => {
+				return table.createTable(database, req.params.padId, template);
+			}).then((renderedTable) => {
+				res.type("html");
+				res.send(renderedTable);
 			}).catch(next);
 		});
 
