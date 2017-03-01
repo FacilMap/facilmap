@@ -374,14 +374,8 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 						url: "https://freegeoip.net/json/",
 						dataType: "json"
 					})).then((data) => {
-						let latResolution = Math.pow(10, -`${data.latitude}`.replace(/^[^.]*\.?/, "").length);
-						let lonResolution = Math.pow(10, -`${data.longitude}`.replace(/^[^.]*\.?/, "").length);
-						map.displayView({
-							left: data.longitude-lonResolution,
-							bottom: data.latitude-latResolution,
-							right: data.longitude+lonResolution,
-							top: data.latitude+latResolution
-						}, -2);
+						map.map.setView([data.latitude, data.longitude], 6);
+						map.displayView(map.getCurrentView()); // To set base layer
 					}).catch((err) => {
 						console.error("Error contacting GeoIP service", err);
 						map.displayView();
