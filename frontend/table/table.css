@@ -5,3 +5,13 @@ h2[aria-expanded=true] .glyphicon-chevron-right {
 table.collapse.in {
 	display: table;
 }
+
+table {
+	table-layout: fixed;
+	width: auto !important;
+}
+
+th,td {
+	box-sizing: content-box !important;
+	overflow: hidden;
+}
