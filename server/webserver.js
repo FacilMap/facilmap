@@ -3,10 +3,12 @@ const ejs = require("ejs");
 const express = require("express");
 const fs = require("fs");
 const http = require("http");
+const jsonFormat = require("json-format");
 const path = require("path");
 const Promise = require("bluebird");
 
 const database = require("./database/database");
+const geojson = require("./export/geojson");
 const gpx = require("./export/gpx");
 const table = require("./export/table");
 const utils = require("./utils");
@@ -98,6 +100,24 @@ const webserver = {
 			return table.createTable(database, req.params.padId).then((renderedTable) => {
 				res.type("html");
 				res.send(renderedTable);
+			}).catch(next);
+		});
+
+		app.get("/:padId/geojson", function(req, res, next) {
+			utils.promiseAuto({
+				padData: database.getPadData(req.params.padId).then((padData) => {
+					if(!padData)
+						throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+					return padData;
+				}),
+				geojson: () => {
+					return geojson.exportGeoJson(database, req.params.padId);
+				},
+				response: (padData, geojson) => {
+					res.set("Content-type", "application/geo+json");
+					res.attachment(padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + ".geojson");
+					res.send(jsonFormat(geojson));
+				}
 			}).catch(next);
 		});
 
