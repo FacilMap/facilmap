@@ -1,3 +1,4 @@
+var Promise = require("bluebird");
 var Sequelize = require("sequelize");
 var underscore = require("underscore");
 

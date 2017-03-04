@@ -26,6 +26,7 @@
     "facilmap-server": "./server.js"
   },
   "dependencies": {
+    "bluebird": "^3.5.0",
     "cheerio": "^0.22.0",
     "compression": "^1.6.2",
     "compressjs": "^1.0.3",
@@ -34,7 +35,6 @@
     "express": "^4.14.0",
     "facilmap-frontend": "^2.3.3",
     "mysql": "^2.13.0",
-    "promise": "^7.1.1",
     "request": "^2.75.0",
     "request-promise": "^4.1.1",
     "sequelize": "^3.24.3",

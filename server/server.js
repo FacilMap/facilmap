@@ -2,6 +2,8 @@
 
 const fs = require("fs");
 const path = require("path");
+const Sequelize = require("sequelize");
+const Promise = require("bluebird");
 
 
 const configPath = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
@@ -37,6 +39,14 @@ Object.defineProperty(Error.prototype, "toJSON", {
 process.on('unhandledRejection', (reason, promise) => {
 	console.trace("Unhandled rejection", reason);
 });
+
+
+let bluebirdConfig = {
+	longStackTraces: true
+};
+Promise.config(bluebirdConfig)
+Sequelize.Promise.config(bluebirdConfig);
+
 
 const database = new Database(config.db);
 

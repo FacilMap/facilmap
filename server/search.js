@@ -1,5 +1,5 @@
 var request = require("request-promise");
-var Promise = require("promise");
+var Promise = require("bluebird");
 var cheerio = require("cheerio");
 var zlib = require("zlib");
 var compressjs = require("compressjs");
@@ -406,7 +406,7 @@ function loadUrl(url, completeOsmObjects) {
 			return new Buffer(compressjs.Bzip2.decompressFile(bodyBuf));
 		}
 		else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
-			return Promise.denodeify(zlib.gunzip.bind(zlib))(bodyBuf);
+			return Promise.promisify(zlib.gunzip.bind(zlib))(bodyBuf);
 		else
 			return bodyBuf;
 	}).then(function(bodyBuf) {

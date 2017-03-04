@@ -4,7 +4,7 @@ const express = require("express");
 const fs = require("fs");
 const http = require("http");
 const path = require("path");
-const Promise = require("promise");
+const Promise = require("bluebird");
 
 const database = require("./database/database");
 const gpx = require("./export/gpx");
@@ -102,7 +102,7 @@ const webserver = {
 		});
 
 		let server = http.createServer(app);
-		return Promise.denodeify(server.listen.bind(server))(port, host).then(() => server);
+		return Promise.promisify(server.listen.bind(server))(port, host).then(() => server);
 	},
 
 	getFrontendFile(path) {
@@ -116,7 +116,7 @@ const webserver = {
 			// We don't want express.static's ETag handling, as it sometimes returns an empty template,
 			// so we have to read it directly from the file system
 
-			return Promise.denodeify(fs.readFile)(`${frontendPath}/build/${path}`, "utf8");
+			return Promise.promisify(fs.readFile)(`${frontendPath}/build/${path}`, "utf8");
 		}
 	}
 };

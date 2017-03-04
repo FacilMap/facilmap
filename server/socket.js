@@ -1,5 +1,6 @@
 var socketIo = require("socket.io");
 var domain = require("domain");
+var Promise = require("bluebird");
 
 var utils = require("./utils");
 var routing = require("./routing");
@@ -112,7 +113,7 @@ class SocketConnection {
 			});
 		}
 
-		return utils.promiseAllObject(promises);
+		return Promise.props(promises);
 	}
 }
 
@@ -172,7 +173,7 @@ utils.extend(SocketConnection.prototype, {
 			this.bbox = bbox;
 
 			if(this.padId && this.padId !== true) {
-				return utils.promiseAllObject({
+				return Promise.props({
 					marker: utils.streamToArrayPromise(this.database.getPadMarkers(this.padId, bboxWithExcept)),
 					linePoints: utils.streamToArrayPromise(this.database.getLinePointsForPad(this.padId, bboxWithExcept))
 				});
@@ -461,7 +462,7 @@ utils.extend(SocketConnection.prototype, {
 						this.socket.emit("history", data);
 				});
 
-				return utils.promiseAllObject({
+				return Promise.props({
 					history: utils.streamToArrayPromise(this.database.getHistory(this.padId))
 				});
 			});

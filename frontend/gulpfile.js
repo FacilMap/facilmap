@@ -4,7 +4,7 @@ var clean = require("gulp-clean");
 var newer = require("gulp-newer");
 var combine = require("stream-combiner");
 var fs = require("fs");
-var Promise = require("promise");
+var Promise = require("bluebird");
 var request = require("request-promise");
 var unzip = require("unzipper");
 var webpack = require("webpack");
@@ -46,7 +46,7 @@ gulp.task("download-icons", function() {
 		});
 
 		return extract.promise().then(() => {
-			return Promise.denodeify(fs.rename)("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
+			return Promise.promisify(fs.rename)("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
 		});
 	});
 });
@@ -61,7 +61,7 @@ gulp.task("icons", ["download-icons"], function() {
 });
 
 gulp.task("webpack", [ "icons" ], function() {
-	return Promise.denodeify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
+	return Promise.promisify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
 		gutil.log("[webpack]", stats.toString());
 
 		if(stats.compilation.errors && stats.compilation.errors.length > 0)
@@ -71,10 +71,10 @@ gulp.task("webpack", [ "icons" ], function() {
 			fs.exists(staticFrontendFile, resolve);
 		}).then((exists) => {
 			if(exists)
-				return Promise.denodeify(fs.unlink)(staticFrontendFile);
+				return Promise.promisify(fs.unlink)(staticFrontendFile);
 		}).then(() => {
 			// Create symlink with fixed file name so that people can include https://facilmap.org/frontend.js
-			return Promise.denodeify(fs.symlink)(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
+			return Promise.promisify(fs.symlink)(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
 	    });
 	});
 });
@@ -85,7 +85,7 @@ gulp.task("symlinks", [ "webpack" /* To create the build directory */ ], functio
 		fs.exists(staticClientFile, resolve);
 	}).then((exists) => {
 		if(!exists)
-			return Promise.denodeify(fs.symlink)(require.resolve("facilmap-client/build/client"), staticClientFile);
+			return Promise.promisify(fs.symlink)(require.resolve("facilmap-client/build/client"), staticClientFile);
 	});
 });
 

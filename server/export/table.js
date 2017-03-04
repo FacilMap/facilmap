@@ -1,6 +1,5 @@
 const ejs = require("ejs");
 const fs = require("fs");
-const Promise = require("promise");
 
 const commonUtils = require("facilmap-frontend/common/utils");
 const commonFormat = require("facilmap-frontend/common/format");

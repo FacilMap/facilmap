@@ -1,6 +1,6 @@
 var stream = require("stream");
 var util = require("util");
-var Promise = require("promise");
+var Promise = require("bluebird");
 var es = require("event-stream");
 var combine = require("stream-combiner");
 
@@ -259,22 +259,6 @@ function streamToArrayPromise(stream) {
 	});
 }
 
-function promiseAllObject(obj) {
-	var keys = [ ];
-	var values = [ ];
-	for(var i in obj) {
-		keys.push(i);
-		values.push(Promise.resolve(obj[i]));
-	}
-
-	return Promise.all(values).then(function(objs) {
-		var ret = { };
-		for(var i=0; i<objs.length; i++)
-			ret[keys[i]] = objs[i];
-		return ret;
-	});
-}
-
 function promiseAuto(obj) {
 	var promises = { };
 
@@ -299,7 +283,7 @@ function promiseAuto(obj) {
 		arr.forEach(function(it) {
 			deps[it] = _get(it);
 		});
-		return promiseAllObject(deps);
+		return Promise.props(deps);
 	}
 
 	return _getDeps(Object.keys(obj));
@@ -390,7 +374,6 @@ module.exports = {
 	isoDate : isoDate,
 	round: round,
 	streamToArrayPromise: streamToArrayPromise,
-	promiseAllObject: promiseAllObject,
 	promiseAuto: promiseAuto,
 	modifyFunction: modifyFunction,
 	interceptWriteStream: interceptWriteStream
