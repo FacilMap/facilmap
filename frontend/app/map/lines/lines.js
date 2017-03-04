@@ -82,9 +82,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 					opacity : 0.7
 				};
 
-				var same = ng.equals(linesById[line.id].getLatLngs(), trackPoints);
+				// Two points that are both outside of the viewport should not be connected, as the piece in between
+				// has not been received.
+				let splitLatLngs = fmUtils.disconnectSegmentsOutsideViewport(trackPoints, map.map.getBounds());
 
-				linesById[line.id].setLatLngs(trackPoints).setStyle(style);
+				var same = ng.equals(linesById[line.id].getLatLngs(), splitLatLngs);
+
+				linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
 
 				if(line.id != null && line.id != editingLineId && linesById[line.id].isPopupOpen()) {
 					if(same)

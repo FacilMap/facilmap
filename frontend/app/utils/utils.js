@@ -725,6 +725,37 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return ret;
 	};
 
+	/**
+	 * Takes an array of track points and splits it up where two points in a row are outside of the given bbox.
+	 * @param trackPoints {Array<L.LatLng>}
+	 * @param bounds {L.LatLngBounds}
+	 * @return {Array<Array<L.LatLng>>}
+	 */
+	fmUtils.disconnectSegmentsOutsideViewport = function(trackPoints, bounds) {
+		let ret = [[]];
+		let lastOneIn = true;
+		let currentIdx = 0;
+
+		for(let trackPoint of trackPoints) {
+			if(bounds.contains(trackPoint)) {
+				lastOneIn = true;
+				ret[currentIdx].push(trackPoint);
+			} else if(lastOneIn) {
+				lastOneIn = false;
+				ret[currentIdx].push(trackPoint);
+			} else {
+				if(ret[currentIdx].length > 1)
+					currentIdx++;
+				ret[currentIdx] = [trackPoint];
+			}
+		}
+
+		if(ret[currentIdx].length <= 1)
+			ret.pop();
+
+		return ret;
+	};
+
 	return fmUtils;
 });
 
