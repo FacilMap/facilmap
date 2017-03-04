@@ -26,6 +26,15 @@ module.exports = function(Database) {
 					return JSON.parse(this.getDataValue("fields"));
 				},
 				set: function(v) {
+					for(let field of v) {
+						if(field.controlSymbol) {
+							for(let option of field.options) {
+								if(!option.symbol)
+									option.symbol = ""; // Avoid "undefined" ending up there, which messes everything up
+							}
+						}
+					}
+
 					return this.setDataValue("fields", JSON.stringify(v));
 				},
 				validate: {

@@ -413,6 +413,8 @@ utils.extend(SocketConnection.prototype, {
 				return this.database.updateType(this.padId, data.id, data, false).then((newType) => {
 					if(Object.keys(rename).length > 0)
 						return this.database.renameObjectDataField(this.padId, data.id, rename, newType.type == "line").then(() => newType);
+					else
+						return newType;
 				}).then((newType) => {
 					return this.database.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line").then(() => newType);
 				});
