@@ -60,14 +60,14 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		};
 
 		scope.showResult = function(result, noZoom) {
-			if(scope.showAll && scope.searchResults.length > 1) {
+			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1) {
 				if(!noZoom)
 					_flyToBounds(layerGroup.getBounds());
 
 				result.marker ? result.marker.openPopup() : result.layer.openPopup();
 			} else {
 				clearRenders();
-				renderResult(scope.submittedSearchString, scope.searchResults, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
+				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
 
 				if(!noZoom) {
 					if(result.lat && result.lon && result.zoom)
@@ -85,8 +85,8 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		scope.showAllResults = function(noZoom) {
 			clearRenders();
 
-			scope.searchResults.forEach(function(result) {
-				renderResult(scope.submittedSearchString, scope.searchResults, result, false, layerGroup, function() { scope.activeResult = result; });
+			scope.searchResults.features.forEach(function(result) {
+				renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup, function() { scope.activeResult = result; });
 			});
 
 			if(!noZoom)
@@ -105,7 +105,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				if(spl.mode)
 					routeUi.setMode(spl.mode);
 			} else if(scope.submittedSearchString == scope.searchString)
-				routeUi.setFrom(scope.searchString, scope.searchResults, scope.activeResult);
+				routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
 			else
 				routeUi.setFrom(scope.searchString);
 		};
@@ -116,9 +116,13 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			if(scope.showAll)
 				scope.showAllResults();
-			 else if(scope.searchResults.length > 0)
-				scope.showResult(scope.activeResult || scope.searchResults[0]);
+			 else if(scope.searchResults.features.length > 0)
+				scope.showResult(scope.activeResult || scope.searchResults.features[0]);
 		});
+
+		scope.showView = function(view) {
+			map.displayView(view);
+		};
 
 		var el = $(require("./search.html")).insertAfter(map.map.getContainer());
 		$compile(el)(scope);
@@ -162,10 +166,10 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		function loadSearchResults(results, noZoom) {
 			clearRenders();
 
-			scope.searchResults = results.features;
+			scope.searchResults = results;
 
-			if(scope.searchResults && scope.searchResults.length > 0)
-				(scope.showAll && scope.searchResults.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults[0], noZoom);
+			if(results && results.features.length > 0)
+				(scope.showAll && results.features.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults.features[0], noZoom);
 		}
 
 		function _lineStringToTrackPoints(geometry) {
@@ -341,7 +345,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			getCurrentSearchForHash: function() {
 				if(searchUi._el.is(":visible")) {
-					if(((scope.searchResults && scope.searchResults.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
+					if(((scope.searchResults && scope.searchResults.features.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 						return scope.activeResult.id;
 					else if(scope.submittedSearchString)
 						return scope.submittedSearchString;

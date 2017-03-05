@@ -18,14 +18,24 @@
 
 		<div class="fm-search-results">
 			<div uib-alert class="alert-danger no-results" ng-if="searchResults.length == 0">No results have been found.</div>
-			<ul class="list-group" ng-if="searchResults.length > 0">
-				<li ng-repeat="result in searchResults" class="list-group-item" ng-class="{active: activeResult === result}">
+			<div ng-if="searchResults.views.length > 0">
+				<h3>Views</h3>
+				<ul class="list-group">
+					<li ng-repeat="view in searchResults.views" class="list-group-item">
+						<a href="javascript:" ng-click="showView(view)">{{view.name}}</a>
+						<span class="result-type">(View)</span>
+					</li>
+				</ul>
+			</div>
+			<h3 ng-if="searchResults.views.length > 0">Markers/Lines</h3>
+			<ul class="list-group" ng-if="searchResults.features.length > 0">
+				<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
 					<a href="javascript:" ng-click="showResult(result)">{{result.display_name}}</a>
 					<span class="result-type" ng-if="result.type">({{result.type}})</span>
 				</li>
 			</ul>
 		</div>
-		<div class="fm-search-buttons" ng-show="searchResults.length > 1">
+		<div class="fm-search-buttons" ng-show="searchResults.features.length > 1">
 			<button type="button" class="btn btn-default" ng-model="showAll" uib-btn-checkbox>Show all</button>
 		</div>
 	</div>
