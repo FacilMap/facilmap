@@ -782,6 +782,7 @@ fm.app.filter('fmPropertyCount', function($filter) {
 
 fm.app.filter('fmRenderOsmTag', function($sce, fmUtils) {
 	return function(value, key) {
+		[key, value] = [`${key}`, `${value}`];
 		if(key.match(/^wikipedia(:|$)/)) {
 			return $sce.trustAsHtml(value.split(";").map(function(it) {
 				var m = it.match(/^(\s*)((([-a-z]+):)?(.*))(\s*)$/);

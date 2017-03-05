@@ -178,10 +178,10 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 						geojson = toGeoJSON.kml(xml[0]);
 					else if(xml.is("osm"))
 						geojson = osmtogeojson(doc);
-				} else if(body.match(/^\s*\{/)) {
-					var content = JSON.parse(body);
+				} else if(file.match(/^\s*\{/)) {
+					var content = JSON.parse(file);
 					if(content.type)
-						return geojson = content;
+						geojson = content;
 				}
 
 				if(geojson == null)
@@ -219,7 +219,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 					ret.push({
 						short_name: name,
 						display_name: name,
-						extratags: feature.properties.tags || _filterAdditionalTags(feature.properties),
+						extratags: feature.properties.data || feature.properties.tags || fmUtils.flattenObject(feature.properties),
 						geojson: feature.geometry,
 						type: feature.properties.type || feature.geometry.type
 					});
@@ -229,15 +229,6 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			if(errors)
 				return map.messages.showMessage("danger", "Some files could not be parsed.");
 
-			return ret;
-		}
-
-		function _filterAdditionalTags(tags) {
-			var ret = { };
-			for(var i in tags) {
-				if(typeof tags[i] == "string" || typeof tags[i] == "number")
-					ret[i] = tags[i];
-			}
 			return ret;
 		}
 
