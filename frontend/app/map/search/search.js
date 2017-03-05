@@ -329,6 +329,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			},
 
 			showFiles: function(files) {
+				scope.submittedSearchString = "";
 				loadSearchResults(filesUi.parseFiles(files));
 			},
 
