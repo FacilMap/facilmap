@@ -17,6 +17,14 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		scope.showAll = false;
 		scope.activeResult = null;
 
+		scope.$watch("activeResult", () => {
+			setTimeout(() => {
+				let activeResultEl = el.find(".fm-search-results .active");
+				if(activeResultEl.length > 0)
+					fmUtils.scrollIntoView(activeResultEl, el.find(".fm-search-results"));
+			}, 0);
+		});
+
 		scope.search = function(noZoom) {
 			reset();
 

@@ -756,6 +756,29 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return ret;
 	};
 
+	fmUtils.scrollIntoView = function(element, scrollableParent) {
+		[element, scrollableParent] = [$(element), $(scrollableParent)];
+
+		function getOffset(el) {
+			let ret = 0;
+			let t = el;
+			while(t) {
+				ret += t.offsetTop;
+				t = t.offsetParent;
+			}
+			return ret;
+		}
+
+		let parentHeight = scrollableParent[0].clientHeight;
+		let resultTop = getOffset(element[0]) - getOffset(scrollableParent[0]);
+		let resultBottom = resultTop + element.outerHeight();
+
+		if(scrollableParent[0].scrollTop > resultTop)
+			scrollableParent.animate({scrollTop: resultTop});
+		else if(scrollableParent[0].scrollTop < resultBottom - parentHeight)
+			scrollableParent.animate({scrollTop: resultBottom - parentHeight});
+	};
+
 	return fmUtils;
 });
 
