@@ -329,17 +329,19 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 					map.messages.showMessage("danger", err);
 				});
 			},
-			createLine: function(type, routePoints, properties) {
+			createLine: function(type, routePoints, properties, noEdit) {
 				map.socket.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
-					linesUi.editLine(line);
+					if(!noEdit) {
+						linesUi.editLine(line);
 
-					// We have to wait until the server sends us the trackPoints of the line
-					var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
-						if(exists) {
-							linesById[line.id].openPopup();
-							removeWatcher();
-						}
-					});
+						// We have to wait until the server sends us the trackPoints of the line
+						var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
+							if(exists) {
+								linesById[line.id].openPopup();
+								removeWatcher();
+							}
+						});
+					}
 				}).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});

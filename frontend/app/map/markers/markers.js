@@ -160,12 +160,14 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 					markersUi.createMarker(pos, type);
 				});
 			},
-			createMarker: function(pos, type, properties) {
+			createMarker: function(pos, type, properties, noEdit) {
 				map.socket.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 					markersUi._addMarker(marker);
 
-					markersById[marker.id].openPopup();
-					markersUi.editMarker(marker);
+					if(!noEdit) {
+						markersById[marker.id].openPopup();
+						markersUi.editMarker(marker);
+					}
 				}).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});

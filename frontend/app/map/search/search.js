@@ -16,6 +16,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		scope.searchResults = null;
 		scope.showAll = false;
 		scope.activeResult = null;
+		scope.socket = map.socket;
 
 		scope.$watch("activeResult", () => {
 			setTimeout(() => {
@@ -122,6 +123,22 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 		scope.showView = function(view) {
 			map.displayView(view);
+		};
+
+		scope.addResultToMap = function(result, type, noEdit) {
+			if(type.type == "marker")
+				map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, { name: result.display_name }, noEdit);
+			else if(type.type == "line") {
+				var trackPoints = _lineStringToTrackPoints(result.geojson);
+				map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], { trackPoints: trackPoints, mode: "track" }, noEdit);
+			}
+		};
+
+		scope.addAllToMap = function(type) {
+			for(let result of scope.searchResults.features) {
+				if((type.type == "marker" && result.isMarker) || (type.type == "line" && result.isLine))
+					scope.addResultToMap(result, type, true);
+			}
 		};
 
 		var el = $(require("./search.html")).insertAfter(map.map.getContainer());
@@ -257,20 +274,15 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		}
 
 		function renderResultPopup(query, results, result, popup) {
-			var scope = map.socket.$new();
+			var popupScope = map.socket.$new();
 
-			scope.result = result;
+			popupScope.result = result;
 
-			scope.addToMap = function(type) {
-				if(type.type == "marker")
-					map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, { name: result.display_name });
-				else if(type.type == "line") {
-					var trackPoints = _lineStringToTrackPoints(result.geojson);
-					map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], { trackPoints: trackPoints, mode: "track" });
-				}
+			popupScope.addToMap = function(type) {
+				scope.addResultToMap(result, type);
 			};
 
-			scope.useForRoute = function(mode) {
+			popupScope.useForRoute = function(mode) {
 				searchUi.hide();
 				routeUi.show();
 
@@ -288,7 +300,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			var el = popup.getContent();
 			$(el).html(require("./result-popup.html"));
-			$compile(el)(scope);
+			$compile(el)(popupScope);
 
 			// Prevent popup close on button click
 			$("button", el).click(function(e) {
