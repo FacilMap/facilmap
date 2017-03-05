@@ -24,14 +24,21 @@ const geojson = module.exports = {
 			views: () => {
 				ret.facilmap.views = [];
 				return utils.streamEachPromise(database.getViews(padId), (view) => {
+					view = JSON.parse(JSON.stringify(view));
+					delete view.id;
+
 					ret.facilmap.views.push(view);
 				});
 			},
 
 			types: () => {
-				ret.facilmap.types = [];
+				ret.facilmap.types = {};
 				return utils.streamEachPromise(database.getTypes(padId), function(type) {
-					ret.facilmap.types.push(type);
+					let typeId = type.id;
+					type = JSON.parse(JSON.stringify(type));
+					delete type.id;
+
+					ret.facilmap.types[typeId] = type;
 				});
 			},
 
@@ -49,7 +56,7 @@ const geojson = module.exports = {
 							size: marker.size,
 							symbol: marker.symbol,
 							data: JSON.parse(JSON.stringify(marker.data)),
-							type: marker.typeId
+							typeId: marker.typeId
 						}
 					});
 				});
@@ -72,7 +79,7 @@ const geojson = module.exports = {
 							time: line.time,
 							data: line.data,
 							routePoints: line.routePoints,
-							type: line.typeId
+							typeId: line.typeId
 						}
 					});
 				});
