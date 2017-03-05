@@ -168,13 +168,26 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			scope.searchResults = results;
 
-			if(results && results.features.length > 0)
+			if(results && results.features.length > 0) {
+				for(let result of results.features) {
+					if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
+						result.isMarker = true;
+					if([ "LineString", "MultiLineString", "Polygon" ].indexOf(result.geojson && result.geojson.type) != -1)
+						result.isLine = true;
+				}
+
 				(scope.showAll && results.features.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults.features[0], noZoom);
+			}
 		}
 
 		function _lineStringToTrackPoints(geometry) {
 			var ret = [ ];
-			var coords = (geometry.type == "MultiLineString" ? geometry.coordinates : [ geometry.coordinates ]);
+			var coords = (["MultiPolygon", "MultiLineString"].indexOf(geometry.type) != -1 ? geometry.coordinates : [ geometry.coordinates ]);
+
+			// Take only outer ring of polygons
+			if(["MultiPolygon", "Polygon"].indexOf(geometry.type) != -1)
+				coords = coords.map((coordArr) => coordArr[0]);
+
 			coords.forEach(function(linePart) {
 				linePart.forEach(function(latlng) {
 					ret.push({ lat: latlng[1], lon: latlng[0] });
@@ -248,24 +261,10 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			scope.result = result;
 
-			if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
-				scope.type = "marker";
-			else if([ "LineString", "MultiLineString" ].indexOf(result.geojson && result.geojson.type) != -1)
-				scope.type = "line";
-
 			scope.addToMap = function(type) {
-				if(type == null) {
-					for(var i in map.socket.types) {
-						if(map.socket.types[i].type == scope.type) {
-							type = map.socket.types[i];
-							break;
-						}
-					}
-				}
-
-				if(scope.type == "marker")
+				if(type.type == "marker")
 					map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, { name: result.display_name });
-				else if(scope.type == "line") {
+				else if(type.type == "line") {
 					var trackPoints = _lineStringToTrackPoints(result.geojson);
 					map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], { trackPoints: trackPoints, mode: "track" });
 				}
