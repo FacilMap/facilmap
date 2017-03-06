@@ -11,7 +11,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 		map.socket.on("line", function(data) {
 			setTimeout(function() { // trackPoints needs to be copied over
 				if(map.socket.filterFunc(map.socket.lines[data.id]))
-					linesUi._addLine(map.socket.lines[data.id]);
+					linesUi._addLine(map.socket.lines[data.id], false);
 			}, 0);
 		});
 
@@ -22,7 +22,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 		map.socket.on("linePoints", function(data) {
 			setTimeout(function() {
 				if(map.socket.filterFunc(map.socket.lines[data.id]))
-					linesUi._addLine(map.socket.lines[data.id]);
+					linesUi._addLine(map.socket.lines[data.id], data.reset);
 			}, 0);
 		});
 
@@ -32,12 +32,12 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				if(linesById[i] && !show)
 					linesUi._deleteLine(map.socket.lines[i]);
 				else if(!linesById[i] && show)
-					linesUi._addLine(map.socket.lines[i]);
+					linesUi._addLine(map.socket.lines[i], false);
 			}
 		});
 
 		var linesUi = {
-			_addLine: function(line) {
+			_addLine: function(line, resetPopupPosition) {
 				var trackPoints = [ ];
 				var p = (editingLineId != null && editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
 				for(var i=0; i<p.length; i++) {
@@ -86,15 +86,17 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				// has not been received.
 				let splitLatLngs = fmUtils.disconnectSegmentsOutsideViewport(trackPoints, map.map.getBounds());
 
-				var same = ng.equals(linesById[line.id].getLatLngs(), splitLatLngs);
-
 				linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
 
 				if(line.id != null && line.id != editingLineId && linesById[line.id].isPopupOpen()) {
-					if(same)
-						linesUi._renderLinePopup(line);
-					else
+					if(resetPopupPosition) {
+						var autoPanBkp = linesById[line.id].options.autoPan;
+						linesById[line.id].options.autoPan = false;
 						linesById[line.id].openPopup();
+						linesById[line.id].options.autoPan = autoPanBkp;
+					}
+					else
+						linesUi._renderLinePopup(line);
 				}
 			},
 			_deleteLine: function(line) {
@@ -149,7 +151,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 				// Re-add the line without a popup (because editingLineId is set)
 				linesUi._deleteLine(line);
-				linesUi._addLine(line);
+				linesUi._addLine(line, true);
 
 				// Watch if route points change (because someone else has moved the line while we are moving it
 				var routePointsBkp = ng.copy(line.routePoints);
@@ -165,7 +167,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 						routePointsBkp = ng.copy(line.routePoints);
 
 					line = map.socket.lines[line.id];
-					linesUi._addLine(line);
+					linesUi._addLine(line, true);
 					removeTempMarkers();
 					createTempMarkers();
 				});
@@ -181,13 +183,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 							markers.splice(idx, 1);
 							line.routePoints.splice(idx, 1);
 							marker.remove();
-							linesUi._addLine(line);
+							linesUi._addLine(line, true);
 						})
 						.on("drag", function() {
 							var idx = markers.indexOf(marker);
 							var latlng = marker.getLatLng();
 							line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
-							linesUi._addLine(line);
+							linesUi._addLine(line, true);
 						});
 					return marker;
 				}
@@ -253,7 +255,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 						// Re-add the line witho a popup (because editingLineId is not set anymore)
 						linesUi._deleteLine(line);
-						linesUi._addLine(line);
+						linesUi._addLine(line, true);
 
 						return line.routePoints;
 					}
@@ -295,7 +297,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 					function addPoint(pos) {
 						line.routePoints.push(pos);
 						line.trackPoints = [ ].concat(line.routePoints, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
-						linesUi._addLine(line);
+						linesUi._addLine(line, true);
 						handler = map.addClickListener(mapClick, mouseMove);
 					}
 
@@ -320,7 +322,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 					var mouseMove = function(pos) {
 						if(line.trackPoints.length > 0) {
 							line.trackPoints[line.trackPoints.length-1] = pos;
-							linesUi._addLine(line);
+							linesUi._addLine(line, true);
 						}
 					};
 
@@ -358,7 +360,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 				function done(save, noClose) {
 					var newPoints = movable.done();
-					linesUi._addLine(line);
+					linesUi._addLine(line, true);
 					linesById[line.id].openPopup();
 
 					if(!noClose) {
@@ -403,6 +405,6 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 	};
 
 	$scope.$watchGroup([ "line.colour", "line.width" ], function() {
-		map.linesUi._addLine($scope.line);
+		map.linesUi._addLine($scope.line, false);
 	});
 });
