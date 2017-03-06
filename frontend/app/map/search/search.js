@@ -49,9 +49,10 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 					if(fmUtils.isSearchId(q) && results.length > 0 && results[0].display_name)
 						scope.searchString = q = results[0].display_name;
 
-					if(typeof results == "string")
+					if(typeof results == "string") {
+						scope.showAll = true;
 						loadSearchResults(filesUi.parseFiles([ results ]), noZoom);
-					else
+					} else
 						loadSearchResults({features: results}, noZoom);
 				}).catch(function(err) {
 					map.messages.showMessage("danger", err);
@@ -62,23 +63,14 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 		scope.showResult = function(result, noZoom) {
 			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1) {
-				if(!noZoom)
-					_flyToBounds(layerGroup.getBounds());
-
 				result.marker ? result.marker.openPopup() : result.layer.openPopup();
 			} else {
 				clearRenders();
 				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
-
-				if(!noZoom) {
-					if(result.lat && result.lon && result.zoom)
-						map.map.flyTo([ result.lat, result.lon ], result.zoom);
-					else if(result.boundingbox)
-						_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
-					else if(result.layer)
-						_flyToBounds(result.layer.getBounds());
-				}
 			}
+
+			if(!noZoom)
+				scope.zoomToResults();
 
 			map.mapEvents.$emit("searchchange");
 		};
@@ -91,7 +83,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			});
 
 			if(!noZoom)
-				_flyToBounds(layerGroup.getBounds());
+				scope.zoomToResults();
 
 			map.mapEvents.$emit("searchchange");
 		};
@@ -111,14 +103,27 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				routeUi.setFrom(scope.searchString);
 		};
 
+		scope.zoomToResults = function() {
+			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1)
+				_flyToBounds(layerGroup.getBounds());
+			else if(scope.activeResult) {
+				if(scope.activeResult.lat && scope.activeResult.lon && scope.activeResult.zoom)
+					map.map.flyTo([ scope.activeResult.lat, scope.activeResult.lon ], scope.activeResult.zoom);
+				else if(scope.activeResult.boundingbox)
+					_flyToBounds(L.latLngBounds([ [ scope.activeResult.boundingbox[0], scope.activeResult.boundingbox[3 ] ], [ scope.activeResult.boundingbox[1], scope.activeResult.boundingbox[2] ] ]));
+				else if(scope.activeResult.layer)
+					_flyToBounds(scope.activeResult.layer.getBounds());
+			}
+		};
+
 		scope.$watch("showAll", function() {
 			if(!scope.searchResults)
 				return;
 
 			if(scope.showAll)
-				scope.showAllResults();
+				scope.showAllResults(true);
 			 else if(scope.searchResults.features.length > 0)
-				scope.showResult(scope.activeResult || scope.searchResults.features[0]);
+				scope.showResult(scope.activeResult || scope.searchResults.features[0], true);
 		});
 
 		scope.showView = function(view) {
@@ -341,6 +346,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			showFiles: function(files) {
 				scope.submittedSearchString = "";
+				scope.showAll = true;
 				loadSearchResults(filesUi.parseFiles(files));
 			},
 

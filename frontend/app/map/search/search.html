@@ -37,7 +37,7 @@
 		</div>
 
 		<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
-			<button type="button" class="btn btn-default" ng-model="showAll" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
+			<button type="button" class="btn btn-default" ng-model="showAll" ng-click="zoomToResults()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
 
 			<div uib-dropdown keyboard-nav="true" class="pull-right">
 				<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
