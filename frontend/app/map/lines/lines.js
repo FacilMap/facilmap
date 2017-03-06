@@ -332,7 +332,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				});
 			},
 			createLine: function(type, routePoints, properties, noEdit) {
-				map.socket.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
+				return map.socket.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
 					if(!noEdit) {
 						linesUi.editLine(line);
 

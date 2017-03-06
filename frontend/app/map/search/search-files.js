@@ -8,8 +8,9 @@ fm.app.factory("fmMapSearchFiles", function($rootScope, $compile, fmUtils) {
 	return function(map, fmMapSearch) {
 		const fmMapSearchFiles = {
 			parseFiles(files) {
-				var ret = {features: [ ], views: [ ], types: [ ]};
+				var ret = {features: [ ], views: [ ], types: { }};
 				var errors = false;
+				var nextTypeIdx = 1;
 				files.forEach(function(file) {
 					var geojson = null;
 
@@ -32,10 +33,14 @@ fm.app.factory("fmMapSearchFiles", function($rootScope, $compile, fmUtils) {
 					if(geojson == null)
 						return errors = true;
 
+					var typeMapping = {};
+
 					if(geojson.facilmap) {
 						if(geojson.facilmap.types) {
-							for(let i in geojson.facilmap.types)
-								ret.types.push(geojson.facilmap.types[i]);
+							for(let i in geojson.facilmap.types) {
+								typeMapping[i] = nextTypeIdx++;
+								ret.types[typeMapping[i]] = geojson.facilmap.types[i];
+							}
 						}
 
 						if(geojson.facilmap.views)
@@ -76,11 +81,14 @@ fm.app.factory("fmMapSearchFiles", function($rootScope, $compile, fmUtils) {
 							display_name: name,
 							extratags: feature.properties.data || feature.properties.tags || fmUtils.flattenObject(feature.properties),
 							geojson: feature.geometry,
-							type: feature.properties.type || feature.geometry.type,
+							type: feature.properties.type || feature.geometry.type
 						};
 
-						if(feature.properties.type && geojson.facilmap && geojson.facilmap.types && geojson.facilmap.types[feature.properties.typeId])
-							f.fmType = geojson.facilmap.types[feature.properties.typeId];
+						if(geojson.facilmap) {
+							if(feature.properties.typeId && typeMapping[feature.properties.typeId])
+								f.fmTypeId = typeMapping[feature.properties.typeId];
+							f.fmProperties = feature.properties;
+						}
 
 						ret.features.push(f);
 					});

@@ -6,7 +6,7 @@ import '../../../assets/font/fontello.css';
 import 'jquery-ui';
 import 'jquery-ui/ui/widgets/resizable';
 
-fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, $q, fmMapSearchRoute, fmMapSearchFiles) {
+fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, $q, fmMapSearchRoute, fmMapSearchFiles, fmMapSearchImport) {
 	return function(map) {
 		var iconSuffix = ".n.32.png";
 
@@ -131,12 +131,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		};
 
 		scope.addResultToMap = function(result, type, noEdit) {
-			if(type.type == "marker")
-				map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, { name: result.display_name }, noEdit);
-			else if(type.type == "line") {
-				var trackPoints = _lineStringToTrackPoints(result.geojson);
-				map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], { trackPoints: trackPoints, mode: "track", name: result.display_name }, noEdit);
-			}
+			importUi.addResultToMap(result, type, !noEdit);
 		};
 
 		scope.addAllToMap = function(type) {
@@ -144,6 +139,10 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				if((type.type == "marker" && result.isMarker) || (type.type == "line" && result.isLine))
 					scope.addResultToMap(result, type, true);
 			}
+		};
+
+		scope.customImport = function() {
+			importUi.openImportDialog(scope.searchResults);
 		};
 
 		var el = $(require("./search.html")).insertAfter(map.map.getContainer());
@@ -200,22 +199,6 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 				(scope.showAll && results.features.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults.features[0], noZoom);
 			}
-		}
-
-		function _lineStringToTrackPoints(geometry) {
-			var ret = [ ];
-			var coords = (["MultiPolygon", "MultiLineString"].indexOf(geometry.type) != -1 ? geometry.coordinates : [ geometry.coordinates ]);
-
-			// Take only outer ring of polygons
-			if(["MultiPolygon", "Polygon"].indexOf(geometry.type) != -1)
-				coords = coords.map((coordArr) => coordArr[0]);
-
-			coords.forEach(function(linePart) {
-				linePart.forEach(function(latlng) {
-					ret.push({ lat: latlng[1], lon: latlng[0] });
-				});
-			});
-			return ret;
 		}
 
 		function renderResult(query, results, result, showPopup, layerGroup, onOpen, noZoom) {
@@ -377,6 +360,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 		var routeUi = fmMapSearchRoute(map, searchUi);
 		var filesUi = fmMapSearchFiles(map, searchUi);
+		var importUi = fmMapSearchImport(map);
 
 		el.find(".fm-search-results").resizable({
 			handles: {

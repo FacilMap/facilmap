@@ -161,7 +161,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				});
 			},
 			createMarker: function(pos, type, properties, noEdit) {
-				map.socket.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
+				return map.socket.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 					markersUi._addMarker(marker);
 
 					if(!noEdit) {

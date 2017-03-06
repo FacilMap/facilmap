@@ -799,7 +799,12 @@ fm.app.filter('fmObjectFilter', function($filter){
 
 fm.app.filter('fmPropertyCount', function($filter) {
 	return function(input, query) {
-		return Object.keys($filter('fmObjectFilter')(input, query)).length;
+		if(!input)
+			return 0;
+		else if(!query)
+			return Object.keys(input).length;
+		else
+			return Object.keys($filter('fmObjectFilter')(input, query)).length;
 	};
 });
 
