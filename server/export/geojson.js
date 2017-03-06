@@ -26,6 +26,7 @@ const geojson = module.exports = {
 				return utils.streamEachPromise(database.getViews(padId), (view) => {
 					view = JSON.parse(JSON.stringify(view));
 					delete view.id;
+					delete view.padId;
 
 					ret.facilmap.views.push(view);
 				});
@@ -37,6 +38,7 @@ const geojson = module.exports = {
 					let typeId = type.id;
 					type = JSON.parse(JSON.stringify(type));
 					delete type.id;
+					delete type.padId;
 
 					ret.facilmap.types[typeId] = type;
 				});
