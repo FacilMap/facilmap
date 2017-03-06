@@ -130,6 +130,30 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			map.displayView(view);
 		};
 
+		scope.viewExists = function(view) {
+			for(let viewId in map.socket.views) {
+				if(["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"].filter((idx) => !ng.equals(view[idx], map.socket.views[viewId][idx])).length == 0)
+					return true;
+			}
+			return false;
+		};
+
+		scope.addView = function(view) {
+			map.socket.addView(view);
+		};
+
+		scope.typeExists = function(type) {
+			for(let typeId in map.socket.types) {
+				if(["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"].filter((idx) => !ng.equals(type[idx], map.socket.types[typeId][idx])).length == 0)
+					return true;
+			}
+			return false;
+		};
+
+		scope.addType = function(type) {
+			map.socket.addType(type);
+		};
+
 		scope.addResultToMap = function(result, type, noEdit) {
 			importUi.addResultToMap(result, type, !noEdit);
 		};

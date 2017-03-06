@@ -24,16 +24,27 @@
 					<li ng-repeat="view in searchResults.views" class="list-group-item">
 						<a href="javascript:" ng-click="showView(view)">{{view.name}}</a>
 						<span class="result-type">(View)</span>
+						<a href="javascript:" ng-if="!viewExists(view)" ng-click="addView(view)" class="pull-right" uib-tooltip="Add this view to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
 					</li>
 				</ul>
 			</div>
-			<h3 ng-if="searchResults.views.length > 0">Markers/Lines</h3>
+			<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
 			<ul class="list-group" ng-if="searchResults.features.length > 0">
 				<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
 					<a href="javascript:" ng-click="showResult(result)">{{result.display_name}}</a>
 					<span class="result-type" ng-if="result.type">({{result.type}})</span>
 				</li>
 			</ul>
+			<div ng-if="(searchResults.types | fmPropertyCount) > 0">
+				<h3>Types</h3>
+				<ul class="list-group">
+					<li ng-repeat="type in searchResults.types" class="list-group-item">
+						{{type.name}}
+						<span class="result-type">(Type)</span>
+						<a href="javascript:" ng-if="!typeExists(type)" ng-click="addType(type)" class="pull-right" uib-tooltip="Add this type to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
+					</li>
+				</ul>
+			</div>
 		</div>
 
 		<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
