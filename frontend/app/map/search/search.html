@@ -50,6 +50,8 @@
 		<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
 			<button type="button" class="btn btn-default" ng-model="showAll" ng-click="zoomToResults()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
 
+			<button type="button" class="btn btn-link" ng-click="reset()"><span class="glyphicon glyphicon-remove"></span></button>
+
 			<div uib-dropdown keyboard-nav="true" class="pull-right">
 				<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
 				<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="search-add-all-button">

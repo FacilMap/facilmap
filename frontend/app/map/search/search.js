@@ -27,7 +27,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		});
 
 		scope.search = function(noZoom) {
-			reset();
+			scope.reset();
 
 			if(scope.searchString.trim() != "") {
 				if(scope.searchString.match(/ to /)) {
@@ -274,12 +274,12 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			}
 		}
 
-		function reset() {
+		scope.reset = function() {
 			scope.searchResults = null;
 			scope.activeResult = null;
 			scope.submittedSearchString = "";
 			clearRenders();
-		}
+		};
 
 		function clearRenders() {
 			layerGroup.clearLayers();
@@ -336,7 +336,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			},
 
 			hide: function() {
-				reset();
+				scope.reset();
 				searchUi._el.hide();
 				map.mapEvents.$emit("searchchange");
 			},
