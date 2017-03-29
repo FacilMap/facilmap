@@ -5,7 +5,7 @@
 				<div class="input-group">
 					<span class="input-group-addon">
 						<a href="javascript:" class="sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a>
-						<a href="javascript:" ng-click="removeDestination($index)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><span class="glyphicon glyphicon-minus"></span></a>
+						<a href="javascript:" ng-click="removeDestination($index); reroute(true)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><span class="glyphicon glyphicon-minus"></span></a>
 					</span>
 					<div class="has-feedback">
 						<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
