@@ -119,9 +119,9 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			});
 		};
 
-		scope.reroute = function() {
+		scope.reroute = function(noZoom) {
 			if(scope.routeObj || scope.routeError)
-				scope.route();
+				scope.route(false, noZoom);
 		};
 
 		scope.reset = function() {
@@ -210,7 +210,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			marker.on("dblclick", function() {
 				scope.$apply(function() {
 					scope.removeDestination(markers.indexOf(marker));
-					scope.reroute();
+					scope.reroute(true);
 				});
 			})
 			.on("drag", function() {
