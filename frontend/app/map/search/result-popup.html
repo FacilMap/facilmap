@@ -10,15 +10,15 @@
 		<dd ng-repeat-end ng-bind-html="value | fmRenderOsmTag:key">{{value}}</dd>
 	</dl>
 </div>
-<div class="buttons" ng-if="!readonly && (result.isMarker || result.isLine)">
+<div class="buttons">
 	{{filteredTypes = (result.isMarker && result.isLine ? types : (types | fmObjectFilter:{type:isMarker ? 'marker' : 'line'})); ""}}
-	<div uib-dropdown keyboard-nav="true" ng-if="(filteredTypes | fmPropertyCount) > 1">
+	<div uib-dropdown keyboard-nav="true" ng-if="!readonly && (filteredTypes | fmPropertyCount) > 1">
 		<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button">
 			<li role="menuitem" ng-repeat="type in filteredTypes"><a href="javascript:" ng-click="addToMap(type)">{{type.name}}</a></li>
 		</ul>
 	</div>
-	<button type="button" ng-if="(filteredTypes | fmPropertyCount) == 1" class="btn btn-default" ng-click="addToMap(filteredTypes[0])">Add to map</button>
+	<button type="button" ng-if="!readonly && (filteredTypes | fmPropertyCount) == 1" class="btn btn-default" ng-click="addToMap(filteredTypes[0])">Add to map</button>
 	<div uib-dropdown keyboard-nav="true">
 		<button type="button" class="btn btn-default" uib-dropdown-toggle>Use as <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu">

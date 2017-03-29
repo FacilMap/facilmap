@@ -191,6 +191,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				clickMarker.clearLayers();
 
 				if(results.length > 0) {
+					prepareResults(results);
 					renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
 
 					// Prevent closing popup on mouseup because of map.options.closePopupOnClick
@@ -208,18 +209,22 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			map.map.flyTo(bounds.getCenter(), Math.min(15, map.map.getBoundsZoom(bounds)));
 		}
 
+		function prepareResults(results) {
+			for(let result of results) {
+				if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
+					result.isMarker = true;
+				if([ "LineString", "MultiLineString", "Polygon" ].indexOf(result.geojson && result.geojson.type) != -1)
+					result.isLine = true;
+			}
+		}
+
 		function loadSearchResults(results, noZoom) {
 			clearRenders();
 
 			scope.searchResults = results;
 
 			if(results && results.features.length > 0) {
-				for(let result of results.features) {
-					if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
-						result.isMarker = true;
-					if([ "LineString", "MultiLineString", "Polygon" ].indexOf(result.geojson && result.geojson.type) != -1)
-						result.isLine = true;
-				}
+				prepareResults(results.features);
 
 				(scope.showAll && results.features.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults.features[0], noZoom);
 			}
