@@ -1036,16 +1036,16 @@ extsprintf@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.0.2.tgz#e1080e0658e300b06294990cc70e1502235fd550"
 
-facilmap-client@^2.3.3:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.3.3.tgz#2defb0ee5c7d2aec7c6aa2f2c4f16646195786cd"
+facilmap-client@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.3.4.tgz#4475ec9966cb9f02ba1ef8b6faa4ce52c68b5397"
   dependencies:
     es6-promise "^4.0.5"
     socket.io-client "^1.7.3"
 
-facilmap-frontend@^2.3.3:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.3.3.tgz#81fca742c3aea200326ad2e72e86402d0e428b5c"
+facilmap-frontend@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.3.4.tgz#89162f65e8c7f366c3890f6ca8a33db46e24b396"
   dependencies:
     "@mapbox/togeojson" "^0.16.0"
     angular "^1.6.1"
@@ -1056,7 +1056,7 @@ facilmap-frontend@^2.3.3:
     bootstrap-touchspin "^3.1.1"
     clipboard "^1.5.16"
     event-stream "^3.3.4"
-    facilmap-client "^2.3.3"
+    facilmap-client "^2.3.4"
     filtrex "^0.5.4"
     jquery "<3.0.0"
     jquery-ui "^1.12.1"
@@ -1070,6 +1070,7 @@ facilmap-frontend@^2.3.3:
     linkifyjs "^2.1.3"
     marked "^0.3.6"
     osmtogeojson "^2.2.12"
+    tablesorter "^2.28.5"
 
 fbjs@^0.8.1, fbjs@^0.8.4:
   version "0.8.9"
@@ -1547,7 +1548,7 @@ jquery-ui@^1.12.1:
   version "1.12.1"
   resolved "https://registry.yarnpkg.com/jquery-ui/-/jquery-ui-1.12.1.tgz#bcb4045c8dd0539c134bc1488cdd3e768a7a9e51"
 
-jquery@<3.0.0, jquery@>=1.9.0:
+jquery@<3.0.0, jquery@>=1.2.6, jquery@>=1.9.0:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-2.2.4.tgz#2c89d6889b5eac522a7eea32c14521559c6cbf02"
 
@@ -2692,6 +2693,12 @@ supports-color@^3.1.0:
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-3.2.3.tgz#65ac0504b3954171d8a64946b2ae3cbb8a5f54f6"
   dependencies:
     has-flag "^1.0.0"
+
+tablesorter@^2.28.5:
+  version "2.28.5"
+  resolved "https://registry.yarnpkg.com/tablesorter/-/tablesorter-2.28.5.tgz#94b6f8326e9ff8b001ae7cf57804476caf8b3437"
+  dependencies:
+    jquery ">=1.2.6"
 
 tapable@^0.2.5, tapable@~0.2.5:
   version "0.2.6"
