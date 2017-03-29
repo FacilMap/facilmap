@@ -22,7 +22,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 		scope.sortableOptions = ng.copy(fmSortableOptions);
 		scope.sortableOptions.update = function() {
-			scope.reroute();
+			scope.reroute(true);
 		};
 
 		scope.addDestination = function() {
