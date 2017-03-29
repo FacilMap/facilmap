@@ -36,6 +36,14 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		map.mapEvents = $rootScope.$new(true); /* Event types: longmousedown, layerchange */
 		map.socket = fmSocket(serverUrl, padId);
 
+		let mapnikLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+			fmName: "Mapnik",
+			fmBase: true,
+			fmKey: "Mpnk",
+			attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+			noWrap: true
+		});
+
 		map.layers = { };
 		[
 			L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", {
@@ -45,13 +53,7 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 				attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 				noWrap: true
 			}),
-			L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-				fmName: "Mapnik",
-				fmBase: true,
-				fmKey: "Mpnk",
-				attribution: $sce.trustAsHtml('© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
-				noWrap: true
-			}),
+			mapnikLayer,
 			L.tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
 				fmName: "Map1.eu",
 				fmBase: true,
@@ -122,6 +124,15 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 			})
 		].forEach(function(it) {
 			map.layers[it.options.fmKey] = it;
+
+			if(it.options.fmBase && it !== mapnikLayer) {
+				it.on("tileerror", (err) => {
+					mapnikLayer._tileZoom = err.target._tileZoom;
+					let fallbackUrl = mapnikLayer.getTileUrl(err.coords);
+					if(err.tile.src != fallbackUrl)
+						err.tile.src = fallbackUrl;
+				});
+			}
 		});
 
 		map.popupOptions = {
