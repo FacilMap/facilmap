@@ -372,15 +372,29 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 					var loadedWatcher = map.socket.$watch("padData", function(padData) {
 						if(padData != null) {
 							loadedWatcher();
+							resolve(padData);
+						}
+					});
 
-							if(!map.hashUi.hasLocationHash())
-								map.displayView(padData.defaultView);
+					var serverErrorWatcher = map.socket.$watch("serverError", function(serverError) {
+						if(serverError != null) {
+							serverErrorWatcher();
+
+							if(serverError.indexOf('does not exist') != -1) {
+								map.socket.serverError = null;
+								map.padUi.createPad(map.socket.padId, true);
+							}
+
 							resolve();
 						}
 					});
 				});
-			} else {
-				if(!map.hashUi.hasLocationHash()) {
+			}
+		}).then((padData) => {
+			if(!map.hashUi.hasLocationHash()) {
+				if(padData)
+					map.displayView(padData.defaultView);
+				else {
 					return $q.resolve($.get({
 						url: "https://freegeoip.net/json/",
 						dataType: "json"
@@ -409,10 +423,13 @@ fm.app.factory("fmMap", function(fmUtils, fmSocket, fmMapMessages, fmMapMarkers,
 		});
 
 		map.socket.$watch("serverError", function(serverError) {
-			if(serverError) {
-				errorMessage && errorMessage.close();
-				map.messages.showMessage("danger", serverError);
+			if(errorMessage) {
+				errorMessage.close();
+				errorMessage = null;
 			}
+
+			if(serverError)
+				errorMessage = map.messages.showMessage("danger", serverError);
 		});
 
 		map.map.on("moveend", function() {

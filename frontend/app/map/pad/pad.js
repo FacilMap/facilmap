@@ -4,10 +4,10 @@ import $ from 'jquery';
 fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 	return function(map) {
 		var ret = {
-			createPad : function() {
-				ret.editPadSettings(true);
+			createPad : function(proposedWriteId, noCancel) {
+				ret.editPadSettings(true, proposedWriteId, noCancel);
 			},
-			editPadSettings : function(create) {
+			editPadSettings : function(create, proposedWriteId, noCancel) {
 				var scope = map.socket.$new();
 
 				var dialog = $uibModal.open({
@@ -17,8 +17,12 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 					size: "lg",
 					resolve: {
 						map: function() { return map; },
-						create: function() { return create; }
-					}
+						create: function() { return create; },
+						proposedWriteId: function() { return proposedWriteId; },
+						noCancel: function() { return noCancel; }
+					},
+					keyboard: !noCancel,
+					backdrop: noCancel ? "static" : true
 				});
 
 				if(!create) {
@@ -52,12 +56,13 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 	};
 });
 
-fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, fmUtils) {
+fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposedWriteId, noCancel, fmUtils) {
 	$scope.urlPrefix = fm.URL_PREFIX;
 	$scope.create = create;
+	$scope.noCancel = noCancel;
 
 	if(create) {
-		$scope.writeId = fmUtils.generateRandomPadId(14);
+		$scope.writeId = (proposedWriteId || fmUtils.generateRandomPadId(14));
 		$scope.readId = fmUtils.generateRandomPadId(12);
 		$scope.padData = {
 			padName: "New FacilMap",

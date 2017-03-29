@@ -1,5 +1,5 @@
 <div class="modal-header">
-	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
+	<button ng-if="!noCancel" type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
 	<h3 class="modal-title">{{create ? 'Start collaborative map' : 'Map settings'}}</h3>
 </div>
 <div class="modal-body">
@@ -67,6 +67,6 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+	<button ng-if="!noCancel" type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
 	<button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError">{{create ? 'Create' : 'Save'}}</button>
 </div>

@@ -149,8 +149,10 @@ utils.extend(SocketConnection.prototype, {
 						return utils.extend(JSON.parse(JSON.stringify(write)), { writable: true });
 					else if(read)
 						return utils.extend(JSON.parse(JSON.stringify(read)), { writable: false, writeId: null });
-					else
+					else {
+						this.padId = null;
 						throw "This pad does not exist";
+					}
 				}
 			}).then(res => {
 				this.padId = res.pad.id;

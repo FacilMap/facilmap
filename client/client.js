@@ -182,7 +182,7 @@ class Socket {
 			this._receiveMultiple(obj);
 		}).catch((err) => {
 			this.serverError = err;
-			this.disconnect();
+			throw err;
 		});
 	}
 
