@@ -305,7 +305,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 				else if(mode == 3)
 					routeUi.setTo(query, results, result);
 
-				routeUi.submit();
+				routeUi.submit(!!routeUi.getQueries());
 
 				popup.closePopup();
 			};
