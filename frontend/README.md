@@ -10,6 +10,9 @@ It is perfectly fine to embed a map from [facilmap.org](https://facilmap.org/) i
 <iframe style="height: 500px; width: 100%; border: none;" src="https://facilmap.org/mymap"></iframe>
 ```
 
+If you use a map ID that does not exist yet, the “Create Collaborative Map” dialog will be opened when accessing the
+map.
+
 Directly into a page
 --------------------
 
