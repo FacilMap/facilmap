@@ -24,7 +24,7 @@
 				</ul></li>
 				<li role="presentation" uib-dropdown keyboard-nav="true">
 					<a href="javascript:" id="toolbox-layers-dropdown" uib-dropdown-toggle role="button">Map style <span class="caret"></span></a>
-					<ul uib-dropdown-menu aria-labelledby="toolbox-layers-dropdown">
+					<ul uib-dropdown-menu aria-labelledby="toolbox-layers-dropdown" class="dropdown-menu-right">
 						<li ng-repeat="layer in layers.base" ng-class="{active: layer.visibility}">
 							<a href="javascript:" ng-click="setLayer(layer)">{{layer.name}}</a>
 						</li>
@@ -32,6 +32,10 @@
 						<li ng-repeat="layer in layers.overlay" ng-class="{active: layer.visibility}">
 							<a href="javascript:" ng-click="setLayer(layer)">{{layer.name}}</a>
 						</li>
+						<li role="separator" class="divider"></li>
+						<li><a href="{{links.osm}}" target="_blank">Open this on OpenStreetMap</a></li>
+						<li><a href="{{links.google}}" target="_blank">Open this on Google Maps</a></li>
+						<li><a href="{{links.bing}}" target="_blank">Open this on Bing Maps</a></li>
 					</ul>
 				</li>
 				<li role="presentation" uib-dropdown keyboard-nav="true">

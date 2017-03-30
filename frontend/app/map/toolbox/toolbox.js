@@ -5,6 +5,21 @@ fm.app.factory("fmMapToolbox", function($compile, fmFilter) {
 	return function(map) {
 		var scope = map.socket.$new();
 
+		scope.links = {};
+		function updateLinks() {
+			if(!map.map._loaded)
+				return;
+
+			let center = map.map.getCenter();
+			let zoom = map.map.getZoom();
+
+			scope.links.osm = `https://www.openstreetmap.org/#map=${zoom}/${center.lat}/${center.lng}`;
+			scope.links.google = `https://www.google.com/maps/@${center.lat},${center.lng},${zoom}z`;
+			scope.links.bing = `https://www.bing.com/maps?cp=${center.lat}~${center.lng}&lvl=${zoom}`;
+		}
+		updateLinks();
+		map.map.on("moveend", updateLinks);
+
 		scope.addObject = function(type) {
 			if(type.type == "marker")
 				map.markersUi.addMarker(type);
