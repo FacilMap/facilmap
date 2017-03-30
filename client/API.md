@@ -49,9 +49,15 @@ _Type:_ string
 
 _Type:_ boolean
 
+### `writable`
+
+`2` if the map has been opened using its admin ID, `1` if if has been opened using the writable ID, `0` if the map is read-only.
+
+_Type:_ number
+
 ### `padData`
 
-The current settings of the map. `writeId` is null if if has been opened using its read-only ID.
+The current settings of the map. `writeId` and/or `adminId` is null if if has been opened using another ID than the admin ID.
 
 _Type:_ [padData](#paddata-2)
 
@@ -488,6 +494,7 @@ their `idx` property.
 
 * `id` (string): The read-only ID of this map
 * `writeId` (string): The read-write ID of this map
+* `adminId` (string): The admin ID of this map
 * `name` (string): The name of this map
 * `searchEngines` (boolean): Whether search engines may index the read-only version of this map
 * `description` (string): The description for search engines

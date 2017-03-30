@@ -36,6 +36,39 @@ module.exports = function(Database) {
 					}
 
 					return Promise.all(promises);
+				}),
+
+				queryInterface.describeTable('Pads').then((attributes) => {
+					// Rename writeId to adminId
+
+					if(!attributes.adminId) {
+						let Pad = this._conn.model('Pad');
+						return queryInterface.renameColumn('Pads', 'writeId', 'adminId').then(() => {
+							return queryInterface.addColumn('Pads', 'writeId', Pad.attributes.writeId);
+						}).then(() => {
+							return Pad.findAll();
+						}).then((pads) => {
+							let promise = Promise.resolve();
+							for(let pad of pads) {
+								let genId = () => {
+									let writeId = utils.generateRandomId(14);
+									return this.padIdExists(writeId).then((exists) => {
+										if(exists)
+											return genId();
+										else
+											return writeId;
+									});
+								};
+
+								promise = promise.then(() => {
+									return genId();
+								}).then((writeId) => {
+									return Pad.update({writeId}, { where: { id: pad.id } });
+								});
+							}
+							return promise;
+						});
+					}
 				})
 			]);
 

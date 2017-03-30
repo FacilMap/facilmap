@@ -16,6 +16,7 @@ class Socket {
 
 		this.padData = null;
 		this.readonly = null;
+		this.writable = null;
 		this.markers = { };
 		this.lines = { };
 		this.views = { };
@@ -82,6 +83,9 @@ class Socket {
 
 	createPad(data) {
 		return this._emit("createPad", data).then((obj) => {
+			this.readonly = false;
+			this.writable = 2;
+
 			this._receiveMultiple(obj);
 		});
 	}
@@ -204,10 +208,12 @@ Socket.prototype._handlers = {
 	padData(data) {
 		this.padData = data;
 
-		if(data.writable != null)
-			this.readonly = !data.writable;
+		if(data.writable != null) {
+			this.readonly = (data.writable == 0);
+			this.writable = data.writable;
+		}
 
-		let id = this.readonly ? data.id : data.writeId;
+		let id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
 		if(id != null)
 			this.padId = id;
 	},

@@ -85,12 +85,19 @@ module.exports = function(Database) {
 			});
 		},
 
-		getHistory(padId) {
-			return this._getPadObjects("History", padId, { order: "time DESC" });
+		getHistory(padId, types) {
+			let query = { order: "time DESC" };
+			if(types)
+				query.where = {type: types};
+			return this._getPadObjects("History", padId, query);
+		},
+
+		getHistoryEntry(padId, entryId) {
+			return this._getPadObject("History", padId, entryId);
 		},
 
 		revertHistoryEntry(padId, id) {
-			return this._getPadObject("History", padId, id).then((entry) => {
+			return this.getHistoryEntry(padId, id).then((entry) => {
 				if(entry.type == "Pad")
 					return this.updatePadData(padId, entry.objectBefore);
 

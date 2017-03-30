@@ -10,17 +10,17 @@
 					<a href="javascript:" id="toolbox-add-dropdown" uib-dropdown-toggle role="button">Add <span class="caret"></span></a>
 					<ul uib-dropdown-menu aria-labelledby="toolbox-add-dropdown">
 						<li ng-repeat="type in types"><a href="javascript:" ng-click="addObject(type)">{{type.name}}</a></li>
-						<li role="separator" class="divider"></li>
-						<li><a href="javascript:" ng-click="editObjectTypes()">Manage types</a></li>
+						<li ng-if="writable == 2" role="separator" class="divider"></li>
+						<li ng-if="writable == 2"><a href="javascript:" ng-click="editObjectTypes()">Manage types</a></li>
 					</ul>
 				</li>
 				<li role="presentation" uib-dropdown keyboard-nav="true" ng-if="padId && (!readonly || (views | fmPropertyCount) != 0)">
 					<a href="javascript:" id="toolbox-views-dropdown" uib-dropdown-toggle role="button">Saved views <span class="caret"></span></a>
 					<ul uib-dropdown-menu aria-labelledby="toolbox-views-dropdown">
 						<li ng-repeat="(id, view) in views"><a href="javascript:" ng-click="displayView(view)">{{view.name}}</a></li>
-						<li ng-if="!readonly" role="separator" class="divider"></li>
-						<li ng-if="!readonly"><a href="javascript:" ng-click="saveView()">Save current view</a></li>
-						<li ng-if="!readonly"><a href="javascript:" ng-click="manageViews()">Manage views</a></li>
+						<li ng-if="writable == 2" role="separator" class="divider"></li>
+						<li ng-if="writable == 2"><a href="javascript:" ng-click="saveView()">Save current view</a></li>
+						<li ng-if="writable == 2"><a href="javascript:" ng-click="manageViews()">Manage views</a></li>
 				</ul></li>
 				<li role="presentation" uib-dropdown keyboard-nav="true">
 					<a href="javascript:" id="toolbox-layers-dropdown" uib-dropdown-toggle role="button">Map style <span class="caret"></span></a>
@@ -49,7 +49,7 @@
 						<li ng-if="padId"><a href="{{padData.id}}/table" target="_blank">Export as table</a></li>
 						<li ng-if="padId" role="separator" class="divider"></li>
 						<li ng-if="padId"><a href="javascript:" ng-click="filter()">Filter</a></li>
-						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
+						<li ng-if="writable == 2 && padId"><a href="javascript:" ng-click="editPadSettings()">Settings</a></li>
 						<li ng-if="!readonly && padId"><a href="javascript:" ng-click="showHistory()">Show edit history</a></li>
 						<li ng-if="padId" role="separator" class="divider"></li>
 						<li><a href="javascript:" ng-click="showAbout()">About FacilMap</a></li>

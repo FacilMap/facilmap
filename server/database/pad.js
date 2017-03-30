@@ -9,6 +9,7 @@ module.exports = function(Database) {
 			id : { type: Sequelize.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
 			name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilMap"; } },
 			writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
+			adminId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
 			description: { type: Sequelize.STRING, allowNull: false },
 			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, default: false }
@@ -23,7 +24,7 @@ module.exports = function(Database) {
 
 	utils.extend(Database.prototype, {
 		padIdExists(padId) {
-			return this._conn.model("Pad").count({ where: { $or: [ { id: padId }, { writeId: padId } ] } }).then(function(num) {
+			return this._conn.model("Pad").count({ where: { $or: [ { id: padId }, { writeId: padId }, { adminId: padId } ] } }).then(function(num) {
 				return num > 0;
 			});
 		},
@@ -36,8 +37,12 @@ module.exports = function(Database) {
 			return this._conn.model("Pad").findOne({ where: { writeId: writeId }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
 		},
 
+		getPadDataByAdminId(adminId) {
+			return this._conn.model("Pad").findOne({ where: { adminId: adminId }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
+		},
+
 		getPadDataByAnyId(padId) {
-			return this._conn.model("Pad").findOne({ where: { $or: { id: padId, writeId: padId } }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
+			return this._conn.model("Pad").findOne({ where: { $or: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
 		},
 
 		createPad(data) {
@@ -46,9 +51,11 @@ module.exports = function(Database) {
 					if(!data.id || data.id.length == 0)
 						throw "Invalid read-only ID";
 					if(!data.writeId || data.writeId.length == 0)
-						throw "Invalid write-only ID";
-					if(data.id == data.writeId)
-						throw "Read-only and write-only ID cannot be the same.";
+						throw "Invalid read-write ID";
+					if(!data.adminId || data.adminId.length == 0)
+						throw "Invalid admin ID";
+					if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
+						throw "Read-only, read-write and admin ID have to be different from each other.";
 
 					return Promise.all([
 						this.padIdExists(data.id).then((exists) => {
@@ -58,6 +65,10 @@ module.exports = function(Database) {
 						this.padIdExists(data.writeId).then((exists) => {
 							if(exists)
 								throw "ID '" + data.writeId + "' is already taken.";
+						}),
+						this.padIdExists(data.adminId).then((exists) => {
+							if(exists)
+								throw "ID '" + data.adminId + "' is already taken.";
 						})
 					]);
 				},
@@ -97,9 +108,9 @@ module.exports = function(Database) {
 				validateWrite: (oldData) => {
 					if(data.writeId != null && data.writeId != oldData.writeId) {
 						if(data.writeId.length == 0)
-							throw "Invalid write-only ID";
+							throw "Invalid read-write ID";
 						if(data.writeId == (data.id != null ? data.id : padId))
-							throw "Read-only and write-only ID cannot be the same.";
+							throw "Read-only and read-write ID cannot be the same.";
 
 						return this.padIdExists(data.writeId).then((exists) => {
 							if(exists)
@@ -108,7 +119,23 @@ module.exports = function(Database) {
 					}
 				},
 
-				update: (validateRead, validateWrite) => {
+				validateAdmin: (oldData) => {
+					if(data.adminId != null && data.adminId != oldData.adminId) {
+						if(data.adminId.length == 0)
+							throw "Invalid admin ID";
+						if(data.adminId == (data.id != null ? data.id : padId))
+							throw "Read-only and admin ID cannot be the same.";
+						if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
+							throw "Read-write and admin ID cannot be the same.";
+
+						return this.padIdExists(data.adminId).then((exists) => {
+							if(exists)
+								throw "ID '" + data.adminId + "' is already taken.";
+						});
+					}
+				},
+
+				update: (validateRead, validateWrite, validateAdmin) => {
 					return this._conn.model("Pad").update(data, { where: { id: padId } }).then(res => {
 						if(res[0] == 0)
 							throw "Pad " + padId + " could not be found.";

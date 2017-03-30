@@ -5,9 +5,24 @@
 <div class="modal-body">
 	<form class="form-horizontal" ng-submit="!writeError && !readError && save()">
 		<div uib-alert class="alert-danger" ng-show="error">{{error.message || error}}</div>
+
+		<div class="form-group" ng-class="{'has-error': !!adminError}">
+			<label for="pad-link-input" class="col-sm-3 control-label">Admin Link</label>
+			<div class="col-sm-9">
+				<div class="input-group">
+					<span class="input-group-addon">{{urlPrefix}}</span>
+					<input id="admin-link-input" ng-model="adminId" class="form-control" />
+					<span class="input-group-btn" ng-if="!create">
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + adminId)">Copy</button>
+					</span>
+				</div>
+				<span class="help-block" ng-if="adminError">{{adminError}}</span>
+				<p class="help-block">When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views.</p>
+			</div>
+		</div>
 		
 		<div class="form-group" ng-class="{'has-error': !!writeError}">
-			<label for="pad-link-input" class="col-sm-3 control-label">Edit-only Link</label>
+			<label for="pad-link-input" class="col-sm-3 control-label">Editable Link</label>
 			<div class="col-sm-9">
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
@@ -17,6 +32,7 @@
 					</span>
 				</div>
 				<span class="help-block" ng-if="writeError">{{writeError}}</span>
+				<p class="help-block">When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified.</p>
 			</div>
 		</div>
 
@@ -31,6 +47,7 @@
 					</span>
 				</div>
 				<span class="help-block" ng-if="readError">{{readError}}</span>
+				<p class="help-block">When opening the map through this link, markers, lines and views can be seen, but nothing can be changed.</p>
 			</div>
 		</div>
 

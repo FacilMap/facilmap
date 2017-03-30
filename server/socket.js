@@ -136,6 +136,10 @@ utils.extend(SocketConnection.prototype, {
 					this.padId = true;
 				},
 
+				admin: (validate) => {
+					return this.database.getPadDataByAdminId(padId);
+				},
+
 				write: (validate) => {
 					return this.database.getPadDataByWriteId(padId);
 				},
@@ -144,11 +148,13 @@ utils.extend(SocketConnection.prototype, {
 					return this.database.getPadData(padId);
 				},
 
-				pad: (write, read) => {
-					if(write)
-						return utils.extend(JSON.parse(JSON.stringify(write)), { writable: true });
+				pad: (admin, write, read) => {
+					if(admin)
+						return utils.extend(JSON.parse(JSON.stringify(admin)), { writable: 2 });
+					else if(write)
+						return utils.extend(JSON.parse(JSON.stringify(write)), { writable: 1, adminId: null });
 					else if(read)
-						return utils.extend(JSON.parse(JSON.stringify(read)), { writable: false, writeId: null });
+						return utils.extend(JSON.parse(JSON.stringify(read)), { writable: 0, writeId: null, adminId: null });
 					else {
 						this.padId = null;
 						throw "This pad does not exist";
@@ -189,7 +195,7 @@ utils.extend(SocketConnection.prototype, {
 
 		createPad : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean" }))
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", adminId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean" }))
 					throw "Invalid parameters.";
 
 				if(this.padId)
@@ -198,7 +204,7 @@ utils.extend(SocketConnection.prototype, {
 				return this.database.createPad(data);
 			}).then((padData) => {
 				this.padId = padData.id;
-				this.writable = true;
+				this.writable = 2;
 
 				this.registerDatabaseHandlers();
 
@@ -208,11 +214,11 @@ utils.extend(SocketConnection.prototype, {
 
 		editPad : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean" }))
+				if(!utils.stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", adminId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean" }))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Map settings can only be changed in admin mode.";
 
 				return this.database.updatePadData(this.padId, data);
 			});
@@ -304,8 +310,8 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Views can only be added in admin mode.";
 
 				return this.database.createView(this.padId, data);
 			});
@@ -316,8 +322,8 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Views can only be changed in admin mode.";
 
 				return this.database.updateView(this.padId, data.id, data);
 			});
@@ -328,8 +334,8 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { id: "number" }))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Views can only be deleted in admin mode.";
 
 				return this.database.deleteView(this.padId, data.id);
 			});
@@ -356,8 +362,8 @@ utils.extend(SocketConnection.prototype, {
 				}))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Types can only be added in admin mode.";
 
 				return this.database.createType(this.padId, data);
 			});
@@ -384,8 +390,8 @@ utils.extend(SocketConnection.prototype, {
 				}))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Types can only be changed in admin mode.";
 
 				let rename = {};
 				for(let field of (data.fields || [])) {
@@ -428,8 +434,8 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { id: "number" }))
 					throw "Invalid parameters.";
 
-				if(!this.writable)
-					throw "In read-only mode.";
+				if(this.writable != 2)
+					throw "Types can only be deleted in admin mode.";
 
 				return this.database.deleteType(this.padId, data.id);
 			});
@@ -462,12 +468,12 @@ utils.extend(SocketConnection.prototype, {
 					throw "Already listening to history.";
 
 				this.historyListener = this.registerDatabaseHandler("addHistoryEntry", (padId, data) => {
-					if(padId == this.padId)
+					if(padId == this.padId && (this.writable == 2 || ["Marker", "Line"].includes(data.type)))
 						this.socket.emit("history", data);
 				});
 
 				return Promise.props({
-					history: utils.streamToArrayPromise(this.database.getHistory(this.padId))
+					history: utils.streamToArrayPromise(this.database.getHistory(this.padId, this.writable == 2 ? null : ["Marker", "Line"]))
 				});
 			});
 		},
@@ -492,6 +498,11 @@ utils.extend(SocketConnection.prototype, {
 
 				if(!this.writable)
 					throw "In read-only mode.";
+
+				return this.database.getHistoryEntry(this.padId, data.id);
+			}).then((historyEntry) => {
+				if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != 2)
+					throw "This kind of change can only be reverted in admin mode.";
 
 				if(listening)
 					this.socketHandlers.stopListeningToHistory.call(this);
@@ -550,8 +561,10 @@ utils.extend(SocketConnection.prototype, {
 		padData: function(padId, data) {
 			if(padId == this.padId) {
 				var dataClone = JSON.parse(JSON.stringify(data));
-				if(!this.writable)
+				if(this.writable == 0)
 					dataClone.writeId = null;
+				if(this.writable != 2)
+					dataClone.adminId = null;
 
 				this.padId = data.id;
 
