@@ -145,7 +145,7 @@ module.exports = function(Database) {
 				});
 			});
 
-			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations/*, dropdownKeyMigration*/ ]);
+			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration ]);
 		}
 	});
 };
