@@ -79,7 +79,7 @@ fm.app.factory("fmMapSearchFiles", function($rootScope, $compile, fmUtils) {
 						let f = {
 							short_name: name,
 							display_name: name,
-							extratags: feature.properties.data || feature.properties.tags || fmUtils.flattenObject(feature.properties),
+							extratags: feature.properties.data || feature.properties.tags || fmUtils.flattenObject(Object.assign({}, feature.properties, {coordTimes: null})),
 							geojson: feature.geometry,
 							type: feature.properties.type || feature.geometry.type
 						};
