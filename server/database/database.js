@@ -31,7 +31,7 @@ class Database extends events.EventEmitter {
 		return this._conn.authenticate().then(() => {
 			return this._conn.sync({ force: !!force });
 		}).then(() => {
-			this._runMigrations()
+			return this._runMigrations()
 		});
 	}
 }
