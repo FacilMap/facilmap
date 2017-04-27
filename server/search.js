@@ -9,6 +9,7 @@ const request = require("request-promise").defaults({
 });
 const zlib = require("zlib");
 
+const elevation = require("./elevation");
 const utils = require("./utils");
 
 const nameFinderUrl = "https://nominatim.openstreetmap.org";
@@ -99,8 +100,18 @@ const search = module.exports = {
 			if(body.error)
 				throw body.error;
 
-			return body.map(search._prepareSearchResult);
-		});
+			let points = body.filter((res) => (res.lon && res.lat));
+			if(points.length > 0) {
+				return elevation.getElevationForPoints(points).then((elevations) => {
+					elevations.forEach((elevation, i) => {
+						points[i].elevation = elevation;
+					});
+
+					return body;
+				});
+			} else
+				return body;
+		}).then((body) => (body.map(search._prepareSearchResult)));
 	},
 
 	_findOsmObject(type, id) {
@@ -109,18 +120,24 @@ const search = module.exports = {
 			json: true
 		}).then(function(body) {
 			if(!body || body.error) {
-					throw body ? body.error : "Invalid response from name finder";
+				throw body ? body.error : "Invalid response from name finder";
 			}
 
-			return [ search._prepareSearchResult(body) ];
-		});
+			if(body.lat && body.lon)
+				return elevation.getElevationForPoint(body).then((elevation) => (Object.assign(body, { elevation })));
+			else
+				return body;
+		}).then((body) => ([ search._prepareSearchResult(body) ]));
 	},
 
 	_findLonLat(lonlatWithZoom) {
-		return request({
-			url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&lat=${encodeURI(lonlatWithZoom.lat)}&lon=${encodeURI(lonlatWithZoom.lon)}&zoom=${encodeURI(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
-			json: true
-		}).then(function(body) {
+		return Promise.all([
+			request({
+				url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&lat=${encodeURI(lonlatWithZoom.lat)}&lon=${encodeURI(lonlatWithZoom.lon)}&zoom=${encodeURI(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
+				json: true
+			}),
+			elevation.getElevationForPoint(lonlatWithZoom)
+		]).then(function([body, elevation]) {
 			if(!body || body.error) {
 				let name = utils.round(lonlatWithZoom.lat, 5) + ", " + utils.round(lonlatWithZoom.lon, 5);
 				return [ {
@@ -130,7 +147,8 @@ const search = module.exports = {
 					short_name: name,
 					display_name : name,
 					zoom: lonlatWithZoom.zoom != null ? lonlatWithZoom.zoom : 15,
-					icon: null
+					icon: null,
+					elevation: elevation
 				} ];
 			}
 
@@ -139,6 +157,8 @@ const search = module.exports = {
 
 			if(lonlatWithZoom.zoom != null)
 				body.zoom = lonlatWithZoom.zoom;
+
+			body.elevation = elevation;
 
 			return [ search._prepareSearchResult(body) ];
 		});
@@ -157,7 +177,8 @@ const search = module.exports = {
 			geojson: result.geojson,
 			icon: result.icon && result.icon.replace(/^.*\/([a-z0-9_]+)\.[a-z0-9]+\.[0-9]+\.[a-z0-9]+$/i, "$1"),
 			type: result.type == "yes" ? result.category : result.type,
-			id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : null
+			id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : null,
+			elevation: result.elevation
 		};
 	},
 

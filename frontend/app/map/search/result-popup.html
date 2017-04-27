@@ -6,6 +6,9 @@
 		<dt class="pos" ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
 		<dd class="pos" ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">{{result.lat | fmRound:5}}, {{result.lon | fmRound:5}}</dd>
 
+		<dt class="elevation" ng-if="result.elevation != null">Elevation</dt>
+		<dd class="elevation" ng-if="result.elevation != null">{{result.elevation}} m</dd>
+
 		<dt ng-repeat-start="(key, value) in result.extratags">{{key}}</dt>
 		<dd ng-repeat-end ng-bind-html="value | fmRenderOsmTag:key">{{value}}</dd>
 	</dl>

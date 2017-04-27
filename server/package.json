@@ -26,6 +26,7 @@
     "facilmap-server": "./server.js"
   },
   "dependencies": {
+    "@mapbox/polyline": "^0.2.0",
     "bluebird": "^3.5.0",
     "cheerio": "^0.22.0",
     "compression": "^1.6.2",

@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@mapbox/polyline@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@mapbox/polyline/-/polyline-0.2.0.tgz#6e25980744aa22331f94b645a542c02d3fcfee97"
+
 "@mapbox/togeojson@^0.16.0":
   version "0.16.0"
   resolved "https://registry.yarnpkg.com/@mapbox/togeojson/-/togeojson-0.16.0.tgz#5b283001078431821dc74e287acaf56a11ceb37c"
