@@ -38,6 +38,7 @@
     "json-format": "^1.0.0",
     "mysql": "^2.13.0",
     "request": "^2.75.0",
+    "request-debug": "^0.2.0",
     "request-promise": "^4.1.1",
     "sequelize": "^3.24.3",
     "socket.io": "^1.2.1",

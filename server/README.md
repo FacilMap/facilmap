@@ -78,4 +78,5 @@ the dev server, first link the dependencies by running `yarn link` in the `clien
 using `FM_DEV=true npm run server`.
 
 To enable debug output of various components, additionally prepend the command by `DEBUG=*`. See the documentation of
-[debug](https://github.com/visionmedia/debug). To only enable the debug logging of SQL queries, use `DEBUG=sql`.
+[debug](https://github.com/visionmedia/debug). To only enable the debug logging of SQL queries, use `DEBUG=sql`. To
+enable the logging of outgoing HTTP requests, set `DEBUG=request`.

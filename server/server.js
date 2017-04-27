@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
+const debug = require("debug");
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
 const Promise = require("bluebird");
+const request = require("request-promise");
+const requestDebug = require("request-debug");
 
 
 const configPath = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
@@ -16,6 +19,11 @@ if(!fs.existsSync(configPath)) {
 const config = require(configPath);
 
 process.env.fmUserAgent = config.userAgent;
+
+
+if(debug.enabled("request")) {
+	requestDebug(request);
+}
 
 
 var Database = require("./database/database");
