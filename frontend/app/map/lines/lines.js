@@ -2,6 +2,7 @@ import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
+import 'leaflet.elevation';
 
 fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 	return function(map) {
@@ -36,6 +37,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 			}
 		});
 
+		let elevationPlot = L.control.elevation({
+			theme: "steelblue-theme",
+			position: "bottomright"
+		});
+
 		var linesUi = {
 			_addLine: function(line, resetPopupPosition) {
 				var trackPoints = [ ];
@@ -59,6 +65,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 								linesUi._renderLinePopup(map.socket.lines[line.id]);
 							})
 							.on("popupclose", function(e) {
+								linesUi.hideElevationPlot();
+
 								ng.element(e.popup.getContent()).scope().$destroy();
 							})
 							.on("fm-almostover", function(e) {
@@ -95,8 +103,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 						linesById[line.id].openPopup();
 						linesById[line.id].options.autoPan = autoPanBkp;
 					}
-					else
+					else {
+						ng.element(linesById[line.id].popup.getContent()).scope().$destroy();
 						linesUi._renderLinePopup(line);
+					}
 				}
 			},
 			_deleteLine: function(line) {
@@ -112,6 +122,19 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				var scope = map.socket.$new();
 
 				scope.line = line;
+				scope.elevationPlotVisible = !!elevationPlot._map;
+
+				scope.$watch("line.trackPoints", (trackPoints) => {
+					if(elevationPlot._map)
+						linesUi.showElevationPlot(trackPoints);
+				}, true);
+
+				scope.$watch("elevationPlotVisible", (visible) => {
+					if(visible)
+						linesUi.showElevationPlot(line.trackPoints);
+					else
+						linesUi.hideElevationPlot();
+				});
 
 				scope.edit = function() {
 					linesUi.editLine(scope.line);
@@ -379,6 +402,38 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				map.socket.deleteLine(line).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
+			},
+
+			showElevationPlot(trackPoints) {
+				map.el.addClass("fm-elevationPlot");
+
+				if(!elevationPlot._map)
+					map.map.addControl(elevationPlot);
+
+				if(trackPoints) {
+					elevationPlot.clear();
+
+					let latlngs = [];
+					for(let i=0; i<trackPoints.length; i++) {
+						if(trackPoints[i] && trackPoints[i].ele != null)
+							latlngs.push(Object.assign(new L.latLng(trackPoints[i].lat, trackPoints[i].lon), { meta: { ele: trackPoints[i].ele } }));
+					}
+
+					elevationPlot.addData({
+						_latlngs: latlngs
+					}, {
+						on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
+					});
+				}
+			},
+
+			hideElevationPlot() {
+				map.el.removeClass("fm-elevationPlot");
+
+				elevationPlot.clear();
+
+				if(elevationPlot._map)
+					map.map.removeControl(elevationPlot);
 			}
 		};
 

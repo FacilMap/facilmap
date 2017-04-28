@@ -81,7 +81,7 @@ module.exports = function(Database) {
 			}));
 
 			var addColMigrations = renameColMigrations.then(() => {
-				return Promise.all([ 'Pad', 'Marker', 'Type', 'View' ].map((table) => {
+				return Promise.all([ 'Pad', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ].map((table) => {
 					var model = this._conn.model(table);
 					return queryInterface.describeTable(model.getTableName()).then((attributes) => {
 						var promises = [ ];
@@ -141,11 +141,34 @@ module.exports = function(Database) {
 					}
 					return operations;
 				}).then(() => {
-					this.setMeta("dropdownKeysMigrated", true);
+					return this.setMeta("dropdownKeysMigrated", true);
 				});
 			});
 
-			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration ]);
+			// Get elevation data for all lines that don't have any yet
+			let elevationMigration = addColMigrations.then(() => {
+				return this.getMeta("hasElevation");
+			}).then((hasElevation) => {
+				if(hasElevation)
+					return;
+
+				return this._conn.model("Line").findAll().then((lines) => {
+					let operations = Promise.resolve();
+					for(let line of lines) {
+						operations = operations.then(() => {
+							return this._conn.model("Line").build({ id: line.id }).getLinePoints().then((trackPoints) => {
+								return this._setLinePoints(line.padId, line.id, trackPoints, true);
+							});
+						});
+					}
+					return operations;
+				}).then(() => {
+					return this.setMeta("hasElevation", true);
+				});
+			});
+
+
+			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration ]);
 		}
 	});
 };

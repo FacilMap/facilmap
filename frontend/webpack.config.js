@@ -8,7 +8,11 @@ const path = require("path");
 
 const depLoaders = {
 	jquery: "expose-loader?jQuery",
-	angular: "exports-loader?window.angular"
+	angular: "exports-loader?window.angular",
+	"leaflet.elevation": [
+		"imports-loader?d3=d3",
+		"string-replace-loader?search=L.Browser.touch&replace=L.Browser.mobile" // https://github.com/MrMufflon/Leaflet.Elevation/issues/67
+	]
 };
 
 // Add imports to these modules, as they don't specify their imports properly
@@ -21,7 +25,8 @@ const addDeps = {
 	"bootstrap-touchspin": [ "bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" ],
 	leaflet: [ "leaflet/dist/leaflet.css" ],
 	"leaflet.locatecontrol": [ "leaflet.locatecontrol/dist/L.Control.Locate.css" ],
-	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ]
+	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ],
+	"leaflet.elevation": [ require.resolve("leaflet.elevation/dist/Leaflet.Elevation-0.0.2.css") ]
 };
 
 for(let i in addDeps) {
@@ -45,7 +50,8 @@ module.exports = {
 	resolve: {
 		unsafeCache: true,
 		alias: {
-			angular: "angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+			angular: "angular/angular", // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+			"leaflet.elevation": "leaflet.elevation/dist/Leaflet.Elevation-0.0.2.src.js"
 		}
 	},
 	module: {

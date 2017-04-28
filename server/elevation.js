@@ -1,3 +1,4 @@
+const highland = require("highland");
 const polyline = require("@mapbox/polyline");
 const request = require("request-promise").defaults({
 	gzip: true,
@@ -9,9 +10,21 @@ const request = require("request-promise").defaults({
 
 const API_URL = "https://elevation.mapzen.com/height";
 const API_KEY = "mapzen-LWPWRB1";
+const LIMIT = 1000;
+const PER_SECOND_LIMIT = 2;
 
+const throttle = highland();
+throttle.ratelimit(PER_SECOND_LIMIT, 1000).each((func) => {
+	func();
+});
 
 const elevation = module.exports = {
+
+	_getThrottledSlot() {
+		return new Promise((resolve) => {
+			throttle.write(resolve);
+		});
+	},
 
 	getElevationForPoint(point) {
 		return elevation.getElevationForPoints([point]).then((points) => (points[0]));
@@ -19,17 +32,41 @@ const elevation = module.exports = {
 
 	getElevationForPoints(points) {
 		if(points.length == 0)
-			return [ ];
+			return Promise.resolve([ ]);
 
-		let json = {
-			encoded_polyline: polyline.encode(points.map((point) => ([point.lat, point.lon])), 6),
-			range: false
+		let ret = Promise.resolve([ ]);
+		for(let i=0; i<points.length; i+=LIMIT) {
+			ret = ret.then((heights) => {
+				return elevation._getThrottledSlot().then(() => (heights));
+			}).then((heights) => {
+				let json = {
+					encoded_polyline: polyline.encode(points.slice(i, i+LIMIT).map((point) => ([point.lat, point.lon])), 6),
+					range: false
+				};
+
+				return request.get({
+					url: `${API_URL}?json=${encodeURI(JSON.stringify(json))}&api_key=${API_KEY}`,
+					json: true
+				}).then((res) => (heights.concat(res.height)));
+			});
+		}
+		return ret;
+	},
+
+	getAscentDescent(elevations) {
+		let ret = {
+			ascent: 0,
+			descent: 0
 		};
 
-		return request.get({
-			url: `${API_URL}?json=${encodeURI(JSON.stringify(json))}&api_key=${API_KEY}`,
-			json: true
-		}).then((res) => (res.height));
+		for(let i=1; i<elevations.length; i++) {
+			if(elevations[i] > elevations[i-1])
+				ret.ascent += elevations[i] - elevations[i-1];
+			else
+				ret.descent += elevations[i-1] - elevations[i];
+		}
+
+		return ret;
 	}
 
 };

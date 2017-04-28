@@ -1,7 +1,9 @@
+var highland = require("highland");
 var Promise = require("bluebird");
 var Sequelize = require("sequelize");
 var underscore = require("underscore");
 
+var elevation = require("../elevation");
 var utils = require("../utils");
 var routing = require("../routing");
 
@@ -37,14 +39,17 @@ module.exports = function(Database) {
 			width : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
 			name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled line"; } },
 			distance : { type: Sequelize.FLOAT(24, 2).UNSIGNED, allowNull: true },
-			time : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
+			time : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
+			ascent : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
+			descent : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
 		});
 
 		this._conn.define("LinePoint", {
 			lat: this._TYPES.lat,
 			lon: this._TYPES.lon,
 			zoom: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
-			idx: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false }
+			idx: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false },
+			ele: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
 		});
 
 		this._conn.define("LineData", this._TYPES.dataDefinition);
@@ -194,16 +199,27 @@ module.exports = function(Database) {
 		},
 
 		_setLinePoints(padId, lineId, trackPoints, _noEvent) {
-			return this._conn.model("LinePoint").destroy({ where: { lineId: lineId } }).then(() => {
+			// First get elevation, so that if that fails, we don't update anything
+			let ascentDescent;
+			return this._updateElevation(trackPoints).then((a) => {
+				ascentDescent = a;
+
+				return this._conn.model("LinePoint").destroy({ where: { lineId: lineId } });
+			}).then(() => {
 				var create = [ ];
 				for(var i=0; i<trackPoints.length; i++) {
-					create.push(utils.extend({ }, trackPoints[i], { lineId: lineId }));
+					create.push(Object.assign(JSON.parse(JSON.stringify(trackPoints[i])), { lineId: lineId }));
 				}
 
 				return this._bulkCreateInBatches(this._conn.model("LinePoint"), create);
 			}).then((points) => {
 				if(!_noEvent)
 					this.emit("linePoints", padId, lineId, points);
+
+				return this._updatePadObject("Line", padId, lineId, ascentDescent, true);
+			}).then((newLine) => {
+				if(!_noEvent)
+					this.emit("line", padId, newLine);
 			});
 		},
 
@@ -257,7 +273,7 @@ module.exports = function(Database) {
 		getLinePointsByIdx(lineId, indexes) {
 			return this._conn.model("Line").build({ id: lineId }).getLinePoints({
 				where: { idx: indexes },
-				attributes: [ "lon", "lat", "idx" ],
+				attributes: [ "lon", "lat", "idx", "ele" ],
 				order: "idx"
 			});
 		},
@@ -291,6 +307,21 @@ module.exports = function(Database) {
 				}
 				return Promise.resolve(trackPoints);
 			}
+		},
+
+		_updateElevation(trackPoints) {
+			let pointsToUpdate = trackPoints.filter((point) => (point.zoom < 12 && point.ele == null));
+
+			return elevation.getElevationForPoints(pointsToUpdate).then((elevations) => {
+				elevations.forEach((elevation, i) => {
+					if(pointsToUpdate[i].setDataValue)
+						pointsToUpdate[i].setDataValue("ele", elevation);
+					else
+						pointsToUpdate[i].ele = elevation;
+				});
+
+				return elevation.getAscentDescent(trackPoints.filter((point) => (point.ele != null)).map((point) => (point.ele)));
+			});
 		}
 	});
 };
