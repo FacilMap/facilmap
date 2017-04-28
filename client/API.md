@@ -447,6 +447,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
 * `symbol` (string): The symbol code for the marker. Default is an empty string.
+* `elevation` (number): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
 * `data` (`{"key", "value"}`): The filled out form fields of the marker
 
@@ -458,8 +459,8 @@ for that line, the `trackPoints` describe how the line should be drawn. If no ro
 
 When creating or updating a line, the `trackPoints`, `distance` and `time` properties are automatically calculated by
 the server. Only when the routing mode is `track`, the `trackPoints` can be specified by hand (meant for importing
-existing tracks, for example from a GPX file). The `idx` and `zoom` properties of the track points are added by the
-server automatically.
+existing tracks, for example from a GPX file). The `idx`, `zoom` and `ele` properties of the track points are added by
+the server automatically.
 
 Note that `line` objects coming from the server don’t contain the `trackPoints` property, but the track points are sent
 separately through `linePoints` events.
@@ -470,8 +471,9 @@ separately through `linePoints` events.
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
 * `name` (string): The name of the line
-* `distance` (number): The distance of the line in kilometers.
-* `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`)
+* `distance` (number): The distance of the line in kilometers (set by the server)
+* `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
+* `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`) (set by the server)
 * `typeId` (number): The ID of the type of this line
 * `data` (`{"key", "value"}`): The filled out form fields of the line
 * `trackPoints`:
@@ -489,6 +491,7 @@ their `idx` property.
 * `lat` (number, min: -90, max: 90): The latitude of this point
 * `lon` (number, min: -180, max: 180): The longitude of this point
 * `zoom` (number, min: 1, max: 20): The miminum zoom level from which this track point makes sense to show
+* `ele` (number): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
 
 ### padData
 
