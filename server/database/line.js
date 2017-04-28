@@ -49,7 +49,7 @@ module.exports = function(Database) {
 			lon: this._TYPES.lon,
 			zoom: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false },
-			ele: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
+			ele: { type: Sequelize.INTEGER, allowNull: true }
 		});
 
 		this._conn.define("LineData", this._TYPES.dataDefinition);
