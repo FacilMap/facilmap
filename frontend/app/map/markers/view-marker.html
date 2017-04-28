@@ -4,6 +4,9 @@
 		<dt class="pos">Coordinates</dt>
 		<dd class="pos">{{marker.lat | fmRound:5}}, {{marker.lon | fmRound:5}}</dd>
 
+		<dt class="elevation" ng-if="marker.ele != null">Elevation</dt>
+		<dd class="elevation" ng-if="marker.ele != null">{{marker.ele}} m</dd>
+
 		<dt ng-repeat-start="field in types[marker.typeId].fields">{{field.name}}</dt>
 		<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="marker.data[field.name]"></dd>
 	</dl>

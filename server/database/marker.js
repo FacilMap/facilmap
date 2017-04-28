@@ -1,5 +1,6 @@
 var Sequelize = require("sequelize");
 
+var elevation = require("../elevation");
 var utils = require("../utils");
 
 module.exports = function(Database) {
@@ -10,7 +11,8 @@ module.exports = function(Database) {
 			name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled marker"; } },
 			colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "ff0000", validate: this._TYPES.validateColour },
 			size : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
-			symbol : { type: Sequelize.TEXT, allowNull: true }
+			symbol : { type: Sequelize.TEXT, allowNull: true },
+			ele: { type: Sequelize.INTEGER, allowNull: true }
 		});
 
 		this._conn.define("MarkerData", this._TYPES.dataDefinition);
@@ -40,13 +42,18 @@ module.exports = function(Database) {
 		createMarker(padId, data) {
 			return utils.promiseAuto({
 				type: this.getType(padId, data.typeId),
-				create: (type) => {
+
+				elevation: elevation.getElevationForPoint(data),
+
+				create: (type, elevation) => {
 					if(type.defaultColour)
 						data.colour = type.defaultColour;
 					if(type.defaultSize)
 						data.size = type.defaultSize;
 					if(type.defaultSymbol)
 						data.symbol = type.defaultSymbol;
+
+					data.ele = elevation;
 
 					return this._createPadObject("Marker", padId, data);
 				},
@@ -62,7 +69,16 @@ module.exports = function(Database) {
 
 		updateMarker(padId, markerId, data, doNotUpdateStyles) {
 			return utils.promiseAuto({
-				update: this._updatePadObject("Marker", padId, markerId, data, doNotUpdateStyles),
+				elevation: () => {
+					if(data.lat != null && data.lon != null)
+						return elevation.getElevationForPoint(data);
+				},
+				update: (elevation) => {
+					if(elevation != null)
+						data.ele = elevation;
+
+					return this._updatePadObject("Marker", padId, markerId, data, doNotUpdateStyles);
+				},
 				updateStyles: (update) => {
 					if(!doNotUpdateStyles)
 						return this._updateObjectStyles(update, false);

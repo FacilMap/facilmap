@@ -2,6 +2,7 @@ var Promise = require("bluebird");
 var Sequelize = require("sequelize");
 var underscore = require("underscore");
 
+var elevation = require("../elevation");
 var utils = require("../utils");
 
 module.exports = function(Database) {
@@ -145,24 +146,37 @@ module.exports = function(Database) {
 				});
 			});
 
-			// Get elevation data for all lines that don't have any yet
+			// Get elevation data for all lines/markers that don't have any yet
 			let elevationMigration = addColMigrations.then(() => {
 				return this.getMeta("hasElevation");
 			}).then((hasElevation) => {
 				if(hasElevation)
 					return;
 
-				return this._conn.model("Line").findAll().then((lines) => {
-					let operations = Promise.resolve();
-					for(let line of lines) {
-						operations = operations.then(() => {
-							return this._conn.model("Line").build({ id: line.id }).getLinePoints().then((trackPoints) => {
-								return this._setLinePoints(line.padId, line.id, trackPoints, true);
+				return Promise.all([
+					this._conn.model("Line").findAll().then((lines) => {
+						let operations = Promise.resolve();
+						for(let line of lines) {
+							operations = operations.then(() => {
+								return this._conn.model("Line").build({ id: line.id }).getLinePoints().then((trackPoints) => {
+									return this._setLinePoints(line.padId, line.id, trackPoints, true);
+								});
 							});
+						}
+						return operations;
+					}),
+					this._conn.model("Marker").findAll({where: {ele: null}}).then((markers) => {
+						return elevation.getElevationForPoints(markers).then((elevations) => {
+							let operations = Promise.resolve();
+							markers.forEach((marker, i) => {
+								operations = operations.then(() => {
+									return this._updatePadObject("Marker", marker.padId, marker.id, {ele: elevations[i]}, true);
+								});
+							});
+							return operations;
 						});
-					}
-					return operations;
-				}).then(() => {
+					})
+				]).then(() => {
 					return this.setMeta("hasElevation", true);
 				});
 			});
