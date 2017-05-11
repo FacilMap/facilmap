@@ -198,7 +198,7 @@ module.exports = function(Database) {
 			});
 		},
 
-		_setLinePoints(padId, lineId, trackPoints, _noEvent) {
+		_setLinePoints(padId, lineId, trackPoints, _noEvent, _noUpdateLine) {
 			// First get elevation, so that if that fails, we don't update anything
 			let ascentDescent;
 			return this._updateElevation(trackPoints).then((a) => {
@@ -216,17 +216,15 @@ module.exports = function(Database) {
 				if(!_noEvent)
 					this.emit("linePoints", padId, lineId, points);
 
-				return this._updatePadObject("Line", padId, lineId, ascentDescent, true);
-			}).then((newLine) => {
-				if(!_noEvent)
-					this.emit("line", padId, newLine);
+				if(!_noUpdateLine) // When deleting the line, we don't want to set this
+					return this._updatePadObject("Line", padId, lineId, ascentDescent, true);
 			});
 		},
 
 		deleteLine(padId, lineId) {
 			return utils.promiseAuto({
 				line: this._deletePadObject("Line", padId, lineId),
-				points: this._setLinePoints(padId, lineId, [ ], true)
+				points: this._setLinePoints(padId, lineId, [ ], true, true)
 			}).then((res) => {
 				this.emit("deleteLine", padId, { id: lineId });
 
