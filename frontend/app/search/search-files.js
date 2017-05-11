@@ -1,11 +1,11 @@
 import toGeoJSON from '@mapbox/togeojson';
 import osmtogeojson from 'osmtogeojson';
 
-import fm from '../../app';
+import fm from '../app';
 
 
-fm.app.factory("fmMapSearchFiles", function($rootScope, $compile, fmUtils) {
-	return function(map, fmMapSearch) {
+fm.app.factory("fmSearchFiles", function($rootScope, $compile, fmUtils) {
+	return function(map, searchUi) {
 		const fmMapSearchFiles = {
 			parseFiles(files) {
 				var ret = {features: [ ], views: [ ], types: { }};

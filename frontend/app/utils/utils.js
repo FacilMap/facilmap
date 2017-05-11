@@ -474,7 +474,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			if(zoom <= 8)
 				layer.clearLayers();
 			else {
-				map.socket.find({
+				map.client.find({
 					query: "https://www.freietonne.de/seekarte/getOpenLayerPois.php?ldez1=" + bounds.left + "&ldez2=" + bounds.right + "&bdez1=" + bounds.top + "&bdez2=" + bounds.bottom + "&zoom=" + zoom,
 					loadUrls: true
 				}).then(function(content) {

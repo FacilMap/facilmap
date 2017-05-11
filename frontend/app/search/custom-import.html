@@ -18,11 +18,11 @@
 					<td><label for="map-type-{{importTypeId}}">{{results.types[importTypeId].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{results.types[importTypeId].name}}” ({{objectCount}})</label></td>
 					<td><select id="map-type-{{importTypeId}}" ng-model="mapping[importTypeId]" class="form-control">
 						<option ng-if="importTypeId" ng-value="'i' + importTypeId">Import type “{{results.types[importTypeId].name}}”</option>
-						<option ng-repeat="type in socket.types" ng-if="type.name == results.types[importTypeId].name && type.type == results.types[importTypeId].type" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
+						<option ng-repeat="type in client.types" ng-if="type.name == results.types[importTypeId].name && type.type == results.types[importTypeId].type" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
 						<option ng-value="false">Do not import</option>
 						<option disabled>──────────</option>
 						<option ng-repeat="(typeId, type) in results.types" ng-if="type.type == results.types[importTypeId].type && typeId != importTypeId" ng-value="'i' + typeId">Import type “{{type.name}}”</option>
-						<option ng-repeat="type in socket.types" ng-if="type.type == results.types[importTypeId].type && type.name != results.types[importTypeId].name" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
+						<option ng-repeat="type in client.types" ng-if="type.type == results.types[importTypeId].type && type.name != results.types[importTypeId].name" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
 					</select></td>
 				</tr>
 				<tr ng-if="untypedMarkers > 0">
@@ -30,7 +30,7 @@
 					<td><select id="map-untyped-markers" ng-model="mapUntypedMarkers" class="form-control">
 						<option ng-value="false">Do not import</option>
 						<option ng-repeat="(typeId, type) in results.types" ng-if="type.type == 'marker'" ng-value="'i' + typeId">Import type “{{type.name}}”</option>
-						<option ng-repeat="type in socket.types" ng-if="type.type == 'marker'" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
+						<option ng-repeat="type in client.types" ng-if="type.type == 'marker'" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
 					</select></td>
 				</tr>
 				<tr ng-if="untypedLines > 0">
@@ -38,7 +38,7 @@
 					<td><select id="map-untyped-lines" ng-model="mapUntypedLines" class="form-control">
 						<option ng-value="false">Do not import</option>
 						<option ng-repeat="(typeId, type) in results.types" ng-if="type.type == 'line'" ng-value="'i' + typeId">Import type “{{type.name}}”</option>
-						<option ng-repeat="type in socket.types" ng-if="type.type == 'marker'" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
+						<option ng-repeat="type in client.types" ng-if="type.type == 'marker'" ng-value="'e' + type.id">Existing type “{{type.name}}”</option>
 					</select></td>
 				</tr>
 			</tbody>

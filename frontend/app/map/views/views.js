@@ -6,7 +6,6 @@ fm.app.factory("fmMapViews", function($uibModal) {
 			saveView : function() {
 				$uibModal.open({
 					template: require("./save-view.html"),
-					scope: map.socket,
 					controller: "fmMapViewsSaveCtrl",
 					size: "lg",
 					resolve: {
@@ -17,7 +16,6 @@ fm.app.factory("fmMapViews", function($uibModal) {
 			manageViews : function() {
 				$uibModal.open({
 					template: require("./manage-views.html"),
-					scope: map.socket,
 					controller: "fmMapViewsManageCtrl",
 					size: "lg",
 					resolve: {
@@ -33,14 +31,14 @@ fm.app.factory("fmMapViews", function($uibModal) {
 
 fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 	$scope.name = null;
-	$scope.filter = map.socket.filterExpr;
+	$scope.filter = map.client.filterExpr;
 
 	$scope.save = function() {
 		var view = map.getCurrentView($scope.saveFilter);
 		view.name = $scope.name;
-		map.socket.addView(view).then(function(view) {
+		map.client.addView(view).then(function(view) {
 			if($scope.makeDefault)
-				return map.socket.editPad({ defaultViewId: view.id });
+				return map.client.editPad({ defaultViewId: view.id });
 		}).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
@@ -50,18 +48,20 @@ fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 });
 
 fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
+	$scope.client = map.client;
+
 	$scope.display = function(view) {
 		map.displayView(view);
 	};
 
 	$scope.makeDefault = function(view) {
-		map.socket.editPad({ defaultViewId: view.id }).catch(function(err) {
+		map.client.editPad({ defaultViewId: view.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};
 
 	$scope['delete'] = function(view) {
-		map.socket.deleteView({ id: view.id }).catch(function(err) {
+		map.client.deleteView({ id: view.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};

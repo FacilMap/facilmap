@@ -1,14 +1,15 @@
 import fm from '../../app';
 import $ from 'jquery';
 
-fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
+fm.app.factory("fmMapPad", function($uibModal, fmUtils, $rootScope) {
 	return function(map) {
 		var ret = {
 			createPad : function(proposedAdminId, noCancel) {
 				ret.editPadSettings(true, proposedAdminId, noCancel);
 			},
 			editPadSettings : function(create, proposedAdminId, noCancel) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
+				scope.client = map.client;
 
 				var dialog = $uibModal.open({
 					template: require("./pad-settings.html"),
@@ -26,7 +27,7 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils) {
 				});
 
 				if(!create) {
-					var preserve = fmUtils.preserveObject(scope, "padData", "padData", function() {
+					var preserve = fmUtils.preserveObject(scope, "client.padData", "padData", function() {
 						dialog.dismiss();
 					});
 
@@ -73,12 +74,20 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 		};
 	} else {
 		// We don't want to edit those in padData directly, as that would change the URL while we type
-		$scope.adminId = $scope.padData.adminId;
-		$scope.writeId = $scope.padData.writeId;
-		$scope.readId = $scope.padData.id;
+		$scope.$watch("padData.adminId", (adminId) => {
+			$scope.adminId = adminId;
+		});
+		$scope.$watch("padData.writeId", (writeId) => {
+			$scope.writeId = writeId;
+		});
+		$scope.$watch("padData.id", (readId) => {
+			$scope.readId = readId;
+		});
 	}
 
 	function validateId(id) {
+		if(!id || id.length == "")
+			return "Cannot be empty.";
 		if(id.indexOf("/") != -1)
 			return "May not contain a slash.";
 	}
@@ -98,15 +107,15 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 	$scope.save = function() {
 		let newData = $.extend({}, $scope.padData, {id: $scope.readId, writeId: $scope.writeId, adminId: $scope.adminId});
 		if(create) {
-			map.socket.createPad(newData).then(function() {
-				map.socket.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
+			map.client.createPad(newData).then(function() {
+				map.client.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;
 			});
 		} else {
-			map.socket.editPad(newData).then(function() {
+			map.client.editPad(newData).then(function() {
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;

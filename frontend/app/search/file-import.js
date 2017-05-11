@@ -1,17 +1,17 @@
-import fm from '../../app';
+import fm from '../app';
 import $ from 'jquery';
 
-fm.app.factory("fmMapImport", function($q) {
+fm.app.factory("fmSearchFileImport", function($q) {
 	return function(map) {
 		var fileEl = $('<input type="file" multiple="multiple">').css("display", "none").appendTo("body");
 
-		fileEl.one("change", function() {
+		fileEl.on("change", function() {
 			fmMapImport.importFiles(fileEl.prop("files"));
 		});
 
-		map.el.on("dragenter", false);
-		map.el.on("dragover", false);
-		map.el.on("drop", function(e) {
+		map.el.on("dragenter.fmSearchFileImport", false);
+		map.el.on("dragover.fmSearchFileImport", false);
+		map.el.on("drop.fmSearchFileImport", function(e) {
 			e.preventDefault();
 
 			fmMapImport.importFiles(e.originalEvent.dataTransfer.files);
@@ -41,6 +41,11 @@ fm.app.factory("fmMapImport", function($q) {
 				$q.all(readers).then(function(files) {
 					map.searchUi.showFiles(files);
 				});
+			},
+
+			destroy: function() {
+				fileEl.remove();
+				map.el.off(".fmSearchFileImport");
 			}
 		};
 

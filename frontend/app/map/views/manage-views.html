@@ -6,7 +6,7 @@
 	<div uib-alert class="alert-danger" ng-if="error">{{error.message || error}}</div>
 	<table class="table table-striped">
 		<tbody>
-			<tr ng-class="{success: view.id == padData.defaultView.id}" ng-repeat="view in views">
+			<tr ng-class="{success: view.id == padData.defaultView.id}" ng-repeat="view in client.views">
 				<td><a href="javascript:" ng-click="display(view)">{{view.name}}</a></td>
 				<td class="td-buttons">
 					<button type="button" ng-hide="view.id == padData.defaultView.id" ng-click="makeDefault(view)" class="btn btn-default">Make default</button>

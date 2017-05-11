@@ -1,4 +1,4 @@
-import fm from '../../app';
+import fm from '../app';
 
 function _lineStringToTrackPoints(geometry) {
 	var ret = [ ];
@@ -16,7 +16,7 @@ function _lineStringToTrackPoints(geometry) {
 	return ret;
 }
 
-fm.app.factory("fmMapSearchImport", function($uibModal, $rootScope) {
+fm.app.factory("fmSearchImport", function($uibModal, $rootScope) {
 	return function(map) {
 		let importUi = {
 			openImportDialog(results) {
@@ -25,7 +25,7 @@ fm.app.factory("fmMapSearchImport", function($uibModal, $rootScope) {
 				let dialog = $uibModal.open({
 					template: require("./custom-import.html"),
 					scope: scope,
-					controller: "fmMapSearchCustomImportController",
+					controller: "fmSearchCustomImportController",
 					size: "lg",
 					resolve: {
 						map: function() { return map; },
@@ -53,9 +53,9 @@ fm.app.factory("fmMapSearchImport", function($uibModal, $rootScope) {
 	}
 });
 
-fm.app.controller("fmMapSearchCustomImportController", function(map, results, $scope, $q, importUi) {
+fm.app.controller("fmSearchCustomImportController", function(map, results, $scope, $q, importUi) {
 	$scope.results = results;
-	$scope.socket = map.socket;
+	$scope.client = map.client;
 
 	$scope.importTypeCounts = {};
 	$scope.untypedMarkers = 0;
@@ -74,8 +74,8 @@ fm.app.controller("fmMapSearchCustomImportController", function(map, results, $s
 
 	$scope.mapping = {};
 	for(let importTypeId in results.types) {
-		for(let typeId in map.socket.types) {
-			if(results.types[importTypeId].name == map.socket.types[typeId].name) {
+		for(let typeId in map.client.types) {
+			if(results.types[importTypeId].name == map.client.types[typeId].name) {
 				$scope.mapping[importTypeId] = `e${typeId}`;
 				break;
 			}
@@ -104,7 +104,7 @@ fm.app.controller("fmMapSearchCustomImportController", function(map, results, $s
 			if(m[1] == "e")
 				resolvedMapping[mapping] = m[2];
 			else if(!createTypes[m[2]]) {
-				createTypes[m[2]] = map.socket.addType(results.types[m[2]]).then((newType) => {
+				createTypes[m[2]] = map.client.addType(results.types[m[2]]).then((newType) => {
 					resolvedMapping[mapping] = newType.id;
 				});
 			}
@@ -115,7 +115,7 @@ fm.app.controller("fmMapSearchCustomImportController", function(map, results, $s
 			if(m[1] == "e")
 				resolvedUntypedMarkerMapping = m[2];
 			else if(!createTypes[m[2]]) {
-				createTypes[m[2]] = map.socket.addType(results.types[m[2]]).then((newType) => {
+				createTypes[m[2]] = map.client.addType(results.types[m[2]]).then((newType) => {
 					resolvedUntypedMarkerMapping = newType.id;
 				});
 			}
@@ -126,7 +126,7 @@ fm.app.controller("fmMapSearchCustomImportController", function(map, results, $s
 			if(m[1] == "e")
 				resolvedUntypedLineMapping = m[2];
 			else if(!createTypes[m[2]]) {
-				createTypes[m[2]] = map.socket.addType(results.types[m[2]]).then((newType) => {
+				createTypes[m[2]] = map.client.addType(results.types[m[2]]).then((newType) => {
 					resolvedUntypedLineMapping = newType.id;
 				});
 			}
@@ -137,11 +137,11 @@ fm.app.controller("fmMapSearchCustomImportController", function(map, results, $s
 			for(let feature of results.features) {
 				if(feature.fmTypeId == null) {
 					if(feature.isMarker && resolvedUntypedMarkerMapping)
-						createObjects.push(importUi.addResultToMap(feature, map.socket.types[resolvedUntypedMarkerMapping]));
+						createObjects.push(importUi.addResultToMap(feature, map.client.types[resolvedUntypedMarkerMapping]));
 					if(feature.isLine && resolvedUntypedLineMapping)
-						createObjects.push(importUi.addResultToMap(feature, map.socket.types[resolvedUntypedLineMapping]));
+						createObjects.push(importUi.addResultToMap(feature, map.client.types[resolvedUntypedLineMapping]));
 				} else if(resolvedMapping[feature.fmTypeId])
-					createObjects.push(importUi.addResultToMap(feature, map.socket.types[resolvedMapping[feature.fmTypeId]]));
+					createObjects.push(importUi.addResultToMap(feature, map.client.types[resolvedMapping[feature.fmTypeId]]));
 			}
 
 			return $q.all(createObjects);

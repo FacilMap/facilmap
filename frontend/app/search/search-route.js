@@ -1,9 +1,9 @@
-import fm from '../../app';
+import fm from '../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 
-fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $timeout, $q, fmSortableOptions) {
+fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout, $q, fmSortableOptions) {
 	return function(map, searchUi) {
 		var lineStyle = {
 			color : '#0000ff',
@@ -13,8 +13,9 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 		var dragTimeout = 300;
 
-		var scope = map.socket.$new();
+		var scope = $rootScope.$new(true);
 
+		scope.client = map.client;
 		scope.routeMode = 'car';
 		scope.destinations = [ ];
 		scope.submittedQueries = null;
@@ -54,7 +55,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			var query = destination.loadingQuery = destination.query;
 
 			if(destination.query.trim() != "") {
-				return map.socket.find({ query: query }).then(function(results) {
+				return map.client.find({ query: query }).then(function(results) {
 					if(query != destination.loadingQuery)
 						return; // The destination has changed in the meantime
 
@@ -88,7 +89,7 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 			});
 			scope.submittedMode = mode;
 
-			map.mapEvents.$emit("searchchange");
+			map.mapEvents.$broadcast("searchchange");
 
 			return $q.all(scope.destinations.map(scope.loadSuggestions)).then(function() {
 				points = scope.destinations.filter(function(destination) {
@@ -104,9 +105,9 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 					return point.id;
 				});
 
-				map.mapEvents.$emit("searchchange");
+				map.mapEvents.$broadcast("searchchange");
 
-				return map.socket.getRoute({ destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
+				return map.client.getRoute({ destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
 			}).then(function(route) {
 				route.routePoints = points;
 				route.routeMode = mode;
@@ -143,9 +144,9 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 		scope.addToMap = function(type) {
 			if(type == null) {
-				for(var i in map.socket.types) {
-					if(map.socket.types[i].type == "line") {
-						type = map.socket.types[i];
+				for(var i in map.client.types) {
+					if(map.client.types[i].type == "line") {
+						type = map.client.types[i];
 						break;
 					}
 				}
@@ -328,6 +329,12 @@ fm.app.factory("fmMapSearchRoute", function($rootScope, $compile, fmUtils, $time
 
 			submit: function(noZoom) {
 				scope.route(false, noZoom);
+			},
+
+			destroy: function() {
+				scope.reset();
+				el.remove();
+				scope.$destroy();
 			}
 		};
 		routeUi.hide();

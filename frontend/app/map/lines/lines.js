@@ -4,36 +4,36 @@ import L from 'leaflet';
 import ng from 'angular';
 import 'leaflet.elevation';
 
-fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
+fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var linesById = { };
 		var editingLineId = null;
 
-		map.socket.on("line", function(data) {
+		map.client.on("line", function(data) {
 			setTimeout(function() { // trackPoints needs to be copied over
-				if(map.socket.filterFunc(map.socket.lines[data.id]))
-					linesUi._addLine(map.socket.lines[data.id], false);
+				if(map.client.filterFunc(map.client.lines[data.id]))
+					linesUi._addLine(map.client.lines[data.id], false);
 			}, 0);
 		});
 
-		map.socket.on("deleteLine", function(data) {
+		map.client.on("deleteLine", function(data) {
 			linesUi._deleteLine(data);
 		});
 
-		map.socket.on("linePoints", function(data) {
+		map.client.on("linePoints", function(data) {
 			setTimeout(function() {
-				if(map.socket.filterFunc(map.socket.lines[data.id]))
-					linesUi._addLine(map.socket.lines[data.id], data.reset);
+				if(map.client.filterFunc(map.client.lines[data.id]))
+					linesUi._addLine(map.client.lines[data.id], data.reset);
 			}, 0);
 		});
 
-		map.socket.on("filter", function() {
-			for(var i in map.socket.lines) {
-				var show = map.socket.filterFunc(map.socket.lines[i]);
+		map.client.on("filter", function() {
+			for(var i in map.client.lines) {
+				var show = map.client.filterFunc(map.client.lines[i]);
 				if(linesById[i] && !show)
-					linesUi._deleteLine(map.socket.lines[i]);
+					linesUi._deleteLine(map.client.lines[i]);
 				else if(!linesById[i] && show)
-					linesUi._addLine(map.socket.lines[i], false);
+					linesUi._addLine(map.client.lines[i], false);
 			}
 		});
 
@@ -62,7 +62,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 						linesById[line.id]
 							.bindPopup($("<div/>")[0], map.popupOptions)
 							.on("popupopen", function(e) {
-								linesUi._renderLinePopup(map.socket.lines[line.id]);
+								linesUi._renderLinePopup(map.client.lines[line.id]);
 							})
 							.on("popupclose", function(e) {
 								linesUi.hideElevationPlot();
@@ -73,7 +73,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 								if(!linesById[line.id].getTooltip())
 									linesById[line.id].bindTooltip("", $.extend({}, map.tooltipOptions, { permanent: true, offset: [ 20, 0 ] }));
 
-								linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.socket.lines[line.id].name)).openTooltip(e.latlng);
+								linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.client.lines[line.id].name)).openTooltip(e.latlng);
 							})
 							.on("fm-almostmove", function(e) {
 								linesById[line.id].openTooltip(e.latlng)
@@ -104,7 +104,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 						linesById[line.id].options.autoPan = autoPanBkp;
 					}
 					else {
-						ng.element(linesById[line.id].popup.getContent()).scope().$destroy();
+						ng.element(linesById[line.id].getPopup().getContent()).scope().$destroy();
 						linesUi._renderLinePopup(line);
 					}
 				}
@@ -119,8 +119,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				delete linesById[line.id];
 			},
 			_renderLinePopup: function(line) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
 
+				scope.client = map.client;
 				scope.line = line;
 				scope.elevationPlotVisible = !!elevationPlot._map;
 
@@ -178,18 +179,18 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 				// Watch if route points change (because someone else has moved the line while we are moving it
 				var routePointsBkp = ng.copy(line.routePoints);
-				var unregisterWatcher = map.socket.$watch(function() { return map.socket.lines[line.id].routePoints; }, function() {
+				var unregisterWatcher = $rootScope.$watch(() => (map.client.lines[line.id].routePoints), function() {
 					// We do not do a deep watch, as then we will be not notified if someone edits the line without
 					// actually moving it, in which case we still need to redraw it (because it gets redrawn because
 					// the server sends it to us again).
 
 					// The line has been edited, but it has not been moved. Override its points with our current stage again
-					if(ng.equals(routePointsBkp, map.socket.lines[line.id].routePoints))
-						map.socket.lines[line.id].routePoints = line.routePoints;
+					if(ng.equals(routePointsBkp, map.client.lines[line.id].routePoints))
+						map.client.lines[line.id].routePoints = line.routePoints;
 					else // The line has been moved. Override our stage with the new points.
 						routePointsBkp = ng.copy(line.routePoints);
 
-					line = map.socket.lines[line.id];
+					line = map.client.lines[line.id];
 					linesUi._addLine(line, true);
 					removeTempMarkers();
 					createTempMarkers();
@@ -285,7 +286,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				};
 			},
 			editLine: function(line) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
+				scope.client = map.client;
 
 				var dialog = $uibModal.open({
 					template: require("./edit-line.html"),
@@ -297,7 +299,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 					}
 				});
 
-				var preserve = fmUtils.preserveObject(scope, "lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
+				var preserve = fmUtils.preserveObject(scope, "client.lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
 					dialog.dismiss();
 				});
 
@@ -306,7 +308,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 			addLine: function(type) {
 				map.map.closePopup();
 
-				map.socket.getLineTemplate({ typeId: type.id }).then(function(line) {
+				map.client.getLineTemplate({ typeId: type.id }).then(function(line) {
 
 					line.routePoints = [ ];
 					line.trackPoints = [ ];
@@ -355,12 +357,12 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 				});
 			},
 			createLine: function(type, routePoints, properties, noEdit) {
-				return map.socket.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
+				return map.client.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
 					if(!noEdit) {
 						linesUi.editLine(line);
 
 						// We have to wait until the server sends us the trackPoints of the line
-						var removeWatcher = map.socket.$watch(function() { return !!linesById[line.id]; }, function(exists) {
+						var removeWatcher = $rootScope.$watch(function() { return !!linesById[line.id]; }, function(exists) {
 							if(exists) {
 								linesById[line.id].openPopup();
 								removeWatcher();
@@ -392,14 +394,14 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 					if(save) {
 						line.trackPoints = { };
-						map.socket.editLine({ id: line.id, routePoints: newPoints }).catch(function(err) {
+						map.client.editLine({ id: line.id, routePoints: newPoints }).catch(function(err) {
 							map.messages.showMessage("danger", err);
 						});
 					}
 				}
 			},
 			deleteLine: function(line) {
-				map.socket.deleteLine(line).catch(function(err) {
+				map.client.deleteLine(line).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
 			},
@@ -443,7 +445,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout) {
 
 fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 	$scope.canControl = function(what) {
-		return map.typesUi.canControl($scope.types[$scope.line.typeId], what);
+		return map.typesUi.canControl($scope.client.types[$scope.line.typeId], what);
 	};
 
 	$scope.save = function() {
@@ -452,7 +454,7 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 		var lineObj = ng.copy($scope.line);
 		delete lineObj.trackPoints;
 
-		map.socket.editLine(lineObj).then(function() {
+		map.client.editLine(lineObj).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			return $scope.error = err;

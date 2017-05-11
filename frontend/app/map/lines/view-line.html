@@ -7,7 +7,7 @@
 		<dt class="elevation" ng-show="line.ascent != null">Climb/drop</dt>
 		<dd class="elevation" ng-show="line.ascent != null"><span uib-tooltip="Total ascent"><span class="glyphicon glyphicon-triangle-top"></span> {{line.ascent}} m</span> / <span uib-tooltip="Total descent"><span class="glyphicon glyphicon-triangle-bottom"></span> {{line.descent}} m</span>  <button type="button" class="btn btn-default btn-xs" ng-model="elevationPlotVisible" uib-btn-checkbox uib-tooltip="Show elevation plot"><span class="glyphicon glyphicon-picture"></span></button></dd>
 
-		<dt ng-repeat-start="field in types[line.typeId].fields">{{field.name}}</dt>
+		<dt ng-repeat-start="field in client.types[line.typeId].fields">{{field.name}}</dt>
 		<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></dd>
 	</dl>
 </div>

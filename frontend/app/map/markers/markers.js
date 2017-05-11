@@ -3,26 +3,26 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 
-fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) {
+fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var markersById = { };
 
-		map.socket.on("marker", function(data) {
-			if(map.socket.filterFunc(data))
+		map.client.on("marker", function(data) {
+			if(map.client.filterFunc(data))
 				markersUi._addMarker(data);
 		});
 
-		map.socket.on("deleteMarker", function(data) {
+		map.client.on("deleteMarker", function(data) {
 			markersUi._deleteMarker(data);
 		});
 
-		map.socket.on("filter", function() {
-			for(var i in map.socket.markers) {
-				var show = map.socket.filterFunc(map.socket.markers[i]);
+		map.client.on("filter", function() {
+			for(var i in map.client.markers) {
+				var show = map.client.filterFunc(map.client.markers[i]);
 				if(markersById[i] && !show)
-					markersUi._deleteMarker(map.socket.markers[i]);
+					markersUi._deleteMarker(map.client.markers[i]);
 				else if(!markersById[i] && show)
-					markersUi._addMarker(map.socket.markers[i]);
+					markersUi._addMarker(map.client.markers[i]);
 			}
 		});
 
@@ -32,14 +32,14 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.markerCluster)
 						.bindPopup($("<div/>")[0], map.popupOptions)
 						.on("popupopen", function(e) {
-							markersUi._renderMarkerPopup(map.socket.markers[marker.id] || marker);
+							markersUi._renderMarkerPopup(map.client.markers[marker.id] || marker);
 						})
 						.on("popupclose", function(e) {
 							ng.element(e.popup.getContent()).scope().$destroy();
 						})
 						.bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
 						.on("tooltipopen", function() {
-							markersById[marker.id].setTooltipContent(fmUtils.quoteHtml(map.socket.markers[marker.id].name));
+							markersById[marker.id].setTooltipContent(fmUtils.quoteHtml(map.client.markers[marker.id].name));
 						});
 				}
 
@@ -58,7 +58,9 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				delete markersById[marker.id];
 			},
 			_renderMarkerPopup: function(marker) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
+
+				scope.client = map.client;
 
 				scope.marker = marker;
 
@@ -89,7 +91,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				}); });
 			},
 			editMarker: function(marker) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
+				scope.client = map.client;
 
 				var dialog = $uibModal.open({
 					template: require("./edit-marker.html"),
@@ -101,7 +104,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 					}
 				});
 
-				var preserve = fmUtils.preserveObject(scope, "markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
+				var preserve = fmUtils.preserveObject(scope, "client.markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
 					dialog.dismiss();
 				});
 
@@ -118,15 +121,15 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 
 					if(save) {
 						var pos = markersById[marker.id].getLatLng();
-						map.socket.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
+						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
 							markersById[marker.id].openPopup();
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 
-							markersUi._addMarker(map.socket.markers[marker.id]);
+							markersUi._addMarker(map.client.markers[marker.id]);
 						});
 					} else {
-						markersUi._addMarker(map.socket.markers[marker.id]);
+						markersUi._addMarker(map.client.markers[marker.id]);
 					}
 				}
 
@@ -140,7 +143,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				markersById[marker.id].dragging.enable();
 			},
 			deleteMarker: function(marker) {
-				map.socket.deleteMarker(marker).catch(function(err) {
+				map.client.deleteMarker(marker).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
 			},
@@ -161,7 +164,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 				});
 			},
 			createMarker: function(pos, type, properties, noEdit) {
-				return map.socket.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
+				return map.client.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 					markersUi._addMarker(marker);
 
 					if(!noEdit) {
@@ -180,12 +183,12 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout) 
 
 fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 	$scope.canControl = function(what) {
-		return map.typesUi.canControl($scope.types[$scope.marker.typeId], what);
+		return map.typesUi.canControl($scope.client.types[$scope.marker.typeId], what);
 	};
 
 	$scope.save = function() {
 		$scope.error = null;
-		map.socket.editMarker($scope.marker).then(function() {
+		map.client.editMarker($scope.marker).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;

@@ -14,7 +14,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr ng-repeat="item in history | fmOrderBy:'-time'">
+			<tr ng-repeat="item in client.history | fmOrderBy:'-time'">
 				<td>{{item.time}}</td>
 				<td>{{item.labels.description}}</td>
 				<td><button ng-show="item.labels.button" type="button" class="btn btn-default" ng-click="confirm(item.labels.confirm) && revert(item)">{{item.labels.button}}</button></td>

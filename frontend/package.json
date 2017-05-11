@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@mapbox/togeojson": "^0.16.0",
-    "angular": "^1.6.1",
+    "angular": "1.6.4",
     "angular-ui-bootstrap": "^2.3.2",
     "angular-ui-sortable": "^0.16.1",
     "blob": "^0.0.4",

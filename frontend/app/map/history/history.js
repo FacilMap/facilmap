@@ -1,31 +1,30 @@
 import fm from '../../app';
 
-fm.app.factory("fmMapHistory", function($uibModal, fmUtils) {
+fm.app.factory("fmMapHistory", function($uibModal, fmUtils, $rootScope) {
 	return function(map) {
 		var fmMapHistory = {
 			openHistoryDialog: function() {
-				var scope = map.socket.$new();
+				let scope = $rootScope.$new();
+
+				scope.client = map.client;
 
 				var dialog = $uibModal.open({
 					template: require("./history.html"),
-					scope: scope,
 					controller: "fmMapHistoryDialogCtrl",
 					size: "lg",
-					resolve: {
-						map: function() { return map; }
-					}
+					scope: scope
 				});
 
-				map.socket.listenToHistory().catch(function(err) {
+				map.client.listenToHistory().catch(function(err) {
 					scope.error = err;
 				});
 
-				var unsubscribe = map.socket.stopListeningToHistory.bind(map.socket);
+				var unsubscribe = map.client.stopListeningToHistory.bind(map.client);
 				dialog.result.then(unsubscribe, unsubscribe);
 
-				scope.$watch("history", function() {
-					for(var i in scope.history) {
-						scope.history[i].labels = fmMapHistory._getLabelsForItem(scope.history[i]);
+				scope.$watch("client.history", function() {
+					for(var i in scope.client.history) {
+						scope.client.history[i].labels = fmMapHistory._getLabelsForItem(scope.client.history[i]);
 					}
 				}, true);
 			},
@@ -35,8 +34,8 @@ fm.app.factory("fmMapHistory", function($uibModal, fmUtils) {
 
 				var ret = null;
 				var time = 0;
-				for(var i in map.socket.history) {
-					var item2 = map.socket.history[i];
+				for(var i in map.client.history) {
+					var item2 = map.client.history[i];
 
 					var time2 = new Date(item2.time).getTime();
 					if(item2.type == item.type && item2.objectId == item.objectId && time2 > time) {
@@ -97,10 +96,10 @@ fm.app.factory("fmMapHistory", function($uibModal, fmUtils) {
 	};
 });
 
-fm.app.controller("fmMapHistoryDialogCtrl", function($scope, map) {
+fm.app.controller("fmMapHistoryDialogCtrl", function($scope) {
 	$scope.revert = function(item) {
 		$scope.error = null;
-		map.socket.revertHistoryEntry({ id: item.id }).catch(function(err) {
+		$scope.client.revertHistoryEntry({ id: item.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};

@@ -1,12 +1,15 @@
 import fm from '../../app';
 
-fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
+fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 	return function(map) {
 		var ret = {
 			editTypes : function() {
+				let scope = $rootScope.$new();
+				scope.client = map.client;
+
 				$uibModal.open({
 					template: require("./edit-types.html"),
-					scope: map.socket,
+					scope: scope,
 					controller: "fmMapTypesEditCtrl",
 					size: "lg",
 					resolve: {
@@ -15,7 +18,8 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
 				});
 			},
 			editType : function(type) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
+				scope.client = map.client;
 				scope.type = type;
 
 				scope.$watch("type.fields", (fields) => {
@@ -34,14 +38,14 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils) {
 					}
 				});
 
-				var preserve = fmUtils.preserveObject(scope, type.id ? "types["+fmUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
+				var preserve = fmUtils.preserveObject(scope, type.id ? "client.types["+fmUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
 					dialog.dismiss();
 				});
 
 				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			editTypeDropdown : function(type, field) {
-				var scope = map.socket.$new();
+				var scope = $rootScope.$new();
 				scope.type = type;
 				scope.field = field;
 
@@ -91,7 +95,7 @@ fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
 
 	$scope['delete'] = function(type) {
 		$scope.error = null;
-		map.socket.deleteType({ id: type.id }).catch(function(err) {
+		map.client.deleteType({ id: type.id }).catch(function(err) {
 			$scope.error = err;
 		});
 	};
@@ -122,7 +126,7 @@ fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOpti
 				$scope.type[prop] = null;
 		});
 
-		($scope.type.id == null ? map.socket.addType($scope.type) : map.socket.editType($scope.type)).then(function() {
+		($scope.type.id == null ? map.client.addType($scope.type) : map.client.editType($scope.type)).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;

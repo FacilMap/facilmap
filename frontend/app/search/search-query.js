@@ -1,12 +1,12 @@
-import fm from '../../app';
+import fm from '../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import '../../../assets/font/fontello.css';
+import '../../assets/font/fontello.css';
 import 'jquery-ui';
 import 'jquery-ui/ui/widgets/resizable';
 
-fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, $q, fmMapSearchRoute, fmMapSearchFiles, fmMapSearchImport) {
+fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchRoute, fmSearchFiles, fmSearchImport) {
 	return function(map) {
 		var iconSuffix = ".n.32.png";
 
@@ -16,7 +16,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		scope.searchResults = null;
 		scope.showAll = false;
 		scope.activeResult = null;
-		scope.socket = map.socket;
+		scope.client = map.client;
 
 		scope.$watch("activeResult", () => {
 			setTimeout(() => {
@@ -40,9 +40,9 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 					return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
 				var q = scope.submittedSearchString = scope.searchString;
-				map.mapEvents.$emit("searchchange");
+				map.mapEvents.$broadcast("searchchange");
 
-				map.socket.find({ query: scope.searchString, loadUrls: true }).then(function(results) {
+				map.client.find({ query: scope.searchString, loadUrls: true }).then(function(results) {
 					if(q != scope.submittedSearchString)
 						return; // Another search has been started in the meantime
 
@@ -58,7 +58,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 					map.messages.showMessage("danger", err);
 				});
 			} else
-				map.mapEvents.$emit("searchchange");
+				map.mapEvents.$broadcast("searchchange");
 		};
 
 		scope.showResult = function(result, noZoom) {
@@ -72,7 +72,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			if(!noZoom)
 				scope.zoomToResults();
 
-			map.mapEvents.$emit("searchchange");
+			map.mapEvents.$broadcast("searchchange");
 		};
 
 		scope.showAllResults = function(noZoom) {
@@ -85,7 +85,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 			if(!noZoom)
 				scope.zoomToResults();
 
-			map.mapEvents.$emit("searchchange");
+			map.mapEvents.$broadcast("searchchange");
 		};
 
 		scope.showRoutingForm = function() {
@@ -131,27 +131,27 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		};
 
 		scope.viewExists = function(view) {
-			for(let viewId in map.socket.views) {
-				if(["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"].filter((idx) => !ng.equals(view[idx], map.socket.views[viewId][idx])).length == 0)
+			for(let viewId in map.client.views) {
+				if(["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"].filter((idx) => !ng.equals(view[idx], map.client.views[viewId][idx])).length == 0)
 					return true;
 			}
 			return false;
 		};
 
 		scope.addView = function(view) {
-			map.socket.addView(view);
+			map.client.addView(view);
 		};
 
 		scope.typeExists = function(type) {
-			for(let typeId in map.socket.types) {
-				if(["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"].filter((idx) => !ng.equals(type[idx], map.socket.types[typeId][idx])).length == 0)
+			for(let typeId in map.client.types) {
+				if(["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"].filter((idx) => !ng.equals(type[idx], map.client.types[typeId][idx])).length == 0)
 					return true;
 			}
 			return false;
 		};
 
 		scope.addType = function(type) {
-			map.socket.addType(type);
+			map.client.addType(type);
 		};
 
 		scope.addResultToMap = function(result, type, noEdit) {
@@ -187,7 +187,7 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			clickMarker.clearLayers();
 
-			map.socket.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
+			map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
 				clickMarker.clearLayers();
 
 				if(results.length > 0) {
@@ -291,8 +291,9 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 		}
 
 		function renderResultPopup(query, results, result, popup) {
-			var popupScope = map.socket.$new();
+			var popupScope = $rootScope.$new();
 
+			popupScope.client = map.client;
 			popupScope.result = result;
 
 			popupScope.addToMap = function(type) {
@@ -337,13 +338,13 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 
 			show: function() {
 				searchUi._el.show();
-				map.mapEvents.$emit("searchchange");
+				map.mapEvents.$broadcast("searchchange");
 			},
 
 			hide: function() {
 				scope.reset();
 				searchUi._el.hide();
-				map.mapEvents.$emit("searchchange");
+				map.mapEvents.$broadcast("searchchange");
 			},
 
 			search: function(query, noZoom, showAll) {
@@ -384,12 +385,19 @@ fm.app.factory("fmMapSearch", function($rootScope, $compile, fmUtils, $timeout, 
 					if(queries)
 						return queries.join(" to ") + " by " + routeUi.getMode();
 				}
+			},
+
+			destroy: function() {
+				scope.reset();
+				searchUi._el.remove();
+				scope.$destroy();
+				routeUi.destroy();
 			}
 		};
 
-		var routeUi = fmMapSearchRoute(map, searchUi);
-		var filesUi = fmMapSearchFiles(map, searchUi);
-		var importUi = fmMapSearchImport(map);
+		var routeUi = fmSearchRoute(map, searchUi);
+		var filesUi = fmSearchFiles(map, searchUi);
+		var importUi = fmSearchImport(map);
 
 		el.find(".fm-search-results").resizable({
 			handles: {

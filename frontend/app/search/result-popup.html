@@ -14,7 +14,7 @@
 	</dl>
 </div>
 <div class="buttons">
-	{{filteredTypes = (result.isMarker && result.isLine ? types : (types | fmObjectFilter:{type:isMarker ? 'marker' : 'line'})); ""}}
+	{{filteredTypes = (result.isMarker && result.isLine ? client.types : (client.types | fmObjectFilter:{type:isMarker ? 'marker' : 'line'})); ""}}
 	<div uib-dropdown keyboard-nav="true" ng-if="!readonly && (filteredTypes | fmPropertyCount) > 1">
 		<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button">

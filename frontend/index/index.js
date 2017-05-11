@@ -2,20 +2,20 @@ import fm from '../entry.js';
 import $ from 'jquery';
 import ng from 'angular';
 
-fm.app.controller("PadCtrl", function($scope, fmMap, $timeout) {
+fm.app.controller("PadCtrl", function($scope, $timeout, $element) {
 	$scope.padId = decodeURIComponent(location.pathname.match(/[^\/]*$/)[0]);
 
 	if(location.search && (!location.hash || location.hash == "#"))
 		history.replaceState(null, "", fm.URL_PREFIX + ($scope.padId || "") + "#" + location.search.replace(/^\?/, ""));
 
 	$timeout(function() {
-		var map = fmMap.getMap("map");
+		var map = angular.element($("facilmap", $element)).controller("facilmap");
 
-		map.socket.$watch("padData.name", function(newVal) {
+		$scope.$watch(() => (map.client.padData && map.client.padData.name), function(newVal) {
 			$scope.padName = newVal;
 		});
 
-		map.socket.$watch("padId", function(padId) {
+		$scope.$watch(() => (map.client.padId), function(padId) {
 			if(padId)
 				history.replaceState(null, "", fm.URL_PREFIX + padId + location.hash);
 		});

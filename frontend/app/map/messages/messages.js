@@ -1,14 +1,15 @@
 import fm from '../../app';
 import $ from 'jquery';
 
-fm.app.factory("fmMapMessages", function($rootScope, $compile) {
+fm.app.factory("fmMapMessages", function($rootScope, $compile, $timeout) {
 	return function(map) {
 		var scope = $rootScope.$new(true);
 		scope.messages = [ ];
 
-		var el = $(require("./messages.html")).insertAfter(map.map.getContainer());
-		$compile(el)(scope);
-		scope.$evalAsync(); // $compile only replaces variables on next digest
+		$timeout(() => {
+			var el = $(require("./messages.html")).insertAfter(map.map.getContainer());
+			$compile(el)(scope);
+		});
 
 		return {
 			showMessage : function(type, message, buttons, lifetime, onclose) {
