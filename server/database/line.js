@@ -192,9 +192,9 @@ module.exports = function(Database) {
 						return this._setLinePoints(newLine.padId, lineId, routing);
 				}
 			}).then((res) => {
-				this.emit("line", padId, res.newLine);
+				this.emit("line", padId, res.linePoints); // res.linePoints returns the line with updated ascent and descent
 
-				return res.newLine;
+				return res.linePoints;
 			});
 		},
 
