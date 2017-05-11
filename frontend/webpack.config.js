@@ -97,9 +97,13 @@ module.exports = {
 			angular: "angular"
 		}),
 		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` }))),
-		new webpack.optimize.UglifyJsPlugin({
-			sourceMap: true
-		}),
+		...(!process.env.FM_DEV ? [
+			new webpack.optimize.UglifyJsPlugin({
+				sourceMap: true
+			})
+		] : [ ]),
 	],
-	devtool: process.env.FM_DEV ? "cheap-eval-source-map" : "source-map"
 };
+
+if(!process.env.FM_DEV)
+	module.exports.devtool = "source-map";
