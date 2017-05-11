@@ -1,0 +1,9 @@
+<div class="fm-info-box panel panel-default" ng-class="className">
+	<div class="panel-body">
+		<div class="layer" ng-repeat="layer in layers">
+			<div class="cover" ng-if="!$last"></div>
+			<button type="button" class="btn btn-link close-button" ng-click="layer.hide()">&times;</button>
+			<div fm-info-box-bind="layer"></div>
+		</div>
+	</div>
+</div>

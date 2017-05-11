@@ -6,7 +6,7 @@ import 'leaflet.locatecontrol';
 import 'leaflet.markercluster';
 
 
-fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient) {
+fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox) {
 	return {
 		restrict: 'E',
 		template: require("./map.html"),
@@ -335,6 +335,7 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 			});
 
 			this.messages = fmMapMessages(this);
+			this.infoBox = fmInfoBox(this);
 			this.markersUi = fmMapMarkers(this);
 			this.linesUi = fmMapLines(this);
 			this.viewsUi = fmMapViews(this);

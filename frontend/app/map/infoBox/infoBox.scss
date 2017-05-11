@@ -1,0 +1,91 @@
+:local(.className)  {
+	position: absolute;
+	right: 10px;
+	bottom: 25px;
+	z-index: 800;
+	width: 350px;
+	max-width: 100%;
+
+	font-size: 12px;
+
+	opacity: .7;
+	transition: opacity .7s,transform .7s;
+	transform-origin: bottom right;
+
+	&:hover {
+		opacity: 1;
+	}
+
+	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
+	margin-bottom: 0;
+
+	.panel-body {
+		padding: 0;
+
+		.close-button {
+			position: absolute;
+			top: 0;
+			right: 0;
+			color: #000;
+			text-decoration: none;
+			font-size: 1.5em;
+			line-height: 1em;
+			font-weight: bold;
+		}
+
+		.content {
+			height: 200px;
+			overflow: auto;
+
+			/* Make space for buttons at the bottom */
+			padding-bottom: 1.5em;
+
+			/* Replace padding by margin to move horizontal scrollbar a bit to the left so that it can be covered by .buttons */
+			/* Make space for close button on the top and don't cover round corners on top and bottom */
+			padding-left: 0;
+			margin: 20px 0 7px 15px;
+
+			h2 {
+				margin-top: 0;
+			}
+
+			/* Copy dl-horizontal styles, modify sizing, also apply for small screens (as popup size is always the same) */
+			.dl-horizontal dt {
+				float: left;
+				width: 29%;
+				overflow: hidden;
+				clear: left;
+				text-align: right;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.dl-horizontal dd {
+				margin-left: 33%;
+			}
+
+			.pos,.distance,.elevation {
+				color: #888;
+			}
+		}
+
+		.buttons {
+			position: absolute;
+			background: #fff;
+			bottom: 0;
+			left: 15px;
+			right: 16px;
+			padding: 5px 0;
+			box-shadow: 0 0 10px #fff;
+			border-bottom-left-radius: 10px;
+
+			div {
+				display: inline-block;
+			}
+		}
+	}
+}
+
+.fm-map-legend.fm-infoBox-hidden {
+	visibility: hidden;
+}

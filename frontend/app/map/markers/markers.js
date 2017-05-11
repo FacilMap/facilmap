@@ -6,6 +6,7 @@ import ng from 'angular';
 fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var markersById = { };
+		let openMarkerId;
 
 		map.client.on("marker", function(data) {
 			if(map.client.filterFunc(data))
@@ -30,13 +31,9 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 			_addMarker : function(marker) {
 				if(!markersById[marker.id]) {
 					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.markerCluster)
-						.bindPopup($("<div/>")[0], map.popupOptions)
-						.on("popupopen", function(e) {
-							markersUi._renderMarkerPopup(map.client.markers[marker.id] || marker);
-						})
-						.on("popupclose", function(e) {
-							ng.element(e.popup.getContent()).scope().$destroy();
-						})
+						.on("click", function(e) {
+							markersUi._renderMarkerInfoBox(map.client.markers[marker.id] || marker);
+						}.fmWrapApply($rootScope))
 						.bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
 						.on("tooltipopen", function() {
 							markersById[marker.id].setTooltipContent(fmUtils.quoteHtml(map.client.markers[marker.id].name));
@@ -47,8 +44,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					.setLatLng([ marker.lat, marker.lon ])
 					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
 
-				if(markersById[marker.id].isPopupOpen())
-					markersUi._renderMarkerPopup(marker);
+				if(openMarkerId == marker.id)
+					markersUi._renderMarkerInfoBox(marker);
 			},
 			_deleteMarker : function(marker) {
 				if(!markersById[marker.id])
@@ -57,7 +54,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				markersById[marker.id].removeFrom(map.map);
 				delete markersById[marker.id];
 			},
-			_renderMarkerPopup: function(marker) {
+			_renderMarkerInfoBox: function(marker) {
 				var scope = $rootScope.$new();
 
 				scope.client = map.client;
@@ -76,19 +73,14 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi.deleteMarker(scope.marker);
 				};
 
-				var popup = markersById[marker.id].getPopup();
-				var el = popup.getContent();
-				$(el).html(require("./view-marker.html"));
-				$compile(el)(scope);
-
-				// Prevent popup close on button click
-				$("button", el).click(function(e) {
-					e.preventDefault();
+				map.infoBox.show(require("./view-marker.html"), scope, true, () => {
+					openMarkerId = null;
+					markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
 				});
 
-				$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
-					popup.update();
-				}); });
+				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, true));
+
+				openMarkerId = marker.id;
 			},
 			editMarker: function(marker) {
 				var scope = $rootScope.$new();
@@ -122,7 +114,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					if(save) {
 						var pos = markersById[marker.id].getLatLng();
 						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
-							markersById[marker.id].openPopup();
+							markersUi._renderMarkerInfoBox(markersById[marker.id]);
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 
@@ -132,8 +124,6 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 						markersUi._addMarker(map.client.markers[marker.id]);
 					}
 				}
-
-				map.map.closePopup();
 
 				var message = map.messages.showMessage("info", "Drag the marker to reposition it.", [
 					{ label: "Save", click: _finish.bind(null, true) },
@@ -155,8 +145,6 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					}}
 				], null, function() { listener.cancel(); });
 
-				map.map.closePopup();
-
 				var listener = map.addClickListener(function(pos) {
 					message.close();
 
@@ -168,7 +156,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi._addMarker(marker);
 
 					if(!noEdit) {
-						markersById[marker.id].openPopup();
+						markersUi._renderMarkerInfoBox(marker);
 						markersUi.editMarker(marker);
 					}
 				}).catch(function(err) {

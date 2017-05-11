@@ -10,6 +10,7 @@ import SimpleGraticule from 'leaflet-simple-graticule';
 
 import commonFormat from '../../common/format';
 import commonUtils from '../../common/utils';
+import markerGraphic from '!ejs-compiled-loader!./marker-graphic.ejs';
 
 fm.app.factory("fmUtils", function($parse, fmIcons) {
 
@@ -48,38 +49,26 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 	};
 
-	fmUtils.createMarkerGraphic = function(colour, height, symbol, padding) {
-		var borderColour = fmUtils.makeTextColour(colour, 0.3);
-		height = 1*height;
-		var width = Math.round(height * 23 / 31);
-		padding = padding || 0;
-
-		var symbolCode = "";
-		if(symbol && fmIcons[symbol]) {
-			symbolCode = '<g transform="translate(2.9 3.3) scale(' + (17 / 580) + ')">' + fmIcons[symbol].replace(/#000/g, '#' + borderColour) + '</g>';
-		} else if(symbol && symbol.length == 1) {
-			symbolCode = '<text x="11.5" y="18.06" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#' + borderColour + '">' + fmUtils.quoteHtml(symbol) + '</tspan></text>';
-		} else {
-			symbolCode = '<circle style="fill:#' + borderColour + '" cy="11" cx="11.5" r="3" />';
-		}
-
-		var svg = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
-			'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + (width + padding*2) + '" height="' + (height + padding*2) + '" version="1.1">' +
-				'<g transform="translate(' + padding + ' ' + padding + ') scale(' + (width / 23) + ' ' + (height / 31) + ')">' +
-					'<path style="stroke:#' + borderColour + ';stroke-linecap:round;fill:#' + colour + '" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z" />' +
-					symbolCode +
-				'</g>' +
-			'</svg>';
-
-		return "data:image/svg+xml,"+encodeURIComponent(svg);
+	fmUtils.createMarkerGraphic = function(colour, height, symbol, padding, highlight) {
+		return "data:image/svg+xml,"+encodeURIComponent(markerGraphic({
+			colour,
+			symbol,
+			fmIcons,
+			highlight,
+			borderColour: fmUtils.makeTextColour(colour, 0.3),
+			oppositeBorderColour: fmUtils.makeTextColour(colour, 0.3, true),
+			height: 1*height,
+			width: Math.round(height * 23 / 31),
+			padding: Math.max(padding || 0, highlight ? 10 * height / 31 : 0)
+		}).replace(/[\r\n\t]/g, ""));
 	};
 
-	fmUtils.createMarkerIcon = function(colour, height, symbol, padding) {
-		padding = padding || 0;
+	fmUtils.createMarkerIcon = function(colour, height, symbol, padding, highlight) {
+		padding = Math.max(padding || 0, highlight ? 10 * height / 31 : 0);
 		height = 1*height;
 		var width = height * 23 / 31;
 		return L.icon({
-			iconUrl: fmUtils.createMarkerGraphic(colour, height, symbol, padding),
+			iconUrl: fmUtils.createMarkerGraphic(colour, height, symbol, padding, highlight),
 			iconSize: [padding*2 + width, padding*2 + height],
 			iconAnchor: [padding + Math.round(width/2), padding + height],
 			popupAnchor: [0, -height]

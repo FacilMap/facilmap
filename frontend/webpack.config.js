@@ -57,6 +57,7 @@ module.exports = {
 	module: {
 		rules: [
 			{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
+			{ test: /\.scss$/, use: [ "style-loader", "css-loader", "sass-loader" ]},
 			{ test: /\.js$/, exclude: /\/node_modules\//, loader: "babel-loader?presets=es2015" },
 			{ test: /\.(png|jpe?g|gif|ttf)$/, loader: "url-loader" },
 			{ test: /\.(html|ejs)$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },

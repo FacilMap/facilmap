@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="<%=width + padding*2%>" height="<%=height + padding*2%>" version="1.1">
+<%
+	if(highlight) {
+%>
+	<defs>
+        <filter id="b">
+            <feGaussianBlur stdDeviation="2.5 2.5" result="blur" />
+        </filter>
+	</defs>
+<%
+	}
+%>
+	<g transform="translate(<%=padding%> <%=padding%>) scale(<%=width / 23%> <%=height / 31%>)">
+<%
+	if(highlight) {
+%>
+		<path style="fill:#<%=borderColour%>;filter:url(#b)" d="M11.5-4.179c-9.907 0-15.568 5.661-15.568 15.568S9.996 38.279 11.5 38.279c1.504 0 15.568-16.983 15.568-26.89S21.407-4.179 11.5-4.179z"/>
+<%
+	}
+%>
+		<path style="stroke:#<%=borderColour%>;stroke-linecap:round;fill:#<%=colour%>" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
+<%
+	if(symbol && fmIcons[symbol]) {
+%>
+		<g transform="translate(2.9 3.3) scale(<%=17 / 580%>)"><%-fmIcons[symbol].replace(/#000/g, '#' + borderColour)%></g>
+<%
+	} else if(symbol && symbol.length == 1) {
+%>
+		<text x="11.5" y="18.06" style="font-size:18px;text-anchor:middle;font-family:'Helvetica'"><tspan style="fill:#<%=borderColour%>"><%=symbol%></tspan></text>
+<%
+	} else {
+%>
+		<circle style="fill:#<%=borderColour%>" cy="11" cx="11.5" r="3" />
+<%
+	}
+%>
+	</g>
+</svg>
