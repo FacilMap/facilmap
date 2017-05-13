@@ -1,0 +1,16 @@
+:local(.className) {
+	margin-top: 44px !important;
+	padding: 5px;
+
+	.nav-tabs {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		padding: 5px 5px 0 5px;
+	}
+
+	.tab-content {
+		padding: 10px;
+	}
+}

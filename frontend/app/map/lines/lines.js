@@ -4,15 +4,34 @@ import L from 'leaflet';
 import ng from 'angular';
 import 'leaflet.elevation';
 
+import css from './lines.scss';
+
 fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var linesById = { };
 		var editingLineId = null;
 
+		let openLine = null;
+		let openLineHighlight = null;
+		let openElevationPlot = null;
+
+		setTimeout(() => {
+			// Make sure that the renderer is added to the map
+			L.polyline([], {pane: "shadowPane"}).addTo(map.map).remove();
+
+			// http://stackoverflow.com/a/28237435/242365
+			let blurFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+			blurFilter.setAttribute("id", "fmLinesBlur");
+			let blurFilterBlur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+			blurFilterBlur.setAttribute("stdDeviation", "4");
+			blurFilter.appendChild(blurFilterBlur);
+			$(map.map.getPane("shadowPane")).find("> svg").append(blurFilter);
+		}, 0);
+
 		map.client.on("line", function(data) {
 			setTimeout(function() { // trackPoints needs to be copied over
 				if(map.client.filterFunc(map.client.lines[data.id]))
-					linesUi._addLine(map.client.lines[data.id], false);
+					linesUi._addLine(map.client.lines[data.id]);
 			}, 0);
 		});
 
@@ -23,7 +42,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 		map.client.on("linePoints", function(data) {
 			setTimeout(function() {
 				if(map.client.filterFunc(map.client.lines[data.id]))
-					linesUi._addLine(map.client.lines[data.id], data.reset);
+					linesUi._addLine(map.client.lines[data.id]);
 			}, 0);
 		});
 
@@ -33,17 +52,18 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				if(linesById[i] && !show)
 					linesUi._deleteLine(map.client.lines[i]);
 				else if(!linesById[i] && show)
-					linesUi._addLine(map.client.lines[i], false);
+					linesUi._addLine(map.client.lines[i]);
 			}
 		});
 
 		let elevationPlot = L.control.elevation({
 			theme: "steelblue-theme",
 			position: "bottomright"
-		});
+		}).addTo(map.map);
+		$(elevationPlot._container).detach();
 
 		var linesUi = {
-			_addLine: function(line, resetPopupPosition) {
+			_addLine: function(line, _doNotRerenderPopup) {
 				var trackPoints = [ ];
 				var p = (editingLineId != null && editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
 				for(var i=0; i<p.length; i++) {
@@ -60,15 +80,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 					if(line.id != null && line.id != editingLineId) { // We don't want a popup for lines that we are drawing right now
 						linesById[line.id]
-							.bindPopup($("<div/>")[0], map.popupOptions)
-							.on("popupopen", function(e) {
-								linesUi._renderLinePopup(map.client.lines[line.id]);
-							})
-							.on("popupclose", function(e) {
-								linesUi.hideElevationPlot();
-
-								ng.element(e.popup.getContent()).scope().$destroy();
-							})
+							.on("click", function(e) {
+								linesUi.showLineInfoBox(map.client.lines[line.id]);
+							}.fmWrapApply($rootScope))
 							.on("fm-almostover", function(e) {
 								if(!linesById[line.id].getTooltip())
 									linesById[line.id].bindTooltip("", $.extend({}, map.tooltipOptions, { permanent: true, offset: [ 20, 0 ] }));
@@ -96,20 +110,21 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
 
-				if(line.id != null && line.id != editingLineId && linesById[line.id].isPopupOpen()) {
-					if(resetPopupPosition) {
-						var autoPanBkp = linesById[line.id].options.autoPan;
-						linesById[line.id].options.autoPan = false;
-						linesById[line.id].openPopup();
-						linesById[line.id].options.autoPan = autoPanBkp;
-					}
-					else {
-						ng.element(linesById[line.id].getPopup().getContent()).scope().$destroy();
-						linesUi._renderLinePopup(line);
-					}
+				if(line.id != null && openLine && line.id == openLine.id) {
+					openLineHighlight.setLatLngs(splitLatLngs).setStyle(Object.assign(style, {
+						color: '#000000'
+					}));
+
+					if(!_doNotRerenderPopup)
+						linesUi.showLineInfoBox(line);
 				}
 			},
 			_deleteLine: function(line) {
+				if(line.id != null && openLine && line.id == openLine.id) {
+					openLine.hide();
+					openLine = null;
+				}
+
 				var lineObj = linesById[line.id];
 				if(!lineObj)
 					return;
@@ -118,24 +133,12 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				lineObj.removeFrom(map.map);
 				delete linesById[line.id];
 			},
-			_renderLinePopup: function(line) {
+			showLineInfoBox: function(line) {
 				var scope = $rootScope.$new();
 
 				scope.client = map.client;
 				scope.line = line;
-				scope.elevationPlotVisible = !!elevationPlot._map;
-
-				scope.$watch("line.trackPoints", (trackPoints) => {
-					if(elevationPlot._map)
-						linesUi.showElevationPlot(trackPoints);
-				}, true);
-
-				scope.$watch("elevationPlotVisible", (visible) => {
-					if(visible)
-						linesUi.showElevationPlot(line.trackPoints);
-					else
-						linesUi.hideElevationPlot();
-				});
+				scope.className = css.className;
 
 				scope.edit = function() {
 					linesUi.editLine(scope.line);
@@ -149,33 +152,49 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					linesUi.deleteLine(scope.line);
 				};
 
-				var popup = linesById[line.id].getPopup();
-				var el = popup.getContent();
-				$(el).html(require("./view-line.html"));
-				$compile(el)(scope);
+				let template = $(require("./view-line.html"));
+				template.find(".fm-elevation-plot").append(elevationPlot._container);
 
-				// Prevent popup close on button click
-				$("button", el).click(function(e) {
-					e.preventDefault();
-				});
+				elevationPlot.clear();
 
-				$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
+				scope.$watch("line.trackPoints", (trackPoints) => {
+					let latlngs = [];
+					for(let i=0; i<line.trackPoints.length; i++) {
+						if(line.trackPoints[i] && line.trackPoints[i].ele != null)
+							latlngs.push(Object.assign(new L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon), { meta: { ele: line.trackPoints[i].ele } }));
+					}
 
-					// Prevent the map to scroll to the popup every time we move it and some more detail of the line gets loaded
-					var autoPanBkp = popup.options.autoPan;
-					popup.options.autoPan = false;
-					popup.update();
-					popup.options.autoPan = autoPanBkp;
-				}); });
+					elevationPlot.addData({
+						_latlngs: latlngs
+					}, {
+						on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
+					});
+				}, true);
+
+				openLine = {
+					hide: map.infoBox.show(template, scope, () => {
+						openLine = null;
+						openLineHighlight.remove();
+					}).hide,
+					id: line.id
+				};
+
+				openLineHighlight = L.polyline([ ], {
+					pane: "shadowPane",
+					interactive: false
+				}).addTo(map.map);
+				openLineHighlight._path.style.filter = 'url(#fmLinesBlur)';
+
+				linesUi._addLine(line, true); // To render the openLineHighlight
 			},
 			_makeLineMovable: function(line) {
 				var markers = [ ];
 
 				editingLineId = line.id;
 
-				// Re-add the line without a popup (because editingLineId is set)
+				// Re-add the line (because editingLineId is set)
 				linesUi._deleteLine(line);
-				linesUi._addLine(line, true);
+				linesUi._addLine(line);
 
 				// Watch if route points change (because someone else has moved the line while we are moving it
 				var routePointsBkp = ng.copy(line.routePoints);
@@ -191,7 +210,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						routePointsBkp = ng.copy(line.routePoints);
 
 					line = map.client.lines[line.id];
-					linesUi._addLine(line, true);
+					linesUi._addLine(line);
 					removeTempMarkers();
 					createTempMarkers();
 				});
@@ -207,13 +226,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 							markers.splice(idx, 1);
 							line.routePoints.splice(idx, 1);
 							marker.remove();
-							linesUi._addLine(line, true);
+							linesUi._addLine(line);
 						})
 						.on("drag", function() {
 							var idx = markers.indexOf(marker);
 							var latlng = marker.getLatLng();
 							line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
-							linesUi._addLine(line, true);
+							linesUi._addLine(line);
 						});
 					return marker;
 				}
@@ -277,9 +296,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						removeTempMarkers();
 						temporaryHoverMarker.remove();
 
-						// Re-add the line witho a popup (because editingLineId is not set anymore)
+						// Re-add the line (because editingLineId is not set anymore)
 						linesUi._deleteLine(line);
-						linesUi._addLine(line, true);
+						linesUi._addLine(line);
 
 						return line.routePoints;
 					}
@@ -306,8 +325,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			addLine: function(type) {
-				map.map.closePopup();
-
 				map.client.getLineTemplate({ typeId: type.id }).then(function(line) {
 
 					line.routePoints = [ ];
@@ -322,7 +339,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					function addPoint(pos) {
 						line.routePoints.push(pos);
 						line.trackPoints = [ ].concat(line.routePoints, [ pos ]); // Add pos a second time so that it gets overwritten by mouseMoveListener
-						linesUi._addLine(line, true);
+						linesUi._addLine(line);
 						handler = map.addClickListener(mapClick, mouseMove);
 					}
 
@@ -347,7 +364,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					var mouseMove = function(pos) {
 						if(line.trackPoints.length > 0) {
 							line.trackPoints[line.trackPoints.length-1] = pos;
-							linesUi._addLine(line, true);
+							linesUi._addLine(line);
 						}
 					};
 
@@ -364,7 +381,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						// We have to wait until the server sends us the trackPoints of the line
 						var removeWatcher = $rootScope.$watch(function() { return !!linesById[line.id]; }, function(exists) {
 							if(exists) {
-								linesById[line.id].openPopup();
+								linesUi.showLineInfoBox(line);
 								removeWatcher();
 							}
 						});
@@ -381,12 +398,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					{ label: "Cancel", click: done.bind(null, false) }
 				], null, done.bind(null, false, true));
 
-				map.map.closePopup();
-
 				function done(save, noClose) {
 					var newPoints = movable.done();
-					linesUi._addLine(line, true);
-					linesById[line.id].openPopup();
+					linesUi._addLine(line);
+					linesUi.showLineInfoBox(line);
 
 					if(!noClose) {
 						message.close();
@@ -404,38 +419,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				map.client.deleteLine(line).catch(function(err) {
 					map.messages.showMessage("danger", err);
 				});
-			},
-
-			showElevationPlot(trackPoints) {
-				map.el.addClass("fm-elevationPlot");
-
-				if(!elevationPlot._map)
-					map.map.addControl(elevationPlot);
-
-				if(trackPoints) {
-					elevationPlot.clear();
-
-					let latlngs = [];
-					for(let i=0; i<trackPoints.length; i++) {
-						if(trackPoints[i] && trackPoints[i].ele != null)
-							latlngs.push(Object.assign(new L.latLng(trackPoints[i].lat, trackPoints[i].lon), { meta: { ele: trackPoints[i].ele } }));
-					}
-
-					elevationPlot.addData({
-						_latlngs: latlngs
-					}, {
-						on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
-					});
-				}
-			},
-
-			hideElevationPlot() {
-				map.el.removeClass("fm-elevationPlot");
-
-				elevationPlot.clear();
-
-				if(elevationPlot._map)
-					map.map.removeControl(elevationPlot);
 			}
 		};
 
@@ -462,6 +445,6 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 	};
 
 	$scope.$watchGroup([ "line.colour", "line.width" ], function() {
-		map.linesUi._addLine($scope.line, false);
+		map.linesUi._addLine($scope.line);
 	});
 });

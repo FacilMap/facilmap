@@ -90,7 +90,3 @@
 .fm-map-legend .filtered {
 	opacity: 0.5;
 }
-
-.fm-elevationPlot .fm-map-legend {
-	display: none;
-}
