@@ -73,7 +73,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi.deleteMarker(scope.marker);
 				};
 
-				map.infoBox.show(require("./view-marker.html"), scope, true, () => {
+				map.infoBox.show(require("./view-marker.html"), scope, () => {
 					openMarkerId = null;
 					markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
 				});

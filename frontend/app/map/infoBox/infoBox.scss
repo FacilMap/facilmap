@@ -25,7 +25,7 @@
 		.close-button {
 			position: absolute;
 			top: 0;
-			right: 0;
+			right: 5px;
 			color: #000;
 			text-decoration: none;
 			font-size: 1.5em;
@@ -37,16 +37,14 @@
 			height: 200px;
 			overflow: auto;
 
-			/* Make space for buttons at the bottom */
-			padding-bottom: 1.5em;
-
 			/* Replace padding by margin to move horizontal scrollbar a bit to the left so that it can be covered by .buttons */
 			/* Make space for close button on the top and don't cover round corners on top and bottom */
-			padding-left: 0;
-			margin: 20px 0 7px 15px;
+			margin: 2px 0 28px 0;
+			padding: 15px;
 
 			h2 {
 				margin-top: 0;
+				font-size: 1.6em;
 			}
 
 			/* Copy dl-horizontal styles, modify sizing, also apply for small screens (as popup size is always the same) */
