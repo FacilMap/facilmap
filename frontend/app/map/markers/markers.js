@@ -6,7 +6,7 @@ import ng from 'angular';
 fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var markersById = { };
-		let openMarkerId;
+		let openMarker;
 
 		map.client.on("marker", function(data) {
 			if(map.client.filterFunc(data))
@@ -32,7 +32,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				if(!markersById[marker.id]) {
 					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.markerCluster)
 						.on("click", function(e) {
-							markersUi._renderMarkerInfoBox(map.client.markers[marker.id] || marker);
+							markersUi.showMarkerInfoBox(map.client.markers[marker.id] || marker);
 						}.fmWrapApply($rootScope))
 						.bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
 						.on("tooltipopen", function() {
@@ -42,19 +42,22 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 				markersById[marker.id]
 					.setLatLng([ marker.lat, marker.lon ])
-					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
+					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, openMarker && openMarker.id == marker.id));
 
-				if(openMarkerId == marker.id)
-					markersUi._renderMarkerInfoBox(marker);
+				if(openMarker && openMarker.id == marker.id)
+					markersUi.showMarkerInfoBox(marker);
 			},
 			_deleteMarker : function(marker) {
 				if(!markersById[marker.id])
 					return;
 
+				if(openMarker && openMarker.id == marker.id)
+					openMarker.hide();
+
 				markersById[marker.id].removeFrom(map.map);
 				delete markersById[marker.id];
 			},
-			_renderMarkerInfoBox: function(marker) {
+			showMarkerInfoBox: function(marker) {
 				var scope = $rootScope.$new();
 
 				scope.client = map.client;
@@ -73,14 +76,15 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi.deleteMarker(scope.marker);
 				};
 
-				map.infoBox.show(require("./view-marker.html"), scope, () => {
-					openMarkerId = null;
-					markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
-				});
+				openMarker = {
+					hide: map.infoBox.show(require("./view-marker.html"), scope, () => {
+						openMarker = null;
+						markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
+					}).hide,
+					id: marker.id
+				};
 
 				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, true));
-
-				openMarkerId = marker.id;
 			},
 			editMarker: function(marker) {
 				var scope = $rootScope.$new();
@@ -114,7 +118,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					if(save) {
 						var pos = markersById[marker.id].getLatLng();
 						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
-							markersUi._renderMarkerInfoBox(markersById[marker.id]);
+							markersUi.showMarkerInfoBox(markersById[marker.id]);
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 
@@ -156,7 +160,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi._addMarker(marker);
 
 					if(!noEdit) {
-						markersUi._renderMarkerInfoBox(marker);
+						markersUi.showMarkerInfoBox(marker);
 						markersUi.editMarker(marker);
 					}
 				}).catch(function(err) {
