@@ -15,6 +15,14 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 		$timeout(() => {
 			el.insertAfter(map.map.getContainer()).hide();
 			$compile(el)(scope);
+
+			el.resizable({
+				handles: {
+					nw: el.find(".ui-resizable-handle")
+				},
+				minHeight: 100,
+				minWidth: 250
+			});
 		});
 
 		let infoBox = {
