@@ -38,6 +38,9 @@
 		.html {
 			height: 100%;
 
+			/* http://stackoverflow.com/a/1939980/242365 */
+			overflow: hidden;
+
 			.content {
 				height: calc(100% - 47px);
 				overflow: auto;
