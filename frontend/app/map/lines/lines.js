@@ -15,6 +15,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 		let openLineHighlight = null;
 		let openElevationPlot = null;
 
+		let linePopupBaseScope = $rootScope.$new();
+		linePopupBaseScope.persistentSettings = {};
+		linePopupBaseScope.client = map.client;
+		linePopupBaseScope.className = css.className;
+
 		setTimeout(() => {
 			// Make sure that the renderer is added to the map
 			L.polyline([], {pane: "shadowPane"}).addTo(map.map).remove();
@@ -59,8 +64,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 		let elevationPlot = L.control.elevation({
 			theme: "steelblue-theme",
 			position: "bottomright"
-		}).addTo(map.map);
-		$(elevationPlot._container).detach();
+		});
 
 		var linesUi = {
 			_addLine: function(line, _doNotRerenderPopup) {
@@ -134,11 +138,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				delete linesById[line.id];
 			},
 			showLineInfoBox: function(line) {
-				var scope = $rootScope.$new();
+				var scope = linePopupBaseScope.$new();
 
-				scope.client = map.client;
 				scope.line = line;
-				scope.className = css.className;
 
 				scope.edit = function() {
 					linesUi.editLine(scope.line);
@@ -153,7 +155,23 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				};
 
 				let template = $(require("./view-line.html"));
-				template.find(".fm-elevation-plot").append(elevationPlot._container);
+
+				openLine = {
+					hide: map.infoBox.show(template, scope, () => {
+						openLine = null;
+						openLineHighlight.remove();
+					}).hide,
+					id: line.id
+				};
+
+				openLineHighlight = L.polyline([ ], {
+					pane: "shadowPane",
+					interactive: false
+				}).addTo(map.map);
+				openLineHighlight._path.style.filter = 'url(#fmLinesBlur)';
+
+				linesUi._addLine(line, true); // To render the openLineHighlight
+
 
 				elevationPlot.clear();
 
@@ -171,21 +189,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					});
 				}, true);
 
-				openLine = {
-					hide: map.infoBox.show(template, scope, () => {
-						openLine = null;
-						openLineHighlight.remove();
-					}).hide,
-					id: line.id
+				let drawElevationPlot = () => {
+					elevationPlot.options.width = template.find(".tab-pane.active").width();
+					template.find(".fm-elevation-plot").empty().append($(elevationPlot.onAdd(map.map)).addClass("leaflet-control"));
 				};
 
-				openLineHighlight = L.polyline([ ], {
-					pane: "shadowPane",
-					interactive: false
-				}).addTo(map.map);
-				openLineHighlight._path.style.filter = 'url(#fmLinesBlur)';
-
-				linesUi._addLine(line, true); // To render the openLineHighlight
+				template.filter(".content").on("resizeend", drawElevationPlot);
+				setTimeout(drawElevationPlot, 0);
 			},
 			_makeLineMovable: function(line) {
 				var markers = [ ];

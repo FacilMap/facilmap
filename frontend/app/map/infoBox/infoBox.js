@@ -21,7 +21,10 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 					nw: el.find(".ui-resizable-handle")
 				},
 				minHeight: 100,
-				minWidth: 250
+				minWidth: 250,
+				stop: () => {
+					el.find(".html").children().trigger("resizeend");
+				}
 			});
 		});
 
