@@ -125,7 +125,7 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 				rec(0, { });
 			}
 
-			resize();
+			setTimeout(resize, 0);
 			scope.$watch(getMaxScale, resize);
 			scope.$watch("showXs", function(s) { s && setTimeout(resize, 0); })
 			$(window).resize(resize);
