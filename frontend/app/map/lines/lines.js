@@ -13,25 +13,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		let openLine = null;
 		let openLineHighlight = null;
-		let openElevationPlot = null;
 
 		let linePopupBaseScope = $rootScope.$new();
 		linePopupBaseScope.persistentSettings = {};
 		linePopupBaseScope.client = map.client;
 		linePopupBaseScope.className = css.className;
-
-		setTimeout(() => {
-			// Make sure that the renderer is added to the map
-			L.polyline([], {pane: "shadowPane"}).addTo(map.map).remove();
-
-			// http://stackoverflow.com/a/28237435/242365
-			let blurFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-			blurFilter.setAttribute("id", "fmLinesBlur");
-			let blurFilterBlur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
-			blurFilterBlur.setAttribute("stdDeviation", "4");
-			blurFilter.appendChild(blurFilterBlur);
-			$(map.map.getPane("shadowPane")).find("> svg").append(blurFilter);
-		}, 0);
 
 		map.client.on("line", function(data) {
 			setTimeout(function() { // trackPoints needs to be copied over
@@ -168,7 +154,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					pane: "shadowPane",
 					interactive: false
 				}).addTo(map.map);
-				openLineHighlight._path.style.filter = 'url(#fmLinesBlur)';
+				fmUtils.blurFilter(openLineHighlight, "fmLinesBlur", 4);
 
 				linesUi._addLine(line, true); // To render the openLineHighlight
 
