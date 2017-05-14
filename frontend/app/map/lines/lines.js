@@ -163,9 +163,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				scope.$watch("line.trackPoints", (trackPoints) => {
 					let latlngs = [];
-					for(let i=0; i<line.trackPoints.length; i++) {
-						if(line.trackPoints[i] && line.trackPoints[i].ele != null)
-							latlngs.push(Object.assign(new L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon), { meta: { ele: line.trackPoints[i].ele } }));
+					if(line.trackPoints) {
+						for(let i=0; i<line.trackPoints.length; i++) {
+							if(line.trackPoints[i] && line.trackPoints[i].ele != null)
+								latlngs.push(Object.assign(new L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon), { meta: { ele: line.trackPoints[i].ele } }));
+						}
 					}
 
 					elevationPlot.addData({

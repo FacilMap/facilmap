@@ -51,8 +51,10 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				if(!markersById[marker.id])
 					return;
 
-				if(openMarker && openMarker.id == marker.id)
+				if(openMarker && openMarker.id == marker.id) {
 					openMarker.hide();
+					openMarker = null;
+				}
 
 				markersById[marker.id].removeFrom(map.map);
 				delete markersById[marker.id];

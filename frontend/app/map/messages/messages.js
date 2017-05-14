@@ -13,6 +13,9 @@ fm.app.factory("fmMapMessages", function($rootScope, $compile, $timeout) {
 
 		return {
 			showMessage : function(type, message, buttons, lifetime, onclose) {
+				if(message instanceof Error)
+					console.warn(message.stack);
+
 				var messageObj = {
 					type: type,
 					message: message instanceof Error ? message.name + ": " + message.message : message,
