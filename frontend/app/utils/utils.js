@@ -688,29 +688,6 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	};
 
 	/**
-	 * Enables or disables the "closeOnClick" option for a Leaflet popup (normally, this option cannot be changed
-	 * dynamically).
-	 * @param layer {L.Layer} The popup layer or a layer or layer group that has popup(s)
-	 * @param enable {Boolean} true/false: Whether to enable or disable, null: reset to default value
-	 */
-	fmUtils.setCloseOnClick = function(layer, enable) {
-		if(layer.eachLayer)
-			return layer.eachLayer(function(layer) { fmUtils.setCloseOnClick(layer, enable); });
-
-		if(layer instanceof L.Popup) {
-			if(enable == null)
-				enable = ('closeOnClick' in layer.options ? layer.options.closeOnClick : layer._map.options.closePopupOnClick);
-
-			if(enable)
-				layer._map.on("preclick", layer._close, layer);
-			else
-				layer._map.off("preclick", layer._close, layer);
-		} else if(layer.getPopup())
-			fmUtils.setCloseOnClick(layer.getPopup(), enable);
-
-	};
-
-	/**
 	 * Converts an object { entry: { subentry: "value" } } into { "entry.subentry": "value" }
 	 * @param obj {Object}
 	 * @return {Object}

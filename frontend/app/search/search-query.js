@@ -18,6 +18,8 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		scope.activeResult = null;
 		scope.client = map.client;
 
+		let currentInfoBox = null;
+
 		scope.$watch("activeResult", () => {
 			setTimeout(() => {
 				let activeResultEl = el.find(".fm-search-results .active");
@@ -62,15 +64,13 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		};
 
 		scope.showResult = function(result, noZoom) {
-			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1) {
-				result.marker ? result.marker.openPopup() : result.layer.openPopup();
-			} else {
+			if(!scope.showAll || !scope.searchResults || scope.searchResults.features.length <= 1)
 				clearRenders();
-				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, noZoom);
-			}
+
+			renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, null, true);
 
 			if(!noZoom)
-				scope.zoomToResults();
+				scope.zoomToResults(true);
 
 			map.mapEvents.$broadcast("searchchange");
 		};
@@ -103,10 +103,15 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				routeUi.setFrom(scope.searchString);
 		};
 
-		scope.zoomToResults = function() {
-			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1)
-				_flyToBounds(layerGroup.getBounds());
-			else if(scope.activeResult) {
+		scope.zoomToResults = function(onlyAsFarAsNecessary) {
+			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1) {
+				if(onlyAsFarAsNecessary && scope.activeResult && scope.activeResult.boundingbox)
+					_flyToBounds(map.map.getBounds().extend(L.latLngBounds([ [ scope.activeResult.boundingbox[0], scope.activeResult.boundingbox[3 ] ], [ scope.activeResult.boundingbox[1], scope.activeResult.boundingbox[2] ] ])));
+				else if(onlyAsFarAsNecessary && scope.activeResult && scope.activeResult.lat != null && scope.activeResult.lon != null)
+					_flyToBounds(map.map.getBounds().extend([scope.activeResult.lat, scope.activeResult.lon]));
+				else
+					_flyToBounds(layerGroup.getBounds());
+			} else if(scope.activeResult) {
 				if(scope.activeResult.lat && scope.activeResult.lon && scope.activeResult.zoom)
 					map.map.flyTo([ scope.activeResult.lat, scope.activeResult.lon ], scope.activeResult.zoom);
 				else if(scope.activeResult.boundingbox)
@@ -174,17 +179,8 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		scope.$evalAsync(); // $compile only replaces variables on next digest
 
 		var clickMarker = L.featureGroup([]).addTo(map.map);
-		clickMarker.on("popupclose", function() {
-			clickMarker.clearLayers();
-		});
 
 		map.mapEvents.$on("longmousedown", function(e, latlng) {
-			var mouseUpHasHappened = false;
-			map.map.once("mouseup", function() { setTimeout(function() {
-				mouseUpHasHappened = true;
-				fmUtils.setCloseOnClick(clickMarker, null); // Reset to default
-			}, 0); });
-
 			clickMarker.clearLayers();
 
 			map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
@@ -192,11 +188,10 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 
 				if(results.length > 0) {
 					prepareResults(results);
-					renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker);
 
-					// Prevent closing popup on mouseup because of map.options.closePopupOnClick
-					if(!mouseUpHasHappened)
-						fmUtils.setCloseOnClick(clickMarker, false);
+					renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, null, () => {
+						clickMarker.clearLayers();
+					}, true);
 				}
 			}).catch(function(err) {
 				map.messages.showMessage("danger", err);
@@ -219,6 +214,10 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		}
 
 		function loadSearchResults(results, noZoom) {
+			if(currentInfoBox) {
+				currentInfoBox.hide();
+				currentInfoBox = null;
+			}
 			clearRenders();
 
 			scope.searchResults = results;
@@ -230,56 +229,90 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			}
 		}
 
-		function renderResult(query, results, result, showPopup, layerGroup, onOpen, noZoom) {
+		function renderResult(query, results, result, showPopup, layerGroup, onOpen, onClose, highlight) {
+			if(showPopup) { // Do this first, so that any onClose function is called before creating the new result rendering
+				showResultInfoBox(query, results, result, () => {
+					if((result.marker && result.marker._map) || (result.layer && result.layer._map)) // Only rerender if it's still on the map
+						renderResult(query, results, result, false, layerGroup, onOpen, onClose, false);
+					onClose && onClose();
+				});
+				onOpen && onOpen();
+			}
+
+			if(result.layer) {
+				result.layer.remove();
+				result.layer = null;
+			}
+			if(result.highlightLayer) {
+				result.highlightLayer.remove();
+				result.highlightLayer = null;
+			}
+			if(result.marker) {
+				result.marker.remove();
+				result.marker = null;
+			}
+
 			if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
 				result.layer = L.geoJson(result.geojson, {
+					pane: highlight ? "fmHighlightPane" : "overlayPane",
 					pointToLayer: function(geoJsonPoint, latlng) {
 					    return L.marker(latlng, {
-					        icon: fmUtils.createMarkerIcon("ff0000", 35)
+					        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, highlight),
+						    pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
 					    });
 					}
 				})
-				.bindPopup($("<div/>")[0], map.popupOptions)
-				.on("popupopen", function(e) {
-					renderResultPopup(query, results, result, e.popup);
+				.on("click", function(e) {
+					renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
 					onOpen && onOpen();
-				}.fmWrapApply(scope))
-				.on("popupclose", function(e) {
-					ng.element(e.popup.getContent()).scope().$destroy();
-				})
+				}.fmWrapApply($rootScope))
 				.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
 				layerGroup.addLayer(result.layer);
+
+				if(highlight) {
+					result.highlightLayer = L.geoJson(result.geojson, {
+						pane: "fmHighlightShadowPane",
+						pointToLayer: function(geoJsonPoint, latlng) {
+						    return L.marker(latlng, {
+						        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, highlight),
+						        pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
+						    });
+						},
+						color: '#000000'
+					})
+					.on("click", function(e) {
+						renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
+						onOpen && onOpen();
+					}.fmWrapApply($rootScope));
+
+					fmUtils.blurFilter(result.highlightLayer, "fmSearchBlur", 4);
+
+					layerGroup.addLayer(result.highlightLayer);
+				}
 			}
 
 			if(result.lat != null && result.lon != null) {
 				result.marker = L.marker([ result.lat, result.lon ], {
-					icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon)
+					pane: highlight ? "fmHighlightMarkerPane" : "markerPane",
+					icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon, null, highlight)
 				})
-					.bindPopup($("<div/>")[0], map.popupOptions)
-					.on("popupopen", function(e) {
-						renderResultPopup(query, results, result, e.popup);
+					.on("click", function(e) {
+						renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
 						onOpen && onOpen();
 					}.fmWrapApply(scope))
-					.on("popupclose", function(e) {
-						ng.element(e.popup.getContent()).scope().$destroy();
-					})
 					.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
 
 				layerGroup.addLayer(result.marker);
 			}
-
-			if(showPopup) {
-				var popupLayer = result.marker || result.layer;
-				if(popupLayer) {
-					if(noZoom)
-						popupLayer._popup.options.autoPan = false;
-					popupLayer.openPopup();
-				}
-			}
 		}
 
 		scope.reset = function() {
+			if(currentInfoBox) {
+				currentInfoBox.hide();
+				currentInfoBox = null;
+			}
+
 			scope.searchResults = null;
 			scope.activeResult = null;
 			scope.submittedSearchString = "";
@@ -288,9 +321,15 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 
 		function clearRenders() {
 			layerGroup.clearLayers();
+			if(scope.searchResults) {
+				scope.searchResults.features.forEach((result) => {
+					result.marker = null;
+					result.layer = null;
+				});
+			}
 		}
 
-		function renderResultPopup(query, results, result, popup) {
+		function showResultInfoBox(query, results, result, onClose) {
 			var popupScope = $rootScope.$new();
 
 			popupScope.client = map.client;
@@ -312,25 +351,14 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 					routeUi.setTo(query, results, result);
 
 				routeUi.submit(!!routeUi.getQueries());
-
-				popup.closePopup();
 			};
 
-			var el = popup.getContent();
-			$(el).html(require("./result-popup.html"));
-			$compile(el)(popupScope);
+			currentInfoBox = map.infoBox.show(require("./result-popup.html"), popupScope, () => {
+				popupScope.$destroy();
 
-			// Prevent popup close on button click
-			$("button", el).click(function(e) {
-				e.preventDefault();
+				onClose && onClose();
+				currentInfoBox = null;
 			});
-
-			$timeout(function() { $timeout(function() { // $compile only replaces variables on next digest
-				popup.update();
-
-				// Might have been set to false in renderResult() if noZoom
-				popup.options.autoPan = true;
-			}); });
 		}
 
 		var searchUi = {

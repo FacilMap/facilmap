@@ -123,12 +123,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				}
 			});
 
-			this.popupOptions = {
-				minWidth: 350,
-				maxWidth: 350,
-				className: "fm-popup"
-			};
-
 			this.tooltipOptions = {
 				direction: "right"
 			};
