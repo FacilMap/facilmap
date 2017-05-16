@@ -81,12 +81,18 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				openMarker = {
 					hide: map.infoBox.show(require("./view-marker.html"), scope, () => {
 						openMarker = null;
+						markersById[marker.id].remove();
+						markersById[marker.id].options.pane = "markerPane";
 						markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
+						markersById[marker.id].addTo(map.map);
 					}).hide,
 					id: marker.id
 				};
 
+				markersById[marker.id].remove();
+				markersById[marker.id].options.pane = "fmHighlightMarkerPane";
 				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, true));
+				markersById[marker.id].addTo(map.map);
 			},
 			editMarker: function(marker) {
 				var scope = $rootScope.$new();

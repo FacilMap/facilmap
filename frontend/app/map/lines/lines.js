@@ -145,16 +145,23 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				openLine = {
 					hide: map.infoBox.show(template, scope, () => {
 						openLine = null;
+						linesById[line.id].remove();
+						linesById[line.id].options.pane = "overlayPane";
+						linesById[line.id].addTo(map.map);
 						openLineHighlight.remove();
 					}).hide,
 					id: line.id
 				};
 
 				openLineHighlight = L.polyline([ ], {
-					pane: "shadowPane",
+					pane: "fmHighlightShadowPane",
 					interactive: false
 				}).addTo(map.map);
 				fmUtils.blurFilter(openLineHighlight, "fmLinesBlur", 4);
+
+				linesById[line.id].remove();
+				linesById[line.id].options.pane = "fmHighlightPane";
+				linesById[line.id].addTo(map.map);
 
 				linesUi._addLine(line, true); // To render the openLineHighlight
 

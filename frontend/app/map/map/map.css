@@ -72,3 +72,15 @@
 .leaflet-control-locate.leaflet-control-locate a {
 	font-size: inherit;
 }
+
+.leaflet-fmHighlightMarker-pane {
+	z-index: 621;
+}
+
+.leaflet-fmHighlight-pane {
+	z-index: 620;
+}
+
+.leaflet-fmHighlightShadow-pane {
+	z-index: 619;
+}

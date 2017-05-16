@@ -137,6 +137,10 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.map = L.map($(".fm-map", $element)[0]);
 
+			this.map.createPane("fmHighlightMarkerPane");
+			this.map.createPane("fmHighlightShadowPane");
+			this.map.createPane("fmHighlightPane");
+
 			$scope.$watch("client.padData.clusterMarkers", (clusterMarkers) => {
 				var currentMarkers = this.markerCluster ? this.markerCluster.getLayers() : [ ];
 
