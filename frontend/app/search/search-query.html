@@ -31,7 +31,8 @@
 			<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
 			<ul class="list-group" ng-if="searchResults.features.length > 0">
 				<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
-					<a href="javascript:" ng-click="showResult(result)">{{result.display_name}}</a>
+					<a ng-show="showAll" href="javascript:" ng-click="showResult(result)" uib-tooltip="Zoom to result" tooltip-append-to-body="true"><span class="glyphicon glyphicon-zoom-in"></span></a>
+					<a href="javascript:" ng-click="showResult(result, showAll ? 2 : false)">{{result.display_name}}</a>
 					<span class="result-type" ng-if="result.type">({{result.type}})</span>
 				</li>
 			</ul>
@@ -48,7 +49,7 @@
 		</div>
 
 		<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
-			<button type="button" class="btn btn-default" ng-model="showAll" ng-click="zoomToResults()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
+			<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
 
 			<button type="button" class="btn btn-link" ng-click="reset()"><span class="glyphicon glyphicon-remove"></span></button>
 

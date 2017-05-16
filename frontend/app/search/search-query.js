@@ -64,28 +64,31 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		};
 
 		scope.showResult = function(result, noZoom) {
-			if(!scope.showAll || !scope.searchResults || scope.searchResults.features.length <= 1)
-				clearRenders();
-
 			renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, null, true);
 
-			if(!noZoom)
-				scope.zoomToResults(true);
+			if(noZoom == 2) {
+				if(result.boundingbox)
+					_flyToBounds(map.map.getBounds().extend(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ])));
+				else if(result.layer)
+					_flyToBounds(map.map.getBounds().extend(result.layer.getBounds()));
+				else if(result.lat != null && result.lon != null)
+					_flyToBounds(map.map.getBounds().extend(L.latLng(result.lat, result.lon)));
+			} else if(noZoom == 3) {
+				scope.zoomToAll();
+			} else if(!noZoom) {
+				if(result.lat && result.lon && result.zoom)
+					map.map.flyTo([ result.lat, result.lon ], result.zoom);
+				else if(result.boundingbox)
+					_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
+				else if(result.layer)
+					_flyToBounds(result.layer.getBounds());
+			}
 
 			map.mapEvents.$broadcast("searchchange");
 		};
 
-		scope.showAllResults = function(noZoom) {
-			clearRenders();
-
-			scope.searchResults.features.forEach(function(result) {
-				renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup, function() { scope.activeResult = result; });
-			});
-
-			if(!noZoom)
-				scope.zoomToResults();
-
-			map.mapEvents.$broadcast("searchchange");
+		scope.zoomToAll = function() {
+			_flyToBounds(layerGroup.getBounds());
 		};
 
 		scope.showRoutingForm = function() {
@@ -103,32 +106,8 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				routeUi.setFrom(scope.searchString);
 		};
 
-		scope.zoomToResults = function(onlyAsFarAsNecessary) {
-			if(scope.showAll && scope.searchResults && scope.searchResults.features.length > 1) {
-				if(onlyAsFarAsNecessary && scope.activeResult && scope.activeResult.boundingbox)
-					_flyToBounds(map.map.getBounds().extend(L.latLngBounds([ [ scope.activeResult.boundingbox[0], scope.activeResult.boundingbox[3 ] ], [ scope.activeResult.boundingbox[1], scope.activeResult.boundingbox[2] ] ])));
-				else if(onlyAsFarAsNecessary && scope.activeResult && scope.activeResult.lat != null && scope.activeResult.lon != null)
-					_flyToBounds(map.map.getBounds().extend([scope.activeResult.lat, scope.activeResult.lon]));
-				else
-					_flyToBounds(layerGroup.getBounds());
-			} else if(scope.activeResult) {
-				if(scope.activeResult.lat && scope.activeResult.lon && scope.activeResult.zoom)
-					map.map.flyTo([ scope.activeResult.lat, scope.activeResult.lon ], scope.activeResult.zoom);
-				else if(scope.activeResult.boundingbox)
-					_flyToBounds(L.latLngBounds([ [ scope.activeResult.boundingbox[0], scope.activeResult.boundingbox[3 ] ], [ scope.activeResult.boundingbox[1], scope.activeResult.boundingbox[2] ] ]));
-				else if(scope.activeResult.layer)
-					_flyToBounds(scope.activeResult.layer.getBounds());
-			}
-		};
-
-		scope.$watch("showAll", function() {
-			if(!scope.searchResults)
-				return;
-
-			if(scope.showAll)
-				scope.showAllResults(true);
-			 else if(scope.searchResults.features.length > 0)
-				scope.showResult(scope.activeResult || scope.searchResults.features[0], true);
+		scope.$watch("showAll", () => {
+			map.mapEvents.$broadcast("searchchange");
 		});
 
 		scope.showView = function(view) {
@@ -174,7 +153,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			importUi.openImportDialog(scope.searchResults);
 		};
 
-		var el = $(require("./search.html")).insertAfter(map.map.getContainer());
+		var el = $(require("./search-query.html")).insertAfter(map.map.getContainer());
 		$compile(el)(scope);
 		scope.$evalAsync(); // $compile only replaces variables on next digest
 
@@ -201,7 +180,13 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		var layerGroup = L.featureGroup([]).addTo(map.map);
 
 		function _flyToBounds(bounds) {
-			map.map.flyTo(bounds.getCenter(), Math.min(15, map.map.getBoundsZoom(bounds)));
+			let currentCenter = map.map.getBounds().getCenter();
+			let newCenter = bounds.getCenter();
+
+			if(currentCenter.lat == newCenter.lat && currentCenter.lng == newCenter.lng) // map.getCenter() is different from map.getBounds().getCenter()
+				return;
+
+			map.map.flyTo(newCenter, Math.min(15, map.map.getBoundsZoom(bounds)));
 		}
 
 		function prepareResults(results) {
@@ -225,7 +210,11 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			if(results && results.features.length > 0) {
 				prepareResults(results.features);
 
-				(scope.showAll && results.features.length > 1) ? scope.showAllResults(noZoom) : scope.showResult(scope.searchResults.features[0], noZoom);
+				scope.searchResults.features.forEach(function(result) {
+					renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup, function() { scope.activeResult = result; });
+				});
+
+				scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false));
 			}
 		}
 
