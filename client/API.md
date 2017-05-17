@@ -92,6 +92,12 @@ All history entries that have been retrieved so far. Note that you have to subsc
 
 _Type:_ `{"<entry id>": `[`historyEntry`](#historyentry)`}`
 
+### `route`
+
+Information about the temporary route set using [`setRoute()`](#setRoutedata).
+
+_Type:_ [`route`](#route-1)
+
 ### `serverError`
 
 If the opening the pad failed ([`setPadId(padId)`](#setpadidpadid) promise got rejected), the error message is stored
@@ -193,6 +199,12 @@ An entry of the modification history is retrieved for the first time, or a new e
 being modified. Note that this event is only fired when the client has subscribed using [`listenToHistory()`](#listentohistory).
  
  _Type:_ [historyEntry](#historyentry)
+ 
+### `routePoints`
+
+New track points for the temporary route are retrieved after a change of bbox.
+
+_Type:_ Array<[trackPoint](#trackpoint)>
  
 ### `loadStart`, `loadEnd`
 
@@ -316,12 +328,31 @@ Search for places.
 
 ### `getRoute(data)`
 
-Calculate a route between two points.
+Calculate a route between two or more points.
 
 * `data` (object): An object with the following properties:
     * `destinations` (array): An array of at least two route points (objects with a `lat` and `lon` property)
     * `mode` (string): `"car"`, `"bicycle"` or `"pedestrian"`
-* _returns_ (Promise<[route](#route)>)
+* _returns_ (Promise<[route](#route-1)>)
+
+### `setRoute(data)`
+
+Calculate a route between two or more points, but but do not return the track points of the route but cache them on the
+server side and send them according to the client bbox. The properties of the route are saved in the [`route`](#route)
+property and the trackPoints in `route.trackPoints`. Only one temporary route like this can be set at a time, when
+calling `setRoute()` again, the existing route will be modified.
+
+* `data` (object): An object with the following properties:
+    * `destinations` (array): An array of at least two route points (objects with a `lat` and `lon` property)
+    * `mode` (string): `"car"`, `"bicycle"` or `"pedestrian"`
+    * `elevation` (boolean): `true` to get elevation data for the route
+* _returns_ (Promise<[route](#route-1)>)
+
+### `clearRoute(data)`
+
+Clear the temporary route set via [`setRoute(data)`](#setroutedata).
+
+* _returns_ (Promise)
 
 ### `addMarker(data)`
 
@@ -564,3 +595,5 @@ their `idx` property.
   that indicates from which zoom level the track point should be shown (to avoid an unnecessarily high resolution))
 * `distance` (number): The distance of the route in kilometers
 * `time` (number): The time it takes to travel the route in seconds
+* `ascent` (number): The total meters of climb
+* `descent` (number) The total meters of drop

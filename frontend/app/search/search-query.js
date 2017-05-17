@@ -32,9 +32,9 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			scope.reset();
 
 			if(scope.searchString.trim() != "") {
-				if(scope.searchString.match(/ to /)) {
+				if(scope.searchString.match(/ to /i)) {
 					scope.showRoutingForm();
-					return routeUi.submit();
+					return routeUi.submit(noZoom);
 				}
 
 				var lonlat = fmUtils.decodeLonLatUrl(scope.searchString);
@@ -95,12 +95,12 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			searchUi.hide();
 			routeUi.show();
 
-			if(scope.searchString.match(/ to /)) {
+			if(scope.searchString.match(/ to /i)) {
 				var spl = fmUtils.splitRouteQuery(scope.searchString);
 				routeUi.setQueries(spl.queries);
 				if(spl.mode)
 					routeUi.setMode(spl.mode);
-			} else if(scope.submittedSearchString == scope.searchString)
+			} else if(scope.searchResults && scope.submittedSearchString == scope.searchString)
 				routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
 			else
 				routeUi.setFrom(scope.searchString);

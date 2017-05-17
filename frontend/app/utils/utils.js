@@ -285,7 +285,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return ret;
 	};
 
-	fmUtils.temporaryDragMarker = function(map, line, colour, callback) {
+	fmUtils.temporaryDragMarker = function(map, line, colour, callback, additionalOptions) {
 		// This marker is shown when we hover the line. It enables us to create new markers.
 		// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
 		// sure that the mouse is over it and dragging it will work smoothly.
@@ -305,10 +305,10 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		line.on("fm-almostover", _over).on("fm-almostmove", _move).on("fm-almostout", _out);
 
 		function makeTemporaryHoverMarker() {
-			temporaryHoverMarker = L.marker([0,0], {
+			temporaryHoverMarker = L.marker([0,0], Object.assign({
 				icon: fmUtils.createMarkerIcon(colour, 35, null, 1000),
 				draggable: true
-			}).once("dragstart", function() {
+			}, additionalOptions)).once("dragstart", function() {
 				temporaryHoverMarker.once("dragend", function() {
 					// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
 					// the dragging gets interrupted

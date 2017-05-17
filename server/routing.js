@@ -109,9 +109,9 @@ function _distance(pos1, pos2) {
 	return Math.sqrt(Math.pow(pos1.lon-pos2.lon, 2) + Math.pow(pos1.lat-pos2.lat, 2));
 }
 
-function prepareForBoundingBox(points, bbox) {
-	points = _filterByZoom(points, bbox.zoom);
-	points = _filterByBbox(points, bbox);
+function prepareForBoundingBox(points, bbox, getCompleteBasicRoute) {
+	points = _filterByZoom(points, Math.max(bbox.zoom, getCompleteBasicRoute ? 5 : 0));
+	points = _filterByBbox(points, bbox, getCompleteBasicRoute);
 	return points;
 }
 
@@ -124,7 +124,7 @@ function _filterByZoom(points, zoom) {
 	return ret;
 }
 
-function _filterByBbox(points, bbox) {
+function _filterByBbox(points, bbox, getCompleteBasicRoute) {
 	var ret = [ ];
 	var lastIn = false;
 	for(var i=0; i<points.length; i++) {
@@ -132,7 +132,7 @@ function _filterByBbox(points, bbox) {
 		if(isIn && !lastIn && i >= 1) {
 			ret.push(points[i-1]);
 		}
-		if(isIn || lastIn)
+		if(isIn || lastIn || (getCompleteBasicRoute && points[i].zoom <= 5))
 			ret.push(points[i]);
 
 		lastIn = isIn;

@@ -33,6 +33,8 @@ class SocketConnection {
 		this.bbox = null;
 		this.writable = null;
 
+		this.routeId = null;
+
 		this._dbHandlers = [ ];
 
 		this.registerSocketHandlers();
@@ -180,17 +182,27 @@ utils.extend(SocketConnection.prototype, {
 
 			this.bbox = bbox;
 
+			let ret = {};
+
 			if(this.padId && this.padId !== true) {
-				return Promise.props({
-					marker: utils.streamToArrayPromise(this.database.getPadMarkers(this.padId, bboxWithExcept)),
-					linePoints: utils.streamToArrayPromise(this.database.getLinePointsForPad(this.padId, bboxWithExcept))
-				});
+				ret.marker = utils.streamToArrayPromise(this.database.getPadMarkers(this.padId, bboxWithExcept));
+				ret.linePoints = utils.streamToArrayPromise(this.database.getLinePointsForPad(this.padId, bboxWithExcept));
 			}
+			if(this.routeId)
+				ret.routePoints = utils.streamToArrayPromise(this.database.getRoutePoints(this.routeId, bboxWithExcept, !bboxWithExcept.except)).then((points) => ([points]));
+
+			return Promise.props(ret);
 		},
 
 		disconnect : function() {
 			if(this.padId)
 				this.unregisterDatabaseHandlers();
+
+			if(this.routeId) {
+				this.database.deleteRoute(this.routeId).catch((err) => {
+					console.error("Error clearing route", err.stack || err);
+				});
+			}
 		},
 
 		createPad : function(data) {
@@ -456,6 +468,48 @@ utils.extend(SocketConnection.prototype, {
 					throw "Invalid parameters.";
 
 				return routing.calculateRouting(data.destinations, data.mode, false);
+			});
+		},
+
+		setRoute: function(data) {
+			return Promise.resolve().then(() => {
+				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string", elevation: "boolean" }))
+					throw "Invalid parameters.";
+
+				if(this.routeId)
+					return this.database.updateRoute(this.routeId, data.destinations, data.mode, data.elevation);
+				else
+					return this.database.createRoute(data.destinations, data.mode, data.elevation);
+			}).then((routeInfo) => {
+				if(!routeInfo) {
+					// A newer submitted route has returned in the meantime
+					console.log("Ignoring outdated route");
+					return;
+				}
+
+				this.routeId = routeInfo.id;
+
+				if(this.bbox)
+					routeInfo.trackPoints = routing.prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
+				else
+					routeInfo.trackPoints = [];
+
+				return {
+					time: routeInfo.time,
+					distance: routeInfo.distance,
+					ascent: routeInfo.ascent,
+					descent: routeInfo.descent,
+					trackPoints: routeInfo.trackPoints
+				};
+			});
+		},
+
+		clearRoute: function() {
+			return Promise.resolve().then(() => {
+				if(this.routeId)
+					return this.database.deleteRoute(this.routeId);
+			}).then(() => {
+				this.routeId = null;
 			});
 		},
 

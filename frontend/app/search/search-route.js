@@ -5,14 +5,6 @@ import ng from 'angular';
 
 fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout, $q, fmSortableOptions) {
 	return function(map, searchUi) {
-		var lineStyle = {
-			color : '#0000ff',
-			weight : 8,
-			opacity : 0.7
-		};
-
-		var dragTimeout = 300;
-
 		var scope = $rootScope.$new(true);
 
 		scope.client = map.client;
@@ -24,6 +16,10 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 		scope.sortableOptions = ng.copy(fmSortableOptions);
 		scope.sortableOptions.update = function() {
 			scope.reroute(true);
+		};
+
+		scope.hasRoute = function() {
+			return map.routeUi.hasRoute();
 		};
 
 		scope.addDestination = function() {
@@ -71,9 +67,8 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 			}
 		};
 
-		scope.route = function(dragging, noZoom) {
-			if(!dragging)
-				scope.reset();
+		scope.route = function(noZoom) {
+			scope.reset();
 
 			if(scope.destinations[0].query.trim() == "" || scope.destinations[scope.destinations.length-1].query.trim() == "")
 				return;
@@ -107,31 +102,25 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 
 				map.mapEvents.$broadcast("searchchange");
 
-				return map.client.getRoute({ destinations: points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode: mode });
-			}).then(function(route) {
-				route.routePoints = points;
-				route.routeMode = mode;
-
-				scope.routeObj = route;
-				scope.routeError = null;
-				renderRoute(dragging, noZoom);
-			}).catch(function(err) {
-				scope.routeError = err;
+				return map.routeUi.setRoute(points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode).then(() => {
+					if(!noZoom)
+						map.routeUi.zoom();
+				});
+			}).catch((err) => {
+				map.messages.showMessage("danger", err);
 			});
 		};
 
 		scope.reroute = function(noZoom) {
-			if(scope.routeObj || scope.routeError)
-				scope.route(false, noZoom);
+			if(scope.hasRoute())
+				scope.route(noZoom);
 		};
 
 		scope.reset = function() {
-			scope.routeObj = null;
-			scope.routeError = null;
 			scope.submittedQueries = null;
 			scope.submittedMode = null;
 
-			clearRoute();
+			map.routeUi.clearRoute();
 		};
 
 		scope.clear = function() {
@@ -142,125 +131,41 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 			scope.addDestination();
 		};
 
-		scope.addToMap = function(type) {
-			if(type == null) {
-				for(var i in map.client.types) {
-					if(map.client.types[i].type == "line") {
-						type = map.client.types[i];
-						break;
-					}
-				}
-			}
+		map.mapEvents.$on("routeDestinationAdd", (e, idx) => {
+			scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.destinations[idx]));
+			map.mapEvents.$broadcast("searchchange");
+		});
 
-			map.linesUi.createLine(type, scope.routeObj.routePoints.map(function(point) { return { lat: point.lat, lon: point.lon }; }), { mode: scope.routeObj.routeMode });
+		map.mapEvents.$on("routeDestinationMove", (e, idx) => {
+			scope.destinations[idx] = makeCoordDestination(map.client.route.destinations[idx]);
+			map.mapEvents.$broadcast("searchchange");
+		});
 
-			scope.clear();
-		};
+		map.mapEvents.$on("routeDestinationRemove", (e, idx) => {
+			scope.destinations.splice(idx, 1);
+			map.mapEvents.$broadcast("searchchange");
+		});
+
+		map.mapEvents.$on("routeClear", () => {
+			scope.submittedQueries = null;
+			scope.submittedMode = null;
+			map.mapEvents.$broadcast("searchchange");
+		});
 
 		var el = $(require("./search-route.html")).insertAfter(searchUi._el);
 		$compile(el)(scope);
 		scope.$evalAsync(); // $compile only replaces variables on next digest
 
-		var routeLayer = null;
-		var dragMarker = null;
-		var markers = [ ];
-		var recalcRoute = fmUtils.minInterval(dragTimeout, false);
-
-		function renderRoute(dragging, noZoom) {
-			clearRoute(dragging);
-
-			routeLayer = L.polyline(scope.routeObj.trackPoints.map(function(it) { return [ it.lat, it.lon ] }), lineStyle).addTo(map.map);
-			map.map.almostOver.addLayer(routeLayer);
-
-			dragMarker = fmUtils.temporaryDragMarker(map.map, routeLayer, map.dragMarkerColour, function(marker) {
-				var latlng = marker.getLatLng();
-				var idx = fmUtils.getIndexOnLine(map.map, scope.routeObj.trackPoints, scope.routeObj.routePoints, { lat: latlng.lat, lon: latlng.lng });
-
-				scope.destinations.splice(idx, 0, makeCoordDestination(latlng));
-				markers.splice(idx, 0, marker);
-
-				registerMarkerHandlers(marker);
-
-				marker.once("dragend", updateMarkerColours);
-
-				scope.route(true);
-			}.fmWrapApply(scope));
-
-			if(!dragging) {
-				if(!noZoom)
-					map.map.flyToBounds(routeLayer.getBounds());
-
-				// Render markers
-
-				scope.routeObj.routePoints.forEach(function(point, i) {
-					var marker = L.marker([ point.lat, point.lon ], {
-						icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35),
-						draggable: true
-					}).addTo(map.map);
-
-					registerMarkerHandlers(marker);
-
-					markers.push(marker);
-				});
-
-				updateMarkerColours();
-			}
-		}
-
-		function registerMarkerHandlers(marker) {
-			marker.on("dblclick", function() {
-				scope.$apply(function() {
-					scope.removeDestination(markers.indexOf(marker));
-					scope.reroute(true);
-				});
-			})
-			.on("drag", function() {
-				recalcRoute(function() {
-					scope.destinations[markers.indexOf(marker)] = makeCoordDestination(marker.getLatLng());
-
-					return scope.route(true);
-				}.fmWrapApply(scope));
-			});
-		}
-
-		function updateMarkerColours() {
-			markers.forEach(function(marker, i) {
-				var colour = (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour);
-
-				marker.setIcon(fmUtils.createMarkerIcon(colour, 35));
-			});
-		}
-
-		function clearRoute(dragging) {
-			if(routeLayer) {
-				map.map.almostOver.removeLayer(routeLayer);
-				routeLayer.remove();
-				routeLayer = null;
-			}
-
-			if(dragMarker) {
-				dragMarker();
-				dragMarker = null;
-			}
-
-			if(!dragging) {
-				markers.forEach(function(marker) {
-					marker.remove();
-				});
-				markers = [ ];
-			}
-		}
-
-		function makeCoordDestination(latlng) {
-			var disp = fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5);
+		function makeCoordDestination(lonlat) {
+			var disp = fmUtils.round(lonlat.lat, 5) + "," + fmUtils.round(lonlat.lon, 5);
 			return {
 				query: disp,
 				loadingQuery: disp,
 				loadedQuery: disp,
 				selectedSuggestionIdx: 0,
 				suggestions: [ {
-					lat: latlng.lat,
-					lon: latlng.lng,
+					lat: lonlat.lat,
+					lon: lonlat.lon,
 					display_name: disp,
 					short_name: disp,
 					type: "coordinates",
@@ -328,7 +233,7 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			submit: function(noZoom) {
-				scope.route(false, noZoom);
+				scope.route(noZoom);
 			},
 
 			destroy: function() {

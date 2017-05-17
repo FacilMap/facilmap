@@ -22,6 +22,7 @@ class Socket {
 		this.views = { };
 		this.types = { };
 		this.history = { };
+		this.route = null;
 
 		this._listeners = [ ];
 
@@ -48,8 +49,10 @@ class Socket {
 		this._listeners[eventName].push(fn);
     }
 
-	removeListener(event, fn) {
-		return this.socket.removeListener(...arguments);
+	removeListener(eventName, fn) {
+		if(typeof this._listeners[eventName] == "object") {
+			this._listeners[eventName] = this._listeners[eventName].filter((listener) => (listener !== fn));
+		}
 	}
 
 	_emit(eventName, data) {
@@ -149,6 +152,24 @@ class Socket {
 		return this._emit("getRoute", data);
 	}
 
+	setRoute(data) {
+		return this._emit("setRoute", data).then((route) => {
+			if(route) { // If unset, a newer submitted route has returned in the meantime
+				this.route = route;
+				this.route.destinations = data.destinations;
+				this.route.mode = data.mode;
+				this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
+			}
+
+			return this.route;
+		});
+	}
+
+	clearRoute() {
+		this.route = null;
+		return this._emit("clearRoute");
+	}
+
 	addType(data) {
 		return this._emit("addType", data);
 	}
@@ -202,6 +223,22 @@ class Socket {
 			});
 		}
 	}
+
+	_mergeTrackPoints(existingTrackPoints, newTrackPoints) {
+		let ret = existingTrackPoints ? Object.assign({}, existingTrackPoints) : {};
+
+		for(let i=0; i<newTrackPoints.length; i++) {
+			ret[newTrackPoints[i].idx] = newTrackPoints[i];
+		}
+
+		ret.length = 0;
+		for(let i in ret) {
+			if(i != "length" && i >= ret.length)
+				ret.length = 1*i+1;
+		}
+
+		return ret;
+	}
 }
 
 Socket.prototype._handlers = {
@@ -247,18 +284,16 @@ Socket.prototype._handlers = {
 		if(line == null)
 			return console.error("Received line points for non-existing line "+data.id+".");
 
-		if(line.trackPoints == null || data.reset)
-			line.trackPoints = { };
+		line.trackPoints = this._mergeTrackPoints(data.reset ? {} : line.trackPoints, data.trackPoints);
+	},
 
-		for(let i=0; i<data.trackPoints.length; i++) {
-			line.trackPoints[data.trackPoints[i].idx] = data.trackPoints[i];
+	routePoints(data) {
+		if(!this.route) {
+			console.error("Received route points for non-existing route.");
+			return;
 		}
 
-		line.trackPoints.length = 0;
-		for(let i in line.trackPoints) {
-			if(i != "length" && i >= line.trackPoints.length)
-				line.trackPoints.length = 1*i+1;
-		}
+		this.route.trackPoints = this._mergeTrackPoints(this.route.trackPoints, data);
 	},
 
 	view(data) {
@@ -304,6 +339,9 @@ Socket.prototype._handlers = {
 
 		if(this._listeningToHistory) // TODO: Execute after setPadId() returns
 			this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
+
+		if(this.route)
+			this.setRoute(this.route);
 	},
 
 	history(data) {

@@ -30,29 +30,14 @@
 					</div>
 
 					<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+4}}">Go!</button>
-					<button ng-show="routeObj || routeError" type="button" class="btn btn-link" tabindex="{{destinations.length+5}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><span class="glyphicon glyphicon-remove"></span></button>
+					<button ng-show="hasRoute()" type="button" class="btn btn-link" tabindex="{{destinations.length+5}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><span class="glyphicon glyphicon-remove"></span></button>
 
 					<button type="button" class="btn btn-default pull-right active" ng-click="showSearchForm()" uib-tooltip="Switch to search from" tooltip-append-to-body="true"><span class="glyphicon glyphicon-road"></span></button>
 				</div>
 			</div>
 
-			<div class="fm-search-results" ng-show="routeObj || routeError">
-				<div uib-alert class="alert-danger no-results" ng-if="routeError">{{routeError}}</div>
-
-				<dl ng-show="routeObj">
-					<dt>Distance</dt>
-					<dd>{{routeObj.distance | fmRound:2}} km <span ng-show="routeObj.time != null">({{routeObj.time | fmFormatTime}} h {{routeObj.routeMode | fmRoutingMode}})</span></dd>
-				</dl>
-
-				<div class="fm-search-buttons" ng-show="routeObj && !readonly">
-					<div uib-dropdown keyboard-nav="true" ng-if="(types | fmPropertyCount:{type:'line'}) > 1" dropdown-append-to-body="true">
-						<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
-						<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button" uib-dropdown-menu>
-							<li role="menuitem" ng-repeat="type in types | fmObjectFilter:{type:'line'}"><a href="#" ng-click="addToMap(type)">{{type.name}}</a></li>
-						</ul>
-					</div>
-					<button ng-if="(types | fmPropertyCount:{type:'line'}) == 1" type="button" class="btn btn-default" ng-click="addToMap()">Add to map</button>
-				</div>
+			<div class="fm-search-results" ng-show="routeError">
+				<div uib-alert class="alert-danger no-results">{{routeError}}</div>
 			</div>
 		</form>
 	</div>
