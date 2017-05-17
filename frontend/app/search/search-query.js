@@ -329,17 +329,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			};
 
 			popupScope.useForRoute = function(mode) {
-				searchUi.hide();
-				routeUi.show();
-
-				if(mode == 1)
-					routeUi.setFrom(query, results, result);
-				else if(mode == 2)
-					routeUi.addVia(query, results, result);
-				else if(mode == 3)
-					routeUi.setTo(query, results, result);
-
-				routeUi.submit(!!routeUi.getQueries());
+				searchUi.setRouteDestination(query, mode, results, result);
 			};
 
 			currentInfoBox = map.infoBox.show(require("./result-popup.html"), popupScope, () => {
@@ -389,6 +379,20 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 					routeUi.setMode(mode);
 
 				routeUi.submit(noZoom);
+			},
+
+			setRouteDestination: function(query, mode, _results, _result) {
+				map.searchUi.hide();
+				routeUi.show();
+
+				if(mode == 1)
+					routeUi.setFrom(query, _results, _result);
+				else if(mode == 2)
+					routeUi.addVia(query, _results, _result);
+				else if(mode == 3)
+					routeUi.setTo(query, _results, _result);
+
+				routeUi.submit(!!routeUi.getQueries());
 			},
 
 			getCurrentSearchForHash: function() {

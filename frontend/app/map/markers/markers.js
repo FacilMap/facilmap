@@ -62,8 +62,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 			showMarkerInfoBox: function(marker) {
 				var scope = $rootScope.$new();
 
+				scope.map = map;
 				scope.client = map.client;
-
 				scope.marker = marker;
 
 				scope.edit = function() {
@@ -76,6 +76,10 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 				scope['delete'] = function() {
 					markersUi.deleteMarker(scope.marker);
+				};
+
+				scope.useForRoute = function(mode) {
+					map.searchUi.setRouteDestination(`${marker.lat},${marker.lon}`, mode);
 				};
 
 				openMarker = {

@@ -15,4 +15,12 @@
 	<button type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
 	<button type="button" class="btn btn-default btn-sm" ng-click="move()">Move</button>
 	<button type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()">Remove</button>
+	<div ng-if="map.searchUi" uib-dropdown keyboard-nav="true" class="dropup">
+		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
+		<ul class="dropdown-menu" uib-dropdown-menu role="menu">
+			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(1)">Route start</a></li>
+			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(2)">Route via</a></li>
+			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(3)">Route destination</a></li>
+		</ul>
+	</div>
 </div>
