@@ -17,7 +17,7 @@
 		</form>
 
 		<div class="fm-search-results">
-			<div uib-alert class="alert-danger no-results" ng-if="searchResults.length == 0">No results have been found.</div>
+			<div uib-alert class="alert-danger no-results" ng-if="!searchResults.views.length && searchResults.features.length == 0 && (searchResults.types | fmPropertyCount) == 0">No results have been found.</div>
 			<div ng-if="searchResults.views.length > 0">
 				<h3>Views</h3>
 				<ul class="list-group">

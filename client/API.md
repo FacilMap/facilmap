@@ -588,6 +588,7 @@ their `idx` property.
 * `icon` (string): Symbol key of the result
 * `type` (string): Type of the result
 * `id` (string): If the result is an OSM object, the ID of the OSM object, prefixed by `n` (node), `w` (way) or `r` (relation)
+* `ele` (number): Elevation in meters
 
 ### route
 

@@ -111,6 +111,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			},
 			_deleteLine: function(line) {
 				if(line.id != null && openLine && line.id == openLine.id) {
+					if(openLineHighlight) {
+						openLineHighlight.remove();
+						openLineHighlight = null;
+					}
+
 					openLine.hide();
 					openLine = null;
 				}
@@ -145,10 +150,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				openLine = {
 					hide: map.infoBox.show(template, scope, () => {
 						openLine = null;
-						linesById[line.id].remove();
-						linesById[line.id].options.pane = "overlayPane";
-						linesById[line.id].addTo(map.map);
-						openLineHighlight.remove();
+						if(linesById[line.id]) { // Does not exist anymore after line was deleted
+							linesById[line.id].remove();
+							linesById[line.id].options.pane = "overlayPane";
+							linesById[line.id].addTo(map.map);
+						}
+						if(openLineHighlight)
+							openLineHighlight.remove();
 					}).hide,
 					id: line.id
 				};
@@ -169,19 +177,21 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				elevationPlot.clear();
 
 				scope.$watch("line.trackPoints", (trackPoints) => {
-					let latlngs = [];
+					elevationPlot.clear();
+
 					if(line.trackPoints) {
+						let latlngs = [];
 						for(let i=0; i<line.trackPoints.length; i++) {
 							if(line.trackPoints[i] && line.trackPoints[i].ele != null)
 								latlngs.push(Object.assign(new L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon), { meta: { ele: line.trackPoints[i].ele } }));
 						}
-					}
 
-					elevationPlot.addData({
-						_latlngs: latlngs
-					}, {
-						on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
-					});
+						elevationPlot.addData({
+							_latlngs: latlngs
+						}, {
+							on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
+						});
+					}
 				}, true);
 
 				let drawElevationPlot = () => {
@@ -386,7 +396,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						// We have to wait until the server sends us the trackPoints of the line
 						var removeWatcher = $rootScope.$watch(function() { return !!linesById[line.id]; }, function(exists) {
 							if(exists) {
-								linesUi.showLineInfoBox(line);
+								linesUi.showLineInfoBox(map.client.lines[line.id]);
 								removeWatcher();
 							}
 						});

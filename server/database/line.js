@@ -157,7 +157,10 @@ module.exports = function(Database) {
 				updateStyle: (createLine) => {
 					return this._updateObjectStyles(createLine, true);
 				}
-			}).then(res => res.createLine);
+			}).then((res) => {
+				this.emit("line", padId, res.setLinePoints); // res.linePoints returns the line with updated ascent and descent
+				return res.setLinePoints;
+			});
 		},
 
 		updateLine(padId, lineId, data, doNotUpdateStyles) {
