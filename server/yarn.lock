@@ -1044,16 +1044,16 @@ extsprintf@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.0.2.tgz#e1080e0658e300b06294990cc70e1502235fd550"
 
-facilmap-client@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.5.0.tgz#72da5892c8cff455db569dbdd319ebdf8a868ddc"
+facilmap-client@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.5.1.tgz#48300d8d69d250eebf4c1aa32e04a7f2232f24ca"
   dependencies:
     es6-promise "^4.0.5"
     socket.io-client "^1.7.3"
 
-facilmap-frontend@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.5.0.tgz#22a9e269d5d429b3ff792f223fce2e6723f01ef9"
+facilmap-frontend@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.5.1.tgz#993a55657435597e70e2b9c1c69f79033e6d51d9"
   dependencies:
     "@mapbox/togeojson" "^0.16.0"
     angular "1.6.4"
@@ -1065,7 +1065,7 @@ facilmap-frontend@^2.5.0:
     clipboard "^1.5.16"
     d3 "3.x.x"
     event-stream "^3.3.4"
-    facilmap-client "^2.5.0"
+    facilmap-client "^2.5.1"
     filtrex "^0.5.4"
     jquery "<3.0.0"
     jquery-ui "^1.12.1"

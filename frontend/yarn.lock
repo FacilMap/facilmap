@@ -1713,9 +1713,9 @@ extsprintf@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.0.2.tgz#e1080e0658e300b06294990cc70e1502235fd550"
 
-facilmap-client@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.5.0.tgz#72da5892c8cff455db569dbdd319ebdf8a868ddc"
+facilmap-client@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.5.1.tgz#48300d8d69d250eebf4c1aa32e04a7f2232f24ca"
   dependencies:
     es6-promise "^4.0.5"
     socket.io-client "^1.7.3"
