@@ -234,6 +234,10 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 				return scope.submittedQueries;
 			},
 
+			getTypedQueries: function() {
+				return scope.destinations.map((destination) => (destination.query));
+			},
+
 			getMode: function() {
 				return scope.submittedMode;
 			},

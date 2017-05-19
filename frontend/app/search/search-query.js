@@ -100,10 +100,12 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				routeUi.setQueries(spl.queries);
 				if(spl.mode)
 					routeUi.setMode(spl.mode);
-			} else if(scope.searchResults && scope.submittedSearchString == scope.searchString)
-				routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
-			else
-				routeUi.setFrom(scope.searchString);
+			} else if(!routeUi.getTypedQueries()[0]) {
+				if(scope.searchResults && scope.submittedSearchString == scope.searchString)
+					routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
+				else
+					routeUi.setFrom(scope.searchString);
+			}
 		};
 
 		scope.$watch("showAll", () => {
