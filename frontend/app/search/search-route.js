@@ -132,17 +132,23 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 		};
 
 		map.mapEvents.$on("routeDestinationAdd", (e, idx) => {
-			scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.destinations[idx]));
+			scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]));
+			if(scope.submittedQueries)
+				scope.submittedQueries.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]).query);
 			map.mapEvents.$broadcast("searchchange");
 		});
 
 		map.mapEvents.$on("routeDestinationMove", (e, idx) => {
-			scope.destinations[idx] = makeCoordDestination(map.client.route.destinations[idx]);
+			scope.destinations[idx] = makeCoordDestination(map.client.route.routePoints[idx]);
+			if(scope.submittedQueries)
+				scope.submittedQueries[idx] = makeCoordDestination(map.client.route.routePoints[idx]).query;
 			map.mapEvents.$broadcast("searchchange");
 		});
 
 		map.mapEvents.$on("routeDestinationRemove", (e, idx) => {
 			scope.destinations.splice(idx, 1);
+			if(scope.submittedQueries)
+				scope.submittedQueries.splice(idx, 1);
 			map.mapEvents.$broadcast("searchchange");
 		});
 

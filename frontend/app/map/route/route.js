@@ -24,7 +24,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		function setRoute(route, calcElevation) {
 			return map.client.setRoute({
-				destinations: route.destinations,
+				routePoints: route.routePoints,
 				mode: route.mode,
 				elevation: !!calcElevation
 			}).then(() => {
@@ -85,9 +85,9 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 							trackPointsArr.push(map.client.route.trackPoints[i]);
 					}
 
-					var idx = fmUtils.getIndexOnLine(map.map, trackPointsArr, map.client.route.destinations, { lat: latlng.lat, lon: latlng.lng });
+					var idx = fmUtils.getIndexOnLine(map.map, trackPointsArr, map.client.route.routePoints, { lat: latlng.lat, lon: latlng.lng });
 
-					map.client.route.destinations.splice(idx, 0, { lat: latlng.lat, lon: latlng.lon });
+					map.client.route.routePoints.splice(idx, 0, { lat: latlng.lat, lon: latlng.lon });
 					markers.splice(idx, 0, marker);
 
 					map.mapEvents.$emit("routeDestinationAdd", [idx]);
@@ -101,7 +101,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 			if(!dragging) {
 				// Render markers
 
-				map.client.route.destinations.forEach(function(point, i) {
+				map.client.route.routePoints.forEach(function(point, i) {
 					var marker = L.marker([ point.lat, point.lon ], {
 						icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35),
 						draggable: true,
@@ -120,7 +120,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 		function registerMarkerHandlers(marker) {
 			marker.on("dblclick", function() {
 				let index = markers.indexOf(marker);
-				map.client.route.destinations.splice(index, 1);
+				map.client.route.routePoints.splice(index, 1);
 				markers[index].remove();
 				markers.splice(index, 1);
 				setRoute(map.client.route, true);
@@ -130,7 +130,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 			.on("drag", function() {
 				recalcRoute(function() {
 					let idx = markers.indexOf(marker);
-					map.client.route.destinations[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
+					map.client.route.routePoints[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
 					map.mapEvents.$emit("routeDestinationMove", [idx]);
 
 					return setRoute(map.client.route, false);
@@ -143,7 +143,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 					dragging = false;
 
 					let idx = markers.indexOf(marker);
-					map.client.route.destinations[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
+					map.client.route.routePoints[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
 					map.mapEvents.$emit("routeDestinationMove", [idx]);
 
 					return setRoute(map.client.route, true);
@@ -211,11 +211,10 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 						}
 					}
 
-					map.linesUi.createLine(type, map.client.route.destinations, { mode: map.client.route.mode });
+					map.linesUi.createLine(type, map.client.route.routePoints, { mode: map.client.route.mode });
 
-					map.client.clearRoute().then(() => {
-						map.mapEvents.$broadcast("routeClear");
-					}).catch((err) => {
+					map.mapEvents.$broadcast("routeClear");
+					map.client.clearRoute().catch((err) => {
 						map.messages.showMessage("danger", err);
 					});
 				};
@@ -263,19 +262,19 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 					map.map.flyToBounds(routeLayer.getBounds());
 			},
 
-			setRoute(destinations, mode) {
-				return setRoute({destinations, mode}, true).then(() => {
+			setRoute(routePoints, mode) {
+				return setRoute({routePoints, mode}, true).then(() => {
 					this.showRouteInfoBox();
 				});
 			},
 
 			clearRoute() {
-				return map.client.clearRoute().then(() => {
-					if(openInfoBox)
-						openInfoBox.hide();
+				map.mapEvents.$broadcast("routeClear");
 
-					map.mapEvents.$broadcast("routeClear");
-				});
+				if(openInfoBox)
+					openInfoBox.hide();
+
+				return map.client.clearRoute();
 			},
 
 			hasRoute() {

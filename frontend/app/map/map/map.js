@@ -405,10 +405,34 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					errorMessage = this.messages.showMessage("danger", serverError);
 			});
 
+			let updateBbox = () => {
+				$scope.client.updateBbox(fmUtils.leafletToFmBbox(this.map.getBounds(), this.map.getZoom()));
+			};
+
 			this.map.on("moveend", () => {
-				if($scope.client.padId)
-					$scope.client.updateBbox(fmUtils.leafletToFmBbox(this.map.getBounds(), this.map.getZoom()));
+				if($scope.client.padId || $scope.client.route)
+					updateBbox();
 			});
+
+			// When no pad is loaded, there is no need to update the bbox, except if a route gets loaded
+			let setRoute = $scope.client.setRoute;
+			$scope.client.setRoute = function() {
+				if(!$scope.client.padId)
+					updateBbox();
+				return setRoute.apply(this, arguments);
+			};
+			let lineToRoute = $scope.client.lineToRoute;
+			$scope.client.lineToRoute = function() {
+				if(!$scope.client.padId)
+					updateBbox();
+				return lineToRoute.apply(this, arguments);
+			};
+
+			$scope.$watch("client.route", () => {
+				// When no pad is opened and a route is set for the first time,
+				if(!$scope.client.padId && $scope.client.route)
+					$scope.client.updateBbox(fmUtils.leafletToFmBbox(this.map.getBounds(), this.map.getZoom()));
+			})
 		},
 		link: function(scope, element, attrs, ctrl) {
 			// Has to be called after the controller is initialised so that loadInitialView can be overridden by fmHash

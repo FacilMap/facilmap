@@ -343,12 +343,12 @@ property and the trackPoints in `route.trackPoints`. Only one temporary route li
 calling `setRoute()` again, the existing route will be modified.
 
 * `data` (object): An object with the following properties:
-    * `destinations` (array): An array of at least two route points (objects with a `lat` and `lon` property)
+    * `routePoints` (array): An array of at least two route points (objects with a `lat` and `lon` property)
     * `mode` (string): `"car"`, `"bicycle"` or `"pedestrian"`
     * `elevation` (boolean): `true` to get elevation data for the route
 * _returns_ (Promise<[route](#route-1)>)
 
-### `clearRoute(data)`
+### `clearRoute()`
 
 Clear the temporary route set via [`setRoute(data)`](#setroutedata).
 
@@ -592,8 +592,10 @@ their `idx` property.
 
 ### route
 
-* `trackPoints` (array): An array of track points (objects with a `lon` and `lat` property and also a `zoom` property
-  that indicates from which zoom level the track point should be shown (to avoid an unnecessarily high resolution))
+* `routePoints` (array): Array of route points (objects with `lon` and `lat` properties)
+* `mode` (string): Route mode: `"car"`, `"bicycle"`, `"pedestrian"` or an empty string `""` for a direct line
+* `trackPoints` (array): An array of track points (objects with a `lon`, `lat`, `ele`, `idx` property and also a `zoom`
+  property that indicates from which zoom level the track point should be shown (to avoid an unnecessarily high resolution))
 * `distance` (number): The distance of the route in kilometers
 * `time` (number): The time it takes to travel the route in seconds
 * `ascent` (number): The total meters of climb

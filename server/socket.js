@@ -473,13 +473,13 @@ utils.extend(SocketConnection.prototype, {
 
 		setRoute: function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string", elevation: "boolean" }))
+				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", elevation: "boolean" }))
 					throw "Invalid parameters.";
 
 				if(this.routeId)
-					return this.database.updateRoute(this.routeId, data.destinations, data.mode, data.elevation);
+					return this.database.updateRoute(this.routeId, data.routePoints, data.mode, data.elevation);
 				else
-					return this.database.createRoute(data.destinations, data.mode, data.elevation);
+					return this.database.createRoute(data.routePoints, data.mode, data.elevation);
 			}).then((routeInfo) => {
 				if(!routeInfo) {
 					// A newer submitted route has returned in the meantime
@@ -495,6 +495,8 @@ utils.extend(SocketConnection.prototype, {
 					routeInfo.trackPoints = [];
 
 				return {
+					routePoints: routeInfo.routePoints,
+					mode: routeInfo.mode,
 					time: routeInfo.time,
 					distance: routeInfo.distance,
 					ascent: routeInfo.ascent,

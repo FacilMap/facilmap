@@ -171,6 +171,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 					renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, null, () => {
 						clickMarker.clearLayers();
 					}, true);
+					currentInfoBox = null; // We don't want it to be cleared when we cleared when we switch to the routing form for example
 				}
 			}).catch(function(err) {
 				map.messages.showMessage("danger", err);
@@ -370,7 +371,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				loadSearchResults(filesUi.parseFiles(files));
 			},
 
-			route: function(destinations, mode, noZoom) {
+			route: function(destinations, mode, noZoom, noSubmit) {
 				searchUi.hide();
 				routeUi.show();
 
@@ -378,7 +379,8 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				if(mode)
 					routeUi.setMode(mode);
 
-				routeUi.submit(noZoom);
+				if(!noSubmit)
+					routeUi.submit(noZoom);
 			},
 
 			setRouteDestination: function(query, mode, _results, _result) {

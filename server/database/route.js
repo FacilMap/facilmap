@@ -71,9 +71,7 @@ module.exports = function(Database) {
 						return this.deleteRoute(routeId);
 
 					return this._conn.model("RoutePoint").destroy({
-						where: {
-							id: routeId
-						}
+						where: { routeId }
 					});
 				},
 				trackPoints: () => {

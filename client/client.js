@@ -156,8 +156,6 @@ class Socket {
 		return this._emit("setRoute", data).then((route) => {
 			if(route) { // If unset, a newer submitted route has returned in the meantime
 				this.route = route;
-				this.route.destinations = data.destinations;
-				this.route.mode = data.mode;
 				this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
 			}
 
