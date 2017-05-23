@@ -322,7 +322,8 @@ Search for places.
 
 * `data` (object): An object with the following properties:
     * `query` (string): The query string
-    * `loadUrls` (string): Whether to return the file if `query` is a URL
+    * `loadUrls` (boolean): Whether to return the file if `query` is a URL
+    * `elevation` (boolean): Whether to find out the elevation of the result(s). Will make the search significantly slower.
 * _returns_ (Promise<string|Array<[searchResult](#searchresult)>>): If `data.query` is a URL to a GPX/KML/OSM/GeoJSON
   file, that file as a string, otherwise an array of search results.
 

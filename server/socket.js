@@ -455,10 +455,10 @@ utils.extend(SocketConnection.prototype, {
 
 		find: function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { query: "string", loadUrls: "boolean" }))
+				if(!utils.stripObject(data, { query: "string", loadUrls: "boolean", elevation: "boolean" }))
 					throw "Invalid parameters.";
 
-				return search.find(data.query, data.loadUrls);
+				return search.find(data.query, data.loadUrls, data.elevation);
 			});
 		},
 

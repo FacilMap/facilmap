@@ -55,7 +55,7 @@ const stateAbbr = {
 
 const search = module.exports = {
 
-	find(query, loadUrls) {
+	find(query, loadUrls, loadElevation) {
 		return Promise.resolve().then(function() {
 			query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
@@ -78,18 +78,18 @@ const search = module.exports = {
 					lat: 1*lonlat_match[2].replace(",", ".").replace(/\s+/, ""),
 					lon : 1*lonlat_match[4].replace(",", ".").replace(/\s+/, ""),
 					zoom : lonlat_match[7] != null ? 1*lonlat_match[7] : null
-				}).then((res) => (res.map((res) => (Object.assign(res, {id: query})))));
+				}, loadElevation).then((res) => (res.map((res) => (Object.assign(res, {id: query})))));
 			}
 
 			let osm_match = query.match(/^([nwr])(\d+)$/i);
 			if(osm_match)
-				return search._findOsmObject(osm_match[1], osm_match[2]);
+				return search._findOsmObject(osm_match[1], osm_match[2], loadElevation);
 
-			return search._findQuery(query);
+			return search._findQuery(query, loadElevation);
 		});
 	},
 
-	_findQuery(query) {
+	_findQuery(query, loadElevation) {
 		return request({
 			url: nameFinderUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
 			json: true
@@ -101,7 +101,7 @@ const search = module.exports = {
 				throw body.error;
 
 			let points = body.filter((res) => (res.lon && res.lat));
-			if(points.length > 0) {
+			if(loadElevation && points.length > 0) {
 				return elevation.getElevationForPoints(points).then((elevations) => {
 					elevations.forEach((elevation, i) => {
 						points[i].elevation = elevation;
@@ -114,7 +114,7 @@ const search = module.exports = {
 		}).then((body) => (body.map(search._prepareSearchResult)));
 	},
 
-	_findOsmObject(type, id) {
+	_findOsmObject(type, id, loadElevation) {
 		return request({
 			url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_type=${encodeURI(type.toUpperCase())}&osm_id=${encodeURI(id)}`,
 			json: true
@@ -123,20 +123,20 @@ const search = module.exports = {
 				throw body ? body.error : "Invalid response from name finder";
 			}
 
-			if(body.lat && body.lon)
+			if(loadElevation && body.lat && body.lon)
 				return elevation.getElevationForPoint(body).then((elevation) => (Object.assign(body, { elevation })));
 			else
 				return body;
 		}).then((body) => ([ search._prepareSearchResult(body) ]));
 	},
 
-	_findLonLat(lonlatWithZoom) {
+	_findLonLat(lonlatWithZoom, loadElevation) {
 		return Promise.all([
 			request({
 				url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&lat=${encodeURI(lonlatWithZoom.lat)}&lon=${encodeURI(lonlatWithZoom.lon)}&zoom=${encodeURI(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
 				json: true
 			}),
-			elevation.getElevationForPoint(lonlatWithZoom)
+			...(loadElevation ? [elevation.getElevationForPoint(lonlatWithZoom)] : [])
 		]).then(function([body, elevation]) {
 			if(!body || body.error) {
 				let name = utils.round(lonlatWithZoom.lat, 5) + ", " + utils.round(lonlatWithZoom.lon, 5);

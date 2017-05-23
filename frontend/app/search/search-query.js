@@ -44,7 +44,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				var q = scope.submittedSearchString = scope.searchString;
 				map.mapEvents.$broadcast("searchchange");
 
-				map.client.find({ query: scope.searchString, loadUrls: true }).then(function(results) {
+				map.client.find({ query: scope.searchString, loadUrls: true, elevation: true }).then(function(results) {
 					if(q != scope.submittedSearchString)
 						return; // Another search has been started in the meantime
 
@@ -164,7 +164,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		map.mapEvents.$on("longmousedown", function(e, latlng) {
 			clickMarker.clearLayers();
 
-			map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false }).then(function(results) {
+			map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false, elevation: true }).then(function(results) {
 				clickMarker.clearLayers();
 
 				if(results.length > 0) {
