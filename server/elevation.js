@@ -11,10 +11,10 @@ const request = require("request-promise").defaults({
 const API_URL = "https://elevation.mapzen.com/height";
 const API_KEY = "mapzen-LWPWRB1";
 const LIMIT = 500;
-const PER_SECOND_LIMIT = 2;
+const MIN_TIME_BETWEEN_REQUESTS = 600;
 
 const throttle = highland();
-throttle.ratelimit(PER_SECOND_LIMIT, 1000).each((func) => {
+throttle.ratelimit(1, MIN_TIME_BETWEEN_REQUESTS).each((func) => {
 	func();
 });
 
