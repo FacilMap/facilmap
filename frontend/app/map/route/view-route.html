@@ -8,7 +8,7 @@
 	</dl>
 	<div class="fm-elevation-plot" ng-show="client.route.ascent != null"></div>
 </div>
-<div class="buttons" ng-if="!readonly">
+<div class="buttons" ng-if="!client.readonly">
 	<div uib-dropdown keyboard-nav="true" ng-if="(client.types | fmPropertyCount:{type:'line'}) > 1" class="dropup">
 		<button id="add-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button" uib-dropdown-menu>

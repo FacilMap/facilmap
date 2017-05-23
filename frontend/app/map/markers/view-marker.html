@@ -11,10 +11,10 @@
 		<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="marker.data[field.name]"></dd>
 	</dl>
 </div>
-<div class="buttons" ng-if="!readonly">
-	<button type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
-	<button type="button" class="btn btn-default btn-sm" ng-click="move()">Move</button>
-	<button type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()">Remove</button>
+<div class="buttons">
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()">Move</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()">Remove</button>
 	<div ng-if="map.searchUi" uib-dropdown keyboard-nav="true" class="dropup">
 		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu">

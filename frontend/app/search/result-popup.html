@@ -15,13 +15,13 @@
 </div>
 <div class="buttons">
 	{{filteredTypes = (result.isMarker && result.isLine ? client.types : (client.types | fmObjectFilter:{type:result.isMarker ? 'marker' : 'line'})); ""}}
-	<div uib-dropdown keyboard-nav="true" ng-if="!readonly && (filteredTypes | fmPropertyCount) > 1" class="dropup">
+	<div uib-dropdown keyboard-nav="true" ng-if="!client.readonly && (filteredTypes | fmPropertyCount) > 1" class="dropup">
 		<button id="add-type-button" type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button">
 			<li role="menuitem" ng-repeat="type in filteredTypes"><a href="javascript:" ng-click="addToMap(type)">{{type.name}}</a></li>
 		</ul>
 	</div>
-	<button type="button" ng-if="!readonly && (filteredTypes | fmPropertyCount) == 1" ng-repeat="type in filteredTypes" class="btn btn-default btn-sm" ng-click="addToMap(type)">Add to map</button>
+	<button type="button" ng-if="!client.readonly && (filteredTypes | fmPropertyCount) == 1" ng-repeat="type in filteredTypes" class="btn btn-default btn-sm" ng-click="addToMap(type)">Add to map</button>
 	<div ng-if="result.isMarker" uib-dropdown keyboard-nav="true" class="dropup">
 		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu">

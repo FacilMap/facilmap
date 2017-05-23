@@ -25,7 +25,7 @@
 		</uib-tab>
 	</uib-tabset>
 </div>
-<div class="buttons" ng-if="!readonly">
+<div class="buttons" ng-if="!client.readonly">
 	<button type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
 	<button type="button" class="btn btn-default btn-sm" ng-click="move()">Move</button>
 	<button type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the line “' + line.name + '”?') && delete()">Remove</button>
