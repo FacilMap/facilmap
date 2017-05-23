@@ -258,8 +258,15 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 			},
 
 			zoom() {
-				if(routeLayer)
-					map.map.flyToBounds(routeLayer.getBounds());
+				if(map.client.route) {
+					let points = [];
+					for(let i=0; i<map.client.route.trackPoints.length; i++) {
+						if(map.client.route.trackPoints[i])
+							points.push(L.latLng(map.client.route.trackPoints[i].lat, map.client.route.trackPoints[i].lon));
+					}
+
+					map.map.flyToBounds(L.latLngBounds(points));
+				}
 			},
 
 			setRoute(routePoints, mode) {
