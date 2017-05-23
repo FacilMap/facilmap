@@ -129,8 +129,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 					if(save) {
 						var pos = markersById[marker.id].getLatLng();
-						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function() {
-							markersUi.showMarkerInfoBox(markersById[marker.id]);
+						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function(marker) {
+							markersUi.showMarkerInfoBox(marker);
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 
