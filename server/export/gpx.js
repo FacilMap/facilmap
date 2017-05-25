@@ -50,13 +50,6 @@ function exportGpx(database, padId, useTracks) {
 	return utils.promiseAuto({
 		padData: database.getPadData(padId),
 
-		views: () => {
-			var views = '';
-			return utils.streamEachPromise(database.getViews(padId), (view) => {
-				views += '<fm:view name="' + _e(view.name) + '" baselayer="' + _e(view.baseLayer) + '" layers="' + _e(JSON.stringify(view.layers)) + '" bbox="' + _e([ view.left, view.top, view.right, view.bottom].join(',')) + '" />\n';
-			}).then(() => views);
-		},
-
 		typesObj: () => {
 			var typesObj = { };
 			return utils.streamEachPromise(database.getTypes(padId), function(type) {
@@ -64,24 +57,12 @@ function exportGpx(database, padId, useTracks) {
 			}).then(() => typesObj);
 		},
 
-		types: (typesObj) => {
-			var types = '';
-			for(var i in typesObj) {
-				var type = typesObj[i];
-				types += '<fm:type name="' + _e(type.name) + '" type="' + _e(type.type) + '" fields="' + _e(JSON.stringify(type.fields)) + '" />\n';
-			}
-			return types;
-		},
-
 		markers: (typesObj) => {
 			var markers = '';
 			return utils.streamEachPromise(database.getPadMarkers(padId), function(marker) {
-				markers += '<wpt lat="' + _e(marker.lat) + '" lon="' + _e(marker.lon) + '">\n' +
+				markers += '<wpt lat="' + _e(marker.lat) + '" lon="' + _e(marker.lon) + '"' + (marker.ele != null ? ' ele="' + _e(marker.ele) + '"' : '') + '>\n' +
 					'\t<name>' + _e(marker.name) + '</name>\n' +
 					'\t<desc>' + _e(_dataToText(typesObj[marker.typeId].fields, marker.data)) + '</desc>\n' +
-					'\t<extensions>\n' +
-					'\t\t<fm:colour>' + _e(marker.colour) + '</fm:colour>\n' +
-					'\t</extensions>\n' +
 					'</wpt>\n';
 			}).then(() => markers);
 		},
@@ -93,18 +74,12 @@ function exportGpx(database, padId, useTracks) {
 
 				lines += '<' + (t ? 'trk' : 'rte') + '>\n' +
 					'\t<name>' + _e(line.name) + '</name>\n' +
-					'\t<desc>' + _e(_dataToText(typesObj[line.typeId].fields, line.data)) + '</desc>\n' +
-					'\t<extensions>\n' +
-					'\t\t<fm:colour>' + _e(line.colour) + '</fm:colour>\n' +
-					'\t\t<fm:width>' + _e(line.width) + '</fm:width>\n' +
-					'\t\t<fm:mode>' + _e(line.mode) + '</fm:mode>\n' +
-					(t && line.mode != 'track' ? '\t\t<fm:routePoints>' + _e(JSON.stringify(line.routePoints)) + '</fm:routePoints>\n' : '') +
-					'\t</extensions>\n';
+					'\t<desc>' + _e(_dataToText(typesObj[line.typeId].fields, line.data)) + '</desc>\n';
 
 				if(t) {
 					lines += '\t<trkseg>\n';
 					for(var i=0; i<line.trackPoints.length; i++) {
-						lines += '\t\t<trkpt lat="' + _e(line.trackPoints[i].lat) + '" lon="' + _e(line.trackPoints[i].lon) + '" />\n';
+						lines += '\t\t<trkpt lat="' + _e(line.trackPoints[i].lat) + '" lon="' + _e(line.trackPoints[i].lon) + '"' + (line.trackPoints[i].ele != null ? ' ele="' + _e(line.trackPoints[i].ele) + '"' : '') + ' />\n';
 					}
 					lines += '\t</trkseg>\n';
 				} else {
@@ -122,10 +97,6 @@ function exportGpx(database, padId, useTracks) {
 		'\t\t<name>' + _e(res.padData.name) + '</name>\n' +
 		'\t\t<time>' + _e(utils.isoDate()) + '</time>\n' +
 		'\t</metadata>\n' +
-		'\t<extensions>\n' +
-		res.views.replace(/^(.)/gm, '\t\t$1') +
-		res.types.replace(/^(.)/gm, '\t\t$1') +
-		'\t</extensions>\n' +
 		res.markers.replace(/^(.)/gm, '\t$1') +
 		res.lines.replace(/^(.)/gm, '\t$1') +
 		'</gpx>'
