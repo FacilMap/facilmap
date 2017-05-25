@@ -123,7 +123,7 @@ module.exports = function(Database) {
 			return this._getPadObject("Line", padId, lineId);
 		},
 
-		createLine(padId, data) {
+		createLine(padId, data, trackPointsFromRoute) {
 			return utils.promiseAuto({
 				defaultVals: this.getType(padId, data.typeId).then((type) => {
 					if(type.defaultColour && !("colour" in data))
@@ -135,7 +135,7 @@ module.exports = function(Database) {
 				}),
 
 				routing: (defaultVals) => {
-					return this._calculateRouting(data);
+					return this._calculateRouting(data, trackPointsFromRoute);
 				},
 
 				createLine: (routing, defaultVals) => {
@@ -163,7 +163,7 @@ module.exports = function(Database) {
 			});
 		},
 
-		updateLine(padId, lineId, data, doNotUpdateStyles) {
+		updateLine(padId, lineId, data, doNotUpdateStyles, trackPointsFromRoute) {
 			return utils.promiseAuto({
 				originalLine: this.getLine(padId, lineId),
 
@@ -175,7 +175,7 @@ module.exports = function(Database) {
 						data.mode = originalLine.mode || "";
 
 					if((data.mode == "track" && data.trackPoints) || !underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode)
-						return this._calculateRouting(data); // Also sets data.distance and data.time
+						return this._calculateRouting(data, trackPointsFromRoute); // Also sets data.distance and data.time
 				},
 
 				newLine: (routing) => {
@@ -279,8 +279,21 @@ module.exports = function(Database) {
 			});
 		},
 
-		_calculateRouting(line) {
-			if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
+		getAllLinePoints(lineId) {
+			return this._conn.model("Line").build({ id: lineId }).getLinePoints({
+				attributes: [ "lat", "lon", "ele", "zoom", "idx" ]
+			});
+		},
+
+		_calculateRouting(line, trackPointsFromRoute) {
+			if(trackPointsFromRoute) {
+				line.distance = trackPointsFromRoute.distance;
+				line.time = trackPointsFromRoute.time;
+				line.ascent = trackPointsFromRoute.ascent;
+				line.descent = trackPointsFromRoute.descent;
+
+				return Promise.resolve(trackPointsFromRoute.trackPoints);
+			} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
 				line.distance = utils.calculateDistance(line.trackPoints);
 				line.time = null;
 

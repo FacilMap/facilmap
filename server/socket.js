@@ -1,6 +1,7 @@
 var socketIo = require("socket.io");
 var domain = require("domain");
 var Promise = require("bluebird");
+var underscore = require("underscore");
 
 var utils = require("./utils");
 var routing = require("./routing");
@@ -33,7 +34,7 @@ class SocketConnection {
 		this.bbox = null;
 		this.writable = null;
 
-		this.routeId = null;
+		this.route = null;
 
 		this._dbHandlers = [ ];
 
@@ -188,8 +189,8 @@ utils.extend(SocketConnection.prototype, {
 				ret.marker = utils.streamToArrayPromise(this.database.getPadMarkers(this.padId, bboxWithExcept));
 				ret.linePoints = utils.streamToArrayPromise(this.database.getLinePointsForPad(this.padId, bboxWithExcept));
 			}
-			if(this.routeId)
-				ret.routePoints = utils.streamToArrayPromise(this.database.getRoutePoints(this.routeId, bboxWithExcept, !bboxWithExcept.except)).then((points) => ([points]));
+			if(this.route)
+				ret.routePoints = this.database.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
 
 			return Promise.props(ret);
 		},
@@ -198,8 +199,8 @@ utils.extend(SocketConnection.prototype, {
 			if(this.padId)
 				this.unregisterDatabaseHandlers();
 
-			if(this.routeId) {
-				this.database.deleteRoute(this.routeId).catch((err) => {
+			if(this.route) {
+				this.database.deleteRoute(this.route.id).catch((err) => {
 					console.error("Error clearing route", err.stack || err);
 				});
 			}
@@ -289,7 +290,10 @@ utils.extend(SocketConnection.prototype, {
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				return this.database.createLine(this.padId, data);
+				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints))
+					return this.database.getAllRoutePoints(this.route.id);
+			}).then((trackPoints) => {
+				return this.database.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
 			});
 		},
 
@@ -301,7 +305,10 @@ utils.extend(SocketConnection.prototype, {
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				return this.database.updateLine(this.padId, data.id, data);
+				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints))
+					return this.database.getAllRoutePoints(this.route.id);
+			}).then((trackPoints) => {
+				return this.database.updateLine(this.padId, data.id, data, null, trackPoints && Object.assign({}, this.route, {trackPoints}));
 			});
 		},
 
@@ -476,8 +483,8 @@ utils.extend(SocketConnection.prototype, {
 				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", elevation: "boolean" }))
 					throw "Invalid parameters.";
 
-				if(this.routeId)
-					return this.database.updateRoute(this.routeId, data.routePoints, data.mode, data.elevation);
+				if(this.route)
+					return this.database.updateRoute(this.route.id, data.routePoints, data.mode, data.elevation);
 				else
 					return this.database.createRoute(data.routePoints, data.mode, data.elevation);
 			}).then((routeInfo) => {
@@ -487,7 +494,7 @@ utils.extend(SocketConnection.prototype, {
 					return;
 				}
 
-				this.routeId = routeInfo.id;
+				this.route = routeInfo;
 
 				if(this.bbox)
 					routeInfo.trackPoints = routing.prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
@@ -508,10 +515,39 @@ utils.extend(SocketConnection.prototype, {
 
 		clearRoute: function() {
 			return Promise.resolve().then(() => {
-				if(this.routeId)
-					return this.database.deleteRoute(this.routeId);
+				if(this.route)
+					return this.database.deleteRoute(this.route.id);
 			}).then(() => {
-				this.routeId = null;
+				this.route = null;
+			});
+		},
+
+		lineToRoute: function(data) {
+			return Promise.resolve().then(() => {
+				if(!utils.stripObject(data, { id: "string" }))
+					throw "Invalid parameters.";
+
+				if(!this.padId)
+					throw "No collaborative map opened.";
+
+				return this.database.lineToRoute(this.route && this.route.id, this.padId, data.id);
+			}).then((routeInfo) => {
+				this.route = routeInfo;
+
+				if(this.bbox)
+					routeInfo.trackPoints = routing.prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
+				else
+					routeInfo.trackPoints = [];
+
+				return {
+					routePoints: routeInfo.routePoints,
+					mode: routeInfo.mode,
+					time: routeInfo.time,
+					distance: routeInfo.distance,
+					ascent: routeInfo.ascent,
+					descent: routeInfo.descent,
+					trackPoints: routeInfo.trackPoints
+				};
 			});
 		},
 

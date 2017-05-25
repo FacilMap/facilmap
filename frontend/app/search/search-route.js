@@ -201,7 +201,9 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			setQueries: function(queries) {
-				scope.clear();
+				scope.submittedQueries = null;
+				scope.submittedMode = null;
+				scope.destinations = [ ];
 
 				for(var i=0; i<queries.length; i++) {
 					if(scope.destinations.length <= i)
@@ -209,6 +211,9 @@ fm.app.factory("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout
 
 					$.extend(scope.destinations[i], typeof queries[i] == "object" ? queries[i] : { query: queries[i] });
 				}
+
+				while(scope.destinations.length < 2)
+					scope.addDestination();
 			},
 
 			setFrom: function(from, suggestions, selectedSuggestion) {

@@ -355,6 +355,15 @@ Clear the temporary route set via [`setRoute(data)`](#setroutedata).
 
 * _returns_ (Promise)
 
+### `lineToRoute(data)`
+
+Call [`setRoute()`](#setroutedata) with the parameters of an existing line. Saves time, as the route does not need to be
+recalculated.
+
+* `data` (object): An object with the following properties:
+	* `id` (string): The ID of the line
+* _returns_ (Promise<[route](#route-1)>)
+
 ### `addMarker(data)`
 
 Create a marker.

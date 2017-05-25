@@ -38,26 +38,22 @@ module.exports = function(Database) {
 			if(getCompleteBasicRoute)
 				cond.$or.push({ zoom: { lte: 5 } });
 
-			let ret = new utils.ArrayStream();
-
-			this._conn.model("RoutePoint").findAll({
+			return this._conn.model("RoutePoint").findAll({
 				where: cond,
 				attributes: [ "lon", "lat", "idx", "ele"],
 				order: "idx"
-			}).then((objs) => {
-				ret.receiveArray(null, objs);
-			}).catch((err) => {
-				ret.receiveArray(err);
 			});
+		},
 
-			return ret;
+		generateRouteId() {
+			// TODO: Check if exists
+			return Promise.resolve(utils.generateRandomId(20));
 		},
 
 		createRoute(routePoints, mode, calculateElevation) {
-			// TODO: Check if exists
-			let routeId = utils.generateRandomId(20);
-
-			return this.updateRoute(routeId, routePoints, mode, calculateElevation, true);
+			return this.generateRouteId().then((routeId) => {
+				return this.updateRoute(routeId, routePoints, mode, calculateElevation, true);
+			});
 		},
 
 		updateRoute(routeId, routePoints, mode, calculateElevation, _noClear) {
@@ -113,6 +109,50 @@ module.exports = function(Database) {
 			});
 		},
 
+		lineToRoute(routeId, padId, lineId) {
+			return utils.promiseAuto({
+				routeId: () => (routeId ? routeId : this.generateRouteId()),
+				clear: () => {
+					if(routeId) {
+						return this._conn.model("RoutePoint").destroy({
+							where: { routeId }
+						});
+					}
+				},
+				line: () => (this.getLine(padId, lineId)),
+				linePoints: () => (this.getAllLinePoints(lineId)),
+				update: (routeId, clear, line, linePoints) => {
+					let create = [];
+					for(let linePoint of linePoints) {
+						create.push({
+							routeId,
+							lat: linePoint.lat,
+							lon: linePoint.lon,
+							ele: linePoint.ele,
+							zoom: linePoint.zoom,
+							idx: linePoint.idx
+						});
+					}
+
+					return this._bulkCreateInBatches(this._conn.model("RoutePoint"), create);
+				}
+
+			}).then((res) => {
+				updateTimes[res.routeId] = Date.now();
+
+				return {
+					id: res.routeId,
+					mode: res.line.mode,
+					routePoints: res.line.routePoints,
+					trackPoints: res.linePoints,
+					distance: res.line.distance,
+					time: res.line.time,
+					ascent: res.line.ascent,
+					descent: res.line.descent
+				};
+			});
+		},
+
 		deleteRoute(routeId) {
 			delete updateTimes[routeId];
 
@@ -124,19 +164,18 @@ module.exports = function(Database) {
 		},
 
 		getRoutePointsByIdx(routeId, indexes) {
-			let ret = new utils.ArrayStream();
-
-			this._conn.model("RoutePoint").findAll({
+			return this._conn.model("RoutePoint").findAll({
 				where: { routeId, idx: indexes },
 				attributes: [ "lon", "lat", "idx", "ele" ],
 				order: "idx"
-			}).then((objs) => {
-				ret.receiveArray(null, objs);
-			}).catch((err) => {
-				ret.receiveArray(err);
 			});
+		},
 
-			return ret;
+		getAllRoutePoints(routeId) {
+			return this._conn.model("RoutePoint").findAll({
+				where: {routeId},
+				attributes: [ "lon", "lat", "idx", "ele", "zoom"]
+			});
 		}
 	});
 };

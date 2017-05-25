@@ -9,7 +9,6 @@ import css from './lines.scss';
 fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
 	return function(map) {
 		var linesById = { };
-		var editingLineId = null;
 
 		let openLine = null;
 		let openLineHighlight = null;
@@ -21,7 +20,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		map.client.on("line", function(data) {
 			setTimeout(function() { // trackPoints needs to be copied over
-				if(map.client.filterFunc(map.client.lines[data.id]))
+				if((!map.client._editingLineId || data.id != map.client._editingLineId) && map.client.filterFunc(map.client.lines[data.id]))
 					linesUi._addLine(map.client.lines[data.id]);
 			}, 0);
 		});
@@ -32,14 +31,14 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		map.client.on("linePoints", function(data) {
 			setTimeout(function() {
-				if(map.client.filterFunc(map.client.lines[data.id]))
+				if((!map.client._editingLineId || data.id != map.client._editingLineId) && map.client.filterFunc(map.client.lines[data.id]))
 					linesUi._addLine(map.client.lines[data.id]);
 			}, 0);
 		});
 
 		map.client.on("filter", function() {
 			for(var i in map.client.lines) {
-				var show = map.client.filterFunc(map.client.lines[i]);
+				var show = (!map.client._editingLineId || i != map.client._editingLineId) && map.client.filterFunc(map.client.lines[i]);
 				if(linesById[i] && !show)
 					linesUi._deleteLine(map.client.lines[i]);
 				else if(!linesById[i] && show)
@@ -55,7 +54,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 		var linesUi = {
 			_addLine: function(line, _doNotRerenderPopup) {
 				var trackPoints = [ ];
-				var p = (editingLineId != null && editingLineId == line.id ? line.routePoints : line.trackPoints) || [ ];
+				var p = line.trackPoints || [ ];
 				for(var i=0; i<p.length; i++) {
 					if(p[i] != null)
 						trackPoints.push(L.latLng(p[i].lat, p[i].lon));
@@ -68,7 +67,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					linesById[line.id] = L.polyline([ ]).addTo(map.map);
 					map.map.almostOver.addLayer(linesById[line.id]);
 
-					if(line.id != null && line.id != editingLineId) { // We don't want a popup for lines that we are drawing right now
+					if(line.id != null) { // We don't want a popup for lines that we are drawing right now
 						linesById[line.id]
 							.on("click", function(e) {
 								linesUi.showLineInfoBox(map.client.lines[line.id]);
@@ -202,123 +201,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				template.filter(".content").on("resizeend", drawElevationPlot);
 				setTimeout(drawElevationPlot, 0);
 			},
-			_makeLineMovable: function(line) {
-				var markers = [ ];
-
-				editingLineId = line.id;
-
-				// Re-add the line (because editingLineId is set)
-				linesUi._deleteLine(line);
-				linesUi._addLine(line);
-
-				// Watch if route points change (because someone else has moved the line while we are moving it
-				var routePointsBkp = ng.copy(line.routePoints);
-				var unregisterWatcher = $rootScope.$watch(() => (map.client.lines[line.id].routePoints), function() {
-					// We do not do a deep watch, as then we will be not notified if someone edits the line without
-					// actually moving it, in which case we still need to redraw it (because it gets redrawn because
-					// the server sends it to us again).
-
-					// The line has been edited, but it has not been moved. Override its points with our current stage again
-					if(ng.equals(routePointsBkp, map.client.lines[line.id].routePoints))
-						map.client.lines[line.id].routePoints = line.routePoints;
-					else // The line has been moved. Override our stage with the new points.
-						routePointsBkp = ng.copy(line.routePoints);
-
-					line = map.client.lines[line.id];
-					linesUi._addLine(line);
-					removeTempMarkers();
-					createTempMarkers();
-				});
-
-				function createTempMarker(huge) {
-					var marker = L.marker([0,0], {
-						icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35, null, huge ? 1000 : null),
-						draggable: true
-					})
-						.on("dblclick", function() {
-							// Double click on temporary marker: Remove this route point
-							var idx = markers.indexOf(marker);
-							markers.splice(idx, 1);
-							line.routePoints.splice(idx, 1);
-							marker.remove();
-							linesUi._addLine(line);
-						})
-						.on("drag", function() {
-							var idx = markers.indexOf(marker);
-							var latlng = marker.getLatLng();
-							line.routePoints[idx] = { lat: latlng.lat, lon: latlng.lng };
-							linesUi._addLine(line);
-						});
-					return marker;
-				}
-
-				function createTempMarkers() {
-					line.routePoints.forEach(function(it) {
-						markers.push(createTempMarker().setLatLng([ it.lat, it.lon ]).addTo(map.map));
-					});
-				}
-
-				function removeTempMarkers() {
-					for(var i=0; i<markers.length; i++)
-						markers[i].remove();
-					markers = [ ];
-				}
-
-				// This marker is shown when we hover the line. It enables us to create new markers.
-				// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
-				// sure that the mouse is over it and dragging it will work smoothly.
-				var temporaryHoverMarker;
-
-				function _over(e) {
-					temporaryHoverMarker.setLatLng(e.latlng).addTo(map.map);
-				}
-
-				function _move(e) {
-					temporaryHoverMarker.setLatLng(e.latlng);
-				}
-
-				function _out(e) {
-					temporaryHoverMarker.remove();
-				}
-
-				linesById[line.id].on("fm-almostover", _over).on("fm-almostmove", _move).on("fm-almostout", _out);
-
-				function makeTemporaryHoverMarker() {
-					temporaryHoverMarker = createTempMarker(true);
-
-					temporaryHoverMarker.once("dragstart", function() {
-						temporaryHoverMarker.once("dragend", function() {
-							// We have to replace the huge icon with the regular one at the end of the dragging, otherwise
-							// the dragging gets interrupted
-							this.setIcon(fmUtils.createMarkerIcon("ffd700", 35));
-						}, temporaryHoverMarker);
-
-						var latlng = temporaryHoverMarker.getLatLng();
-						var idx = fmUtils.getIndexOnLine(map.map, line.routePoints, line.routePoints, latlng);
-						markers.splice(idx, 0, temporaryHoverMarker);
-						line.routePoints.splice(idx, 0, { lat: latlng.lat, lon: latlng.lng });
-
-						makeTemporaryHoverMarker();
-					});
-				}
-
-				makeTemporaryHoverMarker();
-
-				return {
-					done : function() {
-						editingLineId = null;
-						unregisterWatcher();
-						removeTempMarkers();
-						temporaryHoverMarker.remove();
-
-						// Re-add the line (because editingLineId is not set anymore)
-						linesUi._deleteLine(line);
-						linesUi._addLine(line);
-
-						return line.routePoints;
-					}
-				};
-			},
 			editLine: function(line) {
 				var scope = $rootScope.$new();
 				scope.client = map.client;
@@ -406,29 +288,58 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				});
 			},
 			moveLine: function(line) {
-				var movable = linesUi._makeLineMovable(line);
 
-				var message = map.messages.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
-					{ label: "Finish", click: done.bind(null, true) },
-					{ label: "Cancel", click: done.bind(null, false) }
-				], null, done.bind(null, false, true));
+				map.routeUi.lineToRoute(line.id).then(() => {
+					map.client._editingLineId = line.id;
+					linesUi._deleteLine(line);
 
-				function done(save, noClose) {
-					var newPoints = movable.done();
-					linesUi._addLine(line);
-					linesUi.showLineInfoBox(line);
+					let message = map.messages.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
+						{ label: "Finish", click: done.bind(null, true), enabled: () => (!!map.client.route) },
+						{ label: "Cancel", click: done.bind(null, false) }
+					], null, done.bind(null, false, true));
 
-					if(!noClose) {
-						message.close();
+					let searchBkp;
+					if(map.searchUi) {
+						searchBkp = map.searchUi.getCurrentSearchForHash() || "";
+						map.searchUi.route(map.client.route.routePoints.map((routePoint) => (fmUtils.round(routePoint.lat, 5) + "," + fmUtils.round(routePoint.lon, 5))), map.client.route.mode, false, true);
 					}
 
-					if(save) {
-						line.trackPoints = { };
-						map.client.editLine({ id: line.id, routePoints: newPoints }).catch(function(err) {
+					function done(save, noClose) {
+						map.client._editingLineId = null;
+						linesUi._addLine(map.client.lines[line.id]);
+						linesUi.showLineInfoBox(map.client.lines[line.id]);
+
+						if(!noClose) {
+							message.close();
+						}
+
+						if(save && !map.client.route) {
+							map.messages.showMessage("danger", "No route set.");
+							return;
+						}
+
+						Promise.resolve().then(() => {
+							if(save) {
+								return map.client.editLine({ id: line.id, routePoints: map.client.route.routePoints, mode: map.client.route.mode });
+							}
+						}).then(() => {
+							// Clear route after editing line so that the server can take the trackPoints from the route
+							let ret = map.routeUi.clearRoute();
+
+							if(map.searchUi) {
+								map.searchUi.route([], null, false, true);
+								map.searchUi.search(searchBkp, true);
+							}
+
+							return ret;
+						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 						});
 					}
-				}
+				}).catch((err) => {
+					console.log("err", err);
+					map.messages.showMessage("danger", err);
+				});
 			},
 			deleteLine: function(line) {
 				map.client.deleteLine(line).catch(function(err) {

@@ -358,6 +358,11 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			search: function(query, noZoom, showAll) {
+				if(!searchUi._el.is(":visible")) {
+					routeUi.hide();
+					searchUi.show();
+				}
+
 				if(query != null)
 					scope.searchString = query;
 

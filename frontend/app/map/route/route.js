@@ -275,6 +275,15 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				});
 			},
 
+			lineToRoute(lineId) {
+				return map.client.lineToRoute({
+					id: lineId
+				}).then(() => {
+					renderRoute();
+					this.showRouteInfoBox();
+				});
+			},
+
 			clearRoute() {
 				map.mapEvents.$broadcast("routeClear");
 

@@ -2,7 +2,7 @@
 	<div ng-repeat="message in messages" uib-alert ng-class="'alert-' + message.type" close="message.close(true)">
 		<strong>{{message.message}}</strong>
 		<div class="btn-group pull-right btn-group-sm">
-			<a ng-repeat="button in message.buttons" href="{{button.url || 'javascript:'}}" ng-click="button.click && button.click()" class="btn btn-default">{{button.label}}</a>
+			<a ng-repeat="button in message.buttons" href="{{button.url || 'javascript:'}}" ng-click="button.click && button.click()" class="btn btn-default" ng-disabled="button.enabled && !button.enabled()">{{button.label}}</a>
 		</div>
 	</div>
 </div>

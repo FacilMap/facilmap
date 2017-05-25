@@ -168,6 +168,15 @@ class Socket {
 		return this._emit("clearRoute");
 	}
 
+	lineToRoute(data) {
+		return this._emit("lineToRoute", data).then((route) => {
+			this.route = route;
+			this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
+
+			return this.route;
+		});
+	}
+
 	addType(data) {
 		return this._emit("addType", data);
 	}
