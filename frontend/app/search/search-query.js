@@ -99,7 +99,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				var spl = fmUtils.splitRouteQuery(scope.searchString);
 				routeUi.setQueries(spl.queries);
 				if(spl.mode)
-					routeUi.setMode(spl.mode);
+					routeUi.setMode(spl.mode == "helicopter" ? "" : spl.mode);
 			} else if(!routeUi.getTypedQueries()[0]) {
 				if(scope.searchResults && scope.submittedSearchString == scope.searchString)
 					routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
@@ -418,7 +418,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 				} else {
 					var queries = routeUi.getQueries();
 					if(queries)
-						return queries.join(" to ") + " by " + routeUi.getMode();
+						return queries.join(" to ") + " by " + (routeUi.getMode() || "helicopter");
 				}
 			},
 
