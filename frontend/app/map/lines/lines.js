@@ -80,10 +80,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 								linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.client.lines[line.id].name)).openTooltip(e.latlng);
 							})
 							.on("fm-almostmove", function(e) {
-								linesById[line.id].openTooltip(e.latlng)
+								linesById[line.id].openTooltip(e.latlng);
 							})
 							.on("fm-almostout", function() {
-								linesById[line.id].closeTooltip();
+								linesById[line.id].unbindTooltip();
 							});
 					}
 				}
