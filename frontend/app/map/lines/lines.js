@@ -3,6 +3,7 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 import 'leaflet.elevation';
+import {saveAs} from 'file-saver';
 
 import css from './lines.scss';
 
@@ -142,6 +143,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				scope['delete'] = function() {
 					linesUi.deleteLine(scope.line);
+				};
+
+				scope.export = function(useTracks) {
+					linesUi.exportLine(line, useTracks);
 				};
 
 				let template = $(require("./view-line.html"));
@@ -288,7 +293,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				});
 			},
 			moveLine: function(line) {
-
 				map.routeUi.lineToRoute(line.id).then(() => {
 					map.client._editingLineId = line.id;
 					linesUi._deleteLine(line);
@@ -343,6 +347,16 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			},
 			deleteLine: function(line) {
 				map.client.deleteLine(line).catch(function(err) {
+					map.messages.showMessage("danger", err);
+				});
+			},
+			exportLine: function(line, useTracks) {
+				map.client.exportLine({
+					id: line.id,
+					format: useTracks ? "gpx-trk" : "gpx-rte"
+				}).then((exported) => {
+					saveAs(new Blob([exported], {type: "application/gpx+xml"}), `${line.name}.gpx`);
+				}).catch((err) => {
 					map.messages.showMessage("danger", err);
 				});
 			}

@@ -3,6 +3,7 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 import 'leaflet.elevation';
+import {saveAs} from 'file-saver';
 
 fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
 	return function(map) {
@@ -219,6 +220,10 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 					});
 				};
 
+				scope.export = function(useTracks) {
+					routeUi.exportRoute(useTracks);
+				};
+
 				let template = $(require("./view-route.html"));
 
 				openInfoBox = map.infoBox.show(template, scope, () => {
@@ -295,6 +300,16 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 			hasRoute() {
 				return !!map.client.route;
+			},
+
+			exportRoute(useTracks) {
+				map.client.exportRoute({
+					format: useTracks ? "gpx-trk" : "gpx-rte"
+				}).then((exported) => {
+					saveAs(new Blob([exported], {type: "application/gpx+xml"}), "FacilMap route.gpx");
+				}).catch((err) => {
+					map.messages.showMessage("danger", err);
+				});
 			}
 		};
 

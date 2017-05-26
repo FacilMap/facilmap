@@ -1,6 +1,17 @@
+const ejs = require("ejs");
+const fs = require("fs");
+const Promise = require("bluebird");
+
 var utils = require("../utils");
 
 var _e = utils.escapeXml;
+
+let lineTemplate;
+Promise.promisify(fs.readFile)(`${__dirname}/gpx-line.ejs`).then((t) => {
+	lineTemplate = ejs.compile(t.toString());
+}).catch((err) => {
+	console.error("Error reading GPX line template", err.stack || err);
+});
 
 function _dataToText(fields, data) {
 	if(fields.length == 1 && fields[0].name == "Description")
@@ -103,6 +114,16 @@ function exportGpx(database, padId, useTracks) {
 	);
 }
 
+function exportLine(line, type, useTracks) {
+	return lineTemplate({
+		useTracks: (useTracks || line.mode == "track"),
+		time: utils.isoDate(),
+		desc: type && _dataToText(type.fields, line.data),
+		line
+	});
+}
+
 module.exports = {
-	exportGpx : exportGpx
+	exportGpx : exportGpx,
+	exportLine: exportLine
 };

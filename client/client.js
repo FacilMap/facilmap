@@ -144,6 +144,10 @@ class Socket {
 		return this._emit("deleteLine", data);
 	}
 
+	exportLine(data) {
+		return this._emit("exportLine", data);
+	}
+
 	find(data) {
 		return this._emit("find", data);
 	}
@@ -171,10 +175,15 @@ class Socket {
 	lineToRoute(data) {
 		return this._emit("lineToRoute", data).then((route) => {
 			this.route = route;
+			this.route.elevation = data.elevation; // For reconnect
 			this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
 
 			return this.route;
 		});
+	}
+
+	exportRoute(data) {
+		return this._emit("exportRoute", data);
 	}
 
 	addType(data) {

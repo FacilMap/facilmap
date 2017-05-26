@@ -364,6 +364,16 @@ recalculated.
 	* `id` (string): The ID of the line
 * _returns_ (Promise<[route](#route-1)>)
 
+### `exportRoute(data)`
+
+Export the current route.
+
+* `data` (object): An object with the following properties:
+	* `format` (string): One of the following:
+		* `gpx-trk`: GPX track (contains the whole course of the route)
+		* `gpx-rte`: GPX route (contains only the route points, and the navigation device will have to calculate the route)
+* _returns_ (Promise&lt;string&gt;)
+
 ### `addMarker(data)`
 
 Create a marker.
@@ -417,6 +427,17 @@ Delete an existing line
 
 * `data` (`{id: <lineId>}`): An object that contains the ID of the line to be removed
 * _returns_ (Promise): A promise that resolves when the operation has completed
+
+### `exportLine(data)`
+
+Export a line.
+
+* `data` (object): An object with the following properties:
+	* `id` (string): The ID of the line
+	* `format` (string): One of the following:
+		* `gpx-trk`: GPX track (contains the whole course of the route)
+		* `gpx-rte`: GPX route (contains only the route points, and the navigation device will have to calculate the route)
+* _returns_ (Promise&lt;string&gt;)
 
 ### `addType(data)`
 

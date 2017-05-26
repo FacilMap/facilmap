@@ -3,6 +3,7 @@ var domain = require("domain");
 var Promise = require("bluebird");
 var underscore = require("underscore");
 
+var gpx = require("./export/gpx");
 var utils = require("./utils");
 var routing = require("./routing");
 var search = require("./search");
@@ -324,6 +325,35 @@ utils.extend(SocketConnection.prototype, {
 			});
 		},
 
+		exportLine: function(data) {
+			return Promise.resolve().then(() => {
+				if(!utils.stripObject(data, { id: "string", format: "string" }))
+					throw "Invalid parameters.";
+
+				if(!this.padId)
+					throw "No collaborative map opened.";
+
+				return utils.promiseAuto({
+					line: this.database.getLine(this.padId, data.id).then((line) => (JSON.parse(JSON.stringify(line)))),
+					trackPoints: this.database.getAllLinePoints(data.id).then((trackPoints) => (JSON.parse(JSON.stringify(trackPoints)))),
+					type: (line) => {
+						this.database.getType(this.padId, line.typeId);
+					}
+				});
+			}).then(({line, trackPoints, type}) => {
+				line = Object.assign({}, line, {trackPoints});
+
+				switch(data.format) {
+					case "gpx-trk":
+						return gpx.exportLine(line, type, true);
+					case "gpx-rte":
+						return gpx.exportLine(line, type, false);
+					default:
+						throw "Unknown format.";
+				}
+			});
+		},
+
 		addView : function(data) {
 			return Promise.resolve().then(() => {
 				if(!utils.stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
@@ -548,6 +578,29 @@ utils.extend(SocketConnection.prototype, {
 					descent: routeInfo.descent,
 					trackPoints: routeInfo.trackPoints
 				};
+			});
+		},
+
+		exportRoute: function(data) {
+			return Promise.resolve().then(() => {
+				if(!utils.stripObject(data, { format: "string" }))
+					throw "Invalid parameters.";
+
+				if(!this.route)
+					throw "No route set.";
+
+				return this.database.getAllRoutePoints(this.route.id);
+			}).then((trackPoints) => {
+				let route = Object.assign({}, this.route, {trackPoints});
+
+				switch(data.format) {
+					case "gpx-trk":
+						return gpx.exportLine(route, null, true);
+					case "gpx-rte":
+						return gpx.exportLine(route, null, false);
+					default:
+						throw "Unknown format.";
+				}
 			});
 		},
 
