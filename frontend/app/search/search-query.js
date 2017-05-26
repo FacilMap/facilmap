@@ -373,6 +373,11 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			showFiles: function(files) {
+				if(!searchUi._el.is(":visible")) {
+					routeUi.hide();
+					searchUi.show();
+				}
+
 				scope.submittedSearchString = "";
 				scope.showAll = true;
 				loadSearchResults(filesUi.parseFiles(files));
