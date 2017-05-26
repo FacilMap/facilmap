@@ -6,19 +6,19 @@
 	</metadata>
 	<<%=useTracks ? 'trk' : 'rte'%>>
 		<name><%=line.name || 'FacilMap route'%></name>
-<% if(desc) { %>
+<% if(desc) { -%>
 		<desc><%=desc%></desc>
-<% } %>
-<% if(useTracks) { %>
+<% } -%>
+<% if(useTracks) { -%>
 		<trkseg>
-<%     for(let trackPoint of line.trackPoints) { %>
+<%     for(let trackPoint of line.trackPoints) { -%>
 			<trkpt lat="<%=trackPoint.lat%>" lon="<%=trackPoint.lon%>"<% if(trackPoint.ele != null){ %> ele="<%=trackPoint.ele%>"<% } %> />
-<%     } %>
+<%     } -%>
 		</trkseg>
-<% } else { %>
-<%     for(let routePoint of line.routePoints) { %>
+<% } else { -%>
+<%     for(let routePoint of line.routePoints) { -%>
 		<rtept lat="<%=routePoint.lat%>" lon="<%=routePoint.lon%>" />
-<%     } %>
-<% } %>
+<%     } -%>
+<% } -%>
 	</<%=useTracks ? 'trk' : 'rte'%>>
 </gpx>
