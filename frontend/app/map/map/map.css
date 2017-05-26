@@ -67,6 +67,7 @@
 	position: absolute;
 	bottom: -19px;
 	left: -25px;
+	pointer-events: none;
 }
 
 .leaflet-control-locate.leaflet-control-locate a {
