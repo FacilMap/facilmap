@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet-almostover';
 import 'leaflet.locatecontrol';
 import 'leaflet.markercluster';
+import 'leaflet-mouse-position';
 
 
 fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox, fmMapRoute) {
@@ -161,6 +162,12 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				flyTo: true,
 				icon: "glyphicon glyphicon-screenshot",
 				iconLoading: "glyphicon glyphicon-screenshot"
+			}).addTo(this.map);
+
+			L.control.mousePosition({
+				emptyString: "0, 0",
+				separator: ", ",
+				position: "bottomright"
 			}).addTo(this.map);
 
 			this.map.on('almost:over', (e) => {

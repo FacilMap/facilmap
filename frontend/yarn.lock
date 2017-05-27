@@ -2743,6 +2743,10 @@ leaflet-hash@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/leaflet-hash/-/leaflet-hash-0.2.1.tgz#c36c718347c5243033b57cb4baea26119d82c701"
 
+leaflet-mouse-position@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/leaflet-mouse-position/-/leaflet-mouse-position-1.0.1.tgz#cda6c61124ce9ff6d0754528ca1ec56b1400933d"
+
 leaflet-simple-graticule@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/leaflet-simple-graticule/-/leaflet-simple-graticule-1.0.2.tgz#6e685e7134515ce0039d66862474d4abf07e9e87"

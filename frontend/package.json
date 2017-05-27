@@ -43,6 +43,7 @@
     "leaflet-almostover": "git+https://github.com/makinacorpus/Leaflet.AlmostOver.git#gh-pages",
     "leaflet-geometryutil": "^0.8.0",
     "leaflet-hash": "^0.2.1",
+    "leaflet-mouse-position": "^1.0.1",
     "leaflet-simple-graticule": "^1.0.2",
     "leaflet.elevation": "^0.0.3",
     "leaflet.locatecontrol": "^0.59.0",

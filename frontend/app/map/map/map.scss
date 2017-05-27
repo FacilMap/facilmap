@@ -74,6 +74,20 @@
 	font-size: inherit;
 }
 
+.leaflet-control.leaflet-control-mouseposition {
+	float: left;
+	pointer-events: none;
+	padding-right: 0;
+
+	&:after {
+		content: " |";
+	}
+
+	& + * {
+		clear: none;
+	}
+}
+
 .leaflet-fmHighlightMarker-pane {
 	z-index: 621;
 }
