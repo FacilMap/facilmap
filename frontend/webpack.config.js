@@ -27,7 +27,8 @@ const addDeps = {
 	"leaflet.locatecontrol": [ "leaflet.locatecontrol/dist/L.Control.Locate.css" ],
 	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ],
 	"leaflet.elevation": [ require.resolve("leaflet.elevation/dist/Leaflet.Elevation-0.0.2.css") ],
-	"leaflet-mouse-position": [ "leaflet-mouse-position/src/L.Control.MousePosition.css" ]
+	"leaflet-mouse-position": [ "leaflet-mouse-position/src/L.Control.MousePosition.css" ],
+	"leaflet-graphicscale": [ "leaflet-graphicscale/src/Leaflet.GraphicScale.scss" ]
 };
 
 for(let i in addDeps) {

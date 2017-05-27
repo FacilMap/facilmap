@@ -74,6 +74,18 @@
 	font-size: inherit;
 }
 
+.fm-leaflet-center {
+	left: 50%;
+	transform: translateX(-50%);
+	text-align: center;
+
+	.leaflet-control {
+		display: inline-block;
+		float: none;
+		clear: none;
+	}
+}
+
 .leaflet-control.leaflet-control-mouseposition {
 	float: left;
 	pointer-events: none;
@@ -85,6 +97,16 @@
 
 	& + * {
 		clear: none;
+	}
+}
+
+.leaflet-control.leaflet-control-graphicscale {
+	margin-bottom: 0;
+	pointer-events: none;
+
+	.label {
+		color: #000;
+		text-shadow: 0 0 3px #fff, 0 0 5px #fff, 0 0 10px #fff;
 	}
 }
 

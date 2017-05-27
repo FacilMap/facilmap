@@ -5,6 +5,7 @@ import 'leaflet-almostover';
 import 'leaflet.locatecontrol';
 import 'leaflet.markercluster';
 import 'leaflet-mouse-position';
+import 'leaflet-graphicscale';
 
 
 fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox, fmMapRoute) {
@@ -136,6 +137,8 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 			this.map.createPane("fmHighlightShadowPane");
 			this.map.createPane("fmHighlightPane");
 
+			this.map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", this.map._controlContainer);
+
 			$scope.$watch("client.padData.clusterMarkers", (clusterMarkers) => {
 				var currentMarkers = this.markerCluster ? this.markerCluster.getLayers() : [ ];
 
@@ -168,6 +171,11 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				emptyString: "0, 0",
 				separator: ", ",
 				position: "bottomright"
+			}).addTo(this.map);
+
+			L.control.graphicScale({
+				fill: "hollow",
+				position: "bottomcenter"
 			}).addTo(this.map);
 
 			this.map.on('almost:over', (e) => {
