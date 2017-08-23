@@ -31,7 +31,9 @@ const elevation = module.exports = {
 	},
 
 	getElevationForPoints(points) {
-		if(points.length == 0)
+		return Promise.resolve(points.map(() => (null)));
+
+		/*if(points.length == 0)
 			return Promise.resolve([ ]);
 
 		let ret = Promise.resolve([ ]);
@@ -50,10 +52,17 @@ const elevation = module.exports = {
 				}).then((res) => (heights.concat(res.height)));
 			});
 		}
-		return ret;
+		return ret;*/
 	},
 
 	getAscentDescent(elevations) {
+		if(!elevations.some((ele) => (ele != null))) {
+			return {
+				ascent: null,
+				descent: null
+			};
+		}
+
 		let ret = {
 			ascent: 0,
 			descent: 0
