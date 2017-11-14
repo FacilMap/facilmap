@@ -114,11 +114,32 @@ const filter = module.exports = {
 	},
 
 	prepareObject: function(obj, type) {
-		obj = $.extend(true, { }, obj);
+		obj = filter.flattenObject(obj);
 
 		if(type)
 			obj.type = type.type;
 
 		return obj;
+	},
+
+	flattenObject(data) {
+		// https://stackoverflow.com/a/19101235/242365
+
+		var result = {};
+		function recurse (cur, prop) {
+		    if(prop)
+		        result[prop] = cur;
+
+		    if(Array.isArray(cur)) {
+		         for(var i=0, l=cur.length; i<l; i++)
+		             recurse(cur[i], prop + "." + i);
+		    } else if(Object(cur) === cur) {
+		        for (var p in cur) {
+		            recurse(cur[p], prop ? prop+"."+p : p);
+		        }
+		    }
+		}
+		recurse(data, "");
+		return result;
 	}
 };
