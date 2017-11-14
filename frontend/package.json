@@ -85,5 +85,8 @@
     "unzipper": "^0.8.4",
     "url-loader": "^0.5.7",
     "webpack": "^2.2.1"
+  },
+  "resolutions": {
+    "**/leaflet": "1.0.3"
   }
 }

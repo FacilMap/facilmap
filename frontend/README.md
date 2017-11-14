@@ -92,7 +92,10 @@ Development
 Build it yourself
 -----------------
 
-Make sure to have yarn installed. Install the dependencies using `yarn run deps` and bundle the JavaScript
+Make sure to have the newest version of yarn installed. `package.json` uses resolutions, which are only supported by
+recent versions of yarn.
+
+Install the dependencies using `yarn run deps` and bundle the JavaScript
 by running `yarn run build`.
 
 A better way to develop the frontend is to start facilmap-server in dev mode. It will set up a webpack-dev-server that
