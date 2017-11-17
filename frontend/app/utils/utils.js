@@ -75,39 +75,6 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		});
 	};
 
-	fmUtils.blurFilter = function(layer, filterId, stdDeviation) {
-		if(layer instanceof L.LayerGroup) {
-			layer.eachLayer((layer) => {
-				if(layer instanceof L.Path || layer instanceof L.LayerGroup)
-					fmUtils.blurFilter(layer, filterId, stdDeviation);
-			});
-			return;
-		}
-
-		if(!layer._map) {
-			layer.once("add", () => {
-				fmUtils.blurFilter(layer, filterId, stdDeviation);
-			});
-			return;
-		}
-
-		let svg = $(layer.getPane()).find("> svg");
-		if(svg.length == 0)
-			throw new Error(`SVG for pane ${layer.getPane()} could not be found.`);
-
-		if(svg.find("filter").filter(function() { return $(this).attr("id") == filterId; }).length == 0) {
-			// http://stackoverflow.com/a/28237435/242365
-			let blurFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-			blurFilter.setAttribute("id", filterId);
-			let blurFilterBlur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
-			blurFilterBlur.setAttribute("stdDeviation", stdDeviation);
-			blurFilter.appendChild(blurFilterBlur);
-			svg.append(blurFilter);
-		}
-
-		layer._path.style.filter = `url(#${filterId})`;
-	};
-
 	fmUtils.makeTextColour = function(backgroundColour, threshold) {
 		if(threshold == null)
 			threshold = 0.5;

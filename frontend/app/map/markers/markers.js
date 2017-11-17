@@ -30,7 +30,9 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 		var markersUi = {
 			_addMarker : function(marker) {
 				if(!markersById[marker.id]) {
-					markersById[marker.id] = L.marker([ 0, 0 ], { icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)}).addTo(map.markerCluster)
+					markersById[marker.id] = L.marker([ 0, 0 ], {
+						icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)
+					}).addTo(map.markerCluster)
 						.on("click", function(e) {
 							markersUi.showMarkerInfoBox(map.client.markers[marker.id] || marker);
 						}.fmWrapApply($rootScope))
@@ -42,7 +44,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 				markersById[marker.id]
 					.setLatLng([ marker.lat, marker.lon ])
-					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, openMarker && openMarker.id == marker.id));
+					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, openMarker && openMarker.id == marker.id))
+					.setOpacity(0.7);
 
 				if(openMarker && openMarker.id == marker.id)
 					markersUi.showMarkerInfoBox(marker);
@@ -90,6 +93,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 							markersById[marker.id].remove();
 							markersById[marker.id].options.pane = "markerPane";
 							markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
+							markersById[marker.id].setOpacity(0.7);
 							markersById[marker.id].addTo(map.map);
 						}
 					}).hide,
@@ -99,6 +103,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				markersById[marker.id].remove();
 				markersById[marker.id].options.pane = "fmHighlightMarkerPane";
 				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, true));
+				markersById[marker.id].setOpacity(1);
 				markersById[marker.id].addTo(map.map);
 			},
 			editMarker: function(marker) {

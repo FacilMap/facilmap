@@ -91,7 +91,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				var style = {
 					color : '#'+line.colour,
 					weight : line.width,
-					opacity : 0.7
+					opacity : 0.5
 				};
 
 				// Two points that are both outside of the viewport should not be connected, as the piece in between
@@ -102,7 +102,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				if(line.id != null && openLine && line.id == openLine.id) {
 					openLineHighlight.setLatLngs(splitLatLngs).setStyle(Object.assign(style, {
-						color: '#000000'
+						weight: Math.round(line.width*2),
+						color: "#"+fmUtils.makeTextColour(line.colour),
+						opacity: 1
 					}));
 
 					if(!_doNotRerenderPopup)
@@ -169,7 +171,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					pane: "fmHighlightShadowPane",
 					interactive: false
 				}).addTo(map.map);
-				fmUtils.blurFilter(openLineHighlight, "fmLinesBlur", 4);
 
 				linesById[line.id].remove();
 				linesById[line.id].options.pane = "fmHighlightPane";
