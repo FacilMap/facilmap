@@ -778,6 +778,23 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			scrollableParent.animate({scrollTop: resultBottom - parentHeight});
 	};
 
+	fmUtils.decodeQueryString = function(str) {
+		var obj = { };
+		for(let segment of str.replace(/^\?/, "").split(/[;&]/)) {
+			let pair = segment.split("=");
+			obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+		}
+		return obj;
+	};
+
+	fmUtils.encodeQueryString = function(obj) {
+		let pairs = [ ];
+		for(let i in obj) {
+			pairs.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
+		}
+		return pairs.join("&");
+	};
+
 	return fmUtils;
 });
 

@@ -13,6 +13,19 @@ It is perfectly fine to embed a map from [facilmap.org](https://facilmap.org/) i
 If you use a map ID that does not exist yet, the “Create Collaborative Map” dialog will be opened when accessing the
 map.
 
+You can control the display of different components by using the following query parameters:
+
+* `toolbox`: Show the toolbox (default: `true`)
+* `search`: Show the search bar (default: `true`)
+* `autofocus`: Autofocus the search field (default: `false`)
+* `legend`: Show the legend if available (default: `true`)
+
+Example:
+
+```html
+<iframe style="height: 500px; width: 100%; border: none;" src="https://facilmap.org/mymap?search=false&amp;toolbox=false"></iframe>
+```
+
 Directly into a page
 --------------------
 
@@ -74,7 +87,7 @@ of components by adding them to the element:
 ```html
 <facilmap fm-server-url="https://facilmap.org/" fm-map-id="mymap">
 	<fm-toolbox></fm-toolbox>
-	<fm-search></fm-search>
+	<fm-search autofocus="true"></fm-search>
 	<fm-legend></fm-legend>
 </facilmap>
 ```

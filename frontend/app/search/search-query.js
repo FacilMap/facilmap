@@ -7,7 +7,7 @@ import 'jquery-ui';
 import 'jquery-ui/ui/widgets/resizable';
 
 fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchRoute, fmSearchFiles, fmSearchImport) {
-	return function(map) {
+	return function(map, autofocus) {
 		var iconSuffix = ".n.32.png";
 
 		var scope = $rootScope.$new(true);
@@ -155,7 +155,11 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			importUi.openImportDialog(scope.searchResults);
 		};
 
-		var el = $(require("./search-query.html")).insertAfter(map.map.getContainer());
+		var el = $(require("./search-query.html"));
+		if (autofocus) {
+			$("#fm-search-input", el).attr("autofocus", "autofocus");
+		}
+		el.insertAfter(map.map.getContainer());
 		$compile(el)(scope);
 		scope.$evalAsync(); // $compile only replaces variables on next digest
 

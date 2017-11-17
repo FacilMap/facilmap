@@ -31,7 +31,11 @@
 	<body>
 		<noscript><p><strong>FacilMap requires JavaScript to work.</strong></p></noscript>
 		<div id="loading" ng-if="false">Loading...</div>
-		<facilmap id="map" fm-server-url="/" fm-map-id="{{padId}}" fm-hash></facilmap>
+		<facilmap id="map" fm-server-url="/" fm-map-id="{{padId}}" fm-hash>
+			<fm-toolbox ng-if="toolbox"></fm-toolbox>
+			<fm-search ng-if="search" autofocus="autofocus"></fm-search>
+			<fm-legend ng-if="legend"></fm-legend>
+		</facilmap>
 
 		<script>
 			(function() {
