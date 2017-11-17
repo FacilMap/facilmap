@@ -35,7 +35,11 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 
 				map.map.on("layeradd", hashControl.onMapMove, hashControl);
 				map.map.on("layerremove", hashControl.onMapMove, hashControl);
-				map.mapEvents.$on("searchchange", hashControl.onMapMove.bind(hashControl));
+				map.mapEvents.$on("searchchange", () => {
+					setTimeout(() => {
+						hashControl.onMapMove();
+					}, 0);
+				});
 				map.client.on("filter", hashControl.onMapMove.bind(hashControl));
 			};
 
@@ -97,6 +101,13 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 				}
 
 				ret += "/" + additionalParts.map(encodeURIComponent).join("/");
+
+				if(parent !== window) {
+					parent.postMessage({
+						type: "facilmap-hash",
+						hash: ret.replace(/^#/, "")
+					}, "*");
+				}
 
 				return ret;
 			};

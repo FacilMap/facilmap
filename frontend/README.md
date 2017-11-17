@@ -26,6 +26,23 @@ Example:
 <iframe style="height: 500px; width: 100%; border: none;" src="https://facilmap.org/mymap?search=false&amp;toolbox=false"></iframe>
 ```
 
+To synchronize the map state with the location hash (to add something like #9/31/24 to the address bar of the browser to indicate the current map view), add the following script:
+
+```html
+<iframe id="facilmap" style="height: 500px; width: 100%; border: none;" src="https://facilmap.org/mymap"></iframe>
+<script>
+	window.addEventListener("message", function(evt) {
+		if(evt.data && evt.data.type == "facilmap-hash" && location.hash != "#" + evt.data.hash)
+			location.replace("#" + evt.data.hash);
+	});
+
+	window.addEventListener("hashchange", function() {
+		var iframe = document.getElementById("facilmap");
+		iframe.src = iframe.src.replace(/#.*$/, "") + location.hash;
+	});
+</script>
+```
+
 Directly into a page
 --------------------
 
