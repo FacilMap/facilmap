@@ -12,6 +12,7 @@ module.exports = function(Database) {
 			colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "ff0000", validate: this._TYPES.validateColour },
 			size : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
 			symbol : { type: Sequelize.TEXT, allowNull: true },
+			shape : { type: Sequelize.TEXT, allowNull: true },
 			ele: { type: Sequelize.INTEGER, allowNull: true }
 		});
 
@@ -52,6 +53,8 @@ module.exports = function(Database) {
 						data.size = type.defaultSize;
 					if(type.defaultSymbol)
 						data.symbol = type.defaultSymbol;
+					if(type.defaultShape)
+						data.shape = type.defaultShape;
 
 					data.ele = elevation;
 

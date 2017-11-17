@@ -240,7 +240,7 @@ utils.extend(SocketConnection.prototype, {
 
 		addMarker : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", typeId: "number", data: Object } ))
+				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", shape: "string", typeId: "number", data: Object } ))
 					throw "Invalid parameters.";
 
 				if(!this.writable)
@@ -252,7 +252,7 @@ utils.extend(SocketConnection.prototype, {
 
 		editMarker : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", typeId: "number", data: Object }))
+				if(!utils.stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", shape: "string", typeId: "number", data: Object }))
 					throw "Invalid parameters.";
 
 				if(!this.writable)
@@ -399,14 +399,15 @@ utils.extend(SocketConnection.prototype, {
 					defaultColour: "string", colourFixed: "boolean",
 					defaultSize: "number", sizeFixed: "boolean",
 					defaultSymbol: "string", symbolFixed: "boolean",
+					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
 					defaultMode: "string", modeFixed: "boolean",
 					fields: [ {
 						name: "string",
 						type: "string",
 						default: "string",
-						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
-						options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
+						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
+						options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
 					}]
 				}))
 					throw "Invalid parameters.";
@@ -426,6 +427,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultColour: "string", colourFixed: "boolean",
 					defaultSize: "number", sizeFixed: "boolean",
 					defaultSymbol: "string", symbolFixed: "boolean",
+					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
 					defaultMode: "string", modeFixed: "boolean",
 					fields: [ {
@@ -433,8 +435,8 @@ utils.extend(SocketConnection.prototype, {
 						oldName: "string",
 						type: "string",
 						default: "string",
-						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlWidth: "boolean",
-						options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", width: "number" } ]
+						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
+						options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
 					}]
 				}))
 					throw "Invalid parameters.";

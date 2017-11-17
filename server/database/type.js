@@ -14,6 +14,8 @@ module.exports = function(Database) {
 			sizeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			defaultSymbol: { type: Sequelize.TEXT, allowNull: true},
 			symbolFixed: { type: Sequelize.BOOLEAN, allowNull: true},
+			defaultShape: { type: Sequelize.TEXT, allowNull: true },
+			shapeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			defaultWidth: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
 			widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			defaultMode: { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: true },
@@ -31,6 +33,12 @@ module.exports = function(Database) {
 							for(let option of field.options) {
 								if(!option.symbol)
 									option.symbol = ""; // Avoid "undefined" ending up there, which messes everything up
+							}
+						}
+						if(field.controlShape) {
+							for(let option of field.options) {
+								if(!option.shape)
+									option.shape = ""; // Avoid "undefined" ending up there, which messes everything up
 							}
 						}
 					}

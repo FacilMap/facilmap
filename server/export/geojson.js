@@ -57,6 +57,7 @@ const geojson = module.exports = {
 							colour: marker.colour,
 							size: marker.size,
 							symbol: marker.symbol,
+							shape: marker.shape,
 							data: JSON.parse(JSON.stringify(marker.data)),
 							typeId: marker.typeId
 						}

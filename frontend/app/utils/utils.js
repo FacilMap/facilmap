@@ -10,7 +10,6 @@ import SimpleGraticule from 'leaflet-simple-graticule';
 
 import commonFormat from '../../common/format';
 import commonUtils from '../../common/utils';
-import markerGraphic from '!ejs-compiled-loader!./marker-graphic.ejs';
 
 fm.app.factory("fmUtils", function($parse, fmIcons) {
 
@@ -20,6 +19,29 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	var LENGTH = 12;
 
 	var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
+
+	fmUtils.MARKER_SHAPES = {
+		drop: {
+			svg: `<path style="stroke:#%BORDER_COLOUR%;stroke-linecap:round;fill:#%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
+			      <g transform="translate(2.9, 3.3)">%SYMBOL%</g>`,
+			highlightSvg: `<path style="stroke:#%BORDER_COLOUR%;stroke-width:3;stroke-linecap:round;fill:#%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
+			               <g transform="translate(2.9, 3.3)">%SYMBOL%</g>`,
+			height: 31,
+			width: 23,
+			baseX: 12,
+			baseY: 31
+		},
+		circle: {
+			svg: `<circle style="stroke:#%BORDER_COLOUR%;fill:#%COLOUR%;" cx="13" cy="13" r="12.5" />
+			      <g transform="translate(4.642, 4.642)">%SYMBOL%</g>`,
+			highlightSvg: `<circle style="stroke:#%BORDER_COLOUR%;stroke-width:3;fill:#%COLOUR%;" cx="13" cy="13" r="12.5" />
+			      <g transform="translate(4.642, 4.642)">%SYMBOL%</g>`,
+			height: 26,
+			width: 26,
+			baseX: 13,
+			baseY: 13
+		}
+	};
 
 	fmUtils.generateRandomPadId = function(length) {
 		if(length == null)
@@ -32,45 +54,52 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return randomPadId;
 	};
 
-	fmUtils.createSymbol = function(colour, height, symbol) {
-		let symbolCode = "";
-		if(symbol && fmIcons[symbol]) {
-			symbolCode = `<g transform="scale(${height / 580})">${fmIcons[symbol].replace(/#000/g, '#' + colour)}</g>`;
-		} else if(symbol && symbol.length == 1) {
-			height*17 / 2*height / (height / 17)
-			symbolCode = `<text x="8.5" y="15" transform="scale(${height / 17})" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#${colour}">${fmUtils.quoteHtml(symbol)}</tspan></text>`;
-		}
+	fmUtils.getSymbolCode = function(colour, symbol) {
+		if(symbol && fmIcons[symbol])
+			return `<g transform="scale(${17 / 580})">${fmIcons[symbol].replace(/#000/g, '#' + colour)}</g>`;
+		else if(symbol && symbol.length == 1)
+			return `<text x="8.5" y="15" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#${colour}">${fmUtils.quoteHtml(symbol)}</tspan></text>`;
+		else
+			return `<circle style="fill:#${colour}" cx="8.6" cy="7.7" r="3" />`;
+	};
 
+	fmUtils.createSymbol = function(colour, height, symbol) {
 		let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" version="1.1">` +
-			symbolCode +
+			`<g transform="scale(${height / 17})">${fmUtils.getSymbolCode(colour, symbol)}</g>` +
 		`</svg>`;
 
 		return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 	};
 
-	fmUtils.createMarkerGraphic = function(colour, height, symbol, padding, highlight) {
-		return "data:image/svg+xml,"+encodeURIComponent(markerGraphic({
-			colour,
-			symbol,
-			fmIcons,
-			highlight,
-			borderColour: fmUtils.makeTextColour(colour, 0.3),
-			oppositeBorderColour: fmUtils.makeTextColour(colour, 0.3, true),
-			height: 1*height,
-			width: Math.round(height * 23 / 31),
-			padding: Math.max(padding || 0, highlight ? 10 * height / 31 : 0)
-		}).replace(/[\r\n\t]/g, ""));
+	fmUtils.createMarkerGraphic = function(colour, height, symbol, shape, padding, highlight) {
+		let borderColour = fmUtils.makeTextColour(colour, 0.3);
+		padding = Math.max(padding || 0, highlight ? 10 * height / 31 : 0);
+
+		let shapeObj = fmUtils.MARKER_SHAPES[shape] || fmUtils.MARKER_SHAPES.drop;
+		let shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
+			.replace(/%BORDER_COLOUR%/g, borderColour)
+			.replace(/%COLOUR%/g, colour)
+			.replace(/%SYMBOL%/g, fmUtils.getSymbolCode(borderColour, symbol));
+
+		let scale = height / 31;
+
+		return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
+			`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${Math.round(shapeObj.width * scale) + padding*2}" height="${Math.round(shapeObj.height * scale) + padding*2}" version="1.1">` +
+			`<g transform="translate(${padding} ${padding}) scale(${scale})">` +
+			shapeCode +
+			`</g>` +
+			`</svg>`);
 	};
 
-	fmUtils.createMarkerIcon = function(colour, height, symbol, padding, highlight) {
-		padding = Math.max(padding || 0, highlight ? 10 * height / 31 : 0);
-		height = 1*height;
-		var width = height * 23 / 31;
+	fmUtils.createMarkerIcon = function(colour, height, symbol, shape, padding, highlight) {
+		let scale = height / 31;
+		padding = Math.max(padding || 0, highlight ? 10 * scale : 0);
+		let shapeObj = fmUtils.MARKER_SHAPES[shape] || fmUtils.MARKER_SHAPES.drop;
 		return L.icon({
-			iconUrl: fmUtils.createMarkerGraphic(colour, height, symbol, padding, highlight),
-			iconSize: [padding*2 + width, padding*2 + height],
-			iconAnchor: [padding + Math.round(width/2), padding + height],
+			iconUrl: fmUtils.createMarkerGraphic(colour, height, symbol, shape, padding, highlight),
+			iconSize: [padding*2 + shapeObj.width*scale, padding*2 + shapeObj.height*scale],
+			iconAnchor: [padding + Math.round(shapeObj.baseX*scale), padding + Math.round(shapeObj.baseY*scale)],
 			popupAnchor: [0, -height]
 		});
 	};

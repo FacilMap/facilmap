@@ -4,7 +4,7 @@
 			<hr ng-repeat-start="type in legendItems" ng-if="$index > 0">
 			<h3 ng-click="toggleFilter(type)" ng-class="{ filtered: type.filtered }">{{type.name}}</h3>
 			<dl ng-repeat-end>
-				<dt ng-repeat-start="item in type.items" ng-class="thisClass = [ 'fm-' + type.type, { filtered: item.filtered } ]" ng-click="toggleFilter(type, item)" ng-bind-html="item | fmMapLegendMakeSymbol:type.type"></dt>
+				<dt ng-repeat-start="item in type.items" ng-class="thisClass = [ 'fm-' + type.type, { filtered: item.filtered } ]" ng-click="toggleFilter(type, item)" ng-bind-html="item | fmMapLegendMakeSymbol:type"></dt>
 				<dd ng-repeat-end ng-class="thisClass" ng-click="toggleFilter(type, item)">{{item.value}}</dd>
 			</dl>
 		</div>

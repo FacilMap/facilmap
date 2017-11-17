@@ -509,6 +509,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
 * `symbol` (string): The symbol code for the marker. Default is an empty string.
+* `shape` (string): The shape code for the marker. Default is an empty string (equals `"drop"`).
 * `elevation` (number): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
 * `data` (`{"key", "value"}`): The filled out form fields of the marker
@@ -592,7 +593,7 @@ their `idx` property.
 * `type` (string): `marker` or `line`
 * `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultWidth`, `defaultMode` (string/number): Default values for the
   different object properties
-* `colourFixed`, `sizeFixed`, `symbolFixed`, `widthFixed`, `modeFixed` (boolean): Whether those values are fixed and
+* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
     * `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
@@ -605,7 +606,7 @@ their `idx` property.
         * `value` (string): The value of this option.
         * `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](#edittypedata)), specify the
           former value here
-        * `colour`, `size`, `symbol`, `width` (string/number): The property value if this field controls that property
+        * `colour`, `size`, `shape`, `symbol`, `width` (string/number): The property value if this field controls that property
 
 ### searchResult
 

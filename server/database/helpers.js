@@ -67,6 +67,8 @@ module.exports = function(Database) {
 						update.size = type.defaultSize;
 					if(!isLine && type.symbolFixed && object.symbol != type.defaultSymbol)
 						update.symbol = type.defaultSymbol;
+					if(!isLine && type.shapeFixed && object.shape != type.defaultShape)
+						update.shape = type.defaultShape;
 					if(isLine && type.widthFixed && object.width != type.defaultWidth)
 						update.width = type.defaultWidth;
 					if(isLine && type.modeFixed && object.mode != "track" && object.mode != type.defaultMode)
@@ -85,6 +87,8 @@ module.exports = function(Database) {
 									update.size = option.size;
 								if(!isLine && field.controlSymbol && object.symbol != option.symbol)
 									update.symbol = option.symbol;
+								if(!isLine && field.controlShape && object.shape != option.shape)
+									update.shape = option.shape;
 								if(isLine && field.controlWidth && object.width != option.width)
 									update.width = option.width;
 							}

@@ -55,6 +55,18 @@
 			</div>
 		</div>
 
+		<div class="form-group" ng-if="type.type == 'marker'" ng-class="{disabled:!(canControlShape = canControl('shape'))}">
+			<label for="type-shape-input" class="col-sm-3 control-label">Default shape</label>
+			<div class="col-sm-7">
+				<input id="type-shape-input" ng-model="type.defaultShape" ng-disabled="!canControlShape" fm-shape-picker class="form-control">
+			</div>
+			<div class="checkbox col-sm-2">
+				<label>
+					<input type="checkbox" ng-model="type.shapeFixed" ng-disabled="!canControlShape"> Fixed
+				</label>
+			</div>
+		</div>
+
 		<div class="form-group" ng-if="type.type == 'line'" ng-class="{disabled:!(canControlWidth = canControl('width'))}">
 			<label for="type-width-input" class="col-sm-3 control-label">Default width</label>
 			<div class="col-sm-7">

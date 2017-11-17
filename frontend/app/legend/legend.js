@@ -20,13 +20,15 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 					var items = [ ];
 					var fields = { };
 
-					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons[type.defaultSymbol] || type.defaultSymbol.length == 1)) || (type.type == "line" && type.widthFixed)) {
+					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons[type.defaultSymbol] || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
 						var item = { value: type.name };
 
 						if(type.colourFixed)
 							item.colour = type.defaultColour;
 						if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons[type.defaultSymbol] || type.defaultSymbol.length == 1))
 							item.symbol = type.defaultSymbol;
+						if(type.type == "marker" && type.shapeFixed)
+							item.shape = type.defaultShape;
 						if(type.type == "line" && type.widthFixed)
 							item.width = type.defaultWidth;
 
@@ -45,6 +47,8 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 								item.colour = option.colour;
 							if(type.type == "marker" && field.controlSymbol)
 								item.symbol = option.symbol;
+							if(type.type == "marker" && field.controlShape)
+								item.shape = option.shape;
 							if(type.type == "line" && field.controlWidth)
 								item.width = option.width;
 							items.push(item);
@@ -53,7 +57,7 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 					});
 
 					if(items.length > 0) {
-						var type = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true };
+						var type = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true, defaultColour: type.defaultColour, defaultShape: type.defaultShape };
 
 						// Check which fields are filtered
 						_allCombinations(fields, function(data) {
@@ -157,7 +161,8 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 fm.app.filter("fmMapLegendMakeSymbol", function(fmUtils, $sce) {
 	return function(item, type) {
 		var ret;
-		if(type == "line") {
+
+		if(type.type == "line") {
 			ret = $('<span class="fm-map-legend-line"></span>');
 			ret.css("background-color", "#"+(item.colour || "ffffff"));
 			ret.css("box-shadow", "0 0 1px #"+fmUtils.makeTextColour(item.colour || "ffffff", 0.7));
@@ -165,7 +170,7 @@ fm.app.filter("fmMapLegendMakeSymbol", function(fmUtils, $sce) {
 			ret.css("height", (item.width || 5)+"px");
 		}
 		else
-			ret = $('<img class="fm-map-legend-marker"/>').attr("src", item.colour ? fmUtils.createMarkerGraphic(item.colour, 15, item.symbol) : fmUtils.createSymbol("000000", 15, item.symbol));
+			ret = $('<img class="fm-map-legend-marker"/>').attr("src", (item.colour || item.shape) ? fmUtils.createMarkerGraphic(item.colour || type.defaultColour || "000000", 15, item.symbol, item.shape || type.defaultShape) : fmUtils.createSymbol("000000", 15, item.symbol));
 
 		return $sce.trustAsHtml($("<div/>").append(ret).html());
 	}

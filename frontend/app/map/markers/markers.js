@@ -31,7 +31,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 			_addMarker : function(marker) {
 				if(!markersById[marker.id]) {
 					markersById[marker.id] = L.marker([ 0, 0 ], {
-						icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol)
+						icon: fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, marker.shape)
 					}).addTo(map.markerCluster)
 						.on("click", function(e) {
 							markersUi.showMarkerInfoBox(map.client.markers[marker.id] || marker);
@@ -44,7 +44,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 				markersById[marker.id]
 					.setLatLng([ marker.lat, marker.lon ])
-					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, openMarker && openMarker.id == marker.id))
+					.setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, marker.shape, null, openMarker && openMarker.id == marker.id))
 					.setOpacity(0.7);
 
 				if(openMarker && openMarker.id == marker.id)
@@ -92,7 +92,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 						if(markersById[marker.id]) {
 							markersById[marker.id].remove();
 							markersById[marker.id].options.pane = "markerPane";
-							markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol));
+							markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, marker.shape));
 							markersById[marker.id].setOpacity(0.7);
 							markersById[marker.id].addTo(map.map);
 						}
@@ -102,7 +102,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 
 				markersById[marker.id].remove();
 				markersById[marker.id].options.pane = "fmHighlightMarkerPane";
-				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, null, true));
+				markersById[marker.id].setIcon(fmUtils.createMarkerIcon(marker.colour, marker.size, marker.symbol, marker.shape, null, true));
 				markersById[marker.id].setOpacity(1);
 				markersById[marker.id].addTo(map.map);
 			},
@@ -207,7 +207,7 @@ fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 		});
 	};
 
-	$scope.$watchGroup([ "marker.colour", "marker.size", "marker.symbol" ], function() {
+	$scope.$watchGroup([ "marker.colour", "marker.size", "marker.symbol", "marker.shape" ], function() {
 		map.markersUi._addMarker($scope.marker);
 	});
 

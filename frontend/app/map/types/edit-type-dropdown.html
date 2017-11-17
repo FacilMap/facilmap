@@ -22,6 +22,12 @@
 				Control {{type.type}} icon
 			</label>
 		</div>
+		<div class="checkbox" ng-if="type.type == 'marker'" ng-class="{disabled: !canControl('shape')}">
+			<label>
+				<input type="checkbox" ng-model="field.controlShape" ng-disabled="!canControl('shape')">
+				Control {{type.type}} shape
+			</label>
+		</div>
 		<div class="checkbox" ng-if="type.type == 'line'" ng-class="{disabled: !canControl('width')}">
 			<label>
 				<input type="checkbox" ng-model="field.controlWidth" ng-disabled="!canControl('width')">
@@ -46,6 +52,7 @@
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
 					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
 					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>
+					<td ng-if="field.controlShape"><input type="text" ng-model="option.shape" fm-shape-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
 					<td class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
 					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>

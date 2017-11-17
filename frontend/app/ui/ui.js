@@ -66,7 +66,7 @@ fm.app.directive("fmColourPicker", function(fmUtils, $rootScope, $compile) {
 	}
 });
 
-fm.app.directive("fmIconPicker", function(fmIcons, fmUtils, $compile, $rootScope, $parse) {
+function iconShapePicker(shape, fmIcons, fmUtils, $compile, $rootScope, $parse) {
 	var pickerScope, picker;
 
 	return {
@@ -79,8 +79,9 @@ fm.app.directive("fmIconPicker", function(fmIcons, fmUtils, $compile, $rootScope
 					return;
 
 				pickerScope = $rootScope.$new();
-				pickerScope.icons = fmIcons;
-				picker = $(require("./icon-picker.html")).appendTo("body");
+				pickerScope.shape = shape;
+				pickerScope.icons = shape ? Object.keys(fmUtils.MARKER_SHAPES) : Object.keys(fmIcons);
+				picker = $(require("./icon-shape-picker.html")).appendTo("body");
 				$compile(picker)(pickerScope);
 			}
 
@@ -122,6 +123,14 @@ fm.app.directive("fmIconPicker", function(fmIcons, fmUtils, $compile, $rootScope
 			$(element).focus(open.fmWrapApply(scope));
 		}
 	};
+}
+
+fm.app.directive("fmIconPicker", function(fmIcons, fmUtils, $compile, $rootScope, $parse) {
+	return iconShapePicker(false, ...arguments);
+});
+
+fm.app.directive("fmShapePicker", function(fmIcons, fmUtils, $compile, $rootScope, $parse) {
+	return iconShapePicker(true, ...arguments);
 });
 
 fm.app.directive("fmIcon", function(fmUtils) {
@@ -132,6 +141,18 @@ fm.app.directive("fmIcon", function(fmUtils) {
 		},
 		link: function(scope, element, attrs) {
 			element.attr("src", fmUtils.createSymbol("000000", 25, scope.fmIcon));
+		}
+	};
+});
+
+fm.app.directive("fmShape", function(fmUtils) {
+	return {
+		restrict: 'A',
+		scope: {
+			fmShape: "<"
+		},
+		link: function(scope, element, attrs) {
+			element.attr("src", fmUtils.createMarkerGraphic("000000", 25, null, scope.fmShape));
 		}
 	};
 });
