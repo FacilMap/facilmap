@@ -75,7 +75,10 @@ module.exports = function(Database) {
 						update.mode = type.defaultMode;
 
 					types[object.typeId].fields.forEach((field) => {
-						if(field.type == "dropdown" && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (isLine && field.controlWidth))) {
+						if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (!isLine && field.controlShape) || (isLine && field.controlWidth))) {
+							if(!field.options)
+								field.options = [];
+
 							var _find = (value) => (field.options.filter((option) => option.value == value)[0] || null);
 
 							var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];

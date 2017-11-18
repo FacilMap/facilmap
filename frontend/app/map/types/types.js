@@ -49,6 +49,13 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 				scope.type = type;
 				scope.field = field;
 
+				if(field.type == 'checkbox' && !field.options) {
+					field.options = [
+						{ value: '0' },
+						{ value: '1' }
+					]
+				}
+
 				for(let option of (field.options || []))
 					option.oldValue = option.value;
 

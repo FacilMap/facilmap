@@ -111,7 +111,7 @@
 				<tr ng-repeat="field in type.fields">
 					<td><input type="text" ng-model="field.name" class="form-control" /></td>
 					<td>
-						<div class="input-group" ng-if="field.type == 'dropdown'">
+						<div class="input-group" ng-if="field.type == 'dropdown' || field.type == 'checkbox'">
 							<select ng-model="field.type" class="form-control">
 								<option value="input">Text field</option>
 								<option value="textarea">Text area</option>
@@ -120,7 +120,7 @@
 							</select>
 							<span class="input-group-btn"><button type="button" ng-click="editDropdown(field)" class="btn btn-default">Edit</button></span>
 						</div>
-						<select ng-if="field.type != 'dropdown'" ng-model="field.type" class="form-control">
+						<select ng-if="field.type != 'dropdown' && field.type != 'checkbox'" ng-model="field.type" class="form-control">
 							<option value="input">Text field</option>
 							<option value="textarea">Text area</option>
 							<option value="dropdown">Dropdown</option>

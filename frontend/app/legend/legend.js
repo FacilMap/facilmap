@@ -36,13 +36,18 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 					}
 
 					type.fields.forEach(function(field) {
-						if(!field.type == "dropdown" || (!field.controlColour && (type.type != "marker" || !field.controlSymbol) && (type.type != "line" || !field.controlWidth)))
+						if((field.type != "dropdown" && field.type != "checkbox") || (!field.controlColour && (type.type != "marker" || !field.controlSymbol) && (type.type != "marker" || !field.controlShape) && (type.type != "line" || !field.controlWidth)))
 							return;
 
 						fields[field.name] = [ ];
 
 						(field.options || [ ]).forEach(function(option) {
 							var item = { value: option.value, field: field.name, filtered: true };
+
+							if(field.type == "checkbox") {
+								item.checkbox = (option.value == "1");
+							}
+
 							if(field.controlColour)
 								item.colour = option.colour;
 							if(type.type == "marker" && field.controlSymbol)

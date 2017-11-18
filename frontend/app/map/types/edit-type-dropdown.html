@@ -1,6 +1,6 @@
 <div class="modal-header">
 	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
-	<h3 class="modal-title">Edit dropdown</h3>
+	<h3 class="modal-title">Edit {{field.type == 'checkbox' ? 'checkbox' : 'dropdown'}}</h3>
 </div>
 <div class="modal-body">
 	<form class="form-horizontal" ng-submit="save()">
@@ -34,7 +34,7 @@
 				Control {{type.type}} width
 			</label>
 		</div>
-		<table class="table table-striped">
+		<table class="table table-striped" ng-if="field.type != 'checkbox' || field.controlColour || field.controlSize || field.controlSymbol || field.controlShape || field.controlWidth">
 			<thead>
 				<tr>
 					<th>Option</th>
@@ -42,23 +42,26 @@
 					<th ng-if="field.controlSize">Size</th>
 					<th ng-if="field.controlSymbol">Icon</th>
 					<th ng-if="field.controlWidth">Width</th>
-					<th></th>
-					<th class="move"></th>
+					<th ng-if="field.type != 'checkbox'"></th>
+					<th ng-if="field.type != 'checkbox'" class="move"></th>
 				</tr>
 			</thead>
 			<tbody ui-sortable="sortableOptions" ng-model="field.options">
 				<tr ng-repeat="option in field.options">
-					<td><input type="text" ng-model="option.value" class="form-control"></td>
+					<td>
+						<input ng-if="field.type != 'checkbox'" type="text" ng-model="option.value" class="form-control">
+						<strong ng-if="field.type == 'checkbox'">{{option.value == '1' ? '✔' : '✘'}}</strong>
+					</td>
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
 					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
 					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>
 					<td ng-if="field.controlShape"><input type="text" ng-model="option.shape" fm-shape-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
-					<td class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
-					<td class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
+					<td ng-if="field.type != 'checkbox'" class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
+					<td ng-if="field.type != 'checkbox'" class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
 				</tr>
 			</tbody>
-			<tfoot>
+			<tfoot ng-if="field.type != 'checkbox'">
 				<tr>
 					<td><button type="button" ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
 				</tr>
