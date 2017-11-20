@@ -275,14 +275,16 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 						        pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
 						    });
 						},
-						color: '#000000'
+						style: (feature) => ({
+							color: '#000000',
+							fill: false,
+							weight: 6
+						})
 					})
 					.on("click", function(e) {
 						renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
 						onOpen && onOpen();
 					}.fmWrapApply($rootScope));
-
-					fmUtils.blurFilter(result.highlightLayer, "fmSearchBlur", 4);
 
 					layerGroup.addLayer(result.highlightLayer);
 				}

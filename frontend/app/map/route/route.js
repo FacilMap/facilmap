@@ -56,22 +56,27 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 					pane: "fmHighlightShadowPane",
 					interactive: false,
 					color : '#000000',
-					weight : 8,
-					opacity : 0.7
-				}).addTo(map.map).on("click", function(e) {
+					weight : 10,
+					opacity : 1
+				}).on("click", function(e) {
 					routeUi.showRouteInfoBox();
 				}.fmWrapApply($rootScope));
-
-				fmUtils.blurFilter(highlightLayer, "fmLinesBlur", 4);
 
 				routeLayer = L.polyline(splitLatLngs, {
 					pane: "fmHighlightPane",
 					color : '#0000ff',
-					weight : 8,
-					opacity : 0.7
+					weight : 5,
+					opacity : 0.5
 				}).addTo(map.map).on("click", function(e) {
 					routeUi.showRouteInfoBox();
 				}.fmWrapApply($rootScope));
+
+				if (openInfoBox) {
+					highlightLayer.addTo(map.map);
+					routeLayer.setStyle({
+						opacity: 1
+					});
+				}
 
 				map.map.almostOver.addLayer(routeLayer);
 
@@ -195,6 +200,9 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		let routeUi = {
 			showRouteInfoBox() {
+				if(openInfoBox)
+					return;
+
 				let scope = $rootScope.$new();
 				scope.client = map.client;
 
@@ -226,9 +234,22 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				let template = $(require("./view-route.html"));
 
+				highlightLayer.addTo(map.map);
+				routeLayer.setStyle({
+					opacity: 1
+				});
+
 				openInfoBox = map.infoBox.show(template, scope, () => {
 					scope.$destroy();
 					openInfoBox = null;
+
+					if(highlightLayer)
+						highlightLayer.remove();
+					if(routeLayer) {
+						routeLayer.setStyle({
+							opacity: 0.5
+						});
+					}
 				});
 
 				elevationPlot.clear();
