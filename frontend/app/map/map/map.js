@@ -451,9 +451,12 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 		},
 		link: function(scope, element, attrs, ctrl) {
 			// Has to be called after the controller is initialised so that loadInitialView can be overridden by fmHash
-			ctrl.loadInitialView().then(() => {
-				scope.loaded = true;
-			});
+			// Delay it even further so that sub-directives are initialised (fm-hash needs to communicate with fm-search)
+			setTimeout(() => {
+				ctrl.loadInitialView().then(() => {
+					scope.loaded = true;
+				});
+			}, 0);
 		}
 	};
 });
