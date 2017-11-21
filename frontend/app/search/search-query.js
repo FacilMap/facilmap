@@ -253,7 +253,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 					pane: highlight ? "fmHighlightPane" : "overlayPane",
 					pointToLayer: function(geoJsonPoint, latlng) {
 					    return L.marker(latlng, {
-					        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, highlight),
+					        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, null, highlight),
 						    pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
 					    });
 					}
@@ -271,7 +271,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 						pane: "fmHighlightShadowPane",
 						pointToLayer: function(geoJsonPoint, latlng) {
 						    return L.marker(latlng, {
-						        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, highlight),
+						        icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, null, highlight),
 						        pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
 						    });
 						},
@@ -293,7 +293,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			if(result.lat != null && result.lon != null) {
 				result.marker = L.marker([ result.lat, result.lon ], {
 					pane: highlight ? "fmHighlightMarkerPane" : "markerPane",
-					icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon, null, highlight)
+					icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon, null, null, highlight)
 				})
 					.on("click", function(e) {
 						renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
