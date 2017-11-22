@@ -1,9 +1,10 @@
 var Promise = require("bluebird");
 var request = require("request-promise");
 
+var config = require("../config");
 var utils = require("./utils");
 
-var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
+var ROUTING_URL = `https://api.openrouteservice.org/directions?api_key=${config.orsToken}`;
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -13,31 +14,42 @@ var ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 var RESOLUTION_20 = 0.0000013411044763239684 * 4;
 
 var ROUTING_TYPES = {
-	car: "driving",
-	bicycle: "cycling",
-	pedestrian: "walking"
+	car: "driving-car",
+	bicycle: "cycling-regular",
+	pedestrian: "foot-walking"
 };
 
-var ACCESS_TOKEN = "pk.eyJ1IjoiY2RhdXRoIiwiYSI6ImNpdTYwMmZwMDAwM3AyenBhemM5NHM4ZmgifQ.93z6yuzcsxt3eZk9NxPGHA";
-
-var MAX_POINTS_PER_REQUEST = 25;
+var MAX_DISTANCE = {
+	car: 6000,
+	bicycle: 300,
+	pedestrian: 200
+};
 
 function calculateRouting(points, mode, simple) {
-	let coordGroups = [[]];
+	let currentGroup = [];
+	let coordGroups = [currentGroup];
 	for(let point of points) {
-		if(coordGroups[coordGroups.length-1].length >= MAX_POINTS_PER_REQUEST)
-			coordGroups.push([]);
+		if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[mode]) {
+			if(currentGroup.length == 1)
+				return Promise.reject(new Error("Too much distance between route points. Consider adding some via points."));
 
-		coordGroups[coordGroups.length-1].push(point.lon + "," + point.lat);
+			coordGroups.push(currentGroup = [currentGroup[currentGroup.length-1]]);
+
+			if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[mode])
+				return Promise.reject(new Error("Too much distance between route points. Consider adding some via points."));
+		}
+
+		currentGroup.push(point);
 	}
 
 	return Promise.all(coordGroups.map((coords) => {
-		let url = ROUTING_URL + "/" + ROUTING_TYPES[mode] + "/" + coords.join(";")
-			+ "?alternatives=false"
-			+ "&steps=false"
-			+ "&geometries=geojson"
-			+ "&overview=" + (simple ? "simplified" : "full")
-			+ "&access_token=" + encodeURIComponent(ACCESS_TOKEN);
+		let url = ROUTING_URL
+			+ "&coordinates=" + coords.map((point) => (point.lon + "," + point.lat)).join("|")
+			+ "&profile=" + ROUTING_TYPES[mode]
+			+ "&geometry_format=polyline"
+			+ "&instructions=false"
+			+ "&elevation=true";
+			//+ "&extra_info=surface|waytype|steepness|tollways";
 
 		return request.get({
 			url: url,
@@ -51,29 +63,38 @@ function calculateRouting(points, mode, simple) {
 		let ret = {
 			trackPoints: [],
 			distance: 0,
-			time: 0
+			time: 0,
+			ascent: 0,
+			descent: 0
 		};
 
 		for(let body of results) {
-			if(!body || (body.code == "OK" && (!body.legs || !body.legs[0])))
-				throw "Invalid response from routing server.";
+			if(body && body.error)
+				throw new Error(body.error.message);
 
-			if(body.code != 'Ok')
-				throw "Route could not be calculated (" + body.code + ").";
+			if(!body || !body.routes || !body.routes[0])
+				throw new Error("Invalid response from routing server.");
 
-			let trackPoints = body.routes[0].geometry.coordinates.map(function(it) { return { lat: it[1], lon: it[0] }; });
+			let trackPoints = body.routes[0].geometry.map(function(it) { return { lat: it[1], lon: it[0], ele: it[2] }; });
 			if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon)
 				trackPoints.shift();
 
 			ret.trackPoints.push(...trackPoints);
-			ret.distance += body.routes[0].distance/1000;
-			ret.time += body.routes[0].duration;
+			ret.distance += body.routes[0].summary.distance/1000;
+			ret.time += body.routes[0].summary.duration;
+			ret.ascent += body.routes[0].summary.ascent;
+			ret.descent += body.routes[0].summary.descent;
 		}
 
 		if(!simple)
 			_calculateZoomLevels(ret.trackPoints);
 
 		return ret;
+	}).catch((err) => {
+		if(err.response.body && err.response.body.error)
+			throw new Error(err.response.body.error.message);
+		else
+			throw err;
 	});
 }
 

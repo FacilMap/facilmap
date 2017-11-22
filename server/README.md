@@ -21,13 +21,14 @@ facilmap:
         DB_NAME: facilmap
         DB_USER: facilmap
         DB_PASSWORD: password
+        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/
     restart: on-failure
 ```
 
 Or the same using `docker create`:
 
 ```bash
-docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap --restart on-failure facilmap/facilmap2
+docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e OSR_TOKEN= --restart on-failure facilmap/facilmap2
 ```
 
 See [below](#config) for the available config options.
@@ -65,6 +66,7 @@ The config can be set either by using environment variables (useful for docker) 
 | `db.database`     | `DB_NAME`            | The name of the database (default: `facilmap`).                                                                                  |
 | `db.user`         | `DB_USER`            | The username to connect to the database with (default: `facilmap`).                                                              |
 | `db.password`     | `DB_PASSWORD`        | The password to connect to the database with.                                                                                    |
+| `osrToken`        | `OSR_TOKEN`          | OpenRouteService API key.                                                                                                        |
 
 Development
 -----------

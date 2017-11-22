@@ -160,7 +160,6 @@ class Socket {
 		return this._emit("setRoute", data).then((route) => {
 			if(route) { // If unset, a newer submitted route has returned in the meantime
 				this.route = route;
-				this.route.elevation = data.elevation; // For reconnect
 				this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
 			}
 
@@ -176,7 +175,6 @@ class Socket {
 	lineToRoute(data) {
 		return this._emit("lineToRoute", data).then((route) => {
 			this.route = route;
-			this.route.elevation = data.elevation; // For reconnect
 			this.route.trackPoints = this._mergeTrackPoints({}, route.trackPoints);
 
 			return this.route;

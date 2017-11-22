@@ -19,15 +19,13 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 		let highlightLayer = null;
 		let dragMarker = null;
 		let markers = [ ];
-		let recalcRoute = fmUtils.minInterval(dragTimeout, false);
 		let dragging = false;
 		let openInfoBox = null;
 
-		function setRoute(route, calcElevation) {
+		function setRoute(route) {
 			return map.client.setRoute({
 				routePoints: route.routePoints,
-				mode: route.mode,
-				elevation: !!calcElevation
+				mode: route.mode
 			}).then(() => {
 				renderRoute();
 			}).catch((err) => {
@@ -133,27 +131,16 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				map.mapEvents.$emit("routeDestinationRemove", [index]);
 			}.fmWrapApply($rootScope))
-			.on("drag", function() {
-				recalcRoute(function() {
-					let idx = markers.indexOf(marker);
-					map.client.route.routePoints[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
-					map.mapEvents.$emit("routeDestinationMove", [idx]);
-
-					return setRoute(map.client.route, false);
-				}.fmWrapApply($rootScope));
-			})
 			.on("dragstart", () => {
 				dragging = true;
 			}).on("dragend", () => {
-				recalcRoute(function() { // To make sure it runs after the last drag event
-					dragging = false;
+				dragging = false;
 
-					let idx = markers.indexOf(marker);
-					map.client.route.routePoints[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
-					map.mapEvents.$emit("routeDestinationMove", [idx]);
+				let idx = markers.indexOf(marker);
+				map.client.route.routePoints[idx] = {lat: marker.getLatLng().lat, lon: marker.getLatLng().lng};
+				map.mapEvents.$emit("routeDestinationMove", [idx]);
 
-					return setRoute(map.client.route, true);
-				});
+				return setRoute(map.client.route);
 			});
 		}
 
@@ -297,7 +284,8 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 			setRoute(routePoints, mode) {
 				return setRoute({routePoints, mode}, true).then(() => {
-					this.showRouteInfoBox();
+					if(map.client.route)
+						this.showRouteInfoBox();
 				});
 			},
 

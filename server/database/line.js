@@ -3,7 +3,6 @@ var Promise = require("bluebird");
 var Sequelize = require("sequelize");
 var underscore = require("underscore");
 
-var elevation = require("../elevation");
 var utils = require("../utils");
 var routing = require("../routing");
 
@@ -158,8 +157,8 @@ module.exports = function(Database) {
 					return this._updateObjectStyles(createLine, true);
 				}
 			}).then((res) => {
-				this.emit("line", padId, res.setLinePoints); // res.linePoints returns the line with updated ascent and descent
-				return res.setLinePoints;
+				this.emit("line", padId, res.createLine);
+				return res.createLine;
 			});
 		},
 
@@ -195,20 +194,15 @@ module.exports = function(Database) {
 						return this._setLinePoints(newLine.padId, lineId, routing);
 				}
 			}).then((res) => {
-				this.emit("line", padId, res.linePoints || res.newLine); // res.linePoints returns the line with updated ascent and descent
+				this.emit("line", padId, res.newLine);
 
-				return res.linePoints;
+				return res.newLine;
 			});
 		},
 
-		_setLinePoints(padId, lineId, trackPoints, _noEvent, _noUpdateLine) {
+		_setLinePoints(padId, lineId, trackPoints, _noEvent) {
 			// First get elevation, so that if that fails, we don't update anything
-			let ascentDescent;
-			return this._updateElevation(trackPoints).then((a) => {
-				ascentDescent = a;
-
-				return this._conn.model("LinePoint").destroy({ where: { lineId: lineId } });
-			}).then(() => {
+			return this._conn.model("LinePoint").destroy({ where: { lineId: lineId } }).then(() => {
 				var create = [ ];
 				for(var i=0; i<trackPoints.length; i++) {
 					create.push(Object.assign(JSON.parse(JSON.stringify(trackPoints[i])), { lineId: lineId }));
@@ -218,16 +212,13 @@ module.exports = function(Database) {
 			}).then((points) => {
 				if(!_noEvent)
 					this.emit("linePoints", padId, lineId, points);
-
-				if(!_noUpdateLine) // When deleting the line, we don't want to set this
-					return this._updatePadObject("Line", padId, lineId, ascentDescent, true);
 			});
 		},
 
 		deleteLine(padId, lineId) {
 			return utils.promiseAuto({
 				line: this._deletePadObject("Line", padId, lineId),
-				points: this._setLinePoints(padId, lineId, [ ], true, true)
+				points: this._setLinePoints(padId, lineId, [ ], true)
 			}).then((res) => {
 				this.emit("deleteLine", padId, { id: lineId });
 
@@ -307,6 +298,8 @@ module.exports = function(Database) {
 				return routing.calculateRouting(line.routePoints, line.mode).then((routeData) => {
 					line.distance = routeData.distance;
 					line.time = routeData.time;
+					line.ascent = routeData.ascent;
+					line.descent = routeData.descent;
 					for(var i=0; i<routeData.trackPoints.length; i++)
 						routeData.trackPoints[i].idx = i;
 					return routeData.trackPoints;
@@ -321,21 +314,6 @@ module.exports = function(Database) {
 				}
 				return Promise.resolve(trackPoints);
 			}
-		},
-
-		_updateElevation(trackPoints) {
-			let pointsToUpdate = trackPoints.filter((point) => (point.zoom < 12 && point.ele == null));
-
-			return elevation.getElevationForPoints(pointsToUpdate).then((elevations) => {
-				elevations.forEach((elevation, i) => {
-					if(pointsToUpdate[i].setDataValue)
-						pointsToUpdate[i].setDataValue("ele", elevation);
-					else
-						pointsToUpdate[i].ele = elevation;
-				});
-
-				return elevation.getAscentDescent(trackPoints.filter((point) => (point.ele != null)).map((point) => (point.ele)));
-			});
 		}
 	});
 };

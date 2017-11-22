@@ -1,5 +1,19 @@
-<div class="content container-fluid" ng-class="className">
-	<uib-tabset active="persistentSettings.activeTab">
+<div class="content container-fluid" ng-class="line.ascent == null ? className : [className, 'has-elevation']">
+	<div ng-if="line.ascent == null">
+		<h2>{{line.name}}</h2>
+		<dl class="dl-horizontal">
+			<dt class="distance">Distance</dt>
+			<dd class="distance">{{line.distance | fmRound:2}} km <span ng-show="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRoutingMode}})</span></dd>
+
+			<dt class="elevation" ng-show="line.ascent != null">Climb/drop</dt>
+			<dd class="elevation" ng-show="line.ascent != null"><span uib-tooltip="Total ascent"><span class="glyphicon glyphicon-triangle-top"></span> {{line.ascent}} m</span> / <span uib-tooltip="Total descent"><span class="glyphicon glyphicon-triangle-bottom"></span> {{line.descent}} m</span></dd>
+
+			<dt ng-repeat-start="field in client.types[line.typeId].fields">{{field.name}}</dt>
+			<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></dd>
+		</dl>
+	</div>
+
+	<uib-tabset active="persistentSettings.activeTab" ng-if="line.ascent != null">
 		<uib-tab heading="Info">
 			<h2>{{line.name}}</h2>
 			<dl class="dl-horizontal">

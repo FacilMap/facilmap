@@ -1,7 +1,9 @@
 :local(.className) {
-	margin-top: 29px !important;
-	height: calc(100% - 71px) !important;
-	padding: 5px;
+	&.has-elevation {
+		margin-top: 29px !important;
+		height: calc(100% - 71px) !important;
+		padding: 5px;
+	}
 
 	.nav-tabs {
 		position: absolute;

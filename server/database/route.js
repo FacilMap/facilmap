@@ -3,7 +3,6 @@ var Promise = require("bluebird");
 var Sequelize = require("sequelize");
 var underscore = require("underscore");
 
-var elevation = require("../elevation");
 var utils = require("../utils");
 var routing = require("../routing");
 
@@ -50,13 +49,13 @@ module.exports = function(Database) {
 			return Promise.resolve(utils.generateRandomId(20));
 		},
 
-		createRoute(routePoints, mode, calculateElevation) {
+		createRoute(routePoints, mode) {
 			return this.generateRouteId().then((routeId) => {
-				return this.updateRoute(routeId, routePoints, mode, calculateElevation, true);
+				return this.updateRoute(routeId, routePoints, mode, true);
 			});
 		},
 
-		updateRoute(routeId, routePoints, mode, calculateElevation, _noClear) {
+		updateRoute(routeId, routePoints, mode, _noClear) {
 			let line = { id: routeId, mode, routePoints };
 
 			let thisTime = Date.now();
@@ -76,17 +75,7 @@ module.exports = function(Database) {
 
 					return this._calculateRouting(line);
 				},
-				elevation: (trackPoints) => {
-					if(thisTime < updateTimes[routeId])
-						return;
-
-					if(calculateElevation) {
-						return this._updateElevation(trackPoints).then((ascentDescent) => {
-							Object.assign(line, ascentDescent);
-						});
-					}
-				},
-				update: (clear, trackPoints, elevation) => {
+				update: (clear, trackPoints) => {
 					if(thisTime < updateTimes[routeId])
 						return;
 

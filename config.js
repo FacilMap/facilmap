@@ -9,5 +9,6 @@ module.exports = {
 		database: process.env.DB_NAME || "facilmap",
 		user: process.env.DB_USER || "facilmap",
 		password: process.env.DB_PASSWORD || "password"
-	}
+	},
+	orsToken: process.env.OSR_TOKEN || "" // Get a token on https://go.openrouteservice.org/
 };

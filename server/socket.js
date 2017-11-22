@@ -512,13 +512,13 @@ utils.extend(SocketConnection.prototype, {
 
 		setRoute: function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", elevation: "boolean" }))
+				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string" }))
 					throw "Invalid parameters.";
 
 				if(this.route)
-					return this.database.updateRoute(this.route.id, data.routePoints, data.mode, data.elevation);
+					return this.database.updateRoute(this.route.id, data.routePoints, data.mode);
 				else
-					return this.database.createRoute(data.routePoints, data.mode, data.elevation);
+					return this.database.createRoute(data.routePoints, data.mode);
 			}).then((routeInfo) => {
 				if(!routeInfo) {
 					// A newer submitted route has returned in the meantime

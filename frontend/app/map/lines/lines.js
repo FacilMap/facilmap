@@ -184,7 +184,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				scope.$watch("line.trackPoints", (trackPoints) => {
 					elevationPlot.clear();
 
-					if(line.trackPoints) {
+					if(line.ascent != null && line.trackPoints) {
 						let latlngs = [];
 						for(let i=0; i<line.trackPoints.length; i++) {
 							if(line.trackPoints[i] && line.trackPoints[i].ele != null)
@@ -200,8 +200,12 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				}, true);
 
 				let drawElevationPlot = () => {
-					elevationPlot.options.width = template.find(".tab-pane.active").width();
-					template.find(".fm-elevation-plot").empty().append($(elevationPlot.onAdd(map.map)).addClass("leaflet-control"));
+					let el = template.find(".fm-elevation-plot").empty();
+
+					if(line.ascent != null) {
+						elevationPlot.options.width = template.find(".tab-pane.active").width();
+						el.append($(elevationPlot.onAdd(map.map)).addClass("leaflet-control"));
+					}
 				};
 
 				template.filter(".content").on("resizeend", drawElevationPlot);
