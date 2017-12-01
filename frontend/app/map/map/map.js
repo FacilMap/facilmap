@@ -44,6 +44,12 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					noWrap: true
 				}),
 				mapnikLayer,
+				L.tileLayer("http://sg.geodatenzentrum.de/wmts_topplus_web_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
+					fmName: "TopPlus",
+					fmBase: true,
+					fmKey: "ToPl",
+					attribution: $sce.trustAsHtml('© <a href="http://www.bkg.bund.de/">Bundesamt für Kartographie und Geodäsie</a> ' + (new Date()).getFullYear())
+				}),
 				L.tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
 					fmName: "Map1.eu",
 					fmBase: true,
