@@ -1,5 +1,5 @@
-<div class="fm-map-legend">
-	<div class="panel panel-default" ng-show="legendItems.length > 0" ng-class="{'hidden-xs': !showXs}">
+<div class="fm-map-legend" ng-show="legendItems.length > 0">
+	<div class="panel panel-default" ng-class="{'hidden-xs': !showXs}">
 		<div class="panel-body">
 			<hr ng-repeat-start="type in legendItems" ng-if="$index > 0">
 			<h3 ng-click="toggleFilter(type)" ng-class="{ filtered: type.filtered }">{{type.name}}</h3>
@@ -9,5 +9,5 @@
 			</dl>
 		</div>
 	</div>
-	<button type="button" class="btn btn-default visible-xs-block mobile-menu-button" ng-click="showXs = !showXs" uib-tooltip="{{showXs ? 'Hide legend' : 'Show legend'}}" tooltip-placement="left" tooltip-append-to-body="true"><span class="glyphicon glyphicon-info-sign"></span></button>
+	<button type="button" class="btn btn-default visible-xs-block mobile-menu-button"  uib-btn-checkbox ng-model="showXs" uib-tooltip="{{showXs ? 'Hide legend' : 'Show legend'}}" tooltip-placement="left" tooltip-append-to-body="true"><span class="glyphicon glyphicon-info-sign"></span></button>
 </div>
