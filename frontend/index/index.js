@@ -11,7 +11,8 @@ fm.app.controller("PadCtrl", function($scope, $timeout, $element, fmUtils) {
 		toolbox: toBoolean(queryParams.toolbox, true),
 		search: toBoolean(queryParams.search, true),
 		autofocus: toBoolean(queryParams.autofocus, parent === window),
-		legend: toBoolean(queryParams.legend, true)
+		legend: toBoolean(queryParams.legend, true),
+		interactive: toBoolean(queryParams.interactive, parent === window)
 	});
 
 	if(!location.hash || location.hash == "#") {

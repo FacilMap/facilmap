@@ -19,6 +19,7 @@ You can control the display of different components by using the following query
 * `search`: Show the search bar (default: `true`)
 * `autofocus`: Autofocus the search field (default: `false`)
 * `legend`: Show the legend if available (default: `true`)
+* `interactive`: Show certain items (“Create collaborative map”, “Open file”) in the toolbox (default: `false`)
 
 Example:
 
@@ -103,7 +104,7 @@ of components by adding them to the element:
 
 ```html
 <facilmap fm-server-url="https://facilmap.org/" fm-map-id="mymap">
-	<fm-toolbox></fm-toolbox>
+	<fm-toolbox interactive="true"></fm-toolbox>
 	<fm-search autofocus="true"></fm-search>
 	<fm-legend></fm-legend>
 </facilmap>

@@ -7,8 +7,13 @@ fm.app.directive("fmToolbox", function($compile, fmFilter, fmAbout) {
 		require: "^facilmap",
 		template: require("./toolbox.html"),
 		replace: true,
-		scope: {},
+		scope: {
+			interactive: "<interactive"
+		},
 		link: function(scope, element, attrs, map) {
+			if(scope.interactive == null)
+				scope.interactive = true;
+
 			scope.client = map.client;
 
 			scope.links = {};
