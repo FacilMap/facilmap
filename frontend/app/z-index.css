@@ -22,6 +22,10 @@
 	z-index: 1020;
 }
 
+.fm-open-external {
+	z-index: 500;
+}
+
 .fm-map-spinner,.fm-attribution-icon {
 	z-index: 20000;
 }

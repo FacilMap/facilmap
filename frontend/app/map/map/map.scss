@@ -70,6 +70,14 @@
 	pointer-events: none;
 }
 
+.fm-open-external {
+	position: absolute;
+	bottom: 20px;
+	left: 15px;
+	width: 90px;
+	height: 50px;
+}
+
 .leaflet-control-locate.leaflet-control-locate a {
 	font-size: inherit;
 }

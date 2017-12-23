@@ -453,7 +453,12 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				// When no pad is opened and a route is set for the first time,
 				if(!$scope.client.padId && $scope.client.route)
 					$scope.client.updateBbox(fmUtils.leafletToFmBbox(this.map.getBounds(), this.map.getZoom()));
-			})
+			});
+
+			$scope.isInFrame = (parent !== window);
+			$scope.$watch(() => (location.href), (url) => {
+				$scope.url = `${location.origin}${location.pathname}${location.hash}`;
+			});
 		},
 		link: function(scope, element, attrs, ctrl) {
 			// Has to be called after the controller is initialised so that loadInitialView can be overridden by fmHash
