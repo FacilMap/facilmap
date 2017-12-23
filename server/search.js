@@ -221,9 +221,6 @@ const search = module.exports = {
 				case "pl":
 					road = "ul. "+road;
 					break;
-				case "ro":
-					road = "str. "+road;
-					break;
 			}
 		}
 
@@ -270,7 +267,7 @@ const search = module.exports = {
 					road = "No." +housenumber+", "+road;
 					break;
 				case "ro":
-					road += ", nr. "+road;
+					road += ", nr. "+housenumber;
 					break;
 				case "au":
 				case "fr":
@@ -284,7 +281,7 @@ const search = module.exports = {
 				case "gb":
 				case "us":
 				default:
-					road += housenumber+" "+road;
+					road = housenumber+" "+road;
 					break;
 			}
 		}
