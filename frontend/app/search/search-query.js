@@ -155,12 +155,13 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			importUi.openImportDialog(scope.searchResults);
 		};
 
-		var el = $(require("./search-query.html"));
+		var container = $(require("./search-query.html"));
+		var el = $(".fm-search-search", container);
 		if (autofocus) {
 			$("#fm-search-input", el).attr("autofocus", "autofocus");
 		}
-		el.insertAfter(map.map.getContainer());
-		$compile(el)(scope);
+		container.insertAfter(map.map.getContainer());
+		$compile(container)(scope);
 		scope.$evalAsync(); // $compile only replaces variables on next digest
 
 		var clickMarker = L.featureGroup([]).addTo(map.map);

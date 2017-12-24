@@ -1,68 +1,70 @@
 <button type="button" class="btn btn-default visible-xs-block mobile-menu-button fm-search-mobile-toggle" uib-btn-checkbox ng-model="showXs" uib-tooltip="{{showXs ? 'Hide search' : 'Show search'}}" tooltip-placement="right"><span class="glyphicon glyphicon-search"></span></button>
-<div class="fm-search fm-search-search panel panel-default" ng-class="{'fm-hasResults': !!searchResults, 'hidden-xs': !showXs}">
-	<div class="panel-body">
-		<form ng-submit="search()">
-			<div class="form-group">
-				<div class="input-group">
-					<div class="has-feedback">
-						<input id="fm-search-input" type="search" class="form-control" ng-model="searchString" placeholder="Search" tabindex="1">
-						<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><span class="icon-clear"></span></a>
+<div class="fm-search-container" ng-class="{'hidden-xs': !showXs}">
+	<div class="fm-search fm-search-search panel panel-default" ng-class="{'fm-hasResults': !!searchResults}">
+		<div class="panel-body">
+			<form ng-submit="search()">
+				<div class="form-group">
+					<div class="input-group">
+						<div class="has-feedback">
+							<input id="fm-search-input" type="search" class="form-control" ng-model="searchString" placeholder="Search" tabindex="1">
+							<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><span class="icon-clear"></span></a>
+						</div>
+						<span class="input-group-btn">
+							<button type="submit" class="btn btn-default" tabindex="2"><span class="glyphicon glyphicon-search"></span></button>
+							<button type="button" class="btn btn-default" ng-click="showRoutingForm()" tabindex="3" uib-tooltip="Switch to routing form" tooltip-append-to-body="true"><span class="glyphicon glyphicon-road"></span></button>
+						</span>
 					</div>
-					<span class="input-group-btn">
-						<button type="submit" class="btn btn-default" tabindex="2"><span class="glyphicon glyphicon-search"></span></button>
-						<button type="button" class="btn btn-default" ng-click="showRoutingForm()" tabindex="3" uib-tooltip="Switch to routing form" tooltip-append-to-body="true"><span class="glyphicon glyphicon-road"></span></button>
-					</span>
+				</div>
+			</form>
+
+			<div class="fm-search-results">
+				<div uib-alert class="alert-danger no-results" ng-if="!searchResults.views.length && searchResults.features.length == 0 && (searchResults.types | fmPropertyCount) == 0">No results have been found.</div>
+				<div ng-if="searchResults.views.length > 0">
+					<h3>Views</h3>
+					<ul class="list-group">
+						<li ng-repeat="view in searchResults.views" class="list-group-item">
+							<a href="javascript:" ng-click="showView(view)">{{view.name}}</a>
+							<span class="result-type">(View)</span>
+							<a href="javascript:" ng-if="!viewExists(view)" ng-click="addView(view)" class="pull-right" uib-tooltip="Add this view to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
+						</li>
+					</ul>
+				</div>
+				<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
+				<ul class="list-group" ng-if="searchResults.features.length > 0">
+					<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
+						<a ng-show="showAll" href="javascript:" ng-click="showResult(result)" uib-tooltip="Zoom to result" tooltip-append-to-body="true"><span class="glyphicon glyphicon-zoom-in"></span></a>
+						<a href="javascript:" ng-click="showResult(result, showAll ? 2 : false)">{{result.display_name}}</a>
+						<span class="result-type" ng-if="result.type">({{result.type}})</span>
+					</li>
+				</ul>
+				<div ng-if="(searchResults.types | fmPropertyCount) > 0">
+					<h3>Types</h3>
+					<ul class="list-group">
+						<li ng-repeat="type in searchResults.types" class="list-group-item">
+							{{type.name}}
+							<span class="result-type">(Type)</span>
+							<a href="javascript:" ng-if="!typeExists(type)" ng-click="addType(type)" class="pull-right" uib-tooltip="Add this type to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
+						</li>
+					</ul>
 				</div>
 			</div>
-		</form>
 
-		<div class="fm-search-results">
-			<div uib-alert class="alert-danger no-results" ng-if="!searchResults.views.length && searchResults.features.length == 0 && (searchResults.types | fmPropertyCount) == 0">No results have been found.</div>
-			<div ng-if="searchResults.views.length > 0">
-				<h3>Views</h3>
-				<ul class="list-group">
-					<li ng-repeat="view in searchResults.views" class="list-group-item">
-						<a href="javascript:" ng-click="showView(view)">{{view.name}}</a>
-						<span class="result-type">(View)</span>
-						<a href="javascript:" ng-if="!viewExists(view)" ng-click="addView(view)" class="pull-right" uib-tooltip="Add this view to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
-					</li>
-				</ul>
-			</div>
-			<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
-			<ul class="list-group" ng-if="searchResults.features.length > 0">
-				<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
-					<a ng-show="showAll" href="javascript:" ng-click="showResult(result)" uib-tooltip="Zoom to result" tooltip-append-to-body="true"><span class="glyphicon glyphicon-zoom-in"></span></a>
-					<a href="javascript:" ng-click="showResult(result, showAll ? 2 : false)">{{result.display_name}}</a>
-					<span class="result-type" ng-if="result.type">({{result.type}})</span>
-				</li>
-			</ul>
-			<div ng-if="(searchResults.types | fmPropertyCount) > 0">
-				<h3>Types</h3>
-				<ul class="list-group">
-					<li ng-repeat="type in searchResults.types" class="list-group-item">
-						{{type.name}}
-						<span class="result-type">(Type)</span>
-						<a href="javascript:" ng-if="!typeExists(type)" ng-click="addType(type)" class="pull-right" uib-tooltip="Add this type to the map" tooltip-append-to-body="true"><span class="glyphicon glyphicon-plus"></span></a>
-					</li>
-				</ul>
+			<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
+				<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
+
+				<button type="button" class="btn btn-link" ng-click="reset()"><span class="glyphicon glyphicon-remove"></span></button>
+
+				<div uib-dropdown keyboard-nav="true" class="pull-right dropup" ng-if="client.padId && !client.readonly">
+					<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
+					<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="search-add-all-button">
+						<li ng-if="(searchResults.types | fmPropertyCount) > 0" role="menuitem"><a href="javascript:" ng-click="customImport()">Custom type mapping…</a></li>
+						<li ng-if="(searchResults.features | filter:{isMarker: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'marker'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all markers as {{type.name}}</a></li>
+						<li ng-if="(searchResults.features | filter:{isLine: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all lines/polygons as {{type.name}}</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
 
-		<div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
-			<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
-
-			<button type="button" class="btn btn-link" ng-click="reset()"><span class="glyphicon glyphicon-remove"></span></button>
-
-			<div uib-dropdown keyboard-nav="true" class="pull-right dropup" ng-if="client.padId && !client.readonly">
-				<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
-				<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="search-add-all-button">
-					<li ng-if="(searchResults.types | fmPropertyCount) > 0" role="menuitem"><a href="javascript:" ng-click="customImport()">Custom type mapping…</a></li>
-					<li ng-if="(searchResults.features | filter:{isMarker: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'marker'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all markers as {{type.name}}</a></li>
-					<li ng-if="(searchResults.features | filter:{isLine: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all lines/polygons as {{type.name}}</a></li>
-				</ul>
-			</div>
-		</div>
+		<a href="javascript:" class="fm-search-resize ui-resizable-handle ui-resizable-se"><span class="glyphicon glyphicon-resize-horizontal"></span></a>
 	</div>
-
-	<a href="javascript:" class="fm-search-resize ui-resizable-handle ui-resizable-se"><span class="glyphicon glyphicon-resize-horizontal"></span></a>
 </div>
