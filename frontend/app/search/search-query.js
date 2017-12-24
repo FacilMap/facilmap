@@ -417,7 +417,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			getCurrentSearchForHash: function() {
-				if(searchUi._el.is(":visible")) {
+				if(searchUi._el.css("display") != "none") { // Don't use :visible here because it might be hidden my mobile view
 					if(((scope.searchResults && scope.searchResults.features.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 						return scope.activeResult.id;
 					else if(scope.submittedSearchString)
