@@ -103,11 +103,11 @@ module.exports = function(Database) {
 			validate: {
 				defaultValsNotNull: function() {
 					if(this.colourFixed && this.defaultColour == null)
-						throw "Fixed colour cannot be undefined.";
+						throw new Error("Fixed colour cannot be undefined.");
 					if(this.sizeFixed && this.defaultSize == null)
-						throw "Fixed size cannot be undefined.";
+						throw new Error("Fixed size cannot be undefined.");
 					if(this.widthFixed && this.defaultWidth == null)
-						throw "Fixed width cannot be undefined.";
+						throw new Error("Fixed width cannot be undefined.");
 				}
 			}
 		});
@@ -137,7 +137,7 @@ module.exports = function(Database) {
 		createType(padId, data) {
 			return Promise.resolve().then(() => {
 				if(data.name == null || data.name.trim().length == 0)
-					throw "No name provided.";
+					throw new Error("No name provided.");
 
 				return this._createPadObject("Type", padId, data);
 			}).then((data) => {
@@ -150,7 +150,7 @@ module.exports = function(Database) {
 		updateType(padId, typeId, data, _doNotUpdateStyles) {
 			return Promise.resolve().then(() => {
 				if(data.name == null || data.name.trim().length == 0)
-					throw "No name provided.";
+					throw new Error("No name provided.");
 
 				return this._updatePadObject("Type", padId, typeId, data);
 			}).then((data) => {
@@ -189,7 +189,7 @@ module.exports = function(Database) {
 				isUsed: this.isTypeUsed(padId, typeId),
 				del: (isUsed) => {
 					if(isUsed)
-						throw "This type is in use.";
+						throw new Error("This type is in use.");
 
 					return this._deletePadObject("Type", padId, typeId);
 				}

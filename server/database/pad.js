@@ -49,26 +49,26 @@ module.exports = function(Database) {
 			return utils.promiseAuto({
 				validate: () => {
 					if(!data.id || data.id.length == 0)
-						throw "Invalid read-only ID";
+						throw new Error("Invalid read-only ID");
 					if(!data.writeId || data.writeId.length == 0)
-						throw "Invalid read-write ID";
+						throw new Error("Invalid read-write ID");
 					if(!data.adminId || data.adminId.length == 0)
-						throw "Invalid admin ID";
+						throw new Error("Invalid admin ID");
 					if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
-						throw "Read-only, read-write and admin ID have to be different from each other.";
+						throw new Error("Read-only, read-write and admin ID have to be different from each other.");
 
 					return Promise.all([
 						this.padIdExists(data.id).then((exists) => {
 							if(exists)
-								throw "ID '" + data.id + "' is already taken.";
+								throw new Error("ID '" + data.id + "' is already taken.");
 						}),
 						this.padIdExists(data.writeId).then((exists) => {
 							if(exists)
-								throw "ID '" + data.writeId + "' is already taken.";
+								throw new Error("ID '" + data.writeId + "' is already taken.");
 						}),
 						this.padIdExists(data.adminId).then((exists) => {
 							if(exists)
-								throw "ID '" + data.adminId + "' is already taken.";
+								throw new Error("ID '" + data.adminId + "' is already taken.");
 						})
 					]);
 				},
@@ -93,14 +93,14 @@ module.exports = function(Database) {
 
 				validateRead: () => {
 					if(data.id != null && data.id != padId && data.id.length == 0)
-						throw "Invalid read-only ID";
+						throw new Error("Invalid read-only ID");
 
 					var existsPromises = [ ];
 
 					if(data.id != null && data.id != padId) {
 						return this.padIdExists(data.id).then((exists) => {
 							if(exists)
-								throw "ID '" + data.id + "' is already taken.";
+								throw new Error("ID '" + data.id + "' is already taken.");
 						});
 					}
 				},
@@ -108,13 +108,13 @@ module.exports = function(Database) {
 				validateWrite: (oldData) => {
 					if(data.writeId != null && data.writeId != oldData.writeId) {
 						if(data.writeId.length == 0)
-							throw "Invalid read-write ID";
+							throw new Error("Invalid read-write ID");
 						if(data.writeId == (data.id != null ? data.id : padId))
-							throw "Read-only and read-write ID cannot be the same.";
+							throw new Error("Read-only and read-write ID cannot be the same.");
 
 						return this.padIdExists(data.writeId).then((exists) => {
 							if(exists)
-								throw "ID '" + data.writeId + "' is already taken.";
+								throw new Error("ID '" + data.writeId + "' is already taken.");
 						});
 					}
 				},
@@ -122,15 +122,15 @@ module.exports = function(Database) {
 				validateAdmin: (oldData) => {
 					if(data.adminId != null && data.adminId != oldData.adminId) {
 						if(data.adminId.length == 0)
-							throw "Invalid admin ID";
+							throw new Error("Invalid admin ID");
 						if(data.adminId == (data.id != null ? data.id : padId))
-							throw "Read-only and admin ID cannot be the same.";
+							throw new Error("Read-only and admin ID cannot be the same.");
 						if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
-							throw "Read-write and admin ID cannot be the same.";
+							throw new Error("Read-write and admin ID cannot be the same.");
 
 						return this.padIdExists(data.adminId).then((exists) => {
 							if(exists)
-								throw "ID '" + data.adminId + "' is already taken.";
+								throw new Error("ID '" + data.adminId + "' is already taken.");
 						});
 					}
 				},
@@ -138,7 +138,7 @@ module.exports = function(Database) {
 				update: (validateRead, validateWrite, validateAdmin) => {
 					return this._conn.model("Pad").update(data, { where: { id: padId } }).then(res => {
 						if(res[0] == 0)
-							throw "Pad " + padId + " could not be found.";
+							throw new Error("Pad " + padId + " could not be found.");
 						return res;
 					});
 				},

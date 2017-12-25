@@ -52,7 +52,7 @@ module.exports = function(Database) {
 					if(!types[object.typeId]) {
 						return t.getType(object.padId, object.typeId).then((type) => {
 							if(type == null)
-								throw "Type "+object.typeId+" does not exist.";
+								throw new Error("Type "+object.typeId+" does not exist.");
 
 							return types[object.typeId] = type;
 						});

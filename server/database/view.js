@@ -41,7 +41,7 @@ module.exports = function(Database) {
 			return utils.promiseAuto({
 				create: () => {
 					if(data.name == null || data.name.trim().length == 0)
-						throw "No name provided.";
+						throw new Error("No name provided.");
 
 					return this._createPadObject("View", padId, data);
 				},
