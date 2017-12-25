@@ -86,7 +86,7 @@ const webserver = {
 					return padData;
 				}),
 				gpx: (padData) => {
-					return gpx.exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1");
+					return gpx.exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter);
 				},
 				response: (padData, gpx) => {
 					res.set("Content-type", "application/gpx+xml");

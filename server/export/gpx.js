@@ -3,6 +3,7 @@ const fs = require("fs");
 const Promise = require("bluebird");
 
 var utils = require("../utils");
+const commonFilter = require("facilmap-frontend/common/filter");
 
 let padTemplate;
 Promise.promisify(fs.readFile)(`${__dirname}/gpx-pad.ejs`).then((t) => {
@@ -29,18 +30,37 @@ function _dataToText(fields, data) {
 	return text.join('\n\n');
 }
 
-function exportGpx(database, padId, useTracks) {
-	return Promise.all([
-		database.getPadData(padId),
-		Promise.resolve().then(() => {
+function exportGpx(database, padId, useTracks, filter) {
+	const filterFunc = commonFilter.compileExpression(filter);
+
+	return utils.promiseAuto({
+		padData: database.getPadData(padId),
+
+		types: () => {
 			var typesObj = { };
 			return utils.streamEachPromise(database.getTypes(padId), function(type) {
 				typesObj[type.id] = type;
 			}).then(() => typesObj);
-		}),
-		utils.streamToArrayPromise(database.getPadMarkers(padId)),
-		utils.streamToArrayPromise(database.getPadLinesWithPoints(padId))
-	]).then(([padData, types, markers, lines]) => {
+		},
+
+		markers: (types) => {
+			const markers = [];
+			return utils.streamEachPromise(database.getPadMarkers(padId), (marker) => {
+				if(filterFunc(commonFilter.prepareObject(marker, types[marker.typeId]))) {
+					markers.push(marker);
+				}
+			}).then(() => (markers));
+		},
+
+		lines: (types) => {
+			const lines = [];
+			return utils.streamEachPromise(database.getPadLinesWithPoints(padId), (line) => {
+				if(filterFunc(commonFilter.prepareObject(line, types[line.typeId]))) {
+					lines.push(line);
+				}
+			}).then(() => (lines));
+		}
+	}).then(({padData, types, markers, lines}) => {
 		return padTemplate({
 			time: utils.isoDate(),
 			padData,
