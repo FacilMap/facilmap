@@ -111,7 +111,7 @@ const webserver = {
 					return padData;
 				}),
 				geojson: () => {
-					return geojson.exportGeoJson(database, req.params.padId);
+					return geojson.exportGeoJson(database, req.params.padId, req.query.filter);
 				},
 				response: (padData, geojson) => {
 					res.set("Content-type", "application/geo+json");
