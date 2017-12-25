@@ -135,12 +135,11 @@ module.exports = function(Database) {
 					}
 				},
 
-				update: (validateRead, validateWrite, validateAdmin) => {
-					return this._conn.model("Pad").update(data, { where: { id: padId } }).then(res => {
-						if(res[0] == 0)
-							throw new Error("Pad " + padId + " could not be found.");
-						return res;
-					});
+				update: (oldData, validateRead, validateWrite, validateAdmin) => {
+					if(!oldData)
+						throw new Error("Pad " + padId + " could not be found.");
+
+					return this._conn.model("Pad").update(data, { where: { id: padId } });
 				},
 
 				newData: (update) => this.getPadData(data.id || padId),
