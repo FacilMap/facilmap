@@ -144,6 +144,6 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="submit" class="btn btn-primary" ng-click="save()">Save</button>
+	<button type="button" class="btn btn-default" ng-click="$dismiss()" ng-disabled="saving">Cancel</button>
+	<button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="saving">Save</button>
 </div>

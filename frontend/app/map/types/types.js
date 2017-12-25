@@ -92,6 +92,8 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 });
 
 fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
+	$scope.saving = {};
+
 	$scope.create = function() {
 		$scope.edit({
 			fields : [ ]
@@ -101,9 +103,11 @@ fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
 	$scope.edit = map.typesUi.editType.bind(map.typesUi);
 
 	$scope['delete'] = function(type) {
+		$scope.saving[type.id] = true;
 		$scope.error = null;
 		map.client.deleteType({ id: type.id }).catch(function(err) {
 			$scope.error = err;
+			$scope.saving[type.id] = false;
 		});
 	};
 });
@@ -127,6 +131,7 @@ fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOpti
 
 	$scope.save = function() {
 		$scope.error = null;
+		$scope.saving = true;
 
 		[ "defaultWidth", "defaultSize", "defaultColour" ].forEach(function(prop) {
 			if($scope.type[prop] == "")
@@ -137,6 +142,7 @@ fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOpti
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;
+			$scope.saving = false;
 		});
 	};
 

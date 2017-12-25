@@ -12,11 +12,11 @@
 	</dl>
 </div>
 <div class="buttons">
-	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
-	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="client.interaction">Move</button>
-	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()">Remove</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="edit()" ng-disabled="saving">Edit</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="saving || client.interaction">Move</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()" ng-disabled="saving">Remove</button>
 	<div ng-if="map.searchUi" uib-dropdown keyboard-nav="true" class="dropup">
-		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
+		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle ng-disabled="saving">Use as <span class="caret"></span></button>
 		<ul class="dropdown-menu" uib-dropdown-menu role="menu">
 			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(1)">Route start</a></li>
 			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(2)">Route via</a></li>

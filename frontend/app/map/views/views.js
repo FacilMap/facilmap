@@ -34,6 +34,8 @@ fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 	$scope.filter = map.client.filterExpr;
 
 	$scope.save = function() {
+		$scope.saving = true;
+
 		var view = map.getCurrentView($scope.saveFilter);
 		view.name = $scope.name;
 		map.client.addView(view).then(function(view) {
@@ -43,26 +45,34 @@ fm.app.controller("fmMapViewsSaveCtrl", function($scope, map) {
 			$scope.$close();
 		}).catch(function(err) {
 			$scope.error = err;
+			$scope.saving = false;
 		});
 	};
 });
 
 fm.app.controller("fmMapViewsManageCtrl", function($scope, map) {
 	$scope.client = map.client;
+	$scope.saving = {};
 
 	$scope.display = function(view) {
 		map.displayView(view);
 	};
 
 	$scope.makeDefault = function(view) {
-		map.client.editPad({ defaultViewId: view.id }).catch(function(err) {
+		$scope.saving[view.id] = true;
+		map.client.editPad({ defaultViewId: view.id }).then(() => {
+			$scope.saving[view.id] = false;
+		}).catch(function(err) {
 			$scope.error = err;
+			$scope.saving[view.id] = false;
 		});
 	};
 
 	$scope['delete'] = function(view) {
+		$scope.saving[view.id] = true;
 		map.client.deleteView({ id: view.id }).catch(function(err) {
 			$scope.error = err;
+			$scope.saving[view.id] = false;
 		});
 	};
 });

@@ -105,6 +105,8 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 	});
 
 	$scope.save = function() {
+		$scope.saving = true;
+
 		let newData = $.extend({}, $scope.padData, {id: $scope.readId, writeId: $scope.writeId, adminId: $scope.adminId});
 		if(create) {
 			map.client.createPad(newData).then(function() {
@@ -113,12 +115,14 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;
+				$scope.saving = false;
 			});
 		} else {
 			map.client.editPad(newData).then(function() {
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;
+				$scope.saving = false;
 			});
 		}
 	};

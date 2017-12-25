@@ -144,6 +144,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				};
 
 				scope['delete'] = function() {
+					scope.saving = true;
 					linesUi.deleteLine(scope.line);
 				};
 
@@ -385,6 +386,7 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 
 	$scope.save = function() {
 		$scope.error = null;
+		$scope.saving = true;
 
 		var lineObj = ng.copy($scope.line);
 		delete lineObj.trackPoints;
@@ -392,6 +394,7 @@ fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
 		map.client.editLine(lineObj).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
+			$scope.saving = false;
 			return $scope.error = err;
 		});
 	};

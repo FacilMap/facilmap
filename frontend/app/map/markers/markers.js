@@ -78,6 +78,7 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				};
 
 				scope['delete'] = function() {
+					scope.saving = true;
 					markersUi.deleteMarker(scope.marker);
 				};
 
@@ -206,9 +207,12 @@ fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 
 	$scope.save = function() {
 		$scope.error = null;
+		$scope.saving = true;
+
 		map.client.editMarker($scope.marker).then(function() {
 			$scope.$close();
 		}).catch(function(err) {
+			$scope.saving = false;
 			$scope.error = err;
 		});
 	};

@@ -9,8 +9,8 @@
 			<tr ng-class="{success: view.id == client.padData.defaultView.id}" ng-repeat="view in client.views">
 				<td><a href="javascript:" ng-click="display(view)">{{view.name}}</a></td>
 				<td class="td-buttons">
-					<button type="button" ng-hide="view.id == client.padData.defaultView.id" ng-click="makeDefault(view)" class="btn btn-default">Make default</button>
-					<button type="button" ng-click="confirm('Do you really want to delete the view “' + view.name + '”?') && delete(view)" class="btn btn-default">Delete</button>
+					<button type="button" ng-hide="view.id == client.padData.defaultView.id" ng-click="makeDefault(view)" class="btn btn-default" ng-disabled="saving[view.id]">Make default</button>
+					<button type="button" ng-click="confirm('Do you really want to delete the view “' + view.name + '”?') && delete(view)" ng-disabled="saving[view.id]" class="btn btn-default">Delete</button>
 				</td>
 			</tr>
 		</tbody>
