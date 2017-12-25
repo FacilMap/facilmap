@@ -31,6 +31,15 @@ fm.app.directive("fmToolbox", function($compile, fmFilter, fmAbout) {
 			updateLinks();
 			map.map.on("moveend", updateLinks);
 
+			scope.$watch("client.filterExpr", (filterExpr) => {
+				if(filterExpr) {
+					scope.filterQueryQ = `?filter=${encodeURIComponent(filterExpr)}`;
+					scope.filterQueryA = `&filter=${encodeURIComponent(filterExpr)}`;
+				} else {
+					scope.filterQueryQ = scope.filterQueryA = "";
+				}
+			});
+
 			scope.addObject = function(type) {
 				if(type.type == "marker")
 					map.markersUi.addMarker(type);

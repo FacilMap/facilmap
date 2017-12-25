@@ -1,6 +1,6 @@
-import compileExpression from 'filtrex';
+const compileExpression = require('filtrex');
 
-import utils from './utils';
+const utils = require('./utils');
 
 const filter = module.exports = {
 	_customFuncs: {
@@ -114,7 +114,7 @@ const filter = module.exports = {
 	},
 
 	prepareObject: function(obj, type) {
-		obj = filter.flattenObject(obj);
+		obj = filter.flattenObject(JSON.parse(JSON.stringify(obj)));
 
 		if(type)
 			obj.type = type.type;
