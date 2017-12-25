@@ -288,6 +288,8 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				};
 
 				let listenClick = (e) => {
+					this.interactionEnd();
+
 					transparentLayer.removeFrom(this.map).off("click", listenClick);
 
 					if(moveListener)
@@ -303,6 +305,8 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 				if(moveListener)
 					transparentLayer.on("mousemove", listenMove);
+
+				this.interactionStart();
 
 				return {
 					cancel: listenClick
@@ -335,14 +339,23 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				}
 			};
 
-			$scope.loading = 0;
+			$scope.client.interaction = 0;
+			$scope.client.loading = 0;
 
 			this.loadStart = () => {
-				$scope.loading++;
+				$scope.client.loading++;
 			};
 
 			this.loadEnd = () => {
-				$scope.loading--;
+				$scope.client.loading--;
+			};
+
+			this.interactionStart = () => {
+				$scope.client.interaction++;
+			};
+
+			this.interactionEnd = () => {
+				$scope.client.interaction--;
 			};
 
 			$scope.client.on("loadStart", () => {

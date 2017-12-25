@@ -298,6 +298,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				});
 			},
 			moveLine: function(line) {
+				map.interactionStart();
+
 				map.routeUi.lineToRoute(line.id).then(() => {
 					map.client._editingLineId = line.id;
 					linesUi._deleteLine(line);
@@ -340,12 +342,17 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 								map.searchUi.search(searchBkp, true);
 							}
 
+							map.interactionEnd();
+
 							return ret;
 						}).catch(function(err) {
+							map.interactionEnd();
 							map.messages.showMessage("danger", err);
 						});
 					}
 				}).catch((err) => {
+					map.interactionEnd();
+
 					console.log("err", err);
 					map.messages.showMessage("danger", err);
 				});

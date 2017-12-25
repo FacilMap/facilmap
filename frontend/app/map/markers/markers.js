@@ -130,6 +130,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				if(!markersById[marker.id])
 					return;
 
+				map.interactionStart();
+
 				function _finish(save) {
 					message.close();
 
@@ -139,13 +141,17 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 						var pos = markersById[marker.id].getLatLng();
 						map.client.editMarker({ id: marker.id, lat: pos.lat, lon: pos.lng }).then(function(marker) {
 							markersUi.showMarkerInfoBox(marker);
+							map.interactionEnd();
 						}).catch(function(err) {
 							map.messages.showMessage("danger", err);
 
 							markersUi._addMarker(map.client.markers[marker.id]);
+
+							map.interactionEnd();
 						});
 					} else {
 						markersUi._addMarker(map.client.markers[marker.id]);
+						map.interactionEnd();
 					}
 				}
 

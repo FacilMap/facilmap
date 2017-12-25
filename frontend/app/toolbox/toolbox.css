@@ -18,6 +18,10 @@
 	margin-bottom: 0; /* So that the legend can calculate the height of the toolbox properly */
 }
 
+.fm-toolbox a.disabled {
+	color: #aaa !important;
+}
+
 @media print {
 	.fm-toolbox {
 		display: none;

@@ -7,11 +7,11 @@
 					<a href="javascript:" ng-click="startPad()">Start collaborative map</a>
 				</li>
 				<li role="presentation" uib-dropdown keyboard-nav="true" ng-if="!client.readonly && client.padId">
-					<a href="javascript:" id="toolbox-add-dropdown" uib-dropdown-toggle role="button">Add <span class="caret"></span></a>
+					<a href="javascript:" id="toolbox-add-dropdown" uib-dropdown-toggle role="button" ng-class="{disabled: client.interaction}">Add <span class="caret"></span></a>
 					<ul uib-dropdown-menu aria-labelledby="toolbox-add-dropdown">
-						<li ng-repeat="type in client.types"><a href="javascript:" ng-click="addObject(type)">{{type.name}}</a></li>
+						<li ng-repeat="type in client.types"><a href="javascript:" ng-click="!client.interaction && addObject(type)" ng-class="{disabled: client.interaction}">{{type.name}}</a></li>
 						<li ng-if="client.writable == 2" role="separator" class="divider"></li>
-						<li ng-if="client.writable == 2"><a href="javascript:" ng-click="editObjectTypes()">Manage types</a></li>
+						<li ng-if="client.writable == 2"><a href="javascript:" ng-click="!client.interaction && editObjectTypes()" ng-class="{disabled: client.interaction}">Manage types</a></li>
 					</ul>
 				</li>
 				<li role="presentation" uib-dropdown keyboard-nav="true" ng-if="client.padId && (!client.readonly || (client.views | fmPropertyCount) != 0)">

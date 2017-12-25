@@ -13,7 +13,7 @@
 </div>
 <div class="buttons">
 	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="edit()">Edit</button>
-	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()">Move</button>
+	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="client.interaction">Move</button>
 	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the marker “' + marker.name + '”?') && delete()">Remove</button>
 	<div ng-if="map.searchUi" uib-dropdown keyboard-nav="true" class="dropup">
 		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
