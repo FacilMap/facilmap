@@ -44,57 +44,57 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					noWrap: true
 				}),
 				mapnikLayer,
-				L.tileLayer("http://sg.geodatenzentrum.de/wmts_topplus_web_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
+				L.tileLayer("https://sg.geodatenzentrum.de/wmts_topplus_web_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
 					fmName: "TopPlus",
 					fmBase: true,
 					fmKey: "ToPl",
-					attribution: $sce.trustAsHtml('© <a href="http://www.bkg.bund.de/">Bundesamt für Kartographie und Geodäsie</a> ' + (new Date()).getFullYear())
+					attribution: $sce.trustAsHtml('© <a href="https://www.bkg.bund.de/">Bundesamt für Kartographie und Geodäsie</a> ' + (new Date()).getFullYear())
 				}),
 				L.tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
 					fmName: "Map1.eu",
 					fmBase: true,
 					fmKey: "Map1",
-					attribution: $sce.trustAsHtml('© <a href="http://map1.eu/" target="_blank">Map1.eu</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://map1.eu/" target="_blank">Map1.eu</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
 					fmName: "OpenTopoMap",
 					fmBase: true,
 					fmKey: "Topo",
-					attribution: $sce.trustAsHtml('© <a href="https://opentopomap.org/" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC-BY-SA</a>) / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>')
+					attribution: $sce.trustAsHtml('© <a href="https://opentopomap.org/" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC-BY-SA</a>) / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>')
 				}),
 				L.tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
 					fmName: "OpenCycleMap",
 					fmBase: true,
 					fmKey: "OCyc",
-					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
-				L.tileLayer("http://{s}.tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
+				L.tileLayer("https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 					fmName: "Hike & Bike Map",
 					fmBase: true,
 					fmKey: "HiBi",
-					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("https://www.freietonne.de/seekarte/tah.openstreetmap.org/Tiles/TileCache.php?z={z}&x={x}&y={y}.png", {
 					fmName: "Mapnik Water",
 					fmBase: true,
 					fmKey: "MpnW",
-					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
 					fmName: "Public transportation",
 					fmKey: "OPTM",
-					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
-				L.tileLayer("http://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
+				L.tileLayer("https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
 					fmName: "Hiking paths",
 					fmKey: "Hike",
-					attribution: $sce.trustAsHtml('© <a href="http://osm.lonvia.de/world_hiking.html" target="_blank">Lonvia\'s Hiking Map</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://hiking.waymarkedtrails.org/" target="_blank">Waymarked Trails</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
@@ -114,7 +114,7 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				fmUtils.freieTonne(map, {
 					fmName: "Sea marks",
 					fmKey: "FrTo",
-					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					zIndex: 300,
 					noWrap: true
 				})
