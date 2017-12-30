@@ -98,6 +98,13 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					zIndex: 300,
 					noWrap: true
 				}),
+				L.tileLayer("https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png", {
+					fmName: "Bicycle routes",
+					fmKey: "Bike",
+					attribution: $sce.trustAsHtml('© <a href="https://cycling.waymarkedtrails.org/" target="_blank">Waymarked Trails</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					zIndex: 300,
+					noWrap: true
+				}),
 				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
 					fmName: "Relief",
 					fmKey: "Rlie",
