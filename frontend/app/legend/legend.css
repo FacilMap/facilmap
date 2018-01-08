@@ -72,6 +72,10 @@
 	white-space: pre;
 }
 
+.fm-map-legend .first:not(:first-child) {
+	margin-top: 6px;
+}
+
 .fm-map-legend dl:after {
 	content: none;
 }

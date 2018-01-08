@@ -42,7 +42,7 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 						fields[field.name] = [ ];
 
 						(field.options || [ ]).forEach(function(option, idx) {
-							var item = { value: option.value, field: field.name, filtered: true };
+							var item = { value: option.value, field: field.name, filtered: true, first: idx == 0 };
 
 							if(field.type == "checkbox" && (!item.value || /* Legacy format */ item.value == '0' || item.value == '1')) {
 								item.value = field.name;
