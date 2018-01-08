@@ -85,7 +85,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		let scale = height / 31;
 
 		return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
-			`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${Math.round(shapeObj.width * scale) + padding*2}" height="${Math.round(shapeObj.height * scale) + padding*2}" version="1.1">` +
+			`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${Math.ceil(shapeObj.width * scale) + padding*2}" height="${Math.ceil(shapeObj.height * scale) + padding*2}" version="1.1">` +
 			`<g transform="translate(${padding} ${padding}) scale(${scale})">` +
 			shapeCode +
 			`</g>` +
