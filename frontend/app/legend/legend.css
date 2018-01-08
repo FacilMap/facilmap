@@ -52,6 +52,7 @@
 
 .fm-map-legend dt.fm-marker {
 	width: 16px;
+	text-align: center;
 }
 
 .fm-map-legend dt:after {
