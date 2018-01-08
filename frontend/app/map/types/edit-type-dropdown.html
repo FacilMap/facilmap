@@ -38,6 +38,7 @@
 			<thead>
 				<tr>
 					<th>Option</th>
+					<th ng-if="field.type == 'checkbox'">Label (for legend)</th>
 					<th ng-if="field.controlColour">Colour</th>
 					<th ng-if="field.controlSize">Size</th>
 					<th ng-if="field.controlSymbol">Icon</th>
@@ -48,10 +49,8 @@
 			</thead>
 			<tbody ui-sortable="sortableOptions" ng-model="field.options">
 				<tr ng-repeat="option in field.options">
-					<td>
-						<input ng-if="field.type != 'checkbox'" type="text" ng-model="option.value" class="form-control">
-						<strong ng-if="field.type == 'checkbox'">{{option.value == '1' ? '✔' : '✘'}}</strong>
-					</td>
+					<td ng-if="field.type == 'checkbox'"><strong>{{option.value == '1' ? '✔' : '✘'}}</strong></td>
+					<td><input type="text" ng-model="option.value" class="form-control"></td>
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
 					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
 					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>

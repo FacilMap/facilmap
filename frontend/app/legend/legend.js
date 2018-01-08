@@ -41,11 +41,13 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 
 						fields[field.name] = [ ];
 
-						(field.options || [ ]).forEach(function(option) {
+						(field.options || [ ]).forEach(function(option, idx) {
 							var item = { value: option.value, field: field.name, filtered: true };
 
-							if(field.type == "checkbox") {
-								item.checkbox = (option.value == "1");
+							if(field.type == "checkbox" && (!item.value || /* Legacy format */ item.value == '0' || item.value == '1')) {
+								item.value = field.name;
+								if(idx == 0)
+									item.strikethrough = true;
 							}
 
 							if(field.controlColour)

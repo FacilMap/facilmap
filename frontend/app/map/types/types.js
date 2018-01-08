@@ -49,11 +49,19 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 				scope.type = type;
 				scope.field = field;
 
-				if(field.type == 'checkbox' && !field.options) {
-					field.options = [
-						{ value: '0' },
-						{ value: '1' }
-					]
+				if(field.type == 'checkbox') {
+					if(!field.options || field.options.length != 2) {
+						field.options = [
+							{ value: '' },
+							{ value: field.name }
+						]
+					}
+
+					// Convert legacy format
+					if(field.options[0].value == "0")
+						field.options[0].value = "";
+					if(field.options[1].value == "1")
+						field.options[1].value = field.name;
 				}
 
 				for(let option of (field.options || []))

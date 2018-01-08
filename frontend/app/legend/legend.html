@@ -5,7 +5,7 @@
 			<h3 ng-click="toggleFilter(type)" ng-class="{ filtered: type.filtered }">{{type.name}}</h3>
 			<dl ng-repeat-end>
 				<dt ng-repeat-start="item in type.items" ng-class="thisClass = [ 'fm-' + type.type, { filtered: item.filtered } ]" ng-click="toggleFilter(type, item)" ng-bind-html="item | fmMapLegendMakeSymbol:type"></dt>
-				<dd ng-repeat-end ng-class="thisClass" ng-click="toggleFilter(type, item)" ng-style="item.checkbox === false ? {'text-decoration': 'line-through'} : {}">{{item.checkbox != null ? item.field : item.value}}</dd>
+				<dd ng-repeat-end ng-class="thisClass" ng-click="toggleFilter(type, item)" ng-style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.value}}</dd>
 			</dl>
 		</div>
 	</div>
