@@ -20,11 +20,13 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 
 	var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
 
+	fmUtils.RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
+
 	fmUtils.MARKER_SHAPES = {
 		drop: {
-			svg: `<path style="stroke:#%BORDER_COLOUR%;stroke-linecap:round;fill:#%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
+			svg: `<path style="stroke:%BORDER_COLOUR%;stroke-linecap:round;fill:%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
 			      <g transform="translate(2.9, 3.3)">%SYMBOL%</g>`,
-			highlightSvg: `<path style="stroke:#%BORDER_COLOUR%;stroke-width:3;stroke-linecap:round;fill:#%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
+			highlightSvg: `<path style="stroke:%BORDER_COLOUR%;stroke-width:3;stroke-linecap:round;fill:%COLOUR%" d="m11.5 0.5c-7 0-11 4-11 11s9.9375 19 11 19 11-12 11-19-4-11-11-11z"/>
 			               <g transform="translate(2.9, 3.3)">%SYMBOL%</g>`,
 			height: 31,
 			width: 23,
@@ -32,9 +34,9 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			baseY: 31
 		},
 		circle: {
-			svg: `<circle style="stroke:#%BORDER_COLOUR%;fill:#%COLOUR%;" cx="13" cy="13" r="12.5" />
+			svg: `<circle style="stroke:%BORDER_COLOUR%;fill:%COLOUR%;" cx="13" cy="13" r="12.5" />
 			      <g transform="translate(4.642, 4.642)">%SYMBOL%</g>`,
-			highlightSvg: `<circle style="stroke:#%BORDER_COLOUR%;stroke-width:3;fill:#%COLOUR%;" cx="13" cy="13" r="12.5" />
+			highlightSvg: `<circle style="stroke:%BORDER_COLOUR%;stroke-width:3;fill:%COLOUR%;" cx="13" cy="13" r="12.5" />
 			      <g transform="translate(4.642, 4.642)">%SYMBOL%</g>`,
 			height: 26,
 			width: 26,
@@ -79,19 +81,20 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	};
 
 	fmUtils.createMarkerGraphic = function(colour, height, symbol, shape, padding, highlight) {
-		let borderColour = fmUtils.makeTextColour(colour, 0.3);
+		let borderColour = fmUtils.makeTextColour(colour || "ffffff", 0.3);
 		padding = Math.max(padding || 0, highlight ? 10 * height / 31 : 0);
 
 		let shapeObj = fmUtils.MARKER_SHAPES[shape] || fmUtils.MARKER_SHAPES.drop;
 		let shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
-			.replace(/%BORDER_COLOUR%/g, borderColour)
-			.replace(/%COLOUR%/g, colour)
+			.replace(/%BORDER_COLOUR%/g, "#"+borderColour)
+			.replace(/%COLOUR%/g, colour == null ? "url(#rainbow)" : "#" + colour)
 			.replace(/%SYMBOL%/g, fmUtils.getSymbolCode("#"+borderColour, 17, symbol));
 
 		let scale = height / 31;
 
 		return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 			`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${Math.ceil(shapeObj.width * scale) + padding*2}" height="${Math.ceil(shapeObj.height * scale) + padding*2}" version="1.1">` +
+			(colour == null ? `<defs><linearGradient id="rainbow" x2="0" y2="100%">${fmUtils.RAINBOW_STOPS}</linearGradient></defs>` : ``) +
 			`<g transform="translate(${padding} ${padding}) scale(${scale})">` +
 			shapeCode +
 			`</g>` +
@@ -110,15 +113,27 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		});
 	};
 
+	fmUtils.createLineGraphic = function(colour, width, length) {
+		return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
+			`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${length}" height="${width}" version="1.1">` +
+			(colour == null ? `<defs><linearGradient id="rainbow" x2="100%" y2="0">${fmUtils.RAINBOW_STOPS}</linearGradient></defs>` : ``) +
+			`<rect x="0" y="0" width="${length}" height="${width}" style="fill:${colour == null ? `url(#rainbow)` : `#${colour}`}"/>` +
+			`</svg>`);
+	};
+
 	fmUtils.makeTextColour = function(backgroundColour, threshold) {
 		if(threshold == null)
 			threshold = 0.5;
 
-		var r = parseInt(backgroundColour.substr(0, 2), 16)/255;
-		var g = parseInt(backgroundColour.substr(2, 2), 16)/255;
-		var b = parseInt(backgroundColour.substr(4, 2), 16)/255;
+		return (fmUtils.getBrightness(backgroundColour) <= threshold) ? "ffffff" : "000000";
+	};
+
+	fmUtils.getBrightness = function(colour) {
+		var r = parseInt(colour.substr(0, 2), 16)/255;
+		var g = parseInt(colour.substr(2, 2), 16)/255;
+		var b = parseInt(colour.substr(4, 2), 16)/255;
 		// See http://stackoverflow.com/a/596243/242365
-		return (Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b) <= threshold) ? "ffffff" : "000000";
+		return Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b);
 	};
 
 	fmUtils.overwriteObject = function(from, to) {

@@ -170,14 +170,13 @@ fm.app.filter("fmMapLegendMakeSymbol", function(fmUtils, $sce) {
 		var ret;
 
 		if(type.type == "line") {
-			ret = $('<span class="fm-map-legend-line"></span>');
-			ret.css("background-color", "#"+(item.colour || "ffffff"));
-			ret.css("box-shadow", "0 0 1px #"+fmUtils.makeTextColour(item.colour || "ffffff", 0.7));
+			ret = $('<img class="fm-map-legend-line"/>').attr("src", fmUtils.createLineGraphic(item.colour, item.width || 5, 50));
 
-			ret.css("height", (item.width || 5)+"px");
+			if(item.colour && fmUtils.getBrightness(item.colour) > 0.7)
+				ret.addClass("bright");
 		}
 		else
-			ret = $('<img class="fm-map-legend-marker"/>').attr("src", (item.colour || item.shape) ? fmUtils.createMarkerGraphic(item.colour || type.defaultColour || "000000", 15, item.symbol, item.shape || type.defaultShape) : fmUtils.createSymbol("000000", 15, item.symbol));
+			ret = $('<img class="fm-map-legend-marker"/>').attr("src", (item.colour || item.shape) ? fmUtils.createMarkerGraphic(item.colour || type.defaultColour || null, 15, item.symbol, item.shape || type.defaultShape) : fmUtils.createSymbol("000000", 15, item.symbol));
 
 		return $sce.trustAsHtml($("<div/>").append(ret).html());
 	}
