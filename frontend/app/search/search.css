@@ -95,10 +95,24 @@
 	transition: opacity .7s;
 }
 
+.fm-search-resize fm-icon svg {
+	margin-top: 0;
+}
+
 .fm-search-search:not(:hover):not(.fm-hasResults):not(.fm-hasFocus) .fm-search-resize {
 	opacity: 0;
 }
 
 .fm-search:hover .fm-search-resize,.fm-search.fm-hasFocus .fm-search-resize {
 	opacity: 1;
+}
+
+.fm-search-route .btn-group .btn {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.fm-search-route .btn-link {
+	padding-left: 3px;
+	padding-right: 3px;
 }

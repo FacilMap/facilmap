@@ -80,7 +80,7 @@
     "sass-loader": "^6.0.5",
     "string-replace-loader": "^1.2.0",
     "style-loader": "^0.13.1",
-    "svgo": "^0.7.1",
+    "svgo": "^1.0.3",
     "through2": "^2.0.1",
     "unzipper": "^0.8.4",
     "url-loader": "^0.5.7",

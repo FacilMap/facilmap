@@ -53,9 +53,9 @@ gulp.task("download-icons", function() {
 
 gulp.task("icons", ["download-icons"], function() {
 	return combine(
-		gulp.src("build/Open-SVG-Map-Icons/svg/**/*.svg"),
+		gulp.src(["build/Open-SVG-Map-Icons/svg/**/*.svg", "assets/icons/**/*.svg"]),
 		newer("build/icons.js"),
-		icons("icons.js", "angular.module(\"facilmap\").constant(\"fmIcons\", %s);"),
+		icons("icons.js", "angular.module(\"facilmap\").constant(\"fmIconsRaw\", %s);"),
 		gulp.dest("build")
 	);
 });

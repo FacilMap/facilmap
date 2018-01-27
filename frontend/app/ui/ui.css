@@ -1,0 +1,19 @@
+fm-icon {
+	height: 1.428em;
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: -.3em;
+	margin-right: -.3em;
+}
+
+fm-icon svg {
+	height: 82%;
+	vertical-align: top;
+	margin-top: 9%;
+}
+
+#icon-picker fm-icon {
+	height: 30px;
+	color: #000;
+	margin: 0;
+}

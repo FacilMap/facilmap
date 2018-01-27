@@ -57,13 +57,13 @@
 					<td ng-if="field.controlSymbol"><input type="text" ng-model="option.symbol" fm-icon-picker class="form-control"></td>
 					<td ng-if="field.controlShape"><input type="text" ng-model="option.shape" fm-shape-picker class="form-control"></td>
 					<td ng-if="field.controlWidth"><input type="text" ng-model="option.width" fm-spinner class="form-control"></td>
-					<td ng-if="field.type != 'checkbox'" class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></button></td>
-					<td ng-if="field.type != 'checkbox'" class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><span class="glyphicon glyphicon-resize-vertical"></span></a></td>
+					<td ng-if="field.type != 'checkbox'" class="td-buttons"><button type="button" ng-click="confirm('Do you really want to delete the option “' + option.value + '”?') && deleteOption(option)" class="btn btn-default"><fm-icon fm-icon="minus" alt="Remove"/></button></td>
+					<td ng-if="field.type != 'checkbox'" class="td-buttons move"><a href="javascript:" class="btn btn-default sort-handle"><fm-icon fm-icon="resize-vertical" alt="Reorder"/></a></td>
 				</tr>
 			</tbody>
 			<tfoot ng-if="field.type != 'checkbox'">
 				<tr>
-					<td><button type="button" ng-click="addOption()" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button></td>
+					<td><button type="button" ng-click="addOption()" class="btn btn-default"><fm-icon fm-icon="plus" alt="Add"/></button></td>
 				</tr>
 			</tfoot>
 		</table>

@@ -80,7 +80,7 @@ function iconShapePicker(shape, fmIcons, fmUtils, $compile, $rootScope, $parse) 
 
 				pickerScope = $rootScope.$new();
 				pickerScope.shape = shape;
-				pickerScope.icons = shape ? Object.keys(fmUtils.MARKER_SHAPES) : Object.keys(fmIcons);
+				pickerScope.icons = shape ? Object.keys(fmUtils.MARKER_SHAPES) : fmIcons.iconList;
 				picker = $(require("./icon-shape-picker.html")).appendTo("body");
 				$compile(picker)(pickerScope);
 			}
@@ -135,12 +135,14 @@ fm.app.directive("fmShapePicker", function(fmIcons, fmUtils, $compile, $rootScop
 
 fm.app.directive("fmIcon", function(fmUtils) {
 	return {
-		restrict: 'A',
+		restrict: 'E',
 		scope: {
-			fmIcon: "<"
+			fmIcon: "@"
 		},
 		link: function(scope, element, attrs) {
-			element.attr("src", fmUtils.createSymbol("000000", 25, scope.fmIcon));
+			scope.$watch("fmIcon", (icon) => {
+				element.html(fmUtils.createSymbolHtml("currentColor", 25, scope.fmIcon));
+			});
 		}
 	};
 });

@@ -7,15 +7,8 @@ var svgo = require("svgo");
 var Promise = require("promise");
 
 function cleanIcon(icon) {
-	return new Promise(function(resolve, reject) {
-		new svgo().optimize(icon, function(result) {
-			if(result.error)
-				reject(result.error);
-			else
-				resolve(result.data);
-		});
-	}).then(function(icon) {
-		var $ = cheerio.load(icon, {
+	return new svgo().optimize(icon).then(function(icon) {
+		var $ = cheerio.load(icon.data, {
 			xmlMode: true
 		});
 
@@ -54,7 +47,11 @@ module.exports = function(file, code) {
 		throw new gutil.PluginError('gulp-facilmap-icons', 'Missing file option for gulp-facilmap-icons');
 	}
 
-	var content = { };
+	var content = {
+		osmi: {},
+		mdiconic: {},
+		glyphicons: {}
+	};
 	var last;
 
 	return through.obj(function(file, enc, cb) {
@@ -63,11 +60,22 @@ module.exports = function(file, code) {
 			return cb();
 		}
 
-		cleanIcon(file.contents).then(function(icon) {
-			content[file.relative.replace(/\//g, "_").replace(/\.svg$/, "")] = icon;
-			last = file;
+		let fname = file.relative.match(/^(.*)\/(.*)\.svg$/);
+
+		if(!fname)
+			return cb(new Error("Unexpected file name: " + file.relative));
+
+		if(["mdiconic", "glyphicons"].includes(fname[1])) {
+			content[fname[1]][fname[2]] = file.contents.toString("utf8");
 			cb();
-		}).catch(cb);
+		}
+		else {
+			cleanIcon(file.contents).then(function(icon) {
+				content.osmi[file.relative.replace(/\//g, "_").replace(/\.svg$/, "")] = icon;
+				last = file;
+				cb();
+			}).catch(cb);
+		}
 	}, function endStream(cb) {
 		if(last) {
 			var ret = last.clone({contents: false});

@@ -2,7 +2,6 @@ import fm from '../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import '../../assets/font/fontello.css';
 import 'jquery-ui';
 import 'jquery-ui/ui/widgets/resizable';
 

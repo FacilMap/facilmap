@@ -54,22 +54,28 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return randomPadId;
 	};
 
-	fmUtils.getSymbolCode = function(colour, symbol) {
-		if(symbol && fmIcons[symbol])
-			return `<g transform="scale(${17 / 580})">${fmIcons[symbol].replace(/#000/g, '#' + colour)}</g>`;
+	fmUtils.getSymbolCode = function(colour, size, symbol) {
+		if(symbol && fmIcons.iconList.includes(symbol))
+			return fmIcons.getIcon(colour, size, symbol);
 		else if(symbol && symbol.length == 1)
-			return `<text x="8.5" y="15" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:#${colour}">${fmUtils.quoteHtml(symbol)}</tspan></text>`;
+			return `<text x="8.5" y="15" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:${colour}">${fmUtils.quoteHtml(symbol)}</tspan></text>`;
 		else
-			return `<circle style="fill:#${colour}" cx="8.6" cy="7.7" r="3" />`;
+			return `<circle style="fill:${colour}" cx="8.6" cy="7.7" r="3" />`;
 	};
 
 	fmUtils.createSymbol = function(colour, height, symbol) {
 		let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" version="1.1">` +
-			`<g transform="scale(${height / 17})">${fmUtils.getSymbolCode(colour, symbol)}</g>` +
+			fmUtils.getSymbolCode('#'+colour, height, symbol) +
 		`</svg>`;
 
 		return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+	};
+
+	fmUtils.createSymbolHtml = function(colour, height, symbol) {
+		return `<svg width="${height}" height="${height}" viewbox="0 0 ${height} ${height}">` +
+			fmUtils.getSymbolCode(colour, height, symbol) +
+		`</svg>`;
 	};
 
 	fmUtils.createMarkerGraphic = function(colour, height, symbol, shape, padding, highlight) {
@@ -80,7 +86,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		let shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
 			.replace(/%BORDER_COLOUR%/g, borderColour)
 			.replace(/%COLOUR%/g, colour)
-			.replace(/%SYMBOL%/g, fmUtils.getSymbolCode(borderColour, symbol));
+			.replace(/%SYMBOL%/g, fmUtils.getSymbolCode("#"+borderColour, 17, symbol));
 
 		let scale = height / 31;
 

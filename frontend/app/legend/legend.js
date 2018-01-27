@@ -20,12 +20,12 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 					var items = [ ];
 					var fields = { };
 
-					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons[type.defaultSymbol] || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
+					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons.iconList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
 						var item = { value: type.name };
 
 						if(type.colourFixed)
 							item.colour = type.defaultColour;
-						if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons[type.defaultSymbol] || type.defaultSymbol.length == 1))
+						if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (fmIcons.iconList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1))
 							item.symbol = type.defaultSymbol;
 						if(type.type == "marker" && type.shapeFixed)
 							item.shape = type.defaultShape;

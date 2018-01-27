@@ -71,7 +71,7 @@ module.exports = {
 				options: {
 					multiple: [
 						{ search: "src: url\\('\\.\\./fonts/glyphicons-halflings-regular.eot'\\);", replace: "", flags: "" },
-						{ search: "src: url\\('\\.\\./fonts/glyphicons-halflings-regular\\..*", replace: "src: url('../fonts/glyphicons-halflings-regular.ttf') format('truetype');", flags: "" }
+						{ search: "src: url\\('\\.\\./fonts/glyphicons-halflings-regular\\..*", replace: "", flags: "" }
 					]
 				}
 			}

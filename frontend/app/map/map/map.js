@@ -174,11 +174,13 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.map.almostOver.options.distance = 10;
 
-			L.control.locate({
+			let locateControl = L.control.locate({
 				flyTo: true,
-				icon: "glyphicon glyphicon-screenshot",
-				iconLoading: "glyphicon glyphicon-screenshot"
+				icon: "a",
+				iconLoading: "a"
 			}).addTo(this.map);
+
+			$compile($('<fm-icon fm-icon="screenshot" alt="Locate"/>').appendTo($("a", locateControl._container)))($scope);
 
 			L.control.mousePosition({
 				emptyString: "0, 0",
