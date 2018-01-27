@@ -812,6 +812,24 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return pairs.join("&");
 	};
 
+	/**
+	 * Finds out whether the two coordinates are roughly equal. The two points are considered roughly equal when the
+	 * projected distance between them is less than 1 pixel.
+	 * @param latLng1 {L.LatLng} The first point
+	 * @param latLng2 {L.LatLng} The second point
+	 * @param map {L.Map} The map on which the two points are shown
+	 * @param zoom {Number?} The zoom level at which the two points are shown. If not specified, the one of the map is used.
+	 * @returns {boolean} Whether the two points are roughly equal.
+	 */
+	fmUtils.pointsEqual = function(latLng1, latLng2, map, zoom) {
+		latLng1 = L.latLng(latLng1);
+		latLng2 = L.latLng(latLng2);
+
+		console.log(map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)));
+
+		return map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)) < 1;
+	};
+
 	return fmUtils;
 });
 

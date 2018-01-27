@@ -38,7 +38,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 
 				var lonlat = fmUtils.decodeLonLatUrl(scope.searchString);
 				if(lonlat)
-					return map.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
+					return _flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
 
 				var q = scope.submittedSearchString = scope.searchString;
 				map.mapEvents.$broadcast("searchchange");
@@ -65,29 +65,14 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 		scope.showResult = function(result, noZoom) {
 			renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, null, true);
 
-			if(noZoom == 2) {
-				if(result.boundingbox)
-					_flyToBounds(map.map.getBounds().extend(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ])));
-				else if(result.layer)
-					_flyToBounds(map.map.getBounds().extend(result.layer.getBounds()));
-				else if(result.lat != null && result.lon != null)
-					_flyToBounds(map.map.getBounds().extend(L.latLng(result.lat, result.lon)));
-			} else if(noZoom == 3) {
-				scope.zoomToAll();
-			} else if(!noZoom) {
-				if(result.lat && result.lon && result.zoom)
-					map.map.flyTo([ result.lat, result.lon ], result.zoom);
-				else if(result.boundingbox)
-					_flyToBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
-				else if(result.layer)
-					_flyToBounds(result.layer.getBounds());
-			}
+			if(!noZoom || noZoom == 2 || noZoom == 3)
+				_flyTo(...getZoomDestination(noZoom == 3 ? null : result, noZoom == 2));
 
 			map.mapEvents.$broadcast("searchchange");
 		};
 
 		scope.zoomToAll = function() {
-			_flyToBounds(layerGroup.getBounds());
+			_flyTo(...getZoomDestination());
 		};
 
 		scope.showRoutingForm = function() {
@@ -186,14 +171,36 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 
 		var layerGroup = L.featureGroup([]).addTo(map.map);
 
-		function _flyToBounds(bounds) {
-			let currentCenter = map.map.getBounds().getCenter();
-			let newCenter = bounds.getCenter();
+		function getZoomDestination(result, unionZoom) {
+			let forBounds = (bounds) => ([
+				bounds.getCenter(),
+				Math.min(15, map.map.getBoundsZoom(bounds))
+			]);
 
-			if(currentCenter.lat == newCenter.lat && currentCenter.lng == newCenter.lng) // map.getCenter() is different from map.getBounds().getCenter()
+			if(!result) // Zoom to all
+				return forBounds(layerGroup.getBounds());
+			else if(unionZoom) { // Zoom to item, keep current map bounding box in view
+				if(result.boundingbox)
+					return forBounds(map.map.getBounds().extend(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ])));
+				else if(result.layer)
+					return forBounds(map.map.getBounds().extend(result.layer.getBounds()));
+				else if(result.lat != null && result.lon != null)
+					return forBounds(map.map.getBounds().extend(L.latLng(result.lat, result.lon)));
+			} else { // Zoom to item
+				if(result.lat && result.lon && result.zoom) {
+					return [ L.latLng(1*result.lat, 1*result.lon), 1*result.zoom ];
+				} else if(result.boundingbox)
+					return forBounds(L.latLngBounds([ [ result.boundingbox[0], result.boundingbox[3 ] ], [ result.boundingbox[1], result.boundingbox[2] ] ]));
+				else if(result.layer)
+					return forBounds(result.layer.getBounds());
+			}
+		}
+
+		function _flyTo(center, zoom) {
+			if(map.map.getBounds().getCenter().equals(center)) // map.getCenter() is different from map.getBounds().getCenter()
 				return;
 
-			map.map.flyTo(newCenter, Math.min(15, map.map.getBoundsZoom(bounds)));
+			map.map.flyTo(center, zoom);
 		}
 
 		function prepareResults(results) {
@@ -416,7 +423,7 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 			},
 
 			getCurrentSearchForHash: function() {
-				if(searchUi._el.css("display") != "none") { // Don't use :visible here because it might be hidden my mobile view
+				if(searchUi._el.css("display") != "none") { // Don't use :visible here because it might be hidden by mobile view
 					if(((scope.searchResults && scope.searchResults.features.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
 						return scope.activeResult.id;
 					else if(scope.submittedSearchString)
@@ -425,6 +432,16 @@ fm.app.factory("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout
 					var queries = routeUi.getQueries();
 					if(queries)
 						return queries.join(" to ") + " by " + (routeUi.getMode() || "helicopter");
+				}
+			},
+
+			isZoomedToCurrentResult: function() {
+				if(searchUi._el.css("display") != "none") { // Don't use :visible here because it might be hidden by mobile view
+					if(scope.showAll || !scope.activeResult)
+						return false;
+
+					let [center, zoom] = scope.showAll ? getZoomDestination() : getZoomDestination(scope.activeResult);
+					return map.map.getZoom() == zoom && fmUtils.pointsEqual(map.map.getCenter(), center, map.map);
 				}
 			},
 

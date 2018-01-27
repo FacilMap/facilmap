@@ -100,7 +100,10 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 					additionalParts.push(map.client.filterExpr);
 				}
 
-				ret += "/" + additionalParts.map(encodeURIComponent).join("/");
+				if(searchHash && additionalParts.length == 2 && additionalParts[0] == Object.keys(map.layers)[0] && map.searchUi.isZoomedToCurrentResult())
+					ret = "#q=" + encodeURIComponent(additionalParts[1]);
+				else
+					ret += "/" + additionalParts.map(encodeURIComponent).join("/");
 
 				if(parent !== window) {
 					parent.postMessage({
