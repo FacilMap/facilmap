@@ -182,7 +182,36 @@ module.exports = function(Database) {
 			});
 
 
-			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration ]);
+			// Add showInLegend field to types
+			let legendMigration = addColMigrations.then(() => (this.getMeta("hasLegendOption"))).then((hasLegendOption) => {
+				if(hasLegendOption)
+					return;
+
+				return this._conn.model("Type").findAll().then((types) => {
+					let operations = Promise.resolve();
+					for(let type of types) {
+						let showInLegend = false;
+
+						if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed))
+							showInLegend = true;
+
+						if(!showInLegend) {
+							for(let field of type.fields) {
+								if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (type.type == "marker" && field.controlSymbol) || (type.type == "marker" && field.controlShape) || (type.type == "line" && field.controlWidth))) {
+									showInLegend = true;
+									break;
+								}
+							}
+						}
+
+						operations = operations.then(() => (this._updatePadObject("Type", type.padId, type.id, { showInLegend }, true)));
+					}
+					return operations;
+				}).then(() => (this.setMeta("hasLegendOption", true)));
+			});
+
+
+			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration ]);
 		}
 	});
 };

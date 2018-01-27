@@ -402,6 +402,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
 					defaultMode: "string", modeFixed: "boolean",
+					showInLegend: "boolean",
 					fields: [ {
 						name: "string",
 						type: "string",
@@ -430,6 +431,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
 					defaultMode: "string", modeFixed: "boolean",
+					showInLegend: "boolean",
 					fields: [ {
 						name: "string",
 						oldName: "string",

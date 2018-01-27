@@ -20,12 +20,14 @@ module.exports = function(Database) {
 			widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			defaultMode: { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: true },
 			modeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
+			showInLegend: { type: Sequelize.BOOLEAN, allowNull: true },
 
 			fields: {
 				type: Sequelize.TEXT,
 				allowNull: false,
 				get: function() {
-					return JSON.parse(this.getDataValue("fields"));
+					let fields = this.getDataValue("fields");
+					return fields == null ? [] : JSON.parse(fields);
 				},
 				set: function(v) {
 					for(let field of v) {

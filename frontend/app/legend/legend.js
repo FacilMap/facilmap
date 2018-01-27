@@ -17,6 +17,10 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 				scope.legendItems = [ ];
 				for(var i in scope.client.types) {
 					var type = scope.client.types[i];
+
+					if(!type.showInLegend)
+						continue;
+
 					var items = [ ];
 					var fields = { };
 
@@ -63,30 +67,39 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 						});
 					});
 
-					if(items.length > 0) {
-						var type = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true, defaultColour: type.defaultColour, defaultShape: type.defaultShape };
+					if(items.length == 0) {
+						var item = {
+							value: type.name
+						};
 
-						// Check which fields are filtered
-						_allCombinations(fields, function(data) {
-							if(scope.client.filterFunc({ typeId: type.typeId, data: data }, true)) {
-								type.filtered = false;
+						if(type.type == "marker")
+							item.shape = "drop";
 
+						items.push(item);
+					}
+
+					var legendType = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true, defaultColour: type.defaultColour, defaultShape: type.defaultShape };
+
+					// Check which fields are filtered
+					_allCombinations(fields, function(data) {
+						if(scope.client.filterFunc({ typeId: legendType.typeId, data: data }, true)) {
+							legendType.filtered = false;
+
+							items.forEach(function(it) {
+								if(!it.field)
+									it.filtered = false;
+							});
+
+							for(var i in data) {
 								items.forEach(function(it) {
-									if(!it.field)
+									if(it.field == i && it.value == data[i])
 										it.filtered = false;
 								});
-
-								for(var i in data) {
-									items.forEach(function(it) {
-										if(it.field == i && it.value == data[i])
-											it.filtered = false;
-									});
-								}
 							}
-						});
+						}
+					});
 
-						scope.legendItems.push(type);
-					}
+					scope.legendItems.push(legendType);
 				}
 			}
 
