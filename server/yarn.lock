@@ -1044,16 +1044,16 @@ extsprintf@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.0.2.tgz#e1080e0658e300b06294990cc70e1502235fd550"
 
-facilmap-client@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.6.0.tgz#4ef4beed4ec36c95efa92d448707c2552b2021c3"
+facilmap-client@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/facilmap-client/-/facilmap-client-2.7.0.tgz#8773f666ea748a4a2a167d3df2e087d21b508ce2"
   dependencies:
     es6-promise "^4.0.5"
     socket.io-client "^1.7.3"
 
-facilmap-frontend@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.6.0.tgz#75d604b741830b50a629e43613759f50a436c42d"
+facilmap-frontend@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/facilmap-frontend/-/facilmap-frontend-2.7.0.tgz#9389a8f3c892f22f0c21805dc52782cc483ae7c5"
   dependencies:
     "@mapbox/togeojson" "^0.16.0"
     angular "1.6.4"
@@ -1065,7 +1065,7 @@ facilmap-frontend@^2.6.0:
     clipboard "^1.5.16"
     d3 "3.x.x"
     event-stream "^3.3.4"
-    facilmap-client "^2.6.0"
+    facilmap-client "^2.7.0"
     file-saver "^1.3.3"
     filtrex "^0.5.4"
     jquery "<3.0.0"
@@ -1073,7 +1073,9 @@ facilmap-frontend@^2.6.0:
     leaflet "^1.0.3"
     leaflet-almostover "git+https://github.com/makinacorpus/Leaflet.AlmostOver.git#gh-pages"
     leaflet-geometryutil "^0.8.0"
+    leaflet-graphicscale "^0.0.2"
     leaflet-hash "^0.2.1"
+    leaflet-mouse-position "^1.0.1"
     leaflet-simple-graticule "^1.0.2"
     leaflet.elevation "^0.0.3"
     leaflet.locatecontrol "^0.59.0"
@@ -1657,9 +1659,17 @@ leaflet-geometryutil@^0.8.0:
   dependencies:
     leaflet ">=0.7.0"
 
+leaflet-graphicscale@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/leaflet-graphicscale/-/leaflet-graphicscale-0.0.2.tgz#ab620d289e9a7044c2f5107c83be17843aec5303"
+
 leaflet-hash@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/leaflet-hash/-/leaflet-hash-0.2.1.tgz#c36c718347c5243033b57cb4baea26119d82c701"
+
+leaflet-mouse-position@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/leaflet-mouse-position/-/leaflet-mouse-position-1.0.1.tgz#cda6c61124ce9ff6d0754528ca1ec56b1400933d"
 
 leaflet-simple-graticule@^1.0.2:
   version "1.0.2"
