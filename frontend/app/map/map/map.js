@@ -252,8 +252,10 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				return ret;
 			};
 
-			this.displayView = (view, _zoomFactor=0) => {
-				var layers = [ view && this.layers[view.baseLayer] ? view.baseLayer : Object.keys(this.layers)[0] ].concat(view ? view.layers : [ ]);
+			this.displayView = (viewParam, _zoomFactor=0) => {
+				let view = viewParam || {top: -90, bottom: 90, left: -180, right: 180, baseLayer: null, layers: [], filter: ""};
+
+				var layers = [ this.layers[view.baseLayer] ? view.baseLayer : Object.keys(this.layers)[0] ].concat(view.layers);
 				this.map.eachLayer((it) => {
 					if(it.options.fmKey && layers.indexOf(it.options.fmKey) == -1)
 						this.map.removeLayer(it);
@@ -266,16 +268,48 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 						this.map.addLayer(this.layers[it]);
 				});
 
-				var bounds = fmUtils.fmToLeafletBbox(view || { top: -90, bottom: 90, left: -180, right: 180 });
+				var bounds = fmUtils.fmToLeafletBbox(view);
 
 				try {
 					this.map.getCenter(); // Throws exception if map not initialised
-					this.map.flyTo(bounds.getCenter(), this.map.getBoundsZoom(bounds, !view)+_zoomFactor);
+					this.map.flyTo(bounds.getCenter(), this.map.getBoundsZoom(bounds, !viewParam)+_zoomFactor);
 				} catch(e) {
-					this.map.setView(bounds.getCenter(), this.map.getBoundsZoom(bounds, !view)+_zoomFactor);
+					this.map.setView(bounds.getCenter(), this.map.getBoundsZoom(bounds, !viewParam)+_zoomFactor);
 				}
 
 				$scope.client.setFilter(view && view.filter);
+			};
+
+			this.isAtView = (viewParam) => {
+				try {
+					this.map.getCenter();
+				} catch(e) {
+					return false;
+				}
+
+				let view = viewParam || {top: -90, bottom: 90, left: -180, right: 180, baseLayer: null, layers: [], filter: ""};
+
+				if((!view.filter && $scope.client.filterExpr) || (view.filter && $scope.client.filterExpr != view.filter.trim()))
+					return false;
+
+				let layers = [ this.layers[view.baseLayer] ? view.baseLayer : Object.keys(this.layers)[0] ].concat(view ? view.layers : [ ]);
+
+				for(let layerId in this.map._layers) {
+					if(this.map._layers[layerId].options.fmKey && !layers.includes(this.map._layers[layerId].options.fmKey))
+						return false;
+				}
+
+				for(let layer of layers) {
+					if(!this.layers[layer])
+						return;
+
+					if(!this.map.hasLayer(this.layers[layer]))
+						return false;
+				}
+
+				let bounds = fmUtils.fmToLeafletBbox(view);
+
+				return this.map.getBoundsZoom(bounds, !viewParam) == this.map.getZoom() && fmUtils.pointsEqual(bounds.getCenter(), this.map.getCenter(), this.map);
 			};
 
 			var transparentLayer = new (L.Layer.extend({

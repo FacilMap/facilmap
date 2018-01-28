@@ -825,8 +825,6 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		latLng1 = L.latLng(latLng1);
 		latLng2 = L.latLng(latLng2);
 
-		console.log(map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)));
-
 		return map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)) < 1;
 	};
 

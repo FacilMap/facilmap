@@ -48,6 +48,16 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 					hash = hash.substr(1);
 				}
 
+				if(!noApply) {
+					let viewMatch = hash.match(/^q=v(\d+)$/i);
+					if(viewMatch) {
+						if(map.client.views[viewMatch[1]]) {
+							map.displayView(map.client.views[viewMatch[1]]);
+							return;
+						}
+					}
+				}
+
 				var args;
 				if(hash.indexOf("=") != -1 && hash.indexOf("/") == -1)
 					args = oldToNew(hash);
@@ -104,6 +114,21 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 					ret = "#q=" + encodeURIComponent(additionalParts[1]);
 				else
 					ret += "/" + additionalParts.map(encodeURIComponent).join("/");
+
+				// Check if we have a saved view open
+				if(!searchHash) {
+					let defaultView = (map.client.padData.defaultViewId && map.client.views[map.client.padData.defaultViewId]);
+					if(defaultView ? map.isAtView(defaultView) : map.isAtView(null))
+						ret = "#";
+					else {
+						for(let viewId in map.client.views) {
+							if(map.isAtView(map.client.views[viewId])) {
+								ret = `#q=v${encodeURIComponent(viewId)}`;
+								break;
+							}
+						}
+					}
+				}
 
 				if(parent !== window) {
 					parent.postMessage({
