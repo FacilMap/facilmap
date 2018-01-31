@@ -117,7 +117,7 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 
 				// Check if we have a saved view open
 				if(!searchHash) {
-					let defaultView = (map.client.padData.defaultViewId && map.client.views[map.client.padData.defaultViewId]);
+					let defaultView = (map.client.padData && map.client.padData.defaultViewId && map.client.views[map.client.padData.defaultViewId]);
 					if(defaultView ? map.isAtView(defaultView) : map.isAtView(null))
 						ret = "#";
 					else {
