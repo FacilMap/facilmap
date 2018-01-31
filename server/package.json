@@ -27,28 +27,28 @@
   },
   "dependencies": {
     "@mapbox/polyline": "^0.2.0",
-    "bluebird": "^3.5.0",
-    "cheerio": "^0.22.0",
-    "compression": "^1.6.2",
+    "bluebird": "^3.5.1",
+    "cheerio": "^1.0.0-rc.2",
+    "compression": "^1.7.1",
     "compressjs": "^1.0.3",
-    "ejs": "^2.5.5",
+    "ejs": "^2.5.7",
     "event-stream": "^3.3.4",
-    "express": "^4.14.0",
+    "express": "^4.16.2",
     "facilmap-frontend": "^2.7.0",
-    "highland": "^2.10.5",
-    "json-format": "^1.0.0",
+    "highland": "^2.11.1",
+    "json-format": "^1.0.1",
     "mysql2": "^1.5.1",
-    "request": "^2.75.0",
+    "request": "^2.83.0",
     "request-debug": "^0.2.0",
-    "request-promise": "^4.1.1",
+    "request-promise": "^4.2.2",
     "sequelize": "^4.32.2",
-    "socket.io": "^1.2.1",
+    "socket.io": "^2.0.4",
     "stream-combiner": "^0.2.2",
     "underscore": "^1.8.3",
-    "unzipper": "^0.8.4",
-    "webpack-dev-middleware": "^1.10.1"
+    "unzipper": "^0.8.11"
   },
   "devDependencies": {
-    "webpack": "^2.2.1"
+    "webpack": "^3.10.0",
+    "webpack-dev-middleware": "^2.0.4"
   }
 }
