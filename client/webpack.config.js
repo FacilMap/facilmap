@@ -8,7 +8,7 @@ module.exports = {
 	},
 	module: {
 		rules: [
-			{ test: /\.js$/, loader: "babel-loader?presets=es2015" },
+			{ test: /\.js$/, loader: "babel-loader?presets=env" },
 		]
 	},
 	plugins: [
