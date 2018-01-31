@@ -112,13 +112,13 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					zIndex: 300,
 					noWrap: true
 				}),
-				fmUtils.graticule(map, {
+				fmUtils.graticule(this, {
 					fmName: "Graticule",
 					fmKey: "grid",
 					zIndex: 300,
 					noWrap: true
 				}),
-				fmUtils.freieTonne(map, {
+				fmUtils.freieTonne(this, {
 					fmName: "Sea marks",
 					fmKey: "FrTo",
 					attribution: $sce.trustAsHtml('© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
