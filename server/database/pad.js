@@ -3,6 +3,8 @@ var Sequelize = require("sequelize");
 
 var utils = require("../utils");
 
+const Op = Sequelize.Op;
+
 module.exports = function(Database) {
 	Database.prototype._init.push(function() {
 		this._conn.define("Pad", {
@@ -24,7 +26,7 @@ module.exports = function(Database) {
 
 	utils.extend(Database.prototype, {
 		padIdExists(padId) {
-			return this._conn.model("Pad").count({ where: { $or: [ { id: padId }, { writeId: padId }, { adminId: padId } ] } }).then(function(num) {
+			return this._conn.model("Pad").count({ where: { [Op.or]: [ { id: padId }, { writeId: padId }, { adminId: padId } ] } }).then(function(num) {
 				return num > 0;
 			});
 		},
@@ -42,7 +44,7 @@ module.exports = function(Database) {
 		},
 
 		getPadDataByAnyId(padId) {
-			return this._conn.model("Pad").findOne({ where: { $or: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
+			return this._conn.model("Pad").findOne({ where: { [Op.or]: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._conn.model("View"), as: "defaultView" } ] });
 		},
 
 		createPad(data) {

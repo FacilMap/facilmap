@@ -6,6 +6,8 @@ var underscore = require("underscore");
 var utils = require("../utils");
 var routing = require("../routing");
 
+const Op = Sequelize.Op;
+
 module.exports = function(Database) {
 	Database.prototype._init.push(function() {
 		this._conn.define("Line", {
@@ -238,9 +240,9 @@ module.exports = function(Database) {
 		getLinePoints(lineId, bboxWithZoom) {
 			return Promise.resolve().then(() => {
 				return this._conn.model("Line").build({ id: lineId }).getLinePoints({
-					where: Sequelize.and(this._makeBboxCondition(bboxWithZoom), bboxWithZoom ? { zoom: { lte: bboxWithZoom.zoom } } : null),
+					where: Sequelize.and(this._makeBboxCondition(bboxWithZoom), bboxWithZoom ? { zoom: { [Op.lte]: bboxWithZoom.zoom } } : null),
 					attributes: [ "idx" ],
-					order: "idx"
+					order: [[ "idx", "ASC" ]]
 				});
 			}).then((data) => {
 				// Get one more point outside of the bbox for each segment
@@ -266,7 +268,7 @@ module.exports = function(Database) {
 			return this._conn.model("Line").build({ id: lineId }).getLinePoints({
 				where: { idx: indexes },
 				attributes: [ "lon", "lat", "idx", "ele" ],
-				order: "idx"
+				order: [[ "idx", "ASC" ]]
 			});
 		},
 

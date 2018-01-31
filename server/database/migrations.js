@@ -5,6 +5,8 @@ var underscore = require("underscore");
 var elevation = require("../elevation");
 var utils = require("../utils");
 
+const Op = Sequelize.Op;
+
 module.exports = function(Database) {
 	utils.extend(Database.prototype, {
 		_runMigrations() {
@@ -27,7 +29,7 @@ module.exports = function(Database) {
 									type: Sequelize.ENUM("", "shortest", "fastest", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: ""
 								});
 							}).then(() => {
-								return this._conn.model("Line").update({ mode: "car" }, { where: { mode: { $in: [ "fastest", "shortest" ] } } });
+								return this._conn.model("Line").update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } });
 							}).then(() => {
 								return queryInterface.changeColumn('Lines', 'mode', {
 									type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: false, defaultValue: ""

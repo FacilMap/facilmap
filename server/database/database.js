@@ -17,7 +17,8 @@ class Database extends events.EventEmitter {
 			define: {
 				timestamps: false
 			},
-			logging: debug.enabled("sql") ? console.log : false
+			logging: debug.enabled("sql") ? console.log : false,
+			operatorsAliases: false
 		});
 
 		for(let func of this._init)

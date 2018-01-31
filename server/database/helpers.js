@@ -5,6 +5,8 @@ var underscore = require("underscore");
 
 var utils = require("../utils");
 
+const Op = Sequelize.Op;
+
 const ITEMS_PER_BATCH = 5000;
 
 module.exports = function(Database) {
@@ -341,21 +343,21 @@ module.exports = function(Database) {
 			};
 
 			var conditions = [ ];
-			conditions.push(cond("lat", { lte: bbox.top, gte: bbox.bottom }));
+			conditions.push(cond("lat", { [Op.lte]: bbox.top, [Op.gte]: bbox.bottom }));
 
 			if(bbox.right < bbox.left) // Bbox spans over lon=180
-				conditions.push(Sequelize.or(cond("lon", { gte: bbox.left }), cond("lon", { lte: bbox.right })));
+				conditions.push(Sequelize.or(cond("lon", { [Op.gte]: bbox.left }), cond("lon", { [Op.lte]: bbox.right })));
 			else
-				conditions.push(cond("lon", { gte: bbox.left, lte: bbox.right }));
+				conditions.push(cond("lon", { [Op.gte]: bbox.left, [Op.lte]: bbox.right }));
 
 			if(bbox.except) {
 				var exceptConditions = [ ];
-				exceptConditions.push(Sequelize.or(cond("lat", { gt: bbox.except.top }), cond("lat", { lt: bbox.except.bottom })));
+				exceptConditions.push(Sequelize.or(cond("lat", { [Op.gt]: bbox.except.top }), cond("lat", { [Op.lt]: bbox.except.bottom })));
 
 				if(bbox.except.right < bbox.except.left)
-					exceptConditions.push(cond("lon", { lt: bbox.except.left, gt: bbox.except.right }));
+					exceptConditions.push(cond("lon", { [Op.lt]: bbox.except.left, [Op.gt]: bbox.except.right }));
 				else
-					exceptConditions.push(Sequelize.or(cond("lon", { lt: bbox.except.left }), cond("lon", { gt: bbox.except.right })));
+					exceptConditions.push(Sequelize.or(cond("lon", { [Op.lt]: bbox.except.left }), cond("lon", { [Op.gt]: bbox.except.right })));
 				conditions.push(Sequelize.or.apply(Sequelize, exceptConditions));
 			}
 

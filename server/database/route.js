@@ -6,6 +6,8 @@ var underscore = require("underscore");
 var utils = require("../utils");
 var routing = require("../routing");
 
+const Op = Sequelize.Op;
+
 let updateTimes = {};
 
 module.exports = function(Database) {
@@ -28,19 +30,19 @@ module.exports = function(Database) {
 		getRoutePoints(routeId, bboxWithZoom, getCompleteBasicRoute) {
 			let cond = {
 				routeId,
-				$or: [ this._makeBboxCondition(bboxWithZoom) ]
+				[Op.or]: [ this._makeBboxCondition(bboxWithZoom) ]
 			};
 
 			if(bboxWithZoom)
-				cond.$or[0] = Sequelize.and(cond.$or[0], { zoom: { lte: bboxWithZoom.zoom } });
+				cond[Op.or][0] = Sequelize.and(cond[Op.or][0], { zoom: { [Op.lte]: bboxWithZoom.zoom } });
 
 			if(getCompleteBasicRoute)
-				cond.$or.push({ zoom: { lte: 5 } });
+				cond[Op.or].push({ zoom: { [Op.lte]: 5 } });
 
 			return this._conn.model("RoutePoint").findAll({
 				where: cond,
 				attributes: [ "lon", "lat", "idx", "ele"],
-				order: "idx"
+				order: [[ "idx", "ASC" ]]
 			});
 		},
 
@@ -156,7 +158,7 @@ module.exports = function(Database) {
 			return this._conn.model("RoutePoint").findAll({
 				where: { routeId, idx: indexes },
 				attributes: [ "lon", "lat", "idx", "ele" ],
-				order: "idx"
+				order: [[ "idx", "ASC" ]]
 			});
 		},
 

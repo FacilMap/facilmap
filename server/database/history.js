@@ -53,7 +53,7 @@ module.exports = function(Database) {
 				oldEntryIds: () => {
 					return this._conn.model("History").findAll({
 						where: { padId: padId },
-						order: "time DESC",
+						order: [[ "time", "DESC" ]],
 						offset: this.HISTORY_ENTRIES-1,
 						attributes: [ "id" ]
 					}).then(ids => ids.map(it => it.id));
@@ -86,7 +86,7 @@ module.exports = function(Database) {
 		},
 
 		getHistory(padId, types) {
-			let query = { order: "time DESC" };
+			let query = { order: [[ "time", "DESC" ]] };
 			if(types)
 				query.where = {type: types};
 			return this._getPadObjects("History", padId, query);
