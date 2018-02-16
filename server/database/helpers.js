@@ -81,7 +81,7 @@ module.exports = function(Database) {
 							if(!field.options)
 								field.options = [];
 
-							var _find = (value) => (field.options.filter((option) => option.value == value)[0] || null);
+							var _find = (value) => ((field.type == "dropdown" ? field.options.filter((option) => option.value == value)[0] : field.options[parseInt(value)]) || null);
 
 							var option = _find(object.data[field.name]) || _find(field.default) || field.options[0];
 
