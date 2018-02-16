@@ -503,6 +503,16 @@ utils.extend(SocketConnection.prototype, {
 			});
 		},
 
+		async findOnMap(data) {
+			if(!utils.stripObject(data, { query: "string" }))
+				throw new Error("Invalid parameters.");
+
+			if(!this.padId)
+				throw new Error("No collaborative map opened.");
+
+			return this.database.search(this.padId, data.query);
+		},
+
 		getRoute: function(data) {
 			return Promise.resolve().then(() => {
 				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))

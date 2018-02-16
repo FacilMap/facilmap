@@ -327,6 +327,16 @@ Search for places.
 * _returns_ (Promise<string|Array<[searchResult](#searchresult)>>): If `data.query` is a URL to a GPX/KML/OSM/GeoJSON
   file, that file as a string, otherwise an array of search results.
 
+### `findOnMap(data)`
+
+Search for markers and lines inside the map.
+
+* `data` (object): An object with the following properties:
+	* `query` (string): The query string
+* _returns_ (Promise<Array<[Marker](#marker-1)|[Line](#line-1)>>) An array of (stripped down) marker and line objects.
+  The objects only contain the `id`, `name`, `typeId`, ``lat`/`lon` (for markers), `left`/`top`/`right`/`bottom` (for
+  lines) properties, plus an additional `kind` property that is either `"marker"` or `"line"`.
+
 ### `getRoute(data)`
 
 Calculate a route between two or more points.
@@ -409,7 +419,7 @@ that line already has the right style.
 
 Create a line.
 
-* `data` ([line](#line)): The data of the line to create. An `id` will be assigned by the server
+* `data` ([line](#line-1)): The data of the line to create. An `id` will be assigned by the server
 * _returns_ (Promise<[line](#line-1)>): The line as it is on the server, with an `id` assigned and possibly its
   styles modified by the settings of its type.
 
@@ -504,7 +514,7 @@ A bounding box that describes which part of the map the user is currently viewin
 
 * `id` (number): The ID of this marker
 * `lat` (number, min: -90, max: 90): The latitude of this marker
-* `lon` (number, min: -90, max: 90): The longitude of this marker
+* `lon` (number, min: -180, max: 180): The longitude of this marker
 * `name` (string): The name of this marker
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
@@ -537,6 +547,7 @@ separately through `linePoints` events.
 * `distance` (number): The distance of the line in kilometers (set by the server)
 * `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
 * `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`) (set by the server)
+* `left`, `top`, `right`, `bottom` (number): The bounding box of the line (set by the server)
 * `typeId` (number): The ID of the type of this line
 * `data` (`{"key", "value"}`): The filled out form fields of the line
 * `trackPoints`:

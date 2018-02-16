@@ -42,7 +42,11 @@ module.exports = function(Database) {
 			distance : { type: Sequelize.FLOAT(24, 2).UNSIGNED, allowNull: true },
 			time : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
 			ascent : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
-			descent : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true }
+			descent : { type: Sequelize.INTEGER.UNSIGNED, allowNull: true },
+			top: this._TYPES.lat,
+			bottom: this._TYPES.lat,
+			left: this._TYPES.lon,
+			right: this._TYPES.lon
 		});
 
 		this._conn.define("LinePoint", {
@@ -278,14 +282,16 @@ module.exports = function(Database) {
 			});
 		},
 
-		_calculateRouting(line, trackPointsFromRoute) {
+		async _calculateRouting(line, trackPointsFromRoute) {
+			let trackPoints;
+
 			if(trackPointsFromRoute) {
 				line.distance = trackPointsFromRoute.distance;
 				line.time = trackPointsFromRoute.time;
 				line.ascent = trackPointsFromRoute.ascent;
 				line.descent = trackPointsFromRoute.descent;
 
-				return Promise.resolve(trackPointsFromRoute.trackPoints);
+				trackPoints = trackPointsFromRoute.trackPoints;
 			} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
 				line.distance = utils.calculateDistance(line.trackPoints);
 				line.time = null;
@@ -295,27 +301,30 @@ module.exports = function(Database) {
 				for(var i=0; i<line.trackPoints.length; i++)
 					line.trackPoints[i].idx = i;
 
-				return Promise.resolve(line.trackPoints);
+				trackPoints = line.trackPoints;
 			} else if(line.routePoints && line.routePoints.length >= 2 && line.mode && line.mode != "track") {
-				return routing.calculateRouting(line.routePoints, line.mode).then((routeData) => {
-					line.distance = routeData.distance;
-					line.time = routeData.time;
-					line.ascent = routeData.ascent;
-					line.descent = routeData.descent;
-					for(var i=0; i<routeData.trackPoints.length; i++)
-						routeData.trackPoints[i].idx = i;
-					return routeData.trackPoints;
-				});
+				let routeData = await routing.calculateRouting(line.routePoints, line.mode);
+				line.distance = routeData.distance;
+				line.time = routeData.time;
+				line.ascent = routeData.ascent;
+				line.descent = routeData.descent;
+				for(var i=0; i<routeData.trackPoints.length; i++)
+					routeData.trackPoints[i].idx = i;
+
+				trackPoints = routeData.trackPoints;
 			} else {
 				line.distance = utils.calculateDistance(line.routePoints);
 				line.time = null;
 
-				var trackPoints = [ ];
+				trackPoints = [ ];
 				for(var i=0; i<line.routePoints.length; i++) {
 					trackPoints.push(utils.extend({ }, line.routePoints[i], { zoom: 1, idx: i }));
 				}
-				return Promise.resolve(trackPoints);
 			}
+
+			Object.assign(line, utils.calculateBbox(trackPoints));
+
+			return line;
 		}
 	});
 };

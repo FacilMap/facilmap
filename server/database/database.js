@@ -51,5 +51,6 @@ require("./type")(Database);
 require("./history")(Database);
 require("./meta")(Database);
 require("./route")(Database);
+require("./search")(Database);
 
 module.exports = Database;

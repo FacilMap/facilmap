@@ -152,6 +152,10 @@ class Socket {
 		return this._emit("find", data);
 	}
 
+	findOnMap(data) {
+		return this._emit("findOnMap", data);
+	}
+
 	getRoute(data) {
 		return this._emit("getRoute", data);
 	}

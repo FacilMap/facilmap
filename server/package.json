@@ -44,6 +44,7 @@
     "sequelize": "^4.32.2",
     "socket.io": "^2.0.4",
     "stream-combiner": "^0.2.2",
+    "string-similarity": "^1.2.0",
     "underscore": "^1.8.3",
     "unzipper": "^0.8.11"
   },

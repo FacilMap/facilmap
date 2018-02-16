@@ -361,6 +361,23 @@ function interceptWriteStream(writeStream) {
 	});
 }
 
+function calculateBbox(trackPoints) {
+	let bbox = { top: null, left: null, right: null, bottom: null };
+
+	for(let trackPoint of trackPoints) {
+		if(bbox.top == null || trackPoint.lat > bbox.top)
+			bbox.top = trackPoint.lat;
+		if(bbox.bottom == null || trackPoint.lat < bbox.bottom)
+			bbox.bottom = trackPoint.lat;
+		if(bbox.left == null || trackPoint.lon < bbox.left)
+			bbox.left = trackPoint.lon;
+		if(bbox.right == null || trackPoints.lon > bbox.right)
+			bbox.right = trackPoint.lon;
+	}
+
+	return bbox;
+}
+
 module.exports = {
 	isInBbox : isInBbox,
 	filterStreamPromise : filterStreamPromise,
@@ -376,5 +393,6 @@ module.exports = {
 	streamToArrayPromise: streamToArrayPromise,
 	promiseAuto: promiseAuto,
 	modifyFunction: modifyFunction,
-	interceptWriteStream: interceptWriteStream
+	interceptWriteStream: interceptWriteStream,
+	calculateBbox
 };

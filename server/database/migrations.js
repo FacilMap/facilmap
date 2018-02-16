@@ -213,7 +213,29 @@ module.exports = function(Database) {
 			});
 
 
-			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration ]);
+			// Calculate bounding box for lines
+			let bboxMigration = addColMigrations.then(async () => {
+				if(await this.getMeta("hasBboxes"))
+					return;
+
+				let LinePoint = this._conn.model("LinePoint");
+
+				for(let line of await this._conn.model("Line").findAll()) {
+					let bbox = await Promise.props({
+						top: LinePoint.min("lat", { where: { lineId: line.id } }),
+						bottom: LinePoint.max("lat", { where: { lineId: line.id } }),
+						left: LinePoint.min("lon", { where: { lineId: line.id } }),
+						right: LinePoint.min("lon", { where: { lineId: line.id } })
+					});
+
+					await this._updatePadObject("Line", line.padId, line.id, bbox, true);
+				}
+
+				await this.setMeta("hasBboxes", true);
+			});
+
+
+			return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration, bboxMigration ]);
 		}
 	});
 };
