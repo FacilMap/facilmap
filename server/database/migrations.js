@@ -215,7 +215,7 @@ module.exports = function(Database) {
 
 			// Calculate bounding box for lines
 			let bboxMigration = addColMigrations.then(async () => {
-				if(await this.getMeta("hasBboxes"))
+				//if(await this.getMeta("hasBboxes"))
 					return;
 
 				let LinePoint = this._conn.model("LinePoint");
