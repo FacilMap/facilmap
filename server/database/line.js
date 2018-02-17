@@ -324,7 +324,7 @@ module.exports = function(Database) {
 
 			Object.assign(line, utils.calculateBbox(trackPoints));
 
-			return line;
+			return trackPoints;
 		}
 	});
 };
