@@ -1,4 +1,4 @@
-FROM node:7.3-alpine
+FROM node:9.5-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD yarn run server
