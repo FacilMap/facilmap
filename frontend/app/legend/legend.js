@@ -1,5 +1,6 @@
 import fm from '../app';
 import $ from 'jquery';
+import commonFormat from '../../common/format';
 
 fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter) {
 	return {
@@ -153,6 +154,14 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 			scope.$watch(getMaxScale, resize);
 			scope.$watch("showXs", function(s) { s && setTimeout(resize, 0); })
 			$(window).resize(resize);
+
+
+			scope.$watch("client.padData.legend1", (legend1) => {
+				scope.legend1 = $sce.trustAsHtml(legend1 && legend1.trim() && commonFormat.markdownBlock(legend1) || "");
+			});
+			scope.$watch("client.padData.legend2", (legend2) => {
+				scope.legend2 = $sce.trustAsHtml(legend2 && legend2.trim() && commonFormat.markdownBlock(legend2) || "");
+			});
 
 			scope.toggleFilter = function(typeInfo, item) {
 				var filters = { };

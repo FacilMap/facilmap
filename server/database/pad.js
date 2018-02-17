@@ -14,7 +14,9 @@ module.exports = function(Database) {
 			adminId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
 			description: { type: Sequelize.STRING, allowNull: false },
-			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, default: false }
+			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
+			legend1: { type: Sequelize.STRING, allowNull: false },
+			legend2: { type: Sequelize.STRING, allowNull: false }
 		});
 	});
 

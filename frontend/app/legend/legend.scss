@@ -8,6 +8,14 @@
 
 	opacity: .7;
 	transition: opacity .7s;
+
+	.fm-legend1 > div > *:first-child {
+		margin-top: 0;
+	}
+
+	.fm-legend2 > div > *:last-child {
+		margin-bottom: 0;
+	}
 }
 
 .fm-map-legend .mobile-menu-button {
