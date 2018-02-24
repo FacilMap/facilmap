@@ -2,8 +2,8 @@
 	<form ng-submit="reset(); route()" ui-sortable="sortableOptions" ng-model="destinations">
 		<div uib-alert class="alert-danger" ng-repeat="error in errors">{{error.message || error}}</div>
 
-		<div class="form-group" ng-repeat="destination in destinations">
-			<div class="input-group">
+		<div class="form-group" ng-repeat="destination in destinations" ng-class="{highlighted: highlightedIdx === $index}">
+			<div class="input-group" ng-mouseover="destinationMouseOver($index)" ng-mouseout="destinationMouseOut($index)">
 				<span class="input-group-addon">
 					<a href="javascript:" class="sort-handle"><fm-icon fm-icon="resize-vertical" alt="Reorder"/></a>
 					<a href="javascript:" ng-click="removeDestination($index); reroute(true)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><fm-icon fm-icon="minus" alt="Remove"/></a>

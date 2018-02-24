@@ -323,7 +323,8 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		function makeTemporaryHoverMarker() {
 			temporaryHoverMarker = L.marker([0,0], Object.assign({
 				icon: fmUtils.createMarkerIcon(colour, 35, null, null, 1000),
-				draggable: true
+				draggable: true,
+				rise: true
 			}, additionalOptions)).once("dragstart", function() {
 				temporaryHoverMarker.once("dragend", function() {
 					// We have to replace the huge icon with the regular one at the end of the dragging, otherwise

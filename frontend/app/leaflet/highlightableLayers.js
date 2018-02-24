@@ -34,9 +34,9 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
 			super._initIcon(...arguments);
 
-			this.setOpacity(this.options.highlight || this._mouseover ? 1 : 0.6);
+			this.setOpacity(this.options.highlight || this.options.rise || this._mouseover ? 1 : 0.6);
 
-			fmHighlightableLayers._updatePane(this, this.options.highlight ? "fmHighlightMarkerPane" : "markerPane");
+			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightMarkerPane" : "markerPane");
 		}
 
 		setStyle(style) {
@@ -78,8 +78,8 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			this.borderLayer.options.weight = this.options.weight * 2;
 			this.borderLayer.options.color = "#"+fmUtils.makeTextColour(this.options.color.replace(/^#/, ""));
 
-			fmHighlightableLayers._updatePane(this, this.options.highlight ? "fmHighlightPane" : "overlayPane");
-			fmHighlightableLayers._updatePane(this.borderLayer, this.options.highlight ? "fmHighlightShadowPane" : "fmShadowPane");
+			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
+			fmHighlightableLayers._updatePane(this.borderLayer, this.options.highlight || this.options.rise ? "fmHighlightShadowPane" : "fmShadowPane");
 		}
 
 		redraw() {

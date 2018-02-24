@@ -21,7 +21,7 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 			if(!$scope.client)
 				$scope.client = new fmClient($scope.serverUrl, $scope.mapId);
 
-			this.mapEvents = $rootScope.$new(true); /* Event types: longmousedown, layerchange */
+			this.mapEvents = $rootScope.$new(true); /* Event types: longmousedown, layerchange, routeDestinationRemove, routeDestinationMove, routePointMouseOver, routePointMouseOut */
 			this.client = $scope.client;
 			this.el = $($element);
 

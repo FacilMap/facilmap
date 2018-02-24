@@ -52,7 +52,8 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				routeLayer = (new fmHighlightableLayers.Polyline(splitLatLngs, {
 					color : '#0000ff',
 					weight : 5,
-					highlight: !!openInfoBox
+					highlight: !!openInfoBox,
+					rise: true
 				})).addTo(map.map).on("click", function(e) {
 					routeUi.showRouteInfoBox();
 				}.fmWrapApply($rootScope));
@@ -85,11 +86,12 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				// Render markers
 
 				map.client.route.routePoints.forEach(function(point, i) {
-					var marker = L.marker([ point.lat, point.lon ], {
-						icon: fmUtils.createMarkerIcon(map.dragMarkerColour, 35),
+					var marker = (new fmHighlightableLayers.Marker([ point.lat, point.lon ], {
+						colour: map.dragMarkerColour,
+						size: 35,
 						draggable: true,
-						pane: "fmHighlightMarkerPane"
-					}).addTo(map.map);
+						rise: true
+					})).addTo(map.map);
 
 					registerMarkerHandlers(marker);
 
@@ -112,7 +114,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 			}.fmWrapApply($rootScope))
 			.on("dragstart", () => {
 				dragging = true;
-			}).on("dragend", () => {
+			}).on("dragend", function() {
 				dragging = false;
 
 				let idx = markers.indexOf(marker);
@@ -120,7 +122,11 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				map.mapEvents.$emit("routeDestinationMove", [idx]);
 
 				return setRoute(map.client.route);
-			});
+			}.fmWrapApply($rootScope)).on("mouseover", function() {
+				map.mapEvents.$emit("routeDestinationMouseOver", [markers.indexOf(marker)]);
+			}.fmWrapApply($rootScope)).on("mouseout", function() {
+				map.mapEvents.$emit("routeDestinationMouseOut", [markers.indexOf(marker)]);
+			}.fmWrapApply($rootScope));
 		}
 
 		function updateMarkerColours() {
@@ -289,6 +295,10 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				}).catch((err) => {
 					map.messages.showMessage("danger", err);
 				});
+			},
+
+			getMarker(idx) {
+				return markers[idx];
 			}
 		};
 

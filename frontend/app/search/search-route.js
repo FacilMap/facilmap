@@ -98,6 +98,45 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				map.map.flyTo([ suggestion.lat, suggestion.lon ]);
 			};
 
+
+			scope.highlightedIdx = null;
+			let highlightedMarker = null;
+
+			scope.destinationMouseOver = function(idx) {
+				let destination = scope.destinations[idx];
+				if(!destination)
+					return;
+
+				let suggestion = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
+
+				if(idx != -1 && destination.query == destination.loadedQuery && suggestion) {
+					let marker = map.routeUi.getMarker(idx);
+					if(marker && marker.getLatLng().equals([ suggestion.lat, suggestion.lon ])) {
+						highlightedMarker = marker;
+						scope.highlightedIdx = idx;
+						marker.setStyle({ highlight: true });
+					}
+				}
+			};
+
+			scope.destinationMouseOut = function(idx) {
+				if(highlightedMarker) {
+					highlightedMarker.setStyle({ highlight: false });
+					scope.highlightedIdx = null;
+					highlightedMarker = null;
+				}
+			};
+
+			map.mapEvents.$on("routeDestinationMouseOver", (e, [ idx ]) => {
+				scope.destinationMouseOver(idx);
+			});
+
+			map.mapEvents.$on("routeDestinationMouseOut", (e, [ idx ]) => {
+				scope.destinationMouseOut(idx);
+			});
+
+
+
 			scope.route = function(noZoom) {
 				scope.reset();
 
@@ -169,21 +208,21 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				scope.addDestination();
 			};
 
-			map.mapEvents.$on("routeDestinationAdd", (e, idx) => {
+			map.mapEvents.$on("routeDestinationAdd", (e, [ idx ]) => {
 				scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]));
 				if(scope.submittedQueries)
 					scope.submittedQueries.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]).query);
 				map.mapEvents.$broadcast("searchchange");
 			});
 
-			map.mapEvents.$on("routeDestinationMove", (e, idx) => {
+			map.mapEvents.$on("routeDestinationMove", (e, [ idx ]) => {
 				scope.destinations[idx] = makeCoordDestination(map.client.route.routePoints[idx]);
 				if(scope.submittedQueries)
 					scope.submittedQueries[idx] = makeCoordDestination(map.client.route.routePoints[idx]).query;
 				map.mapEvents.$broadcast("searchchange");
 			});
 
-			map.mapEvents.$on("routeDestinationRemove", (e, idx) => {
+			map.mapEvents.$on("routeDestinationRemove", (e, [ idx ]) => {
 				scope.destinations.splice(idx, 1);
 				if(scope.submittedQueries)
 					scope.submittedQueries.splice(idx, 1);
