@@ -80,8 +80,6 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			};
 
 			scope.showMapResult = function(result) {
-				console.log(result);
-
 				if(result.kind == "marker")
 					_flyTo([ result.lat, result.lon ], 15);
 				else if(result.kind == "line") {

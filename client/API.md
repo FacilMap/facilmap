@@ -623,8 +623,9 @@ their `idx` property.
 
 ### searchResult
 
-* `short_name` (string): Short display name of the result
-* `display_name` (string): Long display name of the result
+* `short_name` (string): Name of the result
+* `display_name` (string): Name with address
+* `address` (string): Only the address
 * `boundingbox` ([bbox](#bbox)): bbox that has a good view onto the result. Might be null if `zoom` is set.
 * `lat`, `lon` (number): Position of the search result.
 * `zoom` (number): Zoom level at which there is a good view onto the result. Might be null if `boundingbox` is set.

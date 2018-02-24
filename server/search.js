@@ -165,10 +165,11 @@ const search = module.exports = {
 	},
 
 	_prepareSearchResult(result) {
-		let displayName = search._makeDisplayName(result);
+		let {address, nameWithAddress, name} = search._formatAddress(result);
 		return {
-			short_name: result.namedetails.name || displayName.split(',')[0],
-			display_name: displayName,
+			short_name: name,
+			display_name: nameWithAddress,
+			address,
 			boundingbox: result.boundingbox,
 			lat: result.lat,
 			lon: result.lon,
@@ -186,9 +187,9 @@ const search = module.exports = {
 	 * Tries to format a search result in a readable way according to the address notation habits in
 	 * the appropriate country.
 	 * @param result {Object} A place object as returned by Nominatim
-	 * @return {String} A readable name for the search result
+	 * @return {Object} An object with address, nameWithAddress and name strings
 	 */
-	_makeDisplayName(result) {
+	_formatAddress(result) {
 		// See http://en.wikipedia.org/wiki/Address_%28geography%29#Mailing_address_format_by_country for
 		// address notation guidelines
 
@@ -392,28 +393,34 @@ const search = module.exports = {
 				break;
 		}
 
-		let ret = [ ];
+		let address = [ ];
 
-		if(name)
-			ret.push(name);
 		if(road)
-			ret.push(road);
+			address.push(road);
 		if(suburb)
-			ret.push(suburb);
+			address.push(suburb);
 		if(city)
-			ret.push(city);
+			address.push(city);
 		if([ "residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state" ].indexOf(type) != -1)
 		{ // Searching for a town
 			if(county && county != city)
-				ret.push(county);
+				address.push(county);
 			if(state && state != city)
-				ret.push(state);
+				address.push(state);
 		}
 
 		if(country)
-			ret.push(country);
+			address.push(country);
 
-		return ret.join(", ");
+		let fullName = [ ].concat(address);
+		if(name && name != address[0])
+			fullName.unshift(name);
+
+		return {
+			address: address.join(", "),
+			nameWithAddress: fullName.join(", "),
+			name: fullName[0]
+		};
 	},
 
 	_loadUrl(url, completeOsmObjects) {
