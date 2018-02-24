@@ -28,6 +28,14 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 			});
 		});
 
+		let getLegendSize = () => {
+			let legendEl = map.el.find(".fm-map-legend");
+			let legendPanelEl = legendEl.find("> .panel");
+
+			if(legendEl.length > 0 && !legendPanelEl.hasClass("ng-hide"))
+				return legendPanelEl[0].getBoundingClientRect();
+		};
+
 		let infoBox = {
 			show(html, htmlScope, onClose) {
 				if(currentObj)
@@ -37,23 +45,34 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 				if(htmlScope !== false)
 					$compile(htmlEl)(htmlScope);
 
-				if(!currentObj) {
-					let legendEl = map.el.find(".fm-map-legend");
-					let legendPanelEl = legendEl.find("> .panel");
+				if(!el.is(":visible")) {
+					let legendSize = getLegendSize();
 
-					if(legendEl.length > 0 && !legendPanelEl.hasClass("ng-hide")) {
-						let legendSize = legendPanelEl[0].getBoundingClientRect();
-
+					if(legendSize) {
 						el.show();
 
 						el.css({ transform: "", "transition": "all 0s ease 0s" });
 						el.css("transform", `scale(${legendSize.width/el.width()}, ${legendSize.height/el.height()})`);
 
 						setTimeout(() => { // We have to run this after the transform applies
-							legendEl.addClass("fm-infoBox-hidden");
+							map.el.find(".fm-map-legend").addClass("fm-infoBox-hidden");
 							el.css("transition", "");
 							el.css("transform", ""); // Gets animated by CSS transition
 						}, 0);
+					} else {
+						el.css("transition", "all 0s ease 0s");
+						el.fadeIn(700, () => {
+							el.css("transition", "");
+						});
+					}
+				} else if (!currentObj) {
+					// Element is still visible, but currentObj is null: A hide animation is in progress
+
+					if(getLegendSize()) {
+						el.show();
+						map.el.find(".fm-map-legend").addClass("fm-infoBox-hidden");
+						el.css("transition", "");
+						el.css("transform", ""); // Gets animated by CSS transition
 					} else {
 						el.css("transition", "all 0s ease 0s");
 						el.fadeIn(700, () => {
@@ -79,29 +98,33 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 				if(!currentObj)
 					return Promise.resolve();
 
+				let obj = currentObj;
+				currentObj = null;
+
 				return new Promise((resolve) => {
-					let legendEl = map.el.find(".fm-map-legend");
-					let legendPanelEl = legendEl.find("> .panel");
+					let legendSize = getLegendSize();
 
-					if(legendEl.length > 0 && !legendPanelEl.hasClass("ng-hide")) {
-						let legendSize = legendPanelEl[0].getBoundingClientRect();
-
+					if(legendSize) {
 						el.css("transform", `scale(${legendSize.width/el.width()}, ${legendSize.height/el.height()})`).one("transitionend", () => {
-							el.css("transform", "").hide();
-							el.hide();
-							legendEl.removeClass("fm-infoBox-hidden");
+							if(!currentObj) { // Something new might have opened in the meantime
+								el.css("transform", "").hide();
+								el.hide();
+								map.el.find(".fm-map-legend").removeClass("fm-infoBox-hidden");
+							}
 							resolve();
 						});
 					} else {
 						el.css("transition", "all 0s ease 0s");
 						el.fadeOut(700, () => {
-							el.css("transition", "");
+							if(!currentObj) { // Something new might have opened in the meantime
+								el.css("transition", "");
+								map.el.find(".fm-map-legend").removeClass("fm-infoBox-hidden");
+							}
 							resolve();
 						});
 					}
 				}).then(() => {
-					currentObj.onClose && currentObj.onClose();
-					currentObj = null;
+					obj.onClose && obj.onClose();
 				});
 			}
 		};
