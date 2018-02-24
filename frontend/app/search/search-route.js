@@ -4,7 +4,7 @@ import L from 'leaflet';
 import ng from 'angular';
 import css from './search-route.scss';
 
-fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout, $q, fmSortableOptions) {
+fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeout, $q, fmSortableOptions, fmHighlightableLayers) {
 	return {
 		require: "^fmSearch",
 		scope: true,
@@ -78,6 +78,26 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				}
 			};
 
+			let suggestionMarker = null;
+
+			scope.suggestionMouseOver = function(suggestion) {
+				suggestionMarker = (new fmHighlightableLayers.Marker([ suggestion.lat, suggestion.lon ], {
+					highlight: true,
+					colour: map.dragMarkerColour,
+					size: 35,
+					symbol: suggestion.icon
+				})).addTo(map.map);
+			};
+
+			scope.suggestionMouseOut = function(suggestion) {
+				suggestionMarker.remove();
+				suggestionMarker = null;
+			};
+
+			scope.suggestionZoom = function(suggestion) {
+				map.map.flyTo([ suggestion.lat, suggestion.lon ]);
+			};
+
 			scope.route = function(noZoom) {
 				scope.reset();
 
@@ -132,6 +152,11 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				scope.submittedQueries = null;
 				scope.submittedMode = null;
 				scope.errors = [];
+
+				if(suggestionMarker) {
+					suggestionMarker.remove();
+					suggestionMarker = null;
+				}
 
 				map.routeUi.clearRoute();
 			};

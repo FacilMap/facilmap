@@ -16,8 +16,21 @@
 		margin-bottom: 7px;
 	}
 
-	.reset-button {
- 		z-index: 5;
-		pointer-events: auto;
+	.fm-suggestions {
+		li {
+			position: relative;
+
+			a {
+				padding-left: 30px;
+			}
+
+			.fm-suggestion-zoom {
+				position: absolute;
+				left: 0;
+				top: 0;
+				line-height: 1;
+				padding: 3px 7px;
+			}
+		}
 	}
 }

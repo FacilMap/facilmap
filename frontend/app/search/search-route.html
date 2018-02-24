@@ -12,10 +12,13 @@
 					<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
 					<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''" ng-show="destination.query.length > 0"><fm-icon fm-icon="clear" alt="Clear"/></a>
 				</div>
-				<span class="input-group-btn" uib-dropdown keyboard-nav="true" ng-show="destination.query.length > 0">
+				<span class="input-group-btn fm-suggestions" uib-dropdown keyboard-nav="true" ng-show="destination.query.length > 0">
 					<button type="button" class="btn btn-default" uib-dropdown-toggle ng-click="loadSuggestions(destination)"><span class="caret"></span></button>
 					<ul class="dropdown-menu" role="menu" uib-dropdown-menu>
-						<li ng-repeat="suggestion in destination.suggestions" ng-class="{active: destination.selectedSuggestionIdx == $index}"><a href="javascript:" ng-click="destination.selectedSuggestionIdx = $index; reroute()">{{suggestion.display_name}} ({{suggestion.type}})</a></li>
+						<li ng-repeat="suggestion in destination.suggestions" ng-class="{active: destination.selectedSuggestionIdx == $index}" ng-mouseover="suggestionMouseOver(suggestion)" ng-mouseout="suggestionMouseOut(suggestion)">
+							<a href="javascript:" ng-click="destination.selectedSuggestionIdx = $index; reroute()">{{suggestion.display_name}} ({{suggestion.type}})</a>
+							<a href="javascript:" class="fm-suggestion-zoom" ng-click="suggestionZoom(suggestion); $event.stopPropagation()"><fm-icon fm-icon="zoom-in" alt="Zoom"/></a>
+						</li>
 					</ul>
 				</span>
 			</div>
