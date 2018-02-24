@@ -50,7 +50,7 @@
 			</thead>
 			<tbody ui-sortable="sortableOptions" ng-model="field.options">
 				<tr ng-repeat="option in field.options">
-					<td ng-if="field.type == 'checkbox'"><strong>{{option.value == '1' ? '✔' : '✘'}}</strong></td>
+					<td ng-if="field.type == 'checkbox'"><strong>{{$first ? '✘' : '✔'}}</strong></td>
 					<td><input type="text" ng-model="option.value" class="form-control"></td>
 					<td ng-if="field.controlColour"><input type="text" ng-model="option.colour" fm-colour-picker class="form-control"></td>
 					<td ng-if="field.controlSize"><input type="text" ng-model="option.size" fm-spinner fm-spinner-min="15" class="form-control"></td>
