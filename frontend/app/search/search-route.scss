@@ -1,0 +1,23 @@
+:local(.className) {
+	width: 70vw;
+	max-width: 365px;
+
+	.btn-group .btn {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	.btn-link {
+		padding-left: 3px;
+		padding-right: 3px;
+	}
+
+	.form-group {
+		margin-bottom: 7px;
+	}
+
+	.reset-button {
+ 		z-index: 5;
+		pointer-events: auto;
+	}
+}

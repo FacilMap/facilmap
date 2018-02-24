@@ -152,6 +152,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					linesUi.exportLine(line, useTracks);
 				};
 
+				scope.$watch(() => (!!map.routeUi), (canMoveLine) => {
+					scope.canMoveLine = canMoveLine;
+				});
+
 				let template = $(require("./view-line.html"));
 
 				openLine = {
@@ -164,6 +168,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						}
 						if(openLineHighlight)
 							openLineHighlight.remove();
+
+						scope.$destroy();
 					}).hide,
 					id: line.id
 				};

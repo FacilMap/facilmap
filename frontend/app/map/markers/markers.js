@@ -97,6 +97,8 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 							markersById[marker.id].setOpacity(0.7);
 							markersById[marker.id].addTo(map.map);
 						}
+
+						scope.$destroy();
 					}).hide,
 					id: marker.id
 				};

@@ -5,7 +5,7 @@ import fm from '../app';
 
 
 fm.app.factory("fmSearchFiles", function($rootScope, $compile, fmUtils) {
-	return function(map, searchUi) {
+	return function(map) {
 		const fmMapSearchFiles = {
 			parseFiles(files) {
 				var ret = {features: [ ], views: [ ], types: { }};
@@ -63,7 +63,7 @@ fm.app.factory("fmSearchFiles", function($rootScope, $compile, fmUtils) {
 
 						if(feature.properties.name)
 							name = feature.properties.name;
-						else if(feature.properties.tags.name)
+						else if(feature.properties.tags && feature.properties.tags.name)
 							name = feature.properties.tags.name;
 						else if(feature.properties.type)
 							name = feature.properties.type + " " + feature.properties.id;

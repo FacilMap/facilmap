@@ -41,7 +41,7 @@
 </div>
 <div class="buttons">
 	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="edit()" ng-disabled="saving">Edit</button>
-	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="saving || client.interaction">Move</button>
+	<button ng-if="!client.readonly && canMoveLine" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="saving || client.interaction">Move</button>
 	<button ng-if="!client.readonly" type="button" class="btn btn-default btn-sm" ng-click="confirm('Do you really want to remove the line “' + line.name + '”?') && delete()" ng-disabled="saving">Remove</button>
 	<div uib-dropdown keyboard-nav="true" class="dropup">
 		<button type="button" class="btn btn-default btn-sm" ng-disabled="saving" uib-dropdown-toggle>Export <span class="caret"></span></button>

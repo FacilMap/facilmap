@@ -1,0 +1,9 @@
+<div class="fm-search-container" ng-class="className">
+	<button type="button" class="btn btn-default visible-xs-block mobile-menu-button fm-search-mobile-toggle" uib-btn-checkbox ng-model="showXs" uib-tooltip="{{showXs ? 'Hide search' : 'Show search'}}" tooltip-placement="right"><fm-icon fm-icon="search" alt="Search"/></button>
+	<div ng-class="[{'hidden-xs': !showXs, 'fm-hasResults': hasResults}, 'fm-search-'+(isRouteShown ? 'route' : 'query')]" class="fm-search panel panel-default">
+		<div class="panel-body">
+			<fm-search-query></fm-search-query>
+			<fm-search-route></fm-search-route>
+		</div>
+	</div>
+</div>
