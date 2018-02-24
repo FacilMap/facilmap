@@ -7,12 +7,11 @@ import {saveAs} from 'file-saver';
 
 import css from './lines.scss';
 
-fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
+fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $rootScope, fmHighlightableLayers) {
 	return function(map) {
 		var linesById = { };
 
 		let openLine = null;
-		let openLineHighlight = null;
 
 		let linePopupBaseScope = $rootScope.$new();
 		linePopupBaseScope.persistentSettings = {};
@@ -65,33 +64,23 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					return linesUi._deleteLine(line);
 
 				if(!linesById[line.id]) {
-					linesById[line.id] = L.polyline([ ]).addTo(map.map);
-					map.map.almostOver.addLayer(linesById[line.id]);
+					linesById[line.id] = (new fmHighlightableLayers.Polyline([ ])).addTo(map.map);
 
 					if(line.id != null) { // We don't want a popup for lines that we are drawing right now
 						linesById[line.id]
 							.on("click", function(e) {
 								linesUi.showLineInfoBox(map.client.lines[line.id]);
 							}.fmWrapApply($rootScope))
-							.on("fm-almostover", function(e) {
-								if(!linesById[line.id].getTooltip())
-									linesById[line.id].bindTooltip("", $.extend({}, map.tooltipOptions, { permanent: true, offset: [ 20, 0 ] }));
-
+							.bindTooltip("", $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }))
+							.on("tooltipopen", function(e) {
 								linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.client.lines[line.id].name)).openTooltip(e.latlng);
-							})
-							.on("fm-almostmove", function(e) {
-								linesById[line.id].openTooltip(e.latlng);
-							})
-							.on("fm-almostout", function() {
-								linesById[line.id].unbindTooltip();
 							});
 					}
 				}
 
 				var style = {
 					color : '#'+line.colour,
-					weight : line.width,
-					opacity : 0.5
+					weight : line.width
 				};
 
 				// Two points that are both outside of the viewport should not be connected, as the piece in between
@@ -100,24 +89,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
 
-				if(line.id != null && openLine && line.id == openLine.id) {
-					openLineHighlight.setLatLngs(splitLatLngs).setStyle(Object.assign(style, {
-						weight: Math.round(line.width*2),
-						color: "#"+fmUtils.makeTextColour(line.colour),
-						opacity: 1
-					}));
-
-					if(!_doNotRerenderPopup)
-						linesUi.showLineInfoBox(line);
-				}
+				if(line.id != null && openLine && line.id == openLine.id && !_doNotRerenderPopup)
+					linesUi.showLineInfoBox(line);
 			},
 			_deleteLine: function(line) {
 				if(line.id != null && openLine && line.id == openLine.id) {
-					if(openLineHighlight) {
-						openLineHighlight.remove();
-						openLineHighlight = null;
-					}
-
 					openLine.hide();
 					openLine = null;
 				}
@@ -162,26 +138,15 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					hide: map.infoBox.show(template, scope, () => {
 						openLine = null;
 						if(linesById[line.id]) { // Does not exist anymore after line was deleted
-							linesById[line.id].remove();
-							linesById[line.id].options.pane = "overlayPane";
-							linesById[line.id].addTo(map.map);
+							linesById[line.id].setStyle({ highlight: false });
 						}
-						if(openLineHighlight)
-							openLineHighlight.remove();
 
 						scope.$destroy();
 					}).hide,
 					id: line.id
 				};
 
-				openLineHighlight = L.polyline([ ], {
-					pane: "fmHighlightShadowPane",
-					interactive: false
-				}).addTo(map.map);
-
-				linesById[line.id].remove();
-				linesById[line.id].options.pane = "fmHighlightPane";
-				linesById[line.id].addTo(map.map);
+				linesById[line.id].setStyle({ highlight: true });
 
 				linesUi._addLine(line, true); // To render the openLineHighlight
 

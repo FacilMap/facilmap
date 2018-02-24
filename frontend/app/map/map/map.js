@@ -1,7 +1,6 @@
 import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
-import 'leaflet-almostover';
 import 'leaflet.locatecontrol';
 import 'leaflet.markercluster';
 import 'leaflet-mouse-position';
@@ -146,10 +145,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.map = L.map($(".fm-map", $element)[0]);
 
-			this.map.createPane("fmHighlightMarkerPane");
-			this.map.createPane("fmHighlightShadowPane");
-			this.map.createPane("fmHighlightPane");
-
 			this.map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", this.map._controlContainer);
 
 			$scope.$watch("client.padData.clusterMarkers", (clusterMarkers) => {
@@ -172,8 +167,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					this.markerCluster.addLayer(marker);
 			});
 
-			this.map.almostOver.options.distance = 10;
-
 			let locateControl = L.control.locate({
 				flyTo: true,
 				icon: "a",
@@ -192,24 +185,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				fill: "hollow",
 				position: "bottomcenter"
 			}).addTo(this.map);
-
-			this.map.on('almost:over', (e) => {
-				e.layer.fire('fm-almostover', e);
-				$(this.map.getContainer()).addClass("fm-almostover");
-			});
-
-			this.map.on('almost:out', (e) => {
-				e.layer.fire('fm-almostout', e);
-				$(this.map.getContainer()).removeClass("fm-almostover");
-			});
-
-			this.map.on('almost:click', (e) => {
-				e.layer.fire('click', e, true);
-			});
-
-			this.map.on('almost:move', (e) => {
-				e.layer.fire('fm-almostmove', e);
-			});
 
 			this.startMarkerColour = "00ff00";
 			this.dragMarkerColour = "ffd700";

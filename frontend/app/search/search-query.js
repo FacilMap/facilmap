@@ -6,7 +6,7 @@ import 'jquery-ui';
 import 'jquery-ui/ui/widgets/resizable';
 import css from './search-query.scss';
 
-fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport) {
+fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
 	return {
 		require: "^fmSearch",
 		scope: true,
@@ -270,25 +270,20 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					result.layer.remove();
 					result.layer = null;
 				}
-				if(result.highlightLayer) {
-					result.highlightLayer.remove();
-					result.highlightLayer = null;
-				}
 				if(result.marker) {
 					result.marker.remove();
 					result.marker = null;
 				}
 
 				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
-					result.layer = L.geoJson(result.geojson, {
-						pane: highlight ? "fmHighlightPane" : "overlayPane",
-						pointToLayer: function(geoJsonPoint, latlng) {
-							return L.marker(latlng, {
-								icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, null, highlight),
-								pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
-							});
+					result.layer = (new fmHighlightableLayers.GeoJSON(result.geojson, {
+						highlight,
+						markerOptions: {
+							colour: "ff0000",
+							size: 35,
+							highlight
 						}
-					})
+					}))
 						.on("click", function(e) {
 							renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
 							onOpen && onOpen();
@@ -296,36 +291,15 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
 					layerGroup.addLayer(result.layer);
-
-					if(highlight) {
-						result.highlightLayer = L.geoJson(result.geojson, {
-							pane: "fmHighlightShadowPane",
-							pointToLayer: function(geoJsonPoint, latlng) {
-								return L.marker(latlng, {
-									icon: fmUtils.createMarkerIcon("ff0000", 35, null, null, null, highlight),
-									pane: highlight ? "fmHighlightMarkerPane" : "markerPane"
-								});
-							},
-							style: (feature) => ({
-								color: '#000000',
-								fill: false,
-								weight: 6
-							})
-						})
-							.on("click", function(e) {
-								renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
-								onOpen && onOpen();
-							}.fmWrapApply($rootScope));
-
-						layerGroup.addLayer(result.highlightLayer);
-					}
 				}
 
 				if(result.lat != null && result.lon != null) {
-					result.marker = L.marker([ result.lat, result.lon ], {
-						pane: highlight ? "fmHighlightMarkerPane" : "markerPane",
-						icon: fmUtils.createMarkerIcon(map.searchMarkerColour, 35, result.icon, null, null, highlight)
-					})
+					result.marker = (new fmHighlightableLayers.Marker([ result.lat, result.lon ], {
+						highlight,
+						colour: map.searchMarkerColour,
+						size: 35,
+						symbol: result.icon
+					}))
 						.on("click", function(e) {
 							renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
 							onOpen && onOpen();

@@ -5,7 +5,7 @@ import ng from 'angular';
 import 'leaflet.elevation';
 import {saveAs} from 'file-saver';
 
-fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $rootScope) {
+fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $rootScope, fmHighlightableLayers) {
 	return function(map) {
 		var dragTimeout = 300;
 
@@ -16,7 +16,6 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 		});
 
 		let routeLayer = null;
-		let highlightLayer = null;
 		let dragMarker = null;
 		let markers = [ ];
 		let dragging = false;
@@ -50,33 +49,13 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				// has not been received.
 				let splitLatLngs = fmUtils.disconnectSegmentsOutsideViewport(trackPoints, map.map.getBounds());
 
-				highlightLayer = L.polyline(splitLatLngs, {
-					pane: "fmHighlightShadowPane",
-					interactive: false,
-					color : '#000000',
-					weight : 10,
-					opacity : 1
-				}).on("click", function(e) {
-					routeUi.showRouteInfoBox();
-				}.fmWrapApply($rootScope));
-
-				routeLayer = L.polyline(splitLatLngs, {
-					pane: "fmHighlightPane",
+				routeLayer = (new fmHighlightableLayers.Polyline(splitLatLngs, {
 					color : '#0000ff',
 					weight : 5,
-					opacity : 0.5
-				}).addTo(map.map).on("click", function(e) {
+					highlight: !!openInfoBox
+				})).addTo(map.map).on("click", function(e) {
 					routeUi.showRouteInfoBox();
 				}.fmWrapApply($rootScope));
-
-				if (openInfoBox) {
-					highlightLayer.addTo(map.map);
-					routeLayer.setStyle({
-						opacity: 1
-					});
-				}
-
-				map.map.almostOver.addLayer(routeLayer);
 
 				dragMarker = fmUtils.temporaryDragMarker(map.map, routeLayer, map.dragMarkerColour, function(marker) {
 					dragging = true;
@@ -154,14 +133,8 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		function clearRoute() {
 			if(routeLayer) {
-				map.map.almostOver.removeLayer(routeLayer);
 				routeLayer.remove();
 				routeLayer = null;
-			}
-
-			if(highlightLayer) {
-				highlightLayer.remove();
-				highlightLayer = null;
 			}
 
 			if(dragMarker) {
@@ -221,20 +194,17 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				let template = $(require("./view-route.html"));
 
-				highlightLayer.addTo(map.map);
 				routeLayer.setStyle({
-					opacity: 1
+					highlight: true
 				});
 
 				openInfoBox = map.infoBox.show(template, scope, () => {
 					scope.$destroy();
 					openInfoBox = null;
 
-					if(highlightLayer)
-						highlightLayer.remove();
 					if(routeLayer) {
 						routeLayer.setStyle({
-							opacity: 0.5
+							highlight: false
 						});
 					}
 				});

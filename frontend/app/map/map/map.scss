@@ -11,10 +11,6 @@
 	height: 100%;
 }
 
-.fm-almostover {
-	cursor: pointer !important;
-}
-
 .fm-clickHandler {
 	cursor: crosshair;
 	position: absolute;
@@ -116,16 +112,4 @@
 		color: #000;
 		text-shadow: 0 0 3px #fff, 0 0 5px #fff, 0 0 10px #fff;
 	}
-}
-
-.leaflet-fmHighlightMarker-pane {
-	z-index: 621;
-}
-
-.leaflet-fmHighlight-pane {
-	z-index: 620;
-}
-
-.leaflet-fmHighlightShadow-pane {
-	z-index: 619;
 }

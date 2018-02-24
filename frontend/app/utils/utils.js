@@ -3,7 +3,6 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 import 'leaflet-geometryutil';
-import 'leaflet-almostover';
 import linkifyStr from 'linkifyjs/string';
 import Clipboard from 'clipboard';
 import SimpleGraticule from 'leaflet-simple-graticule';
@@ -319,7 +318,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			temporaryHoverMarker.remove();
 		}
 
-		line.on("fm-almostover", _over).on("fm-almostmove", _move).on("fm-almostout", _out);
+		line.on("mouseover", _over).on("mousemove", _move).on("mouseout", _out);
 
 		function makeTemporaryHoverMarker() {
 			temporaryHoverMarker = L.marker([0,0], Object.assign({
@@ -341,7 +340,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		makeTemporaryHoverMarker();
 
 		return function() {
-			line.off("fm-almostover", _over).off("fm-almostmove", _move).off("fm-almostout", _out);
+			line.off("mouseover", _over).off("mousemove", _move).off("mouseout", _out);
 			temporaryHoverMarker.remove();
 		};
 	};
