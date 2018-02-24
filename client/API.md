@@ -575,6 +575,8 @@ their `idx` property.
 * `name` (string): The name of this map
 * `searchEngines` (boolean): Whether search engines may index the read-only version of this map
 * `description` (string): The description for search engines
+* `clusterMarkers` (boolean): Whether many markers close to each other should be grouped together
+* `legend1`, `legend2` (string): Markdown free text to be shown above and below the legend
 * `defaultViewId` (number): The ID of the default view (if any)
 * `defaultView` ([view](#view-1)): A copy of the default view object
 
