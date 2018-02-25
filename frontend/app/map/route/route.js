@@ -51,7 +51,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				routeLayer = (new fmHighlightableLayers.Polyline(splitLatLngs, {
 					color : '#0000ff',
-					weight : 5,
+					width : 7,
 					highlight: !!openInfoBox,
 					rise: true
 				})).addTo(map.map).on("click", function(e) {

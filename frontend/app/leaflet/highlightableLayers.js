@@ -41,7 +41,8 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
 		setStyle(style) {
 			L.Util.setOptions(this, style);
-			this._initIcon();
+			if(this._map)
+				this._initIcon();
 			return this;
 		}
 
@@ -54,6 +55,9 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			super(latLngs, options);
 
 			this.borderLayer = new L.Polyline(latLngs, Object.assign({}, options, { interactive: false }));
+
+			if(this.options.width == null)
+				this.options.width = 3;
 		}
 
 		onAdd() {
@@ -63,7 +67,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			this._map.addLayer(this.borderLayer);
 			this._map.almostOver.addLayer(this);
 
-			this._updateStyle();
+			this.setStyle({});
 		}
 
 		onRemove() {
@@ -73,17 +77,22 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			super.onRemove(...arguments);
 		}
 
-		_updateStyle() {
+		_regenerateStyle() {
+			let isBright = fmUtils.getBrightness(this.options.color.replace(/^#/, "")) > 0.7;
+
+			// A black border makes the lines look thicker, thus we decrease the thickness to make them look the original size again
+			this.options.weight = isBright ? Math.round(this.options.width / 1.6) : this.options.width;
+
 			this.options.opacity = this.borderLayer.options.opacity = this.options.highlight ? 1 : 0.35;
+			this.borderLayer.options.color = this.borderLayer.options.fillColor = isBright ? "#000000" : "#ffffff";
 			this.borderLayer.options.weight = this.options.weight * 2;
-			this.borderLayer.options.color = "#"+fmUtils.makeTextColour(this.options.color.replace(/^#/, ""));
 
 			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
 			fmHighlightableLayers._updatePane(this.borderLayer, this.options.highlight || this.options.rise ? "fmHighlightShadowPane" : "fmShadowPane");
 		}
 
 		redraw() {
-			this._updateStyle();
+			this._regenerateStyle();
 			super.redraw(...arguments);
 			this.borderLayer.redraw();
 			return this;
@@ -92,7 +101,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		setStyle(style) {
 			L.Util.setOptions(this, style);
 			L.Util.setOptions(this.borderLayer, style);
-			this._updateStyle();
+			this._regenerateStyle();
 			super.setStyle({});
 			this.borderLayer.setStyle({});
 			return this;
@@ -121,6 +130,9 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			super(latLngs, options);
 
 			this.borderLayer = new L.Polygon(latLngs, Object.assign({}, options, { interactive: false }));
+
+			if(this.options.width == null)
+				this.options.width = 3;
 		}
 
 		onAdd() {
@@ -128,7 +140,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			super.onAdd(...arguments);
 			this._map.addLayer(this.borderLayer);
 
-			this._updateStyle();
+			this.setStyle({});
 		}
 
 		onRemove() {
@@ -136,14 +148,14 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			super.onRemove(...arguments);
 		}
 
-		_updateStyle() {
+		_regenerateStyle() {
 			this.borderLayer.options.fill = this.options.highlight;
-			this.borderLayer.options.fillColor = "#"+fmUtils.makeTextColour(this.options.color.replace(/^#/, ""));
-			return Polyline.prototype._updateStyle.apply(this, arguments);
+
+			return Polyline.prototype._regenerateStyle.apply(this, arguments);
 		}
 
 		redraw() {
-			this._updateStyle();
+			this._regenerateStyle();
 			super.redraw(...arguments);
 			this.borderLayer.redraw();
 			return this;
@@ -152,7 +164,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		setStyle(style) {
 			L.Util.setOptions(this, style);
 			L.Util.setOptions(this.borderLayer, style);
-			this._updateStyle();
+			this._regenerateStyle();
 			super.setStyle({});
 			this.borderLayer.setStyle({});
 			return this;
@@ -208,7 +220,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			var geometry = geojson.type === 'Feature' ? geojson.geometry : geojson,
 			    coords = geometry ? geometry.coordinates : null,
 			    layers = [],
-			    _coordsToLatLng = options && options.coordsToLatLng || L.GeoJSON.coordsToLatLng.coordsToLatLng,
+			    _coordsToLatLng = options && options.coordsToLatLng || L.GeoJSON.coordsToLatLng,
 			    latlng, latlngs, i, len;
 
 			if (!coords && !geometry) {

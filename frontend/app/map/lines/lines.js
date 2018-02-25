@@ -80,7 +80,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				var style = {
 					color : '#'+line.colour,
-					weight : line.width
+					width : line.width
 				};
 
 				// Two points that are both outside of the viewport should not be connected, as the piece in between
