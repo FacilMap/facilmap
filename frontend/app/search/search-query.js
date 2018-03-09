@@ -97,7 +97,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					var spl = fmUtils.splitRouteQuery(scope.searchString);
 					searchUi.routeUi.setQueries(spl.queries);
 					if(spl.mode)
-						searchUi.routeUi.setMode(spl.mode == "helicopter" ? "" : spl.mode);
+						searchUi.routeUi.setMode(spl.mode);
 				} else if(!searchUi.routeUi.getTypedQueries()[0]) {
 					if(scope.searchResults && scope.submittedSearchString == scope.searchString)
 						searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);

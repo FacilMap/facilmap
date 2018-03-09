@@ -7,9 +7,10 @@ const request = require("request-promise").defaults({
 	}
 });
 
+const config = require("../config");
+
 
 const API_URL = "https://elevation.mapzen.com/height";
-const API_KEY = "mapzen-LWPWRB1";
 const LIMIT = 500;
 const MIN_TIME_BETWEEN_REQUESTS = 600;
 
@@ -47,7 +48,7 @@ const elevation = module.exports = {
 				};
 
 				return request.get({
-					url: `${API_URL}?json=${encodeURI(JSON.stringify(json))}&api_key=${API_KEY}`,
+					url: `${API_URL}?json=${encodeURI(JSON.stringify(json))}&api_key=${config.mapzenToken}`,
 					json: true
 				}).then((res) => (heights.concat(res.height)));
 			});

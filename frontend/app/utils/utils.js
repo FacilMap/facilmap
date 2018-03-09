@@ -347,29 +347,23 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	};
 
 	fmUtils.splitRouteQuery = function(query) {
-		var ret = {
-			queries: [ ],
-			mode: null
+		let splitQuery = query.split(/(^|\s+)(from|to|via|by)(\s+|$)/).filter((item, i) => (i%2 == 0)); // Filter out every second item (whitespace parantheses)
+		let queryParts = {
+			from: [],
+			via: [],
+			to: [],
+			by: []
 		};
 
-		query = query.replace(/(^|\s+)by\s+([^\s]+)/gi, function(m0, m1, mode) {
-			ret.mode = mode;
-			return "";
-		});
+		for(let i=0; i<splitQuery.length; i+=2) {
+			if(splitQuery[i])
+				queryParts[splitQuery[i-1] || "from"].push(splitQuery[i]);
+		}
 
-		var spl = query.replace(/^\s*from\s+/i, "").split(/\s+to\s+/i);
-		spl.forEach(function(it, i1) {
-			var spl2 = it.split(/\s+via\s+/i);
-
-			spl2.forEach(function(it2, i2) {
-				if(i1 == spl.length-1 && i2 != 0)
-					ret.queries.splice(-1, 0, it2); // vias after the last to should be inserted before the last to (Berlin to Hamburg via Munich should become Berlin, Munich, Hamburg)
-				else
-					ret.queries.push(it2);
-			})
-		});
-
-		return ret;
+		return {
+			queries: queryParts.from.concat(queryParts.via, queryParts.to),
+			mode: queryParts.by[0] || null
+		};
 	};
 
 	/**

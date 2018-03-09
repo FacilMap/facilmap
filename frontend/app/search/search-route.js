@@ -15,10 +15,10 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 			scope.client = map.client;
 			scope.className = css.className;
-			scope.routeMode = 'car';
 			scope.destinations = [ ];
 			scope.submittedQueries = null;
 			scope.submittedMode = null;
+			scope.submittedRouteSettings = null;
 			scope.errors = [ ];
 
 			scope.sortableOptions = ng.copy(fmSortableOptions);
@@ -147,6 +147,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 				var points;
 				var mode = scope.routeMode;
+				var routeSettings = ng.copy(scope.routeSettings);
 
 				scope.submittedQueries = scope.destinations.map(function(destination) {
 					if(destination.loadedQuery == destination.query && destination.suggestions.length)
@@ -155,6 +156,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 						return destination.query;
 				});
 				scope.submittedMode = mode;
+				scope.submittedRouteSettings = routeSettings;
 
 				map.mapEvents.$broadcast("searchchange");
 
@@ -174,7 +176,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 					map.mapEvents.$broadcast("searchchange");
 
-					return map.routeUi.setRoute(points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode).then(() => {
+					return map.routeUi.setRoute(points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode, routeSettings).then(() => {
 						if(!noZoom)
 							map.routeUi.zoom();
 					});
@@ -192,6 +194,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 			scope.reset = function() {
 				scope.submittedQueries = null;
 				scope.submittedMode = null;
+				scope.submittedRouteSettings = null;
 				scope.errors = [];
 
 				if(suggestionMarker) {
@@ -209,6 +212,14 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				scope.addDestination();
 				scope.addDestination();
 			};
+
+			scope.$watch("routeMode", (routeMode) => {
+				scope.reroute(true);
+			});
+
+			scope.$watch("routeSettings", (routeSettings) => {
+				scope.reroute(true);
+			}, true);
 
 			map.mapEvents.$on("routeDestinationAdd", (e, [ idx ]) => {
 				scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]));
@@ -234,6 +245,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 			map.mapEvents.$on("routeClear", () => {
 				scope.submittedQueries = null;
 				scope.submittedMode = null;
+				scope.submittedRouteSettings = null;
 				map.mapEvents.$broadcast("searchchange");
 			});
 
@@ -278,6 +290,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				setQueries: function(queries) {
 					scope.submittedQueries = null;
 					scope.submittedMode = null;
+					scope.submittedRouteSettings = null;
 					scope.destinations = [ ];
 
 					for(var i=0; i<queries.length; i++) {
@@ -307,7 +320,9 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				},
 
 				setMode: function(mode) {
-					scope.routeMode = mode;
+					let decoded = routeUi.decodeMode(mode);
+					scope.routeMode = decoded.mode;
+					scope.routeSettings = decoded.routeSettings;
 				},
 
 				getQueries: function() {
@@ -319,7 +334,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				},
 
 				getMode: function() {
-					return scope.submittedMode;
+					return routeUi.encodeMode(scope.submittedMode, scope.submittedRouteSettings);
 				},
 
 				submit: function(noZoom) {
@@ -329,11 +344,59 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				getCurrentSearchForHash() {
 					var queries = routeUi.getQueries();
 					if(queries)
-						return queries.join(" to ") + " by " + (routeUi.getMode() || "helicopter");
+						return queries.join(" to ") + " by " + routeUi.getMode();
+
+
 				},
 
 				hasResults() {
 					return map.routeUi.routes.length > 0
+				},
+
+				encodeMode(mode, routeSettings) {
+					let encoded = [mode || "helicopter"];
+
+					if(routeSettings) {
+						if(routeSettings.type)
+							encoded.push(routeSettings.type);
+						if(routeSettings.preference && routeSettings.preference != "fastest")
+							encoded.push(routeSettings.preference);
+						if(routeSettings.details)
+							encoded.push("details");
+						if(routeSettings.avoid && routeSettings.avoid.length > 0)
+							encoded.push("avoid", ...routeSettings.avoid);
+					}
+
+					return encoded.join(" ");
+				},
+
+				decodeMode(encoded) {
+					let ret = {
+						mode: "",
+						routeSettings: {
+							type: "",
+							preference: "fastest",
+							details: false,
+							avoid: []
+						}
+					};
+
+					for(let part of encoded.split(/\s+/)) {
+						if(["car", "bicycle", "pedestrian"].includes(part))
+							ret.mode = part;
+						else if(part == "helicopter")
+							ret.mode = "";
+						else if(["road", "safe", "mountain", "tour", "electric", "hiking", "wheelchair"].includes(part))
+							ret.routeSettings.type = part;
+						else if(["fastest", "shortest", "recommended"].includes(part))
+							ret.routeSettings.preference = part;
+						else if(part == "details")
+							ret.routeSettings.details = true;
+						else if(["highways", "tollways", "ferries", "tunnels", "pavedroads", "unpavedroads", "tracks", "fords", "steps", "hills"].includes(part))
+							ret.routeSettings.avoid.push(part);
+					}
+
+					return ret;
 				}
 			};
 

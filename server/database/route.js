@@ -4,7 +4,7 @@ var Sequelize = require("sequelize");
 var underscore = require("underscore");
 
 var utils = require("../utils");
-var routing = require("../routing");
+var routing = require("../routing/routing");
 
 const Op = Sequelize.Op;
 
@@ -51,14 +51,14 @@ module.exports = function(Database) {
 			return Promise.resolve(utils.generateRandomId(20));
 		},
 
-		createRoute(routePoints, mode) {
+		createRoute(routePoints, mode, routeSettings) {
 			return this.generateRouteId().then((routeId) => {
-				return this.updateRoute(routeId, routePoints, mode, true);
+				return this.updateRoute(routeId, routePoints, mode, routeSettings, true);
 			});
 		},
 
-		updateRoute(routeId, routePoints, mode, _noClear) {
-			let line = { id: routeId, mode, routePoints };
+		updateRoute(routeId, routePoints, mode, routeSettings, _noClear) {
+			let line = { id: routeId, mode, routeSettings, routePoints };
 
 			let thisTime = Date.now();
 
@@ -134,6 +134,7 @@ module.exports = function(Database) {
 				return {
 					id: res.routeId,
 					mode: res.line.mode,
+					routeSettings: res.line.routeSettings,
 					routePoints: res.line.routePoints,
 					trackPoints: res.linePoints,
 					distance: res.line.distance,

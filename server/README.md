@@ -21,14 +21,17 @@ facilmap:
         DB_NAME: facilmap
         DB_USER: facilmap
         DB_PASSWORD: password
-        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/
+        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+        MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+        MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
+
     restart: on-failure
 ```
 
 Or the same using `docker create`:
 
 ```bash
-docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e OSR_TOKEN= --restart on-failure facilmap/facilmap2
+docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e OSR_TOKEN= -e MAPBOX_TOKEN= -e MAPZEN_TOKEN= --restart on-failure facilmap/facilmap2
 ```
 
 See [below](#config) for the available config options.

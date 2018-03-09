@@ -75,6 +75,8 @@ module.exports = function(Database) {
 						update.width = type.defaultWidth;
 					if(isLine && type.modeFixed && object.mode != "track" && object.mode != type.defaultMode)
 						update.mode = type.defaultMode;
+					if(isLine && type.modeFixed && object.mode != "track" && !underscore.equals(object.routeSettings, type.defaultRouteSettings))
+						update.routeSettings = type.defaultRouteSettings;
 
 					types[object.typeId].fields.forEach((field) => {
 						if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (!isLine && field.controlSize) || (!isLine && field.controlSymbol) || (!isLine && field.controlShape) || (isLine && field.controlWidth))) {
@@ -108,7 +110,7 @@ module.exports = function(Database) {
 						if(object.id) // Objects from getLineTemplate() do not have an ID
 							ret.push((isLine ? t.updateLine : t.updateMarker).call(t, object.padId, object.id, update, true));
 
-						if(object.id && isLine && "mode" in update) {
+						if(object.id && isLine && ("mode" in update || "routeSettings" in update)) {
 							ret.push(t._calculateRouting(object).then(function(trackPoints) {
 								return t._setLinePoints(object.padId, object.id, trackPoints);
 							}));

@@ -19,6 +19,17 @@ module.exports = function(Database) {
 			defaultWidth: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
 			widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			defaultMode: { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: true },
+			defaultRouteSettings: {
+				type: Sequelize.TEXT,
+				allowNull: false,
+				get: function() {
+					let routeSettings = this.getDataValue("defaultRouteSettings");
+					return routeSettings ? JSON.parse(routeSettings) : routeSettings;
+				},
+				set: function(v) {
+					this.setDataValue("defaultRouteSettings", JSON.stringify(v));
+				}
+			},
 			modeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
 			showInLegend: { type: Sequelize.BOOLEAN, allowNull: true },
 

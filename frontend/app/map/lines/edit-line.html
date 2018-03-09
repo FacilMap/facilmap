@@ -11,15 +11,11 @@
 			<div class="col-sm-9"><input id="edit-line-name" ng-model="line.name" class="form-control" /></div>
 		</div>
 
-		<div class="form-group" ng-show="canControl('mode')">
-			<label for="edit-line-mode" class="col-sm-3 control-label">Routing mode</label>
-			<div class="col-sm-9"><select id="edit-line-mode" ng-model="line.mode" class="form-control" ng-disabled="line.mode == 'track'">
-				<option value="">None</option>
-				<option value="car">Car</option>
-				<option value="bicycle">Bicycle</option>
-				<option value="pedestrian">Pedestrian</option>
-				<option value="track" ng-if="line.mode == 'track'">Track</option>
-			</select></div>
+		<div class="form-group" ng-show="canControl('mode') && line.mode != 'track'">
+			<label class="col-sm-3 control-label">Routing mode</label>
+			<div class="col-sm-9">
+				<fm-route-mode ng-model-mode="line.mode" ng-model-route-settings="line.routeSettings"></fm-route-mode>
+			</div>
 		</div>
 
 		<div class="form-group" ng-show="canControl('colour')">

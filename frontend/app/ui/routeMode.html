@@ -1,0 +1,22 @@
+<div class="btn-group" ng-class="className">
+	<button
+		ng-repeat="thisMode in constants.modes"
+		type="button" class="btn btn-default" ng-class="{active: mode==thisMode}"
+		ng-click="setMode(thisMode, '')"
+		tabindex="{{tabindex+$index}}"
+		uib-tooltip="Go {{constants.modeTitle[thisMode]}}" tooltip-placement="top" tooltip-append-to-body="true"
+		ng-disabled="disabled"><fm-icon fm-icon="{{constants.modeIcon[thisMode]}}" alt="{{constants.modeAlt[thisMode]}}"/></button>
+
+	<div class="btn-group" uib-dropdown dropdown-append-to-body="true" keyboard-nav="true" auto-close="outsideClick">
+		<button type="button" id="fm-routeMode-customise" class="btn btn-default" uib-dropdown-toggle tabindex="{{tabindex+constants.modes.length}}" uib-tooltip="Customise" tooltip-placement="top" tooltip-append-to-body="true" ng-disabled="disabled"><fm-icon fm-icon="cog" alt="Custom"/> <span class="caret"></span></button>
+		<ul class="dropdown-menu" uib-dropdown-menu aria-labelledby="fm-routeMode-customise" ng-class="className">
+			<li role="menuitem" class="long"><a href="javascript:" ng-click="routeSettings.details=!routeSettings.details; $event.stopPropagation()"><fm-icon fm-icon="{{routeSettings.details ? 'check' : 'unchecked'}}"></fm-icon> Load route details (elevation, road types, …)</a></li>
+			<li class="divider"></li>
+			<li role="menuitem" ng-repeat="t in types"><a href="javascript:" ng-click="setMode(t[0], t[1]); $event.stopPropagation()"><fm-icon fm-icon="{{isTypeActive(t[0], t[1]) ? 'check' : 'unchecked'}}"></fm-icon> {{constants.typeText[t[0]][t[1]]}}</a></li>
+			<li class="divider" ng-if="mode"></li>
+			<li role="menuitem" ng-if="mode" ng-repeat="(p, pText) in constants.preferenceText"><a href="javascript:" ng-click="routeSettings.preference=p; $event.stopPropagation()"><fm-icon fm-icon="{{routeSettings.preference==p ? 'check' : 'unchecked'}}"></fm-icon> {{pText}}</a></li>
+			<li class="divider" ng-if="mode"></li>
+			<li role="menuitem" ng-repeat="avoid in constants.avoid" ng-if="constants.avoidAllowed[avoid](mode, routeSettings.type)"><a href="javascript:" ng-click="toggleAvoid(avoid); $event.stopPropagation()"><fm-icon fm-icon="{{routeSettings.avoid.includes(avoid) ? 'check' : 'unchecked'}}"></fm-icon> Avoid {{constants.avoidText[avoid]}}</a></li>
+		</ul>
+	</div>
+</div>
