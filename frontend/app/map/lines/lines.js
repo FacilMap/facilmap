@@ -83,6 +83,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					width : line.width
 				};
 
+				if(line.id == null) // We are drawing a line
+					style.highlight = true;
+
 				// Two points that are both outside of the viewport should not be connected, as the piece in between
 				// has not been received.
 				let splitLatLngs = fmUtils.disconnectSegmentsOutsideViewport(trackPoints, map.map.getBounds());
