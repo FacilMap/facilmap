@@ -12,11 +12,11 @@ module.exports = function(Database) {
 			name: { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "New FacilMap"; } },
 			writeId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: Sequelize.STRING, allowNull: false, validate: { is: /^.+$/ } },
-			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
-			description: { type: Sequelize.STRING, allowNull: false },
-			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, default: false },
-			legend1: { type: Sequelize.STRING, allowNull: false },
-			legend2: { type: Sequelize.STRING, allowNull: false }
+			searchEngines: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+			description: { type: Sequelize.STRING, allowNull: false, defaultValue: "" },
+			clusterMarkers: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: false },
+			legend1: { type: Sequelize.STRING, allowNull: false, defaultValue: "" },
+			legend2: { type: Sequelize.STRING, allowNull: false, defaultValue: "" }
 		});
 	});
 
