@@ -22,21 +22,8 @@ module.exports = function(Database) {
 					}
 
 					// Change routing type "shortest" / "fastest" to "car", add type "track"
-					if(attributes.mode.type.indexOf("shortest") != -1) {
-						promises.push(
-							Promise.resolve().then(() => {
-								return queryInterface.changeColumn('Lines', 'mode', {
-									type: Sequelize.ENUM("", "shortest", "fastest", "car", "bicycle", "pedestrian"), allowNull: false, defaultValue: ""
-								});
-							}).then(() => {
-								return this._conn.model("Line").update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } });
-							}).then(() => {
-								return queryInterface.changeColumn('Lines', 'mode', {
-									type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: false, defaultValue: ""
-								});
-							})
-						);
-					}
+					if(attributes.mode.type.indexOf("shortest") != -1)
+						promises.push(this._conn.model("Line").update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } }));
 
 					return Promise.all(promises);
 				}),
@@ -75,12 +62,18 @@ module.exports = function(Database) {
 				})
 			]);
 
-			var changeColMigrations = Promise.all([ 'Pads', 'Markers', 'Lines' ].map((table) => {
+			var changeColMigrations = Promise.all([ 'Pads', 'Markers', 'Lines', 'Types' ].map(async (table) => {
+				let attributes = await queryInterface.describeTable(table);
+
 				// allow null on Pad.name, Marker.name, Line.name
-				return queryInterface.describeTable(table).then((attributes) => {
-					if(!attributes.name.allowNull)
-						return queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
-				});
+				if(["Pads", "Markers", "Lines"].includes(table) && !attributes.name.allowNull)
+					await queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
+
+				// Change routing mode field from ENUM to TEXT
+				if(table == "Lines" && attributes.mode.type != "TEXT")
+					await queryInterface.changeColumn(table, "mode", { type: Sequelize.TEXT, allowNull: false, defaultValue: "" });
+				if(table == "Types" && attributes.defaultMode.type != "TEXT")
+					await queryInterface.changeColumn(table, "defaultMode", { type: Sequelize.TEXT, allowNull: true });
 			}));
 
 			var addColMigrations = renameColMigrations.then(() => {

@@ -51,14 +51,14 @@ module.exports = function(Database) {
 			return Promise.resolve(utils.generateRandomId(20));
 		},
 
-		createRoute(routePoints, mode, routeSettings) {
+		createRoute(routePoints, mode) {
 			return this.generateRouteId().then((routeId) => {
-				return this.updateRoute(routeId, routePoints, mode, routeSettings, true);
+				return this.updateRoute(routeId, routePoints, mode, true);
 			});
 		},
 
-		updateRoute(routeId, routePoints, mode, routeSettings, _noClear) {
-			let line = { id: routeId, mode, routeSettings, routePoints };
+		updateRoute(routeId, routePoints, mode, _noClear) {
+			let line = { id: routeId, mode, routePoints };
 
 			let thisTime = Date.now();
 
@@ -134,7 +134,6 @@ module.exports = function(Database) {
 				return {
 					id: res.routeId,
 					mode: res.line.mode,
-					routeSettings: res.line.routeSettings,
 					routePoints: res.line.routePoints,
 					trackPoints: res.linePoints,
 					distance: res.line.distance,

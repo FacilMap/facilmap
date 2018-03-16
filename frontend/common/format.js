@@ -56,18 +56,5 @@ const format = module.exports = {
 		if(minutes < 10)
 			minutes = "0" + minutes;
 		return hours + ":" + minutes;
-	},
-
-	routingMode(mode) {
-		switch(mode) {
-			case "car":
-				return "by car";
-			case "bicycle":
-				return "by bicycle";
-			case "pedestrian":
-				return "by foot";
-			default:
-				return "";
-		}
 	}
 };

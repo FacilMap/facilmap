@@ -285,13 +285,13 @@ utils.extend(SocketConnection.prototype, {
 
 		addLine : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", routeSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" }, colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					throw "Invalid parameters.";
 
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints) && this.route.mode == data.mode && underscore.isEqual(this.route.routeSettings, data.routeSettings))
+				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
 					return this.database.getAllRoutePoints(this.route.id);
 			}).then((trackPoints) => {
 				return this.database.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
@@ -300,7 +300,7 @@ utils.extend(SocketConnection.prototype, {
 
 		editLine : function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", routeSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" }, colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
+				if(!utils.stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
 					throw "Invalid parameters.";
 
 				if(!this.writable)
@@ -401,7 +401,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultSymbol: "string", symbolFixed: "boolean",
 					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
-					defaultMode: "string", defaultRouteSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" }, modeFixed: "boolean",
+					defaultMode: "string", modeFixed: "boolean",
 					showInLegend: "boolean",
 					fields: [ {
 						name: "string",
@@ -430,7 +430,7 @@ utils.extend(SocketConnection.prototype, {
 					defaultSymbol: "string", symbolFixed: "boolean",
 					defaultShape: "string", shapeFixed: "boolean",
 					defaultWidth: "number", widthFixed: "boolean",
-					defaultMode: "string", defaultRouteSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" }, modeFixed: "boolean",
+					defaultMode: "string", modeFixed: "boolean",
 					showInLegend: "boolean",
 					fields: [ {
 						name: "string",
@@ -515,22 +515,22 @@ utils.extend(SocketConnection.prototype, {
 
 		getRoute: function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string", routeSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" } }))
+				if(!utils.stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))
 					throw "Invalid parameters.";
 
-				return routing.calculateRouting(data.destinations, data.mode, data.routeSettings);
+				return routing.calculateRouting(data.destinations, data.mode);
 			});
 		},
 
 		setRoute: function(data) {
 			return Promise.resolve().then(() => {
-				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", routeSettings: { type: "string", preference: "string", avoid: [ "string" ], details: "boolean" } }))
+				if(!utils.stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string" }))
 					throw "Invalid parameters.";
 
 				if(this.route)
-					return this.database.updateRoute(this.route.id, data.routePoints, data.mode, data.routeSettings);
+					return this.database.updateRoute(this.route.id, data.routePoints, data.mode);
 				else
-					return this.database.createRoute(data.routePoints, data.mode, data.routeSettings);
+					return this.database.createRoute(data.routePoints, data.mode);
 			}).then((routeInfo) => {
 				if(!routeInfo) {
 					// A newer submitted route has returned in the meantime
@@ -548,7 +548,6 @@ utils.extend(SocketConnection.prototype, {
 				return {
 					routePoints: routeInfo.routePoints,
 					mode: routeInfo.mode,
-					routeSettings: routeInfo.routeSettings,
 					time: routeInfo.time,
 					distance: routeInfo.distance,
 					ascent: routeInfo.ascent,

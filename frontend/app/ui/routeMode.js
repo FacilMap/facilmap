@@ -1,5 +1,6 @@
 import fm from "../app";
 import css from "./routeMode.scss";
+import commonRouting from "../../common/routing";
 
 fm.app.constant("fmRouteModeConstants", {
 	modes: ["car", "bicycle", "pedestrian", ""],
@@ -96,8 +97,7 @@ fm.app.directive("fmRouteMode", function(fmRouteModeConstants) {
 	return {
 		restrict: "E",
 		scope: {
-			mode: "=ngModelMode",
-			routeSettings: "=ngModelRouteSettings",
+			encodedMode: "=ngModel",
 			tabindex: "<fmTabindex"
 		},
 		template: require("./routeMode.html"),
@@ -106,44 +106,49 @@ fm.app.directive("fmRouteMode", function(fmRouteModeConstants) {
 
 			scope.constants = fmRouteModeConstants;
 
+			if(scope.encodedMode == null)
+				scope.encodedMode = "car";
+
+			scope.decodedMode = commonRouting.decodeMode(scope.encodedMode);
+
+			scope.$watch("encodedMode", (encodedMode) => {
+				scope.decodedMode = commonRouting.decodeMode(encodedMode);
+			});
+
+			scope.$watch("decodedMode", (decodedMode) => {
+				scope.encodedMode = commonRouting.encodeMode(decodedMode);
+			}, true);
+
 			scope.types = [];
 			for(let mode in fmRouteModeConstants.types) {
 				scope.types.push(...fmRouteModeConstants.types[mode].map((type) => ([mode, type])));
 			}
 
 			scope.isTypeActive = (mode, type) => {
-				return (!mode && !scope.mode || mode == scope.mode) && (!type && (!scope.routeSettings || !scope.routeSettings.type) || scope.routeSettings && type == scope.routeSettings.type);
+				return (!mode && !scope.decodedMode.mode || mode == scope.decodedMode.mode) && (!type && !scope.decodedMode.type || type == scope.decodedMode.type);
 			};
 
 			scope.setMode = (mode, type) => {
-				scope.mode = mode;
-				scope.routeSettings.type = type;
+				scope.decodedMode.mode = mode;
+				scope.decodedMode.type = type;
 
-				if(scope.routeSettings.avoid) {
-					for(let i=0; i < scope.routeSettings.avoid.length; i++) {
-						if(!fmRouteModeConstants.avoidAllowed[scope.routeSettings.avoid[i]](scope.mode, scope.routeSettings.type))
-							scope.routeSettings.avoid.splice(i--, 1);
+				if(scope.decodedMode.avoid) {
+					for(let i=0; i < scope.decodedMode.avoid.length; i++) {
+						if(!fmRouteModeConstants.avoidAllowed[scope.decodedMode.avoid[i]](scope.mode, scope.decodedMode.type))
+							scope.decodedMode.avoid.splice(i--, 1);
 					}
 				}
 			};
 
-			if(!scope.routeSettings)
-				scope.routeSettings = {};
-
-			if(scope.mode == null)
-				scope.mode = "car";
-			if(!scope.routeSettings.preference)
-				scope.routeSettings.preference = "fastest";
-
 			scope.toggleAvoid = (avoid) => {
-				if(!scope.routeSettings.avoid)
-					scope.routeSettings.avoid = [];
+				if(!scope.decodedMode.avoid)
+					scope.decodedMode.avoid = [];
 
-				let idx = scope.routeSettings.avoid.indexOf(avoid);
+				let idx = scope.decodedMode.avoid.indexOf(avoid);
 				if(idx == -1)
-					scope.routeSettings.avoid.push(avoid);
+					scope.decodedMode.avoid.push(avoid);
 				else
-					scope.routeSettings.avoid.splice(idx, 1);
+					scope.decodedMode.avoid.splice(idx, 1);
 			};
 
 			scope.$watch(() => (el[0].hasAttribute("disabled")), (disabled) => {

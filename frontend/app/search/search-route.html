@@ -27,7 +27,7 @@
 			<div class="btn-toolbar">
 				<button type="button" class="btn btn-default" ng-click="addDestination()" uib-tooltip="Add another destination" tooltip-append-to-body="true" tabindex="{{destinations.length+1}}"><fm-icon fm-icon="plus" alt="Add"/></button>
 
-				<fm-route-mode ng-model-mode="routeMode" ng-model-route-settings="routeSettings" fm-tabindex="destinations.length+2"></fm-route-mode>
+				<fm-route-mode ng-model="routeMode" fm-tabindex="destinations.length+2"></fm-route-mode>
 
 				<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+7}}">Go!</button>
 				<button ng-show="hasRoute()" type="button" class="btn btn-link" tabindex="{{destinations.length+8}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><fm-icon fm-icon="remove" alt="Clear"/></button>

@@ -1,10 +1,8 @@
-const Promise = require("bluebird");
-const request = require("request-promise");
-
 const utils = require("../utils");
 
 const ors = require("./ors");
 const osrm = require("./osrm");
+const commonRouting = require("facilmap-frontend/common/routing");
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -16,22 +14,24 @@ const RESOLUTION_20 = 0.0000013411044763239684 * 4;
 
 const routing = module.exports = {
 
-	async calculateRouting(routePoints, mode, routeSettings) {
-		let simple = routing.isSimpleRoute(routeSettings);
+	async calculateRouting(routePoints, encodedMode) {
+		let decodedMode = commonRouting.decodeMode(encodedMode);
+
+		let simple = routing.isSimpleRoute(decodedMode);
 
 		let route;
 
-		if(simple || routing._needsOSRM(routePoints, mode))
-			route = await osrm.calculateRouting(routePoints, mode);
+		if(simple || routing._needsOSRM(routePoints, decodedMode))
+			route = await osrm.calculateRouting(routePoints, decodedMode.mode);
 
 		if(!simple) {
 			if(route) {
 				// The distances between the current route points exceed the maximum for ORS, so we pick new
 				// route points from the route calculated by OSRM
-				routePoints = routing._getRoutePointsFromTrack(route.trackPoints, ors.getMaximumDistanceBetweenRoutePoints(mode));
+				routePoints = routing._getRoutePointsFromTrack(route.trackPoints, ors.getMaximumDistanceBetweenRoutePoints(decodedMode));
 			}
 
-			route = await ors.calculateRouting(routePoints, mode, routeSettings);
+			route = await ors.calculateRouting(routePoints, decodedMode);
 		}
 
 		routing.calculateZoomLevels(route.trackPoints);
@@ -39,17 +39,15 @@ const routing = module.exports = {
 		return route;
 	},
 
-	isSimpleRoute(routeSettings) {
-		return !routeSettings || (
-			!routeSettings.type &&
-			(!routeSettings.preference || routeSettings.preference == "fastest") &&
-			(!routeSettings.avoid || routeSettings.avoid.length == 0) &&
-			!routeSettings.details
-		);
+	isSimpleRoute(decodedMode) {
+		return !decodedMode.type &&
+			(!decodedMode.preference || decodedMode.preference == "fastest") &&
+			(!decodedMode.avoid || decodedMode.avoid.length == 0) &&
+			!decodedMode.details;
 	},
 
-	_needsOSRM(routePoints, mode) {
-		let maxDist = ors.getMaximumDistanceBetweenRoutePoints(mode);
+	_needsOSRM(routePoints, decodedMode) {
+		let maxDist = ors.getMaximumDistanceBetweenRoutePoints(decodedMode);
 		for(let i=1; i<routePoints.length; i++) {
 			if(utils.calculateDistance([ routePoints[i-1], routePoints[i] ]) > maxDist)
 				return true;
@@ -74,7 +72,6 @@ const routing = module.exports = {
 	},
 
 	_percentageOfSegment(point1, point2, percentage) {
-		console.log("percentage");
 		return {
 			lat: point1.lat + percentage * (point2.lat - point1.lat),
 			lon: point1.lon + percentage * (point2.lon - point1.lon)

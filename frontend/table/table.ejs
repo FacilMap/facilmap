@@ -64,7 +64,7 @@
 			} else {
 %>
 						<td><%=format.round(object.distance, 2)%> km</td>
-						<td><% if(object.time != null) { %><%=format.formatTime(object.time)%> h <%=format.routingMode(object.mode)%><% } %></td>
+						<td><% if(object.time != null) { %><%=format.formatTime(object.time)%> h <%=routing.formatRoutingMode(object.mode)%><% } %></td>
 <%
 			}
 

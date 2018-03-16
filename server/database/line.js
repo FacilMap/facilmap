@@ -5,6 +5,7 @@ var underscore = require("underscore");
 
 var utils = require("../utils");
 var routing = require("../routing/routing");
+var commonRouting = require("facilmap-frontend/common/routing");
 
 const Op = Sequelize.Op;
 
@@ -35,18 +36,7 @@ module.exports = function(Database) {
 					}
 				}
 			},
-			mode : { type: Sequelize.ENUM("", "car", "bicycle", "pedestrian", "track"), allowNull: false, defaultValue: "" },
-			routeSettings: {
-				type: Sequelize.TEXT,
-				allowNull: true,
-				get: function() {
-					let routeSettings = this.getDataValue("routeSettings");
-					return routeSettings ? JSON.parse(routeSettings) : routeSettings;
-				},
-				set: function(v) {
-					this.setDataValue("routeSettings", JSON.stringify(v));
-				}
-			},
+			mode : { type: Sequelize.TEXT, allowNull: false, defaultValue: "" },
 			colour : { type: Sequelize.STRING(6), allowNull: false, defaultValue: "0000ff", validate: this._TYPES.validateColour },
 			width : { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
 			name : { type: Sequelize.TEXT, allowNull: true, get: function() { return this.getDataValue("name") || "Untitled line"; } },
@@ -187,13 +177,10 @@ module.exports = function(Database) {
 					if(data.routePoints == null)
 						data.routePoints = originalLine.routePoints;
 
-					if(data.mode == null)
+					if(data.mode == null || originalLine.mode == "track")
 						data.mode = originalLine.mode || "";
 
-					if(data.routeSettings == null)
-						data.routeSettings = originalLine.routeSettings;
-
-					if((data.mode == "track" && data.trackPoints) || !underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode || !underscore.isEqual(data.routeSettings, originalLine.routeSettings))
+					if((data.mode == "track" && data.trackPoints) || !underscore.isEqual(data.routePoints, originalLine.routePoints) || data.mode != originalLine.mode)
 						return this._calculateRouting(data, trackPointsFromRoute); // Also sets data.distance and data.time
 				},
 
@@ -316,8 +303,8 @@ module.exports = function(Database) {
 					line.trackPoints[i].idx = i;
 
 				trackPoints = line.trackPoints;
-			} else if(line.routePoints && line.routePoints.length >= 2 && line.mode && line.mode != "track") {
-				let routeData = await routing.calculateRouting(line.routePoints, line.mode, line.routeSettings);
+			} else if(line.routePoints && line.routePoints.length >= 2 && line.mode != "track" && commonRouting.decodeMode(line.mode).mode) {
+				let routeData = await routing.calculateRouting(line.routePoints, line.mode);
 				line.distance = routeData.distance;
 				line.time = routeData.time;
 				line.ascent = routeData.ascent;

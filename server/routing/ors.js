@@ -31,29 +31,29 @@ throttle.map((func) => (highland(func()))).parallel(4).done(() => {});
 
 const ors = module.exports = {
 
-	getMaximumDistanceBetweenRoutePoints(mode) {
-		return MAX_DISTANCE[mode];
+	getMaximumDistanceBetweenRoutePoints(decodedMode) {
+		return MAX_DISTANCE[decodedMode.mode];
 	},
 
-	async calculateRouting(points, mode, routeSettings) {
+	async calculateRouting(points, decodedMode) {
 		return await new Promise((resolve, reject) => {
 			throttle.write(() => {
-				return this._calculateRouting(points, mode, routeSettings).then(resolve).catch(reject);
+				return this._calculateRouting(points, decodedMode).then(resolve).catch(reject);
 			});
 		});
 	},
 
-	async _calculateRouting(points, mode, routeSettings) {
+	async _calculateRouting(points, decodedMode) {
 		let currentGroup = [];
 		let coordGroups = [currentGroup];
 		for(let point of points) {
-			if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[mode]) {
+			if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode]) {
 				if(currentGroup.length == 1)
 					throw new Error("Too much distance between route points. Consider adding some via points.");
 
 				coordGroups.push(currentGroup = [currentGroup[currentGroup.length-1]]);
 
-				if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[mode])
+				if(utils.calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode])
 					throw new Error("Too much distance between route points. Consider adding some via points.");
 			}
 
@@ -66,16 +66,16 @@ const ors = module.exports = {
 			results = await Promise.all(coordGroups.map((coords) => {
 				let url = ROUTING_URL
 					+ "&coordinates=" + coords.map((point) => (point.lon + "," + point.lat)).join("|")
-					+ "&profile=" + ROUTING_MODES[`${mode}-${routeSettings && routeSettings.type || ""}`]
+					+ "&profile=" + ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]
 					+ "&geometry_format=polyline"
 					+ "&instructions=false";
 
-				if(routeSettings && routeSettings.details)
-					url += "&elevation=true&extra_info=surface|waytype|steepness" + (mode == "car" ? "|tollways" : "");
-				if(routeSettings && routeSettings.avoid)
-					url += "&options=" + encodeURIComponent(JSON.stringify({"avoid_features": routeSettings.avoid.join("|")}));
-				if(routeSettings && routeSettings.preference)
-					url += "&preference=" + encodeURIComponent(routeSettings.preference);
+				if(decodedMode.details)
+					url += "&elevation=true&extra_info=surface|waytype|steepness" + (decodedMode.mode == "car" ? "|tollways" : "");
+				if(decodedMode.avoid)
+					url += "&options=" + encodeURIComponent(JSON.stringify({"avoid_features": decodedMode.avoid.join("|")}));
+				if(decodedMode.preference)
+					url += "&preference=" + encodeURIComponent(decodedMode.preference);
 
 				return request.get({
 					url: url,

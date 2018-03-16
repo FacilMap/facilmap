@@ -9,6 +9,7 @@ import SimpleGraticule from 'leaflet-simple-graticule';
 
 import commonFormat from '../../common/format';
 import commonUtils from '../../common/utils';
+import commonRouting from '../../common/routing';
 
 fm.app.factory("fmUtils", function($parse, fmIcons) {
 
@@ -148,7 +149,7 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 
 	fmUtils.round = commonFormat.round;
 	fmUtils.formatTime = commonFormat.formatTime;
-	fmUtils.routingMode = commonFormat.routingMode;
+	fmUtils.formatRoutingMode = commonRouting.formatRoutingMode;
 
 	fmUtils.preserveObject = function(scope, sourceExpr, targetExpr, onDelete) {
 		var obj,bkp;
@@ -899,7 +900,7 @@ fm.app.filter('fmFormatTime', function(fmUtils) {
 
 fm.app.filter('fmRoutingMode', function(fmUtils) {
 	return function(value) {
-		return fmUtils.routingMode(value);
+		return fmUtils.formatRoutingMode(value);
 	};
 });
 

@@ -24,8 +24,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 		function setRoute(route) {
 			return map.client.setRoute({
 				routePoints: route.routePoints,
-				mode: route.mode,
-				routeSettings: route.routeSettings
+				mode: route.mode
 			}).then(() => {
 				renderRoute();
 			}).catch((err) => {
@@ -187,7 +186,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 						}
 					}
 
-					map.linesUi.createLine(type, map.client.route.routePoints, { mode: map.client.route.mode, routeSettings: map.client.route.routeSettings });
+					map.linesUi.createLine(type, map.client.route.routePoints, { mode: map.client.route.mode });
 
 					map.mapEvents.$broadcast("routeClear");
 					map.client.clearRoute().catch((err) => {
@@ -259,8 +258,8 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				}
 			},
 
-			setRoute(routePoints, mode, routeSettings) {
-				return setRoute({routePoints, mode, routeSettings}, true).then(() => {
+			setRoute(routePoints, mode) {
+				return setRoute({routePoints, mode}, true).then(() => {
 					if(map.client.route)
 						this.showRouteInfoBox();
 				});

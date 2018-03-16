@@ -4,6 +4,7 @@ const fs = require("fs");
 const commonUtils = require("facilmap-frontend/common/utils");
 const commonFormat = require("facilmap-frontend/common/format");
 const commonFilter = require("facilmap-frontend/common/filter");
+const commonRouting = require("facilmap-frontend/common/routing");
 
 const utils = require("../utils");
 const webserver = require("../webserver");
@@ -49,7 +50,8 @@ const table = {
 				padData: results.padData,
 				types: results.types,
 				utils: commonUtils,
-				format: commonFormat
+				format: commonFormat,
+				routing: commonRouting
 			})
 		})
 	}
