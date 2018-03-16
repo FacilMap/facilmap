@@ -97,7 +97,7 @@ fm.app.directive("fmSearch", function(fmSearchFileImport) {
 
 				isZoomedToCurrentResult: () => {
 					if(!$scope.isRouteShown)
-						return this.queryUi.getCurrentSearchForHash();
+						return this.queryUi.isZoomedToCurrentResult();
 				}
 			};
 
