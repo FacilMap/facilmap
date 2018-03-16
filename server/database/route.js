@@ -19,6 +19,10 @@ module.exports = function(Database) {
 			zoom: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: Sequelize.INTEGER.UNSIGNED, allowNull: false },
 			ele: { type: Sequelize.INTEGER, allowNull: true }
+		}, {
+			indexes: [
+				{ fields: [ "routeId" ] }
+			]
 		});
 	});
 
