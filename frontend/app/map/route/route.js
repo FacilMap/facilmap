@@ -131,9 +131,9 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		function updateMarkerColours() {
 			markers.forEach(function(marker, i) {
-				var colour = (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour);
-
-				marker.setIcon(fmUtils.createMarkerIcon(colour, 35));
+				marker.setStyle({
+					colour: (i == 0 ? map.startMarkerColour : i == markers.length-1 ? map.endMarkerColour : map.dragMarkerColour)
+				});
 			});
 		}
 

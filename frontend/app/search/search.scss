@@ -57,6 +57,11 @@
 			}
 		}
 
+		.reset-button {
+			z-index: 5;
+			pointer-events: auto;
+		}
+
 	}
 
 }

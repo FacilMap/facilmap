@@ -90,8 +90,10 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 			};
 
 			scope.suggestionMouseOut = function(suggestion) {
-				suggestionMarker.remove();
-				suggestionMarker = null;
+				if(suggestionMarker) {
+					suggestionMarker.remove();
+					suggestionMarker = null;
+				}
 			};
 
 			scope.suggestionZoom = function(suggestion) {
@@ -109,7 +111,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 				let suggestion = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
 
-				if(idx != -1 && destination.query == destination.loadedQuery && suggestion) {
+				if(destination.query == destination.loadedQuery && suggestion) {
 					let marker = map.routeUi.getMarker(idx);
 					if(marker && marker.getLatLng().equals([ suggestion.lat, suggestion.lon ])) {
 						highlightedMarker = marker;

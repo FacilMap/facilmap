@@ -154,9 +154,7 @@ const search = module.exports = {
 
 			body.lat = lonlatWithZoom.lat;
 			body.lon = lonlatWithZoom.lon;
-
-			if(lonlatWithZoom.zoom != null)
-				body.zoom = lonlatWithZoom.zoom;
+			body.zoom = lonlatWithZoom.zoom || 15;
 
 			body.elevation = elevation;
 
