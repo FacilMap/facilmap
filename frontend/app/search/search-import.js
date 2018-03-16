@@ -50,9 +50,13 @@ fm.app.factory("fmSearchImport", function($uibModal, $rootScope) {
 				if(type.type == "marker") {
 					return map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, obj, !showEdit);
 				} else if(type.type == "line") {
-					var trackPoints = _lineStringToTrackPoints(result.geojson);
-					$.extend(obj, { trackPoints: trackPoints, mode: "track" });
-					return map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], obj, !showEdit);
+					if(!result.fmProperties || !result.fmProperties.routePoints) {
+						var trackPoints = _lineStringToTrackPoints(result.geojson);
+						$.extend(obj, { trackPoints: trackPoints, mode: "track" });
+						return map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], obj, !showEdit);
+					} else {
+						return map.linesUi.createLine(type, obj.routePoints, obj, !showEdit);
+					}
 				}
 			},
 
