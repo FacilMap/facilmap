@@ -3,6 +3,7 @@ import ng from 'angular';
 import 'bootstrap';
 import 'angular-ui-bootstrap';
 import 'angular-ui-sortable';
+import 'babel-polyfill';
 
 const fm = {
 	URL_PREFIX: location.protocol + "//" + location.host + location.pathname.replace(/[^\/]*$/, "")

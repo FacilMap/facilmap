@@ -138,13 +138,18 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				let template = $(require("./view-line.html"));
 
 				openLine = {
-					hide: map.infoBox.show(template, scope, () => {
-						openLine = null;
-						if(linesById[line.id]) { // Does not exist anymore after line was deleted
-							linesById[line.id].setStyle({ highlight: false });
+					hide: map.infoBox.show({
+						template,
+						scope,
+						onCloseStart: () => {
+							openLine = null;
+							if(linesById[line.id]) { // Does not exist anymore after line was deleted
+								linesById[line.id].setStyle({ highlight: false });
+							}
+						},
+						onCloseEnd: () => {
+							scope.$destroy();
 						}
-
-						scope.$destroy();
 					}).hide,
 					id: line.id
 				};

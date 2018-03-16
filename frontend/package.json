@@ -28,6 +28,7 @@
     "angular": "^1.6.8",
     "angular-ui-bootstrap": "^2.5.6",
     "angular-ui-sortable": "^0.18.0",
+    "babel-polyfill": "^6.26.0",
     "blob": "^0.0.4",
     "bootstrap": "3.x.x",
     "bootstrap-touchspin": "^3.1.1",

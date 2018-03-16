@@ -166,9 +166,6 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		let routeUi = {
 			showRouteInfoBox() {
-				if(openInfoBox)
-					return;
-
 				let scope = $rootScope.$new();
 				scope.client = map.client;
 
@@ -200,19 +197,25 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				let template = $(require("./view-route.html"));
 
-				routeLayer.setStyle({
-					highlight: true
+				openInfoBox = map.infoBox.show({
+					template,
+					scope,
+					onCloseStart: () => {
+						openInfoBox = null;
+
+						if(routeLayer) {
+							routeLayer.setStyle({
+								highlight: false
+							});
+						}
+					},
+					onCloseEnd: () => {
+						scope.$destroy();
+					}
 				});
 
-				openInfoBox = map.infoBox.show(template, scope, () => {
-					scope.$destroy();
-					openInfoBox = null;
-
-					if(routeLayer) {
-						routeLayer.setStyle({
-							highlight: false
-						});
-					}
+				routeLayer.setStyle({
+					highlight: true
 				});
 
 				elevationPlot.clear();

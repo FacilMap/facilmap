@@ -90,16 +90,21 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				};
 
 				openMarker = {
-					hide: map.infoBox.show(require("./view-marker.html"), scope, () => {
-						openMarker = null;
+					hide: map.infoBox.show({
+						template: require("./view-marker.html"),
+						scope,
+						onCloseStart: () => {
+							openMarker = null;
 
-						if(markersById[marker.id]) {
-							markersById[marker.id].setStyle({
-								highlight: false
-							});
+							if(markersById[marker.id]) {
+								markersById[marker.id].setStyle({
+									highlight: false
+								});
+							}
+						},
+						onCloseEnd: () => {
+							scope.$destroy();
 						}
-
-						scope.$destroy();
 					}).hide,
 					id: marker.id
 				};

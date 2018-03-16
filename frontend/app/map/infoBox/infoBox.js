@@ -37,13 +37,15 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 		};
 
 		let infoBox = {
-			show(html, htmlScope, onClose) {
-				if(currentObj)
-					currentObj.onClose && currentObj.onClose();
+			show({template, scope, onCloseStart, onCloseEnd}) {
+				if(currentObj) {
+					currentObj.onCloseStart && currentObj.onCloseStart();
+					currentObj.onCloseEnd && currentObj.onCloseEnd();
+				}
 
-				let htmlEl = $(".html", el).empty().append(html);
-				if(htmlScope !== false)
-					$compile(htmlEl)(htmlScope);
+				let htmlEl = $(".html", el).empty().append(template);
+				if(scope !== false)
+					$compile(htmlEl)(scope);
 
 				if(!el.is(":visible")) {
 					let legendSize = getLegendSize();
@@ -82,7 +84,8 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 				}
 
 				let thisCurrentObj = currentObj = {
-					onClose
+					onCloseStart,
+					onCloseEnd
 				};
 
 				return {
@@ -94,14 +97,16 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 					}
 				};
 			},
-			hide() {
+			async hide() {
 				if(!currentObj)
-					return Promise.resolve();
+					return;
 
 				let obj = currentObj;
 				currentObj = null;
 
-				return new Promise((resolve) => {
+				obj.onCloseStart && obj.onCloseStart();
+
+				await new Promise((resolve) => {
 					let legendSize = getLegendSize();
 
 					if(legendSize) {
@@ -123,9 +128,9 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 							resolve();
 						});
 					}
-				}).then(() => {
-					obj.onClose && obj.onClose();
 				});
+
+				obj.onCloseEnd && obj.onCloseEnd();
 			}
 		};
 

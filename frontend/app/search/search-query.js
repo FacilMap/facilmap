@@ -346,13 +346,17 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					map.searchUi.setRouteDestination(query, mode, results, result);
 				};
 
-				let thisCurrentInfoBox = currentInfoBox = map.infoBox.show(require("./result-popup.html"), popupScope, () => {
-					popupScope.$destroy();
+				currentInfoBox = map.infoBox.show({
+					template: require("./result-popup.html"),
+					scope: popupScope,
+					onCloseStart: () => {
+						onClose && onClose();
 
-					onClose && onClose();
-
-					if(currentInfoBox === thisCurrentInfoBox) // Some other infobox might have opened during the animation
 						currentInfoBox = null;
+					},
+					onCloseEnd: () => {
+						popupScope.$destroy();
+					}
 				});
 			}
 
