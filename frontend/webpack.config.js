@@ -9,10 +9,7 @@ const path = require("path");
 const depLoaders = {
 	jquery: "expose-loader?jQuery",
 	angular: "exports-loader?window.angular",
-	"leaflet.elevation": [
-		"imports-loader?d3=d3",
-		"string-replace-loader?search=L.Browser.touch&replace=L.Browser.mobile" // https://github.com/MrMufflon/Leaflet.Elevation/issues/67
-	]
+	"leaflet.heightgraph": "imports-loader?d3=d3"
 };
 
 // Add imports to these modules, as they don't specify their imports properly
@@ -26,7 +23,7 @@ const addDeps = {
 	leaflet: [ "leaflet/dist/leaflet.css" ],
 	"leaflet.locatecontrol": [ "leaflet.locatecontrol/dist/L.Control.Locate.css" ],
 	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ],
-	"leaflet.elevation": [ require.resolve("leaflet.elevation/dist/Leaflet.Elevation-0.0.2.css") ],
+	"leaflet.heightgraph": [ require.resolve("leaflet.heightgraph/src/L.Control.Heightgraph.css") ],
 	"leaflet-mouse-position": [ "leaflet-mouse-position/src/L.Control.MousePosition.css" ],
 	"leaflet-graphicscale": [ "leaflet-graphicscale/src/Leaflet.GraphicScale.scss" ]
 };
@@ -53,7 +50,8 @@ module.exports = {
 		unsafeCache: true,
 		alias: {
 			angular: "angular/angular", // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
-			"leaflet.elevation": "leaflet.elevation/dist/Leaflet.Elevation-0.0.2.src.js"
+			"leaflet.heightgraph": "leaflet.heightgraph/src/L.Control.Heightgraph.js",
+			d3: `${__dirname}/lib/d3.js`
 		}
 	},
 	module: {
@@ -61,7 +59,7 @@ module.exports = {
 			{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
 			{ test: /\.scss$/, use: [ "style-loader", "css-loader", "sass-loader" ]},
 			{ test: /\.js$/, exclude: /\/node_modules\//, loader: "babel-loader?presets=env" },
-			{ test: /\.(png|jpe?g|gif|ttf)$/, loader: "url-loader" },
+			{ test: /\.(png|jpe?g|gif|ttf|svg)$/, loader: "url-loader" },
 			{ test: /\.(html|ejs)$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
 

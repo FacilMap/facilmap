@@ -2,7 +2,7 @@ import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import 'leaflet.elevation';
+import heightgraph from '../../leaflet/heightgraph';
 import {saveAs} from 'file-saver';
 
 import css from './lines.scss';
@@ -46,10 +46,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			}
 		});
 
-		let elevationPlot = L.control.elevation({
-			theme: "steelblue-theme",
-			position: "bottomright"
-		});
+		let elevationPlot = new heightgraph();
+		elevationPlot._map = map.map;
 
 		var linesUi = {
 			_addLine: function(line, _doNotRerenderPopup) {
@@ -159,23 +157,9 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				linesUi._addLine(line, true); // To render the openLineHighlight
 
 
-				elevationPlot.clear();
-
-				scope.$watch("line.trackPoints", (trackPoints) => {
-					elevationPlot.clear();
-
+				scope.$watch("line.trackPoints", () => {
 					if(line.ascent != null && line.trackPoints) {
-						let latlngs = [];
-						for(let i=0; i<line.trackPoints.length; i++) {
-							if(line.trackPoints[i] && line.trackPoints[i].ele != null)
-								latlngs.push(Object.assign(new L.latLng(line.trackPoints[i].lat, line.trackPoints[i].lon), { meta: { ele: line.trackPoints[i].ele } }));
-						}
-
-						elevationPlot.addData({
-							_latlngs: latlngs
-						}, {
-							on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
-						});
+						elevationPlot.addData(line.extraInfo, line.trackPoints);
 					}
 				}, true);
 
@@ -183,8 +167,11 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					let el = template.find(".fm-elevation-plot").empty();
 
 					if(line.ascent != null) {
-						elevationPlot.options.width = template.find(".tab-pane.active").width();
-						el.append($(elevationPlot.onAdd(map.map)).addClass("leaflet-control"));
+						let content = template.filter(".content");
+						elevationPlot.options.width = content.find(".tab-pane.active").width();
+						elevationPlot.options.height = content.height() - content.find(".tab-pane.active dl").outerHeight(true);
+
+						el.append($(elevationPlot.onAdd(map.map)));
 					}
 				};
 

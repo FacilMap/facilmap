@@ -2,18 +2,15 @@ import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import 'leaflet.elevation';
 import {saveAs} from 'file-saver';
+import heightgraph from '../../leaflet/heightgraph';
 
 fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $rootScope, fmHighlightableLayers) {
 	return function(map) {
 		var dragTimeout = 300;
 
-		let elevationPlot = L.control.elevation({
-			theme: "steelblue-theme",
-			position: "bottomright",
-			height: 140
-		});
+		let elevationPlot = new heightgraph();
+		elevationPlot._map = map.map;
 
 		let routeLayer = null;
 		let dragMarker = null;
@@ -218,35 +215,21 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 					highlight: true
 				});
 
-				elevationPlot.clear();
-
-				scope.$watch("client.route.trackPoints", (trackPoints) => {
-					elevationPlot.clear();
-
-					if(map.client.route && map.client.route.ascent != null) {
-						let latlngs = [];
-						if(trackPoints) {
-							for(let i=0; i<trackPoints.length; i++) {
-								if(trackPoints[i] && trackPoints[i].ele != null)
-									latlngs.push(Object.assign(new L.latLng(trackPoints[i].lat, trackPoints[i].lon), { meta: { ele: trackPoints[i].ele } }));
-							}
-						}
-
-						elevationPlot.addData({
-							_latlngs: latlngs
-						}, {
-							on: () => {} // Otherwise a new event handler gets added every single time we add a line, and is never cleared
-						});
-					}
-				}, true);
-
 				let drawElevationPlot = () => {
-					elevationPlot.options.width = template.filter(".content").width();
-					template.find(".fm-elevation-plot").empty().append($(elevationPlot.onAdd(map.map)).addClass("leaflet-control"));
+					let content = template.filter(".content");
+					elevationPlot.options.width = content.width();
+					elevationPlot.options.height = content.height() - content.find("dl").outerHeight(true);
+
+					template.find(".fm-elevation-plot").empty().append($(elevationPlot.onAdd(map.map)));
 				};
 
 				template.filter(".content").on("resizeend", drawElevationPlot);
 				setTimeout(drawElevationPlot, 0);
+
+				scope.$watch("client.route", () => {
+					if(map.client.route && map.client.route.ascent != null)
+						elevationPlot.addData(map.client.route.extraInfo, map.client.route.trackPoints);
+				}, true);
 			},
 
 			zoom() {

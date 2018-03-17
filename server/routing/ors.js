@@ -98,7 +98,8 @@ const ors = module.exports = {
 			distance: 0,
 			time: 0,
 			ascent: 0,
-			descent: 0
+			descent: 0,
+			extraInfo: {}
 		};
 
 		for(let body of results) {
@@ -109,15 +110,25 @@ const ors = module.exports = {
 			if(!body || !body.routes || !body.routes[0])
 				throw new Error("Invalid response from routing server.");
 
+			let idxAdd = ret.trackPoints.length;
+
 			let trackPoints = body.routes[0].geometry.map(function(it) { return { lat: it[1], lon: it[0], ele: it[2] }; });
-			if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon)
+			if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon) {
 				trackPoints.shift();
+				idxAdd--;
+			}
 
 			ret.trackPoints.push(...trackPoints);
 			ret.distance += body.routes[0].summary.distance/1000;
 			ret.time += body.routes[0].summary.duration;
 			ret.ascent += body.routes[0].summary.ascent;
 			ret.descent += body.routes[0].summary.descent;
+
+			for(var i in body.routes[0].extras) {
+				if(!ret.extraInfo[i])
+					ret.extraInfo[i] = [];
+				ret.extraInfo[i].push(...body.routes[0].extras[i].values.map((v) => ([v[0]+idxAdd, v[1]+idxAdd, v[2]])));
+			}
 		}
 
 		return ret;

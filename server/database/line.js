@@ -47,7 +47,18 @@ module.exports = function(Database) {
 			top: this._TYPES.lat,
 			bottom: this._TYPES.lat,
 			left: this._TYPES.lon,
-			right: this._TYPES.lon
+			right: this._TYPES.lon,
+			extraInfo: {
+				type: Sequelize.TEXT,
+				allowNull: true,
+				get: function() {
+					let extraInfo = this.getDataValue("extraInfo");
+					return extraInfo != null ? JSON.parse(extraInfo) : extraInfo;
+				},
+				set: function(v) {
+					this.setDataValue("extraInfo", JSON.stringify(v));
+				}
+			}
 		});
 
 		this._conn.define("LinePoint", {
@@ -291,11 +302,15 @@ module.exports = function(Database) {
 				line.time = trackPointsFromRoute.time;
 				line.ascent = trackPointsFromRoute.ascent;
 				line.descent = trackPointsFromRoute.descent;
+				line.extraInfo = trackPointsFromRoute.extraInfo;
 
 				trackPoints = trackPointsFromRoute.trackPoints;
 			} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
 				line.distance = utils.calculateDistance(line.trackPoints);
 				line.time = null;
+				line.extraInfo = {};
+
+				// TODO: ascent/descent?
 
 				routing.calculateZoomLevels(line.trackPoints);
 
@@ -309,6 +324,7 @@ module.exports = function(Database) {
 				line.time = routeData.time;
 				line.ascent = routeData.ascent;
 				line.descent = routeData.descent;
+				line.extraInfo = routeData.extraInfo;
 				for(var i=0; i<routeData.trackPoints.length; i++)
 					routeData.trackPoints[i].idx = i;
 
@@ -316,6 +332,7 @@ module.exports = function(Database) {
 			} else {
 				line.distance = utils.calculateDistance(line.routePoints);
 				line.time = null;
+				line.extraInfo = {};
 
 				trackPoints = [ ];
 				for(var i=0; i<line.routePoints.length; i++) {

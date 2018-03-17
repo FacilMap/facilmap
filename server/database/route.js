@@ -100,7 +100,7 @@ module.exports = function(Database) {
 
 				line.trackPoints = res.trackPoints;
 
-				return line; // Contains also distance, time, ascent, descent properties
+				return line; // Contains also distance, time, ascent, descent, routeInfo properties
 			});
 		},
 

@@ -552,6 +552,7 @@ utils.extend(SocketConnection.prototype, {
 					distance: routeInfo.distance,
 					ascent: routeInfo.ascent,
 					descent: routeInfo.descent,
+					extraInfo: routeInfo.extraInfo,
 					trackPoints: routeInfo.trackPoints
 				};
 			});
