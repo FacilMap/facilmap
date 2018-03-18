@@ -221,7 +221,10 @@ module.exports = function(Database) {
 						right: LinePoint.min("lon", { where: { lineId: line.id } })
 					});
 
-					await this._updatePadObject("Line", line.padId, line.id, bbox, true);
+					if(isNaN(bbox.top) || isNaN(bbox.left) || isNaN(bbox.bottom) || isNaN(bbox.right)) // This is a broken line without track points
+						await this._deletePadObject("Line", line.padId, line.id);
+					else
+						await this._updatePadObject("Line", line.padId, line.id, bbox, true);
 				}
 
 				await this.setMeta("hasBboxes", true);
