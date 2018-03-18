@@ -37,10 +37,20 @@ for(let i in addDeps) {
 	}
 }
 
+function includeHotMiddleware(entry) {
+	if(!process.env.FM_DEV)
+		return entry;
+
+	if(!Array.isArray(entry))
+		entry = [ entry ];
+
+	return [ "webpack-hot-middleware/client" ].concat(entry);
+}
+
 module.exports = {
 	entry: {
-		index: __dirname + "/index/index.js",
-		table: __dirname + "/table/table.js"
+		index: includeHotMiddleware(__dirname + "/index/index.js"),
+		table: includeHotMiddleware(__dirname + "/table/table.js")
 	},
 	output: {
 		filename: "frontend-[name]-[hash].js",
@@ -102,7 +112,9 @@ module.exports = {
 			new webpack.optimize.UglifyJsPlugin({
 				sourceMap: true
 			})
-		] : [ ]),
+		] : [
+			new webpack.HotModuleReplacementPlugin()
+		]),
 	],
 };
 

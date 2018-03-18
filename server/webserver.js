@@ -18,11 +18,15 @@ const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.jso
 if(process.env.FM_DEV)
 	process.chdir(frontendPath); // To make sure that webpack finds all the loaders
 
+const webpackCompiler = process.env.FM_DEV ? require("webpack")(require("facilmap-frontend/webpack.config")) : null;
+
 const staticMiddleware = process.env.FM_DEV
-	? require("webpack-dev-middleware")(require("webpack")(require("facilmap-frontend/webpack.config")), { // require the stuff here so that it doesn't fail if devDependencies are not installed
+	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
 		publicPath: "/"
 	})
 	: express.static(frontendPath + "/build/");
+
+const hotMiddleware = process.env.FM_DEV ? require("webpack-hot-middleware")(webpackCompiler) : null;
 
 const webserver = {
 	init(database, port, host) {
@@ -74,6 +78,9 @@ const webserver = {
 		app.get("/table.ejs", padMiddleware);
 
 		app.use(staticMiddleware);
+		if(process.env.FM_DEV) {
+			app.use(hotMiddleware);
+		}
 
 		// If no file with this name has been found, we render a pad
 		app.get("/:padId", padMiddleware);
