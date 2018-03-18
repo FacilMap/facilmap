@@ -116,6 +116,12 @@ class Socket {
 		});
 	}
 
+	async getMarker(data) {
+		let marker = await this._emit("getMarker", data);
+		this.markers[marker.id] = marker;
+		return marker;
+	}
+
 	addMarker(data) {
 		return this._emit("addMarker", data);
 	}

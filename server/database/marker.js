@@ -40,6 +40,10 @@ module.exports = function(Database) {
 			return this._getPadObjects("Marker", padId, { where: { padId: padId, typeId: typeId } });
 		},
 
+		async getMarker(padId, markerId) {
+			return await this._getPadObject("Marker", padId, markerId);
+		},
+
 		createMarker(padId, data) {
 			return utils.promiseAuto({
 				type: this.getType(padId, data.typeId),

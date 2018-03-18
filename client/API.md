@@ -384,6 +384,14 @@ Export the current route.
 		* `gpx-rte`: GPX route (contains only the route points, and the navigation device will have to calculate the route)
 * _returns_ (Promise&lt;string&gt;)
 
+### `getMarker(data)`
+
+Get the marker with the given ID.
+
+* `data` (object): An object with the following properties:
+    * `id` (number): The ID of the marker to load
+* _returns_ (Promise<[marker](#marker-1)>): The marker
+
 ### `addMarker(data)`
 
 Create a marker.

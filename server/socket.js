@@ -238,6 +238,16 @@ utils.extend(SocketConnection.prototype, {
 			});
 		},
 
+		async getMarker(data) {
+			if(!utils.stripObject(data, { id: "number" } ))
+				throw new Error("Invalid parameters.");
+
+			if(!this.padId)
+				throw new Error("No collaborative map opened.");
+
+			return await this.database.getMarker(this.padId, data.id);
+		},
+
 		addMarker : function(data) {
 			return Promise.resolve().then(() => {
 				if(!utils.stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", shape: "string", typeId: "number", data: Object } ))
