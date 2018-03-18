@@ -384,8 +384,12 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 					var queries = routeUi.getQueries();
 					if(queries)
 						return queries.join(" to ") + " by " + routeUi.getMode();
+				},
 
-
+				isZoomedToSubmittedSearch() {
+					let zoomDestination = map.routeUi.getZoomDestination();
+					if(zoomDestination)
+						return map.map.getZoom() == zoomDestination[1] && fmUtils.pointsEqual(map.map.getCenter(), zoomDestination[0], map.map);
 				},
 
 				hasResults() {

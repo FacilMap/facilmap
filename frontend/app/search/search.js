@@ -98,6 +98,8 @@ fm.app.directive("fmSearch", function(fmSearchFileImport) {
 				isZoomedToSubmittedSearch: () => {
 					if(!$scope.isRouteShown)
 						return this.queryUi.isZoomedToSubmittedSearch();
+					else
+						return this.routeUi.isZoomedToSubmittedSearch();
 				}
 			};
 

@@ -232,7 +232,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				}, true);
 			},
 
-			zoom() {
+			getZoomDestination() {
 				if(map.client.route) {
 					let points = [];
 					for(let i=0; i<map.client.route.trackPoints.length; i++) {
@@ -240,7 +240,16 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 							points.push(L.latLng(map.client.route.trackPoints[i].lat, map.client.route.trackPoints[i].lon));
 					}
 
-					map.map.flyToBounds(L.latLngBounds(points));
+					let bounds = L.latLngBounds(points);
+
+					return [ bounds.getCenter(), map.map.getBoundsZoom(bounds) ];
+				}
+			},
+
+			zoom() {
+				if(map.client.route) {
+					let [ center, zoom ] = routeUi.getZoomDestination();
+					map.map.flyTo(center, zoom);
 				}
 			},
 
