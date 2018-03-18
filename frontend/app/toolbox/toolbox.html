@@ -53,6 +53,7 @@
 						<li ng-if="!client.readonly && client.padId"><a href="javascript:" ng-click="showHistory()">Show edit history</a></li>
 						<li ng-if="client.padId" role="separator" class="divider"></li>
 						<li><a href="javascript:" ng-click="showAbout()">About FacilMap</a></li>
+						<li ng-if="client.padId"><a href="{{links.facilmap}}">Exit collaborative map</a></li>
 					</ul>
 				</li>
 			</ul>

@@ -113,6 +113,8 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout, fmUtils) {
 				currentObj = null;
 				infoBox.currentId = null;
 
+				map.mapEvents.$broadcast("searchchange");
+
 				obj.onCloseStart && obj.onCloseStart();
 
 				await new Promise((resolve) => {

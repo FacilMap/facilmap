@@ -27,9 +27,14 @@ fm.app.directive("fmToolbox", function($compile, fmFilter, fmAbout) {
 				scope.links.osm = `https://www.openstreetmap.org/#map=${zoom}/${center.lat}/${center.lng}`;
 				scope.links.google = `https://www.google.com/maps/@${center.lat},${center.lng},${zoom}z`;
 				scope.links.bing = `https://www.bing.com/maps?cp=${center.lat}~${center.lng}&lvl=${zoom}`;
+
+				scope.$evalAsync(() => { // Make sure that location hash is updated after the event
+					scope.links.facilmap = `/${location.hash && location.hash != "#" ? location.hash : `#${zoom}/${center.lat}/${center.lng}`}`;
+				});
 			}
 			updateLinks();
 			map.map.on("moveend", updateLinks);
+			map.mapEvents.$on("searchchange", updateLinks);
 
 			scope.$watch("client.filterExpr", (filterExpr) => {
 				if(filterExpr) {
