@@ -767,8 +767,9 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return ret;
 	};
 
-	fmUtils.scrollIntoView = function(element, scrollableParent) {
-		[element, scrollableParent] = [$(element), $(scrollableParent)];
+	fmUtils.scrollIntoView = function(element) {
+		element = $(element);
+		let scrollableParent = element.scrollParent();
 
 		function getOffset(el) {
 			let ret = 0;

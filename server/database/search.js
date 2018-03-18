@@ -16,7 +16,7 @@ module.exports = (Database) => {
 						{ padId },
 						Sequelize.where(Sequelize.fn("lower", Sequelize.col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 					),
-					attributes: [ "name", "typeId" ].concat(kind == "Marker" ? [ "lat", "lon" ] : [ "top", "left", "bottom", "right" ])
+					attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "lat", "lon", "symbol" ] : [ "top", "left", "bottom", "right" ])
 				});
 
 				return objs.map((obj) => (Object.assign(JSON.parse(JSON.stringify(obj)), {

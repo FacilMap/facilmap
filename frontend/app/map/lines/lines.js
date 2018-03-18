@@ -46,6 +46,29 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			}
 		});
 
+		map.mapEvents.$on("showObject", async (event, id, zoom) => {
+			let m = id.match(/^l(\d+)$/);
+			if(m) {
+				event.preventDefault();
+
+				map.client.awaitPadData().then((() => {
+					let line = map.client.lines[m[1]];
+
+					if(!line)
+						return;
+
+					if(zoom) {
+						let [center, zoom] = linesUi.getZoomDestination(line);
+						map.map.flyTo(center, zoom);
+					}
+
+					linesUi.showLineInfoBox(line);
+				})).catch((err) => {
+					map.messages.showMessage("danger", err);
+				});
+			}
+		});
+
 		let elevationPlot = new heightgraph();
 		elevationPlot._map = map.map;
 
@@ -107,6 +130,13 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				lineObj.removeFrom(map.map);
 				delete linesById[line.id];
 			},
+			getZoomDestination(line) {
+				let bounds = fmUtils.fmToLeafletBbox(line);
+				return [
+					bounds.getCenter(),
+					Math.min(15, map.map.getBoundsZoom(bounds))
+				];
+			},
 			showLineInfoBox: function(line) {
 				var scope = linePopupBaseScope.$new();
 
@@ -135,6 +165,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				let template = $(require("./view-line.html"));
 
+				let [center, zoom] = linesUi.getZoomDestination(line);
+
 				openLine = {
 					hide: map.infoBox.show({
 						template,
@@ -147,15 +179,16 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 						},
 						onCloseEnd: () => {
 							scope.$destroy();
-						}
+						},
+						id: `l${line.id}`,
+						center,
+						zoom
 					}).hide,
 					id: line.id
 				};
 
-				linesById[line.id].setStyle({ highlight: true });
-
-				linesUi._addLine(line, true); // To render the openLineHighlight
-
+				if(linesById[line.id])
+					linesById[line.id].setStyle({ highlight: true });
 
 				scope.$watch("line.trackPoints", () => {
 					if(line.ascent != null && line.trackPoints) {

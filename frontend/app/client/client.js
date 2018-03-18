@@ -32,5 +32,21 @@ fm.app.factory("fmClient", function($rootScope, $q, fmFilter) {
 				return super._simulateEvent(...arguments);
 			}).fmWrapApply($rootScope)();
 		}
+
+		awaitPadData() {
+			if(this.padData)
+				return $q.resolve();
+
+			return $q((resolve) => {
+				let watcher = $rootScope.$watch(() => {
+					if(this.padData) {
+						watcher();
+
+						// Execute delayed, so that event handlers for lines, types, views, etc. are executed first
+						setTimeout(resolve, 0);
+					}
+				}, () => {});
+			});
+		}
 	};
 });

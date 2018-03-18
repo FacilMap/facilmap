@@ -33,11 +33,9 @@ class Socket {
 		setTimeout(() => {
 			this._simulateEvent("loadStart");
 		}, 0);
-		let firstConnectHandler = () => {
-			this.removeListener("connect", firstConnectHandler);
+		this.once("connect", () => {
 			this._simulateEvent("loadEnd");
-		};
-		this.on("connect", firstConnectHandler);
+		});
 	}
 
 	on(eventName, fn) {
@@ -47,6 +45,14 @@ class Socket {
 		}
 
 		this._listeners[eventName].push(fn);
+    }
+
+    once(eventName, fn) {
+		let handler = (data) => {
+			this.removeListener(eventName, handler);
+			fn(data);
+		};
+		this.on(eventName, handler);
     }
 
 	removeListener(eventName, fn) {

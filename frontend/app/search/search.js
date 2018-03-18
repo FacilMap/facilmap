@@ -88,16 +88,16 @@ fm.app.directive("fmSearch", function(fmSearchFileImport) {
 					this.routeUi.submit(!!this.routeUi.getQueries());
 				},
 
-				getCurrentSearchForHash: () => {
+				getSubmittedSearch: () => {
 					if(!$scope.isRouteShown)
-						return this.queryUi.getCurrentSearchForHash();
+						return this.queryUi.getSubmittedSearch();
 					else
-						return this.routeUi.getCurrentSearchForHash();
+						return this.routeUi.getSubmittedSearch();
 				},
 
-				isZoomedToCurrentResult: () => {
+				isZoomedToSubmittedSearch: () => {
 					if(!$scope.isRouteShown)
-						return this.queryUi.isZoomedToCurrentResult();
+						return this.queryUi.isZoomedToSubmittedSearch();
 				}
 			};
 

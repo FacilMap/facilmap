@@ -2,20 +2,27 @@
 
 	width: 70vw;
 	max-width: 365px;
+	max-height: 50vh;
+
+	display: flex;
+	flex-direction: column;
+
+	min-height: 42px;
+	min-width: 260px;
+
+	.fm-hasResults & {
+		min-height: 75px;
+	}
 
 	&.fm-search-resized {
 		max-width: none;
+		max-height: calc(100vh - 130px);
 	}
 
-	.fm-search-results {
-		max-height: 65vh;
+	.fm-search-results,.fm-map-results {
 		overflow: auto;
 		white-space: nowrap;
-
-		.fm-search.fm-hasResults & {
-			min-height: 60px;
-			min-width: 150px;
-		}
+		flex-grow: 1;
 	}
 
 	.no-results {
@@ -64,4 +71,13 @@
 		}
 	}
 
+	hr {
+		width: 100%;
+		margin: 10px 0;
+	}
+
+	h3 {
+		margin-top: 5px;
+		font-size: 20px;
+	}
 }

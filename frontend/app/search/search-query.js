@@ -21,19 +21,11 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			scope.submittedSearchString = "";
 			scope.searchResults = null;
 			scope.showAll = false;
-			scope.activeResult = null;
 			scope.client = map.client;
 			scope.className = css.className;
+			scope.infoBox = map.infoBox;
 
 			let currentInfoBox = null;
-
-			scope.$watch("activeResult", () => {
-				setTimeout(() => {
-					let activeResultEl = el.find(".fm-search-results .active");
-					if(activeResultEl.length > 0)
-						fmUtils.scrollIntoView(activeResultEl, el.find(".fm-search-results"));
-				}, 0);
-			});
 
 			scope.search = function(noZoom) {
 				scope.reset();
@@ -51,18 +43,33 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					var q = scope.submittedSearchString = scope.searchString;
 					map.mapEvents.$broadcast("searchchange");
 
-					map.client.find({ query: scope.searchString, loadUrls: true, elevation: true }).then(function(results) {
+					$q.all([
+						map.client.find({ query: scope.searchString, loadUrls: true, elevation: true }),
+						map.client.padId ? map.client.findOnMap({ query: scope.searchString }) : null
+					]).then(([ searchResults, mapResults ]) => {
 						if(q != scope.submittedSearchString)
 							return; // Another search has been started in the meantime
 
-						if(fmUtils.isSearchId(q) && results.length > 0 && results[0].display_name)
-							scope.searchString = q = results[0].display_name;
+						if(fmUtils.isSearchId(q) && searchResults.length > 0 && searchResults[0].display_name)
+							scope.searchString = q = searchResults[0].display_name;
 
-						if(typeof results == "string") {
+						if(typeof searchResults == "string") {
 							scope.showAll = true;
-							loadSearchResults(filesUi.parseFiles([ results ]), noZoom);
+							scope.searchResults = filesUi.parseFiles([ searchResults ]);
 						} else
-							loadSearchResults({features: results}, noZoom);
+							scope.searchResults = { features: searchResults };
+
+						renderSearchResults(noZoom);
+
+						for(let result of mapResults || [])
+							result.hashId = (result.kind == "marker" ? "m" : "l") + result.id;
+
+						scope.mapResults = mapResults;
+
+						if(scope.mapResults && scope.mapResults.length > 0 && (scope.mapResults[0].similarity == 1 || scope.searchResults.features.length == 0))
+							scope.showMapResult(scope.mapResults[0]);
+						else if(scope.searchResults.features.length > 0)
+							scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false));
 					}).catch(function(err) {
 						map.messages.showMessage("danger", err);
 					});
@@ -71,7 +78,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			};
 
 			scope.showResult = function(result, noZoom) {
-				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, function() { scope.activeResult = result; }, null, true);
+				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, null, true);
 
 				if(!noZoom || noZoom == 2 || noZoom == 3)
 					_flyTo(...getZoomDestination(noZoom == 3 ? null : result, noZoom == 2));
@@ -80,12 +87,12 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			};
 
 			scope.showMapResult = function(result) {
-				if(result.kind == "marker")
+				if(result.kind == "marker") {
+					// We already know the position, so we can already start flying there before the markers UI loads the marker
 					_flyTo([ result.lat, result.lon ], 15);
-				else if(result.kind == "line") {
-					let bounds = fmUtils.fmToLeafletBbox(result);
-					_flyTo(bounds.getCenter(), Math.min(15, map.map.getBoundsZoom(bounds)));
-				}
+					map.mapEvents.$broadcast("showObject", result.hashId, false);
+				} else if(result.kind == "line")
+					map.mapEvents.$broadcast("showObject", result.hashId, true);
 			};
 
 			scope.zoomToAll = function() {
@@ -99,10 +106,18 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					if(spl.mode)
 						searchUi.routeUi.setMode(spl.mode);
 				} else if(!searchUi.routeUi.getTypedQueries()[0]) {
-					if(scope.searchResults && scope.submittedSearchString == scope.searchString)
-						searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.activeResult);
-					else
-						searchUi.routeUi.setFrom(scope.searchString);
+					searchUi.routeUi.setFrom(scope.searchString);
+
+					if(scope.searchResults && scope.submittedSearchString == scope.searchString) {
+						let currentSearchResult = scope.searchResults.features.find((result) => (result.id == map.infoBox.currentId));
+						if(currentSearchResult)
+							searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.mapResults, currentSearchResult);
+						else if(scope.mapResults) {
+							let currentMapResult = scope.mapResults.find((result) => (result.hashId == map.infoBox.currentId));
+							if(currentMapResult)
+								searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.mapResults, currentMapResult);
+						}
+					}
 				}
 
 				map.searchUi.showRoute();
@@ -159,16 +174,31 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				$("#fm-search-input", el).attr("autofocus", "autofocus");
 			}
 
-
-			el.find(".fm-search-results").resizable({
+			let resizing = false;
+			el.resizable({
 				handles: {
 					se: el.find(".fm-search-resize")
 				},
 				minHeight: 0
-			}).one("resize", () => {
-				el.addClass("fm-search-resized");
-			}).on("resize", () => {
-				el.css("width", `${el.find(".fm-search-results").innerWidth()}px`);
+			}).on("resizestart", () => {
+				resizing = true;
+				el.css({
+					width: el.width() + "px",
+					height: el.height() + "px"
+				}).addClass("fm-search-resized");
+			}).on("resizestop", () => {
+				setTimeout(() => {
+					resizing = false;
+				}, 0);
+			});
+
+			el.find(".fm-search-resize").click(() => {
+				if(!resizing) {
+					el.css({
+						width: "",
+						height: ""
+					}).removeClass("fm-search-resized");
+				}
 			});
 
 
@@ -183,10 +213,10 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					if(results.length > 0) {
 						prepareResults(results);
 
-						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, null, () => {
+						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, () => {
 							clickMarker.clearLayers();
 						}, true);
-						currentInfoBox = null; // We don't want it to be cleared when we cleared when we switch to the routing form for example
+						currentInfoBox = null; // We don't want it to be cleared when we switch to the routing form for example
 					}
 				}).catch(function(err) {
 					map.messages.showMessage("danger", err);
@@ -236,34 +266,23 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				}
 			}
 
-			function loadSearchResults(results, noZoom) {
-				if(currentInfoBox) {
-					currentInfoBox.hide();
-					currentInfoBox = null;
-				}
-				clearRenders();
-
-				scope.searchResults = results;
-
-				if(results && results.features.length > 0) {
-					prepareResults(results.features);
+			function renderSearchResults() {
+				if(scope.searchResults && scope.searchResults.features.length > 0) {
+					prepareResults(scope.searchResults.features);
 
 					scope.searchResults.features.forEach(function(result) {
-						renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup, function() { scope.activeResult = result; });
+						renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup);
 					});
-
-					scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false));
 				}
 			}
 
-			function renderResult(query, results, result, showPopup, layerGroup, onOpen, onClose, highlight) {
+			function renderResult(query, results, result, showPopup, layerGroup, onClose, highlight) {
 				if(showPopup) { // Do this first, so that any onClose function is called before creating the new result rendering
 					showResultInfoBox(query, results, result, () => {
 						if((result.marker && result.marker._map) || (result.layer && result.layer._map)) // Only rerender if it's still on the map
-							renderResult(query, results, result, false, layerGroup, onOpen, onClose, false);
+							renderResult(query, results, result, false, layerGroup, onClose, false);
 						onClose && onClose();
 					});
-					onOpen && onOpen();
 				}
 
 				if(result.layer) {
@@ -285,8 +304,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						}
 					}))
 						.on("click", function(e) {
-							renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
-							onOpen && onOpen();
+							renderResult(query, results, result, true, layerGroup, onClose, true);
 						}.fmWrapApply($rootScope))
 						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
 
@@ -301,8 +319,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						symbol: result.icon
 					}))
 						.on("click", function(e) {
-							renderResult(query, results, result, true, layerGroup, onOpen, onClose, true);
-							onOpen && onOpen();
+							renderResult(query, results, result, true, layerGroup, onClose, true);
 						}.fmWrapApply(scope))
 						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
 
@@ -317,6 +334,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				}
 
 				scope.searchResults = null;
+				scope.mapResults = null;
 				scope.activeResult = null;
 				scope.submittedSearchString = "";
 				clearRenders();
@@ -346,6 +364,8 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					map.searchUi.setRouteDestination(query, mode, results, result);
 				};
 
+				let [center, zoom] = getZoomDestination(result);
+
 				currentInfoBox = map.infoBox.show({
 					template: require("./result-popup.html"),
 					scope: popupScope,
@@ -356,7 +376,10 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					},
 					onCloseEnd: () => {
 						popupScope.$destroy();
-					}
+					},
+					id: result.id,
+					center,
+					zoom
 				});
 			}
 
@@ -386,19 +409,15 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 					loadSearchResults(filesUi.parseFiles(files));
 				},
 
-				getCurrentSearchForHash: function() {
-					if(((scope.searchResults && scope.searchResults.features.length == 1) || !scope.showAll) && scope.activeResult && scope.activeResult.id)
-						return scope.activeResult.id;
-					else if(scope.submittedSearchString)
-						return scope.submittedSearchString;
+				getSubmittedSearch: function() {
+					return scope.submittedSearchString;
 				},
 
-				isZoomedToCurrentResult: function() {
-					if(scope.showAll || !scope.activeResult)
-						return false;
-
-					let [center, zoom] = scope.showAll ? getZoomDestination() : getZoomDestination(scope.activeResult);
-					return map.map.getZoom() == zoom && fmUtils.pointsEqual(map.map.getCenter(), center, map.map);
+				isZoomedToSubmittedSearch: function() {
+					if(scope.searchResults && scope.searchResults.features.length > 0) {
+						let [center, zoom] = getZoomDestination();
+						return map.map.getZoom() == zoom && fmUtils.pointsEqual(map.map.getCenter(), center, map.map);
+					}
 				},
 
 				hasResults: function() {

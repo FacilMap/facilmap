@@ -14,8 +14,11 @@
 		</div>
 	</form>
 
-	<div class="fm-search-results">
-		<div uib-alert class="alert-danger no-results" ng-if="!searchResults.views.length && searchResults.features.length == 0 && (searchResults.types | fmPropertyCount) == 0">No results have been found.</div>
+	{{hasSearchResults = searchResults.views.length || searchResults.features.length > 0 || (searchResults.types | fmPropertyCount) > 0; ""}}
+
+	<div uib-alert class="alert-danger no-results" ng-if="!hasSearchResults && mapResults.length == 0">No results have been found.</div>
+
+	<div class="fm-search-results" ng-if="hasSearchResults">
 		<div ng-if="searchResults.views.length > 0">
 			<h3>Views</h3>
 			<ul class="list-group">
@@ -28,7 +31,7 @@
 		</div>
 		<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
 		<ul class="list-group" ng-if="searchResults.features.length > 0">
-			<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: activeResult === result}">
+			<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: infoBox.currentId == result.id}" fm-scroll-to-view="infoBox.currentId == result.id">
 				<a ng-show="showAll" href="javascript:" ng-click="showResult(result)" uib-tooltip="Zoom to result" tooltip-append-to-body="true"><fm-icon fm-icon="zoom-in" alt="Zoom"/></a>
 				<a href="javascript:" ng-click="showResult(result, showAll ? 2 : false)">{{result.display_name}}</a>
 				<span class="result-type" ng-if="result.type">({{result.type}})</span>
@@ -59,6 +62,19 @@
 				<li ng-if="(searchResults.features | filter:{isLine: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all lines/polygons as {{type.name}}</a></li>
 			</ul>
 		</div>
+	</div>
+
+	<hr ng-if="hasSearchResults && mapResults.length > 0"/>
+
+	<h3 ng-if="mapResults.length > 0">On this map</h3>
+
+	<div class="fm-map-results" ng-if="mapResults.length > 0">
+		<ul class="list-group">
+			<li ng-repeat="result in mapResults" class="list-group-item" ng-class="{active: infoBox.currentId == result.hashId}" fm-scroll-to-view="infoBox.currentId == result.hashId">
+				<a href="javascript:" ng-click="showMapResult(result)">{{result.name}}</a>
+				<span class="result-type">({{client.types[result.typeId].name}})</span>
+			</li>
+		</ul>
 	</div>
 
 	<a href="javascript:" class="fm-search-resize ui-resizable-handle ui-resizable-se"><fm-icon fm-icon="resize-horizontal"/></a>

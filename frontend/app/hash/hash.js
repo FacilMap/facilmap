@@ -80,7 +80,8 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 						}
 					}
 
-					if(map.searchUi)
+					let e = map.mapEvents.$broadcast("showObject", args[4] || "", !ret);
+					if(!e.defaultPrevented && map.searchUi)
 						map.searchUi.search(args[4] || "", !!ret, args[4] ? (ret && !fmUtils.isSearchId(args[4])) : null);
 
 					map.client.setFilter(args[5] || "");
@@ -99,24 +100,27 @@ fm.app.directive("fmHash", function($rootScope, fmUtils, $q) {
 				}
 
 				var additionalParts = [ l.join("-") ];
+				let isZoomedToHash = false;
 
-				var searchHash = map.searchUi && map.searchUi.getCurrentSearchForHash();
-				if(searchHash)
-					additionalParts.push(searchHash);
+				if(map.infoBox.currentId) {
+					additionalParts.push(map.infoBox.currentId);
+					isZoomedToHash = map.infoBox.isCurrentObjectZoomed();
+				} else if(map.searchUi && map.searchUi.getSubmittedSearch()) {
+					additionalParts.push(map.searchUi.getSubmittedSearch());
+					isZoomedToHash = map.searchUi.isZoomedToSubmittedSearch();
+				} else if(map.client.filterExpr)
+					additionalParts.push("");
 
-				if(map.client.filterExpr) {
-					if(!searchHash)
-						additionalParts.push("");
+				if(map.client.filterExpr)
 					additionalParts.push(map.client.filterExpr);
-				}
 
-				if(searchHash && additionalParts.length == 2 && additionalParts[0] == Object.keys(map.layers)[0] && map.searchUi.isZoomedToCurrentResult())
+				if(isZoomedToHash && additionalParts.length == 2 && additionalParts[0] == Object.keys(map.layers)[0])
 					ret = "#q=" + encodeURIComponent(additionalParts[1]);
 				else
 					ret += "/" + additionalParts.map(encodeURIComponent).join("/");
 
 				// Check if we have a saved view open
-				if(!searchHash) {
+				if(!additionalParts[1]) {
 					let defaultView = (map.client.padData && map.client.padData.defaultViewId && map.client.views[map.client.padData.defaultViewId]);
 					if(defaultView ? map.isAtView(defaultView) : map.isAtView(null))
 						ret = "#";

@@ -3,7 +3,7 @@ import ng from 'angular';
 import fm from '../../app';
 import css from './infoBox.scss';
 
-fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
+fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout, fmUtils) {
 	return function(map) {
 		let scope = $rootScope.$new();
 		scope.className = css.className;
@@ -37,7 +37,7 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 		};
 
 		let infoBox = {
-			show({template, scope, onCloseStart, onCloseEnd}) {
+			show({template, scope, onCloseStart, onCloseEnd, id, center, zoom}) {
 				if(currentObj) {
 					currentObj.onCloseStart && currentObj.onCloseStart();
 					currentObj.onCloseEnd && currentObj.onCloseEnd();
@@ -85,8 +85,15 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 
 				let thisCurrentObj = currentObj = {
 					onCloseStart,
-					onCloseEnd
+					onCloseEnd,
+					id,
+					center,
+					zoom
 				};
+
+				infoBox.currentId = id;
+
+				map.mapEvents.$broadcast("searchchange");
 
 				return {
 					hide: () => {
@@ -97,12 +104,14 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 					}
 				};
 			},
+
 			async hide() {
 				if(!currentObj)
 					return;
 
 				let obj = currentObj;
 				currentObj = null;
+				infoBox.currentId = null;
 
 				obj.onCloseStart && obj.onCloseStart();
 
@@ -131,6 +140,13 @@ fm.app.factory("fmInfoBox", function($rootScope, $compile, $timeout) {
 				});
 
 				obj.onCloseEnd && obj.onCloseEnd();
+			},
+
+			isCurrentObjectZoomed() {
+				if(!currentObj || currentObj.zoom == null || currentObj.center == null)
+					return null;
+
+				return map.map.getZoom() == currentObj.zoom && fmUtils.pointsEqual(map.map.getCenter(), currentObj.center, map.map);
 			}
 		};
 

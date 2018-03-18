@@ -35,7 +35,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 					query: "",
 					loadingQuery: "",
 					loadedQuery: "",
-					suggestions: [ ]
+					searchSuggestions: [ ]
 				});
 			};
 
@@ -50,24 +50,72 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				map.searchUi.showQuery();
 			};
 
+			scope.getSelectedSuggestion = function(destination) {
+				if(destination.selectedSuggestion && ((destination.searchSuggestions || []).indexOf(destination.selectedSuggestion) != -1 || (destination.mapSuggestions || []).indexOf(destination.selectedSuggestion) != -1))
+					return destination.selectedSuggestion;
+				else if(destination.mapSuggestions && destination.mapSuggestions.length > 0 && (destination.mapSuggestions[0].similarity == 1 || destination.searchSuggestions.length == 0))
+					return destination.mapSuggestions[0];
+				else if(destination.searchSuggestions.length > 0)
+					return destination.searchSuggestions[0];
+				else
+					return null;
+			};
+
 			scope.loadSuggestions = function(destination) {
 				if(destination.loadedQuery == destination.query)
 					return $q.resolve();
 
-				destination.suggestions = [ ];
+				destination.searchSuggestions = [ ];
+				destination.mapSuggestions = [ ];
 				var query = destination.loadingQuery = destination.query;
 
 				if(destination.query.trim() != "") {
-					return map.client.find({ query: query }).then(function(results) {
+					return $q.all([
+						map.client.find({ query: query }),
+						$q.resolve().then(() => {
+							if(map.client.padId) {
+								let m = query.match(/^m(\d+)$/);
+								if(m)
+									return map.client.getMarker({ id: m[1] }).then((marker) => (marker ? [ Object.assign({ kind: "marker" }, marker) ] : [ ]));
+								else
+									return map.client.findOnMap({ query });
+							}
+						})
+					]).then(function([ searchResults, mapResults ]) {
 						if(query != destination.loadingQuery)
 							return; // The destination has changed in the meantime
 
-						if(fmUtils.isSearchId(query) && results.length > 0 && results[0].display_name)
-							destination.query = query = results[0].display_name;
+						destination.selectedSuggestion = null;
 
-						destination.suggestions = results;
+						if(fmUtils.isSearchId(query) && searchResults.length > 0 && searchResults[0].display_name) {
+							destination.query = query = searchResults[0].display_name;
+							destination.selectedSuggestion = searchResults[0];
+						}
+
+						destination.searchSuggestions = searchResults;
+
+						if(mapResults) {
+							mapResults = mapResults.filter((suggestion) => (suggestion.kind == "marker"));
+
+							let referencedMapResult = null;
+							for(let result of mapResults) {
+								result.hashId = "m" + result.id;
+								if(referencedMapResult == null && result.hashId == query)
+									referencedMapResult = result;
+							}
+
+							destination.mapSuggestions = mapResults;
+
+							if(referencedMapResult) {
+								destination.query = query = referencedMapResult.name;
+								destination.selectedSuggestion = referencedMapResult;
+							}
+						}
+
+						if(destination.selectedSuggestion == null)
+							destination.selectedSuggestion = scope.getSelectedSuggestion(destination);
+
 						destination.loadedQuery = query;
-						destination.selectedSuggestionIdx = 0;
 					}).catch(function(err) {
 						if(query != destination.loadingQuery)
 							return; // The destination has changed in the meantime
@@ -85,7 +133,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 					highlight: true,
 					colour: map.dragMarkerColour,
 					size: 35,
-					symbol: suggestion.icon
+					symbol: suggestion.icon || suggestion.symbol
 				})).addTo(map.map);
 			};
 
@@ -109,7 +157,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				if(!destination)
 					return;
 
-				let suggestion = destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
+				let suggestion = scope.getSelectedSuggestion(destination);
 
 				if(destination.query == destination.loadedQuery && suggestion) {
 					let marker = map.routeUi.getMarker(idx);
@@ -149,8 +197,8 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				var mode = scope.routeMode;
 
 				scope.submittedQueries = scope.destinations.map(function(destination) {
-					if(destination.loadedQuery == destination.query && destination.suggestions.length)
-						return destination.suggestions[destination.selectedSuggestionIdx].id || destination.suggestions[0].id;
+					if(destination.loadedQuery == destination.query && (destination.searchSuggestions.length || destination.mapSuggestions.length))
+						return scope.getSelectedSuggestion(destination).hashId || scope.getSelectedSuggestion(destination).id;
 					else
 						return destination.query;
 				});
@@ -162,14 +210,14 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 					points = scope.destinations.filter(function(destination) {
 						return destination.query.trim() != "";
 					}).map(function(destination) {
-						return destination.suggestions[destination.selectedSuggestionIdx] || destination.suggestions[0];
+						return scope.getSelectedSuggestion(destination);
 					});
 
-					if(points.includes(undefined))
+					if(points.includes(null))
 						throw new Error("Some destinations could not be found.");
 
 					scope.submittedQueries = points.map(function(point) {
-						return point.id;
+						return point.hashId || point.id;
 					});
 
 					map.mapEvents.$broadcast("searchchange");
@@ -243,29 +291,31 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 			function makeCoordDestination(lonlat) {
 				var disp = fmUtils.round(lonlat.lat, 5) + "," + fmUtils.round(lonlat.lon, 5);
+				let suggestion = {
+					lat: lonlat.lat,
+					lon: lonlat.lon,
+					display_name: disp,
+					short_name: disp,
+					type: "coordinates",
+					id: disp
+				};
 				return {
 					query: disp,
 					loadingQuery: disp,
 					loadedQuery: disp,
-					selectedSuggestionIdx: 0,
-					suggestions: [ {
-						lat: lonlat.lat,
-						lon: lonlat.lon,
-						display_name: disp,
-						short_name: disp,
-						type: "coordinates",
-						id: disp
-					} ]
+					selectedSuggestion: suggestion,
+					searchSuggestions: [ suggestion ]
 				};
 			}
 
-			function _setDestination(dest, query, suggestions, selectedSuggestion) {
+			function _setDestination(dest, query, searchSuggestions, mapSuggestions, selectedSuggestion) {
 				dest.query = query;
 
-				if(suggestions) {
-					dest.suggestions = suggestions;
+				if(searchSuggestions) {
+					dest.searchSuggestions = searchSuggestions;
+					dest.mapSuggestions = mapSuggestions && mapSuggestions.filter((suggestion) => (suggestion.kind == "marker"));
 					dest.loadingQuery = dest.loadedQuery = query;
-					dest.selectedSuggestionIdx = Math.max(suggestions.indexOf(selectedSuggestion), 0);
+					dest.selectedSuggestion = selectedSuggestion;
 				}
 			}
 
@@ -295,19 +345,19 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 						scope.addDestination();
 				},
 
-				setFrom: function(from, suggestions, selectedSuggestion) {
-					_setDestination(scope.destinations[0], from, suggestions, selectedSuggestion);
+				setFrom: function(from, searchSuggestions, mapSuggestions, selectedSuggestion) {
+					_setDestination(scope.destinations[0], from, searchSuggestions, mapSuggestions, selectedSuggestion);
 				},
 
-				addVia: function(via, suggestions, selectedSuggestion) {
+				addVia: function(via, searchSuggestions, mapSuggestions, selectedSuggestion) {
 					scope.addDestination();
 					var newDest = scope.destinations.pop();
-					_setDestination(newDest, via, suggestions, selectedSuggestion);
+					_setDestination(newDest, via, searchSuggestions, mapSuggestions, selectedSuggestion);
 					scope.destinations.splice(scope.destinations.length-1, 0, newDest);
 				},
 
-				setTo: function(to, suggestions, selectedSuggestion) {
-					_setDestination(scope.destinations[scope.destinations.length-1], to, suggestions, selectedSuggestion);
+				setTo: function(to, searchSuggestions, mapSuggestions, selectedSuggestion) {
+					_setDestination(scope.destinations[scope.destinations.length-1], to, searchSuggestions, mapSuggestions, selectedSuggestion);
 				},
 
 				setMode: function(mode) {
@@ -330,7 +380,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 					scope.route(noZoom);
 				},
 
-				getCurrentSearchForHash() {
+				getSubmittedSearch() {
 					var queries = routeUi.getQueries();
 					if(queries)
 						return queries.join(" to ") + " by " + routeUi.getMode();

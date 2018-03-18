@@ -3,7 +3,7 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 
-fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, $rootScope, fmHighlightableLayers) {
+fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, $rootScope, fmHighlightableLayers, $q) {
 	return function(map) {
 		var markersById = { };
 		let openMarker;
@@ -24,6 +24,25 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					markersUi._deleteMarker(map.client.markers[i]);
 				else if(!markersById[i] && show)
 					markersUi._addMarker(map.client.markers[i]);
+			}
+		});
+
+		map.mapEvents.$on("showObject", (event, id, zoom) => {
+			let m = id.match(/^m(\d+)$/);
+			if(m) {
+				event.preventDefault();
+
+				$q.resolve().then(() => {
+					return map.client.markers[id] || map.client.getMarker({ id: m[1] });
+				}).then(((marker) => {
+					if(zoom)
+						map.map.flyTo([marker.lat, marker.lon], 15);
+
+					markersUi._addMarker(marker);
+					markersUi.showMarkerInfoBox(marker);
+				}).fmWrapApply($rootScope)).catch((err) => {
+					map.messages.showMessage("danger", err);
+				});
 			}
 		});
 
@@ -104,7 +123,10 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 						},
 						onCloseEnd: () => {
 							scope.$destroy();
-						}
+						},
+						id: `m${marker.id}`,
+						center: L.latLng(marker.lat, marker.lon),
+						zoom: 15
 					}).hide,
 					id: marker.id
 				};
