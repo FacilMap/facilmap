@@ -29,7 +29,11 @@ const routing = module.exports = {
 			for(let part of encodedMode.split(/\s+/)) {
 				if(["car", "bicycle", "pedestrian", "track"].includes(part))
 					decodedMode.mode = part;
-				else if(part == "helicopter")
+				else if(part == "bike")
+					decodedMode.mode = "bicycle";
+				else if(["foot", "walk", "walking"].includes(part))
+					decodedMode.mode = "pedestrian";
+				else if(["helicopter", "straight"].includes(part))
 					decodedMode.mode = "";
 				else if(["road", "safe", "mountain", "tour", "electric", "hiking", "wheelchair"].includes(part))
 					decodedMode.type = part;
