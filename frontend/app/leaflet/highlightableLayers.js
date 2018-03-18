@@ -24,9 +24,8 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			});
 		}
 
-		onAdd() {
-			fmHighlightableLayers._prepareMap(this._map);
-			super.onAdd(...arguments);
+		beforeAdd(map) {
+			fmHighlightableLayers._prepareMap(map);
 		}
 
 		_initIcon() {
@@ -60,8 +59,12 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 				this.options.width = 3;
 		}
 
+		beforeAdd(map) {
+			fmHighlightableLayers._prepareMap(map);
+			return super.beforeAdd(...arguments);
+		}
+
 		onAdd() {
-			fmHighlightableLayers._prepareMap(this._map);
 			super.onAdd(...arguments);
 
 			this._map.addLayer(this.borderLayer);
@@ -135,8 +138,12 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 				this.options.width = 3;
 		}
 
+		beforeAdd(map) {
+			fmHighlightableLayers._prepareMap(map);
+			return super.beforeAdd(...arguments);
+		}
+
 		onAdd() {
-			fmHighlightableLayers._prepareMap(this._map);
 			super.onAdd(...arguments);
 			this._map.addLayer(this.borderLayer);
 
