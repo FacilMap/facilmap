@@ -1,4 +1,4 @@
-<div ng-class="className">
+<div ng-class="[className, {'has-search-results': hasSearchResults = searchResults.views.length || searchResults.features.length > 0 || (searchResults.types | fmPropertyCount) > 0, 'has-map-results': hasMapResults = mapResults.length > 0, 'has-nothing': hasNothing = searchResults && !hasSearchResults && !hasMapResults}]">
 	<form ng-submit="search()">
 		<div class="form-group">
 			<div class="input-group">
@@ -14,9 +14,7 @@
 		</div>
 	</form>
 
-	{{hasSearchResults = searchResults.views.length || searchResults.features.length > 0 || (searchResults.types | fmPropertyCount) > 0; ""}}
-
-	<div uib-alert class="alert-danger no-results" ng-if="!hasSearchResults && mapResults.length == 0">No results have been found.</div>
+	<div uib-alert class="alert-danger no-results" ng-if="hasNothing">No results have been found.</div>
 
 	<div class="fm-search-results" ng-if="hasSearchResults">
 		<div ng-if="searchResults.views.length > 0">

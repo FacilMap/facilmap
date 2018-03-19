@@ -10,8 +10,20 @@
 	min-height: 42px;
 	min-width: 260px;
 
-	.fm-hasResults & {
-		min-height: 75px;
+	&.has-nothing {
+		min-height: 104px;
+	}
+
+	&.has-search-results {
+		min-height: 180px;
+
+		&.has-map-results {
+			min-height: 343px;
+		}
+	}
+
+	&.has-map-results {
+		min-height: 184px;
 	}
 
 	&.fm-search-resized {
@@ -23,6 +35,7 @@
 		overflow: auto;
 		white-space: nowrap;
 		flex-grow: 1;
+		min-height: 105px;
 	}
 
 	.no-results {
