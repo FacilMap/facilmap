@@ -218,7 +218,7 @@ module.exports = function(Database) {
 						top: LinePoint.min("lat", { where: { lineId: line.id } }),
 						bottom: LinePoint.max("lat", { where: { lineId: line.id } }),
 						left: LinePoint.min("lon", { where: { lineId: line.id } }),
-						right: LinePoint.min("lon", { where: { lineId: line.id } })
+						right: LinePoint.max("lon", { where: { lineId: line.id } })
 					});
 
 					if(isNaN(bbox.top) || isNaN(bbox.left) || isNaN(bbox.bottom) || isNaN(bbox.right)) // This is a broken line without track points
