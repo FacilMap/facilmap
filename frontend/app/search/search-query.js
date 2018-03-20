@@ -406,7 +406,11 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				showFiles: function(files) {
 					scope.submittedSearchString = "";
 					scope.showAll = true;
-					loadSearchResults(filesUi.parseFiles(files));
+					scope.searchResults = filesUi.parseFiles(files);
+					scope.mapResults = null;
+					renderSearchResults();
+
+					scope.zoomToAll();
 				},
 
 				getSubmittedSearch: function() {

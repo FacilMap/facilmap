@@ -29,7 +29,7 @@
 		</div>
 		<h3 ng-if="searchResults.views.length > 0 || (searchResults.types | fmPropertyCount) > 0">Markers/Lines</h3>
 		<ul class="list-group" ng-if="searchResults.features.length > 0">
-			<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: infoBox.currentId == result.id}" fm-scroll-to-view="infoBox.currentId == result.id">
+			<li ng-repeat="result in searchResults.features" class="list-group-item" ng-class="{active: result.id && infoBox.currentId == result.id}" fm-scroll-to-view="result.id && infoBox.currentId == result.id">
 				<a ng-show="showAll" href="javascript:" ng-click="showResult(result)" uib-tooltip="Zoom to result" tooltip-append-to-body="true"><fm-icon fm-icon="zoom-in" alt="Zoom"/></a>
 				<a href="javascript:" ng-click="showResult(result, showAll ? 2 : false)">{{result.display_name}}</a>
 				<span class="result-type" ng-if="result.type">({{result.type}})</span>
