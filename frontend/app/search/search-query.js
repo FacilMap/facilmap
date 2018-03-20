@@ -59,7 +59,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						} else
 							scope.searchResults = { features: searchResults };
 
-						renderSearchResults(noZoom);
+						renderSearchResults();
 
 						for(let result of mapResults || [])
 							result.hashId = (result.kind == "marker" ? "m" : "l") + result.id;
@@ -67,7 +67,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						scope.mapResults = mapResults;
 
 						if(scope.mapResults && scope.mapResults.length > 0 && (scope.mapResults[0].similarity == 1 || scope.searchResults.features.length == 0))
-							scope.showMapResult(scope.mapResults[0]);
+							scope.showMapResult(scope.mapResults[0], noZoom);
 						else if(scope.searchResults.features.length > 0)
 							scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false));
 					}).catch(function(err) {
@@ -86,13 +86,15 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				map.mapEvents.$broadcast("searchchange");
 			};
 
-			scope.showMapResult = function(result) {
+			scope.showMapResult = function(result, noZoom) {
 				if(result.kind == "marker") {
 					// We already know the position, so we can already start flying there before the markers UI loads the marker
-					_flyTo([ result.lat, result.lon ], 15);
+					if(!noZoom)
+						_flyTo([ result.lat, result.lon ], 15);
+
 					map.mapEvents.$broadcast("showObject", result.hashId, false);
 				} else if(result.kind == "line")
-					map.mapEvents.$broadcast("showObject", result.hashId, true);
+					map.mapEvents.$broadcast("showObject", result.hashId, !noZoom);
 			};
 
 			scope.zoomToAll = function() {
