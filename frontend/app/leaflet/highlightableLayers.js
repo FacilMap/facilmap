@@ -56,7 +56,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			this.borderLayer = new L.Polyline(latLngs, Object.assign({}, options, { interactive: false }));
 
 			if(this.options.width == null)
-				this.options.width = 3;
+				this.options.width = 7;
 		}
 
 		beforeAdd(map) {
