@@ -14,6 +14,9 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 				left: 50
 			},
 			mappings: {
+				"": {
+					"": { text: 'unknown', color: '#4682B4' }
+				},
 				steepness: {
 					'-5': { text: '16%+', color: '#028306' },
 					'-4': { text: '10-15%', color: '#2AA12E' },
@@ -106,7 +109,7 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 		let ret = [];
 
 		for(let i=fromIdx; i<trackPoints.length; i++) {
-			if(trackPoints[i]) {
+			if(trackPoints[i] && trackPoints[i].ele != null) {
 				ret.push(trackPoints[i]);
 
 				if(i >= toIdx) // Makes sure that if toIdx does not exist in trackPoints, the next trackPoint is added, which avoids gaps between the segments, as required by leaflet.heightgraph
@@ -119,6 +122,10 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 
 	static createGeoJsonForHeightGraph(extraInfo, trackPoints) {
 		let geojson = [];
+
+		if(!extraInfo || Object.keys(extraInfo).length == 0)
+			extraInfo = { "": [[ 0, trackPoints.length-1, "" ]] };
+
 		for(let i in extraInfo) {
 			let featureCollection = {
 				type: "FeatureCollection",
