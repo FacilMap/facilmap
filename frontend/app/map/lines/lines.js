@@ -311,7 +311,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 					let searchBkp;
 					if(map.searchUi) {
-						searchBkp = map.searchUi.getCurrentSearchForHash() || "";
+						searchBkp = map.searchUi.getSubmittedSearch() || "";
 						map.searchUi.route(map.client.route.routePoints.map((routePoint) => (fmUtils.round(routePoint.lat, 5) + "," + fmUtils.round(routePoint.lon, 5))), map.client.route.mode, false, true);
 					}
 
