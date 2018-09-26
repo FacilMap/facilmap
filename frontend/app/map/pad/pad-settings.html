@@ -11,9 +11,9 @@
 			<div class="col-sm-9">
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
-					<input id="admin-link-input" ng-model="adminId" class="form-control" />
+					<input id="admin-link-input" ng-model="padData.adminId" class="form-control" />
 					<span class="input-group-btn" ng-if="!create">
-						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + adminId)">Copy</button>
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + padData.adminId)">Copy</button>
 					</span>
 				</div>
 				<span class="help-block" ng-if="adminError">{{adminError}}</span>
@@ -26,9 +26,9 @@
 			<div class="col-sm-9">
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
-					<input id="pad-link-input" ng-model="writeId" class="form-control" />
+					<input id="pad-link-input" ng-model="padData.writeId" class="form-control" />
 					<span class="input-group-btn" ng-if="!create">
-						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + writeId)">Copy</button>
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + padData.writeId)">Copy</button>
 					</span>
 				</div>
 				<span class="help-block" ng-if="writeError">{{writeError}}</span>
@@ -41,9 +41,9 @@
 			<div class="col-sm-9">
 				<div class="input-group">
 					<span class="input-group-addon">{{urlPrefix}}</span>
-					<input id="pad-rolink-input" ng-model="readId" class="form-control" />
+					<input id="pad-rolink-input" ng-model="padData.id" class="form-control" />
 					<span class="input-group-btn" ng-if="!create">
-						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + readId)">Copy</button>
+						<button type="button" class="btn btn-default" ng-click="copy(urlPrefix + padData.id)">Copy</button>
 					</span>
 				</div>
 				<span class="help-block" ng-if="readError">{{readError}}</span>
@@ -93,6 +93,6 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<button ng-if="!noCancel" type="button" class="btn btn-default" ng-click="$dismiss()" ng-disabled="saving">Cancel</button>
-	<button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError || saving">{{create ? 'Create' : 'Save'}}</button>
+	<button ng-if="!noCancel" type="button" class="btn btn-default" ng-click="$dismiss()" ng-disabled="saving">{{create || isModified ? 'Cancel' : 'Close'}}</button>
+	<button ng-show="create || isModified" type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="writeError || readError || saving">{{create ? 'Create' : 'Save'}}</button>
 </div>

@@ -151,48 +151,6 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 	fmUtils.formatTime = commonFormat.formatTime;
 	fmUtils.formatRoutingMode = commonRouting.formatRoutingMode;
 
-	fmUtils.preserveObject = function(scope, sourceExpr, targetExpr, onDelete) {
-		var obj,bkp;
-
-		function _update(firstTime) {
-			obj = $parse(sourceExpr)(scope);
-
-			if(firstTime && obj == null)
-				obj = $parse(targetExpr)(scope);
-
-			bkp = ng.copy(obj);
-
-			if(sourceExpr != targetExpr)
-				$parse(targetExpr + " = " + sourceExpr)(scope);
-		}
-
-		_update(true);
-
-		var unwatch = scope.$watch(sourceExpr, function(newVal) {
-			_update(false);
-
-			if(newVal == null) {
-				unwatch();
-				if(onDelete)
-					onDelete();
-			}
-		});
-
-		return {
-			revert : function() {
-				if(bkp == null)
-					return;
-
-				fmUtils.overwriteObject(bkp, obj);
-				unwatch();
-			},
-			leave : function() {
-				unwatch();
-				bkp = null;
-			}
-		}
-	};
-
 	fmUtils.leafletToFmBbox = function(bbox, zoom) {
 		var ret = {
 			top: bbox.getNorth(),
@@ -822,6 +780,21 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		latLng2 = L.latLng(latLng2);
 
 		return map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)) < 1;
+	};
+
+	/**
+	 * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
+	 * @param oldObject {Object}
+	 * @param newObject {Object}
+	 * @param targetObject {Object}
+	 */
+	fmUtils.mergeObject = function(oldObject, newObject, targetObject) {
+		for(let i of new Set([...Object.keys(newObject), ...Object.keys(targetObject)])) {
+			if(typeof newObject[i] == "object" && newObject[i] != null && targetObject[i] != null)
+				fmUtils.mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
+			else if(oldObject == null || !ng.equals(oldObject[i], newObject[i]))
+				targetObject[i] = ng.copy(newObject[i]);
+		}
 	};
 
 	return fmUtils;

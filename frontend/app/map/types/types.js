@@ -1,15 +1,63 @@
 import fm from '../../app';
+import ng from 'angular';
+
+fm.app.factory("fmMapTypesUtils", function(fmUtils) {
+	function getIdxForInsertingField(targetFields, targetField, mergedFields) {
+		// Check which field comes after the field in the target field list, and return the index of that field in mergedFields
+
+		for(let i = targetFields.indexOf(targetField) + 1; i < targetFields.length; i++) {
+			if(!targetFields[i].oldName)
+				continue;
+
+			let thisIdxInMergedFields = mergedFields.findIndex(field => field.oldName == targetFields[i].oldName);
+			if(thisIdxInMergedFields != -1)
+				return thisIdxInMergedFields;
+		}
+
+		return mergedFields.length;
+	}
+
+	function mergeFields(oldFields, newFields, customFields) {
+		let mergedFields = newFields.map((newField) => {
+			let oldField = oldFields.find((field) => (field.name == newField.name));
+			let customField = customFields.find((field) => (field.oldName == newField.name));
+
+			if(oldField && !customField) // Field has been removed in customFields
+				return null;
+			else if(!customField)
+				return Object.assign({}, newField, {oldName: newField.name});
+
+			let mergedField = ng.copy(customField);
+			fmUtils.mergeObject(oldField, newField, mergedField);
+
+			return mergedField;
+		}).filter(field => field != null);
+
+		// Fields that don't have an oldName have been created, so we have to add them again
+		for(let customField of customFields.filter(field => !field.oldName))
+			mergedFields.splice(getIdxForInsertingField(customFields, customField, mergedFields), 0, customField);
+
+		return mergedFields;
+	}
+
+	let fmMapTypesUtils = {
+		mergeTypeObject(oldObject, newObject, targetObject) {
+			let customFields = ng.copy(targetObject.fields);
+
+			fmUtils.mergeObject(oldObject, newObject, targetObject);
+
+			targetObject.fields = mergeFields(oldObject.fields, newObject.fields, customFields);
+		}
+	};
+	return fmMapTypesUtils;
+});
 
 fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 	return function(map) {
 		var ret = {
 			editTypes : function() {
-				let scope = $rootScope.$new();
-				scope.client = map.client;
-
 				$uibModal.open({
 					template: require("./edit-types.html"),
-					scope: scope,
 					controller: "fmMapTypesEditCtrl",
 					size: "lg",
 					resolve: {
@@ -18,70 +66,27 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 				});
 			},
 			editType : function(type) {
-				var scope = $rootScope.$new();
-				scope.client = map.client;
-				scope.type = type;
-
-				scope.$watch("type.fields", (fields) => {
-					fields.forEach((field) => {
-						field.oldName = field.name;
-					});
-				});
-
-				var dialog = $uibModal.open({
+				$uibModal.open({
 					template: require("./edit-type.html"),
-					scope: scope,
 					controller: "fmMapTypesEditTypeCtrl",
 					size: "lg",
 					resolve: {
-						map: function() { return map; }
+						map: () => (map),
+						type: () => (type)
 					}
 				});
-
-				var preserve = fmUtils.preserveObject(scope, type.id ? "client.types["+fmUtils.quoteJavaScript(type.id)+"]" : "type", "type", function() {
-					dialog.dismiss();
-				});
-
-				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			editTypeDropdown : function(type, field) {
-				var scope = $rootScope.$new();
-				scope.type = type;
-				scope.field = field;
-
-				if(field.type == 'checkbox') {
-					if(!field.options || field.options.length != 2) {
-						field.options = [
-							{ value: '' },
-							{ value: field.name }
-						]
-					}
-
-					// Convert legacy format
-					if(field.options[0].value == "0")
-						field.options[0].value = "";
-					if(field.options[1].value == "1")
-						field.options[1].value = field.name;
-				}
-
-				for(let option of (field.options || []))
-					option.oldValue = option.value;
-
-				var dialog = $uibModal.open({
+				$uibModal.open({
 					template: require("./edit-type-dropdown.html"),
-					scope: scope,
 					controller: "fmMapTypesEditTypeDropdownCtrl",
 					size: "lg",
 					resolve: {
-						map: function() { return map; }
+						map: () => (map),
+						type: () => (type),
+						field: () => (field)
 					}
 				});
-
-				var preserve = fmUtils.preserveObject(scope, "field", "field", function() {
-					dialog.dismiss();
-				});
-
-				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			canControl : function(type, what, ignoreField) {
 				if(type[what+"Fixed"] && ignoreField !== null)
@@ -100,6 +105,7 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 });
 
 fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
+	$scope.client = map.client;
 	$scope.saving = {};
 
 	$scope.create = function() {
@@ -120,7 +126,37 @@ fm.app.controller('fmMapTypesEditCtrl', function($scope, map) {
 	};
 });
 
-fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOptions) {
+fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOptions, type, fmUtils, fmMapTypesUtils) {
+	$scope.client = map.client;
+	$scope.type = ng.copy(type);
+
+	for(let field of $scope.type.fields) {
+		field.oldName = field.name;
+	}
+
+	if(type.id != null) {
+		$scope.$watch(() => (map.client.types[type.id]), (newType, oldType) => {
+			if(newType == null)
+				$scope.$dismiss();
+			else {
+				fmMapTypesUtils.mergeTypeObject(oldType, newType, $scope.type);
+
+				updateModified();
+			}
+		}, true);
+
+		$scope.$watch("type", updateModified, true);
+
+		function updateModified() {
+			let typeWithOldNames = ng.copy(map.client.types[type.id]);
+			for(let field of typeWithOldNames.fields)
+				field.oldName = field.name;
+			$scope.isModified = !ng.equals($scope.type, typeWithOldNames);
+		}
+	} else {
+		$scope.isModified = true;
+	}
+
 	$scope.sortableOptions = fmSortableOptions;
 
 	$scope.editDropdown = function(field) {
@@ -159,11 +195,60 @@ fm.app.controller('fmMapTypesEditTypeCtrl', function($scope, map, fmSortableOpti
 	};
 });
 
-fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtils, fmSortableOptions) {
+fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtils, fmSortableOptions, type, field) {
+	$scope.type = type;
+	$scope.field = ng.copy(field);
+
+	if(type.id != null && field.oldName) {
+		$scope.$watch(() => {
+			let extType = map.client.types[type.id];
+			return extType && extType.fields.find(thisField => thisField.name == field.oldName);
+		}, (newField, oldField) => {
+			if(newField == null)
+				$scope.$dismiss();
+			else {
+				fmUtils.mergeObject(newField, oldField, $scope.field);
+				updateModified();
+			}
+		}, true);
+
+		$scope.$watch("field", updateModified, true);
+
+		function updateModified() {
+			let fieldWithOldName = Object.assign(ng.copy(map.client.types[type.id].fields.find(thisField => thisField.name == field.oldName)), {
+				oldName: $scope.field.oldName,
+				name: $scope.field.name,
+				type: $scope.field.type
+			});
+			$scope.isModified = !ng.equals($scope.field, fieldWithOldName);
+		}
+	} else {
+		$scope.isModified = true;
+	}
+
+	if(field.type == 'checkbox') {
+		if(!field.options || field.options.length != 2) {
+			field.options = [
+				{ value: '' },
+				{ value: field.name }
+			]
+		}
+
+		// Convert legacy format
+		if(field.options[0].value == "0")
+			field.options[0].value = "";
+		if(field.options[1].value == "1")
+			field.options[1].value = field.name;
+	}
+
+	for(let option of (field.options || []))
+		option.oldValue = option.value;
+
+
 	$scope.sortableOptions = fmSortableOptions;
 
 	$scope.canControl = function(what) {
-		return map.typesUi.canControl($scope.type, what, $scope.field);
+		return map.typesUi.canControl($scope.type, what, type.fields.find((field) => (field.oldName ? field.oldName == $scope.field.oldName : field.name == $scope.field.name)));
 	};
 
 	$scope.addOption = function() {
@@ -180,6 +265,9 @@ fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtil
 	};
 
 	$scope.save = function() {
+		let idx = type.fields.findIndex((field) => (field.oldName ? field.oldName == $scope.field.oldName : field.name == $scope.field.name));
+		type.fields[idx] = $scope.field;
+
 		$scope.$close();
 	};
 });

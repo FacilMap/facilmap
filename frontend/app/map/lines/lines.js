@@ -212,24 +212,15 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				setTimeout(drawElevationPlot, 0);
 			},
 			editLine: function(line) {
-				var scope = $rootScope.$new();
-				scope.client = map.client;
-
-				var dialog = $uibModal.open({
+				$uibModal.open({
 					template: require("./edit-line.html"),
-					scope: scope,
 					controller: "fmMapLineEditCtrl",
 					size: "lg",
 					resolve: {
-						map: function() { return map; }
+						map: () => (map),
+						line: () => (line)
 					}
 				});
-
-				var preserve = fmUtils.preserveObject(scope, "client.lines["+fmUtils.quoteJavaScript(line.id)+"]", "line", function() {
-					dialog.dismiss();
-				});
-
-				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			addLine: function(type) {
 				map.client.getLineTemplate({ typeId: type.id }).then(function(line) {
@@ -378,7 +369,25 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 	};
 });
 
-fm.app.controller("fmMapLineEditCtrl", function($scope, map) {
+fm.app.controller("fmMapLineEditCtrl", function($scope, map, line, fmUtils) {
+	$scope.line = ng.copy(line);
+	$scope.client = map.client;
+
+	$scope.$watch(() => (map.client.lines[line.id]), (newLine, oldLine) => {
+		if(newLine == null)
+			$scope.$dismiss();
+		else {
+			fmUtils.mergeObject(oldLine, newLine, $scope.line);
+			updateModified();
+		}
+	}, true);
+
+	$scope.$watch("line", updateModified, true);
+
+	function updateModified() {
+		$scope.isModified = !ng.equals($scope.line, map.client.lines[line.id]);
+	}
+
 	$scope.canControl = function(what) {
 		return map.typesUi.canControl($scope.client.types[$scope.line.typeId], what);
 	};

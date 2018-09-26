@@ -136,24 +136,15 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 				});
 			},
 			editMarker: function(marker) {
-				var scope = $rootScope.$new();
-				scope.client = map.client;
-
-				var dialog = $uibModal.open({
+				$uibModal.open({
 					template: require("./edit-marker.html"),
-					scope: scope,
 					controller: "fmMapMarkerEditCtrl",
 					size: "lg",
 					resolve: {
-						map: function() { return map; }
+						map: () => (map),
+						marker: () => (marker)
 					}
 				});
-
-				var preserve = fmUtils.preserveObject(scope, "client.markers["+fmUtils.quoteJavaScript(marker.id)+"]", "marker", function() {
-					dialog.dismiss();
-				});
-
-				dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
 			},
 			moveMarker: function(marker) {
 				if(!markersById[marker.id])
@@ -228,7 +219,25 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 	};
 });
 
-fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
+fm.app.controller("fmMapMarkerEditCtrl", function($scope, map, marker, fmUtils) {
+	$scope.marker = ng.copy(marker);
+	$scope.client = map.client;
+
+	$scope.$watch(() => (map.client.markers[marker.id]), (newMarker, oldMarker) => {
+		if(newMarker == null)
+			$scope.$dismiss();
+		else {
+			fmUtils.mergeObject(oldMarker, newMarker, $scope.marker);
+			updateModified();
+		}
+	}, true);
+
+	$scope.$watch("marker", updateModified, true);
+
+	function updateModified() {
+		$scope.isModified = !ng.equals($scope.marker, map.client.markers[marker.id]);
+	}
+
 	$scope.canControl = function(what) {
 		return map.typesUi.canControl($scope.client.types[$scope.marker.typeId], what);
 	};
@@ -244,10 +253,6 @@ fm.app.controller("fmMapMarkerEditCtrl", function($scope, map) {
 			$scope.error = err;
 		});
 	};
-
-	$scope.$watchGroup([ "marker.colour", "marker.size", "marker.symbol", "marker.shape" ], function() {
-		map.markersUi._addMarker($scope.marker);
-	});
 
 
 });

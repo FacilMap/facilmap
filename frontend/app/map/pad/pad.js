@@ -1,5 +1,6 @@
 import fm from '../../app';
 import $ from 'jquery';
+import ng from 'angular';
 
 fm.app.factory("fmMapPad", function($uibModal, fmUtils, $rootScope) {
 	return function(map) {
@@ -8,12 +9,8 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils, $rootScope) {
 				ret.editPadSettings(true, proposedAdminId, noCancel);
 			},
 			editPadSettings : function(create, proposedAdminId, noCancel) {
-				var scope = $rootScope.$new();
-				scope.client = map.client;
-
-				var dialog = $uibModal.open({
+				$uibModal.open({
 					template: require("./pad-settings.html"),
-					scope: scope,
 					controller: "fmMapPadSettingsCtrl",
 					size: "lg",
 					resolve: {
@@ -25,14 +22,6 @@ fm.app.factory("fmMapPad", function($uibModal, fmUtils, $rootScope) {
 					keyboard: !noCancel,
 					backdrop: noCancel ? "static" : true
 				});
-
-				if(!create) {
-					var preserve = fmUtils.preserveObject(scope, "client.padData", "padData", function() {
-						dialog.dismiss();
-					});
-
-					dialog.result.then(preserve.leave.bind(preserve), preserve.revert.bind(preserve));
-				}
 			}
 		};
 
@@ -63,26 +52,28 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 	$scope.noCancel = noCancel;
 
 	if(create) {
-		$scope.adminId = (proposedAdminId || fmUtils.generateRandomPadId(16));
-		$scope.writeId = fmUtils.generateRandomPadId(14);
-		$scope.readId = fmUtils.generateRandomPadId(12);
 		$scope.padData = {
 			padName: "New FacilMap",
 			searchEngines: false,
 			description: "",
-			clusterMarkers: false
+			clusterMarkers: false,
+			adminId: (proposedAdminId || fmUtils.generateRandomPadId(16)),
+			writeId: fmUtils.generateRandomPadId(14),
+			id: fmUtils.generateRandomPadId(12)
 		};
 	} else {
-		// We don't want to edit those in padData directly, as that would change the URL while we type
-		$scope.$watch("padData.adminId", (adminId) => {
-			$scope.adminId = adminId;
-		});
-		$scope.$watch("padData.writeId", (writeId) => {
-			$scope.writeId = writeId;
-		});
-		$scope.$watch("padData.id", (readId) => {
-			$scope.readId = readId;
-		});
+		$scope.padData = ng.copy(map.client.padData);
+
+		$scope.$watch(() => (map.client.padData), (newPadData, oldPadData) => {
+			fmUtils.mergeObject(oldPadData, newPadData, $scope.padData);
+			updateModified();
+		}, true);
+
+		$scope.$watch("padData", updateModified, true);
+
+		function updateModified() {
+			$scope.isModified = !ng.equals($scope.padData, map.client.padData);
+		}
 	}
 
 	function validateId(id) {
@@ -92,24 +83,23 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 			return "May not contain a slash.";
 	}
 
-	$scope.$watch("adminId", function(adminId) {
+	$scope.$watch("padData.adminId", function(adminId) {
 		$scope.adminError = validateId(adminId);
 	});
 
-	$scope.$watch("writeId", function(writeId) {
+	$scope.$watch("padData.writeId", function(writeId) {
 		$scope.writeError = validateId(writeId);
 	});
 
-	$scope.$watch("readId", function(readId) {
+	$scope.$watch("padData.id", function(readId) {
 		$scope.readError = validateId(readId);
 	});
 
 	$scope.save = function() {
 		$scope.saving = true;
 
-		let newData = $.extend({}, $scope.padData, {id: $scope.readId, writeId: $scope.writeId, adminId: $scope.adminId});
 		if(create) {
-			map.client.createPad(newData).then(function() {
+			map.client.createPad($scope.padData).then(function() {
 				map.client.updateBbox(fmUtils.leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 
 				$scope.$close();
@@ -118,7 +108,7 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 				$scope.saving = false;
 			});
 		} else {
-			map.client.editPad(newData).then(function() {
+			map.client.editPad($scope.padData).then(function() {
 				$scope.$close();
 			}).catch(function(err) {
 				$scope.error = err;

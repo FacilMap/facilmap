@@ -72,6 +72,6 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<button type="button" class="btn btn-default" ng-click="$dismiss()">Cancel</button>
-	<button type="submit" class="btn btn-primary" ng-click="save()">OK</button>
+	<button type="button" class="btn btn-default" ng-click="$dismiss()">{{isModified ? 'Cancel' : 'Close'}}</button>
+	<button ng-show="isModified" type="submit" class="btn btn-primary" ng-click="save()">OK</button>
 </div>
