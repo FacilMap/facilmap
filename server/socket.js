@@ -686,7 +686,8 @@ utils.extend(SocketConnection.prototype, {
 		},
 
 		async geoip() {
-			return await geoip.lookup(this.socket.request.connection.remoteAddress);
+			let ip = this.socket.handshake.headers["x-forwarded-for"] || this.socket.request.connection.remoteAddress;
+			return await geoip.lookup(ip);
 		}
 
 		/*copyPad : function(data, callback) {
