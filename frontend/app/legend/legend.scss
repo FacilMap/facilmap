@@ -26,7 +26,6 @@
 	box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 5px rgba(0,0,0,.075);
 	margin-bottom: 0;
 
-	transition: transform .7s;
 	transform-origin: bottom right;
 }
 
@@ -101,8 +100,21 @@
 .fm-map-legend-marker {
 	vertical-align: middle;
 	height: 1.3em;
+
+	.fm-map-legend-popover & {
+		height: 2.8em;
+	}
 }
 
 .fm-map-legend .filtered {
 	opacity: 0.5;
+}
+
+.fm-map-legend-popover {
+	display: flex;
+	align-items: center;
+
+	p {
+		margin: 0 0 0 0.5em;
+	}
 }

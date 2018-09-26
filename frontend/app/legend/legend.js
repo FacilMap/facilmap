@@ -130,7 +130,7 @@ fm.app.directive("fmLegend", function($sce, fmUtils, $compile, fmIcons, fmFilter
 
 			function resize() {
 				var maxScale = getMaxScale();
-				style.text(".fm-map-legend .panel{transform:scale(" + Math.min(maxScale, 1) + ")} .fm-map-legend .panel:hover{transform:scale(" + Math.min(maxScale, 3) + ")}");
+				style.text(".fm-map-legend .panel { transform:scale(" + Math.min(maxScale, 1) + ") }");
 			}
 
 			function _allCombinations(fields, cb) {
