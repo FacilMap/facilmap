@@ -85,6 +85,8 @@ function iconShapePicker(shape, fmIcons, fmUtils, $compile, $rootScope, $parse) 
 				pickerScope.icons = shape ? Object.keys(fmUtils.MARKER_SHAPES) : fmIcons.iconList;
 				picker = $(require("./icon-shape-picker.html")).appendTo("body");
 				$compile(picker)(pickerScope);
+
+				$(element).attr("autocomplete", "off");
 			}
 
 			function open() {
@@ -156,7 +158,9 @@ fm.app.directive("fmShape", function(fmUtils) {
 			fmShape: "<"
 		},
 		link: function(scope, element, attrs) {
-			element.attr("src", fmUtils.createMarkerGraphic("000000", 25, null, scope.fmShape));
+			setTimeout(() => {
+				element.attr("src", fmUtils.createMarkerGraphic("000000", 25, null, scope.fmShape));
+			});
 		}
 	};
 });
