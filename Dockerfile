@@ -22,6 +22,6 @@ RUN cd ../client && yarn run deps && yarn build && yarn link && \
     cd ../server && yarn run deps && yarn link facilmap-client facilmap-frontend && yarn add mysql pg sqlite3 tedious
 
 USER root
-RUN chown -R root:root /opt/facilmap
+RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/cache
 
 USER facilmap

@@ -82,10 +82,11 @@ function extend(obj1, obj2) {
 	return obj1;
 }
 
+const R = 6371; // km
+
 function calculateDistance(posList) {
 	// From http://stackoverflow.com/a/365853/242365
 
-	var R = 6371; // km
 	var ret = 0;
 
 	for(var i=1; i<posList.length; i++) {
@@ -103,6 +104,15 @@ function calculateDistance(posList) {
 	}
 
 	return ret;
+}
+
+function distanceToDegreesLat(km) {
+	return km / (R * Math.PI / 180);
+}
+
+function distanceToDegreesLon(km, lat) {
+	let fac = Math.cos(lat * Math.PI / 180);
+	return km / (fac * R * Math.PI / 180)
 }
 
 var LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -383,6 +393,8 @@ module.exports = {
 	filterStreamPromise : filterStreamPromise,
 	extend : extend,
 	calculateDistance : calculateDistance,
+	distanceToDegreesLat,
+	distanceToDegreesLon,
 	generateRandomId : generateRandomId,
 	stripObject : stripObject,
 	ArrayStream : ArrayStream,

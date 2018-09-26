@@ -225,6 +225,10 @@ class Socket {
 		return this._emit("deleteView", data);
 	}
 
+	geoip() {
+		return this._emit("geoip");
+	}
+
 	disconnect() {
 		this.socket.removeAllListeners();
 		this.socket.disconnect();

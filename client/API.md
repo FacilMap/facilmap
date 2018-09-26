@@ -504,6 +504,13 @@ Delete an existing view
 * `data` (`{id: <viewId>}`): An object that contains the ID of the view to be removed
 * _returns_ (Promise): A promise that resolves when the operation has completed
 
+### `geoip()`
+
+Returns an approximate location for the IP address of the client.
+
+* _returns_ (Promise<{top,right,bottom,left}>) A promise that resolves to a bounding box that includes the location of
+  the client
+
 Types
 -----
 

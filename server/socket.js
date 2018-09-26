@@ -7,6 +7,7 @@ var gpx = require("./export/gpx");
 var utils = require("./utils");
 var routing = require("./routing/routing");
 var search = require("./search");
+var geoip = require("./geoip");
 
 class Socket {
 	constructor(server, database) {
@@ -682,6 +683,10 @@ utils.extend(SocketConnection.prototype, {
 				if(listening)
 					return this.socketHandlers.listenToHistory.call(this);
 			});
+		},
+
+		async geoip() {
+			return await geoip.lookup(this.socket.request.connection.remoteAddress);
 		}
 
 		/*copyPad : function(data, callback) {

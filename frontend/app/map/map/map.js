@@ -427,12 +427,8 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					if(padData) {
 						this.displayView(padData.defaultView);
 					} else {
-						return $q.resolve($.get({
-							url: "https://freegeoip.net/json/",
-							dataType: "json"
-						})).then((data) => {
-							this.map.setView([data.latitude, data.longitude], 6);
-							this.displayView(this.getCurrentView()); // To set base layer
+						$scope.client.geoip().then((data) => {
+							this.displayView(data);
 						}).catch((err) => {
 							console.error("Error contacting GeoIP service", err);
 							this.displayView();
