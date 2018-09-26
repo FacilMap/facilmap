@@ -286,7 +286,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			for(let paneName of [ "fmHighlightMarkerPane", "fmHighlightShadowPane", "fmHighlightPane", "fmShadowPane" ])
 				map.createPane(paneName);
 
-			map.almostOver.options.distance = 10;
+			map.options.almostDistance = 10;
 
 			map.on('almost:over', (e) => {
 				e.layer.fire('mouseover', e, true);

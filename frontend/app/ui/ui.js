@@ -7,7 +7,9 @@ fm.app.directive("fmSpinner", function($parse) {
 		restrict: 'A',
 		link: function(scope, element, attrs) {
 			$(element).TouchSpin({
-				min: attrs.fmSpinnerMin != null ? 1*attrs.fmSpinnerMin : 1
+				min: attrs.fmSpinnerMin != null ? 1*attrs.fmSpinnerMin : 1,
+				buttondown_class: "btn btn-default",
+				buttonup_class: "btn btn-default",
 			}).on('change', function() {
 				setTimeout(function() {
 					scope.$apply(function() {

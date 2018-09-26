@@ -3,7 +3,7 @@ import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
 import heightgraph from '../../leaflet/heightgraph';
-import {saveAs} from 'file-saver';
+import saveAs from 'file-saver';
 
 import css from './lines.scss';
 

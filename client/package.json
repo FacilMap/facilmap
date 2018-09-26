@@ -25,15 +25,16 @@
     "clean": "rimraf ./build"
   },
   "dependencies": {
-    "es6-promise": "^4.2.4",
-    "socket.io-client": "^2.0.4"
+    "es6-promise": "^4.2.5",
+    "socket.io-client": "^2.1.1"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.6.1",
-    "expose-loader": "^0.7.4",
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "babel-loader": "^8.0.2",
+    "expose-loader": "^0.7.5",
     "rimraf": "^2.6.2",
-    "webpack": "^3.10.0"
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.1"
   }
 }

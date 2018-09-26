@@ -8,13 +8,17 @@ module.exports = {
 	},
 	module: {
 		rules: [
-			{ test: /\.js$/, loader: "babel-loader?presets=env" },
+			{
+				test: /\.js$/,
+				use: {
+					loader: "babel-loader",
+					options: {
+						presets: [ "@babel/preset-env" ]
+					}
+				}
+			}
 		]
 	},
-	plugins: [
-		new webpack.optimize.UglifyJsPlugin({
-			sourceMap: true
-		})
-	],
+	mode: "production",
 	devtool: "source-map"
 };

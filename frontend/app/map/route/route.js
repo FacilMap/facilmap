@@ -2,7 +2,7 @@ import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import {saveAs} from 'file-saver';
+import saveAs from 'file-saver';
 import heightgraph from '../../leaflet/heightgraph';
 
 fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $rootScope, fmHighlightableLayers) {

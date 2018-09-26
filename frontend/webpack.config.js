@@ -2,8 +2,6 @@ const webpack = require("webpack");
 const copyPlugin = require("copy-webpack-plugin");
 const duplicatePlugin = require("./webpack-duplicates");
 const htmlPlugin = require("html-webpack-plugin");
-const ngAnnotatePlugin = require("ng-annotate-webpack-plugin");
-const path = require("path");
 
 
 const depLoaders = {
@@ -68,7 +66,17 @@ module.exports = {
 		rules: [
 			{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
 			{ test: /\.scss$/, use: [ "style-loader", "css-loader", "sass-loader" ]},
-			{ test: /\.js$/, exclude: /\/node_modules\//, loader: "babel-loader?presets=env" },
+			{
+				test: /\.js$/,
+				exclude: /\/node_modules\//,
+				use: {
+					loader: "babel-loader",
+					options: {
+						presets: [ "@babel/preset-env" ],
+						plugins: [ require("babel-plugin-angularjs-annotate") ]
+					}
+				}
+			},
 			{ test: /\.(png|jpe?g|gif|ttf|svg)$/, loader: "url-loader" },
 			{ test: /\.(html|ejs)$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
@@ -87,9 +95,6 @@ module.exports = {
 	},
 	plugins: [
 		new duplicatePlugin(),
-		new ngAnnotatePlugin({
-			add: true
-		}),
 		new htmlPlugin({
 			template: `${__dirname}/index/index.ejs`,
 			filename: "index.ejs",
@@ -108,15 +113,10 @@ module.exports = {
 			angular: "angular"
 		}),
 		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` }))),
-		...(!process.env.FM_DEV ? [
-			new webpack.optimize.UglifyJsPlugin({
-				sourceMap: true
-			})
-		] : [
+		...(process.env.FM_DEV ? [
 			new webpack.HotModuleReplacementPlugin()
-		]),
+		] : [ ]),
 	],
+	mode: process.env.FM_DEV ? "development" : "production",
+	devtool: process.env.FM_DEV ? "source-map" : "cheap-eval-source-map"
 };
-
-if(!process.env.FM_DEV)
-	module.exports.devtool = "source-map";

@@ -4,7 +4,6 @@ var fs = require('fs');
 var gutil = require('gulp-util');
 var path = require("path");
 var svgo = require("svgo");
-var Promise = require("promise");
 
 function cleanIcon(icon) {
 	return new svgo().optimize(icon).then(function(icon) {
