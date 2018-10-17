@@ -11,7 +11,9 @@ var geoip = require("./geoip");
 
 class Socket {
 	constructor(server, database) {
-		var io = socketIo.listen(server);
+		var io = socketIo.listen(server, {
+			cookie: false
+		});
 
 		io.sockets.on("connection", (socket) => {
 			var d = domain.create();
