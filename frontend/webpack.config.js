@@ -122,5 +122,5 @@ module.exports = {
 		}),
 	],
 	mode: process.env.FM_DEV ? "development" : "production",
-	devtool: process.env.FM_DEV ? "source-map" : "cheap-eval-source-map"
+	devtool: process.env.FM_DEV ? "cheap-eval-source-map" : "source-map"
 };
