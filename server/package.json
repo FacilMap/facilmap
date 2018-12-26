@@ -27,34 +27,34 @@
   },
   "dependencies": {
     "@mapbox/polyline": "^1.0.0",
-    "bluebird": "^3.5.2",
+    "bluebird": "^3.5.3",
     "cheerio": "^1.0.0-rc.2",
     "compression": "^1.7.3",
     "compressjs": "^1.0.3",
     "ejs": "^2.6.1",
-    "event-stream": "^4.0.0",
-    "express": "^4.16.3",
+    "event-stream": "^4.0.1",
+    "express": "^4.16.4",
     "facilmap-frontend": "^2.7.0",
     "highland": "^2.13.0",
     "json-format": "^1.0.1",
-    "maxmind": "^2.7.0",
+    "maxmind": "^2.11.1",
     "md5-file": "^4.0.0",
-    "mysql2": "^1.6.1",
-    "node-cron": "^2.0.1",
+    "mysql2": "^1.6.4",
+    "node-cron": "^2.0.3",
     "promisify-node": "^0.5.0",
     "request": "^2.88.0",
     "request-debug": "^0.2.0",
     "request-promise": "^4.2.2",
-    "sequelize": "^4.39.0",
-    "socket.io": "^2.1.1",
+    "sequelize": "^4.42.0",
+    "socket.io": "^2.2.0",
     "stream-combiner": "^0.2.2",
-    "string-similarity": "^1.2.2",
+    "string-similarity": "^3.0.0",
     "underscore": "^1.9.1",
-    "unzipper": "^0.9.3"
+    "unzipper": "^0.9.7"
   },
   "devDependencies": {
-    "webpack": "^4.20.2",
+    "webpack": "^4.28.2",
     "webpack-dev-middleware": "^3.4.0",
-    "webpack-hot-middleware": "^2.24.2"
+    "webpack-hot-middleware": "^2.24.3"
   }
 }
