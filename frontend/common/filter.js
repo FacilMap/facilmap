@@ -1,5 +1,4 @@
-const compileExpression = require('filtrex');
-
+const compileExpression = require('../lib/filtrex');
 const utils = require('./utils');
 
 const filter = module.exports = {
