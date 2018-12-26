@@ -222,10 +222,7 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 
 					map.mapEvents.$broadcast("searchchange");
 
-					return map.routeUi.setRoute(points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode).then(() => {
-						if(!noZoom)
-							map.routeUi.zoom();
-					});
+					return map.routeUi.setRoute(points.map(function(point) { return { lat: point.lat, lon: point.lon }; }), mode, !noZoom);
 				}).catch((err) => {
 					console.warn(err.stack || err);
 					scope.errors.push(err);
@@ -262,17 +259,17 @@ fm.app.directive("fmSearchRoute", function($rootScope, $compile, fmUtils, $timeo
 				scope.reroute(true);
 			});
 
-			map.mapEvents.$on("routeDestinationAdd", (e, [ idx ]) => {
-				scope.destinations.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]));
+			map.mapEvents.$on("routeDestinationAdd", (e, [ idx, point ]) => {
+				scope.destinations.splice(idx, 0, makeCoordDestination(point));
 				if(scope.submittedQueries)
-					scope.submittedQueries.splice(idx, 0, makeCoordDestination(map.client.route.routePoints[idx]).query);
+					scope.submittedQueries.splice(idx, 0, makeCoordDestination(point).query);
 				map.mapEvents.$broadcast("searchchange");
 			});
 
-			map.mapEvents.$on("routeDestinationMove", (e, [ idx ]) => {
-				scope.destinations[idx] = makeCoordDestination(map.client.route.routePoints[idx]);
+			map.mapEvents.$on("routeDestinationMove", (e, [ idx, point ]) => {
+				scope.destinations[idx] = makeCoordDestination(point);
 				if(scope.submittedQueries)
-					scope.submittedQueries[idx] = makeCoordDestination(map.client.route.routePoints[idx]).query;
+					scope.submittedQueries[idx] = makeCoordDestination(point).query;
 				map.mapEvents.$broadcast("searchchange");
 			});
 
