@@ -1,11 +1,11 @@
-FROM node:9.5-alpine
+FROM node:11.5-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD yarn run server
 EXPOSE 8080
 
-RUN apk update && apk add git
-RUN npm install -g yarn@0.18.1
+RUN apk add --no-cache g++ git make python2
+RUN npm install -g yarn
 
 RUN adduser -D -h /opt/facilmap -s /bin/bash facilmap
 
