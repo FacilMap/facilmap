@@ -2,7 +2,7 @@ const webpack = require("webpack");
 const copyPlugin = require("copy-webpack-plugin");
 const duplicatePlugin = require("./webpack-duplicates");
 const htmlPlugin = require("html-webpack-plugin");
-
+const bundleAnalyzer = require("webpack-bundle-analyzer");
 
 const depLoaders = {
 	jquery: "expose-loader?jQuery",
@@ -86,8 +86,8 @@ module.exports = {
 				loader: "string-replace-loader",
 				options: {
 					multiple: [
-						{ search: "src: url\\('\\.\\./fonts/glyphicons-halflings-regular.eot'\\);", replace: "", flags: "" },
-						{ search: "src: url\\('\\.\\./fonts/glyphicons-halflings-regular\\..*", replace: "", flags: "" }
+						{ search: "src: url\\(\"\\.\\./fonts/glyphicons-halflings-regular.eot\"\\);", replace: "", flags: "" },
+						{ search: "src: url\\(\"\\.\\./fonts/glyphicons-halflings-regular\\..*", replace: "", flags: "" }
 					]
 				}
 			}
@@ -116,6 +116,10 @@ module.exports = {
 		...(process.env.FM_DEV ? [
 			new webpack.HotModuleReplacementPlugin()
 		] : [ ]),
+		new bundleAnalyzer.BundleAnalyzerPlugin({
+			analyzerMode: "static",
+			openAnalyzer: false
+		}),
 	],
 	mode: process.env.FM_DEV ? "development" : "production",
 	devtool: process.env.FM_DEV ? "source-map" : "cheap-eval-source-map"

@@ -2,7 +2,6 @@ var gulp = require("gulp");
 var gutil = require("gulp-util");
 var clean = require("gulp-clean");
 var newer = require("gulp-newer");
-var combine = require("stream-combiner");
 var fs = require("fs");
 var Promise = require("bluebird");
 var request = require("request-promise");
@@ -17,50 +16,59 @@ let webpackCompiler = webpack(webpackConfig);
 const staticFrontendFile = `${__dirname}/build/frontend.js`;
 const staticClientFile = `${__dirname}/build/client.js`;
 
-gulp.task("default", [ "webpack", "symlinks" ]);
+function pipe(source, ...transformers) {
+	let current = source;
+	for (const transformer of transformers) {
+		current.on("error", (e) => {
+			transformer.emit("error", e);
+		});
+		current = current.pipe(transformer);
+	}
+	return current;
+}
 
-gulp.task("clean", function() {
-	return combine(
+function doClean() {
+	return pipe(
 		gulp.src("build"),
 		clean()
 	);
-});
+}
 
-gulp.task("download-icons", function() {
-	return new Promise((resolve, reject) => {
-		fs.exists("build/Open-SVG-Map-Icons", (exists) => {
-			resolve(exists);
-		});
-	}).then((exists) => {
-		if(exists)
-			return;
-
-		let extract = unzip.Extract({
-			path: "build/"
-		});
-
-		let download = request.get("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip");
-		download.pipe(extract);
-		download.catch((err) => {
-			extract.emit("error", err);
-		});
-
-		return extract.promise().then(() => {
-			return Promise.promisify(fs.rename)("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
-		});
+async function downloadIcons() {
+	const exists = await new Promise((resolve) => {
+		fs.exists("build/Open-SVG-Map-Icons", resolve);
 	});
-});
 
-gulp.task("icons", ["download-icons"], function() {
-	return combine(
+	if(exists)
+		return;
+
+	let extract = unzip.Extract({
+		path: "build/"
+	});
+
+	let download = request.get("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip");
+	download.pipe(extract);
+	download.catch((err) => {
+		extract.emit("error", err);
+	});
+
+	await extract.promise();
+
+	await Promise.promisify(fs.rename)("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
+}
+
+function compileIcons() {
+	return pipe(
 		gulp.src(["build/Open-SVG-Map-Icons/svg/**/*.svg", "assets/icons/**/*.svg"]),
 		newer("build/icons.js"),
 		icons("icons.js", "angular.module(\"facilmap\").constant(\"fmIconsRaw\", %s);"),
 		gulp.dest("build")
 	);
-});
+}
 
-gulp.task("webpack", [ "icons" ], function() {
+const doIcons = gulp.series(downloadIcons, compileIcons);
+
+function doWebpack() {
 	return Promise.promisify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
 		gutil.log("[webpack]", stats.toString());
 
@@ -77,9 +85,9 @@ gulp.task("webpack", [ "icons" ], function() {
 			return Promise.promisify(fs.symlink)(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
 	    });
 	});
-});
+}
 
-gulp.task("symlinks", [ "webpack" /* To create the build directory */ ], function() {
+function doSymlinks() {
 	// Create symlink to facilmap-client so that people can include https://facilmap.org/client.js
 	return new Promise((resolve, reject) => {
 		fs.exists(staticClientFile, resolve);
@@ -87,11 +95,16 @@ gulp.task("symlinks", [ "webpack" /* To create the build directory */ ], functio
 		if(!exists)
 			return Promise.promisify(fs.symlink)(require.resolve("facilmap-client/build/client"), staticClientFile);
 	});
-});
+}
 
-gulp.task("watch", [ "icons" ], function() {
+function doWatch() {
 	webpackCompiler.watch({
 	}, function(err, stats) {
         gutil.log("[webpack]", err ? err : stats.toString());
-    });
-});
+	});
+}
+
+module.exports.default = gulp.series(doIcons, doWebpack, doSymlinks);
+module.exports.icons = doIcons;
+module.exports.watch = gulp.series(doIcons, doWatch);
+module.exports.clean = doClean;
