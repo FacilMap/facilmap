@@ -115,11 +115,12 @@ module.exports = {
 		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` }))),
 		...(process.env.FM_DEV ? [
 			new webpack.HotModuleReplacementPlugin()
-		] : [ ]),
-		new bundleAnalyzer.BundleAnalyzerPlugin({
-			analyzerMode: "static",
-			openAnalyzer: false
-		}),
+		] : [
+			new bundleAnalyzer.BundleAnalyzerPlugin({
+				analyzerMode: "static",
+				openAnalyzer: false
+			}),
+		]),
 	],
 	mode: process.env.FM_DEV ? "development" : "production",
 	devtool: process.env.FM_DEV ? "cheap-eval-source-map" : "source-map"
