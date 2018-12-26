@@ -119,9 +119,9 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				map.mapEvents.$emit("routeDestinationMove", [idx]);
 
 				return setRoute(map.client.route);
-			}.fmWrapApply($rootScope)).on("mouseover", function() {
+			}.fmWrapApply($rootScope)).on("fmMouseOver", function() {
 				map.mapEvents.$emit("routeDestinationMouseOver", [markers.indexOf(marker)]);
-			}.fmWrapApply($rootScope)).on("mouseout", function() {
+			}.fmWrapApply($rootScope)).on("fmMouseOut", function() {
 				map.mapEvents.$emit("routeDestinationMouseOut", [markers.indexOf(marker)]);
 			}.fmWrapApply($rootScope));
 		}

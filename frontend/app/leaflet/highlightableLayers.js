@@ -14,13 +14,41 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			}, options);
 			super(latLng, options);
 
-			this.on("mouseover", () => {
-				this._mouseover = true;
-				this._initIcon();
+			this.on("dragstart", () => {
+				this._fmDragging = true;
 			});
-			this.on("mouseout", () => {
-				this._mouseover = false;
-				this._initIcon();
+			this.on("dragend", () => {
+				this._fmDragging = false;
+
+				// Some of our code re-renders the icon on mouseover/mouseout. This breaks dragging if it's in place.
+				// So we delay those events to when dragging has ended.
+				if(this._fmDraggingMouseEvent) {
+					if(!this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseover")
+						this.fire("fmMouseOver", this._fmDraggingMouseEvent);
+					else if(this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseout")
+						this.fire("fmMouseOut", this._fmDraggingMouseEvent);
+					this._fmDraggingMouseEvent = null;
+				}
+			});
+
+			this.on("mouseover", (e) => {
+				if(this._fmDragging)
+					this._fmDraggingMouseEvent = e;
+				else
+					this.fire("fmMouseOver", e);
+			});
+			this.on("mouseout", (e) => {
+				if(this._fmDragging)
+					this._fmDraggingMouseEvent = e;
+				else
+					this.fire("fmMouseOut", e);
+			});
+
+			this.on("fmMouseOver", () => {
+				this._fmMouseOver = true;
+			});
+			this.on("fmMouseOut", () => {
+				this._fmMouseOver = false;
 			});
 		}
 
@@ -33,7 +61,7 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
 			super._initIcon(...arguments);
 
-			this.setOpacity(this.options.highlight || this.options.rise || this._mouseover ? 1 : 0.6);
+			this.setOpacity(this.options.highlight || this.options.rise || this._fmMouseOver ? 1 : 0.6);
 
 			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightMarkerPane" : "markerPane");
 		}
