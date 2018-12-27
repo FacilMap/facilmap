@@ -92,6 +92,9 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		function registerMarkerHandlers(marker, route) {
 			marker.on("dblclick", function() {
+				if(route.routePoints.length <= 2)
+					return;
+
 				let index = markers.indexOf(marker);
 				route.routePoints.splice(index, 1);
 				markers[index].remove();
