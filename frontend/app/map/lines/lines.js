@@ -126,7 +126,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				if(!lineObj)
 					return;
 
-				map.map.almostOver.removeLayer(lineObj);
 				lineObj.removeFrom(map.map);
 				delete linesById[line.id];
 			},

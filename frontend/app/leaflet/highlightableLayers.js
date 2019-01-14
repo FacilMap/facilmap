@@ -2,7 +2,6 @@ import fm from '../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import 'leaflet-almostover';
 
 fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
@@ -79,12 +78,14 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 	class Polyline extends L.Polyline {
 
 		constructor(latLngs, options) {
+			options = Object.assign({
+				width: 7
+			}, options);
+
 			super(latLngs, options);
 
+			this.lineLayer = new L.Polyline(latLngs, Object.assign({}, options, { interactive: false }));
 			this.borderLayer = new L.Polyline(latLngs, Object.assign({}, options, { interactive: false }));
-
-			if(this.options.width == null)
-				this.options.width = 7;
 		}
 
 		beforeAdd(map) {
@@ -95,36 +96,42 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		onAdd() {
 			super.onAdd(...arguments);
 
+			this._map.addLayer(this.lineLayer);
 			this._map.addLayer(this.borderLayer);
-			this._map.almostOver.addLayer(this);
 
 			this.setStyle({});
 		}
 
 		onRemove() {
-			this._map.almostOver.removeLayer(this);
+			this._map.removeLayer(this.lineLayer);
 			this._map.removeLayer(this.borderLayer);
 
 			super.onRemove(...arguments);
 		}
 
 		_regenerateStyle() {
+			this.options.opacity = 0;
+			this.options.weight = 20;
+
 			let isBright = fmUtils.getBrightness(this.options.color.replace(/^#/, "")) > 0.7;
 
 			// A black border makes the lines look thicker, thus we decrease the thickness to make them look the original size again
-			this.options.weight = isBright ? Math.round(this.options.width / 1.6) : this.options.width;
+			this.lineLayer.options.weight = isBright ? Math.round(this.options.width / 1.6) : this.options.width;
 
-			this.options.opacity = this.borderLayer.options.opacity = this.options.highlight ? 1 : 0.35;
+			this.lineLayer.options.opacity = this.borderLayer.options.opacity = this.options.highlight ? 1 : 0.35;
+
 			this.borderLayer.options.color = this.borderLayer.options.fillColor = isBright ? "#000000" : "#ffffff";
-			this.borderLayer.options.weight = this.options.weight * 2;
+			this.borderLayer.options.weight = this.lineLayer.options.weight * 2;
 
-			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
+			fmHighlightableLayers._updatePane(this, "fmAlmostOverPane");
+			fmHighlightableLayers._updatePane(this.lineLayer, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
 			fmHighlightableLayers._updatePane(this.borderLayer, this.options.highlight || this.options.rise ? "fmHighlightShadowPane" : "fmShadowPane");
 		}
 
 		redraw() {
 			this._regenerateStyle();
 			super.redraw(...arguments);
+			this.lineLayer.redraw();
 			this.borderLayer.redraw();
 			return this;
 		}
@@ -132,24 +139,19 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		setStyle(style) {
 			L.Util.setOptions(this, style);
 			L.Util.setOptions(this.borderLayer, style);
+			L.Util.setOptions(this.lineLayer, style);
 			this._regenerateStyle();
 			super.setStyle({});
+			this.lineLayer.setStyle({});
 			this.borderLayer.setStyle({});
 			return this;
 		}
 
 		setLatLngs(latLngs) {
 			super.setLatLngs(...arguments);
+			this.lineLayer.setLatLngs(...arguments);
 			this.borderLayer.setLatLngs(...arguments);
 			return this;
-		}
-
-		fire(type, data, propagate) {
-			// Ignore DOM mouse events, otherwise we get them double, once by DOM, once by almostOver
-			if([ "mouseover", "mousemove", "mouseout" ].includes(type) && (!data.type || !data.type.startsWith("almost:")))
-				return;
-
-			return super.fire.apply(this, arguments);
 		}
 
 	}
@@ -311,28 +313,8 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 			if(map._fmHighlightableLayersPrepared)
 				return;
 
-			for(let paneName of [ "fmHighlightMarkerPane", "fmHighlightShadowPane", "fmHighlightPane", "fmShadowPane" ])
+			for(let paneName of [ "fmHighlightMarkerPane", "fmHighlightShadowPane", "fmHighlightPane", "fmShadowPane", "fmAlmostOverPane" ])
 				map.createPane(paneName);
-
-			map.options.almostDistance = 10;
-
-			map.on('almost:over', (e) => {
-				e.layer.fire('mouseover', e, true);
-				$(map.getContainer()).addClass("fm-almostover");
-			});
-
-			map.on('almost:out', (e) => {
-				e.layer.fire('mouseout', e, true);
-				$(map.getContainer()).removeClass("fm-almostover");
-			});
-
-			map.on('almost:click', (e) => {
-				e.layer.fire('click', e, true);
-			});
-
-			map.on('almost:move', (e) => {
-				e.layer.fire('mousemove', e, true);
-			});
 
 			map._fmHighlightableLayersPrepared = true;
 		},

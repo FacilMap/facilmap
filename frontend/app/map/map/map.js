@@ -308,8 +308,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 				let listenClick = (e) => {
 					this.interactionEnd();
 
-					this.map.almostOver.addHooks();
-
 					transparentLayer.removeFrom(this.map).off("click", listenClick);
 
 					if(moveListener)
@@ -325,8 +323,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 				if(moveListener)
 					transparentLayer.on("mousemove", listenMove);
-
-				this.map.almostOver.removeHooks();
 
 				this.interactionStart();
 
