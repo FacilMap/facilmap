@@ -186,9 +186,19 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		}
 
 		_regenerateStyle() {
+			let isBright = fmUtils.getBrightness(this.options.color.replace(/^#/, "")) > 0.7;
+
+			// A black border makes the lines look thicker, thus we decrease the thickness to make them look the original size again
+			this.options.weight = isBright ? Math.round(this.options.width / 1.6) : this.options.width;
+
+			this.options.opacity = this.borderLayer.options.opacity = this.options.highlight ? 1 : 0.35;
+
+			this.borderLayer.options.color = this.borderLayer.options.fillColor = isBright ? "#000000" : "#ffffff";
+			this.borderLayer.options.weight = this.options.weight * 2;
 			this.borderLayer.options.fill = this.options.highlight;
 
-			return Polyline.prototype._regenerateStyle.apply(this, arguments);
+			fmHighlightableLayers._updatePane(this, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
+			fmHighlightableLayers._updatePane(this.borderLayer, this.options.highlight || this.options.rise ? "fmHighlightShadowPane" : "fmShadowPane");
 		}
 
 		redraw() {
