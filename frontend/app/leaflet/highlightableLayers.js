@@ -110,9 +110,6 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 		}
 
 		_regenerateStyle() {
-			this.options.opacity = 0;
-			this.options.weight = 20;
-
 			let isBright = fmUtils.getBrightness(this.options.color.replace(/^#/, "")) > 0.7;
 
 			// A black border makes the lines look thicker, thus we decrease the thickness to make them look the original size again
@@ -122,6 +119,9 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
 			this.borderLayer.options.color = this.borderLayer.options.fillColor = isBright ? "#000000" : "#ffffff";
 			this.borderLayer.options.weight = this.lineLayer.options.weight * 2;
+
+			this.options.opacity = 0;
+			this.options.weight = Math.max(20, this.borderLayer.options.weight);
 
 			fmHighlightableLayers._updatePane(this, "fmAlmostOverPane");
 			fmHighlightableLayers._updatePane(this.lineLayer, this.options.highlight || this.options.rise ? "fmHighlightPane" : "overlayPane");
