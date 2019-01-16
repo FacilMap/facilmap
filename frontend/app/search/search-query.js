@@ -363,7 +363,7 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				};
 
 				popupScope.useForRoute = function(mode) {
-					map.searchUi.setRouteDestination(query, mode, results, result);
+					map.searchUi.setRouteDestination(query, mode, results, [ ], result);
 				};
 
 				let [center, zoom] = getZoomDestination(result);

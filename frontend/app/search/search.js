@@ -75,15 +75,15 @@ fm.app.directive("fmSearch", function(fmSearchFileImport) {
 						this.routeUi.submit(noZoom);
 				},
 
-				setRouteDestination: (query, mode, _results, _result) => {
+				setRouteDestination: (query, mode, _searchSuggestions, _mapSuggestions, _result) => {
 					searchUi.showRoute();
 
 					if(mode == 1)
-						this.routeUi.setFrom(query, _results, _result);
+						this.routeUi.setFrom(query, _searchSuggestions, _mapSuggestions, _result);
 					else if(mode == 2)
-						this.routeUi.addVia(query, _results, _result);
+						this.routeUi.addVia(query, _searchSuggestions, _mapSuggestions, _result);
 					else if(mode == 3)
-						this.routeUi.setTo(query, _results, _result);
+						this.routeUi.setTo(query, _searchSuggestions, _mapSuggestions, _result);
 
 					this.routeUi.submit(!!this.routeUi.getQueries());
 				},
