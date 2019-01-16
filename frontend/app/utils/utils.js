@@ -169,6 +169,14 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		return L.latLngBounds(L.latLng(bbox.bottom, bbox.left), L.latLng(bbox.top, bbox.right));
 	};
 
+	fmUtils.getClosestPointOnLine = function(map, trackPoints, point) {
+		const index = fmUtils.getClosestIndexOnLine(map, trackPoints, point);
+		const before = trackPoints[Math.floor(index)];
+		const after = trackPoints[Math.ceil(index)];
+		const percentage = index - Math.floor(index);
+		return L.latLng(before.lat + percentage * (after.lat - before.lat), before.lng + percentage * (after.lng - before.lng));
+	};
+
 	fmUtils.getClosestIndexOnLine = function(map, trackPoints, point, startI) {
 		var dist = Infinity;
 		var idx = null;
@@ -264,20 +272,38 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 		// This marker is shown when we hover the line. It enables us to create new markers.
 		// It is a huge one (a normal marker with 5000 px or so transparency around it, so that we can be
 		// sure that the mouse is over it and dragging it will work smoothly.
-		var temporaryHoverMarker;
-		function _over(e) {
-			temporaryHoverMarker.setLatLng(e.latlng).addTo(map);
+
+		let temporaryHoverMarker;
+		let lastPos = null;
+
+		function update() {
+			if(lastPos) {
+				const pointOnLine = fmUtils.getClosestPointOnLine(map, line._latlngs[0], lastPos);
+				const distance = map.latLngToContainerPoint(pointOnLine).distanceTo(map.latLngToContainerPoint(lastPos));
+				if(distance > line.options.weight / 2)
+					lastPos = null;
+				else {
+					temporaryHoverMarker.setLatLng(pointOnLine);
+					if(!temporaryHoverMarker._map)
+						temporaryHoverMarker.addTo(map);
+				}
+			}
+
+			if(!lastPos && temporaryHoverMarker._map)
+				temporaryHoverMarker.remove();
 		}
 
 		function _move(e) {
-			temporaryHoverMarker.setLatLng(e.latlng);
+			lastPos = map.mouseEventToLatLng(e.originalEvent);
+			update();
 		}
 
 		function _out(e) {
-			temporaryHoverMarker.remove();
+			lastPos = null;
+			setTimeout(update, 0); // Delay in case there is a mouseover event over the marker following
 		}
 
-		line.on("mouseover", _over).on("mousemove", _move).on("mouseout", _out);
+		line.on("mouseover", _move).on("mousemove", _move).on("mouseout", _out);
 
 		function makeTemporaryHoverMarker() {
 			temporaryHoverMarker = L.marker([0,0], Object.assign({
@@ -294,13 +320,13 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 				callback(temporaryHoverMarker);
 
 				makeTemporaryHoverMarker();
-			});
+			}).on("mouseover", _move).on("mousemove", _move).on("mouseout", _out);
 		}
 
 		makeTemporaryHoverMarker();
 
 		return function() {
-			line.off("mouseover", _over).off("mousemove", _move).off("mouseout", _out);
+			line.off("mouseover", _move).off("mousemove", _move).off("mouseout", _out);
 			temporaryHoverMarker.remove();
 		};
 	};
