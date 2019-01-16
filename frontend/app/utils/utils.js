@@ -320,7 +320,12 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 				callback(temporaryHoverMarker);
 
 				makeTemporaryHoverMarker();
-			}).on("mouseover", _move).on("mousemove", _move).on("mouseout", _out);
+			})
+				.on("mouseover", _move).on("mousemove", _move).on("mouseout", _out)
+				.on("click", (e) => {
+					// Forward to the line to make it possible to click it again
+					line.fire("click", e);
+				});
 		}
 
 		makeTemporaryHoverMarker();
