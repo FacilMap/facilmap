@@ -7,7 +7,7 @@ import 'leaflet-mouse-position';
 import 'leaflet-graphicscale';
 
 
-fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox, fmMapRoute) {
+fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox, fmMapRoute, fmConfig) {
 	return {
 		restrict: 'E',
 		template: require("./map.html"),
@@ -35,11 +35,11 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.layers = { };
 			[
-				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", {
+				L.tileLayer(`https://api.openrouteservice.org/mapsurfer/{z}/{x}/{y}.png?api_key=${encodeURIComponent(fmConfig.orsToken)}`, {
 					fmName: "MapSurfer Road",
 					fmBase: true,
 					fmKey: "MSfR",
-					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
 				}),
 				mapnikLayer,

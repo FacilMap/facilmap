@@ -12,6 +12,7 @@ const geojson = require("./export/geojson");
 const gpx = require("./export/gpx");
 const table = require("./export/table");
 const utils = require("./utils");
+const config = require("../config");
 
 const frontendPath = path.dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
 
@@ -57,7 +58,10 @@ const webserver = {
 				render: (template, padData) => {
 					res.type("html");
 					res.send(ejs.render(template, {
-						padData: padData
+						padData: padData,
+						config: {
+							orsToken: config.orsToken
+						}
 					}));
 				}
 			}).catch(next);

@@ -43,6 +43,8 @@ fm.app.constant("fmSortableOptions", {
 	}
 });
 
+fm.app.constant("fmConfig", JSON.parse($("meta[name=fmConfig]").attr("content")));
+
 // Properly resolve source maps, see https://github.com/angular/angular.js/issues/5217#issuecomment-257143381
 fm.app.factory('$exceptionHandler', function() {
 	return function(exception, cause) {
