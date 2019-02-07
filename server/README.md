@@ -7,25 +7,33 @@ Using docker
 FacilMap is available as [`facilmap/facilmap2`](https://hub.docker.com/r/facilmap/facilmap2/) on Docker Hub. Here is
 an example `docker-compose.yml`:
 
-```yml
-facilmap:
-    image: facilmap/facilmap2
-    ports:
-        - 8080
-    external_links:
-        - mysql_mysql_1
-    environment:
-        USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
-        DB_TYPE: mysql
-        DB_HOST: mysql_mysql_1
-        DB_NAME: facilmap
-        DB_USER: facilmap
-        DB_PASSWORD: password
-        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
-        MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
-        MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
-
-    restart: on-failure
+```yaml
+version: "2"
+services:
+    facilmap:
+	    image: facilmap/facilmap2
+	    ports:
+	        - 8080
+	    links:
+	        - db
+	    environment:
+	        USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+	        DB_TYPE: mysql
+	        DB_HOST: db
+	        DB_NAME: facilmap
+	        DB_USER: facilmap
+	        DB_PASSWORD: password
+	        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+	        MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+	        MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
+	    restart: on-failure
+    db:
+        image: mariadb
+        environment:
+            MYSQL_DATABASE: facilmap
+            MYSQL_USER: facilmap
+            MYSQL_PASSWORD: password
+            MYSQL_RANDOM_ROOT_PASSWORD: "true"
 ```
 
 Or the same using `docker create`:
