@@ -59,9 +59,7 @@ const webserver = {
 					res.type("html");
 					res.send(ejs.render(template, {
 						padData: padData,
-						config: {
-							orsToken: config.orsToken
-						}
+						config: {}
 					}));
 				}
 			}).catch(next);

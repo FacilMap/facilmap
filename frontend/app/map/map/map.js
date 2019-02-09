@@ -35,7 +35,7 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.layers = { };
 			[
-				L.tileLayer(`https://api.openrouteservice.org/mapsurfer/{z}/{x}/{y}.png?api_key=${encodeURIComponent(fmConfig.orsToken)}`, {
+				L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 					fmName: "MapSurfer Road",
 					fmBase: true,
 					fmKey: "MSfR",
