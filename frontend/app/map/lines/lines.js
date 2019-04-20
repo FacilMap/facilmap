@@ -190,8 +190,10 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 					linesById[line.id].setStyle({ highlight: true });
 
 				scope.$watch("line.trackPoints", () => {
+					scope.elevationStats = null;
 					if(line.ascent != null && line.trackPoints) {
 						elevationPlot.addData(line.extraInfo, line.trackPoints);
+						scope.elevationStats = heightgraph.createElevationStats(line.extraInfo, line.trackPoints);
 					}
 				}, true);
 

@@ -250,8 +250,11 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				setTimeout(drawElevationPlot, 0);
 
 				scope.$watch("client.route", () => {
-					if(map.client.route && map.client.route.ascent != null)
+					scope.elevationStats = null;
+					if(map.client.route && map.client.route.ascent != null) {
 						elevationPlot.addData(map.client.route.extraInfo, map.client.route.trackPoints);
+						scope.elevationStats = heightgraph.createElevationStats(map.client.route.extraInfo, map.client.route.trackPoints);
+					}
 				}, true);
 			},
 

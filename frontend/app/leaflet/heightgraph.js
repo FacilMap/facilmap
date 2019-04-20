@@ -20,11 +20,11 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 					"": { text: 'unknown', color: '#4682B4' }
 				},
 				steepness: {
-					"-5": { text: "16%+", color: "#028306" },
-					"-4": { text: "10-15%", color: "#2AA12E" },
-					"-3": { text: "7-9%", color: "#53BF56" },
-					"-2": { text: "4-6%", color: "#7BDD7E" },
-					"-1": { text: "1-3%", color: "#A4FBA6" },
+					"-5": { text: "- 16%+", color: "#028306" },
+					"-4": { text: "- 10-15%", color: "#2AA12E" },
+					"-3": { text: "- 7-9%", color: "#53BF56" },
+					"-2": { text: "- 4-6%", color: "#7BDD7E" },
+					"-1": { text: "- 1-3%", color: "#A4FBA6" },
 					"0": { text: "0%", color: "#ffcc99" },
 					"1": { text: "1-3%", color: "#F29898" },
 					"2": { text: "4-6%", color: "#E07575" },
@@ -243,5 +243,44 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 			geojson.push(featureCollection);
 		}
 		return geojson;
+	}
+
+	static getDistancesByInfoType(extraInfo, trackPoints) {
+		const ret = { };
+
+		if (!extraInfo)
+			return ret;
+
+		for(let segment in extraInfo) {
+			if (ret[extraInfo[segment][2]] == null)
+				ret[extraInfo[segment][2]] = 0;
+
+			ret[extraInfo[segment][2]] += commonUtils.calculateDistance(FmHeightgraph.trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
+		}
+
+		return ret;
+	}
+
+	static createElevationStats(extraInfo, trackPoints) {
+		if (!extraInfo || !extraInfo.steepness)
+			return null;
+
+		const stats = FmHeightgraph.getDistancesByInfoType(extraInfo.steepness, trackPoints);
+
+		const sum = (filter) => Object.keys(stats).map((i) => parseInt(i, 10)).filter(filter).reduce((acc, cur) => acc + stats[cur], 0);
+
+		return {
+			"-16": sum((i) => (i <= -5)),
+			"-10": sum((i) => (i <= -4)),
+			"-7": sum((i) => (i <= -3)),
+			"-4": sum((i) => (i <= -2)),
+			"-1": sum((i) => (i <= -1)),
+			"0": sum((i) => (i == 0)),
+			"1": sum((i) => (i >= 1)),
+			"4": sum((i) => (i >= 2)),
+			"7": sum((i) => (i >= 3)),
+			"10": sum((i) => (i >= 4)),
+			"16": sum((i) => (i >= 5))
+		};
 	}
 }

@@ -6,7 +6,7 @@
 			<dd class="distance">{{line.distance | fmRound:2}} km <span ng-show="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRoutingMode}})</span></dd>
 
 			<dt class="elevation" ng-show="line.ascent != null">Climb/drop</dt>
-			<dd class="elevation" ng-show="line.ascent != null"><span uib-tooltip="Total ascent"><fm-icon fm-icon="triangle-top" alt="Ascent"/> {{line.ascent}} m</span> / <span uib-tooltip="Total descent"><fm-icon fm-icon="triangle-bottom" alt="Descent"/> {{line.descent}} m</span></dd>
+			<dd class="elevation" ng-show="line.ascent != null"><fm-elevation-stats route="line" stats="elevationStats" /></dd>
 
 			<dt ng-repeat-start="field in client.types[line.typeId].fields">{{field.name}}</dt>
 			<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></dd>
@@ -21,7 +21,7 @@
 				<dd class="distance">{{line.distance | fmRound:2}} km <span ng-show="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRoutingMode}})</span></dd>
 
 				<dt class="elevation" ng-show="line.ascent != null">Climb/drop</dt>
-				<dd class="elevation" ng-show="line.ascent != null"><span uib-tooltip="Total ascent"><fm-icon fm-icon="triangle-top" alt="Ascent"/> {{line.ascent}} m</span> / <span uib-tooltip="Total descent"><fm-icon fm-icon="triangle-bottom" alt="Descent"/> {{line.descent}} m</span></dd>
+				<dd class="elevation" ng-show="line.ascent != null"><fm-elevation-stats route="line" stats="elevationStats" /></dd>
 
 				<dt ng-repeat-start="field in client.types[line.typeId].fields">{{field.name}}</dt>
 				<dd ng-repeat-end fm-type-field-content="field" fm-type-field-model="line.data[field.name]"></dd>
@@ -34,7 +34,7 @@
 				<dd class="distance">{{line.distance | fmRound:2}} km <span ng-show="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRoutingMode}})</span></dd>
 
 				<dt class="elevation" ng-show="line.ascent != null">Climb/drop</dt>
-				<dd class="elevation" ng-show="line.ascent != null"><span uib-tooltip="Total ascent"><fm-icon fm-icon="triangle-top" alt="Ascent"/> {{line.ascent}} m</span> / <span uib-tooltip="Total descent"><fm-icon fm-icon="triangle-bottom" alt="Descent"/> {{line.descent}} m</span></dd>
+				<dd class="elevation" ng-show="line.ascent != null"><fm-elevation-stats route="line" stats="elevationStats" /></dd>
 			</dl>
 		</uib-tab>
 	</uib-tabset>
