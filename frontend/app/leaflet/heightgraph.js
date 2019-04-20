@@ -3,6 +3,8 @@ import $ from 'jquery';
 import L from 'leaflet';
 
 import css from './heightgraph.scss';
+import commonUtils from '../../common/utils';
+import commonFormat from '../../common/format';
 
 export default class FmHeightgraph extends L.Control.Heightgraph {
 	constructor(options) {
@@ -70,6 +72,12 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 				}
 			}
 		}, options));
+
+		for (const i in this.options.mappings) {
+			for (const j in this.options.mappings[i]) {
+				this.options.mappings[i][j].originalText = this.options.mappings[i][j].text;
+			}
+		}
 	}
 
 	onAdd(map) {
@@ -92,6 +100,14 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 
 	addData(extraInfo, trackPoints) {
 		let data = FmHeightgraph.createGeoJsonForHeightGraph(extraInfo, trackPoints);
+
+		for (const featureCollection of data) {
+			for (const i in featureCollection.properties.distances) {
+				const mapping = this.options.mappings[featureCollection.properties.summary] && this.options.mappings[featureCollection.properties.summary][i];
+				if (mapping)
+					mapping.text = mapping.originalText + " (" + commonFormat.round(featureCollection.properties.distances[i], 2) + " km)";
+			}
+		}
 
 		if(this._container)
 			super.addData(data);
@@ -135,18 +151,28 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 				}
 			};
 
+			const distances = { };
+
 			for(let segment in extraInfo[i]) {
+				const segmentPosList = FmHeightgraph.trackSegment(trackPoints, extraInfo[i][segment][0], extraInfo[i][segment][1]);
+
+				if (distances[extraInfo[i][segment][2]] == null)
+					distances[extraInfo[i][segment][2]] = 0;
+				distances[extraInfo[i][segment][2]] += commonUtils.calculateDistance(segmentPosList);
+
 				featureCollection.features.push({
 					type: "Feature",
 					geometry: {
 						type: "LineString",
-						coordinates: FmHeightgraph.trackSegment(trackPoints, extraInfo[i][segment][0], extraInfo[i][segment][1]).map((trackPoint) => ([trackPoint.lon, trackPoint.lat, trackPoint.ele]))
+						coordinates: segmentPosList.map((trackPoint) => ([trackPoint.lon, trackPoint.lat, trackPoint.ele]))
 					},
 					properties: {
 						attributeType: extraInfo[i][segment][2]
 					}
 				});
 			}
+
+			featureCollection.properties.distances = distances;
 
 			geojson.push(featureCollection);
 		}
