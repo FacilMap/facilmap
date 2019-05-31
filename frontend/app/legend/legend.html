@@ -9,7 +9,7 @@
 			<h3 ng-click="toggleFilter(type)" ng-class="{ filtered: type.filtered }">{{type.name}}</h3>
 			<dl ng-repeat-end>
 				<dt ng-repeat-start="item in type.items" ng-class="thisClass = [ 'fm-' + type.type, { filtered: item.filtered, first: item.first } ]" ng-click="toggleFilter(type, item)" ng-bind-html="item | fmMapLegendMakeSymbol:type" uib-popover-template="'fm-legend-popover'" popover-trigger="'mouseenter'" popover-placement="left" popover-append-to-body="true"></dt>
-				<dd ng-repeat-end ng-class="thisClass" ng-click="toggleFilter(type, item)" ng-style="item.strikethrough ? {'text-decoration': 'line-through'} : {}" uib-popover-template="'fm-legend-popover'" popover-trigger="'mouseenter'" popover-placement="left" popover-append-to-body="true">{{item.value}}</dd>
+				<dd ng-repeat-end ng-class="thisClass" ng-click="toggleFilter(type, item)" ng-style="item.strikethrough ? {'text-decoration': 'line-through'} : {}" uib-popover-template="'fm-legend-popover'" popover-trigger="'mouseenter'" popover-placement="left" popover-append-to-body="true">{{item.label}}</dd>
 			</dl>
 			<div class="fm-legend2" ng-if="legend2">
 				<hr ng-if="legendItems.length > 0" />
@@ -23,7 +23,7 @@
 		<div class="fm-map-legend-popover">
 			<div class="symbol" ng-bind-html="item | fmMapLegendMakeSymbol:type"></div>
 			<p>
-				{{item.value}}<br>
+				{{item.label}}<br>
 				<small><em>Click to show/hide objects of this type.</em></small>
 			</p>
 		</div>

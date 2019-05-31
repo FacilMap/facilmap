@@ -199,10 +199,10 @@ fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtil
 	$scope.type = type;
 	$scope.field = ng.copy(field);
 
-	if(type.id != null && field.oldName) {
+	if(type.id != null && $scope.field.oldName) {
 		$scope.$watch(() => {
 			let extType = map.client.types[type.id];
-			return extType && extType.fields.find(thisField => thisField.name == field.oldName);
+			return extType && extType.fields.find(thisField => thisField.name == $scope.field.oldName);
 		}, (newField, oldField) => {
 			if(newField == null)
 				$scope.$dismiss();
@@ -215,7 +215,7 @@ fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtil
 		$scope.$watch("field", updateModified, true);
 
 		function updateModified() {
-			let fieldWithOldName = Object.assign(ng.copy(map.client.types[type.id].fields.find(thisField => thisField.name == field.oldName)), {
+			let fieldWithOldName = Object.assign(ng.copy(map.client.types[type.id].fields.find(thisField => thisField.name == $scope.field.oldName)), {
 				oldName: $scope.field.oldName,
 				name: $scope.field.name,
 				type: $scope.field.type
@@ -226,22 +226,22 @@ fm.app.controller('fmMapTypesEditTypeDropdownCtrl', function($scope, map, fmUtil
 		$scope.isModified = true;
 	}
 
-	if(field.type == 'checkbox') {
-		if(!field.options || field.options.length != 2) {
-			field.options = [
+	if($scope.field.type == 'checkbox') {
+		if(!$scope.field.options || $scope.field.options.length != 2) {
+			$scope.field.options = [
 				{ value: '' },
-				{ value: field.name }
+				{ value: $scope.field.name }
 			]
 		}
 
 		// Convert legacy format
-		if(field.options[0].value == "0")
-			field.options[0].value = "";
-		if(field.options[1].value == "1")
-			field.options[1].value = field.name;
+		if($scope.field.options[0].value == "0")
+			$scope.field.options[0].value = "";
+		if($scope.field.options[1].value == "1")
+			$scope.field.options[1].value = $scope.field.name;
 	}
 
-	for(let option of (field.options || []))
+	for(let option of ($scope.field.options || []))
 		option.oldValue = option.value;
 
 

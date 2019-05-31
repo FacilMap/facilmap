@@ -113,7 +113,20 @@ const filter = module.exports = {
 	},
 
 	prepareObject: function(obj, type) {
-		obj = filter.flattenObject(JSON.parse(JSON.stringify(obj)));
+		obj = JSON.parse(JSON.stringify(obj));
+
+		// Normalise checkbox and dropdown values
+		for (let field of type.fields) {
+			if (field.type == "checkbox") {
+				obj.data[field.name] = obj.data[field.name] == "1" ? "1" : "0";
+			} else if (field.type == "dropdown") {
+				if (!obj.data[field.name] && field.options && field.options[0]) {
+					obj.data[field.name] = field.options[0].value;
+				}
+			}
+		}
+
+		obj = filter.flattenObject(obj);
 
 		if(type)
 			obj.type = type.type;
