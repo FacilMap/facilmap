@@ -45,9 +45,11 @@ fm.app.factory("fmHighlightableLayers", function(fmUtils) {
 
 			this.on("fmMouseOver", () => {
 				this._fmMouseOver = true;
+				this.setStyle({});
 			});
 			this.on("fmMouseOut", () => {
 				this._fmMouseOver = false;
+				this.setStyle({});
 			});
 		}
 
