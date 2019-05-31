@@ -1,5 +1,6 @@
 const compileExpression = require('../lib/filtrex');
 const utils = require('./utils');
+const commonFormat = require('../common/format');
 
 const filter = module.exports = {
 	_customFuncs: {
@@ -115,15 +116,8 @@ const filter = module.exports = {
 	prepareObject: function(obj, type) {
 		obj = JSON.parse(JSON.stringify(obj));
 
-		// Normalise checkbox and dropdown values
 		for (let field of type.fields) {
-			if (field.type == "checkbox") {
-				obj.data[field.name] = obj.data[field.name] == "1" ? "1" : "0";
-			} else if (field.type == "dropdown") {
-				if (!obj.data[field.name] && field.options && field.options[0]) {
-					obj.data[field.name] = field.options[0].value;
-				}
-			}
+			obj.data[field.name] = commonFormat.normalizeField(field, obj.data[field.name], true);
 		}
 
 		obj = filter.flattenObject(obj);

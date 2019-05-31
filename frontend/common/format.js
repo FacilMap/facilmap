@@ -10,9 +10,21 @@ marked.setOptions({
 });
 
 const format = module.exports = {
-	formatField(field, value) {
+	normalizeField(field, value, enforceExistingOption) {
 		if(value == null)
 			value = field['default'] || "";
+
+		if(field.type == "checkbox")
+			value = value == "1" ? "1" : "0";
+
+		if(enforceExistingOption && field.type == "dropdown" && !field.options.some((option) => option.value == value) && field.options[0])
+			value = field.options[0].value;
+
+		return value;
+	},
+
+	formatField(field, value) {
+		value = format.normalizeField(field, value, false);
 		switch(field.type) {
 			case "textarea":
 				return format.markdownBlock(value);
