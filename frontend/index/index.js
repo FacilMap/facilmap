@@ -1,6 +1,7 @@
 import fm from '../entry.js';
 import $ from 'jquery';
 import ng from 'angular';
+import { registerDeobfuscationHandlers } from "../app/fieldTypes/obfuscation";
 
 fm.app.controller("PadCtrl", function($scope, $timeout, $element, fmUtils) {
 	$scope.padId = decodeURIComponent(location.pathname.match(/[^\/]*$/)[0]);
@@ -56,4 +57,6 @@ fm.app.controller("PadCtrl", function($scope, $timeout, $element, fmUtils) {
 			}, 0);
 		}
 	});
+
+	registerDeobfuscationHandlers();
 });

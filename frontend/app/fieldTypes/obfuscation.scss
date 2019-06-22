@@ -1,0 +1,15 @@
+.emobf2 {
+
+	&:before {
+		content: attr(data-u2) "@";
+	}
+
+	&:after {
+		content: attr(data-d2);
+	}
+
+	> span {
+		display: none;
+	}
+
+}

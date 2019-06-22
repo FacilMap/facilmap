@@ -5,6 +5,7 @@ import 'tablesorter/dist/js/widgets/widget-uitheme.min.js';
 import 'tablesorter/dist/js/widgets/widget-resizable.min.js';
 import 'tablesorter/dist/css/theme.bootstrap_3.min.css';
 import './table.css';
+import { registerDeobfuscationHandlers } from "../app/fieldTypes/obfuscation";
 
 // Dereferrer
 $(document).on("click", "a", function(e) {
@@ -26,3 +27,5 @@ $(document).ready(() => {
 		widgets: ["uitheme", "resizable"]
 	});
 });
+
+registerDeobfuscationHandlers();

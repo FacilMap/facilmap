@@ -43,7 +43,7 @@ const format = module.exports = {
 		let ret = isBrowser ? $("<div/>") : $.root();
 
 		ret.html(marked(string, options));
-		$("a[href]", ret).attr("target", "_blank");
+		format._applyMarkdownModifications(ret, $);
 		return ret.html();
 	},
 
@@ -53,7 +53,7 @@ const format = module.exports = {
 
 		ret.html(marked(string, options));
 		$("p", ret).replaceWith(function() { return $(this).contents(); });
-		$("a[href]", ret).attr("target", "_blank");
+		format._applyMarkdownModifications(ret, $);
 		return ret.html();
 	},
 
@@ -68,5 +68,33 @@ const format = module.exports = {
 		if(minutes < 10)
 			minutes = "0" + minutes;
 		return hours + ":" + minutes;
+	},
+
+	_applyMarkdownModifications($el, $) {
+		$("a[href]", $el).attr({
+			target: "_blank",
+			rel: "noopener noreferer"
+		});
+
+		$("a[href^='mailto:']", $el).each(function() {
+			const $a = $(this);
+			let m = $a.attr("href").match(/^mailto:(.*)@(.*)$/i);
+			if(m) {
+				$a.attr({
+					href: "#",
+					"data-u": m[1],
+					"data-d": m[2]
+				}).addClass("emobf");
+			}
+
+			m = $a.text().match(/^(.*)@(.*)$/);
+			if(m && $a.children().length == 0) {
+				$a.attr({
+					"data-u2": m[1],
+					"data-d2": m[2]
+				}).addClass("emobf2").html("<span>[obfuscated]</span>");
+			}
+		});
 	}
+
 };
