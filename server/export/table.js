@@ -10,7 +10,7 @@ const utils = require("../utils");
 const webserver = require("../webserver");
 
 const table = {
-	createTable(database, padId, filter) {
+	createTable(database, padId, filter, hide) {
 		const filterFunc = commonFilter.compileExpression(filter);
 
 		return utils.promiseAuto({
@@ -51,7 +51,8 @@ const table = {
 				types: results.types,
 				utils: commonUtils,
 				format: commonFormat,
-				routing: commonRouting
+				routing: commonRouting,
+				hide
 			})
 		})
 	}

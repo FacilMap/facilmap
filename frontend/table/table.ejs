@@ -29,23 +29,38 @@
 			<table id="type-<%=type.id%>" class="collapse in table table-striped table-bordered table-condensed tablesorter" data-sortlist="[[0,0]]">
 				<thead>
 					<tr>
+<%
+		if(!hide.includes("Name")) {
+%>
 						<th>Name</th>
-<%
-		if(type.type == "marker") {
-%>
-						<th data-sorter="false">Position</th>
-<%
-		} else {
-%>
-						<th>Distance</th>
-						<th>Time</th>
 <%
 		}
 
+		if(type.type == "marker") {
+			if(!hide.includes("Position")) {
+%>
+						<th data-sorter="false">Position</th>
+<%
+			}
+		} else {
+			if(!hide.includes("Distance")) {
+%>
+						<th>Distance</th>
+<%
+			}
+			if(!hide.includes("Time")) {
+%>
+						<th>Time</th>
+<%
+			}
+		}
+
 		for(let field of type.fields) {
+			if(!hide.includes(field.name)) {
 %>
 						<th><%=field.name%></th>
 <%
+			}
 		}
 %>
 					</tr>
@@ -55,23 +70,38 @@
 		for(let object of type.type == "marker" ? type.markers : type.lines) {
 %>
 					<tr>
+<%
+			if(!hide.includes("Name")) {
+%>
 						<td><%=object.name%></td>
-<%
-			if(type.type == "marker") {
-%>
-						<td><%=object.lat%>,<%=object.lon%></td>
-<%
-			} else {
-%>
-						<td><%=format.round(object.distance, 2)%> km</td>
-						<td><% if(object.time != null) { %><%=format.formatTime(object.time)%> h <%=routing.formatRoutingMode(object.mode)%><% } %></td>
 <%
 			}
 
+			if(type.type == "marker") {
+				if(!hide.includes("Position")) {
+%>
+						<td><%=object.lat%>,<%=object.lon%></td>
+<%
+				}
+			} else {
+				if(!hide.includes("Distance")) {
+%>
+						<td><%=format.round(object.distance, 2)%> km</td>
+<%
+				}
+				if(!hide.includes("Time")) {
+%>
+						<td><% if(object.time != null) { %><%=format.formatTime(object.time)%> h <%=routing.formatRoutingMode(object.mode)%><% } %></td>
+<%
+				}
+			}
+
 			for(let field of type.fields) {
+				if(!hide.includes(field.name)) {
 %>
 						<td><%-format.formatField(field, object.data[field.name])%></td>
 <%
+				}
 			}
 %>
 					</tr>

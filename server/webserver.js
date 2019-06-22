@@ -106,7 +106,7 @@ const webserver = {
 		});
 
 		app.get("/:padId/table", function(req, res, next) {
-			return table.createTable(database, req.params.padId, req.query.filter).then((renderedTable) => {
+			return table.createTable(database, req.params.padId, req.query.filter, req.query.hide ? req.query.hide.split(',') : []).then((renderedTable) => {
 				res.type("html");
 				res.send(renderedTable);
 			}).catch(next);
