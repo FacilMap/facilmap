@@ -45,7 +45,7 @@
     "request": "^2.88.0",
     "request-debug": "^0.2.0",
     "request-promise": "^4.2.2",
-    "sequelize": "^4.42.0",
+    "sequelize": "^5.15.1",
     "socket.io": "^2.2.0",
     "stream-combiner": "^0.2.2",
     "string-similarity": "^3.0.0",
