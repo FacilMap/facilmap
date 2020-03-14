@@ -1,4 +1,4 @@
-const compileExpression = require('../lib/filtrex');
+const { compileExpression } = require('filtrex');
 const utils = require('./utils');
 const commonFormat = require('../common/format');
 
@@ -14,7 +14,7 @@ const filter = module.exports = {
 	hasError(expr) {
 		try {
 			if(expr && expr.trim())
-				compileExpression(expr, filter._customFuncs);
+				compileExpression(expr, { extraFunctions: filter._customFuncs });
 		} catch(e) {
 			return e;
 		}
@@ -32,7 +32,7 @@ const filter = module.exports = {
 				};
 			});
 
-			let func = compileExpression(expr, customFuncs);
+			let func = compileExpression(expr, { extraFunctions: customFuncs });
 			return function(val) {
 				try {
 					currentVal = val;

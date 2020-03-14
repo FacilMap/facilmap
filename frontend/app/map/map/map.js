@@ -5,7 +5,7 @@ import 'leaflet.locatecontrol';
 import 'leaflet.markercluster';
 import 'leaflet-mouse-position';
 import 'leaflet-graphicscale';
-
+import 'leaflet-auto-graticule';
 
 fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $compile, fmMapLines, fmMapTypes, fmMapViews, $rootScope, fmMapPad, $timeout, $sce, fmMapHistory, $q, fmClient, fmInfoBox, fmMapRoute, fmConfig) {
 	return {
@@ -111,7 +111,7 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					zIndex: 300,
 					noWrap: true
 				}),
-				fmUtils.graticule(this, {
+				L.autoGraticule(this, {
 					fmName: "Graticule",
 					fmKey: "grid",
 					zIndex: 300,

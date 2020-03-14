@@ -16,7 +16,6 @@ const addDeps = {
 
 	// Until https://github.com/webpack-contrib/css-loader/issues/51 is resolved we have to include CSS files by hand
 	bootstrap: [ "bootstrap/dist/css/bootstrap.css", "bootstrap/dist/css/bootstrap-theme.css" ],
-	"leaflet-simple-graticule": [ "leaflet-simple-graticule/L.SimpleGraticule.css" ],
 	"bootstrap-touchspin": [ "bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" ],
 	leaflet: [ "leaflet/dist/leaflet.css" ],
 	"leaflet.locatecontrol": [ "leaflet.locatecontrol/dist/L.Control.Locate.css" ],
@@ -65,7 +64,16 @@ module.exports = {
 	module: {
 		rules: [
 			{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
-			{ test: /\.scss$/, use: [ "style-loader", "css-loader", "sass-loader" ]},
+			{ test: /\.scss$/, use: [
+				"style-loader",
+				{
+					loader: "css-loader",
+					options: {
+						modules: "global"
+					}
+				},
+				"sass-loader"
+			]},
 			{
 				test: /\.js$/,
 				exclude: /\/node_modules\//,
@@ -77,8 +85,28 @@ module.exports = {
 					}
 				}
 			},
-			{ test: /\.(png|jpe?g|gif|ttf|svg)$/, loader: "url-loader" },
-			{ test: /\.(html|ejs)$/, loader: "html-loader?attrs[]=img:src&attrs[]=link:href" },
+			{
+				test: /\.(png|jpe?g|gif|ttf|svg)$/,
+				use: [
+					{
+						loader: "url-loader",
+						options: {
+							esModule: false // In order for html-loader to handle it properly
+						}
+					}
+				]
+			},
+			{
+				test: /\.(html|ejs)$/,
+				use: [
+					{
+						loader: "html-loader",
+						options: {
+							attributes: [ "img:src", "link:href" ]
+						}
+					}
+				]
+			},
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
 
 			{
