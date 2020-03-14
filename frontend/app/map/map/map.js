@@ -104,14 +104,14 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					zIndex: 300,
 					noWrap: true
 				}),
-				L.tileLayer("http://korona.geog.uni-heidelberg.de/tiles/asterh/x={x}&y={y}&z={z}", {
+				L.tileLayer("https://maps.heigit.org/openmapsurfer/tiles/asterh/webmercator/{z}/{x}/{y}.png", {
 					fmName: "Relief",
 					fmKey: "Rlie",
-					attribution: $sce.trustAsHtml('© <a href="http://korona.geog.uni-heidelberg.de/" target="_blank">OpenMapSurfer</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
+					attribution: $sce.trustAsHtml('© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>'),
 					zIndex: 300,
 					noWrap: true
 				}),
-				L.autoGraticule(this, {
+				L.autoGraticule({
 					fmName: "Graticule",
 					fmKey: "grid",
 					zIndex: 300,
