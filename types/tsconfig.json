@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"target": "es3",
+		"esModuleInterop": true,
+		"strict": true,
+		"sourceMap": true,
+		"declaration": true,
+		"outDir": "dist",
+		"moduleResolution": "node"
+	}
+}

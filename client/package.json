@@ -14,27 +14,30 @@
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "main": "./client.js",
+  "main": "./dist/client.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap2.git"
   },
   "scripts": {
-    "deps": "npm install",
     "build": "webpack",
-    "clean": "rimraf ./build"
+    "watch": "webpack --watch",
+    "clean": "rimraf dist",
+    "dev-server": "webpack-dev-server  --mode development"
   },
   "dependencies": {
+    "@types/geojson": "^7946.0.7",
     "es6-promise": "^4.2.5",
+    "facilmap-types": "2.7.0",
     "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.5",
-    "babel-loader": "^8.1.0",
-    "expose-loader": "^0.7.5",
+    "@types/socket.io-client": "^1.4.32",
     "rimraf": "^3.0.2",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.8.3",
     "webpack": "^4.42.1",
+    "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^3.3.11"
   }
 }

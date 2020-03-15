@@ -96,8 +96,5 @@
     "webpack-bundle-analyzer": "^3.7.0",
     "webpack-cli": "^3.3.11",
     "webpack-hot-middleware": "^2.24.3"
-  },
-  "resolutions": {
-    "**/leaflet": "1.6.0"
   }
 }

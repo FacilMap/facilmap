@@ -438,7 +438,7 @@ Get a fake line object for a line with the given type. This can be used so that 
 that line already has the right style.
 
 * `data` (`{typeId: <typeId>}`): An object containing the type ID
-* _returns_ (Promise<[line](#line-1)): A fake line object with the styles of this type
+* _returns_ (Promise<[line](#line-1)>): A fake line object with the styles of this type
 
 ### `addLine(data)`
 
@@ -626,7 +626,7 @@ their `idx` property.
 * `id` (number): The ID of this history entry
 * `time` (Date): The time when the modification was done
 * `type` (string): The type of object that was modified, one of `Marker`, `Line`, `View`, `Type`, `Pad`
-* `action` (string): The action that was done, one of `create`, `update, `delete`
+* `action` (string): The action that was done, one of `create`, `update`, `delete`
 * `objectId` (number): The ID of the object that was modified (null if the object was the map itself)
 * `objectBefore` (object): The object before the modification (null if `action` is `create`)
 * `objectAfter` (object): The object after the modification (null if `action` is `delete`)
@@ -644,7 +644,7 @@ their `idx` property.
     * `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
     * `oldName` (string): When renaming a field (using [`editType(data)`](#edittypedata)), specify the former name here
     * `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
-    * `controlColour`, `controlSize`, `controlSymbol`, `controlWidth` (boolean): If this field is a dropdown, whether
+    * `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth` (boolean): If this field is a dropdown, whether
       the different options set a specific property on the object
     * `default` (string/boolean): The default value of this field
     * `options` ([object]): If this field is a dropdown, an array of objects with the following properties:
