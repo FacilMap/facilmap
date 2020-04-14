@@ -16,7 +16,7 @@ const tmpfname = fname + ".tmp";
 let currentMd5 = null;
 let db = null;
 
-if(config.maxmind) {
+if(config.maxmindUserId && config.maxmindLicenseKey) {
 	cron.schedule("0 3 * * *", download);
 
 	load().catch((err) => {
@@ -45,7 +45,11 @@ async function download() {
 	}
 
 	let res = await new Promise((resolve, reject) => {
-		https.get(url + (currentMd5 || ""), resolve).on("error", reject);
+		https.get(url + (currentMd5 || ""), {
+			headers: {
+				Authorization: `Basic ${new Buffer(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
+			}
+		}, resolve).on("error", reject);
 	});
 
 	if(res.statusCode == 304) {

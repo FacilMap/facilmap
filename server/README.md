@@ -11,22 +11,24 @@ an example `docker-compose.yml`:
 version: "2"
 services:
     facilmap:
-	    image: facilmap/facilmap2
-	    ports:
-	        - 8080
-	    links:
-	        - db
-	    environment:
-	        USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
-	        DB_TYPE: mysql
-	        DB_HOST: db
-	        DB_NAME: facilmap
-	        DB_USER: facilmap
-	        DB_PASSWORD: password
-	        OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
-	        MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
-	        MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
-	    restart: on-failure
+        image: facilmap/facilmap2
+        ports:
+            - 8080
+        links:
+            - db
+        environment:
+            USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+            DB_TYPE: mysql
+            DB_HOST: db
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: password
+            OSR_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+            MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+            MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
+            MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
+            MAXMIND_LICENSE_KEY: 
+        restart: on-failure
     db:
         image: mariadb
         environment:
@@ -66,18 +68,22 @@ Config
 
 The config can be set either by using environment variables (useful for docker) or by editing [`config.js`](config.js).
 
-| `config.js` value | Environment variable | Meaning                                                                                                                          |
-|-------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| `userAgent`       | `USER_AGENT`         | Will be used for all HTTP requests (search, routing, GPX/KML/OSM/GeoJSON files). You better provide your e-mail address in here. |
-| `host`            |                      | The ip address to listen on.                                                                                                     |
-| `port`            |                      | The port to listen on.                                                                                                           |
-| `db.type`         | `DB_TYPE`            | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`.                                               |
-| `db.host`         | `DB_HOST`            | The host name of the database server (default: `localhost`).                                                                     |
-| `db.port`         | `DB_PORT`            | The port of the database server (optional).                                                                                      |
-| `db.database`     | `DB_NAME`            | The name of the database (default: `facilmap`).                                                                                  |
-| `db.user`         | `DB_USER`            | The username to connect to the database with (default: `facilmap`).                                                              |
-| `db.password`     | `DB_PASSWORD`        | The password to connect to the database with.                                                                                    |
-| `osrToken`        | `OSR_TOKEN`          | OpenRouteService API key.                                                                                                        |
+| `config.js` value   | Environment variable  | Meaning                                                                                                                          |
+|---------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `userAgent`         | `USER_AGENT`          | Will be used for all HTTP requests (search, routing, GPX/KML/OSM/GeoJSON files). You better provide your e-mail address in here. |
+| `host`              |                       | The ip address to listen on.                                                                                                     |
+| `port`              |                       | The port to listen on.                                                                                                           |
+| `db.type`           | `DB_TYPE`             | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`.                                               |
+| `db.host`           | `DB_HOST`             | The host name of the database server (default: `localhost`).                                                                     |
+| `db.port`           | `DB_PORT`             | The port of the database server (optional).                                                                                      |
+| `db.database`       | `DB_NAME`             | The name of the database (default: `facilmap`).                                                                                  |
+| `db.user`           | `DB_USER`             | The username to connect to the database with (default: `facilmap`).                                                              |
+| `db.password`       | `DB_PASSWORD`         | The password to connect to the database with.                                                                                    |
+| `orsToken`          | `ORS_TOKEN`           | OpenRouteService API key.                                                                                                        |
+| `mapboxToken`       | `MAPBOX_TOKEN`        | Mapbox API key.                                                                                                                  |
+| `mapzenToken`       | `MAPZEN_TOKEN`        | Mapzen API key.                                                                                                                  |
+| `maxmindUserId`     | `MAXMIND_USER_ID`     | MaxMind user ID.                                                                                                                 |
+| `maxmindLicenseKey` | `MAXMIND_LICENSE_KEY` | MaxMind license key.                                                                                                          |
 
 Development
 -----------
