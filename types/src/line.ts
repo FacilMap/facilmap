@@ -1,4 +1,4 @@
-import { AllOptionalExceptId, Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base";
+import { AllOptionalExceptId, Bbox, Colour, ID, OmitId, Point, RouteMode, ZoomLevel } from "./base";
 
 interface LineBase {
 	id: ID;
@@ -29,5 +29,5 @@ interface TrackLineCreate extends LineBase {
 	trackPoints: TrackPoint[];
 }
 
-export type LineCreate = LineBase | TrackLineCreate;
-export type LineUpdate = AllOptionalExceptId<LineCreate>;
+export type LineCreate = OmitId<LineBase | TrackLineCreate>;
+export type LineUpdate = AllOptionalExceptId<LineBase | TrackLineCreate>;

@@ -2,11 +2,11 @@ var gulp = require("gulp");
 var gutil = require("gulp-util");
 var clean = require("gulp-clean");
 var newer = require("gulp-newer");
-var fs = require("fs");
-var Promise = require("bluebird");
+var fs = require("fs").promises;
 var request = require("request-promise");
 var unzip = require("unzipper");
 var webpack = require("webpack");
+var util = require("util");
 
 var icons = require("./gulpfile-icons");
 var webpackConfig = require("./webpack.config.js");
@@ -54,7 +54,7 @@ async function downloadIcons() {
 
 	await extract.promise();
 
-	await Promise.promisify(fs.rename)("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
+	await fs.rename("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
 }
 
 function compileIcons() {
@@ -69,7 +69,7 @@ function compileIcons() {
 const doIcons = gulp.series(downloadIcons, compileIcons);
 
 function doWebpack() {
-	return Promise.promisify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
+	return util.promisify(webpackCompiler.run.bind(webpackCompiler))().then(function(stats) {
 		gutil.log("[webpack]", stats.toString());
 
 		if(stats.compilation.errors && stats.compilation.errors.length > 0)
@@ -79,10 +79,10 @@ function doWebpack() {
 			fs.exists(staticFrontendFile, resolve);
 		}).then((exists) => {
 			if(exists)
-				return Promise.promisify(fs.unlink)(staticFrontendFile);
+				return fs.unlink(staticFrontendFile);
 		}).then(() => {
 			// Create symlink with fixed file name so that people can include https://facilmap.org/frontend.js
-			return Promise.promisify(fs.symlink)(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
+			return fs.symlink(`frontend-index-${stats.hash}.js`, `${__dirname}/build/frontend.js`);
 	    });
 	});
 }
@@ -93,7 +93,7 @@ function doSymlinks() {
 		fs.exists(staticClientFile, resolve);
 	}).then((exists) => {
 		if(!exists)
-			return Promise.promisify(fs.symlink)(require.resolve("facilmap-client/build/client"), staticClientFile);
+			return fs.symlink(require.resolve("facilmap-client/build/client"), staticClientFile);
 	});
 }
 

@@ -1,0 +1,37 @@
+# FacilMap configuration file. See https://github.com/motdotla/dotenv#rules for the syntax.
+
+# Database configuration. Possible database types: mysql, postgres, mariadb, sqlite
+#DB_TYPE=mysql
+#DB_HOST=localhost
+#DB_PORT=
+#DB_NAME=facilmap
+#DB_USER=facilmap
+#DB_PASSWORD=password
+
+# Where the FacilMap server should listen
+#HOST=
+#PORT=8080
+
+# The User-Agent header that the FacilMap server will use when talking to other services (for example to OpenStreetMap, Mapbox, OpenRouteService, ...)
+#USER_AGENT=FacilMap (https://facilmap.org/)
+
+# Mapbox configuration. Needed for routing without any advanced mode settings. Get an API key on https://www.mapbox.com/signup/.
+#MAPBOX_TOKEN=
+
+# OpenRouteService configuration. Needed for routing with any advanced mode settings. Get a token on https://go.openrouteservice.org/.
+#OSR_TOKEN=
+
+# MapZen configuration. Needed to get the elevation of markers, search results or GPS tracks. Get an API key on https://mapzen.com/developers/sign_up.
+#MAPZEN_TOKEN=
+
+# Maxmind configuration. If specified, the maxmind GeoLite2 database will be downloaded for Geo IP lookup (to show the initial map state) and kept it in memory
+# Sign up here: https://www.maxmind.com/en/geolite2/signup
+#MAXMIND_USER_ID=
+#MAXMIND_LICENSE_KEY=
+
+# Set to true to enable dev mode and webpack dev middleware
+#FM_DEV=
+
+# Set to a comma-separated list of values (or *) to enable debug output by particular components. See https://github.com/visionmedia/debug for the syntax.
+# Some possible values: request, sql, express:*
+#DEBUG=

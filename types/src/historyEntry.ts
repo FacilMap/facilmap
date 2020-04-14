@@ -1,14 +1,14 @@
-import { ID } from "./base";
+import { ID, OmitId } from "./base";
 import { Marker } from "./marker";
 import { Line } from "./line";
 import { View } from "./view";
 import { PadData } from "./padData";
 import { Type } from "./type";
 
-type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";
-type HistoryEntryAction = "create" | "update" | "delete";
+export type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";
+export type HistoryEntryAction = "create" | "update" | "delete";
 
-type HistoryEntryObject<T extends HistoryEntryType> =
+export type HistoryEntryObject<T extends HistoryEntryType> =
 	T extends "Marker" ? Marker :
 		T extends "Line" ? Line :
 			T extends "View" ? View :
@@ -22,6 +22,7 @@ interface HistoryEntryBase<T extends HistoryEntryType, A extends HistoryEntryAct
 	id: ID;
 	time: Date;
 	objectId: ID;
+	type: T;
 	action: A;
 	objectBefore: HistoryEntryBefore<T, A>;
 	objectAfter: HistoryEntryAfter<T, A>;
@@ -39,3 +40,5 @@ export type HistoryEntry =
 	| HistoryEntryBase2<"View">
 	| HistoryEntryBase2<"Type">
 	| HistoryEntryBase2<"Pad">;
+
+export type HistoryEntryCreate = OmitId<HistoryEntry>;

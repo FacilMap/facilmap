@@ -29,4 +29,5 @@ export type ObjectWithId = {
 	id: ID;
 }
 
+export type OmitId<T extends ObjectWithId> = Omit<T, "id">;
 export type AllOptionalExceptId<T extends ObjectWithId> = Pick<T, "id"> & Partial<Omit<T, "id">>;
