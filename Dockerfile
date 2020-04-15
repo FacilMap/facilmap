@@ -6,7 +6,7 @@ EXPOSE 8080
 
 RUN apk add --no-cache g++ git make python2
 
-RUN adduser -D -h /opt/facilmap -s /bin/bash facilmap
+RUN adduser -D -h /opt/facilmap -s /bin/sh facilmap
 
 WORKDIR /opt/facilmap/server
 

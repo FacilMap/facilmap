@@ -5,6 +5,8 @@ var es = require("event-stream");
 var combine = require("stream-combiner");
 var commonUtils = require("facilmap-frontend/common/utils");
 
+const R = 6371; // km
+
 function isInBbox(position, bbox) {
 	if(position.lat > bbox.top || position.lat < bbox.bottom)
 		return false;
