@@ -1,5 +1,5 @@
 const promisify = require("promisify-node");
-const md5 = require("md5-file/promise");
+const md5 = require("md5-file");
 const cron = require("node-cron");
 const maxmind = promisify("maxmind");
 const fs = promisify("fs");

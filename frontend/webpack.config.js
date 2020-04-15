@@ -98,14 +98,7 @@ module.exports = {
 			},
 			{
 				test: /\.(html|ejs)$/,
-				use: [
-					{
-						loader: "html-loader",
-						options: {
-							attributes: [ "img:src", "link:href" ]
-						}
-					}
-				]
+				use: "html-loader"
 			},
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
 
