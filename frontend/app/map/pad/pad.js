@@ -50,6 +50,9 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 	$scope.urlPrefix = fm.URL_PREFIX;
 	$scope.create = create;
 	$scope.noCancel = noCancel;
+	$scope.state = {
+		deleteConfirmation: ""
+	};
 
 	if(create) {
 		$scope.padData = {
@@ -119,5 +122,17 @@ fm.app.controller("fmMapPadSettingsCtrl", function($scope, map, create, proposed
 
 	$scope.copy = function(text) {
 		fmUtils.copyToClipboard(text);
-	}
+	};
+
+	$scope.deletePad = function() {
+		$scope.saving = true;
+		$scope.error = null;
+
+		map.client.deletePad().then(() => {
+			$scope.$close();
+		}).catch((err) => {
+			$scope.error = err;
+			$scope.saving = false;
+		});
+	};
 });

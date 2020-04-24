@@ -55,6 +55,11 @@ _Type:_ boolean
 
 _Type:_ number
 
+
+### `deleted`
+
+`true` if the map was deleted while this client was connected to it.
+
 ### `padData`
 
 The current settings of the map. `writeId` and/or `adminId` is null if if has been opened using another ID than the admin ID.
@@ -128,6 +133,10 @@ Note that when this event is fired, the read-only and/or the read-write ID of th
 property is updated automatically.
 
 _Type:_ [padData](#paddata-2)
+
+### `deletePad`
+
+The map has been deleted.
 
 ### `marker`
 
@@ -285,9 +294,17 @@ Creates a new collaborative map.
 
 ### `editPad(data)`
 
+Update the metadata of the current map.
+
 * `data` ([padData](#paddata-2)): The data of the map that should be modified. Fields that are not defined will not be
   modified. To change the default view, set the `defaultViewId` property. The `defaultView` property is ignored.
 * _returns_ (Promise): The new padData.
+
+### `deletePad()`
+
+Delete the current map irrevocably.
+
+* _returns_ (Promise): An empty promise that resolves when the map has been deleted.
 
 ### `listenToHistory()`
 

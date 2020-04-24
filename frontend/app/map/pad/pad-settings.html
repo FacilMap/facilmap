@@ -91,6 +91,23 @@
 
 		<button type="submit" class="hidden"></button>
 	</form>
+
+	<hr />
+
+	<form class="form-horizontal" ng-submit="state.deleteConfirmation == 'DELETE' && confirm('Are you sure you want to delete the map “' + padData.name +'”? Deleted maps cannot be restored!') && deletePad()">
+		<div class="form-group" ng-if="!create">
+			<label for="delete-input" class="col-sm-3 control-label">Delete map</label>
+			<div class="col-sm-9">
+				<div class="input-group">
+					<input id="delete-input" ng-model="state.deleteConfirmation" class="form-control" />
+					<span class="input-group-btn">
+						<button type="submit" class="btn btn-danger" ng-disabled="state.deleteConfirmation != 'DELETE'">Delete map</button>
+					</span>
+				</div>
+				<p class="help-block">To delete this map, type <code>DELETE</code> into the field.</p>
+			</div>
+		</div>
+	</form>
 </div>
 <div class="modal-footer">
 	<button ng-if="!noCancel" type="button" class="btn btn-default" ng-click="$dismiss()" ng-disabled="saving">{{create || isModified ? 'Cancel' : 'Close'}}</button>
