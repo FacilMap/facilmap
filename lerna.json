@@ -1,0 +1,9 @@
+{
+  "packages": [
+    "client",
+    "frontend",
+    "server",
+    "types"
+  ],
+  "version": "0.0.0"
+}

@@ -1,4 +1,4 @@
-FROM node:11.5-alpine
+FROM node:14.0-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD npm run server
@@ -17,9 +17,8 @@ RUN chown -R facilmap:facilmap /opt/facilmap
 USER facilmap
 
 RUN mkdir ~/.local && npm config set prefix ~/.local && \
-    cd ../client && npm run deps && npm run build && npm link && \
-    cd ../frontend && npm run deps && npm link facilmap-client && npm run build && npm link && \
-    cd ../server && npm run deps && npm install mysql pg sqlite3 tedious && npm link facilmap-client facilmap-frontend
+	npm install -S mysql pg sqlite3 tedious && \
+    cd .. && npm run deps && npm run build
 
 USER root
 RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/cache
