@@ -453,6 +453,12 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 					errorMessage = this.messages.showMessage("danger", serverError);
 			});
 
+			this.client.on("deletePad", () => {
+				this.messages.showMessage("danger", "This map has been deleted.", [
+					{ url: fm.URL_PREFIX, label: "Close map" }
+				]);
+			});
+
 			let updateBbox = () => {
 				$scope.client.updateBbox(fmUtils.leafletToFmBbox(this.map.getBounds(), this.map.getZoom()));
 			};

@@ -17,6 +17,7 @@ class Socket {
 		this.padData = null;
 		this.readonly = null;
 		this.writable = null;
+		this.deleted = false;
 		this.markers = { };
 		this.lines = { };
 		this.views = { };
@@ -101,6 +102,10 @@ class Socket {
 
 	editPad(data) {
 		return this._emit("editPad", data);
+	}
+
+	deletePad() {
+		return this._emit("deletePad");
 	}
 
 	listenToHistory() {
@@ -288,6 +293,12 @@ Socket.prototype._handlers = {
 		let id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
 		if(id != null)
 			this.padId = id;
+	},
+
+	deletePad() {
+		this.readonly = true;
+		this.writable = 0;
+		this.deleted = true;
 	},
 
 	marker(data) {

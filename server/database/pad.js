@@ -161,6 +161,36 @@ module.exports = function(Database) {
 
 				return res.newData;
 			});
+		},
+
+		async deletePad(padId) {
+			const padData = await this.getPadDataByAnyId(padId);
+
+			if (padData.defaultViewId) {
+				await this.updatePadData(padData.id, { defaultViewId: null });
+			}
+
+			await utils.streamEachPromise(this.getPadMarkers(padData.id, null), async (marker) => {
+				await this.deleteMarker(padData.id, marker.id);
+			});
+
+			await utils.streamEachPromise(this.getPadLines(padData.id, ['id']), async (line) => {
+				await this.deleteLine(padData.id, line.id);
+			});
+
+			await utils.streamEachPromise(this.getTypes(padData.id), async (type) => {
+				await this.deleteType(padData.id, type.id);
+			});
+
+			await utils.streamEachPromise(this.getViews(padData.id), async (view) => {
+				await this.deleteView(padData.id, view.id);
+			});
+
+			await this.clearHistory(padData.id);
+
+			await this._conn.model("Pad").destroy({ where: { id: padData.id } });
+
+			this.emit("deletePad", padId);
 		}
 
 		/*function copyPad(fromPadId, toPadId, callback) {

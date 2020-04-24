@@ -123,6 +123,10 @@ module.exports = function(Database) {
 					}
 				}).then(res => null);
 			});
+		},
+
+		async clearHistory(padId) {
+			await this._conn.model("History").destroy({ where: { padId: padId } });
 		}
 	});
 };

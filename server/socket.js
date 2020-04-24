@@ -241,6 +241,13 @@ utils.extend(SocketConnection.prototype, {
 			});
 		},
 
+		async deletePad() {
+			if (this.writable != 2)
+				throw new Error("Map can only be delete in admin mode.");
+
+			await this.database.deletePad(this.padId);
+		},
+
 		async getMarker(data) {
 			if(!utils.stripObject(data, { id: "number" } ))
 				throw new Error("Invalid parameters.");
@@ -747,6 +754,13 @@ utils.extend(SocketConnection.prototype, {
 				this.padId = data.id;
 
 				this.socket.emit("padData", dataClone);
+			}
+		},
+
+		deletePad: function(padId) {
+			if (padId == this.padId) {
+				this.socket.emit("deletePad");
+				this.writable = 0;
 			}
 		},
 
