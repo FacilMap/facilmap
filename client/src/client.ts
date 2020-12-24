@@ -1,5 +1,4 @@
-import io from "socket.io-client";
-import { Promise as PromiseShim } from "es6-promise";
+import { Manager, Socket as SocketIO } from "socket.io-client";
 import {
 	Bbox, EventData, EventDataParams, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
 	LineExportRequest, LineTemplateRequest, LineUpdate, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
@@ -9,19 +8,22 @@ import {
 
 declare module "facilmap-types/src/events" {
 	interface EventMap {
-		connect: void,
+		connect: void;
+		disconnect: string;
 		connect_error: Error;
-		connect_timeout: void;
+
+		error: Error;
 		reconnect: number;
 		reconnect_attempt: number;
-		reconnecting: number;
 		reconnect_error: Error;
 		reconnect_failed: void;
-		disconnect: void,
+
 		loadStart: void,
 		loadEnd: void
 	}
 }
+
+const MANAGER_EVENTS: Array<EventName> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export interface TrackPoints {
 	[idx: number]: TrackPoint;
@@ -41,7 +43,7 @@ export default class Socket {
 	server!: string;
 	padId!: string;
 	bbox!: Bbox | null;
-	socket!: SocketIOClient.Socket;
+	socket!: SocketIO;
 	padData!: PadData | null;
 	readonly!: boolean | null;
 	writable!: Writable | null;
@@ -72,7 +74,8 @@ export default class Socket {
 		this.serverError = null;
 
 		this.disconnected = true;
-		this.socket = io.connect(server, { forceNew: true });
+		const manager = new Manager(server, { forceNew: true });
+		this.socket = manager.socket("/");
 
 		this.padData = null;
 		this.readonly = null;
@@ -104,17 +107,18 @@ export default class Socket {
 		let listeners = this._listeners[eventName] as Array<EventHandler<E>> | undefined;
 		if(!listeners) {
 			listeners = this._listeners[eventName] = [ ];
-			this.socket.on(eventName, (data: EventData<E>) => { this._simulateEvent(eventName as any, data); });
+			(MANAGER_EVENTS.includes(eventName) ? this.socket.io : this.socket)
+				.on(eventName, (data: EventData<E>) => { this._simulateEvent(eventName as any, data); });
 		}
 
 		listeners.push(fn);
     }
 
     once<E extends EventName>(eventName: E, fn: EventHandler<E>) {
-		let handler: EventHandler<E> = (data) => {
+		let handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			fn(data);
-		};
+		}) as EventHandler<E>;
 		this.on(eventName, handler);
     }
 
@@ -125,8 +129,8 @@ export default class Socket {
 		}
 	}
 
-	_emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): PromiseShim<ResponseData<R>> {
-		return new PromiseShim((resolve, reject) => {
+	_emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
+		return new Promise((resolve, reject) => {
 			this._simulateEvent("loadStart");
 
 			this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
@@ -308,7 +312,7 @@ export default class Socket {
 		return this._emit("addMarker", data);
 	}
 
-	editMarker(data: MarkerUpdate) {
+	editMarker(data: ObjectWithId & MarkerUpdate) {
 		return this._emit("editMarker", data);
 	}
 
@@ -324,7 +328,7 @@ export default class Socket {
 		return this._emit("addLine", data);
 	}
 
-	editLine(data: LineUpdate) {
+	editLine(data: ObjectWithId & LineUpdate) {
 		return this._emit("editLine", data);
 	}
 
@@ -385,7 +389,7 @@ export default class Socket {
 		return this._emit("addType", data);
 	}
 
-	editType(data: TypeUpdate) {
+	editType(data: ObjectWithId & TypeUpdate) {
 		return this._emit("editType", data);
 	}
 
@@ -397,7 +401,7 @@ export default class Socket {
 		return this._emit("addView", data);
 	}
 
-	editView(data: ViewUpdate) {
+	editView(data: ObjectWithId & ViewUpdate) {
 		return this._emit("editView", data);
 	}
 
@@ -410,7 +414,7 @@ export default class Socket {
 	}
 
 	disconnect() {
-		this.socket.removeAllListeners();
+		this.socket.offAny();
 		this.socket.disconnect();
 	}
 
@@ -437,7 +441,7 @@ export default class Socket {
 		const listeners = this._listeners[eventName] as Array<EventHandler<E>> | undefined;
 		if(listeners) {
 			listeners.forEach(function(listener: EventHandler<E>) {
-				listener(data as EventData<E>);
+				listener(data as any);
 			});
 		}
 	}

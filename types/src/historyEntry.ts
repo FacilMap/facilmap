@@ -1,32 +1,39 @@
-import { ID, OmitId } from "./base";
+import { ID } from "./base";
 import { Marker } from "./marker";
 import { Line } from "./line";
 import { View } from "./view";
-import { PadData } from "./padData";
+import { PadData, PadId } from "./padData";
 import { Type } from "./type";
 
 export type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";
 export type HistoryEntryAction = "create" | "update" | "delete";
 
 export type HistoryEntryObject<T extends HistoryEntryType> =
-	T extends "Marker" ? Marker :
-		T extends "Line" ? Line :
-			T extends "View" ? View :
-				T extends "Type" ? Type :
+	T extends "Marker" ? Omit<Marker, 'id'> :
+		T extends "Line" ? Omit<Line, 'id'> :
+			T extends "View" ? Omit<View, 'id'> :
+				T extends "Type" ? Omit<Type, 'id'> :
 					PadData;
 
-type HistoryEntryBefore<T extends HistoryEntryType, A extends HistoryEntryAction> = A extends "create" ? null : HistoryEntryObject<T>;
-type HistoryEntryAfter<T extends HistoryEntryType, A extends HistoryEntryAction> = A extends "delete" ? null : HistoryEntryObject<T>;
-
-interface HistoryEntryBase<T extends HistoryEntryType, A extends HistoryEntryAction> {
+type HistoryEntryBase<T extends HistoryEntryType, A extends HistoryEntryAction> = {
 	id: ID;
 	time: Date;
-	objectId: ID;
 	type: T;
 	action: A;
-	objectBefore: HistoryEntryBefore<T, A>;
-	objectAfter: HistoryEntryAfter<T, A>;
-}
+	padId: PadId;
+} & (A extends "create" ? {
+	objectBefore?: undefined;
+} : {
+	objectBefore: HistoryEntryObject<T>;
+}) & (A extends "delete" ? {
+	objectAfter?: undefined;
+} : {
+	objectAfter: HistoryEntryObject<T>;
+}) & (T extends "Pad" ? {
+	objectId?: undefined;
+} : {
+	objectId: ID;
+});
 
 type HistoryEntryBase2<T extends HistoryEntryType> =
 	HistoryEntryBase<T, "create">
@@ -41,4 +48,4 @@ export type HistoryEntry =
 	| HistoryEntryBase2<"Type">
 	| HistoryEntryBase2<"Pad">;
 
-export type HistoryEntryCreate = OmitId<HistoryEntry>;
+export type HistoryEntryCreate = Omit<HistoryEntry, "id" | "time" | "padId">;

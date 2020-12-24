@@ -42,3 +42,5 @@ const config: Config = {
 	maxmindUserId: process.env.MAXMIND_USER_ID || "",
 	maxmindLicenseKey: process.env.MAXMIND_LICENSE_KEY || "",
 };
+
+export default config;

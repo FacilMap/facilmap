@@ -35,5 +35,5 @@ export function calculateBbox(trackPoints: Point[]) {
 			bbox.right = trackPoint.lon;
 	}
 
-	return bbox;
+	return bbox as Bbox;
 }

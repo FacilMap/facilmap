@@ -2,8 +2,7 @@ import highland from "highland";
 import polyline from "@mapbox/polyline";
 import request from "./utils/request";
 import { Point } from "../../types/src";
-
-const config = require("../../config");
+import config from "./config";
 
 
 const API_URL = "https://elevation.mapzen.com/height";
@@ -16,7 +15,7 @@ throttle.ratelimit(1, MIN_TIME_BETWEEN_REQUESTS).each((func) => {
 });
 
 export function _getThrottledSlot() {
-	return new Promise((resolve) => {
+	return new Promise<void>((resolve) => {
 		throttle.write(resolve);
 	});
 }
@@ -26,8 +25,8 @@ export async function getElevationForPoint(point: Point) {
 	return points[0];
 }
 
-export async function getElevationForPoints(points: Point[]): Promise<Array<number | null>> {
-	return points.map(() => null);
+export async function getElevationForPoints(points: Array<{ lat: string | number; lon: string | number }>): Promise<Array<number | undefined>> {
+	return points.map(() => undefined);
 
 	/*if(points.length == 0)
 		return Promise.resolve([ ]);
@@ -52,15 +51,15 @@ export async function getElevationForPoints(points: Point[]): Promise<Array<numb
 }
 
 interface AscentDescent {
-	ascent: number;
-	descent: number;
+	ascent: number | undefined;
+	descent: number | undefined;
 }
 
-export function getAscentDescent(elevations: Array<number | null>) {
+export function getAscentDescent(elevations: Array<number | null>): AscentDescent {
 	if(!elevations.some((ele) => (ele != null))) {
 		return {
-			ascent: null,
-			descent: null
+			ascent: undefined,
+			descent: undefined
 		};
 	}
 
@@ -76,9 +75,9 @@ export function getAscentDescent(elevations: Array<number | null>) {
 			continue;
 
 		if(ele > last)
-			ret.ascent += ele - last;
+			ret.ascent! += ele - last;
 		else
-			ret.descent += last - ele;
+			ret.descent! += last - ele;
 
 		last = ele;
 	}

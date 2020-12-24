@@ -1,80 +1,58 @@
-import { AllOptionalExceptId, Colour, ID, OmitId, RouteMode, Shape, Symbol } from "./base";
+import { Colour, ID, RouteMode, Shape, Symbol } from "./base";
+import { PadId } from "./padData";
 
 type ObjectType = "marker" | "line";
 type FieldType = "textarea" | "dropdown" | "checkbox" | "input";
-type FieldValue<F extends FieldType> = string;
-type OptionValue<F extends FieldType> = F extends "checkbox" ? "1" | "0" : string;
 
-type FieldBase<F extends FieldType, O extends ObjectType, isUpdate extends boolean> = {
+type FieldBase<isUpdate extends boolean> = {
 	name: string;
-	type: F;
-	controlColour: boolean;
-	default: FieldValue<F>;
-} & (O extends "marker" ? {
-	controlSize: boolean;
-	controlSymbol: boolean;
-	controlShape: boolean;
-} : {
-	controlWidth: boolean;
-}) & (F extends "dropdown" | "checkbox" ? {
-	options: Array<FieldOption<F, O, isUpdate>>
-} : { }) & (isUpdate extends true ? {
-	oldName: string;
+	type: FieldType;
+	controlColour?: boolean;
+	default?: string;
+	controlSize?: boolean;
+	controlSymbol?: boolean;
+	controlShape?: boolean;
+	controlWidth?: boolean;
+	options?: Array<FieldOption<isUpdate>>;
+} & (isUpdate extends true ? {
+	oldName?: string;
 } : { });
 
-type FieldOption<F extends FieldType, O extends ObjectType, isUpdate extends boolean> = {
-	value: OptionValue<F>;
+type FieldOption<isUpdate extends boolean> = {
+	value: string;
 	colour?: Colour;
-} & (O extends "marker" ? {
-	size: number;
-	symbol: Symbol;
-	shape: Shape;
-} : {
-	width: number;
-}) & (isUpdate extends true ? {
-	oldValue?: OptionValue<F>
+	size?: number;
+	symbol?: Symbol;
+	shape?: Shape;
+	width?: number;
+} & (isUpdate extends true ? {
+	oldValue?: string;
 } : { });
 
-type FieldBaseAny<O extends ObjectType, isUpdate extends boolean> =
-	FieldBase<"textarea", O, isUpdate>
-	| FieldBase<"dropdown", O, isUpdate>
-	| FieldBase<"checkbox", O, isUpdate>
-	| FieldBase<"input", O, isUpdate>;
+export type Field = FieldBase<false>;
+export type FieldOptions = Array<FieldOption<false>>;
 
-export type Field = FieldBaseAny<ObjectType, false>;
-export type MarkerField = FieldBaseAny<"marker", false>;
-export type LineField = FieldBaseAny<"line", false>;
-type FieldWithOptions = FieldBase<"dropdown", ObjectType, false> | FieldBase<"checkbox", ObjectType, false>;
-export type FieldOptions = Array<FieldOption<"dropdown" | "checkbox", ObjectType, false>>;
-
-export function fieldHasOptions(field: Field): field is FieldWithOptions {
-	return [ "dropdown", "checkbox" ].indexOf(field.type) != -1;
-}
-
-type TypeBase<O extends ObjectType, isUpdate extends boolean> = {
+type TypeBase<isUpdate extends boolean> = {
 	id: ID;
+	padId: PadId;
 	name: string;
-	defaultColour: Colour | null;
-	colourFixed: boolean;
-	fields: Array<FieldBaseAny<O, isUpdate>>
+	defaultColour?: Colour | null;
+	colourFixed?: boolean;
+	fields: Array<FieldBase<isUpdate>>;
+	defaultSize?: number | null;
+	sizeFixed?: boolean;
+	defaultSymbol?: Symbol | null;
+	symbolFixed?: boolean;
+	defaultShape?: Shape | null;
+	shapeFixed?: boolean;
+	defaultWidth?: number | null;
+	widthFixed?: boolean;
+	defaultMode?: RouteMode | null;
+	modeFixed?: boolean;
 } & (isUpdate extends false ? {
-	type: O
-} : {}) & (O extends "marker" ? {
-	defaultSize: number | null;
-	sizeFixed: boolean;
-	defaultSymbol: Symbol | null;
-	symbolFixed: boolean;
-	defaultShape: Shape | null;
-	shapeFixed: boolean;
-} : {
-	defaultWidth: number | null;
-	widthFixed: boolean;
-	defaultMode: RouteMode | null;
-	modeFixed: boolean;
-});
+	type: ObjectType;
+} : {});
 
-export type MarkerType = TypeBase<"marker", false>;
-export type LineType = TypeBase<"line", false>;
-export type Type = MarkerType | LineType;
-export type TypeCreate = OmitId<Type>;
-export type TypeUpdate = AllOptionalExceptId<TypeBase<"marker", true> | TypeBase<"line", true>>;
+export type Type = TypeBase<false>;
+export type TypeCreate = Omit<Type, "id" | "padId">;
+export type TypeUpdate = Partial<Omit<TypeBase<true>, "id" | "padId">>;

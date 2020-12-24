@@ -1,20 +1,19 @@
 import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo";
 import md5 from "md5-file";
 import cron from "node-cron";
-import maxmind from "maxmind";
-import fsRaw from "fs";
+import maxmind, { Reader, Response } from "maxmind";
+import fs from "fs";
 import https from "https";
 import zlib from "zlib";
-import config from "../../../config";
-
-const fs = fsRaw.promises;
+import config from "./config";
+import { IncomingMessage } from "http";
 
 const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
 const fname = `${__dirname}/cache/GeoLite2-City.mmdb`;
 const tmpfname = fname + ".tmp";
 
-let currentMd5 = null;
-let db = null;
+let currentMd5: string | null = null;
+let db: Reader<Response> | null = null;
 
 if(config.maxmindUserId && config.maxmindLicenseKey) {
 	cron.schedule("0 3 * * *", download);
@@ -28,7 +27,7 @@ if(config.maxmindUserId && config.maxmindLicenseKey) {
 }
 
 async function load() {
-	if(await fs.access(fname).then(() => true).catch(() => false))
+	if(await fs.promises.access(fname).then(() => true).catch(() => false))
 		db = await maxmind.open(fname);
 	else
 		db = null;
@@ -40,11 +39,11 @@ async function download() {
 	console.log("Downloading maxmind database");
 
 	if(!currentMd5) {
-		if(await fs.access(fname).then(() => true).catch(() => false))
+		if(await fs.promises.access(fname).then(() => true).catch(() => false))
 			currentMd5 = await md5(fname);
 	}
 
-	let res = await new Promise((resolve, reject) => {
+	let res = await new Promise<IncomingMessage>((resolve, reject) => {
 		https.get(url + (currentMd5 || ""), {
 			headers: {
 				Authorization: `Basic ${new Buffer(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
@@ -69,7 +68,7 @@ async function download() {
 		file.on("error", reject);
 	});
 
-	await fs.rename(tmpfname, fname);
+	await fs.promises.rename(tmpfname, fname);
 	currentMd5 = await md5(fname);
 
 	await load();
@@ -77,24 +76,22 @@ async function download() {
 	console.log("Maxmind database downloaded");
 }
 
-const geoip = module.exports = {
-	async lookup(ip) {
-		if(!db)
-			return null;
+export async function geoipLookup(ip: string) {
+	if(!db)
+		return null;
 
-		let ret = db.get(ip);
+	let ret = db.get(ip);
 
-		if(ret && ret.location) {
-			let distLat = distanceToDegreesLat(ret.location.accuracy_radius);
-			let distLon = distanceToDegreesLon(ret.location.accuracy_radius, ret.location.latitude);
+	if(ret && 'location' in ret && ret.location) {
+		let distLat = distanceToDegreesLat(ret.location.accuracy_radius);
+		let distLon = distanceToDegreesLon(ret.location.accuracy_radius, ret.location.latitude);
 
-			return {
-				top: ret.location.latitude + distLat,
-				right: ret.location.longitude + distLon,
-				bottom: ret.location.latitude - distLat,
-				left: ret.location.longitude - distLon
-			};
-		} else
-			return null;
-	}
+		return {
+			top: ret.location.latitude + distLat,
+			right: ret.location.longitude + distLon,
+			bottom: ret.location.latitude - distLat,
+			left: ret.location.longitude - distLon
+		};
+	} else
+		return null;
 };

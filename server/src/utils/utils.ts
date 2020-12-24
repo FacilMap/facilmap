@@ -1,3 +1,5 @@
+import { AsyncAutoTasks, AsyncResultCallback, Dictionary, auto as asyncAuto } from "async";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 export function generateRandomId(length: number) {
@@ -73,6 +75,13 @@ export async function promiseProps<T extends object>(obj: PromiseMap<T>): Promis
 	}));
 	return result;
 }
+
+
+export function auto<R extends Dictionary<any>>(tasks: AsyncAutoTasks<R, Error>): Promise<R> {
+	// typing of async.auto is broken
+	return asyncAuto(tasks) as any;
+}
+
 
 type PromiseCreatorMap<T extends object> = {
 	[P in keyof T]: PromiseLike<T[P]> | ((...args: Array<any>) => Promise<T[P]>)

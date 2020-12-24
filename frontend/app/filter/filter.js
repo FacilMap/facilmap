@@ -1,6 +1,6 @@
 import fm from '../app';
 import $ from 'jquery';
-import commonFilter from '../../common/filter';
+import * as commonFilter from '../../common/filter';
 
 fm.app.factory("fmFilter", function($rootScope, $uibModal, fmUtils) {
 	var currentVal;

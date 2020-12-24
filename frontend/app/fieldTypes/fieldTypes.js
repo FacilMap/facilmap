@@ -1,6 +1,6 @@
 import fm from '../app';
 import $ from 'jquery';
-import commonFormat from '../../common/format';
+import { formatField } from "../../common/format";
 
 fm.app.directive("fmTypeField", function($parse, $compile) {
 	return {
@@ -64,7 +64,7 @@ fm.app.directive("fmTypeFieldContent", function($parse) {
 				var field = $parse(attrs.fmTypeFieldContent)(scope);
 				var value = $parse(attrs.fmTypeFieldModel)(scope);
 
-				element.empty().append(commonFormat.formatField(field, value));
+				element.empty().append(formatField(field, value));
 			};
 
 			scope.$watch(attrs.fmTypeFieldModel, update);

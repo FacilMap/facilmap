@@ -9,9 +9,8 @@ import { dirname } from "path";
 import { promisify } from "util";
 import { PadId } from "facilmap-types";
 import { createTable } from "./export/table";
-
-const database = require("./database/database");
-const geojson = require("./export/geojson");
+import database from "./database/database";
+import geojson from "./export/geojson";
 const gpx = require("./export/gpx");
 const table = require("./export/table");
 const config = require("../../config");

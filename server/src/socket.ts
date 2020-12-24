@@ -1,22 +1,22 @@
 import { promiseAuto, promiseProps, stripObject } from "./utils/utils";
 import { streamToArrayPromise } from "./utils/streams";
 import { isInBbox } from "./utils/geo";
-import socketIo from "socket.io";
+import { Server } from "socket.io";
 import domain from "domain";
-import underscore from "underscore";
 import gpx from "./export/gpx";
 import routing from "./routing/routing";
 import search from "./search";
 import geoip from "./geoip";
+import { isEqual } from "lodash";
 
 class Socket {
 	constructor(server, database) {
-		var io = socketIo.listen(server, {
-			cookie: false
+		const io = new Server(server, {
+			cors: { origin: true }
 		});
 
 		io.sockets.on("connection", (socket) => {
-			var d = domain.create();
+			const d = domain.create();
 			d.add(socket);
 
 			d.on("error", function(err) {
@@ -65,7 +65,7 @@ class SocketConnection {
 	}
 
 	registerDatabaseHandler(eventName, handler) {
-		var func = handler.bind(this);
+		const func = handler.bind(this);
 
 		this.database.on(eventName, func);
 
@@ -106,7 +106,7 @@ class SocketConnection {
 	}
 
 	getPadObjects(padData) {
-		var promises = {
+		const promises = {
 			padData: [ padData ],
 			view: streamToArrayPromise(this.database.getViews(padData.id)),
 			type: streamToArrayPromise(this.database.getTypes(padData.id)),
@@ -181,7 +181,7 @@ Object.assign(SocketConnection.prototype, {
 			if(!stripObject(bbox, { top: "number", left: "number", bottom: "number", right: "number", zoom: "number" }))
 				return;
 
-			var bboxWithExcept = { ...bbox };
+			const bboxWithExcept = { ...bbox };
 			if(this.bbox && bbox.zoom == this.bbox.zoom)
 				bboxWithExcept.except = this.bbox;
 
@@ -311,7 +311,7 @@ Object.assign(SocketConnection.prototype, {
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
+				if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
 					return this.database.getAllRoutePoints(this.route.id);
 			}).then((trackPoints) => {
 				return this.database.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
@@ -326,7 +326,7 @@ Object.assign(SocketConnection.prototype, {
 				if(!this.writable)
 					throw "In read-only mode.";
 
-				if(this.route && data.mode != "track" && underscore.isEqual(this.route.routePoints, data.routePoints))
+				if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints))
 					return this.database.getAllRoutePoints(this.route.id);
 			}).then((trackPoints) => {
 				return this.database.updateLine(this.padId, data.id, data, null, trackPoints && Object.assign({}, this.route, {trackPoints}));
@@ -670,7 +670,7 @@ Object.assign(SocketConnection.prototype, {
 		},
 
 		revertHistoryEntry: function(data) {
-			var listening = !!this.historyListener;
+			const listening = !!this.historyListener;
 
 			return Promise.resolve().then(() => {
 				if(!stripObject(data, { id: "number" }))
@@ -745,7 +745,7 @@ Object.assign(SocketConnection.prototype, {
 
 		padData: function(padId, data) {
 			if(padId == this.padId) {
-				var dataClone = JSON.parse(JSON.stringify(data));
+				const dataClone = JSON.parse(JSON.stringify(data));
 				if(this.writable == 0)
 					dataClone.writeId = null;
 				if(this.writable != 2)

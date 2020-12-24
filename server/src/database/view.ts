@@ -1,0 +1,94 @@
+import { DataTypes, Model } from "sequelize";
+import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "../../../types/src";
+import Database from "./database";
+import { getLatType, getLonType, makeNotNullForeignKey } from "./helpers";
+
+function createViewModel() {
+	return class ViewModel extends Model {
+		id!: ID;
+		name!: string;
+		baseLayer!: string;
+		layers!: string;
+		top!: Latitude;
+		bottom!: Latitude;
+		left!: Longitude;
+		right!: Longitude;
+		filter!: string | null;
+		toJSON!: () => View;
+	}
+}
+
+type ViewModel = InstanceType<ReturnType<typeof createViewModel>>;
+
+export default class DatabaseViews {
+
+	ViewModel = createViewModel();
+
+	_db: Database;
+
+	constructor(database: Database) {
+		this._db = database;
+
+		this.ViewModel.init({
+			name : { type: DataTypes.TEXT, allowNull: false },
+			baseLayer : { type: DataTypes.TEXT, allowNull: false },
+			layers : {
+				type: DataTypes.TEXT,
+				allowNull: false,
+				get: function(this: ViewModel) {
+					return JSON.parse(this.getDataValue("layers"));
+				},
+				set: function(this: ViewModel, v) {
+					this.setDataValue("layers", JSON.stringify(v));
+				}
+			},
+			top : getLatType(),
+			bottom : getLatType(),
+			left : getLonType(),
+			right : getLonType(),
+			filter: { type: DataTypes.TEXT, allowNull: true }
+		}, {
+			sequelize: this._db._conn
+		});
+	}
+
+	afterInit() {
+		this.ViewModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
+		this._db.pads.PadModel.hasMany(this.ViewModel, { foreignKey: "padId" });
+	}
+
+	getViews(padId: PadId) {
+		return this._db.helpers._getPadObjects<View>("View", padId);
+	}
+
+	async createView(padId: PadId, data: ViewCreate) {
+		if(data.name == null || data.name.trim().length == 0)
+			throw new Error("No name provided.");
+
+		const newData = await this._db.helpers._createPadObject<View>("View", padId, data);
+
+		await this._db.history.addHistoryEntry(padId, {
+			type: "View",
+			action: "create",
+			objectId: newData.id,
+			objectAfter: newData
+		});
+
+		this._db.emit("view", padId, newData);
+		return newData;
+	}
+
+	async updateView(padId: PadId, viewId: ID, data: ViewUpdate) {
+		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
+
+		this._db.emit("view", padId, newData);
+		return newData;
+	}
+
+	async deleteView(padId: PadId, viewId: ID) {
+		const data = await this._db.helpers._deletePadObject<View>("View", padId, viewId);
+
+		this._db.emit("deleteView", padId, { id: data.id });
+		return data;
+	}
+};

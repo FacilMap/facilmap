@@ -1,4 +1,5 @@
-import { AllOptionalExceptId, Colour, ID, OmitId, Point, Shape, Symbol } from "./base";
+import { Colour, ID, Point, Shape, Symbol } from "./base";
+import { PadId } from "./padData";
 
 export interface Marker extends Point {
 	id: ID;
@@ -7,10 +8,11 @@ export interface Marker extends Point {
 	size: number;
 	symbol: Symbol;
 	shape: Shape;
-	elevation: number;
+	ele?: number;
 	typeId: ID;
 	data: Record<string, string>;
+	padId: PadId;
 }
 
-export type MarkerCreate = OmitId<Marker>;
-export type MarkerUpdate = AllOptionalExceptId<Marker>;
+export type MarkerCreate = Omit<Marker, "id" | "padId">;
+export type MarkerUpdate = Partial<MarkerCreate>;

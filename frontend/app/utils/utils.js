@@ -5,10 +5,9 @@ import ng from 'angular';
 import 'leaflet-geometryutil';
 import linkifyStr from 'linkifyjs/string';
 import Clipboard from 'clipboard';
-
-import commonFormat from '../../common/format';
-import commonUtils from '../../common/utils';
-import commonRouting from '../../common/routing';
+import { formatTime, round } from '../../common/format';
+import { quoteHtml, quoteJavaScript, quoteRegExp } from '../../common/utils';
+import { formatRouteMode } from '../../common/routing';
 
 fm.app.factory("fmUtils", function($parse, fmIcons) {
 
@@ -142,13 +141,13 @@ fm.app.factory("fmUtils", function($parse, fmIcons) {
 			to[i] = from[i];
 	};
 
-	fmUtils.quoteJavaScript = commonUtils.quoteJavaScript;
-	fmUtils.quoteHtml = commonUtils.quoteHtml;
-	fmUtils.quoteRegExp = commonUtils.quoteRegExp;
+	fmUtils.quoteJavaScript = quoteJavaScript;
+	fmUtils.quoteHtml = quoteHtml;
+	fmUtils.quoteRegExp = quoteRegExp;
 
-	fmUtils.round = commonFormat.round;
-	fmUtils.formatTime = commonFormat.formatTime;
-	fmUtils.formatRoutingMode = commonRouting.formatRoutingMode;
+	fmUtils.round = round;
+	fmUtils.formatTime = formatTime;
+	fmUtils.formatRouteMode = formatRouteMode;
 
 	fmUtils.leafletToFmBbox = function(bbox, zoom) {
 		var ret = {
@@ -765,7 +764,7 @@ fm.app.filter('fmFormatTime', function(fmUtils) {
 
 fm.app.filter('fmRoutingMode', function(fmUtils) {
 	return function(value) {
-		return fmUtils.formatRoutingMode(value);
+		return fmUtils.formatRouteMode(value);
 	};
 });
 

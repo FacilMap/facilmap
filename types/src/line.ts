@@ -1,4 +1,8 @@
-import { AllOptionalExceptId, Bbox, Colour, ID, OmitId, Point, RouteMode, ZoomLevel } from "./base";
+import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base";
+import { PadId } from "./padData";
+
+export interface LineExtraInfo {
+}
 
 interface LineBase {
 	id: ID;
@@ -9,13 +13,15 @@ interface LineBase {
 	name: string;
 	typeId: ID;
 	data: Record<string, string>;
+	extraInfo?: LineExtraInfo;
+	padId: PadId;
 }
 
 export interface Line extends LineBase, Bbox {
 	distance: number;
-	ascent: number;
-	descent: number;
-	time: number;
+	ascent?: number;
+	descent?: number;
+	time?: number;
 }
 
 export interface TrackPoint extends Point {
@@ -24,10 +30,9 @@ export interface TrackPoint extends Point {
 	ele?: number;
 }
 
-interface TrackLineCreate extends LineBase {
-	mode: "track";
-	trackPoints: TrackPoint[];
+interface LineWithTrackPoints extends LineBase {
+	trackPoints?: TrackPoint[];
 }
 
-export type LineCreate = OmitId<LineBase | TrackLineCreate>;
-export type LineUpdate = AllOptionalExceptId<LineBase | TrackLineCreate>;
+export type LineCreate = Omit<LineWithTrackPoints, "id" | "padId">;
+export type LineUpdate = Partial<LineCreate>;

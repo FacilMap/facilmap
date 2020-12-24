@@ -3,8 +3,8 @@ import $ from 'jquery';
 import L from 'leaflet';
 
 import css from './heightgraph.scss';
-import commonUtils from '../../common/utils';
-import commonFormat from '../../common/format';
+import { calculateDistance } from '../../common/utils';
+import { round } from '../../common/format';
 
 export default class FmHeightgraph extends L.Control.Heightgraph {
 	constructor(options) {
@@ -171,7 +171,7 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 			for (const i in featureCollection.properties.distances) {
 				const mapping = this.options.mappings[featureCollection.properties.summary] && this.options.mappings[featureCollection.properties.summary][i];
 				if (mapping)
-					mapping.text = mapping.originalText + " (" + commonFormat.round(featureCollection.properties.distances[i], 2) + " km)";
+					mapping.text = mapping.originalText + " (" + round(featureCollection.properties.distances[i], 2) + " km)";
 			}
 		}
 
@@ -224,7 +224,7 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 
 				if (distances[extraInfo[i][segment][2]] == null)
 					distances[extraInfo[i][segment][2]] = 0;
-				distances[extraInfo[i][segment][2]] += commonUtils.calculateDistance(segmentPosList);
+				distances[extraInfo[i][segment][2]] += calculateDistance(segmentPosList);
 
 				featureCollection.features.push({
 					type: "Feature",
@@ -255,7 +255,7 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 			if (ret[extraInfo[segment][2]] == null)
 				ret[extraInfo[segment][2]] = 0;
 
-			ret[extraInfo[segment][2]] += commonUtils.calculateDistance(FmHeightgraph.trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
+			ret[extraInfo[segment][2]] += calculateDistance(FmHeightgraph.trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
 		}
 
 		return ret;

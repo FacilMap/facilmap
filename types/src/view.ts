@@ -1,4 +1,5 @@
-import { AllOptionalExceptId, Bbox, ID, Layer, OmitId } from "./base";
+import { Bbox, ID, Layer } from "./base";
+import { PadId } from "./padData";
 
 export interface View extends Bbox {
 	id: ID;
@@ -6,7 +7,8 @@ export interface View extends Bbox {
 	baseLayer: Layer;
 	layers: Layer[];
 	filter?: string;
+	padId: PadId;
 }
 
-export type ViewCreate = OmitId<View>;
-export type ViewUpdate = AllOptionalExceptId<View>;
+export type ViewCreate = Omit<View, "id" | "padId">;
+export type ViewUpdate = Partial<ViewCreate>;

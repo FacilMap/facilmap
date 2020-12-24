@@ -1,10 +1,11 @@
-import { clone, promiseAuto } from "../utils/utils";
-import { Model, DataTypes } from "sequelize";
+import { clone } from "../utils/utils";
+import { Model, DataTypes, FindOptions } from "sequelize";
 import Database from "./database";
 import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadId } from "facilmap-types";
+import { makeNotNullForeignKey } from "./helpers";
 
 function createHistoryModel() {
-	return class History extends Model {
+	return class HistoryModel extends Model {
 		id!: ID;
 		time!: Date;
 		type!: HistoryEntryType;
@@ -13,6 +14,7 @@ function createHistoryModel() {
 		objectBefore!: string | null;
 		objectAfter!: string | null;
 		padId!: PadId;
+		toJSON!: () => HistoryEntry;
 	};
 }
 
@@ -64,91 +66,134 @@ export default class DatabaseHistory {
 
 
 	afterInit() {
-		this._db.pad.PadModel.hasMany(this.HistoryModel, this._db.helpers._makeNotNullForeignKey("History", "padId"));
-		this.HistoryModel.belongsTo(this._db.pad.PadModel, this._db.helpers._makeNotNullForeignKey("pad", "padId"));
+		this._db.pads.PadModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "padId"));
+		this.HistoryModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
 		this.HistoryModel.findOne()
 	}
 
 
-	addHistoryEntry(padId: ID, data: HistoryEntryCreate) {
-		return promiseAuto({
-			oldEntryIds: async () => {
-				const ids = await this.HistoryModel.findAll({
-					where: { padId: padId },
-					order: [[ "time", "DESC" ]],
-					offset: this.HISTORY_ENTRIES-1,
-					attributes: [ "id" ]
-				});
-				return ids.map(it => it.id);
-			},
-			destroyOld: async (oldEntryIds: ID[]) => {
-				if(oldEntryIds && oldEntryIds.length > 0) {
-					return this._db._conn.model("History").destroy({ where: { padId: padId, id: oldEntryIds } });
-				}
-			},
-			addEntry: (oldEntryIds: ID[]) => {
-				var dataClone = clone(data);
-				if(data.type != "Pad") {
-					if(dataClone.objectBefore) {
-						delete dataClone.objectBefore.id;
-						delete dataClone.objectBefore.padId;
-					}
-					if(dataClone.objectAfter) {
-						delete dataClone.objectAfter.id;
-						delete dataClone.objectAfter.padId;
-					}
-				}
+	async addHistoryEntry(padId: PadId, data: HistoryEntryCreate) {
+		const oldEntryIds = (await this.HistoryModel.findAll({
+			where: { padId: padId },
+			order: [[ "time", "DESC" ]],
+			offset: this.HISTORY_ENTRIES-1,
+			attributes: [ "id" ]
+		})).map(it => it.id);
 
-				return this.helpers._createPadObject("History", padId, dataClone);
+		const dataClone = clone(data);
+		if(data.type != "Pad") {
+			if(dataClone.objectBefore) {
+				delete (dataClone.objectBefore as any).id;
+				delete (dataClone.objectBefore as any).padId;
 			}
-		}).then(res => {
-			this._db.emit("addHistoryEntry", padId, res.addEntry);
+			if(dataClone.objectAfter) {
+				delete (dataClone.objectAfter as any).id;
+				delete (dataClone.objectAfter as any).padId;
+			}
+		}
 
-			return res.addEntry;
-		});
+		const [newEntry] = await Promise.all([
+			this._db.helpers._createPadObject<HistoryEntry>("History", padId, dataClone),
+			oldEntryIds.length > 0 ? this.HistoryModel.destroy({ where: { padId: padId, id: oldEntryIds } }) : undefined
+		]);
+
+		this._db.emit("addHistoryEntry", padId, newEntry);
+
+		return newEntry;
 	}
 
 
-	getHistory(padId: PadId, types?: HistoryEntryType[]): HistoryEntry {
-		let query = { order: [[ "time", "DESC" ]] };
+	getHistory(padId: PadId, types?: HistoryEntryType[]) {
+		let query: FindOptions = { order: [[ "time", "DESC" ]] };
 		if(types)
 			query.where = {type: types};
-		return this.helpers._getPadObjects("History", padId, query);
+		return this._db.helpers._getPadObjects<HistoryEntry>("History", padId, query);
 	}
 
 
-	getHistoryEntry(padId, entryId) {
-		return this._getPadObject("History", padId, entryId);
+	async getHistoryEntry(padId: PadId, entryId: ID) {
+		return await this._db.helpers._getPadObject<HistoryEntry>("History", padId, entryId);
 	}
 
 
-	revertHistoryEntry(padId, id) {
-		return this.getHistoryEntry(padId, id).then((entry) => {
-			if(entry.type == "Pad")
-				return this.updatePadData(padId, entry.objectBefore);
+	async revertHistoryEntry(padId: PadId, id: ID) {
+		const entry = await this.getHistoryEntry(padId, id);
 
-			return promiseAuto({
-				existsNow: () => {
-					return this._padObjectExists(entry.type, padId, entry.objectId);
-				},
+		if(entry.type == "Pad") {
+			if (!entry.objectBefore) {
+				throw new Error("Old pad data not available.");
+			}
+			await this._db.pads.updatePadData(padId, entry.objectBefore);
+			return;
+		} else if (!["Marker", "Line", "View", "Type"].includes(entry.type)) {
+			throw new Error(`Unknown type "${entry.type}.`);
+		}
 
-				restore: (existsNow) => {
-					var objectBefore = JSON.parse(JSON.stringify(entry.objectBefore));
+		const existsNow = await this._db.helpers._padObjectExists(entry.type, padId, entry.objectId);
 
-					if(entry.action == "create")
-						return existsNow && this["delete" + entry.type].call(this, padId, entry.objectId, objectBefore);
-					else if(existsNow)
-						return this["update" + entry.type].call(this, padId, entry.objectId, objectBefore);
-					else {
-						return this["create" + entry.type].call(this, padId, objectBefore).then((newObj) => {
-							return this._db._conn.model("History").update({ objectId: newObj.id }, { where: { padId: padId, type: entry.type, objectId: entry.objectId } }).then(() => {
-								this.emit("historyChange", padId);
-							});
-						});
-					}
-				}
-			}).then(res => null);
-		});
+		if(entry.action == "create") {
+			if (!existsNow)
+				return;
+
+			switch (entry.type) {
+				case "Marker":
+					await this._db.markers.deleteMarker(padId, entry.objectId);
+					break;
+
+				case "Line":
+					await this._db.lines.deleteLine(padId, entry.objectId);
+					break;
+
+				case "View":
+					await this._db.views.deleteView(padId, entry.objectId);
+					break;
+
+				case "Type":
+					await this._db.types.deleteType(padId, entry.objectId);
+					break;
+			}
+		} else if(existsNow) {
+			switch (entry.type) {
+				case "Marker":
+					await this._db.markers.updateMarker(padId, entry.objectId, entry.objectBefore);
+					break;
+
+				case "Line":
+					await this._db.lines.updateLine(padId, entry.objectId, entry.objectBefore);
+					break;
+
+				case "View":
+					await this._db.views.updateView(padId, entry.objectId, entry.objectBefore);
+					break;
+
+				case "Type":
+					await this._db.types.updateType(padId, entry.objectId, entry.objectBefore);
+					break;
+			}
+		} else {
+			let newObj;
+
+			switch (entry.type) {
+				case "Marker":
+					newObj = await this._db.markers.createMarker(padId, entry.objectBefore);
+					break;
+
+				case "Line":
+					newObj = await this._db.lines.createLine(padId, entry.objectBefore);
+					break;
+
+				case "View":
+					newObj = await this._db.views.createView(padId, entry.objectBefore);
+					break;
+
+				case "Type":
+					newObj = await this._db.types.createType(padId, entry.objectBefore);
+					break;
+			}
+
+			await this.HistoryModel.update({ objectId: newObj.id }, { where: { padId: padId, type: entry.type, objectId: entry.objectId } });
+			this._db.emit("historyChange", padId);
+		}
 	}
 
 

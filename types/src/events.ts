@@ -30,7 +30,7 @@ export interface EventMap {
 
 export type EventName = keyof EventMap;
 export type EventData<E extends EventName> = EventMap[E];
-export type EventHandler<E extends EventName> = EventData<E> extends void ? () => void : (data: EventData<E>) => void;
+export type EventHandler<E extends EventName> = EventData<E> extends void ? (data?: undefined) => void : (data: EventData<E>) => void;
 
 export type EventDataParams<E extends EventName> = Array<EventData<E>> & (EventData<E> extends void ? {
 	0?: undefined

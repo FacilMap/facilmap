@@ -1,6 +1,6 @@
 import fm from "../app";
 import css from "./routeMode.scss";
-import commonRouting from "../../common/routing";
+import { decodeRouteMode, encodeRouteMode } from "../../common/routing";
 
 fm.app.constant("fmRouteModeConstants", {
 	modes: ["car", "bicycle", "pedestrian", ""],
@@ -109,14 +109,14 @@ fm.app.directive("fmRouteMode", function(fmRouteModeConstants) {
 			if(scope.encodedMode == null)
 				scope.encodedMode = "car";
 
-			scope.decodedMode = commonRouting.decodeMode(scope.encodedMode);
+			scope.decodedMode = decodeRouteMode(scope.encodedMode);
 
 			scope.$watch("encodedMode", (encodedMode) => {
-				scope.decodedMode = commonRouting.decodeMode(encodedMode);
+				scope.decodedMode = decodeRouteMode(encodedMode);
 			});
 
 			scope.$watch("decodedMode", (decodedMode) => {
-				scope.encodedMode = commonRouting.encodeMode(decodedMode);
+				scope.encodedMode = encodeRouteMode(decodedMode);
 			}, true);
 
 			scope.types = [];
