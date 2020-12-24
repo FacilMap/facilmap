@@ -1,5 +1,5 @@
 import { Model } from "sequelize";
-import { DataTypes, Sequelize, Op } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 import { PadData, PadDataCreate, PadDataUpdate, PadId } from "../../../types/src";
 import Database from "./database";
 import { streamEachPromise } from "../utils/streams";
@@ -45,38 +45,38 @@ export default class DatabasePads {
 		});
 	}
 
-	afterInit() {
+	afterInit(): void {
 		this.PadModel.belongsTo(this._db.views.ViewModel, { as: "defaultView", foreignKey: "defaultViewId", constraints: false });
 	}
 
 	// =====================================================================================================================
 
-	async padIdExists(padId: PadId) {
+	async padIdExists(padId: PadId): Promise<boolean> {
 		const num = await this.PadModel.count({ where: { [Op.or]: [ { id: padId }, { writeId: padId }, { adminId: padId } ] } });
 		return num > 0;
 	}
 
-	async getPadData(padId: PadId) {
+	async getPadData(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { id: padId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ]});
-		return obj?.toJSON() as PadData || null;
+		return obj?.toJSON();
 	}
 
-	async getPadDataByWriteId(writeId: PadId) {
+	async getPadDataByWriteId(writeId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { writeId: writeId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON() as PadData || null;
+		return obj?.toJSON();
 	}
 
-	async getPadDataByAdminId(adminId: PadId) {
+	async getPadDataByAdminId(adminId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { adminId: adminId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON() as PadData || null;
+		return obj?.toJSON();
 	}
 
-	async getPadDataByAnyId(padId: PadId) {
+	async getPadDataByAnyId(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { [Op.or]: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON() as PadData || null;
+		return obj?.toJSON();
 	}
 
-	async createPad(data: PadDataCreate) {
+	async createPad(data: PadDataCreate): Promise<PadData> {
 		if(!data.id || data.id.length == 0)
 			throw new Error("Invalid read-only ID");
 		if(!data.writeId || data.writeId.length == 0)
@@ -98,7 +98,7 @@ export default class DatabasePads {
 		return createdObj.toJSON() as PadData;
 	}
 
-	async updatePadData(padId: PadId, data: PadDataUpdate) {
+	async updatePadData(padId: PadId, data: PadDataUpdate): Promise<PadData> {
 		const oldData = await this.getPadData(padId);
 
 		if(!oldData)
@@ -106,8 +106,6 @@ export default class DatabasePads {
 
 		if(data.id != null && data.id != padId && data.id.length == 0)
 			throw new Error("Invalid read-only ID");
-
-		var existsPromises = [ ];
 
 		if(data.id != null && data.id != padId) {
 			if (await this.padIdExists(data.id))
@@ -140,6 +138,9 @@ export default class DatabasePads {
 
 		const newData = await this.getPadData(data.id || padId);
 
+		if (!newData)
+			throw new Error("Pad has disappeared after updating.");
+
 		await this._db.history.addHistoryEntry(data.id || padId, {
 			type: "Pad",
 			action: "update",
@@ -151,8 +152,11 @@ export default class DatabasePads {
 		return newData;
 	}
 
-	async deletePad(padId: PadId) {
+	async deletePad(padId: PadId): Promise<void> {
 		const padData = await this.getPadDataByAnyId(padId);
+
+		if (!padData)
+			throw new Error(`Pad "${padId}" does not exist.`);
 
 		if (padData.defaultViewId) {
 			await this.updatePadData(padData.id, { defaultViewId: null });

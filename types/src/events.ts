@@ -8,36 +8,30 @@ import { PadData } from "./padData";
 
 export interface LinePointsEvent {
 	id: ID;
-	reset: boolean;
+	reset?: boolean;
 	trackPoints: TrackPoint[];
 }
 
-export interface EventMap {
-	padData: PadData;
-	deletePad: void;
-	marker: Marker;
-	deleteMarker: ObjectWithId;
-	line: Line;
-	deleteLine: ObjectWithId;
-	linePoints: LinePointsEvent;
-	routePoints: TrackPoint[];
-	view: View;
-	deleteView: ObjectWithId;
-	type: Type;
-	deleteType: ObjectWithId;
-	history: HistoryEntry;
+export interface MapEvents {
+	padData: [PadData];
+	deletePad: [];
+	marker: [Marker];
+	deleteMarker: [ObjectWithId];
+	line: [Line];
+	deleteLine: [ObjectWithId];
+	linePoints: [LinePointsEvent];
+	routePoints: [TrackPoint[]];
+	view: [View];
+	deleteView: [ObjectWithId];
+	type: [Type];
+	deleteType: [ObjectWithId];
+	history: [HistoryEntry];
 }
 
-export type EventName = keyof EventMap;
-export type EventData<E extends EventName> = EventMap[E];
-export type EventHandler<E extends EventName> = EventData<E> extends void ? (data?: undefined) => void : (data: EventData<E>) => void;
+export type EventName<Events extends Record<keyof Events, any[]>> = keyof Events & string;
 
-export type EventDataParams<E extends EventName> = Array<EventData<E>> & (EventData<E> extends void ? {
-	0?: undefined
-} : {
-	0: EventData<E>
-});
+export type EventHandler<Events extends Record<keyof Events, any[]>, E extends EventName<Events>> = (...args: Events[E]) => void;
 
-export type MultipleEvents = {
-	[E in EventName]?: Array<EventData<E>> | undefined
+export type MultipleEvents<Events extends Record<keyof Events, any[]>> = {
+	[E in EventName<Events>]?: Array<Events[E][0]>;
 };

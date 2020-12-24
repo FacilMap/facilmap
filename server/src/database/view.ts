@@ -52,16 +52,16 @@ export default class DatabaseViews {
 		});
 	}
 
-	afterInit() {
+	afterInit(): void {
 		this.ViewModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
 		this._db.pads.PadModel.hasMany(this.ViewModel, { foreignKey: "padId" });
 	}
 
-	getViews(padId: PadId) {
+	getViews(padId: PadId): Highland.Stream<View> {
 		return this._db.helpers._getPadObjects<View>("View", padId);
 	}
 
-	async createView(padId: PadId, data: ViewCreate) {
+	async createView(padId: PadId, data: ViewCreate): Promise<View> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -78,17 +78,17 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: ViewUpdate) {
+	async updateView(padId: PadId, viewId: ID, data: ViewUpdate): Promise<View> {
 		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
 
 		this._db.emit("view", padId, newData);
 		return newData;
 	}
 
-	async deleteView(padId: PadId, viewId: ID) {
+	async deleteView(padId: PadId, viewId: ID): Promise<View> {
 		const data = await this._db.helpers._deletePadObject<View>("View", padId, viewId);
 
 		this._db.emit("deleteView", padId, { id: data.id });
 		return data;
 	}
-};
+}

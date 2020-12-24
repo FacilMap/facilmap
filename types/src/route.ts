@@ -1,5 +1,14 @@
 import { Point, RouteMode } from "./base";
-import { LineExtraInfo, TrackPoint } from "./line";
+import { ExtraInfo, TrackPoint } from "./line";
+
+export interface RouteInfo {
+	trackPoints: TrackPoint[],
+	distance: number;
+	time?: number;
+	ascent?: number;
+	descent?: number;
+	extraInfo?: ExtraInfo;
+}
 
 interface RouteBase {
 	routePoints: Point[];
@@ -9,12 +18,10 @@ interface RouteBase {
 export interface RouteCreate extends RouteBase {
 }
 
-export interface Route extends RouteBase {
-	id: string;
-	trackPoints: TrackPoint[],
-	distance: number;
-	time?: number;
-	ascent?: number;
-	descent?: number;
-	extraInfo?: LineExtraInfo;
+export interface Route extends RouteBase, RouteInfo {
+}
+
+export interface RouteRequest {
+	destinations: Point[];
+	mode: RouteMode;
 }

@@ -1,9 +1,11 @@
+/// <reference path="../node_modules/@types/jquery/JQueryStatic.d.ts" />
+
 import marked, { MarkedOptions } from 'marked';
 import { Field } from "facilmap-types";
 
 const isBrowser = (typeof window !== "undefined");
 const jQuery: JQueryStatic | null = isBrowser ? require("jquery") : null;
-const cheerio: CheerioAPI | null = isBrowser ? null : require("cheerio");
+const cheerio: cheerio.CheerioAPI | null = isBrowser ? null : require("cheerio");
 
 marked.setOptions({
 	breaks: true,
@@ -17,7 +19,7 @@ export function normalizeField(field: Field, value: string, enforceExistingOptio
 	if(field.type == "checkbox")
 		value = value == "1" ? "1" : "0";
 
-	if(enforceExistingOption && field.type == "dropdown" && !field.options.some((option) => option.value == value) && field.options[0])
+	if(enforceExistingOption && field.type == "dropdown" && !field.options?.some((option) => option.value == value) && field.options?.[0])
 		value = field.options[0].value;
 
 	return value;
@@ -50,7 +52,7 @@ export function markdownInline(string: string, options?: MarkedOptions) {
 	const [$, ret] = createDiv();
 
 	ret.html(marked(string, options));
-	$("p", ret).replaceWith(function(this: CheerioElement) { return $(this).contents(); });
+	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
 	applyMarkdownModifications(ret, $);
 	return ret.html();
 }
@@ -68,13 +70,13 @@ export function formatTime(seconds: number) {
 	return hours + ":" + minutes;
 }
 
-function applyMarkdownModifications($el: Cheerio, $: CheerioStatic) {
+function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root) {
 	$("a[href]", $el).attr({
 		target: "_blank",
 		rel: "noopener noreferer"
 	});
 
-	$("a[href^='mailto:']", $el).each(function(this: CheerioElement) {
+	$("a[href^='mailto:']", $el).each(function(this: cheerio.Element) {
 		const $a = $(this);
 		let m = $a.attr("href")!.match(/^mailto:(.*)@(.*)$/i);
 		if(m) {
@@ -95,8 +97,8 @@ function applyMarkdownModifications($el: Cheerio, $: CheerioStatic) {
 	});
 }
 
-function createDiv(): [CheerioStatic, Cheerio] {
+function createDiv(): [cheerio.Root, cheerio.Cheerio] {
 	const $ = isBrowser ? jQuery! : cheerio!.load("<div/>");
-	const div = isBrowser ? ($ as JQueryStatic)("<div/>") : ($ as CheerioStatic).root();
-	return [$ as CheerioStatic, div as Cheerio];
+	const div = isBrowser ? ($ as JQueryStatic)("<div/>") : ($ as cheerio.Root).root();
+	return [$ as cheerio.Root, div as cheerio.Cheerio];
 }

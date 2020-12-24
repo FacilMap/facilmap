@@ -1,4 +1,4 @@
-import { jsonStream, toStream } from "../utils/streams";
+import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams";
 import { clone } from "../utils/utils";
 import { compileExpression, prepareObject } from "facilmap-frontend/common/filter";
 import { Marker, PadId } from "../../../types/src";
@@ -7,20 +7,19 @@ import { keyBy, omit } from "lodash";
 import { LineWithTrackPoints } from "../database/line";
 import { mapValues } from "async";
 
-export function exportGeoJson(database: Database, padId: PadId, filter: string): Highland.Stream<string> {
+export function exportGeoJson(database: Database, padId: PadId, filter?: string): Highland.Stream<string> {
 	return toStream(async () => {
 		const padData = await database.pads.getPadData(padId);
+
+		if (!padData)
+			throw new Error(`Pad ${padId} could not be found.`);
+
 		const filterFunc = compileExpression(filter);
 
 		const views = database.views.getViews(padId)
 			.map((view) => omit(view, ["id", "padId"]));
 
-		const types = keyBy(
-			await database.types.getTypes(padId)
-				.collect()
-				.toPromise(Promise),
-			"id"
-		);
+		const types = keyBy(await streamToArrayPromise(database.types.getTypes(padId)), "id");
 
 		const markers = database.markers.getPadMarkers(padId)
 			.filter((marker) => filterFunc(prepareObject(marker, types[marker.typeId])))

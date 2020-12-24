@@ -1,31 +1,16 @@
 #!/usr/bin/env node
 
-import fs from "fs";
-import path from "path";
-
-
-const configPath = path.resolve(process.argv[2] || `${__dirname}/../config.js`);
-
-if(!fs.existsSync(configPath)) {
-	console.error(`Usage: ${process.argv[0]} ${process.argv[1]} <config.js>`);
-	process.exit(1);
-}
-
-const config = require(configPath);
-
-process.env.fmUserAgent = config.userAgent;
-
-
-var Database = require("./database/database");
-var Socket = require("./socket");
-var webserver = require("./webserver");
+import Database from "./database/database";
+import Socket from "./socket";
+import config from "./config";
+import { initWebserver } from "./webserver";
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
-		var str = this.message;
+		let str = this.message;
 		if(this.errors) {
-			for(var i=0; i<this.errors.length; i++)
-				str += "\n"+this.errors[i].message;
+			for(const error of this.errors)
+				str += "\n"+error.message;
 		}
 
 		return str;
@@ -33,7 +18,7 @@ Object.defineProperty(Error.prototype, "toJSON", {
 	configurable: true
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
 	console.trace("Unhandled rejection", reason);
 });
 
@@ -42,7 +27,7 @@ async function start() {
 
 	await database.connect();
 
-	const server = await webserver.init(database, config.port, config.host);
+	const server = await initWebserver(database, config.port, config.host);
 
 	new Socket(server, database);
 

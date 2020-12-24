@@ -1,21 +1,50 @@
-import { promiseAuto, promiseProps, stripObject } from "./utils/utils";
+import { promiseProps, stripObject } from "./utils/utils";
 import { streamToArrayPromise } from "./utils/streams";
 import { isInBbox } from "./utils/geo";
-import { Server } from "socket.io";
+import { Server, Socket as SocketIO } from "socket.io";
 import domain from "domain";
-import gpx from "./export/gpx";
-import routing from "./routing/routing";
-import search from "./search";
-import geoip from "./geoip";
+import { exportLineToGpx } from "./export/gpx";
+import { find } from "./search";
+import { geoipLookup } from "./geoip";
 import { isEqual } from "lodash";
+import Database, { DatabaseEvents } from "./database/database";
+import { Http2Server } from "http2";
+import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData } from "facilmap-types";
+import { calculateRoute, prepareForBoundingBox } from "./routing/routing";
+import { RouteWithId } from "./database/route";
 
-class Socket {
-	constructor(server, database) {
-		const io = new Server(server, {
+enum Writable {
+	READ = 'READ',
+	WRITE = 'WRITE',
+	ADMIN = 'ADMIN'
+}
+
+type SocketHandlers = {
+	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
+} & {
+	error: (data: Error) => void;
+	disconnect: () => void;
+};
+
+type DatabaseHandlers = {
+	[eventName in EventName<DatabaseEvents>]?: EventHandler<DatabaseEvents, eventName>;
+}
+
+type MultipleEventPromises = {
+	[eventName in keyof MultipleEvents<MapEvents>]: PromiseLike<MultipleEvents<MapEvents>[eventName]> | MultipleEvents<MapEvents>[eventName];
+}
+
+function isPadId(padId: PadId | true | undefined): padId is PadId {
+	return !!(padId && padId !== true);
+}
+
+export default class Socket {
+	constructor(server: Http2Server, database: Database) {
+		const io = new Server(server as any, {
 			cors: { origin: true }
 		});
 
-		io.sockets.on("connection", (socket) => {
+		io.sockets.on("connection", (socket: SocketIO) => {
 			const d = domain.create();
 			d.add(socket);
 
@@ -30,673 +59,710 @@ class Socket {
 }
 
 class SocketConnection {
-	constructor(socket, database) {
+	socket: SocketIO;
+	database: Database;
+	padId: PadId | true | undefined = undefined;
+	bbox: BboxWithZoom | undefined = undefined;
+	writable: Writable | undefined = undefined;
+	route: RouteWithId | undefined = undefined;
+	historyListener: undefined | (() => void) = undefined;
+	pauseHistoryListener = 0;
+
+	constructor(socket: SocketIO, database: Database) {
 		this.socket = socket;
 		this.database = database;
-
-		this.padId = null;
-		this.bbox = null;
-		this.writable = null;
-
-		this.route = null;
-
-		this._dbHandlers = [ ];
 
 		this.registerSocketHandlers();
 	}
 
 	registerSocketHandlers() {
-		Object.keys(this.socketHandlers).forEach((i) => {
-			this.socket.on(i, (data, callback) => {
-				Promise.resolve(data).then(this.socketHandlers[i].bind(this)).then((res) => { // nodeify(callback);
+		for (const i of Object.keys(this.socketHandlers) as Array<keyof SocketHandlers>) {
+			this.socket.on(i, async (data, callback) => {
+				try {
+					const res = await this.socketHandlers[i](data);
+					
 					if(!callback && res)
 						console.trace("No callback available to send result of socket handler " + i);
 
 					callback && callback(null, res);
-				}, (err) => {
+				} catch (err) {
 					console.log(err.stack);
 
 					callback && callback(err);
-				}).catch(err => {
-					console.error("Error in socket handler for "+i, err.stack);
-				});
+				}
 			});
-		});
+		}
 	}
 
-	registerDatabaseHandler(eventName, handler) {
-		const func = handler.bind(this);
-
-		this.database.on(eventName, func);
-
-		if(!this._dbHandlers[eventName])
-			this._dbHandlers[eventName] = [ ];
-
-		this._dbHandlers[eventName].push(func);
+	registerDatabaseHandler<E extends EventName<DatabaseEvents>>(eventName: E, handler: EventHandler<DatabaseEvents, E>) {
+		this.database.on(eventName, handler);
 
 		return () => {
-			this.database.removeListener(eventName, func);
-			this._dbHandlers[eventName] = this._dbHandlers[eventName].filter(function(it) { return it !== func; });
+			this.database.off(eventName, handler);
 		};
 	}
 
 	registerDatabaseHandlers() {
-		Object.keys(this.databaseHandlers).forEach((eventName) => {
-			this.registerDatabaseHandler(eventName, this.databaseHandlers[eventName]);
-		});
+		for (const eventName of Object.keys(this.databaseHandlers) as Array<EventName<DatabaseEvents>>) {
+			this.database.on(eventName as any, this.databaseHandlers[eventName] as any);
+		}
 	}
 
 	unregisterDatabaseHandlers() {
-		Object.keys(this._dbHandlers).forEach((eventName) => {
-			this._dbHandlers[eventName].forEach((it) => {
-				this.database.removeListener(eventName, it);
-			});
-		});
-		this._dbHandlers = { };
+		for (const eventName of Object.keys(this.databaseHandlers) as Array<EventName<DatabaseEvents>>) {
+			this.database.removeListener(eventName as any, this.databaseHandlers[eventName] as any);
+		}
 	}
 
-	sendStreamData(eventName, stream) {
-		stream.on("data", (data) => {
-			if(data != null)
-				this.socket.emit(eventName, data);
-		}).on("error", (err) => {
-			console.warn("SocketConnection.sendStreamData", err.stack);
-			this.socket.emit("error", err);
-		});
-	}
-
-	getPadObjects(padData) {
-		const promises = {
+	getPadObjects(padData: PadData) {
+		const promises: MultipleEventPromises = {
 			padData: [ padData ],
-			view: streamToArrayPromise(this.database.getViews(padData.id)),
-			type: streamToArrayPromise(this.database.getTypes(padData.id)),
-			line: streamToArrayPromise(this.database.getPadLines(padData.id))
+			view: streamToArrayPromise(this.database.views.getViews(padData.id)),
+			type: streamToArrayPromise(this.database.types.getTypes(padData.id)),
+			line: streamToArrayPromise(this.database.lines.getPadLines(padData.id))
 		};
 
 		if(this.bbox) { // In case bbox is set while fetching pad data
 			Object.assign(promises, {
-				marker: streamToArrayPromise(this.database.getPadMarkers(padData.id, this.bbox)),
-				linePoints: streamToArrayPromise(this.database.getLinePointsForPad(padData.id, this.bbox))
+				marker: streamToArrayPromise(this.database.markers.getPadMarkers(padData.id, this.bbox)),
+				linePoints: streamToArrayPromise(this.database.lines.getLinePointsForPad(padData.id, this.bbox))
 			});
 		}
 
 		return promiseProps(promises);
 	}
-}
 
-Object.assign(SocketConnection.prototype, {
-	socketHandlers: {
-		error : function(err) {
+	validateConditions(minimumPermissions: Writable, data?: any, structure?: object) {
+		if(structure && !stripObject(data, structure))
+			throw new Error("Invalid parameters.");
+
+		if (minimumPermissions == Writable.ADMIN && ![Writable.ADMIN].includes(this.writable!))
+			throw new Error('Only available in admin mode.');
+		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(this.writable!))
+			throw new Error('Only available in write mode.');
+	}
+
+	socketHandlers: SocketHandlers = {
+		error: (err) => {
 			console.error("Error! Disconnecting client.");
 			console.error(err.stack);
 			this.socket.disconnect();
 		},
 
-		setPadId : function(padId) {
-			return promiseAuto({
-				validate: () => {
-					if(typeof padId != "string")
-						throw "Invalid pad id";
-					if(this.padId != null)
-						throw "Pad id already set";
+		setPadId: async (padId) => {
+			if(typeof padId != "string")
+				throw new Error("Invalid pad id");
+			if(this.padId != null)
+				throw new Error("Pad id already set");
 
-					this.padId = true;
-				},
+			this.padId = true;
 
-				admin: (validate) => {
-					return this.database.getPadDataByAdminId(padId);
-				},
+			const [admin, write, read] = await Promise.all([
+				this.database.pads.getPadDataByAdminId(padId),
+				this.database.pads.getPadDataByWriteId(padId),
+				this.database.pads.getPadData(padId)
+			]);
 
-				write: (validate) => {
-					return this.database.getPadDataByWriteId(padId);
-				},
+			let pad;
+			if(admin)
+				pad = { ...admin, writable: Writable.ADMIN };
+			else if(write)
+				pad = { ...write, writable: Writable.WRITE, adminId: undefined };
+			else if(read)
+				pad = { ...read, writable: Writable.READ, writeId: undefined, adminId: undefined };
+			else {
+				this.padId = undefined;
+				throw new Error("This pad does not exist");
+			}
+			
+			this.padId = pad.id;
+			this.writable = pad.writable;
 
-				read: (validate) => {
-					return this.database.getPadData(padId);
-				},
+			this.registerDatabaseHandlers();
 
-				pad: (admin, write, read) => {
-					if(admin)
-						return { ...JSON.parse(JSON.stringify(admin)), writable: 2 };
-					else if(write)
-						return { ...JSON.parse(JSON.stringify(write)), writable: 1, adminId: null };
-					else if(read)
-						return { ...JSON.parse(JSON.stringify(read)), writable: 0, writeId: null, adminId: null };
-					else {
-						this.padId = null;
-						throw "This pad does not exist";
-					}
-				}
-			}).then(res => {
-				this.padId = res.pad.id;
-				this.writable = res.pad.writable;
-
-				this.registerDatabaseHandlers();
-
-				return this.getPadObjects(res.pad);
-			});
+			return await this.getPadObjects(pad);
 		},
 
-		updateBbox : function(bbox) {
-			if(!stripObject(bbox, { top: "number", left: "number", bottom: "number", right: "number", zoom: "number" }))
-				return;
+		updateBbox: async (bbox) => {
+			this.validateConditions(Writable.READ, bbox, {
+				top: "number",
+				left: "number",
+				bottom: "number",
+				right: "number",
+				zoom: "number"
+			});
 
-			const bboxWithExcept = { ...bbox };
+			const bboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
 			if(this.bbox && bbox.zoom == this.bbox.zoom)
 				bboxWithExcept.except = this.bbox;
 
 			this.bbox = bbox;
 
-			let ret = {};
+			const ret: MultipleEventPromises = {};
 
 			if(this.padId && this.padId !== true) {
-				ret.marker = streamToArrayPromise(this.database.getPadMarkers(this.padId, bboxWithExcept));
-				ret.linePoints = streamToArrayPromise(this.database.getLinePointsForPad(this.padId, bboxWithExcept));
+				ret.marker = streamToArrayPromise(this.database.markers.getPadMarkers(this.padId, bboxWithExcept));
+				ret.linePoints = streamToArrayPromise(this.database.lines.getLinePointsForPad(this.padId, bboxWithExcept));
 			}
 			if(this.route)
-				ret.routePoints = this.database.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
+				ret.routePoints = this.database.routes.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
 
-			return promiseProps(ret);
+			return await promiseProps(ret);
 		},
 
-		disconnect : function() {
+		disconnect: () => {
 			if(this.padId)
 				this.unregisterDatabaseHandlers();
 
+			if (this.historyListener) {
+				this.historyListener();
+				this.historyListener = undefined;
+			}
+
 			if(this.route) {
-				this.database.deleteRoute(this.route.id).catch((err) => {
+				this.database.routes.deleteRoute(this.route.id).catch((err) => {
 					console.error("Error clearing route", err.stack || err);
 				});
 			}
 		},
 
-		createPad : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", adminId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean", legend1: "string", legend2: "string" }))
-					throw "Invalid parameters.";
-
-				if(this.padId)
-					throw "Pad already loaded.";
-
-				return this.database.createPad(data);
-			}).then((padData) => {
-				this.padId = padData.id;
-				this.writable = 2;
-
-				this.registerDatabaseHandlers();
-
-				return this.getPadObjects(padData);
+		createPad: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				name: "string",
+				defaultViewId: "number",
+				id: "string",
+				writeId: "string",
+				adminId: "string",
+				searchEngines: "boolean",
+				description: "string",
+				clusterMarkers: "boolean",
+				legend1: "string",
+				legend2: "string"
 			});
+
+			if(this.padId)
+				throw new Error("Pad already loaded.");
+
+			const padData = await this.database.pads.createPad(data);
+
+			this.padId = padData.id;
+			this.writable = Writable.ADMIN;
+
+			this.registerDatabaseHandlers();
+
+			return await this.getPadObjects(padData);
 		},
 
-		editPad : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { name: "string", defaultViewId: "number", id: "string", writeId: "string", adminId: "string", searchEngines: "boolean", description: "string", clusterMarkers: "boolean", legend1: "string", legend2: "string" }))
-					throw "Invalid parameters.";
-
-				if(this.writable != 2)
-					throw "Map settings can only be changed in admin mode.";
-
-				return this.database.updatePadData(this.padId, data);
+		editPad: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				name: "string",
+				defaultViewId: "number",
+				id: "string",
+				writeId: "string",
+				adminId: "string",
+				searchEngines: "boolean",
+				description: "string",
+				clusterMarkers: "boolean",
+				legend1: "string",
+				legend2: "string"
 			});
+			
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.pads.updatePadData(this.padId, data);
 		},
 
-		async deletePad() {
-			if (this.writable != 2)
-				throw new Error("Map can only be delete in admin mode.");
+		deletePad: async () => {
+			this.validateConditions(Writable.ADMIN);
 
-			await this.database.deletePad(this.padId);
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			await this.database.pads.deletePad(this.padId);
 		},
 
-		async getMarker(data) {
-			if(!stripObject(data, { id: "number" } ))
-				throw new Error("Invalid parameters.");
+		getMarker: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				id: "number"
+			} );
 
-			if(!this.padId)
-				throw new Error("No collaborative map opened.");
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
 
-			return await this.database.getMarker(this.padId, data.id);
+			return await this.database.markers.getMarker(this.padId, data.id);
 		},
 
-		addMarker : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", shape: "string", typeId: "number", data: Object } ))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				return this.database.createMarker(this.padId, data);
+		addMarker: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				lat: "number",
+				lon: "number",
+				name: "string",
+				colour: "string",
+				size: "number",
+				symbol: "string",
+				shape: "string",
+				typeId: "number",
+				data: Object
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.markers.createMarker(this.padId, data);
 		},
 
-		editMarker : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number", lat: "number", lon: "number", name: "string", colour: "string", size: "number", symbol: "string", shape: "string", typeId: "number", data: Object }))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				return this.database.updateMarker(this.padId, data.id, data);
+		editMarker: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				id: "number",
+				lat: "number",
+				lon: "number",
+				name: "string",
+				colour: "string",
+				size: "number",
+				symbol: "string",
+				shape: "string",
+				typeId: "number",
+				data: Object
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return this.database.markers.updateMarker(this.padId, data.id, data);
 		},
 
-		deleteMarker : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number" }))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				return this.database.deleteMarker(this.padId, data.id);
+		deleteMarker: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				id: "number"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return this.database.markers.deleteMarker(this.padId, data.id);
 		},
 
-		getLineTemplate : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { typeId: "number" }) || data.typeId == null)
-					throw "Invalid parameters.";
+		getLineTemplate: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				typeId: "number"
+			}); // || data.typeId == null)
 
-				return this.database.getLineTemplate(this.padId, data);
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.lines.getLineTemplate(this.padId, data);
+		},
+
+		addLine: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				routePoints: [ { lat: "number", lon: "number" } ],
+				trackPoints: [ { lat: "number", lon: "number" } ],
+				mode: "string",
+				colour: "string",
+				width: "number",
+				name: "string",
+				typeId: "number",
+				data: Object
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			let trackPoints;
+			if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
+				trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+			
+			return await this.database.lines.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
 		},
 
-		addLine : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
-					return this.database.getAllRoutePoints(this.route.id);
-			}).then((trackPoints) => {
-				return this.database.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
+		editLine: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				id: "number",
+				routePoints: [ { lat: "number", lon: "number" } ],
+				trackPoints: [ { lat: "number", lon: "number" } ],
+				mode: "string",
+				colour: "string",
+				width: "number",
+				name: "string",
+				typeId: "number",
+				data: Object
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			let trackPoints;
+			if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints))
+				trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+
+			return await this.database.lines.updateLine(this.padId, data.id, data, undefined, trackPoints && Object.assign({}, this.route, {trackPoints}));
 		},
 
-		editLine : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number", routePoints: [ { lat: "number", lon: "number" } ], trackPoints: [ { lat: "number", lon: "number" } ], mode: "string", colour: "string", width: "number", name: "string", typeId: "number", data: Object }))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints))
-					return this.database.getAllRoutePoints(this.route.id);
-			}).then((trackPoints) => {
-				return this.database.updateLine(this.padId, data.id, data, null, trackPoints && Object.assign({}, this.route, {trackPoints}));
+		deleteLine: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				id: "number"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return this.database.lines.deleteLine(this.padId, data.id);
 		},
 
-		deleteLine : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number" }))
-					throw "Invalid parameters.";
-
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				return this.database.deleteLine(this.padId, data.id);
+		exportLine: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				id: "string",
+				format: "string"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			const lineP = this.database.lines.getLine(this.padId, data.id);
+
+			const [line, trackPoints, type] = await Promise.all([
+				lineP,
+				this.database.lines.getAllLinePoints(data.id),
+				lineP.then((line) => this.database.types.getType(this.padId as string, line.typeId))
+			]);
+
+			const lineWithTrackPoints = { ...line, trackPoints };
+
+			switch(data.format) {
+				case "gpx-trk":
+					return exportLineToGpx(lineWithTrackPoints, type, true);
+				case "gpx-rte":
+					return exportLineToGpx(lineWithTrackPoints, type, false);
+				default:
+					throw new Error("Unknown format.");
+			}
 		},
 
-		exportLine: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "string", format: "string" }))
-					throw "Invalid parameters.";
-
-				if(!this.padId)
-					throw "No collaborative map opened.";
-
-				return promiseAuto({
-					line: this.database.getLine(this.padId, data.id).then((line) => (JSON.parse(JSON.stringify(line)))),
-					trackPoints: this.database.getAllLinePoints(data.id).then((trackPoints) => (JSON.parse(JSON.stringify(trackPoints)))),
-					type: (line) => {
-						this.database.getType(this.padId, line.typeId);
-					}
-				});
-			}).then(({line, trackPoints, type}) => {
-				line = Object.assign({}, line, {trackPoints});
-
-				switch(data.format) {
-					case "gpx-trk":
-						return gpx.exportLine(line, type, true);
-					case "gpx-rte":
-						return gpx.exportLine(line, type, false);
-					default:
-						throw "Unknown format.";
-				}
+		addView: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				name: "string",
+				baseLayer: "string",
+				layers: [ "string" ],
+				top: "number",
+				left: "number",
+				right: "number",
+				bottom: "number",
+				filter: "string"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+			
+			return await this.database.views.createView(this.padId, data);
 		},
 
-		addView : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { name: "string", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
-					throw "Invalid parameters.";
-
-				if(this.writable != 2)
-					throw "Views can only be added in admin mode.";
-
-				return this.database.createView(this.padId, data);
+		editView: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				id: "number",
+				baseLayer: "string",
+				layers: [ "string" ],
+				top: "number",
+				left: "number",
+				right: "number",
+				bottom: "number",
+				filter: "string"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.views.updateView(this.padId, data.id, data);
 		},
 
-		editView : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number", baseLayer: "string", layers: [ "string" ], top: "number", left: "number", right: "number", bottom: "number", filter: "string" }))
-					throw "Invalid parameters.";
-
-				if(this.writable != 2)
-					throw "Views can only be changed in admin mode.";
-
-				return this.database.updateView(this.padId, data.id, data);
+		deleteView: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				id: "number"
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.views.deleteView(this.padId, data.id);
 		},
 
-		deleteView : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number" }))
-					throw "Invalid parameters.";
-
-				if(this.writable != 2)
-					throw "Views can only be deleted in admin mode.";
-
-				return this.database.deleteView(this.padId, data.id);
-			});
-		},
-
-		addType : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, {
-					id: "number",
+		addType: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				id: "number",
+				name: "string",
+				type: "string",
+				defaultColour: "string", colourFixed: "boolean",
+				defaultSize: "number", sizeFixed: "boolean",
+				defaultSymbol: "string", symbolFixed: "boolean",
+				defaultShape: "string", shapeFixed: "boolean",
+				defaultWidth: "number", widthFixed: "boolean",
+				defaultMode: "string", modeFixed: "boolean",
+				showInLegend: "boolean",
+				fields: [ {
 					name: "string",
 					type: "string",
-					defaultColour: "string", colourFixed: "boolean",
-					defaultSize: "number", sizeFixed: "boolean",
-					defaultSymbol: "string", symbolFixed: "boolean",
-					defaultShape: "string", shapeFixed: "boolean",
-					defaultWidth: "number", widthFixed: "boolean",
-					defaultMode: "string", modeFixed: "boolean",
-					showInLegend: "boolean",
-					fields: [ {
-						name: "string",
-						type: "string",
-						default: "string",
-						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
-						options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
-					}]
-				}))
-					throw "Invalid parameters.";
-
-				if(this.writable != 2)
-					throw "Types can only be added in admin mode.";
-
-				return this.database.createType(this.padId, data);
+					default: "string",
+					controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
+					options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
+				}]
 			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.types.createType(this.padId, data);
 		},
 
-		editType : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, {
-					id: "number",
+		editType: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				id: "number",
+				name: "string",
+				defaultColour: "string", colourFixed: "boolean",
+				defaultSize: "number", sizeFixed: "boolean",
+				defaultSymbol: "string", symbolFixed: "boolean",
+				defaultShape: "string", shapeFixed: "boolean",
+				defaultWidth: "number", widthFixed: "boolean",
+				defaultMode: "string", modeFixed: "boolean",
+				showInLegend: "boolean",
+				fields: [ {
 					name: "string",
-					defaultColour: "string", colourFixed: "boolean",
-					defaultSize: "number", sizeFixed: "boolean",
-					defaultSymbol: "string", symbolFixed: "boolean",
-					defaultShape: "string", shapeFixed: "boolean",
-					defaultWidth: "number", widthFixed: "boolean",
-					defaultMode: "string", modeFixed: "boolean",
-					showInLegend: "boolean",
-					fields: [ {
-						name: "string",
-						oldName: "string",
-						type: "string",
-						default: "string",
-						controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
-						options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
-					}]
-				}))
-					throw "Invalid parameters.";
+					oldName: "string",
+					type: "string",
+					default: "string",
+					controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
+					options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
+				}]
+			});
 
-				if(this.writable != 2)
-					throw "Types can only be changed in admin mode.";
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
 
-				let rename = {};
-				for(let field of (data.fields || [])) {
-					if(field.oldName && field.oldName != field.name)
-						rename[field.oldName] = { name: field.name };
+			const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
+			for(const field of (data.fields || [])) {
+				if(field.oldName && field.oldName != field.name)
+					rename[field.oldName] = { name: field.name };
 
-					if(field.type == "dropdown" && field.options) {
-						for(let option of field.options) {
-							if(option.oldValue && option.oldValue != option.value) {
-								if(!rename[field.oldName || field.name])
-									rename[field.oldName || field.name] = { };
-								if(!rename[field.oldName || field.name].values)
-									rename[field.oldName || field.name].values = { };
+				if(field.type == "dropdown" && field.options) {
+					for(const option of field.options) {
+						if(option.oldValue && option.oldValue != option.value) {
+							if(!rename[field.oldName || field.name])
+								rename[field.oldName || field.name] = { };
+							if(!rename[field.oldName || field.name].values)
+								rename[field.oldName || field.name].values = { };
 
-								rename[field.oldName || field.name].values[option.oldValue] = option.value;
-							}
-
-							delete option.oldValue;
+							rename[field.oldName || field.name].values![option.oldValue] = option.value;
 						}
+
+						delete option.oldValue;
 					}
-
-					delete field.oldName;
 				}
 
-				// We first update the type (without updating the styles). If that succeeds, we rename the data fields.
-				// Only then we update the object styles (as they often depend on the field values).
-				return this.database.updateType(this.padId, data.id, data, false).then((newType) => {
-					if(Object.keys(rename).length > 0)
-						return this.database.renameObjectDataField(this.padId, data.id, rename, newType.type == "line").then(() => newType);
-					else
-						return newType;
-				}).then((newType) => {
-					return this.database.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line").then(() => newType);
-				});
-			})
+				delete field.oldName;
+			}
+
+			// We first update the type (without updating the styles). If that succeeds, we rename the data fields.
+			// Only then we update the object styles (as they often depend on the field values).
+			const newType = await this.database.types.updateType(this.padId, data.id, data, false)
+	
+			if(Object.keys(rename).length > 0)
+				await this.database.helpers.renameObjectDataField(this.padId, data.id, rename, newType.type == "line");
+				
+			await this.database.types.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line")
+
+			return newType;
 		},
 
-		deleteType : function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number" }))
-					throw "Invalid parameters.";
+		deleteType: async (data) => {
+			this.validateConditions(Writable.ADMIN, data, {
+				id: "number"
+			});
 
-				if(this.writable != 2)
-					throw "Types can only be deleted in admin mode.";
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
 
-				return this.database.deleteType(this.padId, data.id);
+			return await this.database.types.deleteType(this.padId, data.id);
+		},
+
+		find: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				query: "string",
+				loadUrls: "boolean",
+				elevation: "boolean"
+			});
+
+			return await find(data.query, data.loadUrls, data.elevation);
+		},
+
+		findOnMap: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				query: "string"
+			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+
+			return await this.database.search.search(this.padId, data.query);
+		},
+
+		getRoute: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				destinations: [ { lat: "number", lon: "number" } ],
+				mode: "string"
+			});
+
+			return await calculateRoute(data.destinations, data.mode);
+		},
+
+		setRoute: async (data) => {
+			this.validateConditions(Writable.READ, data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string" });
+
+			let routeInfo;
+			if(this.route)
+				routeInfo = await this.database.routes.updateRoute(this.route.id, data.routePoints, data.mode);
+			else
+				routeInfo = await this.database.routes.createRoute(data.routePoints, data.mode);
+
+			if(!routeInfo) {
+				// A newer submitted route has returned in the meantime
+				console.log("Ignoring outdated route");
+				return;
+			}
+
+			this.route = routeInfo;
+
+			if(this.bbox)
+				routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
+			else
+				routeInfo.trackPoints = [];
+
+			return {
+				routePoints: routeInfo.routePoints,
+				mode: routeInfo.mode,
+				time: routeInfo.time,
+				distance: routeInfo.distance,
+				ascent: routeInfo.ascent,
+				descent: routeInfo.descent,
+				extraInfo: routeInfo.extraInfo,
+				trackPoints: routeInfo.trackPoints
+			};
+		},
+
+		clearRoute: async () => {
+			if(this.route)
+				await this.database.routes.deleteRoute(this.route.id);
+			
+			this.route = undefined;
+		},
+
+		lineToRoute: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				id: "string"
+			});
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+			
+			const routeInfo = await this.database.routes.lineToRoute(this.route?.id, this.padId, data.id);
+
+			this.route = routeInfo;
+
+			if(this.bbox)
+				routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
+			else
+				routeInfo.trackPoints = [];
+
+			return {
+				routePoints: routeInfo.routePoints,
+				mode: routeInfo.mode,
+				time: routeInfo.time,
+				distance: routeInfo.distance,
+				ascent: routeInfo.ascent,
+				descent: routeInfo.descent,
+				trackPoints: routeInfo.trackPoints
+			};
+		},
+
+		exportRoute: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				format: "string"
+			});
+
+			if (!this.route) {
+				throw new Error("No active route available.");
+			}
+
+			const trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+
+			const route = { ...this.route, trackPoints };
+
+			switch(data.format) {
+				case "gpx-trk":
+					return await exportLineToGpx(route, undefined, true);
+				case "gpx-rte":
+					return await exportLineToGpx(route, undefined, false);
+				default:
+					throw new Error("Unknown format.");
+			}
+		},
+
+		listenToHistory: async () => {
+			this.validateConditions(Writable.WRITE);
+
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
+			
+			if(this.historyListener)
+				throw new Error("Already listening to history.");
+
+			this.historyListener = this.registerDatabaseHandler("addHistoryEntry", (padId, data) => {
+				if(padId == this.padId && (this.writable == Writable.ADMIN || ["Marker", "Line"].includes(data.type)) && !this.pauseHistoryListener)
+					this.socket.emit("history", data);
+			});
+
+			return promiseProps({
+				history: streamToArrayPromise(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 			});
 		},
 
-		find: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { query: "string", loadUrls: "boolean", elevation: "boolean" }))
-					throw "Invalid parameters.";
+		stopListeningToHistory: () => {
+			this.validateConditions(Writable.WRITE);
 
-				return search.find(data.query, data.loadUrls, data.elevation);
-			});
-		},
-
-		async findOnMap(data) {
-			if(!stripObject(data, { query: "string" }))
-				throw new Error("Invalid parameters.");
-
-			if(!this.padId)
-				throw new Error("No collaborative map opened.");
-
-			return this.database.search(this.padId, data.query);
-		},
-
-		getRoute: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { destinations: [ { lat: "number", lon: "number" } ], mode: "string" }))
-					throw "Invalid parameters.";
-
-				return routing.calculateRouting(data.destinations, data.mode);
-			});
-		},
-
-		setRoute: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string" }))
-					throw "Invalid parameters.";
-
-				if(this.route)
-					return this.database.updateRoute(this.route.id, data.routePoints, data.mode);
-				else
-					return this.database.createRoute(data.routePoints, data.mode);
-			}).then((routeInfo) => {
-				if(!routeInfo) {
-					// A newer submitted route has returned in the meantime
-					console.log("Ignoring outdated route");
-					return;
-				}
-
-				this.route = routeInfo;
-
-				if(this.bbox)
-					routeInfo.trackPoints = routing.prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
-				else
-					routeInfo.trackPoints = [];
-
-				return {
-					routePoints: routeInfo.routePoints,
-					mode: routeInfo.mode,
-					time: routeInfo.time,
-					distance: routeInfo.distance,
-					ascent: routeInfo.ascent,
-					descent: routeInfo.descent,
-					extraInfo: routeInfo.extraInfo,
-					trackPoints: routeInfo.trackPoints
-				};
-			});
-		},
-
-		clearRoute: function() {
-			return Promise.resolve().then(() => {
-				if(this.route)
-					return this.database.deleteRoute(this.route.id);
-			}).then(() => {
-				this.route = null;
-			});
-		},
-
-		lineToRoute: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "string" }))
-					throw "Invalid parameters.";
-
-				if(!this.padId)
-					throw "No collaborative map opened.";
-
-				return this.database.lineToRoute(this.route && this.route.id, this.padId, data.id);
-			}).then((routeInfo) => {
-				this.route = routeInfo;
-
-				if(this.bbox)
-					routeInfo.trackPoints = routing.prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
-				else
-					routeInfo.trackPoints = [];
-
-				return {
-					routePoints: routeInfo.routePoints,
-					mode: routeInfo.mode,
-					time: routeInfo.time,
-					distance: routeInfo.distance,
-					ascent: routeInfo.ascent,
-					descent: routeInfo.descent,
-					trackPoints: routeInfo.trackPoints
-				};
-			});
-		},
-
-		exportRoute: function(data) {
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { format: "string" }))
-					throw "Invalid parameters.";
-
-				if(!this.route)
-					throw "No route set.";
-
-				return this.database.getAllRoutePoints(this.route.id);
-			}).then((trackPoints) => {
-				let route = Object.assign({}, this.route, {trackPoints});
-
-				switch(data.format) {
-					case "gpx-trk":
-						return gpx.exportLine(route, null, true);
-					case "gpx-rte":
-						return gpx.exportLine(route, null, false);
-					default:
-						throw "Unknown format.";
-				}
-			});
-		},
-
-		listenToHistory: function() {
-			return Promise.resolve().then(() => {
-				if(!this.writable)
-					throw "In read-only mode.";
-
-				if(this.historyListener)
-					throw "Already listening to history.";
-
-				this.historyListener = this.registerDatabaseHandler("addHistoryEntry", (padId, data) => {
-					if(padId == this.padId && (this.writable == 2 || ["Marker", "Line"].includes(data.type)))
-						this.socket.emit("history", data);
-				});
-
-				return promiseProps({
-					history: streamToArrayPromise(this.database.getHistory(this.padId, this.writable == 2 ? null : ["Marker", "Line"]))
-				});
-			});
-		},
-
-		stopListeningToHistory: function() {
 			if(!this.historyListener)
-				throw "Not listening to history.";
-
-			if(!this.writable)
-				throw "In read-only mode.";
+				throw new Error("Not listening to history.");
 
 			this.historyListener(); // Unregister db listener
-			this.historyListener = null;
+			this.historyListener = undefined;
 		},
 
-		revertHistoryEntry: function(data) {
-			const listening = !!this.historyListener;
+		revertHistoryEntry: async (data) => {
+			this.validateConditions(Writable.WRITE, data, {
+				id: "number"
+			});
 
-			return Promise.resolve().then(() => {
-				if(!stripObject(data, { id: "number" }))
-					throw "Invalid parameters.";
+			if (!isPadId(this.padId))
+				throw new Error("No map opened.");
 
-				if(!this.writable)
-					throw "In read-only mode.";
+			const historyEntry = await this.database.history.getHistoryEntry(this.padId, data.id);
+			
+			if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != Writable.ADMIN)
+				throw new Error("This kind of change can only be reverted in admin mode.");
 
-				return this.database.getHistoryEntry(this.padId, data.id);
-			}).then((historyEntry) => {
-				if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != 2)
-					throw "This kind of change can only be reverted in admin mode.";
+			this.pauseHistoryListener++;
+			
+			try {
+				await this.database.history.revertHistoryEntry(this.padId, data.id);
+			} finally {
+				this.pauseHistoryListener--;
+			}
 
-				if(listening)
-					this.socketHandlers.stopListeningToHistory.call(this);
-
-				return this.database.revertHistoryEntry(this.padId, data.id);
-			}).then(() => {
-				if(listening)
-					return this.socketHandlers.listenToHistory.call(this);
+			return promiseProps({
+				history: streamToArrayPromise(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 			});
 		},
 
-		async geoip() {
-			let ip = this.socket.handshake.headers["x-forwarded-for"] || this.socket.request.connection.remoteAddress;
-			return await geoip.lookup(ip);
+		geoip: async () => {
+			const ip = (this.socket.handshake.headers as Record<string, string>)["x-forwarded-for"] || this.socket.request.connection.remoteAddress;
+			return ip && await geoipLookup(ip);
 		}
 
 		/*copyPad : function(data, callback) {
@@ -705,50 +771,50 @@ Object.assign(SocketConnection.prototype, {
 
 			this.database.copyPad(this.padId, data.toId, callback);
 		}*/
-	},
+	};
 
-	databaseHandlers: {
-		line: function(padId, data) {
+	databaseHandlers: DatabaseHandlers = {
+		line: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("line", data);
 		},
 
-		linePoints: function(padId, lineId, trackPoints) {
+		linePoints: (padId, lineId, trackPoints) => {
 			if(padId == this.padId)
-				this.socket.emit("linePoints", { reset: true, id: lineId, trackPoints : (this.bbox ? routing.prepareForBoundingBox(trackPoints, this.bbox) : [ ]) });
+				this.socket.emit("linePoints", { reset: true, id: lineId, trackPoints : (this.bbox ? prepareForBoundingBox(trackPoints, this.bbox) : [ ]) });
 		},
 
-		deleteLine: function(padId, data) {
+		deleteLine: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("deleteLine", data);
 		},
 
-		marker: function(padId, data) {
+		marker: (padId, data) => {
 			if(padId == this.padId && this.bbox && isInBbox(data, this.bbox))
 				this.socket.emit("marker", data);
 		},
 
-		deleteMarker: function(padId, data) {
+		deleteMarker: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("deleteMarker", data);
 		},
 
-		type: function(padId, data) {
+		type: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("type", data);
 		},
 
-		deleteType: function(padId, data) {
+		deleteType: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("deleteType", data);
 		},
 
-		padData: function(padId, data) {
+		padData: (padId, data) => {
 			if(padId == this.padId) {
 				const dataClone = JSON.parse(JSON.stringify(data));
-				if(this.writable == 0)
+				if(this.writable == Writable.READ)
 					dataClone.writeId = null;
-				if(this.writable != 2)
+				if(this.writable != Writable.ADMIN)
 					dataClone.adminId = null;
 
 				this.padId = data.id;
@@ -757,23 +823,21 @@ Object.assign(SocketConnection.prototype, {
 			}
 		},
 
-		deletePad: function(padId) {
+		deletePad: (padId) => {
 			if (padId == this.padId) {
 				this.socket.emit("deletePad");
-				this.writable = 0;
+				this.writable = Writable.READ;
 			}
 		},
 
-		view: function(padId, data) {
+		view: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("view", data);
 		},
 
-		deleteView: function(padId, data) {
+		deleteView: (padId, data) => {
 			if(padId == this.padId)
 				this.socket.emit("deleteView", data);
 		}
-	}
-});
-
-module.exports = Socket;
+	};
+}

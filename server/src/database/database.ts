@@ -1,4 +1,3 @@
-import { EventEmitter } from "events";
 import { Sequelize } from "sequelize";
 import debug from "debug";
 import DatabaseHelpers from "./helpers";
@@ -13,8 +12,31 @@ import DatabaseMeta from "./meta";
 import DatabaseSearch from "./search";
 import DatabaseRoutes from "./route";
 import DatabaseMigrations from "./migrations";
+import { TypedEventEmitter } from "../utils/events";
+import { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
 
-export default class Database extends EventEmitter {
+export interface DatabaseEvents {
+    addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];
+    historyChange: [padId: PadId];
+
+    line: [padId: PadId, newLine: Line];
+    linePoints: [padId: PadId, lineId: ID, points: TrackPoint[]];
+    deleteLine: [padId: PadId, data: ObjectWithId];
+    
+    marker: [padId: PadId, newMarker: Marker];
+    deleteMarker: [padId: PadId, data: ObjectWithId];
+
+    padData: [padId: PadId, padData: PadData];
+    deletePad: [padId: PadId];
+
+    type: [padId: PadId, newType: Type];
+    deleteType: [padId: PadId, data: ObjectWithId];
+
+    view: [padId: PadId, newView: View];
+    deleteView: [padId: PadId, data: ObjectWithId];
+}
+
+export default class Database extends TypedEventEmitter<DatabaseEvents> {
 
 	_conn: Sequelize;
 	helpers: DatabaseHelpers;
@@ -62,10 +84,10 @@ export default class Database extends EventEmitter {
 		this.types.afterInit();
 	}
 
-	async connect(force: boolean) {
+	async connect(force?: boolean): Promise<void> {
 		await this._conn.authenticate();
 		await this._conn.sync({ force: !!force });
-		return await this.migrations._runMigrations()
+		await this.migrations._runMigrations()
 	}
 }
 

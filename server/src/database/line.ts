@@ -1,10 +1,10 @@
 import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Line, LineCreate, LineExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "../../../types/src";
+import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "../../../types/src";
 import Database from "./database";
 import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
-import { isEqual, omit } from "lodash";
+import { isEqual } from "lodash";
 import { wrapAsync } from "../utils/streams";
-import { calculateRoute, calculateRouteInfo, calculateZoomLevels } from "../routing/routing";
+import { calculateRouteForLine } from "../routing/routing";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: Point[];
@@ -43,7 +43,7 @@ function createLinePointModel() {
 		idx!: number;
 		ele!: number | null;
 		toJSON!: () => TrackPoint;
-	}
+	};
 }
 
 function createLineDataModel() {
@@ -52,7 +52,6 @@ function createLineDataModel() {
 
 export type LineModel = InstanceType<ReturnType<typeof createLineModel>>;
 export type LinePointModel = InstanceType<ReturnType<typeof createLinePointModel>>;
-type LineDataModel = InstanceType<ReturnType<typeof createLineDataModel>>;
 
 export default class DatabaseLines {
 
@@ -106,10 +105,10 @@ export default class DatabaseLines {
 				type: DataTypes.TEXT,
 				allowNull: true,
 				get: function(this: LineModel) {
-					let extraInfo = this.getDataValue("extraInfo");
+					const extraInfo = this.getDataValue("extraInfo");
 					return extraInfo != null ? JSON.parse(extraInfo) : extraInfo;
 				},
-				set: function(this: LineModel, v: LineExtraInfo) {
+				set: function(this: LineModel, v: ExtraInfo) {
 					this.setDataValue("extraInfo", JSON.stringify(v));
 				}
 			}
@@ -132,7 +131,7 @@ export default class DatabaseLines {
 		});
 	}
 
-	afterInit() {
+	afterInit(): void {
 		this.LineModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
 		this._db.pads.PadModel.hasMany(this.LineModel, { foreignKey: "padId" });
 
@@ -146,16 +145,16 @@ export default class DatabaseLines {
 		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
 	}
 
-	getPadLines(padId: PadId, fields?: Array<keyof Line>) {
+	getPadLines(padId: PadId, fields?: Array<keyof Line>): Highland.Stream<Line> {
 		const cond = fields ? { attributes: fields } : { };
 		return this._db.helpers._getPadObjects<Line>("Line", padId, cond);
 	}
 
-	getPadLinesByType(padId: PadId, typeId: ID) {
+	getPadLinesByType(padId: PadId, typeId: ID): Highland.Stream<Line> {
 		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
 	}
 
-	getPadLinesWithPoints(padId: PadId, bboxWithZoom?: BboxWithZoom) {
+	getPadLinesWithPoints(padId: PadId, bboxWithZoom?: BboxWithZoom): Highland.Stream<LineWithTrackPoints> {
 		return this.getPadLines(padId)
 			.flatMap(wrapAsync(async (line): Promise<LineWithTrackPoints> => {
 				const trackPoints = await this.getLinePoints(line.id, bboxWithZoom);
@@ -163,10 +162,10 @@ export default class DatabaseLines {
 			}));
 	}
 
-	async getLineTemplate(padId: PadId, data: LineCreate) {
+	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
 		const lineTemplate = {
 			...this.LineModel.build({ ...data, padId: padId }).toJSON(),
-			data: data.data || { }
+			// data: data.data || { }
 		} as Line;
 
 		const type = await this._db.types.getType(padId, data.typeId);
@@ -183,11 +182,11 @@ export default class DatabaseLines {
 		return lineTemplate;
 	}
 
-	getLine(padId: PadId, lineId: ID) {
+	getLine(padId: PadId, lineId: ID): Promise<Line> {
 		return this._db.helpers._getPadObject<Line>("Line", padId, lineId);
 	}
 
-	async createLine(padId: PadId, data: LineCreate, trackPointsFromRoute?: Route) {
+	async createLine(padId: PadId, data: LineCreate, trackPointsFromRoute?: Route): Promise<Line> {
 		const type = await this._db.types.getType(padId, data.typeId);
 
 		if(type.defaultColour && !data.colour)
@@ -197,7 +196,7 @@ export default class DatabaseLines {
 		if(type.defaultMode && !data.mode)
 			data.mode = type.defaultMode;
 
-		const { trackPoints, ...routeInfo } = await calculateRouteInfo(data, trackPointsFromRoute);
+		const { trackPoints, ...routeInfo } = await calculateRouteForLine(data, trackPointsFromRoute);
 
 		const dataCopy = { ...data, ...routeInfo };
 		delete dataCopy.trackPoints; // They came if mode is track
@@ -213,7 +212,7 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: LineUpdate, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route) {
+	async updateLine(padId: PadId, lineId: ID, data: LineUpdate, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
 		const update = {
 			...data,
@@ -223,7 +222,7 @@ export default class DatabaseLines {
 
 		let routeInfo;
 		if((update.mode == "track" && update.trackPoints) || !isEqual(update.routePoints, originalLine.routePoints) || update.mode != originalLine.mode)
-			routeInfo = await calculateRouteInfo(update, trackPointsFromRoute);
+			routeInfo = await calculateRouteForLine(update, trackPointsFromRoute);
 
 		Object.assign(update, routeInfo);
 		delete update.trackPoints; // They came if mode is track
@@ -241,7 +240,7 @@ export default class DatabaseLines {
 		return newLine;
 	}
 
-	async _setLinePoints(padId: PadId, lineId: ID, trackPoints: Point[], _noEvent?: boolean) {
+	async _setLinePoints(padId: PadId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
 		// First get elevation, so that if that fails, we don't update anything
 		await this.LinePointModel.destroy({ where: { lineId: lineId } });
 
@@ -250,20 +249,20 @@ export default class DatabaseLines {
 			create.push(Object.assign(JSON.parse(JSON.stringify(trackPoints[i])), { lineId: lineId }));
 		}
 
-		const points = await this._db.helpers._bulkCreateInBatches<Point>(this.LinePointModel, create);
+		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
 
 		if(!_noEvent)
 			this._db.emit("linePoints", padId, lineId, points);
 	}
 
-	async deleteLine(padId: PadId, lineId: ID) {
+	async deleteLine(padId: PadId, lineId: ID): Promise<Line> {
 		await this._setLinePoints(padId, lineId, [ ], true);
 		const oldLine = await this._db.helpers._deletePadObject<Line>("Line", padId, lineId);
 		this._db.emit("deleteLine", padId, { id: lineId });
 		return oldLine;
 	}
 
-	getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept) {
+	getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): Highland.Stream<{ id: ID; trackPoints: TrackPoint[] }> {
 		return this.getPadLines(padId, [ "id" ])
 			.flatMap(wrapAsync(async (line): Promise<{ id: ID, trackPoints: TrackPoint[] } | undefined> => {
 				const trackPoints = await this.getLinePoints(line.id, bboxWithZoom);
@@ -273,7 +272,7 @@ export default class DatabaseLines {
 			.filter((obj) => obj != null) as Highland.Stream<{ id: ID, trackPoints: TrackPoint[] }>;
 	}
 
-	async getLinePoints(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept) {
+	async getLinePoints(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): Promise<TrackPoint[]> {
 		const data = await this.LineModel.build({ id: lineId }).getLinePoints({
 			where: {
 				[Op.and]: [
@@ -303,7 +302,7 @@ export default class DatabaseLines {
 		return this.getLinePointsByIdx(lineId, indexes);
 	}
 
-	async getLinePointsByIdx(lineId: ID, indexes: number[]) {
+	async getLinePointsByIdx(lineId: ID, indexes: number[]): Promise<TrackPoint[]> {
 		const data = await this.LineModel.build({ id: lineId }).getLinePoints({
 			where: { idx: indexes },
 			attributes: [ "lon", "lat", "idx", "ele" ],
@@ -312,7 +311,7 @@ export default class DatabaseLines {
 		return data.map((point) => point.toJSON() as TrackPoint);
 	}
 
-	async getAllLinePoints(lineId: ID) {
+	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {
 		const points = await this.LineModel.build({ id: lineId }).getLinePoints({
 			attributes: [ "lat", "lon", "ele", "zoom", "idx" ]
 		});

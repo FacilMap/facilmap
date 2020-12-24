@@ -1,11 +1,11 @@
-import { Bbox, ExportFormat, ID, ObjectWithId } from "./base";
+import { Bbox, BboxWithZoom, ExportFormat, ID, ObjectWithId } from "./base";
 import { PadData, PadDataCreate, PadDataUpdate } from "./padData";
 import { Marker, MarkerCreate, MarkerUpdate } from "./marker";
 import { Line, LineCreate, LineUpdate } from "./line";
-import { Route, RouteCreate } from "./route";
+import { Route, RouteCreate, RouteInfo, RouteRequest } from "./route";
 import { Type, TypeCreate, TypeUpdate } from "./type";
 import { View, ViewCreate, ViewUpdate } from "./view";
-import { MultipleEvents } from "./events";
+import { MapEvents, MultipleEvents } from "./events";
 import { SearchResult } from "./searchResult";
 
 export interface LineTemplateRequest {
@@ -32,7 +32,7 @@ export interface FindOnMapQuery {
 }
 
 export interface RequestDataMap {
-	updateBbox: Bbox;
+	updateBbox: BboxWithZoom;
 	createPad: PadDataCreate;
 	editPad: PadDataUpdate;
 	deletePad: void;
@@ -50,7 +50,7 @@ export interface RequestDataMap {
 	exportLine: LineExportRequest;
 	find: FindQuery;
 	findOnMap: FindOnMapQuery;
-	getRoute: RouteCreate;
+	getRoute: RouteRequest;
 	setRoute: RouteCreate;
 	clearRoute: void;
 	lineToRoute: ObjectWithId;
@@ -66,12 +66,13 @@ export interface RequestDataMap {
 }
 
 export interface ResponseDataMap {
-	updateBbox: MultipleEvents;
-	createPad: MultipleEvents;
+	updateBbox: MultipleEvents<MapEvents>;
+	createPad: MultipleEvents<MapEvents>;
 	editPad: PadData;
-	listenToHistory: MultipleEvents;
+	deletePad: void;
+	listenToHistory: MultipleEvents<MapEvents>;
 	stopListeningToHistory: void;
-	revertHistoryEntry: MultipleEvents;
+	revertHistoryEntry: MultipleEvents<MapEvents>;
 	getMarker: Marker;
 	addMarker: Marker;
 	editMarker: Marker;
@@ -83,8 +84,8 @@ export interface ResponseDataMap {
 	exportLine: string;
 	find: string | SearchResult[];
 	findOnMap: Array<Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon"> | Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom">>;
-	getRoute: Route;
-	setRoute: Route;
+	getRoute: RouteInfo;
+	setRoute: Route | undefined;
 	clearRoute: void;
 	lineToRoute: Route;
 	exportRoute: string;
@@ -95,7 +96,7 @@ export interface ResponseDataMap {
 	editView: View;
 	deleteView: View;
 	geoip: Bbox | null;
-	setPadId: MultipleEvents;
+	setPadId: MultipleEvents<MapEvents>;
 }
 
 export type RequestName = keyof RequestDataMap;

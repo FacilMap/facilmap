@@ -1,19 +1,12 @@
 import { DataTypes, Model } from "sequelize";
 import Database from "./database";
 
-interface Meta {
-	key: string;
-	value: string;
-}
-
 function createMetaModel() {
 	return class MetaModel extends Model {
 		key!: string;
 		value!: string;
 	};
 }
-
-type MetaModel = InstanceType<ReturnType<typeof createMetaModel>>;
 
 export default class DatabaseMeta {
 
@@ -32,13 +25,13 @@ export default class DatabaseMeta {
 		});
 	}
 
-	async getMeta(key: string) {
+	async getMeta(key: string): Promise<string | undefined> {
 		const entry = await this.MetaModel.findOne({ where: { key } });
-		return entry && entry.value;
+		return entry?.value ?? undefined;
 	}
 
-	setMeta(key: string, value: string) {
-		return this.MetaModel.upsert({key, value});
+	async setMeta(key: string, value: string): Promise<void> {
+		await this.MetaModel.upsert({key, value});
 	}
 
 }

@@ -1,12 +1,12 @@
-import { generateRandomId, promiseAuto } from "../utils/utils";
+import { generateRandomId } from "../utils/utils";
 import { DataTypes, Model, Op } from "sequelize";
 import Database from "./database";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "../../../types/src";
 import { BboxWithExcept, getLatType, getLonType, makeBboxCondition } from "./helpers";
 import { WhereOptions } from "sequelize/types/lib/model";
-import { calculateRouteInfo } from "../routing/routing";
+import { calculateRouteForLine } from "../routing/routing";
 
-let updateTimes: Record<string, number> = {};
+const updateTimes: Record<string, number> = {};
 
 function createRoutePointModel() {
 	return class RoutePointModel extends Model {
@@ -20,7 +20,9 @@ function createRoutePointModel() {
 	};
 }
 
-type RoutePointModel = InstanceType<ReturnType<typeof createRoutePointModel>>;
+export interface RouteWithId extends Route {
+	id: string;
+}
 
 export default class DatabaseRoutes {
 
@@ -46,8 +48,8 @@ export default class DatabaseRoutes {
 		});
 	}
 
-	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false) {
-		let cond: WhereOptions = {
+	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false): Promise<TrackPoint[]> {
+		const cond: WhereOptions = {
 			routeId,
 			...(!bboxWithZoom ? {} : {
 				[Op.or]: [
@@ -66,20 +68,20 @@ export default class DatabaseRoutes {
 		})).map((point) => point.toJSON());
 	}
 
-	async generateRouteId() {
+	async generateRouteId(): Promise<string> {
 		// TODO: Check if exists
 		return generateRandomId(20);
 	}
 
-	async createRoute(routePoints: Point[], mode: RouteMode) {
+	async createRoute(routePoints: Point[], mode: RouteMode): Promise<RouteWithId | undefined> {
 		const routeId = await this.generateRouteId();
-		return this.updateRoute(routeId, routePoints, mode, true);
+		return await this.updateRoute(routeId, routePoints, mode, true);
 	}
 
-	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear: boolean = false): Promise<Route | undefined> {
-		let thisTime = Date.now();
+	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<RouteWithId | undefined> {
+		const thisTime = Date.now();
 
-		const routeInfoP = calculateRouteInfo({ mode, routePoints });
+		const routeInfoP = calculateRouteForLine({ mode, routePoints });
 
 		if(!_noClear)
 			await this.deleteRoute(routeId);
@@ -99,8 +101,8 @@ export default class DatabaseRoutes {
 		if(thisTime < updateTimes[routeId])
 			return;
 
-		let create = [ ];
-		for(let trackPoint of routeInfo.trackPoints) {
+		const create = [ ];
+		for(const trackPoint of routeInfo.trackPoints) {
 			create.push({ ...trackPoint, routeId: routeId });
 		}
 
@@ -119,7 +121,7 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async lineToRoute(routeId: string, padId: PadId, lineId: ID): Promise<Route> {
+	async lineToRoute(routeId: string | undefined, padId: PadId, lineId: ID): Promise<RouteWithId> {
 		if(routeId) {
 			await this.RoutePointModel.destroy({
 				where: { routeId }
@@ -130,8 +132,8 @@ export default class DatabaseRoutes {
 		const line = await this._db.lines.getLine(padId, lineId);
 		const linePoints = await this._db.lines.getAllLinePoints(lineId);
 
-		let create = [];
-		for(let linePoint of linePoints) {
+		const create = [];
+		for(const linePoint of linePoints) {
 			create.push({
 				routeId,
 				lat: linePoint.lat,
@@ -159,7 +161,7 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async deleteRoute(routeId: string) {
+	async deleteRoute(routeId: string): Promise<void> {
 		delete updateTimes[routeId];
 
 		await this.RoutePointModel.destroy({
@@ -169,7 +171,7 @@ export default class DatabaseRoutes {
 		});
 	}
 
-	async getRoutePointsByIdx(routeId: string, indexes: number[]) {
+	async getRoutePointsByIdx(routeId: string, indexes: number[]): Promise<TrackPoint[]> {
 		const data = await this.RoutePointModel.findAll({
 			where: { routeId, idx: indexes },
 			attributes: [ "lon", "lat", "idx", "ele" ],
@@ -178,7 +180,7 @@ export default class DatabaseRoutes {
 		return data.map((d) => d.toJSON());
 	}
 
-	async getAllRoutePoints(routeId: string) {
+	async getAllRoutePoints(routeId: string): Promise<TrackPoint[]> {
 		const data = await this.RoutePointModel.findAll({
 			where: {routeId},
 			attributes: [ "lon", "lat", "idx", "ele", "zoom"]

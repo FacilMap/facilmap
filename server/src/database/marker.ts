@@ -26,8 +26,6 @@ function createMarkerDataModel() {
 
 export type MarkerModel = InstanceType<ReturnType<typeof createMarkerModel>>;
 
-type MarkerDataModel = InstanceType<ReturnType<typeof createMarkerDataModel>>;
-
 export default class DatabaseMarkers {
 
 	MarkerModel = createMarkerModel();
@@ -56,7 +54,7 @@ export default class DatabaseMarkers {
 		});
 	}
 
-	afterInit() {
+	afterInit(): void {
 		const PadModel = this._db.pads.PadModel;
 		const TypeModel = this._db.types.TypeModel;
 
@@ -68,19 +66,19 @@ export default class DatabaseMarkers {
 		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
-	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept) {
+	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): Highland.Stream<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: makeBboxCondition(bbox) });
 	}
 
-	getPadMarkersByType(padId: PadId, typeId: ID) {
+	getPadMarkersByType(padId: PadId, typeId: ID): Highland.Stream<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: { padId: padId, typeId: typeId } });
 	}
 
-	getMarker(padId: PadId, markerId: ID) {
+	getMarker(padId: PadId, markerId: ID): Promise<Marker> {
 		return this._db.helpers._getPadObject("Marker", padId, markerId);
 	}
 
-	async createMarker(padId: PadId, data: MarkerCreate) {
+	async createMarker(padId: PadId, data: MarkerCreate): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
 		const elevation = await getElevationForPoint(data);
 
@@ -103,7 +101,7 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: MarkerUpdate, doNotUpdateStyles: boolean = false) {
+	async updateMarker(padId: PadId, markerId: ID, data: MarkerUpdate, doNotUpdateStyles = false): Promise<Marker> {
 		const update = { ...data };
 
 		if (update.lat != null && update.lon != null)
@@ -119,7 +117,7 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async deleteMarker(padId: PadId, markerId: ID) {
+	async deleteMarker(padId: PadId, markerId: ID): Promise<Marker> {
 		const result = await this._db.helpers._deletePadObject<Marker>("Marker", padId, markerId);
 		this._db.emit("deleteMarker", padId, { id: result.id });
 		return result;

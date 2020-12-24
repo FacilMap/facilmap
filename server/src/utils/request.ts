@@ -1,6 +1,7 @@
 import requestPromise from "request-promise";
 import debug from "debug";
 import requestDebug from "request-debug";
+import config from "../config";
 
 if(debug.enabled("request")) {
 	requestDebug(requestPromise);
@@ -9,7 +10,7 @@ if(debug.enabled("request")) {
 const request: typeof requestPromise = requestPromise.defaults({
 	gzip: true,
 	headers: {
-		'User-Agent': process.env.fmUserAgent
+		'User-Agent': config.userAgent
 	}
 });
 

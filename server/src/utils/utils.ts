@@ -1,8 +1,9 @@
-import { AsyncAutoTasks, AsyncResultCallback, Dictionary, auto as asyncAuto } from "async";
+import { AsyncAutoTasks, Dictionary, auto as asyncAuto } from "async";
+import highland from "highland";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-export function generateRandomId(length: number) {
+export function generateRandomId(length: number): string {
 	let randomPadId = "";
 	for(let i=0; i<length; i++) {
 		randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
@@ -55,7 +56,7 @@ function _stripObject(obj: any, type: any): any {
 		return FAILURE;
 }
 
-export function round(number: number, digits: number) {
+export function round(number: number, digits: number): number {
 	const fac = Math.pow(10, digits);
 	return Math.round(number*fac)/fac;
 }
@@ -65,13 +66,13 @@ export function round(number: number, digits: number) {
 }; */
 
 type PromiseMap<T extends object> = {
-	[P in keyof T]: PromiseLike<T[P]>
+	[P in keyof T]: PromiseLike<T[P]> | T[P]
 }
 
 export async function promiseProps<T extends object>(obj: PromiseMap<T>): Promise<T> {
 	const result = { } as T;
 	await Promise.all((Object.keys(obj) as Array<keyof T>).map(async (key) => {
-		result[key] = await obj[key];
+		result[key] = (await obj[key]) as any;
 	}));
 	return result;
 }
@@ -101,7 +102,7 @@ export function promiseAuto<T extends object>(obj: PromiseCreatorMap<T>): Promis
 		if(dep instanceof Function) {
 			const params = getFuncParams(dep) as Array<keyof T>;
 			return promises[str] = _getDeps(params).then(function(res) {
-				return dep.apply(null, params.map(function(param) { return res[param]; }));
+				return (dep as any)(...params.map((param) => res[param]));
 			});
 		} else {
 			return Promise.resolve(dep as any);
@@ -122,8 +123,8 @@ export function promiseAuto<T extends object>(obj: PromiseCreatorMap<T>): Promis
 function getFuncParams(func: Function) {
 	// Taken from angular injector code
 
-	const ARROW_ARG = /^([^\(]+?)\s*=>/;
-	const FN_ARGS = /^[^\(]*\(\s*([^\)]*)\)/m;
+	const ARROW_ARG = /^([^(]+?)\s*=>/;
+	const FN_ARGS = /^[^(]*\(\s*([^)]*)\)/m;
 	const FN_ARG_SPLIT = /\s*,\s*/;
 	const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
@@ -138,4 +139,17 @@ function getFuncParams(func: Function) {
 
 export function clone<T>(obj: T): T {
 	return JSON.parse(JSON.stringify(obj));
+}
+
+export function throttle<A extends any[], R>(func: (...args: A) => Promise<R>, parallel = 1): (...args: A) => Promise<R> {
+	const stream = highland<() => Promise<void>>();
+	stream.map((func) => (highland(func()))).parallel(parallel).done(() => undefined);
+
+	return (...args: A): Promise<R> => {
+		return new Promise<R>((resolve, reject) => {
+			stream.write(() => {
+				return func(...args).then(resolve).catch(reject);
+			});
+		});
+	};
 }

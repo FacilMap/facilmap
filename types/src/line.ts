@@ -1,8 +1,7 @@
 import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base";
 import { PadId } from "./padData";
 
-export interface LineExtraInfo {
-}
+export type ExtraInfo = Record<string, string[]>;
 
 interface LineBase {
 	id: ID;
@@ -13,7 +12,7 @@ interface LineBase {
 	name: string;
 	typeId: ID;
 	data: Record<string, string>;
-	extraInfo?: LineExtraInfo;
+	extraInfo?: ExtraInfo;
 	padId: PadId;
 }
 

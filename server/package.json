@@ -20,7 +20,10 @@
   "scripts": {
     "start": "npm run deps && npm run server",
     "deps": "npm install",
-    "server": "ts-node src/server.ts"
+    "server": "ts-node src/server.ts",
+    "test": "jest",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts"
   },
   "bin": {
     "facilmap-server": "src/server.ts"

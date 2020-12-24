@@ -1,9 +1,13 @@
-import { PadId } from "facilmap-types";
+import { Line, Marker, PadId } from "facilmap-types";
 import Sequelize, { ModelCtor } from "sequelize";
 import Database from "./database";
 import { LineModel } from "./line";
 import { MarkerModel } from "./marker";
 import similarity from "string-similarity";
+
+type DatabaseSearchResult = ((Marker & { kind: "marker" }) | (Line & { kind: "line" })) & {
+	similarity: number;
+};
 
 const Op = Sequelize.Op;
 
@@ -15,10 +19,10 @@ export default class DatabaseSearch {
 		this._db = database;
 	}
 
-	async search(padId: PadId, searchText: string) {
-		let objects = (await Promise.all([ "Marker", "Line" ].map(async (kind) => {
+	async search(padId: PadId, searchText: string): Promise<Array<DatabaseSearchResult>> {
+		const objects = (await Promise.all([ "Marker", "Line" ].map(async (kind) => {
 			const model = this._db._conn.model(kind) as ModelCtor<MarkerModel | LineModel>;
-			let objs = await model.findAll<MarkerModel | LineModel>({
+			const objs = await model.findAll<MarkerModel | LineModel>({
 				where: Sequelize.and(
 					{ padId },
 					Sequelize.where(Sequelize.fn("lower", Sequelize.col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
@@ -28,7 +32,7 @@ export default class DatabaseSearch {
 
 			return objs.map((obj) => ({
 				...obj.toJSON(),
-				kind: kind.toLowerCase(),
+				kind: kind.toLowerCase() as any,
 				similarity: similarity.compareTwoStrings(searchText, obj.name ?? '')
 			}));
 		}))).flat();

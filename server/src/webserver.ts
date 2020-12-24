@@ -1,47 +1,43 @@
-import { promiseAuto } from "./utils/utils";
 import compression from "compression";
 import ejs from "ejs";
 import express, { Request, Response, NextFunction } from "express";
-const fs = require("fs").promises;
-import { createServer } from "http2";
+import fs from "fs";
+import { createServer, Http2Server } from "http2";
 import jsonFormat from "json-format";
 import { dirname } from "path";
-import { promisify } from "util";
 import { PadId } from "facilmap-types";
 import { createTable } from "./export/table";
-import database from "./database/database";
-import geojson from "./export/geojson";
-const gpx = require("./export/gpx");
-const table = require("./export/table");
-const config = require("../../config");
+import Database from "./database/database";
+import { exportGeoJson } from "./export/geojson";
+import { exportGpx } from "./export/gpx";
 
 const frontendPath = dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
 
-if(process.env.FM_DEV)
-	process.chdir(frontendPath); // To make sure that webpack finds all the loaders
+const isDevMode = !!process.env.FM_DEV;
 
-const webpackCompiler = process.env.FM_DEV ? require("webpack")(require("facilmap-frontend/webpack.config")) : null;
+/* eslint-disable @typescript-eslint/no-var-requires */
+const webpackCompiler = isDevMode ? require("webpack")(require("facilmap-frontend/webpack.config")) : null;
 
-const staticMiddleware = process.env.FM_DEV
+const staticMiddleware = isDevMode
 	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
 		publicPath: "/"
 	})
 	: express.static(frontendPath + "/build/");
 
-const hotMiddleware = process.env.FM_DEV ? require("webpack-hot-middleware")(webpackCompiler) : null;
+const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : null;
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 type PathParams = {
 	padId: PadId
 }
 
-export async function initWebserver(database: any, port: number, host: string) {
+export async function initWebserver(database: Database, port: number, host?: string): Promise<Http2Server> {
 	const padMiddleware = function(req: Request<PathParams>, res: Response<string>, next: NextFunction) {
-		promiseAuto({
-			template: () => getFrontendFile("index.ejs"),
-
-			padData: () => {
+		Promise.all([
+			getFrontendFile("index.ejs"),
+			(async () => {
 				if(req.params && req.params.padId) {
-					return database.getPadData(req.params.padId).then((padData) => {
+					return database.pads.getPadData(req.params.padId).then((padData) => {
 						// We only look up by read ID. At the moment, we only need the data for the search engine
 						// meta tags, and those should be only enabled in the read-only version anyways.
 
@@ -56,20 +52,17 @@ export async function initWebserver(database: any, port: number, host: string) {
 						};
 					});
 				}
-			},
-
-			render: async (template, padData) => {
-				res.type("html");
-				res.send(ejs.render(template, {
-					padData: padData,
-					config: {}
-				}));
-			}
+			})()
+		]).then(([ template, padData ]) => {
+			res.type("html");
+			res.send(ejs.render(template, {
+				padData: padData,
+				config: {}
+			}));
 		}).catch(next);
 	};
 
-
-	let app = express();
+	const app = express();
 	app.use(compression());
 
 	app.get("/bundle-:hash.js", function(req, res, next) {
@@ -83,67 +76,69 @@ export async function initWebserver(database: any, port: number, host: string) {
 	app.get("/table.ejs", padMiddleware);
 
 	app.use(staticMiddleware);
-	if(process.env.FM_DEV) {
+	if(isDevMode) {
 		app.use(hotMiddleware);
 	}
 
 	// If no file with this name has been found, we render a pad
 	app.get("/:padId", padMiddleware);
 
-	app.get("/:padId/gpx", function(req: Request<PathParams>, res: Response<string>, next) {
-		promiseAuto({
-			padData: database.getPadDataByAnyId(req.params.padId).then((padData) => {
-				if(!padData)
-					throw new Error(`Map with ID ${req.params.padId} could not be found.`);
-				return padData;
-			}),
-			gpx: (padData) => {
-				return gpx.exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter);
-			},
-			response: async (padData, gpx) => {
-				res.set("Content-type", "application/gpx+xml");
-				res.attachment(padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + ".gpx");
-				res.send(gpx);
-			}
-		}).catch(next);
+	app.get("/:padId/gpx", async function(req: Request<PathParams>, res: Response<string>, next) {
+		try {
+			const padData = await database.pads.getPadDataByAnyId(req.params.padId);
+			
+			if(!padData)
+				throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			
+			const gpx = await exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined);
+			
+			res.set("Content-type", "application/gpx+xml");
+			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
+			res.send(gpx);
+		} catch (e) {
+			next(e);
+		}
 	});
 
-	app.get("/:padId/table", function(req: Request<PathParams>, res: Response<string>, next) {
-		return createTable(database, req.params.padId, req.query.filter, req.query.hide ? req.query.hide.split(',') : []).then((renderedTable) => {
+	app.get("/:padId/table", async function(req: Request<PathParams>, res: Response<string>, next) {
+		try {
+			const renderedTable = await createTable(database, req.params.padId, req.query.filter as string | undefined, req.query.hide ? (req.query.hide as string).split(',') : []);
+			
 			res.type("html");
 			res.send(renderedTable);
-		}).catch(next);
+		} catch (e) {
+			next(e);
+		}
 	});
 
-	app.get("/:padId/geojson", function(req: Request<PathParams>, res: Response<string>, next) {
-		promiseAuto({
-			padData: database.getPadData(req.params.padId).then((padData) => {
-				if(!padData)
-					throw new Error(`Map with ID ${req.params.padId} could not be found.`);
-				return padData;
-			}),
-			geojson: () => {
-				return geojson.exportGeoJson(database, req.params.padId, req.query.filter);
-			},
-			response: async (padData, geojson) => {
-				res.set("Content-type", "application/geo+json");
-				res.attachment(padData.name.replace(/[\\\/:*?"<>|]+/g, '_') + ".geojson");
-				res.send(jsonFormat(geojson));
-			}
-		}).catch(next);
+	app.get("/:padId/geojson", async function(req: Request<PathParams>, res: Response<string>, next) {
+		try {
+			const [padData, geojson] = await Promise.all([
+				database.pads.getPadData(req.params.padId),
+				exportGeoJson(database, req.params.padId, req.query.filter as string | undefined)
+			]);
+
+			if(!padData)
+				throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			
+			res.set("Content-type", "application/geo+json");
+			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
+			res.send(jsonFormat(geojson));
+		} catch (e) {
+			next(e);
+		}
 	});
 
 	const server = createServer(app);
-	await promisify(server.listen.bind(server))({
-		port,
-		host
+	await new Promise<void>((resolve) => {
+		server.listen({ port, host }, resolve);
 	});
 	return server;
 }
 
 export function getFrontendFile(path: string): Promise<string> {
-	if (process.env.FM_DEV) {
-		return new Promise((resolve, reject) => {
+	if (isDevMode) {
+		return new Promise((resolve) => {
 			staticMiddleware.waitUntilValid(resolve);
 		}).then(() => {
 			return staticMiddleware.fileSystem.readFileSync(staticMiddleware.getFilenameFromUrl(`/${path}`), "utf8");
@@ -152,6 +147,6 @@ export function getFrontendFile(path: string): Promise<string> {
 		// We don't want express.static's ETag handling, as it sometimes returns an empty template,
 		// so we have to read it directly from the file system
 
-		return fs.readFile(`${frontendPath}/build/${path}`, "utf8");
+		return fs.promises.readFile(`${frontendPath}/build/${path}`, "utf8");
 	}
 }

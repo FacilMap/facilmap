@@ -1,12 +1,8 @@
 import highland from "highland";
-import polyline from "@mapbox/polyline";
-import request from "./utils/request";
 import { Point } from "../../types/src";
-import config from "./config";
 
-
-const API_URL = "https://elevation.mapzen.com/height";
-const LIMIT = 500;
+// const API_URL = "https://elevation.mapzen.com/height";
+// const LIMIT = 500;
 const MIN_TIME_BETWEEN_REQUESTS = 600;
 
 const throttle = highland<() => void>();
@@ -14,13 +10,13 @@ throttle.ratelimit(1, MIN_TIME_BETWEEN_REQUESTS).each((func) => {
 	func();
 });
 
-export function _getThrottledSlot() {
+export function _getThrottledSlot(): Promise<void> {
 	return new Promise<void>((resolve) => {
 		throttle.write(resolve);
 	});
 }
 
-export async function getElevationForPoint(point: Point) {
+export async function getElevationForPoint(point: Point): Promise<number | undefined> {
 	const points = await getElevationForPoints([point]);
 	return points[0];
 }
@@ -63,7 +59,7 @@ export function getAscentDescent(elevations: Array<number | null>): AscentDescen
 		};
 	}
 
-	let ret: AscentDescent = {
+	const ret: AscentDescent = {
 		ascent: 0,
 		descent: 0
 	};

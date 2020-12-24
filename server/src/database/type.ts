@@ -65,19 +65,19 @@ export default class DatabaseTypes {
 				type: Sequelize.TEXT,
 				allowNull: false,
 				get: function(this: TypeModel) {
-					let fields = this.getDataValue("fields") as any as string;
+					const fields = this.getDataValue("fields") as any as string;
 					return fields == null ? [] : JSON.parse(fields);
 				},
 				set: function(this: TypeModel, v: Field[]) {
-					for(let field of v) {
+					for(const field of v) {
 						if(field.controlSymbol) {
-							for(let option of field.options ?? []) {
+							for(const option of field.options ?? []) {
 								if(!option.symbol)
 									option.symbol = ""; // Avoid "undefined" ending up there, which messes everything up
 							}
 						}
 						if(field.controlShape) {
-							for(let option of field.options ?? []) {
+							for(const option of field.options ?? []) {
 								if(!option.shape)
 									option.shape = ""; // Avoid "undefined" ending up there, which messes everything up
 							}
@@ -135,8 +135,8 @@ export default class DatabaseTypes {
 
 							// Validate unique dropdown entries
 							if(field.type == "dropdown") {
-								let existingValues: Record<string, boolean> = { };
-								for(let option of (field.options || [])) {
+								const existingValues: Record<string, boolean> = { };
+								for(const option of (field.options || [])) {
 									if(existingValues[option.value])
 										throw new Error(`Duplicate option "${option.value}" for field "${field.name}".`);
 									existingValues[option.value] = true;
@@ -161,21 +161,21 @@ export default class DatabaseTypes {
 		});
 	}
 
-	afterInit() {
+	afterInit(): void {
 		const PadModel = this._db.pads.PadModel;
 		this.TypeModel.belongsTo(PadModel, makeNotNullForeignKey("pad", "padId"));
 		PadModel.hasMany(this.TypeModel, { foreignKey: "padId" });
 	}
 
-	getTypes(padId: PadId) {
+	getTypes(padId: PadId): Highland.Stream<Type> {
 		return this._db.helpers._getPadObjects<Type>("Type", padId);
 	}
 
-	getType(padId: PadId, typeId: ID) {
+	getType(padId: PadId, typeId: ID): Promise<Type> {
 		return this._db.helpers._getPadObject<Type>("Type", padId, typeId);
 	}
 
-	async createType(padId: PadId, data: TypeCreate) {
+	async createType(padId: PadId, data: TypeCreate): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -184,7 +184,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: TypeUpdate, _doNotUpdateStyles?: boolean) {
+	async updateType(padId: PadId, typeId: ID, data: TypeUpdate, _doNotUpdateStyles?: boolean): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -197,11 +197,11 @@ export default class DatabaseTypes {
 		return result;
 	}
 
-	async recalculateObjectStylesForType(padId: PadId, typeId: ID, isLine: boolean) {
+	async recalculateObjectStylesForType(padId: PadId, typeId: ID, isLine: boolean): Promise<void> {
 		await this._db.helpers._updateObjectStyles(isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId));
 	}
 
-	async isTypeUsed(padId: PadId, typeId: ID) {
+	async isTypeUsed(padId: PadId, typeId: ID): Promise<boolean> {
 		const [ marker, line ] = await Promise.all([
 			this._db.markers.MarkerModel.findOne({ where: { padId: padId, typeId: typeId } }),
 			this._db.lines.LineModel.findOne({ where: { padId: padId, typeId: typeId } })
@@ -210,7 +210,7 @@ export default class DatabaseTypes {
 		return !!marker || !!line;
 	}
 
-	async deleteType(padId: PadId, typeId: ID) {
+	async deleteType(padId: PadId, typeId: ID): Promise<Type> {
 		if (await this.isTypeUsed(padId, typeId))
 			throw new Error("This type is in use.");
 
@@ -221,7 +221,7 @@ export default class DatabaseTypes {
 		return type;
 	}
 
-	async createDefaultTypes(padId: PadId) {
+	async createDefaultTypes(padId: PadId): Promise<Type[]> {
 		return await Promise.all(DEFAULT_TYPES.map((it) => this.createType(padId, it)));
 	}
 }

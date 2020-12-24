@@ -16,5 +16,6 @@
   "dependencies": {
     "@types/geojson": "^7946.0.7"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {}
 }

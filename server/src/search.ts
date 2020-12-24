@@ -1,18 +1,11 @@
 import { round } from "./utils/utils";
 import cheerio from "cheerio";
 import compressjs from "compressjs";
-import requestP, { RequestPromise } from "request-promise";
 import zlib from "zlib";
 import util from "util";
 import { getElevationForPoint, getElevationForPoints } from "./elevation";
-import { ZoomLevel, Point } from "facilmap-types";
-
-const request = requestP.defaults({
-	gzip: true,
-	headers: {
-		'User-Agent': process.env.fmUserAgent
-	}
-});
+import { ZoomLevel, Point, SearchResult } from "facilmap-types";
+import request from "./utils/request";
 
 interface NominatimResult {
 	place_id: number;
@@ -38,22 +31,6 @@ interface NominatimResult {
 
 interface NominatimError {
 	error: string;
-}
-
-interface SearchResult {
-	short_name: string;
-	display_name: string;
-	address?: string;
-	boundingbox?: [string, string, string, string];
-	lat: number;
-	lon: number;
-	zoom?: number;
-	extratags?: Record<string, string>;
-	geojson?: GeoJSON.GeoJSON;
-	icon?: string;
-	type: string;
-	id?: string;
-	elevation?: number;
 }
 
 const nameFinderUrl = "https://nominatim.openstreetmap.org";
@@ -100,7 +77,7 @@ interface PointWithZoom extends Point {
 	zoom?: ZoomLevel;
 }
 
-async function find(query: string, loadUrls = false, loadElevation = false): Promise<Array<SearchResult>> {
+export async function find(query: string, loadUrls = false, loadElevation = false): Promise<Array<SearchResult>> {
 	query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
 	if(loadUrls) {
@@ -116,7 +93,7 @@ async function find(query: string, loadUrls = false, loadElevation = false): Pro
 			return await _loadUrl(query);
 	}
 
-	let lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/);
+	const lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/);
 	if(lonlat_match) {
 		const result = await _findLonLat({
 			lat: Number(lonlat_match[2].replace(",", ".").replace(/\s+/, "")),
@@ -126,7 +103,7 @@ async function find(query: string, loadUrls = false, loadElevation = false): Pro
 		return result.map((res) => ({ ...res, id: query }));
 	}
 
-	let osm_match = query.match(/^([nwr])(\d+)$/i);
+	const osm_match = query.match(/^([nwr])(\d+)$/i);
 	if(osm_match)
 		return await _findOsmObject(osm_match[1], osm_match[2], loadElevation);
 
@@ -145,7 +122,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 	if('error' in body)
 		throw new Error(body.error);
 
-	let points = body.filter((res) => (res.lon && res.lat));
+	const points = body.filter((res) => (res.lon && res.lat));
 	if(loadElevation && points.length > 0) {
 		const elevations = await getElevationForPoints(points);
 		elevations.forEach((elevation, i) => {
@@ -182,7 +159,7 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false)
 	]);
 	
 	if(!body || body.error) {
-		let name = round(lonlatWithZoom.lat, 5) + ", " + round(lonlatWithZoom.lon, 5);
+		const name = round(lonlatWithZoom.lat, 5) + ", " + round(lonlatWithZoom.lon, 5);
 		return [ {
 			lat: lonlatWithZoom.lat,
 			lon : lonlatWithZoom.lon,
@@ -205,7 +182,7 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false)
 }
 
 function _prepareSearchResult(result: NominatimResult): SearchResult {
-	let {address, nameWithAddress, name} = _formatAddress(result);
+	const { address, nameWithAddress, name } = _formatAddress(result);
 	return {
 		short_name: name,
 		display_name: nameWithAddress,
@@ -235,16 +212,16 @@ function _formatAddress(result: NominatimResult) {
 
 	let type = result.type;
 	let name = result.namedetails.name;
-	let countryCode = result.address.country_code;
+	const countryCode = result.address.country_code;
 
 	let road = result.address.road;
-	let housenumber = result.address.house_number;
+	const housenumber = result.address.house_number;
 	let suburb = result.address.town || result.address.suburb || result.address.village || result.address.hamlet || result.address.residential;
-	let postcode = result.address.postcode;
+	const postcode = result.address.postcode;
 	let city = result.address.city;
 	let county = result.address.county;
 	let state = result.address.state;
-	let country = result.address.country;
+	const country = result.address.country;
 
 	if([ "road", "residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state" ].indexOf(type) != -1)
 		name = "";
@@ -369,7 +346,7 @@ function _formatAddress(result: NominatimResult) {
 		case "us":
 			if(city && state)
 			{
-				let thisStateAbbr = stateAbbr[countryCode][state.toLowerCase()];
+				const thisStateAbbr = stateAbbr[countryCode][state.toLowerCase()];
 				if(thisStateAbbr)
 				{
 					city += " "+thisStateAbbr;
@@ -386,7 +363,7 @@ function _formatAddress(result: NominatimResult) {
 			{
 				if(county)
 				{
-					let countyAbbr = stateAbbr.it[county.toLowerCase().replace(/ì/g, "i")];
+					const countyAbbr = stateAbbr.it[county.toLowerCase().replace(/ì/g, "i")];
 					if(countyAbbr)
 					{
 						city += " ("+countyAbbr+")";
@@ -407,8 +384,7 @@ function _formatAddress(result: NominatimResult) {
 				city += ", "+postcode;
 			break;
 		case "cl":
-		case "hk":
-			// Postcode rarely/not used
+		case "hk": // Postcode rarely/not used
 		case "ie":
 		case "in":
 		case "id":
@@ -426,7 +402,7 @@ function _formatAddress(result: NominatimResult) {
 			break;
 	}
 
-	let address = [ ];
+	const address = [ ];
 
 	if(road)
 		address.push(road);
@@ -445,7 +421,7 @@ function _formatAddress(result: NominatimResult) {
 	if(country)
 		address.push(country);
 
-	let fullName = [ ...address ];
+	const fullName = [ ...address ];
 	if(name && name != address[0])
 		fullName.unshift(name);
 
@@ -468,13 +444,13 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 	else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
 		bodyBuf = await util.promisify(zlib.gunzip.bind(zlib))(bodyBuf);
 	
-	let body = bodyBuf.toString();
+	const body = bodyBuf.toString();
 
 	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
 		return body;
 	else if(body.match(/^\s*</)) {
-		let $ = cheerio.load(body, { xmlMode: true });
-		let rootEl = $.root().children();
+		const $ = cheerio.load(body, { xmlMode: true });
+		const rootEl = $.root().children();
 
 		if(rootEl.is("osm") && completeOsmObjects) {
 			await _loadSubRelations($);
@@ -484,7 +460,7 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 		else
 			throw new Error("Unknown file format.");
 	} else if(body.match(/^\s*\{/)) {
-		let content = JSON.parse(body);
+		const content = JSON.parse(body);
 		if(content.type)
 			return body;
 		else
@@ -495,9 +471,9 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 }
 
 async function _loadSubRelations($: cheerio.Root) {
-	let promises: Array<RequestPromise<string>> = [ ];
+	const promises: Array<ReturnType<typeof request>> = [ ];
 	$("member[type='relation']").each(function(this: cheerio.Element) {
-		let relId = $(this).attr("ref");
+		const relId = $(this).attr("ref");
 		if($("relation[id='" + relId + "']").length == 0) {
 			promises.push(request("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full"));
 		}

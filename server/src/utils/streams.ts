@@ -41,7 +41,7 @@ export function jsonStream(template: any, data: Record<string, Highland.Stream<a
 		}
 		else if (highland.isStream(data[part])) {
 			let first = true;
-			let indent = lastIndent + "\t";
+			const indent = lastIndent + "\t";
 			return highland([ '[\n' ]).concat(
 				data[part].map((obj: any) => {
 					const prefix = first ? '' : ',\n';

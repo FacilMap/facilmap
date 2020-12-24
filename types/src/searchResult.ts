@@ -6,13 +6,15 @@ export type SearchResultType = string;
 export interface SearchResult extends Point {
 	short_name: string;
 	display_name: string;
-	address: string;
-	boundingbox: Bbox | null;
-	zoom: ZoomLevel | null;
-	extratags: Record<string, string>;
-	geojson: GeoJSON | null;
-	icon: Symbol;
+	address?: string;
+	boundingbox?: [string, string, string, string];
+	lat: number;
+	lon: number;
+	zoom?: number;
+	extratags?: Record<string, string>;
+	geojson?: GeoJSON.GeoJSON;
+	icon?: string;
 	type: SearchResultType;
-	id: string;
-	ele?: number;
+	id?: string;
+	elevation?: number;
 }

@@ -1,14 +1,12 @@
 import { clone, generateRandomId, promiseProps } from "../utils/utils";
 import { streamEachPromise } from "../utils/streams";
-import Sequelize, { Model, ModelCtor } from "sequelize";
+import Sequelize from "sequelize";
 import { isEqual } from "lodash";
 import Database from "./database";
-import { TypeModel } from "./type";
 import { PadModel } from "./pad";
 import { Line, Marker } from "facilmap-types";
-import { LineModel, LinePointModel } from "./line";
+import { LinePointModel } from "./line";
 import { getElevationForPoints } from "../elevation";
-import { MarkerModel } from "./marker";
 
 const Op = Sequelize.Op;
 
@@ -20,12 +18,12 @@ export default class DatabaseMigrations {
 		this._db = database;
 	}
 
-	_runMigrations() {
-		var queryInterface = this._db._conn.getQueryInterface();
+	async _runMigrations(): Promise<void> {
+		const queryInterface = this._db._conn.getQueryInterface();
 
-		var renameColMigrations = Promise.all([
+		const renameColMigrations = Promise.all([
 			queryInterface.describeTable('Lines').then((attributes: any) => {
-				var promises: Promise<any>[] = [ ];
+				const promises: Promise<any>[] = [ ];
 
 				// Rename Line.points to Line.routePoints
 				if(attributes.points) {
@@ -43,16 +41,16 @@ export default class DatabaseMigrations {
 				// Rename writeId to adminId
 
 				if(!attributes.adminId) {
-					let Pad = this._db.pads.PadModel;
+					const Pad = this._db.pads.PadModel;
 					return queryInterface.renameColumn('Pads', 'writeId', 'adminId').then(() => {
 						return queryInterface.addColumn('Pads', 'writeId', Pad.rawAttributes.writeId);
 					}).then(() => {
 						return Pad.findAll<PadModel>();
 					}).then((pads) => {
 						let promise: Promise<any> = Promise.resolve();
-						for(let pad of pads) {
-							let genId = (): Promise<string> => {
-								let writeId = generateRandomId(14);
+						for(const pad of pads) {
+							const genId = (): Promise<string> => {
+								const writeId = generateRandomId(14);
 								return this._db.pads.padIdExists(writeId).then((exists) => {
 									if(exists)
 										return genId();
@@ -73,8 +71,8 @@ export default class DatabaseMigrations {
 			})
 		]);
 
-		var changeColMigrations = Promise.all([ 'Pads', 'Markers', 'Lines', 'Types' ].map(async (table) => {
-			let attributes: any = await queryInterface.describeTable(table);
+		const changeColMigrations = Promise.all([ 'Pads', 'Markers', 'Lines', 'Types' ].map(async (table) => {
+			const attributes: any = await queryInterface.describeTable(table);
 
 			// allow null on Pad.name, Marker.name, Line.name
 			if(["Pads", "Markers", "Lines"].includes(table) && !attributes.name.allowNull)
@@ -87,12 +85,12 @@ export default class DatabaseMigrations {
 				await queryInterface.changeColumn(table, "defaultMode", { type: Sequelize.TEXT, allowNull: true });
 		}));
 
-		var addColMigrations = renameColMigrations.then(() => {
+		const addColMigrations = renameColMigrations.then(() => {
 			return Promise.all([ 'Pad', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ].map((table) => {
-				var model = this._db._conn.model(table);
+				const model = this._db._conn.model(table);
 				return queryInterface.describeTable(model.getTableName()).then((attributes: any) => {
-					var promises = [ ];
-					for(var attribute in model.rawAttributes) {
+					const promises = [ ];
+					for(const attribute in model.rawAttributes) {
 						if(!attributes[attribute])
 							promises.push(queryInterface.addColumn(model.getTableName(), attribute, model.rawAttributes[attribute]));
 					}
@@ -102,23 +100,23 @@ export default class DatabaseMigrations {
 		});
 
 		// Get rid of the dropdown key, save the value in the data instead
-		let dropdownKeyMigration = this._db.meta.getMeta("dropdownKeysMigrated").then((dropdownKeysMigrated) => {
+		const dropdownKeyMigration = this._db.meta.getMeta("dropdownKeysMigrated").then((dropdownKeysMigrated) => {
 			if(dropdownKeysMigrated == "true")
 				return;
 
 			return this._db.types.TypeModel.findAll().then((types) => {
 				let operations = Promise.resolve();
-				for(let type of types) {
-					let newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
-					let dropdowns = newFields.filter((field) => field.type == "dropdown");
+				for(const type of types) {
+					const newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
+					const dropdowns = newFields.filter((field) => field.type == "dropdown");
 					if(dropdowns.length > 0) {
 						operations = operations.then(() => {
-							let objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id)) as Highland.Stream<Marker | Line>;
+							const objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id)) as Highland.Stream<Marker | Line>;
 
 							return streamEachPromise(objectStream, (object) => {
-								let newData = clone(object.data);
-								for(let dropdown of dropdowns) {
-									let newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.name])[0];
+								const newData = clone(object.data);
+								for(const dropdown of dropdowns) {
+									const newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.name])[0];
 									if(newVal)
 										newData[dropdown.name] = newVal.value;
 									else if(newData[dropdown.name])
@@ -131,7 +129,7 @@ export default class DatabaseMigrations {
 						}).then(() => {
 							dropdowns.forEach((dropdown) => {
 								if(dropdown.default) {
-									let newDefault = dropdown.options?.filter((option: any) => (option.key == dropdown.default))[0];
+									const newDefault = dropdown.options?.filter((option: any) => (option.key == dropdown.default))[0];
 									if(newDefault)
 										dropdown.default = newDefault.value;
 									else
@@ -153,7 +151,7 @@ export default class DatabaseMigrations {
 		});
 
 		// Get elevation data for all lines/markers that don't have any yet
-		let elevationMigration = addColMigrations.then(() => {
+		const elevationMigration = addColMigrations.then(() => {
 			return this._db.meta.getMeta("hasElevation");
 		}).then((hasElevation) => {
 			if(hasElevation == "true")
@@ -162,7 +160,7 @@ export default class DatabaseMigrations {
 			return Promise.all([
 				this._db.lines.LineModel.findAll().then((lines) => {
 					let operations = Promise.resolve();
-					for(let line of lines) {
+					for(const line of lines) {
 						operations = operations.then(() => {
 							return this._db.lines.LineModel.build({ id: line.id }).getLinePoints().then((trackPoints) => {
 								return this._db.lines._setLinePoints(line.padId, line.id, trackPoints, true);
@@ -189,20 +187,20 @@ export default class DatabaseMigrations {
 
 
 		// Add showInLegend field to types
-		let legendMigration = addColMigrations.then(() => (this._db.meta.getMeta("hasLegendOption"))).then((hasLegendOption) => {
+		const legendMigration = addColMigrations.then(() => (this._db.meta.getMeta("hasLegendOption"))).then((hasLegendOption) => {
 			if(hasLegendOption == "true")
 				return;
 
 			return this._db.types.TypeModel.findAll().then((types) => {
 				let operations = Promise.resolve();
-				for(let type of types) {
+				for(const type of types) {
 					let showInLegend = false;
 
 					if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed))
 						showInLegend = true;
 
 					if(!showInLegend) {
-						for(let field of type.fields) {
+						for(const field of type.fields) {
 							if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (type.type == "marker" && field.controlSymbol) || (type.type == "marker" && field.controlShape) || (type.type == "line" && field.controlWidth))) {
 								showInLegend = true;
 								break;
@@ -218,14 +216,14 @@ export default class DatabaseMigrations {
 
 
 		// Calculate bounding box for lines
-		let bboxMigration = addColMigrations.then(async () => {
+		const bboxMigration = addColMigrations.then(async () => {
 			if(await this._db.meta.getMeta("hasBboxes") == "true")
 				return;
 
-			let LinePoint = this._db.lines.LinePointModel;
+			const LinePoint = this._db.lines.LinePointModel;
 
-			for(let line of await this._db.lines.LineModel.findAll()) {
-				let bbox = await promiseProps({
+			for(const line of await this._db.lines.LineModel.findAll()) {
+				const bbox = await promiseProps({
 					top: LinePoint.min<number, LinePointModel>("lat", { where: { lineId: line.id } }),
 					bottom: LinePoint.max<number, LinePointModel>("lat", { where: { lineId: line.id } }),
 					left: LinePoint.min<number, LinePointModel>("lon", { where: { lineId: line.id } }),
@@ -241,7 +239,6 @@ export default class DatabaseMigrations {
 			await this._db.meta.setMeta("hasBboxes", "true");
 		});
 
-
-		return Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration, bboxMigration ]);
+		await Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration, bboxMigration ]);
 	}
-};
+}

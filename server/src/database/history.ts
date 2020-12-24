@@ -40,7 +40,7 @@ export default class DatabaseHistory {
 				type: DataTypes.TEXT,
 				allowNull: true,
 				get(this: HistoryModel) {
-					var obj = this.getDataValue("objectBefore");
+					const obj = this.getDataValue("objectBefore");
 					return obj == null ? null : JSON.parse(obj);
 				},
 				set(this: HistoryModel, v) {
@@ -51,7 +51,7 @@ export default class DatabaseHistory {
 				type: DataTypes.TEXT,
 				allowNull: true,
 				get: function(this: HistoryModel) {
-					var obj = this.getDataValue("objectAfter");
+					const obj = this.getDataValue("objectAfter");
 					return obj == null ? null : JSON.parse(obj);
 				},
 				set: function(this: HistoryModel, v) {
@@ -65,14 +65,14 @@ export default class DatabaseHistory {
 	}
 
 
-	afterInit() {
+	afterInit(): void {
 		this._db.pads.PadModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "padId"));
 		this.HistoryModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
 		this.HistoryModel.findOne()
 	}
 
 
-	async addHistoryEntry(padId: PadId, data: HistoryEntryCreate) {
+	async addHistoryEntry(padId: PadId, data: HistoryEntryCreate): Promise<HistoryEntry> {
 		const oldEntryIds = (await this.HistoryModel.findAll({
 			where: { padId: padId },
 			order: [[ "time", "DESC" ]],
@@ -103,20 +103,20 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(padId: PadId, types?: HistoryEntryType[]) {
-		let query: FindOptions = { order: [[ "time", "DESC" ]] };
+	getHistory(padId: PadId, types?: HistoryEntryType[]): Highland.Stream<HistoryEntry> {
+		const query: FindOptions = { order: [[ "time", "DESC" ]] };
 		if(types)
 			query.where = {type: types};
 		return this._db.helpers._getPadObjects<HistoryEntry>("History", padId, query);
 	}
 
 
-	async getHistoryEntry(padId: PadId, entryId: ID) {
+	async getHistoryEntry(padId: PadId, entryId: ID): Promise<HistoryEntry> {
 		return await this._db.helpers._getPadObject<HistoryEntry>("History", padId, entryId);
 	}
 
 
-	async revertHistoryEntry(padId: PadId, id: ID) {
+	async revertHistoryEntry(padId: PadId, id: ID): Promise<void> {
 		const entry = await this.getHistoryEntry(padId, id);
 
 		if(entry.type == "Pad") {
@@ -197,7 +197,7 @@ export default class DatabaseHistory {
 	}
 
 
-	async clearHistory(padId: PadId) {
+	async clearHistory(padId: PadId): Promise<void> {
 		await this.HistoryModel.destroy({ where: { padId: padId } });
 	}
 

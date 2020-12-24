@@ -7,6 +7,7 @@ import https from "https";
 import zlib from "zlib";
 import config from "./config";
 import { IncomingMessage } from "http";
+import { Bbox } from "facilmap-types";
 
 const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
 const fname = `${__dirname}/cache/GeoLite2-City.mmdb`;
@@ -43,7 +44,7 @@ async function download() {
 			currentMd5 = await md5(fname);
 	}
 
-	let res = await new Promise<IncomingMessage>((resolve, reject) => {
+	const res = await new Promise<IncomingMessage>((resolve, reject) => {
 		https.get(url + (currentMd5 || ""), {
 			headers: {
 				Authorization: `Basic ${new Buffer(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
@@ -57,10 +58,10 @@ async function download() {
 	} else if(res.statusCode != 200)
 		throw new Error(`Unexpected status code ${res.statusCode} when downloading maxmind database.`);
 
-	let gunzip = zlib.createGunzip();
+	const gunzip = zlib.createGunzip();
 	res.pipe(gunzip);
 
-	let file = fs.createWriteStream(tmpfname);
+	const file = fs.createWriteStream(tmpfname);
 	gunzip.pipe(file);
 
 	await new Promise((resolve, reject) => {
@@ -76,15 +77,15 @@ async function download() {
 	console.log("Maxmind database downloaded");
 }
 
-export async function geoipLookup(ip: string) {
+export async function geoipLookup(ip: string): Promise<Bbox | undefined> {
 	if(!db)
-		return null;
+		return undefined;
 
-	let ret = db.get(ip);
+	const ret = db.get(ip);
 
 	if(ret && 'location' in ret && ret.location) {
-		let distLat = distanceToDegreesLat(ret.location.accuracy_radius);
-		let distLon = distanceToDegreesLon(ret.location.accuracy_radius, ret.location.latitude);
+		const distLat = distanceToDegreesLat(ret.location.accuracy_radius);
+		const distLon = distanceToDegreesLon(ret.location.accuracy_radius, ret.location.latitude);
 
 		return {
 			top: ret.location.latitude + distLat,
@@ -92,6 +93,5 @@ export async function geoipLookup(ip: string) {
 			bottom: ret.location.latitude - distLat,
 			left: ret.location.longitude - distLon
 		};
-	} else
-		return null;
-};
+	}
+}

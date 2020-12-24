@@ -4,7 +4,7 @@ import fs from "fs";
 import Database from "../database/database";
 import { Field, PadId, Type } from "facilmap-types";
 import { compileExpression, prepareObject } from "facilmap-frontend/common/filter";
-import { Line } from "../../../types/src";
+import { LineWithTrackPoints } from "../database/line";
 import { keyBy } from "lodash";
 
 
@@ -12,7 +12,7 @@ const padTemplateP = fs.promises.readFile(`${__dirname}/gpx-pad.ejs`).then((t) =
 	return ejs.compile(t.toString());
 });
 
-let lineTemplateP = fs.promises.readFile(`${__dirname}/gpx-line.ejs`).then((t) => {
+const lineTemplateP = fs.promises.readFile(`${__dirname}/gpx-line.ejs`).then((t) => {
 	return ejs.compile(t.toString());
 });
 
@@ -27,7 +27,7 @@ function dataToText(fields: Field[], data: Record<string, string>) {
 	return text.join('\n\n');
 }
 
-export async function exportGpx(database: Database, padId: PadId, useTracks: boolean, filter: string) {
+export async function exportGpx(database: Database, padId: PadId, useTracks: boolean, filter?: string): Promise<string> {
 	const filterFunc = compileExpression(filter);
 
 	const typesP = streamToArrayPromise(database.types.getTypes(padId)).then((types) => keyBy(types, 'id'));
@@ -55,13 +55,15 @@ export async function exportGpx(database: Database, padId: PadId, useTracks: boo
 	});
 }
 
-export async function exportLineToGpx(line: Line, type: Type, useTracks: boolean) {
+type LineForExport = Partial<Pick<LineWithTrackPoints, "name" | "data" | "mode" | "trackPoints" | "routePoints">>;
+
+export async function exportLineToGpx(line: LineForExport, type: Type | undefined, useTracks: boolean): Promise<string> {
 	const lineTemplate = await lineTemplateP;
 
 	return lineTemplate({
 		useTracks: (useTracks || line.mode == "track"),
 		time: new Date().toISOString(),
-		desc: type && dataToText(type.fields, line.data),
+		desc: type && dataToText(type.fields, line.data ?? {}),
 		line
 	});
 }

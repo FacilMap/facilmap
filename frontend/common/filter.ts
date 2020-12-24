@@ -20,7 +20,7 @@ export function filterHasError(expr: string): Error | void {
 	}
 }
 
-export function compileExpression(expr: string) {
+export function compileExpression(expr?: string) {
 	if(!expr || !expr.trim())
 		return function() { return true; };
 	else

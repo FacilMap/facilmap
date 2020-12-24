@@ -3,7 +3,7 @@ import { Latitude } from "../../../types/src";
 
 const R = 6371; // km
 
-export function isInBbox(position: Point, bbox: Bbox) {
+export function isInBbox(position: Point, bbox: Bbox): boolean {
 	if(position.lat > bbox.top || position.lat < bbox.bottom)
 		return false;
 	if(bbox.right < bbox.left) // bbox spans over lon = 180
@@ -12,19 +12,19 @@ export function isInBbox(position: Point, bbox: Bbox) {
 		return (position.lon > bbox.left && position.lon < bbox.right);
 }
 
-export function distanceToDegreesLat(km: number) {
+export function distanceToDegreesLat(km: number): number {
 	return km / (R * Math.PI / 180);
 }
 
-export function distanceToDegreesLon(km: number, lat: Latitude) {
-	let fac = Math.cos(lat * Math.PI / 180);
+export function distanceToDegreesLon(km: number, lat: Latitude): number {
+	const fac = Math.cos(lat * Math.PI / 180);
 	return km / (fac * R * Math.PI / 180)
 }
 
-export function calculateBbox(trackPoints: Point[]) {
-	let bbox: Partial<Bbox> = { };
+export function calculateBbox(trackPoints: Point[]): Bbox {
+	const bbox: Partial<Bbox> = { };
 
-	for(let trackPoint of trackPoints) {
+	for(const trackPoint of trackPoints) {
 		if(bbox.top == null || trackPoint.lat > bbox.top)
 			bbox.top = trackPoint.lat;
 		if(bbox.bottom == null || trackPoint.lat < bbox.bottom)

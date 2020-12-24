@@ -26,7 +26,7 @@ test('jsonStream', async () => {
 		var6: () => Promise.resolve('async')
 	});
 
-	const result = (await stream.collect().toPromise(Promise)).join('');
+	const result = (await stream.collect().toPromise(Promise as any)).join('');
 	expect(result).toBe(jsonFormat({
 		test1: { test: 'object' },
 		test2: {

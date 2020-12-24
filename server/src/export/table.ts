@@ -14,7 +14,7 @@ type TypeWithObjects = Type & {
 	lines: Line[]
 }
 
-export function createTable(database: Database, padId: PadId, filter: string, hide: string[]): Promise<string> {
+export function createTable(database: Database, padId: PadId, filter: string | undefined, hide: string[]): Promise<string> {
 	const filterFunc = compileExpression(filter);
 
 	return promiseAuto({

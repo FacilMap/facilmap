@@ -6,7 +6,7 @@ import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "f
 import Database from "./database";
 import { DataTypes, FindOptions, Op } from "sequelize";
 import { isEqual } from "lodash";
-import { calculateRouteInfo } from "../routing/routing";
+import { calculateRouteForLine } from "../routing/routing";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -45,7 +45,7 @@ export const dataDefinition = {
 	"value" : { type: DataTypes.TEXT, allowNull: false }
 };
 
-export function makeNotNullForeignKey(type: string, field: string, error: boolean = false): AssociationOptions {
+export function makeNotNullForeignKey(type: string, field: string, error = false): AssociationOptions {
 	return {
 		as: type,
 		onDelete: error ? "RESTRICT" : "CASCADE",
@@ -137,7 +137,7 @@ export default class DatabaseHelpers {
 					throw new Error("Type "+object.typeId+" does not exist.");
 			}
 
-			let data = {
+			const data = {
 				object,
 				type: types[object.typeId],
 				update: { } as MarkerUpdate | LineUpdate
@@ -162,7 +162,7 @@ export default class DatabaseHelpers {
 
 			for(const field of data.type.fields) {
 				if(field.controlColour || (!isLine(data) ? (field.controlSize || field.controlSymbol || field.controlShape) : field.controlWidth)) {
-					let options = field.options ?? [];
+					const options = field.options ?? [];
 
 					const _find = (value: string | undefined) => ((field.type == "dropdown" ? options.filter((option) => option.value == value)[0] : options[Number(value)]) || null);
 
@@ -197,7 +197,7 @@ export default class DatabaseHelpers {
 				}
 
 				if(data.object.id && isLine(data) && "mode" in data.update) {
-					ret.push(calculateRouteInfo(data.object).then(async ({ trackPoints, ...routeInfo }) => {
+					ret.push(calculateRouteForLine(data.object).then(async ({ trackPoints, ...routeInfo }) => {
 						Object.assign(object, routeInfo);
 						await this._db.lines._setLinePoints(padId, data.object.id, trackPoints);
 					}));
@@ -335,7 +335,7 @@ export default class DatabaseHelpers {
 		return oldObject;
 	}
 
-	_dataToArr<T>(data: Record<string, string>, extend: T) {
+	_dataToArr<T>(data: Record<string, string>, extend: T): Array<{ name: string; value: string } & T> {
 		const dataArr: Array<{ name: string; value: string } & T> = [ ];
 		for(const i in data) {
 			if(data[i] != null) {
@@ -345,14 +345,14 @@ export default class DatabaseHelpers {
 		return dataArr;
 	}
 
-	_dataFromArr(dataArr: Array<{ name: string; value: string }>) {
+	_dataFromArr(dataArr: Array<{ name: string; value: string }>): Record<string, string> {
 		const data: Record<string, string> = { };
 		for(let i=0; i<dataArr.length; i++)
 			data[dataArr[i].name] = dataArr[i].value;
 		return data;
 	}
 
-	async _getObjectData(type: string, objId: ID) {
+	async _getObjectData(type: string, objId: ID): Promise<Record<string, string>> {
 		const filter: any = { };
 		filter[type.toLowerCase()+"Id"] = objId;
 
@@ -360,7 +360,7 @@ export default class DatabaseHelpers {
 		return this._dataFromArr(dataArr as any);
 	}
 
-	async _setObjectData(type: string, objId: ID, data: Record<string, string>) {
+	async _setObjectData(type: string, objId: ID, data: Record<string, string>): Promise<void> {
 		const model = this._db._conn.model(type+"Data");
 		const idObj: any = { };
 		idObj[type.toLowerCase()+"Id"] = objId;
@@ -369,14 +369,14 @@ export default class DatabaseHelpers {
 		await model.bulkCreate(this._dataToArr(data, idObj));
 	}
 
-	renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean) {
-		let objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId)) as Highland.Stream<Marker | Line>;
+	renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
+		const objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId)) as Highland.Stream<Marker | Line>;
 
 		return streamEachPromise(objectStream, async (object) => {
-			let newData = clone(object.data);
-			let newNames: string[] = [ ];
+			const newData = clone(object.data);
+			const newNames: string[] = [ ];
 
-			for(let oldName in rename) {
+			for(const oldName in rename) {
 				if(rename[oldName].name) {
 					newData[rename[oldName].name!] = object.data[oldName];
 					newNames.push(rename[oldName].name!);
@@ -384,7 +384,7 @@ export default class DatabaseHelpers {
 						delete newData[oldName];
 				}
 
-				for(let oldValue in (rename[oldName].values || { })) {
+				for(const oldValue in (rename[oldName].values || { })) {
 					if(object.data[oldName] == oldValue)
 						newData[rename[oldName].name || oldName] = rename[oldName].values![oldValue];
 				}
@@ -399,11 +399,11 @@ export default class DatabaseHelpers {
 		});
 	}
 
-	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Array<object>): Promise<Array<T>> {
+	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Array<Record<string, unknown>>): Promise<Array<T>> {
 		const result: Array<any> = [];
 		for(let i=0; i<data.length; i+=ITEMS_PER_BATCH)
 			result.push(...(await model.bulkCreate(data.slice(i, i+ITEMS_PER_BATCH))).map((it) => it.toJSON()));
 		return result;
 	}
 
-};
+}
