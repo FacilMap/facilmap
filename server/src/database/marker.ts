@@ -46,11 +46,13 @@ export default class DatabaseMarkers {
 			shape : { type: DataTypes.TEXT, allowNull: true },
 			ele: { type: DataTypes.INTEGER, allowNull: true }
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "Marker"
 		});
 
 		this.MarkerDataModel.init(dataDefinition, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "MarkerData"
 		});
 	}
 

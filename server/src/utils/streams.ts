@@ -1,3 +1,5 @@
+/// <reference path="../deps.d.ts" />
+
 import highland from "highland";
 import jsonFormat from "json-format";
 

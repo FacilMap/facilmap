@@ -113,7 +113,8 @@ export default class DatabaseLines {
 				}
 			}
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "Line"
 		});
 
 		this.LinePointModel.init({
@@ -123,11 +124,13 @@ export default class DatabaseLines {
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			ele: { type: DataTypes.INTEGER, allowNull: true }
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "LinePoint"
 		});
 
 		this.LineDataModel.init(dataDefinition, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "LineData"
 		});
 	}
 

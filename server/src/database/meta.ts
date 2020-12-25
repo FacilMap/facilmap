@@ -21,7 +21,8 @@ export default class DatabaseMeta {
 			key: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
 			value: { type: DataTypes.TEXT, allowNull: false }
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "Meta"
 		});
 	}
 

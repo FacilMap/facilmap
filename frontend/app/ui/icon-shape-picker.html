@@ -2,7 +2,7 @@
 	<div class="arrow"></div>
 	<div class="popover-content">
 		<ul class="list-inline">
-			<li ng-repeat="key in icons" ng-class="{active: selectedSymbol == key}"><a href="javascript:" ng-click="setSymbol(key)" uib-tooltip="{{key}}" tooltip-append-to-body="true"><img src="#" ng-if="shape" fm-shape="key"><fm-icon ng-if="!shape" fm-icon="{{key}}" alt="{{key}}"></li>
+			<li ng-repeat="key in icons" ng-class="{active: selectedSymbol == key}"><a href="javascript:" ng-click="setSymbol(key)" uib-tooltip="{{key}}" tooltip-append-to-body="true"><img src="#" ng-if="shape" fm-shape="key"><fm-icon ng-if="!shape" fm-icon="{{key}}" alt="{{key}}"></fm-icon></li>
 		</ul>
 	</div>
 </div>

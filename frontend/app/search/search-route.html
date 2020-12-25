@@ -5,24 +5,24 @@
 		<div class="form-group" ng-repeat="destination in destinations" ng-class="{highlighted: highlightedIdx === $index}">
 			<div class="input-group" ng-mouseover="destinationMouseOver($index)" ng-mouseout="destinationMouseOut($index)">
 				<span class="input-group-addon">
-					<a href="javascript:" class="sort-handle"><fm-icon fm-icon="resize-vertical" alt="Reorder"/></a>
-					<a href="javascript:" ng-click="removeDestination($index); reroute(true)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><fm-icon fm-icon="minus" alt="Remove"/></a>
+					<a href="javascript:" class="sort-handle"><fm-icon fm-icon="resize-vertical" alt="Reorder"></fm-icon></a>
+					<a href="javascript:" ng-click="removeDestination($index); reroute(true)" ng-show="destinations.length > 2" uib-tooltip="Remove this destination" tooltip-append-to-body="true"><fm-icon fm-icon="minus" alt="Remove"></fm-icon></a>
 				</span>
 				<div class="has-feedback" ng-class="{'has-error': destination.loadedQuery && destination.query == destination.loadedQuery && getSelectedSuggestion(destination) == null}">
 					<input type="search" class="form-control" ng-model="destination.query" placeholder="{{$index == 0 ? 'From' : $index == destinations.length-1 ? 'To' : 'Via'}}" tabindex="{{$index+1}}">
-					<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''" ng-show="destination.query.length > 0"><fm-icon fm-icon="clear" alt="Clear"/></a>
+					<a href="javascript:" class="reset-button form-control-feedback" ng-click="destination.query=''" ng-show="destination.query.length > 0"><fm-icon fm-icon="clear" alt="Clear"></fm-icon></a>
 				</div>
 				<span class="input-group-btn fm-suggestions" uib-dropdown keyboard-nav="true" ng-show="destination.query.length > 0">
 					<button type="button" class="btn btn-default" uib-dropdown-toggle ng-click="loadSuggestions(destination)"><span class="caret"></span></button>
 					<ul class="dropdown-menu" role="menu" uib-dropdown-menu>
 						<li ng-repeat="suggestion in destination.searchSuggestions" ng-class="{active: suggestion === getSelectedSuggestion(destination)}" ng-mouseover="suggestionMouseOver(suggestion)" ng-mouseout="suggestionMouseOut(suggestion)">
 							<a href="javascript:" ng-click="destination.selectedSuggestion = suggestion; reroute()">{{suggestion.display_name}}<span ng-if="suggestion.type"> ({{suggestion.type}})</span></a>
-							<a href="javascript:" class="fm-suggestion-zoom" ng-click="suggestionZoom(suggestion); $event.stopPropagation()"><fm-icon fm-icon="zoom-in" alt="Zoom"/></a>
+							<a href="javascript:" class="fm-suggestion-zoom" ng-click="suggestionZoom(suggestion); $event.stopPropagation()"><fm-icon fm-icon="zoom-in" alt="Zoom"></fm-icon></a>
 						</li>
 						<li class="divider" ng-if="destination.searchSuggestions.length > 0 && destination.mapSuggestions.length > 0"></li>
 						<li ng-repeat="suggestion in destination.mapSuggestions" ng-class="{active: suggestion === getSelectedSuggestion(destination)}" ng-mouseover="suggestionMouseOver(suggestion)" ng-mouseout="suggestionMouseOut(suggestion)">
 							<a href="javascript:" ng-click="destination.selectedSuggestion = suggestion; reroute()">{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
-							<a href="javascript:" class="fm-suggestion-zoom" ng-click="suggestionZoom(suggestion); $event.stopPropagation()"><fm-icon fm-icon="zoom-in" alt="Zoom"/></a>
+							<a href="javascript:" class="fm-suggestion-zoom" ng-click="suggestionZoom(suggestion); $event.stopPropagation()"><fm-icon fm-icon="zoom-in" alt="Zoom"></fm-icon></a>
 						</li>
 					</ul>
 				</span>
@@ -30,14 +30,14 @@
 		</div>
 		<div class="form-group">
 			<div class="btn-toolbar">
-				<button type="button" class="btn btn-default" ng-click="addDestination()" uib-tooltip="Add another destination" tooltip-append-to-body="true" tabindex="{{destinations.length+1}}"><fm-icon fm-icon="plus" alt="Add"/></button>
+				<button type="button" class="btn btn-default" ng-click="addDestination()" uib-tooltip="Add another destination" tooltip-append-to-body="true" tabindex="{{destinations.length+1}}"><fm-icon fm-icon="plus" alt="Add"></fm-icon></button>
 
 				<fm-route-mode ng-model="routeMode" fm-tabindex="destinations.length+2"></fm-route-mode>
 
 				<button type="submit" class="btn btn-primary" tabindex="{{destinations.length+7}}">Go!</button>
-				<button ng-show="hasRoute()" type="button" class="btn btn-link" tabindex="{{destinations.length+8}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><fm-icon fm-icon="remove" alt="Clear"/></button>
+				<button ng-show="hasRoute()" type="button" class="btn btn-link" tabindex="{{destinations.length+8}}" ng-click="reset()" uib-tooltip="Clear route" tooltip-append-to-body="true"><fm-icon fm-icon="remove" alt="Clear"></fm-icon></button>
 
-				<button type="button" class="btn btn-default pull-right active" tabindex="{{destinations.length+9}}" ng-click="showSearchForm()" uib-tooltip="Switch to search from" tooltip-append-to-body="true"><fm-icon fm-icon="road" alt="Route"/></button>
+				<button type="button" class="btn btn-default pull-right active" tabindex="{{destinations.length+9}}" ng-click="showSearchForm()" uib-tooltip="Switch to search from" tooltip-append-to-body="true"><fm-icon fm-icon="road" alt="Route"></fm-icon></button>
 			</div>
 		</div>
 

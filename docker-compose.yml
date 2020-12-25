@@ -12,10 +12,10 @@ services:
             DB_USER: facilmap
             DB_PASSWORD: facilmap
         links:
-            - mariadb
+            - mysql
         restart: on-failure
-    mariadb:
-        image: mariadb
+    mysql:
+        image: mysql:5.7
         environment:
             MYSQL_DATABASE: facilmap
             MYSQL_USER: facilmap

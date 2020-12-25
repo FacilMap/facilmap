@@ -23,7 +23,9 @@
     "server": "ts-node src/server.ts",
     "test": "jest",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "preinstall": "lerna link",
+    "postinstall": "lerna link"
   },
   "bin": {
     "facilmap-server": "src/server.ts"
@@ -34,6 +36,7 @@
     "cheerio": "^1.0.0-rc.5",
     "compression": "^1.7.3",
     "compressjs": "^1.0.3",
+    "dotenv": "^8.2.0",
     "ejs": "^3.1.5",
     "event-stream": "^4.0.1",
     "express": "^4.16.4",
@@ -61,6 +64,7 @@
     "@types/cheerio": "^0.22.23",
     "@types/compression": "^1.7.0",
     "@types/debug": "^4.1.5",
+    "@types/dotenv": "^8.2.0",
     "@types/ejs": "^3.0.5",
     "@types/event-stream": "^3.3.34",
     "@types/express": "^4.17.9",

@@ -1,5 +1,5 @@
 import ng from 'angular';
-
+import $ from "jquery";
 import fm from '../../app';
 import css from './infoBox.scss';
 

@@ -10,7 +10,7 @@ import { IncomingMessage } from "http";
 import { Bbox } from "facilmap-types";
 
 const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
-const fname = `${__dirname}/cache/GeoLite2-City.mmdb`;
+const fname = `${__dirname}/../cache/GeoLite2-City.mmdb`;
 const tmpfname = fname + ".tmp";
 
 let currentMd5: string | null = null;

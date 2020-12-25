@@ -23,7 +23,8 @@
     "build": "webpack",
     "watch": "webpack --watch",
     "clean": "rimraf dist",
-    "dev-server": "webpack-dev-server  --mode development"
+    "dev-server": "webpack-dev-server  --mode development",
+    "postinstall": "lerna link"
   },
   "dependencies": {
     "facilmap-types": "2.7.0",

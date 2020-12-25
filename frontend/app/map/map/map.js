@@ -35,13 +35,13 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.layers = { };
 			[
-				L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
+				/*L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 					fmName: "MapSurfer Road",
 					fmBase: true,
 					fmKey: "MSfR",
 					attribution: $sce.trustAsHtml('© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>'),
 					noWrap: true
-				}),
+				}),*/
 				mapnikLayer,
 				L.tileLayer("https://sg.geodatenzentrum.de/wmts_topplus_web_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
 					fmName: "TopPlus",

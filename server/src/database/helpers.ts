@@ -211,7 +211,7 @@ export default class DatabaseHelpers {
 	async _padObjectExists(type: string, padId: PadId, id: ID): Promise<boolean> {
 		const entry = await this._db._conn.model(type).findOne({
 			where: { padId: padId, id: id },
-			attributes: []
+			attributes: ['id']
 		});
 		return entry != null;
 	}
@@ -222,7 +222,6 @@ export default class DatabaseHelpers {
 		const entry = await this._db._conn.model(type).findOne({
 			where: { id: id, padId: padId },
 			include: includeData ? [ this._db._conn.model(type + "Data") ] : [ ],
-			raw: true,
 			nest: true
 		});
 

@@ -2,7 +2,7 @@ import compression from "compression";
 import ejs from "ejs";
 import express, { Request, Response, NextFunction } from "express";
 import fs from "fs";
-import { createServer, Http2Server } from "http2";
+import { createServer, Server as HttpServer } from "http";
 import jsonFormat from "json-format";
 import { dirname } from "path";
 import { PadId } from "facilmap-types";
@@ -16,7 +16,7 @@ const frontendPath = dirname(require.resolve("facilmap-frontend/package.json"));
 const isDevMode = !!process.env.FM_DEV;
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const webpackCompiler = isDevMode ? require("webpack")(require("facilmap-frontend/webpack.config")) : null;
+const webpackCompiler = isDevMode ? require(require.resolve("webpack", { paths: [ require.resolve("facilmap-frontend/package.json") ] }))(require("facilmap-frontend/webpack.config")) : null;
 
 const staticMiddleware = isDevMode
 	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
@@ -25,13 +25,12 @@ const staticMiddleware = isDevMode
 	: express.static(frontendPath + "/build/");
 
 const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : null;
-/* eslint-enable @typescript-eslint/no-var-requires */
 
 type PathParams = {
 	padId: PadId
 }
 
-export async function initWebserver(database: Database, port: number, host?: string): Promise<Http2Server> {
+export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
 	const padMiddleware = function(req: Request<PathParams>, res: Response<string>, next: NextFunction) {
 		Promise.all([
 			getFrontendFile("index.ejs"),
@@ -141,7 +140,7 @@ export function getFrontendFile(path: string): Promise<string> {
 		return new Promise((resolve) => {
 			staticMiddleware.waitUntilValid(resolve);
 		}).then(() => {
-			return staticMiddleware.fileSystem.readFileSync(staticMiddleware.getFilenameFromUrl(`/${path}`), "utf8");
+			return webpackCompiler.outputFileSystem.readFileSync(`${webpackCompiler.outputPath}${path}`, "utf8");
 		});
 	} else {
 		// We don't want express.static's ETag handling, as it sometimes returns an empty template,

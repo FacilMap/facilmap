@@ -30,6 +30,6 @@ fm.app.controller("fmFilterDialogCtrl", function(currentFilter, types, $scope, f
 	$scope.types = types;
 
 	$scope.$watch("filter", function(newFilter) {
-		$scope.error = fmFilter.hasError(newFilter);
+		$scope.error = fmFilter.filterHasError(newFilter);
 	})
 });

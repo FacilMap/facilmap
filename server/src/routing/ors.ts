@@ -69,7 +69,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 			}
 			if(decodedMode.avoid) {
 				req.options = {
-					avoid_features: decodedMode.avoid.join("|")
+					avoid_features: decodedMode.avoid
 				};
 			}
 			if(decodedMode.preference)
@@ -79,9 +79,10 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 				url: `${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`,
 				json: true,
 				headers: {
-					'Authorization': config.orsToken
+					'Authorization': config.orsToken,
+					'Accept': '*/*' // Server sends application/geo+json
 				},
-				body: JSON.stringify(req)
+				body: req
 			});
 		}));
 	} catch(err) {
@@ -106,29 +107,29 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 			throw new Error(body.error.message);
 		}
 
-		if(!body || !body.routes || !body.routes[0])
+		if(!body?.features?.[0])
 			throw new Error("Invalid response from routing server.");
 
 		let idxAdd = ret.trackPoints.length;
 
-		const trackPoints = body.routes[0].geometry.map((it: any) => ({ lat: it[1], lon: it[0], ele: it[2] }));
+		const trackPoints = body.features[0].geometry.coordinates.map((it: any) => ({ lat: it[1], lon: it[0], ele: it[2] }));
 		if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon) {
 			trackPoints.shift();
 			idxAdd--;
 		}
 
 		ret.trackPoints.push(...trackPoints);
-		ret.distance += body.routes[0].summary.distance/1000;
-		ret.time += body.routes[0].summary.duration;
+		ret.distance += body.features[0].properties.summary.distance/1000;
+		ret.time += body.features[0].properties.summary.duration;
 
 		if(decodedMode.details) {
-			ret.ascent += body.routes[0].summary.ascent;
-			ret.descent += body.routes[0].summary.descent;
+			ret.ascent += body.features[0].properties.ascent;
+			ret.descent += body.features[0].properties.descent;
 
-			for(const i of Object.keys(body.routes[0].extras)) {
+			for(const i of Object.keys(body.features[0].properties.extras)) {
 				if(!ret.extraInfo![i])
 					ret.extraInfo![i] = [];
-				ret.extraInfo![i].push(...body.routes[0].extras[i].values.map((v: any) => ([v[0]+idxAdd, v[1]+idxAdd, v[2]])));
+				ret.extraInfo![i].push(...body.features[0].properties.extras[i].values.map((v: any) => ([v[0]+idxAdd, v[1]+idxAdd, v[2]])));
 			}
 		}
 	}

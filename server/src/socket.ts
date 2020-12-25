@@ -8,16 +8,10 @@ import { find } from "./search";
 import { geoipLookup } from "./geoip";
 import { isEqual } from "lodash";
 import Database, { DatabaseEvents } from "./database/database";
-import { Http2Server } from "http2";
-import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData } from "facilmap-types";
+import { Server as HttpServer } from "http";
+import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "./routing/routing";
 import { RouteWithId } from "./database/route";
-
-enum Writable {
-	READ = 'READ',
-	WRITE = 'WRITE',
-	ADMIN = 'ADMIN'
-}
 
 type SocketHandlers = {
 	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
@@ -39,9 +33,9 @@ function isPadId(padId: PadId | true | undefined): padId is PadId {
 }
 
 export default class Socket {
-	constructor(server: Http2Server, database: Database) {
-		const io = new Server(server as any, {
-			cors: { origin: true }
+	constructor(server: HttpServer, database: Database) {
+		const io = new Server(server, {
+			//cors: { origin: true }
 		});
 
 		io.sockets.on("connection", (socket: SocketIO) => {

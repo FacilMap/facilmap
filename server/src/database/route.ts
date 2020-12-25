@@ -44,7 +44,8 @@ export default class DatabaseRoutes {
 			sequelize: this._db._conn,
 			indexes: [
 				{ fields: [ "routeId" ] }
-			]
+			],
+			modelName: "Route"
 		});
 	}
 

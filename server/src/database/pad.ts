@@ -41,7 +41,8 @@ export default class DatabasePads {
 			legend1: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
 			legend2: { type: DataTypes.STRING, allowNull: false, defaultValue: "" }
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "Pad"
 		});
 	}
 

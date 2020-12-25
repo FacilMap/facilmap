@@ -1,13 +1,22 @@
 const webpack = require("webpack");
 const copyPlugin = require("copy-webpack-plugin");
-const duplicatePlugin = require("./webpack-duplicates");
 const htmlPlugin = require("html-webpack-plugin");
 const bundleAnalyzer = require("webpack-bundle-analyzer");
 
 const depLoaders = {
-	jquery: "expose-loader?jQuery",
-	angular: "exports-loader?window.angular",
-	"leaflet.heightgraph": "imports-loader?d3=d3"
+	jquery: {
+		loader: "expose-loader",
+		options: {
+			exposes: "jQuery"
+		}
+	},
+	angular: {
+		loader: "exports-loader",
+		options: {
+			exports: "single window.angular",
+			type: "commonjs"
+		}
+	}
 };
 
 // Add imports to these modules, as they don't specify their imports properly
@@ -26,7 +35,14 @@ const addDeps = {
 };
 
 for(let i in addDeps) {
-	let thisDep = `imports-loader?${addDeps[i].map((dep, i) => `fmImport${i}=${dep}`).join(",")}`;
+	let thisDep = {
+		loader: "imports-loader",
+		options: {
+			imports: addDeps[i].map((dep, i) => `pure ${dep}`),
+			type: "commonjs"
+		}
+	};
+
 	if(depLoaders[i]) {
 		depLoaders[i] = [thisDep, ...(Array.isArray(depLoaders[i]) ? depLoaders[i] : [ depLoaders[i] ])];
 	} else {
@@ -56,10 +72,12 @@ module.exports = {
 	resolve: {
 		unsafeCache: true,
 		alias: {
-			angular: "angular/angular", // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
-			"leaflet.heightgraph": "leaflet.heightgraph/src/L.Control.Heightgraph.js",
-			d3: `${__dirname}/lib/d3.js`
-		}
+			angular: "angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+		},
+		extensions: ['.ts', '.wasm', '.mjs', '.js', '.json']
+	},
+	resolveLoader: {
+		modules: [ `${__dirname}/node_modules` ]
 	},
 	module: {
 		rules: [
@@ -75,14 +93,28 @@ module.exports = {
 				"sass-loader"
 			]},
 			{
-				test: /\.(js|ts)$/,
+				test: /\.ts$/,
 				exclude: /\/node_modules\//,
 				use: {
 					loader: "babel-loader",
 					options: {
+						cwd: __dirname,
 						presets: [
 							"@babel/preset-env",
-							"@babel/preset-typescript"
+							"@babel/preset-typescript",
+						]
+					}
+				}
+			},
+			{
+				test: /\.js$/,
+				exclude: /\/node_modules\//,
+				use: {
+					loader: "babel-loader",
+					options: {
+						cwd: __dirname,
+						presets: [
+							"@babel/preset-env"
 						],
 						plugins: [ require("babel-plugin-angularjs-annotate") ]
 					}
@@ -103,7 +135,7 @@ module.exports = {
 				test: /\.(html|ejs)$/,
 				use: "html-loader"
 			},
-			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), [Array.isArray(depLoaders[key]) ? "use" : "loader"]: depLoaders[key] })),
+			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), ...(Array.isArray(depLoaders[key]) ? { use: depLoaders[key] } : depLoaders[key]) })),
 
 			{
 				test: /\/node_modules\/bootstrap\/dist\/css\/bootstrap\.css$/,
@@ -118,7 +150,6 @@ module.exports = {
 		],
 	},
 	plugins: [
-		new duplicatePlugin(),
 		new htmlPlugin({
 			template: `${__dirname}/index/index.ejs`,
 			filename: "index.ejs",
@@ -136,7 +167,7 @@ module.exports = {
 			L: "leaflet",
 			angular: "angular"
 		}),
-		new copyPlugin([ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` }))),
+		new copyPlugin({ patterns: [ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` })) }),
 		...(process.env.FM_DEV ? [
 			new webpack.HotModuleReplacementPlugin()
 		] : [
@@ -147,5 +178,5 @@ module.exports = {
 		]),
 	],
 	mode: process.env.FM_DEV ? "development" : "production",
-	devtool: process.env.FM_DEV ? "cheap-eval-source-map" : "source-map"
+	devtool: process.env.FM_DEV ? "eval-cheap-source-map" : "source-map"
 };

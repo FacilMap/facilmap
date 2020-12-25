@@ -157,7 +157,8 @@ export default class DatabaseTypes {
 					if(this.widthFixed && this.defaultWidth == null)
 						throw new Error("Fixed width cannot be undefined.");
 				}
-			}
+			},
+			modelName: "Type"
 		});
 	}
 

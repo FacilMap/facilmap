@@ -275,7 +275,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			createLine: function(type, routePoints, properties, noEdit) {
 				return map.client.addLine($.extend({ routePoints: routePoints, typeId: type.id }, properties)).then(function(line) {
 					if(!noEdit) {
-						linesUi.editLine(line);
+						linesUi.editLine(map.client.lines[line.id] || line);
 
 						// We have to wait until the server sends us the trackPoints of the line
 						var removeWatcher = $rootScope.$watch(function() { return !!linesById[line.id]; }, function(exists) {

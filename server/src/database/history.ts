@@ -60,6 +60,7 @@ export default class DatabaseHistory {
 			}
 		}, {
 			sequelize: this._db._conn,
+			modelName: "History",
 			freezeTableName: true // Do not call it Histories
 		});
 	}

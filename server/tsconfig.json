@@ -8,6 +8,9 @@
 		"outDir": "dist",
 		"moduleResolution": "node",
 		"noErrorTruncation": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"typeRoots": [
+			"./node_modules/@types"
+		]
 	}
 }

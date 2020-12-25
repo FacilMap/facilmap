@@ -48,7 +48,8 @@ export default class DatabaseViews {
 			right : getLonType(),
 			filter: { type: DataTypes.TEXT, allowNull: true }
 		}, {
-			sequelize: this._db._conn
+			sequelize: this._db._conn,
+			modelName: "View"
 		});
 	}
 

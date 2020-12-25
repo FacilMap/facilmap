@@ -1,4 +1,7 @@
 import { Options as SequelizeOptions } from "sequelize";
+import { config as dotenv } from "dotenv";
+
+dotenv({ path: `${__dirname}/../../config.env`});
 
 export interface DbConfig {
 	type: SequelizeOptions['dialect'];
@@ -31,9 +34,9 @@ const config: Config = {
 		port: Number(process.env.DB_PORT) || undefined,
 		database: process.env.DB_NAME || "facilmap",
 		user: process.env.DB_USER || "facilmap",
-		password: process.env.DB_PASSWORD || "password"
+		password: process.env.DB_PASSWORD || "facilmap"
 	},
-	orsToken: process.env.OSR_TOKEN || "", // Get a token on https://go.openrouteservice.org/
+	orsToken: process.env.ORS_TOKEN || "", // Get a token on https://go.openrouteservice.org/
 	mapboxToken: process.env.MAPBOX_TOKEN || "", // Get an API key on https://www.mapbox.com/signup/
 	mapzenToken: process.env.MAPZEN_TOKEN || "", // Get an API key on https://mapzen.com/developers/sign_up
 

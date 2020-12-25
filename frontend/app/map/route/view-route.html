@@ -4,7 +4,7 @@
 		<dd class="distance">{{client.route.distance | fmRound:2}} km <span ng-show="client.route.time != null">({{client.route.time | fmFormatTime}} h {{client.route.mode | fmRoutingMode}})</span></dd>
 
 		<dt class="elevation" ng-show="client.route.ascent != null">Climb/drop</dt>
-		<dd class="elevation" ng-show="client.route.ascent != null"><fm-elevation-stats route="client.route" stats="elevationStats" /></dd>
+		<dd class="elevation" ng-show="client.route.ascent != null"><fm-elevation-stats route="client.route" stats="elevationStats"></fm-elevation-stats></dd>
 	</dl>
 	<div class="fm-elevation-plot" ng-show="client.route.ascent != null"></div>
 </div>

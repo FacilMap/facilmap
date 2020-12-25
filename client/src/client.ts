@@ -1,29 +1,30 @@
 import { Manager, Socket as SocketIO } from "socket.io-client";
 import {
-	Bbox, EventData, EventDataParams, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
-	LineExportRequest, LineTemplateRequest, LineUpdate, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
+	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
+	LineExportRequest, LineTemplateRequest, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
 	PadData, PadDataCreate, PadDataUpdate, PadId, RequestData, RequestName, ResponseData, Route, RouteCreate, RouteExportRequest,
+	RouteRequest,
 	TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable
 } from "facilmap-types";
 
 declare module "facilmap-types/src/events" {
-	interface EventMap {
-		connect: void;
-		disconnect: string;
-		connect_error: Error;
+	interface MapEvents {
+		connect: [];
+		disconnect: [string];
+		connect_error: [Error];
 
-		error: Error;
-		reconnect: number;
-		reconnect_attempt: number;
-		reconnect_error: Error;
-		reconnect_failed: void;
+		error: [Error];
+		reconnect: [number];
+		reconnect_attempt: [number];
+		reconnect_error: [Error];
+		reconnect_failed: [];
 
-		loadStart: void,
-		loadEnd: void
+		loadStart: [],
+		loadEnd: []
 	}
 }
 
-const MANAGER_EVENTS: Array<EventName> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
+const MANAGER_EVENTS: Array<EventName<MapEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export interface TrackPoints {
 	[idx: number]: TrackPoint;
@@ -39,27 +40,27 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 }
 
 export default class Socket {
-	disconnected!: boolean;
+	disconnected: boolean = true;
 	server!: string;
 	padId!: string;
-	bbox!: Bbox | null;
+	bbox: BboxWithZoom | undefined = undefined;
 	socket!: SocketIO;
-	padData!: PadData | null;
-	readonly!: boolean | null;
-	writable!: Writable | null;
-	deleted!: boolean;
-	markers!: Record<ID, Marker>;
-	lines!: Record<ID, LineWithTrackPoints>;
-	views!: Record<ID, View>;
-	types!: Record<ID, Type>;
-	history!: Record<ID, HistoryEntry>;
-	route!: RouteWithTrackPoints | null;
-	serverError!: Error | null;
+	padData: PadData | undefined = undefined;
+	readonly: boolean | undefined = undefined;
+	writable: Writable | undefined = undefined;
+	deleted: boolean = false;
+	markers: Record<ID, Marker> = { };
+	lines: Record<ID, LineWithTrackPoints> = { };
+	views: Record<ID, View> = { };
+	types: Record<ID, Type> = { };
+	history: Record<ID, HistoryEntry> = { };
+	route: RouteWithTrackPoints | undefined = undefined;
+	serverError: Error | undefined = undefined;
 
-	_listeners!: {
-		[E in EventName]?: Array<EventHandler<E>>
-	};
-	_listeningToHistory!: boolean;
+	_listeners: {
+		[E in EventName<MapEvents>]?: Array<EventHandler<MapEvents, E>>
+	} = { };
+	_listeningToHistory: boolean = false;
 
 	constructor(server: string, padId: string) {
 		this._init(server, padId);
@@ -70,29 +71,12 @@ export default class Socket {
 
 		this.server = server;
 		this.padId = padId;
-		this.bbox = null;
-		this.serverError = null;
 
-		this.disconnected = true;
 		const manager = new Manager(server, { forceNew: true });
 		this.socket = manager.socket("/");
 
-		this.padData = null;
-		this.readonly = null;
-		this.writable = null;
-		this.deleted = false;
-		this.markers = { };
-		this.lines = { };
-		this.views = { };
-		this.types = { };
-		this.history = { };
-		this.route = null;
-
-		this._listeners = { };
-		this._listeningToHistory = false;
-
-		for(let i of Object.keys(this._handlers) as EventName[]) {
-			this.on(i, this._handlers[i] as EventHandler<typeof i>);
+		for(let i of Object.keys(this._handlers) as EventName<MapEvents>[]) {
+			this.on(i, this._handlers[i] as EventHandler<MapEvents, typeof i>);
 		}
 
 		setTimeout(() => {
@@ -103,27 +87,27 @@ export default class Socket {
 		});
 	}
 
-	on<E extends EventName>(eventName: E, fn: EventHandler<E>) {
-		let listeners = this._listeners[eventName] as Array<EventHandler<E>> | undefined;
+	on<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
+		let listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
 		if(!listeners) {
 			listeners = this._listeners[eventName] = [ ];
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io : this.socket)
-				.on(eventName, (data: EventData<E>) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: MapEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
 		listeners.push(fn);
     }
 
-    once<E extends EventName>(eventName: E, fn: EventHandler<E>) {
+    once<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
 		let handler = ((data: any) => {
 			this.removeListener(eventName, handler);
-			fn(data);
-		}) as EventHandler<E>;
+			(fn as any)(data);
+		}) as EventHandler<MapEvents, E>;
 		this.on(eventName, handler);
     }
 
-	removeListener<E extends EventName>(eventName: E, fn: EventHandler<E>) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<E>> | undefined;
+	removeListener<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
+		const listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
 		if(listeners) {
 			this._listeners[eventName] = listeners.filter((listener) => (listener !== fn)) as any;
 		}
@@ -145,7 +129,7 @@ export default class Socket {
 	}
 
 	_handlers: {
-		[E in EventName]?: EventHandler<E>
+		[E in EventName<MapEvents>]?: EventHandler<MapEvents, E>
 	} = {
 		padData: (data) => {
 			this.padData = data;
@@ -259,7 +243,7 @@ export default class Socket {
 		return this._setPadId(padId);
 	}
 
-	updateBbox(bbox: Bbox) {
+	updateBbox(bbox: BboxWithZoom) {
 		this.bbox = bbox;
 		return this._emit("updateBbox", bbox).then((obj) => {
 			this._receiveMultiple(obj);
@@ -348,7 +332,7 @@ export default class Socket {
 		return this._emit("findOnMap", data);
 	}
 
-	getRoute(data: RouteCreate) {
+	getRoute(data: RouteRequest) {
 		return this._emit("getRoute", data);
 	}
 
@@ -366,7 +350,7 @@ export default class Socket {
 	}
 
 	clearRoute() {
-		this.route = null;
+		this.route = undefined;
 		return this._emit("clearRoute");
 	}
 
@@ -430,18 +414,18 @@ export default class Socket {
 		});
 	}
 
-	_receiveMultiple(obj?: MultipleEvents) {
+	_receiveMultiple(obj?: MultipleEvents<MapEvents>) {
 		if (obj) {
-			for(const i of Object.keys(obj) as EventName[])
-				(obj[i] as Array<EventData<typeof i>>).forEach((it) => { this._simulateEvent(i, it); });
+			for(const i of Object.keys(obj) as EventName<MapEvents>[])
+				(obj[i] as Array<MapEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName>(eventName: E, ...[data]: EventDataParams<E>) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<E>> | undefined;
+	_simulateEvent<E extends EventName<MapEvents>>(eventName: E, ...data: MapEvents[E]) {
+		const listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
 		if(listeners) {
-			listeners.forEach(function(listener: EventHandler<E>) {
-				listener(data as any);
+			listeners.forEach(function(listener: EventHandler<MapEvents, E>) {
+				listener(...data);
 			});
 		}
 	}

@@ -5,7 +5,7 @@ import { Field } from "facilmap-types";
 
 const isBrowser = (typeof window !== "undefined");
 const jQuery: JQueryStatic | null = isBrowser ? require("jquery") : null;
-const cheerio: cheerio.CheerioAPI | null = isBrowser ? null : require("cheerio");
+const cheerio: cheerio.CheerioAPI | null = isBrowser ? null : eval('require')("cheerio");
 
 marked.setOptions({
 	breaks: true,
