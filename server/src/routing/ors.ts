@@ -1,7 +1,6 @@
-import { calculateDistance } from "facilmap-frontend/common/utils";
 import config from "../config";
 import request from "../utils/request";
-import { DecodedRouteMode } from "facilmap-frontend/common/routing";
+import { calculateDistance, DecodedRouteMode } from "facilmap-frontend/src/utils/routing";
 import { ExtraInfo, Point } from "facilmap-types";
 import { throttle } from "../utils/utils";
 import { RawRouteInfo } from "./routing";

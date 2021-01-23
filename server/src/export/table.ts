@@ -3,10 +3,10 @@ import { promiseAuto } from "../utils/utils";
 import ejs from "ejs";
 import { getFrontendFile } from "../webserver";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
-import { compileExpression, prepareObject } from "facilmap-frontend/common/filter";
-import * as commonUtils from "facilmap-frontend/common/utils";
-import * as commonFormat from "facilmap-frontend/common/format";
-import * as commonRouting from "facilmap-frontend/common/routing";
+import { compileExpression, prepareObject } from "facilmap-frontend/src/utils/filter";
+import * as commonUtils from "facilmap-frontend/src/utils/utils";
+import * as commonFormat from "facilmap-frontend/src/utils/format";
+import * as commonRouting from "facilmap-frontend/src/utils/routing";
 import Database from "../database/database";
 
 type TypeWithObjects = Type & {

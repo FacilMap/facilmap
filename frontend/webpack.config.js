@@ -9,23 +9,14 @@ const depLoaders = {
 		options: {
 			exposes: "jQuery"
 		}
-	},
-	angular: {
-		loader: "exports-loader",
-		options: {
-			exports: "single window.angular",
-			type: "commonjs"
-		}
 	}
 };
 
 // Add imports to these modules, as they don't specify their imports properly
 const addDeps = {
-	"angular-ui-sortable": [ "jquery-ui", "jquery-ui/ui/widgets/sortable" ],
-
 	// Until https://github.com/webpack-contrib/css-loader/issues/51 is resolved we have to include CSS files by hand
-	bootstrap: [ "bootstrap/dist/css/bootstrap.css", "bootstrap/dist/css/bootstrap-theme.css" ],
-	"bootstrap-touchspin": [ "bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" ],
+	//bootstrap: [ "bootstrap/dist/css/bootstrap.css", "bootstrap/dist/css/bootstrap-theme.css" ],
+	//"bootstrap-touchspin": [ "bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" ],
 	leaflet: [ "leaflet/dist/leaflet.css" ],
 	"leaflet.locatecontrol": [ "leaflet.locatecontrol/dist/L.Control.Locate.css" ],
 	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ],
@@ -62,8 +53,8 @@ function includeHotMiddleware(entry) {
 
 module.exports = {
 	entry: {
-		index: includeHotMiddleware(__dirname + "/index/index.js"),
-		table: includeHotMiddleware(__dirname + "/table/table.js")
+		map: includeHotMiddleware(__dirname + "/src/map/map.ts"),
+		table: includeHotMiddleware(__dirname + "/src/table/table.ts")
 	},
 	output: {
 		filename: "frontend-[name]-[hash].js",
@@ -72,7 +63,7 @@ module.exports = {
 	resolve: {
 		unsafeCache: true,
 		alias: {
-			angular: "angular/angular" // We cannot use the main file, as it exports the variable "angular", which clashes with this ProvidePlugin
+			vue: "vue/dist/vue.js"
 		},
 		extensions: ['.ts', '.wasm', '.mjs', '.js', '.json']
 	},
@@ -102,6 +93,10 @@ module.exports = {
 						presets: [
 							"@babel/preset-env",
 							"@babel/preset-typescript",
+						],
+						plugins: [
+							[ "@babel/plugin-proposal-decorators", { legacy: true } ],
+							[ "@babel/plugin-proposal-class-properties", { loose: true } ]
 						]
 					}
 				}
@@ -115,8 +110,7 @@ module.exports = {
 						cwd: __dirname,
 						presets: [
 							"@babel/preset-env"
-						],
-						plugins: [ require("babel-plugin-angularjs-annotate") ]
+						]
 					}
 				}
 			},
@@ -132,7 +126,7 @@ module.exports = {
 				]
 			},
 			{
-				test: /\.(html|ejs)$/,
+				test: /\.(html|ejs|vue)$/,
 				use: "html-loader"
 			},
 			...Object.keys(depLoaders).map(key => ({ test: new RegExp("/node_modules/" + key + "/.*\.js$"), ...(Array.isArray(depLoaders[key]) ? { use: depLoaders[key] } : depLoaders[key]) })),
@@ -151,21 +145,20 @@ module.exports = {
 	},
 	plugins: [
 		new htmlPlugin({
-			template: `${__dirname}/index/index.ejs`,
-			filename: "index.ejs",
-			chunks: ["index"]
+			template: `${__dirname}/src/map/map.ejs`,
+			filename: "map.ejs",
+			chunks: ["map"]
 		}),
 		new htmlPlugin({
-			template: `${__dirname}/table/table.ejs`,
+			template: `${__dirname}/src/table/table.ejs`,
 			filename: "table.ejs",
 			chunks: ["table"]
 		}),
 		new webpack.ProvidePlugin({
-		    $: "jquery",
-		    jQuery: "jquery",
-		    "window.jQuery": "jquery",
-			L: "leaflet",
-			angular: "angular"
+			$: "jquery",
+			jQuery: "jquery",
+			"window.jQuery": "jquery",
+			L: "leaflet"
 		}),
 		new copyPlugin({ patterns: [ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` })) }),
 		...(process.env.FM_DEV ? [

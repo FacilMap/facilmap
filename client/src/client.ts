@@ -42,7 +42,7 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 export default class Socket {
 	disconnected: boolean = true;
 	server!: string;
-	padId!: string;
+	padId: string | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
 	socket!: SocketIO;
 	padData: PadData | undefined = undefined;
@@ -62,11 +62,11 @@ export default class Socket {
 	} = { };
 	_listeningToHistory: boolean = false;
 
-	constructor(server: string, padId: string) {
+	constructor(server: string, padId?: string) {
 		this._init(server, padId);
 	}
 
-	_init(server: string, padId: string) {
+	_init(server: string, padId: string | undefined) {
 		// Needs to be in a separate method so that we can merge this class with a scope object in the frontend.
 
 		this.server = server;

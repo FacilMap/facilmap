@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>facilmap-leaflet Example</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+		<style type="text/css">
+			html, body { width: 100%; height: 100%; margin: 0; }
+			body { display: flex; flex-direction: column; }
+			#map { flex-grow: 1; }
+		</style>
+		<script>
+			function log(name) {
+				return (...args) => { console.log(name, ...args); };
+			}
+		</script>
+	</head>
+
+	<body>
+		<div style="padding: 10px;">
+			<input
+				type="button"
+				value="Click listener"
+				onclick="L.FacilMap.ClickListener.addClickListener(map, log('click'), log('move'))"
+			/>
+
+			<input
+				type="button"
+				value="Default view"
+				onclick="L.FacilMap.Views.displayView(map)"
+			/>
+
+			<input
+				type="button"
+				value="Hamburg"
+				onclick="L.FacilMap.Views.displayView(map, { top: 53.959, left: 8.331, right: 9.650, bottom: 53.767, baseLayer: 'MpnW', layers: ['FrTo'] })"
+			/>
+		</div>
+		<div id="map"></div>
+		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+		<script type="text/javascript" src="dist/facilmap-leaflet.js"></script>
+
+		<script type="text/javascript">
+		    var map = L.map('map',{
+				center: [0,0],
+				zoom: 5,
+			});
+			L.FacilMap.Layers.setVisibleLayers(map);
+			
+			L.control.layers(L.FacilMap.Layers.baseLayers, L.FacilMap.Layers.overlays).addTo(map);
+
+			L.control.mousePosition({
+				emptyString: "0, 0",
+				separator: ", ",
+				position: "bottomright"
+			}).addTo(map);
+
+			L.control.graphicScale({
+				fill: "hollow",
+				position: "bottomcenter"
+			}).addTo(map);
+
+			new L.FacilMap.BboxHandler(map).enable();
+		</script>
+	</body>
+</html>

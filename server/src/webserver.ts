@@ -33,7 +33,7 @@ type PathParams = {
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
 	const padMiddleware = function(req: Request<PathParams>, res: Response<string>, next: NextFunction) {
 		Promise.all([
-			getFrontendFile("index.ejs"),
+			getFrontendFile("map.ejs"),
 			(async () => {
 				if(req.params && req.params.padId) {
 					return database.pads.getPadData(req.params.padId).then((padData) => {
@@ -46,6 +46,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 					}).catch(() => {
 						// Error will be handled on the client side when it tries to fetch the pad data
 						return {
+							id: undefined,
 							searchEngines: false,
 							description: ""
 						};
@@ -54,6 +55,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 			})()
 		]).then(([ template, padData ]) => {
 			res.type("html");
+
+			if (padData && padData.id == null) {
+				res.status(404);
+			}
+
 			res.send(ejs.render(template, {
 				padData: padData,
 				config: {}
@@ -71,7 +77,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 	});
 
 	app.get("/", padMiddleware);
-	app.get("/index.ejs", padMiddleware);
+	app.get("/map.ejs", padMiddleware);
 	app.get("/table.ejs", padMiddleware);
 
 	app.use(staticMiddleware);

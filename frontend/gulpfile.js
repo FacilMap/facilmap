@@ -47,34 +47,6 @@ async function fileExists(filename) {
 	}
 }
 
-async function downloadIcons() {
-	if (await fileExists("build/Open-SVG-Map-Icons"))
-		return;
-
-	let extract = unzip.Extract({
-		path: "build/"
-	});
-
-	let download = request.get("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip");
-	download.pipe(extract);
-	download.catch((err) => {
-		extract.emit("error", err);
-	});
-
-	await extract.promise();
-
-	await fs.promises.rename("build/Open-SVG-Map-Icons-master", "build/Open-SVG-Map-Icons");
-}
-
-function compileIcons() {
-	return pipe(
-		gulp.src(["build/Open-SVG-Map-Icons/svg/**/*.svg", "assets/icons/**/*.svg"]),
-		newer("build/icons.js"),
-		icons("icons.js", "angular.module(\"facilmap\").constant(\"fmIconsRaw\", %s);"),
-		gulp.dest("build")
-	);
-}
-
 const doIcons = gulp.series(downloadIcons, compileIcons);
 
 async function doWebpack() {
