@@ -3,7 +3,7 @@ import ejs from "ejs";
 import fs from "fs";
 import Database from "../database/database";
 import { Field, PadId, Type } from "facilmap-types";
-import { compileExpression, prepareObject } from "facilmap-frontend/src/utils/filter";
+import { compileExpression, prepareObject } from "facilmap-leaflet/src/utils/filter";
 import { LineWithTrackPoints } from "../database/line";
 import { keyBy } from "lodash";
 

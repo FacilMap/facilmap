@@ -10,10 +10,15 @@ declare module "leaflet" {
     interface LayerOptions extends FmLayerOptions {}
 }
 
-export let defaultLayerKey = 'Mpnk';
+export let defaultVisibleLayers: VisibleLayers = {
+    baseLayer: 'Mpnk',
+    overlays: []
+};
+
+export let fallbackLayer = 'Mpnk';
 
 export const baseLayers: Record<string, Layer> = {
-    [defaultLayerKey]: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    Mpnk: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         fmName: "Mapnik",
         attribution: '© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
         noWrap: true
@@ -54,7 +59,7 @@ export const baseLayers: Record<string, Layer> = {
         noWrap: true
     }),
 
-    MpnW: L.tileLayer("https://www.freietonne.de/seekarte/tah.openstreetmap.org/Tiles/TileCache.php?z={z}&x={x}&y={y}.png", {
+    MpnW: L.tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
         fmName: "Mapnik Water",
         attribution: '© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
         noWrap: true
@@ -104,30 +109,32 @@ export const overlays: Record<string, Layer> = {
 };
 
 for (const key of Object.keys(baseLayers)) {
-    if(key !== defaultLayerKey) {
+    if(key !== fallbackLayer) {
         baseLayers[key].on("tileerror", (err) => {
-            const defaultLayer = baseLayers[defaultLayerKey] as TileLayer;
+            const defaultLayer = baseLayers[fallbackLayer] as TileLayer;
             defaultLayer['_tileZoom'] = err.target._tileZoom;
             const fallbackUrl = defaultLayer.getTileUrl(err.coords);
             if(err.tile.src != fallbackUrl)
                 err.tile.src = fallbackUrl;
+
+            console.log('tileerror', err, err.target.getTileUrl(err.coords));
         });
     }
 }
 
 export interface VisibleLayers {
     baseLayer: string;
-    layers: string[];
+    overlays: string[];
 }
 
 export function getVisibleLayers(map: Map): VisibleLayers {
     return {
         baseLayer: Object.keys(baseLayers).find((key) => map.hasLayer(baseLayers[key]))!,
-        layers: Object.keys(overlays).filter((key) => map.hasLayer(overlays[key]))
+        overlays: Object.keys(overlays).filter((key) => map.hasLayer(overlays[key]))
     };
 }
 
-export function setVisibleLayers(map: Map, { baseLayer = defaultLayerKey, layers = [] }: Partial<VisibleLayers> = { }) {
+export function setVisibleLayers(map: Map, { baseLayer = defaultVisibleLayers.baseLayer, overlays: overlaysArg = defaultVisibleLayers.overlays } = {}) {
     const visibleLayers = getVisibleLayers(map);
 
     if (visibleLayers.baseLayer !== baseLayer) {
@@ -136,10 +143,10 @@ export function setVisibleLayers(map: Map, { baseLayer = defaultLayerKey, layers
         map.addLayer(baseLayers[baseLayer]);
     }
 
-    for (const key of visibleLayers.layers.filter((k) => !layers.includes(k))) {
+    for (const key of visibleLayers.overlays.filter((k) => !overlaysArg.includes(k))) {
         map.removeLayer(overlays[key]);
     }
-    for (const key of layers.filter((k) => !visibleLayers.layers.includes(k))) {
+    for (const key of overlaysArg.filter((k) => !visibleLayers.overlays.includes(k))) {
         map.addLayer(overlays[key]);
     }
 }

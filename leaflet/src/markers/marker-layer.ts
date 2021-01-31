@@ -1,91 +1,90 @@
-import { Colour, Shape, Symbol } from "facilmap-types";
-import L, { LatLngExpression, LeafletMouseEvent, Map, Marker, MarkerOptions } from "leaflet";
-import { ensureRequiredPanes, setLayerPane } from "../panes/panes";
+import { Colour, Marker, Shape, Symbol } from "facilmap-types";
+import L, { LatLngExpression, LeafletMouseEvent, Map, Marker as LeafletMarker, MarkerOptions } from "leaflet";
 import { createMarkerIcon } from "../utils/icons";
+import { setLayerPane } from "leaflet-highlightable-layers";
+import "./marker-layer.scss";
 
-interface MarkerLayerOptions extends MarkerOptions {
-    colour: Colour;
-    size: number;
-    symbol: Symbol;
-    shape: Shape;
-    padding?: number;
-    highlight?: boolean;
-    rise?: boolean;
+Map.addInitHook(function (this: Map) {
+	this.createPane("fm-raised-marker");
+});
+
+export interface MarkerLayerOptions extends MarkerOptions {
+	marker?: Marker;
+	padding?: number;
+	highlight?: boolean;
+	raised?: boolean;
 }
 
-class MarkerLayer extends Marker {
+export default class MarkerLayer extends LeafletMarker {
 
-    options: MarkerLayerOptions = {
-        riseOnHover: true
-    } as MarkerLayerOptions;
+	options!: MarkerLayerOptions;
 
-    _fmDragging: boolean = false;
-    _fmDraggingMouseEvent?: LeafletMouseEvent;
-    _fmMouseOver: boolean = false;
+	_fmDragging: boolean = false;
+	_fmDraggingMouseEvent?: LeafletMouseEvent;
+	_fmMouseOver: boolean = false;
 
-    constructor(latLng: LatLngExpression, options: MarkerLayerOptions) {
-        super(latLng, options);
+	constructor(latLng: LatLngExpression, options?: MarkerLayerOptions) {
+		super(latLng, {
+			riseOnHover: true,
+			...options
+		});
 
-        this.on("dragstart", () => {
-            this._fmDragging = true;
-        });
-        this.on("dragend", () => {
-            this._fmDragging = false;
+		this.on("dragstart", () => {
+			this._fmDragging = true;
+		});
+		this.on("dragend", () => {
+			this._fmDragging = false;
 
-            // Some of our code re-renders the icon on mouseover/mouseout. This breaks dragging if it's in place.
-            // So we delay those events to when dragging has ended.
-            if(this._fmDraggingMouseEvent) {
-                if(!this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseover")
-                    this.fire("fmMouseOver", this._fmDraggingMouseEvent);
-                else if(this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseout")
-                    this.fire("fmMouseOut", this._fmDraggingMouseEvent);
-                this._fmDraggingMouseEvent = undefined;
-            }
-        });
+			// Some of our code re-renders the icon on mouseover/mouseout. This breaks dragging if it's in place.
+			// So we delay those events to when dragging has ended.
+			if(this._fmDraggingMouseEvent) {
+				if(!this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseover")
+					this.fire("fmMouseOver", this._fmDraggingMouseEvent);
+				else if(this._fmMouseOver && this._fmDraggingMouseEvent.type == "mouseout")
+					this.fire("fmMouseOut", this._fmDraggingMouseEvent);
+				this._fmDraggingMouseEvent = undefined;
+			}
+		});
 
-        this.on("mouseover", (e: LeafletMouseEvent) => {
-            if(this._fmDragging)
-                this._fmDraggingMouseEvent = e;
-            else
-                this.fire("fmMouseOver", e);
-        });
-        this.on("mouseout", (e: LeafletMouseEvent) => {
-            if(this._fmDragging)
-                this._fmDraggingMouseEvent = e;
-            else
-                this.fire("fmMouseOut", e);
-        });
+		this.on("mouseover", (e: LeafletMouseEvent) => {
+			if(this._fmDragging)
+				this._fmDraggingMouseEvent = e;
+			else
+				this.fire("fmMouseOver", e);
+		});
+		this.on("mouseout", (e: LeafletMouseEvent) => {
+			if(this._fmDragging)
+				this._fmDraggingMouseEvent = e;
+			else
+				this.fire("fmMouseOut", e);
+		});
 
-        this.on("fmMouseOver", () => {
-            this._fmMouseOver = true;
-            this.setStyle({});
-        });
-        this.on("fmMouseOut", () => {
-            this._fmMouseOver = false;
-            this.setStyle({});
-        });
-    }
+		this.on("fmMouseOver", () => {
+			this._fmMouseOver = true;
+			this.setStyle({});
+		});
+		this.on("fmMouseOut", () => {
+			this._fmMouseOver = false;
+			this.setStyle({});
+		});
+	}
 
-    beforeAdd(map: Map) {
-        ensureRequiredPanes(map);
-        return this;
-    }
+	_initIcon() {
+		if (this.options.marker)
+			this.options.icon = createMarkerIcon(this.options.marker.colour, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.padding, this.options.highlight);
 
-    _initIcon() {
-        this.options.icon = createMarkerIcon(this.options.colour, this.options.size, this.options.symbol, this.options.shape, this.options.padding, this.options.highlight);
+		super._initIcon();
 
-        super._initIcon();
+		this.setOpacity(this.options.highlight || this.options.raised || this._fmMouseOver ? 1 : 0.6);
 
-        this.setOpacity(this.options.highlight || this.options.rise || this._fmMouseOver ? 1 : 0.6);
+		setLayerPane(this, this.options.highlight || this.options.raised ? "fm-raised-marker" : "markerPane");
+	}
 
-        setLayerPane(this, this.options.highlight || this.options.rise ? "fmHighlightMarkerPane" : "markerPane");
-    }
-
-    setStyle(style: Partial<MarkerLayerOptions>) {
-        L.Util.setOptions(this, style);
-        if(this._map)
-            this._initIcon();
-        return this;
-    }
+	setStyle(style: Partial<MarkerLayerOptions>) {
+		L.Util.setOptions(this, style);
+		if(this._map)
+			this._initIcon();
+		return this;
+	}
 
 }

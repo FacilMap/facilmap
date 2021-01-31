@@ -26,6 +26,7 @@ module.exports = (env: any, argv: any): Configuration => {
 					] ] },
 					loader: "ts-loader"
 				},
+				{ test: /\.css$/, use: [ "style-loader", "css-loader" ] },
 				{ test: /\.scss$/, use: [
 					"style-loader",
 					{

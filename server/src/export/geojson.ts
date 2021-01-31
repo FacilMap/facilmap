@@ -1,6 +1,6 @@
 import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams";
 import { clone } from "../utils/utils";
-import { compileExpression, prepareObject } from "facilmap-frontend/src/utils/filter";
+import { compileExpression, prepareObject } from "facilmap-leaflet/src/utils/filter";
 import { Marker, PadId } from "../../../types/src";
 import Database from "../database/database";
 import { keyBy, omit } from "lodash";

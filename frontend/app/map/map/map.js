@@ -25,10 +25,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 			this.client = $scope.client;
 			this.el = $($element);
 
-			this.tooltipOptions = {
-				direction: "right"
-			};
-
 			$scope.loaded = false;
 
 			this.map = L.map($(".fm-map", $element)[0]);
@@ -115,44 +111,18 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 			this.historyUi = fmMapHistory(this);
 			this.routeUi = fmMapRoute(this);
 
-			this.loadInitialView = () => {
-				return $q.resolve().then(() => {
-					if(this.client.padId) {
-						return $q((resolve) => {
-							var loadedWatcher = $scope.$watch("client.padData", (padData) => {
-								if(padData != null) {
-									loadedWatcher();
-									resolve(padData);
-								}
-							});
+			var serverErrorWatcher = $scope.$watch("client.serverError", (serverError) => {
+				if(serverError != null) {
+					serverErrorWatcher();
 
-							var serverErrorWatcher = $scope.$watch("client.serverError", (serverError) => {
-								if(serverError != null) {
-									serverErrorWatcher();
-
-									if(serverError.indexOf('does not exist') != -1) {
-										$scope.client.serverError = null;
-										this.padUi.createPad($scope.client.padId, true);
-									}
-
-									resolve();
-								}
-							});
-						});
+					if(serverError.indexOf('does not exist') != -1) {
+						$scope.client.serverError = null;
+						this.padUi.createPad($scope.client.padId, true);
 					}
-				}).then((padData) => {
-					if(padData) {
-						this.displayView(padData.defaultView);
-					} else {
-						$scope.client.geoip().then((data) => {
-							this.displayView(data);
-						}).catch((err) => {
-							console.error("Error contacting GeoIP service", err);
-							this.displayView();
-						});
-					}
-				});
-			};
+
+					resolve();
+				}
+			});
 
 			var errorMessage = null;
 			$scope.$watch("client.disconnected", (disconnected) => {

@@ -1,15 +1,17 @@
 import { View } from "facilmap-types";
-import { fmToLeafletBbox, leafletToFmBbox, pointsEqual } from "./utils/leaflet";
+import { fmToLeafletBbox, leafletToFmBbox, pointsEqual } from "../utils/leaflet";
 import { Map } from "leaflet";
-import { getVisibleLayers, setVisibleLayers } from "./layers";
+import { getVisibleLayers, setVisibleLayers } from "../layers";
 import { isEqual } from "lodash";
 
 export type UnsavedView = Omit<View, 'id' | 'padId' | 'name'>;
 
 export function getCurrentView(map: Map, includeFilter = false): UnsavedView {
+    const visibleLayers = getVisibleLayers(map);
     var ret: UnsavedView = {
         ...leafletToFmBbox(map.getBounds()),
-        ...getVisibleLayers(map)
+        baseLayer: visibleLayers.baseLayer,
+        layers: visibleLayers.overlays
     };
 
     if (includeFilter && map.fmFilter) {
@@ -22,7 +24,10 @@ export function getCurrentView(map: Map, includeFilter = false): UnsavedView {
 const DEFAULT_VIEW: UnsavedView = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
 
 export function displayView(map: Map, view = DEFAULT_VIEW, _zoomFactor = 0): void {
-    setVisibleLayers(map, view);
+    setVisibleLayers(map, {
+        baseLayer: view.baseLayer,
+        
+    });
 
     const bounds = fmToLeafletBbox(view);
 
@@ -36,7 +41,7 @@ export function displayView(map: Map, view = DEFAULT_VIEW, _zoomFactor = 0): voi
     map.setFmFilter(view.filter);
 };
 
-function isAtView(map: Map, view = DEFAULT_VIEW): boolean {
+export function isAtView(map: Map, view = DEFAULT_VIEW): boolean {
     try {
         map.getCenter();
     } catch(e) {

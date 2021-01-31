@@ -1,22 +1,34 @@
 import L from 'leaflet';
 import * as Layers from "./layers";
 import * as ClickListener from "./click-listener/click-listener";
-import * as Utils from "./utils/leaflet";
-import * as Views from "./views";
+import * as Views from "./views/views";
 import BboxHandler from "./bbox-handler";
-import * as Filter from "./utils/filter";
 import "./filter/map-filter";
-import * as Icons from "./utils/icons";
+import Socket from "facilmap-client";
+import * as leafletUtils from "./utils/leaflet";
+import * as icons from "./utils/icons";
+import * as filter from "./utils/filter";
+import * as utils from "./utils/utils";
+import MarkerCluster from "./markers/marker-cluster";
+import MarkerLayer from "./markers/marker-layer";
+import MarkersLayer from "./markers/markers-layer";
+import HashHandler from "./views/hash";
 
 const FacilMap = {
     BboxHandler,
     ClickListener,
-    Filter,
+    HashHandler,
     Layers,
-    Markers: {
-        Icons
+    MarkerCluster,
+    MarkerLayer,
+    MarkersLayer,
+    Socket,
+    Utils: {
+        leaflet: leafletUtils,
+        icons,
+        filter,
+        utils
     },
-    Utils,
     Views
 };
 

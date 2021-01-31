@@ -1,93 +1,126 @@
 import Socket from 'facilmap-client';
-import { FeatureGroup, LayerOptions, Marker as MarkerLayer } from 'leaflet';
+import { ID, Marker, ObjectWithId } from 'facilmap-types';
+import { FeatureGroup, LayerOptions, Map } from 'leaflet';
+import { tooltipOptions } from '../utils/leaflet';
+import { quoteHtml } from '../utils/utils';
+import MarkerCluster, { MarkerClusterOptions } from './marker-cluster';
+import MarkerLayer from './marker-layer';
 
-export interface MarkersLayerOptions extends LayerOptions {
+export interface MarkersLayerOptions extends MarkerClusterOptions {
 }
 
-/* export default class MarkersLayer extends FeatureGroup {
+export default class MarkersLayer extends MarkerCluster {
 
-    client: Socket;
-    markersById: Record<string, MarkerLayer>;
+	options!: MarkersLayerOptions;
+	client: Socket;
+	markersById: Record<string, MarkerLayer> = {};
+	highlightedMarkerIds = new Set<ID>();
 
-    constructor(client: Socket, options?: MarkersLayerOptions) {
-        super([], options);
-        this.client = client;
-    }
+	constructor(client: Socket, options?: MarkersLayerOptions) {
+		super(client, options);
+		this.client = client;
+	}
 
-    map.client.on("marker", function(data) {
-        if(map.client.filterFunc(data))
-            markersUi._addMarker(data);
-    });
+	onAdd(map: Map) {
+		super.onAdd(map);
 
-    map.client.on("deleteMarker", function(data) {
-        markersUi._deleteMarker(data);
-    });
+		this.client.on("marker", this.handleMarker);
+		this.client.on("deleteMarker", this.handleDeleteMarker);
 
-    map.client.on("filter", function() {
-        for(var i in map.client.markers) {
-            var show = map.client.filterFunc(map.client.markers[i]);
-            if(markersById[i] && !show)
-                markersUi._deleteMarker(map.client.markers[i]);
-            else if(!markersById[i] && show)
-                markersUi._addMarker(map.client.markers[i]);
-        }
-    });
+		map.on("fmFilter", this.handleFilter);
 
-    map.mapEvents.$on("showObject", (event, id, zoom) => {
-        let m = id.match(/^m(\d+)$/);
-        if(m) {
-            event.preventDefault();
+		return this;
+	}
 
-            $q.resolve().then(() => {
-                return map.client.markers[id] || map.client.getMarker({ id: m[1] });
-            }).then(((marker) => {
-                if(zoom)
-                    map.map.flyTo([marker.lat, marker.lon], 15);
+	onRemove(map: Map) {
+		super.onRemove(map);
 
-                markersUi._addMarker(marker);
-                markersUi.showMarkerInfoBox(marker);
-            }).fmWrapApply($rootScope)).catch((err) => {
-                map.messages.showMessage("danger", err);
-            });
-        }
-    });
+		this.client.removeListener("marker", this.handleMarker);
+		this.client.removeListener("deleteMarker", this.handleDeleteMarker);
 
-    _addMarker : function(marker) {
-        if(!markersById[marker.id]) {
-            markersById[marker.id] = (new fmHighlightableLayers.Marker([ 0, 0 ])).addTo(map.markerCluster)
-                .on("click", function(e) {
-                    markersUi.showMarkerInfoBox(map.client.markers[marker.id] || marker);
-                }.fmWrapApply($rootScope))
-                .bindTooltip("", $.extend({}, map.tooltipOptions, { offset: [ 20, -15 ] }))
-                .on("tooltipopen", function() {
-                    markersById[marker.id].setTooltipContent(fmUtils.quoteHtml(map.client.markers[marker.id].name));
-                });
-        }
+		map.off("fmFilter", this.handleFilter);
 
-        markersById[marker.id]
-            .setLatLng([ marker.lat, marker.lon ])
-            .setStyle({
-                colour: marker.colour,
-                size: marker.size,
-                symbol: marker.symbol,
-                shape: marker.shape,
-                highlight: openMarker && openMarker.id == marker.id
-            });
+		return this;
+	}
 
-        if(openMarker && openMarker.id == marker.id)
-            markersUi.showMarkerInfoBox(marker);
-    },
-    _deleteMarker : function(marker) {
-        if(!markersById[marker.id])
-            return;
+	handleMarker = (marker: Marker) => {
+		if(this._map.fmFilterFunc(marker))
+			this._addMarker(marker);
+	};
 
-        if(openMarker && openMarker.id == marker.id) {
-            openMarker.hide();
-            openMarker = null;
-        }
+	handleDeleteMarker = (data: ObjectWithId) => {
+		this._deleteMarker(data);
+	};
 
-        markersById[marker.id].removeFrom(map.map);
-        delete markersById[marker.id];
-    },
+	handleFilter = () => {
+		for(const i of Object.keys(this.client.markers) as any as Array<keyof Socket['markers']>) {
+			const show = this._map.fmFilterFunc(this.client.markers[i]);
+			if(this.markersById[i] && !show)
+				this._deleteMarker(this.client.markers[i]);
+			else if(!this.markersById[i] && show)
+				this._addMarker(this.client.markers[i]);
+		}
+	};
 
-} */
+	async showMarker(id: ID, zoom = false) {
+		const marker = this.client.markers[id] || await this.client.getMarker({ id });
+	
+		if(zoom)
+			this._map.flyTo([marker.lat, marker.lon], 15);
+
+		this._addMarker(marker);
+	}
+
+	highlightMarker(id: ID) {
+		this.highlightedMarkerIds.add(id);
+		if (this.client.markers[id])
+			this.handleMarker(this.client.markers[id]);
+	}
+
+	unhighlightMarker(id: ID) {
+		this.highlightedMarkerIds.delete(id);
+		if (this.client.markers[id])
+			this.handleMarker(this.client.markers[id]);
+	}
+
+	setHighlightedMarkers(ids: Set<ID>) {
+		for (const id of this.highlightedMarkerIds) {
+			if (!ids.has(id))
+				this.unhighlightMarker(id);
+		}
+
+		for (const id of ids) {
+			if (!this.highlightedMarkerIds.has(id))
+				this.highlightMarker(id);
+		}
+	}
+
+	_addMarker(marker: Marker) {
+		if(!this.markersById[marker.id]) {
+			const layer = new MarkerLayer([ 0, 0 ]);
+			this.markersById[marker.id] = layer;
+			this.addLayer(layer);
+
+			layer.bindTooltip("", { ...tooltipOptions, offset: [ 20, -15 ] });
+			layer.on("tooltipopen", () => {
+				this.markersById[marker.id].setTooltipContent(quoteHtml(this.client.markers[marker.id].name));
+			});
+		}
+
+		this.markersById[marker.id]
+			.setLatLng([ marker.lat, marker.lon ])
+			.setStyle({
+				marker,
+				highlight: this.highlightedMarkerIds.has(marker.id)
+			});
+	}
+
+	_deleteMarker(marker: ObjectWithId) {
+		if(!this.markersById[marker.id])
+			return;
+
+		this.removeLayer(this.markersById[marker.id]);
+		delete this.markersById[marker.id];
+	}
+
+}

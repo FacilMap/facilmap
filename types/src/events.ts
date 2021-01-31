@@ -5,6 +5,7 @@ import { View } from "./view";
 import { Line, TrackPoint } from "./line";
 import { Marker } from "./marker";
 import { PadData } from "./padData";
+import { RequestData, RequestName } from "./socket";
 
 export interface LinePointsEvent {
 	id: ID;
@@ -26,6 +27,7 @@ export interface MapEvents {
 	type: [Type];
 	deleteType: [ObjectWithId];
 	history: [HistoryEntry];
+	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName];
 }
 
 export type EventName<Events extends Record<keyof Events, any[]>> = keyof Events & string;

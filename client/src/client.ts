@@ -117,6 +117,8 @@ export default class Socket {
 		return new Promise((resolve, reject) => {
 			this._simulateEvent("loadStart");
 
+			this._simulateEvent("emit", eventName as any, data as any);
+
 			this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
 				this._simulateEvent("loadEnd");
 

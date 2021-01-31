@@ -2,7 +2,7 @@ import { Colour, Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "./utils";
 import L from "leaflet";
 
-const rawIconsContext = (require as any).context("../../assets/icons");
+const rawIconsContext = require.context("../../assets/icons");
 const rawIcons: Record<string, Record<string, string>> = {};
 for (const key of rawIconsContext.keys() as string[]) {
     const [set, fname] = key.split("/").slice(-2);
@@ -73,7 +73,7 @@ export function getIcon(colour: Colour, size: number, iconName: string) {
     return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${rawIcons[set][iconName]}</g>`;
 }
 
-export function getSymbolCode(colour: Colour, size: number, symbol: Symbol): string {
+export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): string {
     if(symbol && iconList.includes(symbol))
         return getIcon(colour, size, symbol)!;
     else if(symbol && symbol.length == 1)
@@ -82,7 +82,7 @@ export function getSymbolCode(colour: Colour, size: number, symbol: Symbol): str
         return `<circle style="fill:${colour}" cx="8.6" cy="7.7" r="3" />`;
 }
 
-export function createSymbol(colour: Colour, height: number, symbol: Symbol): string {
+export function createSymbol(colour: Colour, height: number, symbol?: Symbol): string {
     let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" version="1.1">` +
         getSymbolCode('#'+colour, height, symbol) +
@@ -91,17 +91,17 @@ export function createSymbol(colour: Colour, height: number, symbol: Symbol): st
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export function createSymbolHtml(colour: string, height: number, symbol: Symbol): string {
+export function createSymbolHtml(colour: string, height: number, symbol?: Symbol): string {
     return `<svg width="${height}" height="${height}" viewbox="0 0 ${height} ${height}">` +
         getSymbolCode(colour, height, symbol) +
     `</svg>`;
 }
 
-export function createMarkerGraphic(colour: string, height: number, symbol: Symbol, shape: Shape, padding: number, highlight: boolean) {
-    let borderColour = makeTextColour(colour || "ffffff", 0.3);
-    padding = Math.max(padding || 0, highlight ? 10 * height / 31 : 0);
+export function createMarkerGraphic(colour = "ffffff", height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false) {
+    let borderColour = makeTextColour(colour, 0.3);
+    padding = Math.max(padding, highlight ? 10 * height / 31 : 0);
 
-    let shapeObj = MARKER_SHAPES[shape] || MARKER_SHAPES.drop!;
+    let shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     let shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
         .replace(/%BORDER_COLOUR%/g, "#"+borderColour)
         .replace(/%COLOUR%/g, colour == null ? "url(#rainbow)" : "#" + colour)
@@ -118,10 +118,10 @@ export function createMarkerGraphic(colour: string, height: number, symbol: Symb
         `</svg>`);
 }
 
-export function createMarkerIcon(colour: Colour, height: number, symbol: Symbol, shape: Shape, padding = 0, highlight = false) {
+export function createMarkerIcon(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false) {
     let scale = height / 31;
     padding = Math.max(padding, highlight ? 10 * scale : 0);
-    let shapeObj = MARKER_SHAPES[shape] || MARKER_SHAPES.drop!;
+    let shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     return L.icon({
         iconUrl: createMarkerGraphic(colour, height, symbol, shape, padding, highlight),
         iconSize: [padding*2 + shapeObj.width*scale, padding*2 + shapeObj.height*scale],

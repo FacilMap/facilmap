@@ -41,6 +41,7 @@
     "event-stream": "^4.0.1",
     "express": "^4.16.4",
     "facilmap-frontend": "^2.7.0",
+    "facilmap-leaflet": "^2.7.0",
     "highland": "^2.13.0",
     "json-format": "^1.0.1",
     "lodash": "^4.17.20",

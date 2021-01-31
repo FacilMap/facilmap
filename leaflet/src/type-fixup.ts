@@ -23,4 +23,10 @@ declare module "leaflet" {
     interface Marker {
         _initIcon(): void;
     }
+
+    interface MarkerClusterGroup {
+        options: MarkerClusterGroupOptions;
+    }
+
+    export const Hash: any;
 }

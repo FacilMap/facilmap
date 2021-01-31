@@ -1,6 +1,10 @@
 import { Bbox, BboxWithZoom } from 'facilmap-types';
-import L, { LatLng, LatLngBounds, Map } from 'leaflet';
+import L, { LatLng, LatLngBounds, Map, TooltipOptions } from 'leaflet';
 import 'leaflet-geometryutil';
+
+export const tooltipOptions: TooltipOptions = {
+	direction: "right"
+};
 
 export function leafletToFmBbox(bbox: LatLngBounds): Bbox;
 export function leafletToFmBbox(bbox: LatLngBounds, zoom: number): BboxWithZoom;

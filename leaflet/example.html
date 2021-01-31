@@ -35,6 +35,18 @@
 				value="Hamburg"
 				onclick="L.FacilMap.Views.displayView(map, { top: 53.959, left: 8.331, right: 9.650, bottom: 53.767, baseLayer: 'MpnW', layers: ['FrTo'] })"
 			/>
+
+			<input
+				type="button"
+				value="Open map wqxygV4R506PlBlZ"
+				onclick="client.setPadId('wqxygV4R506PlBlZ').catch(log('setPadId error'))"
+			/>
+
+			<input
+				type="button"
+				value="Toggle filter name ~= &quot;test&quot;"
+				onclick="map.setFmFilter(map.fmFilter ? undefined : 'name ~= &quot;test&quot;')"
+			/>
 		</div>
 		<div id="map"></div>
 		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -45,22 +57,25 @@
 				center: [0,0],
 				zoom: 5,
 			});
+
+			var client = new L.FacilMap.Socket("http://localhost:40829/");
+
 			L.FacilMap.Layers.setVisibleLayers(map);
 			
 			L.control.layers(L.FacilMap.Layers.baseLayers, L.FacilMap.Layers.overlays).addTo(map);
 
-			L.control.mousePosition({
-				emptyString: "0, 0",
-				separator: ", ",
-				position: "bottomright"
-			}).addTo(map);
+			new L.FacilMap.BboxHandler(map, client).enable();
 
-			L.control.graphicScale({
-				fill: "hollow",
-				position: "bottomcenter"
-			}).addTo(map);
+			const markersLayer = new L.FacilMap.MarkersLayer(client).addTo(map)
+				.on("click", (e) => {
+					markersLayer.setHighlightedMarkers(new Set([e.layer.options.marker.id]));
+				});
+			
+			map.on("click", () => {
+				markersLayer.setHighlightedMarkers(new Set());
+			});
 
-			new L.FacilMap.BboxHandler(map).enable();
+			const hashHandler = new L.FacilMap.HashHandler(map, client).enable();
 		</script>
 	</body>
 </html>
