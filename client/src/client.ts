@@ -7,24 +7,26 @@ import {
 	TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable
 } from "facilmap-types";
 
-declare module "facilmap-types/src/events" {
-	interface MapEvents {
-		connect: [];
-		disconnect: [string];
-		connect_error: [Error];
+export interface SocketEvents extends MapEvents {
+	connect: [];
+	disconnect: [string];
+	connect_error: [Error];
 
-		error: [Error];
-		reconnect: [number];
-		reconnect_attempt: [number];
-		reconnect_error: [Error];
-		reconnect_failed: [];
+	error: [Error];
+	reconnect: [number];
+	reconnect_attempt: [number];
+	reconnect_error: [Error];
+	reconnect_failed: [];
 
-		loadStart: [],
-		loadEnd: []
-	}
+	loadStart: [],
+	loadEnd: [],
+
+	route: [RouteWithTrackPoints | undefined];
+
+	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName]
 }
 
-const MANAGER_EVENTS: Array<EventName<MapEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
+const MANAGER_EVENTS: Array<EventName<SocketEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export interface TrackPoints {
 	[idx: number]: TrackPoint;
@@ -58,7 +60,7 @@ export default class Socket {
 	serverError: Error | undefined = undefined;
 
 	_listeners: {
-		[E in EventName<MapEvents>]?: Array<EventHandler<MapEvents, E>>
+		[E in EventName<SocketEvents>]?: Array<EventHandler<SocketEvents, E>>
 	} = { };
 	_listeningToHistory: boolean = false;
 
@@ -75,8 +77,8 @@ export default class Socket {
 		const manager = new Manager(server, { forceNew: true });
 		this.socket = manager.socket("/");
 
-		for(let i of Object.keys(this._handlers) as EventName<MapEvents>[]) {
-			this.on(i, this._handlers[i] as EventHandler<MapEvents, typeof i>);
+		for(let i of Object.keys(this._handlers) as EventName<SocketEvents>[]) {
+			this.on(i, this._handlers[i] as EventHandler<SocketEvents, typeof i>);
 		}
 
 		setTimeout(() => {
@@ -87,27 +89,27 @@ export default class Socket {
 		});
 	}
 
-	on<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
-		let listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
+	on<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
+		let listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
 		if(!listeners) {
 			listeners = this._listeners[eventName] = [ ];
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io : this.socket)
-				.on(eventName, (...[data]: MapEvents[E]) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: SocketEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
 		listeners.push(fn);
     }
 
-    once<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
+    once<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
 		let handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			(fn as any)(data);
-		}) as EventHandler<MapEvents, E>;
+		}) as EventHandler<SocketEvents, E>;
 		this.on(eventName, handler);
     }
 
-	removeListener<E extends EventName<MapEvents>>(eventName: E, fn: EventHandler<MapEvents, E>) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
+	removeListener<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
+		const listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
 		if(listeners) {
 			this._listeners[eventName] = listeners.filter((listener) => (listener !== fn)) as any;
 		}
@@ -131,7 +133,7 @@ export default class Socket {
 	}
 
 	_handlers: {
-		[E in EventName<MapEvents>]?: EventHandler<MapEvents, E>
+		[E in EventName<SocketEvents>]?: EventHandler<SocketEvents, E>
 	} = {
 		padData: (data) => {
 			this.padData = data;
@@ -345,6 +347,8 @@ export default class Socket {
 					...route,
 					trackPoints: this._mergeTrackPoints({}, route.trackPoints)
 				};
+
+				this._simulateEvent("route", this.route);
 			}
 
 			return this.route;
@@ -353,6 +357,7 @@ export default class Socket {
 
 	clearRoute() {
 		this.route = undefined;
+		this._simulateEvent("route", undefined);
 		return this._emit("clearRoute");
 	}
 
@@ -362,6 +367,8 @@ export default class Socket {
 				...route,
 				trackPoints: this._mergeTrackPoints({}, route.trackPoints)
 			};
+
+			this._simulateEvent("route", this.route);
 
 			return this.route;
 		});
@@ -416,17 +423,17 @@ export default class Socket {
 		});
 	}
 
-	_receiveMultiple(obj?: MultipleEvents<MapEvents>) {
+	_receiveMultiple(obj?: MultipleEvents<SocketEvents>) {
 		if (obj) {
-			for(const i of Object.keys(obj) as EventName<MapEvents>[])
-				(obj[i] as Array<MapEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
+			for(const i of Object.keys(obj) as EventName<SocketEvents>[])
+				(obj[i] as Array<SocketEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName<MapEvents>>(eventName: E, ...data: MapEvents[E]) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<MapEvents, E>> | undefined;
+	_simulateEvent<E extends EventName<SocketEvents>>(eventName: E, ...data: SocketEvents[E]) {
+		const listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
 		if(listeners) {
-			listeners.forEach(function(listener: EventHandler<MapEvents, E>) {
+			listeners.forEach(function(listener: EventHandler<SocketEvents, E>) {
 				listener(...data);
 			});
 		}

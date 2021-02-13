@@ -351,7 +351,7 @@ Search for markers and lines inside the map.
 * `data` (object): An object with the following properties:
 	* `query` (string): The query string
 * _returns_ (Promise<Array<[Marker](#marker-1)|[Line](#line-1)>>) An array of (stripped down) marker and line objects.
-  The objects only contain the `id`, `name`, `typeId`, ``lat`/`lon` (for markers), `left`/`top`/`right`/`bottom` (for
+  The objects only contain the `id`, `name`, `typeId`, `lat`/`lon` (for markers), `left`/`top`/`right`/`bottom` (for
   lines) properties, plus an additional `kind` property that is either `"marker"` or `"line"`.
 
 ### `getRoute(data)`

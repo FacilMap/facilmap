@@ -1,5 +1,5 @@
-import Socket from "facilmap-client";
-import { EventHandler, MapEvents } from "facilmap-types";
+import Socket, { SocketEvents } from "facilmap-client";
+import { EventHandler } from "facilmap-types";
 import { Handler, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
@@ -22,7 +22,7 @@ export default class BboxHandler extends Handler {
         }
     }
 
-    handleEmit: EventHandler<MapEvents, "emit"> = (name, data) => {
+    handleEmit: EventHandler<SocketEvents, "emit"> = (name, data) => {
         if (["setPadId", "setRoute"].includes(name)) {
             this.updateBbox();
         }

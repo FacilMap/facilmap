@@ -18,34 +18,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 		linePopupBaseScope.client = map.client;
 		linePopupBaseScope.className = css.className;
 
-		map.client.on("line", function(data) {
-			setTimeout(function() { // trackPoints needs to be copied over
-				if((!map.client._editingLineId || data.id != map.client._editingLineId) && map.client.filterFunc(map.client.lines[data.id]))
-					linesUi._addLine(map.client.lines[data.id]);
-			}, 0);
-		});
-
-		map.client.on("deleteLine", function(data) {
-			linesUi._deleteLine(data);
-		});
-
-		map.client.on("linePoints", function(data) {
-			setTimeout(function() {
-				if((!map.client._editingLineId || data.id != map.client._editingLineId) && map.client.filterFunc(map.client.lines[data.id]))
-					linesUi._addLine(map.client.lines[data.id]);
-			}, 0);
-		});
-
-		map.client.on("filter", function() {
-			for(var i in map.client.lines) {
-				var show = (!map.client._editingLineId || i != map.client._editingLineId) && map.client.filterFunc(map.client.lines[i]);
-				if(linesById[i] && !show)
-					linesUi._deleteLine(map.client.lines[i]);
-				else if(!linesById[i] && show)
-					linesUi._addLine(map.client.lines[i]);
-			}
-		});
-
 		map.mapEvents.$on("showObject", async (event, id, zoom) => {
 			let m = id.match(/^l(\d+)$/);
 			if(m) {
@@ -74,60 +46,8 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 		var linesUi = {
 			_addLine: function(line, _doNotRerenderPopup) {
-				var trackPoints = [ ];
-				var p = line.trackPoints || [ ];
-				for(var i=0; i<p.length; i++) {
-					if(p[i] != null)
-						trackPoints.push(L.latLng(p[i].lat, p[i].lon));
-				}
-
-				if(trackPoints.length < 2)
-					return linesUi._deleteLine(line);
-
-				if(!linesById[line.id]) {
-					linesById[line.id] = (new fmHighlightableLayers.Polyline([ ])).addTo(map.map);
-
-					if(line.id != null) { // We don't want a popup for lines that we are drawing right now
-						linesById[line.id]
-							.on("click", function(e) {
-								linesUi.showLineInfoBox(map.client.lines[line.id]);
-							}.fmWrapApply($rootScope))
-							.bindTooltip("", $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }))
-							.on("tooltipopen", function(e) {
-								linesById[line.id].setTooltipContent(fmUtils.quoteHtml(map.client.lines[line.id].name)).openTooltip(e.latlng);
-							});
-					}
-				}
-
-				var style = {
-					color : '#'+line.colour,
-					width : line.width
-				};
-
-				if(line.id == null) // We are drawing a line
-					style.highlight = true;
-
-				// Two points that are both outside of the viewport should not be connected, as the piece in between
-				// has not been received.
-				let splitLatLngs = fmUtils.disconnectSegmentsOutsideViewport(trackPoints, map.map.getBounds());
-
-				linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
-
-				if(line.id != null && openLine && line.id == openLine.id && !_doNotRerenderPopup)
-					linesUi.showLineInfoBox(line);
 			},
 			_deleteLine: function(line) {
-				if(line.id != null && openLine && line.id == openLine.id) {
-					openLine.hide();
-					openLine = null;
-				}
-
-				var lineObj = linesById[line.id];
-				if(!lineObj)
-					return;
-
-				lineObj.removeFrom(map.map);
-				delete linesById[line.id];
 			},
 			getZoomDestination(line) {
 				let bounds = fmUtils.fmToLeafletBbox(line);

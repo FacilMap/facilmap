@@ -1,3 +1,5 @@
+import { TrackPoints } from "facilmap-client";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 

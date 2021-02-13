@@ -41,11 +41,34 @@
 				value="Open map wqxygV4R506PlBlZ"
 				onclick="client.setPadId('wqxygV4R506PlBlZ').catch(log('setPadId error'))"
 			/>
+			<a href="http://localhost:40829/wqxygV4R506PlBlZ" target="_blank"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg=="></a>
 
 			<input
 				type="button"
 				value="Toggle filter name ~= &quot;test&quot;"
 				onclick="map.setFmFilter(map.fmFilter ? undefined : 'name ~= &quot;test&quot;')"
+			/>
+
+			<input
+				type="button"
+				value="Berlin to Hamburg"
+				onclick="client.setRoute({ routePoints: [{ lat: 52.51704, lon: 13.38886 }, { lat: 53.55034, lon: 10.00065 }], mode: 'car' })"
+			/>
+			<input
+				type="button"
+				value="Clear route"
+				onclick="client.clearRoute()"
+			/>
+
+			<input
+				type="button"
+				value="Search for &quot;Berlin&quot;"
+				onclick="client.find({ query: 'Berlin' }).then((res) => { searchResultsLayer.setResults(res) }).catch((err) => { console.error(err); })"
+			/>
+			<input
+				type="button"
+				value="Clear search"
+				onclick="searchResultsLayer.setResults([]);"
 			/>
 		</div>
 		<div id="map"></div>
@@ -68,12 +91,34 @@
 
 			const markersLayer = new L.FacilMap.MarkersLayer(client).addTo(map)
 				.on("click", (e) => {
-					markersLayer.setHighlightedMarkers(new Set([e.layer.options.marker.id]));
+					markersLayer.setHighlightedMarkers(new Set([e.layer.marker.id]));
+					linesLayer.setHighlightedLines(new Set());
+					searchResultsLayer.setHighlightedResults(new Set());
+				});
+			
+			const linesLayer = new L.FacilMap.LinesLayer(client).addTo(map)
+				.on("click", (e) => {
+					L.DomEvent.stopPropagation(e);
+					markersLayer.setHighlightedMarkers(new Set());
+					linesLayer.setHighlightedLines(new Set([e.layer.line.id]));
+					searchResultsLayer.setHighlightedResults(new Set());
 				});
 			
 			map.on("click", () => {
 				markersLayer.setHighlightedMarkers(new Set());
+				linesLayer.setHighlightedLines(new Set());
+				searchResultsLayer.setHighlightedResults(new Set());
 			});
+
+			const routeLayer = new L.FacilMap.RouteLayer(client, { raised: true }).addTo(map);
+
+			const searchResultsLayer = new L.FacilMap.SearchResultsLayer().addTo(map)
+				.on("click", (e) => {
+					L.DomEvent.stopPropagation(e);
+					markersLayer.setHighlightedMarkers(new Set());
+					linesLayer.setHighlightedLines(new Set());
+					searchResultsLayer.setHighlightedResults(new Set([ e.layer._fmSearchResult ]));
+				});
 
 			const hashHandler = new L.FacilMap.HashHandler(map, client).enable();
 		</script>

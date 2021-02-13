@@ -13,15 +13,23 @@ import MarkerCluster from "./markers/marker-cluster";
 import MarkerLayer from "./markers/marker-layer";
 import MarkersLayer from "./markers/markers-layer";
 import HashHandler from "./views/hash";
+import LinesLayer from "./lines/lines-layer";
+import RouteLayer from "./lines/route-layer";
+import SearchResultGeoJSON from "./search/search-result-geojson";
+import SearchResultsLayer from "./search/search-results-layer";
 
 const FacilMap = {
     BboxHandler,
     ClickListener,
     HashHandler,
     Layers,
+    LinesLayer,
     MarkerCluster,
     MarkerLayer,
     MarkersLayer,
+    RouteLayer,
+    SearchResultGeoJSON,
+    SearchResultsLayer,
     Socket,
     Utils: {
         leaflet: leafletUtils,

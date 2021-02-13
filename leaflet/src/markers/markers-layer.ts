@@ -1,6 +1,6 @@
 import Socket from 'facilmap-client';
 import { ID, Marker, ObjectWithId } from 'facilmap-types';
-import { FeatureGroup, LayerOptions, Map } from 'leaflet';
+import { Map } from 'leaflet';
 import { tooltipOptions } from '../utils/leaflet';
 import { quoteHtml } from '../utils/utils';
 import MarkerCluster, { MarkerClusterOptions } from './marker-cluster';
@@ -107,11 +107,16 @@ export default class MarkersLayer extends MarkerCluster {
 			});
 		}
 
+		(this.markersById[marker.id] as any).marker = marker;
+
+		const highlight = this.highlightedMarkerIds.has(marker.id);
+
 		this.markersById[marker.id]
 			.setLatLng([ marker.lat, marker.lon ])
 			.setStyle({
 				marker,
-				highlight: this.highlightedMarkerIds.has(marker.id)
+				highlight,
+				raised: highlight
 			});
 	}
 

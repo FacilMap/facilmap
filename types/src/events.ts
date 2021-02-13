@@ -27,7 +27,6 @@ export interface MapEvents {
 	type: [Type];
 	deleteType: [ObjectWithId];
 	history: [HistoryEntry];
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName];
 }
 
 export type EventName<Events extends Record<keyof Events, any[]>> = keyof Events & string;

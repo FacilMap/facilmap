@@ -1,4 +1,5 @@
 import { GridLayerOptions, Layer, Map } from "leaflet";
+import geojson from "geojson";
 
 declare module "leaflet" {
     interface LayerOptions {
@@ -26,6 +27,12 @@ declare module "leaflet" {
 
     interface MarkerClusterGroup {
         options: MarkerClusterGroupOptions;
+    }
+
+    interface GeoJSON<P = any> {
+        // Cannot override this properly
+        //constructor(geojson?: Array<geojson.Feature> | geojson.GeoJSON, options?: GeoJSONOptions<P>);
+        //addData(geojson: Array<geojson.Feature> | geojson.GeoJSON): this;
     }
 
     export const Hash: any;
