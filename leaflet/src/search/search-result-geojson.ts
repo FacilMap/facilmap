@@ -17,7 +17,7 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 		super(geojson, options);
 	}
 
-	addData(geojson: GeoJSON) {
+	addData(geojson: GeoJSON): this {
 		// GeoJSON.addData() does not support specifying a custom geometryToLayer function. Thus we are replicating its functionality here.
 
 		if (Array.isArray(geojson) || 'features' in geojson) {

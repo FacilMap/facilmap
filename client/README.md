@@ -30,25 +30,20 @@ or
 yarn add facilmap-client
 ```
 
-or load the client directly from facilmap.org:
+or load the client directly from facilmap.org (along with socket.io, which is needed by facilmap-client):
 
 ```html
+<script src="https://unpkg.com/socket.io-client@3/dist/socket.io.js"></script>
 <script src="https://facilmap.org/client.js"></script>
 ```
 
-The file `build/client.js` contains the Client class and all its dependencies. You can access
-the class using the global variable `FacilMap.Client`.
+The client class will be available as the global `FacilMap.Client` variable.
 
-If you are using webpack, you can alternatively require the Client like this:
-
-```js
-import Client from 'babel-loader?presets=es2015!facilmap-client';
-```
 
 ### Development
 
-Make sure you have yarn installed. Run `yarn run deps` to install the dependencies and `yarn run build`
-to create the bundle in `build/client.js`.
+Make sure you have yarn installed. Run `npm install` to install the dependencies and `npm run build`
+to create the bundle in `dist/client.js`.
 
 
 Setting up a connection
@@ -67,40 +62,3 @@ Using it
 --------
 
 A detailed description of all the methods and data types can be found in [API](./API.md).
-
-Using with Angular JS
----------------------
-
-Making sure `$apply` is called when the asynchronous methods of the Client return is easy:
-
-```js
-let Client = require("facilmap-client");
-let myAngularApp = angular.module("myAngularApp", []);
-
-angular.factory("facilMapClient", ($q, $rootScope) => {
-	// We need to overload two methods to make sure that $rootScope.$apply() is
-	// called when asynchronous methods return
-	class FacilMapClient extends Client {
-		_emit(eventName, data) {
-			return $q.resolve(super._emit(...arguments));
-		}
-	
-		_simulateEvent(eventName, data) {
-			return $rootScope.$apply(() => {
-				return super._simulateEvent(...arguments);
-			});
-		}
-	}
-	
-	// We can use the overloaded class like the regular one
-	return new FacilMapClient("https://facilmap.org/");
-});
-
-angular.run((facilMapClient) => {
-	facilMapClient.setPadId("myMapId").then(() => {
-		console.log(facilMapClient.padData);
-	}).catch((err) => {
-		console.error(err.stack);
-	});
-});
-```

@@ -13,5 +13,6 @@
 			"./node_modules/@types",
 			"./node_modules/facilmap-frontend/src/shims.d.ts"
 		]
-	}
+	},
+	"include": ["src/**/*"]
 }

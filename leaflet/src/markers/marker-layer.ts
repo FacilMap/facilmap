@@ -69,7 +69,7 @@ export default class MarkerLayer extends LeafletMarker {
 		});
 	}
 
-	_initIcon() {
+	_initIcon(): void {
 		if (this.options.marker)
 			this.options.icon = createMarkerIcon(this.options.marker.colour, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.padding, this.options.highlight);
 
@@ -80,7 +80,7 @@ export default class MarkerLayer extends LeafletMarker {
 		setLayerPane(this, this.options.highlight || this.options.raised ? "fm-raised-marker" : "markerPane");
 	}
 
-	setStyle(style: Partial<MarkerLayerOptions>) {
+	setStyle(style: Partial<MarkerLayerOptions>): this {
 		L.Util.setOptions(this, style);
 		if(this._map)
 			this._initIcon();

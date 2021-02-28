@@ -1,10 +1,6 @@
-<div class="modal-header">
-	<button type="button" class="close" ng-click="$dismiss()"><span aria-hidden="true">&times;</span></button>
-	<h3 class="modal-title">About FacilMap {{fmVersion}}</h3>
-</div>
-<div class="modal-body">
-	<p><a href="{{fmHomepage}}" target="_blank"><strong>FacilMap</strong></a> is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>.</p>
-	<p>If something does not work or you have a suggestion for improvement, please report on the <a href="{{fmBugTracker}}" target="_blank">issue tracker</a>.</p>
+<b-modal :id="id" :title="`About FacilMap ${fmVersion}`" ok-only ok-title="Close" size="lg">
+	<p><a :href="fmHomepage" target="_blank"><strong>FacilMap</strong></a> is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>.</p>
+	<p>If something does not work or you have a suggestion for improvement, please report on the <a :href="fmBugTracker" target="_blank">issue tracker</a>.</p>
 	<h4>Programs/libraries</h4>
 	<ul class="list-inline">
 		<li><a href="https://nodejs.org/" target="_blank">Node.js</a></li>
@@ -30,8 +26,10 @@
 	</ul>
 	<h4>Map data</h4>
 	<dl class="dl-horizontal">
-		<dt ng-repeat-start="layer in layers.base.concat(layers.overlay)" ng-if="layer.attribution">{{layer.name}}</dt>
-		<dd ng-repeat-end ng-bind-html="layer.attribution" ng-if="layer.attribution"></dd>
+		<template v-for="layer in layers" v-if="layer.attribution">
+			<dt>{{layer.name}}</dt>
+			<dd v-html="layer.attribution"></dd>
+		</template>
 
 		<dt>Search</dt>
 		<dd><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
@@ -42,7 +40,4 @@
 		<dt>GeoIP</dt>
 		<dd>This product includes GeoLite2 data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</dd>
 	</dl>
-</div>
-<div class="modal-footer">
-	<button type="button" class="btn btn-default" ng-click="$dismiss()">Close</button>
-</div>
+</b-modal>

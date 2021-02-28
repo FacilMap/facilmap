@@ -5,12 +5,12 @@ import 'tablesorter/dist/js/widgets/widget-uitheme.min.js';
 import 'tablesorter/dist/js/widgets/widget-resizable.min.js';
 import 'tablesorter/dist/css/theme.bootstrap_3.min.css';
 import './table.css';
-import { registerDeobfuscationHandlers } from "../utils/obfuscate/obfuscate";
+import { registerDeobfuscationHandlers } from "../utils/ui";
 
 // Dereferrer
-$(document).on("click", "a", function(e) {
-	var el = $(this);
-	var href = el.attr("href");
+$(document).on("click", "a", function() {
+	const el = $(this);
+	const href = el.attr("href");
 	if(href && href.match(/^\s*(https?:)?\/\//i)) {
 		el.attr("href", "deref.html?"+encodeURIComponent(href));
 
@@ -21,7 +21,7 @@ $(document).on("click", "a", function(e) {
 });
 
 $(document).ready(() => {
-	$("table.tablesorter").tablesorter({
+	($("table.tablesorter") as any).tablesorter({
 		theme: "bootstrap",
 		headerTemplate: "{content} {icon}",
 		widgets: ["uitheme", "resizable"]

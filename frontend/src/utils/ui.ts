@@ -1,4 +1,8 @@
-var shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
+import $ from 'jquery';
+import './ui.scss';
+import { deobfuscate } from "facilmap-utils";
+
+/* 
 
 fmUtils.createLineGraphic = function(colour, width, length) {
     return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
@@ -74,3 +78,24 @@ fmUtils.scrollIntoView = function(element) {
     else if(scrollableParent[0].scrollTop < resultBottom - parentHeight)
         scrollableParent.animate({scrollTop: resultBottom - parentHeight});
 };
+*/
+
+export function registerDeobfuscationHandlers(): void {
+	const clickHandler = (e: JQuery.ClickEvent) => {
+		deobfuscate($(e.target).closest(".emobf") as any);
+	};
+
+	const actionHandler = () => {
+		$(".emobf,.emobf2").each(function() {
+			deobfuscate($(this) as any);
+		});
+
+		$(document).off("click", ".emobf", clickHandler);
+		$(document).off("mousemove", actionHandler);
+		$(document).off("keydown", actionHandler);
+	};
+
+	$(document).on("click", ".emobf", clickHandler);
+	$(document).one("mousemove", actionHandler);
+	$(document).one("keydown", actionHandler);
+}

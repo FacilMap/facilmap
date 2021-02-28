@@ -11,7 +11,7 @@
 <% } %>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
-		<link rel="shortcut icon" href="../static/favicon.png">
+		<link rel="shortcut icon" href="../../static/favicon.png">
 		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="https://facilmap.org/opensearch.xml">
 		<style type="text/css">
 			html, body {
@@ -42,12 +42,7 @@
 	</head>
 	<body>
 		<noscript><p><strong>FacilMap requires JavaScript to work.</strong></p></noscript>
-		<div id="loading" ng-if="false">Loading...</div>
-		<facilmap id="map" fm-server-url="/" fm-map-id="{{padId}}" fm-hash>
-			<fm-toolbox ng-if="toolbox" interactive="interactive"></fm-toolbox>
-			<fm-search ng-if="search" autofocus="autofocus"></fm-search>
-			<fm-legend ng-if="legend"></fm-legend>
-		</facilmap>
+		<div id="loading">Loading...</div>
 
 		<script>
 			(function() {

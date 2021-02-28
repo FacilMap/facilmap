@@ -29,27 +29,6 @@ fm.app.directive("facilmap", function(fmUtils, fmMapMessages, fmMapMarkers, $com
 
 			this.map = L.map($(".fm-map", $element)[0]);
 
-			this.map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", this.map._controlContainer);
-
-			let locateControl = L.control.locate({
-				flyTo: true,
-				icon: "a",
-				iconLoading: "a"
-			}).addTo(this.map);
-
-			$compile($('<fm-icon fm-icon="screenshot" alt="Locate"/>').appendTo($("a", locateControl._container)))($scope);
-
-			L.control.mousePosition({
-				emptyString: "0, 0",
-				separator: ", ",
-				position: "bottomright"
-			}).addTo(this.map);
-
-			L.control.graphicScale({
-				fill: "hollow",
-				position: "bottomcenter"
-			}).addTo(this.map);
-
 			this.startMarkerColour = "00ff00";
 			this.dragMarkerColour = "ffd700";
 			this.endMarkerColour = "ff0000";

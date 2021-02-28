@@ -1,0 +1,37 @@
+{
+  "name": "facilmap-utils",
+  "version": "2.7.0",
+  "description": "FacilMap helper functions used in both the frontend and backend.",
+  "keywords": [
+    "webpack",
+    "facilmap"
+  ],
+  "homepage": "https://github.com/FacilMap/facilmap2",
+  "bugs": {
+    "url": "https://github.com/FacilMap/facilmap2/issues"
+  },
+  "license": "AGPL-3.0",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FacilMap/facilmap2.git"
+  },
+  "scripts": {
+    "types": "tsc --noEmit src/*",
+    "lint": "eslint src/*"
+  },
+  "dependencies": {
+    "@types/cheerio": "^0.22.24",
+    "@types/jquery": "^3.5.5",
+    "@types/marked": "^1.2.2",
+    "cheerio": "^1.0.0-rc.5",
+    "facilmap-types": "2.7.0",
+    "filtrex": "^2.1.0",
+    "jquery": "^3.5.1",
+    "marked": "^2.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.2.2"
+  }
+}

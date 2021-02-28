@@ -1,10 +1,13 @@
 import $ from 'jquery';
 import Vue from "vue";
 import BootstrapVue from "bootstrap-vue";
-import { registerDeobfuscationHandlers } from "../utils/obfuscate/obfuscate";
+import { registerDeobfuscationHandlers } from "../utils/ui";
 import Main from './main/main';
 import { ClientProvider } from './client/client';
 import context from './context';
+import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-vue/dist/bootstrap-vue.css";
+import withRender from "./map.vue";
 
 Vue.use(BootstrapVue);
 
@@ -55,19 +58,11 @@ $(document).on("click", "a", function() {
 
 registerDeobfuscationHandlers();
 
-new Vue({
+new Vue(withRender({
 	el: "#loading",
 	data: {
 		serverUrl: "/",
 		padId: context.activePadId
 	},
-	template: `
-		<ClientProvider :serverUrl='serverUrl' :padId='padId'>
-			<Main/>
-		</ClientProvider>
-	`,
-	components: { ClientProvider, Main },
-	mounted() {
-		// enableRouter(this);
-	}
-});
+	components: { ClientProvider, Main }
+}));

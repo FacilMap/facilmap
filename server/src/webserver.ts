@@ -16,7 +16,11 @@ const frontendPath = dirname(require.resolve("facilmap-frontend/package.json"));
 const isDevMode = !!process.env.FM_DEV;
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const webpackCompiler = isDevMode ? require(require.resolve("webpack", { paths: [ require.resolve("facilmap-frontend/package.json") ] }))(require("facilmap-frontend/webpack.config")) : null;
+const webpackCompiler = isDevMode ? (() => {
+	const webpack = require(require.resolve("webpack", { paths: [ require.resolve("facilmap-frontend/package.json") ] }));
+	const webpackConfig = require("facilmap-frontend/webpack.config");
+	return webpack(webpackConfig({}, { mode: "development" }));
+})() : undefined;
 
 const staticMiddleware = isDevMode
 	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
@@ -24,7 +28,7 @@ const staticMiddleware = isDevMode
 	})
 	: express.static(frontendPath + "/build/");
 
-const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : null;
+const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : undefined;
 
 type PathParams = {
 	padId: PadId

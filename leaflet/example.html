@@ -72,8 +72,10 @@
 			/>
 		</div>
 		<div id="map"></div>
-		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-		<script type="text/javascript" src="dist/facilmap-leaflet.js"></script>
+		<script src="https://unpkg.com/leaflet"></script>
+		<script src="https://unpkg.com/socket.io-client/dist/socket.io.js"></script>
+		<script src="node_modules/facilmap-client/dist/client.js"></script>
+		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
 
 		<script type="text/javascript">
 		    var map = L.map('map',{
@@ -81,11 +83,11 @@
 				zoom: 5,
 			});
 
-			var client = new L.FacilMap.Socket("http://localhost:40829/");
+			var client = new FacilMap.Client("http://localhost:40829/");
 
-			L.FacilMap.Layers.setVisibleLayers(map);
+			L.FacilMap.setVisibleLayers(map);
 			
-			L.control.layers(L.FacilMap.Layers.baseLayers, L.FacilMap.Layers.overlays).addTo(map);
+			L.control.layers(L.FacilMap.baseLayers, L.FacilMap.overlays).addTo(map);
 
 			new L.FacilMap.BboxHandler(map, client).enable();
 

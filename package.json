@@ -1,11 +1,21 @@
 {
-  "name": "root",
+  "name": "facilmap-root",
   "private": true,
+  "workspaces": [
+    "client",
+    "frontend",
+    "leaflet",
+    "server",
+    "types",
+    "utils"
+  ],
   "scripts": {
-    "deps": "npm install && lerna bootstrap",
-    "build": "lerna run build"
+    "lint": "eslint **/*.ts"
   },
   "devDependencies": {
-    "lerna": "^3.20.2"
+    "@typescript-eslint/eslint-plugin": "^4.15.2",
+    "@typescript-eslint/parser": "^4.15.2",
+    "eslint": "^7.21.0",
+    "eslint-plugin-import": "^2.22.1"
   }
 }

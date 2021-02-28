@@ -28,17 +28,17 @@ export default class SearchResultsLayer extends FeatureGroup {
 			this.setResults(results);
 	}
 
-	highlightResult(result: SearchResult) {
+	highlightResult(result: SearchResult): void {
 		this.highlightedResults.add(result);
 		this.redrawResult(result);
 	}
 
-	unhighlightResult(result: SearchResult) {
+	unhighlightResult(result: SearchResult): void {
 		this.highlightedResults.delete(result);
 		this.redrawResult(result);
 	}
 
-	setHighlightedResults(results: Set<SearchResult>) {
+	setHighlightedResults(results: Set<SearchResult>): void {
 		for (const result of this.highlightedResults) {
 			if (!results.has(result))
 				this.unhighlightResult(result);
@@ -50,7 +50,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 		}
 	}
 
-	redrawResult(result: SearchResult) {
+	redrawResult(result: SearchResult): void {
 		for (const layer of this.getLayers().filter((layer) => layer._fmSearchResult === result)) {
 			this.removeLayer(layer);
 		}
@@ -60,7 +60,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 		}
 	}
 
-	resultToLayers(result: SearchResult) {
+	resultToLayers(result: SearchResult): Layer[] {
 		const layers: Layer[] = [];
 
 		const highlight = this.highlightedResults.has(result);
@@ -101,7 +101,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 		return layers;
 	}
 
-	setResults(results: SearchResult[]) {
+	setResults(results: SearchResult[]): void {
 		this.clearLayers();
 
 		for (const result of results) {

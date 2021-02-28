@@ -8,7 +8,7 @@ export type UnsavedView = Omit<View, 'id' | 'padId' | 'name'>;
 
 export function getCurrentView(map: Map, includeFilter = false): UnsavedView {
     const visibleLayers = getVisibleLayers(map);
-    var ret: UnsavedView = {
+    const ret: UnsavedView = {
         ...leafletToFmBbox(map.getBounds()),
         baseLayer: visibleLayers.baseLayer,
         layers: visibleLayers.overlays
@@ -39,7 +39,7 @@ export function displayView(map: Map, view = DEFAULT_VIEW, _zoomFactor = 0): voi
     }
 
     map.setFmFilter(view.filter);
-};
+}
 
 export function isAtView(map: Map, view = DEFAULT_VIEW): boolean {
     try {
@@ -58,4 +58,4 @@ export function isAtView(map: Map, view = DEFAULT_VIEW): boolean {
         && pointsEqual(bounds.getCenter(), map.getCenter(), map)
         && ((!map.fmFilter && !view.filter) || (map.fmFilter == view.filter))
     );
-};
+}

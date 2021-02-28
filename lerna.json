@@ -4,7 +4,8 @@
     "frontend",
     "leaflet",
     "server",
-    "types"
+    "types",
+    "utils"
   ],
   "version": "0.0.0"
 }

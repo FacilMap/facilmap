@@ -1,5 +1,102 @@
-.fm-leaflet-map {
+.fm-leaflet-map-container {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    position: relative;
+
+    .fm-leaflet-map {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 0;
+
+        .fm-leaflet-center {
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        
+            .leaflet-control {
+                display: inline-block;
+                float: none;
+                clear: none;
+            }
+        }
+        
+        .leaflet-control.leaflet-control-mouseposition {
+            float: left;
+            pointer-events: none;
+            padding-right: 0;
+        
+            &:after {
+                content: " |";
+            }
+        
+            & + * {
+                clear: none;
+            }
+        }
+        
+        .leaflet-control.leaflet-control-graphicscale {
+            margin-bottom: 0;
+            pointer-events: none;
+        
+            .label {
+                color: #000;
+                text-shadow: 0 0 3px #fff, 0 0 5px #fff, 0 0 10px #fff;
+            }
+        }
+        
+    }
+
+    .fm-leaflet-map-disabled-cover {
+        background-color: #888;
+        opacity: 0.7;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .fm-leaflet-map-loading {
+        position:absolute;
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+        padding:10px;
+        background: #fff;
+        z-index:100000;
+        font-size:1.5em;
+        font-weight:bold;
+    }
+    
+    .fm-leaflet-map-spinner {
+        position:absolute;
+        bottom: 7px;
+        left: 102px;
+        height:28px;
+        width:29px;
+        padding:16px 16px 16px 15px;
+        background:url(./spinner-background.png);
+        box-sizing: content-box;
+    }
+    
+    .fm-attribution-icon {
+        position: absolute;
+        bottom: -19px;
+        left: -25px;
+        pointer-events: none;
+    }
+    
+    .fm-open-external {
+        position: absolute;
+        bottom: 20px;
+        left: 15px;
+        width: 90px;
+        height: 50px;
+    }
+
 }

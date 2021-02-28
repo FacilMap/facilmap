@@ -64,6 +64,9 @@ export function decodeLonLatUrl(query: string): DecodedGeoQuery | undefined {
 	return undefined;
 }
 
+
+const shortLinkCharArray = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_@";
+
 /**
  * Decodes a string from FacilMap.Util.encodeShortLink().
 */

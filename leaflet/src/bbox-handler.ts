@@ -12,11 +12,11 @@ export default class BboxHandler extends Handler {
         this.client = client;
     }
 
-    updateBbox() {
+    updateBbox(): void {
         this.client.updateBbox(leafletToFmBbox(this._map.getBounds(), this._map.getZoom()));
     }
 
-    handleMoveEnd = () => {
+    handleMoveEnd = (): void => {
         if (this.client.padId || this.client.route) {
             this.updateBbox();
         }
@@ -28,12 +28,12 @@ export default class BboxHandler extends Handler {
         }
     }
 
-    addHooks() {
+    addHooks(): void {
         this._map.on("moveend", this.handleMoveEnd);
         this.client.on("emit", this.handleEmit);
     }
 
-    removeHooks() {
+    removeHooks(): void {
         this._map.off("moveend", this.handleMoveEnd);
         this.client.removeListener("emit", this.handleEmit);
     }

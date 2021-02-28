@@ -1,9 +1,8 @@
 import marked, { MarkedOptions } from 'marked';
 import { Field } from "facilmap-types";
+import { createDiv, $ } from './dom';
+import { normalizeField } from './filter';
 
-const isBrowser = (typeof window !== "undefined");
-const jQuery: JQueryStatic | null = isBrowser ? require("jquery") : null;
-const cheerio: cheerio.CheerioAPI | null = isBrowser ? null : eval('require')("cheerio");
 
 marked.setOptions({
 	breaks: true,
@@ -26,19 +25,17 @@ export function formatField(field: Field, value: string): string {
 }
 
 export function markdownBlock(string: string, options?: MarkedOptions): string {
-	const [$, ret] = createDiv();
-
+	const ret = createDiv();
 	ret.html(marked(string, options));
-	applyMarkdownModifications(ret, $);
+	applyMarkdownModifications(ret);
 	return ret.html()!;
 }
 
 export function markdownInline(string: string, options?: MarkedOptions): string {
-	const [$, ret] = createDiv();
-
+	const ret = createDiv();
 	ret.html(marked(string, options));
 	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
-	applyMarkdownModifications(ret, $);
+	applyMarkdownModifications(ret);
 	return ret.html()!;
 }
 
@@ -55,11 +52,12 @@ export function formatTime(seconds: number): string {
 	return hours + ":" + minutes;
 }
 
-function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root): void {
+function applyMarkdownModifications($el: cheerio.Cheerio): void {
 	$("a[href]", $el).attr({
 		target: "_blank",
 		rel: "noopener noreferer"
 	});
+
 
 	$("a[href^='mailto:']", $el).each(function(this: cheerio.Element) {
 		const $a = $(this);
@@ -80,10 +78,4 @@ function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root): void
 			}).addClass("emobf2").html("<span>[obfuscated]</span>");
 		}
 	});
-}
-
-function createDiv(): [cheerio.Root, cheerio.Cheerio] {
-	const $ = isBrowser ? jQuery! : cheerio!.load("<div/>");
-	const div = isBrowser ? ($ as JQueryStatic)("<div/>") : ($ as cheerio.Root).root();
-	return [$ as cheerio.Root, div as cheerio.Cheerio];
 }

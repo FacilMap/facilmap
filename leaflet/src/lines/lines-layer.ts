@@ -3,7 +3,7 @@ import { ID, Line, LinePointsEvent, ObjectWithId } from "facilmap-types";
 import { FeatureGroup, LayerOptions, Map, PolylineOptions } from "leaflet";
 import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
-import { quoteHtml } from "../utils/utils";
+import { quoteHtml } from "facilmap-utils";
 
 interface LinesLayerOptions extends LayerOptions {
 }
@@ -20,7 +20,7 @@ export default class LinesLayer extends FeatureGroup {
 		this.client = client;
 	}
 
-	onAdd(map: Map) {
+	onAdd(map: Map): this {
 		super.onAdd(map);
 
 		this.client.on("line", this.handleLine);
@@ -32,7 +32,7 @@ export default class LinesLayer extends FeatureGroup {
 		return this;
 	}
 
-	onRemove(map: Map) {
+	onRemove(map: Map): this {
 		super.onRemove(map);
 
 		this.client.removeListener("line", this.handleLine);
@@ -44,22 +44,22 @@ export default class LinesLayer extends FeatureGroup {
 		return this;
 	}
 
-	handleLine = (line: Line) => {
+	handleLine = (line: Line): void => {
 		if(this._map.fmFilterFunc(line))
 			this._addLine(line);
 	};
 
-	handleLinePoints = (event: LinePointsEvent) => {
+	handleLinePoints = (event: LinePointsEvent): void => {
 		const line = this.client.lines[event.id];
 		if(line && this._map.fmFilterFunc(line))
 			this._addLine(line);
 	};
 
-	handleDeleteLine = (data: ObjectWithId) => {
+	handleDeleteLine = (data: ObjectWithId): void => {
 		this._deleteLine(data);
 	};
 
-	handleFilter = () => {
+	handleFilter = (): void => {
 		for(const i of Object.keys(this.client.lines) as any as Array<keyof Socket['lines']>) {
 			const show = this._map.fmFilterFunc(this.client.lines[i]);
 			if(this.linesById[i] && !show)
@@ -69,19 +69,19 @@ export default class LinesLayer extends FeatureGroup {
 		}
 	};
 
-	highlightLine(id: ID) {
+	highlightLine(id: ID): void {
 		this.highlightedLinesIds.add(id);
 		if (this.client.lines[id])
 			this.handleLine(this.client.lines[id]);
 	}
 
-	unhighlightLine(id: ID) {
+	unhighlightLine(id: ID): void {
 		this.highlightedLinesIds.delete(id);
 		if (this.client.lines[id])
 			this.handleLine(this.client.lines[id]);
 	}
 
-	setHighlightedLines(ids: Set<ID>) {
+	setHighlightedLines(ids: Set<ID>): void {
 		for (const id of this.highlightedLinesIds) {
 			if (!ids.has(id))
 				this.unhighlightLine(id);
@@ -93,7 +93,7 @@ export default class LinesLayer extends FeatureGroup {
 		}
 	}
 
-	_addLine(line: Line & { trackPoints?: TrackPoints }) {
+	_addLine(line: Line & { trackPoints?: TrackPoints }): void {
 		const trackPoints = trackPointsToLatLngArray(line.trackPoints);
 
 		if(trackPoints.length < 2) {
@@ -129,13 +129,13 @@ export default class LinesLayer extends FeatureGroup {
 
 		// Two points that are both outside of the viewport should not be connected, as the piece in between
 		// has not been received.
-		let splitLatLngs = disconnectSegmentsOutsideViewport(trackPoints, this._map.getBounds());
+		const splitLatLngs = disconnectSegmentsOutsideViewport(trackPoints, this._map.getBounds());
 
 		(this.linesById[line.id] as any).line = line;
 		this.linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
 	}
 
-	_deleteLine(line: ObjectWithId) {
+	_deleteLine(line: ObjectWithId): void {
 		if(!this.linesById[line.id])
 			return;
 

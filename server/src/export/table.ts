@@ -3,10 +3,8 @@ import { promiseAuto } from "../utils/utils";
 import ejs from "ejs";
 import { getFrontendFile } from "../webserver";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
-import { compileExpression, prepareObject } from "facilmap-leaflet/src/utils/filter";
-import * as commonUtils from "facilmap-leaflet/src/utils/utils";
-import * as commonFormat from "facilmap-frontend/src/utils/format";
-import * as commonRouting from "facilmap-frontend/src/utils/routing";
+import { compileExpression, prepareObject } from "facilmap-utils";
+import * as utils from "facilmap-utils";
 import Database from "../database/database";
 
 type TypeWithObjects = Type & {
@@ -56,9 +54,7 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 		return ejs.render(results.template, {
 			padData: results.padData,
 			types: results.types,
-			utils: commonUtils,
-			format: commonFormat,
-			routing: commonRouting,
+			utils,
 			hide
 		})
 	});

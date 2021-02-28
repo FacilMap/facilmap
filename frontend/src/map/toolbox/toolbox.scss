@@ -1,0 +1,27 @@
+.fm-toolbox {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	opacity: .5;
+	transition: opacity .7s;
+
+	&:hover {
+		opacity: 1;
+	}
+
+	.mobile-menu-button {
+		margin-left: auto;
+	}
+
+	.navbar {
+		margin-bottom: 0; /* So that the legend can calculate the height of the toolbox properly */
+	}
+
+	a.disabled {
+		color: #aaa !important;
+	}
+
+	@media print {
+		display: none;
+	}
+}

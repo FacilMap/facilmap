@@ -1,6 +1,6 @@
 import L, { Layer, Map, TileLayer } from "leaflet";
-import "leaflet-auto-graticule";
-import "leaflet-freie-tonne";
+import AutoGraticule from "leaflet-auto-graticule";
+import FreieTonne from "leaflet-freie-tonne";
 
 declare module "leaflet" {
     interface FmLayerOptions {
@@ -10,11 +10,12 @@ declare module "leaflet" {
     interface LayerOptions extends FmLayerOptions {}
 }
 
-export let defaultVisibleLayers: VisibleLayers = {
+export const defaultVisibleLayers: VisibleLayers = {
     baseLayer: 'Mpnk',
     overlays: []
 };
 
+// eslint-disable-next-line prefer-const
 export let fallbackLayer = 'Mpnk';
 
 export const baseLayers: Record<string, Layer> = {
@@ -95,13 +96,13 @@ export const overlays: Record<string, Layer> = {
         noWrap: true
     }),
 
-    grid: L.autoGraticule({
+    grid: new AutoGraticule({
         fmName: "Graticule",
         zIndex: 300,
         noWrap: true
     }),
 
-    FrTo: L.freieTonne({
+    FrTo: new FreieTonne({
         fmName: "Sea marks",
         zIndex: 300,
         noWrap: true
@@ -134,19 +135,33 @@ export function getVisibleLayers(map: Map): VisibleLayers {
     };
 }
 
-export function setVisibleLayers(map: Map, { baseLayer = defaultVisibleLayers.baseLayer, overlays: overlaysArg = defaultVisibleLayers.overlays } = {}) {
+export function setVisibleLayers(map: Map, { baseLayer = defaultVisibleLayers.baseLayer, overlays: overlaysArg = defaultVisibleLayers.overlays } = {}): void {
     const visibleLayers = getVisibleLayers(map);
 
     if (visibleLayers.baseLayer !== baseLayer) {
         if (visibleLayers.baseLayer != null)
             map.removeLayer(baseLayers[visibleLayers.baseLayer]);
-        map.addLayer(baseLayers[baseLayer]);
+        map.addLayer(baseLayers[baseLayer] || baseLayers[defaultVisibleLayers.baseLayer]);
     }
 
     for (const key of visibleLayers.overlays.filter((k) => !overlaysArg.includes(k))) {
         map.removeLayer(overlays[key]);
     }
     for (const key of overlaysArg.filter((k) => !visibleLayers.overlays.includes(k))) {
-        map.addLayer(overlays[key]);
+        if (overlays[key])
+            map.addLayer(overlays[key]);
     }
+}
+
+export function setBaseLayer(map: Map, baseLayer: string): void {
+    const visibleLayers = getVisibleLayers(map);
+    setVisibleLayers(map, { ...visibleLayers, baseLayer });
+}
+
+export function toggleOverlay(map: Map, overlay: string): void {
+    const visibleLayers = getVisibleLayers(map);
+    if (visibleLayers.overlays.includes(overlay))
+        setVisibleLayers(map, { ...visibleLayers, overlays: visibleLayers.overlays.filter((o) => o !== overlay) });
+    else
+    setVisibleLayers(map, { ...visibleLayers, overlays: [...visibleLayers.overlays, overlay] });
 }

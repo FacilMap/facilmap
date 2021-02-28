@@ -1,4 +1,4 @@
-import { decodeQueryString, encodeQueryString } from "../../../leaflet/src/utils/utils";
+import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");

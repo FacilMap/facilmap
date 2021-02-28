@@ -1,6 +1,6 @@
 import { Colour, Shape, Symbol } from "facilmap-types";
-import { makeTextColour, quoteHtml } from "./utils";
-import L from "leaflet";
+import { makeTextColour, quoteHtml } from "facilmap-utils";
+import L, { Icon } from "leaflet";
 
 const rawIconsContext = require.context("../../assets/icons");
 const rawIcons: Record<string, Record<string, string>> = {};
@@ -54,10 +54,10 @@ const sizes: Record<string, number> = {
     glyphicons: 1410
 };
 
-export function getIcon(colour: Colour, size: number, iconName: string) {
-    let set = Object.keys(rawIcons).filter((i) => (rawIcons[i][iconName]))[0];
+export function getIcon(colour: Colour, size: number, iconName: string): string | undefined {
+    const set = Object.keys(rawIcons).filter((i) => (rawIcons[i][iconName]))[0];
     if(!set)
-        return null;
+        return undefined;
 
     if(set == "osmi") {
         return `<g transform="scale(${size / sizes.osmi})">${rawIcons[set][iconName].replace(/#000/g, colour)}</g>`;
@@ -66,9 +66,9 @@ export function getIcon(colour: Colour, size: number, iconName: string) {
     const div = document.createElement('div');
     div.innerHTML = rawIcons[set][iconName];
     const el = div.firstChild as SVGElement;
-    let scale = size / sizes[set];
-    let moveX = (sizes[set] - Number(el.getAttribute("width"))) / 2;
-    let moveY = (sizes[set] - Number(el.getAttribute("height"))) / 2;
+    const scale = size / sizes[set];
+    const moveX = (sizes[set] - Number(el.getAttribute("width"))) / 2;
+    const moveY = (sizes[set] - Number(el.getAttribute("height"))) / 2;
 
     return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${rawIcons[set][iconName]}</g>`;
 }
@@ -77,13 +77,13 @@ export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): st
     if(symbol && iconList.includes(symbol))
         return getIcon(colour, size, symbol)!;
     else if(symbol && symbol.length == 1)
-        return `<text x="8.5" y="15" style="font-size:18px;text-anchor:middle;font-family:\'Helvetica\'"><tspan style="fill:${colour}">${quoteHtml(symbol)}</tspan></text>`;
+        return `<text x="8.5" y="15" style="font-size:18px;text-anchor:middle;font-family:'Helvetica'"><tspan style="fill:${colour}">${quoteHtml(symbol)}</tspan></text>`;
     else
         return `<circle style="fill:${colour}" cx="8.6" cy="7.7" r="3" />`;
 }
 
 export function createSymbol(colour: Colour, height: number, symbol?: Symbol): string {
-    let svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
+    const svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" version="1.1">` +
         getSymbolCode('#'+colour, height, symbol) +
     `</svg>`;
@@ -97,17 +97,17 @@ export function createSymbolHtml(colour: string, height: number, symbol?: Symbol
     `</svg>`;
 }
 
-export function createMarkerGraphic(colour = "ffffff", height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false) {
-    let borderColour = makeTextColour(colour, 0.3);
+export function createMarkerGraphic(colour = "ffffff", height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false): string {
+    const borderColour = makeTextColour(colour, 0.3);
     padding = Math.max(padding, highlight ? 10 * height / 31 : 0);
 
-    let shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
-    let shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
+    const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
+    const shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
         .replace(/%BORDER_COLOUR%/g, "#"+borderColour)
         .replace(/%COLOUR%/g, colour == null ? "url(#rainbow)" : "#" + colour)
         .replace(/%SYMBOL%/g, getSymbolCode("#"+borderColour, 17, symbol));
 
-    let scale = height / 31;
+    const scale = height / 31;
 
     return "data:image/svg+xml,"+encodeURIComponent(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
         `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${Math.ceil(shapeObj.width * scale) + padding*2}" height="${Math.ceil(shapeObj.height * scale) + padding*2}" version="1.1">` +
@@ -118,14 +118,14 @@ export function createMarkerGraphic(colour = "ffffff", height: number, symbol?: 
         `</svg>`);
 }
 
-export function createMarkerIcon(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false) {
-    let scale = height / 31;
+export function createMarkerIcon(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, padding = 0, highlight = false): Icon {
+    const scale = height / 31;
     padding = Math.max(padding, highlight ? 10 * scale : 0);
-    let shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
+    const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     return L.icon({
         iconUrl: createMarkerGraphic(colour, height, symbol, shape, padding, highlight),
         iconSize: [padding*2 + shapeObj.width*scale, padding*2 + shapeObj.height*scale],
         iconAnchor: [padding + Math.round(shapeObj.baseX*scale), padding + Math.round(shapeObj.baseY*scale)],
         popupAnchor: [0, -height]
     });
-};
+}

@@ -38,7 +38,7 @@ export default class HashHandler extends Handler {
 		});
 	}
 
-	addHooks() {
+	addHooks(): void {
 		this.hash.init(this._map);
 
 		// hashControl calls hashControl.onHashChange(), which will run hashControl.update() with 100ms delay.
@@ -53,18 +53,18 @@ export default class HashHandler extends Handler {
 		this._map.on("filter", this.updateHash);
 	}
 
-	removeHooks() {
+	removeHooks(): void {
 		this._map.off("layeradd", this.updateHash);
 		this._map.off("layerremove", this.updateHash);
 		this._map.off("fmFilter", this.updateHash);
 		this.hash.removeFrom(this._map);
 	}
 
-	updateHash = () => {
+	updateHash = (): void => {
 		this.hash.onMapMove();
 	};
 
-	setQuery(query?: Query) {
+	setQuery(query?: Query): void {
 		this.activeQuery = query;
 		this.updateHash();
 	}
@@ -73,6 +73,8 @@ export default class HashHandler extends Handler {
 		if(hash.indexOf('#') === 0) {
 			hash = hash.substr(1);
 		}
+
+		this.fireEvent("fmHash", { hash });
 	
 		const viewMatch = hash.match(/^q=v(\d+)$/i);
 		if(viewMatch && this.socket.views[viewMatch[1] as any]) {
@@ -103,7 +105,7 @@ export default class HashHandler extends Handler {
 		return L.Hash.parseHash(args.slice(0, 3).join("/"));
 	};
 
-	formatHash = (mapObj: Map) => {
+	formatHash = (mapObj: Map): string => {
 		let result: string | undefined;
 	
 		const visibleLayers = getVisibleLayers(mapObj);
@@ -147,6 +149,8 @@ export default class HashHandler extends Handler {
 				hash: result.replace(/^#/, "")
 			}, "*");
 		}
+
+		this.fireEvent("fmHash", { hash: result.replace(/^#/, "") });
 	
 		return result;
 	};

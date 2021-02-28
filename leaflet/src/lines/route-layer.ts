@@ -18,7 +18,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		this.client = client;
 	}
 
-	onAdd(map: Map) {
+	onAdd(map: Map): this {
 		super.onAdd(map);
 
 		this.draggable = new DraggableLines(map, { enableForLayer: false });
@@ -33,7 +33,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		return this;
 	}
 
-	onRemove(map: Map) {
+	onRemove(map: Map): this {
 		super.onRemove(map);
 
 		this.client.removeListener("route", this.handleRoute);
@@ -46,19 +46,19 @@ export default class RouteLayer extends HighlightablePolyline {
 		return this;
 	}
 
-	handleDrag = () => {
+	handleDrag = (): void => {
 		this.updateRoute();
 	};
 
-	handleRoute = () => {
+	handleRoute = (): void => {
 		this.updateLine(true);
 	};
 
-	handleRoutePoints = () => {
+	handleRoutePoints = (): void => {
 		this.updateLine(false);
 	};
 
-	updateRoute() {
+	updateRoute(): void {
 		if (this.client.route) {
 			this.client.setRoute({
 				...this.client.route,
@@ -67,7 +67,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		}
 	}
 
-	updateLine(updateRoutePoints: boolean) {
+	updateLine(updateRoutePoints: boolean): void {
 		if (this.client.route) {
 			if (updateRoutePoints)
 				this.setDraggableLinesRoutePoints(this.client.route.routePoints.map((p) => [p.lat, p.lon]));
@@ -82,7 +82,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		}
 	}
 
-	updateDraggableStyle() {
+	updateDraggableStyle(): void {
 		if (this.draggable) {
 			Object.assign(this.draggable.options, {
 				dragMarkerOptions: () => ({ pane: "fm-raised-marker" }),
@@ -93,7 +93,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		}
 	}
 
-	setStyle(style: HighlightableLayerOptions<PathOptions>) {
+	setStyle(style: HighlightableLayerOptions<PathOptions>): this {
 		super.setStyle(style);
 
 		this.updateDraggableStyle();

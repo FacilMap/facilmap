@@ -12,7 +12,7 @@ export function decodeQueryString(str: string): any {
 		if(arrMatch) {
 			const indexes = [
 				key.substr(0, key.length - arrMatch[0].length),
-				...arrMatch[0].replace(/^[.\[]/, "").replace(/\]$/, "").split(/\]\[|\./)
+				...arrMatch[0].replace(/^[.[]/, "").replace(/\]$/, "").split(/\]\[|\./)
 			];
 			let current = result;
 			for (let i = 0; i < indexes.length; i++) {

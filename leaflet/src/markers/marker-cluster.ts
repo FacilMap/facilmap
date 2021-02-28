@@ -1,4 +1,4 @@
-import L, { FeatureGroup, Map, MarkerClusterGroup, MarkerClusterGroupOptions } from "leaflet";
+import { Map, MarkerClusterGroup, MarkerClusterGroupOptions } from "leaflet";
 import Socket from "facilmap-client";
 import { PadData } from "facilmap-types";
 import "leaflet.markercluster";
@@ -26,7 +26,7 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this.client = client;
 	}
 
-	handlePadData = (padData: PadData) => {
+	handlePadData = (padData: PadData): void => {
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
 		if (padData.clusterMarkers && !isClusterEnabled) {
