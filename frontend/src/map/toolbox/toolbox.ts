@@ -2,17 +2,20 @@ import Component from "vue-class-component";
 import Vue from "vue";
 import WithRender from "./toolbox.vue";
 import "./toolbox.scss";
-import { Prop } from "vue-property-decorator";
+import { Prop, Ref } from "vue-property-decorator";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
 import { View } from "facilmap-types";
 import About from "../about/about";
+import Sidebar from "../ui/sidebar/sidebar";
+import Icon from "../ui/icon/icon";
+import context from "../context";
 
 @WithRender
 @Component({
-    components: { About }
+    components: { About, Icon, Sidebar }
 })
 export default class Toolbox extends Vue {
 
@@ -22,7 +25,11 @@ export default class Toolbox extends Vue {
 	@Prop({ type: Boolean, default: true }) readonly interactive!: boolean;
 
 	hasImportUi = true; // TODO
-	
+
+	get isNarrow() {
+		return context.isNarrow;
+	}
+
 	get links() {
 		const v = this.mapContext;
 		return {
@@ -121,4 +128,5 @@ export default class Toolbox extends Vue {
 	showHistory() {
 		map.historyUi.openHistoryDialog();
 	} */
+
 }

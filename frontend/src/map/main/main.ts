@@ -7,10 +7,11 @@ import "./main.scss";
 import { InjectClient } from "../client/client";
 import Toolbox from "../toolbox/toolbox";
 import context from "../context";
+import SearchBox from "../search-box/search-box";
 
 @WithRender
 @Component({
-    components: { LeafletMap, Toolbox }
+    components: { LeafletMap, SearchBox, Toolbox }
 })
 export default class Main extends Vue {
 

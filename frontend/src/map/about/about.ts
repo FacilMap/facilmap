@@ -4,6 +4,7 @@ import packageJson from "../../../package.json";
 import WithRender from "./about.vue";
 import { baseLayers, overlays } from "facilmap-leaflet";
 import { Prop } from "vue-property-decorator";
+import "./about.scss";
 
 @WithRender
 @Component({

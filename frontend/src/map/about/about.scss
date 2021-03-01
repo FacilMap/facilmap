@@ -1,0 +1,19 @@
+.fm-about {
+	ul {
+		margin-left: 0;
+		padding-left: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, 180px);
+		gap: 5px;
+
+		li {
+			border: 1px solid rgba(0,0,0,.125);
+			display: flex;
+
+			a {
+				flex-grow: 1;
+				padding: 5px 10px;
+			}
+		}
+	}
+}

@@ -11,6 +11,10 @@ declare module "leaflet" {
 		_loaded?: true;
 	}
 
+	interface Control {
+		_container: HTMLElement;
+	}
+
 	namespace control {
 		export const graphicScale: any;
 	}

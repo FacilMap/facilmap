@@ -47,6 +47,13 @@
                 text-shadow: 0 0 3px #fff, 0 0 5px #fff, 0 0 10px #fff;
             }
         }
+
+        .leaflet-control-locate.leaflet-control-locate a {
+            font-size: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
         
     }
 
@@ -75,20 +82,21 @@
     
     .fm-leaflet-map-spinner {
         position:absolute;
-        bottom: 7px;
-        left: 102px;
-        height:28px;
-        width:29px;
-        padding:16px 16px 16px 15px;
-        background:url(./spinner-background.png);
-        box-sizing: content-box;
+        bottom: 20px;
+        left: 115px;
+        color: #00272a;
     }
     
-    .fm-attribution-icon {
+    .fm-logo {
         position: absolute;
-        bottom: -19px;
+        bottom: 0;
         left: -25px;
         pointer-events: none;
+        overflow: hidden;
+
+        img {
+            margin-bottom: -19px;
+        }
     }
     
     .fm-open-external {

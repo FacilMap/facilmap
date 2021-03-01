@@ -1,18 +1,19 @@
 import WithRender from "./leaflet-map.vue";
 import Vue from "vue";
-import { Component, Inject, InjectReactive, Provide, ProvideReactive } from "vue-property-decorator";
+import { Component, InjectReactive, ProvideReactive } from "vue-property-decorator";
 import Client from 'facilmap-client';
 import "./leaflet-map.scss";
-import { ClientContext, InjectClient, InjectClientContext } from "../client/client";
-import L, { LatLng, Map } from "leaflet";
+import { InjectClient } from "../client/client";
+import L, { Control, LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { displayView, getInitialView, getVisibleLayers, HashHandler, setVisibleLayers, VisibleLayers } from "facilmap-leaflet";
+import { createSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, VisibleLayers } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
 import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
+import $ from "jquery";
 
 const MAP_COMPONENTS_KEY = "fm-map-components";
 const MAP_CONTEXT_KEY = "fm-map-context";
@@ -23,6 +24,24 @@ export function InjectMapComponents() {
 
 export function InjectMapContext() {
     return InjectReactive(MAP_CONTEXT_KEY);
+}
+
+function createButton(symbol: string, onClick: () => void): Control {
+    return Object.assign(new Control(), {
+        onAdd() {
+            const div = document.createElement('div');
+            div.className = "leaflet-bar";
+            const a = document.createElement('a');
+            a.href = "javascript:";
+            a.innerHTML = createSymbolHtml("currentColor", "1.5em", symbol);
+            a.addEventListener("click", (e) => {
+                e.preventDefault();
+                onClick();
+            });
+            div.appendChild(a);
+            return div;
+        }
+    });
 }
 
 export interface MapComponents {
@@ -36,6 +55,7 @@ export interface MapContext {
     layers: VisibleLayers;
     filter: string | undefined;
     hash: string;
+    showToolbox: boolean;
 }
 
 @WithRender
@@ -45,13 +65,12 @@ export interface MapContext {
 export default class LeafletMap extends Vue {
 
     @InjectClient() client!: Client;
-    @InjectClientContext() clientContext!: ClientContext;
 
     @ProvideReactive(MAP_COMPONENTS_KEY) mapComponents!: MapComponents;
     @ProvideReactive(MAP_CONTEXT_KEY) mapContext: MapContext = null as any;
 
     isInFrame = (parent !== window);
-    loaded = true;
+    loaded = false;
 
     get selfUrl() {
         return `${location.origin}${location.pathname}${this.mapContext.hash ? `#${this.mapContext.hash}` : ''}`;
@@ -71,6 +90,8 @@ export default class LeafletMap extends Vue {
             iconLoading: "a"
         }).addTo(map);
 
+        $(locateControl._container).find("a").append(createSymbolHtml("currentColor", "1.5em", "screenshot"));
+
         // $compile($('<fm-icon fm-icon="screenshot" alt="Locate"/>').appendTo($("a", locateControl._container)))($scope);
 
         L.control.mousePosition({
@@ -84,27 +105,35 @@ export default class LeafletMap extends Vue {
             position: "bottomcenter"
         }).addTo(map);
 
+        /* createButton("menu-hamburger", () => {
+            this.mapContext.showToolbox = true;
+        }).addTo(map); */
+
         this.mapComponents = {
             map,
             hashHandler
         };
 
-        if (!map._loaded) {
-            // Initial view was not set by hash handler
-            getInitialView(this.client).then((view) => {
-                displayView(map, view);
-            }).catch((error) => {
-                console.error(error);
-                // TODO
-            });
-        }
+        (async () => {
+            if (!map._loaded) {
+                try {
+                    // Initial view was not set by hash handler
+                    displayView(map, await getInitialView(this.client));
+                } catch (error) {
+                    console.error(error);
+                    displayView(map);
+                }
+            }
+            this.loaded = true;
+        })();
 
         this.mapContext = {
             center: map._loaded ? map.getCenter() : L.latLng(0, 0),
             zoom: map._loaded ? map.getZoom() : 1,
             layers: getVisibleLayers(map),
             filter: map.fmFilter,
-            hash: location.hash.replace(/^#/, "")
+            hash: location.hash.replace(/^#/, ""),
+            showToolbox: false
         };
 
         map.on("moveend", () => {

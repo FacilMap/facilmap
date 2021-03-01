@@ -1,0 +1,22 @@
+.fm-search-box {
+	position: absolute;
+
+	&:not(.isNarrow) {
+		top: 10px;
+		left: 52px;
+		transition: opacity .7s,width .7s,max-width .7s,background-color .7s,border-color .7s;
+		opacity: .7;
+
+		&:hover,&.fm-hasFocus {
+			opacity: 1;
+		}
+	}
+
+	&.isNarrow {
+		top: calc(100% - 70px);
+		bottom: 0;
+		left: 0;
+		right: 0;
+		overflow: hidden;
+	}
+}

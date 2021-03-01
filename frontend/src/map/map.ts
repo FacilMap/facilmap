@@ -8,8 +8,12 @@ import context from './context';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import withRender from "./map.vue";
+import Vue2TouchEvents from 'vue2-touch-events'
+import PortalVue from 'portal-vue'
 
 Vue.use(BootstrapVue);
+Vue.use(Vue2TouchEvents);
+Vue.use(PortalVue);
 
 /*fm.app.config(function($compileProvider, $uibTooltipProvider) {
 	$compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);

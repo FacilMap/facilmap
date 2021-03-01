@@ -1,17 +1,25 @@
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
+import Vue from "vue";
 
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
 
-const context = {
+const isNarrow = () => window.innerWidth < 768;
+
+const context = Vue.observable({
     activePadId: decodeURIComponent(location.pathname.match(/[^/]*$/)![0]),
     urlPrefix: location.protocol + "//" + location.host + location.pathname.replace(/[^/]*$/, ""),
     toolbox: toBoolean(queryParams.toolbox, true),
     search: toBoolean(queryParams.search, true),
     autofocus: toBoolean(queryParams.autofocus, parent === window),
     legend: toBoolean(queryParams.legend, true),
-    interactive: toBoolean(queryParams.interactive, parent === window)
-};
+    interactive: toBoolean(queryParams.interactive, parent === window),
+    isNarrow: isNarrow()
+});
+
+window.addEventListener("resize", () => {
+    context.isNarrow = isNarrow();
+});
 
 export default context;
 
