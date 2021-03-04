@@ -1,13 +1,16 @@
 import { Manager, Socket as SocketIO } from "socket.io-client";
 import {
+	Bbox,
 	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
 	LineExportRequest, LineTemplateRequest, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
 	PadData, PadDataCreate, PadDataUpdate, PadId, RequestData, RequestName, ResponseData, Route, RouteCreate, RouteExportRequest,
+	RouteInfo,
 	RouteRequest,
+	SearchResult,
 	TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable
 } from "facilmap-types";
 
-export interface SocketEvents extends MapEvents {
+export interface ClientEvents extends MapEvents {
 	connect: [];
 	disconnect: [string];
 	connect_error: [Error];
@@ -26,7 +29,7 @@ export interface SocketEvents extends MapEvents {
 	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName]
 }
 
-const MANAGER_EVENTS: Array<EventName<SocketEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
+const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export interface TrackPoints {
 	[idx: number]: TrackPoint;
@@ -41,7 +44,7 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 	trackPoints: TrackPoints;
 }
 
-export default class Socket {
+export default class Client {
 	disconnected: boolean = true;
 	server!: string;
 	padId: string | undefined = undefined;
@@ -58,9 +61,10 @@ export default class Socket {
 	history: Record<ID, HistoryEntry> = { };
 	route: RouteWithTrackPoints | undefined = undefined;
 	serverError: Error | undefined = undefined;
+	loading: number = 0;
 
 	_listeners: {
-		[E in EventName<SocketEvents>]?: Array<EventHandler<SocketEvents, E>>
+		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
 	_listeningToHistory: boolean = false;
 
@@ -68,17 +72,25 @@ export default class Socket {
 		this._init(server, padId);
 	}
 
-	_init(server: string, padId: string | undefined) {
+	_set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
+		object[key] = value;
+	}
+
+	_delete<O>(object: O, key: keyof O): void {
+		delete object[key];
+	}
+
+	_init(server: string, padId: string | undefined): void {
 		// Needs to be in a separate method so that we can merge this class with a scope object in the frontend.
 
-		this.server = server;
-		this.padId = padId;
+		this._set(this, 'server', server);
+		this._set(this, 'padId', padId);
 
 		const manager = new Manager(server, { forceNew: true });
-		this.socket = manager.socket("/");
+		this._set(this, 'socket', manager.socket("/"));
 
-		for(let i of Object.keys(this._handlers) as EventName<SocketEvents>[]) {
-			this.on(i, this._handlers[i] as EventHandler<SocketEvents, typeof i>);
+		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
+			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
 		}
 
 		setTimeout(() => {
@@ -89,29 +101,27 @@ export default class Socket {
 		});
 	}
 
-	on<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
-		let listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
-		if(!listeners) {
-			listeners = this._listeners[eventName] = [ ];
+	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+		if(!this._listeners[eventName]) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io : this.socket)
-				.on(eventName, (...[data]: SocketEvents[E]) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
-		listeners.push(fn);
+		this._set(this._listeners, eventName, [ ...(this._listeners[eventName] || [] as any), fn ]);
     }
 
-    once<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
-		let handler = ((data: any) => {
+    once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+		const handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			(fn as any)(data);
-		}) as EventHandler<SocketEvents, E>;
+		}) as EventHandler<ClientEvents, E>;
 		this.on(eventName, handler);
     }
 
-	removeListener<E extends EventName<SocketEvents>>(eventName: E, fn: EventHandler<SocketEvents, E>) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
+	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
-			this._listeners[eventName] = listeners.filter((listener) => (listener !== fn)) as any;
+			this._set(this._listeners, eventName, listeners.filter((listener) => (listener !== fn)) as any);
 		}
 	}
 
@@ -133,52 +143,52 @@ export default class Socket {
 	}
 
 	_handlers: {
-		[E in EventName<SocketEvents>]?: EventHandler<SocketEvents, E>
+		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} = {
 		padData: (data) => {
-			this.padData = data;
+			this._set(this, 'padData', data);
 
 			if(data.writable != null) {
-				this.readonly = (data.writable == 0);
-				this.writable = data.writable;
+				this._set(this, 'readonly', data.writable == 0);
+				this._set(this, 'writable', data.writable);
 			}
 
-			let id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
+			const id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
 			if(id != null)
-				this.padId = id;
+				this._set(this, 'padId', id);
 		},
 
 		deletePad: () => {
-			this.readonly = true;
-			this.writable = 0;
-			this.deleted = true;
+			this._set(this, 'readonly', true);
+			this._set(this, 'writable', 0);
+			this._set(this, 'deleted', true);
 		},
 
 		marker: (data) => {
-			this.markers[data.id] = data;
+			this._set(this.markers, data.id, data);
 		},
 
 		deleteMarker: (data) => {
-			delete this.markers[data.id];
+			this._delete(this.markers, data.id);
 		},
 
 		line: (data) => {
-			this.lines[data.id] = {
+			this._set(this.lines, data.id, {
 				...data,
 				trackPoints: this.lines[data.id]?.trackPoints || { }
-			};
+			});
 		},
 
 		deleteLine: (data) => {
-			delete this.lines[data.id];
+			this._delete(this.lines, data.id);
 		},
 
 		linePoints: (data) => {
-			let line = this.lines[data.id];
+			const line = this.lines[data.id];
 			if(line == null)
 				return console.error("Received line points for non-existing line "+data.id+".");
 
-			line.trackPoints = this._mergeTrackPoints(data.reset ? {} : line.trackPoints, data.trackPoints);
+			this._set(line, 'trackPoints', this._mergeTrackPoints(data.reset ? {} : line.trackPoints, data.trackPoints));
 		},
 
 		routePoints: (data) => {
@@ -187,42 +197,42 @@ export default class Socket {
 				return;
 			}
 
-			this.route.trackPoints = this._mergeTrackPoints(this.route.trackPoints, data);
+			this._set(this.route, 'trackPoints', this._mergeTrackPoints(this.route.trackPoints, data));
 		},
 
 		view: (data) => {
-			this.views[data.id] = data;
+			this._set(this.views, data.id, data);
 		},
 
 		deleteView: (data) => {
-			delete this.views[data.id];
+			this._delete(this.views, data.id);
 			if (this.padData) {
 				if(this.padData.defaultViewId == data.id)
-					this.padData.defaultViewId = null;
+					this._set(this.padData, 'defaultViewId', null);
 			}
 		},
 
 		type: (data) => {
-			this.types[data.id] = data;
+			this._set(this.types, data.id, data);
 		},
 
 		deleteType: (data) => {
-			delete this.types[data.id];
+			this._delete(this.types, data.id);
 		},
 
 		disconnect: () => {
-			this.disconnected = true;
-			this.markers = { };
-			this.lines = { };
-			this.views = { };
-			this.history = { };
+			this._set(this, 'disconnected', true);
+			this._set(this, 'markers', { });
+			this._set(this, 'lines', { });
+			this._set(this, 'views', { });
+			this._set(this, 'history', { });
 		},
 
 		connect: () => {
 			if(this.padId)
 				this._setPadId(this.padId);
 			else
-				this.disconnected = false; // Otherwise it gets set when padData arrives
+				this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
 
 			if(this.bbox)
 				this.updateBbox(this.bbox);
@@ -235,118 +245,126 @@ export default class Socket {
 		},
 
 		history: (data) => {
-			this.history[data.id] = data;
+			this._set(this.history, data.id, data);
 			// TODO: Limit to 50 entries
+		},
+
+		loadStart: () => {
+			this._set(this, 'loading', this.loading + 1);
+		},
+
+		loadEnd: () => {
+			this._set(this, 'loading', this.loading - 1);
 		}
 	};
 
-	setPadId(padId: PadId) {
+	setPadId(padId: PadId): Promise<void> {
 		if(this.padId != null)
 			throw new Error("Pad ID already set.");
 
 		return this._setPadId(padId);
 	}
 
-	updateBbox(bbox: BboxWithZoom) {
-		this.bbox = bbox;
+	updateBbox(bbox: BboxWithZoom): Promise<void> {
+		this._set(this, 'bbox', bbox);
 		return this._emit("updateBbox", bbox).then((obj) => {
 			this._receiveMultiple(obj);
 		});
 	}
 
-	createPad(data: PadDataCreate) {
+	createPad(data: PadDataCreate): Promise<void> {
 		return this._emit("createPad", data).then((obj) => {
-			this.readonly = false;
-			this.writable = 2;
+			this._set(this, 'readonly', false);
+			this._set(this, 'writable', 2);
 
 			this._receiveMultiple(obj);
 		});
 	}
 
-	editPad(data: PadDataUpdate) {
+	editPad(data: PadDataUpdate): Promise<PadData> {
 		return this._emit("editPad", data);
 	}
 
-	deletePad() {
+	deletePad(): Promise<void> {
 		return this._emit("deletePad");
 	}
 
-	listenToHistory() {
+	listenToHistory(): Promise<void> {
 		return this._emit("listenToHistory").then((obj) => {
-			this._listeningToHistory = true;
+			this._set(this, '_listeningToHistory', true);
 			this._receiveMultiple(obj);
 		});
 	}
 
-	stopListeningToHistory() {
-		this._listeningToHistory = false;
+	stopListeningToHistory(): Promise<void> {
+		this._set(this, '_listeningToHistory', false);
 		return this._emit("stopListeningToHistory");
 	}
 
-	revertHistoryEntry(data: ObjectWithId) {
+	revertHistoryEntry(data: ObjectWithId): Promise<void> {
 		return this._emit("revertHistoryEntry", data).then((obj) => {
-			this.history = { };
+			this._set(this, 'history', { });
 			this._receiveMultiple(obj);
 		});
 	}
 
-	async getMarker(data: ObjectWithId) {
-		let marker = await this._emit("getMarker", data);
-		this.markers[marker.id] = marker;
+	async getMarker(data: ObjectWithId): Promise<Marker> {
+		const marker = await this._emit("getMarker", data);
+		this._set(this.markers, marker.id, marker);
 		return marker;
 	}
 
-	addMarker(data: MarkerCreate) {
+	addMarker(data: MarkerCreate): Promise<Marker> {
 		return this._emit("addMarker", data);
 	}
 
-	editMarker(data: ObjectWithId & MarkerUpdate) {
+	editMarker(data: ObjectWithId & MarkerUpdate): Promise<Marker> {
 		return this._emit("editMarker", data);
 	}
 
-	deleteMarker(data: ObjectWithId) {
+	deleteMarker(data: ObjectWithId): Promise<Marker> {
 		return this._emit("deleteMarker", data);
 	}
 
-	getLineTemplate(data: LineTemplateRequest) {
+	getLineTemplate(data: LineTemplateRequest): Promise<Line> {
 		return this._emit("getLineTemplate", data);
 	}
 
-	addLine(data: LineCreate) {
+	addLine(data: LineCreate): Promise<Line> {
 		return this._emit("addLine", data);
 	}
 
-	editLine(data: ObjectWithId & LineUpdate) {
+	editLine(data: ObjectWithId & LineUpdate): Promise<Line> {
 		return this._emit("editLine", data);
 	}
 
-	deleteLine(data: ObjectWithId) {
+	deleteLine(data: ObjectWithId): Promise<Line> {
 		return this._emit("deleteLine", data);
 	}
 
-	exportLine(data: LineExportRequest) {
+	exportLine(data: LineExportRequest): Promise<string> {
 		return this._emit("exportLine", data);
 	}
 
-	find(data: FindQuery) {
+	find(data: FindQuery): Promise<string | SearchResult[]> {
 		return this._emit("find", data);
 	}
 
-	findOnMap(data: FindOnMapQuery) {
+	findOnMap(data: FindOnMapQuery): Promise<ResponseData<'findOnMap'>> {
 		return this._emit("findOnMap", data);
 	}
 
-	getRoute(data: RouteRequest) {
+	getRoute(data: RouteRequest): Promise<RouteInfo> {
 		return this._emit("getRoute", data);
 	}
 
-	setRoute(data: RouteCreate) {
+	setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
 		return this._emit("setRoute", data).then((route) => {
 			if(route) { // If unset, a newer submitted route has returned in the meantime
-				this.route = {
+				this._set(this, 'route', {
 					...route,
 					trackPoints: this._mergeTrackPoints({}, route.trackPoints)
-				};
+				});
 
 				this._simulateEvent("route", this.route);
 			}
@@ -355,18 +373,18 @@ export default class Socket {
 		});
 	}
 
-	clearRoute() {
-		this.route = undefined;
+	clearRoute(): Promise<void> {
+		this._set(this, 'route', undefined);
 		this._simulateEvent("route", undefined);
 		return this._emit("clearRoute");
 	}
 
-	lineToRoute(data: ObjectWithId) {
+	lineToRoute(data: ObjectWithId): Promise<RouteWithTrackPoints | undefined> {
 		return this._emit("lineToRoute", data).then((route) => {
-			this.route = {
+			this._set(this, 'route', {
 				...route,
 				trackPoints: this._mergeTrackPoints({}, route.trackPoints)
-			};
+			});
 
 			this._simulateEvent("route", this.route);
 
@@ -374,80 +392,80 @@ export default class Socket {
 		});
 	}
 
-	exportRoute(data: RouteExportRequest) {
+	exportRoute(data: RouteExportRequest): Promise<string> {
 		return this._emit("exportRoute", data);
 	}
 
-	addType(data: TypeCreate) {
+	addType(data: TypeCreate): Promise<Type> {
 		return this._emit("addType", data);
 	}
 
-	editType(data: ObjectWithId & TypeUpdate) {
+	editType(data: ObjectWithId & TypeUpdate): Promise<Type> {
 		return this._emit("editType", data);
 	}
 
-	deleteType(data: ObjectWithId) {
+	deleteType(data: ObjectWithId): Promise<Type> {
 		return this._emit("deleteType", data);
 	}
 
-	addView(data: ViewCreate) {
+	addView(data: ViewCreate): Promise<View> {
 		return this._emit("addView", data);
 	}
 
-	editView(data: ObjectWithId & ViewUpdate) {
+	editView(data: ObjectWithId & ViewUpdate): Promise<View> {
 		return this._emit("editView", data);
 	}
 
-	deleteView(data: ObjectWithId) {
+	deleteView(data: ObjectWithId): Promise<View> {
 		return this._emit("deleteView", data);
 	}
 
-	geoip() {
+	geoip(): Promise<Bbox | null> {
 		return this._emit("geoip");
 	}
 
-	disconnect() {
+	disconnect(): void {
 		this.socket.offAny();
 		this.socket.disconnect();
 	}
 
-	_setPadId(padId: string) {
-		this.padId = padId;
+	_setPadId(padId: string): Promise<void> {
+		this._set(this, 'padId', padId);
 		return this._emit("setPadId", padId).then((obj) => {
-			this.disconnected = false;
+			this._set(this, 'disconnected', false);
 
 			this._receiveMultiple(obj);
 		}).catch((err) => {
-			this.serverError = err;
+			this._set(this, 'serverError', err);
 			throw err;
 		});
 	}
 
-	_receiveMultiple(obj?: MultipleEvents<SocketEvents>) {
+	_receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
 		if (obj) {
-			for(const i of Object.keys(obj) as EventName<SocketEvents>[])
-				(obj[i] as Array<SocketEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
+			for(const i of Object.keys(obj) as EventName<ClientEvents>[])
+				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName<SocketEvents>>(eventName: E, ...data: SocketEvents[E]) {
-		const listeners = this._listeners[eventName] as Array<EventHandler<SocketEvents, E>> | undefined;
+	_simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
+		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
-			listeners.forEach(function(listener: EventHandler<SocketEvents, E>) {
+			listeners.forEach(function(listener: EventHandler<ClientEvents, E>) {
 				listener(...data);
 			});
 		}
 	}
 
-	_mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]) {
-		let ret = { ...(existingTrackPoints || { }) } as TrackPoints;
+	_mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
+		const ret = { ...(existingTrackPoints || { }) } as TrackPoints;
 
 		for(let i=0; i<newTrackPoints.length; i++) {
 			ret[newTrackPoints[i].idx] = newTrackPoints[i];
 		}
 
 		ret.length = 0;
-		for(let i in ret) {
+		for(const i in ret) {
 			if(i != "length")
 				ret.length = Math.max(ret.length, parseInt(i) + 1);
 		}

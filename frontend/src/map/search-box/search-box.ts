@@ -11,14 +11,14 @@ import $ from "jquery";
 })
 export default class SearchBox extends Vue {
 
-	tab: number = 0;
+	tab = 0;
 	touchStartY: number | null = null;
 
-	get isNarrow() {
+	get isNarrow(): boolean {
 		return context.isNarrow;
 	}
 
-	handleTouchStart(event: TouchEvent) {
+	handleTouchStart(event: TouchEvent): void {
 		if(context.isNarrow && event.touches && event.touches[0] && $(event.target as EventTarget).closest("[draggable=true]").length == 0) {
 			const top = (this.$el as HTMLElement).offsetTop;
 			this.touchStartY = event.touches[0].clientY - top;
@@ -26,7 +26,7 @@ export default class SearchBox extends Vue {
 		}
 	}
 
-	handleTouchMove(event: TouchEvent) {
+	handleTouchMove(event: TouchEvent): void {
 		if(this.touchStartY != null && event.touches[0]) {
 			const minTop = Math.max(0, ((this.$el as HTMLElement).offsetParent as HTMLElement).offsetHeight - (this.$el as HTMLElement).scrollHeight);
 			const maxTop = ((this.$el as HTMLElement).offsetParent as HTMLElement).offsetHeight - 70;
@@ -35,7 +35,7 @@ export default class SearchBox extends Vue {
 		}
 	}
 
-	handleTouchEnd(event: TouchEvent) {
+	handleTouchEnd(event: TouchEvent): void {
 		if(this.touchStartY != null && event.changedTouches[0]) {
 			this.touchStartY = null;
 		}

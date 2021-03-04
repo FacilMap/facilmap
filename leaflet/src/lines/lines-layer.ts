@@ -1,4 +1,4 @@
-import Socket, { TrackPoints } from "facilmap-client";
+import Client, { TrackPoints } from "facilmap-client";
 import { ID, Line, LinePointsEvent, ObjectWithId } from "facilmap-types";
 import { FeatureGroup, LayerOptions, Map, PolylineOptions } from "leaflet";
 import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
@@ -11,11 +11,11 @@ interface LinesLayerOptions extends LayerOptions {
 export default class LinesLayer extends FeatureGroup {
 
 	options!: LayerOptions;
-	client: Socket;
+	client: Client;
 	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	highlightedLinesIds = new Set<ID>();
 
-	constructor(client: Socket, options?: LinesLayerOptions) {
+	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
 		this.client = client;
 	}
@@ -60,7 +60,7 @@ export default class LinesLayer extends FeatureGroup {
 	};
 
 	handleFilter = (): void => {
-		for(const i of Object.keys(this.client.lines) as any as Array<keyof Socket['lines']>) {
+		for(const i of Object.keys(this.client.lines) as any as Array<keyof Client['lines']>) {
 			const show = this._map.fmFilterFunc(this.client.lines[i]);
 			if(this.linesById[i] && !show)
 				this._deleteLine(this.client.lines[i]);

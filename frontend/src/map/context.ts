@@ -39,15 +39,17 @@ if(!location.hash || location.hash == "#") {
     }
 }
 
-/* setTimeout(function() {
-    var map = angular.element($("facilmap", $element)).controller("facilmap");
+export function updatePadId(padId: string): void {
+    context.activePadId = padId;
+ 
+    if (padId)
+        history.replaceState(null, "", context.urlPrefix + padId + location.search + location.hash);
+}
 
-    $scope.$watch(() => (map.client.padData && map.client.padData.name), function(newVal) {
-        $scope.padName = newVal;
-    });
+export function updatePadName(padName: string): void {
+    const title = padName ? padName + ' – FacilMap' : 'FacilMap';
 
-    $scope.$watch(() => (map.client.padId), function(padId) {
-        if(padId)
-            history.replaceState(null, "", fm.URL_PREFIX + padId + location.search + location.hash);
-    });
-}, 0); */
+    // We have to call history.replaceState() in order for the new title to end up in the browser history
+    window.history && history.replaceState({ }, title);
+    document.title = title;
+}

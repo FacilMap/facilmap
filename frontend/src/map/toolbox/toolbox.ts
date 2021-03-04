@@ -2,7 +2,7 @@ import Component from "vue-class-component";
 import Vue from "vue";
 import WithRender from "./toolbox.vue";
 import "./toolbox.scss";
-import { Prop, Ref } from "vue-property-decorator";
+import { Prop } from "vue-property-decorator";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
@@ -12,10 +12,11 @@ import About from "../about/about";
 import Sidebar from "../ui/sidebar/sidebar";
 import Icon from "../ui/icon/icon";
 import context from "../context";
+import PadSettings from "../pad/pad-settings";
 
 @WithRender
 @Component({
-    components: { About, Icon, Sidebar }
+    components: { About, Icon, PadSettings, Sidebar }
 })
 export default class Toolbox extends Vue {
 
@@ -26,11 +27,11 @@ export default class Toolbox extends Vue {
 
 	hasImportUi = true; // TODO
 
-	get isNarrow() {
+	get isNarrow(): boolean {
 		return context.isNarrow;
 	}
 
-	get links() {
+	get links(): Record<'osm' | 'google' | 'bing' | 'facilmap', string> {
 		const v = this.mapContext;
 		return {
 			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
@@ -40,7 +41,7 @@ export default class Toolbox extends Vue {
 		};
 	}
 
-	get filterQuery() {
+	get filterQuery(): Record<'q' | 'a', string> {
 		const v = this.mapContext;
 		if (v.filter) {
 			return {
@@ -52,18 +53,18 @@ export default class Toolbox extends Vue {
 		}
 	}
 
-	get baseLayers() {
+	get baseLayers(): Array<{ key: string; name: string; active: boolean }> {
 		return Object.keys(baseLayers).map((key) => ({
 			key,
-			name: baseLayers[key].options.fmName,
+			name: baseLayers[key].options.fmName!,
 			active: this.mapContext.layers.baseLayer === key
 		}));
 	}
 
-	get overlays() {
+	get overlays(): Array<{ key: string; name: string; active: boolean }> {
 		return Object.keys(overlays).map((key) => ({
 			key,
-			name: overlays[key].options.fmName,
+			name: overlays[key].options.fmName!,
 			active: this.mapContext.layers.overlays.includes(key)
 		}));
 	}
@@ -75,15 +76,15 @@ export default class Toolbox extends Vue {
 			map.linesUi.addLine(type);
 	} */
 
-	displayView(view: View) {
+	displayView(view: View): void {
 		displayView(this.mapComponents.map, view);
 	}
 
-	setBaseLayer(key: string) {
+	setBaseLayer(key: string): void {
 		setBaseLayer(this.mapComponents.map, key);
 	}
 
-	toggleOverlay(key: string) {
+	toggleOverlay(key: string): void {
 		toggleOverlay(this.mapComponents.map, key);
 	}
 
@@ -93,10 +94,6 @@ export default class Toolbox extends Vue {
 
 	manageViews() {
 		manageViews();
-	}
-
-	editPadSettings() {
-		map.padUi.editPadSettings();
 	}
 
 	editObjectTypes() {
@@ -113,10 +110,6 @@ export default class Toolbox extends Vue {
 
 	showAbout() {
 		fmAbout.showAbout(map);
-	}
-
-	startPad() {
-		map.padUi.createPad();
 	}
 
 	filter() {

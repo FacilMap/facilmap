@@ -1,15 +1,17 @@
 import $ from 'jquery';
 import Vue from "vue";
-import BootstrapVue from "bootstrap-vue";
+import { BootstrapVue } from "bootstrap-vue";
 import { registerDeobfuscationHandlers } from "../utils/ui";
 import Main from './main/main';
 import { ClientProvider } from './client/client';
-import context from './context';
+import context, { updatePadId, updatePadName } from './context';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import withRender from "./map.vue";
-import Vue2TouchEvents from 'vue2-touch-events'
-import PortalVue from 'portal-vue'
+import Vue2TouchEvents from "vue2-touch-events";
+import PortalVue from "portal-vue";
+import "../utils/validation";
+import { PadId } from 'facilmap-types';
 
 Vue.use(BootstrapVue);
 Vue.use(Vue2TouchEvents);
@@ -67,6 +69,15 @@ new Vue(withRender({
 	data: {
 		serverUrl: "/",
 		padId: context.activePadId
+	},
+	methods: {
+		handlePadIdChange(padId: PadId) {
+			updatePadId(padId);
+		},
+
+		handlePadNameChange(padName: string) {
+			updatePadName(padName);
+		}
 	},
 	components: { ClientProvider, Main }
 }));

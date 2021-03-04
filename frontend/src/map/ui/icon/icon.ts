@@ -9,7 +9,7 @@ import { createSymbolHtml } from "facilmap-leaflet";
 })
 export default class Icon extends Vue {
 
-	@Prop({ type: String }) icon!: string;
+	@Prop({ type: String, required: true }) icon!: string;
 
 	get iconCode() {
 		return createSymbolHtml("currentColor", "1.5em", this.icon);

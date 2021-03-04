@@ -3,7 +3,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 module.exports = (env, argv) => {
 	const isDev = argv.mode == "development";
 
-	const base = {
+	return {
 		entry: `${__dirname}/src/client.ts`,
 		output: {
 			filename: "client.js",

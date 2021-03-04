@@ -40,10 +40,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			getFrontendFile("map.ejs"),
 			(async () => {
 				if(req.params && req.params.padId) {
-					return database.pads.getPadData(req.params.padId).then((padData) => {
-						// We only look up by read ID. At the moment, we only need the data for the search engine
-						// meta tags, and those should be only enabled in the read-only version anyways.
-
+					return database.pads.getPadDataByAnyId(req.params.padId).then((padData) => {
 						if (!padData)
 							throw new Error();
 						return padData;

@@ -82,7 +82,7 @@ class SocketConnection {
 				} catch (err) {
 					console.log(err.stack);
 
-					callback && callback(err);
+					callback && callback({ message: err.message, stack: err.stack });
 				}
 			});
 		}

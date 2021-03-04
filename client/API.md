@@ -108,6 +108,11 @@ _Type:_ [`route`](#route-1)
 If the opening the pad failed ([`setPadId(padId)`](#setpadidpadid) promise got rejected), the error message is stored
 in this property.
 
+### `loading`
+
+A number that indicates how many requests are currently pending. You can use this to show a loading spinner or disable certain
+UI elements while the value is greater than 0.
+
 
 Events
 ------

@@ -12,7 +12,7 @@ import "./about.scss";
 })
 export default class About extends Vue {
 
-	@Prop({ type: String }) id!: string;
+	@Prop({ type: String, required: true }) id!: string;
 
 	layers = [...Object.values(baseLayers), ...Object.values(overlays)];
 	fmVersion = packageJson.version;

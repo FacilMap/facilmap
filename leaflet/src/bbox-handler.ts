@@ -1,13 +1,13 @@
-import Socket, { SocketEvents } from "facilmap-client";
+import Client, { ClientEvents } from "facilmap-client";
 import { EventHandler } from "facilmap-types";
 import { Handler, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
 export default class BboxHandler extends Handler {
 
-    client: Socket;
+    client: Client;
 
-    constructor(map: Map, client: Socket) {
+    constructor(map: Map, client: Client) {
         super(map);
         this.client = client;
     }
@@ -22,7 +22,7 @@ export default class BboxHandler extends Handler {
         }
     }
 
-    handleEmit: EventHandler<SocketEvents, "emit"> = (name, data) => {
+    handleEmit: EventHandler<ClientEvents, "emit"> = (name, data) => {
         if (["setPadId", "setRoute"].includes(name)) {
             this.updateBbox();
         }

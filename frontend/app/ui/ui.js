@@ -137,20 +137,6 @@ fm.app.directive("fmShapePicker", function(fmIcons, fmUtils, $compile, $rootScop
 	return iconShapePicker(true, ...arguments);
 });
 
-fm.app.directive("fmIcon", function(fmUtils) {
-	return {
-		restrict: 'E',
-		scope: {
-			fmIcon: "@"
-		},
-		link: function(scope, element, attrs) {
-			scope.$watch("fmIcon", (icon) => {
-				element.html(fmUtils.createSymbolHtml("currentColor", 25, scope.fmIcon));
-			});
-		}
-	};
-});
-
 fm.app.directive("fmShape", function(fmUtils) {
 	return {
 		restrict: 'A',
@@ -160,22 +146,6 @@ fm.app.directive("fmShape", function(fmUtils) {
 		link: function(scope, element, attrs) {
 			setTimeout(() => {
 				element.attr("src", fmUtils.createMarkerGraphic("000000", 25, null, scope.fmShape));
-			});
-		}
-	};
-});
-
-fm.app.directive("fmTitle", function() {
-	return {
-		restrict: 'A',
-		link: function(scope, element, attrs) {
-			if(!$(element).is("title"))
-				return;
-
-			scope.$watch(attrs.fmTitle, function(v) {
-				// We have to call history.replaceState() in order for the new title to end up in the browser history
-				window.history && history.replaceState({ }, v);
-				document.title = v;
 			});
 		}
 	};

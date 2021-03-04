@@ -1,3 +1,5 @@
+import { isEqual } from "lodash";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
@@ -99,21 +101,6 @@ export function encodeQueryString(obj: Record<string, string>): string {
 	return pairs.join("&");
 }
 
-/**
- * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
- * @param oldObject {Object}
- * @param newObject {Object}
- * @param targetObject {Object}
- */
-/* export function mergeObject<T extends Record<keyof any, any>>(oldObject: T, newObject: T, targetObject: T): void {
-	for(const i of new Set([...Object.keys(newObject), ...Object.keys(targetObject)])) {
-		if(typeof newObject[i] == "object" && newObject[i] != null && targetObject[i] != null)
-			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
-		else if(oldObject == null || !ng.equals(oldObject[i], newObject[i]))
-			targetObject[i] = ng.copy(newObject[i]);
-	}
-}*/
-
 export function clone<T>(obj: T): T {
-	return JSON.parse(JSON.stringify(obj));
+	return obj != null ? JSON.parse(JSON.stringify(obj)) : obj;
 }

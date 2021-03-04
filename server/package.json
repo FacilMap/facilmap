@@ -21,6 +21,7 @@
     "start": "npm run deps && npm run server",
     "deps": "npm install",
     "server": "ts-node --transpile-only src/server.ts",
+    "dev-server": "FM_DEV=true ts-node --transpile-only src/server.ts",
     "test": "jest",
     "types": "tsc --noEmit src/**/*.ts",
     "lint": "eslint src/**/*.ts"

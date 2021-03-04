@@ -14,7 +14,7 @@ for (const key of rawIconsContext.keys() as string[]) {
 }
 const iconList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
 
-const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
+export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
 
 interface ShapeInfo {
     svg: string;
@@ -70,7 +70,7 @@ export function getIcon(colour: Colour, size: number, iconName: string): string 
     const moveX = (sizes[set] - Number(el.getAttribute("width"))) / 2;
     const moveY = (sizes[set] - Number(el.getAttribute("height"))) / 2;
 
-    return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${rawIcons[set][iconName]}</g>`;
+    return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${el.innerHTML}</g>`;
 }
 
 export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): string {
@@ -91,9 +91,9 @@ export function createSymbol(colour: Colour, height: number, symbol?: Symbol): s
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export function createSymbolHtml(colour: string, height: number, symbol?: Symbol): string {
-    return `<svg width="${height}" height="${height}" viewbox="0 0 ${height} ${height}">` +
-        getSymbolCode(colour, height, symbol) +
+export function createSymbolHtml(colour: string, height: number | string, symbol?: Symbol): string {
+    return `<svg width="${height}" height="${height}" viewbox="0 0 25 25">` +
+        getSymbolCode(colour, 25, symbol) +
     `</svg>`;
 }
 

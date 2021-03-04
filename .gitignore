@@ -1,6 +1,5 @@
 *.iml
 .idea
 node_modules
-bower_components
-frontend/build
-client/dist
+*/dist
+yarn-error.log

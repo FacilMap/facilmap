@@ -1,4 +1,4 @@
-import Socket from 'facilmap-client';
+import Client from 'facilmap-client';
 import L, { Evented, Handler, LatLng, Map } from 'leaflet';
 import 'leaflet-hash';
 import { isEqual } from 'lodash';
@@ -24,13 +24,13 @@ interface Query {
 
 export default class HashHandler extends Handler {
 
-	socket: Socket;
+	client: Client;
 	hash: any;
 	activeQuery?: Query;
 
-	constructor(map: Map, socket: Socket) {
+	constructor(map: Map, client: Client) {
 		super(map);
-		this.socket = socket;
+		this.client = client;
 
 		this.hash = Object.assign(new L.Hash(), {
 			parseHash: this.parseHash,
@@ -77,8 +77,8 @@ export default class HashHandler extends Handler {
 		this.fireEvent("fmHash", { hash });
 	
 		const viewMatch = hash.match(/^q=v(\d+)$/i);
-		if(viewMatch && this.socket.views[viewMatch[1] as any]) {
-			displayView(this._map, this.socket.views[viewMatch[1] as any]);
+		if(viewMatch && this.client.views[viewMatch[1] as any]) {
+			displayView(this._map, this.client.views[viewMatch[1] as any]);
 			return false;
 		}
 	
@@ -126,12 +126,12 @@ export default class HashHandler extends Handler {
 			result = "#q=" + encodeURIComponent(this.activeQuery.query);
 		} else if(!this.activeQuery) {
 			// Check if we have a saved view open
-			const defaultView = (this.socket.padData && this.socket.padData.defaultViewId && this.socket.views[this.socket.padData.defaultViewId]);
+			const defaultView = (this.client.padData && this.client.padData.defaultViewId && this.client.views[this.client.padData.defaultViewId]);
 			if(isAtView(this._map, defaultView || undefined))
 				result = "#";
 			else {
-				for(const viewId of Object.keys(this.socket.views)) {
-					if(isAtView(this._map, this.socket.views[viewId as any])) {
+				for(const viewId of Object.keys(this.client.views)) {
+					if(isAtView(this._map, this.client.views[viewId as any])) {
 						result = `#q=v${encodeURIComponent(viewId)}`;
 						break;
 					}

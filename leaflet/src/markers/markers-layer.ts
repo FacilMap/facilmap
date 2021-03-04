@@ -1,4 +1,4 @@
-import Socket from 'facilmap-client';
+import Client from 'facilmap-client';
 import { ID, Marker, ObjectWithId } from 'facilmap-types';
 import { Map } from 'leaflet';
 import { tooltipOptions } from '../utils/leaflet';
@@ -12,11 +12,11 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 export default class MarkersLayer extends MarkerCluster {
 
 	options!: MarkersLayerOptions;
-	client: Socket;
+	client: Client;
 	markersById: Record<string, MarkerLayer> = {};
 	highlightedMarkerIds = new Set<ID>();
 
-	constructor(client: Socket, options?: MarkersLayerOptions) {
+	constructor(client: Client, options?: MarkersLayerOptions) {
 		super(client, options);
 		this.client = client;
 	}
@@ -53,7 +53,7 @@ export default class MarkersLayer extends MarkerCluster {
 	};
 
 	handleFilter = (): void => {
-		for(const i of Object.keys(this.client.markers) as any as Array<keyof Socket['markers']>) {
+		for(const i of Object.keys(this.client.markers) as any as Array<keyof Client['markers']>) {
 			const show = this._map.fmFilterFunc(this.client.markers[i]);
 			if(this.markersById[i] && !show)
 				this._deleteMarker(this.client.markers[i]);

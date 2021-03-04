@@ -10,7 +10,7 @@ import $ from "jquery";
 })
 export default class Sidebar extends Vue {
 
-	@Prop({ type: String }) readonly id!: string;
+	@Prop({ type: String, required: true }) readonly id!: string;
 
 	touchStartX: number | null = null;
 	sidebarVisible = false;

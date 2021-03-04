@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title fm-title="padName ? padName + ' – FacilMap' : 'FacilMap'">FacilMap</title>
+		<title>FacilMap</title>
 <% if(!padData || padData.searchEngines) { %>
 		<meta name="robots" content="index,nofollow" />
-		<meta name="description" ng-non-bindable content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
+		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
 <% } else { %>
 		<meta name="robots" content="noindex,nofollow" />
 <% } %>

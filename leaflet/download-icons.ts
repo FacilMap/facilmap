@@ -38,20 +38,20 @@ async function updateIcons() {
 async function cleanIcon(icon: string): Promise<string> {
     const optimized = await new svgo().optimize(icon);
     
-    var $ = cheerio.load(optimized.data, {
+    const $ = cheerio.load(optimized.data, {
         xmlMode: true
     });
 
-    for (const el of $("*").toArray()) {
+    for (const el of $("*").toArray() as cheerio.TagElement[]) {
         el.name = el.name.replace(/^svg:/, "");
     }
 
     $("metadata,sodipodi\\:namedview,defs,image").remove();
 
     for (const el of $("*").toArray()) {
-        var $el = $(el);
+        const $el = $(el);
 
-        var fill = $el.css("fill") || $el.attr("fill");
+        const fill = $el.css("fill") || $el.attr("fill");
         if(fill && fill != "none") {
             if(fill != "#ffffff" && fill != "#fff") { // This is the background
                 $el.remove();

@@ -1,4 +1,4 @@
-import Socket from "facilmap-client";
+import Client from "facilmap-client";
 import { Map, PathOptions, PolylineOptions } from "leaflet";
 import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
@@ -10,10 +10,10 @@ interface RouteLayerOptions extends PolylineOptions {
 export default class RouteLayer extends HighlightablePolyline {
 
 	realOptions!: RouteLayerOptions;
-	client: Socket;
+	client: Client;
 	draggable?: DraggableLines;
 
-	constructor(client: Socket, options?: RouteLayerOptions) {
+	constructor(client: Client, options?: RouteLayerOptions) {
 		super([], options);
 		this.client = client;
 	}

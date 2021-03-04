@@ -1,12 +1,14 @@
-import { Component, InjectReactive, Prop, ProvideReactive } from "vue-property-decorator";
+import { Component, InjectReactive, Prop, ProvideReactive, Watch } from "vue-property-decorator";
 import Vue from "vue";
 import Client from "facilmap-client";
 import "./client.scss";
 import WithRender from "./client.vue";
+import { PadId } from "facilmap-types";
+import { VueDecorator } from "vue-class-component";
 
 const CLIENT_KEY = "fm-client";
 
-export function InjectClient() {
+export function InjectClient(): VueDecorator {
     return InjectReactive(CLIENT_KEY);
 }
 
@@ -25,6 +27,20 @@ export class ClientProvider extends Vue {
         client._delete = Vue.delete;
 
         this.client = client;
+    }
+
+    beforeDestroy(): void {
+        this.client.disconnect();
+    }
+
+    @Watch("client.padId")
+    handlePadIdChange(padId: PadId): void {
+        this.$emit("padId", padId);
+    }
+
+    @Watch("client.padData.name")
+    handlePadNameChange(padName: string): void {
+        this.$emit("padName", padName);
     }
 
 }
