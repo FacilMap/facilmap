@@ -4,7 +4,7 @@ import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highli
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import DraggableLines from "leaflet-draggable-lines";
 
-interface RouteLayerOptions extends PolylineOptions {
+interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 }
 
 export default class RouteLayer extends HighlightablePolyline {

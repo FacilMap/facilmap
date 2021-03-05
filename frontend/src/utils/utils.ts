@@ -1,6 +1,6 @@
 import Vue from "vue";
 import { isEqual } from "lodash";
-import { clone } from "facilmap-utils";
+import { clone, round } from "facilmap-utils";
 
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
@@ -16,3 +16,5 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T, newO
 			Vue.set(targetObject, i, clone(newObject[i]));
 	}
 }
+
+Vue.filter('round', (number: number, digits: number) => round(number, digits));

@@ -112,20 +112,6 @@ fm.app.factory("fmMapMarkers", function($uibModal, fmUtils, $compile, $timeout, 
 					map.messages.showMessage("danger", err);
 				});
 			},
-			addMarker: function(type) {
-				var message = map.messages.showMessage("info", "Please click on the map to add a marker.", [
-					{ label: "Cancel", click: function() {
-						message.close();
-						listener.cancel();
-					}}
-				], null, function() { listener.cancel(); });
-
-				var listener = map.addClickListener(function(pos) {
-					message.close();
-
-					markersUi.createMarker(pos, type);
-				});
-			},
 			createMarker: function(pos, type, properties, noEdit) {
 				return map.client.addMarker($.extend({ lon: pos.lon, lat: pos.lat, typeId: type.id }, properties)).then(function(marker) {
 					markersUi._addMarker(marker);

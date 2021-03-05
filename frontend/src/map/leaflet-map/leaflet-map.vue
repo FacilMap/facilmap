@@ -6,7 +6,7 @@
 	    <img src="./logo.png"/>
     </div>
     <b-spinner class="fm-leaflet-map-spinner" v-show="client.loading > 0"></b-spinner>
-	
+
     <slot v-if="mapContext"></slot>
 
     <div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || client.serverError || client.deleted)"></div>

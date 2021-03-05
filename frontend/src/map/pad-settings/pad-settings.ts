@@ -1,7 +1,7 @@
 import { Component, Prop, Watch } from "vue-property-decorator";
 import WithRender from "./pad-settings.vue";
 import Vue from "vue";
-import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { ValidationProvider } from "vee-validate";
 import context from "../context";
 import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 import { clone, generateRandomPadId } from "facilmap-utils";
@@ -15,7 +15,7 @@ import FormModal from "../ui/form-modal/form-modal";
 
 @WithRender
 @Component({
-    components: { FormModal, ValidationObserver, ValidationProvider }
+    components: { FormModal, ValidationProvider }
 })
 export default class PadSettings extends Vue {
 
@@ -30,7 +30,7 @@ export default class PadSettings extends Vue {
 	deleteConfirmation = "";
 	padData: PadDataCreate | PadDataUpdate = null as any;
 
-	handleShow(): void {
+	initialize(): void {
 		if(this.isCreate) {
 			this.padData = {
 				name: "New FacilMap",
@@ -59,11 +59,9 @@ export default class PadSettings extends Vue {
 
 	@Watch("client.padData", { deep: true })
 	handlePadDataChange(newPadData: PadData, oldPadData: PadData): void {
-		if (!this.isCreate)
+		if (!this.isCreate && this.padData)
 			mergeObject(oldPadData, newPadData, this.padData);
 	}
-
-	getValidationState = getValidationState;
 
 	/*
 	$scope.copyPadId = fmUtils.generateRandomPadId();

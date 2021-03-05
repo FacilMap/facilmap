@@ -3511,6 +3511,11 @@ expect@^26.6.2:
     jest-message-util "^26.6.2"
     jest-regex-util "^26.0.0"
 
+expose-loader@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/expose-loader/-/expose-loader-2.0.0.tgz#1c323577db3d16f7817e4652024f2c545b3f6a70"
+  integrity sha512-WBpSGlNkn7YwbU2us7O+h0XsoFrB43Y/VCNSpRV4OZFXXKgw8W800BgNxLV0S97N3+KGnFYSCAJi1AV86NO22w==
+
 express@^4.16.4, express@^4.17.1:
   version "4.17.1"
   resolved "https://registry.yarnpkg.com/express/-/express-4.17.1.tgz#4491fc38605cf51f8629d39c2b5d026f98a4c134"
@@ -5365,10 +5370,10 @@ leaflet-hash@^0.2.1:
   resolved "https://registry.yarnpkg.com/leaflet-hash/-/leaflet-hash-0.2.1.tgz#c36c718347c5243033b57cb4baea26119d82c701"
   integrity sha1-w2xxg0fFJDAztXy0uuomEZ2CxwE=
 
-leaflet-highlightable-layers@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.0.8.tgz#784c15a351dcdd2550051fb5a188db791c56bed8"
-  integrity sha512-Mprs93Hv5adCiyKNlGpK4dzAKCboba7UpE4tUdV8ou01/gZ83jfzTa6/+G5RWjW0lI9y8gpr5VRtGx9Q5hMf2A==
+leaflet-highlightable-layers@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.0.9.tgz#1da83937a07ebe29fd40ec663619017b2f458045"
+  integrity sha512-y6kBmZ+OVvSCPkD66Xjqo70ToLW9YEBXHLGCdqFm2F5msONdSTv388693iLPtTgsFYxlKaJu3eW28T8DxyNVsQ==
 
 leaflet-mouse-position@^1.0.4:
   version "1.2.0"

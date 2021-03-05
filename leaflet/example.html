@@ -70,11 +70,21 @@
 				value="Clear search"
 				onclick="searchResultsLayer.setResults([]);"
 			/>
+
+			<input
+				type="button"
+				value="Draw line"
+				onclick="drawLine()"
+			/>
+			<input
+				type="button"
+				value="End draw line"
+				onclick="linesLayer.endDrawLine(confirm('Save?'))"
+			/>
 		</div>
 		<div id="map"></div>
 		<script src="https://unpkg.com/leaflet"></script>
 		<script src="https://unpkg.com/socket.io-client/dist/socket.io.js"></script>
-		<script src="node_modules/facilmap-client/dist/client.js"></script>
 		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
 
 		<script type="text/javascript">
@@ -123,6 +133,16 @@
 				});
 
 			const hashHandler = new L.FacilMap.HashHandler(map, client).enable();
+
+			async function drawLine() {
+				try {
+					const lineTemplate = await client.getLineTemplate({ typeId: Object.keys(client.types).find((type) => client.types[type].type == "line") });
+					const result = await linesLayer.drawLine(lineTemplate);
+					console.log(result);
+				} catch (err) {
+					console.error(err);
+				}
+			}
 		</script>
 	</body>
 </html>

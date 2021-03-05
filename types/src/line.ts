@@ -29,9 +29,9 @@ export interface TrackPoint extends Point {
 	ele?: number;
 }
 
-interface LineWithTrackPoints extends LineBase {
-	trackPoints?: TrackPoint[];
-}
+export type TrackPointCreate = Omit<TrackPoint, "idx" | "zoom">;
 
-export type LineCreate = Omit<LineWithTrackPoints, "id" | "padId">;
+export type LineCreate = Partial<Omit<LineBase, "id" | "padId">> & Pick<LineBase, "routePoints" | "typeId"> & {
+	trackPoints?: TrackPointCreate[];
+};
 export type LineUpdate = Partial<LineCreate>;

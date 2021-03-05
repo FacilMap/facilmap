@@ -14,5 +14,5 @@ export interface Marker extends Point {
 	padId: PadId;
 }
 
-export type MarkerCreate = Omit<Marker, "id" | "padId">;
+export type MarkerCreate = Partial<Omit<Marker, "id" | "padId">> & Pick<Marker, keyof Point | 'typeId'>;
 export type MarkerUpdate = Partial<MarkerCreate>;

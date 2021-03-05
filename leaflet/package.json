@@ -40,7 +40,7 @@
     "leaflet-freie-tonne": "^1.0.5",
     "leaflet-geometryutil": "^0.9.3",
     "leaflet-hash": "^0.2.1",
-    "leaflet-highlightable-layers": "^1.0.8",
+    "leaflet-highlightable-layers": "^1.0.9",
     "leaflet.markercluster": "^1.4.1",
     "lodash": "^4.17.21"
   },
@@ -60,6 +60,7 @@
     "@types/yauzl": "^2.9.1",
     "cheerio": "^1.0.0-rc.5",
     "css-loader": "^5.1.0",
+    "expose-loader": "^2.0.0",
     "highland": "^2.13.5",
     "jest": "^26.6.3",
     "node-fetch": "^2.6.1",

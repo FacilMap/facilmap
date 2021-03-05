@@ -9,10 +9,10 @@
 			<b-dropdown-item v-if="client.writable == 2" :disabled="!!client.interaction" href="javascript:" @click="editObjectTypes()">Manage types</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)" text="Views" right>
-			<b-dropdown-item v-for="(id, view) in client.views" href="javascript:" @click="displayView(view)">{{view.name}}</b-dropdown-item>
+			<b-dropdown-item v-for="view in client.views" href="javascript:" @click="displayView(view)">{{view.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="client.writable == 2"></b-dropdown-divider>
-			<b-dropdown-item v-if="client.writable == 2" href="javascript:" @click="saveView()">Save current view</b-dropdown-item>
-			<b-dropdown-item v-if="client.writable == 2" href="javascript:" @click="manageViews()">Manage views</b-dropdown-item>
+			<b-dropdown-item v-if="client.writable == 2" href="javascript:" v-b-modal.fm-toolbox-save-view v-b-toggle.fm-toolbox-sidebar>Save current view</b-dropdown-item>
+			<b-dropdown-item v-if="client.writable == 2" href="javascript:" v-b-modal.fm-toolbox-manage-views v-b-toggle.fm-toolbox-sidebar>Manage views</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Map style" right>
 			<b-dropdown-item v-for="layerInfo in baseLayers" :active="layerInfo.active" href="javascript:" @click="setBaseLayer(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
@@ -43,4 +43,6 @@
 	<About id="fm-toolbox-about"></About>
 	<PadSettings v-if="!client.padId" id="fm-toolbox-create-pad" :isCreate="true"></PadSettings>
 	<PadSettings v-if="client.padData" id="fm-toolbox-edit-pad"></PadSettings>
+	<SaveView v-if="client.padData" id="fm-toolbox-save-view"></SaveView>
+	<ManageViews v-if="client.padData" id="fm-toolbox-manage-views"></ManageViews>
 </div>

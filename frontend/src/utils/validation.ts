@@ -1,4 +1,5 @@
 import { extend, withValidation } from "vee-validate";
+import Vue from "vue";
 
 extend("required", {
 	validate: (val: any) => !!val,
@@ -16,3 +17,5 @@ export type ValidationContext = Parameters<Exclude<Parameters<typeof withValidat
 export function getValidationState(v: ValidationContext): boolean | null {
 	return v.dirty || v.validated ? v.valid : null;
 }
+
+Vue.filter('validationState', getValidationState);

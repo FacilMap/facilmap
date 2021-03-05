@@ -4,9 +4,9 @@ import { Component, InjectReactive, ProvideReactive } from "vue-property-decorat
 import Client from 'facilmap-client';
 import "./leaflet-map.scss";
 import { InjectClient } from "../client/client";
-import L, { Control, LatLng, Map } from "leaflet";
+import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { createSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, VisibleLayers } from "facilmap-leaflet";
+import { BboxHandler, createSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, RouteLayer, SearchResultsLayer, VisibleLayers } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -14,19 +14,21 @@ import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import $ from "jquery";
+import { VueDecorator } from "vue-class-component";
+import { SelectedItem } from "../selection/selection";
 
 const MAP_COMPONENTS_KEY = "fm-map-components";
 const MAP_CONTEXT_KEY = "fm-map-context";
 
-export function InjectMapComponents() {
+export function InjectMapComponents(): VueDecorator {
     return InjectReactive(MAP_COMPONENTS_KEY);
 }
 
-export function InjectMapContext() {
+export function InjectMapContext(): VueDecorator {
     return InjectReactive(MAP_CONTEXT_KEY);
 }
 
-function createButton(symbol: string, onClick: () => void): Control {
+/* function createButton(symbol: string, onClick: () => void): Control {
     return Object.assign(new Control(), {
         onAdd() {
             const div = document.createElement('div');
@@ -42,11 +44,19 @@ function createButton(symbol: string, onClick: () => void): Control {
             return div;
         }
     });
-}
+} */
 
 export interface MapComponents {
-    map: Map;
+    bboxHandler: BboxHandler;
+    graphicScale: any;
     hashHandler: HashHandler;
+    linesLayer: LinesLayer;
+    locateControl: L.Control.Locate;
+    map: Map;
+    markersLayer: MarkersLayer;
+    mousePosition: L.Control.MousePosition;
+    routeLayer: RouteLayer;
+    searchResultsLayer: SearchResultsLayer;
 }
 
 export interface MapContext {
@@ -56,6 +66,7 @@ export interface MapContext {
     filter: string | undefined;
     hash: string;
     showToolbox: boolean;
+    selection: SelectedItem[];
 }
 
 @WithRender
@@ -72,47 +83,30 @@ export default class LeafletMap extends Vue {
     isInFrame = (parent !== window);
     loaded = false;
 
-    get selfUrl() {
+    get selfUrl(): string {
         return `${location.origin}${location.pathname}${this.mapContext.hash ? `#${this.mapContext.hash}` : ''}`;
     }
 
-    mounted() {
+    mounted(): void {
         const el = this.$el.querySelector(".fm-leaflet-map") as HTMLElement;
         const map = L.map(el);
 
-        const hashHandler = new HashHandler(map, this.client).enable();
-
         map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
-        let locateControl = L.control.locate({
-            flyTo: true,
-            icon: "a",
-            iconLoading: "a"
-        }).addTo(map);
-
-        $(locateControl._container).find("a").append(createSymbolHtml("currentColor", "1.5em", "screenshot"));
-
-        // $compile($('<fm-icon fm-icon="screenshot" alt="Locate"/>').appendTo($("a", locateControl._container)))($scope);
-
-        L.control.mousePosition({
-            emptyString: "0, 0",
-            separator: ", ",
-            position: "bottomright"
-        }).addTo(map);
-
-        L.control.graphicScale({
-            fill: "hollow",
-            position: "bottomcenter"
-        }).addTo(map);
-
-        /* createButton("menu-hamburger", () => {
-            this.mapContext.showToolbox = true;
-        }).addTo(map); */
-
         this.mapComponents = {
+            bboxHandler: new BboxHandler(map, this.client).enable(),
+            graphicScale: L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map),
+            hashHandler: new HashHandler(map, this.client).enable(),
+            linesLayer: new LinesLayer(this.client).addTo(map),
+            locateControl: L.control.locate({ flyTo: true, icon: "a", iconLoading: "a" }).addTo(map),
             map,
-            hashHandler
+            markersLayer: new MarkersLayer(this.client).addTo(map),
+            mousePosition: L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map),
+            routeLayer: new RouteLayer(this.client).addTo(map),
+            searchResultsLayer: new SearchResultsLayer().addTo(map)
         };
+
+        $(this.mapComponents.locateControl._container).find("a").append(createSymbolHtml("currentColor", "1.5em", "screenshot"));
 
         (async () => {
             if (!map._loaded) {
@@ -133,7 +127,8 @@ export default class LeafletMap extends Vue {
             layers: getVisibleLayers(map),
             filter: map.fmFilter,
             hash: location.hash.replace(/^#/, ""),
-            showToolbox: false
+            showToolbox: false,
+            selection: []
         };
 
         map.on("moveend", () => {
@@ -149,7 +144,7 @@ export default class LeafletMap extends Vue {
             this.mapContext.layers = getVisibleLayers(map);
         });
 
-        hashHandler.on("fmHash", (e: any) => {
+        this.mapComponents.hashHandler.on("fmHash", (e: any) => {
             this.mapContext.hash = e.hash;
         });
     }

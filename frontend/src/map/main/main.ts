@@ -8,10 +8,11 @@ import { InjectClient } from "../client/client";
 import Toolbox from "../toolbox/toolbox";
 import context from "../context";
 import SearchBox from "../search-box/search-box";
+import Selection from "../selection/selection";
 
 @WithRender
 @Component({
-    components: { LeafletMap, SearchBox, Toolbox }
+    components: { LeafletMap, SearchBox, Selection, Toolbox }
 })
 export default class Main extends Vue {
 

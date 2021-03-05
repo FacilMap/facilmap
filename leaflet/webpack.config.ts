@@ -1,4 +1,4 @@
-import { Configuration } from "webpack";
+import { Configuration, ProvidePlugin, WebpackPluginInstance } from "webpack";
 import nodeExternals from "webpack-node-externals";
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -82,6 +82,7 @@ module.exports = (env: any, argv: any): Configuration[] => {
 		},
 		{
 			...base,
+			entry: ["facilmap-client", base.entry as string],
 			name: "full",
 			output: {
 				filename: "facilmap-leaflet.full.js",
@@ -90,9 +91,21 @@ module.exports = (env: any, argv: any): Configuration[] => {
 				libraryTarget: "umd"
 			},
 			externals: makeExternals({
-				"facilmap-client": "FacilMap.Client",
 				"leaflet": "L"
-			})
+			}),
+			module: {
+				...base.module,
+				rules: [
+					...base.module!.rules!,
+					{
+						test: require.resolve("facilmap-client"),
+						loader: "expose-loader",
+						options: {
+							exposes: "FacilMap.Client"
+						}
+					}
+				]
+			}
 		}
-	]
+	];
 };

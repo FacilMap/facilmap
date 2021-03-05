@@ -1,9 +1,10 @@
-import Client, { TrackPoints } from "facilmap-client";
-import { ID, Line, LinePointsEvent, ObjectWithId } from "facilmap-types";
+import Client from "facilmap-client";
+import { ID, Line, LinePointsEvent, ObjectWithId, Point } from "facilmap-types";
 import { FeatureGroup, LayerOptions, Map, PolylineOptions } from "leaflet";
 import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
-import { disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
+import { BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
 import { quoteHtml } from "facilmap-utils";
+import { addClickListener, ClickListenerHandle } from "../click-listener/click-listener";
 
 interface LinesLayerOptions extends LayerOptions {
 }
@@ -93,7 +94,65 @@ export default class LinesLayer extends FeatureGroup {
 		}
 	}
 
-	_addLine(line: Line & { trackPoints?: TrackPoints }): void {
+	endDrawLine(save = false): void {
+		if (!this._endDrawLine)
+			throw new Error("No drawing in process.");
+		else
+			this._endDrawLine(save);
+	}
+
+	_endDrawLine?: (save: boolean) => void;
+
+	drawLine(lineTemplate: Line): Promise<Point[] | undefined> {
+		return new Promise<Point[] | undefined>((resolve) => {
+			const line: Line & { trackPoints: BasicTrackPoints } = {
+				...lineTemplate,
+				routePoints: [ ],
+				trackPoints: [ ]
+			};
+
+			let handler: ClickListenerHandle;
+
+			const addPoint = (pos: Point) => {
+				line.routePoints.push(pos);
+				line.trackPoints = [ ...line.routePoints, pos ]; // Add pos a second time so that it gets overwritten by mouseMoveListener
+				this._addLine(line);
+				handler = addClickListener(this._map, handleClick, handleMouseMove);
+			};
+
+			const handleClick = (pos: Point) => {
+				if(line.routePoints.length > 0 && pos.lon == line.routePoints[line.routePoints.length-1].lon && pos.lat == line.routePoints[line.routePoints.length-1].lat)
+					finishLine(true);
+				else
+					addPoint(pos);
+			}
+
+			const handleMouseMove = (pos: Point) => {
+				if(line.trackPoints!.length > 0) {
+					line.trackPoints![line.trackPoints!.length-1] = pos;
+					this._addLine(line);
+				}
+			}
+
+			const finishLine = async (save: boolean) => {
+				handler.cancel();
+				this._deleteLine(line);
+
+				delete this._endDrawLine;
+
+				if(save && line.routePoints.length >= 2)
+					resolve(line.routePoints);
+				else
+					resolve(undefined);
+			}
+
+			handler = addClickListener(this._map, handleClick, handleMouseMove)
+
+			this._endDrawLine = finishLine;
+		});
+	}
+
+	_addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
 		const trackPoints = trackPointsToLatLngArray(line.trackPoints);
 
 		if(trackPoints.length < 2) {

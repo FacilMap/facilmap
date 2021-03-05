@@ -15,6 +15,10 @@ declare module "leaflet" {
 		_container: HTMLElement;
 	}
 
+	interface LeafletEvent {
+		originalEvent: Event;
+	}
+
 	namespace control {
 		export const graphicScale: any;
 	}

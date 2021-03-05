@@ -6,17 +6,21 @@ import { Prop } from "vue-property-decorator";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-import { baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
-import { View } from "facilmap-types";
+import { addClickListener, baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
+import { LineCreate, Type, View } from "facilmap-types";
 import About from "../about/about";
 import Sidebar from "../ui/sidebar/sidebar";
 import Icon from "../ui/icon/icon";
 import context from "../context";
-import PadSettings from "../pad/pad-settings";
+import PadSettings from "../pad-settings/pad-settings";
+import SaveView from "../save-view/save-view";
+import ManageViews from "../manage-views/manage-views";
+import toastActions from "../ui/toast-actions/toast-actions";
+import { drawLine, drawMarker } from "../ui/draw/draw";
 
 @WithRender
 @Component({
-    components: { About, Icon, PadSettings, Sidebar }
+    components: { About, Icon, ManageViews, PadSettings, SaveView, Sidebar }
 })
 export default class Toolbox extends Vue {
 
@@ -69,12 +73,20 @@ export default class Toolbox extends Vue {
 		}));
 	}
 
-	/* addObject(type: Type) {
+	addObject(type: Type): void {
 		if(type.type == "marker")
-			map.markersUi.addMarker(type);
+			this.addMarker(type);
 		else if(type.type == "line")
-			map.linesUi.addLine(type);
-	} */
+			this.addLine(type);
+	}
+
+	addMarker(type: Type): void {
+		drawMarker(type, this, this.client, this.mapComponents);
+	}
+
+	addLine(type: Type): void {
+		drawLine(type, this, this.client, this.mapComponents);
+	}
 
 	displayView(view: View): void {
 		displayView(this.mapComponents.map, view);

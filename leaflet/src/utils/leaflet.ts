@@ -1,5 +1,5 @@
 import { TrackPoints } from 'facilmap-client';
-import { Bbox, BboxWithZoom } from 'facilmap-types';
+import { Bbox, BboxWithZoom, Point } from 'facilmap-types';
 import L, { LatLng, LatLngBounds, Map, TooltipOptions } from 'leaflet';
 import 'leaflet-geometryutil';
 
@@ -74,7 +74,12 @@ export function pointsEqual(latLng1: LatLng, latLng2: LatLng, map: Map, zoom?: n
 	return map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)) < 1;
 }
 
-export function trackPointsToLatLngArray(trackPoints: TrackPoints | undefined): LatLng[] {
+export interface BasicTrackPoints {
+	[idx: number]: Point & { ele?: number };
+    length: number;
+}
+
+export function trackPointsToLatLngArray(trackPoints: BasicTrackPoints | undefined): LatLng[] {
 	const result: LatLng[] = [];
 	if (trackPoints) {
 		for (let i = 0; i < trackPoints.length; i++) {
