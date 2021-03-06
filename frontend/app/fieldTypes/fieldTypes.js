@@ -55,23 +55,3 @@ fm.app.directive("fmTypeField", function($parse, $compile) {
 		}
 	};
 });
-
-fm.app.directive("fmTypeFieldContent", function($parse) {
-	return {
-		restrict: 'A',
-		link: function(scope, element, attrs) {
-			var update = function() {
-				var field = $parse(attrs.fmTypeFieldContent)(scope);
-				var value = $parse(attrs.fmTypeFieldModel)(scope);
-
-				element.empty().append(formatField(field, value));
-			};
-
-			scope.$watch(attrs.fmTypeFieldModel, update);
-			scope.$watch(attrs.fmTypeFieldContent+".type", update);
-			scope.$watch(attrs.fmTypeFieldContent+".options", update, true);
-			if(attrs.fmTypeFieldIgnoreDefault == null)
-				scope.$watch(attrs.fmTypeFieldContent+".default", update);
-		}
-	}
-});

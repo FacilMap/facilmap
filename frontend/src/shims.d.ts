@@ -8,3 +8,9 @@ declare module "*.vue" {
     const withRender: WithRender;
     export default withRender;
 }
+
+declare module "vue-color" {
+    export const ColorMixin: any;
+    export const Hue: any;
+    export const Saturation: any;
+}

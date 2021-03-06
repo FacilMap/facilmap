@@ -2,6 +2,7 @@ import marked, { MarkedOptions } from 'marked';
 import { Field } from "facilmap-types";
 import { createDiv, $ } from './dom';
 import { normalizeField } from './filter';
+import { quoteHtml } from './utils';
 
 
 marked.setOptions({
@@ -17,7 +18,7 @@ export function formatField(field: Field, value: string): string {
 		case "checkbox":
 			return value == "1" ? "✔" : "✘";
 		case "dropdown":
-			return value || "";
+			return quoteHtml(value) || "";
 		case "input":
 		default:
 			return markdownInline(value);

@@ -3,10 +3,10 @@
 
 	<Sidebar id="fm-toolbox-sidebar">
 		<b-nav-item v-if="!client.padId && interactive" href="javascript:" v-b-modal.fm-toolbox-create-pad v-b-toggle.fm-toolbox-sidebar>Start collaborative map</b-nav-item>
-		<b-nav-item-dropdown v-if="!client.readonly && client.padData" text="Add" :disabled="!!client.interaction" right>
-			<b-dropdown-item v-for="type in client.types" :disabled="!!client.interaction" href="javascript:" @click="addObject(type)">{{type.name}}</b-dropdown-item>
+		<b-nav-item-dropdown v-if="!client.readonly && client.padData" text="Add" :disabled="!!mapContext.interaction" right>
+			<b-dropdown-item v-for="type in client.types" :disabled="!!mapContext.interaction" href="javascript:" @click="addObject(type)">{{type.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="client.writable == 2"></b-dropdown-divider>
-			<b-dropdown-item v-if="client.writable == 2" :disabled="!!client.interaction" href="javascript:" @click="editObjectTypes()">Manage types</b-dropdown-item>
+			<b-dropdown-item v-if="client.writable == 2" :disabled="!!mapContext.interaction" href="javascript:" @click="editObjectTypes()">Manage types</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)" text="Views" right>
 			<b-dropdown-item v-for="view in client.views" href="javascript:" @click="displayView(view)">{{view.name}}</b-dropdown-item>

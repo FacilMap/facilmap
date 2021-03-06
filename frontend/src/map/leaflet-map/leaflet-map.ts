@@ -67,6 +67,7 @@ export interface MapContext {
     hash: string;
     showToolbox: boolean;
     selection: SelectedItem[];
+    interaction: boolean;
 }
 
 @WithRender
@@ -82,6 +83,7 @@ export default class LeafletMap extends Vue {
 
     isInFrame = (parent !== window);
     loaded = false;
+    interaction = 0;
 
     get selfUrl(): string {
         return `${location.origin}${location.pathname}${this.mapContext.hash ? `#${this.mapContext.hash}` : ''}`;
@@ -128,7 +130,8 @@ export default class LeafletMap extends Vue {
             filter: map.fmFilter,
             hash: location.hash.replace(/^#/, ""),
             showToolbox: false,
-            selection: []
+            selection: [],
+            interaction: false
         };
 
         map.on("moveend", () => {
@@ -142,6 +145,16 @@ export default class LeafletMap extends Vue {
 
         map.on("layeradd layerremove", () => {
             this.mapContext.layers = getVisibleLayers(map);
+        });
+
+        map.on("fmInteractionStart", () => {
+            this.interaction++;
+            this.mapContext.interaction = true;
+        });
+
+        map.on("fmInteractionEnd", () => {
+            this.interaction--;
+            this.mapContext.interaction = this.interaction > 0;
         });
 
         this.mapComponents.hashHandler.on("fmHash", (e: any) => {

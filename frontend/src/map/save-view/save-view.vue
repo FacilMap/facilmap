@@ -9,8 +9,9 @@
 >
 	<template v-if="view">
 		<ValidationProvider name="Editable link" v-slot="v" rules="required">
-			<b-form-group label="Name" label-for="name-input" label-cols-sm="3" :invalid-feedback="v.errors[0]" :state="v | validationState">
+			<b-form-group label="Name" label-for="name-input" label-cols-sm="3" :state="v | validationState">
 				<b-form-input id="name-input" v-model="view.name" :state="v | validationState" autofocus></b-form-input>
+				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 			</b-form-group>
 		</ValidationProvider>
 
@@ -34,20 +35,14 @@
 			<b-form-input id="filter-input" value="—" plaintext></b-form-input>
 		</b-form-group>
 
-		<div v-if="filter" class="form-group row">
-			<div class="col-sm-3">Filter</div>
-			<div class="col-sm-9">
-				<b-form-checkbox checked="!!view.filter" @input="view.filter = ($event ? filter : undefined)">
-					Save current filter (<code>{{filter}}</code>
-				</b-form-checkbox>
-			</div>
-		</div>
+		<b-form-group v-if="filter" label="Filter" label-for="filter-checkbox" label-cols-sm="3" label-class="pt-0">
+			<b-form-checkbox id="filter-checkbox" checked="!!view.filter" @input="view.filter = ($event ? filter : undefined)">
+				Save current filter (<code>{{filter}}</code>
+			</b-form-checkbox>
+		</b-form-group>
 
-		<div class="form-group row">
-			<div class="col-sm-3">Default view</div>
-			<div class="col-sm-9">
-				<b-form-checkbox v-model="makeDefault">Make default view</b-form-checkbox>
-			</div>
-		</div>
+		<b-form-group label="Default view" label-for="make-default-input" label-cols-sm="3" label-class="pt-0">
+			<b-form-checkbox id="make-default-input" v-model="makeDefault">Make default view</b-form-checkbox>
+		</b-form-group>
 	</template>
 </FormModal>

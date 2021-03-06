@@ -6,8 +6,8 @@ import { Prop } from "vue-property-decorator";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-import { addClickListener, baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
-import { LineCreate, Type, View } from "facilmap-types";
+import { baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
+import { Type, View } from "facilmap-types";
 import About from "../about/about";
 import Sidebar from "../ui/sidebar/sidebar";
 import Icon from "../ui/icon/icon";
@@ -15,7 +15,6 @@ import context from "../context";
 import PadSettings from "../pad-settings/pad-settings";
 import SaveView from "../save-view/save-view";
 import ManageViews from "../manage-views/manage-views";
-import toastActions from "../ui/toast-actions/toast-actions";
 import { drawLine, drawMarker } from "../ui/draw/draw";
 
 @WithRender

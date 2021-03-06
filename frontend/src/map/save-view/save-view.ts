@@ -9,6 +9,7 @@ import { InjectClient } from "../client/client";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
 import { getValidationState } from "../../utils/validation";
+import { showErrorToast } from "../../utils/toasts";
 
 @WithRender
 @Component({
@@ -58,13 +59,7 @@ export default class SaveView extends Vue {
 
 			this.$bvModal.hide(this.id);
 		} catch (err) {
-			console.error(err.stack || err);
-			this.$bvToast.toast(err.message || err, {
-				id: "fm-save-view-error",
-				title: "Error saving view",
-				variant: "danger",
-				noAutoHide: true
-			});
+			showErrorToast(this, "fm-save-view-error", "Error saving view", err);
 		} finally {
 			this.isSaving = false;
 		}

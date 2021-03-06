@@ -1,6 +1,10 @@
 import Vue from "vue";
 import { isEqual } from "lodash";
-import { clone, round } from "facilmap-utils";
+import { clone, formatField, round } from "facilmap-utils";
+import { Field, Line, Marker, Type } from "facilmap-types";
+
+/** Can be used as the "type" of props that accept an ID */
+export const IdType = Number;
 
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
@@ -18,3 +22,17 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T, newO
 }
 
 Vue.filter('round', (number: number, digits: number) => round(number, digits));
+
+Vue.filter('fmFieldContent', (value: string, field: Field) => formatField(field, value));
+
+export function canControl(type: Type, what: keyof Marker | keyof Line, ignoreField?: Field): boolean {
+	if((type as any)[what+"Fixed"] && ignoreField !== null)
+		return false;
+
+	const idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);
+	for (const field of type.fields) {
+		if ((field as any)[idx] && (!ignoreField || field !== ignoreField))
+			return false;
+	}
+	return true;
+}

@@ -87,17 +87,6 @@ fm.app.factory("fmMapTypes", function($uibModal, fmUtils, $rootScope) {
 						field: () => (field)
 					}
 				});
-			},
-			canControl : function(type, what, ignoreField) {
-				if(type[what+"Fixed"] && ignoreField !== null)
-					return false;
-
-				var idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);
-				for(var i=0; i<(type && type.fields && type.fields || [ ]).length; i++) {
-					if(type.fields[i][idx] && (!ignoreField || type.fields[i] !== ignoreField))
-						return false;
-				}
-				return true;
 			}
 		};
 		return ret;

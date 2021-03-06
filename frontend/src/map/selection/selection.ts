@@ -5,6 +5,9 @@ import { Component } from "vue-property-decorator";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { isEqual } from "lodash";
 import WithRender from "./selection.vue";
+import MarkerInfo from "../marker-info/marker-info";
+import Client from "facilmap-client";
+import { InjectClient } from "../client/client";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -19,11 +22,14 @@ function byType<T extends SelectedItem["type"]>(items: SelectedItem[], type: T):
 }
 
 @WithRender
-@Component({})
+@Component({
+	components: { MarkerInfo }
+})
 export default class Selection extends Vue {
 
 	@InjectMapContext() mapContext!: MapContext;
 	@InjectMapComponents() mapComponents!: MapComponents;
+	@InjectClient() client!: Client;
 
 	created(): void {
 		this.mapComponents.markersLayer.on("click", this.handleClickMarker);
@@ -41,6 +47,22 @@ export default class Selection extends Vue {
 
 	get selection(): SelectedItem[] {
 		return this.mapContext.selection;
+	}
+
+	get title(): string {
+		if (this.selection.length == 1) {
+			const item = this.selection[0];
+			if (item.type == "marker")
+				return this.client.markers[item.id]?.name;
+			else if (item.type == "line")
+				return this.client.lines[item.id]?.name;
+			else if (item.type == "searchResult")
+				return item.result.display_name;
+			else
+				return "Selected item";
+		} else {
+			return `${this.selection.length} selected items`;
+		}
 	}
 
 	setSelectedItems(items: SelectedItem[]): void {

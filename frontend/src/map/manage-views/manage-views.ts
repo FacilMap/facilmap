@@ -6,6 +6,7 @@ import { Component, Prop } from "vue-property-decorator";
 import { InjectMapComponents, MapComponents } from "../leaflet-map/leaflet-map";
 import { ID, View } from "facilmap-types";
 import { displayView } from "facilmap-leaflet";
+import { showErrorToast } from "../../utils/toasts";
 
 @WithRender
 @Component({})
@@ -34,13 +35,7 @@ export default class ManageViews extends Vue {
 		try {
 			await this.client.editPad({ defaultViewId: view.id });
 		} catch (err) {
-			console.error(err.stack || err);
-			this.$bvToast.toast(err.message || err, {
-				id: `fm-save-view-error-default`,
-				title: "Error setting default view",
-				variant: "danger",
-				noAutoHide: true
-			});
+			showErrorToast(this, "fm-save-view-error-default", "Error setting default view", err);
 		} finally {
 			this.isSavingDefaultView = null;
 		}
@@ -56,13 +51,7 @@ export default class ManageViews extends Vue {
 
 			await this.client.deleteView({ id: view.id });
 		} catch (err) {
-			console.error(err.stack || err);
-			this.$bvToast.toast(err.message || err, {
-				id: `fm-save-view-error-${view.id}`,
-				title: "Error deleting view",
-				variant: "danger",
-				noAutoHide: true
-			});
+			showErrorToast(this, `fm-save-view-error-${view.id}`, "Error deleting view", err);
 		} finally {
 			Vue.delete(this.isDeleting, view.id);
 		}

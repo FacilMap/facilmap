@@ -9,9 +9,9 @@ import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { mergeObject } from "../../utils/utils";
 import { isEqual } from "lodash";
-import { getValidationState } from "../../utils/validation";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
+import { showErrorToast } from "../../utils/toasts";
 
 @WithRender
 @Component({
@@ -93,13 +93,7 @@ export default class PadSettings extends Vue {
 
 			this.$bvModal.hide(this.id);
 		} catch (err) {
-			console.error(err.stack || err);
-			this.$bvToast.toast(err.message || err, {
-				id: "fm-pad-settings-error",
-				title: this.isCreate ? "Error creating map" : "Error saving map settings",
-				variant: "danger",
-				noAutoHide: true
-			});
+			showErrorToast(this, "fm-pad-settings-error", this.isCreate ? "Error creating map" : "Error saving map settings", err);
 		} finally {
 			this.isSaving = false;
 		}
@@ -117,13 +111,7 @@ export default class PadSettings extends Vue {
 			await this.client.deletePad();
 			this.$bvModal.hide(this.id);
 		} catch (err) {
-			console.error(err.stack || err);
-			this.$bvToast.toast(err.message || err, {
-				id: "fm-pad-settings-error",
-				title: "Error deleting map",
-				variant: "danger",
-				noAutoHide: true
-			});
+			showErrorToast(this, "fm-pad-settings-error", "Error deleting map", err);
 		} finally {
 			this.isSaving = false;
 		}
