@@ -1,7 +1,7 @@
 import WithRender from "./icon.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { createSymbolHtml } from "facilmap-leaflet";
+import { getSymbolHtml } from "facilmap-leaflet";
 
 @WithRender
 @Component({
@@ -9,10 +9,11 @@ import { createSymbolHtml } from "facilmap-leaflet";
 })
 export default class Icon extends Vue {
 
-	@Prop({ type: String, required: true }) icon!: string;
+	@Prop({ type: String }) icon!: string | undefined;
+	@Prop({ type: String }) alt?: string; // TODO
 
-	get iconCode() {
-		return createSymbolHtml("currentColor", "1.5em", this.icon);
+	get iconCode(): string {
+		return getSymbolHtml("currentColor", "1.4em", this.icon);
 	}
 
 }

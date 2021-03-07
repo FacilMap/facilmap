@@ -1,0 +1,17 @@
+<span class="fm-elevation-stats" :id="`fm-elevation-stats-${id}`">
+	<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}} m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}} m
+	<b-popover :target="`fm-elevation-stats-${id}`" placement="top" triggers="hover" custom-class="fm-elevation-stats-popover">
+		<dl class="row">
+			<dt class="col-sm-4">Total ascent</dt>
+			<dd class="col-sm-8">{{route.ascent}} m</dd>
+
+			<dt class="col-sm-4">Total descent</dt>
+			<dd class="col-sm-8">{{route.descent}} m</dd>
+
+			<template v-for="stat in statsArr">
+				<dt class="col-sm-4">{{stat.i == 0 ? '0%' : stat.i < 0 ? "≤ "+stat.i+"%" : "≥ "+stat.i+"%"}}</dt>
+				<dd class="col-sm-8">{{stat.distance | round(2)}} km</dd>
+			</template>
+		</dl>
+	</b-popover>
+</span>

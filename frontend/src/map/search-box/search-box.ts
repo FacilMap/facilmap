@@ -4,6 +4,7 @@ import { Component } from "vue-property-decorator";
 import "./search-box.scss";
 import context from "../context";
 import $ from "jquery";
+import { BTab } from "bootstrap-vue";
 
 @WithRender
 @Component({
@@ -38,6 +39,15 @@ export default class SearchBox extends Vue {
 	handleTouchEnd(event: TouchEvent): void {
 		if(this.touchStartY != null && event.changedTouches[0]) {
 			this.touchStartY = null;
+		}
+	}
+
+	handleChanged(currentTabs: BTab[], previousTabs: BTab[]): void {
+		for (let i = 0; i < currentTabs.length; i++) {
+			if (!previousTabs.includes(currentTabs[i])) {
+				this.tab = i;
+				return;
+			}
 		}
 	}
 

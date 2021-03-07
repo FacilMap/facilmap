@@ -68,18 +68,6 @@ fm.app.filter('fmRound', function(fmUtils) {
 	};
 });
 
-fm.app.filter('fmFormatTime', function(fmUtils) {
-	return function(value, key) {
-		return fmUtils.formatTime(value);
-	};
-});
-
-fm.app.filter('fmRoutingMode', function(fmUtils) {
-	return function(value) {
-		return fmUtils.formatRouteMode(value);
-	};
-});
-
 fm.app.filter('fmOrderBy', function($filter) {
 	return function(value, key) {
 		return $filter('orderBy')(Object.keys(value).map(function(i) { return value[i]; }), key);

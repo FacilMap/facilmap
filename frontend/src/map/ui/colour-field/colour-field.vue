@@ -1,12 +1,14 @@
-<span>
-	<b-input-group>
+<div :id="`${id}-container`">
+	<b-input-group :id="`${id}-input-group`">
 		<b-input-group-prepend>
-			<b-button :id="`${id}-colour-field`" :style="{ backgroundColor: `#${value}` }" class="dropdown-toggle"></b-button>
+			<b-input-group-text :style="{ backgroundColor: `#${value}` }">
+				<span style="width: 24px"></span>
+			</b-input-group-text>
 		</b-input-group-prepend>
-		<b-form-input v-bind="$props" v-on="$listeners"></b-form-input>
+		<b-form-input v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
 	</b-input-group>
 
-	<b-popover :target="`${id}-colour-field`" triggers="click blur" placement="bottom" custom-class="fm-colour-field">
+	<FieldPopover :show.sync="popoverOpen" :container="`${id}-container`" :target="`${id}-input-group`" custom-class="fm-colour-field" @keydown.esc="handleEscape">
 		<Saturation :value="val" @change="handleChange"></Saturation>
 		<Hue :value="val" @change="handleChange"></Hue>
 		<ul>
@@ -14,5 +16,5 @@
 				<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="$emit('input', colour)"></a>
 			</li>
 		</ul>
-	</b-popover>
-</span>
+	</FieldPopover>
+</div>

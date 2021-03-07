@@ -8,6 +8,7 @@ import WithRender from "./selection.vue";
 import MarkerInfo from "../marker-info/marker-info";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
+import LineInfo from "../line-info/line-info";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -23,7 +24,7 @@ function byType<T extends SelectedItem["type"]>(items: SelectedItem[], type: T):
 
 @WithRender
 @Component({
-	components: { MarkerInfo }
+	components: { LineInfo, MarkerInfo }
 })
 export default class Selection extends Vue {
 

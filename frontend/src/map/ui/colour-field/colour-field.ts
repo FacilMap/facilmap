@@ -4,6 +4,7 @@ import { BFormInput } from "bootstrap-vue";
 import { Component } from "vue-property-decorator";
 import { ColorMixin, Hue, Saturation } from "vue-color";
 import "./colour-field.scss";
+import FieldPopover from "../field-popover/field-popover";
 
 function normalizeData(value: string) {
 	return ColorMixin.data.apply({ value }).val;
@@ -11,14 +12,16 @@ function normalizeData(value: string) {
 
 @WithRender
 @Component({
-	components: { Hue, Saturation },
+	components: { FieldPopover, Hue, Saturation },
 	props: {
 		...(BFormInput as any).options.props
 	}
 })
 export default class ColourField extends Vue {
 
+	id!: string;
 	value!: string;
+	popoverOpen = false;
 
 	colours = [ "ffffff", "ffccc9", "ffce93", "fffc9e", "ffffc7", "9aff99", "96fffb", "cdffff", "cbcefb", "cfcfcf", "fd6864",
 	"fe996b", "fffe65", "fcff2f", "67fd9a", "38fff8", "68fdff", "9698ed", "c0c0c0", "fe0000", "f8a102", "ffcc67", "f8ff00", "34ff34",
@@ -32,6 +35,15 @@ export default class ColourField extends Vue {
 
 	handleChange(val: any): void {
 		this.$emit('input', normalizeData(val).hex.replace(/^#/, '').toLowerCase());
+	}
+
+	handleEscape(event: KeyboardEvent): void {
+		if (this.popoverOpen) {
+			event.preventDefault();
+			event.stopPropagation(); // Prevent closing modal
+			this.popoverOpen = false;
+			document.getElementById(this.id)!.focus();
+		}
 	}
 
 }

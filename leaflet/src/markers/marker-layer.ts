@@ -1,6 +1,6 @@
 import { Marker } from "facilmap-types";
 import L, { LatLngExpression, LeafletMouseEvent, Map, Marker as LeafletMarker, MarkerOptions } from "leaflet";
-import { createMarkerIcon } from "../utils/icons";
+import { getMarkerIcon } from "../utils/icons";
 import { setLayerPane } from "leaflet-highlightable-layers";
 import "./marker-layer.scss";
 
@@ -10,7 +10,6 @@ Map.addInitHook(function (this: Map) {
 
 export interface MarkerLayerOptions extends MarkerOptions {
 	marker?: Partial<Marker> & Pick<Marker, 'colour' | 'size' | 'symbol' | 'shape'>;
-	padding?: number;
 	highlight?: boolean;
 	raised?: boolean;
 }
@@ -71,7 +70,7 @@ export default class MarkerLayer extends LeafletMarker {
 
 	_initIcon(): void {
 		if (this.options.marker)
-			this.options.icon = createMarkerIcon(this.options.marker.colour, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.padding, this.options.highlight);
+			this.options.icon = getMarkerIcon(this.options.marker.colour, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.highlight);
 
 		super._initIcon();
 

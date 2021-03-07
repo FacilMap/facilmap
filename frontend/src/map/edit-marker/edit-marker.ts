@@ -1,6 +1,6 @@
 import WithRender from "./edit-marker.vue";
 import Vue from "vue";
-import { ID, Marker } from "facilmap-types";
+import { ID, Marker, Type } from "facilmap-types";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import { Component, Prop, Watch } from "vue-property-decorator";
@@ -11,10 +11,13 @@ import { showErrorToast } from "../../utils/toasts";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
 import ColourField from "../ui/colour-field/colour-field";
+import SymbolField from "../ui/symbol-field/symbol-field";
+import ShapeField from "../ui/shape-field/shape-field";
+import FieldInput from "../ui/field-input/field-input";
 
 @WithRender
 @Component({
-	components: { ColourField, FormModal, ValidationProvider }
+	components: { ColourField, FieldInput, FormModal, ShapeField, SymbolField, ValidationProvider }
 })
 export default class EditMarker extends Vue {
 
@@ -38,13 +41,19 @@ export default class EditMarker extends Vue {
 		return this.client.markers[this.markerId];
 	}
 
+	get types(): Type[] {
+		return Object.values(this.client.types).filter((type) => type.type === "marker");
+	}
+
 	@Watch("originalMarker", { deep: true })
 	handleChangeMarker(newMarker: Marker | undefined, oldMarker: Marker): void {
-		if (!newMarker) {
-			this.$bvModal.hide(this.id);
-			// TODO: Show message
-		} else {
-			mergeObject(oldMarker, newMarker, this.marker);
+		if (this.marker) {
+			if (!newMarker) {
+				this.$bvModal.hide(this.id);
+				// TODO: Show message
+			} else {
+				mergeObject(oldMarker, newMarker, this.marker);
+			}
 		}
 	}
 

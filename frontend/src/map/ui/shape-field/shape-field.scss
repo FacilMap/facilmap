@@ -1,0 +1,33 @@
+.fm-shape-field-container {
+	position: relative;
+}
+
+.fm-shape-field {
+	.popover-body {
+		display: flex;
+		flex-direction: column;
+	}
+
+	ul {
+		margin: 10px 0 0 0;
+		padding: 0;
+		list-style-type: none;
+		display: flex;
+		flex-wrap: wrap;
+		overflow-y: auto;
+		max-height: 200px;
+
+		li {
+			display: flex;
+		}
+
+		a {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-grow: 1;
+			color: inherit;
+			padding: 5px 8px;
+		}
+	}
+}

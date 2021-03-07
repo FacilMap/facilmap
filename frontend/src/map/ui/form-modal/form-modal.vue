@@ -19,5 +19,17 @@
 		</b-form>
 
 		<slot name="after-form"></slot>
+
+		<template #modal-footer="{ ok, cancel }">
+			<slot name="footer-left"></slot>
+			<div style="flex-grow: 1"></div>
+			<b-button v-if="!noCancel" variant="secondary" @click="cancel" :disabled="isSaving">
+				{{isModified ? "Cancel" : "Close"}}
+			</b-button>
+			<b-button v-if="noCancel || isModified || isCreate" variant="primary" @click="ok" :disabled="isSaving">
+				<b-spinner small v-if="isSaving"></b-spinner>
+				{{isCreate ? "Create" : "Save"}}
+			</b-button>
+		</template>
 	</b-modal>
 </ValidationObserver>

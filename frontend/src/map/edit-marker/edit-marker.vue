@@ -23,26 +23,28 @@
 			<b-form-spinbutton id="fm-edit-marker-size-input" v-model="marker.size" min="15"></b-form-spinbutton>
 		</b-form-group>
 
-		<b-form-group v-show="canControl('symbol')" label="Icon" label-for="fm-edit-marker-symbol-input" label-cols-sm="3">
-			<!-- TODO: Icon picker -->
-			<b-form-input id="fm-edit-marker-symbol-input" v-model="marker.symbol"></b-form-input>
-		</b-form-group>
+		<ValidationProvider name="Icon" v-slot="v" rules="symbol">
+			<b-form-group v-show="canControl('symbol')" label="Icon" label-for="fm-edit-marker-symbol-input" label-cols-sm="3" :state="v | validationState">
+				<SymbolField id="fm-edit-marker-symbol-input" v-model="marker.symbol" :state="v | validationState"></SymbolField>
+				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+			</b-form-group>
+		</ValidationProvider>
 
-		<b-form-group v-show="canControl('shape')" label="Shape" label-for="fm-edit-marker-shape-input" label-cols-sm="3">
-			<!-- TODO: Shape picker -->
-			<b-form-input id="fm-edit-marker-shape-input" v-model="marker.shape"></b-form-input>
-		</b-form-group>
+		<ValidationProvider name="Shape" v-slot="v" rules="shape">
+			<b-form-group v-show="canControl('shape')" label="Shape" label-for="fm-edit-marker-shape-input" label-cols-sm="3" :state="v | validationState">
+				<ShapeField id="fm-edit-marker-shape-input" v-model="marker.shape" :state="v | validationState"></ShapeField>
+				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+			</b-form-group>
+		</ValidationProvider>
 
 		<b-form-group v-for="(field, idx in client.types[marker.typeId].fields" :label="field.name" :label-for="`fm-edit-marker-${idx}-input`" label-cols-sm="3">
-			<!-- TODO: Field input -->
-			<b-form-input :id="`fm-edit-marker-${idx}-input`" v-model="marker.data[field.name]"></b-form-input>
+			<FieldInput :id="`fm-edit-marker-${idx}-input`" :field="field" v-model="marker.data[field.name]"></FieldInput>
 		</b-form-group>
+	</template>
 
-	<!-- <div class="btn-group pull-left dropup" uib-dropdown keyboard-nav="true" ng-if="(client.types | fmPropertyCount:{type:'marker'}) > 1">
-		<button id="change-type-button" type="button" class="btn btn-default" uib-dropdown-toggle>Change type <span class="caret"></span></button>
-		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="change-type-button" uib-dropdown-menu>
-			<li role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'marker'}" ng-class="{active: type.id == marker.typeId}"><a href="javascript:" ng-click="marker.typeId = type.id">{{type.name}}</a></li>
-		</ul>
-	</div> -->
+	<template #footer-left>
+		<b-dropdown dropup v-if="types.length > 1" text="Change type">
+			<b-dropdown-item v-for="type in types" :active="type.id == marker.typeId" @click="marker.typeId = type.id">{{type.name}}</b-dropdown-item>
+		</b-dropdown>
 	</template>
 </FormModal>

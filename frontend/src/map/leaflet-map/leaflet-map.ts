@@ -6,7 +6,7 @@ import "./leaflet-map.scss";
 import { InjectClient } from "../client/client";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, createSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, RouteLayer, SearchResultsLayer, VisibleLayers } from "facilmap-leaflet";
+import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, RouteLayer, SearchResultsLayer, VisibleLayers } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -108,7 +108,7 @@ export default class LeafletMap extends Vue {
             searchResultsLayer: new SearchResultsLayer().addTo(map)
         };
 
-        $(this.mapComponents.locateControl._container).find("a").append(createSymbolHtml("currentColor", "1.5em", "screenshot"));
+        $(this.mapComponents.locateControl._container).find("a").append(getSymbolHtml("currentColor", "1.5em", "screenshot"));
 
         (async () => {
             if (!map._loaded) {

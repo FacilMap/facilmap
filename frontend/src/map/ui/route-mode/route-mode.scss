@@ -1,17 +1,17 @@
-:local(.className) {
+.fm-route-mode {
 	.btn-group .btn {
 		padding-left: 10px;
 		padding-right: 10px;
 	}
 
-	&.dropdown-menu {
+	.dropdown-menu {
 		width: 380px;
 		font-size: 0; /* https://stackoverflow.com/a/5647640/242365 */
 
 		li {
 			font-size: 14px;
 
-			&[role=menuitem]:not(.long) {
+			&.column {
 				display: inline-block;
 				width: 50%;
 			}

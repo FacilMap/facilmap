@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>facilmap-leaflet Example</title>
+		<style>
+			span {
+				display: inline-block;
+				height: 50px;
+				background: #faa;
+				margin: 5px;
+			}
+
+			#icons span {
+				width: 50px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<script src="https://unpkg.com/leaflet"></script>
+		<!-- <script src="https://unpkg.com/socket.io-client/dist/socket.io.js"></script> -->
+		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
+
+		<script type="text/javascript">
+			function createIcons(id, createIcon) {
+				const el = document.createElement("div");
+				el.id = id;
+				document.body.appendChild(el);
+				for (const icon of ["", "O", "g", "j", "a", "*", ...L.FacilMap.symbolList]) {
+					const span = document.createElement('span');
+					span.innerHTML = createIcon(icon);
+					el.appendChild(span);
+				}
+			}
+
+			createIcons("icons", (icon) => L.FacilMap.getSymbolHtml("000000", 50, icon));
+			createIcons("icons-circle", (icon) => L.FacilMap.getMarkerHtml("ccffcc", 50, icon, "circle"));
+			createIcons("icons-circle-highlight", (icon) => L.FacilMap.getMarkerHtml("ccffcc", 50, icon, "circle", true));
+			createIcons("icons-drop", (icon) => L.FacilMap.getMarkerHtml("ccffcc", 50, icon, "drop"));
+			createIcons("icons-drop-highlight", (icon) => L.FacilMap.getMarkerHtml("ccffcc", 50, icon, "drop", true));
+		</script>
+	</body>
+</html>
