@@ -13,12 +13,12 @@ type FieldBase<isUpdate extends boolean> = {
 	controlSymbol?: boolean;
 	controlShape?: boolean;
 	controlWidth?: boolean;
-	options?: Array<FieldOption<isUpdate>>;
+	options?: Array<FieldOptionBase<isUpdate>>;
 } & (isUpdate extends true ? {
 	oldName?: string;
 } : { });
 
-type FieldOption<isUpdate extends boolean> = {
+type FieldOptionBase<isUpdate extends boolean> = {
 	value: string;
 	colour?: Colour;
 	size?: number;
@@ -30,7 +30,9 @@ type FieldOption<isUpdate extends boolean> = {
 } : { });
 
 export type Field = FieldBase<false>;
-export type FieldOptions = Array<FieldOption<false>>;
+export type FieldUpdate = FieldBase<true>;
+export type FieldOption = FieldOptionBase<false>;
+export type FieldOptionUpdate = FieldOptionBase<true>;
 
 type TypeBase<isUpdate extends boolean> = {
 	id: ID;
@@ -49,6 +51,7 @@ type TypeBase<isUpdate extends boolean> = {
 	widthFixed?: boolean;
 	defaultMode?: RouteMode | null;
 	modeFixed?: boolean;
+	showInLegend?: boolean;
 } & (isUpdate extends false ? {
 	type: ObjectType;
 } : {});

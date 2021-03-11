@@ -134,19 +134,20 @@ let idCounter = 0;
 
 export function getMarkerCode(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
     const borderColour = makeTextColour(colour, 0.3);
+    const id = `${idCounter++}`;
 
     const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     const shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
         .replace(/%BORDER_COLOUR%/g, "#"+borderColour)
-        .replace(/%COLOUR%/g, colour == "rainbow" ? "url(#rainbow)" : "#" + colour)
+        .replace(/%COLOUR%/g, colour == "rainbow" ? `url(#fm-rainbow-${id})` : "#" + colour)
         .replace(/%SYMBOL%/g, getSymbolCode("#"+borderColour, 24, symbol))
-        .replace(/%ID%/g, `${idCounter++}`);
+        .replace(/%ID%/g, id);
 
     const scale = height / shapeObj.height;
 
     return (
         `<g transform="scale(${scale})">` +
-            (colour == "rainbow" ? `<defs><linearGradient id="rainbow" x2="0" y2="100%">${RAINBOW_STOPS}</linearGradient></defs>` : '') +
+            (colour == "rainbow" ? `<defs><linearGradient id="fm-rainbow-${id}" x2="0" y2="100%">${RAINBOW_STOPS}</linearGradient></defs>` : '') +
             shapeCode +
         `</g>`
     );

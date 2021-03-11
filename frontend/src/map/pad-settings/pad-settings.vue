@@ -10,7 +10,7 @@
 	@show="initialize"
 >
 	<template v-if="padData">
-		<ValidationProvider name="Admin link" v-slot="v" rules="required|padId">
+		<ValidationProvider name="Admin link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Admin link" label-for="admin-link-input" label-cols-sm="3" :state="v | validationState">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="admin-link-input" v-model="padData.adminId" :state="v | validationState"></b-form-input>
@@ -25,7 +25,7 @@
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider name="Editable link" v-slot="v" rules="required|padId">
+		<ValidationProvider name="Editable link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Editable link" label-for="write-link-input" label-cols-sm="3" :state="v | validationState">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="write-link-input" v-model="padData.writeId" :state="v | validationState"></b-form-input>
@@ -40,7 +40,7 @@
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId">
+		<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Read-only link link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="read-link-input" v-model="padData.id" :state="v | validationState"></b-form-input>
@@ -89,7 +89,11 @@
 			</template>
 		</b-form-group>
 
-		<button type="submit" class="d-none"></button>
+		<ValidationProvider vid="padData" ref="padDataValidationProvider" v-slot="v" rules="" immediate>
+			<b-form-group :state="v | validationState">
+				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+			</b-form-group>
+		</ValidationProvider>
 	</template>
 
 	<template #after-form v-if="padData && !isCreate">
@@ -104,7 +108,7 @@
 					</b-input-group-append>
 				</b-input-group>
 				<template #description>
-					To delete this map, type <code>DELETE</code> into the field.
+					To delete this map, type <code>DELETE</code> into the field and click the “Delete map” button.
 				</template>
 			</b-form-group>
 		</b-form>

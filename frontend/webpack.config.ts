@@ -1,6 +1,7 @@
 import webpack, { Configuration } from "webpack";
 import copyPlugin from "copy-webpack-plugin";
 import htmlPlugin from "html-webpack-plugin";
+import { compile, CompilerOptions } from "vue-template-compiler";
 //import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 /*
@@ -80,6 +81,9 @@ module.exports = (env: any, argv: any): Configuration => {
 					options: {
 						transformAssetUrls: {
 							img: 'src'
+						},
+						compiler: {
+							compile: (template: string, options: CompilerOptions) => compile(template, { ...options, whitespace: "condense" })
 						}
 					}
 				}

@@ -6,7 +6,7 @@
 		<b-nav-item-dropdown v-if="!client.readonly && client.padData" text="Add" :disabled="!!mapContext.interaction" right>
 			<b-dropdown-item v-for="type in client.types" :disabled="!!mapContext.interaction" href="javascript:" @click="addObject(type)">{{type.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="client.writable == 2"></b-dropdown-divider>
-			<b-dropdown-item v-if="client.writable == 2" :disabled="!!mapContext.interaction" href="javascript:" @click="editObjectTypes()">Manage types</b-dropdown-item>
+			<b-dropdown-item v-if="client.writable == 2" :disabled="!!mapContext.interaction" href="javascript:" v-b-modal.fm-toolbox-manage-types>Manage types</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)" text="Views" right>
 			<b-dropdown-item v-for="view in client.views" href="javascript:" @click="displayView(view)">{{view.name}}</b-dropdown-item>
@@ -45,4 +45,5 @@
 	<PadSettings v-if="client.padData" id="fm-toolbox-edit-pad"></PadSettings>
 	<SaveView v-if="client.padData" id="fm-toolbox-save-view"></SaveView>
 	<ManageViews v-if="client.padData" id="fm-toolbox-manage-views"></ManageViews>
+	<ManageTypes v-if="client.padData" id="fm-toolbox-manage-types"></ManageTypes>
 </div>

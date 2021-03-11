@@ -3,10 +3,17 @@ import Vue from "vue";
 import { BFormInput } from "bootstrap-vue";
 import "./symbol-field.scss";
 import { getSymbolHtml, symbolList } from "facilmap-leaflet";
-import { Component, Ref } from "vue-property-decorator";
+import { Component, Prop, Ref } from "vue-property-decorator";
 import Icon from "../icon/icon";
 import { quoteHtml } from "facilmap-utils";
 import FieldPopover from "../field-popover/field-popover";
+import { extend } from "vee-validate";
+import { getUniqueId } from "../../../utils/utils";
+
+extend("symbol", {
+	validate: (symbol: string) => (symbol.length == 1 || symbolList.includes(symbol)),
+	message: "Unknown icon"
+});
 
 @WithRender
 @Component({
@@ -17,12 +24,16 @@ import FieldPopover from "../field-popover/field-popover";
 })
 export default class SymbolField extends Vue {
 
-	@Ref() readonly popover!: FieldPopover;
+	@Prop({ type: Boolean, default: false }) raised!: boolean;
 
-	id!: string;
+	id?: string;
 	value!: string | undefined;
 	filter = "";
 	popoverOpen = false;
+
+	get effId(): string {
+		return this.id ?? getUniqueId("fm-symbol-field");
+	}
 
 	get filteredSymbols(): string[] {
 		const lowerFilter = this.filter.trim().toLowerCase();
@@ -55,7 +66,7 @@ export default class SymbolField extends Vue {
 			event.preventDefault();
 			event.stopPropagation(); // Prevent closing modal
 			this.popoverOpen = false;
-			document.getElementById(this.id)!.focus();
+			document.getElementById(this.effId)!.focus();
 		}
 	}
 

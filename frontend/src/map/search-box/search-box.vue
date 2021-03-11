@@ -1,6 +1,6 @@
 <div class="fm-search-box" :class="{ isNarrow }" v-touch:start="handleTouchStart" v-touch:moving="handleTouchMove" v-touch:end="handleTouchEnd">
 	<b-card no-body>
-		<b-tabs card align="center" @changed="handleChanged" v-model="tab">
+		<b-tabs card align="center" v-model="tab" ref="tabsComponent" @changed="handleChanged" @activate-tab="handleActivateTab">
 			<portal-target name="fm-search-box" multiple></portal-target>
 		</b-tabs>
 	</b-card>

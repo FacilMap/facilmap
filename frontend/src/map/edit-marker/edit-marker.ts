@@ -14,10 +14,11 @@ import ColourField from "../ui/colour-field/colour-field";
 import SymbolField from "../ui/symbol-field/symbol-field";
 import ShapeField from "../ui/shape-field/shape-field";
 import FieldInput from "../ui/field-input/field-input";
+import SizeField from "../ui/size-field/size-field";
 
 @WithRender
 @Component({
-	components: { ColourField, FieldInput, FormModal, ShapeField, SymbolField, ValidationProvider }
+	components: { ColourField, FieldInput, FormModal, ShapeField, SizeField, SymbolField, ValidationProvider }
 })
 export default class EditMarker extends Vue {
 

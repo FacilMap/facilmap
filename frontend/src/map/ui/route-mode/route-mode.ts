@@ -131,12 +131,12 @@ export default class RouteMode extends Vue {
 
 	@Watch("value")
 	handleValueChange(newMode: RouteModeType): void {
-		this.decodedMode = decodeRouteMode(this.value ?? "car");
+		this.decodedMode = decodeRouteMode(newMode ?? "car");
 	}
 
 	@Watch("decodedMode", { deep: true })
-	handleModeChange(newMode: DecodedRouteMode, oldMode: DecodedRouteMode): void {
-		this.$emit("input", encodeRouteMode(this.decodedMode));
+	handleModeChange(newMode: DecodedRouteMode): void {
+		this.$emit("input", encodeRouteMode(newMode));
 	}
 
 	get types(): Array<[Mode, Type]> {

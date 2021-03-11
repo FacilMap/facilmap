@@ -3,11 +3,18 @@ import Vue from "vue";
 import { BFormInput } from "bootstrap-vue";
 import "./shape-field.scss";
 import { getMarkerUrl, shapeList } from "facilmap-leaflet";
-import { Component } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import Icon from "../icon/icon";
 import { quoteHtml } from "facilmap-utils";
 import FieldPopover from "../field-popover/field-popover";
 import { Shape } from "facilmap-types";
+import { extend } from "vee-validate";
+import { getUniqueId } from "../../../utils/utils";
+
+extend("shape", {
+	validate: (shape: string) => shapeList.includes(shape as Shape),
+	message: "Unknown shape"
+});
 
 @WithRender
 @Component({
@@ -18,10 +25,16 @@ import { Shape } from "facilmap-types";
 })
 export default class ShapeField extends Vue {
 
-	id!: string;
+	@Prop({ type: Boolean, default: false }) raised!: boolean;
+
+	id?: string;
 	value!: Shape | undefined;
 	filter = "";
 	popoverOpen = false;
+
+	get effId(): string {
+		return this.id ?? getUniqueId("fm-shape-field");
+	}
 
 	get valueSrc(): string {
 		return getMarkerUrl("000000", 25, undefined, this.value);
@@ -56,7 +69,7 @@ export default class ShapeField extends Vue {
 			event.preventDefault();
 			event.stopPropagation(); // Prevent closing modal
 			this.popoverOpen = false;
-			document.getElementById(this.id)!.focus();
+			document.getElementById(this.effId)!.focus();
 		}
 	}
 

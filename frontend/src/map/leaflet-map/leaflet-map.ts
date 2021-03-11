@@ -16,6 +16,7 @@ import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import $ from "jquery";
 import { VueDecorator } from "vue-class-component";
 import { SelectedItem } from "../selection/selection";
+import { FilterFunc } from "facilmap-utils";
 
 const MAP_COMPONENTS_KEY = "fm-map-components";
 const MAP_CONTEXT_KEY = "fm-map-context";
@@ -64,6 +65,7 @@ export interface MapContext {
     zoom: number;
     layers: VisibleLayers;
     filter: string | undefined;
+    filterFunc: FilterFunc;
     hash: string;
     showToolbox: boolean;
     selection: SelectedItem[];
@@ -128,6 +130,7 @@ export default class LeafletMap extends Vue {
             zoom: map._loaded ? map.getZoom() : 1,
             layers: getVisibleLayers(map),
             filter: map.fmFilter,
+            filterFunc: map.fmFilterFunc,
             hash: location.hash.replace(/^#/, ""),
             showToolbox: false,
             selection: [],
@@ -141,6 +144,7 @@ export default class LeafletMap extends Vue {
         
         map.on("fmFilter", () => {
             this.mapContext.filter = map.fmFilter;
+            this.mapContext.filterFunc = map.fmFilterFunc;
         });
 
         map.on("layeradd layerremove", () => {

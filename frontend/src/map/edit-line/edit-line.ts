@@ -15,10 +15,11 @@ import SymbolField from "../ui/symbol-field/symbol-field";
 import ShapeField from "../ui/shape-field/shape-field";
 import FieldInput from "../ui/field-input/field-input";
 import RouteMode from "../ui/route-mode/route-mode";
+import WidthField from "../ui/width-field/width-field";
 
 @WithRender
 @Component({
-	components: { ColourField, FieldInput, FormModal, RouteMode, ShapeField, SymbolField, ValidationProvider }
+	components: { ColourField, FieldInput, FormModal, RouteMode, ShapeField, SymbolField, ValidationProvider, WidthField }
 })
 export default class EditLine extends Vue {
 

@@ -17,6 +17,7 @@ export default class FormModal extends Vue {
 	@Prop({ type: Boolean }) readonly isSaving?: boolean;
 	@Prop({ type: Boolean }) readonly isCreate?: boolean;
 	@Prop({ type: Boolean, default: true }) readonly isModified?: boolean;
+	@Prop({ type: String }) readonly size?: string;
 
 	handleSubmit(e: Event): void {
 		this.$emit("submit", e);

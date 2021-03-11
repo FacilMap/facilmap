@@ -1,7 +1,7 @@
-import { Component, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import WithRender from "./pad-settings.vue";
 import Vue from "vue";
-import { ValidationProvider } from "vee-validate";
+import { extend, ValidationProvider } from "vee-validate";
 import context from "../context";
 import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 import { clone, generateRandomPadId } from "facilmap-utils";
@@ -13,6 +13,20 @@ import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
 import { showErrorToast } from "../../utils/toasts";
 
+extend("padId", {
+	validate: (id: string) => !id.includes("/"),
+	message: "May not contain a slash."
+});
+
+extend("padIdUnique", {
+	validate: (id: string, args: any) => {
+		const padData: PadData = args.padData;
+		return !padData || [padData.id, padData.writeId, padData.adminId].filter((v) => v == id).length <= 1;
+	},
+	message: "The same link cannot be used for different access levels.",
+	params: ["padData"]
+})
+
 @WithRender
 @Component({
     components: { FormModal, ValidationProvider }
@@ -20,6 +34,8 @@ import { showErrorToast } from "../../utils/toasts";
 export default class PadSettings extends Vue {
 
 	@InjectClient() client!: Client;
+
+	@Ref() padDataValidationProvider?: InstanceType<typeof ValidationProvider>;
 
 	@Prop({ type: String, required: true }) readonly id!: string;
 	@Prop({ type: String }) readonly proposedAdminId?: string;
@@ -61,6 +77,11 @@ export default class PadSettings extends Vue {
 	handlePadDataChange(newPadData: PadData, oldPadData: PadData): void {
 		if (!this.isCreate && this.padData)
 			mergeObject(oldPadData, newPadData, this.padData);
+	}
+
+	@Watch("padData", { deep: true })
+	handleChange(padData: PadDataCreate | PadDataUpdate): void {
+		this.padDataValidationProvider?.validate({ ...padData });
 	}
 
 	/*

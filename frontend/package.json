@@ -55,7 +55,8 @@
     "vue-class-component": "^7.2.6",
     "vue-color": "^2.8.1",
     "vue-property-decorator": "^9.1.2",
-    "vue2-touch-events": "^3.2.0"
+    "vue2-touch-events": "^3.2.0",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^6.4.0",

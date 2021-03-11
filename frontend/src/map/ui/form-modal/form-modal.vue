@@ -2,7 +2,7 @@
 	<b-modal
 		:id="id"
 		:title="title"
-		size="lg"
+		:size="size || 'lg'"
 		:dialog-class="dialogClass"
 		:no-close-on-esc="noCancel" :no-close-on-backdrop="noCancel" :hide-header-close="noCancel" :ok-only="noCancel"
 		:busy="isSaving"
@@ -23,7 +23,7 @@
 		<template #modal-footer="{ ok, cancel }">
 			<slot name="footer-left"></slot>
 			<div style="flex-grow: 1"></div>
-			<b-button v-if="!noCancel" variant="secondary" @click="cancel" :disabled="isSaving">
+			<b-button v-if="!noCancel" :variant="noCancel || isModified || isCreate ? 'secondary' : 'primary'" @click="cancel" :disabled="isSaving">
 				{{isModified ? "Cancel" : "Close"}}
 			</b-button>
 			<b-button v-if="noCancel || isModified || isCreate" variant="primary" @click="ok" :disabled="isSaving">

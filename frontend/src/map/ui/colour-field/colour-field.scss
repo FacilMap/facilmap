@@ -1,5 +1,9 @@
+.fm-colour-field-container {
+	position: relative;
+}
+
 .fm-colour-field {
-	.popover-body {
+	.fm-field-popover-content {
 		display: grid;
 		grid-template: 100px 15px auto / auto;
 		gap: 15px;

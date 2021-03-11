@@ -57,7 +57,7 @@ export function _getMatchesWithBrackets(str: string, regexp: string): string[] {
 	return ret;
 }
 
-export function makeTypeFilter(previousFilter: string, typeId: ID, filteredData: boolean | Record<string, Record<string, boolean>>): string {
+export function makeTypeFilter(previousFilter: string = "", typeId: ID, filteredData: boolean | Record<string, Record<string, boolean>>): string {
 	function removePart(str: string, regexp: string[]) {
 		str = str || "";
 		for (const r of regexp) {

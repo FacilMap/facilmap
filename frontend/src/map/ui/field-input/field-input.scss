@@ -1,0 +1,11 @@
+.fm-field-input {
+
+	.custom-checkbox {
+		height: calc(1.5em + 0.75rem + 2px);
+	}
+
+	.custom-checkbox label::before, .custom-checkbox label::after {
+		top: calc(0.75em - 0.125rem + 1px);
+	}
+
+}

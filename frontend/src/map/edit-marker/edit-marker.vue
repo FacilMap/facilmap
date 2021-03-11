@@ -12,26 +12,28 @@
 			<b-form-input id="fm-edit-marker-name-input" v-model="marker.name"></b-form-input>
 		</b-form-group>
 
-		<ValidationProvider name="Colour" v-slot="v" rules="required|colour">
-			<b-form-group v-show="canControl('colour')" label="Colour" label-for="fm-edit-marker-colour-input" label-cols-sm="3" :state="v | validationState">
+		<ValidationProvider v-if="canControl('colour')" name="Colour" v-slot="v" rules="colour">
+			<b-form-group label="Colour" label-for="fm-edit-marker-colour-input" label-cols-sm="3" :state="v | validationState">
 				<ColourField id="fm-edit-marker-colour-input" v-model="marker.colour" :state="v | validationState"></ColourField>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 			</b-form-group>
 		</ValidationProvider>
 
-		<b-form-group v-show="canControl('size')" label="Size" label-for="fm-edit-marker-size-input" label-cols-sm="3">
-			<b-form-spinbutton id="fm-edit-marker-size-input" v-model="marker.size" min="15"></b-form-spinbutton>
-		</b-form-group>
+		<ValidationProvider v-if="canControl('size')" name="Size" v-slot="v" rules="size">
+			<b-form-group label="Size" label-for="fm-edit-marker-size-input" label-cols-sm="3">
+				<SizeField id="fm-edit-marker-size-input" v-model="marker.size"></SizeField>
+			</b-form-group>
+		</ValidationProvider>
 
-		<ValidationProvider name="Icon" v-slot="v" rules="symbol">
-			<b-form-group v-show="canControl('symbol')" label="Icon" label-for="fm-edit-marker-symbol-input" label-cols-sm="3" :state="v | validationState">
+		<ValidationProvider v-if="canControl('symbol')" name="Icon" v-slot="v" rules="symbol">
+			<b-form-group label="Icon" label-for="fm-edit-marker-symbol-input" label-cols-sm="3" :state="v | validationState">
 				<SymbolField id="fm-edit-marker-symbol-input" v-model="marker.symbol" :state="v | validationState"></SymbolField>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider name="Shape" v-slot="v" rules="shape">
-			<b-form-group v-show="canControl('shape')" label="Shape" label-for="fm-edit-marker-shape-input" label-cols-sm="3" :state="v | validationState">
+		<ValidationProvider v-if="canControl('shape')" name="Shape" v-slot="v" rules="shape">
+			<b-form-group label="Shape" label-for="fm-edit-marker-shape-input" label-cols-sm="3" :state="v | validationState">
 				<ShapeField id="fm-edit-marker-shape-input" v-model="marker.shape" :state="v | validationState"></ShapeField>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 			</b-form-group>

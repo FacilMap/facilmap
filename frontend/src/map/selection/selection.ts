@@ -67,6 +67,12 @@ export default class Selection extends Vue {
 	}
 
 	setSelectedItems(items: SelectedItem[]): void {
+		if (this.mapContext.selection.length == 0 && items.length > 0) {
+			setTimeout(() => {
+				this.$root.$emit("fmSearchBoxShowTab", "fm-selection-tab");
+			}, 0);
+		}
+
 		this.mapContext.selection = items;
 
 		this.mapComponents.markersLayer.setHighlightedMarkers(new Set(

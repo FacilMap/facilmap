@@ -51,7 +51,7 @@ export default class ManageViews extends Vue {
 
 			await this.client.deleteView({ id: view.id });
 		} catch (err) {
-			showErrorToast(this, `fm-save-view-error-${view.id}`, "Error deleting view", err);
+			showErrorToast(this, `fm-save-view-error-${view.id}`, `Error deleting view “${view.name}”`, err);
 		} finally {
 			Vue.delete(this.isDeleting, view.id);
 		}

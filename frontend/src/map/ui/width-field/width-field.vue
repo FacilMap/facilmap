@@ -1,0 +1,1 @@
+<b-form-spinbutton min="1" v-bind="$props" v-on="$listeners"></b-form-spinbutton>

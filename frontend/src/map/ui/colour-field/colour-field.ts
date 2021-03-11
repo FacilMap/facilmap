@@ -1,14 +1,21 @@
 import WithRender from "./colour-field.vue";
 import Vue from "vue";
 import { BFormInput } from "bootstrap-vue";
-import { Component } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import { ColorMixin, Hue, Saturation } from "vue-color";
 import "./colour-field.scss";
 import FieldPopover from "../field-popover/field-popover";
+import { extend } from "vee-validate";
+import { getUniqueId } from "../../../utils/utils";
 
 function normalizeData(value: string) {
 	return ColorMixin.data.apply({ value }).val;
 }
+
+extend("colour", {
+	validate: (colour: string) => !!colour.match(/^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/),
+	message: "Needs to be in 3-digit or 6-digit hex format, for example <code>f00</code> or <code>0000ff</code>."
+});
 
 @WithRender
 @Component({
@@ -19,8 +26,10 @@ function normalizeData(value: string) {
 })
 export default class ColourField extends Vue {
 
-	id!: string;
-	value!: string;
+	@Prop({ type: Boolean, default: false }) raised!: boolean;
+
+	id?: string;
+	value?: string;
 	popoverOpen = false;
 
 	colours = [ "ffffff", "ffccc9", "ffce93", "fffc9e", "ffffc7", "9aff99", "96fffb", "cdffff", "cbcefb", "cfcfcf", "fd6864",
@@ -29,8 +38,12 @@ export default class ColourField extends Vue {
 	"9a0000", "ce6301", "cd9934", "999903", "009901", "329a9d", "3531ff", "6200c9", "343434", "680100", "963400", "986536", "646809",
 	"036400", "34696d", "00009b", "303498", "000000", "330001", "643403", "663234", "343300", "013300", "003532", "010066", "340096" ];
 
+	get effId(): string {
+		return this.id ?? getUniqueId("fm-colour-field");
+	}
+
 	get val(): any {
-		return normalizeData(this.value);
+		return normalizeData(this.value ?? "");
 	}
 
 	handleChange(val: any): void {
@@ -42,7 +55,7 @@ export default class ColourField extends Vue {
 			event.preventDefault();
 			event.stopPropagation(); // Prevent closing modal
 			this.popoverOpen = false;
-			document.getElementById(this.id)!.focus();
+			document.getElementById(this.effId)!.focus();
 		}
 	}
 
