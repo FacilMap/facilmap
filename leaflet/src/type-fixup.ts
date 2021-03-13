@@ -34,5 +34,9 @@ declare module "leaflet" {
         //addData(geojson: Array<geojson.Feature> | geojson.GeoJSON): this;
     }
 
+    interface Map {
+        _loaded?: true;
+    }
+
     export const Hash: any;
 }

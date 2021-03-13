@@ -1,17 +1,17 @@
 <div class="fm-marker-info" v-if="marker">
 	<h2>{{marker.name}}</h2>
-	<dl class="row">
-		<dt class="col-sm-4">Coordinates</dt>
-		<dd class="col-sm-8">{{marker.lat | round(5)}}, {{marker.lon | round(5)}}</dd>
+	<dl>
+		<dt class="pos">Coordinates</dt>
+		<dd class="pos">{{marker.lat | round(5)}}, {{marker.lon | round(5)}}</dd>
 
 		<template v-if="marker.ele != null">
-			<dt class="col-sm-4 elevation">Elevation</dt>
-			<dd class="col-sm-8 elevation">{{marker.ele}} m</dd>
+			<dt class="elevation">Elevation</dt>
+			<dd class="elevation">{{marker.ele}} m</dd>
 		</template>
 
 		<template v-for="field in client.types[marker.typeId].fields">
-			<dt class="col-sm-4">{{field.name}}</dt>
-			<dd class="col-sm-8" v-html="$options.filters.fmFieldContent(marker.data[field.name], field)"></dd>
+			<dt>{{field.name}}</dt>
+			<dd v-html="$options.filters.fmFieldContent(marker.data[field.name], field)"></dd>
 		</template>
 	</dl>
 

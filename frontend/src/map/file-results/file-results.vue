@@ -1,22 +1,7 @@
-<div ng-class="[className, {'has-search-results': hasSearchResults = searchResults.views.length || searchResults.features.length > 0 || (searchResults.types | fmPropertyCount) > 0, 'has-map-results': hasMapResults = mapResults.length > 0, 'has-nothing': hasNothing = searchResults && !hasSearchResults && !hasMapResults}]">
-	<form ng-submit="search()">
-		<div class="form-group">
-			<div class="input-group">
-				<div class="has-feedback">
-					<input id="fm-search-input" type="search" class="form-control" ng-model="searchString" placeholder="Search" tabindex="1">
-					<a href="javascript:" class="reset-button form-control-feedback" ng-click="searchString=''; search()" ng-show="searchString.length > 0"><fm-icon fm-icon="clear" alt="Clear"></fm-icon></a>
-				</div>
-				<span class="input-group-btn">
-					<button type="submit" class="btn btn-default" tabindex="2"><fm-icon fm-icon="search" alt="Search"></fm-icon></button>
-					<button type="button" class="btn btn-default" ng-click="showRoutingForm()" tabindex="3" uib-tooltip="Switch to routing form" tooltip-append-to-body="true"><fm-icon fm-icon="road" alt="Route"></fm-icon></button>
-				</span>
-			</div>
-		</div>
-	</form>
+<div class="fm-file-results">
+	<b-alert v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" show variant="danger">No results have been found.</b-alert>
 
-	<div uib-alert class="alert-danger no-results" ng-if="hasNothing">No results have been found.</div>
-
-	<div class="fm-search-results" ng-if="hasSearchResults">
+	<div v-if="searchResults && searchResults.length > 0">
 		<div ng-if="searchResults.views.length > 0">
 			<h3>Views</h3>
 			<ul class="list-group">
@@ -74,6 +59,4 @@
 			</li>
 		</ul>
 	</div>
-
-	<a href="javascript:" class="fm-search-resize ui-resizable-handle ui-resizable-se"><fm-icon fm-icon="resize-horizontal"></fm-icon></a>
 </div>

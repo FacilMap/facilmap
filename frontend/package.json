@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@mapbox/togeojson": "^0.16.0",
+    "@types/hammerjs": "^2.0.39",
+    "@types/scrollparent": "^2.0.0",
     "blob": "^0.1.0",
     "bootstrap": "x",
     "bootstrap-touchspin": "^4.3.0",
@@ -36,6 +38,7 @@
     "facilmap-leaflet": "^2.7.0",
     "facilmap-utils": "^2.7.0",
     "file-saver": "^2.0.5",
+    "hammerjs": "^2.0.8",
     "jquery": "^3.5.1",
     "jquery-ui": "^1.12.1",
     "leaflet": "^1.7.1",
@@ -55,7 +58,6 @@
     "vue-class-component": "^7.2.6",
     "vue-color": "^2.8.1",
     "vue-property-decorator": "^9.1.2",
-    "vue2-touch-events": "^3.2.0",
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {

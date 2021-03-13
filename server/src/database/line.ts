@@ -168,7 +168,7 @@ export default class DatabaseLines {
 	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
 		const lineTemplate = {
 			...this.LineModel.build({ ...data, padId: padId }).toJSON(),
-			// data: data.data || { }
+			data: { }
 		} as Line;
 
 		const type = await this._db.types.getType(padId, data.typeId);

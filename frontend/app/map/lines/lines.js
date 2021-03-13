@@ -50,11 +50,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			_deleteLine: function(line) {
 			},
 			getZoomDestination(line) {
-				let bounds = fmUtils.fmToLeafletBbox(line);
-				return [
-					bounds.getCenter(),
-					Math.min(15, map.map.getBoundsZoom(bounds))
-				];
+				
 			},
 			showLineInfoBox: function(line) {
 				var scope = linePopupBaseScope.$new();

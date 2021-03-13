@@ -1,8 +1,10 @@
 import WithRender from "./sidebar.vue";
 import Vue from "vue";
-import { Component, Prop, Ref } from "vue-property-decorator";
+import { Component, Prop } from "vue-property-decorator";
 import context from "../../context";
 import $ from "jquery";
+import hammer from "hammerjs";
+import "./sidebar.scss";
 
 @WithRender
 @Component({
@@ -12,44 +14,44 @@ export default class Sidebar extends Vue {
 
 	@Prop({ type: String, required: true }) readonly id!: string;
 
+	sidebar!: HTMLElement;
+
 	touchStartX: number | null = null;
 	sidebarVisible = false;
 
-	get isNarrow() {
+	mounted(): void {
+		this.sidebar = (this.$el as any).querySelector(".b-sidebar");
+
+		const mc = new hammer.Manager(this.sidebar);
+		mc.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));
+		mc.on("pan", this.handleDragMove);
+		mc.on("panend", this.handleDragEnd);
+	}
+
+	beforeDestroy(): void {
+		this.sidebar = undefined as any;
+	}
+
+	get isNarrow(): boolean {
 		return context.isNarrow;
 	}
 
-	handleTouchStart(event: TouchEvent) {
-		if(event.touches && event.touches[0] && $(event.target as EventTarget).closest("[draggable=true]").length == 0) {
-			this.touchStartX = event.touches[0].clientX;
-			$(this.$el).find(".b-sidebar").css("transition", "none");
+	handleDragMove(event: any): void {
+		$(this.sidebar).css("margin-right", `-${event.deltaX}px`);
+	}
+
+	handleDragEnd(event: any): void {
+		if (event.velocityX > 0.3 || event.deltaX > this.sidebar.offsetWidth / 2) {
+			this.sidebarVisible = false;
+		} else {
+			$(this.sidebar).animate({
+				marginRight: 0
+			});
 		}
 	}
 
-	handleTouchMove(event: TouchEvent) {
-		if(this.touchStartX != null && event.touches[0]) {
-			const right = Math.min(this.touchStartX - event.touches[0].clientX, 0);
-			$(this.$el).find(".b-sidebar").css("margin-right", `${right}px`);
-		}
-	}
-
-	handleTouchEnd(event: TouchEvent) {
-		if(this.touchStartX != null && event.changedTouches[0]) {
-			const right = Math.min(this.touchStartX - event.changedTouches[0].clientX, 0);
-			if(right < -($(this.$el).find(".b-sidebar").width() as number / 2)) {
-				this.sidebarVisible = false;
-				setTimeout(() => {
-					$(this.$el).find(".b-sidebar").css("margin-right", "");
-				}, 0);
-			} else {
-				$(this.$el).find(".b-sidebar").css({
-					"transition": "margin-right 0.4s",
-					"margin-right": ""
-				});
-			}
-
-			this.touchStartX = null;
-		}
+	handleSidebarHidden(): void {
+		$(this.sidebar).css("margin-right", "");
 	}
 
 }

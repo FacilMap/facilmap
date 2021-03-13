@@ -1,12 +1,182 @@
-import fm from '../app';
-import $ from 'jquery';
-import L from 'leaflet';
-import ng from 'angular';
-import 'jquery-ui';
-import 'jquery-ui/ui/widgets/resizable';
-import css from './search-query.scss';
+import WithRender from "./search-form.vue";
+import "./search-form.scss";
+import Vue from "vue";
+import { Component } from "vue-property-decorator";
+import Icon from "../ui/icon/icon";
+import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { decodeLonLatUrl, isSearchId } from "facilmap-utils";
+import Client from "facilmap-client";
+import { InjectClient } from "../client/client";
+import { showErrorToast } from "../../utils/toasts";
+import { FindOnMapResult, SearchResult } from "facilmap-types";
+import SearchResults from "../search-results/search-results";
+import context from "../context";
+import { SelectedItem } from "../../utils/selection";
+import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 
-fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
+@WithRender
+@Component({
+	components: { Icon, SearchResults }
+})
+export default class SearchForm extends Vue {
+	
+	@InjectMapComponents() mapComponents!: MapComponents;
+	@InjectClient() client!: Client;
+	@InjectMapContext() mapContext!: MapContext;
+
+	autofocus = !context.isNarrow && context.autofocus;
+	searchString = "";
+	autoZoom = true;
+	zoomToAll = false;
+	searchCounter = 0;
+
+	searchResults: SearchResult[] | null = null;
+	mapResults: FindOnMapResult[] | null = null;
+
+	async search(): Promise<void> {
+		this.reset();
+
+		const counter = ++this.searchCounter;
+
+		if(this.searchString.trim() != "") {
+			/* if(this.searchString.match(/ to /i)) {
+				scope.showRoutingForm();
+				return searchUi.routeUi.submit(noZoom);
+			} */
+
+			var lonlat = decodeLonLatUrl(this.searchString);
+			if(lonlat) {
+				this.mapComponents.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
+				return;
+			}
+
+			try {
+				const query = this.searchString;
+
+				const [searchResults, mapResults] = await Promise.all([
+					this.client.find({ query, loadUrls: true, elevation: true }),
+					this.client.padId ? this.client.findOnMap({ query }) : undefined
+				]);
+
+				if (counter != this.searchCounter)
+					return; // Another search has been started in the meantime
+
+				if(isSearchId(query) && Array.isArray(searchResults) && searchResults.length > 0 && searchResults[0].display_name)
+					this.searchString = searchResults[0].display_name;
+
+				if(typeof searchResults == "string")
+					return; // this.searchResults = parseFiles([ searchResults ]);
+
+				this.searchResults = searchResults;
+				this.mapComponents.searchResultsLayer.setResults(searchResults);
+				this.mapResults = mapResults ?? null;
+
+				if (this.autoZoom) {
+					if (this.zoomToAll)
+						this.zoomToAllResults();
+					else if (mapResults && mapResults.length > 0 && (mapResults[0].similarity == 1 || searchResults.length == 0))
+						this.showResult(mapResults[0]);
+					else if (searchResults.length > 0)
+						this.showResult(searchResults[0]);
+
+				}
+
+				/* if(scope.mapResults && scope.mapResults.length > 0 && (scope.mapResults[0].similarity == 1 || scope.searchResults.features.length == 0))
+					scope.showMapResult(scope.mapResults[0], noZoom);
+				else if(scope.searchResults.features.length > 0)
+					scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false)); */
+			} catch(err) {
+				showErrorToast(this, "fm-search-form-error", "Search error", err);
+			}
+		}
+	}
+
+	reset(): void {
+		this.searchCounter++;
+
+		if (this.activeResults && this.activeResults.length > 0)
+			this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((item) => item.type != "searchResult"));
+
+		this.$bvToast.hide("fm-search-form-error");
+		this.searchResults = null;
+		this.mapResults = null;
+		this.mapComponents.searchResultsLayer.setResults([]);
+	};
+
+	get activeResults(): Array<SearchResult | FindOnMapResult> {
+		return [
+			...(this.searchResults || []).filter((result) => this.mapContext.selection.some((item) => item.type == "searchResult" && item.result === result)),
+			...(this.mapResults || []).filter((result) => {
+				if (result.kind == "marker")
+					return this.mapContext.selection.some((item) => item.type == "marker" && item.id == result.id);
+				else if (result.kind == "line")
+					return this.mapContext.selection.some((item) => item.type == "line" && item.id == result.id);
+				else
+					return false;
+			})
+		];
+	}
+
+	showResult(result: SearchResult | FindOnMapResult, event?: MouseEvent): void {
+		const item: SelectedItem = "kind" in result ? { type: result.kind, id: result.id } : { type: "searchResult", result };
+		if (event && (event.ctrlKey || event.shiftKey))
+			this.mapComponents.selectionHandler.toggleItem(item);
+		else {
+			this.mapComponents.selectionHandler.setSelectedItems([item]);
+
+			if (this.autoZoom) {
+				if (this.zoomToAll)
+					this.unionZoomToResult(result);
+				else
+					this.zoomToResult(result);
+			}
+		}
+	}
+
+	zoomToResult(result: SearchResult | FindOnMapResult): void {
+		const dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
+		if (dest)
+			flyTo(this.mapComponents.map, dest);
+	}
+
+	unionZoomToResult(result: SearchResult | FindOnMapResult): void {
+		// Zoom to item, keep current map bounding box in view
+		let dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
+		if (dest)
+			dest = combineZoomDestinations([dest, { bounds: this.mapComponents.map.getBounds() }]);
+		if (dest)
+			flyTo(this.mapComponents.map, dest);
+	}
+
+	zoomToActiveResults(): void {
+		const dest = getZoomDestinationForResults(this.activeResults || []);
+		if (dest)
+			flyTo(this.mapComponents.map, dest);
+	}
+
+	zoomToAllResults(): void {
+		const dest = getZoomDestinationForResults([
+			...(this.searchResults || []),
+			...(this.mapResults || [])
+		]);
+		if (dest)
+			flyTo(this.mapComponents.map, dest);
+	}
+
+	toggleZoomToAll(): void {
+		this.zoomToAll = !this.zoomToAll;
+
+		if (this.autoZoom) {
+			if (this.zoomToAll)
+				this.zoomToAllResults();
+			else
+				this.zoomToActiveResults();
+		}
+	}
+
+}
+
+/* fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
 	return {
 		require: "^fmSearch",
 		scope: true,
@@ -26,56 +196,6 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			scope.infoBox = map.infoBox;
 
 			let currentInfoBox = null;
-
-			scope.search = function(noZoom) {
-				scope.reset();
-
-				if(scope.searchString.trim() != "") {
-					if(scope.searchString.match(/ to /i)) {
-						scope.showRoutingForm();
-						return searchUi.routeUi.submit(noZoom);
-					}
-
-					var lonlat = fmUtils.decodeLonLatUrl(scope.searchString);
-					if(lonlat)
-						return _flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
-
-					var q = scope.submittedSearchString = scope.searchString;
-					map.mapEvents.$broadcast("searchchange");
-
-					$q.all([
-						map.client.find({ query: scope.searchString, loadUrls: true, elevation: true }),
-						map.client.padId ? map.client.findOnMap({ query: scope.searchString }) : null
-					]).then(([ searchResults, mapResults ]) => {
-						if(q != scope.submittedSearchString)
-							return; // Another search has been started in the meantime
-
-						if(fmUtils.isSearchId(q) && searchResults.length > 0 && searchResults[0].display_name)
-							scope.searchString = q = searchResults[0].display_name;
-
-						if(typeof searchResults == "string") {
-							scope.showAll = true;
-							scope.searchResults = filesUi.parseFiles([ searchResults ]);
-						} else
-							scope.searchResults = { features: searchResults };
-
-						renderSearchResults();
-
-						for(let result of mapResults || [])
-							result.hashId = (result.kind == "marker" ? "m" : "l") + result.id;
-
-						scope.mapResults = mapResults;
-
-						if(scope.mapResults && scope.mapResults.length > 0 && (scope.mapResults[0].similarity == 1 || scope.searchResults.features.length == 0))
-							scope.showMapResult(scope.mapResults[0], noZoom);
-						else if(scope.searchResults.features.length > 0)
-							scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false));
-					}).catch(function(err) {
-						map.messages.showMessage("danger", err);
-					});
-				} else
-					map.mapEvents.$broadcast("searchchange");
-			};
 
 			scope.showResult = function(result, noZoom) {
 				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, null, true);
@@ -278,70 +398,6 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 				}
 			}
 
-			function renderResult(query, results, result, showPopup, layerGroup, onClose, highlight) {
-				if(showPopup) { // Do this first, so that any onClose function is called before creating the new result rendering
-					showResultInfoBox(query, results, result, () => {
-						if((result.marker && result.marker._map) || (result.layer && result.layer._map)) // Only rerender if it's still on the map
-							renderResult(query, results, result, false, layerGroup, onClose, false);
-						onClose && onClose();
-					});
-				}
-
-				if(result.layer) {
-					result.layer.remove();
-					result.layer = null;
-				}
-				if(result.marker) {
-					result.marker.remove();
-					result.marker = null;
-				}
-
-				if(!result.lat || !result.lon || (result.geojson && result.geojson.type != "Point")) { // If the geojson is just a point, we already render our own marker
-					result.layer = (new fmHighlightableLayers.GeoJSON(result.geojson, {
-						highlight,
-						markerOptions: {
-							colour: "ff0000",
-							size: 35,
-							highlight
-						}
-					}))
-						.on("click", function(e) {
-							renderResult(query, results, result, true, layerGroup, onClose, true);
-						}.fmWrapApply($rootScope))
-						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { sticky: true, offset: [ 20, 0 ] }));
-
-					layerGroup.addLayer(result.layer);
-				}
-
-				if(result.lat != null && result.lon != null) {
-					result.marker = (new fmHighlightableLayers.Marker([ result.lat, result.lon ], {
-						highlight,
-						colour: map.searchMarkerColour,
-						size: 35,
-						symbol: result.icon
-					}))
-						.on("click", function(e) {
-							renderResult(query, results, result, true, layerGroup, onClose, true);
-						}.fmWrapApply(scope))
-						.bindTooltip(result.display_name, $.extend({}, map.tooltipOptions, { offset: [ 20, 0 ] }));
-
-					layerGroup.addLayer(result.marker);
-				}
-			}
-
-			scope.reset = function() {
-				if(currentInfoBox) {
-					currentInfoBox.hide();
-					currentInfoBox = null;
-				}
-
-				scope.searchResults = null;
-				scope.mapResults = null;
-				scope.activeResult = null;
-				scope.submittedSearchString = "";
-				clearRenders();
-			};
-
 			function clearRenders() {
 				layerGroup.clearLayers();
 				if(scope.searchResults) {
@@ -350,39 +406,6 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 						result.layer = null;
 					});
 				}
-			}
-
-			function showResultInfoBox(query, results, result, onClose) {
-				var popupScope = $rootScope.$new();
-
-				popupScope.client = map.client;
-				popupScope.result = result;
-
-				popupScope.addToMap = function(type) {
-					scope.addResultToMap(result, type);
-				};
-
-				popupScope.useForRoute = function(mode) {
-					map.searchUi.setRouteDestination(query, mode, results, [ ], result);
-				};
-
-				let [center, zoom] = getZoomDestination(result);
-
-				currentInfoBox = map.infoBox.show({
-					template: require("./result-popup.html"),
-					scope: popupScope,
-					onCloseStart: () => {
-						onClose && onClose();
-
-						currentInfoBox = null;
-					},
-					onCloseEnd: () => {
-						popupScope.$destroy();
-					},
-					id: result.id,
-					center,
-					zoom
-				});
 			}
 
 			var queryUi = searchUi.queryUi = {
@@ -440,4 +463,4 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			var importUi = fmSearchImport(map);
 		}
 	};
-});
+}); */

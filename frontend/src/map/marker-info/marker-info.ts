@@ -5,7 +5,7 @@ import { ID, Marker } from "facilmap-types";
 import { IdType } from "../../utils/utils";
 import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
-import { moveMarker } from "../ui/draw/draw";
+import { moveMarker } from "../../utils/draw";
 import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { showErrorToast } from "../../utils/toasts";
 import EditMarker from "../edit-marker/edit-marker";

@@ -31,9 +31,9 @@
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`" title="GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.">Export as GPX (routes)</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/table${filterQuery.q}`" target="_blank">Export as table</b-dropdown-item>
 			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
-			<b-dropdown-item v-if="client.padData" href="javascript:" @click="filter()">Filter</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-filter v-b-toggle.fm-toolbox-sidebar>Filter</b-dropdown-item>
 			<b-dropdown-item v-if="client.writable == 2 && client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-pad v-b-toggle.fm-toolbox-sidebar>Settings</b-dropdown-item>
-			<b-dropdown-item v-if="!client.readonly && client.padData" href="javascript:" @click="showHistory()">Show edit history</b-dropdown-item>
+			<b-dropdown-item v-if="!client.readonly && client.padData" href="javascript:" v-b-modal.fm-toolbox-history v-b-toggle.fm-toolbox-sidebar>Show edit history</b-dropdown-item>
 			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
 			<b-dropdown-item v-b-modal.fm-toolbox-about v-b-toggle.fm-toolbox-sidebar href="javascript:">About FacilMap</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="links.facilmap">Exit collaborative map</b-dropdown-item>
@@ -46,4 +46,6 @@
 	<SaveView v-if="client.padData" id="fm-toolbox-save-view"></SaveView>
 	<ManageViews v-if="client.padData" id="fm-toolbox-manage-views"></ManageViews>
 	<ManageTypes v-if="client.padData" id="fm-toolbox-manage-types"></ManageTypes>
+	<EditFilter v-if="client.padData" id="fm-toolbox-edit-filter"></EditFilter>
+	<History v-if="client.padData" id="fm-toolbox-history"></History>
 </div>

@@ -17,7 +17,7 @@ export type HistoryEntryObject<T extends HistoryEntryType> =
 
 type HistoryEntryBase<T extends HistoryEntryType, A extends HistoryEntryAction> = {
 	id: ID;
-	time: Date;
+	time: string;
 	type: T;
 	action: A;
 	padId: PadId;

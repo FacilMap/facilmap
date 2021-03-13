@@ -1,23 +1,25 @@
-<div class="content container-fluid">
+<div class="fm-search-result-info" v-if="result">
 	<h2>{{result.short_name}}</h2>
-	<dl class="dl-horizontal">
-		<dt ng-if="result.type">Type</dt>
-		<dd ng-if="result.type">{{result.type}}</dd>
+	<dl>
+		<dt v-if="result.type">Type</dt>
+		<dd v-if="result.type">{{result.type}}</dd>
 
-		<dt ng-if="result.address">Address</dt>
-		<dd ng-if="result.address">{{result.address}}</dd>
+		<dt v-if="result.address">Address</dt>
+		<dd v-if="result.address">{{result.address}}</dd>
 
-		<dt ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
-		<dd ng-if="result.type != 'coordinates' && result.lat != null && result.lon != null">{{result.lat | fmRound:5}}, {{result.lon | fmRound:5}}</dd>
+		<dt v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
+		<dd v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">{{result.lat | round(5)}}, {{result.lon | round(5)}}</dd>
 
-		<dt ng-if="result.elevation != null">Elevation</dt>
-		<dd ng-if="result.elevation != null">{{result.elevation}} m</dd>
+		<dt v-if="result.elevation != null">Elevation</dt>
+		<dd v-if="result.elevation != null">{{result.elevation}} m</dd>
 
-		<dt ng-repeat-start="(key, value) in result.extratags">{{key}}</dt>
-		<dd ng-repeat-end ng-bind-html="value | fmRenderOsmTag:key">{{value}}</dd>
+		<template v-for="(value, key) in result.extratags">
+			<dt>{{key}}</dt>
+			<dd v-html="renderOsmTag(key, value)"></dd>
+		</template>
 	</dl>
 </div>
-<div class="buttons">
+<!-- <div class="buttons">
 	{{filteredTypes = (result.isMarker && result.isLine ? client.types : (client.types | fmObjectFilter:{type:result.isMarker ? 'marker' : 'line'})); ""}}
 	<div uib-dropdown keyboard-nav="true" ng-if="!client.readonly && (filteredTypes | fmPropertyCount) > 1" class="dropup">
 		<button id="add-type-button" type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
@@ -34,4 +36,4 @@
 			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(3)">Route destination</a></li>
 		</ul>
 	</div>
-</div>
+</div> -->

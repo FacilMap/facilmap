@@ -1,0 +1,17 @@
+.fm-sidebar {
+
+	.b-sidebar {
+		max-width: 80%;
+	}
+
+	.b-sidebar-body {
+		touch-action: pan-y;
+	}
+
+	&.isNarrow {
+		&, .dropdown-menu {
+			font-size: 14px;
+		}
+	}
+
+}

@@ -4,6 +4,11 @@
     flex-grow: 1;
     position: relative;
 
+    .fm-leaflet-map-inner-container {
+        position: relative;
+        flex-grow: 1;
+    }
+
     .fm-leaflet-map {
         position: absolute;
         top: 0;
@@ -57,6 +62,12 @@
         
     }
 
+    &.isNarrow {
+        .leaflet-control-graphicscale,.leaflet-control-mouseposition {
+            display: none !important;
+        }
+    }
+
     .fm-leaflet-map-disabled-cover {
         background-color: #888;
         opacity: 0.7;
@@ -95,13 +106,13 @@
         overflow: hidden;
 
         img {
-            margin-bottom: -19px;
+            margin-bottom: -24px;
         }
     }
     
     .fm-open-external {
         position: absolute;
-        bottom: 20px;
+        bottom: 15px;
         left: 15px;
         width: 90px;
         height: 50px;

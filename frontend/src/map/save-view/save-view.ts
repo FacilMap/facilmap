@@ -8,7 +8,6 @@ import Client from "facilmap-client";
 import { InjectClient } from "../client/client";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
-import { getValidationState } from "../../utils/validation";
 import { showErrorToast } from "../../utils/toasts";
 
 @WithRender

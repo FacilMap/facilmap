@@ -1,17 +1,17 @@
 <div class="fm-line-info" v-if="line">
 	<h2>{{line.name}}</h2>
-	<dl class="row">
-		<dt class="col-sm-4">Distance</dt>
-		<dd class="col-sm-8">{{line.distance | round(2)}} km <span v-if="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRouteMode}})</span></dd>
+	<dl>
+		<dt class="distance">Distance</dt>
+		<dd class="distance">{{line.distance | round(2)}} km <span v-if="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRouteMode}})</span></dd>
 
 		<template v-if="line.ascent != null">
-			<dt class="col-sm-4 elevation">Climb/drop</dt>
-			<dd class="col-sm-8 elevation"><ElevationStats :route="line" :stats="elevationStats"></ElevationStats></dd>
+			<dt class="elevation">Climb/drop</dt>
+			<dd class="elevation"><ElevationStats :route="line" :stats="elevationStats"></ElevationStats></dd>
 		</template>
 
 		<template v-for="field in client.types[line.typeId].fields">
-			<dt class="col-sm-4">{{field.name}}</dt>
-			<dd class="col-sm-8" v-html="$options.filters.fmFieldContent(line.data[field.name], field)"></dd>
+			<dt>{{field.name}}</dt>
+			<dd v-html="$options.filters.fmFieldContent(line.data[field.name], field)"></dd>
 		</template>
 	</dl>
 

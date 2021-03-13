@@ -3,7 +3,7 @@ import { Field } from "facilmap-types";
 import { createDiv, $ } from './dom';
 import { normalizeField } from './filter';
 import { quoteHtml } from './utils';
-
+import linkifyStr from 'linkifyjs/string';
 
 marked.setOptions({
 	breaks: true,
@@ -79,4 +79,26 @@ function applyMarkdownModifications($el: cheerio.Cheerio): void {
 			}).addClass("emobf2").html("<span>[obfuscated]</span>");
 		}
 	});
+}
+
+export function renderOsmTag(key: string, value: string): string {
+	if(key.match(/^wikipedia(:|$)/)) {
+		return value.split(";").map((it) => {
+			const m = it.match(/^(\s*)((([-a-z]+):)?(.*))(\s*)$/)!;
+			const url = "https://" + (m[4] || "en") + ".wikipedia.org/wiki/" + m[5];
+			return m?.[1] + '<a href="' + quoteHtml(url) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[6];
+		}).join(";");
+	} else if(key.match(/^wikidata(:|$)/)) {
+		return value.split(";").map((it) => {
+			const m = it.match(/^(\s*)(.*?)(\s*)$/)!;
+			return m[1] + '<a href="https://www.wikidata.org/wiki/' + quoteHtml(m[2]) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[3];
+		}).join(";");
+	} else if(key.match(/^wiki:symbol(:$)/)) {
+		return value.split(";").map(function(it) {
+			var m = it.match(/^(\s*)(.*?)(\s*)$/)!;
+			return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + quoteHtml(m[2]) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[3];
+		}).join(";");
+	} else {
+		return linkifyStr(value);
+	}
 }

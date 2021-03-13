@@ -15,5 +15,6 @@ export * from "./views/initialView";
 export * from "./views/views";
 export * from "./utils/icons";
 export * from "./utils/leaflet";
+export * from "./views/hash";
 
 export { BboxHandler, HashHandler, LinesLayer, MarkerCluster, MarkerLayer, MarkersLayer, RouteLayer, SearchResultGeoJSON, SearchResultsLayer };

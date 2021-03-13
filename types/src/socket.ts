@@ -31,6 +31,10 @@ export interface FindOnMapQuery {
 	query: string;
 }
 
+export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon"> & { kind: "marker"; similarity: number };
+export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
+export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
+
 export interface RequestDataMap {
 	updateBbox: BboxWithZoom;
 	createPad: PadDataCreate;
@@ -83,7 +87,7 @@ export interface ResponseDataMap {
 	deleteLine: Line;
 	exportLine: string;
 	find: string | SearchResult[];
-	findOnMap: Array<Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon"> | Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom">>;
+	findOnMap: Array<FindOnMapResult>;
 	getRoute: RouteInfo;
 	setRoute: Route | undefined;
 	clearRoute: void;

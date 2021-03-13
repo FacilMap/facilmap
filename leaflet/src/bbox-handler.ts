@@ -13,7 +13,8 @@ export default class BboxHandler extends Handler {
     }
 
     updateBbox(): void {
-        this.client.updateBbox(leafletToFmBbox(this._map.getBounds(), this._map.getZoom()));
+        if (this._map._loaded)
+            this.client.updateBbox(leafletToFmBbox(this._map.getBounds(), this._map.getZoom()));
     }
 
     handleMoveEnd = (): void => {

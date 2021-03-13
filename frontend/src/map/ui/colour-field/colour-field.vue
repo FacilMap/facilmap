@@ -5,7 +5,7 @@
 				<span style="width: 24px"></span>
 			</b-input-group-text>
 		</b-input-group-prepend>
-		<b-form-input v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
+		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
 	</b-input-group>
 
 	<FieldPopover :show.sync="popoverOpen" :container="raised ? undefined : `${effId}-container`" :target="`${effId}-input-group`" custom-class="fm-colour-field" @keydown.esc="handleEscape">

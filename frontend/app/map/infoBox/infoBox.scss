@@ -49,30 +49,6 @@
 				/* Make space for close button on the top and don't cover round corners on top and bottom */
 				margin: 2px 0 28px 0;
 				padding: 15px 15px 5px 15px;
-
-				h2 {
-					margin-top: 0;
-					font-size: 1.6em;
-				}
-
-				/* Copy dl-horizontal styles, modify sizing, also apply for small screens (as popup size is always the same) */
-				.dl-horizontal dt {
-					float: left;
-					width: 29%;
-					overflow: hidden;
-					clear: left;
-					text-align: right;
-					text-overflow: ellipsis;
-					white-space: nowrap;
-				}
-
-				.dl-horizontal dd {
-					margin-left: 33%;
-				}
-
-				.pos,.distance,.elevation {
-					color: #888;
-				}
 			}
 		}
 

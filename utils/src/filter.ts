@@ -12,7 +12,7 @@ const customFuncs = {
 	random() { } // Does not work well with angular digest cycles
 };
 
-export function filterHasError(expr: string): Error | void {
+export function filterHasError(expr: string): Error | undefined {
 	try {
 		if(expr && expr.trim())
 			filtrexCompileExpression(expr, { extraFunctions: customFuncs });

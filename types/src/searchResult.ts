@@ -1,5 +1,4 @@
-import { Bbox, Point, ZoomLevel } from "./base";
-import { GeoJSON } from "geojson";
+import { Point } from "./base";
 
 export type SearchResultType = string;
 
@@ -7,7 +6,7 @@ export interface SearchResult extends Point {
 	short_name: string;
 	display_name: string;
 	address?: string;
-	boundingbox?: [string, string, string, string];
+	boundingbox?: [number, number, number, number];
 	lat: number;
 	lon: number;
 	zoom?: number;

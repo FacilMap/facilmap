@@ -19,6 +19,16 @@ declare module "leaflet" {
 		originalEvent: Event;
 	}
 
+	interface Handler {
+        _map: Map;
+    }
+
+	/*
+	interface lagLngBounds {
+		(): LatLngBounds;
+	}
+	*/
+
 	namespace control {
 		export const graphicScale: any;
 	}

@@ -59,7 +59,7 @@ export function flattenObject(obj: Record<keyof any, any>, _prefix = ""): Record
 	return ret;
 }
 
-interface ObjectDiffItem {
+export interface ObjectDiffItem {
 	index: string;
 	before: any;
 	after: any;

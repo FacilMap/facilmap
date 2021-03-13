@@ -7,9 +7,10 @@
 		:no-close-on-esc="noCancel" :no-close-on-backdrop="noCancel" :hide-header-close="noCancel" :ok-only="noCancel"
 		:busy="isSaving"
 		:ok-disabled="!isCreate && !isModified"
-		:ok-title="isCreate ? 'Create' : 'Save'"
+		:ok-title="okTitle || (isCreate ? 'Create' : 'Save')"
 		@ok.prevent="observer.handleSubmit(handleSubmit)"
 		@show="$emit('show')"
+		scrollable
 	>
 		<b-form @submit.prevent="observer.handleSubmit(handleSubmit)">
 			<template>

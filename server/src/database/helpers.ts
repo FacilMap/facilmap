@@ -1,10 +1,9 @@
 import highland from "highland";
 import { streamEachPromise } from "../utils/streams";
 import { clone } from "../utils/utils";
-import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions } from "sequelize";
+import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
 import Database from "./database";
-import { DataTypes, FindOptions, Op } from "sequelize";
 import { isEqual } from "lodash";
 import { calculateRouteForLine } from "../routing/routing";
 

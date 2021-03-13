@@ -16,17 +16,17 @@ export interface ParsedHash extends UnsavedView {
 	filter?: string;
 }
 
-interface Query {
+export interface HashQuery {
 	query: string;
-	center: LatLng;
-	zoom: number;
+	center?: LatLng;
+	zoom?: number;
 }
 
 export default class HashHandler extends Handler {
 
 	client: Client;
 	hash: any;
-	activeQuery?: Query;
+	activeQuery?: HashQuery;
 
 	constructor(map: Map, client: Client) {
 		super(map);
@@ -64,7 +64,7 @@ export default class HashHandler extends Handler {
 		this.hash.onMapMove();
 	};
 
-	setQuery(query?: Query): void {
+	setQuery(query?: HashQuery): void {
 		this.activeQuery = query;
 		this.updateHash();
 	}
@@ -122,7 +122,7 @@ export default class HashHandler extends Handler {
 			additionalParts.push(mapObj.fmFilter);
 		}
 
-		if (this.activeQuery && !mapObj.fmFilter && isEqual(visibleLayers, defaultVisibleLayers) && mapObj.getZoom() == this.activeQuery.zoom && pointsEqual(mapObj.getCenter(), this.activeQuery.center, mapObj, this.activeQuery.zoom)) {
+		if (this.activeQuery && !mapObj.fmFilter && isEqual(visibleLayers, defaultVisibleLayers) && this.activeQuery.zoom != null && this.activeQuery.center != null && mapObj.getZoom() == this.activeQuery.zoom && pointsEqual(mapObj.getCenter(), this.activeQuery.center, mapObj, this.activeQuery.zoom)) {
 			result = "#q=" + encodeURIComponent(this.activeQuery.query);
 		} else if(!this.activeQuery) {
 			// Check if we have a saved view open

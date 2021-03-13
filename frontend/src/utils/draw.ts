@@ -1,19 +1,21 @@
 import Client from "facilmap-client";
 import { addClickListener } from "facilmap-leaflet";
 import { ID, Type } from "facilmap-types";
-import { showActionToast, showErrorToast } from "../../../utils/toasts";
-import { MapComponents } from "../../leaflet-map/leaflet-map";
+import { showActionToast, showErrorToast } from "./toasts";
+import { MapComponents } from "../map/leaflet-map/leaflet-map";
 
 export function drawMarker(type: Type, component: Vue, client: Client, mapComponents: MapComponents): void {
 	const clickListener = addClickListener(mapComponents.map, async (point) => {
 		component.$bvToast.hide("fm-draw-add-marker");
 
 		try {
-			await client.addMarker({
+			const marker = await client.addMarker({
 				lat: point.lat,
 				lon: point.lon,
 				typeId: type.id
 			});
+
+			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 		} catch (err) {
 			showErrorToast(component, "fm-draw-add-marker", "Error adding marker", err);
 		}
@@ -86,7 +88,8 @@ export async function drawLine(type: Type, component: Vue, client: Client, mapCo
 		component.$bvToast.hide("fm-draw-add-line");
 
 		if (routePoints) {
-			await client.addLine({ typeId: type.id, routePoints });
+			const line = await client.addLine({ typeId: type.id, routePoints });
+			mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 		}
 	} catch (err) {
 		showErrorToast(component, "fm-draw-add-line", "Error adding line", err);

@@ -8,12 +8,11 @@ import { InjectClient } from "../client/client";
 import Toolbox from "../toolbox/toolbox";
 import context from "../context";
 import SearchBox from "../search-box/search-box";
-import Selection from "../selection/selection";
 import Legend from "../legend/legend";
 
 @WithRender
 @Component({
-    components: { LeafletMap, Legend, SearchBox, Selection, Toolbox }
+    components: { LeafletMap, Legend, SearchBox, Toolbox }
 })
 export default class Main extends Vue {
 

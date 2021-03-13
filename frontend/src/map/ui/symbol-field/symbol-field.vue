@@ -3,11 +3,11 @@
 		<b-input-group-prepend>
 			<b-input-group-text><Icon :icon="value"></Icon></b-input-group-text>
 		</b-input-group-prepend>
-		<b-form-input v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
+		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
 	</b-input-group>
 
 	<FieldPopover :show.sync="popoverOpen" :container="raised ? undefined : `${effId}-input-container`" :target="`${effId}-input-group`" custom-class="fm-symbol-field fm-field-popover" @keydown.esc="handleEscape">
-		<b-input v-model="filter" placeholder="Filter"></b-input>
+		<b-input v-model="filter" placeholder="Filter" autocomplete="off"></b-input>
 		<ul v-html="symbolsCode" @click="handleClick"></ul>
 	</FieldPopover>
 </div>

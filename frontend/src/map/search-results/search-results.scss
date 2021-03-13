@@ -1,0 +1,9 @@
+.fm-search-results {
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
+
+	.active a {
+		color: inherit;
+	}
+}

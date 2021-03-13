@@ -15,12 +15,14 @@ import context from "../context";
 import PadSettings from "../pad-settings/pad-settings";
 import SaveView from "../save-view/save-view";
 import ManageViews from "../manage-views/manage-views";
-import { drawLine, drawMarker } from "../ui/draw/draw";
+import { drawLine, drawMarker } from "../../utils/draw";
 import ManageTypes from "../manage-types/manage-types";
+import EditFilter from "../edit-filter/edit-filter";
+import History from "../history/history";
 
 @WithRender
 @Component({
-    components: { About, Icon, ManageViews, ManageTypes, PadSettings, SaveView, Sidebar }
+    components: { About, EditFilter, History, Icon, ManageViews, ManageTypes, PadSettings, SaveView, Sidebar }
 })
 export default class Toolbox extends Vue {
 
