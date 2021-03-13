@@ -1,12 +1,20 @@
 import { BvToastOptions } from "bootstrap-vue";
 import { VNode } from "vue";
 
-export interface ToastAction {
-	onClick: () => void;
-	label: string;
+export interface ToastOptionsWithActions extends BvToastOptions {
+	actions?: ToastAction[];
 }
 
-export function toastActions(component: Vue, message: string, actions: ToastAction[]): VNode {
+export interface ToastAction {
+	onClick?: () => void;
+	label: string;
+	href?: string;
+}
+
+export function toastActions(component: Vue, message: string, actions?: ToastAction[]): VNode | string {
+	if (!actions || actions.length == 0)
+		return message;
+
 	return component.$createElement(
 		"div",
 		{ class: "fm-toast-actions" },
@@ -14,27 +22,28 @@ export function toastActions(component: Vue, message: string, actions: ToastActi
 			component.$createElement("div", { }, message),
 			...actions.map((action) => component.$createElement(
 				"b-button",
-				{ props: { size: "sm" }, on: { "click": action.onClick } },
+				{
+					props: { size: "sm", ...(action.href ? { href: action.href } : { }) },
+					on: { ...(action.onClick ? { "click": action.onClick } : { }) },
+				},
 				action.label
 			))
 		]
 	);
 }
 
-export function showErrorToast(component: Vue, id: string, title: string, err: any, options?: BvToastOptions): void {
+export function showErrorToast(component: Vue, id: string, title: string, err: any, options?: ToastOptionsWithActions): void {
 	console.error(err.stack || err);
 
-	component.$bvToast.toast(err.message || err, {
-		id,
-		title,
+	showToast(component, id, title, err.message || err, {
 		variant: "danger",
-		noAutoHide: true,
+		noCloseButton: false,
 		...options
 	});
 }
 
-export function showActionToast(component: Vue, id: string, title: string, message: string, actions: ToastAction[], options?: BvToastOptions): void {
-	component.$bvToast.toast(toastActions(component, message, actions), {
+export function showToast(component: Vue, id: string, title: string, message: string, options?: ToastOptionsWithActions): void {
+	component.$bvToast.toast(toastActions(component, message, options?.actions), {
 		id,
 		title,
 		noCloseButton: true,

@@ -10,7 +10,8 @@ import SearchFormTab from "../search-form/search-form-tab";
 import MarkerInfoTab from "../marker-info/marker-info-tab";
 import LineInfoTab from "../line-info/line-info-tab";
 import hammer from "hammerjs";
-import { InjectMapComponents, MapComponents } from "../leaflet-map/leaflet-map";
+import { InjectMapComponents } from "../../utils/decorators";
+import { MapComponents } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({
@@ -96,12 +97,12 @@ export default class SearchBox extends Vue {
 		}
 	}
 
-	handleShowTab(id: string): void {
+	handleShowTab(id: string, expand = true): void {
 		const idx = this.tabsComponent.tabs.findIndex((tab: any) => tab.id == id);
 		if (idx != -1)
 			this.tab = idx;
 
-		if (this.isNarrow) {
+		if (this.isNarrow && expand) {
 			setTimeout(() => {
 				const maxTop = this.getSanitizedTop(this.getTopFromBottom(300));
 				const currentTop = this.searchBox.offsetTop;

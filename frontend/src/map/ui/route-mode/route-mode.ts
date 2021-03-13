@@ -25,10 +25,10 @@ const constants: {
 	modes: ["car", "bicycle", "pedestrian", ""],
 
 	modeIcon: {
-		car: "car",
-		bicycle: "bicycle",
-		pedestrian: "walk",
-		"": "share"
+		car: "car-alt",
+		bicycle: "biking",
+		pedestrian: "walking",
+		"": "slash"
 	},
 
 	modeAlt: {

@@ -86,12 +86,12 @@
 			} else {
 				if(!hide.includes("Distance")) {
 -%>
-						<td><%=format.round(object.distance, 2)%> km</td>
+						<td><%=utils.round(object.distance, 2)%> km</td>
 <%
 				}
 				if(!hide.includes("Time")) {
 -%>
-						<td><% if(object.time != null) { %><%=format.formatTime(object.time)%> h <%=routing.formatRouteMode(object.mode)%><% } %></td>
+						<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%> h <%=utils.formatRouteMode(object.mode)%><% } %></td>
 <%
 				}
 			}
@@ -99,7 +99,7 @@
 			for(let field of type.fields) {
 				if(!hide.includes(field.name)) {
 -%>
-						<td><%-format.formatField(field, object.data[field.name]).trim()%></td>
+						<td><%-utils.formatField(field, object.data[field.name]).trim()%></td>
 <%
 				}
 			}

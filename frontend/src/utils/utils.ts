@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { isEqual } from "lodash";
-import { clone, formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
-import { Field, Line, Marker, RouteMode, Type } from "facilmap-types";
+import { clone } from "facilmap-utils";
+import { Field, Line, Marker, Type } from "facilmap-types";
 
 /** Can be used as the "type" of props that accept an ID */
 export const IdType = Number;
@@ -20,14 +20,6 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 			Vue.set(targetObject, i, clone(newObject[i]));
 	}
 }
-
-Vue.filter('round', (number: number, digits: number) => round(number, digits));
-
-Vue.filter('fmFieldContent', (value: string, field: Field) => formatField(field, value));
-
-Vue.filter('fmFormatTime', (value: number) => formatTime(value));
-
-Vue.filter('fmRouteMode', (value: RouteMode) => formatRouteMode(value));
 
 export function canControl(type: Type, what: keyof Marker | keyof Line, ignoreField?: Field): boolean {
 	if((type as any)[what+"Fixed"] && ignoreField != null)

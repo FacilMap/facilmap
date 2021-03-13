@@ -2,10 +2,6 @@
 /* bootstrap popovers have a z-index of 1060, tooltips 1070 (makes no sense...) */
 /* OpenLayers Controls have z-index: 1008 (inside the map viewport) */
 
-.fm-map-disabled-cover {
-	z-index: 10001;
-}
-
 .messages {
 	z-index: 10002;
 }

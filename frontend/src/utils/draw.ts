@@ -1,8 +1,8 @@
 import Client from "facilmap-client";
 import { addClickListener } from "facilmap-leaflet";
 import { ID, Type } from "facilmap-types";
-import { showActionToast, showErrorToast } from "./toasts";
 import { MapComponents } from "../map/leaflet-map/leaflet-map";
+import { showToast, showErrorToast } from "./toasts";
 
 export function drawMarker(type: Type, component: Vue, client: Client, mapComponents: MapComponents): void {
 	const clickListener = addClickListener(mapComponents.map, async (point) => {
@@ -21,12 +21,14 @@ export function drawMarker(type: Type, component: Vue, client: Client, mapCompon
 		}
 	});
 
-	showActionToast(component, "fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", [
-		{ label: "Cancel", onClick: () => {
-			component.$bvToast.hide("fm-draw-add-marker");
-			clickListener.cancel();
-		} }
-	]);
+	showToast(component, "fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+		actions: [
+			{ label: "Cancel", onClick: () => {
+				component.$bvToast.hide("fm-draw-add-marker");
+				clickListener.cancel();
+			} }
+		]
+	});
 }
 
 export function moveMarker(markerId: ID, component: Vue, client: Client, mapComponents: MapComponents): void {
@@ -56,14 +58,16 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 		mapComponents.map.fire('fmInteractionEnd');
 	}
 
-	showActionToast(component, "fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", [
-		{ label: "Save", onClick: () => {
-			finish(true);
-		}},
-		{ label: "Cancel", onClick: () => {
-			finish(false);
-		} }
-	]);
+	showToast(component, "fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+		actions: [
+			{ label: "Save", onClick: () => {
+				finish(true);
+			}},
+			{ label: "Cancel", onClick: () => {
+				finish(false);
+			} }
+		]
+	});
 
 	markerLayer.dragging!.enable();
 }
@@ -74,14 +78,16 @@ export async function drawLine(type: Type, component: Vue, client: Client, mapCo
 
 		const lineTemplate = await client.getLineTemplate({ typeId: type.id });
 
-		showActionToast(component, "fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Double-click to finish it.", [
-			{ label: "Finish", onClick: () => {
-				mapComponents.linesLayer.endDrawLine(true);
-			}},
-			{ label: "Cancel", onClick: () => {
-				mapComponents.linesLayer.endDrawLine(false);
-			} }
-		]);
+		showToast(component, "fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Double-click to finish it.", {
+			actions: [
+				{ label: "Finish", onClick: () => {
+					mapComponents.linesLayer.endDrawLine(true);
+				}},
+				{ label: "Cancel", onClick: () => {
+					mapComponents.linesLayer.endDrawLine(false);
+				} }
+			]
+		});
 
 		const routePoints = await mapComponents.linesLayer.drawLine(lineTemplate);
 

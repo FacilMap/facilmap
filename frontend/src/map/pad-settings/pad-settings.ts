@@ -6,7 +6,7 @@ import context from "../context";
 import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 import { clone, generateRandomPadId } from "facilmap-utils";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
+import { InjectClient } from "../../utils/decorators";
 import { mergeObject } from "../../utils/utils";
 import { isEqual } from "lodash";
 import copyToClipboard from "copy-to-clipboard";
@@ -129,6 +129,9 @@ export default class PadSettings extends Vue {
 		this.$bvToast.hide("fm-pad-settings-error");
 
 		try {
+			if (!await this.$bvModal.msgBoxConfirm(`Are you sure you want to delete the map “${this.padData.name}”? Deleted maps cannot be restored!`))
+				return;
+
 			await this.client.deletePad();
 			this.$bvModal.hide(this.id);
 		} catch (err) {

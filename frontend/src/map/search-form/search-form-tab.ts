@@ -1,9 +1,10 @@
 import WithRender from "./search-form-tab.vue";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import { InjectMapContext, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectMapContext } from "../../utils/decorators";
 import SearchForm from "./search-form";
 import "./search-form-tab.scss";
+import { MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({

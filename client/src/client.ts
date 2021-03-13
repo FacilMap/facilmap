@@ -21,6 +21,8 @@ export interface ClientEvents extends MapEvents {
 	reconnect_error: [Error];
 	reconnect_failed: [];
 
+	serverError: [Error];
+
 	loadStart: [],
 	loadEnd: [],
 
@@ -229,10 +231,10 @@ export default class Client {
 		},
 
 		connect: () => {
+			this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
+
 			if(this.padId)
 				this._setPadId(this.padId);
-			else
-				this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
 
 			if(this.bbox)
 				this.updateBbox(this.bbox);
@@ -429,16 +431,17 @@ export default class Client {
 		this.socket.disconnect();
 	}
 
-	_setPadId(padId: string): Promise<void> {
+	async _setPadId(padId: string): Promise<void> {
+		this._set(this, 'serverError', undefined);
 		this._set(this, 'padId', padId);
-		return this._emit("setPadId", padId).then((obj) => {
-			this._set(this, 'disconnected', false);
-
+		try {
+			const obj = await this._emit("setPadId", padId);
 			this._receiveMultiple(obj);
-		}).catch((err) => {
+		} catch(err) {
 			this._set(this, 'serverError', err);
+			this._simulateEvent("serverError", err);
 			throw err;
-		});
+		}
 	}
 
 	_receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {

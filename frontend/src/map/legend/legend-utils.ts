@@ -2,8 +2,8 @@ import "./legend.scss";
 import Client from "facilmap-client";
 import { Colour, ID, Shape, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
-import { MapContext } from "../leaflet-map/leaflet-map";
 import { getBrightness } from "facilmap-utils";
+import { MapContext } from "../leaflet-map/leaflet-map";
 
 export interface LegendType {
 	type: Type['type'];

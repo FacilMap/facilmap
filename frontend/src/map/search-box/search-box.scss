@@ -88,6 +88,8 @@
 	h2 {
 		margin-top: 0;
 		font-size: 1.6em;
+		display: flex;
+		align-items: center;
 	}
 
 	h3 {
@@ -98,6 +100,10 @@
 		display: grid;
 		grid-template-columns: 150px auto;
 		gap: 5px;
+
+		* {
+			min-width: 0;
+		}
 
 		dd {
 			margin-bottom: 0;

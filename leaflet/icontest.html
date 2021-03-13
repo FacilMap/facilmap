@@ -29,6 +29,7 @@
 				document.body.appendChild(el);
 				for (const icon of ["", "O", "g", "j", "a", "*", ...L.FacilMap.symbolList]) {
 					const span = document.createElement('span');
+					span.title = icon;
 					span.innerHTML = createIcon(icon);
 					el.appendChild(span);
 				}

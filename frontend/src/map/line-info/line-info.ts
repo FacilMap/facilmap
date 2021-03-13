@@ -4,11 +4,11 @@ import { Component, Prop } from "vue-property-decorator";
 import { ID, Line } from "facilmap-types";
 import { IdType } from "../../utils/utils";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import EditLine from "../edit-line/edit-line";
 import ElevationStats from "../ui/elevation-stats/elevation-stats";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({

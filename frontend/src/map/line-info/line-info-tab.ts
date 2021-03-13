@@ -1,11 +1,11 @@
 import WithRender from "./line-info-tab.vue";
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { ID, Line } from "facilmap-types";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
 import LineInfo from "./line-info";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({

@@ -1,14 +1,14 @@
 import WithRender from "./save-view.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { baseLayers, getCurrentView, overlays } from "facilmap-leaflet";
 import { ViewCreate } from "facilmap-types";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
 import { showErrorToast } from "../../utils/toasts";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({

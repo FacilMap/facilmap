@@ -3,12 +3,16 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { renderOsmTag } from "facilmap-utils";
 import { SearchResult } from "facilmap-types";
+import Icon from "../ui/icon/icon";
 
 @WithRender
-@Component({})
+@Component({
+	components: { Icon }
+})
 export default class SearchResultInfo extends Vue {
 
 	@Prop({ type: Object, required: true }) result!: SearchResult;
+	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
 
 	renderOsmTag = renderOsmTag;
 

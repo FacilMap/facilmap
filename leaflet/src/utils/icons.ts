@@ -13,6 +13,12 @@ for (const key of rawIconsContext.keys() as string[]) {
     
     rawIcons[set][fname.replace(/\.svg$/, "")] = rawIconsContext(key);
 }
+
+rawIcons["fontawesome"] = {};
+for (const name of ["arrow-left", "arrow-right", "biking", "car-alt", "slash", "walking"]) {
+    rawIcons["fontawesome"][name] = require(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
+}
+
 export const symbolList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
 
 export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
@@ -66,7 +72,8 @@ export const shapeList = Object.keys(MARKER_SHAPES) as Shape[];
 const sizes: Record<string, number> = {
     osmi: 580,
     mdiconic: 1000,
-    glyphicons: 1410
+    glyphicons: 1410,
+    fontawesome: 640
 };
 
 export const getLetterOffset = memoize((letter: string): { x: number, y: number } => {
@@ -91,8 +98,12 @@ export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): st
             return `<g transform="scale(${size / sizes.osmi})">${rawIcons[set][symbol].replace(/#000/g, colour)}</g>`;
         }
 
-        const width = Number(rawIcons[set][symbol].match(/^<svg [^>]* width="([0-9.]+)"/)![1]);
-        const height = Number(rawIcons[set][symbol].match(/^<svg [^>]* height="([0-9.]+)"/)![1]);
+        const widthMatch = rawIcons[set][symbol].match(/^<svg [^>]* width="([0-9.]+)"/);
+        const heightMatch = rawIcons[set][symbol].match(/^<svg [^>]* height="([0-9.]+)"/);
+        const viewBoxMatch = rawIcons[set][symbol].match(/^<svg [^>]* viewBox="([ 0-9.]+)"/);
+
+        const width = Number(widthMatch ? widthMatch[1] : viewBoxMatch![1].split(" ")[2]);
+        const height = Number(heightMatch ? heightMatch[1] : viewBoxMatch![1].split(" ")[3]);
         const scale = size / sizes[set];
         const moveX = (sizes[set] - width) / 2;
         const moveY = (sizes[set] - height) / 2;

@@ -3,16 +3,16 @@ import "./search-form.scss";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { decodeLonLatUrl, isSearchId } from "facilmap-utils";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
 import { showErrorToast } from "../../utils/toasts";
 import { FindOnMapResult, SearchResult } from "facilmap-types";
 import SearchResults from "../search-results/search-results";
 import context from "../context";
 import { SelectedItem } from "../../utils/selection";
 import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({
@@ -118,18 +118,13 @@ export default class SearchForm extends Vue {
 	}
 
 	showResult(result: SearchResult | FindOnMapResult, event?: MouseEvent): void {
-		const item: SelectedItem = "kind" in result ? { type: result.kind, id: result.id } : { type: "searchResult", result };
-		if (event && (event.ctrlKey || event.shiftKey))
-			this.mapComponents.selectionHandler.toggleItem(item);
-		else {
-			this.mapComponents.selectionHandler.setSelectedItems([item]);
+		this.selectResult(result, event);
 
-			if (this.autoZoom) {
-				if (this.zoomToAll)
-					this.unionZoomToResult(result);
-				else
-					this.zoomToResult(result);
-			}
+		if (this.autoZoom) {
+			if (this.zoomToAll)
+				this.unionZoomToResult(result);
+			else
+				this.zoomToResult(result);
 		}
 	}
 
@@ -137,6 +132,14 @@ export default class SearchForm extends Vue {
 		const dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
 		if (dest)
 			flyTo(this.mapComponents.map, dest);
+	}
+
+	selectResult(result: SearchResult | FindOnMapResult, event?: MouseEvent): void {
+		const item: SelectedItem = "kind" in result ? { type: result.kind, id: result.id } : { type: "searchResult", result };
+		if (event && (event.ctrlKey || event.shiftKey))
+			this.mapComponents.selectionHandler.toggleItem(item);
+		else
+			this.mapComponents.selectionHandler.setSelectedItems([item]);
 	}
 
 	unionZoomToResult(result: SearchResult | FindOnMapResult): void {
@@ -166,12 +169,8 @@ export default class SearchForm extends Vue {
 	toggleZoomToAll(): void {
 		this.zoomToAll = !this.zoomToAll;
 
-		if (this.autoZoom) {
-			if (this.zoomToAll)
-				this.zoomToAllResults();
-			else
-				this.zoomToActiveResults();
-		}
+		if (this.autoZoom && this.zoomToAll)
+			this.zoomToAllResults();
 	}
 
 }

@@ -99,7 +99,7 @@
 	<template #after-form v-if="padData && !isCreate">
 		<hr/>
 
-		<b-form @submit.prevent="deleteConfirmation == 'DELETE' && confirm('Are you sure you want to delete the map “' + padData.name +'”? Deleted maps cannot be restored!') && deletePad()">
+		<b-form @submit.prevent="deleteConfirmation == 'DELETE' && deletePad()">
 			<b-form-group label="Delete map" label-for="delete-input" label-cols-sm="3">
 				<b-input-group>
 					<b-form-input id="delete-input" v-model="deleteConfirmation" autocomplete="off"></b-form-input>

@@ -4,8 +4,7 @@ import WithRender from "./toolbox.vue";
 import "./toolbox.scss";
 import { Prop } from "vue-property-decorator";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
 import { Type, View } from "facilmap-types";
 import About from "../about/about";
@@ -19,6 +18,7 @@ import { drawLine, drawMarker } from "../../utils/draw";
 import ManageTypes from "../manage-types/manage-types";
 import EditFilter from "../edit-filter/edit-filter";
 import History from "../history/history";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 @WithRender
 @Component({

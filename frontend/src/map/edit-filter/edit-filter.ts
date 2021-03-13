@@ -4,11 +4,11 @@ import Vue from "vue";
 import { extend, ValidationProvider } from 'vee-validate';
 import { filterHasError } from 'facilmap-utils';
 import { Component, Prop } from "vue-property-decorator";
-import { InjectMapComponents, InjectMapContext, MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
 import { Type } from "facilmap-types";
 import FormModal from "../ui/form-modal/form-modal";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 extend("filter", (filter: string): string | true => {
 	return filterHasError(filter)?.message ?? true;

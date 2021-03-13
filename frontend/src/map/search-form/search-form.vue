@@ -7,7 +7,7 @@
 				<b-input-group-append>
 					<b-button type="submit"><Icon icon="search" alt="Search"></Icon></b-button>
 					<b-button v-if="searchResults || mapResults" @click="reset()"><Icon icon="remove" alt="Clear"></Icon></b-button>
-					<b-dropdown id="fm-search-form-settings" boundary="viewport" :popper-opts="{ positionFixed: true }">
+					<b-dropdown id="fm-search-form-settings">
 						<b-dropdown-item @click.native.capture.stop.prevent="autoZoom = !autoZoom"><Icon :icon="autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results</b-dropdown-item>
 						<b-dropdown-item @click.native.capture.stop.prevent="toggleZoomToAll()"><Icon :icon="zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results</b-dropdown-item>
 					</b-dropdown>
@@ -22,9 +22,8 @@
 		:mapResults="mapResults"
 		:activeResults="activeResults"
 		:showZoom="!autoZoom || zoomToAll"
-		@click-search-result="showResult"
-		@click-map-result="showResult"
-		@zoom-search-result="zoomToResult"
-		@zoom-map-result="zoomToResult"
+		@click-result="showResult"
+		@select-result="selectResult"
+		@zoom-result="zoomToResult"
 	></SearchResults>
 </div>

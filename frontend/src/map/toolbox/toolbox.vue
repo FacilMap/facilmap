@@ -41,7 +41,7 @@
 	</Sidebar>
 
 	<About id="fm-toolbox-about"></About>
-	<PadSettings v-if="!client.padId" id="fm-toolbox-create-pad" :isCreate="true"></PadSettings>
+	<PadSettings v-if="!client.padData" id="fm-toolbox-create-pad" :isCreate="true"></PadSettings>
 	<PadSettings v-if="client.padData" id="fm-toolbox-edit-pad"></PadSettings>
 	<SaveView v-if="client.padData" id="fm-toolbox-save-view"></SaveView>
 	<ManageViews v-if="client.padData" id="fm-toolbox-manage-views"></ManageViews>

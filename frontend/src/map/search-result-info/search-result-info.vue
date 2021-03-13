@@ -1,5 +1,8 @@
 <div class="fm-search-result-info" v-if="result">
-	<h2>{{result.short_name}}</h2>
+	<h2>
+		<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+		{{result.short_name}}
+	</h2>
 	<dl>
 		<dt v-if="result.type">Type</dt>
 		<dd v-if="result.type">{{result.type}}</dd>

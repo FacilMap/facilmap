@@ -45,6 +45,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.2",
     "@types/geojson": "^7946.0.7",
     "@types/highland": "^2.12.11",
     "@types/jest": "^26.0.20",

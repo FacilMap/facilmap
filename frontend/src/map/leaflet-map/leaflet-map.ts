@@ -1,9 +1,9 @@
 import WithRender from "./leaflet-map.vue";
 import Vue from "vue";
-import { Component, InjectReactive, ProvideReactive, Watch } from "vue-property-decorator";
+import { Component, ProvideReactive, Watch } from "vue-property-decorator";
 import Client from 'facilmap-client';
 import "./leaflet-map.scss";
-import { InjectClient } from "../client/client";
+import { InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, RouteLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
@@ -14,22 +14,10 @@ import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import $ from "jquery";
-import { VueDecorator } from "vue-class-component";
 import SelectionHandler, { SelectedItem } from "../../utils/selection";
 import { FilterFunc } from "facilmap-utils";
 import { getHashQuery } from "../../utils/zoom";
 import context from "../context";
-
-const MAP_COMPONENTS_KEY = "fm-map-components";
-const MAP_CONTEXT_KEY = "fm-map-context";
-
-export function InjectMapComponents(): VueDecorator {
-    return InjectReactive(MAP_COMPONENTS_KEY);
-}
-
-export function InjectMapContext(): VueDecorator {
-    return InjectReactive(MAP_CONTEXT_KEY);
-}
 
 /* function createButton(symbol: string, onClick: () => void): Control {
     return Object.assign(new Control(), {
@@ -83,8 +71,8 @@ export default class LeafletMap extends Vue {
 
     @InjectClient() client!: Client;
 
-    @ProvideReactive(MAP_COMPONENTS_KEY) mapComponents!: MapComponents;
-    @ProvideReactive(MAP_CONTEXT_KEY) mapContext: MapContext = null as any;
+    @ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents!: MapComponents;
+    @ProvideReactive(MAP_CONTEXT_INJECT_KEY) mapContext: MapContext = null as any;
 
     isInFrame = (parent !== window);
     loaded = false;

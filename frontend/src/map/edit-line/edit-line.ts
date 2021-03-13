@@ -2,7 +2,7 @@ import WithRender from "./edit-line.vue";
 import Vue from "vue";
 import { ID, Line, Type } from "facilmap-types";
 import Client from "facilmap-client";
-import { InjectClient } from "../client/client";
+import { InjectClient } from "../../utils/decorators";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { canControl, IdType, mergeObject } from "../../utils/utils";
 import { clone } from "facilmap-utils";

@@ -1,9 +1,8 @@
 import $ from 'jquery';
 import Vue from "vue";
 import { BootstrapVue } from "bootstrap-vue";
-import { registerDeobfuscationHandlers } from "../utils/ui";
+import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 import Main from './main/main';
-import { ClientProvider } from './client/client';
 import context, { updatePadId, updatePadName } from './context';
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
@@ -11,8 +10,16 @@ import withRender from "./map.vue";
 import PortalVue from "portal-vue";
 import "../utils/validation";
 import { PadId } from 'facilmap-types';
+import "./map.scss";
+import { ClientProvider } from './client/client';
+import "../utils/vue";
 
-Vue.use(BootstrapVue);
+Vue.use(BootstrapVue, {
+	BDropdown: {
+		popperOpts: { positionFixed: true },
+		boundary: "viewport"
+	}
+});
 Vue.use(PortalVue);
 
 // Dereferrer
