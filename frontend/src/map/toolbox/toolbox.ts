@@ -31,8 +31,6 @@ export default class Toolbox extends Vue {
 	@InjectMapContext() readonly mapContext!: MapContext;
 	@Prop({ type: Boolean, default: true }) readonly interactive!: boolean;
 
-	hasImportUi = true; // TODO
-
 	get isNarrow(): boolean {
 		return context.isNarrow;
 	}
@@ -102,38 +100,8 @@ export default class Toolbox extends Vue {
 		toggleOverlay(this.mapComponents.map, key);
 	}
 
-	/* saveView() {
-		saveView();
+	importFile(): void {
+		this.$root.$emit("fm-import-file");
 	}
-
-	manageViews() {
-		manageViews();
-	}
-
-	editObjectTypes() {
-		map.typesUi.editTypes();
-	}
-
-	scope.$watch(() => !!map.importUi, (hasImportUi) => {
-		scope.hasImportUi = hasImportUi;
-	});
-
-	importFile() {
-		map.importUi.openImportDialog();
-	}
-
-	showAbout() {
-		fmAbout.showAbout(map);
-	}
-
-	filter() {
-		fmFilter.showFilterDialog(map.client.filterExpr, map.client.types).then(function(newFilter) {
-			map.client.setFilter(newFilter);
-		});
-	}
-
-	showHistory() {
-		map.historyUi.openHistoryDialog();
-	} */
 
 }

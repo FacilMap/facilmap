@@ -1,0 +1,20 @@
+.fm-import-tab-title {
+	display: inline-flex;
+	width: 100%;
+	
+	> span {
+		align-items: center;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	a {
+		padding: 0 !important;
+	}
+
+	object, a, .fm-icon {
+		display: inline-flex;
+		align-items: center;
+	}
+}

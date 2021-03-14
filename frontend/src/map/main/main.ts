@@ -9,10 +9,11 @@ import context from "../context";
 import SearchBox from "../search-box/search-box";
 import Legend from "../legend/legend";
 import LeafletMap from "../leaflet-map/leaflet-map";
+import Import from "../import/import";
 
 @WithRender
 @Component({
-    components: { LeafletMap, Legend, SearchBox, Toolbox }
+    components: { Import, LeafletMap, Legend, SearchBox, Toolbox }
 })
 export default class Main extends Vue {
 

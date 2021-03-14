@@ -1,5 +1,5 @@
 <div class="fm-leaflet-map-container" :class="{ isNarrow }">
-    <div class="fm-leaflet-map-inner-container">
+    <div class="fm-leaflet-map-inner-container" ref="innerContainer">
         <div class="fm-leaflet-map"></div>
 
         <a v-if="isInFrame" :href="selfUrl" target="_blank" class="fm-open-external" uib-tooltip="Open FacilMap in full size" tooltip-placement="right"></a>

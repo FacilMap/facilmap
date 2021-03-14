@@ -1,7 +1,7 @@
 import WithRender from "./search-form.vue";
 import "./search-form.scss";
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Ref } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { decodeLonLatUrl, isSearchId } from "facilmap-utils";
@@ -24,8 +24,11 @@ export default class SearchForm extends Vue {
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
 
+	@Ref() searchInput!: HTMLInputElement;
+
 	autofocus = !context.isNarrow && context.autofocus;
 	searchString = "";
+	loadedSearchString = "";
 	autoZoom = true;
 	zoomToAll = false;
 	searchCounter = 0;
@@ -34,60 +37,64 @@ export default class SearchForm extends Vue {
 	mapResults: FindOnMapResult[] | null = null;
 
 	async search(): Promise<void> {
-		this.reset();
+		this.searchInput.blur();
 
-		const counter = ++this.searchCounter;
+		if (this.searchString != this.loadedSearchString) {
+			this.reset();
 
-		if(this.searchString.trim() != "") {
-			/* if(this.searchString.match(/ to /i)) {
-				scope.showRoutingForm();
-				return searchUi.routeUi.submit(noZoom);
-			} */
+			const counter = ++this.searchCounter;
 
-			var lonlat = decodeLonLatUrl(this.searchString);
-			if(lonlat) {
-				this.mapComponents.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
-				return;
-			}
+			if(this.searchString.trim() != "") {
+				/* if(this.searchString.match(/ to /i)) {
+					scope.showRoutingForm();
+					return searchUi.routeUi.submit(noZoom);
+				} */
 
-			try {
-				const query = this.searchString;
-
-				const [searchResults, mapResults] = await Promise.all([
-					this.client.find({ query, loadUrls: true, elevation: true }),
-					this.client.padId ? this.client.findOnMap({ query }) : undefined
-				]);
-
-				if (counter != this.searchCounter)
-					return; // Another search has been started in the meantime
-
-				if(isSearchId(query) && Array.isArray(searchResults) && searchResults.length > 0 && searchResults[0].display_name)
-					this.searchString = searchResults[0].display_name;
-
-				if(typeof searchResults == "string")
-					return; // this.searchResults = parseFiles([ searchResults ]);
-
-				this.searchResults = searchResults;
-				this.mapComponents.searchResultsLayer.setResults(searchResults);
-				this.mapResults = mapResults ?? null;
-
-				if (this.autoZoom) {
-					if (this.zoomToAll)
-						this.zoomToAllResults();
-					else if (mapResults && mapResults.length > 0 && (mapResults[0].similarity == 1 || searchResults.length == 0))
-						this.showResult(mapResults[0]);
-					else if (searchResults.length > 0)
-						this.showResult(searchResults[0]);
-
+				const lonlat = decodeLonLatUrl(this.searchString);
+				if(lonlat) {
+					this.mapComponents.map.flyTo([ lonlat.lat, lonlat.lon ], lonlat.zoom);
+					return;
 				}
 
-				/* if(scope.mapResults && scope.mapResults.length > 0 && (scope.mapResults[0].similarity == 1 || scope.searchResults.features.length == 0))
-					scope.showMapResult(scope.mapResults[0], noZoom);
-				else if(scope.searchResults.features.length > 0)
-					scope.showResult(scope.searchResults.features[0], noZoom || (scope.showAll ? 3 : false)); */
-			} catch(err) {
-				showErrorToast(this, "fm-search-form-error", "Search error", err);
+				try {
+					const query = this.searchString;
+
+					const [searchResults, mapResults] = await Promise.all([
+						this.client.find({ query, loadUrls: true, elevation: true }),
+						this.client.padId ? this.client.findOnMap({ query }) : undefined
+					]);
+
+					if (counter != this.searchCounter)
+						return; // Another search has been started in the meantime
+
+					this.loadedSearchString = query;
+
+					if(isSearchId(query) && Array.isArray(searchResults) && searchResults.length > 0 && searchResults[0].display_name) {
+						this.searchString = searchResults[0].display_name;
+						this.loadedSearchString = query;
+					}
+				
+
+					if(typeof searchResults == "string")
+						return; // this.searchResults = parseFiles([ searchResults ]);
+
+					this.searchResults = searchResults;
+					this.mapComponents.searchResultsLayer.setResults(searchResults);
+					this.mapResults = mapResults ?? null;
+				} catch(err) {
+					showErrorToast(this, "fm-search-form-error", "Search error", err);
+					return;
+				}
 			}
+		}
+
+		if (this.autoZoom) {
+			if (this.zoomToAll)
+				this.zoomToAllResults();
+			else if (this.mapResults && this.mapResults.length > 0 && (this.mapResults[0].similarity == 1 || (!this.searchResults || this.searchResults.length == 0)))
+				this.showResult(this.mapResults[0]);
+			else if (this.searchResults && this.searchResults.length > 0)
+				this.showResult(this.searchResults[0]);
 		}
 	}
 
@@ -98,6 +105,7 @@ export default class SearchForm extends Vue {
 			this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((item) => item.type != "searchResult"));
 
 		this.$bvToast.hide("fm-search-form-error");
+		this.loadedSearchString = "";
 		this.searchResults = null;
 		this.mapResults = null;
 		this.mapComponents.searchResultsLayer.setResults([]);
@@ -291,38 +299,6 @@ export default class SearchForm extends Vue {
 				importUi.openImportDialog(scope.searchResults);
 			};
 
-			if (scope.autofocus) {
-				$("#fm-search-input", el).attr("autofocus", "autofocus");
-			}
-
-			let resizing = false;
-			el.resizable({
-				handles: {
-					se: el.find(".fm-search-resize")
-				},
-				minHeight: 0
-			}).on("resizestart", () => {
-				resizing = true;
-				el.css({
-					width: el.width() + "px",
-					height: el.height() + "px"
-				}).addClass("fm-search-resized");
-			}).on("resizestop", () => {
-				setTimeout(() => {
-					resizing = false;
-				}, 0);
-			});
-
-			el.find(".fm-search-resize").click(() => {
-				if(!resizing) {
-					el.css({
-						width: "",
-						height: ""
-					}).removeClass("fm-search-resized");
-				}
-			});
-
-
 			var clickMarker = L.featureGroup([]).addTo(map.map);
 
 			map.mapEvents.$on("longmousedown", function(e, latlng) {
@@ -369,13 +345,6 @@ export default class SearchForm extends Vue {
 					else if(result.layer)
 						return forBounds(result.layer.getBounds());
 				}
-			}
-
-			function _flyTo(center, zoom) {
-				if(map.map.getBounds().getCenter().equals(center)) // map.getCenter() is different from map.getBounds().getCenter()
-					return;
-
-				map.map.flyTo(center, zoom);
 			}
 
 			function prepareResults(results) {

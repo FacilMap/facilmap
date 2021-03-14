@@ -33,7 +33,8 @@ export function toastActions(component: Vue, message: string, actions?: ToastAct
 }
 
 export function showErrorToast(component: Vue, id: string, title: string, err: any, options?: ToastOptionsWithActions): void {
-	console.error(err.stack || err);
+	if (err.stack)
+		console.error(err.stack);
 
 	showToast(component, id, title, err.message || err, {
 		variant: "danger",

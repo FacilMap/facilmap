@@ -29,7 +29,7 @@
 		width: auto !important; /* Override resize width from non-narrow mode */
 	}
 
-	.tabs {
+	.tabs, .tab-content, .vue-portal-target {
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
@@ -60,12 +60,6 @@
 			overflow: hidden;
 			font-size: 14px;
 		}
-	}
-
-	.tab-content {
-		display: flex;
-		flex-direction: column;
-		min-height: 0;
 	}
 
 	.tab-pane.active {

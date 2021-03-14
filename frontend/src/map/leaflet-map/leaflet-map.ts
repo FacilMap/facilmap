@@ -1,6 +1,6 @@
 import WithRender from "./leaflet-map.vue";
 import Vue from "vue";
-import { Component, ProvideReactive, Watch } from "vue-property-decorator";
+import { Component, ProvideReactive, Ref, Watch } from "vue-property-decorator";
 import Client from 'facilmap-client';
 import "./leaflet-map.scss";
 import { InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
@@ -39,6 +39,7 @@ import context from "../context";
 
 export interface MapComponents {
     bboxHandler: BboxHandler;
+    container: HTMLElement;
     graphicScale: any;
     hashHandler: HashHandler;
     linesLayer: LinesLayer;
@@ -74,6 +75,8 @@ export default class LeafletMap extends Vue {
     @ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents!: MapComponents;
     @ProvideReactive(MAP_CONTEXT_INJECT_KEY) mapContext: MapContext = null as any;
 
+    @Ref() innerContainer!: HTMLElement;
+
     isInFrame = (parent !== window);
     loaded = false;
     interaction = 0;
@@ -93,6 +96,7 @@ export default class LeafletMap extends Vue {
         map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
         const bboxHandler = new BboxHandler(map, this.client).enable();
+        const container = this.innerContainer;
         const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
         const hashHandler = new HashHandler(map, this.client).enable();
         const linesLayer = new LinesLayer(this.client).addTo(map);
@@ -103,7 +107,7 @@ export default class LeafletMap extends Vue {
         const searchResultsLayer = new SearchResultsLayer().addTo(map);
         const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
 
-        this.mapComponents = { bboxHandler, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, routeLayer, searchResultsLayer, selectionHandler };
+        this.mapComponents = { bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, routeLayer, searchResultsLayer, selectionHandler };
 
         $(this.mapComponents.locateControl._container).find("a").append(getSymbolHtml("currentColor", "1.5em", "screenshot"));
 

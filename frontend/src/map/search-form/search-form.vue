@@ -3,7 +3,7 @@
 	<b-form @submit.prevent="search()">
 		<b-form-group>
 			<b-input-group>
-				<b-form-input type="search" v-model="searchString" :autofocus="autofocus"></b-form-input>
+				<b-form-input type="search" v-model="searchString" :autofocus="autofocus" ref="searchInput"></b-form-input>
 				<b-input-group-append>
 					<b-button type="submit"><Icon icon="search" alt="Search"></Icon></b-button>
 					<b-button v-if="searchResults || mapResults" @click="reset()"><Icon icon="remove" alt="Clear"></Icon></b-button>
