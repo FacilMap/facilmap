@@ -5,7 +5,7 @@
 				<b-td><a href="javascript:" @click="display(view)">{{view.name}}</a></b-td>
 				<b-td class="td-buttons text-right">
 					<b-button 
-						v-show="view.id !== client.padData.defaultView.id"
+						v-show="!client.padData.defaultView || view.id !== client.padData.defaultView.id"
 						@click="makeDefault(view)"
 						:disabled="!!isSavingDefaultView || isDeleting[view.id]"
 					>

@@ -54,5 +54,6 @@
 		<li><a href="https://github.com/twain47/Open-SVG-Map-Icons/" target="_blank">Open SVG Map Icons</a></li>
 		<li><a href="https://glyphicons.com/" target="_blank">Glyphicons</a></li>
 		<li><a href="https://zavoloklom.github.io/material-design-iconic-font/index.html" target="_blank">Material Design Iconic Font</a></li>
+		<li><a href="https://fontawesome.com/" target="_blank">Font Awesome</a></li>
 	</ul>
 </b-modal>

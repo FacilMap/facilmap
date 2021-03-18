@@ -1,25 +1,29 @@
 import WithRender from "./import.vue";
 import Vue from "vue";
 import { Component, Ref } from "vue-property-decorator";
-import { InjectMapComponents } from "../../utils/decorators";
-import { MapComponents } from "../leaflet-map/leaflet-map";
+import { InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { showErrorToast } from "../../utils/toasts";
-import { FileResults, parseFiles } from "../../utils/files";
+import { FileResult, FileResultObject, parseFiles } from "../../utils/files";
 import pluralize from "pluralize";
 import Icon from "../ui/icon/icon";
 import "./import.scss";
 import { SearchResultsLayer } from "facilmap-leaflet";
+import { Util } from "leaflet";
+import FileResults from "../file-results/file-results";
+import { flyTo } from "../../utils/zoom";
 
 @WithRender
 @Component({
-	components: { Icon }
+	components: { Icon, FileResults }
 })
 export default class Import extends Vue {
 
 	@InjectMapComponents() mapComponents!: MapComponents;
+	@InjectMapContext() mapContext!: MapContext;
 	@Ref() fileInput!: HTMLInputElement;
 
-	files: Array<FileResults & { title: string }> = [];
+	files: Array<FileResultObject & { title: string }> = [];
 	layers!: SearchResultsLayer[]; // Don't make layer objects reactive
 
 	created(): void {
@@ -28,6 +32,7 @@ export default class Import extends Vue {
 
 	mounted(): void {
 		this.$root.$on("fm-import-file", this.handleImportFile);
+		this.$root.$on("fm-open-selection", this.handleOpenSelection);
 		this.mapComponents.container.addEventListener("dragenter", this.handleMapDragEnter);
 		this.mapComponents.container.addEventListener("dragover", this.handleMapDragOver);
 		this.mapComponents.container.addEventListener("drop", this.handleMapDrop);
@@ -35,13 +40,29 @@ export default class Import extends Vue {
 
 	beforeDestroy(): void {
 		this.$root.$off("fm-import-file", this.handleImportFile);
+		this.$root.$off("fm-open-selection", this.handleOpenSelection);
 		this.mapComponents.container.removeEventListener("dragenter", this.handleMapDragEnter);
 		this.mapComponents.container.removeEventListener("dragover", this.handleMapDragOver);
 		this.mapComponents.container.removeEventListener("drop", this.handleMapDrop);
 	}
 
+	get layerIds(): number[] {
+		return this.files.map((file, i) => { // Iterate files instead of layers because it is reactive
+			return Util.stamp(this.layers[i]);
+		});
+	}
+
 	handleImportFile(): void {
 		this.fileInput.click();
+	}
+
+	handleOpenSelection(): void {
+		for (let i = 0; i < this.layerIds.length; i++) {
+			if (this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == this.layerIds[i])) {
+				this.$root.$emit("fm-search-box-show-tab", `fm-import-tab-${i}`);
+				break;
+			}
+		}
 	}
 
 	handleMapDragEnter(event: DragEvent): void {
@@ -56,6 +77,18 @@ export default class Import extends Vue {
 		event.preventDefault();
 
 		this.importFiles(event.dataTransfer?.files);
+	}
+
+	zoomToResult(result: FileResult): void {
+		const layer = this.layers.find((layer, idx) => this.files[idx].features.includes(result));
+		if (!layer)
+			return;
+		
+		const featureLayer = layer.getLayers().find((l) => l._fmSearchResult === result) as any;
+		if (!featureLayer)
+			return;
+
+		flyTo(this.mapComponents.map, { bounds: featureLayer.getBounds() });
 	}
 
 	async importFiles(files: FileList | undefined): Promise<void> {
@@ -88,9 +121,14 @@ export default class Import extends Vue {
 				if (result.errors)
 					showErrorToast(this, "fm-import-error", "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
 
+				const layer = new SearchResultsLayer(result.features).addTo(this.mapComponents.map);
+				this.mapComponents.map.flyToBounds(layer.getBounds());
+				this.mapComponents.selectionHandler.addSearchResultLayer(layer);
+
 				this.files.push(result);
+				this.layers.push(layer);
 				setTimeout(() => {
-					this.$root.$emit("fm-search-box-show-tab", `fm-import-${this.files.length -1}`);
+					this.$root.$emit("fm-search-box-show-tab", `fm-import-tab-${this.files.length -1}`);
 				}, 0);
 			}
 		} catch (err) {
@@ -100,6 +138,9 @@ export default class Import extends Vue {
 
 	close(idx: number): void {
 		this.files.splice(idx, 1);
+		this.layers[idx].remove();
+		this.mapComponents.selectionHandler.addSearchResultLayer(this.layers[idx]);
+		this.layers.splice(idx, 1);
 	}
 
 }

@@ -18,12 +18,11 @@
 
 	<SearchResults
 		v-if="searchResults || mapResults"
-		:searchResults="searchResults"
-		:mapResults="mapResults"
-		:activeResults="activeResults"
-		:showZoom="!autoZoom || zoomToAll"
-		@click-result="showResult"
-		@select-result="selectResult"
+		:search-results="searchResults"
+		:map-results="mapResults"
+		:show-zoom="!autoZoom || zoomToAll"
+		:layer-id="layerId"
+		@click-result="handleClickResult"
 		@zoom-result="zoomToResult"
 	></SearchResults>
 </div>

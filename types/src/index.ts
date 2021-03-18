@@ -9,3 +9,4 @@ export * from './searchResult';
 export * from './socket';
 export * from './type';
 export * from './view';
+export * from './geoJson';

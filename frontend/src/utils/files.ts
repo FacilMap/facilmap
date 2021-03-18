@@ -2,7 +2,7 @@ import { gpx, kml, tcx } from "@tmcw/togeojson";
 import osmtogeojson from "osmtogeojson";
 import $ from "jquery";
 import { Feature, Geometry } from "geojson";
-import { GeoJsonExport, LineFeature, MarkerFeature } from "facilmap-types";
+import { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 
 type FeatureProperties = Partial<MarkerFeature["properties"]> & Partial<LineFeature["properties"]> & {
@@ -11,23 +11,20 @@ type FeatureProperties = Partial<MarkerFeature["properties"]> & Partial<LineFeat
 	id?: string;
 }
 
-export interface FileResults {
-	features: Array<{
-		short_name: string;
-		display_name: string;
-		extratags: Record<string, string>;
-		geojson: Geometry;
-		type: string;
-		fmTypeId?: number;
-		fmProperties?: FeatureProperties;
-	}>;
+export type FileResult = SearchResult & {
+	fmTypeId?: number;
+	fmProperties?: FeatureProperties;
+}
+
+export interface FileResultObject {
+	features: FileResult[];
 	views: GeoJsonExport["facilmap"]["views"];
 	types: GeoJsonExport["facilmap"]["types"];
 	errors: boolean;
 }
 
-export function parseFiles(files: string[]): FileResults {
-	const ret: FileResults = { features: [ ], views: [ ], types: { }, errors: false };
+export function parseFiles(files: string[]): FileResultObject {
+	const ret: FileResultObject = { features: [ ], views: [ ], types: { }, errors: false };
 	let nextTypeIdx = 1;
 	for (const file of files) {
 		let geojson: any;
@@ -98,7 +95,7 @@ export function parseFiles(files: string[]): FileResults {
 			else
 				name = feature.geometry.type || "Object";
 
-			let f: FileResults["features"][0] = {
+			let f: FileResult = {
 				short_name: name,
 				display_name: name,
 				extratags: feature.properties.data || feature.properties.tags || flattenObject(Object.assign({}, feature.properties, {coordTimes: null})),

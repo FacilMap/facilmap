@@ -21,6 +21,7 @@ declare module "leaflet" {
 
 	interface Handler {
         _map: Map;
+		_enabled?: boolean;
     }
 
 	/*

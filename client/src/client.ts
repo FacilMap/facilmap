@@ -127,21 +127,23 @@ export default class Client {
 		}
 	}
 
-	_emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
-		return new Promise((resolve, reject) => {
+	async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
+		try {
 			this._simulateEvent("loadStart");
 
 			this._simulateEvent("emit", eventName as any, data as any);
 
-			this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
-				this._simulateEvent("loadEnd");
-
-				if(err)
-					reject(err);
-				else
-					resolve(data);
+			return await new Promise((resolve, reject) => {
+				this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
+					if(err)
+						reject(err);
+					else
+						resolve(data);
+				});
 			});
-		});
+		} finally {
+			this._simulateEvent("loadEnd");
+		}
 	}
 
 	_handlers: {

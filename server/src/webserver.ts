@@ -119,17 +119,14 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.get("/:padId/geojson", async function(req: Request<PathParams>, res: Response<string>, next) {
 		try {
-			const [padData, geojson] = await Promise.all([
-				database.pads.getPadData(req.params.padId),
-				exportGeoJson(database, req.params.padId, req.query.filter as string | undefined)
-			]);
+			const padData = await database.pads.getPadData(req.params.padId);
 
 			if(!padData)
 				throw new Error(`Map with ID ${req.params.padId} could not be found.`);
-			
+
 			res.set("Content-type", "application/geo+json");
 			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
-			res.send(jsonFormat(geojson));
+			exportGeoJson(database, req.params.padId, req.query.filter as string | undefined).pipe(res);
 		} catch (e) {
 			next(e);
 		}

@@ -18,6 +18,10 @@ Vue.use(BootstrapVue, {
 	BDropdown: {
 		popperOpts: { positionFixed: true },
 		boundary: "viewport"
+	},
+	BTooltip: {
+		popperOpts: { positionFixed: true },
+		boundary: "viewport"
 	}
 });
 Vue.use(PortalVue);

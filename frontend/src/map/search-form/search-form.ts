@@ -10,9 +10,9 @@ import { showErrorToast } from "../../utils/toasts";
 import { FindOnMapResult, SearchResult } from "facilmap-types";
 import SearchResults from "../search-results/search-results";
 import context from "../context";
-import { SelectedItem } from "../../utils/selection";
 import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { Util } from "leaflet";
 
 @WithRender
 @Component({
@@ -32,9 +32,14 @@ export default class SearchForm extends Vue {
 	autoZoom = true;
 	zoomToAll = false;
 	searchCounter = 0;
+	layerId: number = null as any;
 
 	searchResults: SearchResult[] | null = null;
 	mapResults: FindOnMapResult[] | null = null;
+
+	mounted(): void {
+		this.layerId = Util.stamp(this.mapComponents.searchResultsLayer);
+	}
 
 	async search(): Promise<void> {
 		this.searchInput.blur();
@@ -91,19 +96,21 @@ export default class SearchForm extends Vue {
 		if (this.autoZoom) {
 			if (this.zoomToAll)
 				this.zoomToAllResults();
-			else if (this.mapResults && this.mapResults.length > 0 && (this.mapResults[0].similarity == 1 || (!this.searchResults || this.searchResults.length == 0)))
-				this.showResult(this.mapResults[0]);
-			else if (this.searchResults && this.searchResults.length > 0)
-				this.showResult(this.searchResults[0]);
+			else if (this.mapResults && this.mapResults.length > 0 && (this.mapResults[0].similarity == 1 || (!this.searchResults || this.searchResults.length == 0))) {
+				this.mapComponents.selectionHandler.setSelectedItems([{ type: this.mapResults[0].kind, id: this.mapResults[0].id }])
+				this.zoomToResult(this.mapResults[0]);
+			}
+			else if (this.searchResults && this.searchResults.length > 0) {
+				this.mapComponents.selectionHandler.setSelectedItems([{ type: "searchResult", result: this.searchResults[0], layerId: this.layerId }]);
+				this.zoomToResult(this.searchResults[0]);
+			}
 		}
 	}
 
 	reset(): void {
 		this.searchCounter++;
 
-		if (this.activeResults && this.activeResults.length > 0)
-			this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((item) => item.type != "searchResult"));
-
+		this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((item) => item.type != "searchResult" || item.layerId != this.layerId));
 		this.$bvToast.hide("fm-search-form-error");
 		this.loadedSearchString = "";
 		this.searchResults = null;
@@ -111,23 +118,7 @@ export default class SearchForm extends Vue {
 		this.mapComponents.searchResultsLayer.setResults([]);
 	};
 
-	get activeResults(): Array<SearchResult | FindOnMapResult> {
-		return [
-			...(this.searchResults || []).filter((result) => this.mapContext.selection.some((item) => item.type == "searchResult" && item.result === result)),
-			...(this.mapResults || []).filter((result) => {
-				if (result.kind == "marker")
-					return this.mapContext.selection.some((item) => item.type == "marker" && item.id == result.id);
-				else if (result.kind == "line")
-					return this.mapContext.selection.some((item) => item.type == "line" && item.id == result.id);
-				else
-					return false;
-			})
-		];
-	}
-
-	showResult(result: SearchResult | FindOnMapResult, event?: MouseEvent): void {
-		this.selectResult(result, event);
-
+	handleClickResult(result: SearchResult | FindOnMapResult): void {
 		if (this.autoZoom) {
 			if (this.zoomToAll)
 				this.unionZoomToResult(result);
@@ -142,25 +133,11 @@ export default class SearchForm extends Vue {
 			flyTo(this.mapComponents.map, dest);
 	}
 
-	selectResult(result: SearchResult | FindOnMapResult, event?: MouseEvent): void {
-		const item: SelectedItem = "kind" in result ? { type: result.kind, id: result.id } : { type: "searchResult", result };
-		if (event && (event.ctrlKey || event.shiftKey))
-			this.mapComponents.selectionHandler.toggleItem(item);
-		else
-			this.mapComponents.selectionHandler.setSelectedItems([item]);
-	}
-
 	unionZoomToResult(result: SearchResult | FindOnMapResult): void {
 		// Zoom to item, keep current map bounding box in view
 		let dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
 		if (dest)
 			dest = combineZoomDestinations([dest, { bounds: this.mapComponents.map.getBounds() }]);
-		if (dest)
-			flyTo(this.mapComponents.map, dest);
-	}
-
-	zoomToActiveResults(): void {
-		const dest = getZoomDestinationForResults(this.activeResults || []);
 		if (dest)
 			flyTo(this.mapComponents.map, dest);
 	}
@@ -255,34 +232,6 @@ export default class SearchForm extends Vue {
 			scope.$watch("showAll", () => {
 				map.mapEvents.$broadcast("searchchange");
 			});
-
-			scope.showView = function(view) {
-				map.displayView(view);
-			};
-
-			scope.viewExists = function(view) {
-				for(let viewId in map.client.views) {
-					if(["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"].filter((idx) => !ng.equals(view[idx], map.client.views[viewId][idx])).length == 0)
-						return true;
-				}
-				return false;
-			};
-
-			scope.addView = function(view) {
-				map.client.addView(view);
-			};
-
-			scope.typeExists = function(type) {
-				for(let typeId in map.client.types) {
-					if(["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"].filter((idx) => !ng.equals(type[idx], map.client.types[typeId][idx])).length == 0)
-						return true;
-				}
-				return false;
-			};
-
-			scope.addType = function(type) {
-				map.client.addType(type);
-			};
 
 			scope.addResultToMap = function(result, type, noEdit) {
 				importUi.addResultToMap(result, type, !noEdit);

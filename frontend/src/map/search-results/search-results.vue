@@ -3,6 +3,8 @@
 		<b-carousel-slide>
 			<b-alert v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" show variant="danger">No results have been found.</b-alert>
 
+			<slot name="before"></slot>
+
 			<b-list-group v-if="mapResults && mapResults.length > 0">
 				<b-list-group-item  v-for="result in mapResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
 					<span>
@@ -28,6 +30,8 @@
 					<a href="javascript:" @click="handleOpen(result, $event)" title="Show details" v-b-tooltip><Icon icon="arrow-right" alt="Details"></Icon></a>
 				</b-list-group-item>
 			</b-list-group>
+
+			<slot name="after"></slot>
 
 			<!-- <div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
 				<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>

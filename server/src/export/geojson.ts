@@ -3,9 +3,9 @@ import { clone } from "../utils/utils";
 import { compileExpression, prepareObject } from "facilmap-utils";
 import { Marker, PadId } from "../../../types/src";
 import Database from "../database/database";
-import { keyBy, omit } from "lodash";
+import { keyBy, mapValues, omit } from "lodash";
 import { LineWithTrackPoints } from "../database/line";
-import { mapValues } from "async";
+import { MarkerFeature, LineFeature } from "facilmap-types"; 
 
 export function exportGeoJson(database: Database, padId: PadId, filter?: string): Highland.Stream<string> {
 	return toStream(async () => {
@@ -31,7 +31,7 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 
 		return jsonStream({
 			type: "FeatureCollection",
-			...(padData.defaultView ? { bbox: "%bbox" } : { }),
+			...(padData.defaultView ? { bbox: "%bbox%" } : { }),
 			facilmap: {
 				name: "%name%",
 				searchEngines: "%searchEngines%",
@@ -40,7 +40,7 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 				views: "%views%",
 				types: "%types%"
 			},
-			features: "%features"
+			features: "%features%"
 		}, {
 			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
 			name: padData.name,
@@ -49,12 +49,12 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 			clusterMarkers: padData.clusterMarkers,
 			views,
 			types: mapValues(types, (type) => omit(type, ["id", "padId"])),
-			features: markers.concat(lines)
+			features: (markers as Highland.Stream<MarkerFeature | LineFeature>).concat(lines as Highland.Stream<MarkerFeature | LineFeature>)
 		});
 	}).flatten();
 }
 
-function markerToGeoJson(marker: Marker): GeoJSON.Feature {
+function markerToGeoJson(marker: Marker): MarkerFeature {
 	return {
 		type: "Feature",
 		geometry: {
@@ -73,7 +73,7 @@ function markerToGeoJson(marker: Marker): GeoJSON.Feature {
 	};
 }
 
-function lineToGeoJson(line: LineWithTrackPoints): GeoJSON.Feature {
+function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 	return {
 		type: "Feature",
 		geometry: {

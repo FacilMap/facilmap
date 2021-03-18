@@ -536,7 +536,7 @@ class SocketConnection {
 				if(field.oldName && field.oldName != field.name)
 					rename[field.oldName] = { name: field.name };
 
-				if(field.type == "dropdown" && field.options) {
+				if(field.options) {
 					for(const option of field.options) {
 						if(option.oldValue && option.oldValue != option.value) {
 							if(!rename[field.oldName || field.name])
