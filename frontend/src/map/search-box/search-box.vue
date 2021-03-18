@@ -1,6 +1,7 @@
 <b-card no-body ref="searchBox" class="fm-search-box" :class="{ isNarrow, hasFocus }" @focusin="hasFocus = true" @focusout="hasFocus = false">
 	<b-tabs card align="center" v-model="tab" ref="tabsComponent" @changed="handleChanged" @activate-tab="handleActivateTab" no-fade>
 		<SearchFormTab></SearchFormTab>
+		<RouteFormTab></RouteFormTab>
 		<MarkerInfoTab></MarkerInfoTab>
 		<LineInfoTab></LineInfoTab>
 		<portal-target name="fm-search-box" multiple></portal-target>

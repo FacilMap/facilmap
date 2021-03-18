@@ -16,12 +16,20 @@ import "../utils/vue";
 
 Vue.use(BootstrapVue, {
 	BDropdown: {
-		popperOpts: { positionFixed: true },
-		boundary: "viewport"
+		popperOpts: {
+			positionFixed: true,
+			modifiers: {
+				preventOverflow: {
+					enabled: false
+				}
+			}
+		},
+		boundary: "window",
+		noFlip: true
 	},
 	BTooltip: {
 		popperOpts: { positionFixed: true },
-		boundary: "viewport"
+		boundary: "window"
 	}
 });
 Vue.use(PortalVue);

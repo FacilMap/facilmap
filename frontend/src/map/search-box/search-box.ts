@@ -12,10 +12,11 @@ import LineInfoTab from "../line-info/line-info-tab";
 import hammer from "hammerjs";
 import { InjectMapComponents } from "../../utils/decorators";
 import { MapComponents } from "../leaflet-map/leaflet-map";
+import RouteFormTab from "../route-form/route-form-tab";
 
 @WithRender
 @Component({
-    components: { Icon, LineInfoTab, MarkerInfoTab, SearchFormTab }
+    components: { Icon, LineInfoTab, MarkerInfoTab, RouteFormTab, SearchFormTab }
 })
 export default class SearchBox extends Vue {
 

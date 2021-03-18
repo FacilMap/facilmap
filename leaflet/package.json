@@ -36,7 +36,7 @@
     "facilmap-utils": "2.7.0",
     "filtrex": "^2.1.0",
     "leaflet-auto-graticule": "^1.0.9",
-    "leaflet-draggable-lines": "^1.0.6",
+    "leaflet-draggable-lines": "^1.0.8",
     "leaflet-freie-tonne": "^1.0.5",
     "leaflet-geometryutil": "^0.9.3",
     "leaflet-hash": "^0.2.1",

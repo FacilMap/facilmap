@@ -9,7 +9,9 @@ export type SelectedItem = {
 	type: "searchResult";
 	result: SearchResult;
 	layerId: number;
-}
+} | {
+	type: "route"
+};
 
 function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
 	if (["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))

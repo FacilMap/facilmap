@@ -1,6 +1,6 @@
 import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
 import { fmToLeafletBbox, HashQuery } from "facilmap-leaflet";
-import Client from "facilmap-client";
+import Client, { RouteWithTrackPoints } from "facilmap-client";
 import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 
@@ -16,6 +16,15 @@ export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker): Z
 
 export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
 	return { bounds: fmToLeafletBbox(line) };
+}
+
+export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDestination {
+	const bounds = latLngBounds(undefined as any);
+	for (let i = 0; i < route.trackPoints.length; i++) {
+		if (route.trackPoints[i])
+			bounds.extend([route.trackPoints[i].lat, route.trackPoints[i].lon]);
+	}
+	return { bounds };
 }
 
 export function getZoomDestinationForSearchResult(result: SearchResult): ZoomDestination | undefined {

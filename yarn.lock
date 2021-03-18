@@ -5406,10 +5406,10 @@ leaflet-auto-graticule@^1.0.9:
   resolved "https://registry.yarnpkg.com/leaflet-auto-graticule/-/leaflet-auto-graticule-1.0.9.tgz#e51469b26986b03faae03c50d49a3e1c1139cc13"
   integrity sha512-mfl2NEHx4zXjCJLGMYLdlRoZUvsc8niOVPBeXScvKvM2DDPTUHm/SHDgpTa+klHocOUZgarG9FIaPCVVi9sMuQ==
 
-leaflet-draggable-lines@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/leaflet-draggable-lines/-/leaflet-draggable-lines-1.0.6.tgz#a50c4b79aea251232dae8ac0f10a007570396d8f"
-  integrity sha512-jt81tW9C6Z3i6d1T0J8+IpL6eC9KwU4Qc4yPmwaY3L75k0VfDfr6G+7vvPcJGYTujtSduIpyUfGzm1iMPuXONA==
+leaflet-draggable-lines@^1.0.8:
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/leaflet-draggable-lines/-/leaflet-draggable-lines-1.0.8.tgz#79749a13e498cb5c0fc49c84c75afc6535e88fbd"
+  integrity sha512-6WgrJc90cAVg3+XdmmkEEBxcENV8kNmvjTWamf+a8/papowvVGp1mPTepQU4jUmBcHgO/zKDxv6kUNSBz1oHRQ==
   dependencies:
     leaflet-geometryutil "^0.9.3"
 
@@ -6653,6 +6653,11 @@ pluralize@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-8.0.0.tgz#1a6fa16a38d12a1901e0320fa017051c539ce3b1"
   integrity sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==
+
+popper-max-size-modifier@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/popper-max-size-modifier/-/popper-max-size-modifier-0.2.0.tgz#1574744401296a488b4974909d130a85db94256f"
+  integrity sha512-UerPt9pZfTFnpSpIBVJrR3ibHMuU1k5K01AyNLfMUWCr4z1MFH+dsayPlAF9ZeYExa02HPiQn5OIMqUSVtJEbg==
 
 popper.js@^1.16.1:
   version "1.16.1"

@@ -123,6 +123,8 @@
 			});
 
 			const routeLayer = new L.FacilMap.RouteLayer(client, { raised: true }).addTo(map);
+			const routeDragHandler = new L.FacilMap.RouteDragHandler(map, client).enable();
+			routeDragHandler.enableForLayer(routeLayer);
 
 			const searchResultsLayer = new L.FacilMap.SearchResultsLayer().addTo(map)
 				.on("click", (e) => {

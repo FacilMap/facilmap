@@ -6,7 +6,7 @@ import "./leaflet-map.scss";
 import { InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, RouteLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
+import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -47,7 +47,6 @@ export interface MapComponents {
     map: Map;
     markersLayer: MarkersLayer;
     mousePosition: L.Control.MousePosition;
-    routeLayer: RouteLayer;
     searchResultsLayer: SearchResultsLayer;
     selectionHandler: SelectionHandler;
 }
@@ -103,11 +102,10 @@ export default class LeafletMap extends Vue {
         const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a" }).addTo(map);
         const markersLayer = new MarkersLayer(this.client).addTo(map);
         const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
-        const routeLayer = new RouteLayer(this.client).addTo(map);
         const searchResultsLayer = new SearchResultsLayer().addTo(map);
         const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
 
-        this.mapComponents = { bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, routeLayer, searchResultsLayer, selectionHandler };
+        this.mapComponents = { bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, searchResultsLayer, selectionHandler };
 
         $(this.mapComponents.locateControl._container).find("a").append(getSymbolHtml("currentColor", "1.5em", "screenshot"));
 

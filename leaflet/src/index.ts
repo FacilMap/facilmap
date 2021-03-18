@@ -8,6 +8,7 @@ import RouteLayer from "./lines/route-layer";
 import SearchResultGeoJSON from "./search/search-result-geojson";
 import SearchResultsLayer from "./search/search-results-layer";
 import "./filter/map-filter";
+import RouteDragHandler from "./lines/route-drag-handler";
 
 export * from "./click-listener/click-listener";
 export * from "./layers";
@@ -17,4 +18,4 @@ export * from "./utils/icons";
 export * from "./utils/leaflet";
 export * from "./views/hash";
 
-export { BboxHandler, HashHandler, LinesLayer, MarkerCluster, MarkerLayer, MarkersLayer, RouteLayer, SearchResultGeoJSON, SearchResultsLayer };
+export { BboxHandler, HashHandler, LinesLayer, MarkerCluster, MarkerLayer, MarkersLayer, RouteDragHandler, RouteLayer, SearchResultGeoJSON, SearchResultsLayer };

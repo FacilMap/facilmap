@@ -350,7 +350,9 @@ export default class Client {
 		return this._emit("exportLine", data);
 	}
 
-	find(data: FindQuery): Promise<string | SearchResult[]> {
+	find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
+	find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
+	find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
 		return this._emit("find", data);
 	}
 
