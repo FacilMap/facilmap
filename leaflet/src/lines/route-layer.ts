@@ -53,6 +53,7 @@ export default class RouteLayer extends HighlightablePolyline {
 			this.setLatLngs(trackPoints);
 		} else {
 			this.setLatLngs([]);
+			this.setDraggableLinesRoutePoints([]);
 		}
 	}
 

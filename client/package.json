@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "facilmap-types": "2.7.0",
-    "socket.io-client": "^3.1.0"
+    "socket.io-client": "^4.0.0"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.7",

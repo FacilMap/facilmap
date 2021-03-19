@@ -10,3 +10,9 @@
 .fm-drag-handle {
 	cursor: grab !important;
 }
+
+.btn-toolbar {
+	* + * {
+		margin-left: 0.5rem;
+	}
+}

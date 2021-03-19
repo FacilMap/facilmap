@@ -1,7 +1,6 @@
 import Client from "facilmap-client";
 import { Map, Polyline } from "leaflet";
-import DraggableLines from "leaflet-draggable-lines";
-import { DraggableLinesHandlerOptions } from "leaflet-draggable-lines/dist/handler";
+import DraggableLines, { DraggableLinesHandlerOptions } from "leaflet-draggable-lines";
 
 interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 }

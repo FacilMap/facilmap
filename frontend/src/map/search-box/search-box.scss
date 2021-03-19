@@ -4,9 +4,9 @@
 		top: 10px !important; /* Override drag position from narrow mode */
 		left: 52px;
 		max-height: calc(100% - 25px);
-		min-width: 250px;
-		min-height: 93px;
-		width: 420px;
+		min-width: 19rem;
+		min-height: 6rem;
+		width: 29rem;
 
 		transition: opacity .7s,background-color .7s,border-color .7s;
 		opacity: .7;
@@ -68,8 +68,6 @@
 		overflow: auto;
 	}
 
-
-	font-size: 14px;
 
 	hr {
 		width: 100%;

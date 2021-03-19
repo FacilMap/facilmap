@@ -9,8 +9,6 @@ export type SelectedItem = {
 	type: "searchResult";
 	result: SearchResult;
 	layerId: number;
-} | {
-	type: "route"
 };
 
 function isAllowedSibling(a: SelectedItem, b: SelectedItem) {

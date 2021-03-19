@@ -1,13 +1,12 @@
 <div class="fm-route-form">
-	<b-form @submit.prevent="route(true)">
+	<b-form @submit.prevent="handleSubmit">
 		<draggable v-model="destinations" handle=".fm-drag-handle" @end="reroute(true)">
 			<!-- ng-class="{'has-error': }" -->
 			<b-form-group v-for="(destination, idx) in destinations" :class="{ active: hoverDestinationIdx == idx }">
 				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
 				<b-input-group @mouseenter="destinationMouseOver(idx)" @mouseleave="destinationMouseOut(idx)" :state="getValidationState(destination)">
 					<b-input-group-prepend>
-						<b-button class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></b-button>
-						<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" title="Remove this destination" v-b-tooltip><Icon icon="minus" alt="Remove"></Icon></b-button>
+						<b-input-group-text class="px-2"><a href="javascript:" class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></a></b-input-group-text>
 					</b-input-group-prepend>
 					<b-form-input v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)"></b-form-input>
 					<b-input-group-append>
@@ -52,6 +51,7 @@
 							</template>
 							<b-spinner v-else></b-spinner>
 						</b-dropdown>
+						<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" title="Remove this destination" v-b-tooltip><Icon icon="minus" alt="Remove" size="1.0em"></Icon></b-button>
 					</b-input-group-append>
 				</b-input-group>
 			</b-form-group>
@@ -63,7 +63,7 @@
 
 			<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)"></RouteMode>
 
-			<b-button type="submit" variant="primary" :tabindex="destinations.length+7">Go!</b-button>
+			<b-button type="submit" variant="primary" :tabindex="destinations.length+7" class="flex-grow-1">Go!</b-button>
 			<b-button v-if="hasRoute" type="button" :tabindex="destinations.length+8" @click="reset()" title="Clear route" v-b-tooltip><Icon icon="remove" alt="Clear"></Icon></b-button>
 		</b-button-toolbar>
 

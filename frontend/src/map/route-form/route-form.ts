@@ -1,7 +1,7 @@
 import WithRender from "./route-form.vue";
 import "./route-form.scss";
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Prop, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { isSearchId, round } from "facilmap-utils";
@@ -78,6 +78,8 @@ export default class RouteForm extends Vue {
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
 
+	@Prop({ type: Boolean, default: true }) active!: boolean;
+
 	routeLayer!: RouteLayer;
 	draggable!: DraggableLines;
 
@@ -96,9 +98,15 @@ export default class RouteForm extends Vue {
 	suggestionMarker: MarkerLayer | undefined;
 
 	mounted(): void {
-		this.routeLayer = new RouteLayer(this.client, { weight: 7 }).addTo(this.mapComponents.map);
+		this.routeLayer = new RouteLayer(this.client, { weight: 7, opacity: 1, raised: true }).addTo(this.mapComponents.map);
+		this.routeLayer.on("click", (e) => {
+			if (!this.active && !(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
+				this.$emit("activate");
+			}
+		});
+
 		this.draggable = new DraggableLines(this.mapComponents.map, {
-			enableForLayer: this.routeLayer,
+			enableForLayer: false,
 			tempMarkerOptions: () => ({
 				icon: getMarkerIcon(dragMarkerColour, 35),
 				pane: "fm-raised-marker"
@@ -159,6 +167,8 @@ export default class RouteForm extends Vue {
 			}
 		} as any);
 
+		this.handleActiveChange(this.active);
+
 		/* if(scope.submittedQueries)
 			scope.submittedQueries.splice(idx, 0, makeCoordDestination(point).query);
 		map.mapEvents.$broadcast("searchchange"); */
@@ -167,6 +177,17 @@ export default class RouteForm extends Vue {
 	beforeDestroy(): void {
 		this.draggable.disable();
 		this.routeLayer.remove();
+	}
+
+	@Watch("active")
+	handleActiveChange(active: boolean): void {
+		if (active)
+			this.draggable.enableForLayer(this.routeLayer);
+		else
+			this.draggable.disableForLayer(this.routeLayer);
+		
+		if (this.client.route)
+			this.routeLayer.setStyle({ opacity: active ? 1 : 0.35, raised: active });
 	}
 
 	get hasRoute(): boolean {
@@ -289,38 +310,24 @@ export default class RouteForm extends Vue {
 
 	destinationMouseOver(idx: number): void {
 		const marker = this.routeLayer._draggableLines?.dragMarkers[idx];
+
 		if (marker) {
 			this.hoverDestinationIdx = idx;
 			marker.setIcon(getIcon(idx, this.routeLayer._draggableLines!.dragMarkers.length, true));
 		}
-		/* let destination = scope.destinations[idx];
-		if(!destination)
-			return;
-
-		let suggestion = scope.getSelectedSuggestion(destination);
-
-		if(destination.query == destination.loadedQuery && suggestion) {
-			let marker = map.routeUi.getMarker(idx);
-			if(marker && marker.getLatLng().equals([ suggestion.lat, suggestion.lon ])) {
-				highlightedMarker = marker;
-				scope.highlightedIdx = idx;
-				marker.setStyle({ highlight: true });
-			}
-		}*/
 	}
 
 	destinationMouseOut(idx: number): void {
 		this.hoverDestinationIdx = null;
 
 		const marker = this.routeLayer._draggableLines?.dragMarkers[idx];
-		if (marker)
-			marker.setIcon(getIcon(idx, this.routeLayer._draggableLines!.dragMarkers.length));
-
-		/* if(highlightedMarker) {
-			highlightedMarker.setStyle({ highlight: false });
-			scope.highlightedIdx = null;
-			highlightedMarker = null;
-		} */
+		if (marker) {
+			Promise.resolve().then(() => {
+				// If mouseout event is directly followed by a dragend event, the marker will be removed. Only update the icon if the marker is not removed.
+				if (marker["_map"])
+					marker.setIcon(getIcon(idx, this.routeLayer._draggableLines!.dragMarkers.length));
+			});
+		}
 	}
 
 	getValidationState(destination: Destination): boolean | null {
@@ -393,6 +400,11 @@ export default class RouteForm extends Vue {
 		}
 
 		this.client.clearRoute();
+	}
+
+	handleSubmit(event: Event): void {
+		(document.activeElement as any)?.blur?.();
+		this.route(true);
 	}
 
 	/* const routeUi = searchUi.routeUi = {

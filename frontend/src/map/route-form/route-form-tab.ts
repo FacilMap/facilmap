@@ -15,17 +15,10 @@ export default class RouteFormTab extends Vue {
 	@InjectMapContext() mapContext!: MapContext;
 	@InjectMapComponents() mapComponents!: MapComponents;
 
-	mounted(): void {
-		this.$root.$on("fm-open-selection", this.handleOpenSelection);
-	}
+	tabActive = false;
 
-	beforeDestroy(): void {
-		this.$root.$off("fm-open-selection", this.handleOpenSelection);
-	}
-
-	handleOpenSelection(): void {
-		if (this.mapContext.selection.some((item) => item.type == "route"))
-			this.$root.$emit("fm-search-box-show-tab", "fm-route-form-tab");
+	activate(): void {
+		this.$root.$emit("fm-search-box-show-tab", "fm-route-form-tab");
 	}
 
 }

@@ -62,7 +62,6 @@ export default class FileResults extends Vue {
 
 	typeExists(type: TypeImport): boolean {
 		for (const typeId of Object.keys(this.client.types) as any as ID[]) {
-			console.log(type, this.client.types[typeId]);
 			if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], this.client.types[typeId][idx])))
 				return true;
 		}

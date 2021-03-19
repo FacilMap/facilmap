@@ -119,6 +119,7 @@ export default class SearchBox extends Vue {
 		this.isResizing = true;
 		this.resizeStartWidth = this.searchBox.offsetWidth;
 		this.resizeStartHeight = this.searchBox.offsetHeight;
+		this.$root.$emit('bv::hide::tooltip');
 	}
 
 	handleResizeMove(event: any): void {
@@ -133,6 +134,7 @@ export default class SearchBox extends Vue {
 	handleResizeClick(): void {
 		this.searchBox.style.width = "";
 		this.searchBox.style.height = "";
+		this.$root.$emit('bv::hide::tooltip');
 	}
 
 }

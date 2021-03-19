@@ -12,11 +12,13 @@
 				<b-td>{{type.name}}</b-td>
 				<b-td>{{type.type}}</b-td>
 				<b-td class="td-buttons">
-					<b-button :disabled="isDeleting[type.id]" @click="openEditDialog(type)">Edit</b-button>
-					<b-button @click="deleteType(type)" class="btn btn-default" :disabled="isDeleting[type.id]">
-						<b-spinner small v-if="isDeleting[type.id]"></b-spinner>
-						Delete
-					</b-button>
+					<b-button-group>
+						<b-button :disabled="isDeleting[type.id]" @click="openEditDialog(type)">Edit</b-button>
+						<b-button @click="deleteType(type)" class="btn btn-default" :disabled="isDeleting[type.id]">
+							<b-spinner small v-if="isDeleting[type.id]"></b-spinner>
+							Delete
+						</b-button>
+					</b-button-group>
 				</b-td>
 			</b-tr>
 		</b-tbody>
