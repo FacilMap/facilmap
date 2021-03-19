@@ -2,10 +2,10 @@ import { RouteMode } from "facilmap-types";
 
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";
-	type: "" | "road" | "safe" | "mountain" | "tour" | "electric" | "hiking" | "wheelchair";
+	type: "" | "hgv" | "road" | "mountain" | "electric" | "hiking" | "wheelchair";
 	preference: "fastest" | "shortest" | "recommended";
 	details: boolean;
-	avoid: Array<"highways" | "tollways" | "ferries" | "tunnels" | "pavedroads" | "unpavedroads" | "tracks" | "fords" | "steps" | "hills">;
+	avoid: Array<"highways" | "tollways" | "ferries" | "fords" | "steps">;
 }
 
 export const R = 6371; // km
@@ -67,7 +67,7 @@ export function decodeRouteMode(encodedMode: RouteMode): DecodedRouteMode {
 				decodedMode.mode = "pedestrian";
 			else if(["helicopter", "straight"].includes(part))
 				decodedMode.mode = "";
-			else if(["road", "safe", "mountain", "tour", "electric", "hiking", "wheelchair"].includes(part))
+			else if(["hgv", "road", "mountain", "electric", "hiking", "wheelchair"].includes(part))
 				decodedMode.type = part as any;
 			else if(["fastest", "shortest", "recommended"].includes(part))
 				decodedMode.preference = part as any;
@@ -86,15 +86,18 @@ export function formatRouteMode(encodedMode: RouteMode): string {
 
 	switch(decodedMode.mode) {
 		case "car":
-			return "by car";
+			switch(decodedMode.type) {
+				case "hgv":
+					return "by HGV";
+				default:
+					return "by car";
+			}
 		case "bicycle":
 			switch(decodedMode.type) {
 				case "road":
 					return "by road bike";
 				case "mountain":
 					return "by mountain bike";
-				case "tour":
-					return "by touring bike";
 				case "electric":
 					return "by electric bike";
 				default:

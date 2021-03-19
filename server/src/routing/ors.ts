@@ -9,11 +9,12 @@ const ROUTING_URL = `https://api.openrouteservice.org/v2/directions`;
 
 const ROUTING_MODES: Record<string, string> = {
 	"car-": "driving-car",
+	"car-hgv": "driving-hgv", // TODO
 	"bicycle-": "cycling-regular",
 	"bicycle-road": "cycling-road",
-	"bicycle-safe": "cycling-safe",
+	// "bicycle-safe": "cycling-safe",
 	"bicycle-mountain": "cycling-mountain",
-	"bicycle-tour": "cycling-tour",
+	// "bicycle-tour": "cycling-tour",
 	"bicycle-electric": "cycling-electric",
 	"pedestrian-": "foot-walking",
 	"pedestrian-hiking": "foot-hiking",
@@ -55,7 +56,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		results = await Promise.all(coordGroups.map((coords) => {
 			const req: any = {
 				coordinates: coords.map((point) => [point.lon, point.lat]),
-				// + "&geometry_format=polyline"
+				radiuses: coords.map(() => -1),
 				instructions: false
 			};
 

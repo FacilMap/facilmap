@@ -189,32 +189,6 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 				let scope = $rootScope.$new();
 				scope.client = map.client;
 
-				scope.addToMap = function(type) {
-					if(openInfoBox) {
-						openInfoBox.hide();
-					}
-
-					if(type == null) {
-						for(var i in map.client.types) {
-							if(map.client.types[i].type == "line") {
-								type = map.client.types[i];
-								break;
-							}
-						}
-					}
-
-					map.linesUi.createLine(type, map.client.route.routePoints, { mode: map.client.route.mode });
-
-					map.mapEvents.$broadcast("routeClear");
-					map.client.clearRoute().catch((err) => {
-						map.messages.showMessage("danger", err);
-					});
-				};
-
-				scope.export = function(useTracks) {
-					routeUi.exportRoute(useTracks);
-				};
-
 				let template = $(require("./view-route.html"));
 
 				openInfoBox = map.infoBox.show({
@@ -313,13 +287,7 @@ fm.app.factory("fmMapRoute", function(fmUtils, $uibModal, $compile, $timeout, $r
 			},
 
 			exportRoute(useTracks) {
-				map.client.exportRoute({
-					format: useTracks ? "gpx-trk" : "gpx-rte"
-				}).then((exported) => {
-					saveAs(new Blob([exported], {type: "application/gpx+xml"}), "FacilMap route.gpx");
-				}).catch((err) => {
-					map.messages.showMessage("danger", err);
-				});
+				
 			},
 
 			getMarker(idx) {

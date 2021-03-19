@@ -15,7 +15,7 @@ for (const key of rawIconsContext.keys() as string[]) {
 }
 
 rawIcons["fontawesome"] = {};
-for (const name of ["arrow-left", "arrow-right", "biking", "car-alt", "slash", "walking"]) {
+for (const name of ["arrow-left", "arrow-right", "biking", "car-alt", "chart-line", "slash", "walking"]) {
     rawIcons["fontawesome"][name] = require(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
 }
 

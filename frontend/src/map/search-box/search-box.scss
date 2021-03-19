@@ -35,6 +35,10 @@
 		min-height: 0;
 	}
 
+	.tabs, .tab-content, .tab-pane {
+		flex-grow: 1;
+	}
+
 	.card-header {
 		display: flex;
 		flex-direction: column;

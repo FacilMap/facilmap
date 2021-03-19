@@ -2,6 +2,7 @@
 	padding: 0.5rem;
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
 
 	.input-group {
 		position: static;

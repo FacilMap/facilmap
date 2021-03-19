@@ -2,7 +2,7 @@ import fm from '../../app';
 import $ from 'jquery';
 import L from 'leaflet';
 import ng from 'angular';
-import heightgraph from '../../leaflet/heightgraph';
+import heightgraph from '../../../src/utils/heightgraph';
 import saveAs from 'file-saver';
 
 import css from './lines.scss';
@@ -41,8 +41,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 			}
 		});
 
-		let elevationPlot = new heightgraph();
-		elevationPlot._map = map.map;
+		
 
 		var linesUi = {
 			_addLine: function(line, _doNotRerenderPopup) {
@@ -104,26 +103,6 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 
 				if(linesById[line.id])
 					linesById[line.id].setStyle({ highlight: true });
-
-				scope.$watch("line.trackPoints", () => {
-					scope.elevationStats = null;
-					if(line.ascent != null && line.trackPoints) {
-						elevationPlot.addData(line.extraInfo, line.trackPoints);
-						scope.elevationStats = heightgraph.createElevationStats(line.extraInfo, line.trackPoints);
-					}
-				}, true);
-
-				let drawElevationPlot = () => {
-					let el = template.find(".fm-elevation-plot").empty();
-
-					if(line.ascent != null) {
-						let content = template.filter(".content");
-						elevationPlot.options.width = content.find(".tab-pane.active").width();
-						elevationPlot.options.height = content.height() - content.find(".tab-pane.active dl").outerHeight(true);
-
-						el.append($(elevationPlot.onAdd(map.map)));
-					}
-				};
 
 				template.filter(".content").on("resizeend", drawElevationPlot);
 				setTimeout(drawElevationPlot, 0);

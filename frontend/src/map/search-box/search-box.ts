@@ -1,6 +1,6 @@
 import WithRender from "./search-box.vue";
 import Vue from "vue";
-import { Component, Ref } from "vue-property-decorator";
+import { Component, ProvideReactive, Ref } from "vue-property-decorator";
 import "./search-box.scss";
 import context from "../context";
 import $ from "jquery";
@@ -10,9 +10,11 @@ import SearchFormTab from "../search-form/search-form-tab";
 import MarkerInfoTab from "../marker-info/marker-info-tab";
 import LineInfoTab from "../line-info/line-info-tab";
 import hammer from "hammerjs";
-import { InjectMapComponents } from "../../utils/decorators";
+import { InjectMapComponents, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import { MapComponents } from "../leaflet-map/leaflet-map";
 import RouteFormTab from "../route-form/route-form-tab";
+
+export type SearchBoxContext = Vue;
 
 @WithRender
 @Component({
@@ -21,6 +23,8 @@ import RouteFormTab from "../route-form/route-form-tab";
 export default class SearchBox extends Vue {
 
 	@InjectMapComponents() mapComponents!: MapComponents;
+
+	@ProvideReactive(SEARCH_BOX_CONTEXT_INJECT_KEY) searchBoxContext = new Vue();
 
 	@Ref() tabsComponent!: any;
 	@Ref() searchBox!: HTMLElement;
@@ -120,15 +124,18 @@ export default class SearchBox extends Vue {
 		this.resizeStartWidth = this.searchBox.offsetWidth;
 		this.resizeStartHeight = this.searchBox.offsetHeight;
 		this.$root.$emit('bv::hide::tooltip');
+		this.searchBoxContext.$emit("resizestart");
 	}
 
 	handleResizeMove(event: any): void {
 		this.searchBox.style.width = `${this.resizeStartWidth + event.deltaX}px`;
 		this.searchBox.style.height = `${this.resizeStartHeight + event.deltaY}px`;
+		this.searchBoxContext.$emit("resize");
 	}
 
 	handleResizeEnd(event: any): void {
 		this.isResizing = false;
+		this.searchBoxContext.$emit("resizeend");
 	}
 
 	handleResizeClick(): void {

@@ -33,4 +33,8 @@ declare module "leaflet" {
 	namespace control {
 		export const graphicScale: any;
 	}
+
+	namespace Control {
+		const Heightgraph: any;
+	}
 }

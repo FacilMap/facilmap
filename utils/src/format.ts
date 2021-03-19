@@ -99,6 +99,8 @@ export function renderOsmTag(key: string, value: string): string {
 			return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + quoteHtml(m[2]) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[3];
 		}).join(";");
 	} else {
-		return linkifyStr(value);
+		return linkifyStr(value, {
+			target: (href, type) => type === "url" ? "_blank" : ""
+		});
 	}
 }

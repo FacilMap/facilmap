@@ -2,7 +2,7 @@
 	<b-input-group :id="`${effId}-input-group`">
 		<b-input-group-prepend>
 			<b-input-group-text :style="{ backgroundColor: `#${value}` }">
-				<span style="width: 24px"></span>
+				<span style="width: 1.4em"></span>
 			</b-input-group-text>
 		</b-input-group-prepend>
 		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>

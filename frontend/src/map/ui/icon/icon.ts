@@ -11,10 +11,10 @@ export default class Icon extends Vue {
 
 	@Prop({ type: String }) icon!: string | undefined;
 	@Prop({ type: String }) alt?: string; // TODO
-	@Prop({ type: String }) size?: string;
+	@Prop({ type: String, default: "1.4em" }) size!: string;
 
 	get iconCode(): string {
-		return getSymbolHtml("currentColor", this.size || "1.4em", this.icon);
+		return getSymbolHtml("currentColor", this.size, this.icon);
 	}
 
 }

@@ -46,22 +46,21 @@ const constants: {
 	},
 
 	types: {
-		car: [""],
-		bicycle: ["", "road", "safe", "mountain", "tour", "electric"],
+		car: ["", "hgv"],
+		bicycle: ["", "road", "mountain", "electric"],
 		pedestrian: ["", "hiking", "wheelchair"],
 		"": [""]
 	},
 
 	typeText: {
 		car: {
-			"": "Car"
+			"": "Car",
+			"hgv": "HGV"
 		},
 		bicycle: {
 			"": "Bicycle",
 			road: "Road bike",
-			safe: "Safe cycling",
 			mountain: "Mountain bike",
-			tour: "Touring bike",
 			electric: "Electric bike"
 		},
 		pedestrian: {
@@ -82,32 +81,26 @@ const constants: {
 		recommended: "Recommended"
 	},
 
-	avoid: ["highways", "tollways", "ferries", "tunnels", "pavedroads", "unpavedroads", "tracks", "fords", "steps", "hills"],
+	avoid: ["highways", "tollways", "ferries", "fords", "steps"],
 
+	// driving: highways, tollways, ferries
+	// cycling: ferries, steps, fords
+	// foot: ferries, fords, steps
+	// wheelchair: ferries, steps
 	avoidAllowed: {
 		highways: (mode) => (mode == "car"),
 		tollways: (mode) => (mode == "car"),
 		ferries: (mode) => (!!mode),
-		tunnels: (mode) => (mode == "car"),
-		pavedroads: (mode) => (mode == "car" || mode == "bicycle"),
-		unpavedroads: (mode) => (mode == "car" || mode == "bicycle"),
-		tracks: (mode) => (mode == "car"),
-		fords: (mode, type) => (!!mode && (mode != "pedestrian" || type != "wheelchair")),
-		steps: (mode) => (!!mode && mode != "car"),
-		hills: (mode, type) => (!!mode && mode != "car" && (mode != "pedestrian" || type != "wheelchair"))
+		fords: (mode, type) => (mode == "bicycle" || (mode == "pedestrian" && type != "wheelchair")),
+		steps: (mode) => (mode == "bicycle" || mode == "pedestrian")
 	},
 
 	avoidText: {
 		highways: "highways",
 		tollways: "toll roads",
 		ferries: "ferries",
-		tunnels: "tunnels",
-		pavedroads: "paved roads",
-		unpavedroads: "unpaved roads",
-		tracks: "tracks",
 		fords: "fords",
-		steps: "steps",
-		hills: "hills"
+		steps: "steps"
 	}
 }
 

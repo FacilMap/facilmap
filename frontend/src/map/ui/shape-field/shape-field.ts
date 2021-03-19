@@ -37,7 +37,7 @@ export default class ShapeField extends Vue {
 	}
 
 	get valueSrc(): string {
-		return getMarkerUrl("000000", 25, undefined, this.value);
+		return getMarkerUrl("000000", 21, undefined, this.value);
 	}
 
 	get filteredShapes(): Shape[] {

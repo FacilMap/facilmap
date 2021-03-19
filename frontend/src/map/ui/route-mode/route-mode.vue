@@ -12,11 +12,11 @@
 	</b-button>
 
 	<b-dropdown
-		id="fm-route-mode-customise"
 		:tabindex="tabindex + constants.modes.length"
 		title="Customise"
 		v-b-tooltip.hover.top
 		:disabled="disabled"
+		menu-class="fm-route-mode-customize"
 	>
 		<template #button-content><Icon icon="cog" alt="Custom"/></template>
 		<b-dropdown-item @click.native.capture.stop.prevent="decodedMode.details = !decodedMode.details"><Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> Load route details (elevation, road types, …)</b-dropdown-item>

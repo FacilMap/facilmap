@@ -9,10 +9,12 @@ import { showErrorToast } from "../../utils/toasts";
 import EditLine from "../edit-line/edit-line";
 import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import ElevationPlot from "../ui/elevation-plot/elevation-plot";
+import Icon from "../ui/icon/icon";
 
 @WithRender
 @Component({
-	components: { EditLine, ElevationStats }
+	components: { EditLine, ElevationPlot, ElevationStats, Icon }
 })
 export default class LineInfo extends Vue {
 	
@@ -23,14 +25,10 @@ export default class LineInfo extends Vue {
 	@Prop({ type: IdType, required: true }) lineId!: ID;
 
 	isSaving = false;
+	showElevationPlot = false;
 
 	get line(): Line | undefined {
 		return this.client.lines[this.lineId];
-	}
-
-	get elevationStats(): undefined {
-		// TODO
-		return undefined;
 	}
 
 	async deleteLine(): Promise<void> {

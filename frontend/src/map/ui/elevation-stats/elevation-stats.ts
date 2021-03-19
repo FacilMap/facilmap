@@ -1,20 +1,24 @@
-import { Line, Route } from "facilmap-types";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import WithRender from "./elevation-stats.vue";
 import { sortBy } from "lodash";
+import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
+import { createElevationStats } from "../../../utils/heightgraph";
+import Icon from "../icon/icon";
 
 @WithRender
-@Component({})
+@Component({
+	components: { Icon }
+})
 export default class ElevationStats extends Vue {
 	
-	@Prop({ type: Object, required: true }) route!: Line | Route;
-	@Prop({ type: Object }) stats: any;
+	@Prop({ type: Object, required: true }) route!: LineWithTrackPoints | RouteWithTrackPoints;
 
 	id = Date.now();
 
 	get statsArr(): any {
-		return this.stats && sortBy(Object.keys(this.stats).map((i) => ({ i: Number(i), distance: this.stats[i] })), 'i');
+		const stats = createElevationStats(this.route.extraInfo, this.route.trackPoints)
+		return stats && sortBy((Object.keys(stats) as any as number[]).map((i) => ({ i: Number(i), distance: stats[i] })), 'i');
 	}
 
 }

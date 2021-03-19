@@ -63,7 +63,7 @@
 
 			<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)"></RouteMode>
 
-			<b-button type="submit" variant="primary" :tabindex="destinations.length+7" class="flex-grow-1">Go!</b-button>
+			<b-button type="submit" variant="primary" :tabindex="destinations.length+7" class="flex-grow-1" ref="submitButton">Go!</b-button>
 			<b-button v-if="hasRoute" type="button" :tabindex="destinations.length+8" @click="reset()" title="Clear route" v-b-tooltip><Icon icon="remove" alt="Clear"></Icon></b-button>
 		</b-button-toolbar>
 
@@ -79,28 +79,35 @@
 			<dl>
 				<dt>Distance</dt>
 				<dd>{{client.route.distance | round(2)}} km <span v-if="client.route.time != null">({{client.route.time | fmFormatTime}} h {{client.route.mode | fmRouteMode}})</span></dd>
-		
-				<!-- <dt class="elevation" v-if="client.route.ascent != null">Climb/drop</dt>
-				<dd class="elevation" v-if="client.route.ascent != null"><ElevationStats :route="client.route" :stats="elevationStats"></ElevationStats></dd> -->
-			</dl>
-				<!-- <div class="fm-elevation-plot" ng-show="client.route.ascent != null"></div> -->
 
-			<!-- <div class="buttons" ng-if="!client.readonly">
-				<div uib-dropdown keyboard-nav="true" ng-if="!client._editingLineId && (client.types | fmPropertyCount:{type:'line'}) > 1" class="dropup">
-					<button id="add-type-button" type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
-					<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button">
-						<li role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addToMap(type)">{{type.name}}</a></li>
-					</ul>
-				</div>
-				<button ng-if="!client._editingLineId && (client.types | fmPropertyCount:{type:'line'}) == 1" type="button" class="btn btn-default" ng-click="addToMap()">Add to map</button>
-				<div uib-dropdown keyboard-nav="true" class="dropup">
-					<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Export <span class="caret"></span></button>
-					<ul class="dropdown-menu" uib-dropdown-menu role="menu">
-						<li role="menuitem"><a href="javascript:" ng-click="export(true)" uib-tooltip="GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file."tooltip-placement="left">Export as GPX track</a></li>
-						<li role="menuitem"><a href="javascript:" ng-click="export(false)" uib-tooltip="GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route."tooltip-placement="left">Export as GPX route</a></li>
-					</ul>
-				</div>
-			</div> -->
+				<template v-if="client.route.ascent != null">
+					<dt>Climb/drop</dt>
+					<dd><ElevationStats :route="client.route"></ElevationStats></dd>
+				</template>
+			</dl>
+
+			<ElevationPlot :route="client.route" v-if="client.route.ascent != null"></ElevationPlot>
+
+			<b-button-toolbar v-if="!client.readonly">
+				<b-dropdown v-if="lineTypes.length > 1" text="Add to map" size="sm">
+					<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(type)">{{type.name}}</b-dropdown-item>
+				</b-dropdown>
+				<b-button v-if="lineTypes.length == 1" @click="addToMap(lineTypes[0])" size="sm">Add to map</b-button>
+				<b-dropdown text="Export" size="sm">
+					<b-dropdown-item
+						href="javascript:"
+						@click="exportRoute('gpx-trk')"
+						title="GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file."
+						v-b-tooltip
+					>Export as GPX track</b-dropdown-item>
+					<b-dropdown-item
+						href="javascript:"
+						@click="exportRoute('gpx-rte')"
+						title="GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route."
+						v-b-tooltip
+					>Export as GPX route</b-dropdown-item>
+				</b-dropdown>
+			</b-button-toolbar>
 		</template>
 	</b-form>
 </div>

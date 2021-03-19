@@ -1,13 +1,13 @@
 import WithRender from "./route-form.vue";
 import "./route-form.scss";
 import Vue from "vue";
-import { Component, Prop, Watch } from "vue-property-decorator";
+import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { isSearchId, round } from "facilmap-utils";
 import Client from "facilmap-client";
 import { showErrorToast } from "../../utils/toasts";
-import { FindOnMapResult, SearchResult } from "facilmap-types";
+import { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { getMarkerIcon, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 import { getZoomDestinationForRoute, flyTo } from "../../utils/zoom";
@@ -16,6 +16,9 @@ import draggable from "vuedraggable";
 import RouteMode from "../ui/route-mode/route-mode";
 import DraggableLines from "leaflet-draggable-lines";
 import { throttle } from "lodash";
+import ElevationStats from "../ui/elevation-stats/elevation-stats";
+import ElevationPlot from "../ui/elevation-plot/elevation-plot";
+import { saveAs } from 'file-saver';
 
 type SearchSuggestion = SearchResult;
 type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -70,13 +73,15 @@ function getIcon(i: number, length: number, highlight = false) {
 
 @WithRender
 @Component({
-	components: { draggable, Icon, RouteMode }
+	components: { draggable, ElevationPlot, ElevationStats, Icon, RouteMode }
 })
 export default class RouteForm extends Vue {
 	
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
+
+	@Ref() submitButton!: HTMLButtonElement;
 
 	@Prop({ type: Boolean, default: true }) active!: boolean;
 
@@ -192,6 +197,10 @@ export default class RouteForm extends Vue {
 
 	get hasRoute(): boolean {
 		return !!this.client.route;
+	}
+
+	get lineTypes(): Type[] {
+		return Object.values(this.client.types).filter((type) => type.type == "line");
 	}
 
 	addDestination(): void {
@@ -402,9 +411,41 @@ export default class RouteForm extends Vue {
 		this.client.clearRoute();
 	}
 
+	clear(): void {
+		this.reset();
+
+		this.destinations = [
+			{ query: "" },
+			{ query: "" }
+		];
+	}
+
 	handleSubmit(event: Event): void {
-		(document.activeElement as any)?.blur?.();
+		this.submitButton.focus();
 		this.route(true);
+	}
+
+	async addToMap(type: Type): Promise<void> {
+		this.$bvToast.hide("fm-route-form-add-error");
+
+		try {
+			const line = await this.client.addLine({ typeId: type.id, routePoints: this.client.route!.routePoints, mode: this.client.route!.mode });
+			this.clear();
+			this.mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
+		} catch (err) {
+			showErrorToast(this, "fm-route-form-add-error", "Error adding line", err);
+		}
+	}
+
+	async exportRoute(format: ExportFormat): Promise<void> {
+		this.$bvToast.hide("fm-route-form-export-error");
+
+		try {
+			const exported = await this.client.exportRoute({ format });
+			saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
+		} catch(err) {
+			showErrorToast(this, "fm-route-form-export-error", "Error exporting route", err);
+		}
 	}
 
 	/* const routeUi = searchUi.routeUi = {

@@ -1,14 +1,118 @@
 import 'leaflet.heightgraph';
-import $ from 'jquery';
-import L from 'leaflet';
+import { Control, Map, Polyline } from 'leaflet';
+import "leaflet.heightgraph/src/L.Control.Heightgraph.css";
+import "./heightgraph.scss";
+import { TrackPoints } from 'facilmap-client';
+import { ExtraInfo, TrackPoint } from 'facilmap-types';
+import { FeatureCollection } from "geojson";
+import { calculateDistance, round } from 'facilmap-utils';
 
-import css from './heightgraph.scss';
-import { calculateDistance } from '../../common/utils';
-import { round } from '../../common/format';
+function trackSegment(trackPoints: TrackPoints, fromIdx: number, toIdx: number): TrackPoint[] {
+	let ret: TrackPoint[] = [];
 
-export default class FmHeightgraph extends L.Control.Heightgraph {
-	constructor(options) {
-		super(Object.assign({
+	for(let i=fromIdx; i<trackPoints.length; i++) {
+		if(trackPoints[i] && trackPoints[i].ele != null) {
+			ret.push(trackPoints[i]);
+
+			if(i >= toIdx) // Makes sure that if toIdx does not exist in trackPoints, the next trackPoint is added, which avoids gaps between the segments, as required by leaflet.heightgraph
+				break;
+		}
+	}
+
+	return ret;
+}
+
+type Collection = FeatureCollection & {
+	properties: {
+		summary: string;
+		distances: Record<number, number>;
+	};
+}
+
+function createGeoJsonForHeightGraph(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): Collection[] {
+	const geojson: Collection[] = [];
+
+	if(!extraInfo || Object.keys(extraInfo).length == 0)
+		extraInfo = { "": [[ 0, trackPoints.length-1, "" as any ]] };
+
+	for(const i of Object.keys(extraInfo)) {
+		let featureCollection: Collection = {
+			type: "FeatureCollection",
+			features: [],
+			properties: {
+				summary: i,
+				distances: {}
+			}
+		};
+
+		const distances = featureCollection.properties.distances;
+
+		for(let segment in extraInfo[i]) {
+			const segmentPosList = trackSegment(trackPoints, extraInfo[i][segment][0], extraInfo[i][segment][1]);
+
+			if (distances[extraInfo[i][segment][2]] == null)
+				distances[extraInfo[i][segment][2]] = 0;
+			distances[extraInfo[i][segment][2]] += calculateDistance(segmentPosList);
+
+			featureCollection.features.push({
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: segmentPosList.map((trackPoint) => ([trackPoint.lon, trackPoint.lat, ...(trackPoint.ele != null ? [trackPoint.ele] : [])]))
+				},
+				properties: {
+					attributeType: extraInfo[i][segment][2]
+				}
+			});
+		}
+
+		geojson.push(featureCollection);
+	}
+	return geojson;
+}
+
+function getDistancesByInfoType(extraInfo: ExtraInfo[string] | undefined, trackPoints: TrackPoints): Record<number, number> {
+	const ret: Record<number, number> = { };
+
+	if (!extraInfo)
+		return ret;
+
+	for(let segment in extraInfo) {
+		if (ret[extraInfo[segment][2]] == null)
+			ret[extraInfo[segment][2]] = 0;
+
+		ret[extraInfo[segment][2]] += calculateDistance(trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
+	}
+
+	return ret;
+}
+
+export function createElevationStats(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): Record<number, number> | null {
+	if (!extraInfo || !extraInfo.steepness)
+		return null;
+
+	const stats = getDistancesByInfoType(extraInfo.steepness, trackPoints);
+
+	const sum = (filter: (i: number) => boolean): number => Object.keys(stats).map((i) => parseInt(i, 10)).filter(filter).reduce((acc, cur) => acc + stats[cur], 0);
+
+	return {
+		"-16": sum((i) => (i <= -5)),
+		"-10": sum((i) => (i <= -4)),
+		"-7": sum((i) => (i <= -3)),
+		"-4": sum((i) => (i <= -2)),
+		"-1": sum((i) => (i <= -1)),
+		"0": sum((i) => (i == 0)),
+		"1": sum((i) => (i >= 1)),
+		"4": sum((i) => (i >= 2)),
+		"7": sum((i) => (i >= 3)),
+		"10": sum((i) => (i >= 4)),
+		"16": sum((i) => (i >= 5))
+	};
+}
+
+export default class FmHeightgraph extends Control.Heightgraph {
+	constructor(options?: any) {
+		super({
 			margins: {
 				top: 20,
 				right: 10,
@@ -136,36 +240,26 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 					"16": { text: "Private", color: "#F64A8A" },
 					"32": { text: "Permissive", color: "#E0115F" }
 				}
-			}
-		}, options));
+			},
+			...options
+		});
 
-		for (const i in this.options.mappings) {
-			for (const j in this.options.mappings[i]) {
+		for (const i of Object.keys(this.options.mappings)) {
+			for (const j of Object.keys(this.options.mappings[i])) {
 				this.options.mappings[i][j].originalText = this.options.mappings[i][j].text;
 			}
 		}
 	}
 
-	onAdd(map) {
-		// Work around double margins (https://github.com/GIScience/Leaflet.Heightgraph/issues/33)
-		let sizeBkp = { width: this.options.width, height: this.options.height };
-		this.options.width = sizeBkp.width + this.options.margins.left + this.options.margins.right;
-		this.options.height = sizeBkp.height + this.options.margins.top + this.options.margins.bottom;
+	onAdd(map: Map): Element {
+		// Initialize renderer on overlay pane because Heightgraph renders the hover overlay there (it appends it to .leaflet-overlay-pane svg)
+		map.getRenderer(new Polyline([]));
 
-		let el = $("svg", super.onAdd(map));
-
-		Object.assign(this.options, sizeBkp);
-
-		if(this._data)
-			super.addData(this._data);
-
-		el.addClass(css.className);
-
-		return el[0];
+		return super.onAdd(map);
 	}
 
-	addData(extraInfo, trackPoints) {
-		let data = FmHeightgraph.createGeoJsonForHeightGraph(extraInfo, trackPoints);
+	addData(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): void {
+		let data = createGeoJsonForHeightGraph(extraInfo, trackPoints);
 
 		for (const featureCollection of data) {
 			for (const i in featureCollection.properties.distances) {
@@ -181,106 +275,4 @@ export default class FmHeightgraph extends L.Control.Heightgraph {
 			this._data = data;
 	}
 
-	_appendScales() {
-		super._appendScales();
-
-		//this._xAxis.ticks(3);
-	}
-
-	static trackSegment(trackPoints, fromIdx, toIdx) {
-		let ret = [];
-
-		for(let i=fromIdx; i<trackPoints.length; i++) {
-			if(trackPoints[i] && trackPoints[i].ele != null) {
-				ret.push(trackPoints[i]);
-
-				if(i >= toIdx) // Makes sure that if toIdx does not exist in trackPoints, the next trackPoint is added, which avoids gaps between the segments, as required by leaflet.heightgraph
-					break;
-			}
-		}
-
-		return ret;
-	}
-
-	static createGeoJsonForHeightGraph(extraInfo, trackPoints) {
-		let geojson = [];
-
-		if(!extraInfo || Object.keys(extraInfo).length == 0)
-			extraInfo = { "": [[ 0, trackPoints.length-1, "" ]] };
-
-		for(let i in extraInfo) {
-			let featureCollection = {
-				type: "FeatureCollection",
-				features: [],
-				properties: {
-					summary: i
-				}
-			};
-
-			const distances = { };
-
-			for(let segment in extraInfo[i]) {
-				const segmentPosList = FmHeightgraph.trackSegment(trackPoints, extraInfo[i][segment][0], extraInfo[i][segment][1]);
-
-				if (distances[extraInfo[i][segment][2]] == null)
-					distances[extraInfo[i][segment][2]] = 0;
-				distances[extraInfo[i][segment][2]] += calculateDistance(segmentPosList);
-
-				featureCollection.features.push({
-					type: "Feature",
-					geometry: {
-						type: "LineString",
-						coordinates: segmentPosList.map((trackPoint) => ([trackPoint.lon, trackPoint.lat, trackPoint.ele]))
-					},
-					properties: {
-						attributeType: extraInfo[i][segment][2]
-					}
-				});
-			}
-
-			featureCollection.properties.distances = distances;
-
-			geojson.push(featureCollection);
-		}
-		return geojson;
-	}
-
-	static getDistancesByInfoType(extraInfo, trackPoints) {
-		const ret = { };
-
-		if (!extraInfo)
-			return ret;
-
-		for(let segment in extraInfo) {
-			if (ret[extraInfo[segment][2]] == null)
-				ret[extraInfo[segment][2]] = 0;
-
-			ret[extraInfo[segment][2]] += calculateDistance(FmHeightgraph.trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
-		}
-
-		return ret;
-	}
-
-	static createElevationStats(extraInfo, trackPoints) {
-		if (!extraInfo || !extraInfo.steepness)
-			return null;
-
-		const stats = FmHeightgraph.getDistancesByInfoType(extraInfo.steepness, trackPoints);
-
-		const sum = (filter) => Object.keys(stats).map((i) => parseInt(i, 10)).filter(filter).reduce((acc, cur) => acc + stats[cur], 0);
-
-		return {
-			"-16": sum((i) => (i <= -5)),
-			"-10": sum((i) => (i <= -4)),
-			"-7": sum((i) => (i <= -3)),
-			"-4": sum((i) => (i <= -2)),
-			"-1": sum((i) => (i <= -1)),
-			"0": sum((i) => (i == 0)),
-			"1": sum((i) => (i >= 1)),
-			"4": sum((i) => (i >= 2)),
-			"7": sum((i) => (i >= 3)),
-			"10": sum((i) => (i >= 4)),
-			"16": sum((i) => (i >= 5))
-		};
-	}
 }

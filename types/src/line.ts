@@ -1,7 +1,7 @@
 import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base";
 import { PadId } from "./padData";
 
-export type ExtraInfo = Record<string, string[]>;
+export type ExtraInfo = Record<string, Array<[number, number, number]>>;
 
 interface LineBase {
 	id: ID;

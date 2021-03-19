@@ -1,23 +1,34 @@
 <div class="fm-line-info" v-if="line">
-	<h2>{{line.name}}</h2>
+	<div class="d-flex align-items-center">
+		<h2 class="flex-grow-1">{{line.name}}</h2>
+		<b-button
+			v-if="line.ascent != null"
+			:pressed.sync="showElevationPlot"
+			:title="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
+			v-b-tooltip
+		><Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon></b-button>
+	</div>
+
 	<dl>
 		<dt class="distance">Distance</dt>
 		<dd class="distance">{{line.distance | round(2)}} km <span v-if="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRouteMode}})</span></dd>
 
 		<template v-if="line.ascent != null">
 			<dt class="elevation">Climb/drop</dt>
-			<dd class="elevation"><ElevationStats :route="line" :stats="elevationStats"></ElevationStats></dd>
+			<dd class="elevation"><ElevationStats :route="line"></ElevationStats></dd>
 		</template>
 
-		<template v-for="field in client.types[line.typeId].fields">
+		<template v-if="line.ascent == null || !showElevationPlot" v-for="field in client.types[line.typeId].fields">
 			<dt>{{field.name}}</dt>
 			<dd v-html="$options.filters.fmFieldContent(line.data[field.name], field)"></dd>
 		</template>
 	</dl>
 
-	<div class="buttons">
+	<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
+
+	<div class="buttons" v-if="line.ascent == null || !showElevationPlot">
 		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-line-info-edit :disabled="isSaving || mapContext.interaction">Edit data</b-button>
-		<!-- <button ng-if="!client.readonly && canMoveLine" type="button" class="btn btn-default btn-sm" ng-click="move()" ng-disabled="saving || client.interaction">Move</button> -->
+		<!-- <b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isSaving || mapContext.interaction">Move</b-button> -->
 		<b-button v-if="!client.readonly" size="sm" @click="deleteLine()" :disabled="isSaving || mapContext.interaction">Remove</b-button>
 		<!--
 			<div uib-dropdown keyboard-nav="true" class="dropup">

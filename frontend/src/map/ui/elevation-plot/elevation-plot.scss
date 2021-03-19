@@ -1,0 +1,9 @@
+.fm-elevation-plot {
+	flex-grow: 1;
+	flex-basis: 12rem;
+	overflow: hidden;
+
+	.heightgraph-toggle, .heightgraph-close-icon {
+		display: none !important;
+	}
+}
