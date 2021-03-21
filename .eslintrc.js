@@ -20,6 +20,7 @@ module.exports = {
 		"@typescript-eslint/no-non-null-asserted-optional-chain": ["error"],
 		"@typescript-eslint/prefer-as-const": ["error"],
 		"no-restricted-globals": ["error", "$"],
+		"no-restricted-imports": ["error", "vue/types/umd"],
 
 		"constructor-super": ["error"],
 		"for-direction": ["error"],

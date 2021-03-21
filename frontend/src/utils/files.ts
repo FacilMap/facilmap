@@ -5,15 +5,17 @@ import { Feature, Geometry } from "geojson";
 import { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 
-type FeatureProperties = Partial<MarkerFeature["properties"]> & Partial<LineFeature["properties"]> & {
+type FmFeatureProperties = Partial<MarkerFeature["properties"]> | Partial<LineFeature["properties"]>;
+type FeatureProperties = FmFeatureProperties & {
 	tags?: Record<string, string>; // Tags for OSM objects
 	type?: string;
 	id?: string;
 }
 
 export type FileResult = SearchResult & {
+	isFileResult: true;
 	fmTypeId?: number;
-	fmProperties?: FeatureProperties;
+	fmProperties?: FmFeatureProperties;
 }
 
 export interface FileResultObject {
@@ -96,6 +98,7 @@ export function parseFiles(files: string[]): FileResultObject {
 				name = feature.geometry.type || "Object";
 
 			let f: FileResult = {
+				isFileResult: true,
 				short_name: name,
 				display_name: name,
 				extratags: feature.properties.data || feature.properties.tags || flattenObject(Object.assign({}, feature.properties, {coordTimes: null})),

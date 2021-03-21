@@ -1,18 +1,16 @@
-import { isEqual } from "lodash";
-
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
-export function quoteJavaScript(str: string): string {
-	return "'" + (""+str).replace(/['\\]/g, '\\$1').replace(/\n/g, "\\n") + "'";
+export function quoteJavaScript(str: any): string {
+	return "'" + `${str}`.replace(/['\\]/g, '\\$1').replace(/\n/g, "\\n") + "'";
 }
 
-export function quoteHtml(str: string): string {
-	return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+export function quoteHtml(str: any): string {
+	return `${str}`.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 export function quoteRegExp(str: string): string {
-	return (str+'').replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
+	return `${str}`.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
 }
 
 export function generateRandomPadId(length: number = LENGTH): string {

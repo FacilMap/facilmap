@@ -72,6 +72,10 @@
 		overflow: auto;
 	}
 
+	.fm-search-box-collapse-point {
+		overflow: auto;
+	}
+
 
 	hr {
 		width: 100%;
@@ -112,10 +116,6 @@
 
 	.pos,.distance,.elevation {
 		color: #888;
-	}
-
-	.buttons button + button {
-		margin-left: 5px;
 	}
 }
 

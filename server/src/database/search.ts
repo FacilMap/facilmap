@@ -1,13 +1,9 @@
-import { Line, Marker, PadId } from "facilmap-types";
+import { FindOnMapResult, PadId } from "facilmap-types";
 import Sequelize, { ModelCtor } from "sequelize";
 import Database from "./database";
 import { LineModel } from "./line";
 import { MarkerModel } from "./marker";
 import similarity from "string-similarity";
-
-type DatabaseSearchResult = ((Marker & { kind: "marker" }) | (Line & { kind: "line" })) & {
-	similarity: number;
-};
 
 const Op = Sequelize.Op;
 
@@ -19,7 +15,7 @@ export default class DatabaseSearch {
 		this._db = database;
 	}
 
-	async search(padId: PadId, searchText: string): Promise<Array<DatabaseSearchResult>> {
+	async search(padId: PadId, searchText: string): Promise<Array<FindOnMapResult>> {
 		const objects = (await Promise.all([ "Marker", "Line" ].map(async (kind) => {
 			const model = this._db._conn.model(kind) as ModelCtor<MarkerModel | LineModel>;
 			const objs = await model.findAll<MarkerModel | LineModel>({

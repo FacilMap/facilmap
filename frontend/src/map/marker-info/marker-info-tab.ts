@@ -18,11 +18,11 @@ export default class MarkerInfoTab extends Vue {
 	@InjectMapComponents() mapComponents!: MapComponents;
 
 	mounted(): void {
-		this.$root.$on("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
 	}
 
 	beforeDestroy(): void {
-		this.$root.$off("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
 	}
 
 	get markerId(): ID | undefined {
@@ -44,7 +44,7 @@ export default class MarkerInfoTab extends Vue {
 
 	handleOpenSelection(): void {
 		if (this.marker)
-			this.$root.$emit("fm-search-box-show-tab", "fm-marker-info-tab");
+			this.mapContext.$emit("fm-search-box-show-tab", "fm-marker-info-tab");
 	}
 
 	get title(): string | undefined {

@@ -18,6 +18,7 @@ import SelectionHandler, { SelectedItem } from "../../utils/selection";
 import { FilterFunc } from "facilmap-utils";
 import { getHashQuery } from "../../utils/zoom";
 import context from "../context";
+import { createEventBus, EventBus } from "./events";
 
 /* function createButton(symbol: string, onClick: () => void): Control {
     return Object.assign(new Control(), {
@@ -51,7 +52,7 @@ export interface MapComponents {
     selectionHandler: SelectionHandler;
 }
 
-export interface MapContext {
+export interface MapContext extends EventBus {
     center: LatLng;
     zoom: number;
     layers: VisibleLayers;
@@ -131,7 +132,8 @@ export default class LeafletMap extends Vue {
             hash: location.hash.replace(/^#/, ""),
             showToolbox: false,
             selection: [],
-            interaction: false
+            interaction: false,
+            ...createEventBus()
         };
 
         map.on("moveend", () => {
@@ -168,7 +170,7 @@ export default class LeafletMap extends Vue {
 
             if (event.open) {
                 setTimeout(() => {
-                    this.$root.$emit("fm-open-selection", selection);
+                    this.mapContext.$emit("fm-open-selection", selection);
                 }, 0);
             }
         });

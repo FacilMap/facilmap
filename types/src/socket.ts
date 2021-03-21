@@ -31,7 +31,7 @@ export interface FindOnMapQuery {
 	query: string;
 }
 
-export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon"> & { kind: "marker"; similarity: number };
+export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "symbol"> & { kind: "marker"; similarity: number };
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 

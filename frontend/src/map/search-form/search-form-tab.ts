@@ -17,17 +17,17 @@ export default class SearchFormTab extends Vue {
 	@InjectMapComponents() mapComponents!: MapComponents;
 
 	mounted(): void {
-		this.$root.$on("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
 	}
 
 	beforeDestroy(): void {
-		this.$root.$off("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
 	}
 
 	handleOpenSelection(): void {
 		const layerId = Util.stamp(this.mapComponents.searchResultsLayer);
 		if (this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerId))
-			this.$root.$emit("fm-search-box-show-tab", "fm-search-form-tab");
+			this.mapContext.$emit("fm-search-box-show-tab", "fm-search-form-tab");
 	}
 
 }

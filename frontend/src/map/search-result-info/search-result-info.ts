@@ -2,8 +2,14 @@ import WithRender from "./search-result-info.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { renderOsmTag } from "facilmap-utils";
-import { SearchResult } from "facilmap-types";
+import { SearchResult, Type } from "facilmap-types";
 import Icon from "../ui/icon/icon";
+import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import Client from "facilmap-client";
+import "./search-result-info.scss";
+import { FileResult } from "../../utils/files";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import { isLineResult, isMarkerResult } from "../../utils/search";
 
 @WithRender
 @Component({
@@ -11,10 +17,27 @@ import Icon from "../ui/icon/icon";
 })
 export default class SearchResultInfo extends Vue {
 
-	@Prop({ type: Object, required: true }) result!: SearchResult;
+	@InjectClient() client!: Client;
+	@InjectMapComponents() mapComponents!: MapComponents;
+	@InjectMapContext() mapContext!: MapContext;
+
+	@Prop({ type: Object, required: true }) result!: SearchResult | FileResult;
 	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
 
 	renderOsmTag = renderOsmTag;
+
+	get isMarker(): boolean {
+		return isMarkerResult(this.result);
+	}
+
+	get isLine(): boolean {
+		return isLineResult(this.result);
+	}
+
+	get types(): Type[] {
+		// Result can be both marker and line
+		return Object.values(this.client.types).filter((type) => (this.isMarker && type.type == "marker") || (this.isLine && type.type == "line"));
+	}
 
 }
 

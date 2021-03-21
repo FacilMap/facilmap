@@ -18,7 +18,7 @@ export default class RouteFormTab extends Vue {
 	tabActive = false;
 
 	activate(): void {
-		this.$root.$emit("fm-search-box-show-tab", "fm-route-form-tab");
+		this.mapContext.$emit("fm-search-box-show-tab", "fm-route-form-tab");
 	}
 
 }

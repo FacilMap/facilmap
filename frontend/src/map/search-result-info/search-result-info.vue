@@ -3,7 +3,7 @@
 		<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
 		{{result.short_name}}
 	</h2>
-	<dl>
+	<dl class="fm-search-box-collapse-point">
 		<dt v-if="result.type">Type</dt>
 		<dd v-if="result.type">{{result.type}}</dd>
 
@@ -21,22 +21,16 @@
 			<dd v-html="renderOsmTag(key, value)"></dd>
 		</template>
 	</dl>
+
+	<b-button-toolbar>
+		<b-dropdown v-if="!client.readonly && types.length > 1" text="Add to map" size="sm">
+			<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
+		</b-dropdown>
+		<b-button v-if="!client.readonly && types.length == 1" @click="$emit('add-to-map', types[0])" size="sm">Add to map</b-button>
+		<b-dropdown v-if="isMarker" text="Use as" size="sm">
+			<b-dropdown-item href="javascript:" @click="$emit('use-as-from')">Route start</b-dropdown-item>
+			<b-dropdown-item href="javascript:" @click="$emit('use-as-via')">Route via</b-dropdown-item>
+			<b-dropdown-item href="javascript:" @click="$emit('use-as-to')">Route destination</b-dropdown-item>
+		</b-dropdown>
+	</b-button-toolbar>
 </div>
-<!-- <div class="buttons">
-	{{filteredTypes = (result.isMarker && result.isLine ? client.types : (client.types | fmObjectFilter:{type:result.isMarker ? 'marker' : 'line'})); ""}}
-	<div uib-dropdown keyboard-nav="true" ng-if="!client.readonly && (filteredTypes | fmPropertyCount) > 1" class="dropup">
-		<button id="add-type-button" type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Add to map <span class="caret"></span></button>
-		<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="add-type-button">
-			<li role="menuitem" ng-repeat="type in filteredTypes"><a href="javascript:" ng-click="addToMap(type)">{{type.name}}</a></li>
-		</ul>
-	</div>
-	<button type="button" ng-if="!client.readonly && (filteredTypes | fmPropertyCount) == 1" ng-repeat="type in filteredTypes" class="btn btn-default btn-sm" ng-click="addToMap(type)">Add to map</button>
-	<div ng-if="result.isMarker" uib-dropdown keyboard-nav="true" class="dropup">
-		<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle>Use as <span class="caret"></span></button>
-		<ul class="dropdown-menu" uib-dropdown-menu role="menu">
-			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(1)">Route start</a></li>
-			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(2)">Route via</a></li>
-			<li role="menuitem"><a href="javascript:" ng-click="useForRoute(3)">Route destination</a></li>
-		</ul>
-	</div>
-</div> -->

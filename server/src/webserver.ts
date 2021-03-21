@@ -3,13 +3,13 @@ import ejs from "ejs";
 import express, { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import { createServer, Server as HttpServer } from "http";
-import jsonFormat from "json-format";
 import { dirname } from "path";
 import { PadId } from "facilmap-types";
 import { createTable } from "./export/table";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson";
 import { exportGpx } from "./export/gpx";
+import domainMiddleware from "express-domain-middleware";
 
 const frontendPath = dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
 
@@ -26,7 +26,7 @@ const staticMiddleware = isDevMode
 	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
 		publicPath: "/"
 	})
-	: express.static(frontendPath + "/build/");
+	: express.static(frontendPath + "/dist/");
 
 const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : undefined;
 
@@ -69,6 +69,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 	};
 
 	const app = express();
+	app.use(domainMiddleware);
 	app.use(compression());
 
 	app.get("/bundle-:hash.js", function(req, res, next) {
@@ -96,11 +97,9 @@ export async function initWebserver(database: Database, port: number, host?: str
 			if(!padData)
 				throw new Error(`Map with ID ${req.params.padId} could not be found.`);
 			
-			const gpx = await exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined);
-			
 			res.set("Content-type", "application/gpx+xml");
 			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
-			res.send(gpx);
+			exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined).pipe(res);
 		} catch (e) {
 			next(e);
 		}
@@ -150,6 +149,6 @@ export function getFrontendFile(path: string): Promise<string> {
 		// We don't want express.static's ETag handling, as it sometimes returns an empty template,
 		// so we have to read it directly from the file system
 
-		return fs.promises.readFile(`${frontendPath}/build/${path}`, "utf8");
+		return fs.promises.readFile(`${frontendPath}/dist/${path}`, "utf8");
 	}
 }

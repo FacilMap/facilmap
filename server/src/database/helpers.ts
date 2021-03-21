@@ -56,27 +56,25 @@ export interface BboxWithExcept extends Bbox {
 	except?: Bbox;
 }
 
-export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, prefix?: string): WhereOptions {
+export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, prefix = "", suffix = ""): WhereOptions {
 	if(!bbox)
 		return { };
 
-	prefix = prefix || "";
-
 	const conditions = [ ];
 	conditions.push({
-		[prefix + "lat"]: { [Op.lte]: bbox.top, [Op.gte]: bbox.bottom }
+		[prefix + "lat" + suffix]: { [Op.lte]: bbox.top, [Op.gte]: bbox.bottom }
 	});
 
 	if(bbox.right < bbox.left) { // Bbox spans over lon=180
 		conditions.push({
 			[Op.or]: [
-				{ [prefix + "lon" ]: { [Op.gte]: bbox.left } },
-				{ [prefix + "lon"]: { [Op.lte]: bbox.right } }
+				{ [prefix + "lon" + suffix]: { [Op.gte]: bbox.left } },
+				{ [prefix + "lon" + suffix]: { [Op.lte]: bbox.right } }
 			]
 		});
 	} else {
 		conditions.push({
-			[prefix + "lon"]: { [Op.gte]: bbox.left, [Op.lte]: bbox.right }
+			[prefix + "lon" + suffix]: { [Op.gte]: bbox.left, [Op.lte]: bbox.right }
 		});
 	}
 
@@ -84,20 +82,20 @@ export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, prefi
 		const exceptConditions = [ ];
 		exceptConditions.push({
 			[Op.or]: [
-				{ [prefix + "lat"]: { [Op.gt]: bbox.except.top } },
-				{ [prefix + "lat"]: { [Op.lt]: bbox.except.bottom } }
+				{ [prefix + "lat" + suffix]: { [Op.gt]: bbox.except.top } },
+				{ [prefix + "lat" + suffix]: { [Op.lt]: bbox.except.bottom } }
 			]
 		});
 
 		if(bbox.except.right < bbox.except.left) {
 			exceptConditions.push({
-				[prefix + "lon" ]: { [Op.lt]: bbox.except.left, [Op.gt]: bbox.except.right }
+				[prefix + "lon" + suffix]: { [Op.lt]: bbox.except.left, [Op.gt]: bbox.except.right }
 			});
 		} else {
 			exceptConditions.push({
 				[Op.or]: [
-					{ [prefix + "lon"]: { [Op.lt]: bbox.except.left } },
-					{ [prefix + "lon"]: { [Op.gt]: bbox.except.right } }
+					{ [prefix + "lon" + suffix]: { [Op.lt]: bbox.except.left } },
+					{ [prefix + "lon" + suffix]: { [Op.gt]: bbox.except.right } }
 				]
 			});
 		}

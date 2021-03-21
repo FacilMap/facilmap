@@ -160,7 +160,8 @@ export default class SearchForm extends Vue {
 
 }
 
-/* fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
+/* TODO
+fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
 	return {
 		require: "^fmSearch",
 		scope: true,

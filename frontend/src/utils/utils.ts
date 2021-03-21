@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { isEqual } from "lodash";
 import { clone } from "facilmap-utils";
-import { Field, Line, Marker, Type } from "facilmap-types";
+import { Field, Line, Marker, SearchResult, Type } from "facilmap-types";
 
 /** Can be used as the "type" of props that accept an ID */
 export const IdType = Number;

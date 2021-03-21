@@ -772,6 +772,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/express-domain-middleware@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@types/express-domain-middleware/-/express-domain-middleware-0.0.6.tgz#e5babd03950b10b80465f8f349a176807f8fa0be"
+  integrity sha512-EljBMHFHDA/vRJQu+Zf4c3GlckYc+9Q6W4xfphwFc6RSSmKNmtGiPknWffYBq1hVnGnqt+eHMjMvrtY84wtlCQ==
+  dependencies:
+    "@types/express" "*"
+
 "@types/express-serve-static-core@*", "@types/express-serve-static-core@^4.17.18":
   version "4.17.19"
   resolved "https://registry.yarnpkg.com/@types/express-serve-static-core/-/express-serve-static-core-4.17.19.tgz#00acfc1632e729acac4f1530e9e16f6dd1508a1d"
@@ -3527,6 +3534,11 @@ expose-loader@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/expose-loader/-/expose-loader-2.0.0.tgz#1c323577db3d16f7817e4652024f2c545b3f6a70"
   integrity sha512-WBpSGlNkn7YwbU2us7O+h0XsoFrB43Y/VCNSpRV4OZFXXKgw8W800BgNxLV0S97N3+KGnFYSCAJi1AV86NO22w==
+
+express-domain-middleware@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/express-domain-middleware/-/express-domain-middleware-0.1.0.tgz#36731b7c1901284fbf4fb5a62b0e7b0457d8e8c5"
+  integrity sha1-NnMbfBkBKE+/T7WmKw57BFfY6MU=
 
 express@^4.16.4, express@^4.17.1:
   version "4.17.1"

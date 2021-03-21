@@ -31,16 +31,16 @@ export default class Import extends Vue {
 	}
 
 	mounted(): void {
-		this.$root.$on("fm-import-file", this.handleImportFile);
-		this.$root.$on("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$on("fm-import-file", this.handleImportFile);
+		this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
 		this.mapComponents.container.addEventListener("dragenter", this.handleMapDragEnter);
 		this.mapComponents.container.addEventListener("dragover", this.handleMapDragOver);
 		this.mapComponents.container.addEventListener("drop", this.handleMapDrop);
 	}
 
 	beforeDestroy(): void {
-		this.$root.$off("fm-import-file", this.handleImportFile);
-		this.$root.$off("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$off("fm-import-file", this.handleImportFile);
+		this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
 		this.mapComponents.container.removeEventListener("dragenter", this.handleMapDragEnter);
 		this.mapComponents.container.removeEventListener("dragover", this.handleMapDragOver);
 		this.mapComponents.container.removeEventListener("drop", this.handleMapDrop);
@@ -59,7 +59,7 @@ export default class Import extends Vue {
 	handleOpenSelection(): void {
 		for (let i = 0; i < this.layerIds.length; i++) {
 			if (this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == this.layerIds[i])) {
-				this.$root.$emit("fm-search-box-show-tab", `fm-import-tab-${i}`);
+				this.mapContext.$emit("fm-search-box-show-tab", `fm-import-tab-${i}`);
 				break;
 			}
 		}
@@ -128,7 +128,7 @@ export default class Import extends Vue {
 				this.files.push(result);
 				this.layers.push(layer);
 				setTimeout(() => {
-					this.$root.$emit("fm-search-box-show-tab", `fm-import-tab-${this.files.length -1}`);
+					this.mapContext.$emit("fm-search-box-show-tab", `fm-import-tab-${this.files.length -1}`);
 				}, 0);
 			}
 		} catch (err) {

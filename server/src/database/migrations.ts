@@ -101,7 +101,7 @@ export default class DatabaseMigrations {
 
 		// Get rid of the dropdown key, save the value in the data instead
 		const dropdownKeyMigration = this._db.meta.getMeta("dropdownKeysMigrated").then((dropdownKeysMigrated) => {
-			if(dropdownKeysMigrated == "true")
+			if(dropdownKeysMigrated == "1")
 				return;
 
 			return this._db.types.TypeModel.findAll().then((types) => {
@@ -146,7 +146,7 @@ export default class DatabaseMigrations {
 				}
 				return operations;
 			}).then(() => {
-				return this._db.meta.setMeta("dropdownKeysMigrated", "true");
+				return this._db.meta.setMeta("dropdownKeysMigrated", "1");
 			});
 		});
 
@@ -154,7 +154,7 @@ export default class DatabaseMigrations {
 		const elevationMigration = addColMigrations.then(() => {
 			return this._db.meta.getMeta("hasElevation");
 		}).then((hasElevation) => {
-			if(hasElevation == "true")
+			if(hasElevation == "1")
 				return;
 
 			return Promise.all([
@@ -181,14 +181,14 @@ export default class DatabaseMigrations {
 					});
 				})
 			]).then(() => {
-				return this._db.meta.setMeta("hasElevation", "true");
+				return this._db.meta.setMeta("hasElevation", "1");
 			});
 		});
 
 
 		// Add showInLegend field to types
 		const legendMigration = addColMigrations.then(() => (this._db.meta.getMeta("hasLegendOption"))).then((hasLegendOption) => {
-			if(hasLegendOption == "true")
+			if(hasLegendOption == "1")
 				return;
 
 			return this._db.types.TypeModel.findAll().then((types) => {
@@ -211,13 +211,13 @@ export default class DatabaseMigrations {
 					operations = operations.then(() => (this._db.helpers._updatePadObject("Type", type.padId, type.id, { showInLegend }, true)));
 				}
 				return operations;
-			}).then(() => (this._db.meta.setMeta("hasLegendOption", "true")));
+			}).then(() => (this._db.meta.setMeta("hasLegendOption", "1")));
 		});
 
 
 		// Calculate bounding box for lines
 		const bboxMigration = addColMigrations.then(async () => {
-			if(await this._db.meta.getMeta("hasBboxes") == "true")
+			if(await this._db.meta.getMeta("hasBboxes") == "1")
 				return;
 
 			const LinePoint = this._db.lines.LinePointModel;
@@ -236,7 +236,7 @@ export default class DatabaseMigrations {
 					await this._db.helpers._updatePadObject("Line", line.padId, line.id, bbox, true);
 			}
 
-			await this._db.meta.setMeta("hasBboxes", "true");
+			await this._db.meta.setMeta("hasBboxes", "1");
 		});
 
 		await Promise.all([ renameColMigrations, changeColMigrations, addColMigrations, dropdownKeyMigration, elevationMigration, legendMigration, bboxMigration ]);

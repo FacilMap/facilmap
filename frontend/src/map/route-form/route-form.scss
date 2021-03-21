@@ -35,6 +35,7 @@
 .fm-route-suggestions.show {
 	display: grid !important;
 	grid-template-columns: auto 1fr;
+	opacity: 0.6;
 
 	&.isPending {
 		display: flex !important;

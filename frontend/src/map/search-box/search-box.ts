@@ -10,8 +10,8 @@ import SearchFormTab from "../search-form/search-form-tab";
 import MarkerInfoTab from "../marker-info/marker-info-tab";
 import LineInfoTab from "../line-info/line-info-tab";
 import hammer from "hammerjs";
-import { InjectMapComponents, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
-import { MapComponents } from "../leaflet-map/leaflet-map";
+import { InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
+import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import RouteFormTab from "../route-form/route-form-tab";
 
 export type SearchBoxContext = Vue;
@@ -23,6 +23,7 @@ export type SearchBoxContext = Vue;
 export default class SearchBox extends Vue {
 
 	@InjectMapComponents() mapComponents!: MapComponents;
+	@InjectMapContext() mapContext!: MapContext;
 
 	@ProvideReactive(SEARCH_BOX_CONTEXT_INJECT_KEY) searchBoxContext = new Vue();
 
@@ -44,7 +45,7 @@ export default class SearchBox extends Vue {
 	}
 
 	mounted(): void {
-		this.$root.$on("fm-search-box-show-tab", this.handleShowTab);
+		this.mapContext.$on("fm-search-box-show-tab", this.handleShowTab);
 
 		this.cardHeader = this.searchBox.querySelector(".card-header")!;
 
@@ -64,7 +65,7 @@ export default class SearchBox extends Vue {
 	}
 
 	beforeDestroy(): void {
-		this.$root.$off("fm-search-box-show-tab", this.handleShowTab);
+		this.mapContext.$off("fm-search-box-show-tab", this.handleShowTab);
 		this.cardHeader = undefined as any;
 	}
 
@@ -142,6 +143,7 @@ export default class SearchBox extends Vue {
 		this.searchBox.style.width = "";
 		this.searchBox.style.height = "";
 		this.$root.$emit('bv::hide::tooltip');
+		this.searchBoxContext.$emit("resizereset");
 	}
 
 }

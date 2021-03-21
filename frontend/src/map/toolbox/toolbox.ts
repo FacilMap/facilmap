@@ -101,7 +101,7 @@ export default class Toolbox extends Vue {
 	}
 
 	importFile(): void {
-		this.$root.$emit("fm-import-file");
+		this.mapContext.$emit("fm-import-file");
 	}
 
 }

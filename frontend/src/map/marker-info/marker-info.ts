@@ -1,7 +1,7 @@
 import WithRender from "./marker-info.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ID, Marker } from "facilmap-types";
+import { FindOnMapResult, ID, Marker } from "facilmap-types";
 import { IdType } from "../../utils/utils";
 import Client from "facilmap-client";
 import { moveMarker } from "../../utils/draw";
@@ -9,12 +9,13 @@ import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils
 import { showErrorToast } from "../../utils/toasts";
 import EditMarker from "../edit-marker/edit-marker";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import "./marker-info.scss";
+import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
+import Icon from "../ui/icon/icon";
 
 @WithRender
 @Component({
-	components: {
-		EditMarker
-	}
+	components: { EditMarker, Icon }
 })
 export default class MarkerInfo extends Vue {
 	
@@ -50,10 +51,30 @@ export default class MarkerInfo extends Vue {
 		}
 	}
 
-	/*
-	scope.useForRoute = function(mode) {
-		map.searchUi.setRouteDestination(`${marker.lat},${marker.lon}`, mode);
-	};
-	*/
+	zoomToMarker(): void {
+		if (this.marker)
+			flyTo(this.mapComponents.map, getZoomDestinationForMarker(this.marker));
+	}
+
+	useAs(event: "fm-route-set-from" | "fm-route-add-via" | "fm-route-set-to"): void {
+		if (!this.marker)
+			return;
+
+		const markerSuggestion: FindOnMapResult = { ...this.marker, kind: "marker", similarity: 1 };
+		this.mapContext.$emit(event, this.marker.name, [], [markerSuggestion], markerSuggestion);
+		this.mapContext.$emit("fm-search-box-show-tab", "fm-route-form-tab");
+	}
+
+	useAsFrom(): void {
+		this.useAs("fm-route-set-from");
+	}
+
+	useAsVia(): void {
+		this.useAs("fm-route-add-via");
+	}
+
+	useAsTo(): void {
+		this.useAs("fm-route-set-to");
+	}
 
 }

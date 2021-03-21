@@ -5,6 +5,7 @@ import { sortBy } from "lodash";
 import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 import { createElevationStats } from "../../../utils/heightgraph";
 import Icon from "../icon/icon";
+import "./elevation-stats.scss";
 
 @WithRender
 @Component({

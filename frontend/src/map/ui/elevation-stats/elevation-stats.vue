@@ -1,6 +1,9 @@
-<span class="fm-elevation-stats" :id="`fm-elevation-stats-${id}`">
-	<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}} m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}} m
-	<b-popover :target="`fm-elevation-stats-${id}`" placement="top" triggers="hover" custom-class="fm-elevation-stats-popover">
+<span class="fm-elevation-stats">
+	<span>
+		<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}} m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}} m
+	</span>
+	<b-button :id="`fm-elevation-stats-${id}`" v-b-tooltip="'Show elevation statistics'"><Icon icon="info-circle" alt="Show stats"></Icon></b-button>
+	<b-popover :target="`fm-elevation-stats-${id}`" placement="bottom" triggers="click blur" custom-class="fm-elevation-stats-popover">
 		<dl class="row">
 			<dt class="col-sm-6">Total ascent</dt>
 			<dd class="col-sm-6">{{route.ascent}} m</dd>

@@ -31,16 +31,20 @@ export default class ElevationPlot extends Vue {
 		this.container.append(this.elevationPlot.onAdd(this.mapComponents.map));
 		this.handleResize();
 
-		if (this.searchBoxContext)
+		if (this.searchBoxContext) {
 			this.searchBoxContext.$on("resizeend", this.handleResize);
+			this.searchBoxContext.$on("resizereset", this.handleResize);
+		}
 
 		$(window).on("resize", this.handleResize);
 	}
 
 
 	beforeDestroy(): void {
-		if (this.searchBoxContext)
+		if (this.searchBoxContext) {
 			this.searchBoxContext.$off("resizeend", this.handleResize);
+			this.searchBoxContext.$off("resizereset", this.handleResize);
+		}
 
 		$(window).off("resize", this.handleResize);
 		this.elevationPlot.onRemove(this.mapComponents.map);

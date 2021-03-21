@@ -1,21 +1,5 @@
 import fm from '../app';
 
-function _lineStringToTrackPoints(geometry) {
-	var ret = [ ];
-	var coords = (["MultiPolygon", "MultiLineString"].indexOf(geometry.type) != -1 ? geometry.coordinates : [ geometry.coordinates ]);
-
-	// Take only outer ring of polygons
-	if(["MultiPolygon", "Polygon"].indexOf(geometry.type) != -1)
-		coords = coords.map((coordArr) => coordArr[0]);
-
-	coords.forEach(function(linePart) {
-		linePart.forEach(function(latlng) {
-			ret.push({ lat: latlng[1], lon: latlng[0] });
-		});
-	});
-	return ret;
-}
-
 fm.app.factory("fmSearchImport", function($uibModal, $rootScope) {
 	return function(map) {
 		let importUi = {
@@ -34,60 +18,6 @@ fm.app.factory("fmSearchImport", function($uibModal, $rootScope) {
 					}
 				});
 			},
-
-			addResultToMap(result, type, showEdit) {
-				let obj = {
-					name: result.short_name
-				};
-
-				if(result.fmProperties) { // Import GeoJSON
-					Object.assign(obj, result.fmProperties);
-					delete obj.typeId;
-				} else {
-					obj.data = importUi._mapSearchResultToType(result, type)
-				}
-
-				if(type.type == "marker") {
-					return map.markersUi.createMarker(result.lat != null && result.lon != null ? result : { lat: result.geojson.coordinates[1], lon: result.geojson.coordinates[0] }, type, obj, !showEdit);
-				} else if(type.type == "line") {
-					if(!result.fmProperties || !result.fmProperties.routePoints) {
-						var trackPoints = _lineStringToTrackPoints(result.geojson);
-						$.extend(obj, { trackPoints: trackPoints, mode: "track" });
-						return map.linesUi.createLine(type, [ trackPoints[0], trackPoints[trackPoints.length-1] ], obj, !showEdit);
-					} else {
-						return map.linesUi.createLine(type, obj.routePoints, obj, !showEdit);
-					}
-				}
-			},
-
-			/**
-			 * Prefills the fields of a type with information from a search result. The "address" and "extratags" from
-			 * the search result are taken matched whose names equal the tag key (ignoring case and non-letters). The
-			 * returned object is an object that can be used as "data" for a marker and line, so an object that maps
-			 * field names to values.
-			 */
-			_mapSearchResultToType(result, type) {
-				let keyMap = (keys) => {
-					let ret = {};
-					for(let key of keys)
-						ret[key.replace(/[^a-z0-9]/gi, "").toLowerCase()] = key;
-					return ret;
-				};
-
-				let resultData = Object.assign({
-					address: result.address
-				}, result.extratags);
-
-				let fieldKeys = keyMap(type.fields.map((field) => (field.name)));
-				let resultDataKeys = keyMap(Object.keys(resultData));
-
-				let ret = {};
-				for(let key in resultDataKeys) {
-					if(fieldKeys[key])
-						ret[fieldKeys[key]] = resultData[resultDataKeys[key]];
-				}
-				return ret;
-			}
 		};
 
 		return importUi;

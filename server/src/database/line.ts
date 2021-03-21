@@ -7,7 +7,7 @@ import { wrapAsync } from "../utils/streams";
 import { calculateRouteForLine } from "../routing/routing";
 
 export type LineWithTrackPoints = Line & {
-	trackPoints: Point[];
+	trackPoints: TrackPoint[];
 }
 
 function createLineModel() {
@@ -125,6 +125,9 @@ export default class DatabaseLines {
 			ele: { type: DataTypes.INTEGER, allowNull: true }
 		}, {
 			sequelize: this._db._conn,
+			indexes: [
+				{ fields: [ "lineId", "zoom" ] }
+			],
 			modelName: "LinePoint"
 		});
 
@@ -157,10 +160,10 @@ export default class DatabaseLines {
 		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
 	}
 
-	getPadLinesWithPoints(padId: PadId, bboxWithZoom?: BboxWithZoom): Highland.Stream<LineWithTrackPoints> {
+	getPadLinesWithPoints(padId: PadId): Highland.Stream<LineWithTrackPoints> {
 		return this.getPadLines(padId)
 			.flatMap(wrapAsync(async (line): Promise<LineWithTrackPoints> => {
-				const trackPoints = await this.getLinePoints(line.id, bboxWithZoom);
+				const trackPoints = await this.getAllLinePoints(line.id);
 				return { ...line, trackPoints };
 			}));
 	}
@@ -266,52 +269,26 @@ export default class DatabaseLines {
 	}
 
 	getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): Highland.Stream<{ id: ID; trackPoints: TrackPoint[] }> {
-		return this.getPadLines(padId, [ "id" ])
-			.flatMap(wrapAsync(async (line): Promise<{ id: ID, trackPoints: TrackPoint[] } | undefined> => {
-				const trackPoints = await this.getLinePoints(line.id, bboxWithZoom);
-				if(trackPoints.length >= 2)
-					return { id: line.id, trackPoints: trackPoints };
-			}))
-			.filter((obj) => obj != null) as Highland.Stream<{ id: ID, trackPoints: TrackPoint[] }>;
-	}
+		return this._db.helpers._toStream(async () => {
+			const results = await this.LineModel.findAll({
+				attributes: ["id"],
+				where: {
+					[Op.and]: [
+						{
+							padId,
+							"$LinePoints.zoom$": { [Op.lte]: bboxWithZoom.zoom }
+						},
+						makeBboxCondition(bboxWithZoom, "$LinePoints.", "$")
+					]
+				},
+				include: this.LinePointModel
+			});
 
-	async getLinePoints(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): Promise<TrackPoint[]> {
-		const data = await this.LineModel.build({ id: lineId }).getLinePoints({
-			where: {
-				[Op.and]: [
-					makeBboxCondition(bboxWithZoom),
-					...(bboxWithZoom ? [ { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] : [])
-				]
-			},
-			attributes: [ "idx" ],
-			order: [[ "idx", "ASC" ]]
+			return results.map((res) => {
+				const val = res.toJSON() as any;
+				return { id: val.id, trackPoints: val.LinePoints };
+			});
 		});
-
-		// Get one more point outside of the bbox for each segment
-		const indexes = [ ];
-		for(let i=0; i<data.length; i++) {
-			if(i == 0 || data[i-1].idx != data[i].idx-1) // Beginning of segment
-				indexes.push(data[i].idx-1);
-
-			indexes.push(data[i].idx);
-
-			if(i == data.length-1 || data[i+1].idx != data[i].idx+1) // End of segment
-				indexes.push(data[i].idx+1);
-		}
-
-		if(indexes.length == 0)
-			return [ ];
-
-		return this.getLinePointsByIdx(lineId, indexes);
-	}
-
-	async getLinePointsByIdx(lineId: ID, indexes: number[]): Promise<TrackPoint[]> {
-		const data = await this.LineModel.build({ id: lineId }).getLinePoints({
-			where: { idx: indexes },
-			attributes: [ "lon", "lat", "idx", "ele" ],
-			order: [[ "idx", "ASC" ]]
-		});
-		return data.map((point) => point.toJSON() as TrackPoint);
 	}
 
 	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {

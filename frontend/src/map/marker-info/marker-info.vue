@@ -1,6 +1,6 @@
 <div class="fm-marker-info" v-if="marker">
 	<h2>{{marker.name}}</h2>
-	<dl>
+	<dl class="fm-search-box-collapse-point">
 		<dt class="pos">Coordinates</dt>
 		<dd class="pos">{{marker.lat | round(5)}}, {{marker.lon | round(5)}}</dd>
 
@@ -15,21 +15,19 @@
 		</template>
 	</dl>
 
-	<div class="buttons">
+	<b-button-toolbar>
+		<b-button v-b-tooltip="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
+
+		<b-dropdown text="Use as" size="sm">
+			<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
+			<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
+			<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
+		</b-dropdown>
+
 		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-marker-info-edit :disabled="isSaving || mapContext.interaction">Edit data</b-button>
 		<b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isSaving || mapContext.interaction">Move</b-button>
 		<b-button v-if="!client.readonly" size="sm" @click="deleteMarker()" :disabled="isSaving || mapContext.interaction">Remove</b-button>
-		<!--
-		<div ng-if="map.searchUi" uib-dropdown keyboard-nav="true" class="dropup">
-			<button type="button" class="btn btn-default btn-sm" uib-dropdown-toggle ng-disabled="saving">Use as <span class="caret"></span></button>
-			<ul class="dropdown-menu" uib-dropdown-menu role="menu">
-				<li role="menuitem"><a href="javascript:" ng-click="useForRoute(1)">Route start</a></li>
-				<li role="menuitem"><a href="javascript:" ng-click="useForRoute(2)">Route via</a></li>
-				<li role="menuitem"><a href="javascript:" ng-click="useForRoute(3)">Route destination</a></li>
-			</ul>
-		</div>
-		-->
-	</div>
+	</b-button-toolbar>
 
 	<EditMarker id="fm-marker-info-edit" :markerId="markerId"></EditMarker>
 </div>

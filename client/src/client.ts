@@ -28,7 +28,9 @@ export interface ClientEvents extends MapEvents {
 
 	route: [RouteWithTrackPoints | undefined];
 
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName]
+	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName],
+	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName>] }[RequestName],
+	emitReject: { [eventName in RequestName]: [eventName, Error] }[RequestName]
 }
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
@@ -105,7 +107,7 @@ export default class Client {
 
 	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
 		if(!this._listeners[eventName]) {
-			(MANAGER_EVENTS.includes(eventName) ? this.socket.io : this.socket)
+			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
 				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
@@ -135,10 +137,13 @@ export default class Client {
 
 			return await new Promise((resolve, reject) => {
 				this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
-					if(err)
+					if(err) {
 						reject(err);
-					else
+						this._simulateEvent("emitReject", eventName as any, err);
+					} else {
 						resolve(data);
+						this._simulateEvent("emitResolve", eventName as any, data as any);
+					}
 				});
 			});
 		} finally {
@@ -318,8 +323,11 @@ export default class Client {
 		return marker;
 	}
 
-	addMarker(data: MarkerCreate): Promise<Marker> {
-		return this._emit("addMarker", data);
+	async addMarker(data: MarkerCreate): Promise<Marker> {
+		const marker = await this._emit("addMarker", data);
+		// If the marker is out of view, we will not recieve it in an event. Add it here manually to make sure that we have it.
+		this._set(this.markers, marker.id, marker);
+		return marker;
 	}
 
 	editMarker(data: ObjectWithId & MarkerUpdate): Promise<Marker> {

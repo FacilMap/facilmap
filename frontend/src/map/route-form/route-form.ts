@@ -52,16 +52,15 @@ function makeCoordDestination(latlng: LatLng) {
 	};
 }
 
-/* function _setDestination(dest, query, searchSuggestions, mapSuggestions, selectedSuggestion) {
-	dest.query = query;
-
-	if(searchSuggestions) {
-		dest.searchSuggestions = searchSuggestions;
-		dest.mapSuggestions = mapSuggestions && mapSuggestions.filter((suggestion) => (suggestion.kind == "marker"));
-		dest.loadingQuery = dest.loadedQuery = query;
-		dest.selectedSuggestion = selectedSuggestion;
-	}
-} */
+function makeDestination(query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult): Destination {
+	return {
+		query,
+		loadedQuery: searchSuggestions || mapSuggestions ? query : undefined,
+		searchSuggestions,
+		mapSuggestions: mapSuggestions?.filter((result) => result.kind == "marker") as MapSuggestion[],
+		selectedSuggestion: selectedSuggestion as MapSuggestion
+	};
+}
 
 const startMarkerColour = "00ff00";
 const dragMarkerColour = "ffd700";
@@ -103,6 +102,11 @@ export default class RouteForm extends Vue {
 	suggestionMarker: MarkerLayer | undefined;
 
 	mounted(): void {
+		this.mapContext.$on("fm-route-set-queries", this.setQueries);
+		this.mapContext.$on("fm-route-set-from", this.setFrom);
+		this.mapContext.$on("fm-route-add-via", this.addVia);
+		this.mapContext.$on("fm-route-set-to", this.setTo);
+
 		this.routeLayer = new RouteLayer(this.client, { weight: 7, opacity: 1, raised: true }).addTo(this.mapComponents.map);
 		this.routeLayer.on("click", (e) => {
 			if (!this.active && !(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
@@ -180,6 +184,11 @@ export default class RouteForm extends Vue {
 	}
 
 	beforeDestroy(): void {
+		this.mapContext.$off("fm-route-set-queries", this.setQueries);
+		this.mapContext.$off("fm-route-set-from", this.setFrom);
+		this.mapContext.$off("fm-route-add-via", this.addVia);
+		this.mapContext.$off("fm-route-set-to", this.setTo);
+
 		this.draggable.disable();
 		this.routeLayer.remove();
 	}
@@ -300,7 +309,7 @@ export default class RouteForm extends Vue {
 			marker: {
 				colour: dragMarkerColour,
 				size: 35,
-				symbol: (suggestion as any).icon || (suggestion as any).symbol,
+				symbol: "",
 				shape: "drop"
 			}
 		})).addTo(this.mapComponents.map);
@@ -346,7 +355,7 @@ export default class RouteForm extends Vue {
 			return null;
 	}
 
-	async route(zoom = true): Promise<void> {
+	async route(zoom: boolean): Promise<void> {
 		this.reset();
 
 		if(this.destinations[0].query.trim() == "" || this.destinations[this.destinations.length-1].query.trim() == "")
@@ -392,7 +401,7 @@ export default class RouteForm extends Vue {
 		}
 	}
 
-	reroute(zoom = true): void {
+	reroute(zoom: boolean): void {
 		if(this.hasRoute)
 			this.route(zoom);
 	}
@@ -418,6 +427,11 @@ export default class RouteForm extends Vue {
 			{ query: "" },
 			{ query: "" }
 		];
+	}
+
+	zoomToRoute(): void {
+		if (this.client.route)
+			flyTo(this.mapComponents.map, getZoomDestinationForRoute(this.client.route));
 	}
 
 	handleSubmit(event: Event): void {
@@ -448,37 +462,31 @@ export default class RouteForm extends Vue {
 		}
 	}
 
-	/* const routeUi = searchUi.routeUi = {
-		setQueries: function(queries) {
-			scope.submittedQueries = null;
-			scope.submittedMode = null;
-			scope.destinations = [ ];
+	setQueries(queries: string[]): void {
+		this.clear();
+		this.destinations = queries.map((query) => ({ query }));
+		while (this.destinations.length < 2)
+			this.destinations.push({ query: "" });
+		this.route(true);
+	}
 
-			for(const i=0; i<queries.length; i++) {
-				if(scope.destinations.length <= i)
-					scope.addDestination();
+	setFrom(...args: Parameters<typeof makeDestination>): void {
+		Vue.set(this.destinations, 0, makeDestination(...args));
+		this.reroute(true);
+	}
 
-				$.extend(scope.destinations[i], typeof queries[i] == "object" ? queries[i] : { query: queries[i] });
-			}
+	addVia(...args: Parameters<typeof makeDestination>): void {
+		this.destinations.splice(this.destinations.length - 1, 0, makeDestination(...args));
+		this.reroute(true);
+	}
 
-			while(scope.destinations.length < 2)
-				scope.addDestination();
-		},
+	setTo(...args: Parameters<typeof makeDestination>): void {
+		Vue.set(this.destinations, this.destinations.length - 1, makeDestination(...args));
+		this.reroute(true);
+	}
 
-		setFrom: function(from, searchSuggestions, mapSuggestions, selectedSuggestion) {
-			_setDestination(scope.destinations[0], from, searchSuggestions, mapSuggestions, selectedSuggestion);
-		},
-
-		addVia: function(via, searchSuggestions, mapSuggestions, selectedSuggestion) {
-			scope.addDestination();
-			const newDest = scope.destinations.pop();
-			_setDestination(newDest, via, searchSuggestions, mapSuggestions, selectedSuggestion);
-			scope.destinations.splice(scope.destinations.length-1, 0, newDest);
-		},
-
-		setTo: function(to, searchSuggestions, mapSuggestions, selectedSuggestion) {
-			_setDestination(scope.destinations[scope.destinations.length-1], to, searchSuggestions, mapSuggestions, selectedSuggestion);
-		},
+	/* TODO
+	const routeUi = searchUi.routeUi = {
 
 		setMode: function(mode) {
 			scope.routeMode = mode;
@@ -492,14 +500,6 @@ export default class RouteForm extends Vue {
 			return scope.destinations.map((destination) => (destination.query));
 		},
 
-		getMode: function() {
-			return scope.submittedMode;
-		},
-
-		submit: function(noZoom) {
-			scope.route(noZoom);
-		},
-
 		getSubmittedSearch() {
 			const queries = routeUi.getQueries();
 			if(queries)
@@ -511,9 +511,5 @@ export default class RouteForm extends Vue {
 			if(zoomDestination)
 				return map.map.getZoom() == zoomDestination[1] && fmUtils.pointsEqual(map.map.getCenter(), zoomDestination[0], map.map);
 		},
-
-		hasResults() {
-			return map.routeUi.routes.length > 0
-		}
 	}; */
 }

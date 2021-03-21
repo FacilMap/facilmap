@@ -1,7 +1,7 @@
 import WithRender from "./line-info.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { ID, Line } from "facilmap-types";
+import { ExportFormat, ID, Line } from "facilmap-types";
 import { IdType } from "../../utils/utils";
 import Client from "facilmap-client";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
@@ -11,6 +11,8 @@ import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import ElevationPlot from "../ui/elevation-plot/elevation-plot";
 import Icon from "../ui/icon/icon";
+import "./line-info.scss";
+import { flyTo, getZoomDestinationForLine } from "../../utils/zoom";
 
 @WithRender
 @Component({
@@ -44,6 +46,25 @@ export default class LineInfo extends Vue {
 			showErrorToast(this, "fm-line-info-delete", "Error deleting line", err);
 		} finally {
 			this.isSaving = false;
+		}
+	}
+
+	zoomToLine(): void {
+		if (this.line)
+			flyTo(this.mapComponents.map, getZoomDestinationForLine(this.line));
+	}
+
+	async exportRoute(format: ExportFormat): Promise<void> {
+		if (!this.line)
+			return;
+
+		this.$bvToast.hide("fm-line-info-export-error");
+
+		try {
+			const exported = await this.client.exportLine({ id: this.line.id, format });
+			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${this.line.name}.gpx`);
+		} catch(err) {
+			showErrorToast(this, "fm-line-info-export-error", "Error exporting line", err);
 		}
 	}
 

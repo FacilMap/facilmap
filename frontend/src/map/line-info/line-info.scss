@@ -1,0 +1,17 @@
+.fm-line-info {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	flex-grow: 1;
+
+	.fm-search-box-collapse-point {
+		display: flex;
+		flex-direction: column;
+		min-height: 1.5em;
+		flex-grow: 1;
+	}
+
+	.fm-elevation-plot {
+		margin-bottom: 1rem;
+	}
+}

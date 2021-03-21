@@ -5,7 +5,6 @@ import { View } from "./view";
 import { Line, TrackPoint } from "./line";
 import { Marker } from "./marker";
 import { PadData } from "./padData";
-import { RequestData, RequestName } from "./socket";
 
 export interface LinePointsEvent {
 	id: ID;

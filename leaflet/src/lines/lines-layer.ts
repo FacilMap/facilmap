@@ -176,6 +176,7 @@ export default class LinesLayer extends FeatureGroup {
 		const style: HighlightableLayerOptions<PolylineOptions> = {
 			color: '#'+line.colour,
 			weight: line.width,
+			raised: false,
 			opacity: 0.35
 		} as any;
 

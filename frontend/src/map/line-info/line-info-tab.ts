@@ -18,11 +18,11 @@ export default class LineInfoTab extends Vue {
 	@InjectMapComponents() mapComponents!: MapComponents;
 
 	mounted(): void {
-		this.$root.$on("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
 	}
 
 	beforeDestroy(): void {
-		this.$root.$off("fm-open-selection", this.handleOpenSelection);
+		this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
 	}
 
 	get lineId(): ID | undefined {
@@ -51,7 +51,7 @@ export default class LineInfoTab extends Vue {
 
 	handleOpenSelection(): void {
 		if (this.line)
-			this.$root.$emit("fm-search-box-show-tab", "fm-line-info-tab")
+			this.mapContext.$emit("fm-search-box-show-tab", "fm-line-info-tab")
 	}
 
 }

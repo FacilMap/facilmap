@@ -3,35 +3,37 @@
 		<b-carousel-slide>
 			<b-alert v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" show variant="danger">No results have been found.</b-alert>
 
-			<slot name="before"></slot>
+			<div class="fm-search-box-collapse-point">
+				<slot name="before"></slot>
 
-			<b-list-group v-if="mapResults && mapResults.length > 0">
-				<b-list-group-item  v-for="result in mapResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
-					<span>
-						<a href="javascript:" @click="handleClick(result, $event)">{{result.name}}</a>
-						{{" "}}
-						<span class="result-type">({{client.types[result.typeId].name}})</span>
-					</span>
-					<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" title="Zoom to result" v-b-tooltip><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-					<a href="javascript:" @click="handleOpen(result, $event)" title="Show details" v-b-tooltip><Icon icon="arrow-right" alt="Details"></Icon></a>
-				</b-list-group-item>
-			</b-list-group>
+				<b-list-group v-if="mapResults && mapResults.length > 0">
+					<b-list-group-item  v-for="result in mapResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
+						<span>
+							<a href="javascript:" @click="handleClick(result, $event)">{{result.name}}</a>
+							{{" "}}
+							<span class="result-type">({{client.types[result.typeId].name}})</span>
+						</span>
+						<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+					</b-list-group-item>
+				</b-list-group>
 
-			<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
+				<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
 
-			<b-list-group v-if="searchResults && searchResults.length > 0">
-				<b-list-group-item v-for="result in searchResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
-					<span>
-						<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
-						{{" "}}
-						<span class="result-type" v-if="result.type">({{result.type}})</span>
-					</span>
-					<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" title="Zoom to result" v-b-tooltip><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-					<a href="javascript:" @click="handleOpen(result, $event)" title="Show details" v-b-tooltip><Icon icon="arrow-right" alt="Details"></Icon></a>
-				</b-list-group-item>
-			</b-list-group>
+				<b-list-group v-if="searchResults && searchResults.length > 0">
+					<b-list-group-item v-for="result in searchResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
+						<span>
+							<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
+							{{" "}}
+							<span class="result-type" v-if="result.type">({{result.type}})</span>
+						</span>
+						<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+					</b-list-group-item>
+				</b-list-group>
 
-			<slot name="after"></slot>
+				<slot name="after"></slot>
+			</div>
 
 			<!-- <div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
 				<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
@@ -48,7 +50,16 @@
 		</b-carousel-slide>
 
 		<b-carousel-slide>
-			<SearchResultInfo v-if="openResult" :result="openResult" show-back-button @back="closeResult()"></SearchResultInfo>
+			<SearchResultInfo
+				v-if="openResult"
+				:result="openResult"
+				show-back-button
+				@back="closeResult()"
+				@add-to-map="addToMap([openResult], $event)"
+				@use-as-from="useAsFrom(openResult)"
+				@use-as-via="useAsVia(openResult)"
+				@use-as-to="useAsTo(openResult)"
+			></SearchResultInfo>
 		</b-carousel-slide>
 	</b-carousel>
 </div>

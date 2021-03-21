@@ -36,7 +36,7 @@ export default class BboxHandler extends Handler {
         this.updateBbox(bounds, zoom);
     }
 
-    handleEmit: EventHandler<ClientEvents, "emit"> = (name, data) => {
+    handleEmitResolve: EventHandler<ClientEvents, "emitResolve"> = (name, data) => {
         if (["setPadId", "setRoute"].includes(name)) {
             this.updateBbox();
         }
@@ -45,12 +45,12 @@ export default class BboxHandler extends Handler {
     addHooks(): void {
         this._map.on("moveend", this.handleMoveEnd);
         this._map.on("fmFlyTo", this.handleFlyTo);
-        this.client.on("emit", this.handleEmit);
+        this.client.on("emitResolve", this.handleEmitResolve);
     }
 
     removeHooks(): void {
         this._map.off("moveend", this.handleMoveEnd);
         this._map.off("fmFlyTo", this.handleFlyTo);
-        this.client.removeListener("emit", this.handleEmit);
+        this.client.removeListener("emitResolve", this.handleEmitResolve);
     }
 }
