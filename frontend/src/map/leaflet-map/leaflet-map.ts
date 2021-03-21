@@ -174,6 +174,10 @@ export default class LeafletMap extends Vue {
                 }, 0);
             }
         });
+
+        selectionHandler.on("fmMapClick", (event: any) => {
+            this.mapContext.$emit("fm-map-click", { lat: event.latlng.lat, lon: event.latlng.lng });
+        });
     }
 
     get activeQuery(): HashQuery | undefined {

@@ -50,10 +50,12 @@ export default class SearchForm extends Vue {
 			const counter = ++this.searchCounter;
 
 			if(this.searchString.trim() != "") {
-				/* if(this.searchString.match(/ to /i)) {
-					scope.showRoutingForm();
-					return searchUi.routeUi.submit(noZoom);
-				} */
+				if(this.searchString.match(/ to /i)) {
+					this.mapContext.$emit("fm-route-set-query", this.searchString);
+					this.mapContext.$emit("fm-search-box-show-tab", "fm-route-form-tab");
+					this.searchString = "";
+					return;
+				}
 
 				const lonlat = decodeLonLatUrl(this.searchString);
 				if(lonlat) {
@@ -161,83 +163,6 @@ export default class SearchForm extends Vue {
 }
 
 /* TODO
-fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeout, $q, fmSearchFiles, fmSearchImport, fmHighlightableLayers) {
-	return {
-		require: "^fmSearch",
-		scope: true,
-		replace: true,
-		template: require("./search-query.html"),
-		link(scope, el, attrs, searchUi) {
-			const map = searchUi.map;
-
-			var iconSuffix = ".n.32.png";
-
-			scope.searchString = "";
-			scope.submittedSearchString = "";
-			scope.searchResults = null;
-			scope.showAll = false;
-			scope.client = map.client;
-			scope.className = css.className;
-			scope.infoBox = map.infoBox;
-
-			let currentInfoBox = null;
-
-			scope.showResult = function(result, noZoom) {
-				renderResult(scope.submittedSearchString, scope.searchResults.features, result, true, layerGroup, null, true);
-
-				if(!noZoom || noZoom == 2 || noZoom == 3)
-					_flyTo(...getZoomDestination(noZoom == 3 ? null : result, noZoom == 2));
-
-				map.mapEvents.$broadcast("searchchange");
-			};
-
-			scope.showMapResult = function(result, noZoom) {
-				if(result.kind == "marker") {
-					// We already know the position, so we can already start flying there before the markers UI loads the marker
-					if(!noZoom)
-						_flyTo([ result.lat, result.lon ], 15);
-
-					map.mapEvents.$broadcast("showObject", result.hashId, false);
-				} else if(result.kind == "line")
-					map.mapEvents.$broadcast("showObject", result.hashId, !noZoom);
-			};
-
-			scope.zoomToAll = function() {
-				_flyTo(...getZoomDestination());
-			};
-
-			scope.showRoutingForm = function() {
-				if(scope.searchString.match(/ to /i)) {
-					var spl = fmUtils.splitRouteQuery(scope.searchString);
-					searchUi.routeUi.setQueries(spl.queries);
-					if(spl.mode)
-						searchUi.routeUi.setMode(spl.mode);
-				} else if(!searchUi.routeUi.getTypedQueries()[0]) {
-					searchUi.routeUi.setFrom(scope.searchString);
-
-					if(scope.searchResults && scope.submittedSearchString == scope.searchString) {
-						let currentSearchResult = scope.searchResults.features.find((result) => (result.id == map.infoBox.currentId));
-						if(currentSearchResult)
-							searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.mapResults, currentSearchResult);
-						else if(scope.mapResults) {
-							let currentMapResult = scope.mapResults.find((result) => (result.hashId == map.infoBox.currentId));
-							if(currentMapResult)
-								searchUi.routeUi.setFrom(scope.searchString, scope.searchResults.features, scope.mapResults, currentMapResult);
-						}
-					}
-				}
-
-				map.searchUi.showRoute();
-			};
-
-			scope.$watch("showAll", () => {
-				map.mapEvents.$broadcast("searchchange");
-			});
-
-			scope.addResultToMap = function(result, type, noEdit) {
-				importUi.addResultToMap(result, type, !noEdit);
-			};
-
 			scope.addAllToMap = function(type) {
 				for(let result of scope.searchResults.features) {
 					if((type.type == "marker" && result.isMarker) || (type.type == "line" && result.isLine))
@@ -248,27 +173,6 @@ fm.app.directive("fmSearchQuery", function($rootScope, $compile, fmUtils, $timeo
 			scope.customImport = function() {
 				importUi.openImportDialog(scope.searchResults);
 			};
-
-			var clickMarker = L.featureGroup([]).addTo(map.map);
-
-			map.mapEvents.$on("longmousedown", function(e, latlng) {
-				clickMarker.clearLayers();
-
-				map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false, elevation: true }).then(function(results) {
-					clickMarker.clearLayers();
-
-					if(results.length > 0) {
-						prepareResults(results);
-
-						renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, () => {
-							clickMarker.clearLayers();
-						}, true);
-						currentInfoBox = null; // We don't want it to be cleared when we switch to the routing form for example
-					}
-				}).catch(function(err) {
-					map.messages.showMessage("danger", err);
-				});
-			});
 
 			var layerGroup = L.featureGroup([]).addTo(map.map);
 

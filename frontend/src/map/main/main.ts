@@ -10,10 +10,11 @@ import SearchBox from "../search-box/search-box";
 import Legend from "../legend/legend";
 import LeafletMap from "../leaflet-map/leaflet-map";
 import Import from "../import/import";
+import ClickMarker from "../click-marker/click-marker";
 
 @WithRender
 @Component({
-    components: { Import, LeafletMap, Legend, SearchBox, Toolbox }
+    components: { ClickMarker, Import, LeafletMap, Legend, SearchBox, Toolbox }
 })
 export default class Main extends Vue {
 

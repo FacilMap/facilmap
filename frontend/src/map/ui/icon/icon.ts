@@ -2,7 +2,6 @@ import WithRender from "./icon.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { getSymbolHtml } from "facilmap-leaflet";
-import "./icon.scss";
 
 @WithRender
 @Component({

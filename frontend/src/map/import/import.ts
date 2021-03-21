@@ -128,7 +128,7 @@ export default class Import extends Vue {
 				this.files.push(result);
 				this.layers.push(layer);
 				setTimeout(() => {
-					this.mapContext.$emit("fm-search-box-show-tab", `fm-import-tab-${this.files.length -1}`);
+					this.mapContext.$emit("fm-search-box-show-tab", `fm-import-tab-${this.files.length - 1}`);
 				}, 0);
 			}
 		} catch (err) {
@@ -138,8 +138,8 @@ export default class Import extends Vue {
 
 	close(idx: number): void {
 		this.files.splice(idx, 1);
+		this.mapComponents.selectionHandler.removeSearchResultLayer(this.layers[idx]);
 		this.layers[idx].remove();
-		this.mapComponents.selectionHandler.addSearchResultLayer(this.layers[idx]);
 		this.layers.splice(idx, 1);
 	}
 

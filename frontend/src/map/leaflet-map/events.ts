@@ -1,4 +1,4 @@
-import { EventHandler, EventName, FindOnMapResult, SearchResult } from "facilmap-types";
+import { EventHandler, EventName, FindOnMapResult, Point, SearchResult } from "facilmap-types";
 import Vue from "vue";
 import { SelectedItem } from "../../utils/selection";
 
@@ -6,10 +6,11 @@ export interface MapContextEvents {
 	"fm-import-file": []
 	"fm-open-selection": [selection: SelectedItem[]],
 	"fm-search-box-show-tab": [id: string, expand?: boolean];
-	"fm-route-set-queries": [queries: string[]];
+	"fm-route-set-query": [query: string];
 	"fm-route-set-from": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-add-via": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-set-to": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
+	"fm-map-click": [point: Point];
 }
 
 export interface EventBus {

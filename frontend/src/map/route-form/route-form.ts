@@ -4,7 +4,7 @@ import Vue from "vue";
 import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-import { isSearchId, round } from "facilmap-utils";
+import { isSearchId, round, splitRouteQuery } from "facilmap-utils";
 import Client from "facilmap-client";
 import { showErrorToast } from "../../utils/toasts";
 import { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
@@ -102,7 +102,7 @@ export default class RouteForm extends Vue {
 	suggestionMarker: MarkerLayer | undefined;
 
 	mounted(): void {
-		this.mapContext.$on("fm-route-set-queries", this.setQueries);
+		this.mapContext.$on("fm-route-set-query", this.setQuery);
 		this.mapContext.$on("fm-route-set-from", this.setFrom);
 		this.mapContext.$on("fm-route-add-via", this.addVia);
 		this.mapContext.$on("fm-route-set-to", this.setTo);
@@ -184,7 +184,7 @@ export default class RouteForm extends Vue {
 	}
 
 	beforeDestroy(): void {
-		this.mapContext.$off("fm-route-set-queries", this.setQueries);
+		this.mapContext.$off("fm-route-set-query", this.setQuery);
 		this.mapContext.$off("fm-route-set-from", this.setFrom);
 		this.mapContext.$off("fm-route-add-via", this.addVia);
 		this.mapContext.$off("fm-route-set-to", this.setTo);
@@ -462,11 +462,13 @@ export default class RouteForm extends Vue {
 		}
 	}
 
-	setQueries(queries: string[]): void {
+	setQuery(query: string): void {
 		this.clear();
-		this.destinations = queries.map((query) => ({ query }));
+		const split = splitRouteQuery(query);
+		this.destinations = split.queries.map((query) => ({ query }));
 		while (this.destinations.length < 2)
 			this.destinations.push({ query: "" });
+		this.routeMode = split.mode ?? "car";
 		this.route(true);
 	}
 

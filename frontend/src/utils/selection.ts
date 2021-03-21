@@ -153,8 +153,12 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {
-		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey)
-			this.setSelectedItems([]);
+		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
+			if (this._selection.length == 0)
+				this.fire("fmMapClick", e);
+			else
+				this.setSelectedItems([]);
+		}
 	}
 
 }
