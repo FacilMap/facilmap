@@ -111,7 +111,7 @@ export default class LinesLayer extends FeatureGroup {
 				trackPoints: [ ]
 			};
 
-			let handler: ClickListenerHandle;
+			let handler: ClickListenerHandle | undefined = undefined;
 
 			const addPoint = (pos: Point) => {
 				line.routePoints.push(pos);
@@ -121,6 +121,7 @@ export default class LinesLayer extends FeatureGroup {
 			};
 
 			const handleClick = (pos: Point) => {
+				handler = undefined;
 				if(line.routePoints.length > 0 && pos.lon == line.routePoints[line.routePoints.length-1].lon && pos.lat == line.routePoints[line.routePoints.length-1].lat)
 					finishLine(true);
 				else
@@ -135,7 +136,8 @@ export default class LinesLayer extends FeatureGroup {
 			}
 
 			const finishLine = async (save: boolean) => {
-				handler.cancel();
+				if (handler)
+					handler.cancel();
 				this._deleteLine(line);
 
 				delete this._endDrawLine;

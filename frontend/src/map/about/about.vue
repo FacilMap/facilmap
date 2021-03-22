@@ -6,7 +6,8 @@
 		FacilMap aims to be a privacy-friendly open-source alternative to commercial maps that track your data. When you use FacilMap,
 		anything you do on the map (for example pan/zoom the map, search for something, calculate a route, add a marker) is sent to the
 		FacilMap server and persisted there only if necessary for the interaction. No personally identifiable information is persisted
-		(for example your IP address). FacilMap does not set any cookies.
+		(for example your IP address). FacilMap stores the zoom preferences that you set in the search bar (auto-zoom, etc.) in the
+		localStorage of your browser, but it does not set any cookies.
 	</p>
 	<p>
 		FacilMap combines multiple third-party services (listed below under “Map data”) into one versatile map. When you use FacilMap,

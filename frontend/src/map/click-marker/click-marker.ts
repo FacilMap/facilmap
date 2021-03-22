@@ -1,6 +1,6 @@
 import WithRender from "./click-marker.vue";
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { LineCreate, MarkerCreate, Point, SearchResult, Type } from "facilmap-types";
@@ -23,6 +23,8 @@ export default class ClickMarker extends Vue {
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectClient() client!: Client;
 
+	lastClick = 0;
+
 	results: SearchResult[] = [];
 	layers!: SearchResultsLayer[]; // Don't make layer objects reactive
 
@@ -43,6 +45,14 @@ export default class ClickMarker extends Vue {
 		});
 	}
 
+	@Watch("mapContext.selection")
+	handleSelectionChange(): void {
+		for (let i = this.results.length - 1; i >= 0; i--) {
+			if (!this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == this.layerIds[i]))
+				this.close(this.results[i]);
+		}
+	}
+
 	handleOpenSelection(): void {
 		for (let i = 0; i < this.layerIds.length; i++) {
 			if (this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == this.layerIds[i])) {
@@ -53,11 +63,32 @@ export default class ClickMarker extends Vue {
 	}
 
 	async handleMapClick(pos: Point): Promise<void> {
-		const results = await this.client.find({
-			query: `geo:${round(pos.lat, 5)},${round(pos.lon, 5)}?z=${this.mapContext.zoom}`,
-			loadUrls: false,
-			elevation: true
-		});
+		const now = Date.now();
+		if (now - this.lastClick < 500) {
+			// Hacky solution to avoid markers being created when the user double-clicks the map. If multiple clicks happen less than 500 ms from each
+			// other, all those clicks are ignored.
+			this.lastClick = now;
+			return;
+		}
+		
+		this.lastClick = now;
+
+		const [results] = await Promise.all([
+			this.client.find({
+				query: `geo:${round(pos.lat, 5)},${round(pos.lon, 5)}?z=${this.mapContext.zoom}`,
+				loadUrls: false,
+				elevation: true
+			}),
+			new Promise((resolve) => {
+				// Specify the minimum time the search will take to allow for some time for the double-click detection
+				setTimeout(resolve, 500);
+			})
+		]);
+
+		if (now !== this.lastClick) {
+			// There has been another click since the one we are reacting to.
+			return;
+		}
 
 		if (results.length > 0) {
 			const layer = new SearchResultsLayer([results[0]]).addTo(this.mapComponents.map);
@@ -83,6 +114,11 @@ export default class ClickMarker extends Vue {
 		this.layers[idx].remove();
 		this.results.splice(idx, 1);
 		this.layers.splice(idx, 1);
+	}
+
+	clear(): void {
+		for (let i = this.results.length - 1; i >= 0; i--)
+			this.close(this.results[i]);
 	}
 
 	async addToMap(result: SearchResult, type: Type): Promise<void> {

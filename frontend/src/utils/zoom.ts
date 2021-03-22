@@ -3,12 +3,29 @@ import { fmToLeafletBbox, HashQuery } from "facilmap-leaflet";
 import Client, { RouteWithTrackPoints } from "facilmap-client";
 import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
+import { Geometry } from "geojson";
+import { isMapResult } from "./search";
 
 export type ZoomDestination = {
 	center?: LatLng;
 	zoom?: number;
 	bounds?: LatLngBounds;
 };
+
+export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination | undefined {
+	if (geojson.type == "GeometryCollection")
+		return combineZoomDestinations(geojson.geometries.map((geo) => getZoomDestinationForGeoJSON(geo)));
+	else if (geojson.type == "Point")
+		return { center: latLng(geojson.coordinates[1], geojson.coordinates[0]) };
+	else if (geojson.type == "LineString" || geojson.type == "MultiPoint")
+		return combineZoomDestinations(geojson.coordinates.map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+	else if (geojson.type == "Polygon" || geojson.type == "MultiLineString")
+		return combineZoomDestinations(geojson.coordinates.flat().map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+	else if (geojson.type == "MultiPolygon")
+		return combineZoomDestinations(geojson.coordinates.flat().flat().map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+	else
+		return undefined;
+}
 
 export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker): ZoomDestination {
 	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
@@ -29,10 +46,17 @@ export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDes
 
 export function getZoomDestinationForSearchResult(result: SearchResult): ZoomDestination | undefined {
 	const dest: ZoomDestination = {};
+
 	if (result.boundingbox)
 		dest.bounds = latLngBounds([[result.boundingbox[0], result.boundingbox[3]], [result.boundingbox[1], result.boundingbox[2]]]);
+	else if (result.geojson)
+		dest.bounds = getZoomDestinationForGeoJSON(result.geojson)?.bounds;
+	
 	if (result.lat && result.lon)
 		dest.center = latLng(Number(result.lat), Number(result.lon));
+	else if (result.geojson)
+		dest.center = getZoomDestinationForGeoJSON(result.geojson)?.center;
+
 	if (result.zoom != null)
 		dest.zoom = result.zoom;
 
@@ -48,12 +72,12 @@ export function getZoomDestinationForMapResult(result: FindOnMapResult): ZoomDes
 
 export function getZoomDestinationForResults(results: Array<SearchResult | FindOnMapResult>): ZoomDestination | undefined {
 	return combineZoomDestinations(results
-		.map((result) => (("kind" in result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result)))
+		.map((result) => (isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result)))
 		.filter((result) => !!result) as ZoomDestination[]
 	);
 }
 
-export function combineZoomDestinations(destinations: ZoomDestination[]): ZoomDestination | undefined {
+export function combineZoomDestinations(destinations: Array<ZoomDestination | undefined>): ZoomDestination | undefined {
 	if (destinations.length == 0)
 		return undefined;
 	else if (destinations.length == 1)
@@ -61,7 +85,8 @@ export function combineZoomDestinations(destinations: ZoomDestination[]): ZoomDe
 	
 	const bounds = latLngBounds(undefined as any);
 	for (const destination of destinations) {
-		bounds.extend((destination.bounds || destination.center)!);
+		if (destination)
+			bounds.extend((destination.bounds || destination.center)!);
 	}
 	return { bounds };
 }
@@ -71,7 +96,7 @@ export function normalizeZoomDestination(map: Map, destination: ZoomDestination)
 	if (result.center == null)
 		result.center = destination.bounds!.getCenter();
 	if (result.zoom == null)
-		result.zoom = Math.min(15, map.getBoundsZoom(result.bounds!));
+		result.zoom = result.bounds ? Math.min(15, map.getBoundsZoom(result.bounds)) : 15;
 	return result as any;
 }
 

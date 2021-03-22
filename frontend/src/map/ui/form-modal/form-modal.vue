@@ -7,7 +7,6 @@
 		:no-close-on-esc="noCancel" :no-close-on-backdrop="noCancel" :hide-header-close="noCancel" :ok-only="noCancel"
 		:busy="isSaving"
 		:ok-disabled="!isCreate && !isModified"
-		:ok-title="okTitle || (isCreate ? 'Create' : 'Save')"
 		@ok.prevent="observer.handleSubmit(handleSubmit)"
 		@show="$emit('show')"
 		scrollable
@@ -29,7 +28,7 @@
 			</b-button>
 			<b-button v-if="noCancel || isModified || isCreate" variant="primary" @click="ok" :disabled="isSaving">
 				<b-spinner small v-if="isSaving"></b-spinner>
-				{{isCreate ? "Create" : "Save"}}
+				{{okTitle || (isCreate ? 'Create' : 'Save')}}
 			</b-button>
 		</template>
 	</b-modal>

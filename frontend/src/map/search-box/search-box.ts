@@ -33,8 +33,9 @@ export default class SearchBox extends Vue {
 	cardHeader!: HTMLElement;
 
 	tab = 0;
-	panStartTop: number | null = null;
-	restoreTop: number | null = null;
+	tabHistory = [0];
+	panStartHeight: number | null = null;
+	restoreHeight: number | null = null;
 	resizeStartHeight: number | null = null;
 	resizeStartWidth: number | null = null;
 	hasFocus = false;
@@ -70,37 +71,44 @@ export default class SearchBox extends Vue {
 	}
 
 	handlePanStart(event: any): void {
-		this.restoreTop = null;
-		this.panStartTop = parseInt($(this.searchBox).css("flex-basis"));
+		this.restoreHeight = null;
+		this.panStartHeight = parseInt($(this.searchBox).css("flex-basis"));
 	}
 
 	handlePanMove(event: any): void {
-		if (this.isNarrow && this.panStartTop != null && event.srcEvent.type != "pointercancel")
-			$(this.searchBox).stop().css("flexBasis", `${this.getSanitizedTop(this.panStartTop - event.deltaY)}px`);
+		if (this.isNarrow && this.panStartHeight != null && event.srcEvent.type != "pointercancel")
+			$(this.searchBox).stop().css("flexBasis", `${this.getSanitizedHeight(this.panStartHeight - event.deltaY)}px`);
 	}
 
 	handlePanEnd(): void {
-		this.mapComponents.map.invalidateSize({ animate: true });
+		this.mapComponents.map.invalidateSize({ pan: false });
 	}
 
-	getTopFromBottom(bottom: number): number {
-		return (this.searchBox.offsetParent as HTMLElement).offsetHeight - bottom;
+	getSanitizedHeight(height: number): number {
+		const maxHeight = (this.searchBox.offsetParent as HTMLElement).offsetHeight - 45;
+		return Math.max(0, Math.min(maxHeight, height));
 	}
 
-	getSanitizedTop(top: number): number {
-		const maxTop = (this.searchBox.offsetParent as HTMLElement).offsetHeight - 45;
-		return Math.max(0, Math.min(maxTop, top));
-	}
-
-	handleActivateTab(): void {
-		this.restoreTop = null;
+	handleActivateTab(idx: number): void {
+		this.restoreHeight = null;
+		this.tabHistory = [
+			...this.tabHistory.filter((tab) => tab != idx),
+			idx
+		];
 	}
 
 	handleChanged(newTabs: BTab[], oldTabs: BTab[]): void {
-		if (this.restoreTop != null && newTabs.length < oldTabs.length) {
-			$(this.searchBox).animate({ top: this.restoreTop });
-			this.restoreTop = null;
+		if (this.restoreHeight != null && newTabs.length < oldTabs.length) {
+			$(this.searchBox).animate({ flexBasis: this.restoreHeight }, () => {
+				this.mapComponents.map.invalidateSize({ pan: false });
+			});
+			this.restoreHeight = null;
 		}
+
+		const lastActiveTab = this.tabHistory[this.tabHistory.length - 1];
+		this.tabHistory = this.tabHistory.map((idx) => newTabs.indexOf(oldTabs[idx])).filter((idx) => idx != -1);
+		if (!newTabs.includes(oldTabs[lastActiveTab]))
+			this.tab = this.tabHistory[this.tabHistory.length - 1];
 	}
 
 	handleShowTab(id: string, expand = true): void {
@@ -110,11 +118,12 @@ export default class SearchBox extends Vue {
 
 		if (this.isNarrow && expand) {
 			setTimeout(() => {
-				const maxTop = this.getSanitizedTop(this.getTopFromBottom(300));
-				const currentTop = this.searchBox.offsetTop;
-				if (currentTop > maxTop) {
-					this.restoreTop = currentTop;
-					$(this.searchBox).animate({ top: maxTop });
+				const currentHeight = parseInt($(this.searchBox).css("flex-basis"));
+				if (currentHeight < 120) {
+					this.restoreHeight = currentHeight;
+					$(this.searchBox).animate({ flexBasis: 120 }, () => {
+						this.mapComponents.map.invalidateSize({ pan: false });
+					});
 				}
 			}, 0);
 		}
@@ -144,6 +153,15 @@ export default class SearchBox extends Vue {
 		this.searchBox.style.height = "";
 		this.$root.$emit('bv::hide::tooltip');
 		this.searchBoxContext.$emit("resizereset");
+	}
+
+	handleFocusIn(e: FocusEvent): void {
+		if ((e.target as HTMLElement).closest("input,textarea"))
+			this.hasFocus = true;
+	}
+
+	handleFocusOut(e: FocusEvent): void {
+		this.hasFocus = false;
 	}
 
 }

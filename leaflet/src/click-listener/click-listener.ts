@@ -1,5 +1,5 @@
 import { Point } from "facilmap-types";
-import { Layer, LeafletMouseEvent, Map } from "leaflet";
+import { DomEvent, Layer, LeafletMouseEvent, Map } from "leaflet";
 import "./click-listener.scss";
 
 class TransparentLayer extends Layer {
@@ -44,6 +44,7 @@ export function addClickListener(map: Map, listener: ClickListener, moveListener
         cancel();
 
         e.originalEvent.preventDefault();
+        DomEvent.stopPropagation(e);
         listener({ lat: e.latlng.lat, lon: e.latlng.lng });
     };
 

@@ -10,6 +10,7 @@ import "./search-result-info.scss";
 import { FileResult } from "../../utils/files";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { isLineResult, isMarkerResult } from "../../utils/search";
+import { flyTo, getZoomDestinationForSearchResult } from "../../utils/zoom";
 
 @WithRender
 @Component({
@@ -37,6 +38,12 @@ export default class SearchResultInfo extends Vue {
 	get types(): Type[] {
 		// Result can be both marker and line
 		return Object.values(this.client.types).filter((type) => (this.isMarker && type.type == "marker") || (this.isLine && type.type == "line"));
+	}
+
+	zoomToResult(): void {
+		const dest = getZoomDestinationForSearchResult(this.result);
+		if (dest)
+			flyTo(this.mapComponents.map, dest);
 	}
 
 }

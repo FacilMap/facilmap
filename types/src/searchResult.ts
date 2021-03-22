@@ -1,3 +1,5 @@
+import { Geometry } from "geojson";
+
 export type SearchResultType = string;
 
 export interface SearchResult {
@@ -9,7 +11,7 @@ export interface SearchResult {
 	lon?: number;
 	zoom?: number;
 	extratags?: Record<string, string>;
-	geojson?: GeoJSON.GeoJSON;
+	geojson?: Geometry;
 	icon?: string;
 	type: SearchResultType;
 	id?: string;

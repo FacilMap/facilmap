@@ -20,9 +20,8 @@
 		v-if="searchResults || mapResults"
 		:search-results="searchResults"
 		:map-results="mapResults"
-		:show-zoom="!autoZoom || zoomToAll"
+		:auto-zoom="autoZoom"
+		:union-zoom="zoomToAll"
 		:layer-id="layerId"
-		@click-result="handleClickResult"
-		@zoom-result="zoomToResult"
 	></SearchResults>
 </div>

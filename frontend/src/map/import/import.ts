@@ -4,14 +4,13 @@ import { Component, Ref } from "vue-property-decorator";
 import { InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { showErrorToast } from "../../utils/toasts";
-import { FileResult, FileResultObject, parseFiles } from "../../utils/files";
+import { FileResultObject, parseFiles } from "../../utils/files";
 import pluralize from "pluralize";
 import Icon from "../ui/icon/icon";
 import "./import.scss";
 import { SearchResultsLayer } from "facilmap-leaflet";
 import { Util } from "leaflet";
 import FileResults from "../file-results/file-results";
-import { flyTo } from "../../utils/zoom";
 
 @WithRender
 @Component({
@@ -77,18 +76,6 @@ export default class Import extends Vue {
 		event.preventDefault();
 
 		this.importFiles(event.dataTransfer?.files);
-	}
-
-	zoomToResult(result: FileResult): void {
-		const layer = this.layers.find((layer, idx) => this.files[idx].features.includes(result));
-		if (!layer)
-			return;
-		
-		const featureLayer = layer.getLayers().find((l) => l._fmSearchResult === result) as any;
-		if (!featureLayer)
-			return;
-
-		flyTo(this.mapComponents.map, { bounds: featureLayer.getBounds() });
 	}
 
 	async importFiles(files: FileList | undefined): Promise<void> {

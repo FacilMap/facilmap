@@ -10,9 +10,11 @@ import { showErrorToast } from "../../utils/toasts";
 import { FindOnMapResult, SearchResult } from "facilmap-types";
 import SearchResults from "../search-results/search-results";
 import context from "../context";
-import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
+import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { Util } from "leaflet";
+import { isMapResult } from "../../utils/search";
+import storage from "../../utils/storage";
 
 @WithRender
 @Component({
@@ -29,8 +31,6 @@ export default class SearchForm extends Vue {
 	autofocus = !context.isNarrow && context.autofocus;
 	searchString = "";
 	loadedSearchString = "";
-	autoZoom = true;
-	zoomToAll = false;
 	searchCounter = 0;
 	layerId: number = null as any;
 
@@ -39,6 +39,22 @@ export default class SearchForm extends Vue {
 
 	mounted(): void {
 		this.layerId = Util.stamp(this.mapComponents.searchResultsLayer);
+	}
+
+	get autoZoom(): boolean {
+		return storage.autoZoom;
+	}
+	
+	set autoZoom(autoZoom: boolean) {
+		storage.autoZoom = autoZoom;
+	}
+
+	get zoomToAll(): boolean {
+		return storage.zoomToAll;
+	}
+
+	set zoomToAll(zoomToAll: boolean) {
+		storage.zoomToAll = zoomToAll;
 	}
 
 	async search(): Promise<void> {
@@ -120,26 +136,8 @@ export default class SearchForm extends Vue {
 		this.mapComponents.searchResultsLayer.setResults([]);
 	};
 
-	handleClickResult(result: SearchResult | FindOnMapResult): void {
-		if (this.autoZoom) {
-			if (this.zoomToAll)
-				this.unionZoomToResult(result);
-			else
-				this.zoomToResult(result);
-		}
-	}
-
 	zoomToResult(result: SearchResult | FindOnMapResult): void {
-		const dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
-		if (dest)
-			flyTo(this.mapComponents.map, dest);
-	}
-
-	unionZoomToResult(result: SearchResult | FindOnMapResult): void {
-		// Zoom to item, keep current map bounding box in view
-		let dest = "kind" in result ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
-		if (dest)
-			dest = combineZoomDestinations([dest, { bounds: this.mapComponents.map.getBounds() }]);
+		const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
 		if (dest)
 			flyTo(this.mapComponents.map, dest);
 	}
@@ -163,19 +161,6 @@ export default class SearchForm extends Vue {
 }
 
 /* TODO
-			scope.addAllToMap = function(type) {
-				for(let result of scope.searchResults.features) {
-					if((type.type == "marker" && result.isMarker) || (type.type == "line" && result.isLine))
-						scope.addResultToMap(result, type, true);
-				}
-			};
-
-			scope.customImport = function() {
-				importUi.openImportDialog(scope.searchResults);
-			};
-
-			var layerGroup = L.featureGroup([]).addTo(map.map);
-
 			function getZoomDestination(result, unionZoom) {
 				let forBounds = (bounds) => ([
 					bounds.getCenter(),
@@ -201,88 +186,10 @@ export default class SearchForm extends Vue {
 				}
 			}
 
-			function prepareResults(results) {
-				for(let result of results) {
-					if((result.lat != null && result.lon != null) || result.geojson && result.geojson.type == "Point")
-						result.isMarker = true;
-					if([ "LineString", "MultiLineString", "Polygon", "MultiPolygon" ].indexOf(result.geojson && result.geojson.type) != -1)
-						result.isLine = true;
-				}
-			}
-
-			function renderSearchResults() {
-				if(scope.searchResults && scope.searchResults.features.length > 0) {
-					prepareResults(scope.searchResults.features);
-
-					scope.searchResults.features.forEach(function(result) {
-						renderResult(scope.submittedSearchString, scope.searchResults.features, result, false, layerGroup);
-					});
-				}
-			}
-
-			function clearRenders() {
-				layerGroup.clearLayers();
-				if(scope.searchResults) {
-					scope.searchResults.features.forEach((result) => {
-						result.marker = null;
-						result.layer = null;
-					});
-				}
-			}
-
-			var queryUi = searchUi.queryUi = {
-				show: function() {
-					el.show();
-				},
-
-				hide: function() {
-					scope.reset();
-					el.hide();
-				},
-
-				search: function(query, noZoom, showAll) {
-					if(query != null)
-						scope.searchString = query;
-
-					if(showAll != null)
-						scope.showAll = showAll;
-
-					scope.search(noZoom);
-				},
-
-				showFiles: function(files) {
-					scope.submittedSearchString = "";
-					scope.showAll = true;
-					scope.searchResults = filesUi.parseFiles(files);
-					scope.mapResults = null;
-					renderSearchResults();
-
-					scope.zoomToAll();
-				},
-
-				getSubmittedSearch: function() {
-					return scope.submittedSearchString;
-				},
-
 				isZoomedToSubmittedSearch: function() {
 					if(scope.searchResults && scope.searchResults.features.length > 0) {
 						let [center, zoom] = getZoomDestination();
 						return map.map.getZoom() == zoom && fmUtils.pointsEqual(map.map.getCenter(), center, map.map);
 					}
 				},
-
-				hasResults: function() {
-					return !!scope.searchResults;
-				}
-			};
-
-			scope.$on("$destroy", () => {
-				scope.reset();
-				searchUi.searchUi = null;
-			});
-
-			var filesUi = fmSearchFiles(map);
-			var importUi = fmSearchImport(map);
-		}
-	};
 }); */

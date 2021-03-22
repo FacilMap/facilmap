@@ -21,8 +21,8 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 	}
 }
 
-export function canControl(type: Type, what: keyof Marker | keyof Line, ignoreField?: Field): boolean {
-	if((type as any)[what+"Fixed"] && ignoreField != null)
+export function canControl(type: Type, what: keyof Marker | keyof Line, ignoreField?: Field | null): boolean {
+	if((type as any)[what+"Fixed"] && ignoreField !== null)
 		return false;
 
 	const idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);

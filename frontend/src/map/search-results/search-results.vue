@@ -13,7 +13,7 @@
 							{{" "}}
 							<span class="result-type">({{client.types[result.typeId].name}})</span>
 						</span>
-						<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
@@ -27,7 +27,7 @@
 							{{" "}}
 							<span class="result-type" v-if="result.type">({{result.type}})</span>
 						</span>
-						<a v-if="showZoom" href="javascript:" @click="handleZoom(result, $event)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
@@ -35,18 +35,22 @@
 				<slot name="after"></slot>
 			</div>
 
-			<!-- <div class="fm-search-buttons" ng-show="searchResults.features.length > 0">
-				<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="searchResults.features.length > 1">Show all</button>
-				<button type="button" class="btn btn-link" ng-click="reset()"><fm-icon fm-icon="remove" alt="Remove"></fm-icon></button>
-				<div uib-dropdown keyboard-nav="true" class="pull-right dropup" ng-if="client.padId && !client.readonly">
-					<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
-					<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="search-add-all-button">
-						<li ng-if="(searchResults.types | fmPropertyCount) > 0" role="menuitem"><a href="javascript:" ng-click="customImport()">Custom type mapping…</a></li>
-						<li ng-if="(searchResults.features | filter:{isMarker: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'marker'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all markers as {{type.name}}</a></li>
-						<li ng-if="(searchResults.features | filter:{isLine: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all lines/polygons as {{type.name}}</a></li>
-					</ul>
-				</div>
-			</div> -->
+			<b-button-toolbar v-if="client.padId && !client.readonly && searchResults && searchResults.length > 0">
+				<b-button @click="toggleSelectAll" :pressed="isAllSelected">Select all</b-button>
+
+				<b-dropdown v-if="client.padId && !client.readonly" :disabled="activeSearchResults.length == 0" :text="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`">
+					<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
+						<b-dropdown-item v-for="type in markerTypes" href="javascript:" @click="addToMap(activeMarkerSearchResults, type)">Marker items as {{type.name}}</b-dropdown-item>
+					</template>
+					<template v-if="activeLineSearchResults.length > 0 && lineTypes.length ">
+						<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(activeLineSearchResults, type)">Line/polygon items as {{type.name}}</b-dropdown-item>
+					</template>
+					<template v-if="hasCustomTypes">
+						<b-dropdown-divider></b-dropdown-divider>
+						<b-dropdown-item href="javascript:" v-b-modal.fm-search-results-custom-import>Custom type mapping…</b-dropdown-item>
+					</template>
+				</b-dropdown>
+			</b-button-toolbar>
 		</b-carousel-slide>
 
 		<b-carousel-slide>
@@ -62,4 +66,39 @@
 			></SearchResultInfo>
 		</b-carousel-slide>
 	</b-carousel>
+
+
+	<FormModal
+		id="fm-search-results-custom-import"
+		title="Custom Import"
+		dialog-class="fm-search-results-custom-import"
+		:is-saving="isCustomImportSaving"
+		is-create
+		ok-title="Import"
+		@submit="customImport"
+		@show="initializeCustomImport"
+	>
+		<b-table-simple striped hover>
+			<b-thead>
+				<b-tr>
+					<b-th>Type</b-th>
+					<b-th>Map to…</b-th>
+				</b-tr>
+			</b-thead>
+			<b-tbody>
+				<b-tr v-for="(options, importTypeId) in customMappingOptions">
+					<b-td><label :for="`map-type-${importTypeId}`">{{customTypes[importTypeId].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{customTypes[importTypeId].name}}” ({{activeFileResultsByType[importTypeId].length}})</label></b-td>
+					<b-td><b-form-select :id="`map-type-${importTypeId}`" v-model="customMapping[importTypeId]" :options="options"></b-form-select></b-td>
+				</b-tr>
+				<b-tr v-if="untypedMarkers.length > 0">
+					<b-td><label for="map-untyped-markers">Untyped markers ({{untypedMarkers}})</label></b-td>
+					<b-td><b-form-select id="map-untyped-markers" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions"></b-form-select></b-td>
+				</b-tr>
+				<b-tr v-if="untypedLines.length > 0">
+					<b-td><label for="map-untyped-lines">Untyped lines/polygons ({{untypedLines}})</label></b-td>
+					<b-td><b-form-select id="map-untyped-lines" v-model="untypedLineMapping" :options="untypedLineMappingOptions"></b-form-select></b-td>
+				</b-tr>
+			</b-tbody>
+		</b-table-simple>
+	</FormModal>
 </div>

@@ -11,6 +11,7 @@ import Icon from "../ui/icon/icon";
 import SearchResults from "../search-results/search-results";
 import { displayView } from "facilmap-leaflet";
 import { MapComponents } from "../leaflet-map/leaflet-map";
+import "./file-results.scss";
 
 type ViewImport = FileResultObject["views"][0];
 type TypeImport = FileResultObject["types"][0];
@@ -29,6 +30,11 @@ export default class FileResults extends Vue {
 
 	@Prop({ type: Number, required: true }) layerId!: number;
 	@Prop({ type: Object, required: true }) file!: FileResultObject;
+
+	/** When clicking a search result, union zoom to it. Normal zoom is done when clicking the zoom button. */
+	@Prop({ type: Boolean, default: false }) unionZoom!: boolean;
+	/** When clicking or selecting a search result, zoom to it. */
+	@Prop({ type: Boolean, default: false }) autoZoom!: boolean;
 
 	get hasViews(): boolean {
 		return this.file.views.length > 0;

@@ -30,6 +30,7 @@ interface ShapeInfo {
     width: number;
     baseX: number;
     baseY: number;
+    scale: number;
 }
 
 const MARKER_SHAPES: Partial<Record<Shape, ShapeInfo>> = {
@@ -47,7 +48,8 @@ const MARKER_SHAPES: Partial<Record<Shape, ShapeInfo>> = {
         height: 36,
         width: 26,
         baseX: 13,
-        baseY: 36
+        baseY: 36,
+        scale: 1
     },
     circle: {
         svg: (
@@ -63,7 +65,8 @@ const MARKER_SHAPES: Partial<Record<Shape, ShapeInfo>> = {
         height: 36,
         width: 36,
         baseX: 18,
-        baseY: 18
+        baseY: 18,
+        scale: 0.85
     }
 };
 
@@ -186,8 +189,8 @@ export function getMarkerHtml(colour: string, height: number, symbol?: Symbol, s
 }
 
 export function getMarkerIcon(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
-    const scale = height / 31;
     const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
+    const scale = shapeObj.scale * height / shapeObj.height;
     return L.icon({
         iconUrl: getMarkerUrl(colour, height, symbol, shape, highlight),
         iconSize: [shapeObj.width*scale, shapeObj.height*scale],

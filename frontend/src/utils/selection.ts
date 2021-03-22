@@ -41,6 +41,9 @@ export default class SelectionHandler extends Handler {
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
 
+	_mapFocusTime: number | undefined = undefined;
+	_mapInteraction: number = 0;
+
 	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer) {
 		super(map);
 
@@ -55,6 +58,10 @@ export default class SelectionHandler extends Handler {
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
 		this._map.on("click", this.handleClickMap);
+		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
+		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
+		this._map.getContainer().addEventListener("focusin", this.handleMapFocusIn);
+		this._map.getContainer().addEventListener("focusout", this.handleMapFocusOut);
 	}
 
 	removeHooks(): void {
@@ -63,6 +70,10 @@ export default class SelectionHandler extends Handler {
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
 		this._map.off("click", this.handleClickMap);
+		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
+		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
+		this._map.getContainer().removeEventListener("focusin", this.handleMapFocusIn);
+		this._map.getContainer().removeEventListener("focusout", this.handleMapFocusOut);
 	}
 
 	addSearchResultLayer(layer: SearchResultsLayer): void {
@@ -82,6 +93,11 @@ export default class SelectionHandler extends Handler {
 		
 		layer.off("click", this.handleClickSearchResult);
 		this._searchResultLayers.splice(idx, 1);
+
+		const layerId = Util.stamp(layer);
+		const without = this._selection.filter((item) => item.type != "searchResult" || item.layerId != layerId);
+		if (without.length != this._selection.length)
+			this.setSelectedItems(without);
 	}
 
 	getSelection(): SelectedItem[] {
@@ -130,6 +146,9 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickItem(item: SelectedItem, e: LeafletEvent): void {
+		if (this._mapInteraction)
+			return;
+
 		DomEvent.stopPropagation(e);
 		if ((e.originalEvent as any).ctrlKey || (e.originalEvent as any).shiftKey)
 			this.toggleItem(item, true);
@@ -153,12 +172,33 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {
+		if (this._mapInteraction)
+			return;
+
 		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
-			if (this._selection.length == 0)
-				this.fire("fmMapClick", e);
-			else
+			if (this._selection.length == 0) {
+				// Focus event is fired before click event. Delay so that our click handlers knows whether the map was focused before it was clicked.
+				if (this._mapFocusTime && Date.now() - this._mapFocusTime > 500)
+					this.fire("fmMapClick", e);
+			} else
 				this.setSelectedItems([]);
 		}
+	}
+
+	handleMapFocusIn = (): void => {
+		this._mapFocusTime = Date.now();
+	}
+
+	handleMapFocusOut = (): void => {
+		this._mapFocusTime = undefined;
+	}
+
+	handleMapInteractionStart = (): void => {
+		this._mapInteraction++;
+	}
+
+	handleMapInteractionEnd = (): void => {
+		this._mapInteraction--;
 	}
 
 }

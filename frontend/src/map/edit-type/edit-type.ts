@@ -137,6 +137,6 @@ export default class EditType extends Vue {
 	}
 
 	canControl(what: keyof Marker | keyof Line): boolean {
-		return canControl(this.type, what);
+		return canControl(this.type, what, null);
 	}
 }

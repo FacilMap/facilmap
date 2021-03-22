@@ -2,7 +2,9 @@
 	<SearchResults
 		:search-results="file.features"
 		:layer-id="layerId"
-		@click-result="$emit('click-result', $event)"
+		:auto-zoom="autoZoom"
+		:union-zoom="unionZoom"
+		:custom-types="file.types"
 	>
 		<template #before>
 			<template v-if="hasViews">
@@ -36,21 +38,6 @@
 				</b-list-group>
 			</template>
 		</template>
-
-	<!-- <div class="fm-search-buttons" ng-show="file.features.length > 0">
-		<button type="button" class="btn btn-default" ng-model="showAll" ng-click="showAll && zoomToAll()" uib-btn-checkbox ng-show="file.features.length > 1">Show all</button>
-
-		<button type="button" class="btn btn-link" ng-click="reset()"><fm-icon fm-icon="remove" alt="Remove"></fm-icon></button>
-
-		<div uib-dropdown keyboard-nav="true" class="pull-right dropup" ng-if="client.padId && !client.readonly">
-			<button id="search-add-all-button" type="button" class="btn btn-default" uib-dropdown-toggle>Add all to map <span class="caret"></span></button>
-			<ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="search-add-all-button">
-				<li ng-if="(file.types | fmPropertyCount) > 0" role="menuitem"><a href="javascript:" ng-click="customImport()">Custom type mapping…</a></li>
-				<li ng-if="(file.features | filter:{isMarker: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'marker'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all markers as {{type.name}}</a></li>
-				<li ng-if="(file.features | filter:{isLine: true}).length > 0" role="menuitem" ng-repeat="type in client.types | fmObjectFilter:{type:'line'}"><a href="javascript:" ng-click="addAllToMap(type)">Add all lines/polygons as {{type.name}}</a></li>
-			</ul>
-		</div>
-	</div> -->
 
 	</SearchResults>
 </div>
