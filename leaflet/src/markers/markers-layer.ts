@@ -16,6 +16,9 @@ export default class MarkersLayer extends MarkerCluster {
 	markersById: Record<string, MarkerLayer> = {};
 	highlightedMarkerIds = new Set<ID>();
 
+	/** The position of these markers will not be touched until they are unlocked again. */
+	lockedMarkerIds = new Set<ID>();
+
 	constructor(client: Client, options?: MarkersLayerOptions) {
 		super(client, options);
 		this.client = client;
@@ -54,11 +57,13 @@ export default class MarkersLayer extends MarkerCluster {
 
 	handleFilter = (): void => {
 		for(const i of Object.keys(this.client.markers) as any as Array<keyof Client['markers']>) {
-			const show = this._map.fmFilterFunc(this.client.markers[i]);
-			if(this.markersById[i] && !show)
-				this._deleteMarker(this.client.markers[i]);
-			else if(!this.markersById[i] && show)
-				this._addMarker(this.client.markers[i]);
+			if (!this.lockedMarkerIds.has(i)) {
+				const show = this._map.fmFilterFunc(this.client.markers[i]);
+				if(this.markersById[i] && !show)
+					this._deleteMarker(this.client.markers[i]);
+				else if(!this.markersById[i] && show)
+					this._addMarker(this.client.markers[i]);
+			}
 		}
 	};
 
@@ -95,7 +100,35 @@ export default class MarkersLayer extends MarkerCluster {
 		}
 	}
 
+	/**
+	 * Ignore the position and any filter for this marker until it is unlocked again using unlockMarker().
+	 * 
+	 * While a marker is locked, any new position that is received from the server is ignored, the position of the marker layer is left untouched.
+	 * If a filter is applied that would hide the marker, it is also ignored and the marker stays visible. Style updated to the marker are still
+	 * applied.
+	 * 
+	 * The purpose of this is to allow the user to edit the position of a marker by dragging it around. Panning/zooming the map would update the
+	 * bbox and the server might resend the marker. In this case we don't want the position to be reset while the user is dragging the marker.
+	*/
+	lockMarker(id: ID): void {
+		this.lockedMarkerIds.add(id);
+	}
+
+	/**
+	 * Unlock a marker previously locked using lockMarker(). The current position and filter is applied to the marker.
+	 */
+	unlockMarker(id: ID): void {
+		this.lockedMarkerIds.delete(id);
+
+		if (this._map.fmFilterFunc(this.client.markers[id]))
+			this._addMarker(this.client.markers[id]);
+		else
+			this._deleteMarker(this.client.markers[id]);
+	}
+
 	_addMarker(marker: Marker): void {
+		const updatePos = !this.markersById[marker.id] || !this.lockedMarkerIds.has(marker.id);
+
 		if(!this.markersById[marker.id]) {
 			const layer = new MarkerLayer([ 0, 0 ]);
 			this.markersById[marker.id] = layer;
@@ -111,13 +144,10 @@ export default class MarkersLayer extends MarkerCluster {
 
 		const highlight = this.highlightedMarkerIds.has(marker.id);
 
-		this.markersById[marker.id]
-			.setLatLng([ marker.lat, marker.lon ])
-			.setStyle({
-				marker,
-				highlight,
-				raised: highlight
-			});
+		if (updatePos)
+			this.markersById[marker.id].setLatLng([ marker.lat, marker.lon ]);
+
+		this.markersById[marker.id].setStyle({ marker, highlight, raised: highlight });
 	}
 
 	_deleteMarker(marker: ObjectWithId): void {

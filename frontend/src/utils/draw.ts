@@ -39,6 +39,7 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 	component.$bvToast.hide("fm-draw-drag-marker");
 
 	mapComponents.map.fire('fmInteractionStart');
+	mapComponents.markersLayer.lockMarker(markerId);
 
 	async function finish(save: boolean) {
 		component.$bvToast.hide("fm-draw-drag-marker");
@@ -52,9 +53,9 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 			} catch (err) {
 				showErrorToast(component, "fm-draw-drag-marker", "Error moving marker", err);
 			}
-		} else
-			markerLayer.setLatLng([client.markers[markerId].lat, client.markers[markerId].lon]);
+		}
 
+		mapComponents.markersLayer.unlockMarker(markerId);
 		mapComponents.map.fire('fmInteractionEnd');
 	}
 
