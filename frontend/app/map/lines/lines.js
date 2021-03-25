@@ -185,64 +185,7 @@ fm.app.factory("fmMapLines", function(fmUtils, $uibModal, $compile, $timeout, $r
 				});
 			},
 			moveLine: function(line) {
-				map.interactionStart();
-
-				map.routeUi.lineToRoute(line.id).then(() => {
-					map.client._editingLineId = line.id;
-					linesUi._deleteLine(line);
-
-					let message = map.messages.showMessage("info", "Drag the line points around to change it. Double-click a point to remove it.", [
-						{ label: "Finish", click: done.bind(null, true), enabled: () => (!!map.client.route) },
-						{ label: "Cancel", click: done.bind(null, false) }
-					], null, done.bind(null, false, true));
-
-					let searchBkp;
-					if(map.searchUi) {
-						searchBkp = map.searchUi.getSubmittedSearch() || "";
-						map.searchUi.route(map.client.route.routePoints.map((routePoint) => (fmUtils.round(routePoint.lat, 5) + "," + fmUtils.round(routePoint.lon, 5))), map.client.route.mode, false, true);
-					}
-
-					function done(save, noClose) {
-						map.client._editingLineId = null;
-						linesUi._addLine(map.client.lines[line.id]);
-						linesUi.showLineInfoBox(map.client.lines[line.id]);
-
-						if(!noClose) {
-							message.close();
-						}
-
-						if(save && !map.client.route) {
-							map.messages.showMessage("danger", "No route set.");
-							return;
-						}
-
-						Promise.resolve().then(() => {
-							if(save) {
-								return map.client.editLine({ id: line.id, routePoints: map.client.route.routePoints, mode: map.client.route.mode });
-							}
-						}).then(() => {
-							// Clear route after editing line so that the server can take the trackPoints from the route
-							let ret = map.routeUi.clearRoute();
-
-							if(map.searchUi) {
-								map.searchUi.route([], null, false, true);
-								map.searchUi.search(searchBkp, true);
-							}
-
-							map.interactionEnd();
-
-							return ret;
-						}).catch(function(err) {
-							map.interactionEnd();
-							map.messages.showMessage("danger", err);
-						});
-					}
-				}).catch((err) => {
-					map.interactionEnd();
-
-					console.log("err", err);
-					map.messages.showMessage("danger", err);
-				});
+				
 			},
 			deleteLine: function(line) {
 				map.client.deleteLine(line).catch(function(err) {

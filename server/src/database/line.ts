@@ -2,7 +2,7 @@ import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "../../../types/src";
 import Database from "./database";
 import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
-import { isEqual } from "lodash";
+import { isEqual, mapValues } from "lodash";
 import { wrapAsync } from "../utils/streams";
 import { calculateRouteForLine } from "../routing/routing";
 
@@ -230,7 +230,7 @@ export default class DatabaseLines {
 		if((update.mode == "track" && update.trackPoints) || !isEqual(update.routePoints, originalLine.routePoints) || update.mode != originalLine.mode)
 			routeInfo = await calculateRouteForLine(update, trackPointsFromRoute);
 
-		Object.assign(update, routeInfo);
+		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
 		delete update.trackPoints; // They came if mode is track
 
 		const newLine = await this._db.helpers._updatePadObject<Line>("Line", padId, lineId, update, doNotUpdateStyles);

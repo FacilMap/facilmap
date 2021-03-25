@@ -16,7 +16,7 @@
 							{{" "}}
 							<span class="result-type">(View)</span>
 						</span>
-						<a href="javascript:" v-if="client.padId && client.writable == 2 && !viewExists(view)" @click="addView(view)" v-b-tooltip.right="'Add this view to the map'"><Icon icon="plus" alt="Add"></Icon></a>
+						<a href="javascript:" v-if="client.padData && client.writable == 2 && !viewExists(view)" @click="addView(view)" v-b-tooltip.hover.right="'Add this view to the map'"><Icon icon="plus" alt="Add"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
 			</template>
@@ -33,7 +33,7 @@
 							{{" "}}
 							<span class="result-type">(Type)</span>
 						</span>
-						<a href="javascript:" v-if="client.padId && client.writable == 2 && !typeExists(type)" @click="addType(type)" v-b-tooltip.right="'Add this type to the map'"><Icon icon="plus" alt="Add"></Icon></a>
+						<a href="javascript:" v-if="client.padData && client.writable == 2 && !typeExists(type)" @click="addType(type)" v-b-tooltip.hover.right="'Add this type to the map'"><Icon icon="plus" alt="Add"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
 			</template>

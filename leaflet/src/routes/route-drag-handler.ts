@@ -24,12 +24,13 @@ export default class RouteDragHandler extends DraggableLines {
 	}
 
 	handleDrag = (e: any): void => {
-		if (this.client.route) {
+		const route = e.layer.routeId ? this.client.routes[e.layer.routeId] : this.client.route;
+		if (route) {
 			const routePoints = (e.layer as Polyline).getDraggableLinesRoutePoints();
 
 			if (routePoints) {
 				this.client.setRoute({
-					...this.client.route,
+					...route,
 					routePoints: routePoints.map((p) => ({ lat: p.lat, lon: p.lng }))
 				});
 			}

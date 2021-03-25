@@ -2,8 +2,8 @@ import { Manager, Socket as SocketIO } from "socket.io-client";
 import {
 	Bbox,
 	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
-	LineExportRequest, LineTemplateRequest, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
-	PadData, PadDataCreate, PadDataUpdate, PadId, RequestData, RequestName, ResponseData, Route, RouteCreate, RouteExportRequest,
+	LineExportRequest, LineTemplateRequest, LineToRouteCreate, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
+	PadData, PadDataCreate, PadDataUpdate, PadId, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest,
 	RouteInfo,
 	RouteRequest,
 	SearchResult,
@@ -23,21 +23,22 @@ export interface ClientEvents extends MapEvents {
 
 	serverError: [Error];
 
-	loadStart: [],
-	loadEnd: [],
+	loadStart: [];
+	loadEnd: [];
 
-	route: [RouteWithTrackPoints | undefined];
+	route: [RouteWithTrackPoints];
+	clearRoute: [RouteClear];
 
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName],
-	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName>] }[RequestName],
-	emitReject: { [eventName in RequestName]: [eventName, Error] }[RequestName]
+	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName];
+	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName>] }[RequestName];
+	emitReject: { [eventName in RequestName]: [eventName, Error] }[RequestName];
 }
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export interface TrackPoints {
 	[idx: number]: TrackPoint;
-	length: number
+	length: number;
 }
 
 export interface LineWithTrackPoints extends Line {
@@ -45,6 +46,7 @@ export interface LineWithTrackPoints extends Line {
 }
 
 export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
+	routeId?: string;
 	trackPoints: TrackPoints;
 }
 
@@ -64,6 +66,7 @@ export default class Client {
 	types: Record<ID, Type> = { };
 	history: Record<ID, HistoryEntry> = { };
 	route: RouteWithTrackPoints | undefined = undefined;
+	routes: Record<string, RouteWithTrackPoints> = { };
 	serverError: Error | undefined = undefined;
 	loading: number = 0;
 
@@ -184,7 +187,7 @@ export default class Client {
 		line: (data) => {
 			this._set(this.lines, data.id, {
 				...data,
-				trackPoints: this.lines[data.id]?.trackPoints || { }
+				trackPoints: this.lines[data.id]?.trackPoints || { length: 0 }
 			});
 		},
 
@@ -207,6 +210,16 @@ export default class Client {
 			}
 
 			this._set(this.route, 'trackPoints', this._mergeTrackPoints(this.route.trackPoints, data));
+		},
+
+		routePointsWithId: (data) => {
+			const route = this.routes[data.routeId];
+			if(!route) {
+				console.error("Received route points for non-existing route.");
+				return;
+			}
+
+			this._set(route, 'trackPoints', this._mergeTrackPoints(route.trackPoints, data.trackPoints));
 		},
 
 		view: (data) => {
@@ -251,6 +264,8 @@ export default class Client {
 
 			if(this.route)
 				this.setRoute(this.route);
+			for (const route of Object.values(this.routes))
+				this.setRoute(route);
 		},
 
 		history: (data) => {
@@ -372,38 +387,56 @@ export default class Client {
 		return this._emit("getRoute", data);
 	}
 
-	setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
-		return this._emit("setRoute", data).then((route) => {
-			if(route) { // If unset, a newer submitted route has returned in the meantime
-				this._set(this, 'route', {
-					...route,
-					trackPoints: this._mergeTrackPoints({}, route.trackPoints)
-				});
+	async setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
+		const route = await this._emit("setRoute", data);
 
-				this._simulateEvent("route", this.route);
-			}
+		if(!route) // A newer submitted route has returned in the meantime
+			return undefined;
 
-			return this.route;
-		});
+		const result = {
+			...route,
+			trackPoints: this._mergeTrackPoints({}, route.trackPoints)
+		};
+
+		if (data.routeId)
+			this._set(this.routes, data.routeId, result);
+		else
+			this._set(this, "route", result);
+
+		this._simulateEvent("route", result);
+		return result;
 	}
 
-	clearRoute(): Promise<void> {
-		this._set(this, 'route', undefined);
-		this._simulateEvent("route", undefined);
-		return this._emit("clearRoute");
+	async clearRoute(data?: RouteClear): Promise<void> {
+		if (data?.routeId) {
+			this._delete(this.routes, data.routeId);
+			this._simulateEvent("clearRoute", { routeId: data.routeId });
+			return this._emit("clearRoute", data);
+		} else if (this.route) {
+			this._set(this, 'route', undefined);
+			this._simulateEvent("clearRoute", { routeId: undefined });
+			return this._emit("clearRoute", data);
+		}
 	}
 
-	lineToRoute(data: ObjectWithId): Promise<RouteWithTrackPoints | undefined> {
-		return this._emit("lineToRoute", data).then((route) => {
-			this._set(this, 'route', {
-				...route,
-				trackPoints: this._mergeTrackPoints({}, route.trackPoints)
-			});
+	async lineToRoute(data: LineToRouteCreate): Promise<RouteWithTrackPoints | undefined> {
+		const route = await this._emit("lineToRoute", data);
 
-			this._simulateEvent("route", this.route);
+		if (!route) // A newer submitted route has returned in the meantime
+			return undefined;
 
-			return this.route;
-		});
+		const result = {
+			...route,
+			trackPoints: this._mergeTrackPoints({}, route.trackPoints)
+		};
+
+		if (data.routeId)
+			this._set(this.routes, data.routeId, result);
+		else
+			this._set(this, "route", result);
+
+		this._simulateEvent("route", result);
+		return result;
 	}
 
 	exportRoute(data: RouteExportRequest): Promise<string> {

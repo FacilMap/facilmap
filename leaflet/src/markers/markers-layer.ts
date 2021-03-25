@@ -2,7 +2,7 @@ import Client from 'facilmap-client';
 import { ID, Marker, ObjectWithId } from 'facilmap-types';
 import { Map } from 'leaflet';
 import { tooltipOptions } from '../utils/leaflet';
-import { quoteHtml } from 'facilmap-utils';
+import { numberKeys, quoteHtml } from 'facilmap-utils';
 import MarkerCluster, { MarkerClusterOptions } from './marker-cluster';
 import MarkerLayer from './marker-layer';
 
@@ -56,7 +56,7 @@ export default class MarkersLayer extends MarkerCluster {
 	};
 
 	handleFilter = (): void => {
-		for(const i of Object.keys(this.client.markers) as any as Array<keyof Client['markers']>) {
+		for(const i of numberKeys(this.client.markers)) {
 			if (!this.lockedMarkerIds.has(i)) {
 				const show = this._map.fmFilterFunc(this.client.markers[i]);
 				if(this.markersById[i] && !show)

@@ -1,5 +1,5 @@
 <div class="fm-client-provider">
-	<slot/>
+	<slot v-if="loaded"/>
 
 	<b-toast v-if="client.deleted" id="fm-client-deleted" variant="danger" title="Map deleted" no-auto-hide no-close-button visible>
 		<div class="fm-toast-actions">

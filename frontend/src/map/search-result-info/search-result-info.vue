@@ -23,7 +23,7 @@
 	</dl>
 
 	<b-button-toolbar>
-		<b-button v-b-tooltip="'Zoom to search result'" @click="zoomToResult()" size="sm"><Icon icon="zoom-in" alt="Zoom to search result"></Icon></b-button>
+		<b-button v-b-tooltip.hover="'Zoom to search result'" @click="zoomToResult()" size="sm"><Icon icon="zoom-in" alt="Zoom to search result"></Icon></b-button>
 
 		<b-dropdown v-if="!client.readonly && types.length > 1" text="Add to map" size="sm">
 			<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>

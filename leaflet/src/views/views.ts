@@ -23,7 +23,10 @@ export function getCurrentView(map: Map, includeFilter = false): UnsavedView {
 
 const DEFAULT_VIEW: UnsavedView = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
 
-export function displayView(map: Map, view = DEFAULT_VIEW, _zoomFactor = 0): void {
+export function displayView(map: Map, view?: UnsavedView | null, _zoomFactor = 0): void {
+    if (view == null)
+        view = DEFAULT_VIEW;
+
     setVisibleLayers(map, {
         baseLayer: view.baseLayer,
         

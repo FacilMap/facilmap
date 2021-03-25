@@ -5,13 +5,13 @@ import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
 import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { isSearchId, round, splitRouteQuery } from "facilmap-utils";
-import Client from "facilmap-client";
+import Client, { RouteWithTrackPoints } from "facilmap-client";
 import { showErrorToast } from "../../utils/toasts";
 import { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-import { getMarkerIcon, MarkerLayer, RouteLayer } from "facilmap-leaflet";
-import { getZoomDestinationForRoute, flyTo } from "../../utils/zoom";
-import { LatLng } from "leaflet";
+import { getMarkerIcon, HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
+import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
+import { latLng, LatLng } from "leaflet";
 import draggable from "vuedraggable";
 import RouteMode from "../ui/route-mode/route-mode";
 import DraggableLines from "leaflet-draggable-lines";
@@ -19,6 +19,7 @@ import { throttle } from "lodash";
 import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import ElevationPlot from "../ui/elevation-plot/elevation-plot";
 import { saveAs } from 'file-saver';
+import { isMapResult } from "../../utils/search";
 
 type SearchSuggestion = SearchResult;
 type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -83,6 +84,8 @@ export default class RouteForm extends Vue {
 	@Ref() submitButton!: HTMLButtonElement;
 
 	@Prop({ type: Boolean, default: true }) active!: boolean;
+	@Prop({ type: String }) routeId: string | undefined;
+	@Prop({ type: Boolean, default: true }) showToolbar!: boolean;
 
 	routeLayer!: RouteLayer;
 	draggable!: DraggableLines;
@@ -92,8 +95,7 @@ export default class RouteForm extends Vue {
 		{ query: "" },
 		{ query: "" }
 	];
-	submittedQueries = null;
-	submittedMode = null;
+	submittedQuery: string | null = null;
 	routeError: string | null = null;
 	hoverDestinationIdx: number | null = null;
 	hoverInsertIdx: number | null = null;
@@ -102,12 +104,7 @@ export default class RouteForm extends Vue {
 	suggestionMarker: MarkerLayer | undefined;
 
 	mounted(): void {
-		this.mapContext.$on("fm-route-set-query", this.setQuery);
-		this.mapContext.$on("fm-route-set-from", this.setFrom);
-		this.mapContext.$on("fm-route-add-via", this.addVia);
-		this.mapContext.$on("fm-route-set-to", this.setTo);
-
-		this.routeLayer = new RouteLayer(this.client, { weight: 7, opacity: 1, raised: true }).addTo(this.mapComponents.map);
+		this.routeLayer = new RouteLayer(this.client, this.routeId, { weight: 7, opacity: 1, raised: true }).addTo(this.mapComponents.map);
 		this.routeLayer.on("click", (e) => {
 			if (!this.active && !(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
 				this.$emit("activate");
@@ -178,19 +175,17 @@ export default class RouteForm extends Vue {
 
 		this.handleActiveChange(this.active);
 
-		/* if(scope.submittedQueries)
-			scope.submittedQueries.splice(idx, 0, makeCoordDestination(point).query);
-		map.mapEvents.$broadcast("searchchange"); */
+		if (this.routeObj)
+			this.destinations = this.routeObj.routePoints.map((point) => makeCoordDestination(latLng(point.lat, point.lon)));
 	}
 
 	beforeDestroy(): void {
-		this.mapContext.$off("fm-route-set-query", this.setQuery);
-		this.mapContext.$off("fm-route-set-from", this.setFrom);
-		this.mapContext.$off("fm-route-add-via", this.addVia);
-		this.mapContext.$off("fm-route-set-to", this.setTo);
-
 		this.draggable.disable();
 		this.routeLayer.remove();
+	}
+
+	get routeObj(): RouteWithTrackPoints | undefined {
+		return this.routeId ? this.client.routes[this.routeId] : this.client.route;
 	}
 
 	@Watch("active")
@@ -200,16 +195,31 @@ export default class RouteForm extends Vue {
 		else
 			this.draggable.disableForLayer(this.routeLayer);
 		
-		if (this.client.route)
+		if (this.hasRoute)
 			this.routeLayer.setStyle({ opacity: active ? 1 : 0.35, raised: active });
 	}
 
 	get hasRoute(): boolean {
-		return !!this.client.route;
+		return !!this.routeObj;
 	}
 
 	get lineTypes(): Type[] {
 		return Object.values(this.client.types).filter((type) => type.type == "line");
+	}
+
+	get hashQuery(): HashQuery | undefined {
+		if (this.submittedQuery) {
+			return {
+				query: this.submittedQuery,
+				...(this.routeObj ? normalizeZoomDestination(this.mapComponents.map, getZoomDestinationForRoute(this.routeObj)) : {})
+			};
+		} else
+			return undefined;
+	}
+
+	@Watch("hashQuery")
+	handleHashQueryChange(hashQuery: HashQuery | undefined): void {
+		this.$emit("hash-query-change", hashQuery);
 	}
 
 	addDestination(): void {
@@ -234,6 +244,17 @@ export default class RouteForm extends Vue {
 			return undefined;
 	}
 
+	getSelectedSuggestionId(dest: Destination): string | undefined {
+		const sugg = this.getSelectedSuggestion(dest);
+		if (!sugg)
+			return undefined;
+		
+		if (isMapResult(sugg))
+			return (sugg.kind == "marker" ? "m" : "l") + sugg.id;
+		else
+			return sugg.id;
+	}
+
 	async loadSuggestions(dest: Destination): Promise<void> {
 		if (dest.loadingQuery == dest.query.trim() || dest.loadedQuery == dest.query.trim())
 			return;
@@ -255,7 +276,7 @@ export default class RouteForm extends Vue {
 				const [searchResults, mapResults] = await Promise.all([
 					this.client.find({ query: query }),
 					(async () => {
-						if (this.client.padId) {
+						if (this.client.padData) {
 							const m = query.match(/^m(\d+)$/);
 							if (m) {
 								const marker = await this.client.getMarker({ id: Number(m[1]) });
@@ -349,67 +370,65 @@ export default class RouteForm extends Vue {
 	}
 
 	getValidationState(destination: Destination): boolean | null {
-		if (destination.loadedQuery && destination.query == destination.loadedQuery && this.getSelectedSuggestion(destination) == null)
+		if (this.routeError && destination.query.trim() == '')
+			return false;
+		else if (destination.loadedQuery && destination.query == destination.loadedQuery && this.getSelectedSuggestion(destination) == null)
 			return false;
 		else
 			return null;
 	}
 
-	async route(zoom: boolean): Promise<void> {
+	async route(zoom: boolean, smooth = true): Promise<void> {
 		this.reset();
-
-		if(this.destinations[0].query.trim() == "" || this.destinations[this.destinations.length-1].query.trim() == "")
-			return;
 
 		try {
 			const mode = this.routeMode;
 
-			/* this.submittedQueries = this.destinations.map((dest) => {
-				if(dest.loadedQuery == dest.query && (dest.searchSuggestions?.length || dest.mapSuggestions?.length))
-					return this.getSelectedSuggestion(dest).hashId || this.getSelectedSuggestion(dest).id;
-				else
-					return dest.query;
-			});
-			scope.submittedMode = mode;
-
-			map.mapEvents.$broadcast("searchchange"); */
+			this.submittedQuery = [
+				this.destinations.map((dest) => (this.getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
+				mode
+			].join(" by ");
 
 			await Promise.all(this.destinations.map((dest) => this.loadSuggestions(dest)));
-			const points = this.destinations.filter((dest) => dest.query.trim() != "").map((dest) => this.getSelectedSuggestion(dest));
+			const points = this.destinations.map((dest) => this.getSelectedSuggestion(dest));
+
+			this.submittedQuery = [
+				this.destinations.map((dest) => (this.getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
+				mode
+			].join(" by ");
 
 			if(points.some((point) => point == null)) {
 				this.routeError = "Some destinations could not be found.";
 				return;
 			}
 
-			/* scope.submittedQueries = points.map(function(point) {
-				return point.hashId || point.id;
-			});
-
-			map.mapEvents.$broadcast("searchchange"); */
-
 			const route = await this.client.setRoute({
 				routePoints: points.map((point) => ({ lat: point!.lat!, lon: point!.lon! })),
-				mode
+				mode,
+				routeId: this.routeId
 			});
 			
 			if (route && zoom) {
-				flyTo(this.mapComponents.map, getZoomDestinationForRoute(route));
+				flyTo(this.mapComponents.map, getZoomDestinationForRoute(route), smooth);
 			}
 		} catch (err) {
 			showErrorToast(this, "fm-route-form-error", "Error calculating route", err);
 		}
 	}
 
-	reroute(zoom: boolean): void {
-		if(this.hasRoute)
-			this.route(zoom);
+	async reroute(zoom: boolean, smooth = true): Promise<void> {
+		if(this.hasRoute) {
+			await Promise.all(this.destinations.map((dest) => this.loadSuggestions(dest)));
+			const points = this.destinations.map((dest) => this.getSelectedSuggestion(dest));
+
+			if(!points.some((point) => point == null))
+				this.route(zoom, smooth);
+		}
 	}
 
 	reset(): void {
 		this.$bvToast.hide("fm-route-form-error");
-		this.submittedQueries = null;
-		this.submittedMode = null;
+		this.submittedQuery = null;
 		this.routeError = null;
 
 		if(this.suggestionMarker) {
@@ -417,7 +436,7 @@ export default class RouteForm extends Vue {
 			this.suggestionMarker = undefined;
 		}
 
-		this.client.clearRoute();
+		this.client.clearRoute({ routeId: this.routeId });
 	}
 
 	clear(): void {
@@ -430,8 +449,8 @@ export default class RouteForm extends Vue {
 	}
 
 	zoomToRoute(): void {
-		if (this.client.route)
-			flyTo(this.mapComponents.map, getZoomDestinationForRoute(this.client.route));
+		if (this.routeObj)
+			flyTo(this.mapComponents.map, getZoomDestinationForRoute(this.routeObj));
 	}
 
 	handleSubmit(event: Event): void {
@@ -443,7 +462,7 @@ export default class RouteForm extends Vue {
 		this.$bvToast.hide("fm-route-form-add-error");
 
 		try {
-			const line = await this.client.addLine({ typeId: type.id, routePoints: this.client.route!.routePoints, mode: this.client.route!.mode });
+			const line = await this.client.addLine({ typeId: type.id, routePoints: this.routeObj!.routePoints, mode: this.routeObj!.mode });
 			this.clear();
 			this.mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 		} catch (err) {
@@ -462,14 +481,14 @@ export default class RouteForm extends Vue {
 		}
 	}
 
-	setQuery(query: string): void {
+	setQuery(query: string, zoom = true, smooth = true): void {
 		this.clear();
 		const split = splitRouteQuery(query);
 		this.destinations = split.queries.map((query) => ({ query }));
 		while (this.destinations.length < 2)
 			this.destinations.push({ query: "" });
 		this.routeMode = split.mode ?? "car";
-		this.route(true);
+		this.route(zoom, smooth);
 	}
 
 	setFrom(...args: Parameters<typeof makeDestination>): void {
@@ -487,31 +506,4 @@ export default class RouteForm extends Vue {
 		this.reroute(true);
 	}
 
-	/* TODO
-	const routeUi = searchUi.routeUi = {
-
-		setMode: function(mode) {
-			scope.routeMode = mode;
-		},
-
-		getQueries: function() {
-			return scope.submittedQueries;
-		},
-
-		getTypedQueries: function() {
-			return scope.destinations.map((destination) => (destination.query));
-		},
-
-		getSubmittedSearch() {
-			const queries = routeUi.getQueries();
-			if(queries)
-				return queries.join(" to ") + " by " + routeUi.getMode();
-		},
-
-		isZoomedToSubmittedSearch() {
-			let zoomDestination = map.routeUi.getZoomDestination();
-			if(zoomDestination)
-				return map.map.getZoom() == zoomDestination[1] && fmUtils.pointsEqual(map.map.getCenter(), zoomDestination[0], map.map);
-		},
-	}; */
 }

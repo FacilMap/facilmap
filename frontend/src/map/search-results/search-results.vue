@@ -13,8 +13,8 @@
 							{{" "}}
 							<span class="result-type">({{client.types[result.typeId].name}})</span>
 						</span>
-						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.hover.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
 
@@ -27,18 +27,18 @@
 							{{" "}}
 							<span class="result-type" v-if="result.type">({{result.type}})</span>
 						</span>
-						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.hover.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
 					</b-list-group-item>
 				</b-list-group>
 
 				<slot name="after"></slot>
 			</div>
 
-			<b-button-toolbar v-if="client.padId && !client.readonly && searchResults && searchResults.length > 0">
+			<b-button-toolbar v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0">
 				<b-button @click="toggleSelectAll" :pressed="isAllSelected">Select all</b-button>
 
-				<b-dropdown v-if="client.padId && !client.readonly" :disabled="activeSearchResults.length == 0" :text="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`">
+				<b-dropdown v-if="client.padData && !client.readonly" :disabled="activeSearchResults.length == 0" :text="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`">
 					<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
 						<b-dropdown-item v-for="type in markerTypes" href="javascript:" @click="addToMap(activeMarkerSearchResults, type)">Marker items as {{type.name}}</b-dropdown-item>
 					</template>

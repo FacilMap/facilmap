@@ -16,7 +16,7 @@ import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import $ from "jquery";
 import SelectionHandler, { SelectedItem } from "../../utils/selection";
 import { FilterFunc } from "facilmap-utils";
-import { getHashQuery } from "../../utils/zoom";
+import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
 import context from "../context";
 import { createEventBus, EventBus } from "./events";
 
@@ -61,6 +61,7 @@ export interface MapContext extends EventBus {
     hash: string;
     showToolbox: boolean;
     selection: SelectedItem[];
+    fallbackQuery: HashQuery | undefined; // Updated by search-box
     interaction: boolean;
 }
 
@@ -98,7 +99,7 @@ export default class LeafletMap extends Vue {
         const bboxHandler = new BboxHandler(map, this.client).enable();
         const container = this.innerContainer;
         const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
-        const hashHandler = new HashHandler(map, this.client).enable();
+        const hashHandler = new HashHandler(map, this.client).on("fmQueryChange", this.handleNewHashQuery).enable();
         const linesLayer = new LinesLayer(this.client).addTo(map);
         const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a" }).addTo(map);
         const markersLayer = new MarkersLayer(this.client).addTo(map);
@@ -132,6 +133,7 @@ export default class LeafletMap extends Vue {
             hash: location.hash.replace(/^#/, ""),
             showToolbox: false,
             selection: [],
+            fallbackQuery: undefined,
             interaction: false,
             ...createEventBus()
         };
@@ -183,12 +185,24 @@ export default class LeafletMap extends Vue {
     get activeQuery(): HashQuery | undefined {
         if (!this.mapContext) // Not mounted yet
             return undefined;
-        return getHashQuery(this.mapComponents.map, this.client, this.mapContext.selection);
+        return getHashQuery(this.mapComponents.map, this.client, this.mapContext.selection) || this.mapContext.fallbackQuery;
     }
 
     @Watch("activeQuery")
     handleActiveQueryChange(query: HashQuery | undefined): void {
         this.mapComponents.hashHandler.setQuery(query);
+    }
+
+    async handleNewHashQuery(e: any): Promise<void> {
+        let smooth = true;
+        if (!this.mapComponents) {
+            // This is called while the hash handler is being enabled, so it is the initial view
+            smooth = false;
+            await new Promise((resolve) => { setTimeout(resolve); });
+        }
+
+        if (!await openSpecialQuery(e.query, this.client, this.mapComponents, this.mapContext, e.zoom, smooth))
+            this.mapContext.$emit("fm-search-set-query", e.query, e.zoom, smooth);
     }
 
 }

@@ -6,6 +6,7 @@ import util from "util";
 import { getElevationForPoint, getElevationForPoints } from "./elevation";
 import { ZoomLevel, Point, SearchResult } from "facilmap-types";
 import request from "./utils/request";
+import { Geometry } from "geojson";
 
 interface NominatimResult {
 	place_id: number;
@@ -23,7 +24,7 @@ interface NominatimResult {
 	importance: number;
 	icon: string;
 	address: Partial<Record<string, string>>;
-	geojson: GeoJSON.GeoJSON;
+	geojson: Geometry;
 	extratags: Record<string, string>;
 	namedetails: Record<string, string>;
 	elevation?: number; // Added by us
@@ -187,7 +188,7 @@ function _prepareSearchResult(result: NominatimResult): SearchResult {
 		short_name: name,
 		display_name: nameWithAddress,
 		address,
-		boundingbox: result.boundingbox,
+		boundingbox: result.boundingbox?.map((n) => Number(n)) as [number, number, number, number],
 		lat: Number(result.lat),
 		lon: Number(result.lon),
 		zoom: result.zoom,
@@ -319,7 +320,8 @@ function _formatAddress(result: NominatimResult) {
 
 				if(postcode)
 					city = postcode+" "+city;
-			}
+			} else if (postcode)
+				city = postcode;
 			break;
 		case "be":
 		case "hr":
@@ -340,6 +342,8 @@ function _formatAddress(result: NominatimResult) {
 		case "tr":
 			if(city && postcode)
 				city = postcode+" "+city;
+			else if (postcode)
+				city = postcode;
 			break;
 		case "au":
 		case "ca":
@@ -372,7 +376,8 @@ function _formatAddress(result: NominatimResult) {
 				}
 				if(postcode)
 					city  = postcode+" "+city;
-			}
+			} else if (postcode)
+				city = postcode;
 			break;
 		case "ro":
 			if(city && county)
@@ -382,6 +387,8 @@ function _formatAddress(result: NominatimResult) {
 			}
 			if(city && postcode)
 				city += ", "+postcode;
+			else if (postcode)
+				city = postcode;
 			break;
 		case "cl":
 		case "hk": // Postcode rarely/not used
@@ -410,7 +417,7 @@ function _formatAddress(result: NominatimResult) {
 		address.push(suburb);
 	if(city)
 		address.push(city);
-	if([ "residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state" ].indexOf(type) != -1)
+	if(["residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state"].includes(type) || address.length == 0)
 	{ // Searching for a town
 		if(county && county != city)
 			address.push(county);

@@ -4,8 +4,7 @@
 		:pressed="decodedMode.mode == mode"
 		@click="setMode(mode, '')"
 		:tabindex="tabindex + idx"
-		:title="`Go ${constants.modeTitle[mode]}`"
-		v-b-tooltip.hover.top
+		v-b-tooltip.hover="{ placement: tooltipPlacement, title: `Go ${constants.modeTitle[mode]}` }"
 		:disabled="disabled"
 	>
 		<Icon :icon="constants.modeIcon[mode]" :alt="constants.modeAlt[mode]"></Icon>
@@ -13,8 +12,7 @@
 
 	<b-dropdown
 		:tabindex="tabindex + constants.modes.length"
-		title="Customise"
-		v-b-tooltip.hover.top
+		v-b-tooltip.hover="{ placement: tooltipPlacement, title: 'Customize' }"
 		:disabled="disabled"
 		menu-class="fm-route-mode-customize"
 	>

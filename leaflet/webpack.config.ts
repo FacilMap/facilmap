@@ -1,4 +1,4 @@
-import { Configuration, ProvidePlugin, WebpackPluginInstance } from "webpack";
+import { Configuration } from "webpack";
 import nodeExternals from "webpack-node-externals";
 
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -77,7 +77,8 @@ module.exports = (env: any, argv: any): Configuration[] => {
 			externals: nodeExternals({
 				additionalModuleDirs: [
 					`${__dirname}/../node_modules`
-				]
+				],
+				allowlist: /\.css$/
 			})
 		},
 		{

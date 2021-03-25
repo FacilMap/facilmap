@@ -81,25 +81,26 @@ export default class DatabaseRoutes {
 
 	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<RouteWithId | undefined> {
 		const thisTime = Date.now();
+		updateTimes[routeId] = thisTime;
 
 		const routeInfoP = calculateRouteForLine({ mode, routePoints });
 
 		if(!_noClear)
-			await this.deleteRoute(routeId);
+			await this.deleteRoute(routeId, true);
 
-		if(thisTime < updateTimes[routeId])
+		if(thisTime != updateTimes[routeId])
 			return;
 
 		await this.RoutePointModel.destroy({
 			where: { routeId }
 		});
 
-		if(thisTime < updateTimes[routeId])
+		if(thisTime != updateTimes[routeId])
 			return;
 
 		const routeInfo = await routeInfoP;
 
-		if(thisTime < updateTimes[routeId])
+		if(thisTime != updateTimes[routeId])
 			return;
 
 		const create = [ ];
@@ -109,10 +110,8 @@ export default class DatabaseRoutes {
 
 		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, create);
 
-		if(thisTime < updateTimes[routeId])
+		if(thisTime != updateTimes[routeId])
 			return;
-
-		updateTimes[routeId] = thisTime;
 
 		return {
 			id: routeId,
@@ -122,16 +121,29 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async lineToRoute(routeId: string | undefined, padId: PadId, lineId: ID): Promise<RouteWithId> {
-		if(routeId) {
+	async lineToRoute(routeId: string | undefined, padId: PadId, lineId: ID): Promise<RouteWithId | undefined> {
+		const clear = !!routeId;
+
+		if (!routeId)
+			routeId = await this.generateRouteId();
+		
+		const thisTime = Date.now();
+		updateTimes[routeId] = thisTime;
+
+		if(clear) {
 			await this.RoutePointModel.destroy({
 				where: { routeId }
 			});
-		} else
-			routeId = await this.generateRouteId();
+		}
+
+		if(thisTime != updateTimes[routeId])
+			return;
 
 		const line = await this._db.lines.getLine(padId, lineId);
 		const linePoints = await this._db.lines.getAllLinePoints(lineId);
+
+		if(thisTime != updateTimes[routeId])
+			return;
 
 		const create = [];
 		for(const linePoint of linePoints) {
@@ -147,7 +159,8 @@ export default class DatabaseRoutes {
 
 		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, create);
 
-		updateTimes[routeId] = Date.now();
+		if(thisTime != updateTimes[routeId])
+			return;
 
 		return {
 			id: routeId,
@@ -162,8 +175,9 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async deleteRoute(routeId: string): Promise<void> {
-		delete updateTimes[routeId];
+	async deleteRoute(routeId: string, _noConcurrencyCheck = false): Promise<void> {
+		if (!_noConcurrencyCheck)
+			updateTimes[routeId] = Date.now();
 
 		await this.RoutePointModel.destroy({
 			where: {

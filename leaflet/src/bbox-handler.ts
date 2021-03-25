@@ -25,7 +25,7 @@ export default class BboxHandler extends Handler {
     }
 
     handleMoveEnd = (): void => {
-        if (this.client.padId || this.client.route) {
+        if (this.client.padData || this.client.route || Object.keys(this.client.routes).length > 0) {
             this.updateBbox();
         }
     }

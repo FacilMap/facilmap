@@ -5,6 +5,9 @@ import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import { Geometry } from "geojson";
 import { isMapResult } from "./search";
+import { MapComponents } from "../map/leaflet-map/leaflet-map";
+import { decodeLonLatUrl } from "facilmap-utils";
+import { EventBus } from "../map/leaflet-map/events";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -100,9 +103,12 @@ export function normalizeZoomDestination(map: Map, destination: ZoomDestination)
 	return result as any;
 }
 
-export function flyTo(map: Map, destination: ZoomDestination): void {
+export function flyTo(map: Map, destination: ZoomDestination, smooth = true): void {
 	const dest = normalizeZoomDestination(map, destination);
-	map.flyTo(dest.center, dest.zoom);
+	if (map._loaded && smooth)
+		map.flyTo(dest.center, dest.zoom);
+	else
+		map.setView(dest.center, dest.zoom, { animate: false });
 }
 
 export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): HashQuery | undefined {
@@ -129,4 +135,62 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 	}
 
 	return undefined;
+}
+
+export async function openSpecialQuery(query: string, client: Client, mapComponents: MapComponents, mapContext: EventBus, zoom: boolean, smooth = true): Promise<boolean> {
+	if(query.match(/ to /i)) {
+		mapContext.$emit("fm-route-set-query", query, zoom, smooth);
+		mapContext.$emit("fm-search-box-show-tab", "fm-route-form-tab");
+		return true;
+	}
+
+	const lonlat = decodeLonLatUrl(query);
+	if(lonlat) {
+		if (zoom)
+			flyTo(mapComponents.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
+		return true;
+	}
+
+	const markerId = Number(query.match(/^m(\d+)$/)?.[1]);
+	if (markerId) {
+		let marker = client.markers[markerId];
+		if (!marker) {
+			try {
+				marker = await client.getMarker({ id: markerId });
+			} catch (err) {
+				console.error("Could not find marker", err);
+			}
+		}
+
+		if (marker) {
+			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
+		
+			if (zoom)
+				flyTo(mapComponents.map, getZoomDestinationForMarker(marker), smooth);
+			
+			setTimeout(() => {
+				mapContext.$emit("fm-search-box-show-tab", "fm-marker-info-tab");
+			}, 0);
+
+			return true;
+		}
+	}
+
+	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
+	if (lineId && client.lines[lineId]) {
+		const line = client.lines[lineId];
+
+		mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
+		
+		if (zoom)
+			flyTo(mapComponents.map, getZoomDestinationForLine(line), smooth);
+		
+		setTimeout(() => {
+			mapContext.$emit("fm-search-box-show-tab", "fm-line-info-tab");
+		}, 0);
+
+		return true;
+	}
+
+	return false;
 }

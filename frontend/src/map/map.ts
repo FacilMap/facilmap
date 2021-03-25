@@ -20,14 +20,14 @@ Vue.use(BootstrapVue, {
 	BDropdown: {
 		popperOpts: {
 			positionFixed: true,
-			modifiers: {
+			/* modifiers: {
 				preventOverflow: {
 					enabled: false
 				},
 				hide: {
 					enabled: false
 				}
-			}
+			} */
 		},
 		boundary: "window",
 		noFlip: true

@@ -13,6 +13,7 @@ import hammer from "hammerjs";
 import { InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import RouteFormTab from "../route-form/route-form-tab";
+import { HashQuery } from "facilmap-leaflet";
 
 export type SearchBoxContext = Vue;
 
@@ -63,6 +64,10 @@ export default class SearchBox extends Vue {
 		resize.on("pan", this.handleResizeMove);
 		resize.on("panend", this.handleResizeEnd);
 		resize.on("tap", this.handleResizeClick);
+
+		this.$watch(() => this.tabsComponent?.tabs[this.tab]?.$attrs?.["fm-hash-query"], (hashQuery: HashQuery | undefined) => {
+			this.mapContext.fallbackQuery = hashQuery;
+		});
 	}
 
 	beforeDestroy(): void {
@@ -85,7 +90,7 @@ export default class SearchBox extends Vue {
 	}
 
 	getSanitizedHeight(height: number): number {
-		const maxHeight = (this.searchBox.offsetParent as HTMLElement).offsetHeight - 45;
+		const maxHeight = (this.searchBox.offsetParent as HTMLElement).offsetHeight - 5;
 		return Math.max(0, Math.min(maxHeight, height));
 	}
 

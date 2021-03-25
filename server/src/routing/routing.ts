@@ -1,7 +1,7 @@
 import { calculateBbox, isInBbox } from "../utils/geo";
 import { Bbox, BboxWithZoom, Point, RouteMode, TrackPoint } from "../../../types/src";
 import { decodeRouteMode, DecodedRouteMode, calculateDistance } from "facilmap-utils";
-import { LineCreate, ExtraInfo, Route, RouteInfo } from "facilmap-types";
+import { LineCreate, Route, RouteInfo } from "facilmap-types";
 import { calculateOSRMRoute } from "./osrm";
 import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors";
 
@@ -16,7 +16,7 @@ export type RawRouteInfo = Omit<RouteInfo, "trackPoints"> & {
 	trackPoints: Array<Point & { ele?: number }>;
 }
 
-export async function calculateRoute(routePoints: Point[], encodedMode: RouteMode): Promise<RouteInfo> {
+export async function calculateRoute(routePoints: Point[], encodedMode: RouteMode | undefined): Promise<RouteInfo> {
 	const decodedMode = decodeRouteMode(encodedMode);
 
 	const simple = isSimpleRoute(decodedMode);
@@ -41,15 +41,6 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	return route as RouteInfo;
 }
 
-export interface RoutingResult {
-	distance: number;
-	time?: number;
-	ascent?: number;
-	descent?: number;
-	extraInfo?: ExtraInfo;
-	trackPoints: TrackPoint[];
-}
-
 export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
 	const result: Partial<RouteInfo> = {};
 
@@ -70,9 +61,9 @@ export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'rou
 		calculateZoomLevels(line.trackPoints);
 
 		for(let i=0; i<line.trackPoints.length; i++)
-			line.trackPoints[i].idx = i;
+			(line.trackPoints[i] as TrackPoint).idx = i;
 
-		result.trackPoints = line.trackPoints;
+		result.trackPoints = line.trackPoints as TrackPoint[];
 	} else if(line.routePoints && line.routePoints.length >= 2 && line.mode != "track" && decodeRouteMode(line.mode).mode) {
 		const routeData = await calculateRoute(line.routePoints, line.mode);
 		result.distance = routeData.distance;

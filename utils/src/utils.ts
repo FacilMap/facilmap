@@ -102,3 +102,12 @@ export function encodeQueryString(obj: Record<string, string>): string {
 export function clone<T>(obj: T): T {
 	return obj != null ? JSON.parse(JSON.stringify(obj)) : obj;
 }
+
+export function* numberKeys(obj: Record<number, any>): Generator<number> {
+	for (const idx of Object.keys(obj)) {
+		// https://stackoverflow.com/a/175787/242365
+		const number = Number(idx);
+		if (!isNaN(number) && !isNaN(parseFloat(idx)))
+			yield number;
+	}
+}

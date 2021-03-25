@@ -48,7 +48,7 @@ export function encodeRouteMode(decodedMode: DecodedRouteMode): string {
 	return encodedMode.join(" ");
 }
 
-export function decodeRouteMode(encodedMode: RouteMode): DecodedRouteMode {
+export function decodeRouteMode(encodedMode: RouteMode | undefined): DecodedRouteMode {
 	const decodedMode: DecodedRouteMode = {
 		mode: "",
 		type: "",

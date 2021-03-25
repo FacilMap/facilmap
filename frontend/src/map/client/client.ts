@@ -21,6 +21,7 @@ export class ClientProvider extends Vue {
 
     createId: string | null = null;
     connecting = true;
+    loaded = false;
 
     created(): void {
         const client = new Client(this.serverUrl, this.padId);
@@ -32,6 +33,10 @@ export class ClientProvider extends Vue {
         });
 
         this.client = client;
+
+        client.once(this.padId ? "padData" : "connect", () => {
+            this.loaded = true;
+        });
     }
 
     beforeDestroy(): void {

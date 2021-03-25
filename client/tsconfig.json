@@ -6,6 +6,9 @@
 		"sourceMap": true,
 		"declaration": true,
 		"outDir": "dist",
-		"moduleResolution": "node"
-	}
+		"moduleResolution": "node",
+		"noErrorTruncation": true,
+		"skipLibCheck": true
+	},
+	"include": ["src/**/*"]
 }

@@ -115,6 +115,7 @@ export default class RouteMode extends Vue {
 	@Prop({ type: String }) value?: RouteModeType;
 	@Prop({ type: Number }) tabindex?: number;
 	@Prop({ type: Boolean }) disabled?: boolean;
+	@Prop({ type: String, default: "top" }) tooltipPlacement!: string;
 
 	decodedMode: DecodedRouteMode = null as any;
 

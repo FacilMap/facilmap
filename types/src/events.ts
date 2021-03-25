@@ -12,6 +12,11 @@ export interface LinePointsEvent {
 	trackPoints: TrackPoint[];
 }
 
+export interface RoutePointsEvent {
+	routeId: string;
+	trackPoints: TrackPoint[];
+}
+
 export interface MapEvents {
 	padData: [PadData];
 	deletePad: [];
@@ -21,6 +26,7 @@ export interface MapEvents {
 	deleteLine: [ObjectWithId];
 	linePoints: [LinePointsEvent];
 	routePoints: [TrackPoint[]];
+	routePointsWithId: [RoutePointsEvent];
 	view: [View];
 	deleteView: [ObjectWithId];
 	type: [Type];

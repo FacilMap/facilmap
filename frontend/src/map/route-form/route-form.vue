@@ -1,7 +1,6 @@
 <div class="fm-route-form">
 	<b-form @submit.prevent="handleSubmit">
 		<draggable v-model="destinations" handle=".fm-drag-handle" @end="reroute(true)">
-			<!-- ng-class="{'has-error': }" -->
 			<b-form-group v-for="(destination, idx) in destinations" :class="{ active: hoverDestinationIdx == idx }">
 				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
 				<b-input-group @mouseenter="destinationMouseOver(idx)" @mouseleave="destinationMouseOut(idx)" :state="getValidationState(destination)">
@@ -51,7 +50,7 @@
 							</template>
 							<b-spinner v-else></b-spinner>
 						</b-dropdown>
-						<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" v-b-tooltip.right="'Remove this destination'"><Icon icon="minus" alt="Remove" size="1.0em"></Icon></b-button>
+						<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" v-b-tooltip.hover.right="'Remove this destination'"><Icon icon="minus" alt="Remove" size="1.0em"></Icon></b-button>
 					</b-input-group-append>
 				</b-input-group>
 			</b-form-group>
@@ -59,12 +58,12 @@
 		</draggable>
 
 		<b-button-toolbar>
-			<b-button @click="addDestination()" v-b-tooltip="'Add another destination'" :tabindex="destinations.length+1"><Icon icon="plus" alt="Add"></Icon></b-button>
+			<b-button @click="addDestination()" v-b-tooltip.hover.bottom="'Add another destination'" :tabindex="destinations.length+1"><Icon icon="plus" alt="Add"></Icon></b-button>
 
-			<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)"></RouteMode>
+			<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)" tooltip-placement="bottom"></RouteMode>
 
 			<b-button type="submit" variant="primary" :tabindex="destinations.length+7" class="flex-grow-1" ref="submitButton">Go!</b-button>
-			<b-button v-if="hasRoute" type="button" :tabindex="destinations.length+8" @click="reset()" v-b-tooltip.right="'Clear route'"><Icon icon="remove" alt="Clear"></Icon></b-button>
+			<b-button v-if="hasRoute" type="button" :tabindex="destinations.length+8" @click="reset()" v-b-tooltip.hover.right="'Clear route'"><Icon icon="remove" alt="Clear"></Icon></b-button>
 		</b-button-toolbar>
 
 		<template v-if="routeError">
@@ -73,23 +72,23 @@
 			<b-alert variant="danger" show>{{routeError}}</b-alert>
 		</template>
 
-		<template v-if="client.route">
+		<template v-if="routeObj">
 			<hr />
 
 			<dl>
 				<dt>Distance</dt>
-				<dd>{{client.route.distance | round(2)}} km <span v-if="client.route.time != null">({{client.route.time | fmFormatTime}} h {{client.route.mode | fmRouteMode}})</span></dd>
+				<dd>{{routeObj.distance | round(2)}} km <span v-if="routeObj.time != null">({{routeObj.time | fmFormatTime}} h {{routeObj.mode | fmRouteMode}})</span></dd>
 
-				<template v-if="client.route.ascent != null">
+				<template v-if="routeObj.ascent != null">
 					<dt>Climb/drop</dt>
-					<dd><ElevationStats :route="client.route"></ElevationStats></dd>
+					<dd><ElevationStats :route="routeObj"></ElevationStats></dd>
 				</template>
 			</dl>
 
-			<ElevationPlot :route="client.route" v-if="client.route.ascent != null"></ElevationPlot>
+			<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
-			<b-button-toolbar v-if="!client.readonly">
-				<b-button v-b-tooltip="'Zoom to route'" @click="zoomToRoute()" size="sm"><Icon icon="zoom-in" alt="Zoom to route"></Icon></b-button>
+			<b-button-toolbar v-if="showToolbar && !client.readonly">
+				<b-button v-b-tooltip.hover="'Zoom to route'" @click="zoomToRoute()" size="sm"><Icon icon="zoom-in" alt="Zoom to route"></Icon></b-button>
 
 				<b-dropdown v-if="lineTypes.length > 1" text="Add to map" size="sm">
 					<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(type)">{{type.name}}</b-dropdown-item>
@@ -99,12 +98,12 @@
 					<b-dropdown-item
 						href="javascript:"
 						@click="exportRoute('gpx-trk')"
-						v-b-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+						v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
 					>Export as GPX track</b-dropdown-item>
 					<b-dropdown-item
 						href="javascript:"
 						@click="exportRoute('gpx-rte')"
-						v-b-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+						v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
 					>Export as GPX route</b-dropdown-item>
 				</b-dropdown>
 			</b-button-toolbar>

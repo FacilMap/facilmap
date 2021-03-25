@@ -6,6 +6,7 @@ import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 import { createElevationStats } from "../../../utils/heightgraph";
 import Icon from "../icon/icon";
 import "./elevation-stats.scss";
+import { numberKeys } from "facilmap-utils";
 
 @WithRender
 @Component({
@@ -19,7 +20,7 @@ export default class ElevationStats extends Vue {
 
 	get statsArr(): any {
 		const stats = createElevationStats(this.route.extraInfo, this.route.trackPoints)
-		return stats && sortBy((Object.keys(stats) as any as number[]).map((i) => ({ i: Number(i), distance: stats[i] })), 'i');
+		return stats && sortBy([...numberKeys(stats)].map((i) => ({ i, distance: stats[i] })), 'i');
 	}
 
 }

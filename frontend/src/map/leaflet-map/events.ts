@@ -6,7 +6,8 @@ export interface MapContextEvents {
 	"fm-import-file": []
 	"fm-open-selection": [selection: SelectedItem[]],
 	"fm-search-box-show-tab": [id: string, expand?: boolean];
-	"fm-route-set-query": [query: string];
+	"fm-search-set-query": [query: string, zoom?: boolean, smooth?: boolean];
+	"fm-route-set-query": [query: string, zoom?: boolean, smooth?: boolean];
 	"fm-route-set-from": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-add-via": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-set-to": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];

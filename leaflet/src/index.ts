@@ -4,11 +4,11 @@ import LinesLayer from "./lines/lines-layer";
 import MarkerCluster from "./markers/marker-cluster";
 import MarkerLayer from "./markers/marker-layer";
 import MarkersLayer from "./markers/markers-layer";
-import RouteLayer from "./lines/route-layer";
+import RouteLayer from "./routes/route-layer";
 import SearchResultGeoJSON from "./search/search-result-geojson";
 import SearchResultsLayer from "./search/search-results-layer";
 import "./filter/map-filter";
-import RouteDragHandler from "./lines/route-drag-handler";
+import RouteDragHandler from "./routes/route-drag-handler";
 
 export * from "./click-listener/click-listener";
 export * from "./layers";

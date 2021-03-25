@@ -26,9 +26,9 @@
 		<b-nav-item-dropdown text="Tools" right>
 			<!--<b-dropdown-item v-if="!client.readonly" @click="openDialog('copy-pad-dialog')">Copy pad</b-dropdown-item>-->
 			<b-dropdown-item v-if="interactive" href="javascript:" @click="importFile()" v-b-toggle.fm-toolbox-sidebar>Open file</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" v-b-tooltip.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" v-b-tooltip.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`" v-b-tooltip.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'">Export as GPX (routes)</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" v-b-tooltip.hover.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'">Export as GPX (routes)</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/table${filterQuery.q}`" target="_blank">Export as table</b-dropdown-item>
 			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
 			<b-dropdown-item v-if="client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-filter v-b-toggle.fm-toolbox-sidebar>Filter</b-dropdown-item>

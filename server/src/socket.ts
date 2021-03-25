@@ -6,7 +6,7 @@ import domain from "domain";
 import { exportLineToGpx } from "./export/gpx";
 import { find } from "./search";
 import { geoipLookup } from "./geoip";
-import { isEqual } from "lodash";
+import { isEqual, omit } from "lodash";
 import Database, { DatabaseEvents } from "./database/database";
 import { Server as HttpServer } from "http";
 import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable } from "facilmap-types";
@@ -58,7 +58,8 @@ class SocketConnection {
 	padId: PadId | true | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
 	writable: Writable | undefined = undefined;
-	route: RouteWithId | undefined = undefined;
+	route: Omit<RouteWithId, "trackPoints"> | undefined = undefined;
+	routes: Record<string, Omit<RouteWithId, "trackPoints">> = { };
 	historyListener: undefined | (() => void) = undefined;
 	pauseHistoryListener = 0;
 
@@ -200,6 +201,11 @@ class SocketConnection {
 			}
 			if(this.route)
 				ret.routePoints = this.database.routes.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
+			if(Object.keys(this.routes).length > 0) {
+				ret.routePointsWithId = Promise.all(Object.keys(this.routes).map(
+					(routeId) => this.database.routes.getRoutePoints(this.routes[routeId].id, bboxWithExcept, !bboxWithExcept.except).then((trackPoints) => ({ routeId, trackPoints }))
+				));
+			}
 
 			return await promiseProps(ret);
 		},
@@ -215,6 +221,12 @@ class SocketConnection {
 
 			if(this.route) {
 				this.database.routes.deleteRoute(this.route.id).catch((err) => {
+					console.error("Error clearing route", err.stack || err);
+				});
+			}
+
+			for (const routeId of Object.keys(this.routes)) {
+				this.database.routes.deleteRoute(this.routes[routeId].id).catch((err) => {
 					console.error("Error clearing route", err.stack || err);
 				});
 			}
@@ -363,11 +375,17 @@ class SocketConnection {
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
 
-			let trackPoints;
-			if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints) && data.mode == this.route.mode)
-				trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+			let fromRoute;
+			if (data.mode != "track") {
+				for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
+					if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
+						fromRoute = { ...route, trackPoints: await this.database.routes.getAllRoutePoints(route.id) };
+						break;
+					}
+				}
+			}
 			
-			return await this.database.lines.createLine(this.padId, data, trackPoints && Object.assign({}, this.route, {trackPoints}));
+			return await this.database.lines.createLine(this.padId, data, fromRoute);
 		},
 
 		editLine: async (data) => {
@@ -386,11 +404,17 @@ class SocketConnection {
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
 
-			let trackPoints;
-			if(this.route && data.mode != "track" && isEqual(this.route.routePoints, data.routePoints))
-				trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+			let fromRoute;
+			if (data.mode != "track") {
+				for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
+					if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
+						fromRoute = { ...route, trackPoints: await this.database.routes.getAllRoutePoints(route.id) };
+						break;
+					}
+				}
+			}
 
-			return await this.database.lines.updateLine(this.padId, data.id, data, undefined, trackPoints && Object.assign({}, this.route, {trackPoints}));
+			return await this.database.lines.updateLine(this.padId, data.id, data, undefined, fromRoute);
 		},
 
 		deleteLine: async (data) => {
@@ -608,11 +632,13 @@ class SocketConnection {
 		},
 
 		setRoute: async (data) => {
-			this.validateConditions(Writable.READ, data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string" });
+			this.validateConditions(Writable.READ, data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", routeId: "string" });
+
+			const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
 
 			let routeInfo;
-			if(this.route)
-				routeInfo = await this.database.routes.updateRoute(this.route.id, data.routePoints, data.mode);
+			if(existingRoute)
+				routeInfo = await this.database.routes.updateRoute(existingRoute.id, data.routePoints, data.mode);
 			else
 				routeInfo = await this.database.routes.createRoute(data.routePoints, data.mode);
 
@@ -622,7 +648,10 @@ class SocketConnection {
 				return;
 			}
 
-			this.route = routeInfo;
+			if (data.routeId)
+				this.routes[data.routeId] = omit(routeInfo, "trackPoints");
+			else
+				this.route = omit(routeInfo, "trackPoints");
 
 			if(this.bbox)
 				routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
@@ -630,6 +659,7 @@ class SocketConnection {
 				routeInfo.trackPoints = [];
 
 			return {
+				routeId: data.routeId,
 				routePoints: routeInfo.routePoints,
 				mode: routeInfo.mode,
 				time: routeInfo.time,
@@ -641,24 +671,48 @@ class SocketConnection {
 			};
 		},
 
-		clearRoute: async () => {
-			if(this.route)
-				await this.database.routes.deleteRoute(this.route.id);
-			
-			this.route = undefined;
+		clearRoute: async (data) => {
+			if (data) {
+				this.validateConditions(Writable.READ, data, {
+					routeId: "string"
+				});
+			}
+
+			let route;
+			if (data?.routeId != null) {
+				route = this.routes[data.routeId];
+				delete this.routes[data.routeId];
+			} else {
+				route = this.route;
+				this.route = undefined;
+			}
+
+			if (route)
+				await this.database.routes.deleteRoute(route.id);
 		},
 
 		lineToRoute: async (data) => {
 			this.validateConditions(Writable.READ, data, {
-				id: "string"
+				id: "number",
+				routeId: "string"
 			});
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
-			
-			const routeInfo = await this.database.routes.lineToRoute(this.route?.id, this.padId, data.id);
 
-			this.route = routeInfo;
+			const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
+			const routeInfo = await this.database.routes.lineToRoute(existingRoute?.id, this.padId, data.id);
+
+			if (!routeInfo) {
+				// A newer submitted route has returned in the meantime
+				console.log("Ignoring outdated route");
+				return;
+			}
+
+			if (data.routeId)
+				this.routes[routeInfo.id] = omit(routeInfo, "trackPoints");
+			else
+				this.route = omit(routeInfo, "trackPoints");
 
 			if(this.bbox)
 				routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
@@ -666,6 +720,7 @@ class SocketConnection {
 				routeInfo.trackPoints = [];
 
 			return {
+				routeId: data.routeId,
 				routePoints: routeInfo.routePoints,
 				mode: routeInfo.mode,
 				time: routeInfo.time,
@@ -678,22 +733,24 @@ class SocketConnection {
 
 		exportRoute: async (data) => {
 			this.validateConditions(Writable.READ, data, {
-				format: "string"
+				format: "string",
+				routeId: "string"
 			});
 
-			if (!this.route) {
-				throw new Error("No active route available.");
+			const route = data.routeId ? this.routes[data.routeId] : this.route;
+			if (!route) {
+				throw new Error("Route not available.");
 			}
 
-			const trackPoints = await this.database.routes.getAllRoutePoints(this.route.id);
+			const trackPoints = await this.database.routes.getAllRoutePoints(route.id);
 
-			const route = { ...this.route, trackPoints };
+			const routeInfo = { ...this.route, trackPoints };
 
 			switch(data.format) {
 				case "gpx-trk":
-					return await exportLineToGpx(route, undefined, true);
+					return await exportLineToGpx(routeInfo, undefined, true);
 				case "gpx-rte":
-					return await exportLineToGpx(route, undefined, false);
+					return await exportLineToGpx(routeInfo, undefined, false);
 				default:
 					throw new Error("Unknown format.");
 			}

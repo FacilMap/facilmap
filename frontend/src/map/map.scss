@@ -38,3 +38,8 @@
 		align-items: center;
 	}
 }
+
+.dropdown-menu {
+	max-height: 99vh;
+	overflow-y: auto;
+}

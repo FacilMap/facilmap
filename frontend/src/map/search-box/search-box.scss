@@ -6,7 +6,7 @@
 		max-height: calc(100% - 25px);
 		min-width: 19rem;
 		min-height: 6rem;
-		width: 29rem;
+		width: 29.5rem;
 
 		transition: opacity .7s,background-color .7s,border-color .7s;
 		opacity: .7;
@@ -21,12 +21,28 @@
 	}
 
 	&.isNarrow {
-		min-height: 45px;
-		flex-basis: 45px;
+		min-height: 55px;
+		flex-basis: 55px;
 		overflow: hidden;
 
 		height: auto !important; /* Override resize height from non-narrow mode */
 		width: auto !important; /* Override resize width from non-narrow mode */
+
+		.card-header {
+			padding-top: 11px;
+			position: relative;
+
+			::before {
+				content: "";
+				position: absolute;
+				left: 0;
+				right: 0;
+				margin: 0 auto;
+				top: 4px;
+				border-top: 3px double #aaa;
+				width: 40px;
+			}
+		}
 	}
 
 	.tabs, .tab-content, .vue-portal-target {

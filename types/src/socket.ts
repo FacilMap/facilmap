@@ -2,7 +2,7 @@ import { Bbox, BboxWithZoom, ExportFormat, ID, ObjectWithId } from "./base";
 import { PadData, PadDataCreate, PadDataUpdate } from "./padData";
 import { Marker, MarkerCreate, MarkerUpdate } from "./marker";
 import { Line, LineCreate, LineUpdate } from "./line";
-import { Route, RouteCreate, RouteInfo, RouteRequest } from "./route";
+import { LineToRouteCreate, Route, RouteClear, RouteCreate, RouteInfo, RouteRequest } from "./route";
 import { Type, TypeCreate, TypeUpdate } from "./type";
 import { View, ViewCreate, ViewUpdate } from "./view";
 import { MapEvents, MultipleEvents } from "./events";
@@ -18,7 +18,8 @@ export interface LineExportRequest {
 }
 
 export interface RouteExportRequest {
-	format: ExportFormat
+	format: ExportFormat;
+	routeId?: string;
 }
 
 export interface FindQuery {
@@ -56,8 +57,8 @@ export interface RequestDataMap {
 	findOnMap: FindOnMapQuery;
 	getRoute: RouteRequest;
 	setRoute: RouteCreate;
-	clearRoute: void;
-	lineToRoute: ObjectWithId;
+	clearRoute: RouteClear | undefined;
+	lineToRoute: LineToRouteCreate;
 	exportRoute: RouteExportRequest;
 	addType: TypeCreate;
 	editType: ObjectWithId & TypeUpdate;
@@ -91,7 +92,7 @@ export interface ResponseDataMap {
 	getRoute: RouteInfo;
 	setRoute: Route | undefined;
 	clearRoute: void;
-	lineToRoute: Route;
+	lineToRoute: Route | undefined;
 	exportRoute: string;
 	addType: Type;
 	editType: Type;

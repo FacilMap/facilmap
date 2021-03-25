@@ -1,4 +1,4 @@
-import { Point, RouteMode } from "./base";
+import { ID, Point, RouteMode } from "./base";
 import { ExtraInfo, TrackPoint } from "./line";
 
 export interface RouteInfo {
@@ -16,9 +16,21 @@ interface RouteBase {
 }
 
 export interface RouteCreate extends RouteBase {
+	routeId?: string;
+}
+
+export type RouteClear = {
+	routeId?: string;
+};
+
+export interface LineToRouteCreate {
+	/** The ID of the line. */
+	id: ID;
+	routeId?: string;
 }
 
 export interface Route extends RouteBase, RouteInfo {
+	routeId?: string;
 }
 
 export interface RouteRequest {

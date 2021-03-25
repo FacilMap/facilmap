@@ -16,7 +16,7 @@
 	</dl>
 
 	<b-button-toolbar>
-		<b-button v-b-tooltip="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
+		<b-button v-b-tooltip.hover="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
 
 		<b-dropdown text="Use as" size="sm">
 			<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>

@@ -3,7 +3,7 @@ import { ID, Line, LinePointsEvent, ObjectWithId, Point } from "facilmap-types";
 import { FeatureGroup, LayerOptions, Map, PolylineOptions } from "leaflet";
 import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
-import { quoteHtml } from "facilmap-utils";
+import { numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, ClickListenerHandle } from "../click-listener/click-listener";
 
 interface LinesLayerOptions extends LayerOptions {
@@ -15,6 +15,7 @@ export default class LinesLayer extends FeatureGroup {
 	client: Client;
 	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	highlightedLinesIds = new Set<ID>();
+	hiddenLinesIds = new Set<ID>();
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
@@ -46,13 +47,13 @@ export default class LinesLayer extends FeatureGroup {
 	}
 
 	handleLine = (line: Line): void => {
-		if(this._map.fmFilterFunc(line))
+		if(!this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line))
 			this._addLine(line);
 	};
 
 	handleLinePoints = (event: LinePointsEvent): void => {
 		const line = this.client.lines[event.id];
-		if(line && this._map.fmFilterFunc(line))
+		if(line && !this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line))
 			this._addLine(line);
 	};
 
@@ -61,8 +62,8 @@ export default class LinesLayer extends FeatureGroup {
 	};
 
 	handleFilter = (): void => {
-		for(const i of Object.keys(this.client.lines) as any as Array<keyof Client['lines']>) {
-			const show = this._map.fmFilterFunc(this.client.lines[i]);
+		for(const i of numberKeys(this.client.lines)) {
+			const show = !this.hiddenLinesIds.has(i) && this._map.fmFilterFunc(this.client.lines[i]);
 			if(this.linesById[i] && !show)
 				this._deleteLine(this.client.lines[i]);
 			else if(!this.linesById[i] && show)
@@ -92,6 +93,18 @@ export default class LinesLayer extends FeatureGroup {
 			if (!this.highlightedLinesIds.has(id))
 				this.highlightLine(id);
 		}
+	}
+
+	hideLine(id: ID): void {
+		this.hiddenLinesIds.add(id);
+		if (this.client.lines[id])
+			this._deleteLine(this.client.lines[id]);
+	}
+
+	unhideLine(id: ID): void {
+		this.hiddenLinesIds.delete(id);
+		if (this.client.lines[id])
+			this.handleLine(this.client.lines[id]);
 	}
 
 	endDrawLine(save = false): void {

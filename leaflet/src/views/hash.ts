@@ -1,4 +1,5 @@
 import Client from 'facilmap-client';
+import { numberKeys } from 'facilmap-utils';
 import L, { Evented, Handler, LatLng, Map } from 'leaflet';
 import 'leaflet-hash';
 import { isEqual } from 'lodash';
@@ -69,7 +70,7 @@ export default class HashHandler extends Handler {
 		this.updateHash();
 	}
 
-	parseHash = (hash: string): ParsedHash | false => {
+	parseHash = (hash: string, noEmit = false): ParsedHash | false => {
 		if(hash.indexOf('#') === 0) {
 			hash = hash.substr(1);
 		}
@@ -95,10 +96,7 @@ export default class HashHandler extends Handler {
 			setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1) });
 		}
 
-		this.fire("fmQueryChange", args[4]);
-		//let e = map.mapEvents.$broadcast("showObject", args[4] || "", !ret);
-		//if(!e.defaultPrevented && map.searchUi)
-		//	map.searchUi.search(args[4] || "", !!ret, args[4] ? (ret && !fmUtils.isSearchId(args[4])) : null);
+		this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
 
 		this._map.setFmFilter(args[5]);
 	
@@ -130,8 +128,8 @@ export default class HashHandler extends Handler {
 			if(isAtView(this._map, defaultView || undefined))
 				result = "#";
 			else {
-				for(const viewId of Object.keys(this.client.views)) {
-					if(isAtView(this._map, this.client.views[viewId as any])) {
+				for(const viewId of numberKeys(this.client.views)) {
+					if(isAtView(this._map, this.client.views[viewId])) {
 						result = `#q=v${encodeURIComponent(viewId)}`;
 						break;
 					}
@@ -157,6 +155,7 @@ export default class HashHandler extends Handler {
 
 }
 
+// eslint-disable-next-line no-redeclare
 export default interface HashHandler extends Evented {}
 Object.assign(HashHandler.prototype, Evented.prototype);
 

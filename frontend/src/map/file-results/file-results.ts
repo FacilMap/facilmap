@@ -5,13 +5,13 @@ import { FileResultObject } from "../../utils/files";
 import Client from "facilmap-client";
 import { InjectClient, InjectMapComponents } from "../../utils/decorators";
 import { isEqual } from "lodash";
-import { ID } from "facilmap-types";
 import { showErrorToast } from "../../utils/toasts";
 import Icon from "../ui/icon/icon";
 import SearchResults from "../search-results/search-results";
 import { displayView } from "facilmap-leaflet";
 import { MapComponents } from "../leaflet-map/leaflet-map";
 import "./file-results.scss";
+import { numberKeys } from "facilmap-utils";
 
 type ViewImport = FileResultObject["views"][0];
 type TypeImport = FileResultObject["types"][0];
@@ -45,7 +45,7 @@ export default class FileResults extends Vue {
 	}
 
 	viewExists(view: ViewImport): boolean {
-		for (const viewId of Object.keys(this.client.views) as any as ID[]) {
+		for (const viewId of numberKeys(this.client.views)) {
 			if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], this.client.views[viewId][idx])))
 				return true;
 		}
@@ -67,7 +67,7 @@ export default class FileResults extends Vue {
 	};
 
 	typeExists(type: TypeImport): boolean {
-		for (const typeId of Object.keys(this.client.types) as any as ID[]) {
+		for (const typeId of numberKeys(this.client.types)) {
 			if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], this.client.types[typeId][idx])))
 				return true;
 		}

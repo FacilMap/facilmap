@@ -51,13 +51,24 @@
 
 			<input
 				type="button"
-				value="Berlin to Hamburg"
+				value="Route 1"
 				onclick="client.setRoute({ routePoints: [{ lat: 52.51704, lon: 13.38886 }, { lat: 53.55034, lon: 10.00065 }], mode: 'car' })"
 			/>
 			<input
 				type="button"
-				value="Clear route"
+				value="Clear route 1"
 				onclick="client.clearRoute()"
+			/>
+
+			<input
+				type="button"
+				value="Route 2"
+				onclick="client.setRoute({ routeId: 'route2', routePoints: [{ lat: 51.34063, lon: 12.37473 }, { lat: 53.07582, lon: 8.80716 }], mode: 'car' })"
+			/>
+			<input
+				type="button"
+				value="Clear route 2"
+				onclick="client.clearRoute({ routeId: 'route2' })"
 			/>
 
 			<input
@@ -122,9 +133,11 @@
 				searchResultsLayer.setHighlightedResults(new Set());
 			});
 
-			const routeLayer = new L.FacilMap.RouteLayer(client, { raised: true }).addTo(map);
+			const routeLayer1 = new L.FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
+			const routeLayer2 = new L.FacilMap.RouteLayer(client, "route2", { raised: true }).addTo(map);
 			const routeDragHandler = new L.FacilMap.RouteDragHandler(map, client).enable();
-			routeDragHandler.enableForLayer(routeLayer);
+			routeDragHandler.enableForLayer(routeLayer1);
+			routeDragHandler.enableForLayer(routeLayer2);
 
 			const searchResultsLayer = new L.FacilMap.SearchResultsLayer().addTo(map)
 				.on("click", (e) => {
