@@ -194,6 +194,9 @@ export default class LeafletMap extends Vue {
     }
 
     async handleNewHashQuery(e: any): Promise<void> {
+        if (!e.query)
+            return;
+
         let smooth = true;
         if (!this.mapComponents) {
             // This is called while the hash handler is being enabled, so it is the initial view

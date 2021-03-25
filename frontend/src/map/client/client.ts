@@ -14,7 +14,6 @@ import { CLIENT_INJECT_KEY } from "../../utils/decorators";
 })
 export class ClientProvider extends Vue {
 
-    @Prop({ type: String, default: "/" }) readonly serverUrl!: string;
     @Prop({ type: String }) readonly padId: string | undefined;
 
     @ProvideReactive(CLIENT_INJECT_KEY) client: Client = null as any;
@@ -24,7 +23,7 @@ export class ClientProvider extends Vue {
     loaded = false;
 
     created(): void {
-        const client = new Client(this.serverUrl, this.padId);
+        const client = new Client(context.urlPrefix, this.padId);
         client._set = Vue.set;
         client._delete = Vue.delete;
 

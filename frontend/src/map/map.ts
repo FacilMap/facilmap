@@ -57,7 +57,6 @@ registerDeobfuscationHandlers();
 new Vue(withRender({
 	el: "#loading",
 	data: {
-		serverUrl: "/",
 		padId: context.activePadId
 	},
 	methods: {

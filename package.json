@@ -10,7 +10,8 @@
     "utils"
   ],
   "scripts": {
-    "lint": "eslint **/*.ts"
+    "lint": "eslint **/*.ts",
+    "build": "cd client && yarn run build && cd ../leaflet && yarn run build && cd ../frontend && yarn run build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.15.2",
