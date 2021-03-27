@@ -16,7 +16,7 @@
 			<RouteMode v-model="line.mode"></RouteMode>
 		</b-form-group>
 
-		<ValidationProvider v-if="canControl('colour')" name="Colour" v-slot="v" rules="colour">
+		<ValidationProvider v-if="canControl('colour')" name="Colour" v-slot="v" rules="required|colour">
 			<b-form-group label="Colour" label-for="fm-edit-line-colour-input" label-cols-sm="3" :state="v | validationState">
 				<ColourField id="fm-edit-line-colour-input" v-model="line.colour" :state="v | validationState"></ColourField>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>

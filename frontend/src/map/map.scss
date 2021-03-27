@@ -40,6 +40,7 @@
 }
 
 .dropdown-menu {
-	max-height: 99vh;
-	overflow-y: auto;
+	max-height: 90vh;
+	max-width: 99vw;
+	overflow: auto;
 }

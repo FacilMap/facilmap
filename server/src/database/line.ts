@@ -223,7 +223,7 @@ export default class DatabaseLines {
 		const update = {
 			...data,
 			routePoints: data.routePoints || originalLine.routePoints,
-			mode: data.mode || originalLine.mode || ""
+			mode: (data.mode ?? originalLine.mode) || ""
 		};
 
 		let routeInfo;

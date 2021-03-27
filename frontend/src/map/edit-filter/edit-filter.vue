@@ -8,9 +8,11 @@
 	ok-title="Apply"
 >
 	<template v-if="filter != null">
+		<p>Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.</p>
+
 		<ValidationProvider name="Filter" v-slot="v" rules="filter">
 			<b-form-group :state="v | validationState(true)">
-				<b-textarea v-model="filter" rows="5" :state="v | validationState(true)"></b-textarea>
+				<b-textarea v-model="filter" rows="5" :state="v | validationState(true)" class="text-monospace"></b-textarea>
 				<template #invalid-feedback><pre v-html="v.errors[0]"></pre></template>
 			</b-form-group>
 		</ValidationProvider>
@@ -42,7 +44,7 @@
 
 					<tr>
 						<td><code>typeId</code></td>
-						<td><span v-for="(type, idx) in types"><span ng-if="idx != 0"> / </span> <code>{{type.id}}</code> ({{type.name}})</span></td>
+						<td><span v-for="(type, idx) in types"><span v-if="idx != 0"> / </span> <code>{{type.id}}</code> ({{type.name}})</span></td>
 						<td><code>typeId == 1</code></td>
 					</tr>
 
@@ -90,7 +92,7 @@
 
 					<tr>
 						<td><code>mode</code></td>
-						<td>Line routing mode (empty / <code>car</code> / <code>bicycle</code> / <code>pedestrian</code> / <code>track</code>)</td>
+						<td>Line routing mode (<code>""</code> / <code>"car"</code> / <code>"bicycle"</code> / <code>"pedestrian"</code> / <code>"track"</code>)</td>
 						<td><code>mode in (&quot;bicycle&quot;, &quot;pedestrian&quot;)</code></td>
 					</tr>
 

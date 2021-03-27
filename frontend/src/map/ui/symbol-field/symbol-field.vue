@@ -1,13 +1,18 @@
-<div :id="`${effId}-input-container`" class="fm-symbol-field-container">
-	<b-input-group :id="`${effId}-input-group`">
-		<b-input-group-prepend>
-			<b-input-group-text><Icon :icon="value"></Icon></b-input-group-text>
-		</b-input-group-prepend>
-		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
-	</b-input-group>
+<Picker v-bind="$props" v-on="$listeners" custom-class="fm-symbol-field" expand @keydown="handleKeyDown">
+	<template #preview>
+		<b-input-group-text><Icon :icon="value"></Icon></b-input-group-text>
+	</template>
 
-	<FieldPopover :show.sync="popoverOpen" :container="raised ? undefined : `${effId}-input-container`" :target="`${effId}-input-group`" custom-class="fm-symbol-field fm-field-popover" @keydown.esc="handleEscape">
-		<b-input v-model="filter" placeholder="Filter" autocomplete="off"></b-input>
-		<ul v-html="symbolsCode" @click="handleClick"></ul>
-	</FieldPopover>
-</div>
+	<template #default="{ close }">
+		<b-input type="search" v-model="filter" placeholder="Filter" autocomplete="off" autofocus></b-input>
+
+		<b-alert v-if="Object.keys(items).length == 0" show variant="danger" class="mt-2 mb-1">No icons could be found.</b-alert>
+
+		<PrerenderedList
+			:items="items"
+			:value="value"
+			@click="handleClick($event, close)"
+			ref="grid"
+		></PrerenderedList>
+	</template>
+</Picker>

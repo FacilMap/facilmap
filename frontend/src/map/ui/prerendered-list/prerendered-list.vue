@@ -1,0 +1,1 @@
+<ul v-show="Object.keys(items).length > 0" v-html="code" @click="handleClick"></ul>

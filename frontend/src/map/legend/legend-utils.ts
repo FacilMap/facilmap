@@ -1,6 +1,6 @@
 import "./legend.scss";
 import Client from "facilmap-client";
-import { Colour, ID, Shape, Symbol, Type } from "facilmap-types";
+import { ID, Shape, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
 import { getBrightness } from "facilmap-utils";
 import { MapContext } from "../leaflet-map/leaflet-map";
@@ -11,7 +11,7 @@ export interface LegendType {
 	name: string;
 	items: LegendItem[];
 	filtered: boolean;
-	defaultColour?: Colour;
+	defaultColour?: string;
 	defaultShape?: Shape;
 }
 
@@ -22,7 +22,7 @@ export interface LegendItem {
 	filtered?: boolean;
 	first?: boolean;
 	strikethrough?: boolean;
-	colour?: Colour;
+	colour?: string;
 	symbol?: Symbol;
 	shape?: Shape;
 	width?: number;
@@ -44,7 +44,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 			const item: LegendItem = { value: type.name, label: type.name, filtered: true };
 
 			if(type.colourFixed)
-				item.colour = type.defaultColour ?? undefined;
+				item.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
 			if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1))
 				item.symbol = type.defaultSymbol;
 			if(type.type == "marker" && type.shapeFixed)
@@ -78,7 +78,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 				}
 
 				if(field.controlColour)
-					item.colour = option.colour;
+					item.colour = `#${option.colour}`;
 				if(type.type == "marker" && field.controlSymbol)
 					item.symbol = option.symbol;
 				if(type.type == "marker" && field.controlShape)

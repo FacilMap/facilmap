@@ -2,13 +2,15 @@ import WithRender from "./form-modal.vue";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { ValidationObserver } from "vee-validate";
-import { Prop } from "vue-property-decorator";
+import { Prop, Ref } from "vue-property-decorator";
 
 @WithRender
 @Component({
 	components: { ValidationObserver }
 })
 export default class FormModal extends Vue {
+
+	@Ref() form!: HTMLElement;
 
 	@Prop({ type: String, required: true }) readonly id!: string;
 	@Prop({ type: String }) readonly title?: string;
@@ -20,8 +22,14 @@ export default class FormModal extends Vue {
 	@Prop({ type: String }) readonly size?: string;
 	@Prop({ type: String }) readonly okTitle?: string;
 
-	handleSubmit(e: Event): void {
-		this.$emit("submit", e);
+	async handleSubmit(observer: InstanceType<typeof ValidationObserver>): Promise<void> {
+		if (await observer.validate())
+			this.$emit("submit");
+		else {
+			const error = this.form.querySelector(".is-invalid");
+			if (error)
+				error.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		}
 	}
 
 }

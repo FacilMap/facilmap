@@ -10,25 +10,24 @@
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)" text="Views" right>
 			<b-dropdown-item v-for="view in client.views" href="javascript:" @click="displayView(view)" v-b-toggle.fm-toolbox-sidebar>{{view.name}}</b-dropdown-item>
-			<b-dropdown-divider v-if="client.writable == 2"></b-dropdown-divider>
+			<b-dropdown-divider v-if="client.writable == 2 && Object.keys(client.views).length > 0"></b-dropdown-divider>
 			<b-dropdown-item v-if="client.writable == 2" href="javascript:" v-b-modal.fm-toolbox-save-view v-b-toggle.fm-toolbox-sidebar>Save current view</b-dropdown-item>
-			<b-dropdown-item v-if="client.writable == 2" href="javascript:" v-b-modal.fm-toolbox-manage-views v-b-toggle.fm-toolbox-sidebar>Manage views</b-dropdown-item>
+			<b-dropdown-item v-if="client.writable == 2 && Object.keys(client.views).length > 0" href="javascript:" v-b-modal.fm-toolbox-manage-views v-b-toggle.fm-toolbox-sidebar>Manage views</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Map style" right>
-			<b-dropdown-item v-for="layerInfo in baseLayers" :active="layerInfo.active" href="javascript:" @click="setBaseLayer(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
+			<b-dropdown-item v-for="layerInfo in baseLayers" :active="layerInfo.active" href="javascript:" @click.native.capture.stop="setBaseLayer(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="baseLayers.length > 0 && overlays.length > 0"></b-dropdown-divider>
-			<b-dropdown-item v-for="layerInfo in overlays" :active="layerInfo.active" href="javascript:" @click="toggleOverlay(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
+			<b-dropdown-item v-for="layerInfo in overlays" :active="layerInfo.active" href="javascript:" @click.native.capture.stop="toggleOverlay(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
 			<b-dropdown-divider></b-dropdown-divider>
 			<b-dropdown-item :href="links.osm" target="_blank">Open this on OpenStreetMap</b-dropdown-item>
 			<b-dropdown-item :href="links.google" target="_blank">Open this on Google Maps</b-dropdown-item>
 			<b-dropdown-item :href="links.bing" target="_blank">Open this on Bing Maps</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Tools" right>
-			<!--<b-dropdown-item v-if="!client.readonly" @click="openDialog('copy-pad-dialog')">Copy pad</b-dropdown-item>-->
 			<b-dropdown-item v-if="interactive" href="javascript:" @click="importFile()" v-b-toggle.fm-toolbox-sidebar>Open file</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" v-b-tooltip.hover.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>
-			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'">Export as GPX (routes)</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" target="_blank" v-b-tooltip.hover.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" target="_blank" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>
+			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`" target="_blank" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'">Export as GPX (routes)</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/table${filterQuery.q}`" target="_blank">Export as table</b-dropdown-item>
 			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
 			<b-dropdown-item v-if="client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-filter v-b-toggle.fm-toolbox-sidebar>Filter</b-dropdown-item>

@@ -47,36 +47,3 @@ export default class SearchResultInfo extends Vue {
 	}
 
 }
-
-/* function showResultInfoBox(query, results, result, onClose) {
-	var popupScope = $rootScope.$new();
-
-	popupScope.client = map.client;
-	popupScope.result = result;
-
-	popupScope.addToMap = function(type) {
-		scope.addResultToMap(result, type);
-	};
-
-	popupScope.useForRoute = function(mode) {
-		map.searchUi.setRouteDestination(query, mode, results, [ ], result);
-	};
-
-	let [center, zoom] = getZoomDestination(result);
-
-	currentInfoBox = map.infoBox.show({
-		template: require("./result-popup.html"),
-		scope: popupScope,
-		onCloseStart: () => {
-			onClose && onClose();
-
-			currentInfoBox = null;
-		},
-		onCloseEnd: () => {
-			popupScope.$destroy();
-		},
-		id: result.id,
-		center,
-		zoom
-	});
-} */

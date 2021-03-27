@@ -6,10 +6,11 @@ import { ID, Marker } from "facilmap-types";
 import Client from "facilmap-client";
 import MarkerInfo from "./marker-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import Icon from "../ui/icon/icon";
 
 @WithRender
 @Component({
-	components: { MarkerInfo }
+	components: { Icon, MarkerInfo }
 })
 export default class MarkerInfoTab extends Vue {
 
@@ -39,7 +40,7 @@ export default class MarkerInfoTab extends Vue {
 	@Watch("marker")
 	handleChangeMarker(marker: Marker | undefined): void {
 		if (!marker && this.markerId != null)
-			this.mapComponents.selectionHandler.setSelectedItems([]);
+			this.close();
 	}
 
 	handleOpenSelection(): void {
@@ -52,6 +53,10 @@ export default class MarkerInfoTab extends Vue {
 			return this.marker.name;
 		else
 			return undefined;
+	}
+
+	close(): void {
+		this.mapComponents.selectionHandler.setSelectedItems([]);
 	}
 
 }

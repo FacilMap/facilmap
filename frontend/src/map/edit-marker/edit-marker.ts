@@ -46,7 +46,7 @@ export default class EditMarker extends Vue {
 		return Object.values(this.client.types).filter((type) => type.type === "marker");
 	}
 
-	@Watch("originalMarker", { deep: true })
+	@Watch("originalMarker")
 	handleChangeMarker(newMarker: Marker | undefined, oldMarker: Marker): void {
 		if (this.marker) {
 			if (!newMarker) {

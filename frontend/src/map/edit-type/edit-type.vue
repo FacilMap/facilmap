@@ -9,7 +9,6 @@
 	@show="initialize"
 >
 	<template v-if="type">
-
 		<ValidationProvider name="Name" v-slot="v" rules="required">
 			<b-form-group label="Name" label-for="fm-edit-type-name-input" label-cols-sm="3" :state="v | validationState">
 				<b-input id="fm-edit-type-name-input" v-model="type.name" :state="v | validationState"></b-input>

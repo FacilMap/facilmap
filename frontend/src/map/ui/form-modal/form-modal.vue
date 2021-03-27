@@ -7,11 +7,11 @@
 		:no-close-on-esc="noCancel" :no-close-on-backdrop="noCancel" :hide-header-close="noCancel" :ok-only="noCancel"
 		:busy="isSaving"
 		:ok-disabled="!isCreate && !isModified"
-		@ok.prevent="observer.handleSubmit(handleSubmit)"
+		@ok.prevent="handleSubmit(observer)"
 		@show="$emit('show')"
 		scrollable
 	>
-		<b-form @submit.prevent="observer.handleSubmit(handleSubmit)">
+		<b-form @submit.prevent="observer.handleSubmit(handleSubmit)" ref="form">
 			<template>
 				<slot v-bind="observer"></slot>
 			</template>

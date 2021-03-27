@@ -4,7 +4,9 @@ import { createDiv, $ } from './dom';
 import { normalizeField } from './filter';
 import { quoteHtml } from './utils';
 import linkifyStr from 'linkifyjs/string';
-import { sanitize } from 'dompurify';
+import createPurify from 'dompurify';
+
+const purify = createPurify(typeof window !== "undefined" ? window : new (eval("require")("jsdom").JSDOM)("").window);
 
 marked.setOptions({
 	breaks: true
@@ -27,14 +29,14 @@ export function formatField(field: Field, value: string): string {
 
 export function markdownBlock(string: string, options?: MarkedOptions): string {
 	const ret = createDiv();
-	ret.html(sanitize(marked(string, options)));
+	ret.html(purify.sanitize(marked(string, options)));
 	applyMarkdownModifications(ret);
 	return ret.html()!;
 }
 
 export function markdownInline(string: string, options?: MarkedOptions): string {
 	const ret = createDiv();
-	ret.html(sanitize(marked(string, options)));
+	ret.html(purify.sanitize(marked(string, options)));
 	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
 	applyMarkdownModifications(ret);
 	return ret.html()!;

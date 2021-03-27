@@ -78,7 +78,7 @@ export default class EditType extends Vue {
 		return this.typeId != null ? this.client.types[this.typeId] : undefined;
 	}
 
-	@Watch("originalType", { deep: true })
+	@Watch("originalType")
 	handleChangeType(newType: Type | undefined, oldType: Type): void {
 		if (this.type) {
 			if (!newType) {

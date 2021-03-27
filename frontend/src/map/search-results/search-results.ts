@@ -349,6 +349,7 @@ export default class SearchResults extends Vue {
 
 	async customImport(): Promise<void> {
 		this.$bvToast.hide("fm-search-result-info-add-error");
+		this.isCustomImportSaving = true;
 
 		try {
 			const resolvedMapping: Record<string, Type> = {};
@@ -371,6 +372,8 @@ export default class SearchResults extends Vue {
 				this.$bvModal.hide("fm-search-results-custom-import");
 		} catch(err) {
 			showErrorToast(this, "fm-search-result-info-add-error", "Error importing to map", err);
+		} finally {
+			this.isCustomImportSaving = false;
 		}
 	}
 

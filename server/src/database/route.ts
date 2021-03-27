@@ -45,7 +45,7 @@ export default class DatabaseRoutes {
 			indexes: [
 				{ fields: [ "routeId", "zoom" ] }
 			],
-			modelName: "Route"
+			modelName: "RoutePoint"
 		});
 	}
 

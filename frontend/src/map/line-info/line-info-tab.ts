@@ -6,10 +6,11 @@ import { ID, Line } from "facilmap-types";
 import Client from "facilmap-client";
 import LineInfo from "./line-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import Icon from "../ui/icon/icon";
 
 @WithRender
 @Component({
-	components: { LineInfo }
+	components: { Icon, LineInfo }
 })
 export default class LineInfoTab extends Vue {
 
@@ -39,7 +40,7 @@ export default class LineInfoTab extends Vue {
 	@Watch("line")
 	handleChangeLine(line: Line | undefined): void {
 		if (!line && this.lineId != null)
-			this.mapComponents.selectionHandler.setSelectedItems([]);
+			this.close();
 	}
 
 	get title(): string | undefined {
@@ -52,6 +53,10 @@ export default class LineInfoTab extends Vue {
 	handleOpenSelection(): void {
 		if (this.line)
 			this.mapContext.$emit("fm-search-box-show-tab", "fm-line-info-tab")
+	}
+
+	close(): void {
+		this.mapComponents.selectionHandler.setSelectedItems([]);
 	}
 
 }

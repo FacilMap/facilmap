@@ -62,7 +62,7 @@ export default class LegendContent extends Vue {
 		else if (item.colour || item.shape)
 			return getMarkerHtml(item.colour || typeInfo.defaultColour || "rainbow", height, item.symbol, item.shape || typeInfo.defaultShape);
 		else
-			return getSymbolHtml("000000", height, item.symbol);
+			return getSymbolHtml("#000000", height, item.symbol);
 	}
 
 	handleMouseEnter(target: HTMLElement, type: LegendType, item: LegendItem): void {

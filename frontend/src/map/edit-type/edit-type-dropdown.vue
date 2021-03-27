@@ -6,6 +6,7 @@
 	@submit="save"
 	@show="initialize"
 	:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
+	ok-title="OK"
 >
 	<template v-if="fieldValue">
 		<b-form-group label="Control" label-cols-sm="3">
@@ -15,7 +16,7 @@
 			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlShape" :disabled="!canControl('shape')">Control {{type.type}} shape</b-checkbox>
 			<b-checkbox v-if="type.type == 'line'" v-model="fieldValue.controlWidth" :disabled="!canControl('width')">Control {{type.type}} width</b-checkbox>
 		</b-form-group>
-		<b-table-simple striped hover responsive v-if="fieldValue.type != 'checkbox' || controlNumber > 0">
+		<b-table-simple striped hover v-if="fieldValue.type != 'checkbox' || controlNumber > 0">
 			<b-thead>
 				<b-tr>
 					<b-th>Option</b-th>
@@ -34,7 +35,7 @@
 					<b-td v-if="fieldValue.type == 'checkbox'">
 						<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
 					</b-td>
-					<b-td>
+					<b-td class="field">
 						<ValidationProvider :name="`Label (${option.value})`" v-slot="v" :rules="fieldValue.type == 'checkbox' ? '' : 'required|uniqueFieldOptionValue:@field'">
 							<b-form-group :state="v | validationState">
 								<b-input v-model="option.value" :state="v | validationState"></b-input>
@@ -42,15 +43,15 @@
 							</b-form-group>
 						</ValidationProvider>
 					</b-td>
-					<b-td v-if="fieldValue.controlColour">
+					<b-td v-if="fieldValue.controlColour" class="field">
 						<ValidationProvider :name="`Colour (${option.value})`" v-slot="v" rules="required|colour">
 							<b-form-group :state="v | validationState">
-								<ColourField raised v-model="option.colour" :state="v | validationState"></ColourField>
+								<ColourField v-model="option.colour" :state="v | validationState"></ColourField>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 							</b-form-group>
 						</ValidationProvider>
 					</b-td>
-					<b-td v-if="fieldValue.controlSize">
+					<b-td v-if="fieldValue.controlSize" class="field">
 						<ValidationProvider :name="`Size (${option.value})`" v-slot="v" rules="required|size">
 							<b-form-group :state="v | validationState">
 								<SizeField v-model="option.size" :state="v | validationState"></SizeField>
@@ -58,23 +59,23 @@
 							</b-form-group>
 						</ValidationProvider>
 					</b-td>
-					<b-td v-if="fieldValue.controlSymbol">
+					<b-td v-if="fieldValue.controlSymbol" class="field">
 						<ValidationProvider :name="`Icon (${option.value})`" v-slot="v" rules="required|symbol">
 							<b-form-group :state="v | validationState">
-								<SymbolField raised v-model="option.symbol" :state="v | validationState"></SymbolField>
+								<SymbolField v-model="option.symbol" :state="v | validationState"></SymbolField>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 							</b-form-group>
 						</ValidationProvider>
 					</b-td>
-					<b-td v-if="fieldValue.controlShape">
+					<b-td v-if="fieldValue.controlShape" class="field">
 						<ValidationProvider :name="`Shape (${option.value})`" v-slot="v" rules="required|shape">
 							<b-form-group :state="v | validationState">
-								<ShapeField raised v-model="option.shape" :state="v | validationState"></ShapeField>
+								<ShapeField v-model="option.shape" :state="v | validationState"></ShapeField>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 							</b-form-group>
 						</ValidationProvider>
 					</b-td>
-					<b-td v-if="fieldValue.controlWidth">
+					<b-td v-if="fieldValue.controlWidth" class="field">
 						<ValidationProvider :name="`Width (${option.value})`" v-slot="v" rules="required|width">
 							<b-form-group :state="v | validationState">
 								<WidthField v-model="option.width" :state="v | validationState"></WidthField>

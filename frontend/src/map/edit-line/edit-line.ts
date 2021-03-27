@@ -47,7 +47,7 @@ export default class EditLine extends Vue {
 		return Object.values(this.client.types).filter((type) => type.type === "line");
 	}
 
-	@Watch("originalLine", { deep: true })
+	@Watch("originalLine")
 	handleChangeLine(newLine: Line | undefined, oldLine: Line): void {
 		if (this.line) {
 			if (!newLine) {

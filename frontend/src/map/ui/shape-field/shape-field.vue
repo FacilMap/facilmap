@@ -1,13 +1,16 @@
-<div :id="`${effId}-input-container`" class="fm-shape-field-container">
-	<b-input-group :id="`${effId}-input-group`">
-		<b-input-group-prepend>
-			<b-input-group-text><span style="width: 1.4em"><img :src="valueSrc"></span></b-input-group-text>
-		</b-input-group-prepend>
-		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
-	</b-input-group>
+<Picker v-bind="$props" v-on="$listeners" custom-class="fm-shape-field" @keydown="handleKeyDown">
+	<template #preview>
+		<b-input-group-text><span style="width: 1.4em"><img :src="valueSrc"></span></b-input-group-text>
+	</template>
 
-	<FieldPopover :show.sync="popoverOpen" :container="raised ? undefined : `${effId}-input-container`" :target="`${effId}-input-group`" custom-class="fm-shape-field fm-field-popover" @keydown.esc="handleEscape">
-		<!-- <b-input v-model="filter" placeholder="Filter" autocomplete="off"></b-input> -->
-		<ul v-html="shapesCode" @click="handleClick"></ul>
-	</FieldPopover>
-</div>
+	<template #default="{ close }">
+		<b-alert v-if="Object.keys(items).length == 0" show variant="danger" class="mt-2 mb-1">No shapes could be found.</b-alert>
+
+		<PrerenderedList
+			:items="items"
+			:value="value"
+			@click="handleClick($event, close)"
+			ref="grid"
+		></PrerenderedList>
+	</template>
+</Picker>

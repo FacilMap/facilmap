@@ -20,6 +20,7 @@ import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import ElevationPlot from "../ui/elevation-plot/elevation-plot";
 import { saveAs } from 'file-saver';
 import { isMapResult } from "../../utils/search";
+import context from "../context";
 
 type SearchSuggestion = SearchResult;
 type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -68,7 +69,7 @@ const dragMarkerColour = "ffd700";
 const endMarkerColour = "ff0000";
 
 function getIcon(i: number, length: number, highlight = false) {
-	return getMarkerIcon(i == 0 ? startMarkerColour : i == length - 1 ? endMarkerColour : dragMarkerColour, 35, undefined, undefined, highlight);
+	return getMarkerIcon(i == 0 ? `#${startMarkerColour}` : i == length - 1 ? `#${endMarkerColour}` : `#${dragMarkerColour}`, 35, undefined, undefined, highlight);
 }
 
 @WithRender
@@ -114,11 +115,11 @@ export default class RouteForm extends Vue {
 		this.draggable = new DraggableLines(this.mapComponents.map, {
 			enableForLayer: false,
 			tempMarkerOptions: () => ({
-				icon: getMarkerIcon(dragMarkerColour, 35),
+				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
 				pane: "fm-raised-marker"
 			}),
 			plusTempMarkerOptions: () => ({
-				icon: getMarkerIcon(dragMarkerColour, 35),
+				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
 				pane: "fm-raised-marker"
 			}),
 			dragMarkerOptions: (layer, i, length) => ({
@@ -175,13 +176,19 @@ export default class RouteForm extends Vue {
 
 		this.handleActiveChange(this.active);
 
-		if (this.routeObj)
+		if (this.routeObj) {
 			this.destinations = this.routeObj.routePoints.map((point) => makeCoordDestination(latLng(point.lat, point.lon)));
+			this.routeMode = this.routeObj.mode;
+		}
 	}
 
 	beforeDestroy(): void {
 		this.draggable.disable();
 		this.routeLayer.remove();
+	}
+
+	get isNarrow(): boolean {
+		return context.isNarrow;
 	}
 
 	get routeObj(): RouteWithTrackPoints | undefined {

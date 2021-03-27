@@ -32,9 +32,11 @@ export function calculateDistance(posList: Array<{ lat: number; lon: number; }>)
 }
 
 export function encodeRouteMode(decodedMode: DecodedRouteMode): string {
-	const encodedMode = [decodedMode.mode || "helicopter"];
+	const encodedMode = [];
 
 	if(decodedMode) {
+		if(decodedMode.mode)
+			encodedMode.push(decodedMode.mode);
 		if(decodedMode.type)
 			encodedMode.push(decodedMode.type);
 		if(decodedMode.preference && decodedMode.preference != "fastest")

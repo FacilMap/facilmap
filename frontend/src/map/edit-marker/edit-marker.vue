@@ -12,7 +12,7 @@
 			<b-form-input id="fm-edit-marker-name-input" v-model="marker.name"></b-form-input>
 		</b-form-group>
 
-		<ValidationProvider v-if="canControl('colour')" name="Colour" v-slot="v" rules="colour">
+		<ValidationProvider v-if="canControl('colour')" name="Colour" v-slot="v" rules="required|colour">
 			<b-form-group label="Colour" label-for="fm-edit-marker-colour-input" label-cols-sm="3" :state="v | validationState">
 				<ColourField id="fm-edit-marker-colour-input" v-model="marker.colour" :state="v | validationState"></ColourField>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>

@@ -12,6 +12,7 @@ import { isEqual } from "lodash";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
 import { showErrorToast } from "../../utils/toasts";
+import "./pad-settings.scss";
 
 extend("padId", {
 	validate: (id: string) => !id.includes("/"),

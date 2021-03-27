@@ -1,10 +1,10 @@
-<b-modal :id="id" title="History" ok-only ok-title="Close" size="xl" dialog-class="fm-history" @show="handleShow" @hidden="handleHidden">
+<b-modal :id="id" title="History" ok-only ok-title="Close" size="xl" dialog-class="fm-history" @show="handleShow" @hidden="handleHidden" scrollable>
 	<p><em>Here you can inspect and revert the last 50 changes to the map.</em></p>
 	<b-table-simple striped hover>
 		<b-thead>
 			<b-tr>
-				<b-th>Date</b-th>
-				<b-th>Action</b-th>
+				<b-th style="min-width: 12rem">Date</b-th>
+				<b-th style="min-width: 15rem">Action</b-th>
 				<b-th></b-th>
 				<b-th>Restore</b-th>
 			</b-tr>

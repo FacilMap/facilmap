@@ -11,7 +11,7 @@
 >
 	<template v-if="padData">
 		<ValidationProvider name="Admin link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-			<b-form-group label="Admin link" label-for="admin-link-input" label-cols-sm="3" :state="v | validationState">
+			<b-form-group label="Admin link" label-for="admin-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="admin-link-input" v-model="padData.adminId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
@@ -26,7 +26,7 @@
 		</ValidationProvider>
 
 		<ValidationProvider name="Editable link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-			<b-form-group label="Editable link" label-for="write-link-input" label-cols-sm="3" :state="v | validationState">
+			<b-form-group label="Editable link" label-for="write-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="write-link-input" v-model="padData.writeId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
@@ -41,7 +41,7 @@
 		</ValidationProvider>
 
 		<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-			<b-form-group label="Read-only link link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState">
+			<b-form-group label="Read-only link link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="read-link-input" v-model="padData.id" :state="v | validationState"></b-form-input>
 					<b-input-group-append>

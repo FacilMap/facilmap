@@ -1,20 +1,20 @@
-<div :id="`${effId}-container`" class="fm-colour-field-container">
-	<b-input-group :id="`${effId}-input-group`">
-		<b-input-group-prepend>
-			<b-input-group-text :style="{ backgroundColor: `#${value}` }">
-				<span style="width: 1.4em"></span>
-			</b-input-group-text>
-		</b-input-group-prepend>
-		<b-form-input autocomplete="off" v-bind="$props" v-on="$listeners" @keydown.esc="handleEscape"></b-form-input>
-	</b-input-group>
+<Picker v-bind="$props" v-on="$listeners" custom-class="fm-colour-field" @keydown="handleKeyDown">
+	<template #preview>
+		<b-input-group-text :style="previewStyle">
+			<span style="width: 1.4em"></span>
+		</b-input-group-text>
+	</template>
 
-	<FieldPopover :show.sync="popoverOpen" :container="raised ? undefined : `${effId}-container`" :target="`${effId}-input-group`" custom-class="fm-colour-field" @keydown.esc="handleEscape">
-		<Saturation :value="val" @change="handleChange"></Saturation>
-		<Hue :value="val" @change="handleChange"></Hue>
-		<ul>
-			<li v-for="colour in colours">
-				<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="$emit('input', colour)"></a>
-			</li>
-		</ul>
-	</FieldPopover>
-</div>
+	<template #default="{ isModal }">
+		<div class="fm-colour-field-content">
+			<b-input v-show="isModal" :value="value" @update="$emit('input', $event)" :style="previewStyle"></b-input>
+			<Saturation :value="val" @change="handleChange"></Saturation>
+			<Hue :value="val" @change="handleChange"></Hue>
+			<ul ref="grid">
+				<li v-for="colour in colours" :class="{ active: value == colour }">
+					<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="$emit('input', colour)"></a>
+				</li>
+			</ul>
+		</div>
+	</template>
+</Picker>

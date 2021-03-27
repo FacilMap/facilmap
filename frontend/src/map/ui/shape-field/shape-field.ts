@@ -1,75 +1,55 @@
 import WithRender from "./shape-field.vue";
 import Vue from "vue";
-import { BFormInput } from "bootstrap-vue";
 import "./shape-field.scss";
 import { getMarkerUrl, shapeList } from "facilmap-leaflet";
-import { Component, Prop } from "vue-property-decorator";
+import { Component, Ref } from "vue-property-decorator";
 import Icon from "../icon/icon";
 import { quoteHtml } from "facilmap-utils";
-import FieldPopover from "../field-popover/field-popover";
+import Picker from "../picker/picker";
 import { Shape } from "facilmap-types";
 import { extend } from "vee-validate";
-import { getUniqueId } from "../../../utils/utils";
+import { arrowNavigation } from "../../../utils/ui";
+import { keyBy, mapValues } from "lodash";
+import PrerenderedList from "../prerendered-list/prerendered-list";
 
 extend("shape", {
 	validate: (shape: string) => shapeList.includes(shape as Shape),
 	message: "Unknown shape"
 });
 
+const items = mapValues(keyBy(shapeList, (s) => s), (s) => `<img src="${quoteHtml(getMarkerUrl("#000000", 25, undefined, s))}">`);
+
 @WithRender
 @Component({
-	components: { FieldPopover, Icon },
+	components: { Picker, PrerenderedList, Icon },
 	props: {
-		...(BFormInput as any).options.props
+		...(Picker as any).options.props
 	}
 })
 export default class ShapeField extends Vue {
 
-	@Prop({ type: Boolean, default: false }) raised!: boolean;
+	@Ref() grid!: Vue;
 
-	id?: string;
 	value!: Shape | undefined;
 	filter = "";
-	popoverOpen = false;
-
-	get effId(): string {
-		return this.id ?? getUniqueId("fm-shape-field");
-	}
+	items = items;
 
 	get valueSrc(): string {
-		return getMarkerUrl("000000", 21, undefined, this.value);
+		return getMarkerUrl("#000000", 21, undefined, this.value);
 	}
 
-	get filteredShapes(): Shape[] {
-		if (this.filter.trim() == "")
-			return shapeList;
-		
-		const lowerFilter = this.filter.toLowerCase();
-		return shapeList.filter((icon) => icon.toLowerCase().includes(lowerFilter));
+	handleClick(shape: Shape, close: () => void): void {
+		this.$emit("input", shape);
+		close();
 	}
 
-	get shapesCode(): string {
-		return this.filteredShapes.map((shape) => (`
-			<li>
-				<a href="javascript:" data-fm-shape="${quoteHtml(shape)}" class="dropdown-item${shape === this.value ? ' active' : ''}">
-					<img src="${getMarkerUrl("000000", 25, undefined, shape)}">
-				</a>
-			</li>
-		`)).join('');
-	}
-
-	handleClick(e: MouseEvent): void {
-		const shape = (e.target as HTMLElement).closest("[data-fm-shape]")?.getAttribute("data-fm-shape");
-		if (shape)
-			this.$emit("input", shape);
-	}
-
-	handleEscape(event: KeyboardEvent): void {
-		if (this.popoverOpen) {
-			event.preventDefault();
-			event.stopPropagation(); // Prevent closing modal
-			this.popoverOpen = false;
-			document.getElementById(this.effId)!.focus();
+	handleKeyDown(event: KeyboardEvent): void {
+		const newVal = arrowNavigation(Object.keys(this.items), this.value, this.grid.$el, event);
+		if (newVal) {
+			this.$emit('input', newVal);
+			setTimeout(() => {
+				this.grid.$el.querySelector<HTMLElement>(".active")?.focus();
+			}, 0);
 		}
 	}
 

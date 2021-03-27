@@ -50,6 +50,9 @@ export default class SearchBox extends Vue {
 		this.mapContext.$on("fm-search-box-show-tab", this.handleShowTab);
 
 		this.cardHeader = this.searchBox.querySelector(".card-header")!;
+		this.cardHeader.addEventListener("contextmenu", (e) => {
+			e.preventDefault();
+		});
 
 		const pan = new hammer.Manager(this.cardHeader);
 		pan.add(new hammer.Pan({ direction: hammer.DIRECTION_VERTICAL }));
@@ -126,7 +129,7 @@ export default class SearchBox extends Vue {
 				const currentHeight = parseInt($(this.searchBox).css("flex-basis"));
 				if (currentHeight < 120) {
 					this.restoreHeight = currentHeight;
-					$(this.searchBox).animate({ flexBasis: 120 }, () => {
+					$(this.searchBox).animate({ flexBasis: 170 }, () => {
 						this.mapComponents.map.invalidateSize({ pan: false });
 					});
 				}

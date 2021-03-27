@@ -1,3 +1,5 @@
+import { Colour } from "facilmap-types";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
@@ -22,10 +24,11 @@ export function generateRandomPadId(length: number = LENGTH): string {
 }
 
 export function makeTextColour(backgroundColour: string, threshold = 0.5): string {
-	return (getBrightness(backgroundColour) <= threshold) ? "ffffff" : "000000";
+	return (getBrightness(backgroundColour) <= threshold) ? "#ffffff" : "#000000";
 }
 
 export function getBrightness(colour: string): number {
+	colour = colour.replace(/^#/, '');
 	const r = parseInt(colour.substr(0, 2), 16)/255;
 	const g = parseInt(colour.substr(2, 2), 16)/255;
 	const b = parseInt(colour.substr(4, 2), 16)/255;

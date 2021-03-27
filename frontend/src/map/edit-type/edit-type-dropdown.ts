@@ -15,6 +15,7 @@ import SizeField from "../ui/size-field/size-field";
 import SymbolField from "../ui/symbol-field/symbol-field";
 import WidthField from "../ui/width-field/width-field";
 import { extend, ValidationProvider } from "vee-validate";
+import "./edit-type-dropdown.scss";
 
 extend("uniqueFieldOptionValue", {
 	validate: (value: string, args: any) => {

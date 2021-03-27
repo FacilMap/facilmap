@@ -7,7 +7,7 @@
 				:pressed.sync="showElevationPlot"
 				v-b-tooltip.hover.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
 			><Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon></b-button>
-			
+
 		</b-button-toolbar>
 	</div>
 

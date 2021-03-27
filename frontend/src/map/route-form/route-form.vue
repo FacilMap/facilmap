@@ -5,11 +5,11 @@
 				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
 				<b-input-group @mouseenter="destinationMouseOver(idx)" @mouseleave="destinationMouseOut(idx)" :state="getValidationState(destination)">
 					<b-input-group-prepend>
-						<b-input-group-text class="px-2"><a href="javascript:" class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></a></b-input-group-text>
+						<b-input-group-text class="px-2"><a href="javascript:" class="fm-drag-handle" @contextmenu.prevent><Icon icon="resize-vertical" alt="Reorder"></Icon></a></b-input-group-text>
 					</b-input-group-prepend>
 					<b-form-input v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)"></b-form-input>
 					<b-input-group-append>
-						<b-dropdown v-if="destination.query.trim() != ''" @show="loadSuggestions(destination)" :menu-class="['fm-route-suggestions', { isPending: !destination.searchSuggestions }]">
+						<b-dropdown v-if="destination.query.trim() != ''" @show="loadSuggestions(destination)" :menu-class="['fm-route-suggestions', { isPending: !destination.searchSuggestions, isNarrow }]">
 							<template v-if="destination.searchSuggestions">
 								<template v-for="suggestion in destination.mapSuggestions">
 									<b-dropdown-item

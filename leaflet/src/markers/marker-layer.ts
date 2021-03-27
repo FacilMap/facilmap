@@ -70,7 +70,7 @@ export default class MarkerLayer extends LeafletMarker {
 
 	_initIcon(): void {
 		if (this.options.marker)
-			this.options.icon = getMarkerIcon(this.options.marker.colour, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.highlight);
+			this.options.icon = getMarkerIcon(`#${this.options.marker.colour}`, this.options.marker.size, this.options.marker.symbol, this.options.marker.shape, this.options.highlight);
 
 		super._initIcon();
 

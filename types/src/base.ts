@@ -1,6 +1,7 @@
 export type Latitude = number;
 export type Longitude = number;
 export type ZoomLevel = number;
+/** Colour in 6-digit hex format without a # */
 export type Colour = string;
 export type Symbol = string;
 export type Shape = "" | "drop" | "circle";

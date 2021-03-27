@@ -35,7 +35,8 @@ function isPadId(padId: PadId | true | undefined): padId is PadId {
 export default class Socket {
 	constructor(server: HttpServer, database: Database) {
 		const io = new Server(server, {
-			cors: { origin: true }
+			cors: { origin: true },
+			allowEIO3: true
 		});
 
 		io.sockets.on("connection", (socket: SocketIO) => {

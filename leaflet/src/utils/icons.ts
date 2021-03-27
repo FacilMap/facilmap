@@ -93,7 +93,7 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
     };
 });
 
-export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): string {
+export function getSymbolCode(colour: string, size: number, symbol?: Symbol): string {
     if(symbol && symbolList.includes(symbol)) {
         const set = Object.keys(rawIcons).filter((i) => (rawIcons[i][symbol] != null))[0];
 
@@ -118,7 +118,7 @@ export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): st
             const offset = getLetterOffset(symbol);
             return (
                 `<g transform="scale(${size / 25}) translate(${offset.x}, ${offset.y})">` +
-                    `<text style="font-size: 25px; font-family: sans-serif; fill: #${colour}">${quoteHtml(symbol)}</text>` +
+                    `<text style="font-size: 25px; font-family: sans-serif; fill: ${colour}">${quoteHtml(symbol)}</text>` +
                 `</g>`
             );
         } catch (e) {
@@ -129,16 +129,16 @@ export function getSymbolCode(colour: Colour, size: number, symbol?: Symbol): st
     return `<circle style="fill:${colour}" cx="${Math.floor(size / 2)}" cy="${Math.floor(size / 2)}" r="${Math.floor(size / 6)}" />`;
 }
 
-export function getSymbolUrl(colour: Colour, height: number, symbol?: Symbol): string {
+export function getSymbolUrl(colour: string, height: number, symbol?: Symbol): string {
     const svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" viewbox="0 0 24 24" version="1.1">` +
-        getSymbolCode('#'+colour, 24, symbol) +
+        getSymbolCode(colour, 24, symbol) +
     `</svg>`;
 
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export function getSymbolHtml(colour: Colour, height: number | string, symbol?: Symbol): string {
+export function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): string {
     return `<svg width="${height}" height="${height}" viewbox="0 0 24 24">` +
         getSymbolCode(colour, 24, symbol) +
     `</svg>`;
@@ -146,15 +146,15 @@ export function getSymbolHtml(colour: Colour, height: number | string, symbol?: 
 
 let idCounter = 0;
 
-export function getMarkerCode(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
     const borderColour = makeTextColour(colour, 0.3);
     const id = `${idCounter++}`;
 
     const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     const shapeCode = (highlight ? shapeObj.highlightSvg : shapeObj.svg)
-        .replace(/%BORDER_COLOUR%/g, "#"+borderColour)
-        .replace(/%COLOUR%/g, colour == "rainbow" ? `url(#fm-rainbow-${id})` : "#" + colour)
-        .replace(/%SYMBOL%/g, getSymbolCode("#"+borderColour, 24, symbol))
+        .replace(/%BORDER_COLOUR%/g, borderColour)
+        .replace(/%COLOUR%/g, colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour)
+        .replace(/%SYMBOL%/g, getSymbolCode(borderColour, 24, symbol))
         .replace(/%ID%/g, id);
 
     const scale = height / shapeObj.height;
@@ -188,7 +188,7 @@ export function getMarkerHtml(colour: string, height: number, symbol?: Symbol, s
     );
 }
 
-export function getMarkerIcon(colour: Colour, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
+export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
     const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES.drop!;
     const scale = shapeObj.scale * height / shapeObj.height;
     return L.icon({
