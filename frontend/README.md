@@ -37,10 +37,14 @@ To synchronize the map state with the location hash (to add something like #9/31
 			location.replace("#" + evt.data.hash);
 	});
 
-	window.addEventListener("hashchange", function() {
+	function handleHashChange() {
 		var iframe = document.getElementById("facilmap");
-		iframe.src = iframe.src.replace(/#.*$/, "") + location.hash;
-	});
+		iframe.src = iframe.src.replace(/(#.*)?$/, "") + location.hash;
+	}
+
+	window.addEventListener("hashchange", handleHashChange);
+	if (location.hash)
+		handleHashChange();
 </script>
 ```
 

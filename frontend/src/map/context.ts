@@ -14,7 +14,8 @@ const context = Vue.observable({
     autofocus: toBoolean(queryParams.autofocus, parent === window),
     legend: toBoolean(queryParams.legend, true),
     interactive: toBoolean(queryParams.interactive, parent === window),
-    isNarrow: isNarrow()
+    isNarrow: isNarrow(),
+    isInFrame: parent !== window
 });
 
 window.addEventListener("resize", () => {

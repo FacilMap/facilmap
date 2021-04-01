@@ -77,7 +77,6 @@ export default class LeafletMap extends Vue {
 
     @Ref() innerContainer!: HTMLElement;
 
-    isInFrame = (parent !== window);
     loaded = false;
     interaction = 0;
 
@@ -86,7 +85,11 @@ export default class LeafletMap extends Vue {
     }
 
     get selfUrl(): string {
-        return `${location.origin}${location.pathname}${this.mapContext.hash ? `#${this.mapContext.hash}` : ''}`;
+        return `${location.origin}${location.pathname}${this.mapContext?.hash ? `#${this.mapContext.hash}` : ''}`;
+    }
+
+    get isInFrame(): boolean {
+        return context.isInFrame;
     }
 
     mounted(): void {

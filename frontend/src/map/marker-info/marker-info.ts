@@ -12,6 +12,7 @@ import "./marker-info.scss";
 import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
 import Icon from "../ui/icon/icon";
 import StringMap from "../../utils/string-map";
+import context from "../context";
 
 @WithRender
 @Component({
@@ -29,6 +30,10 @@ export default class MarkerInfo extends Vue {
 
 	get marker(): Marker<StringMap> | undefined {
 		return this.client.markers[this.markerId];
+	}
+
+	get context(): typeof context {
+		return context;
 	}
 
 	move(): void {

@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>FacilMap iframe test</title>
+		<style type="text/css">
+			iframe { position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; }
+		</style>
+	</head>
+
+	<body>
+		<iframe src="http://localhost:40829/"></iframe>
+
+		<script>
+			window.addEventListener("message", function(evt) {
+				if (evt.data && evt.data.type == "facilmap-hash" && location.hash != "#" + evt.data.hash)
+					location.replace("#" + evt.data.hash);
+			});
+
+			function handleHashChange() {
+				var iframe = document.querySelector("iframe");
+				iframe.src = iframe.src.replace(/(#.*)?$/, "") + location.hash;
+			}
+
+			window.addEventListener("hashchange", handleHashChange);
+			if (location.hash)
+				handleHashChange();
+		</script>
+	</body>
+</html>

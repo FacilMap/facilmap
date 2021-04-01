@@ -41,9 +41,14 @@ export default class SearchBox extends Vue {
 	resizeStartWidth: number | null = null;
 	hasFocus = false;
 	isResizing = false;
+	isMounted = false;
 
 	get isNarrow(): boolean {
 		return context.isNarrow;
+	}
+
+	get context(): typeof context {
+		return context;
 	}
 
 	mounted(): void {
@@ -71,11 +76,17 @@ export default class SearchBox extends Vue {
 		this.$watch(() => this.tabsComponent?.tabs[this.tab]?.$attrs?.["fm-hash-query"], (hashQuery: HashQuery | undefined) => {
 			this.mapContext.fallbackQuery = hashQuery;
 		});
+
+		this.isMounted = true;
 	}
 
 	beforeDestroy(): void {
 		this.mapContext.$off("fm-search-box-show-tab", this.handleShowTab);
 		this.cardHeader = undefined as any;
+	}
+
+	get hasTabs(): boolean {
+		return this.isMounted && this.tabsComponent?.tabs.length > 0;
 	}
 
 	handlePanStart(event: any): void {

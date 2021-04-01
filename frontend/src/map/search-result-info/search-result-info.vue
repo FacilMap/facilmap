@@ -30,7 +30,7 @@
 		</b-dropdown>
 		<b-button v-if="!client.readonly && types.length == 1" @click="$emit('add-to-map', types[0])" size="sm">Add to map</b-button>
 
-		<b-dropdown v-if="isMarker" text="Use as" size="sm">
+		<b-dropdown v-if="isMarker && context.search" text="Use as" size="sm">
 			<b-dropdown-item href="javascript:" @click="$emit('use-as-from')">Route start</b-dropdown-item>
 			<b-dropdown-item href="javascript:" @click="$emit('use-as-via')">Route via</b-dropdown-item>
 			<b-dropdown-item href="javascript:" @click="$emit('use-as-to')">Route destination</b-dropdown-item>

@@ -3,10 +3,10 @@
         <Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
         <Legend v-if="context.legend"></Legend>
         <Import v-if="context.interactive"></Import>
-        <ClickMarker v-if="context.interactive"></ClickMarker>
+        <ClickMarker></ClickMarker>
 
         <template #after>
-            <SearchBox v-if="context.search"></SearchBox>
+            <SearchBox></SearchBox>
         </template>
     </LeafletMap>
 </div>

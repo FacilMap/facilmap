@@ -1,5 +1,5 @@
 import { ID, SearchResult } from "facilmap-types";
-import { DomEvent, Evented, Handler, LeafletEvent, Map, Util } from "leaflet";
+import { Browser, DomEvent, Evented, Handler, LatLng, LeafletEvent, Map, Util } from "leaflet";
 import { LinesLayer, MarkersLayer, SearchResultsLayer } from "facilmap-leaflet";
 
 export type SelectedItem = {
@@ -41,8 +41,8 @@ export default class SelectionHandler extends Handler {
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
 
-	_mapFocusTime: number | undefined = undefined;
 	_mapInteraction: number = 0;
+	_isLongClick: boolean = false;
 
 	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer) {
 		super(map);
@@ -60,8 +60,10 @@ export default class SelectionHandler extends Handler {
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
-		this._map.getContainer().addEventListener("focusin", this.handleMapFocusIn);
-		this._map.getContainer().addEventListener("focusout", this.handleMapFocusOut);
+		if (Browser.touch && !Browser.pointer) // Long click will call the contextmenu event
+			this._map.on("contextmenu", this.handleMapContextMenu);
+		else
+			this._map.on("mousedown", this.handleMapMouseDown);
 	}
 
 	removeHooks(): void {
@@ -72,8 +74,8 @@ export default class SelectionHandler extends Handler {
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
-		this._map.getContainer().removeEventListener("focusin", this.handleMapFocusIn);
-		this._map.getContainer().removeEventListener("focusout", this.handleMapFocusOut);
+		this._map.off("contextmenu", this.handleMapContextMenu);
+		this._map.off("mousedown", this.handleMapMouseDown);
 	}
 
 	addSearchResultLayer(layer: SearchResultsLayer): void {
@@ -172,26 +174,53 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {
-		if (this._mapInteraction)
+		if (this._mapInteraction || this._isLongClick)
 			return;
 
-		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
-			if (this._selection.length == 0) {
-				// Focus event is fired before click event. Delay so that our click handlers knows whether the map was focused before it was clicked.
-				if (this._mapFocusTime && Date.now() - this._mapFocusTime > 500)
-					this.fire("fmMapClick", e);
-			} else
-				this.setSelectedItems([]);
+		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey)
+			this.setSelectedItems([]);
+	}
+
+	handleMapContextMenu = (e: any): void => {
+		this.fire("fmMapClick", e);
+	}
+
+	handleMapMouseDown = (e: any): void => {
+        if(e.originalEvent.which != 1) // Only react to left click
+            return;
+
+        const pos: LatLng = e.containerPoint;
+        const timeout = setTimeout(() => {
+			this._isLongClick = true;
+            this.fire("fmMapClick", e);
+        }, 500);
+
+        const handleMouseMove = (e: any) => {
+            if(pos.distanceTo(e.containerPoint) > (this._map.dragging as any)._draggable.options.clickTolerance)
+				clear();
+        };
+
+		const handleContextMenu = (e: any) => {
+			DomEvent.preventDefault(e);
 		}
-	}
 
-	handleMapFocusIn = (): void => {
-		this._mapFocusTime = Date.now();
-	}
+        const clear = () => {
+			clearTimeout(timeout);
+			this._map.off("mousemove", handleMouseMove);
+			this._map.off("mouseup", clear);
+			this._map.off("contextmenu", handleContextMenu);
 
-	handleMapFocusOut = (): void => {
-		this._mapFocusTime = undefined;
-	}
+			setTimeout(() => {
+				this._isLongClick = false;
+			}, 0);
+		}
+
+        this._map.on("mousemove", handleMouseMove);
+		this._map.on("touchmove", handleMouseMove);
+        this._map.on("mouseup", clear);
+		this._map.on("touchend", clear);
+		this._map.on("contextmenu", handleContextMenu);
+    }
 
 	handleMapInteractionStart = (): void => {
 		this._mapInteraction++;
