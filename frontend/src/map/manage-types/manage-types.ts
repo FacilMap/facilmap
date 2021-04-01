@@ -2,8 +2,7 @@ import { Component, Prop } from "vue-property-decorator";
 import WithRender from "./manage-types.vue";
 import Vue from "vue";
 import { ID, Type } from "facilmap-types";
-import { InjectClient } from "../../utils/decorators";
-import Client from "facilmap-client";
+import { Client, InjectClient } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import EditType from "../edit-type/edit-type";
 

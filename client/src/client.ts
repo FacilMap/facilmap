@@ -10,7 +10,7 @@ import {
 	TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable
 } from "facilmap-types";
 
-export interface ClientEvents extends MapEvents {
+export interface ClientEvents<DataType = Record<string, string>> extends MapEvents<DataType> {
 	connect: [];
 	disconnect: [string];
 	connect_error: [Error];
@@ -29,9 +29,9 @@ export interface ClientEvents extends MapEvents {
 	route: [RouteWithTrackPoints];
 	clearRoute: [RouteClear];
 
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName];
-	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName>] }[RequestName];
-	emitReject: { [eventName in RequestName]: [eventName, Error] }[RequestName];
+	emit: { [eventName in RequestName]: [eventName, RequestData<eventName, DataType>] }[RequestName];
+	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName, DataType>] }[RequestName];
+	emitReject: [RequestName, Error];
 }
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
@@ -41,7 +41,7 @@ export interface TrackPoints {
 	length: number;
 }
 
-export interface LineWithTrackPoints extends Line {
+export interface LineWithTrackPoints<DataType = Record<string, string>> extends Line<DataType> {
 	trackPoints: TrackPoints;
 }
 
@@ -50,7 +50,7 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 	trackPoints: TrackPoints;
 }
 
-export default class Client {
+export default class Client<DataType = Record<string, string>> {
 	disconnected: boolean = true;
 	server!: string;
 	padId: string | undefined = undefined;
@@ -60,8 +60,8 @@ export default class Client {
 	readonly: boolean | undefined = undefined;
 	writable: Writable | undefined = undefined;
 	deleted: boolean = false;
-	markers: Record<ID, Marker> = { };
-	lines: Record<ID, LineWithTrackPoints> = { };
+	markers: Record<ID, Marker<DataType>> = { };
+	lines: Record<ID, LineWithTrackPoints<DataType>> = { };
 	views: Record<ID, View> = { };
 	types: Record<ID, Type> = { };
 	history: Record<ID, HistoryEntry> = { };
@@ -87,6 +87,49 @@ export default class Client {
 		delete object[key];
 	}
 
+	_decodeData(data: Record<string, string>): DataType {
+		const result = Object.create(null);
+		Object.assign(result, data);
+		return result;
+	}
+
+	_encodeData(data: DataType): Record<string, string> {
+		return data as any;
+	}
+
+	_fixRequestObject<T>(requestName: RequestName, obj: T): T {
+		if (typeof obj != "object" || !(obj as any)?.data || !["addMarker", "editMarker", "addLine", "editLine"].includes(requestName))
+			return obj;
+
+		return {
+			...obj,
+			data: this._encodeData((obj as any).data)
+		};
+	}
+
+	_fixResponseObject<T>(requestName: RequestName, obj: T): T {
+		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
+			return obj;
+		
+		return {
+			...obj,
+			data: this._decodeData((obj as any).data)
+		};
+	}
+
+	_fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
+		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
+			return obj;
+		
+		return [
+			{
+				...obj[0],
+				data: this._decodeData((obj[0] as any).data)
+			},
+			...obj.slice(1)
+		] as T;
+	}
+
 	_init(server: string, padId: string | undefined): void {
 		// Needs to be in a separate method so that we can merge this class with a scope object in the frontend.
 
@@ -96,8 +139,8 @@ export default class Client {
 		const manager = new Manager(server, { forceNew: true });
 		this._set(this, 'socket', manager.socket("/"));
 
-		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
-			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
+		for(const i of Object.keys(this._handlers) as EventName<ClientEvents<DataType>>[]) {
+			this.on(i, this._handlers[i] as EventHandler<ClientEvents<DataType>, typeof i>);
 		}
 
 		setTimeout(() => {
@@ -108,44 +151,45 @@ export default class Client {
 		});
 	}
 
-	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
 		if(!this._listeners[eventName]) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
-				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: ClientEvents<DataType>[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
 		this._set(this._listeners, eventName, [ ...(this._listeners[eventName] || [] as any), fn ]);
     }
 
-    once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+    once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
 		const handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			(fn as any)(data);
-		}) as EventHandler<ClientEvents, E>;
+		}) as EventHandler<ClientEvents<DataType>, E>;
 		this.on(eventName, handler);
     }
 
-	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
+	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
+		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents<DataType>, E>> | undefined;
 		if(listeners) {
 			this._set(this._listeners, eventName, listeners.filter((listener) => (listener !== fn)) as any);
 		}
 	}
 
-	async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
+	async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R, DataType> extends void ? [ ] : [ RequestData<R, DataType> ]): Promise<ResponseData<R, DataType>> {
 		try {
 			this._simulateEvent("loadStart");
 
 			this._simulateEvent("emit", eventName as any, data as any);
 
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
+				this.socket.emit(eventName, this._fixRequestObject(eventName, data), (err: Error, data: ResponseData<R, DataType>) => {
 					if(err) {
 						reject(err);
 						this._simulateEvent("emitReject", eventName as any, err);
 					} else {
-						resolve(data);
-						this._simulateEvent("emitResolve", eventName as any, data as any);
+						const fixedData = this._fixResponseObject(eventName, data);
+						resolve(fixedData);
+						this._simulateEvent("emitResolve", eventName as any, fixedData as any);
 					}
 				});
 			});
@@ -155,7 +199,7 @@ export default class Client {
 	}
 
 	_handlers: {
-		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
+		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents<DataType>, E>
 	} = {
 		padData: (data) => {
 			this._set(this, 'padData', data);
@@ -332,40 +376,40 @@ export default class Client {
 		});
 	}
 
-	async getMarker(data: ObjectWithId): Promise<Marker> {
+	async getMarker(data: ObjectWithId): Promise<Marker<DataType>> {
 		const marker = await this._emit("getMarker", data);
 		this._set(this.markers, marker.id, marker);
 		return marker;
 	}
 
-	async addMarker(data: MarkerCreate): Promise<Marker> {
+	async addMarker(data: MarkerCreate<DataType>): Promise<Marker<DataType>> {
 		const marker = await this._emit("addMarker", data);
 		// If the marker is out of view, we will not recieve it in an event. Add it here manually to make sure that we have it.
 		this._set(this.markers, marker.id, marker);
 		return marker;
 	}
 
-	editMarker(data: ObjectWithId & MarkerUpdate): Promise<Marker> {
+	editMarker(data: ObjectWithId & MarkerUpdate<DataType>): Promise<Marker<DataType>> {
 		return this._emit("editMarker", data);
 	}
 
-	deleteMarker(data: ObjectWithId): Promise<Marker> {
+	deleteMarker(data: ObjectWithId): Promise<Marker<DataType>> {
 		return this._emit("deleteMarker", data);
 	}
 
-	getLineTemplate(data: LineTemplateRequest): Promise<Line> {
+	getLineTemplate(data: LineTemplateRequest): Promise<Line<DataType>> {
 		return this._emit("getLineTemplate", data);
 	}
 
-	addLine(data: LineCreate): Promise<Line> {
+	addLine(data: LineCreate<DataType>): Promise<Line<DataType>> {
 		return this._emit("addLine", data);
 	}
 
-	editLine(data: ObjectWithId & LineUpdate): Promise<Line> {
+	editLine(data: ObjectWithId & LineUpdate<DataType>): Promise<Line<DataType>> {
 		return this._emit("editLine", data);
 	}
 
-	deleteLine(data: ObjectWithId): Promise<Line> {
+	deleteLine(data: ObjectWithId): Promise<Line<DataType>> {
 		return this._emit("deleteLine", data);
 	}
 
@@ -489,18 +533,20 @@ export default class Client {
 		}
 	}
 
-	_receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
+	_receiveMultiple(obj?: MultipleEvents<ClientEvents<DataType>>): void {
 		if (obj) {
 			for(const i of Object.keys(obj) as EventName<ClientEvents>[])
-				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
+				(obj[i] as Array<ClientEvents<DataType>[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
+	_simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents<DataType>[E]): void {
+		const fixedData = this._fixEventObject(eventName, data);
+
+		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents<DataType>, E>> | undefined;
 		if(listeners) {
-			listeners.forEach(function(listener: EventHandler<ClientEvents, E>) {
-				listener(...data);
+			listeners.forEach(function(listener: EventHandler<ClientEvents<DataType>, E>) {
+				listener(...fixedData);
 			});
 		}
 	}

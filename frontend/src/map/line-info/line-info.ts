@@ -3,8 +3,7 @@ import Vue from "vue";
 import { Component, Prop, Ref } from "vue-property-decorator";
 import { ExportFormat, ID, Line } from "facilmap-types";
 import { IdType } from "../../utils/utils";
-import Client from "facilmap-client";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { showErrorToast, showToast } from "../../utils/toasts";
 import EditLine from "../edit-line/edit-line";
 import ElevationStats from "../ui/elevation-stats/elevation-stats";
@@ -14,6 +13,7 @@ import Icon from "../ui/icon/icon";
 import "./line-info.scss";
 import { flyTo, getZoomDestinationForLine } from "../../utils/zoom";
 import RouteForm from "../route-form/route-form";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -33,7 +33,7 @@ export default class LineInfo extends Vue {
 	showElevationPlot = false;
 	isMoving = false;
 
-	get line(): Line | undefined {
+	get line(): Line<StringMap> | undefined {
 		return this.client.lines[this.lineId];
 	}
 

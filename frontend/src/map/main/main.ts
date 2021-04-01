@@ -1,9 +1,8 @@
 import WithRender from "./main.vue";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
-import Client from 'facilmap-client';
 import "./main.scss";
-import { InjectClient } from "../../utils/decorators";
+import { Client, InjectClient } from "../../utils/decorators";
 import Toolbox from "../toolbox/toolbox";
 import context from "../context";
 import SearchBox from "../search-box/search-box";

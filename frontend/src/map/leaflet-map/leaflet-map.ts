@@ -1,9 +1,8 @@
 import WithRender from "./leaflet-map.vue";
 import Vue from "vue";
 import { Component, ProvideReactive, Ref, Watch } from "vue-property-decorator";
-import Client from 'facilmap-client';
 import "./leaflet-map.scss";
-import { InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
+import { Client, InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
@@ -73,7 +72,7 @@ export default class LeafletMap extends Vue {
 
     @InjectClient() client!: Client;
 
-    @ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents!: MapComponents;
+    @ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents: MapComponents = null as any;
     @ProvideReactive(MAP_CONTEXT_INJECT_KEY) mapContext: MapContext = null as any;
 
     @Ref() innerContainer!: HTMLElement;
@@ -107,7 +106,9 @@ export default class LeafletMap extends Vue {
         const searchResultsLayer = new SearchResultsLayer().addTo(map);
         const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
 
-        this.mapComponents = { bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, searchResultsLayer, selectionHandler };
+        this.mapComponents = Vue.nonreactive({ bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, searchResultsLayer, selectionHandler });
+        for (const i of Object.keys(this.mapComponents) as Array<keyof MapComponents>)
+            Vue.nonreactive(this.mapComponents[i]);
 
         $(this.mapComponents.locateControl._container).find("a").append(getSymbolHtml("currentColor", "1.5em", "screenshot"));
 

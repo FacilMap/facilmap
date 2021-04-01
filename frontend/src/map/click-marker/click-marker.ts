@@ -1,10 +1,9 @@
 import WithRender from "./click-marker.vue";
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { InjectClient, Client, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { LineCreate, MarkerCreate, Point, SearchResult, Type } from "facilmap-types";
-import Client from "facilmap-client";
 import { round } from "facilmap-utils";
 import { lineStringToTrackPoints, mapSearchResultToType } from "../search-results/utils";
 import { showErrorToast } from "../../utils/toasts";
@@ -12,6 +11,7 @@ import { SearchResultsLayer } from "facilmap-leaflet";
 import SearchResultInfo from "../search-result-info/search-result-info";
 import Icon from "../ui/icon/icon";
 import { Util } from "leaflet";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -125,7 +125,7 @@ export default class ClickMarker extends Vue {
 		this.$bvToast.hide("fm-click-marker-add-error");
 
 		try {
-			const obj: Partial<MarkerCreate & LineCreate> = {
+			const obj: Partial<MarkerCreate<StringMap> & LineCreate<StringMap>> = {
 				name: result.short_name,
 				data: mapSearchResultToType(result, type)
 			};

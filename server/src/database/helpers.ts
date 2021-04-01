@@ -333,7 +333,7 @@ export default class DatabaseHelpers {
 
 	_dataToArr<T>(data: Record<string, string>, extend: T): Array<{ name: string; value: string } & T> {
 		const dataArr: Array<{ name: string; value: string } & T> = [ ];
-		for(const i in data) {
+		for(const i of Object.keys(data)) {
 			if(data[i] != null) {
 				dataArr.push({ name: i, value: data[i], ...extend });
 			}
@@ -342,7 +342,7 @@ export default class DatabaseHelpers {
 	}
 
 	_dataFromArr(dataArr: Array<{ name: string; value: string }>): Record<string, string> {
-		const data: Record<string, string> = { };
+		const data: Record<string, string> = Object.create(null);
 		for(let i=0; i<dataArr.length; i++)
 			data[dataArr[i].name] = dataArr[i].value;
 		return data;

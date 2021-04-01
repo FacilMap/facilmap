@@ -1,8 +1,8 @@
-import { ID, Point, RouteMode } from "./base";
+import { Bbox, ID, Point, RouteMode } from "./base";
 import { ExtraInfo, TrackPoint } from "./line";
 
-export interface RouteInfo {
-	trackPoints: TrackPoint[],
+export interface RouteInfo extends Bbox {
+	trackPoints: TrackPoint[];
 	distance: number;
 	time?: number;
 	ascent?: number;

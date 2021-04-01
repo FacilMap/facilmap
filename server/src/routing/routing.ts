@@ -86,7 +86,7 @@ export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'rou
 		}
 	}
 
-	Object.assign(line, calculateBbox(result.trackPoints!));
+	Object.assign(result, calculateBbox(result.trackPoints!));
 
 	return result as RouteInfo;
 }

@@ -4,15 +4,6 @@ import htmlPlugin from "html-webpack-plugin";
 import { compile, CompilerOptions } from "vue-template-compiler";
 //import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
-/*
-const addDeps = {
-	"angular-ui-sortable": [ "jquery-ui", "jquery-ui/ui/widgets/sortable" ],
-	"bootstrap-touchspin": [ "bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css" ],
-	"leaflet.markercluster": [ "leaflet.markercluster/dist/MarkerCluster.css", "leaflet.markercluster/dist/MarkerCluster.Default.css" ],
-	"leaflet.heightgraph": [ require.resolve("leaflet.heightgraph/src/L.Control.Heightgraph.css") ],
-};
-*/
-
 function includeHotMiddleware(entry: string | string[], isDev: boolean): string | string[] {
 	if(!isDev)
 		return entry;

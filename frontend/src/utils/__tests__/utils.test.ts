@@ -102,3 +102,8 @@ test('mergeObject', () => {
 		.toEqual({ obj: { str: "new" } });
 	
 });
+
+test('mergeObject prototype pollution', () => {
+	mergeObject({}, JSON.parse('{"__proto__":{"test": "test"}}'), {});
+	expect(({} as any).test).toBeUndefined();
+});

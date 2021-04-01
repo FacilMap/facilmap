@@ -1,12 +1,12 @@
 import { compileExpression as filtrexCompileExpression } from 'filtrex';
-import { clone, flattenObject, quoteRegExp } from "./utils";
+import { clone, flattenObject, getProperty, quoteRegExp } from "./utils";
 import { ID, Marker, Line, Type, Field } from "facilmap-types";
 
 export type FilterFunc = (obj: any) => boolean;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
-		return obj && obj[key];
+		return obj && getProperty(obj, key);
 	},
 
 	random() { } // Does not work well with angular digest cycles
@@ -103,7 +103,10 @@ export function prepareObject<T extends Marker | Line>(obj: T, type: Type): T & 
 	obj = clone(obj);
 
 	for (const field of type.fields) {
-		obj.data[field.name] = normalizeField(field, obj.data[field.name], true);
+		if (Object.getPrototypeOf(obj.data)?.set)
+			(obj.data as any).set(field.name, normalizeField(field, (obj.data as any).get(field.name), true));
+		else
+			obj.data[field.name] = normalizeField(field, obj.data[field.name], true);
 	}
 
 	const ret = flattenObject(obj) as T & { type?: Type["type"] };

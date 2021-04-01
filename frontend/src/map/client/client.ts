@@ -1,12 +1,13 @@
 import { Component, Prop, ProvideReactive, Watch } from "vue-property-decorator";
 import Vue from "vue";
-import Client from "facilmap-client";
+import FmClient from "facilmap-client";
 import "./client.scss";
 import WithRender from "./client.vue";
 import { PadId } from "facilmap-types";
 import context from "../context";
 import PadSettings from "../pad-settings/pad-settings";
-import { CLIENT_INJECT_KEY } from "../../utils/decorators";
+import { Client, CLIENT_INJECT_KEY } from "../../utils/decorators";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -23,9 +24,11 @@ export class ClientProvider extends Vue {
     loaded = false;
 
     created(): void {
-        const client = new Client(context.urlPrefix, this.padId);
+        const client = new FmClient<StringMap>(context.urlPrefix, this.padId);
         client._set = Vue.set;
         client._delete = Vue.delete;
+        client._encodeData = (data) => data.toObject();
+        client._decodeData = (data) => new StringMap(data);
 
         client.on("connect", () => {
             this.connecting = false;

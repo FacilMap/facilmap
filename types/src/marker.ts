@@ -1,7 +1,7 @@
 import { Colour, ID, Point, Shape, Symbol } from "./base";
 import { PadId } from "./padData";
 
-export interface Marker extends Point {
+export interface Marker<DataType = Record<string, string>> extends Point {
 	id: ID;
 	name: string;
 	colour: Colour;
@@ -10,9 +10,9 @@ export interface Marker extends Point {
 	shape: Shape;
 	ele?: number;
 	typeId: ID;
-	data: Record<string, string>;
+	data: DataType;
 	padId: PadId;
 }
 
-export type MarkerCreate = Partial<Omit<Marker, "id" | "padId">> & Pick<Marker, keyof Point | 'typeId'>;
-export type MarkerUpdate = Partial<MarkerCreate>;
+export type MarkerCreate<DataType = Record<string, string>> = Partial<Omit<Marker<DataType>, "id" | "padId">> & Pick<Marker<DataType>, keyof Point | 'typeId'>;
+export type MarkerUpdate<DataType = Record<string, string>> = Partial<MarkerCreate<DataType>>;

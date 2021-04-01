@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { isEqual } from "lodash";
 import { clone } from "facilmap-utils";
-import { Field, Line, Marker, SearchResult, Type } from "facilmap-types";
+import { Field, Line, Marker, Type } from "facilmap-types";
 
 /** Can be used as the "type" of props that accept an ID */
 export const IdType = Number;
@@ -14,7 +14,10 @@ export const IdType = Number;
  */
 export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | undefined, newObject: T, targetObject: T): void {
 	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
-		if(typeof newObject[i] == "object" && newObject[i] != null && targetObject[i] != null)
+		if(
+			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject[i] == "object" && newObject[i] != null
+			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
+		)
 			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
 		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
 			Vue.set(targetObject, i, clone(newObject[i]));

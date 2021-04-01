@@ -36,7 +36,7 @@ export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "l
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
-export interface RequestDataMap {
+export interface RequestDataMap<DataType = Record<string, string>> {
 	updateBbox: BboxWithZoom;
 	createPad: PadDataCreate;
 	editPad: PadDataUpdate;
@@ -45,12 +45,12 @@ export interface RequestDataMap {
 	stopListeningToHistory: void;
 	revertHistoryEntry: ObjectWithId;
 	getMarker: ObjectWithId;
-	addMarker: MarkerCreate;
-	editMarker: ObjectWithId & MarkerUpdate;
+	addMarker: MarkerCreate<DataType>;
+	editMarker: ObjectWithId & MarkerUpdate<DataType>;
 	deleteMarker: ObjectWithId;
 	getLineTemplate: LineTemplateRequest;
-	addLine: LineCreate;
-	editLine: ObjectWithId & LineUpdate;
+	addLine: LineCreate<DataType>;
+	editLine: ObjectWithId & LineUpdate<DataType>;
 	deleteLine: ObjectWithId;
 	exportLine: LineExportRequest;
 	find: FindQuery;
@@ -70,22 +70,22 @@ export interface RequestDataMap {
 	setPadId: string;
 }
 
-export interface ResponseDataMap {
-	updateBbox: MultipleEvents<MapEvents>;
-	createPad: MultipleEvents<MapEvents>;
+export interface ResponseDataMap<DataType = Record<string, string>> {
+	updateBbox: MultipleEvents<MapEvents<DataType>>;
+	createPad: MultipleEvents<MapEvents<DataType>>;
 	editPad: PadData;
 	deletePad: void;
-	listenToHistory: MultipleEvents<MapEvents>;
+	listenToHistory: MultipleEvents<MapEvents<DataType>>;
 	stopListeningToHistory: void;
-	revertHistoryEntry: MultipleEvents<MapEvents>;
-	getMarker: Marker;
-	addMarker: Marker;
-	editMarker: Marker;
-	deleteMarker: Marker;
-	getLineTemplate: Line;
-	addLine: Line;
-	editLine: Line;
-	deleteLine: Line;
+	revertHistoryEntry: MultipleEvents<MapEvents<DataType>>;
+	getMarker: Marker<DataType>;
+	addMarker: Marker<DataType>;
+	editMarker: Marker<DataType>;
+	deleteMarker: Marker<DataType>;
+	getLineTemplate: Line<DataType>;
+	addLine: Line<DataType>;
+	editLine: Line<DataType>;
+	deleteLine: Line<DataType>;
 	exportLine: string;
 	find: string | SearchResult[];
 	findOnMap: Array<FindOnMapResult>;
@@ -101,9 +101,9 @@ export interface ResponseDataMap {
 	editView: View;
 	deleteView: View;
 	geoip: Bbox | null;
-	setPadId: MultipleEvents<MapEvents>;
+	setPadId: MultipleEvents<MapEvents<DataType>>;
 }
 
 export type RequestName = keyof RequestDataMap;
-export type RequestData<E extends RequestName> = RequestDataMap[E];
-export type ResponseData<E extends RequestName> = ResponseDataMap[E];
+export type RequestData<E extends RequestName, DataType = Record<string, string>> = RequestDataMap<DataType>[E];
+export type ResponseData<E extends RequestName, DataType = Record<string, string>> = ResponseDataMap<DataType>[E];

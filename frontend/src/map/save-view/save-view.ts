@@ -1,10 +1,9 @@
 import WithRender from "./save-view.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { baseLayers, getCurrentView, overlays } from "facilmap-leaflet";
 import { ViewCreate } from "facilmap-types";
-import Client from "facilmap-client";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
 import { showErrorToast } from "../../utils/toasts";

@@ -1,12 +1,12 @@
 import WithRender from "./marker-info-tab.vue";
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { ID, Marker } from "facilmap-types";
-import Client from "facilmap-client";
 import MarkerInfo from "./marker-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import Icon from "../ui/icon/icon";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -33,12 +33,12 @@ export default class MarkerInfoTab extends Vue {
 			return undefined;
 	}
 
-	get marker(): Marker | undefined {
+	get marker(): Marker<StringMap> | undefined {
 		return this.markerId != null ? this.client.markers[this.markerId] : undefined;
 	}
 
 	@Watch("marker")
-	handleChangeMarker(marker: Marker | undefined): void {
+	handleChangeMarker(marker: Marker<StringMap> | undefined): void {
 		if (!marker && this.markerId != null)
 			this.close();
 	}

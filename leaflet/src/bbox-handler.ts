@@ -12,9 +12,9 @@ Map.prototype.flyTo = function(...args) {
 
 export default class BboxHandler extends Handler {
 
-    client: Client;
+    client: Client<any>;
 
-    constructor(map: Map, client: Client) {
+    constructor(map: Map, client: Client<any>) {
         super(map);
         this.client = client;
     }

@@ -1,8 +1,7 @@
 import WithRender from "./manage-views.vue";
 import Vue from "vue";
-import Client from "facilmap-client";
 import { Component, Prop } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents } from "../../utils/decorators";
 import { ID, View } from "facilmap-types";
 import { displayView } from "facilmap-leaflet";
 import { showErrorToast } from "../../utils/toasts";

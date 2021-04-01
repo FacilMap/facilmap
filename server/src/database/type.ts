@@ -1,8 +1,7 @@
-import { Model } from "sequelize";
+import Sequelize, { Model } from "sequelize";
 import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "../../../types/src";
 import Database from "./database";
 import { makeNotNullForeignKey, validateColour } from "./helpers";
-import Sequelize from "sequelize";
 
 function createTypeModel() {
 	return class TypeModel extends Model {
@@ -89,14 +88,14 @@ export default class DatabaseTypes {
 				validate: {
 					checkUniqueFieldName: (value: string) => {
 						const fields = JSON.parse(value) as Field[];
-						const fieldNames: Record<string, boolean> = { };
+						const fieldNames = new Set<string>();
 						for (const field of fields) {
 							if(field.name.trim().length == 0)
 								throw new Error("Empty field name.");
-							if(fieldNames[field.name])
+							if(fieldNames.has(field.name))
 								throw new Error("field name "+field.name+" is not unique.");
 
-							fieldNames[field.name] = true;
+							fieldNames.add(field.name);
 
 							if([ "textarea", "dropdown", "checkbox", "input" ].indexOf(field.type) == -1)
 								throw new Error("Invalid field type "+field.type+" for field "+field.name+".");
@@ -135,11 +134,11 @@ export default class DatabaseTypes {
 
 							// Validate unique dropdown entries
 							if(field.type == "dropdown") {
-								const existingValues: Record<string, boolean> = { };
+								const existingValues = new Set<string>();
 								for(const option of (field.options || [])) {
-									if(existingValues[option.value])
+									if(existingValues.has(option.value))
 										throw new Error(`Duplicate option "${option.value}" for field "${field.name}".`);
-									existingValues[option.value] = true;
+									existingValues.add(option.value);
 								}
 							}
 						}

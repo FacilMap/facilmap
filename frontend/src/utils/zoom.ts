@@ -1,6 +1,6 @@
 import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
 import { fmToLeafletBbox, HashQuery } from "facilmap-leaflet";
-import Client, { RouteWithTrackPoints } from "facilmap-client";
+import { RouteWithTrackPoints } from "facilmap-client";
 import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import { Geometry } from "geojson";
@@ -8,6 +8,8 @@ import { isMapResult } from "./search";
 import { MapComponents } from "../map/leaflet-map/leaflet-map";
 import { decodeLonLatUrl } from "facilmap-utils";
 import { EventBus } from "../map/leaflet-map/events";
+import { Client } from "./decorators";
+import StringMap from "./string-map";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -30,21 +32,16 @@ export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination
 		return undefined;
 }
 
-export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker): ZoomDestination {
+export function getZoomDestinationForMarker(marker: Marker<StringMap> | FindOnMapMarker): ZoomDestination {
 	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
 }
 
-export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
+export function getZoomDestinationForLine(line: Line<StringMap> | FindOnMapLine): ZoomDestination {
 	return { bounds: fmToLeafletBbox(line) };
 }
 
 export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDestination {
-	const bounds = latLngBounds(undefined as any);
-	for (let i = 0; i < route.trackPoints.length; i++) {
-		if (route.trackPoints[i])
-			bounds.extend([route.trackPoints[i].lat, route.trackPoints[i].lon]);
-	}
-	return { bounds };
+	return { bounds: fmToLeafletBbox(route) };
 }
 
 export function getZoomDestinationForSearchResult(result: SearchResult): ZoomDestination | undefined {

@@ -1,8 +1,7 @@
 import WithRender from "./history.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { InjectClient } from "../../utils/decorators";
-import Client from "facilmap-client";
+import { Client, InjectClient } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import { getLabelsForHistoryEntry, HistoryEntryLabels } from "./history-utils";
 import { HistoryEntry } from "facilmap-types";

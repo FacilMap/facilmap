@@ -1,8 +1,7 @@
 import WithRender from "./edit-type.vue";
 import Vue from "vue";
-import Client from "facilmap-client";
 import { Component, Prop, Ref, Watch } from "vue-property-decorator";
-import { InjectClient } from "../../utils/decorators";
+import { Client, InjectClient } from "../../utils/decorators";
 import { Field, ID, Line, Marker, Type, TypeUpdate } from "facilmap-types";
 import { clone } from "facilmap-utils";
 import { canControl, IdType } from "../../utils/utils";

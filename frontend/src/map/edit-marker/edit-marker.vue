@@ -40,7 +40,7 @@
 		</ValidationProvider>
 
 		<b-form-group v-for="(field, idx in client.types[marker.typeId].fields" :label="field.name" :label-for="`fm-edit-marker-${idx}-input`" label-cols-sm="3">
-			<FieldInput :id="`fm-edit-marker-${idx}-input`" :field="field" v-model="marker.data[field.name]"></FieldInput>
+			<FieldInput :id="`fm-edit-marker-${idx}-input`" :field="field" :value="marker.data.get(field.name)" @input="marker.data.set(field.name, $event)"></FieldInput>
 		</b-form-group>
 	</template>
 

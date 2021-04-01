@@ -12,14 +12,14 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 export default class MarkersLayer extends MarkerCluster {
 
 	options!: MarkersLayerOptions;
-	client: Client;
+	client: Client<any>;
 	markersById: Record<string, MarkerLayer> = {};
 	highlightedMarkerIds = new Set<ID>();
 
 	/** The position of these markers will not be touched until they are unlocked again. */
 	lockedMarkerIds = new Set<ID>();
 
-	constructor(client: Client, options?: MarkersLayerOptions) {
+	constructor(client: Client<any>, options?: MarkersLayerOptions) {
 		super(client, options);
 		this.client = client;
 	}

@@ -20,3 +20,7 @@ declare module "@tmcw/togeojson" {
     export const kml: any;
     export const tcx: any;
 }
+
+declare module "vue-nonreactive" {
+    export default function nonreactive(obj: ConstructorType<Vue>): void;
+}

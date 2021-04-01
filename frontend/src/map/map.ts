@@ -15,6 +15,7 @@ import { PadId } from 'facilmap-types';
 import "./map.scss";
 import { ClientProvider } from './client/client';
 import "../utils/vue";
+import installNonReactive from "vue-nonreactive";
 
 Vue.use(BootstrapVue, {
 	BDropdown: {
@@ -38,6 +39,8 @@ Vue.use(BootstrapVue, {
 	}
 });
 Vue.use(PortalVue);
+
+installNonReactive(Vue);
 
 // Dereferrer
 $(document).on("click", "a", function() {

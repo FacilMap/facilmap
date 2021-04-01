@@ -661,6 +661,10 @@ class SocketConnection {
 
 			return {
 				routeId: data.routeId,
+				top: routeInfo.top,
+				left: routeInfo.left,
+				bottom: routeInfo.bottom,
+				right: routeInfo.right,
 				routePoints: routeInfo.routePoints,
 				mode: routeInfo.mode,
 				time: routeInfo.time,
@@ -722,6 +726,10 @@ class SocketConnection {
 
 			return {
 				routeId: data.routeId,
+				top: routeInfo.top,
+				left: routeInfo.left,
+				bottom: routeInfo.bottom,
+				right: routeInfo.right,
 				routePoints: routeInfo.routePoints,
 				mode: routeInfo.mode,
 				time: routeInfo.time,

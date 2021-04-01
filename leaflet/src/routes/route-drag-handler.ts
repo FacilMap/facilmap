@@ -8,9 +8,9 @@ interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 export default class RouteDragHandler extends DraggableLines {
 
 	realOptions!: RouteDragHandlerOptions;
-	client: Client;
+	client: Client<any>;
 
-	constructor(map: Map, client: Client, options?: RouteDragHandlerOptions) {
+	constructor(map: Map, client: Client<any>, options?: RouteDragHandlerOptions) {
 		super(map, {
 			enableForLayer: false,
 			dragMarkerOptions: () => ({ pane: "fm-raised-marker" }),

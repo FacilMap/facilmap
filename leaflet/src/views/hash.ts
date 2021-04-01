@@ -25,11 +25,11 @@ export interface HashQuery {
 
 export default class HashHandler extends Handler {
 
-	client: Client;
+	client: Client<any>;
 	hash: any;
 	activeQuery?: HashQuery;
 
-	constructor(map: Map, client: Client) {
+	constructor(map: Map, client: Client<any>) {
 		super(map);
 		this.client = client;
 

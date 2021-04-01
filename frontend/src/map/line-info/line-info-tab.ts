@@ -1,12 +1,12 @@
 import WithRender from "./line-info-tab.vue";
 import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { ID, Line } from "facilmap-types";
-import Client from "facilmap-client";
 import LineInfo from "./line-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import Icon from "../ui/icon/icon";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -33,7 +33,7 @@ export default class LineInfoTab extends Vue {
 			return undefined;
 	}
 
-	get line(): Line | undefined {
+	get line(): Line<StringMap> | undefined {
 		return this.lineId != null ? this.client.lines[this.lineId] : undefined;
 	}
 

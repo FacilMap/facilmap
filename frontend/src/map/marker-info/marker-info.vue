@@ -11,7 +11,7 @@
 
 		<template v-for="field in client.types[marker.typeId].fields">
 			<dt>{{field.name}}</dt>
-			<dd v-html="$options.filters.fmFieldContent(marker.data[field.name], field)"></dd>
+			<dd v-html="$options.filters.fmFieldContent(marker.data.get(field.name), field)"></dd>
 		</template>
 	</dl>
 

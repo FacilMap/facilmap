@@ -3,15 +3,15 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { FindOnMapResult, ID, Marker } from "facilmap-types";
 import { IdType } from "../../utils/utils";
-import Client from "facilmap-client";
 import { moveMarker } from "../../utils/draw";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import EditMarker from "../edit-marker/edit-marker";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import "./marker-info.scss";
 import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
 import Icon from "../ui/icon/icon";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -27,7 +27,7 @@ export default class MarkerInfo extends Vue {
 
 	isSaving = false;
 
-	get marker(): Marker | undefined {
+	get marker(): Marker<StringMap> | undefined {
 		return this.client.markers[this.markerId];
 	}
 

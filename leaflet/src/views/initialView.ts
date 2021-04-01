@@ -2,7 +2,7 @@ import Client from "facilmap-client";
 import { PadData } from "facilmap-types";
 import { UnsavedView } from "./views";
 
-export async function getInitialView(client: Client): Promise<UnsavedView | undefined> {
+export async function getInitialView(client: Client<any>): Promise<UnsavedView | undefined> {
 	if(client.padId) {
 		const padData = client.padData || await new Promise<PadData>((resolve, reject) => {
 			client.on("padData", resolve);

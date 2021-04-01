@@ -1,8 +1,7 @@
 import WithRender from "./edit-line.vue";
 import Vue from "vue";
 import { ID, Line, Type } from "facilmap-types";
-import Client from "facilmap-client";
-import { InjectClient } from "../../utils/decorators";
+import { Client, InjectClient } from "../../utils/decorators";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { canControl, IdType, mergeObject } from "../../utils/utils";
 import { clone } from "facilmap-utils";
@@ -16,6 +15,7 @@ import ShapeField from "../ui/shape-field/shape-field";
 import FieldInput from "../ui/field-input/field-input";
 import RouteMode from "../ui/route-mode/route-mode";
 import WidthField from "../ui/width-field/width-field";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -28,7 +28,7 @@ export default class EditLine extends Vue {
 	@Prop({ type: String, required: true }) id!: string;
 	@Prop({ type: IdType, required: true }) lineId!: ID;
 
-	line: Line = null as any;
+	line: Line<StringMap> = null as any;
 	isSaving = false;
 
 	initialize(): void {
@@ -39,7 +39,7 @@ export default class EditLine extends Vue {
 		return !isEqual(this.line, this.client.lines[this.lineId]);
 	}
 
-	get originalLine(): Line | undefined {
+	get originalLine(): Line<StringMap> | undefined {
 		return this.client.lines[this.lineId];
 	}
 
@@ -48,7 +48,7 @@ export default class EditLine extends Vue {
 	}
 
 	@Watch("originalLine")
-	handleChangeLine(newLine: Line | undefined, oldLine: Line): void {
+	handleChangeLine(newLine: Line<StringMap> | undefined, oldLine: Line<StringMap>): void {
 		if (this.line) {
 			if (!newLine) {
 				this.$bvModal.hide(this.id);

@@ -216,9 +216,10 @@ export default class RouteForm extends Vue {
 
 	get hashQuery(): HashQuery | undefined {
 		if (this.submittedQuery) {
+			const zoomDest = this.routeObj && getZoomDestinationForRoute(this.routeObj);
 			return {
 				query: this.submittedQuery,
-				...(this.routeObj ? normalizeZoomDestination(this.mapComponents.map, getZoomDestinationForRoute(this.routeObj)) : {})
+				...(zoomDest ? normalizeZoomDestination(this.mapComponents.map, zoomDest) : {})
 			};
 		} else
 			return undefined;
@@ -415,9 +416,8 @@ export default class RouteForm extends Vue {
 				routeId: this.routeId
 			});
 			
-			if (route && zoom) {
+			if (route && zoom)
 				flyTo(this.mapComponents.map, getZoomDestinationForRoute(route), smooth);
-			}
 		} catch (err) {
 			showErrorToast(this, "fm-route-form-error", "Error calculating route", err);
 		}

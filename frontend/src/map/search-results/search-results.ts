@@ -4,8 +4,7 @@ import { Component, Prop, Watch } from "vue-property-decorator";
 import { FindOnMapResult, ID, LineCreate, MarkerCreate, SearchResult, Type } from "facilmap-types";
 import "./search-results.scss";
 import Icon from "../ui/icon/icon";
-import Client from "facilmap-client";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import context from "../context";
 import SearchResultInfo from "../search-result-info/search-result-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
@@ -18,6 +17,7 @@ import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../u
 import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 import { mapValues, pickBy, uniq } from "lodash";
 import FormModal from "../ui/form-modal/form-modal";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -171,7 +171,7 @@ export default class SearchResults extends Vue {
 			const selection: SelectedItem[] = [];
 
 			for (const { result, type } of data) {
-				const obj: Partial<MarkerCreate & LineCreate> = {
+				const obj: Partial<MarkerCreate<StringMap> & LineCreate<StringMap>> = {
 					name: result.short_name
 				};
 

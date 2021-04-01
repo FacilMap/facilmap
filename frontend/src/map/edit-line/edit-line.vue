@@ -30,7 +30,7 @@
 		</ValidationProvider>
 
 		<b-form-group v-for="(field, idx in client.types[line.typeId].fields" :label="field.name" :label-for="`fm-edit-line-${idx}-input`" label-cols-sm="3">
-			<FieldInput :id="`fm-edit-line-${idx}-input`" :field="field" v-model="line.data[field.name]"></FieldInput>
+			<FieldInput :id="`fm-edit-line-${idx}-input`" :field="field" :value="line.data.get(field.name)" @input="line.data.set(field.name, $event)"></FieldInput>
 		</b-form-group>
 	</template>
 

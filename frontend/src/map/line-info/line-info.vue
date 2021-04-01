@@ -23,7 +23,7 @@
 
 			<template v-if="line.ascent == null || !showElevationPlot" v-for="field in client.types[line.typeId].fields">
 				<dt>{{field.name}}</dt>
-				<dd v-html="$options.filters.fmFieldContent(line.data[field.name], field)"></dd>
+				<dd v-html="$options.filters.fmFieldContent(line.data.get(field.name), field)"></dd>
 			</template>
 		</dl>
 

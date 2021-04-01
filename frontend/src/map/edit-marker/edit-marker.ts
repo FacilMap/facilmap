@@ -1,8 +1,7 @@
 import WithRender from "./edit-marker.vue";
 import Vue from "vue";
 import { ID, Marker, Type } from "facilmap-types";
-import Client from "facilmap-client";
-import { InjectClient } from "../../utils/decorators";
+import { Client, InjectClient } from "../../utils/decorators";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { canControl, IdType, mergeObject } from "../../utils/utils";
 import { clone } from "facilmap-utils";
@@ -15,6 +14,7 @@ import SymbolField from "../ui/symbol-field/symbol-field";
 import ShapeField from "../ui/shape-field/shape-field";
 import FieldInput from "../ui/field-input/field-input";
 import SizeField from "../ui/size-field/size-field";
+import StringMap from "../../utils/string-map";
 
 @WithRender
 @Component({
@@ -27,7 +27,7 @@ export default class EditMarker extends Vue {
 	@Prop({ type: String, required: true }) id!: string;
 	@Prop({ type: IdType, required: true }) markerId!: ID;
 
-	marker: Marker = null as any;
+	marker: Marker<StringMap> = null as any;
 	isSaving = false;
 
 	initialize(): void {
@@ -38,7 +38,7 @@ export default class EditMarker extends Vue {
 		return !isEqual(this.marker, this.client.markers[this.markerId]);
 	}
 
-	get originalMarker(): Marker | undefined {
+	get originalMarker(): Marker<StringMap> | undefined {
 		return this.client.markers[this.markerId];
 	}
 
@@ -47,7 +47,7 @@ export default class EditMarker extends Vue {
 	}
 
 	@Watch("originalMarker")
-	handleChangeMarker(newMarker: Marker | undefined, oldMarker: Marker): void {
+	handleChangeMarker(newMarker: Marker<StringMap> | undefined, oldMarker: Marker<StringMap>): void {
 		if (this.marker) {
 			if (!newMarker) {
 				this.$bvModal.hide(this.id);

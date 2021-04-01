@@ -17,12 +17,12 @@ export interface RoutePointsEvent {
 	trackPoints: TrackPoint[];
 }
 
-export interface MapEvents {
+export interface MapEvents<DataType = Record<string, string>> {
 	padData: [PadData];
 	deletePad: [];
-	marker: [Marker];
+	marker: [Marker<DataType>];
 	deleteMarker: [ObjectWithId];
-	line: [Line];
+	line: [Line<DataType>];
 	deleteLine: [ObjectWithId];
 	linePoints: [LinePointsEvent];
 	routePoints: [TrackPoint[]];

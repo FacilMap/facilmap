@@ -1,5 +1,6 @@
 import { Point, SearchResult, Type } from "facilmap-types";
 import { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
+import StringMap from "../../utils/string-map";
 
 /**
  * Prefills the fields of a type with information from a search result. The "address" and "extratags" from
@@ -7,9 +8,9 @@ import { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "ge
  * returned object is an object that can be used as "data" for a marker and line, so an object that maps
  * field names to values.
  */
-export function mapSearchResultToType(result: SearchResult, type: Type): Record<string, string> {
+export function mapSearchResultToType(result: SearchResult, type: Type): StringMap {
 	let keyMap = (keys: string[]) => {
-		let ret: Record<string, string> = {};
+		let ret: Record<string, string> = Object.create(null);
 		for(let key of keys)
 			ret[key.replace(/[^a-z0-9]/gi, "").toLowerCase()] = key;
 		return ret;
@@ -22,10 +23,10 @@ export function mapSearchResultToType(result: SearchResult, type: Type): Record<
 	let fieldKeys = keyMap(type.fields.map((field) => (field.name)));
 	let resultDataKeys = keyMap(Object.keys(resultData));
 
-	let ret: Record<string, string> = {};
+	const ret: StringMap = new StringMap();
 	for(let key in resultDataKeys) {
 		if(fieldKeys[key])
-			ret[fieldKeys[key]] = resultData[resultDataKeys[key]];
+			ret.set(fieldKeys[key], resultData[resultDataKeys[key]]);
 	}
 	return ret;
 }

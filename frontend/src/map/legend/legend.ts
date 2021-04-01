@@ -2,12 +2,11 @@ import "./legend.scss";
 import WithRender from "./legend.vue";
 import Vue from "vue";
 import { Component, Ref } from "vue-property-decorator";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { round } from "facilmap-utils";
 import $ from "jquery";
 import context from "../context";
 import LegendContent from "./legend-content";
-import Client from "facilmap-client";
 import { getLegendItems, LegendType } from "./legend-utils";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 

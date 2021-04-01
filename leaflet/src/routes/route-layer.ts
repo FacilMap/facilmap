@@ -11,10 +11,10 @@ interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 export default class RouteLayer extends HighlightablePolyline {
 
 	realOptions!: RouteLayerOptions;
-	client: Client;
+	client: Client<any>;
 	routeId: string | undefined;
 
-	constructor(client: Client, routeId?: string, options?: RouteLayerOptions) {
+	constructor(client: Client<any>, routeId?: string, options?: RouteLayerOptions) {
 		super([], options);
 		this.client = client;
 		this.routeId = routeId;

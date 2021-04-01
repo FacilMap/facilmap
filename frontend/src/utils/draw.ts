@@ -1,7 +1,7 @@
-import Client from "facilmap-client";
 import { addClickListener } from "facilmap-leaflet";
 import { ID, Type } from "facilmap-types";
 import { MapComponents } from "../map/leaflet-map/leaflet-map";
+import { Client } from "./decorators";
 import { showToast, showErrorToast } from "./toasts";
 import { getUniqueId } from "./utils";
 
