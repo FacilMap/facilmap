@@ -103,6 +103,7 @@ Information about the temporary route set using [`setRoute()`](#setRoutedata).
 
 _Type:_ [`route`](#route-1)
 
+
 ### `serverError`
 
 If the opening the pad failed ([`setPadId(padId)`](#setpadidpadid) promise got rejected), the error message is stored

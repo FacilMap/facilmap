@@ -4,14 +4,14 @@ Running the FacilMap server
 Using docker
 ------------
 
-FacilMap is available as [`facilmap/facilmap2`](https://hub.docker.com/r/facilmap/facilmap2/) on Docker Hub. Here is
+FacilMap is available as [`facilmap/facilmap`](https://hub.docker.com/r/facilmap/facilmap/) on Docker Hub. Here is
 an example `docker-compose.yml`:
 
 ```yaml
 version: "2"
 services:
     facilmap:
-        image: facilmap/facilmap2
+        image: facilmap/facilmap
         ports:
             - 8080
         links:
@@ -41,61 +41,56 @@ services:
 Or the same using `docker create`:
 
 ```bash
-docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e OSR_TOKEN= -e MAPBOX_TOKEN= -e MAPZEN_TOKEN= --restart on-failure facilmap/facilmap2
+docker create --link=mysql_mysql_1 -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=mysql_mysql_1 -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e OSR_TOKEN= -e MAPBOX_TOKEN= -e MAPZEN_TOKEN= --restart on-failure facilmap/facilmap
 ```
 
 See [below](#config) for the available config options.
 
 Both the FacilMap server and the frontend will be available via HTTP on port `8080`. It is recommended to use a reverse
-proxy, such as [`rankenstein/https-proxy-letsencrypt`](https://hub.docker.com/r/rankenstein/https-proxy-letsencrypt/),
-to make it available over HTTPS.
+proxy, such as [`jwilder/nginx-proxy`](https://hub.docker.com/r/jwilder/nginx-proxy), to make it available over HTTPS.
+
 
 Standalone
 ----------
 
 To run the FacilMap server by hand, follow the following steps:
 
-1. Make sure that you have a recent version of [Node.js](https://nodejs.org/) and a database (MariaDB, MySQL, PostgreSQL,
-   SQLite, Microsoft SQL Server) set up. (Note that only MySQL has been tested so far.)
-2. Install the facilmap server (`npm install -g facilmap-server`).
-3. If you want to use a database other than MySQL, you will have to install the driver using `npm install -g pg` (for
-   PostgreSQL), `npm install -g sqlite3`, or `npm install -g tedious` (for MSSQL).
-4. Download [config.js](src/config.ts) and adjust the settings (see below for an explanation of the different parameters)
-5. Run `facilmap-server config.js`
+1. Make sure that you have a recent version of [Node.js](https://nodejs.org/), [yarn](https://yarnpkg.com/)
+   and a database (MariaDB, MySQL, PostgreSQL, SQLite, Microsoft SQL Server) set up. (Note that only MySQL/MariaDB has been tested so far.)
+2. Clone this repository.
+3. Run `yarn install` in the root folder of this repository to install the dependencies.
+4. Run `yarn build` to create the JS bundles
+5. Copy `config.env.example` to `config.env` and adjust the configuration (see [below](#config) for the available options).
+6. Inside the `server` directory, run `yarn server`. This will automatically set up the database structure and start the server.
 
 Config
 ------
 
-The config can be set either by using environment variables (useful for docker) or by editing [`config.js`](config.js).
+The config can be set either by using environment variables (useful for docker) or by editing [`config.env`](../config.env).
 
-| `config.js` value   | Environment variable  | Meaning                                                                                                                          |
-|---------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| `userAgent`         | `USER_AGENT`          | Will be used for all HTTP requests (search, routing, GPX/KML/OSM/GeoJSON files). You better provide your e-mail address in here. |
-| `host`              |                       | The ip address to listen on.                                                                                                     |
-| `port`              |                       | The port to listen on.                                                                                                           |
-| `db.type`           | `DB_TYPE`             | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`.                                               |
-| `db.host`           | `DB_HOST`             | The host name of the database server (default: `localhost`).                                                                     |
-| `db.port`           | `DB_PORT`             | The port of the database server (optional).                                                                                      |
-| `db.database`       | `DB_NAME`             | The name of the database (default: `facilmap`).                                                                                  |
-| `db.user`           | `DB_USER`             | The username to connect to the database with (default: `facilmap`).                                                              |
-| `db.password`       | `DB_PASSWORD`         | The password to connect to the database with.                                                                                    |
-| `orsToken`          | `ORS_TOKEN`           | OpenRouteService API key.                                                                                                        |
-| `mapboxToken`       | `MAPBOX_TOKEN`        | Mapbox API key.                                                                                                                  |
-| `mapzenToken`       | `MAPZEN_TOKEN`        | Mapzen API key.                                                                                                                  |
-| `maxmindUserId`     | `MAXMIND_USER_ID`     | MaxMind user ID.                                                                                                                 |
-| `maxmindLicenseKey` | `MAXMIND_LICENSE_KEY` | MaxMind license key.                                                                                                          |
+| Variable              | Meaning                                                                                                                          |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `USER_AGENT`          | Will be used for all HTTP requests (search, routing, GPX/KML/OSM/GeoJSON files). You better provide your e-mail address in here. |
+| `HOST`                | The ip address to listen on (leave empty to listen on all addresses)                                                             |
+| `PORT`                | The port to listen on.                                                                                                           |
+| `DB_TYPE`             | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`.                                               |
+| `DB_HOST`             | The host name of the database server (default: `localhost`).                                                                     |
+| `DB_PORT`             | The port of the database server (optional).                                                                                      |
+| `DB_NAME`             | The name of the database (default: `facilmap`).                                                                                  |
+| `DB_USER`             | The username to connect to the database with (default: `facilmap`).                                                              |
+| `DB_PASSWORD`         | The password to connect to the database with.                                                                                    |
+| `ORS_TOKEN`           | OpenRouteService API key.                                                                                                        |
+| `MAPBOX_TOKEN`        | Mapbox API key.                                                                                                                  |
+| `MAPZEN_TOKEN`        | Mapzen API key.                                                                                                                  |
+| `MAXMIND_USER_ID`     | MaxMind user ID.                                                                                                                 |
+| `MAXMIND_LICENSE_KEY` | MaxMind license key.                                                                                                             |
 
 Development
 -----------
 
-To get the server running, run `yarn run deps` to install the dependencies, and then `yarn run server` to start the server.
-
 For developing the frontend/client, FacilMap server can integrate a webpack-dev-server. This server will automatically
 recompile the frontend files when a file changes, and even delay reloads until the compilation has finished. To run
-the dev server, first link the dependencies by running `yarn link` in the `client/` and `frontend/` directories, and then
-`yarn link facilmap-frontend facilmap-client` in the `server/` directory. Then start the server in development mode
-using `FM_DEV=true npm run server`.
+the dev server, run `yarn dev-server` instead of `yarn server` in the `server` directory.
 
 To enable debug output of various components, additionally prepend the command by `DEBUG=*`. See the documentation of
-[debug](https://github.com/visionmedia/debug). To only enable the debug logging of SQL queries, use `DEBUG=sql`. To
-enable the logging of outgoing HTTP requests, set `DEBUG=request`.
+[debug](https://github.com/visionmedia/debug). To only enable the debug logging of SQL queries, use `DEBUG=sql`.

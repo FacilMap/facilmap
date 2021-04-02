@@ -5,7 +5,8 @@ open-source map based on [OpenStreetMap](https://openstreetmap.org/). Features i
   [OpenCycleMap](https://opencyclemap.org/), [Hike & Bike map](http://hikebikemap.org/).
 * [Public Transportation](http://openptmap.org/) and hillshading overlays.
 * Search and calculate routes. Routes are fully draggable. (Uses [Nominatim](http://wiki.openstreetmap.org/wiki/Nominatim),
-  [Mapbox](https://www.mapbox.com/api-documentation/#directions), [OSRM](http://project-osrm.org/).)
+  [OSRM](http://project-osrm.org/), [OpenRouteService](https://openrouteservice.org/),
+  [Leaflet.DraggableLines](https://github.com/FacilMap/Leaflet.DraggableLines).)
 * Show GPX/KML/OSM/GeoJSON files on the map (use `Tools` → `Import File`, type a URL into the search field, or simply
   drag and drop a file onto the map)
 * Show additional information about places (for example opening hours or a link to the website). Press the map for
@@ -13,7 +14,7 @@ open-source map based on [OpenStreetMap](https://openstreetmap.org/). Features i
 * Zoom to the location of your device and follow it. (Uses [leaflet-locatecontrol](https://github.com/domoritz/leaflet-locatecontrol).)
 * Create a collaborative map under a custom link where you and others can add markers, draw lines, save routes and
   import GPX/KML/OSM/GeoJSON files
-    * Every map has two links, a read-only one and one where it can be edited. Everyone who has the link can access the map
+    * Every map has three links, a read-only link, an editable link and an admin link. Everyone who has the link can access the map
       (similar to [Etherpad](http://etherpad.org/), just for maps).
     * Live collaboration. All changes to the map are immediately visible to everyone who is looking at it (using
       [socket.io](http://socket.io/)).
@@ -23,13 +24,13 @@ open-source map based on [OpenStreetMap](https://openstreetmap.org/). Features i
       of the markers and lines automatically, and a legend is generated automatically to explain what the different
       styles stand for.
     * The current map view can be saved for others to open.
-    * Map objects that do not fit a certain filter expression can be hidden (using [Filtrex](https://github.com/joewalnes/filtrex))
-    * There is a modification history and changes can be undone
+    * Map objects that do not fit a certain filter expression can be hidden (using [Filtrex](https://github.com/m93a/filtrex)).
+    * There is a modification history and changes can be undone.
 * Can be easily run on your server or embedded into your website (see below).
 
-On the client side, FacilMap relies heavily on [AngularJS](https://angularjs.org/), [Leaflet](http://leafletjs.com/)
+On the client side, FacilMap relies heavily on [Vue.js](https://vuejs.org/), [Leaflet](http://leafletjs.com/)
 and [Bootstrap](https://getbootstrap.com/). On the server side, it uses [Node.js](https://nodejs.org/),
-[Sequelize](http://sequelizejs.com/) and [socket.io](http://socket.io/).
+[Sequelize](http://sequelizejs.com/) and [socket.io](http://socket.io/). FacilMap is written in [TypeScript](https://www.typescriptlang.org/).
 
 
 Developer documentation
@@ -39,3 +40,14 @@ Developer documentation
 * [Run the FacilMap server yourself](./server/README.md)
 * [Use the FacilMap client](./client/README.md) to receive changes and add/update/remove objects to/from a FacilMap
   programmatically from a JavaScript web or server application.
+
+
+Quick start
+-----------
+
+1. Run `yarn install` to install the dependencies
+2. Run `yarn build` to build the JS bundles
+3. Copy `config.env.example` to `config.env` and adjust the settings
+4. Run `yarn server` inside the `server` directory
+
+More details can be found under [Run the FacilMap server yourself](./server/README.md).

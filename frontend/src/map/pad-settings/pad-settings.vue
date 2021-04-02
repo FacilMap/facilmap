@@ -41,7 +41,7 @@
 		</ValidationProvider>
 
 		<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-			<b-form-group label="Read-only link link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
+			<b-form-group label="Read-only link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="read-link-input" v-model="padData.id" :state="v | validationState"></b-form-input>
 					<b-input-group-append>

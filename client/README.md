@@ -27,8 +27,8 @@ npm install -S facilmap-client
 or load the client directly from facilmap.org (along with socket.io, which is needed by facilmap-client):
 
 ```html
-<script src="https://unpkg.com/socket.io-client@3/dist/socket.io.js"></script>
-<script src="https://facilmap.org/client.js"></script>
+<script src="https://unpkg.com/socket.io-client@4"></script>
+<script src="https://unpkg.com/facilmap-client@3"></script>
 ```
 
 The client class will be available as the global `FacilMap.Client` variable.
