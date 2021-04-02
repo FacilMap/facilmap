@@ -23,7 +23,7 @@ module.exports = (env: any, argv: any): Configuration => {
 			table: includeHotMiddleware(__dirname + "/src/table/table.ts", isDev)
 		},
 		output: {
-			filename: "frontend-[name].js",
+			filename: "frontend-[name]-[hash].js",
 			path: __dirname + "/dist/"
 		},
 		resolve: {

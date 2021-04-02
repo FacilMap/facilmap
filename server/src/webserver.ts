@@ -72,7 +72,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.use(domainMiddleware);
 	app.use(compression());
 
-	app.get("/bundle-:hash.js", function(req, res, next) {
+	app.get("/frontend-:hash.js", function(req, res, next) {
 		res.setHeader('Cache-Control', 'public, max-age=31557600'); // one year
 
 		next();
