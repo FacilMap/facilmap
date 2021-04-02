@@ -1,3 +1,7 @@
+**This is the outdated version 2 of FacilMap. Find the newest version of FacilMap on the [master branch](https://github.com/FacilMap/facilmap) or in the [facilmap/facilmap](https://hub.docker.com/r/facilmap/facilmap) Docker image.**
+
+----
+
 [**FacilMap**](https://facilmap.org/) is an online map that aims to bring together many useful functions in a usable and pretty way onto an
 open-source map based on [OpenStreetMap](https://openstreetmap.org/). Features include:
 
