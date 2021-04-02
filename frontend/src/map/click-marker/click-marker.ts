@@ -30,12 +30,12 @@ export default class ClickMarker extends Vue {
 
 	mounted(): void {
 		this.layers = [];
-		this.mapContext.$on("fm-map-click", this.handleMapClick);
+		this.mapContext.$on("fm-map-long-click", this.handleMapLongClick);
 		this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
 	}
 
 	beforeDestroy(): void {
-		this.mapContext.$off("fm-map-click", this.handleMapClick);
+		this.mapContext.$off("fm-map-long-click", this.handleMapLongClick);
 		this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
 	}
 
@@ -62,7 +62,7 @@ export default class ClickMarker extends Vue {
 		}
 	}
 
-	async handleMapClick(pos: Point): Promise<void> {
+	async handleMapLongClick(pos: Point): Promise<void> {
 		const now = Date.now();
 		if (now - this.lastClick < 500) {
 			// Hacky solution to avoid markers being created when the user double-clicks the map. If multiple clicks happen less than 500 ms from each

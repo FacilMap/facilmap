@@ -11,7 +11,7 @@ export interface MapContextEvents {
 	"fm-route-set-from": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-add-via": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
 	"fm-route-set-to": [query: string, searchSuggestions?: SearchResult[], mapSuggestions?: FindOnMapResult[], selectedSuggestion?: SearchResult | FindOnMapResult];
-	"fm-map-click": [point: Point];
+	"fm-map-long-click": [point: Point];
 }
 
 export interface EventBus {

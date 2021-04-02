@@ -37,6 +37,10 @@ declare module "leaflet" {
 	namespace Control {
 		const Heightgraph: any;
 	}
+
+	namespace Draggable {
+		const _dragging: Draggable;
+	}
 }
 
 declare module "vue" {

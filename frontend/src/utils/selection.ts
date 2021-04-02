@@ -1,5 +1,5 @@
 import { ID, SearchResult } from "facilmap-types";
-import { Browser, DomEvent, Evented, Handler, LatLng, LeafletEvent, Map, Util } from "leaflet";
+import { DomEvent, Evented, Handler, LeafletEvent, Map, Point, Util } from "leaflet";
 import { LinesLayer, MarkersLayer, SearchResultsLayer } from "facilmap-leaflet";
 
 export type SelectedItem = {
@@ -60,10 +60,8 @@ export default class SelectionHandler extends Handler {
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
-		if (Browser.touch && !Browser.pointer) // Long click will call the contextmenu event
-			this._map.on("contextmenu", this.handleMapContextMenu);
-		else
-			this._map.on("mousedown", this.handleMapMouseDown);
+		this._map.getContainer().addEventListener("mousedown", this.handleMapMouseDown);
+		this._map.getContainer().addEventListener("touchstart", this.handleMapMouseDown);
 	}
 
 	removeHooks(): void {
@@ -74,8 +72,8 @@ export default class SelectionHandler extends Handler {
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
-		this._map.off("contextmenu", this.handleMapContextMenu);
-		this._map.off("mousedown", this.handleMapMouseDown);
+		this._map.getContainer().removeEventListener("mousedown", this.handleMapMouseDown);
+		this._map.getContainer().removeEventListener("touchstart", this.handleMapMouseDown);
 	}
 
 	addSearchResultLayer(layer: SearchResultsLayer): void {
@@ -181,46 +179,46 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems([]);
 	}
 
-	handleMapContextMenu = (e: any): void => {
-		this.fire("fmMapClick", e);
-	}
+	handleMapMouseDown = (e: MouseEvent | TouchEvent): void => {
+		if ("button" in e && e.button != null && e.button != 0) // Only react to left click
+			return;
+		if ("touches" in e && e.touches && e.touches.length != 1)
+			return;
 
-	handleMapMouseDown = (e: any): void => {
-        if(e.originalEvent.which != 1) // Only react to left click
-            return;
-
-        const pos: LatLng = e.containerPoint;
-        const timeout = setTimeout(() => {
+		const pos: Point = this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any);
+		const timeout = setTimeout(() => {
 			this._isLongClick = true;
-            this.fire("fmMapClick", e);
-        }, 500);
+			this.fire("fmLongClick", { latlng: this._map.mouseEventToLatLng(("touches" in e ? e.touches[0] : e) as any) });
+		}, 500);
 
-        const handleMouseMove = (e: any) => {
-            if(pos.distanceTo(e.containerPoint) > (this._map.dragging as any)._draggable.options.clickTolerance)
+		const handleMouseMove = (e: any) => {
+			if(pos.distanceTo(this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any)) > (this._map.dragging as any)._draggable.options.clickTolerance)
 				clear();
-        };
+		};
 
 		const handleContextMenu = (e: any) => {
 			DomEvent.preventDefault(e);
 		}
 
-        const clear = () => {
+		const clear = () => {
 			clearTimeout(timeout);
-			this._map.off("mousemove", handleMouseMove);
-			this._map.off("mouseup", clear);
-			this._map.off("contextmenu", handleContextMenu);
+			this._map.getContainer().removeEventListener("mousemove", handleMouseMove);
+			this._map.getContainer().removeEventListener("touchmove", handleMouseMove);
+			this._map.getContainer().removeEventListener("mouseup", clear);
+			this._map.getContainer().removeEventListener("touchend", clear);
+			this._map.getContainer().removeEventListener("contextmenu", handleContextMenu);
 
 			setTimeout(() => {
 				this._isLongClick = false;
 			}, 0);
 		}
 
-        this._map.on("mousemove", handleMouseMove);
-		this._map.on("touchmove", handleMouseMove);
-        this._map.on("mouseup", clear);
-		this._map.on("touchend", clear);
-		this._map.on("contextmenu", handleContextMenu);
-    }
+		this._map.getContainer().addEventListener("mousemove", handleMouseMove);
+		this._map.getContainer().addEventListener("touchmove", handleMouseMove);
+		this._map.getContainer().addEventListener("mouseup", clear);
+		this._map.getContainer().addEventListener("touchend", clear);
+		this._map.getContainer().addEventListener("contextmenu", handleContextMenu);
+	}
 
 	handleMapInteractionStart = (): void => {
 		this._mapInteraction++;

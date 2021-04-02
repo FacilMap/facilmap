@@ -181,8 +181,8 @@ export default class LeafletMap extends Vue {
             }
         });
 
-        selectionHandler.on("fmMapClick", (event: any) => {
-            this.mapContext.$emit("fm-map-click", { lat: event.latlng.lat, lon: event.latlng.lng });
+        selectionHandler.on("fmLongClick", (event: any) => {
+            this.mapContext.$emit("fm-map-long-click", { lat: event.latlng.lat, lon: event.latlng.lng });
         });
     }
 
