@@ -89,9 +89,9 @@ export const overlays: Record<string, Layer> = {
         noWrap: true
     }),
 
-    Rlie: L.tileLayer("https://maps.heigit.org/openmapsurfer/tiles/asterh/webmercator/{z}/{x}/{y}.png", {
+    Rlie: L.tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
+        maxZoom: 16,
         fmName: "Relief",
-        attribution: '© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="http://www.meti.go.jp/english/press/data/20090626_03.html" target="_blank">METI</a> / <a href="https://lpdaac.usgs.gov/products/aster_policies" target="_blank">NASA</a>',
         zIndex: 300,
         noWrap: true
     }),
