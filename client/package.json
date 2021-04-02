@@ -1,6 +1,6 @@
 {
   "name": "facilmap-client",
-  "version": "3.0.0-beta2",
+  "version": "3.0.0-beta3",
   "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
   "keywords": [
     "webpack",
@@ -26,7 +26,7 @@
     "dev-server": "webpack-dev-server  --mode development"
   },
   "dependencies": {
-    "facilmap-types": "3.0.0-beta2",
+    "facilmap-types": "3.0.0-beta3",
     "socket.io-client": "^4.0.0"
   },
   "devDependencies": {
