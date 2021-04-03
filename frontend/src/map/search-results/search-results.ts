@@ -177,6 +177,8 @@ export default class SearchResults extends Vue {
 
 				if("fmProperties" in result && result.fmProperties) { // Import GeoJSON
 					Object.assign(obj, result.fmProperties);
+					if (result.fmProperties.data)
+						obj.data = new StringMap(result.fmProperties.data);
 					delete obj.typeId;
 				} else {
 					obj.data = mapSearchResultToType(result, type)
