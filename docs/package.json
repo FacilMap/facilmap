@@ -1,0 +1,18 @@
+{
+  "name": "facilmap-docs",
+  "version": "0.0.1",
+  "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
+  "author": "Candid Dauth <cdauth@cdauth.eu>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FacilMap/facilmap2.git"
+  },
+  "license": "AGPL-3.0",
+  "scripts": {
+    "dev-server": "vuepress dev src",
+    "build": "vuepress build src"
+  },
+  "devDependencies": {
+    "vuepress": "^1.5.3"
+  }
+}
