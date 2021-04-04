@@ -49,7 +49,7 @@
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider v-if="type.type == 'marker'" name="Default icon" v-slot="v" :rules="type.symbolFixed ? 'required|symbol' : 'symbol'">
+		<ValidationProvider v-if="type.type == 'marker'" name="Default icon" v-slot="v" rules="symbol">
 			<b-form-group label="Default icon" label-for="fm-edit-type-default-symbol-input" label-cols-sm="3" :state="v | validationState">
 				<b-row align-v="center">
 					<b-col><SymbolField id="fm-edit-type-default-symbol-input" v-model="type.defaultSymbol" :disabled="!canControl('symbol')" :state="v | validationState"></SymbolField></b-col>
@@ -59,7 +59,7 @@
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider v-if="type.type == 'marker'" name="Default shape" v-slot="v" :rules="type.shapeFixed ? 'required|shape' : 'shape'">
+		<ValidationProvider v-if="type.type == 'marker'" name="Default shape" v-slot="v" rules="shape">
 			<b-form-group label="Default shape" label-for="fm-edit-type-default-shape-input" label-cols-sm="3" :state="v | validationState">
 				<b-row align-v="center">
 					<b-col><ShapeField id="fm-edit-type-default-shape-input" v-model="type.defaultShape" :disabled="!canControl('shape')" :state="v | validationState"></ShapeField></b-col>
