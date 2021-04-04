@@ -26,31 +26,32 @@
 	for(let type of Object.values(types)) {
 -%>
 			<h2 role="button" data-toggle="collapse" data-target="#type-<%=type.id%>" aria-expanded="true" aria-controls="type-<%=type.id%>"><svg class="hidden-print" viewbox="0 0 11 15" height="15"><path d="M10.195 7.5l-7.5 7.5L0 12.305 4.805 7.5 0 2.695 2.695 0z"/></svg> <%=type.name%></h2>
-			<table id="type-<%=type.id%>" class="collapse in table table-striped table-bordered table-condensed tablesorter" data-sortlist="[[0,0]]">
-				<thead>
-					<tr>
+			<div id="type-<%=type.id%>" class="collapse show">
+				<table class="table table-striped table-bordered table-condensed tablesorter" data-sortlist="[[0,0]]">
+					<thead>
+						<tr>
 <%
 		if(!hide.includes("Name")) {
 -%>
-						<th>Name</th>
+							<th>Name</th>
 <%
 		}
 
 		if(type.type == "marker") {
 			if(!hide.includes("Position")) {
 -%>
-						<th data-sorter="false">Position</th>
+							<th data-sorter="false">Position</th>
 <%
 			}
 		} else {
 			if(!hide.includes("Distance")) {
 -%>
-						<th>Distance</th>
+							<th>Distance</th>
 <%
 			}
 			if(!hide.includes("Time")) {
 -%>
-						<th>Time</th>
+							<th>Time</th>
 <%
 			}
 		}
@@ -58,40 +59,40 @@
 		for(let field of type.fields) {
 			if(!hide.includes(field.name)) {
 -%>
-						<th><%=field.name%></th>
+							<th><%=field.name%></th>
 <%
 			}
 		}
 -%>
-					</tr>
-				</thead>
-				<tbody>
+						</tr>
+					</thead>
+					<tbody>
 <%
 		for(let object of type.type == "marker" ? type.markers : type.lines) {
 -%>
-					<tr>
+						<tr>
 <%
 			if(!hide.includes("Name")) {
 -%>
-						<td><%=object.name%></td>
+							<td><%=object.name%></td>
 <%
 			}
 
 			if(type.type == "marker") {
 				if(!hide.includes("Position")) {
 -%>
-						<td><%=object.lat%>,<%=object.lon%></td>
+							<td><%=object.lat%>,<%=object.lon%></td>
 <%
 				}
 			} else {
 				if(!hide.includes("Distance")) {
 -%>
-						<td><%=utils.round(object.distance, 2)%> km</td>
+							<td><%=utils.round(object.distance, 2)%> km</td>
 <%
 				}
 				if(!hide.includes("Time")) {
 -%>
-						<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%> h <%=utils.formatRouteMode(object.mode)%><% } %></td>
+							<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%> h <%=utils.formatRouteMode(object.mode)%><% } %></td>
 <%
 				}
 			}
@@ -99,17 +100,18 @@
 			for(let field of type.fields) {
 				if(!hide.includes(field.name)) {
 -%>
-						<td><%-utils.formatField(field, object.data[field.name]).trim()%></td>
+							<td><%-utils.formatField(field, object.data[field.name]).trim()%></td>
 <%
 				}
 			}
 -%>
-					</tr>
+						</tr>
 <%
 		}
 -%>
-				</tbody>
-			</table>
+					</tbody>
+				</table>
+			</div>
 <%
 	}
 -%>
