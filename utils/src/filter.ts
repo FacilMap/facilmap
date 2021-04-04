@@ -2,7 +2,7 @@ import { compileExpression as filtrexCompileExpression } from 'filtrex';
 import { clone, flattenObject, getProperty, quoteRegExp } from "./utils";
 import { ID, Marker, Line, Type, Field } from "facilmap-types";
 
-export type FilterFunc = (obj: any) => boolean;
+export type FilterFunc = (obj: Marker<any> | Line<any>, type: Type) => boolean;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
@@ -23,9 +23,11 @@ export function filterHasError(expr: string): Error | undefined {
 
 export function compileExpression(expr?: string): FilterFunc {
 	if(!expr || !expr.trim())
-		return function() { return true; };
-	else
-		return filtrexCompileExpression(expr, { extraFunctions: customFuncs });
+		return () => true;
+	else {
+		const filterFunc = filtrexCompileExpression(expr, { extraFunctions: customFuncs });
+		return (obj, type) => filterFunc(prepareObject(obj, type));
+	}
 }
 
 export function quote(str: string): string {
@@ -99,17 +101,20 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 	return ret;
 }
 
-export function prepareObject<T extends Marker | Line>(obj: T, type: Type): T & { type?: Type["type"] } {
+export function prepareObject<T extends Marker | Marker<Map<string, string>> | Line | Line<Map<string, string>>>(obj: T, type: Type): T & { type?: Type["type"] } {
 	obj = clone(obj);
 
 	for (const field of type.fields) {
 		if (Object.getPrototypeOf(obj.data)?.set)
-			(obj.data as any).set(field.name, normalizeField(field, (obj.data as any).get(field.name), true));
+			(obj.data as any).set(field.name, normalizeField(field, (obj.data as any).get(field.name)));
 		else
-			obj.data[field.name] = normalizeField(field, obj.data[field.name], true);
+			(obj.data as any)[field.name] = normalizeField(field, (obj.data as any)[field.name]);
 	}
 
-	const ret = flattenObject(obj) as T & { type?: Type["type"] };
+	const ret = {
+		...flattenObject(obj),
+		...obj
+	} as T & { type?: Type["type"] };
 
 	if(type)
 		ret.type = type.type;
@@ -117,14 +122,14 @@ export function prepareObject<T extends Marker | Line>(obj: T, type: Type): T & 
 	return ret;
 }
 
-export function normalizeField(field: Field, value: string, enforceExistingOption: boolean): string {
+export function normalizeField(field: Field, value: string): string {
 	if(value == null)
 		value = field['default'] || "";
 
 	if(field.type == "checkbox")
 		value = value == "1" ? "1" : "0";
 
-	if(enforceExistingOption && field.type == "dropdown" && !field.options?.some((option) => option.value == value) && field.options?.[0])
+	if(field.type == "dropdown" && !field.options?.some((option) => option.value == value) && field.options?.[0])
 		value = field.options[0].value;
 
 	return value;

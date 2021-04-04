@@ -18,7 +18,7 @@ export function drawMarker(type: Type, component: Vue, client: Client, mapCompon
 
 			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
-			if (!mapComponents.map.fmFilterFunc(marker))
+			if (!mapComponents.map.fmFilterFunc(marker, client.types[marker.typeId]))
 				showToast(component, getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
 		} catch (err) {
 			showErrorToast(component, "fm-draw-add-marker", "Error adding marker", err);
@@ -102,7 +102,7 @@ export async function drawLine(type: Type, component: Vue, client: Client, mapCo
 			const line = await client.addLine({ typeId: type.id, routePoints });
 			mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 
-			if (!mapComponents.map.fmFilterFunc(line))
+			if (!mapComponents.map.fmFilterFunc(line, client.types[line.typeId]))
 				showToast(component, getUniqueId("fm-draw-add-line"), `${type.name} successfully added`, "The line was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
 		}
 	} catch (err) {

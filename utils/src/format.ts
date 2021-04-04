@@ -13,7 +13,7 @@ marked.setOptions({
 });
 
 export function formatField(field: Field, value: string): string {
-	value = normalizeField(field, value, false);
+	value = normalizeField(field, value);
 	switch(field.type) {
 		case "textarea":
 			return markdownBlock(value);

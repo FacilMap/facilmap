@@ -47,7 +47,7 @@ export default class MarkersLayer extends MarkerCluster {
 	}
 
 	handleMarker = (marker: Marker): void => {
-		if(this._map.fmFilterFunc(marker))
+		if(this._map.fmFilterFunc(marker, this.client.types[marker.typeId]))
 			this._addMarker(marker);
 	};
 
@@ -58,7 +58,7 @@ export default class MarkersLayer extends MarkerCluster {
 	handleFilter = (): void => {
 		for(const i of numberKeys(this.client.markers)) {
 			if (!this.lockedMarkerIds.has(i)) {
-				const show = this._map.fmFilterFunc(this.client.markers[i]);
+				const show = this._map.fmFilterFunc(this.client.markers[i], this.client.types[this.client.markers[i].typeId]);
 				if(this.markersById[i] && !show)
 					this._deleteMarker(this.client.markers[i]);
 				else if(!this.markersById[i] && show)
@@ -120,7 +120,7 @@ export default class MarkersLayer extends MarkerCluster {
 	unlockMarker(id: ID): void {
 		this.lockedMarkerIds.delete(id);
 
-		if (this._map.fmFilterFunc(this.client.markers[id]))
+		if (this._map.fmFilterFunc(this.client.markers[id], this.client.types[this.client.markers[id].typeId]))
 			this._addMarker(this.client.markers[id]);
 		else
 			this._deleteMarker(this.client.markers[id]);

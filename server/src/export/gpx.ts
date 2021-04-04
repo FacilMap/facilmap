@@ -3,7 +3,7 @@ import { compile } from "ejs";
 import fs from "fs";
 import Database from "../database/database";
 import { Field, PadId, Type } from "facilmap-types";
-import { compileExpression, prepareObject, quoteHtml } from "facilmap-utils";
+import { compileExpression, quoteHtml } from "facilmap-utils";
 import { LineWithTrackPoints } from "../database/line";
 import { keyBy } from "lodash";
 import highland from "highland";
@@ -35,8 +35,8 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 		if (!padData)
 			throw new Error(`Pad ${padId} could not be found.`);
 
-		const markers = database.markers.getPadMarkers(padId).filter((marker) => filterFunc(prepareObject(marker, types[marker.typeId])));
-		const lines = database.lines.getPadLinesWithPoints(padId).filter((line) => filterFunc(prepareObject(line, types[line.typeId])));
+		const markers = database.markers.getPadMarkers(padId).filter((marker) => filterFunc(marker, types[marker.typeId]));
+		const lines = database.lines.getPadLinesWithPoints(padId).filter((line) => filterFunc(line, types[line.typeId]));
 
 		return highland([
 			`<?xml version="1.0" encoding="UTF-8"?>\n` +

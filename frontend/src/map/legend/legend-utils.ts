@@ -38,7 +38,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 			continue;
 
 		const items: LegendItem[] = [ ];
-		const fields: Record<string, string[]> = { };
+		const fields: Record<string, string[]> = Object.create(null);
 
 		if (type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
 			const item: LegendItem = { value: type.name, label: type.name, filtered: true };
@@ -111,7 +111,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 
 		// Check which fields are filtered
 		allCombinations(fields, (data) => {
-			if(mapContext.filterFunc({ typeId: legendType.typeId, data: data })) {
+			if(mapContext.filterFunc({ typeId: legendType.typeId, data } as any, type)) {
 				legendType.filtered = false;
 
 				for (const item of items) {
@@ -147,5 +147,5 @@ function allCombinations(fields: Record<string, string[]>, callback: (data: Reco
 		}
 	}
 
-	rec(0, { });
+	rec(0, Object.create(null));
 }

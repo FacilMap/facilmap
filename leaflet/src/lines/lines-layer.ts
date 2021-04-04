@@ -47,13 +47,13 @@ export default class LinesLayer extends FeatureGroup {
 	}
 
 	handleLine = (line: Line): void => {
-		if(!this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line))
+		if(!this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line, this.client.types[line.typeId]))
 			this._addLine(this.client.lines[line.id]);
 	};
 
 	handleLinePoints = (event: LinePointsEvent): void => {
 		const line = this.client.lines[event.id];
-		if(line && !this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line))
+		if(line && !this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line, this.client.types[line.typeId]))
 			this._addLine(this.client.lines[line.id]);
 	};
 
@@ -63,7 +63,7 @@ export default class LinesLayer extends FeatureGroup {
 
 	handleFilter = (): void => {
 		for(const i of numberKeys(this.client.lines)) {
-			const show = !this.hiddenLinesIds.has(i) && this._map.fmFilterFunc(this.client.lines[i]);
+			const show = !this.hiddenLinesIds.has(i) && this._map.fmFilterFunc(this.client.lines[i], this.client.types[this.client.lines[i].typeId]);
 			if(this.linesById[i] && !show)
 				this._deleteLine(this.client.lines[i]);
 			else if(!this.linesById[i] && show)

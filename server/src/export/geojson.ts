@@ -1,6 +1,6 @@
 import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams";
 import { clone } from "../utils/utils";
-import { compileExpression, prepareObject } from "facilmap-utils";
+import { compileExpression } from "facilmap-utils";
 import { Marker, PadId } from "../../../types/src";
 import Database from "../database/database";
 import { keyBy, mapValues, omit } from "lodash";
@@ -22,11 +22,11 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 		const types = keyBy(await streamToArrayPromise(database.types.getTypes(padId)), "id");
 
 		const markers = database.markers.getPadMarkers(padId)
-			.filter((marker) => filterFunc(prepareObject(marker, types[marker.typeId])))
+			.filter((marker) => filterFunc(marker, types[marker.typeId]))
 			.map(markerToGeoJson);
 
 		const lines = database.lines.getPadLinesWithPoints(padId)
-			.filter((line) => filterFunc(prepareObject(line, types[line.typeId])))
+			.filter((line) => filterFunc(line, types[line.typeId]))
 			.map(lineToGeoJson);
 
 		return jsonStream({

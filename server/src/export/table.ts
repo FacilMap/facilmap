@@ -3,7 +3,7 @@ import { promiseAuto } from "../utils/utils";
 import ejs from "ejs";
 import { getFrontendFile } from "../webserver";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
-import { compileExpression, prepareObject } from "facilmap-utils";
+import { compileExpression } from "facilmap-utils";
 import * as utils from "facilmap-utils";
 import Database from "../database/database";
 
@@ -32,14 +32,14 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 
 		markers: (types) => {
 			return streamEachPromise(database.markers.getPadMarkers(padId), (marker: Marker) => {
-				if(filterFunc(prepareObject(marker, types[marker.typeId])))
+				if(filterFunc(marker, types[marker.typeId]))
 					types[marker.typeId].markers.push(marker);
 			});
 		},
 
 		lines: (types) => {
 			return streamEachPromise(database.lines.getPadLines(padId), (line: Line) => {
-				if(filterFunc(prepareObject(line, types[line.typeId])))
+				if(filterFunc(line, types[line.typeId]))
 					types[line.typeId].lines.push(line);
 			});
 		},

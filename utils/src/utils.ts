@@ -102,12 +102,12 @@ export function encodeQueryString(obj: Record<string, string>): string {
 
 function applyPrototypes(source: any, target: any): void {
 	if (typeof source === 'object' && source != null) {
-		Object.setPrototypeOf(target, Object.getPrototypeOf(source));
-
 		if (Array.isArray(source)) {
 			for (let i = 0; i < source.length; i++)
 				applyPrototypes(source[i], target[i]);
 		} else {
+			Object.setPrototypeOf(target, Object.getPrototypeOf(source));
+
 			for (const key of Object.keys(source))
 				applyPrototypes(source[key], target[key]);
 		}
@@ -132,6 +132,11 @@ export function* numberKeys(obj: Record<number, any>): Generator<number> {
 	}
 }
 
-export function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
-	return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : (undefined as any);
+export function getProperty<K, V, T extends Map<K, V>>(obj: T, key: K): V;
+export function getProperty<T, K extends keyof T>(obj: T, key: K): T[K]; // eslint-disable-line no-redeclare
+export function getProperty(obj: any, key: any): any { // eslint-disable-line no-redeclare
+	if (Object.getPrototypeOf(obj)?.get)// This is an ES6 map
+		return obj.get(key);
+	else
+		return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : (undefined as any);
 }
