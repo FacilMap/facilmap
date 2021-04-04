@@ -22,7 +22,8 @@
 		margin: 10px -8px;
 	}
 	
-	dl {
+	&#{&}#{&} dl {
+		display: block; // Override display: grid from search-box styles
 		margin-bottom: 0px;
 	}
 	
