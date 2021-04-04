@@ -24,6 +24,7 @@ export default class SearchResultInfo extends Vue {
 
 	@Prop({ type: Object, required: true }) result!: SearchResult | FileResult;
 	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
+	@Prop({ type: Boolean, default: false }) isAdding!: boolean;
 
 	renderOsmTag = renderOsmTag;
 

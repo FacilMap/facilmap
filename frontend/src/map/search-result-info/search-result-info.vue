@@ -25,10 +25,17 @@
 	<b-button-toolbar>
 		<b-button v-b-tooltip.hover="'Zoom to search result'" @click="zoomToResult()" size="sm"><Icon icon="zoom-in" alt="Zoom to search result"></Icon></b-button>
 
-		<b-dropdown v-if="!client.readonly && types.length > 1" text="Add to map" size="sm">
+		<b-dropdown v-if="!client.readonly && types.length > 1" :disabled="isAdding" size="sm">
+			<template #button-content>
+				<b-spinner small v-if="isAdding"></b-spinner>
+				Add to map
+			</template>
 			<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
 		</b-dropdown>
-		<b-button v-if="!client.readonly && types.length == 1" @click="$emit('add-to-map', types[0])" size="sm">Add to map</b-button>
+		<b-button v-if="!client.readonly && types.length == 1" @click="$emit('add-to-map', types[0])" size="sm" :disabled="isAdding">
+			<b-spinner small v-if="isAdding"></b-spinner>
+			Add to map
+		</b-button>
 
 		<b-dropdown v-if="isMarker && context.search" text="Use as" size="sm">
 			<b-dropdown-item href="javascript:" @click="$emit('use-as-from')">Route start</b-dropdown-item>

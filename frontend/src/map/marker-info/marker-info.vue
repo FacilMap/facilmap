@@ -24,9 +24,12 @@
 			<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
 		</b-dropdown>
 
-		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-marker-info-edit :disabled="isSaving || mapContext.interaction">Edit data</b-button>
-		<b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isSaving || mapContext.interaction">Move</b-button>
-		<b-button v-if="!client.readonly" size="sm" @click="deleteMarker()" :disabled="isSaving || mapContext.interaction">Remove</b-button>
+		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-marker-info-edit :disabled="isDeleting || mapContext.interaction">Edit data</b-button>
+		<b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isDeleting || mapContext.interaction">Move</b-button>
+		<b-button v-if="!client.readonly" size="sm" @click="deleteMarker()" :disabled="isDeleting || mapContext.interaction">
+			<b-spinner small v-if="isDeleting"></b-spinner>
+			Remove
+		</b-button>
 	</b-button-toolbar>
 
 	<EditMarker id="fm-marker-info-edit" :markerId="markerId"></EditMarker>

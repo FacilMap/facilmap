@@ -26,7 +26,7 @@ export default class MarkerInfo extends Vue {
 
 	@Prop({ type: IdType, required: true }) markerId!: ID;
 
-	isSaving = false;
+	isDeleting = false;
 
 	get marker(): Marker<StringMap> | undefined {
 		return this.client.markers[this.markerId];
@@ -46,13 +46,13 @@ export default class MarkerInfo extends Vue {
 		if (!this.marker || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove the marker “${this.marker.name}”?`))
 			return;
 		
-		this.isSaving = true;
+		this.isDeleting = true;
 		try {
 			await this.client.deleteMarker({ id: this.markerId });
 		} catch (err) {
 			showErrorToast(this, "fm-marker-info-delete", "Error deleting marker", err);
 		} finally {
-			this.isSaving = false;
+			this.isDeleting = false;
 		}
 	}
 

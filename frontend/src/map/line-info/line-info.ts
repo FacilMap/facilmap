@@ -29,7 +29,7 @@ export default class LineInfo extends Vue {
 
 	@Prop({ type: IdType, required: true }) lineId!: ID;
 
-	isSaving = false;
+	isDeleting = false;
 	showElevationPlot = false;
 	isMoving = false;
 
@@ -43,13 +43,13 @@ export default class LineInfo extends Vue {
 		if (!this.line || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove the line “${this.line.name}”?`))
 			return;
 		
-		this.isSaving = true;
+		this.isDeleting = true;
 		try {
 			await this.client.deleteLine({ id: this.lineId });
 		} catch (err) {
 			showErrorToast(this, "fm-line-info-delete", "Error deleting line", err);
 		} finally {
-			this.isSaving = false;
+			this.isDeleting = false;
 		}
 	}
 

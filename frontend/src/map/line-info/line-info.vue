@@ -46,11 +46,14 @@
 			>Export as GPX route</b-dropdown-item>
 		</b-dropdown>
 
-		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-line-info-edit :disabled="isSaving || mapContext.interaction">Edit data</b-button>
+		<b-button v-if="!client.readonly" size="sm" v-b-modal.fm-line-info-edit :disabled="isDeleting || mapContext.interaction">Edit data</b-button>
 		
-		<b-button v-if="!client.readonly && line.mode != 'track'" size="sm" @click="moveLine()" :disabled="isSaving || mapContext.interaction">Edit waypoints</b-button>
+		<b-button v-if="!client.readonly && line.mode != 'track'" size="sm" @click="moveLine()" :disabled="isDeleting || mapContext.interaction">Edit waypoints</b-button>
 		
-		<b-button v-if="!client.readonly" size="sm" @click="deleteLine()" :disabled="isSaving || mapContext.interaction">Remove</b-button>
+		<b-button v-if="!client.readonly" size="sm" @click="deleteLine()" :disabled="isDeleting || mapContext.interaction">
+			<b-spinner small v-if="isDeleting"></b-spinner>
+			Remove
+		</b-button>
 	</b-button-toolbar>
 
 	<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>

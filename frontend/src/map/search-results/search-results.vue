@@ -38,7 +38,11 @@
 			<b-button-toolbar v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0">
 				<b-button @click="toggleSelectAll" :pressed="isAllSelected">Select all</b-button>
 
-				<b-dropdown v-if="client.padData && !client.readonly" :disabled="activeSearchResults.length == 0" :text="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`">
+				<b-dropdown v-if="client.padData && !client.readonly" :disabled="activeSearchResults.length == 0 || isAdding">
+					<template #button-content>
+						<b-spinner small v-if="isAdding"></b-spinner>
+						Add selected item{{activeSearchResults.length == 1 ? '' : 's'}} to map
+					</template>
 					<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
 						<b-dropdown-item v-for="type in markerTypes" href="javascript:" @click="addToMap(activeMarkerSearchResults, type)">Marker items as {{type.name}}</b-dropdown-item>
 					</template>
@@ -58,6 +62,7 @@
 				v-if="openResult"
 				:result="openResult"
 				show-back-button
+				:is-adding="isAdding"
 				@back="closeResult()"
 				@add-to-map="addToMap([openResult], $event)"
 				@use-as-from="useAsFrom(openResult)"

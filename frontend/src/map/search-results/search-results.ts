@@ -39,6 +39,7 @@ export default class SearchResults extends Vue {
 	@Prop({ type: Object, default: () => ({}) }) customTypes!: FileResultObject["types"];
 
 	activeTab = 0;
+	isAdding = false;
 
 	get isNarrow(): boolean {
 		return context.isNarrow;
@@ -166,6 +167,7 @@ export default class SearchResults extends Vue {
 
 	async _addToMap(data: Array<{ result: SearchResult | FileResult; type: Type }>): Promise<boolean> {
 		this.$bvToast.hide("fm-search-result-info-add-error");
+		this.isAdding = true;
 
 		try {
 			const selection: SelectedItem[] = [];
@@ -223,6 +225,8 @@ export default class SearchResults extends Vue {
 		} catch (err) {
 			showErrorToast(this, "fm-search-result-info-add-error", "Error adding to map", err);
 			return false;
+		} finally {
+			this.isAdding = false;
 		}
 	}
 
