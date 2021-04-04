@@ -1,5 +1,5 @@
 *.iml
 .idea
 node_modules
-*/dist
+dist
 yarn-error.log
