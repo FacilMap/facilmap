@@ -5,7 +5,7 @@
   "author": "Candid Dauth <cdauth@cdauth.eu>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FacilMap/facilmap2.git"
+    "url": "https://github.com/FacilMap/facilmap.git"
   },
   "license": "AGPL-3.0",
   "scripts": {

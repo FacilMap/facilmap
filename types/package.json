@@ -2,16 +2,16 @@
   "name": "facilmap-types",
   "version": "3.0.0-beta3",
   "description": "Typescript typings for the FacilMap communication between client and server.",
-  "homepage": "https://github.com/FacilMap/facilmap2",
+  "homepage": "https://github.com/FacilMap/facilmap",
   "bugs": {
-    "url": "https://github.com/FacilMap/facilmap2/issues"
+    "url": "https://github.com/FacilMap/facilmap/issues"
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FacilMap/facilmap2.git"
+    "url": "https://github.com/FacilMap/facilmap.git"
   },
   "dependencies": {
     "@types/geojson": "^7946.0.7"

@@ -8,16 +8,16 @@
     "osm",
     "facilmap"
   ],
-  "homepage": "https://github.com/FacilMap/facilmap2",
+  "homepage": "https://github.com/FacilMap/facilmap",
   "bugs": {
-    "url": "https://github.com/FacilMap/facilmap2/issues"
+    "url": "https://github.com/FacilMap/facilmap/issues"
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
   "main": "./dist/client.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FacilMap/facilmap2.git"
+    "url": "https://github.com/FacilMap/facilmap.git"
   },
   "scripts": {
     "build": "webpack",
