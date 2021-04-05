@@ -36,7 +36,7 @@ export function decodeLonLatUrl(query: string): DecodedGeoQuery | undefined {
 	function decodeQueryString(str: string) {
 		let lonMatch,latMatch,leafletMatch;
 
-		if((lonMatch = str.match(/[?&]lat=([^&]+)/)) && (latMatch = str.match(/[?&]lat=([^&]+)/))) {
+		if((lonMatch = str.match(/[?&]lon=([^&]+)/)) && (latMatch = str.match(/[?&]lat=([^&]+)/))) {
 			return {
 				lat: Number(decodeURIComponent(latMatch[1])),
 				lon: Number(decodeURIComponent(lonMatch[1])),
