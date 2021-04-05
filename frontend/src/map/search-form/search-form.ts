@@ -64,7 +64,8 @@ export default class SearchForm extends Vue {
 	get zoomDestination(): ZoomDestination | undefined {
 		return getZoomDestinationForResults([
 			...(this.searchResults || []),
-			...(this.mapResults || [])
+			...(this.mapResults || []),
+			...(this.fileResult?.features || [])
 		]);
 	}
 
@@ -152,11 +153,13 @@ export default class SearchForm extends Vue {
 			this.mapComponents.selectionHandler.setSelectedItems([{ type: this.mapResults[0].kind, id: this.mapResults[0].id }])
 			if (zoom)
 				this.zoomToResult(this.mapResults[0], smooth);
-		}
-		else if (this.searchResults && this.searchResults.length > 0) {
+		} else if (this.searchResults && this.searchResults.length > 0) {
 			this.mapComponents.selectionHandler.setSelectedItems([{ type: "searchResult", result: this.searchResults[0], layerId: this.layerId }]);
 			if (zoom)
 				this.zoomToResult(this.searchResults[0], smooth);
+		} else if (this.fileResult) {
+			if (zoom)
+				this.zoomToAllResults(smooth);
 		}
 	}
 
