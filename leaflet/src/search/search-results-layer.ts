@@ -14,6 +14,7 @@ const searchMarkerColour = "000000";
 const searchMarkerSize = 35;
 
 interface SearchResultsLayerOptions extends LayerOptions {
+	weight?: number;
 }
 
 export default class SearchResultsLayer extends FeatureGroup {
@@ -74,7 +75,8 @@ export default class SearchResultsLayer extends FeatureGroup {
 					size: searchMarkerSize,
 					symbol: result.icon || '',
 					shape: ''
-				}
+				},
+				weight: this.options.weight
 			}).bindTooltip(result.display_name, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 			layer._fmSearchResult = result;
 			layer.eachLayer((l) => {

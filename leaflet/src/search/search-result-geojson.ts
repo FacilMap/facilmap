@@ -5,6 +5,7 @@ import MarkerLayer, { MarkerLayerOptions } from "../markers/marker-layer";
 
 interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 	marker?: MarkerLayerOptions['marker'];
+	weight?: number;
 	highlight?: boolean;
 	raised?: boolean;
 }
@@ -56,20 +57,36 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 
 		switch (geometry.type) {
 			case 'Point':
-				return new MarkerLayer(_coordsToLatLng(geometry.coordinates as any), { marker: this.options.marker, raised: this.options.raised, highlight: this.options.highlight });
+				return new MarkerLayer(_coordsToLatLng(geometry.coordinates as any), {
+					marker: this.options.marker,
+					raised: this.options.raised,
+					highlight: this.options.highlight
+				});
 
 			case 'MultiPoint':
 				return new FeatureGroup(geometry.coordinates.map((coords) => (
-					new MarkerLayer(_coordsToLatLng(coords as any), { marker: this.options.marker, raised: this.options.raised, highlight: this.options.highlight })
+					new MarkerLayer(_coordsToLatLng(coords as any), {
+						marker: this.options.marker,
+						raised: this.options.raised,
+						highlight: this.options.highlight
+					})
 				)));
 
 			case 'LineString':
 			case 'MultiLineString':
-				return new HighlightablePolyline(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'LineString' ? 0 : 1, _coordsToLatLng), { raised: this.options.raised, opacity: this.options.highlight ? 1 : 0.35 });
+				return new HighlightablePolyline(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'LineString' ? 0 : 1, _coordsToLatLng), {
+					raised: this.options.raised,
+					opacity: this.options.highlight ? 1 : 0.35,
+					...(this.options.weight ? { weight: this.options.weight } : {})
+				});
 
 			case 'Polygon':
 			case 'MultiPolygon':
-				return new HighlightablePolygon(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'Polygon' ? 1 : 2, _coordsToLatLng), { raised: this.options.raised, opacity: this.options.highlight ? 1 : 0.35 });
+				return new HighlightablePolygon(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'Polygon' ? 1 : 2, _coordsToLatLng), {
+					raised: this.options.raised,
+					opacity: this.options.highlight ? 1 : 0.35,
+					...(this.options.weight ? { weight: this.options.weight } : {})
+				});
 
 			case 'GeometryCollection':
 				return new FeatureGroup(geometry.geometries.map((g) => (
