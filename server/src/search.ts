@@ -478,21 +478,30 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 }
 
 async function _loadSubRelations($: cheerio.Root) {
-	const promises: Array<ReturnType<typeof request>> = [ ];
-	$("member[type='relation']").each(function(this: cheerio.Element) {
-		const relId = $(this).attr("ref");
-		if($("relation[id='" + relId + "']").length == 0) {
-			promises.push(request("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full"));
-		}
-	});
+	const loadedIds = new Set<string>();
 
-	if(promises.length > 0) {
-		const relations = await Promise.all(promises);
-		
-		for (const relation of relations) {
-			$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
-		}
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const promises: Array<ReturnType<typeof request>> = [ ];
 
-		await _loadSubRelations($);
+		$("member[type='relation']").each(function(this: cheerio.Element) {
+			const relId = $(this).attr("ref")!;
+			if(!loadedIds.has(relId)) {
+				$(this).remove(); // Remove relation from result, as it will be returned again as part of the sub request
+				promises.push(request("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full"));
+				loadedIds.add(relId);
+			}
+		});
+
+		if (promises.length == 0)
+			return;
+
+		if(promises.length > 0) {
+			const relations = await Promise.all(promises);
+			
+			for (const relation of relations) {
+				$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
+			}
+		}
 	}
 }
