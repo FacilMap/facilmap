@@ -30,34 +30,43 @@ module.exports = {
     ],
     sidebar: {
       '/users/': [
-        '',
+        {
+          title: "Overview",
+          collapsable: false,
+          children: [
+            "",
+            "help/"
+          ]
+        },
         {
           title: 'General functions',
           collapsable: false,
           children: [
-            "layers",
-            "search",
-            "route",
-            "click-marker",
-            "files",
-            "locate",
-            "privacy"
+            "ui/",
+            "layers/",
+            "search/",
+            "route/",
+            "click-marker/",
+            "files/",
+            "locate/",
+            "hash/",
+            "privacy/"
           ]
         },
         {
           title: 'Collaborative maps',
           collapsable: false,
           children: [
-            "collaborative",
-            "markers",
-            "lines",
-            "types",
-            "legend",
-            "views",
-            "filters",
-            "history",
-            "export",
-            "import"
+            "collaborative/",
+            "markers/",
+            "lines/",
+            "types/",
+            "legend/",
+            "views/",
+            "filters/",
+            "history/",
+            "export/",
+            "import/"
           ]
         },
       ],
