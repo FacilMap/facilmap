@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "vuepress": "^1.5.3"
+  },
+  "dependencies": {
+    "markdown-it-footnote": "^3.0.2"
   }
 }
