@@ -36,9 +36,7 @@
 	display: grid !important;
 	grid-template-columns: auto 1fr;
 
-	&:not(.isNarrow) {
-		opacity: 0.6;
-	}
+	opacity: 0.6;
 
 	&.isPending {
 		display: flex !important;

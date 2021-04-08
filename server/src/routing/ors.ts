@@ -9,7 +9,7 @@ const ROUTING_URL = `https://api.openrouteservice.org/v2/directions`;
 
 const ROUTING_MODES: Record<string, string> = {
 	"car-": "driving-car",
-	"car-hgv": "driving-hgv", // TODO
+	"car-hgv": "driving-hgv",
 	"bicycle-": "cycling-regular",
 	"bicycle-road": "cycling-road",
 	// "bicycle-safe": "cycling-safe",
