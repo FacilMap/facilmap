@@ -27,7 +27,7 @@ Example:
 
 ## Location hash
 
-When a FacilMap is opened directly in the browser, the current view of the map is [added to the location hash](../users/share.md) (the part after the `#` in the URL). This means that users can easily share the current view by copying the URL straight from the address bar of their browser, and reloading the page will not cause the current view to be lost.
+When a FacilMap is opened directly in the browser, the current view of the map is [added to the location hash](../users/hash/) (the part after the `#` in the URL). This means that users can easily share the current view by copying the URL straight from the address bar of their browser, and reloading the page will not cause the current view to be lost.
 
 FacilMap emits a [cross-origin message](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) every time it updates the location map. You can listen to it to synchronize the location hash of your website with the one of FacilMap by using the following script:
 

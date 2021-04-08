@@ -11,12 +11,14 @@
   "scripts": {
     "dev-server": "vuepress dev src",
     "build": "vuepress build src",
-    "deploy": "./deploy.sh"
+    "deploy": "./deploy.sh",
+    "check": "vuepress check-md src"
   },
   "devDependencies": {
-    "vuepress": "^1.5.3"
+    "markdown-it-footnote": "^3.0.2",
+    "vuepress": "^1.5.3",
+    "vuepress-plugin-check-md": "^0.0.2"
   },
   "dependencies": {
-    "markdown-it-footnote": "^3.0.2"
   }
 }
