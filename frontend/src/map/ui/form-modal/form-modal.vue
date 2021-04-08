@@ -11,7 +11,7 @@
 		@show="$emit('show')"
 		scrollable
 	>
-		<b-form @submit.prevent="observer.handleSubmit(handleSubmit)" ref="form">
+		<b-form @submit.prevent="handleSubmit(observer)" ref="form">
 			<template>
 				<slot v-bind="observer"></slot>
 			</template>
