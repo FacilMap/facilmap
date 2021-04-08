@@ -293,7 +293,8 @@ export default class DatabaseLines {
 
 	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {
 		const points = await this.LineModel.build({ id: lineId }).getLinePoints({
-			attributes: [ "lat", "lon", "ele", "zoom", "idx" ]
+			attributes: [ "lat", "lon", "ele", "zoom", "idx" ],
+			order: [["idx", "ASC"]]
 		});
 		return points.map((point) => point.toJSON() as TrackPoint);
 	}
