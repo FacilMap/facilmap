@@ -34,8 +34,11 @@
 			<b-dropdown-item v-if="client.writable == 2 && client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-pad v-b-toggle.fm-toolbox-sidebar>Settings</b-dropdown-item>
 			<b-dropdown-item v-if="!client.readonly && client.padData" href="javascript:" v-b-modal.fm-toolbox-history v-b-toggle.fm-toolbox-sidebar>Show edit history</b-dropdown-item>
 			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
-			<b-dropdown-item v-b-modal.fm-toolbox-about v-b-toggle.fm-toolbox-sidebar href="javascript:">About FacilMap</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData && interactive" :href="links.facilmap">Exit collaborative map</b-dropdown-item>
+		</b-nav-item-dropdown>
+		<b-nav-item-dropdown text="Help" right>
+			<b-dropdown-item v-b-toggle.fm-toolbox-sidebar href="https://docs.facilmap.org/users/" target="_blank">Documentation</b-dropdown-item>
+			<b-dropdown-item v-b-modal.fm-toolbox-about v-b-toggle.fm-toolbox-sidebar href="javascript:">About FacilMap</b-dropdown-item>
 		</b-nav-item-dropdown>
 	</Sidebar>
 

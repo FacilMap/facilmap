@@ -1,21 +1,8 @@
 <b-modal :id="id" :title="`About FacilMap ${fmVersion}`" ok-only ok-title="Close" size="lg" dialog-class="fm-about">
-	<p><a :href="fmHomepage" target="_blank"><strong>FacilMap</strong></a> is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>.</p>
-	<p>If something does not work or you have a suggestion for improvement, please report on the <a :href="fmBugTracker" target="_blank">issue tracker</a>.</p>
-	<h4>Privacy</h4>
-	<p>
-		FacilMap aims to be a privacy-friendly open-source alternative to commercial maps that track your data. When you use FacilMap,
-		anything you do on the map (for example pan/zoom the map, search for something, calculate a route, add a marker) is sent to the
-		FacilMap server and persisted there only if necessary for the interaction. No personally identifiable information is persisted
-		(for example your IP address). FacilMap stores the zoom preferences that you set in the search bar (auto-zoom, etc.) in the
-		localStorage of your browser, but it does not set any cookies.
-	</p>
-	<p>
-		FacilMap combines multiple third-party services (listed below under “Map data”) into one versatile map. When you use FacilMap,
-		your browser will retrieve the information provided by these services directly from there. FacilMap will send the current position
-		of the map and (for the search/route service) the search terms to those services. Your browser will send your IP address and
-		potentially some cookies that these services have set. It remains at the discretion of those third-party services what they
-		do with this data.
-	</p>
+	<p><a href="https://github.com/facilmap/facilmap" target="_blank"><strong>FacilMap</strong></a> is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>.</p>
+	<p>If something does not work or you have a suggestion for improvement, please report on the <a href="https://github.com/FacilMap/facilmap/issues" target="_blank">issue tracker</a>.</p>
+	<p>If you have a question, please have a look at the <a href="https://docs.facilmap.org/users/">documentation</a> or raise a question in the <a href="https://github.com/FacilMap/facilmap/discussions">discussion forum</a>.</p>
+	<p><a href="https://docs.facilmap.org/users/privacy/">Privacy information</a></p>
 	<h4>Map data</h4>
 	<dl class="row">
 		<template v-for="layer in layers" v-if="layer.options.attribution">

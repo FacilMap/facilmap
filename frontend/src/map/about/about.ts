@@ -16,7 +16,5 @@ export default class About extends Vue {
 
 	layers = [...Object.values(baseLayers), ...Object.values(overlays)];
 	fmVersion = packageJson.version;
-	fmHomepage = packageJson.homepage;
-	fmBugTracker = packageJson.bugs.url;
 
 }
