@@ -52,7 +52,7 @@ export default class RouteFormTab extends Vue {
 	}
 
 	setTo(...args: any[]): void {
-		(this.routeForm.addVia as any)(...args);
+		(this.routeForm.setTo as any)(...args);
 	}
 
 }
