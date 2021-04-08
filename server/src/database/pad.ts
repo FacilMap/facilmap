@@ -89,7 +89,7 @@ export default class DatabasePads {
 
 		await Promise.all([data.id, data.writeId, data.adminId].map(async (id) => {
 			if (await this.padIdExists(id))
-				throw new Error("ID '" + data.id + "' is already taken.");
+				throw new Error("ID '" + id + "' is already taken.");
 		}));
 
 		const createdObj = await this.PadModel.create(data);
