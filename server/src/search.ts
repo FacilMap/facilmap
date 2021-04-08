@@ -153,7 +153,7 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false): Promise<Array<SearchResult>> {
 	const [body, elevation] = await Promise.all([
 		request({
-			url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
+			url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
 			json: true
 		}),
 		...(loadElevation ? [getElevationForPoint(lonlatWithZoom)] : [])

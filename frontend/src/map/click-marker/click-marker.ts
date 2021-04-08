@@ -64,26 +64,13 @@ export default class ClickMarker extends Vue {
 
 	async handleMapLongClick(pos: Point): Promise<void> {
 		const now = Date.now();
-		if (now - this.lastClick < 500) {
-			// Hacky solution to avoid markers being created when the user double-clicks the map. If multiple clicks happen less than 500 ms from each
-			// other, all those clicks are ignored.
-			this.lastClick = now;
-			return;
-		}
-		
 		this.lastClick = now;
 
-		const [results] = await Promise.all([
-			this.client.find({
-				query: `geo:${round(pos.lat, 5)},${round(pos.lon, 5)}?z=${this.mapContext.zoom}`,
-				loadUrls: false,
-				elevation: true
-			}),
-			new Promise((resolve) => {
-				// Specify the minimum time the search will take to allow for some time for the double-click detection
-				setTimeout(resolve, 500);
-			})
-		]);
+		const results = await this.client.find({
+			query: `geo:${round(pos.lat, 5)},${round(pos.lon, 5)}?z=${this.mapContext.zoom}`,
+			loadUrls: false,
+			elevation: true
+		});
 
 		if (now !== this.lastClick) {
 			// There has been another click since the one we are reacting to.
