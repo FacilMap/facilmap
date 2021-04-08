@@ -7,6 +7,7 @@ import { getElevationForPoint, getElevationForPoints } from "./elevation";
 import { ZoomLevel, Point, SearchResult } from "facilmap-types";
 import request from "./utils/request";
 import { Geometry } from "geojson";
+import stripBomBuf from "strip-bom-buf";
 
 interface NominatimResult {
 	place_id: number;
@@ -78,7 +79,7 @@ interface PointWithZoom extends Point {
 	zoom?: ZoomLevel;
 }
 
-export async function find(query: string, loadUrls = false, loadElevation = false): Promise<Array<SearchResult>> {
+export async function find(query: string, loadUrls = false, loadElevation = false): Promise<Array<SearchResult> | string> {
 	query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
 	if(loadUrls) {
@@ -446,12 +447,12 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 		throw new Error("Invalid response from server.");
 
 	if(bodyBuf[0] == 0x42 && bodyBuf[1] == 0x5a && bodyBuf[2] == 0x68) {// bzip2
-		bodyBuf = new Buffer(compressjs.Bzip2.decompressFile(bodyBuf));
+		bodyBuf = Buffer.from(compressjs.Bzip2.decompressFile(bodyBuf));
 	}
 	else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
 		bodyBuf = await util.promisify(zlib.gunzip.bind(zlib))(bodyBuf);
 	
-	const body = bodyBuf.toString();
+	const body = stripBomBuf(bodyBuf).toString();
 
 	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
 		return body;

@@ -63,6 +63,7 @@
     "stream-array": "^1.1.2",
     "stream-combiner": "^0.2.2",
     "string-similarity": "^4.0.3",
+    "strip-bom-buf": "^2.0.0",
     "unzipper": "^0.10.11"
   },
   "devDependencies": {
