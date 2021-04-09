@@ -21,8 +21,7 @@ In addition, FacilMap allows you to create collaborative maps, where you and oth
 * [Saved views](./views/) reference a particular area on the map with certain settings. You can change the default view of a collaborative map or save additional views as a shortcut for users to navigate to a certain area on the map.
 * [Filters](./filters/) make it possible to temporarily hide certain types of markers/lines based on certain criteria.
 * Modifications to the map are logged in the [edit history](./history/) and can be reverted if necessary.
-* [Export](./export/) the map or parts of it as a GPX or GeoJSON file.
-* Show the objects on the map as a [table](./table/).
+* [Export](./export/) the map or parts of it as a GPX or GeoJSON file or as a table.
 * [Import](./import/) GPX, KML or GeoJSON files. Importing a GeoJSON file that was exported by FacilMap makes it possible to copy parts of one map onto another.
 * Adjust the [map settings](./map-settings/). This is also where your can [delete the map](./map-settings/#delete-the-map).
 
