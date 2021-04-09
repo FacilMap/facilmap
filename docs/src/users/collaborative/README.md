@@ -2,7 +2,7 @@
 
 A collaborative map is a map that can be reached under its own unique URL. Users can add markers, lines, routes and various other things to the map, and if multiple people are working on it simultaneously, they all see each others’ changes instantly. Think of it like an [Etherpad](https://etherpad.org/), just for maps.
 
-While using a collaborative map, users can still use all of the non-collaborative features of FacilMap, such as [searching for a place](../search/), [calculating a route](../route/), [adding a map point](../click-marker/) etc. However, only [markers](../markers/) and [lines](../lines/) explicitly added to the map will be saved as part of it and be visible to other users. If you search for a place or calculate a route on a collaborative map, you might see the search results or the route on top of the markers and lines of the map (until you close the search or the route again), but others can still only see the markers and lines of the map. Also, if you move the map around, choose a different [map styles](../layers/) or enable a [filter](../filters/), this will not effect what other users are seeing, unless you save it as a [view](../views/) that other users can open.
+While using a collaborative map, users can still use all of the non-collaborative features of FacilMap, such as [searching for a place](../search/), [calculating a route](../route/), [adding a map point](../click-marker/) etc. However, only [markers](../markers/) and [lines](../lines/) explicitly added to the map will be saved as part of it and be visible to other users. If you search for a place or calculate a route on a collaborative map, you might see the search results or the route on top of the markers and lines of the map (until you close the search or the route again), but others can still only see the markers and lines of the map. Also, if you move the map around, choose a different [map styles](../layers/) or enable a [filter](../filter/), this will not effect what other users are seeing, unless you save it as a [view](../views/) that other users can open.
 
 When changing something on the map, there is no need to “Save” the map. Changes are applied immediately.
 
@@ -30,7 +30,7 @@ When creating a collaborative map, some random characters are proposed for the d
 | Add/edit/remove [custom types](../types/) | ✘ | ✘ | ✔ |
 | Add/remove [views](../views/) | ✘ | ✘ | ✔ |
 | Show [edit history](../history/) | ✘ | ✘ | ✔ |
-| Change [map settings](../settings/) | ✘ | ✘ | ✔ |
+| Change [map settings](../map-settings/) | ✘ | ✘ | ✔ |
 | [Delete map](../map-settings/#delete-the-map) | ✘ | ✘ | ✔ |
 
 ## Exit a collaborative map

@@ -1,12 +1,12 @@
 # Saved views
 
-Saved views represent a particular section of the map with a certain [map style](../layers/) and optionally a [filter](../filters/) active. Users can open a view by using the “Views” menu in the [toolbox](../ui/#toolbox) or by opening a [shared link](#share-a-link) to a view. A map can have a [default view](#default-view) that is initially loaded when users open the map.
+Saved views represent a particular section of the map with a certain [map style](../layers/) and optionally a [filter](../filter/) active. Users can open a view by using the “Views” menu in the [toolbox](../ui/#toolbox) or by opening a [shared link](#share-a-link) to a view. A map can have a [default view](#default-view) that is initially loaded when users open the map.
 
 ## Save a view
 
 To save a view, you must have the map open through its [admin link](../collaborative/#urls). In the [toolbox](../ui/#toolbox), click “Views” and then “Save current view”.
 
-The view will persist the section of the map that you are currently viewing and the [map style](../layers/) (base layers and overlays) that is currently active. If a [filter](../filters) is currently active, you have the option to include that filter as part of the view or not.
+The view will persist the section of the map that you are currently viewing and the [map style](../layers/) (base layers and overlays) that is currently active. If a [filter](../filter) is currently active, you have the option to include that filter as part of the view or not.
 
 Saving a view does not directly affect any other users who are looking at the map. Views have to be manually opened, or, in case of the [default view](#default-view), are opened when the user initially opens a map.
 

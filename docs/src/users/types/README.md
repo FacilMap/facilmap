@@ -4,7 +4,7 @@ By default, a collaborative map has two object types, “Marker” and “Line�
 * You can give your types a custom name, you can customise what users see in the “Add” menu of the toolbox.
 * You can define form fields in addition or in place of the description field, for example “Address”, “E-mail” or “Status”.
 * You can preconfigure the initial style or make the style fixed. The style can also be configured to be dependent on a form field. For example, you can configure that the colour depends on the value of the “Status” field.
-* You can easily show/hide objects of a particular type using [filters](../filters/).
+* You can easily show/hide objects of a particular type using [filters](../filter/).
 
 ## Add a custom type
 
@@ -90,4 +90,4 @@ Note that objects keep their data internally when you change the type to one tha
 
 ## Delete a type
 
-Deleting a type is only possible if no objects of this type exist. If you want to delete a type that has existing objects, you might want to use a [filter](../filters) to identify them and then either delete them or change their type.
+Deleting a type is only possible if no objects of this type exist. If you want to delete a type that has existing objects, you might want to use a [filter](../filter) to identify them and then either delete them or change their type.

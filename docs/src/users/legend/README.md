@@ -1,6 +1,6 @@
 # Legend
 
-A legend describes the meaning of the different styles of items. FacilMap [shows the legend](../ui/#legend) as a box in the bottom right of the screen on big screens and as a [search box](../ui/#search-box) tab on small screens. The legend is shown if [custom legend text](#show-custom-text) is defined or if at least one type is configured to be [shown in the legend](#show-custom-types).
+A legend describes the meaning of the different styles of items. FacilMap shows the legend as a box in the bottom right of the screen on big screens and as a [search box](../ui/#search-box) tab on small screens. The legend is shown if [custom legend text](#show-custom-text) is defined or if at least one type is configured to be [shown in the legend](#show-custom-types).
 
 ![](./example.png)
 

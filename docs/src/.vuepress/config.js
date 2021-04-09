@@ -64,7 +64,7 @@ module.exports = {
 						"types/",
 						"legend/",
 						"views/",
-						"filters/",
+						"filter/",
 						"history/",
 						"export/",
 						"import/",
@@ -80,6 +80,27 @@ module.exports = {
 						"",
 						"embed",
 						"server"
+					]
+				}
+			],
+			'/developers/': [
+				"",
+				{
+					title: 'Client',
+					collapsable: false,
+					children: [
+						"client/",
+						"client/properties",
+						"client/events",
+						"client/methods",
+						"client/types"
+					]
+				},
+				{
+					title: 'Development',
+					collapsable: false,
+					children: [
+						"development/dev-setup.md"
 					]
 				}
 			]

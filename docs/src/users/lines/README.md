@@ -42,7 +42,7 @@ When you click on a line, it is highlighted and a [search box](../ui/#search-box
 
 To edit the details of a line, select the line and then click “Edit data” in its [search box](../ui/#search-box) tab. A dialog will open where you can edit the following fields:
 * **Name:** The name of the line. Will be shown as the heading in the line details and as a tooltip when hovering the line.
-* **Routing mode:** The route mode of the line. By default, “straight line” is selected, but you can select something else to make the line points into route destinations. More information about route modes can be found under [routes](../routes/#route-modes).
+* **Routing mode:** The route mode of the line. By default, “straight line” is selected, but you can select something else to make the line points into route destinations. More information about route modes can be found under [routes](../route/#route-modes).
 * **Colour:** The colour of the line.
 * **Width:** The width of the line (in pixels). Use the + and &minus; buttons to change the value.
 * **Description:** The description of the line. Will be shown in the line details. You can format the text using [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet).
@@ -53,7 +53,7 @@ Click “Save” to save your changes.
 
 ## Edit line points
 
-To change the course or the position of a line, select the line and then click “Edit waypoints” in its [search box](../ui/#search-box) tab. A message will appear on the top right of the screen and the tab will turn into a search form and the line will become draggable. You can now change the line in the same way that you would [change a route](../routes/#drag-a-route), by changing the route destinations in the form or by dragging the line. When you are finished, click the “Finish” button in the message.
+To change the course or the position of a line, select the line and then click “Edit waypoints” in its [search box](../ui/#search-box) tab. A message will appear on the top right of the screen and the tab will turn into a search form and the line will become draggable. You can now change the line in the same way that you would [change a route](../route/#drag-a-route), by changing the route destinations in the form or by dragging the line. When you are finished, click the “Finish” button in the message.
 
 <Screencast :desktop="require('./drag.mp4')" :mobile="require('./drag-mobile.mp4')"></Screencast>
 

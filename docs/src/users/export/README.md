@@ -2,7 +2,7 @@
 
 A map can be exported as a file, in order to use it in another application or to create a backup.
 
-To export a map, in the [toolbox](../ui/#toolbox), click “Tools” and then one of the “Export” options. Note that when a [filter](../filters/) is active, only the objects that match the filter are exported.
+To export a map, in the [toolbox](../ui/#toolbox), click “Tools” and then one of the “Export” options. Note that when a [filter](../filter/) is active, only the objects that match the filter are exported.
 
 The exports are available under their own URL. In the context menu (right click) of the export links, you can copy the URL to use it elsewhere.
 

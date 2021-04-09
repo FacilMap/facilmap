@@ -14,7 +14,7 @@ The following information is stored in the location hash:
 	* The [map point](../click-marker/)
 	* The selected [marker](../markers/) or [line](../lines/) (on [collaborative maps](../collaborative/))
 	* The active [view](../views/) (on [collaborative maps](../collaborative/))
-* The active [filter](../filters/) (on [collaborative maps](../collaborative/))
+* The active [filter](../filter/) (on [collaborative maps](../collaborative/))
 
 ## Technical details
 
@@ -39,4 +39,4 @@ The different components of the long format have the following meaning:
 	* The ID of a [view](../views/) in the form `v123` (on [collaborative maps](../collaborative/)). This only works in the short format of the location hash.
 	* The ID of an OpenStreetMap object in the form `node 123`, `way 123`, `relation 123` or `trace 123`.
 	* Anything else that can be typed into the [search form](../search/).
-* **filter:** The currently applied [filter](../filters/) (on [collaborative maps](../collaborative/))
+* **filter:** The currently applied [filter](../filter/) (on [collaborative maps](../collaborative/))

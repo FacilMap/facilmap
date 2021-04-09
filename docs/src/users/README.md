@@ -19,7 +19,7 @@ In addition, FacilMap allows you to create collaborative maps, where you and oth
 * By default, markers/lines/routes have a name and a description. You can [define additional fields](./types/) that contain more detailed information and can automatically influence the style of the marker/line/route.
 * [Add a legend](./legend/) that shows which colour/style belongs to which type of marker/line.
 * [Saved views](./views/) reference a particular area on the map with certain settings. You can change the default view of a collaborative map or save additional views as a shortcut for users to navigate to a certain area on the map.
-* [Filters](./filters/) make it possible to temporarily hide certain types of markers/lines based on certain criteria.
+* [Filters](./filter/) make it possible to temporarily hide certain types of markers/lines based on certain criteria.
 * Modifications to the map are logged in the [edit history](./history/) and can be reverted if necessary.
 * [Export](./export/) the map or parts of it as a GPX or GeoJSON file or as a table.
 * [Import](./import/) GPX, KML or GeoJSON files. Importing a GeoJSON file that was exported by FacilMap makes it possible to copy parts of one map onto another.
