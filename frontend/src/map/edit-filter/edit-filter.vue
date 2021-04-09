@@ -45,13 +45,13 @@
 					<tr>
 						<td><code>typeId</code></td>
 						<td><span v-for="(type, idx) in types"><span v-if="idx != 0"> / </span> <code>{{type.id}}</code> ({{type.name}})</span></td>
-						<td><code>typeId == 1</code></td>
+						<td><code>typeId == {{types[0].id || 1}}</code></td>
 					</tr>
 
 					<tr>
 						<td><code>data.&lt;field&gt;</code> / <code>prop(data, &lt;field&gt;)</code></td>
 						<td>Field values (example: <code>data.Description</code> or <code>prop(data, &quot;Description&quot;)</code></td>
-						<td><code>data.Description ~= &quot;camp&quot;</code></td>
+						<td><code>lower(data.Description) ~= &quot;camp&quot;</code></td>
 					</tr>
 
 					<tr>
@@ -178,6 +178,12 @@
 						<td><code>~=</code></td>
 						<td>Regular expression match (case sensitive)</td>
 						<td><code>name ~= &quot;^[Cc]amp$&quot;</code></td>
+					</tr>
+
+					<tr>
+						<td><code>lower()</code></td>
+						<td>Convert to lower case</td>
+						<td><code>lower(name) ~= &quot;untitled&quot;</code></td>
 					</tr>
 
 					<tr>

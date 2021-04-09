@@ -9,7 +9,14 @@ const customFuncs = {
 		return obj && getProperty(obj, key);
 	},
 
-	random() { } // Does not work well with angular digest cycles
+	random() { }, // Does not work well with angular digest cycles
+
+	lower(obj: any) {
+		if (typeof obj == "string")
+			return obj.toLowerCase();
+		else
+			return obj;
+	}
 };
 
 export function filterHasError(expr: string): Error | undefined {
