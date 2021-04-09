@@ -37,7 +37,9 @@
 			<b-dropdown-item v-if="client.padData && interactive" :href="links.facilmap">Exit collaborative map</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Help" right>
-			<b-dropdown-item v-b-toggle.fm-toolbox-sidebar href="https://docs.facilmap.org/users/" target="_blank">Documentation</b-dropdown-item>
+			<b-dropdown-item href="https://docs.facilmap.org/users/" target="_blank">Documentation</b-dropdown-item>
+			<b-dropdown-item href="https://github.com/FacilMap/facilmap/issues" target="_blank">Report a problem</b-dropdown-item>
+			<b-dropdown-item href="https://github.com/FacilMap/facilmap/discussions" target="_blank">Ask a question</b-dropdown-item>
 			<b-dropdown-item v-b-modal.fm-toolbox-about v-b-toggle.fm-toolbox-sidebar href="javascript:">About FacilMap</b-dropdown-item>
 		</b-nav-item-dropdown>
 	</Sidebar>
