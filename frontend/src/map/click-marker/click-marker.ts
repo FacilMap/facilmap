@@ -163,27 +163,3 @@ export default class ClickMarker extends Vue {
 	}
 
 }
-
-/*
-// TODO
-var clickMarker = L.featureGroup([]).addTo(map.map);
-
-map.mapEvents.$on("longmousedown", function(e, latlng) {
-	clickMarker.clearLayers();
-
-	map.client.find({ query: "geo:" + fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5) + "?z=" + map.map.getZoom(), loadUrls: false, elevation: true }).then(function(results) {
-		clickMarker.clearLayers();
-
-		if(results.length > 0) {
-			prepareResults(results);
-
-			renderResult(fmUtils.round(latlng.lat, 5) + "," + fmUtils.round(latlng.lng, 5), results, results[0], true, clickMarker, () => {
-				clickMarker.clearLayers();
-			}, true);
-			currentInfoBox = null; // We don't want it to be cleared when we switch to the routing form for example
-		}
-	}).catch(function(err) {
-		map.messages.showMessage("danger", err);
-	});
-});
-*/
