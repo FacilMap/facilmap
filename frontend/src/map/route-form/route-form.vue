@@ -90,10 +90,9 @@
 			<b-button-toolbar v-if="showToolbar && !client.readonly">
 				<b-button v-b-tooltip.hover="'Zoom to route'" @click="zoomToRoute()" size="sm"><Icon icon="zoom-in" alt="Zoom to route"></Icon></b-button>
 
-				<b-dropdown v-if="lineTypes.length > 1" text="Add to map" size="sm">
+				<b-dropdown v-if="lineTypes.length > 0" text="Add to map" size="sm">
 					<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(type)">{{type.name}}</b-dropdown-item>
 				</b-dropdown>
-				<b-button v-if="lineTypes.length == 1" @click="addToMap(lineTypes[0])" size="sm">Add to map</b-button>
 				<b-dropdown text="Export" size="sm">
 					<b-dropdown-item
 						href="javascript:"
