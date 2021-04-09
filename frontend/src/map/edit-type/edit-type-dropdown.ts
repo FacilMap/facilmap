@@ -23,7 +23,8 @@ extend("uniqueFieldOptionValue", {
 		return !field || field.options!.filter((option) => option.value == value).length <= 1;
 	},
 	message: "Multiple options cannot have the same label.",
-	params: ["field"]
+	params: ["field"],
+	computesRequired: true // To check empty values as well
 });
 
 extend("fieldOptionNumber", {

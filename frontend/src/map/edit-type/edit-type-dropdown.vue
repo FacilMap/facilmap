@@ -37,7 +37,7 @@
 						<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
 					</b-td>
 					<b-td class="field">
-						<ValidationProvider :name="`Label (${option.value})`" v-slot="v" :rules="fieldValue.type == 'checkbox' ? '' : 'required|uniqueFieldOptionValue:@field'">
+						<ValidationProvider :name="`Label (${option.value})`" v-slot="v" :rules="fieldValue.type == 'checkbox' ? '' : 'uniqueFieldOptionValue:@field'">
 							<b-form-group :state="v | validationState">
 								<b-input v-model="option.value" :state="v | validationState"></b-input>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
