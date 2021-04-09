@@ -35,7 +35,8 @@
 	<b-popover v-if="popover" :target="popover.target" placement="left" show custom-class="fm-legend-popover">
 		<div :class="[ 'fm-legend-symbol', 'fm-' + popover.type.type, { filtered: popover.item.filtered, bright: popover.item.bright } ]" v-html="makeSymbol(popover.type, popover.item, 40)"></div>
 		<p>
-			{{popover.item.label}}<br>
+			<span :style="popover.item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{popover.item.label}}</span>
+			<br>
 			<small><em>Click to show/hide objects of this type.</em></small>
 		</p>
 	</b-popover>
