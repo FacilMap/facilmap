@@ -59,8 +59,8 @@ export default class LegendContent extends Vue {
 	makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): string {
 		if(typeInfo.type == "line")
 			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50);
-		else if (item.colour || item.shape)
-			return getMarkerHtml(item.colour || typeInfo.defaultColour || "rainbow", height, item.symbol, item.shape || typeInfo.defaultShape);
+		else if (item.colour || item.shape != null)
+			return getMarkerHtml(item.colour || typeInfo.defaultColour || "rainbow", height, item.symbol, item.shape ?? typeInfo.defaultShape);
 		else
 			return getSymbolHtml("#000000", height, item.symbol);
 	}

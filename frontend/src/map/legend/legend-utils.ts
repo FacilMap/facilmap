@@ -48,7 +48,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 			if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1))
 				item.symbol = type.defaultSymbol;
 			if(type.type == "marker" && type.shapeFixed)
-				item.shape = type.defaultShape ?? undefined;
+				item.shape = type.defaultShape ?? "";
 			if(type.type == "line" && type.widthFixed)
 				item.width = type.defaultWidth ?? undefined;
 				
