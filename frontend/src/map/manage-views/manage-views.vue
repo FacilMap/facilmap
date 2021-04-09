@@ -1,8 +1,8 @@
 <b-modal :id="id" title="Manage Views" ok-only ok-title="Close" :busy="isBusy()" size="lg" dialog-class="fm-manage-views">
 	<b-table-simple striped hover>
 		<b-tbody>
-			<b-tr class="{success: view.id == client.padData.defaultView.id}" v-for="view in client.views">
-				<b-td><a href="javascript:" @click="display(view)">{{view.name}}</a></b-td>
+			<b-tr v-for="view in client.views">
+				<b-td :class="{ 'font-weight-bold': client.padData.defaultView && view.id == client.padData.defaultView.id }"><a href="javascript:" @click="display(view)">{{view.name}}</a></b-td>
 				<b-td class="td-buttons text-right">
 					<b-button 
 						v-show="!client.padData.defaultView || view.id !== client.padData.defaultView.id"
