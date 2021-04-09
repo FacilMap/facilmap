@@ -61,7 +61,7 @@
 						</ValidationProvider>
 					</b-td>
 					<b-td v-if="fieldValue.controlSymbol" class="field">
-						<ValidationProvider :name="`Icon (${option.value})`" v-slot="v" rules="required|symbol">
+						<ValidationProvider :name="`Icon (${option.value})`" v-slot="v" rules="symbol">
 							<b-form-group :state="v | validationState">
 								<SymbolField v-model="option.symbol" :state="v | validationState"></SymbolField>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
@@ -69,7 +69,7 @@
 						</ValidationProvider>
 					</b-td>
 					<b-td v-if="fieldValue.controlShape" class="field">
-						<ValidationProvider :name="`Shape (${option.value})`" v-slot="v" rules="required|shape">
+						<ValidationProvider :name="`Shape (${option.value})`" v-slot="v" rules="shape">
 							<b-form-group :state="v | validationState">
 								<ShapeField v-model="option.shape" :state="v | validationState"></ShapeField>
 								<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
