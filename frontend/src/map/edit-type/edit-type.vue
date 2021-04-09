@@ -6,6 +6,7 @@
 	:is-modified="isModified"
 	:is-create="isCreate"
 	@submit="save"
+	@hidden="clear"
 	@show="initialize"
 >
 	<template v-if="type">

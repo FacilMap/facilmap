@@ -5,6 +5,7 @@
 	:is-modified="isModified"
 	@submit="save"
 	@show="initialize"
+	@hidden="clear"
 	:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
 	ok-title="OK"
 >

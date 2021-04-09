@@ -6,6 +6,7 @@
 	:is-modified="isModified"
 	@submit="save"
 	@show="initialize"
+	@hidden="clear"
 >
 	<template v-if="marker">
 		<b-form-group label="Name" label-for="fm-edit-marker-name-input" label-cols-sm="3">

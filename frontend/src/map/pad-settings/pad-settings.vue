@@ -8,6 +8,7 @@
 	:is-modified="isModified"
 	@submit="save"
 	@show="initialize"
+	@hidden="clear"
 >
 	<template v-if="padData">
 		<ValidationProvider name="Admin link" v-slot="v" rules="required|padId|padIdUnique:@padData">

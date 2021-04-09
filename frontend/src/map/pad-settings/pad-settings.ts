@@ -65,6 +65,10 @@ export default class PadSettings extends Vue {
 		}
 	}
 
+	clear(): void {
+		this.padData = null as any;
+	}
+
 	get isModified(): boolean {
 		return !isEqual(this.padData, this.client.padData);
 	}

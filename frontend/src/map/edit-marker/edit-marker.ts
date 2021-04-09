@@ -34,6 +34,10 @@ export default class EditMarker extends Vue {
 		this.marker = clone(this.client.markers[this.markerId]);
 	}
 
+	clear(): void {
+		this.marker = null as any;
+	}
+
 	get isModified(): boolean {
 		return !isEqual(this.marker, this.client.markers[this.markerId]);
 	}

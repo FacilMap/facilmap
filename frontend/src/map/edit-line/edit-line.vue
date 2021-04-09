@@ -5,6 +5,7 @@
 	:is-saving="isSaving"
 	:is-modified="isModified"
 	@submit="save"
+	@hidden="clear"
 	@show="initialize"
 >
 	<template v-if="line">

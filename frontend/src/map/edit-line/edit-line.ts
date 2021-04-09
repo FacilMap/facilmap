@@ -35,6 +35,10 @@ export default class EditLine extends Vue {
 		this.line = clone(this.client.lines[this.lineId]);
 	}
 
+	clear(): void {
+		this.line = null as any;
+	}
+
 	get isModified(): boolean {
 		return !isEqual(this.line, this.client.lines[this.lineId]);
 	}

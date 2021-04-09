@@ -66,6 +66,10 @@ export default class EditTypeDropdown extends Vue {
 		this.fieldValue = clone(this.initialField);
 	}
 
+	clear(): void {
+		this.fieldValue = null as any;
+	}
+
 	get initialField(): FieldUpdate {
 		const field: FieldUpdate = clone(this.field);
 

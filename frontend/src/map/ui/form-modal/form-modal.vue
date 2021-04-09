@@ -9,6 +9,7 @@
 		:ok-disabled="!isCreate && !isModified"
 		@ok.prevent="handleSubmit(observer)"
 		@show="$emit('show')"
+		@hidden="$emit('hidden')"
 		scrollable
 	>
 		<b-form @submit.prevent="handleSubmit(observer)" ref="form">

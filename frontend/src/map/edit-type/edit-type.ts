@@ -55,6 +55,10 @@ export default class EditType extends Vue {
 		this.type = clone(this.initialType);
 	}
 
+	clear(): void {
+		this.type = null as any;
+	}
+
 	get initialType(): Type & TypeUpdate {
 		const type = this.isCreate ? { fields: [] } as any : clone(this.originalType)!;
 	
