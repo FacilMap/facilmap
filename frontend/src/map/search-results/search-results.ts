@@ -13,7 +13,7 @@ import { Point } from "geojson";
 import { FileResult, FileResultObject } from "../../utils/files";
 import { showErrorToast } from "../../utils/toasts";
 import { lineStringToTrackPoints, mapSearchResultToType } from "./utils";
-import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
+import { isFileResult, isLineResult, isMapResult, isMarkerResult, typeExists } from "../../utils/search";
 import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 import { mapValues, pickBy, uniq } from "lodash";
 import FormModal from "../ui/form-modal/form-modal";
@@ -290,7 +290,7 @@ export default class SearchResults extends Vue {
 					options.push({ value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
-			if (this.client.writable == 2)
+			if (this.client.writable == 2 && !typeExists(this.client, customType))
 				options.push({ value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 
 			options.push({ value: false, text: "Do not import" });
@@ -303,7 +303,7 @@ export default class SearchResults extends Vue {
 
 			for (const customTypeId2 of Object.keys(this.customTypes)) {
 				const customType2 = this.customTypes[customTypeId2 as any];
-				if (this.client.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId)
+				if (this.client.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(this.client, customType2))
 					options.push({ value: `i${customTypeId2}`, text: `Import type “${customType2.name}”` });
 			}
 
@@ -317,7 +317,7 @@ export default class SearchResults extends Vue {
 
 		for (const customTypeId of Object.keys(this.customTypes)) {
 			const customType = this.customTypes[customTypeId as any];
-			if (this.client.writable && customType.type == "marker")
+			if (this.client.writable && customType.type == "marker" && !typeExists(this.client, customType))
 				options.push({ value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 

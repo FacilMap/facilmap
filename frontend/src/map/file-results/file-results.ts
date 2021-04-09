@@ -3,20 +3,16 @@ import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { FileResultObject } from "../../utils/files";
 import { Client, InjectClient, InjectMapComponents } from "../../utils/decorators";
-import { isEqual } from "lodash";
 import { showErrorToast } from "../../utils/toasts";
 import Icon from "../ui/icon/icon";
 import SearchResults from "../search-results/search-results";
 import { displayView } from "facilmap-leaflet";
 import { MapComponents } from "../leaflet-map/leaflet-map";
 import "./file-results.scss";
-import { numberKeys } from "facilmap-utils";
+import { typeExists, viewExists } from "../../utils/search";
 
 type ViewImport = FileResultObject["views"][0];
 type TypeImport = FileResultObject["types"][0];
-
-const VIEW_KEYS: Array<keyof ViewImport> = ["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"];
-const TYPE_KEYS: Array<keyof TypeImport> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"];
 
 @WithRender
 @Component({
@@ -44,11 +40,7 @@ export default class FileResults extends Vue {
 	}
 
 	viewExists(view: ViewImport): boolean {
-		for (const viewId of numberKeys(this.client.views)) {
-			if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], this.client.views[viewId][idx])))
-				return true;
-		}
-		return false;
+		return viewExists(this.client, view);
 	};
 
 	showView(view: ViewImport): void {
@@ -66,11 +58,7 @@ export default class FileResults extends Vue {
 	};
 
 	typeExists(type: TypeImport): boolean {
-		for (const typeId of numberKeys(this.client.types)) {
-			if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], this.client.types[typeId][idx])))
-				return true;
-		}
-		return false;
+		return typeExists(this.client, type);
 	};
 
 	async addType(type: TypeImport): Promise<void> {

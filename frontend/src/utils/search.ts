@@ -1,5 +1,11 @@
 import { FindOnMapResult, SearchResult } from "facilmap-types";
-import { FileResult } from "./files";
+import { numberKeys } from "facilmap-utils";
+import { isEqual } from "lodash";
+import { Client } from "./decorators";
+import { FileResult, FileResultObject } from "./files";
+
+const VIEW_KEYS: Array<keyof FileResultObject["views"][0]> = ["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"];
+const TYPE_KEYS: Array<keyof FileResultObject["types"][0]> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"];
 
 export function isSearchResult(result: SearchResult | FindOnMapResult | FileResult): result is SearchResult {
 	return !isMapResult(result) && !isFileResult(result);
@@ -25,4 +31,20 @@ export function isLineResult(result: SearchResult | FindOnMapResult | FileResult
 		return result.kind == "line";
 	else
 		return !!result.geojson && ["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(result.geojson.type);
+}
+
+export function viewExists(client: Client, view: FileResultObject["views"][0]): boolean {
+	for (const viewId of numberKeys(client.views)) {
+		if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], client.views[viewId][idx])))
+			return true;
+	}
+	return false;
+}
+
+export function typeExists(client: Client, type: FileResultObject["types"][0]): boolean {
+	for (const typeId of numberKeys(client.types)) {
+		if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], client.types[typeId][idx])))
+			return true;
+	}
+	return false;
 }
