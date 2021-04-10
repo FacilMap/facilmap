@@ -1,4 +1,4 @@
-import { Manager, Socket as SocketIO } from "socket.io-client";
+import { io, Socket as SocketIO } from "socket.io-client";
 import {
 	Bbox,
 	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
@@ -136,8 +136,12 @@ export default class Client<DataType = Record<string, string>> {
 		this._set(this, 'server', server);
 		this._set(this, 'padId', padId);
 
-		const manager = new Manager(server, { forceNew: true });
-		this._set(this, 'socket', manager.socket("/"));
+		const serverUrl = typeof location != "undefined" ? new URL(server, location.href) : new URL(server);
+		const socket = io(serverUrl.origin, {
+			forceNew: true,
+			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
+		});
+		this._set(this, 'socket', socket);
 
 		for(const i of Object.keys(this._handlers) as EventName<ClientEvents<DataType>>[]) {
 			this.on(i, this._handlers[i] as EventHandler<ClientEvents<DataType>, typeof i>);
