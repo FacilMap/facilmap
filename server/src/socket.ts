@@ -439,6 +439,7 @@ class SocketConnection {
 				throw new Error("No map opened.");
 
 			const lineP = this.database.lines.getLine(this.padId, data.id);
+			lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
 			const [line, trackPoints, type] = await Promise.all([
 				lineP,

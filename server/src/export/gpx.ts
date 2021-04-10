@@ -11,6 +11,7 @@ import highland from "highland";
 const lineTemplateP = fs.promises.readFile(`${__dirname}/gpx-line.ejs`).then((t) => {
 	return compile(t.toString());
 });
+lineTemplateP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
 function dataToText(fields: Field[], data: Record<string, string>) {
 	if(fields.length == 1 && fields[0].name == "Description")

@@ -3,6 +3,9 @@ import config from "../config";
 import { Point, RouteMode } from "facilmap-types";
 import { RawRouteInfo } from "./routing";
 
+if (!config.mapboxToken)
+	console.error("Warning: No Mapbox token configured, calculating routes will fail. Please set MAPBOX_TOKEN in the environment or in config.env.");
+
 const ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 
 const ROUTING_TYPES = {
@@ -14,6 +17,9 @@ const ROUTING_TYPES = {
 const MAX_POINTS_PER_REQUEST = 25;
 
 export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simple = false): Promise<RawRouteInfo> {
+	if (!config.mapboxToken)
+		throw new Error("No Mapbox token configured. Please ask the administrator to set MAPBOX_TOKEN in the environment or in config.env.")
+
 	const coordGroups: string[][] = [[]];
 	for(const point of points) {
 		if(coordGroups[coordGroups.length-1].length >= MAX_POINTS_PER_REQUEST)

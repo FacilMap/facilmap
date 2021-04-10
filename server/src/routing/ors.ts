@@ -5,6 +5,9 @@ import { ExtraInfo, Point } from "facilmap-types";
 import { throttle } from "../utils/utils";
 import { RawRouteInfo } from "./routing";
 
+if (!config.orsToken)
+	console.error("Warning: No ORS token configured, calculating routes will fail. Please set ORS_TOKEN in the environment or in config.env.");
+
 const ROUTING_URL = `https://api.openrouteservice.org/v2/directions`;
 
 const ROUTING_MODES: Record<string, string> = {
@@ -34,6 +37,9 @@ export function getMaximumDistanceBetweenRoutePoints(decodedMode: DecodedRouteMo
 export const calculateORSRoute = throttle(calculateRouteInternal, 4);
 
 async function calculateRouteInternal(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
+	if (!config.orsToken)
+		throw new Error("Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.");
+
 	let currentGroup: Point[] = [];
 	const coordGroups: Point[][] = [currentGroup];
 	for(const point of points) {

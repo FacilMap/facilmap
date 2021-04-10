@@ -84,6 +84,7 @@ export default class DatabaseRoutes {
 		updateTimes[routeId] = thisTime;
 
 		const routeInfoP = calculateRouteForLine({ mode, routePoints });
+		routeInfoP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
 		if(!_noClear)
 			await this.deleteRoute(routeId, true);
