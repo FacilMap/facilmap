@@ -1,4 +1,15 @@
-[FacilMap](https://facilmap.org/) is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan routes and create custom maps full of markers, lines and routes.
+[FacilMap](https://facilmap.org/) is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan routes and create custom maps full of markers, lines and routes. Features include:
+
+* Different map styles for roads, topography, cycling, hiking, public transportation, water navigation, ...
+* Search for places and show their information (website, opening hours, ...)
+* Calculate routes and adjust them by dragging. An elevation profile can be shown.
+* Smartphone-friendly interface.
+* Create and share custom maps with markers, lines and routes on them.
+* Open GPX/KML/OSM/GeoJSON files and save them on a custom map.
+* Define custom styles of markers, lines and routes and generate a legend automatically.
+* Define custom form fields for the details of markers, lines and routes.
+* API to embed custom maps into a website and to modify them programmatically.
+* Extensive [documentation](https://docs.facilmap.org/).
 
 Documentation
 =============
