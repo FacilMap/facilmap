@@ -2,10 +2,12 @@
     "name": "FacilMap",
     "short_name": "FacilMap",
     "icons": [{
-        "src": "./favicon-512.png",
-        "sizes": "512x512"
+        "src": "./app-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
     }],
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "display": "fullscreen"
+    "display": "fullscreen",
+    "start_url": "./"
 }

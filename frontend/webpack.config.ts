@@ -109,7 +109,7 @@ module.exports = (env: any, argv: any): Configuration => {
 					"favicon.svg",
 					"favicon-64.png",
 					"favicon-180.png",
-					"favicon-512.png"
+					"app-512.png"
 				].map((file) => ({ from: `${__dirname}/static/${file}` }))
 			}),
 			...(isDev ? [

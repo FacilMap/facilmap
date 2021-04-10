@@ -51,6 +51,7 @@ module.exports = {
 						"files/",
 						"locate/",
 						"hash/",
+						"app/",
 						"privacy/"
 					]
 				},
