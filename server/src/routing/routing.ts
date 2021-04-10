@@ -12,7 +12,7 @@ import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors";
 // As we don’t need one route point per pixel, we raise the value a bit
 const RESOLUTION_20 = 0.0000013411044763239684 * 4;
 
-export type RawRouteInfo = Omit<RouteInfo, "trackPoints"> & {
+export type RawRouteInfo = Omit<RouteInfo, "trackPoints" | keyof Bbox> & {
 	trackPoints: Array<Point & { ele?: number }>;
 }
 
@@ -37,6 +37,7 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	}
 
 	calculateZoomLevels(route!.trackPoints);
+	Object.assign(route, calculateBbox(route!.trackPoints));
 
 	return route as RouteInfo;
 }
