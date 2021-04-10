@@ -21,6 +21,11 @@
     "types": "tsc --noEmit src/*",
     "lint": "eslint src/*"
   },
+  "files": [
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
   "dependencies": {
     "cheerio": "^1.0.0-rc.5",
     "dompurify": "^2.2.7",

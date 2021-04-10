@@ -18,6 +18,14 @@
     "url": "https://github.com/FacilMap/facilmap.git"
   },
   "main": "./entry.js",
+  "files": [
+    "dist",
+    "src",
+    "static",
+    "iframe-test.html",
+    "README.md",
+    "tsconfig.json"
+  ],
   "scripts": {
     "build": "webpack",
     "clean": "rimraf dist",

@@ -13,9 +13,13 @@
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
   },
+  "files": [
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
   "dependencies": {
     "@types/geojson": "^7946.0.7"
   },
-  "private": true,
   "devDependencies": {}
 }

@@ -17,6 +17,11 @@
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
   },
+  "files": [
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
   "scripts": {
     "start": "npm run deps && npm run server",
     "deps": "npm install",
@@ -27,7 +32,7 @@
     "lint": "eslint src/**/*.ts"
   },
   "bin": {
-    "facilmap-server": "src/server.ts"
+    "facilmap-server": "ts-node --transpile-only src/server.ts"
   },
   "dependencies": {
     "@mapbox/polyline": "^1.1.1",

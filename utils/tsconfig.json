@@ -9,7 +9,8 @@
 		"moduleResolution": "node",
 		"noErrorTruncation": true,
 		"skipLibCheck": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"noEmit": true
 	},
 	"include": ["src/**/*"]
 }
