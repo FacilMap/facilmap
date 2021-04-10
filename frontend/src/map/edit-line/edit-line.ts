@@ -51,6 +51,10 @@ export default class EditLine extends Vue {
 		return Object.values(this.client.types).filter((type) => type.type === "line");
 	}
 
+	get canControl(): Array<keyof Line> {
+		return canControl(this.client.types[this.line.typeId]);
+	}
+
 	@Watch("originalLine")
 	handleChangeLine(newLine: Line<StringMap> | undefined, oldLine: Line<StringMap>): void {
 		if (this.line) {
@@ -61,10 +65,6 @@ export default class EditLine extends Vue {
 				mergeObject(oldLine, newLine, this.line);
 			}
 		}
-	}
-
-	canControl(what: keyof Line): boolean {
-		return canControl(this.client.types[this.line.typeId], what);
 	}
 
 	async save(): Promise<void> {

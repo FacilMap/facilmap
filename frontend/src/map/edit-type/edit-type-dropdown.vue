@@ -11,11 +11,11 @@
 >
 	<template v-if="fieldValue">
 		<b-form-group label="Control" label-cols-sm="3">
-			<b-checkbox v-model="fieldValue.controlColour" :disabled="!canControl('colour')">Control {{type.type}} colour</b-checkbox>
-			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlSize" :disabled="!canControl('size')">Control {{type.type}} size</b-checkbox>
-			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlSymbol" :disabled="!canControl('symbol')">Control {{type.type}} icon</b-checkbox>
-			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlShape" :disabled="!canControl('shape')">Control {{type.type}} shape</b-checkbox>
-			<b-checkbox v-if="type.type == 'line'" v-model="fieldValue.controlWidth" :disabled="!canControl('width')">Control {{type.type}} width</b-checkbox>
+			<b-checkbox v-model="fieldValue.controlColour" :disabled="!canControl.includes('colour')">Control {{type.type}} colour</b-checkbox>
+			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlSize" :disabled="!canControl.includes('size')">Control {{type.type}} size</b-checkbox>
+			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlSymbol" :disabled="!canControl.includes('symbol')">Control {{type.type}} icon</b-checkbox>
+			<b-checkbox v-if="type.type == 'marker'" v-model="fieldValue.controlShape" :disabled="!canControl.includes('shape')">Control {{type.type}} shape</b-checkbox>
+			<b-checkbox v-if="type.type == 'line'" v-model="fieldValue.controlWidth" :disabled="!canControl.includes('width')">Control {{type.type}} width</b-checkbox>
 		</b-form-group>
 		<b-table-simple striped hover v-if="fieldValue.type != 'checkbox' || controlNumber > 0">
 			<b-thead>

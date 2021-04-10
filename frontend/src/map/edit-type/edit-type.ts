@@ -81,6 +81,10 @@ export default class EditType extends Vue {
 		return this.typeId != null ? this.client.types[this.typeId] : undefined;
 	}
 
+	get canControl(): Array<keyof Marker | keyof Line> {
+		return canControl(this.type, null);
+	}
+
 	@Watch("originalType")
 	handleChangeType(newType: Type | undefined, oldType: Type): void {
 		if (this.type) {
@@ -139,7 +143,4 @@ export default class EditType extends Vue {
 		setTimeout(() => { this.$bvModal.show("fm-edit-type-dropdown"); }, 0);
 	}
 
-	canControl(what: keyof Marker | keyof Line): boolean {
-		return canControl(this.type, what, null);
-	}
 }

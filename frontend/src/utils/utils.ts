@@ -24,16 +24,19 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 	}
 }
 
-export function canControl(type: Type, what: keyof Marker | keyof Line, ignoreField?: Field | null): boolean {
-	if((type as any)[what+"Fixed"] && ignoreField !== null)
-		return false;
-
-	const idx = "control"+what.charAt(0).toUpperCase() + what.slice(1);
-	for (const field of type.fields) {
-		if ((field as any)[idx] && (!ignoreField || field !== ignoreField))
+export function canControl<T extends Marker | Line = Marker | Line>(type: Type, ignoreField?: Field | null): Array<keyof T> {
+	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "mode"] : [];
+	return props.filter((prop) => {
+		if((type as any)[prop+"Fixed"] && ignoreField !== null)
 			return false;
-	}
-	return true;
+
+		const idx = "control"+prop.charAt(0).toUpperCase() + prop.slice(1);
+		for (const field of type.fields) {
+			if ((field as any)[idx] && (!ignoreField || field !== ignoreField))
+				return false;
+		}
+		return true;
+	}) as Array<keyof T>;
 }
 
 

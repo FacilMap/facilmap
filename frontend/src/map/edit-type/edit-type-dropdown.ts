@@ -116,8 +116,8 @@ export default class EditTypeDropdown extends Vue {
 		return !isEqual(this.fieldValue, this.initialField);
 	}
 
-	canControl(what: keyof Marker | keyof Line): boolean {
-		return canControl(this.type, what, this.field);
+	get canControl(): Array<keyof Marker | keyof Line> {
+		return canControl(this.type, this.field);
 	}
 
 	addOption(): void {

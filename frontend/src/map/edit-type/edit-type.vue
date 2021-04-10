@@ -30,68 +30,83 @@
 			</b-form-group>
 		</ValidationProvider>
 
-		<ValidationProvider name="Default colour" v-slot="v" :rules="type.colourFixed ? 'required|colour' : 'colour'">
-			<b-form-group label="Default colour" label-for="fm-edit-type-default-color-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><ColourField id="fm-edit-type-default-colour-input" v-model="type.defaultColour" :disabled="!canControl('colour')" :state="v | validationState"></ColourField></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.colourFixed" :disabled="!canControl('colour')" @change="setTimeout(() => { v.validate(type.defaultColour); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+		<template v-if="canControl.length > 0">
+			<hr/>
 
-		<ValidationProvider v-if="type.type == 'marker'" name="Default size" v-slot="v" :rules="type.sizeFixed ? 'required|size' : 'size'">
-			<b-form-group label="Default size" label-for="fm-edit-type-default-size-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><SizeField id="fm-edit-type-default-size-input" v-model="type.defaultSize" :disabled="!canControl('size')" :state="v | validationState"></SizeField></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.sizeFixed" :disabled="!canControl('size')" @change="setTimeout(() => { v.validate(type.defaultSize); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+			<p class="text-muted">
+				These styles are applied when a new object of this type is created. If “Fixed” is enabled, the style is applied to all objects
+				of this type and cannot be changed for an individual object anymore. For more complex style control, dropdown or checkbox fields
+				can be configured below to change the style based on their selected value.
+			</p>
 
-		<ValidationProvider v-if="type.type == 'marker'" name="Default icon" v-slot="v" rules="symbol">
-			<b-form-group label="Default icon" label-for="fm-edit-type-default-symbol-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><SymbolField id="fm-edit-type-default-symbol-input" v-model="type.defaultSymbol" :disabled="!canControl('symbol')" :state="v | validationState"></SymbolField></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.symbolFixed" :disabled="!canControl('symbol')" @change="setTimeout(() => { v.validate(type.defaultSymbol); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+			<ValidationProvider v-if="canControl.includes('colour')" name="Default colour" v-slot="v" :rules="type.colourFixed ? 'required|colour' : 'colour'">
+				<b-form-group label="Default colour" label-for="fm-edit-type-default-color-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><ColourField id="fm-edit-type-default-colour-input" v-model="type.defaultColour" :state="v | validationState"></ColourField></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.colourFixed" @change="setTimeout(() => { v.validate(type.defaultColour); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
 
-		<ValidationProvider v-if="type.type == 'marker'" name="Default shape" v-slot="v" rules="shape">
-			<b-form-group label="Default shape" label-for="fm-edit-type-default-shape-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><ShapeField id="fm-edit-type-default-shape-input" v-model="type.defaultShape" :disabled="!canControl('shape')" :state="v | validationState"></ShapeField></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.shapeFixed" :disabled="!canControl('shape')" @change="setTimeout(() => { v.validate(type.defaultShape); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+			<ValidationProvider v-if="canControl.includes('size')" name="Default size" v-slot="v" :rules="type.sizeFixed ? 'required|size' : 'size'">
+				<b-form-group label="Default size" label-for="fm-edit-type-default-size-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><SizeField id="fm-edit-type-default-size-input" v-model="type.defaultSize" :state="v | validationState"></SizeField></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.sizeFixed" @change="setTimeout(() => { v.validate(type.defaultSize); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
 
-		<ValidationProvider v-if="type.type == 'line'" name="Default width" v-slot="v" :rules="type.widthFixed ? 'required|width' : 'width'">
-			<b-form-group label="Default width" label-for="fm-edit-type-default-width-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><WidthField id="fm-edit-type-default-width-input" v-model="type.defaultWidth" :disabled="!canControl('width')" :state="v | validationState"></WidthField></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.widthFixed" :disabled="!canControl('width')" @change="setTimeout(() => { v.validate(type.defaultWidth); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+			<ValidationProvider v-if="canControl.includes('symbol')" name="Default icon" v-slot="v" rules="symbol">
+				<b-form-group label="Default icon" label-for="fm-edit-type-default-symbol-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><SymbolField id="fm-edit-type-default-symbol-input" v-model="type.defaultSymbol" :state="v | validationState"></SymbolField></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.symbolFixed" @change="setTimeout(() => { v.validate(type.defaultSymbol); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
 
-		<ValidationProvider v-if="type.type == 'line'" name="Default routing mode" v-slot="v" :rules="type.modeFixed ? 'required' : ''">
-			<b-form-group label="Default routing mode" label-for="fm-edit-type-default-mode-input" label-cols-sm="3" :state="v | validationState">
-				<b-row align-v="center">
-					<b-col><RouteMode id="fm-edit-type-default-mode-input" v-model="type.defaultMode" :disabled="!canControl('mode')" min="1"></RouteMode></b-col>
-					<b-col sm="3"><b-checkbox v-model="type.modeFixed" :disabled="!canControl('mode')" @change="setTimeout(() => { v.validate(type.defaultMode); })">Fixed</b-checkbox></b-col>
-				</b-row>
-				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-			</b-form-group>
-		</ValidationProvider>
+			<ValidationProvider v-if="canControl.includes('shape')" name="Default shape" v-slot="v" rules="shape">
+				<b-form-group label="Default shape" label-for="fm-edit-type-default-shape-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><ShapeField id="fm-edit-type-default-shape-input" v-model="type.defaultShape" :state="v | validationState"></ShapeField></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.shapeFixed" @change="setTimeout(() => { v.validate(type.defaultShape); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
+
+			<ValidationProvider v-if="canControl.includes('width')" name="Default width" v-slot="v" :rules="type.widthFixed ? 'required|width' : 'width'">
+				<b-form-group label="Default width" label-for="fm-edit-type-default-width-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><WidthField id="fm-edit-type-default-width-input" v-model="type.defaultWidth" :state="v | validationState"></WidthField></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.widthFixed" @change="setTimeout(() => { v.validate(type.defaultWidth); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
+
+			<ValidationProvider v-if="canControl.includes('mode')" name="Default routing mode" v-slot="v" :rules="type.modeFixed ? 'required' : ''">
+				<b-form-group label="Default routing mode" label-for="fm-edit-type-default-mode-input" label-cols-sm="3" :state="v | validationState">
+					<b-row align-v="center">
+						<b-col><RouteMode id="fm-edit-type-default-mode-input" v-model="type.defaultMode" min="1"></RouteMode></b-col>
+						<b-col sm="3"><b-checkbox v-model="type.modeFixed" @change="setTimeout(() => { v.validate(type.defaultMode); })">Fixed</b-checkbox></b-col>
+					</b-row>
+					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+				</b-form-group>
+			</ValidationProvider>
+
+			<hr/>
+		</template>
 
 		<b-form-group label="Legend" label-for="fm-edit-type-show-in-legend-input" label-cols-sm="3" label-class="pt-0">
 			<b-checkbox v-model="type.showInLegend">Show in legend</b-checkbox>
+			<template #description>
+				An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.
+			</template>
 		</b-form-group>
 
 		<h2>Fields</h2>

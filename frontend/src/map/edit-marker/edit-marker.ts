@@ -50,6 +50,10 @@ export default class EditMarker extends Vue {
 		return Object.values(this.client.types).filter((type) => type.type === "marker");
 	}
 
+	get canControl(): Array<keyof Marker> {
+		return canControl(this.client.types[this.marker.typeId]);
+	}
+
 	@Watch("originalMarker")
 	handleChangeMarker(newMarker: Marker<StringMap> | undefined, oldMarker: Marker<StringMap>): void {
 		if (this.marker) {
@@ -60,10 +64,6 @@ export default class EditMarker extends Vue {
 				mergeObject(oldMarker, newMarker, this.marker);
 			}
 		}
-	}
-
-	canControl(what: keyof Marker): boolean {
-		return canControl(this.client.types[this.marker.typeId], what);
 	}
 
 	async save(): Promise<void> {
