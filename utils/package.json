@@ -1,6 +1,6 @@
 {
   "name": "facilmap-utils",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "FacilMap helper functions used in both the frontend and backend.",
   "keywords": [
     "webpack",
@@ -30,7 +30,7 @@
     "cheerio": "^1.0.0-rc.5",
     "dompurify": "^2.2.7",
     "eslint": "^7.21.0",
-    "facilmap-types": "3.0.0",
+    "facilmap-types": "3.0.1",
     "filtrex": "^2.1.0",
     "jquery": "^3.6.0",
     "jsdom": "^16.5.1",
