@@ -35,7 +35,7 @@ To edit the details of a marker, select the marker and then click “Edit data�
 * **Colour:** The colour of the marker.
 * **Size:** The size of the marker (height in pixels). Use the + and &minus; buttons to change the value.
 * **Icon:** An icon to show inside the marker shape. You can leave it empty (will show a dot), select an icon from the list, or type in a single character (such as `1`).
-* **Shape:** The shape of the marker, either a drop or a circle.
+* **Shape:** The shape of the marker.
 * **Description:** The description of the marker. Will be shown in the marker details. You can format the text using [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet).
 
 Click “Save” to save your changes.

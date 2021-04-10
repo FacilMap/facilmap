@@ -36,10 +36,10 @@
 			}
 
 			createIcons("icons", (icon) => L.FacilMap.getSymbolHtml("#000000", 50, icon));
-			createIcons("icons-circle", (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, "circle"));
-			createIcons("icons-circle-highlight", (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, "circle", true));
-			createIcons("icons-drop", (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, "drop"));
-			createIcons("icons-drop-highlight", (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, "drop", true));
+			for (const shape of ["drop", "rectangle-marker", "circle", "rectangle", "diamond", "pentagon", "hexagon", "triangle", "triangle-down", "star"]) {
+				createIcons(`icons-${shape}`, (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape));
+				createIcons(`icons-${shape}-highlight`, (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape, true));
+			}
 		</script>
 	</body>
 </html>

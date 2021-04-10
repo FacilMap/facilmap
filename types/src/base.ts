@@ -4,7 +4,7 @@ export type ZoomLevel = number;
 /** Colour in 6-digit hex format without a # */
 export type Colour = string;
 export type Symbol = string;
-export type Shape = "" | "drop" | "circle";
+export type Shape = string;
 export type ID = number;
 export type RouteMode = string;
 export type Layer = string;
