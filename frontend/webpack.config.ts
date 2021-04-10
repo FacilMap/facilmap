@@ -2,6 +2,7 @@ import webpack, { Configuration } from "webpack";
 import copyPlugin from "copy-webpack-plugin";
 import htmlPlugin from "html-webpack-plugin";
 import { compile, CompilerOptions } from "vue-template-compiler";
+import svgToMiniDataURI from "mini-svg-data-uri";
 //import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 function includeHotMiddleware(entry: string | string[], isDev: boolean): string | string[] {
@@ -56,11 +57,20 @@ module.exports = (env: any, argv: any): Configuration => {
 				]},
 				{
 					test: /\.(png|jpe?g|gif|ttf)$/,
-					type: 'asset/inline'
+					type: 'asset/inline',
+					exclude: [
+						`${__dirname}/static/favicon-180.png`
+					]
 				},
 				{
 					test: /\.(svg)$/,
-					type: 'asset/source'
+					type: 'asset/inline',
+					generator: {
+						dataUrl: (content: any) => {
+							content = content.toString();
+							return svgToMiniDataURI(content);
+						}
+					}
 				},
 				{
 					test: /\.(html|ejs)$/,
@@ -91,7 +101,17 @@ module.exports = (env: any, argv: any): Configuration => {
 				filename: "table.ejs",
 				chunks: ["table"]
 			}),
-			new copyPlugin({ patterns: [ "deref.html", "opensearch.xml" ].map((file) => ({ from: `${__dirname}/static/${file}` })) }),
+			new copyPlugin({
+				patterns: [
+					"deref.html",
+					"opensearch.xml",
+					"favicon.ico",
+					"favicon.svg",
+					"favicon-64.png",
+					"favicon-180.png",
+					"favicon-512.png"
+				].map((file) => ({ from: `${__dirname}/static/${file}` }))
+			}),
 			...(isDev ? [
 				new webpack.HotModuleReplacementPlugin()
 			] : [
