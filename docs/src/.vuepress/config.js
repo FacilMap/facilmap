@@ -36,6 +36,7 @@ module.exports = {
 					children: [
 						"",
 						"help/",
+						"releases/",
 						"contribute/"
 					]
 				},
