@@ -17,6 +17,7 @@ In addition, FacilMap allows you to create collaborative maps, where you and oth
 * [Creating collaborative maps](./collaborative/)
 * [Add markers](./markers/)
 * [Add lines/routes](./lines/)
+* [Handle multiple objects](./multiple/), for example to delete multiple markers/lines at once.
 * By default, markers/lines/routes have a name and a description. You can [define additional fields](./types/) that contain more detailed information and can automatically influence the style of the marker/line/route.
 * [Add a legend](./legend/) that shows which colour/style belongs to which type of marker/line.
 * [Saved views](./views/) reference a particular area on the map with certain settings. You can change the default view of a collaborative map or save additional views as a shortcut for users to navigate to a certain area on the map.

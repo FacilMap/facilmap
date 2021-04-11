@@ -45,3 +45,11 @@ let idCounter = 1;
 export function getUniqueId(scope = ""): string {
 	return `${scope ? `${scope}-` : ""}${idCounter++}`;
 }
+
+export function isMarker<DataType>(object: Marker<DataType> | Line<DataType>): object is Marker<DataType> {
+	return "lat" in object && object.lat != null;
+}
+
+export function isLine<DataType>(object: Marker<DataType> | Line<DataType>): object is Line<DataType> {
+	return "top" in object && object.top != null;
+}

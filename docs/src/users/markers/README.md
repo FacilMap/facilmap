@@ -51,3 +51,5 @@ To change the position of a marker, select the marker and then click “Move” 
 To remove a marker from the map, select the marker, click “Remove” and confirm the alert box. Note that removed markers will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
 
 <Screencast :desktop="require('./remove.mp4')" :mobile="require('./remove-mobile.mp4')"></Screencast>
+
+You can also remove multiple markers at once by [handling multiple objects](../multiple/).

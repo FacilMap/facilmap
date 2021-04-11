@@ -14,12 +14,13 @@ import { InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } 
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import RouteFormTab from "../route-form/route-form-tab";
 import { HashQuery } from "facilmap-leaflet";
+import MultipleInfoTab from "../multiple-info/multiple-info-tab";
 
 export type SearchBoxContext = Vue;
 
 @WithRender
 @Component({
-    components: { Icon, LineInfoTab, MarkerInfoTab, RouteFormTab, SearchFormTab }
+    components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, RouteFormTab, SearchFormTab }
 })
 export default class SearchBox extends Vue {
 

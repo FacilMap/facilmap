@@ -28,6 +28,7 @@ export default class LineInfo extends Vue {
 	@Ref() routeForm?: RouteForm;
 
 	@Prop({ type: IdType, required: true }) lineId!: ID;
+	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
 
 	isDeleting = false;
 	showElevationPlot = false;

@@ -1,6 +1,9 @@
 <div class="fm-line-info" v-if="line">
 	<div class="d-flex align-items-center">
-		<h2 class="flex-grow-1">{{line.name}}</h2>
+		<h2 class="flex-grow-1">
+			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+			{{line.name}}
+		</h2>
 		<b-button-toolbar v-if="!isMoving">
 			<b-button
 				v-if="line.ascent != null"

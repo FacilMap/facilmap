@@ -62,3 +62,5 @@ To change the course or the position of a line, select the line and then click �
 To remove a line from the map, select the line, click “Remove” and confirm the alert box. Note that removed lines will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
 
 <Screencast :desktop="require('./remove.mp4')" :mobile="require('./remove-mobile.mp4')"></Screencast>
+
+You can also remove multiple lines at once by [handling multiple objects](../multiple/).

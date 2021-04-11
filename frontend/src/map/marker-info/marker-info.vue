@@ -1,5 +1,8 @@
 <div class="fm-marker-info" v-if="marker">
-	<h2>{{marker.name}}</h2>
+	<h2>
+		<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+		{{marker.name}}
+	</h2>
 	<dl class="fm-search-box-collapse-point">
 		<dt class="pos">Coordinates</dt>
 		<dd class="pos">{{marker.lat | round(5)}}, {{marker.lon | round(5)}}</dd>
@@ -16,7 +19,7 @@
 	</dl>
 
 	<b-button-toolbar>
-		<b-button v-b-tooltip.hover="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
+		<b-button v-b-tooltip.hover="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to marker"></Icon></b-button>
 
 		<b-dropdown text="Use as" size="sm" v-if="context.search">
 			<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>

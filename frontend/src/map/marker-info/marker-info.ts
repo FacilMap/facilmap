@@ -25,6 +25,7 @@ export default class MarkerInfo extends Vue {
 	@InjectMapComponents() mapComponents!: MapComponents;
 
 	@Prop({ type: IdType, required: true }) markerId!: ID;
+	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
 
 	isDeleting = false;
 

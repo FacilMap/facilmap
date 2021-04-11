@@ -63,6 +63,7 @@ module.exports = {
 						"collaborative/",
 						"markers/",
 						"lines/",
+						"multiple/",
 						"types/",
 						"legend/",
 						"views/",
