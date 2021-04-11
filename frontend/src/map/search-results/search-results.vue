@@ -51,7 +51,7 @@
 					</template>
 					<template v-if="hasCustomTypes">
 						<b-dropdown-divider></b-dropdown-divider>
-						<b-dropdown-item href="javascript:" v-b-modal.fm-search-results-custom-import>Custom type mapping…</b-dropdown-item>
+						<b-dropdown-item href="javascript:" v-b-modal="customImportModalId">Custom type mapping…</b-dropdown-item>
 					</template>
 				</b-dropdown>
 			</b-button-toolbar>
@@ -74,7 +74,7 @@
 
 
 	<FormModal
-		id="fm-search-results-custom-import"
+		:id="customImportModalId"
 		title="Custom Import"
 		dialog-class="fm-search-results-custom-import"
 		:is-saving="isCustomImportSaving"

@@ -18,6 +18,7 @@ import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoom
 import { mapValues, pickBy, uniq } from "lodash";
 import FormModal from "../ui/form-modal/form-modal";
 import StringMap from "../../utils/string-map";
+import { getUniqueId } from "../../utils/utils";
 
 @WithRender
 @Component({
@@ -38,6 +39,7 @@ export default class SearchResults extends Vue {
 	@Prop({ type: Boolean, default: false }) autoZoom!: boolean;
 	@Prop({ type: Object, default: () => ({}) }) customTypes!: FileResultObject["types"];
 
+	customImportModalId = getUniqueId("fm-search-results-custom-import");
 	activeTab = 0;
 	isAdding = false;
 
@@ -375,7 +377,7 @@ export default class SearchResults extends Vue {
 			});
 			
 			if (await this._addToMap(add))
-				this.$bvModal.hide("fm-search-results-custom-import");
+				this.$bvModal.hide(this.customImportModalId);
 		} catch(err) {
 			showErrorToast(this, "fm-search-result-info-add-error", "Error importing to map", err);
 		} finally {
