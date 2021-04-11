@@ -14,6 +14,7 @@
     "deploy": "./deploy.sh",
     "check": "vuepress check-md src"
   },
+  "private": true,
   "devDependencies": {
     "markdown-it-footnote": "^3.0.2",
     "vuepress": "^1.5.3",

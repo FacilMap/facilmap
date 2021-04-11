@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "lint": "eslint **/*.ts",
+    "clean": "cd client && yarn run clean && cd ../leaflet && yarn run clean && cd ../frontend && yarn run clean",
     "build": "cd client && yarn run build && cd ../leaflet && yarn run build && cd ../frontend && yarn run build"
   },
   "devDependencies": {
