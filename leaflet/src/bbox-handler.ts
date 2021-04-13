@@ -37,7 +37,7 @@ export default class BboxHandler extends Handler {
     }
 
     handleEmitResolve: EventHandler<ClientEvents, "emitResolve"> = (name, data) => {
-        if (["setPadId", "setRoute"].includes(name)) {
+        if (["createPad", "setPadId", "setRoute"].includes(name)) {
             this.updateBbox();
         }
     }
