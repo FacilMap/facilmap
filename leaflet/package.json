@@ -64,7 +64,6 @@
     "@types/lodash": "^4.14.168",
     "@types/node-fetch": "^2.5.8",
     "@types/svgo": "^2.0.0",
-    "@types/webpack": "^5.28.0",
     "@types/webpack-dev-server": "^3.11.2",
     "@types/webpack-env": "^1.16.0",
     "@types/webpack-node-externals": "^2.5.0",
