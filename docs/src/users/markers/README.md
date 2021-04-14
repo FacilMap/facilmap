@@ -20,7 +20,7 @@ In the search box tab of that object, click on “Add to map” and then “Mark
 
 <Screencast :desktop="require('./add-result.mp4')" :mobile="require('./add-result-mobile.mp4')"></Screencast>
 
-You can also add multiple results at once. In the search form, select multiple items by using the “Select all” button or clicking individual items while holding the Ctrl or Shift key. Then click “Add selected items to map” and then “Marker items as Marker”. (In case of an opened geographic file, some of the selected items may be polygons or polylines, these will not be added, as they are not “Marker items”.)
+You can also add multiple results at once. In the search form, select multiple items by using the “Select all” button or clicking individual items while holding the Ctrl key. Then click “Add selected items to map” and then “Marker items as Marker”. (In case of an opened geographic file, some of the selected items may be polygons or polylines, these will not be added, as they are not “Marker items”.)
 
 <Screencast :desktop="require('./add-results.mp4')" :mobile="require('./add-results-mobile.mp4')"></Screencast>
 

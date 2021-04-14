@@ -30,7 +30,7 @@ In the search box tab of the search result, click on “Add to map” and then �
 
 <Screencast :desktop="require('./add-result.mp4')" :mobile="require('./add-result-mobile.mp4')"></Screencast>
 
-You can also add multiple results at once. In the search form, select multiple items by using the “Select all” button or clicking individual items while holding the Ctrl or Shift key. Then click “Add selected items to map” and then “Line/polygon items as Line”. (Those selected results that are markers and not lines/polygons will not be added.)
+You can also add multiple results at once. In the search form, select multiple items by using the “Select all” button or clicking individual items while holding the Ctrl key. Then click “Add selected items to map” and then “Line/polygon items as Line”. (Those selected results that are markers and not lines/polygons will not be added.)
 
 <Screencast :desktop="require('./add-results.mp4')" :mobile="require('./add-results-mobile.mp4')"></Screencast>
 

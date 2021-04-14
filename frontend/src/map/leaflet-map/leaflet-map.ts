@@ -94,7 +94,7 @@ export default class LeafletMap extends Vue {
 
     mounted(): void {
         const el = this.$el.querySelector(".fm-leaflet-map") as HTMLElement;
-        const map = L.map(el);
+        const map = L.map(el, { boxZoom: false });
 
         map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 

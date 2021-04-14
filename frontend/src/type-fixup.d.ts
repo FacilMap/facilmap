@@ -41,6 +41,10 @@ declare module "leaflet" {
 	namespace Draggable {
 		const _dragging: Draggable;
 	}
+
+	namespace Map {
+		const BoxZoom: any;
+	}
 }
 
 declare module "vue" {

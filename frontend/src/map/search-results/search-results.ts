@@ -111,7 +111,7 @@ export default class SearchResults extends Vue {
 	}
 
 	handleClick(result: SearchResult | FileResult | FindOnMapResult, event: MouseEvent): void {
-		const toggle = event.ctrlKey || event.shiftKey;
+		const toggle = event.ctrlKey;
 		this.selectResult(result, toggle);
 
 		if (this.autoZoom)

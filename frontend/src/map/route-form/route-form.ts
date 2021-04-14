@@ -107,7 +107,7 @@ export default class RouteForm extends Vue {
 	mounted(): void {
 		this.routeLayer = new RouteLayer(this.client, this.routeId, { weight: 7, opacity: 1, raised: true }).addTo(this.mapComponents.map);
 		this.routeLayer.on("click", (e) => {
-			if (!this.active && !(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey) {
+			if (!this.active && !(e.originalEvent as any).ctrlKey) {
 				this.$emit("activate");
 			}
 		});

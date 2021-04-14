@@ -1,6 +1,7 @@
 import { ID, SearchResult } from "facilmap-types";
-import { DomEvent, Evented, Handler, LeafletEvent, Map, Point, Util } from "leaflet";
-import { LinesLayer, MarkersLayer, SearchResultsLayer } from "facilmap-leaflet";
+import { DomEvent, Evented, Handler, LatLngBounds, LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
+import { LinesLayer, MarkerLayer, MarkersLayer, SearchResultsLayer } from "facilmap-leaflet";
+import BoxSelection from "./box-selection";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -41,15 +42,35 @@ export default class SelectionHandler extends Handler {
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
 
+	_boxSelectionHandler: BoxSelection;
+	_selectionBeforeBox: SelectedItem[] = [];
+
 	_mapInteraction: number = 0;
 	_isLongClick: boolean = false;
 
 	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer) {
 		super(map);
 
+		this._boxSelectionHandler = new BoxSelection(map)
+			.on("selectstart", this.handleBoxSelectStart)
+			.on("select", this.handleBoxSelect)
+			.on("selectend", this.handleBoxSelectEnd);
+
 		this._markersLayer = markersLayer;
 		this._linesLayer = linesLayer;
 		this._searchResultLayers = [searchResultsLayer];
+	}
+
+	enable(): this {
+		super.enable();
+		this._boxSelectionHandler.enable();
+		return this;
+	}
+
+	disable(): this {
+		this._boxSelectionHandler.disable();
+		super.disable();
+		return this;
 	}
 
 	addHooks(): void {
@@ -150,7 +171,7 @@ export default class SelectionHandler extends Handler {
 			return;
 
 		DomEvent.stopPropagation(e);
-		if ((e.originalEvent as any).ctrlKey || (e.originalEvent as any).shiftKey)
+		if ((e.originalEvent as any).ctrlKey)
 			this.toggleItem(item, true);
 		else
 			this.setSelectedItems([item], true);
@@ -175,7 +196,7 @@ export default class SelectionHandler extends Handler {
 		if (this._mapInteraction || this._isLongClick)
 			return;
 
-		if (!(e.originalEvent as any).ctrlKey && !(e.originalEvent as any).shiftKey)
+		if (!(e.originalEvent as any).ctrlKey)
 			this.setSelectedItems([]);
 	}
 
@@ -228,7 +249,33 @@ export default class SelectionHandler extends Handler {
 		this._mapInteraction--;
 	}
 
+	handleBoxSelectStart = (e: any): void => {
+		this._selectionBeforeBox = e.ctrlKey ? [...this._selection] : [];
+	}
+
+	handleBoxSelect = (e: any): void => {
+		const bounds: LatLngBounds = e.bounds;
+		
+		const markers = this._markersLayer.getLayers()
+			.filter((layer) => layer instanceof MarkerLayer && bounds.contains(layer.getLatLng()))
+			.map((layer): SelectedItem => ({ type: "marker", id: (layer as any).marker.id }));
+		
+		const lines = this._linesLayer.getLayers()
+			.filter((layer) => layer instanceof Polyline && bounds.contains(layer.getBounds()))
+			.map((layer): SelectedItem => ({ type: "line", id: (layer as any).line.id }));
+		
+		this.setSelectedItems([
+			...this._selectionBeforeBox,
+			...[...markers, ...lines].filter((item1) => !this._selectionBeforeBox.some((item2) => isSame(item1, item2)))
+		], true);
+	}
+
+	handleBoxSelectEnd = (): void => {
+		this._selectionBeforeBox = [];
+	}
+
 }
 
-export default interface HashHandler extends Evented {}
+// eslint-disable-next-line no-redeclare
+export default interface SelectionHandler extends Evented {}
 Object.assign(SelectionHandler.prototype, Evented.prototype);

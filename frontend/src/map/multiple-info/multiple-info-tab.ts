@@ -53,7 +53,7 @@ export default class MultipleInfoTab extends Vue {
 			return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
 		});
 		if (item) {
-			if (event.ctrlKey || event.shiftKey)
+			if (event.ctrlKey)
 				this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((it) => it !== item), true);
 			else
 				this.mapComponents.selectionHandler.setSelectedItems([item], true);
