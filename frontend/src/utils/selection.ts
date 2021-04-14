@@ -44,6 +44,7 @@ export default class SelectionHandler extends Handler {
 
 	_boxSelectionHandler: BoxSelection;
 	_selectionBeforeBox: SelectedItem[] = [];
+	_isBoxInteraction = false;
 
 	_mapInteraction: number = 0;
 	_isLongClick: boolean = false;
@@ -193,7 +194,7 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {
-		if (this._mapInteraction || this._isLongClick)
+		if (this._mapInteraction || this._isLongClick || this._isBoxInteraction)
 			return;
 
 		if (!(e.originalEvent as any).ctrlKey)
@@ -250,6 +251,7 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleBoxSelectStart = (e: any): void => {
+		this._isBoxInteraction = true;
 		this._selectionBeforeBox = e.ctrlKey ? [...this._selection] : [];
 	}
 
@@ -272,6 +274,10 @@ export default class SelectionHandler extends Handler {
 
 	handleBoxSelectEnd = (): void => {
 		this._selectionBeforeBox = [];
+
+		setTimeout(() => {
+			this._isBoxInteraction = false;
+		}, 0);
 	}
 
 }

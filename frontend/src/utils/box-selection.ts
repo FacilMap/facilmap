@@ -13,10 +13,10 @@ export default class BoxSelection extends Map.BoxZoom {
 				else if (type == "boxzoomend")
 					this.fire("selectend");
 
-				return map;
+				return this._map;
 			},
 			fitBounds: () => {
-				return map;
+				return this._map;
 			}
 		}));
 	}
