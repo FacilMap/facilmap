@@ -43,6 +43,7 @@ export default class PadSettings extends Vue {
 	@Prop({ type: Boolean }) readonly isCreate?: boolean;
 
 	isSaving = false;
+	isDeleting = false;
 	deleteConfirmation = "";
 	padData: PadDataCreate | PadDataUpdate = null as any;
 
@@ -88,23 +89,6 @@ export default class PadSettings extends Vue {
 		this.padDataValidationProvider?.validate({ ...padData });
 	}
 
-	/*
-	$scope.copyPadId = fmUtils.generateRandomPadId();
-	$scope.copyPad = function() {
-		socket.copyPad({ toId: $scope.copyPadId }, function(err) {
-			if(err) {
-				$scope.dialogError = err;
-				return;
-			}
-
-			$scope.closeDialog();
-			var url = $scope.urlPrefix + $scope.copyPadId;
-			$scope.showMessage("success", "The pad has been copied to", [ { label: url, url: url } ]);
-			$scope.copyPadId = fmUtils.generateRandomPadId();
-		});
-	};
-	*/
-
 	async save(): Promise<void> {
 		this.isSaving = true;
 		this.$bvToast.hide("fm-pad-settings-error");
@@ -112,7 +96,6 @@ export default class PadSettings extends Vue {
 		try {
 			if(this.isCreate)
 				await this.client.createPad(this.padData as PadDataCreate);
-				// this.client.updateBbox(leafletToFmBbox(map.map.getBounds(), map.map.getZoom()));
 			else
 				await this.client.editPad(this.padData);
 
@@ -129,19 +112,20 @@ export default class PadSettings extends Vue {
 	}
 
 	async deletePad(): Promise<void> {
-		this.isSaving = true;
 		this.$bvToast.hide("fm-pad-settings-error");
 
-		try {
-			if (!await this.$bvModal.msgBoxConfirm(`Are you sure you want to delete the map “${this.padData.name}”? Deleted maps cannot be restored!`))
+		if (!await this.$bvModal.msgBoxConfirm(`Are you sure you want to delete the map “${this.padData.name}”? Deleted maps cannot be restored!`))
 				return;
 
+		this.isDeleting = true;
+
+		try {
 			await this.client.deletePad();
 			this.$bvModal.hide(this.id);
 		} catch (err) {
 			showErrorToast(this, "fm-pad-settings-error", "Error deleting map", err);
 		} finally {
-			this.isSaving = false;
+			this.isDeleting = false;
 		}
 	};
 }

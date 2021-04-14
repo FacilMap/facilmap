@@ -36,7 +36,12 @@
 	<b-button-toolbar v-if="!isMoving">
 		<b-button v-b-tooltip.hover="'Zoom to line'" @click="zoomToLine()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
 
-		<b-dropdown text="Export" size="sm">
+		<b-dropdown size="sm" :disabled="isExporting">
+			<template #button-content>
+				<b-spinner small v-if="isExporting"></b-spinner>
+				Export
+			</template>
+
 			<b-dropdown-item
 				href="javascript:"
 				@click="exportRoute('gpx-trk')"

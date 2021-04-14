@@ -31,6 +31,7 @@ export default class LineInfo extends Vue {
 	@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
 
 	isDeleting = false;
+	isExporting = false;
 	showElevationPlot = false;
 	isMoving = false;
 
@@ -45,6 +46,7 @@ export default class LineInfo extends Vue {
 			return;
 		
 		this.isDeleting = true;
+
 		try {
 			await this.client.deleteLine({ id: this.lineId });
 		} catch (err) {
@@ -64,12 +66,15 @@ export default class LineInfo extends Vue {
 			return;
 
 		this.$bvToast.hide("fm-line-info-export-error");
+		this.isExporting = true;
 
 		try {
 			const exported = await this.client.exportLine({ id: this.line.id, format });
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${this.line.name}.gpx`);
 		} catch(err) {
 			showErrorToast(this, "fm-line-info-export-error", "Error exporting line", err);
+		} finally {
+			this.isExporting = false;
 		}
 	}
 

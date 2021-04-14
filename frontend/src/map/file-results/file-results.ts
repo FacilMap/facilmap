@@ -31,6 +31,9 @@ export default class FileResults extends Vue {
 	/** When clicking or selecting a search result, zoom to it. */
 	@Prop({ type: Boolean, default: false }) autoZoom!: boolean;
 
+	isAddingView: Array<ViewImport> = [];
+	isAddingType: Array<TypeImport> = [];
+
 	get hasViews(): boolean {
 		return this.file.views.length > 0;
 	}
@@ -49,11 +52,14 @@ export default class FileResults extends Vue {
 
 	async addView(view: ViewImport): Promise<void> {
 		this.$bvModal.hide("fm-file-result-import-error");
-
+		this.isAddingView.push(view);
+		
 		try {
 			await this.client.addView(view);
 		} catch (err) {
 			showErrorToast(this, "fm-file-result-import-error", "Error importing view", err);
+		} finally {
+			this.isAddingView = this.isAddingView.filter((v) => v !== view);
 		}
 	};
 
@@ -63,11 +69,14 @@ export default class FileResults extends Vue {
 
 	async addType(type: TypeImport): Promise<void> {
 		this.$bvModal.hide("fm-file-result-import-error");
+		this.isAddingType.push(type);
 
 		try {
-			this.client.addType(type);
+			await this.client.addType(type);
 		} catch (err) {
 			showErrorToast(this, "fm-file-result-import-error", "Error importing type", err);
+		} finally {
+			this.isAddingType = this.isAddingType.filter((t) => t !== type);
 		}
 	};
 	

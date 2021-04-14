@@ -8,6 +8,7 @@
 		</template>
 		<SearchResultInfo
 			:result="result"
+			:is-adding="isAdding"
 			@add-to-map="addToMap(result, $event)"
 			@use-as-from="useAsFrom(result)"
 			@use-as-via="useAsVia(result)"

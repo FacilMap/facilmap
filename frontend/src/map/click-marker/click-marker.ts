@@ -27,6 +27,7 @@ export default class ClickMarker extends Vue {
 
 	results: SearchResult[] = [];
 	layers!: SearchResultsLayer[]; // Don't make layer objects reactive
+	isAdding = false;
 
 	mounted(): void {
 		this.layers = [];
@@ -110,6 +111,7 @@ export default class ClickMarker extends Vue {
 
 	async addToMap(result: SearchResult, type: Type): Promise<void> {
 		this.$bvToast.hide("fm-click-marker-add-error");
+		this.isAdding = true;
 
 		try {
 			const obj: Partial<MarkerCreate<StringMap> & LineCreate<StringMap>> = {
@@ -142,6 +144,8 @@ export default class ClickMarker extends Vue {
 			this.close(result);
 		} catch (err) {
 			showErrorToast(this, "fm-click-marker-add-error", "Error adding to map", err);
+		} finally {
+			this.isAdding = false;
 		}
 	}
 

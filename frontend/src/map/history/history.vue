@@ -1,6 +1,21 @@
-<b-modal :id="id" title="History" ok-only ok-title="Close" size="xl" dialog-class="fm-history" @show="handleShow" @hidden="handleHidden" scrollable>
+<b-modal
+	:id="id"
+	title="History"
+	ok-only
+	ok-title="Close"
+	size="xl"
+	dialog-class="fm-history"
+	@show="handleShow"
+	@shown="handleShown"
+	@hidden="handleHidden"
+	:is-busy="!!reverting"
+	scrollable
+>
 	<p><em>Here you can inspect and revert the last 50 changes to the map.</em></p>
-	<b-table-simple striped hover>
+	<div v-if="isLoading" class="d-flex justify-content-center">
+		<b-spinner></b-spinner>
+	</div>
+	<b-table-simple v-else striped hover>
 		<b-thead>
 			<b-tr>
 				<b-th style="min-width: 12rem">Date</b-th>
@@ -19,7 +34,10 @@
 					<b-button v-if="entry.labels.diff" @click="handleInfoClick($event.target, entry)" @blur="handleInfoBlur()"><Icon icon="info-sign"></Icon></b-button>
 				</b-td>
 				<b-td class="td-buttons">
-					<b-button v-if="entry.labels.button" block :disabled="!!client.loading" @click="revert(entry)">{{entry.labels.button}}</b-button>
+					<b-button v-if="entry.labels.button" block :disabled="!!reverting" @click="revert(entry)">
+						<b-spinner small v-if="reverting === entry"></b-spinner>
+						{{entry.labels.button}}
+					</b-button>
 				</b-td>
 			</b-tr>
 		</b-tbody>

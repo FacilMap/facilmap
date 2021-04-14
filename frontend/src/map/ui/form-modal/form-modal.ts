@@ -17,6 +17,7 @@ export default class FormModal extends Vue {
 	@Prop({ type: String }) readonly dialogClass?: string;
 	@Prop({ type: Boolean }) readonly noCancel?: boolean;
 	@Prop({ type: Boolean }) readonly isSaving?: boolean;
+	@Prop({ type: Boolean }) readonly isBusy?: boolean;
 	@Prop({ type: Boolean }) readonly isCreate?: boolean;
 	@Prop({ type: Boolean, default: true }) readonly isModified?: boolean;
 	@Prop({ type: String }) readonly size?: string;

@@ -24,14 +24,22 @@ export default class History extends Vue {
 	@Prop({ type: String, required: true }) id!: string;
 
 	popover: { entry: HistoryEntryWithLabels; target: HTMLElement } | null = null;
+	isLoading = true;
+	reverting: HistoryEntryWithLabels | null = null;
 
-	async handleShow(): Promise<void> {
+	handleShow(): void {
+		this.isLoading = true;
+	}
+
+	async handleShown(): Promise<void> {
 		this.$bvToast.hide("fm-history-error");
 
 		try {
 			await this.client.listenToHistory();
 		} catch (err) {
 			showErrorToast(this, "fm-history-error", "Error loading history", err);
+		} finally {
+			this.isLoading = false;
 		}
 	}
 
@@ -49,10 +57,14 @@ export default class History extends Vue {
 		if (!await this.$bvModal.msgBoxConfirm(entry.labels.confirm))
 			return;
 		
+		this.reverting = entry;
+
 		try {
-			this.client.revertHistoryEntry({ id: entry.id });
+			await this.client.revertHistoryEntry({ id: entry.id });
 		} catch (err) {
 			showErrorToast(this, "fm-history-error", "Error loading history", err);
+		} finally {
+			this.reverting = null;
 		}
 	}
 

@@ -48,6 +48,7 @@ export default class MarkerInfo extends Vue {
 			return;
 		
 		this.isDeleting = true;
+
 		try {
 			await this.client.deleteMarker({ id: this.markerId });
 		} catch (err) {

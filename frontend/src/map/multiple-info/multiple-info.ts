@@ -75,6 +75,7 @@ export default class MultipleInfo extends Vue {
 			return;
 		
 		this.isDeleting = true;
+
 		try {
 			for (const object of this.objects) {
 				if (isMarker(object))

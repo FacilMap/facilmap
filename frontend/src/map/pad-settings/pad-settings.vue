@@ -4,6 +4,7 @@
 	dialog-class="fm-pad-settings"
 	:no-cancel="noCancel"
 	:is-saving="isSaving"
+	:is-busy="isDeleting"
 	:is-create="isCreate"
 	:is-modified="isModified"
 	@submit="save"
@@ -105,7 +106,10 @@
 				<b-input-group>
 					<b-form-input id="delete-input" v-model="deleteConfirmation" autocomplete="off"></b-form-input>
 					<b-input-group-append>
-						<b-button type="submit" variant="danger" :disabled="deleteConfirmation != 'DELETE'">Delete map</b-button>
+						<b-button type="submit" variant="danger" :disabled="isDeleting || isSaving || deleteConfirmation != 'DELETE'">
+							<b-spinner small v-if="isDeleting"></b-spinner>
+							Delete map
+						</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<template #description>

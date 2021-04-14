@@ -4,9 +4,8 @@
 		:title="title"
 		:size="size || 'lg'"
 		:dialog-class="dialogClass"
-		:no-close-on-esc="noCancel" :no-close-on-backdrop="noCancel" :hide-header-close="noCancel" :ok-only="noCancel"
-		:busy="isSaving"
-		:ok-disabled="!isCreate && !isModified"
+		:no-close-on-esc="isSaving || isBusy || noCancel" :no-close-on-backdrop="isSaving || isBusy || noCancel || isModified" :hide-header-close="noCancel"
+		@close="(isSaving || isBusy) && $event.preventDefault()"
 		@ok.prevent="handleSubmit(observer)"
 		@show="$emit('show')"
 		@hidden="$emit('hidden')"
@@ -24,10 +23,10 @@
 		<template #modal-footer="{ ok, cancel }">
 			<slot name="footer-left"></slot>
 			<div style="flex-grow: 1"></div>
-			<b-button v-if="!noCancel" :variant="noCancel || isModified || isCreate ? 'secondary' : 'primary'" @click="cancel" :disabled="isSaving">
+			<b-button v-if="!noCancel" :variant="noCancel || isModified || isCreate ? 'secondary' : 'primary'" @click="cancel" :disabled="isSaving || isBusy">
 				{{isModified ? "Cancel" : "Close"}}
 			</b-button>
-			<b-button v-if="noCancel || isModified || isCreate" variant="primary" @click="ok" :disabled="isSaving">
+			<b-button v-if="noCancel || isModified || isCreate" variant="primary" @click="ok" :disabled="isSaving || isBusy">
 				<b-spinner small v-if="isSaving"></b-spinner>
 				{{okTitle || (isCreate ? 'Create' : 'Save')}}
 			</b-button>

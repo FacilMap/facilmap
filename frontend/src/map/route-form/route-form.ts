@@ -100,6 +100,8 @@ export default class RouteForm extends Vue {
 	routeError: string | null = null;
 	hoverDestinationIdx: number | null = null;
 	hoverInsertIdx: number | null = null;
+	isAdding = false;
+	isExporting = false;
 
 	// Do not make reactive
 	suggestionMarker: MarkerLayer | undefined;
@@ -467,6 +469,7 @@ export default class RouteForm extends Vue {
 
 	async addToMap(type: Type): Promise<void> {
 		this.$bvToast.hide("fm-route-form-add-error");
+		this.isAdding = true;
 
 		try {
 			const line = await this.client.addLine({ typeId: type.id, routePoints: this.routeObj!.routePoints, mode: this.routeObj!.mode });
@@ -474,17 +477,22 @@ export default class RouteForm extends Vue {
 			this.mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 		} catch (err) {
 			showErrorToast(this, "fm-route-form-add-error", "Error adding line", err);
+		} finally {
+			this.isAdding = false;
 		}
 	}
 
 	async exportRoute(format: ExportFormat): Promise<void> {
 		this.$bvToast.hide("fm-route-form-export-error");
+		this.isExporting = true;
 
 		try {
 			const exported = await this.client.exportRoute({ format });
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
 		} catch(err) {
 			showErrorToast(this, "fm-route-form-export-error", "Error exporting route", err);
+		} finally {
+			this.isExporting = false;
 		}
 	}
 

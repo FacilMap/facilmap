@@ -41,12 +41,13 @@ export default class ManageViews extends Vue {
 	};
 
 	async deleteView(view: View): Promise<void> {
-		Vue.set(this.isDeleting, view.id, true);
 		this.$bvToast.hide(`fm-save-view-error-${view.id}`);
 
 		try {
 			if (!await this.$bvModal.msgBoxConfirm(`Do you really want to delete the view “${view.name}”?`))
 				return;
+
+			Vue.set(this.isDeleting, view.id, true);
 
 			await this.client.deleteView({ id: view.id });
 		} catch (err) {
