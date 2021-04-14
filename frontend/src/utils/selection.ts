@@ -258,18 +258,23 @@ export default class SelectionHandler extends Handler {
 	handleBoxSelect = (e: any): void => {
 		const bounds: LatLngBounds = e.bounds;
 		
-		const markers = this._markersLayer.getLayers()
-			.filter((layer) => layer instanceof MarkerLayer && bounds.contains(layer.getLatLng()))
-			.map((layer): SelectedItem => ({ type: "marker", id: (layer as any).marker.id }));
-		
-		const lines = this._linesLayer.getLayers()
-			.filter((layer) => layer instanceof Polyline && bounds.contains(layer.getBounds()))
-			.map((layer): SelectedItem => ({ type: "line", id: (layer as any).line.id }));
-		
-		this.setSelectedItems([
-			...this._selectionBeforeBox,
-			...[...markers, ...lines].filter((item1) => !this._selectionBeforeBox.some((item2) => isSame(item1, item2)))
-		], true);
+		const selection = [
+			...this._markersLayer.getLayers()
+				.filter((layer) => layer instanceof MarkerLayer && bounds.contains(layer.getLatLng()))
+				.map((layer): SelectedItem => ({ type: "marker", id: (layer as any).marker.id })),
+			...this._linesLayer.getLayers()
+				.filter((layer) => layer instanceof Polyline && bounds.contains(layer.getBounds()))
+				.map((layer): SelectedItem => ({ type: "line", id: (layer as any).line.id }))
+		].filter((item1) => !this._selectionBeforeBox.some((item2) => isSame(item1, item2)));
+
+		if (selection.length == 0)
+			this.setSelectedItems(this._selectionBeforeBox, true);
+		else {
+			this.setSelectedItems([
+				...this._selectionBeforeBox.filter((item) => isAllowedSibling(selection[0], item)),
+				...selection
+			], true);
+		}
 	}
 
 	handleBoxSelectEnd = (): void => {
