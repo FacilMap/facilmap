@@ -18,8 +18,8 @@ For more information, have a look at the [documentation](https://docs.facilmap.o
 
 Quick links:
 * [User guide](https://docs.facilmap.org/users/)
-* [Embed FacilMap into a website](https://docs.facilmap.org/administrators/embed.html)
-* [Run the FacilMap server](https://docs.facilmap.org/administrators/server.html)
+* [Embed FacilMap into a website](https://docs.facilmap.org/developers/embed.html)
+* [Run the FacilMap server](https://docs.facilmap.org/developers/server/)
 * [Use the FacilMap client](https://docs.facilmap.org/developers/client/) to programmatically modify objects on a collaborative map.
 * [Dev setup](https://docs.facilmap.org/developers/development/dev-setup.html)
 

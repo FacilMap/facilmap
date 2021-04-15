@@ -20,10 +20,6 @@ module.exports = {
 				link: '/users/',
 			},
 			{
-				text: 'Administrators',
-				link: '/administrators/'
-			},
-			{
 				text: 'Developers',
 				link: '/developers/'
 			}
@@ -75,19 +71,25 @@ module.exports = {
 					]
 				},
 			],
-			'/administrators/': [
+			'/developers/': [
 				{
-					title: 'Administrator guide',
+					title: "Developer guide",
 					collapsable: false,
 					children: [
 						"",
-						"embed",
-						"server"
+						"embed"
 					]
-				}
-			],
-			'/developers/': [
-				"",
+				},
+				{
+					title: "Server",
+					collapsable: false,
+					children: [
+						"server/",
+						"server/docker",
+						"server/standalone",
+						"server/config"
+					]
+				},
 				{
 					title: 'Client',
 					collapsable: false,
@@ -103,7 +105,8 @@ module.exports = {
 					title: 'Development',
 					collapsable: false,
 					children: [
-						"development/dev-setup.md"
+						"development/dev-setup",
+						"development/documentation"
 					]
 				}
 			]
