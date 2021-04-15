@@ -1,6 +1,6 @@
 import Client, { ClientEvents } from "facilmap-client";
 import { EventHandler } from "facilmap-types";
-import { Handler, LatLngBounds, Map } from "leaflet";
+import { Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
 const flyToBkp = Map.prototype.flyTo;
@@ -12,6 +12,8 @@ Map.prototype.flyTo = function(...args) {
 
 export default class BboxHandler extends Handler {
 
+    margin = 50;
+
     client: Client<any>;
 
     constructor(map: Map, client: Client<any>) {
@@ -19,9 +21,21 @@ export default class BboxHandler extends Handler {
         this.client = client;
     }
 
-    updateBbox(bounds?: LatLngBounds, zoom?: number): void {
-        if (this._map._loaded)
-            this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
+    updateBbox(center?: LatLng, zoom?: number): void {
+        if (!this._map._loaded && (center == null || zoom == null))
+            return;
+
+        const pixelBounds = this._map.getPixelBounds(center, zoom);
+        pixelBounds.min!.x -= this.margin;
+        pixelBounds.min!.y -= this.margin;
+        pixelBounds.max!.x += this.margin;
+        pixelBounds.max!.y += this.margin;
+
+        const bounds = new LatLngBounds(
+            this._map.unproject(pixelBounds.getBottomLeft(), zoom),
+            this._map.unproject(pixelBounds.getTopRight(), zoom)
+        );
+        this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
     }
 
     handleMoveEnd = (): void => {
@@ -31,9 +45,7 @@ export default class BboxHandler extends Handler {
     }
 
     handleFlyTo = ({ latlng, zoom }: any): void => {
-        const pixelBounds = this._map.getPixelBounds(latlng, zoom);
-        const bounds = new LatLngBounds(this._map.unproject(pixelBounds.getBottomLeft(), zoom), this._map.unproject(pixelBounds.getTopRight(), zoom));
-        this.updateBbox(bounds, zoom);
+        this.updateBbox(latlng, zoom);
     }
 
     handleEmitResolve: EventHandler<ClientEvents, "emitResolve"> = (name, data) => {
