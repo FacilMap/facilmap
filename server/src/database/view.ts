@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "../../../types/src";
+import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "facilmap-types";
 import Database from "./database";
 import { getLatType, getLonType, makeNotNullForeignKey } from "./helpers";
 

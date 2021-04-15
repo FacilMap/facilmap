@@ -1,6 +1,5 @@
-import { Model } from "sequelize";
-import { DataTypes, Op } from "sequelize";
-import { PadData, PadDataCreate, PadDataUpdate, PadId } from "../../../types/src";
+import { DataTypes, Model, Op } from "sequelize";
+import { PadData, PadDataCreate, PadDataUpdate, PadId } from "facilmap-types";
 import Database from "./database";
 import { streamEachPromise } from "../utils/streams";
 

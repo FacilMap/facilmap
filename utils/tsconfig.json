@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "esnext",
+		"module": "CommonJS",
 		"esModuleInterop": true,
 		"strict": true,
 		"sourceMap": true,
@@ -9,8 +10,7 @@
 		"moduleResolution": "node",
 		"noErrorTruncation": true,
 		"skipLibCheck": true,
-		"experimentalDecorators": true,
-		"noEmit": true
+		"experimentalDecorators": true
 	},
 	"include": ["src/**/*"]
 }

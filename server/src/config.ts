@@ -1,7 +1,5 @@
 import { Options as SequelizeOptions } from "sequelize";
-import { config as dotenv } from "dotenv";
-
-dotenv({ path: `${__dirname}/../../config.env`});
+import "dotenv/config";
 
 export interface DbConfig {
 	type: SequelizeOptions['dialect'];
@@ -25,7 +23,7 @@ interface Config {
 }
 
 const config: Config = {
-	userAgent: process.env.USER_AGENT || 'FacilMap (https://facilmap.org/)',
+	userAgent: process.env.USER_AGENT || 'FacilMap',
 	host: process.env.HOST || undefined,
 	port: process.env.PORT ? Number(process.env.PORT) : 8080,
 	db : {

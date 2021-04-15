@@ -1,5 +1,5 @@
 import highland from "highland";
-import { Point } from "../../types/src";
+import { Point } from "facilmap-types";
 
 // const API_URL = "https://elevation.mapzen.com/height";
 // const LIMIT = 500;

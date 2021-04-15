@@ -1,5 +1,4 @@
-import { Bbox, Point } from "facilmap-types";
-import { Latitude } from "../../../types/src";
+import { Bbox, Latitude, Point } from "facilmap-types";
 
 const R = 6371; // km
 

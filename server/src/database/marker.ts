@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "../../../types/src";
+import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
 import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
 import Database from "./database";
 import { getElevationForPoint } from "../elevation";

@@ -47,7 +47,7 @@ async function download() {
 	const res = await new Promise<IncomingMessage>((resolve, reject) => {
 		https.get(url + (currentMd5 || ""), {
 			headers: {
-				Authorization: `Basic ${new Buffer(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
+				Authorization: `Basic ${Buffer.from(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
 			}
 		}, resolve).on("error", reject);
 	});

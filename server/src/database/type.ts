@@ -1,5 +1,5 @@
 import Sequelize, { Model } from "sequelize";
-import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "../../../types/src";
+import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "facilmap-types";
 import Database from "./database";
 import { makeNotNullForeignKey, validateColour } from "./helpers";
 

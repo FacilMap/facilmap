@@ -1,7 +1,7 @@
 import { generateRandomId } from "../utils/utils";
 import { DataTypes, Model, Op } from "sequelize";
 import Database from "./database";
-import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "../../../types/src";
+import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { BboxWithExcept, getLatType, getLonType, makeBboxCondition } from "./helpers";
 import { WhereOptions } from "sequelize/types/lib/model";
 import { calculateRouteForLine } from "../routing/routing";
@@ -172,7 +172,11 @@ export default class DatabaseRoutes {
 			time: line.time,
 			ascent: line.ascent,
 			descent: line.descent,
-			extraInfo: line.extraInfo
+			extraInfo: line.extraInfo,
+			top: line.top,
+			left: line.left,
+			bottom: line.bottom,
+			right: line.right
 		};
 	}
 

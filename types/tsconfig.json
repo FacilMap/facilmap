@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"target": "es3",
+		"target": "esnext",
+		"module": "CommonJS",
 		"esModuleInterop": true,
 		"strict": true,
 		"sourceMap": true,
@@ -8,7 +9,6 @@
 		"outDir": "dist",
 		"moduleResolution": "node",
 		"noErrorTruncation": true,
-		"skipLibCheck": true,
-		"noEmit": true
+		"skipLibCheck": true
 	}
 }

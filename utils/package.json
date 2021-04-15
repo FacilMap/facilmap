@@ -12,16 +12,20 @@
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
   },
   "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
     "types": "tsc --noEmit src/*",
     "lint": "eslint src/*"
   },
   "files": [
+    "dist",
     "src",
     "README.md",
     "tsconfig.json"
@@ -47,6 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "jest": "^26.6.3",
+    "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
     "typescript": "^4.2.3"
   }

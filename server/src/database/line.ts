@@ -1,5 +1,5 @@
 import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "../../../types/src";
+import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
 import Database from "./database";
 import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
 import { isEqual, mapValues } from "lodash";

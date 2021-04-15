@@ -5,6 +5,15 @@ The FacilMap server is written in [node.js](https://nodejs.org/en/). To run the 
 * You need to create a database on one of the systems supported by [Sequelize](https://sequelize.org/master/), it is recommended to use MySQL/MariaDB. When creating a database for FacilMap, make sure to use the `utf8mb4` charset/collation to make sure that characters from all languages can be used on a map. By default, MySQL/MariaDB uses the `latin1` charset, which mostly supports only basic latin characters. When you start the FacilMap server for the first time, the necessary tables are created using the charset of the database.
 * It is recommended to run FacilMap as an unprivileged user.
 
+## Run the latest release
+
+A bundled version of the FacilMap server is published on NPM as [facilmap-server](https://www.npmjs.com/package/facilmap-server). To run it, run the following steps:
+
+1. If you don’t have a global NPM prefix set up yet, run `npm config set prefix ~/.local`. This will install npm packages into `~/.local/bin`, rather than trying to install them into `/usr/local/bin`.
+2. Install facilmap-server by running `npm install -g facilmap-server`
+3. Create a `config.env` file based on [`config.env.example`](https://github.com/FacilMap/facilmap/blob/master/config.env.example) and to adjust the [configuration](./config).
+4. Start the FacilMap server by running `~/.local/bin/facilmap-server dotenv_config_path=config.env`.
+
 
 ## Run the development version
 
