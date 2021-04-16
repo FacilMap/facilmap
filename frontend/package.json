@@ -81,7 +81,7 @@
     "@types/leaflet.locatecontrol": "^0.60.7",
     "@types/pluralize": "^0.0.29",
     "@types/scrollparent": "^2.0.0",
-    "@types/webpack-bundle-analyzer": "^3.9.1",
+    "@types/webpack-bundle-analyzer": "^4.4.0",
     "@types/webpack-dev-server": "^3.11.2",
     "copy-webpack-plugin": "^8.0.0",
     "css-loader": "^5.1.3",
