@@ -11,7 +11,6 @@
   "scripts": {
     "dev-server": "vuepress dev src",
     "build": "vuepress build src",
-    "deploy": "./deploy.sh",
     "check": "vuepress check-md src"
   },
   "private": true,

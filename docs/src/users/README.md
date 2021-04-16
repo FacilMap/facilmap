@@ -27,4 +27,4 @@ In addition, FacilMap allows you to create collaborative maps, where you and oth
 * [Import](./import/) GPX, KML or GeoJSON files. Importing a GeoJSON file that was exported by FacilMap makes it possible to copy parts of one map onto another.
 * Adjust the [map settings](./map-settings/). This is also where your can [delete the map](./map-settings/#delete-the-map).
 
-If you are interested in embedding FacilMap into your website or even running your own FacilMap server, check out the [Administrator guide](../administrators/).
+If you are interested in embedding FacilMap into your website or even running your own FacilMap server, check out the [Developer guide](../developers/).
