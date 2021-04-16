@@ -14,6 +14,8 @@ A bundled version of the FacilMap server is published on NPM as [facilmap-server
 3. Create a `config.env` file based on [`config.env.example`](https://github.com/FacilMap/facilmap/blob/master/config.env.example) and to adjust the [configuration](./config).
 4. Start the FacilMap server by running `~/.local/bin/facilmap-server dotenv_config_path=config.env`.
 
+FacilMap will need write access to the directory `~/.local/lib/node_modules/facilmap-server/cache`. All other files and directories can be read-only. To harden the FacilMap installation, make the whole installation folder owned by root, but create the cache directory and make it owned by the facilmap user.
+
 
 ## Run the development version
 
