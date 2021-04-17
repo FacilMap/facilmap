@@ -16,37 +16,39 @@
         left: 0;
         bottom: 0;
         z-index: 0;
+        user-select: none;
+        -webkit-user-select: none;
 
         .fm-leaflet-center {
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-        
+
             .leaflet-control {
                 display: inline-block;
                 float: none;
                 clear: none;
             }
         }
-        
+
         .leaflet-control.leaflet-control-mouseposition {
             float: left;
             pointer-events: none;
             padding-right: 0;
-        
+
             &:after {
                 content: " |";
             }
-        
+
             & + * {
                 clear: none;
             }
         }
-        
+
         .leaflet-control.leaflet-control-graphicscale {
             margin-bottom: 0;
             pointer-events: none;
-        
+
             .label {
                 color: #000;
                 text-shadow: 0 0 3px #fff, 0 0 5px #fff, 0 0 10px #fff;
@@ -59,7 +61,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
     }
 
     &.isNarrow {
@@ -78,7 +80,7 @@
         height: 100%;
         z-index: 10001;
     }
-    
+
     .fm-leaflet-map-loading {
         position:absolute;
         top:0;
@@ -91,26 +93,28 @@
         font-size:1.5em;
         font-weight:bold;
     }
-    
+
     .fm-leaflet-map-spinner {
         position:absolute;
         bottom: 20px;
         left: 115px;
         color: #00272a;
     }
-    
+
     .fm-logo {
         position: absolute;
         bottom: 0;
         left: -25px;
         pointer-events: none;
         overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
 
         img {
             margin-bottom: -24px;
         }
     }
-    
+
     .fm-open-external {
         position: absolute;
         bottom: 15px;

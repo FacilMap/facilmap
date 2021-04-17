@@ -146,7 +146,7 @@ export default class LeafletMap extends Vue {
             this.mapContext.center = map.getCenter();
             this.mapContext.zoom = map.getZoom();
         });
-        
+
         map.on("fmFilter", () => {
             this.mapContext.filter = map.fmFilter;
             this.mapContext.filterFunc = map.fmFilterFunc;
