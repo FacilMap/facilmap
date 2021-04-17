@@ -24,7 +24,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
 * `elevation` (number): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
-* `data` (`{ [fieldName: string]: string }`): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
 
 ## Line
 
@@ -50,11 +50,11 @@ separately through `linePoints` events.
 * `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
 * `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`) (set by the server)
 * `left`, `top`, `right`, `bottom` (number): The bounding box of the line (set by the server)
-* `extraInfo` (`{ [type: string]: Array<[startIdx: number, endIdx: number, type: number]>> }`): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
+* `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code>): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
 * `typeId` (number): The ID of the type of this line
-* `data` (`{ [fieldName: string]: string }`): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
 * `trackPoints`:
-  * In the `lines` property of the client, an object of the format [`{ [idx: number]: TrackPoint }`](#trackpoint)
+  * In the `lines` property of the client, an object of the format [<code>{ &#91;idx: number&#93;: TrackPoint }</code>](#trackpoint)
   * When creating/updating a line with the routing mode `track`, an array of the format [`TrackPoint[]`](#trackpoint)
 
 ## TrackPoint

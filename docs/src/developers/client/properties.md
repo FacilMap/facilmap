@@ -68,35 +68,35 @@ _Type:_ [PadData](./types#paddata)
 All markers that have been retrieved so far.
 
 _Set:_ in response to [`marker`](./events#marker) and [`deleteMarker`](./events#deletemarker) events.\
-_Type:_ [`{ [markerId: number]: Marker }`](./types#marker)
+_Type:_ [<code>{ &#91;markerId: number&#93;: Marker }</code>](./types#marker)
 
 ## `lines`
 
 All lines of the map along with the track points that have been retrieved so far.
 
 _Set:_ in response to [`line`](./events#line), [`linePoints`](./events#linepoints) and [`deleteLine`](./events#deleteline) events.\
-_Type:_ [`{ [lineId: number]: Line }`](./types#line) (with track points)
+_Type:_ [<code>{ &#91;lineId: number&#93;: Line }</code>](./types#line) (with track points)
 
 ## `views`
 
 All views of the map.
 
 _Set:_ in response to [`view`](./events#view) and [`deleteView`](./events#deleteview) events.\
-_Type:_ [`{ [viewId: number]: View }`](./types#view)
+_Type:_ [<code>{ &#91;viewId: number&#93;: View }</code>](./types#view)
 
 ## `types`
 
 All types of the map.
 
 _Set:_ in response to [`type`](./events#type) and [`deleteType`](./events#deletetype) events.\
-_Type:_ [`{ [typeId: number]: Type }`](./types#type)
+_Type:_ [<code>{ &#91;typeId: number&#93;: Type }</code>](./types#type)
 
 ## `history`
 
 All history entries that have been retrieved so far. Note that you have to subscribe to the history using [`listenToHistory()`](./methods#listentohistory).
 
 _Set:_ in response to [`history`](./events#history) events.\
-_Type:_ [`{ [entryId: number]: HistoryEntry }`](./types#historyentry)
+_Type:_ [<code>{ &#91;entryId: number&#93;: HistoryEntry }</code>](./types#historyentry)
 
 ## `route`
 
@@ -110,14 +110,14 @@ _Type:_ [`Route`](./types#route)
 Details and track points (simplified for the current bbox) for the active routes set using [`setRoute()`](./methods#setroute-data) with `routeId` set to a string.
 
 _Set:_ during [`setRoute()`](./methods#setroute-data) and in response to [`routePoints`](./events#routepoints) events.\
-_Type:_ [`{ [routeId: string]: Route }`](./types#route)
+_Type:_ [<code>{ &#91;routeId: string&#93;: Route }</code>](./types#route)
 
 ## `serverError`
 
 If the opening the map failed ([`setPadId(padId)`](./methods#setpadid-padid) promise got rejected), the error message is stored in this property.
 
 _Set:_ in response to a [`serverError`](./events#servererror) event (fired during [`setPadId`](./methods#setpadid-padid)).\
-_Type:_ [`{ [routeId: string]: Route }`](./types#route)
+_Type:_ Error
 
 ## `loading`
 
