@@ -95,7 +95,6 @@
 		</div>
 		<div id="map"></div>
 		<script src="https://unpkg.com/leaflet"></script>
-		<script src="https://unpkg.com/socket.io-client/dist/socket.io.js"></script>
 		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
 
 		<script type="text/javascript">
@@ -107,7 +106,7 @@
 			var client = new FacilMap.Client("http://localhost:40829/");
 
 			L.FacilMap.setVisibleLayers(map);
-			
+
 			const layers = L.FacilMap.getLayers(map);
 			const byName = (layerMap) => Object.fromEntries(Object.entries(layerMap).map(([key, layer]) => [layer.options.fmName, layer]));
 			L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
@@ -120,7 +119,7 @@
 					linesLayer.setHighlightedLines(new Set());
 					searchResultsLayer.setHighlightedResults(new Set());
 				});
-			
+
 			const linesLayer = new L.FacilMap.LinesLayer(client).addTo(map)
 				.on("click", (e) => {
 					L.DomEvent.stopPropagation(e);
@@ -128,7 +127,7 @@
 					linesLayer.setHighlightedLines(new Set([e.layer.line.id]));
 					searchResultsLayer.setHighlightedResults(new Set());
 				});
-			
+
 			map.on("click", () => {
 				markersLayer.setHighlightedMarkers(new Set());
 				linesLayer.setHighlightedLines(new Set());

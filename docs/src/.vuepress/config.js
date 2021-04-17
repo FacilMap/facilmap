@@ -104,6 +104,25 @@ module.exports = {
 					]
 				},
 				{
+					title: "Leaflet components",
+					collapsable: false,
+					children: [
+						"leaflet/",
+						"leaflet/bbox",
+						"leaflet/layers",
+						"leaflet/markers",
+						"leaflet/lines",
+						"leaflet/route",
+						"leaflet/search",
+						"leaflet/icons",
+						"leaflet/hash",
+						"leaflet/initial-view",
+						"leaflet/views",
+						"leaflet/click-listener",
+						"leaflet/map"
+					]
+				},
+				{
 					title: 'Development',
 					collapsable: false,
 					children: [

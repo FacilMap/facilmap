@@ -25,9 +25,9 @@
     "assets",
     "dist",
     "src",
-    "./download-icons.ts",
-    "./example.html",
-    "./icontest.html",
+    "download-icons.ts",
+    "example.html",
+    "icontest.html",
     "README.md",
     "tsconfig.json"
   ],
