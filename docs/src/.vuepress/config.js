@@ -99,7 +99,8 @@ module.exports = {
 						"client/properties",
 						"client/events",
 						"client/methods",
-						"client/types"
+						"client/types",
+						"client/advanced"
 					]
 				},
 				{

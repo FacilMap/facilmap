@@ -27,23 +27,25 @@ client.on("marker", (marker) => {
 
 ## `padId`
 
-The ID under which the client is connected to the map. Can be the read-only or a read-write ID of an existing map.
+The ID of the collaborative map that the client is connected to. Can be the read-only, writable or admin ID of an existing map.
 
-Note that the ID can be changed in the settings. If in case of a [`padData`](./events#paddata) event, the ID of the pad has
-changed, this property is updated automatically.
+Note that the ID can be changed in the settings. If in case of a [`padData`](./events#paddata) event, the ID of the pad has changed, this property is updated automatically.
 
+_Set:_ when calling [`setPadId`](./methods#setpadid-padid) and in response to a [`padData`](./events#paddata) event.\
 _Type:_ string
 
 ## `readonly`
 
 `true` if the map has been opened using its read-only ID. `false` if the map is writable.
 
+_Set:_ during [`setPadId`](./methods#setpadid-padid).\
 _Type:_ boolean
 
 ## `writable`
 
 `2` if the map has been opened using its admin ID, `1` if if has been opened using the writable ID, `0` if the map is read-only.
 
+_Set:_ during [`setPadId`](./methods#setpadid-padid).\
 _Type:_ number
 
 
@@ -51,56 +53,82 @@ _Type:_ number
 
 `true` if the map was deleted while this client was connected to it.
 
+_Set:_ in response to a [`deletePad`](./events#deletepad) event.\
+_Type:_ boolean
+
 ## `padData`
 
 The current settings of the map. `writeId` and/or `adminId` is null if if has been opened using another ID than the admin ID.
 
-_Type:_ [padData](./types#paddata)
+_Set:_ in response to a [`padData`](./events#paddata) event.\
+_Type:_ [PadData](./types#paddata)
 
 ## `markers`
 
 All markers that have been retrieved so far.
 
-_Type:_ `{"<marker id>": `[`marker`](./types#marker)`}`
+_Set:_ in response to [`marker`](./events#marker) and [`deleteMarker`](./events#deletemarker) events.\
+_Type:_ [`{ [markerId: number]: Marker }`](./types#marker)
 
 ## `lines`
 
-All lines and their track points that have been retrieved so far.
+All lines of the map along with the track points that have been retrieved so far.
 
-_Type:_ `{"<line id>": `[`line with trackPoints`](./types#line)`}`
+_Set:_ in response to [`line`](./events#line), [`linePoints`](./events#linepoints) and [`deleteLine`](./events#deleteline) events.\
+_Type:_ [`{ [lineId: number]: Line }`](./types#line) (with track points)
 
 ## `views`
 
-All views that have been retrieved so far.
+All views of the map.
 
-_Type:_ `{"<view id>": `[`view`](./types#view)`}`
+_Set:_ in response to [`view`](./events#view) and [`deleteView`](./events#deleteview) events.\
+_Type:_ [`{ [viewId: number]: View }`](./types#view)
 
 ## `types`
 
-All types that have been retrieved so far.
+All types of the map.
 
-_Type:_ `{"<type id>": `[`type`](./types#type)`}`
+_Set:_ in response to [`type`](./events#type) and [`deleteType`](./events#deletetype) events.\
+_Type:_ [`{ [typeId: number]: Type }`](./types#type)
 
 ## `history`
 
-All history entries that have been retrieved so far. Note that you have to subscribe to the history using
-[`listenToHistory()`](./methods#listentohistory).
+All history entries that have been retrieved so far. Note that you have to subscribe to the history using [`listenToHistory()`](./methods#listentohistory).
 
-_Type:_ `{"<entry id>": `[`historyEntry`](./types#historyentry)`}`
+_Set:_ in response to [`history`](./events#history) events.\
+_Type:_ [`{ [entryId: number]: HistoryEntry }`](./types#historyentry)
 
 ## `route`
 
-Information about the temporary route set using [`setRoute()`](./methods#setroute-data).
+Details and track points (simplified for the current bbox) for the active route set using [`setRoute()`](./methods#setroute-data) with `routeId` set to `undefined`, or `undefined` if no such route is active.
 
-_Type:_ [`route`](./types#route)
+_Set:_ during [`setRoute()`](./methods#setroute-data) and in response to [`routePoints`](./events#routepoints) events.\
+_Type:_ [`Route`](./types#route)
 
+## `routes`
+
+Details and track points (simplified for the current bbox) for the active routes set using [`setRoute()`](./methods#setroute-data) with `routeId` set to a string.
+
+_Set:_ during [`setRoute()`](./methods#setroute-data) and in response to [`routePoints`](./events#routepoints) events.\
+_Type:_ [`{ [routeId: string]: Route }`](./types#route)
 
 ## `serverError`
 
-If the opening the pad failed ([`setPadId(padId)`](./methods#setpadid-padid) promise got rejected), the error message is stored
-in this property.
+If the opening the map failed ([`setPadId(padId)`](./methods#setpadid-padid) promise got rejected), the error message is stored in this property.
+
+_Set:_ in response to a [`serverError`](./events#servererror) event (fired during [`setPadId`](./methods#setpadid-padid)).\
+_Type:_ [`{ [routeId: string]: Route }`](./types#route)
 
 ## `loading`
 
-A number that indicates how many requests are currently pending. You can use this to show a loading spinner or disable certain
-UI elements while the value is greater than 0.
+A number that indicates how many requests are currently pending (meaning how many async methods are currently running). You can use this to show a loading spinner or disable certain UI elements while the value is greater than 0.
+
+_Set:_ increased when any method is called and decreased when the method returns.\
+_Type:_ `number`
+
+## `disconnected`
+
+`false` in the beginning, changed to `true` as soon as the socket.io connection is made. May be `false` temporarily if the connection is lost.
+
+_Set:_ in reaction to `connect` and `disconnect` events.\
+_Type:_ `boolean`

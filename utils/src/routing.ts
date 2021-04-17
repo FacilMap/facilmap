@@ -75,7 +75,7 @@ export function decodeRouteMode(encodedMode: RouteMode | undefined): DecodedRout
 				decodedMode.preference = part as any;
 			else if(part == "details")
 				decodedMode.details = true;
-			else if(["highways", "tollways", "ferries", "tunnels", "pavedroads", "unpavedroads", "tracks", "fords", "steps", "hills"].includes(part))
+			else if(["highways", "tollways", "ferries", "fords", "steps"].includes(part))
 				decodedMode.avoid.push(part as any);
 		}
 	}
