@@ -2,7 +2,7 @@ import WithRender from "./save-view.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-import { baseLayers, getCurrentView, overlays } from "facilmap-leaflet";
+import { getCurrentView, getLayers } from "facilmap-leaflet";
 import { ViewCreate } from "facilmap-types";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";
@@ -37,10 +37,12 @@ export default class SaveView extends Vue {
 	}
 
 	get baseLayer(): string {
+		const { baseLayers } = getLayers(this.mapComponents.map);
 		return baseLayers[this.view.baseLayer].options.fmName || this.view.baseLayer;
 	}
 
 	get overlays(): string {
+		const { overlays } = getLayers(this.mapComponents.map);
 		return this.view.layers.map((key) => overlays[key].options.fmName || key).join(", ") || "—";
 	}
 

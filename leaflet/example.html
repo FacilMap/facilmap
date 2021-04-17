@@ -108,7 +108,9 @@
 
 			L.FacilMap.setVisibleLayers(map);
 			
-			L.control.layers(L.FacilMap.baseLayers, L.FacilMap.overlays).addTo(map);
+			const layers = L.FacilMap.getLayers(map);
+			const byName = (layerMap) => Object.fromEntries(Object.entries(layerMap).map(([key, layer]) => [layer.options.fmName, layer]));
+			L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
 
 			new L.FacilMap.BboxHandler(map, client).enable();
 

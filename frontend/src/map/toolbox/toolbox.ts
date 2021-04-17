@@ -4,7 +4,7 @@ import WithRender from "./toolbox.vue";
 import "./toolbox.scss";
 import { Prop } from "vue-property-decorator";
 import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-import { baseLayers, displayView, overlays, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
+import { displayView, getLayers, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
 import { Type, View } from "facilmap-types";
 import About from "../about/about";
 import Sidebar from "../ui/sidebar/sidebar";
@@ -57,6 +57,7 @@ export default class Toolbox extends Vue {
 	}
 
 	get baseLayers(): Array<{ key: string; name: string; active: boolean }> {
+		const { baseLayers } = getLayers(this.mapComponents.map);
 		return Object.keys(baseLayers).map((key) => ({
 			key,
 			name: baseLayers[key].options.fmName!,
@@ -65,6 +66,7 @@ export default class Toolbox extends Vue {
 	}
 
 	get overlays(): Array<{ key: string; name: string; active: boolean }> {
+		const { overlays } = getLayers(this.mapComponents.map);
 		return Object.keys(overlays).map((key) => ({
 			key,
 			name: overlays[key].options.fmName!,

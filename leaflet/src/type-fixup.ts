@@ -36,6 +36,7 @@ declare module "leaflet" {
 
     interface Map {
         _loaded?: true;
+        _layers: Record<string, Layer>;
         getPixelBounds(latlng?: LatLngExpression, zoom?: number): Bounds;
     }
 
