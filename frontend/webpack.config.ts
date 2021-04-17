@@ -123,7 +123,8 @@ module.exports = (env: any, argv: any): Configuration => {
 			//hotOnly: true,
 			disableHostCheck: true,
 			writeToDisk: true,
-			injectClient: false // https://github.com/webpack/webpack-dev-server/issues/2484
+			injectClient: false, // https://github.com/webpack/webpack-dev-server/issues/2484
+			port: 8082
 		}
 	};
 };

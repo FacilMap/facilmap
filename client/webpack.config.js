@@ -45,7 +45,8 @@ module.exports = (env, argv) => {
 		devServer: {
 			publicPath: "/dist",
 			disableHostCheck: true,
-			injectClient: false // https://github.com/webpack/webpack-dev-server/issues/2484
+			injectClient: false, // https://github.com/webpack/webpack-dev-server/issues/2484
+			port: 8083
 		}
 	};
 };
