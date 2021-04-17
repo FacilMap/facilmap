@@ -10,7 +10,7 @@ If you want to make some changes to the documentation, first install the necessa
 
 Before building the documentation, run `yarn run check` to check that all links in the markdown point to a valid destination.
 
-To build the documentation, run `yarn run build`. This will create static HTML files in `src/.vuepress/dist` that can be served by a simple HTTP server.
+To build the documentation, run `yarn run build`. This will create static HTML files in `dist` that can be served by a simple HTTP server.
 
 ## Embed videos
 
