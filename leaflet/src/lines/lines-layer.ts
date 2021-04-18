@@ -72,10 +72,13 @@ export default class LinesLayer extends FeatureGroup {
 
 	handleMoveEnd = (): void => {
 		// Rerender all lines to recall disconnectSegmentsOutsideViewport()
-		for(const i of numberKeys(this.client.lines)) {
-			if (this.shouldShowLine(this.client.lines[i]))
-				this._addLine(this.client.lines[i]);
-		}
+		// Run it on next tick because the renderers need to run first
+		Promise.resolve().then(() => {
+			for(const i of numberKeys(this.client.lines)) {
+				if (this.shouldShowLine(this.client.lines[i]))
+					this._addLine(this.client.lines[i]);
+			}
+		});
 	};
 
 	handleFilter = (): void => {
@@ -187,14 +190,17 @@ export default class LinesLayer extends FeatureGroup {
 	_addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
 		const trackPoints = line.mode ? trackPointsToLatLngArray(line.trackPoints) : line.routePoints.map((p) => latLng(p.lat, p.lon));
 
-		if(trackPoints.length < 2) {
+		// Two points that are both outside of the viewport should not be connected, as the piece in between
+		// has not been received.
+		const splitLatLngs = line.mode ? disconnectSegmentsOutsideViewport(trackPoints, this._map.getBounds()) : [trackPoints];
+
+		if(splitLatLngs.length == 0) {
 			this._deleteLine(line);
 			return;
 		}
 
 		if(!this.linesById[line.id]) {
 			this.linesById[line.id] = new HighlightablePolyline([ ]);
-			this.addLayer(this.linesById[line.id]);
 
 			if(line.id != null) { // We don't want a popup for lines that we are drawing right now
 				this.linesById[line.id]
@@ -219,12 +225,11 @@ export default class LinesLayer extends FeatureGroup {
 			});
 		}
 
-		// Two points that are both outside of the viewport should not be connected, as the piece in between
-		// has not been received.
-		const splitLatLngs = line.mode ? disconnectSegmentsOutsideViewport(trackPoints, this._map.getBounds()) : trackPoints;
-
 		(this.linesById[line.id] as any).line = line;
 		this.linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
+
+		if (!this.hasLayer(this.linesById[line.id]))
+			this.addLayer(this.linesById[line.id]);
 	}
 
 	_deleteLine(line: ObjectWithId): void {
