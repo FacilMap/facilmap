@@ -116,10 +116,9 @@ module.exports = {
 						"leaflet/search",
 						"leaflet/icons",
 						"leaflet/hash",
-						"leaflet/initial-view",
 						"leaflet/views",
-						"leaflet/click-listener",
-						"leaflet/map"
+						"leaflet/filter",
+						"leaflet/click-listener"
 					]
 				},
 				{

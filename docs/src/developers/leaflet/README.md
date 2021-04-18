@@ -14,10 +14,9 @@ The Leaflet components are only useful in combination with a [FacilMap client](.
 * [Search](./search) renders search results.
 * [Icons](./icons) provides methods to draw marker icons and shapes.
 * [HashHandler](./hash) hooks up the location hash to the current map view.
-* [Initial view](./initial-view) uses geoip or the default view of the opened collaborative map to set the initial view of a map.
-* [Views](./views) allow opening or creating a saved view.
+* [Views](./views) allow controlling the map view and handling saved views.
+* [Filter](./filter) expressions can be used to control which markers/lines are visible on the map.
 * [Click listener](./click-listener) is a helper to ask the user to click somewhere on the map.
-* [Map extensions](./map) add some additional methods and events to Leaflet maps, for example to apply a filter expression to control which markers/lines are shown.
 
 ## Setup
 

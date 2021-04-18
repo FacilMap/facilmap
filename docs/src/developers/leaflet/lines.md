@@ -17,7 +17,7 @@ const linesLayer = new LinesLayer(client).addTo(map);
 `LinesLayer` also has the following features:
 * Lines get a tooltip with their name.
 * It automatically reacts to changes. When lines are created, changed or deleted, these changes are reflected on the map. `LinesLayer` can also be added before a collaborative map is opened, and will draw the lines as soon as a map is opened.
-* It shows/hides the appropriate lines if a [filter](./map#filter) is set.
+* It shows/hides the appropriate lines if a [filter](./filter) is set.
 
 ## Handle line clicks
 
