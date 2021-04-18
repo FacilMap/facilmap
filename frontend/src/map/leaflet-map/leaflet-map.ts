@@ -103,7 +103,7 @@ export default class LeafletMap extends Vue {
         const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
         const hashHandler = new HashHandler(map, this.client).on("fmQueryChange", this.handleNewHashQuery).enable();
         const linesLayer = new LinesLayer(this.client).addTo(map);
-        const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a" }).addTo(map);
+        const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } }).addTo(map);
         const markersLayer = new MarkersLayer(this.client).addTo(map);
         const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
         const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
