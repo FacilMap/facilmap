@@ -1,11 +1,11 @@
 import { GeoJSON, Geometry, Feature } from "geojson";
-import { FeatureGroup, GeoJSON as GeoJSONLayer, GeoJSONOptions, Layer } from "leaflet";
+import { FeatureGroup, GeoJSON as GeoJSONLayer, GeoJSONOptions, Layer, PathOptions } from "leaflet";
 import { HighlightablePolygon, HighlightablePolyline } from "leaflet-highlightable-layers";
 import MarkerLayer, { MarkerLayerOptions } from "../markers/marker-layer";
 
 interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 	marker?: MarkerLayerOptions['marker'];
-	weight?: number;
+	pathOptions?: PathOptions;
 	highlight?: boolean;
 	raised?: boolean;
 }
@@ -77,7 +77,7 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 				return new HighlightablePolyline(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'LineString' ? 0 : 1, _coordsToLatLng), {
 					raised: this.options.raised,
 					opacity: this.options.highlight ? 1 : 0.35,
-					...(this.options.weight ? { weight: this.options.weight } : {})
+					...this.options.pathOptions
 				});
 
 			case 'Polygon':
@@ -85,7 +85,7 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 				return new HighlightablePolygon(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'Polygon' ? 1 : 2, _coordsToLatLng), {
 					raised: this.options.raised,
 					opacity: this.options.highlight ? 1 : 0.35,
-					...(this.options.weight ? { weight: this.options.weight } : {})
+					...this.options.pathOptions
 				});
 
 			case 'GeometryCollection':

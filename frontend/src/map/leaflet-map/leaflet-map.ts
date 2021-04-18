@@ -106,7 +106,7 @@ export default class LeafletMap extends Vue {
         const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a" }).addTo(map);
         const markersLayer = new MarkersLayer(this.client).addTo(map);
         const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
-        const searchResultsLayer = new SearchResultsLayer(undefined, { weight: 7 }).addTo(map);
+        const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
         const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
 
         this.mapComponents = Vue.nonreactive({ bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, searchResultsLayer, selectionHandler });

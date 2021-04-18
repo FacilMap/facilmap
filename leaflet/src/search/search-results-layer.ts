@@ -1,5 +1,5 @@
-import { SearchResult } from "facilmap-types";
-import { FeatureGroup, Layer, LayerOptions } from "leaflet";
+import { Colour, SearchResult, Shape } from "facilmap-types";
+import { FeatureGroup, Layer, LayerOptions, PathOptions } from "leaflet";
 import MarkerLayer from "../markers/marker-layer";
 import { tooltipOptions } from "../utils/leaflet";
 import SearchResultGeoJSON from "./search-result-geojson";
@@ -10,11 +10,11 @@ declare module "leaflet" {
 	}
 }
 
-const searchMarkerColour = "000000";
-const searchMarkerSize = 35;
-
 interface SearchResultsLayerOptions extends LayerOptions {
-	weight?: number;
+	markerColour?: Colour;
+	markerSize?: number;
+	markerShape?: Shape;
+	pathOptions?: PathOptions;
 }
 
 export default class SearchResultsLayer extends FeatureGroup {
@@ -23,7 +23,12 @@ export default class SearchResultsLayer extends FeatureGroup {
 	highlightedResults = new Set<SearchResult>();
 
 	constructor(results?: SearchResult[], options?: SearchResultsLayerOptions) {
-		super([], options);
+		super([], {
+			markerColour: "000000",
+			markerSize: 35,
+			markerShape: "",
+			...options
+		});
 
 		if (results)
 			this.setResults(results);
@@ -55,7 +60,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 		for (const layer of this.getLayers().filter((layer) => layer._fmSearchResult === result)) {
 			this.removeLayer(layer);
 		}
-		
+
 		for (const layer of this.resultToLayers(result)) {
 			this.addLayer(layer);
 		}
@@ -71,12 +76,12 @@ export default class SearchResultsLayer extends FeatureGroup {
 				raised: highlight,
 				highlight,
 				marker: {
-					colour: searchMarkerColour,
-					size: searchMarkerSize,
+					colour: this.options.markerColour!,
+					size: this.options.markerSize!,
 					symbol: result.icon || '',
-					shape: ''
+					shape: this.options.markerShape!
 				},
-				weight: this.options.weight
+				pathOptions: this.options.pathOptions
 			}).bindTooltip(result.display_name, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 			layer._fmSearchResult = result;
 			layer.eachLayer((l) => {
@@ -84,16 +89,16 @@ export default class SearchResultsLayer extends FeatureGroup {
 			});
 			layers.push(layer);
 		}
-	
+
 		if(result.lat != null && result.lon != null) {
 			const marker = new MarkerLayer([ result.lat, result.lon ], {
 				raised: highlight,
 				highlight,
 				marker: {
-					colour: searchMarkerColour,
-					size: searchMarkerSize,
+					colour: this.options.markerColour!,
+					size: this.options.markerSize!,
 					symbol: result.icon || '',
-					shape: ''
+					shape: this.options.markerShape!
 				}
 			}).bindTooltip(result.display_name, { ...tooltipOptions, offset: [ 20, 0 ] })
 			marker._fmSearchResult = result;

@@ -95,7 +95,7 @@ export default class Import extends Vue {
 				};
 				reader.readAsText(file);
 			})));
-			
+
 			const result = {
 				...parseFiles(loadedFiles),
 				title: (files.length == 1 && files[0].name) || pluralize("file", files.length, true)
@@ -108,7 +108,7 @@ export default class Import extends Vue {
 				if (result.errors)
 					showErrorToast(this, "fm-import-error", "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
 
-				const layer = new SearchResultsLayer(result.features, { weight: 7 }).addTo(this.mapComponents.map);
+				const layer = new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(this.mapComponents.map);
 				this.mapComponents.map.flyToBounds(layer.getBounds());
 				this.mapComponents.selectionHandler.addSearchResultLayer(layer);
 
