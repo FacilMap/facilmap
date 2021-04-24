@@ -2,10 +2,10 @@
 
 ## Quick links
 
-* [Embed FacilMap](./embed) into any website using an iframe.
+* [Embed FacilMap](./embed.md) into any website using an iframe.
 * Run your own [FacilMap server](./server/).
 * Use the [FacilMap client](./client/) to programmatically access and modify data on a collaborative map.
-* Read about the [dev setup](./development/dev-setup) to start contributing to the FacilMap code.
+* Read about the [dev setup](./development/dev-setup.md) to start contributing to the FacilMap code.
 
 ## Structural overview
 

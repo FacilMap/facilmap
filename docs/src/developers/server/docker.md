@@ -4,7 +4,7 @@
 
 This manual assumes that you have docker set up on your system.
 
-The FacilMap server is available as [`facilmap/facilmap`](https://hub.docker.com/r/facilmap/facilmap/) on Docker Hub. The [configuration](./config) can be defined using environment variables. The container will expose a HTTP server on port 8080, which you should put behind a reverse proxy such as [nginx-proxy](https://hub.docker.com/r/jwilder/nginx-proxy) or [traefik](https://traefik.io/traefik/) for HTTPS support.
+The FacilMap server is available as [`facilmap/facilmap`](https://hub.docker.com/r/facilmap/facilmap/) on Docker Hub. The [configuration](./config.md) can be defined using environment variables. The container will expose a HTTP server on port 8080, which you should put behind a reverse proxy such as [nginx-proxy](https://hub.docker.com/r/jwilder/nginx-proxy) or [traefik](https://traefik.io/traefik/) for HTTPS support.
 
 FacilMap needs a database supported by [Sequelize](https://sequelize.org/master/) to run, it is recommended to use MySQL/MariaDB. When creating a database for FacilMap, make sure to use the `utf8mb4` charset/collation to make sure that characters from all languages can be used on a map. By default, MySQL/MariaDB uses the `latin1` charset, which mostly supports only basic latin characters. When you start the FacilMap server for the first time, the necessary tables are created using the charset of the database.
 
@@ -32,7 +32,7 @@ services:
             MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
             MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
             MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
-            MAXMIND_LICENSE_KEY: 
+            MAXMIND_LICENSE_KEY:
         restart: unless-stopped
     db:
         image: mariadb

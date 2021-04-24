@@ -3,7 +3,7 @@
 ## Show search results
 
 `SearchResultsLayer` renders search results as markers, lines and polygons on the map. The constructor accepts the following arguments:
-* `results`: An array of search results as returned by [client.find()](../client/methods#find-data). You can also leave this `undefined` and add results later using `setResults()`.
+* `results`: An array of search results as returned by [client.find()](../client/methods.md#find-data). You can also leave this `undefined` and add results later using `setResults()`.
 * `options`: An optional object containing the following properties:
 	* `markerColour`: A 6-digit colour to use for search result markers, defaults to `000000`
 	* `markerSize`: The height of search result markers in pixels, defaults to `35`

@@ -2,8 +2,8 @@
 
 In Leaflet, a lot of different types of objects are layers internally, for example tile layers, polylines, markers and even tooltips. In the context of FacilMap, there are base layers (tile layers that make up the main map style, only one can be active at a time) and overlays (layers that are shown on top of the base layer). These layers are used in the following way:
 * The frontend offers the user to change which base layer and which overlays are visible
-* [Saved views](./views) contain information about which base layer and which overlays should be visible
-* The [location hash](./hash) stores which base layer and which overlays are visible.
+* [Saved views](./views.md) contain information about which base layer and which overlays should be visible
+* The [location hash](./hash.md) stores which base layer and which overlays are visible.
 
 facilmap-leaflet maintains a list of available base layers and overlays. This list is used by the layer picker in the frontend to show the available layers to the user, but it is also used when for views and the location hash to distinguish which layers on a map are FacilMap layers and which are other types of Leaflet layers.
 

@@ -41,7 +41,7 @@ One instance of the client class represents one connection to one specific colla
 * Map ID set: All methods are available. Events are received when the map settings, types, views and lines (only metadata, not track points) are created/updated/deleted.
 * Map ID and bbox set: All methods are available. In addition to the other events, events are received when markers and lines in the specified bounding box are created/updated/deleted.
 
-It is possible to initialize a client without a map ID and later open a map using [`setPadId`](./methods#setpadid-padid) or [`createPad`](./methods#createpad-data). Once a specific map is loaded, it is not possible to close it or switch to another map anymore. To do that, a new client instance has to be created.
+It is possible to initialize a client without a map ID and later open a map using [`setPadId`](./methods.md#setpadid-padid) or [`createPad`](./methods.md#createpad-data). Once a specific map is loaded, it is not possible to close it or switch to another map anymore. To do that, a new client instance has to be created.
 
 The bbox can be updated continuously. In the official FacilMap UI, the bbox is updated every time the user pans the map, causing the server to send the markers within that bbox and a simplified version of the line track points and active routes fit to the bbox and zoom level.
 
@@ -55,9 +55,9 @@ await client.setPadId("myMapId");
 console.log(client.padData, client.types, client.lines);
 ```
 
-The client [constructor](./methods#constructor-server-padid) takes the URL where the FacilMap server is running and opens a socket.io connection to the server.
+The client [constructor](./methods.md#constructor-server-padid) takes the URL where the FacilMap server is running and opens a socket.io connection to the server.
 
-When opening a collaborative map using [`setPadId`](./methods#setpadid-padid), the server sends [events](./events) for the map settings, types, views and lines (without track points). The same types of events will be received later if the respective objects are changed while the connection is open. The client has some default listeners registered that will store the data received as events in its [properties](./properties). For example, a `padData` event contains the map settings and is emitted the first time the map ID is set and every time the map settings are changed while the connection is open. The `client.padData` property always contains the latest state of the map settings.
+When opening a collaborative map using [`setPadId`](./methods.md#setpadid-padid), the server sends [events](./events.md) for the map settings, types, views and lines (without track points). The same types of events will be received later if the respective objects are changed while the connection is open. The client has some default listeners registered that will store the data received as events in its [properties](./properties.md). For example, a `padData` event contains the map settings and is emitted the first time the map ID is set and every time the map settings are changed while the connection is open. The `client.padData` property always contains the latest state of the map settings.
 
 Note that most methods of the client are asynchronous. Events that the server fires in response to a method call are always fired before the method returns. This is why in the above example, `client.padData` and the other properties are available right after the `setPadId` call.
 

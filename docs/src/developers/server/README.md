@@ -7,5 +7,5 @@ The FacilMap server is a HTTP server that fulfills the following tasks:
 * Maintain a connection to a database where collaborative map data and calculated routes are stored.
 
 The official FacilMap server is running on [https://facilmap.org/](https://facilmap.org/). If you want, you can run your own FacilMap server using one of these options:
-* [Docker](./docker) will run the server in an isolated container. It is easer to set up and more secure, but takes more resources.
-* Running the server [standalone](./standalone) takes less resources, but is less secure and takes more steps to set up.
+* [Docker](./docker.md) will run the server in an isolated container. It is easer to set up and more secure, but takes more resources.
+* Running the server [standalone](./standalone.md) takes less resources, but is less secure and takes more steps to set up.

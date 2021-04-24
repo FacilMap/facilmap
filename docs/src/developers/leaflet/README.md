@@ -6,17 +6,17 @@ The Leaflet components are only useful in combination with a [FacilMap client](.
 
 ## Components
 
-* [BboxHandler](./bbox) automatically calls [updateBbox()](../client/methods#updatebbox-bbox) when the position of the map changes.
-* [Layers](./layers) provides the layers that FacilMap offers by default and helpers to show them.
-* [Markers](./markers) shows the markers of a collaborative map.
-* [Lines](./lines) shows the lines of a collaborative map.
-* [Route](./route) allows showing a calculated route on the map.
-* [Search](./search) renders search results.
-* [Icons](./icons) provides methods to draw marker icons and shapes.
-* [HashHandler](./hash) hooks up the location hash to the current map view.
-* [Views](./views) allow controlling the map view and handling saved views.
-* [Filter](./filter) expressions can be used to control which markers/lines are visible on the map.
-* [Click listener](./click-listener) is a helper to ask the user to click somewhere on the map.
+* [BboxHandler](./bbox.md) automatically calls [updateBbox()](../client/methods.md#updatebbox-bbox) when the position of the map changes.
+* [Layers](./layers.md) provides the layers that FacilMap offers by default and helpers to show them.
+* [Markers](./markers.md) shows the markers of a collaborative map.
+* [Lines](./lines.md) shows the lines of a collaborative map.
+* [Route](./route.md) allows showing a calculated route on the map.
+* [Search](./search.md) renders search results.
+* [Icons](./icons.md) provides methods to draw marker icons and shapes.
+* [HashHandler](./hash.md) hooks up the location hash to the current map view.
+* [Views](./views.md) allow controlling the map view and handling saved views.
+* [Filter](./filter.md) expressions can be used to control which markers/lines are visible on the map.
+* [Click listener](./click-listener.md) is a helper to ask the user to click somewhere on the map.
 
 ## Setup
 

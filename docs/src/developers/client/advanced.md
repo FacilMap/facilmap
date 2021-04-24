@@ -44,6 +44,6 @@ client._decodeData = (data) => new Map(Object.entries(data));
 client._encodeData = (data) => Object.fromEntries([...data]);
 ```
 
-Doing this will change the type of the `data` property of the [`Marker`](./types#marker) and [`Line`](./types#line) types in all properties, methods and events that deal with such objects.
+Doing this will change the type of the `data` property of the [`Marker`](./types.md#marker) and [`Line`](./types.md#line) types in all properties, methods and events that deal with such objects.
 
 In TypeScript, you can specify the data type using a generic (`Client<Map<string, string>>`).

@@ -18,7 +18,7 @@ const markersLayer = new MarkersLayer(client).addTo(map);
 * It clusters markers if this has been enabled in the map settings.
 * Markers get a tooltip with their name.
 * It automatically reacts to changes. When markers are created, changed or deleted, these changes are reflected on the map. `MarkersLayer` can also be added before a collaborative map is opened, and will draw the markers as soon as a map is opened.
-* It shows/hides the appropriate markers if a [filter](./filter) is set.
+* It shows/hides the appropriate markers if a [filter](./filter.md) is set.
 
 ## Handle marker clicks
 

@@ -10,7 +10,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `bottom` (number, min: -90, max: 90): The latitude of the south end of the box
 * `left` (number, min: -180, max: 180): The longitude of the west end of the box
 * `right` (number, min: -180, max: 180): The longitude of the east end of the box
-* `zoom` (number, min: 1, max: 20): The current zoom level. This is relevant for the density of track points that should be received. 
+* `zoom` (number, min: 1, max: 20): The current zoom level. This is relevant for the density of track points that should be received.
 
 ## Marker
 
@@ -24,7 +24,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
 * `elevation` (number): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
-* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
 
 ## Line
 
@@ -52,7 +52,7 @@ separately through `linePoints` events.
 * `left`, `top`, `right`, `bottom` (number): The bounding box of the line (set by the server)
 * `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code>): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
 * `typeId` (number): The ID of the type of this line
-* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
 * `trackPoints`:
   * In the `lines` property of the client, an object of the format [<code>{ &#91;idx: number&#93;: TrackPoint }</code>](#trackpoint)
   * When creating/updating a line with the routing mode `track`, an array of the format [`TrackPoint[]`](#trackpoint)
@@ -113,14 +113,14 @@ their `idx` property.
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
     * `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
-    * `oldName` (string): When renaming a field (using [`editType(data)`](./methods#edittype-data)), specify the former name here
+    * `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
     * `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
     * `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth` (boolean): If this field is a dropdown, whether
       the different options set a specific property on the object
     * `default` (string/boolean): The default value of this field
     * `options` ([object]): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
         * `value` (string): The value of this option.
-        * `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods#edittype-data)), specify the
+        * `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods.md#edittype-data)), specify the
           former value here
         * `colour`, `size`, `shape`, `symbol`, `width` (string/number): The property value if this field controls that property
 

@@ -6,9 +6,9 @@ FacilMap can store the current map view in the location hash. The details can be
 
 `HashHandler` handles the different details encoded in the location hash in the following way:
 * Longitude, latitude, zoom level: automatically synchronised.
-* Active layers: automatically synchronised (using the [FacilMap layer helpers](./layers)).
+* Active layers: automatically synchronised (using the [FacilMap layer helpers](./layers.md)).
 * Search term: needs to be synchronised manually (see [below](#search-term)).
-* Active filter: automatically synchronised (using the [filter map extension](./filter)).
+* Active filter: automatically synchronised (using the [filter map extension](./filter.md)).
 
 `HashHandler` also has support for saved views. If the position of the map is exactly that of a saved view, the location hash will be set to something like `#q=v123`.
 
@@ -27,7 +27,7 @@ const hashHandler = new HashHandler(map, client).enable();
 
 ## HashHandler and initial view
 
-facilmap-leaflet provides helper methods to set the [initial view](./views#initial-view) of a map. However, when opening the map with a specific map view already present in the location hash, loading the initial view would cause unnecessary network requests and jumping of the map if the hash handler would move the map position immediately afterwards.
+facilmap-leaflet provides helper methods to set the [initial view](./views.md#initial-view) of a map. However, when opening the map with a specific map view already present in the location hash, loading the initial view would cause unnecessary network requests and jumping of the map if the hash handler would move the map position immediately afterwards.
 
 When the hash handler is enabled for the first time, it checks whether a map view is present in the location hash. If there is, it zooms to that view, otherwise it leaves the map position untouched. This means that if the hash handler is enabled on a map whose position is not initialised yet, the position remains uninitialised if no position is present in the location hash. This can be checked by checking whether `map._loaded` is defined or not, and loading the initial view only if it is not.
 

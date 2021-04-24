@@ -1,10 +1,10 @@
 # Events
 
-The FacilMap server uses events to send information about objects on a collaborative map to the client. The events are fired when the client opens a map or a particular section of a map for the first time, and whenever an object is changed on the map (including when the change is made by the same instance of the client). The client has some listeners already attached to most events and uses them to persist and update the received objects in its [properties](./properties).
+The FacilMap server uses events to send information about objects on a collaborative map to the client. The events are fired when the client opens a map or a particular section of a map for the first time, and whenever an object is changed on the map (including when the change is made by the same instance of the client). The client has some listeners already attached to most events and uses them to persist and update the received objects in its [properties](./properties.md).
 
 Note that events are always fired _before_ the method causing them returns. For example, when updating a marker using the `editMarker()` method, a `marker` event with the updated marker is fired first (if the marker is within the current bbox), and only then the method returns the updated marker as well.
 
-Subscribe to events using the [`on(eventName, function)`](./methods#on-eventname-function) method. Example:
+Subscribe to events using the [`on(eventName, function)`](./methods.md#on-eventname-function) method. Example:
 
 ```js
 const client = new FacilMap.Client("https://facilmap.org/", "testPad");
@@ -21,14 +21,14 @@ These events come from socket.io and are [documented there under the section “
 
 The settings of the map have changed or are retrieved for the first time.
 
-Note that when this event is fired, the read-only and/or the read-write ID of the map might have changed. The [`padId`](./properties#padid)
+Note that when this event is fired, the read-only and/or the read-write ID of the map might have changed. The [`padId`](./properties.md#padid)
 property is updated automatically.
 
-_Type:_ [PadData](./types#paddata)
+_Type:_ [PadData](./types.md#paddata)
 
 ## `serverError`
 
-[`setPadId()`](./methods#setpadid-padid) failed and the map could not be opened.
+[`setPadId()`](./methods.md#setpadid-padid) failed and the map could not be opened.
 
 _Type:_ Error
 
@@ -40,7 +40,7 @@ The map has been deleted.
 
 An existing marker is retrieved for the first time, has been modified, or a new marker has been created in the current bbox.
 
-_Type:_ [Marker](./types#marker)
+_Type:_ [Marker](./types.md#marker)
 
 ## `deleteMarker`
 
@@ -55,7 +55,7 @@ An existing line is retrieved for the first time, has been modified, or a new li
 objects only contain the line metadata, not its track points (those are handled separately as `linePoints`). This is why
 all line objects of the map are sent to the client, regardless of the current bbox.
 
-_Type:_ [Line](./types#line) (without trackPoints)
+_Type:_ [Line](./types.md#line) (without trackPoints)
 
 ## `deleteLine`
 
@@ -72,13 +72,13 @@ _Type:_ object with the following properties:
 * __id__ (number): The ID of the line that these track points belong to
 * __reset__ (boolean): Whether to remove all cached track points for this line (`true`) or to merge these track points
   with the cached ones (`false`).
-* __trackPoints__ (Array<[TrackPoint](./types#trackpoint)>): The track points
+* __trackPoints__ (Array<[TrackPoint](./types.md#trackpoint)>): The track points
 
 ## `view`
 
 A view is retrieved for the first time, has been modified, or a new view has been created.
 
-_Type:_ [View](./types#view)
+_Type:_ [View](./types.md#view)
 
 ## `deleteView`
 
@@ -90,7 +90,7 @@ _Type:_ `{ id: number }`
 
 A type is retrieved for the first time, has been modified, or a new type has been created.
 
-_Type:_ [Type](./types#type)
+_Type:_ [Type](./types.md#type)
 
 ## `deleteType`
 
@@ -101,15 +101,15 @@ _Type:_ `{ id: number }`
 ## `history`
 
 An entry of the modification history is retrieved for the first time, or a new entry has been created due to something
-being modified. Note that this event is only fired when the client has subscribed using [`listenToHistory()`](./methods#listentohistory).
- 
-_Type:_ [historyEntry](./types#historyentry)
+being modified. Note that this event is only fired when the client has subscribed using [`listenToHistory()`](./methods.md#listentohistory).
+
+_Type:_ [historyEntry](./types.md#historyentry)
 
 ## `route`
 
 A new route has been set.
 
-_Type:_ [Route](./types#route)> with trackpoints for the current bbox. The `routeId` property identifies the route (can be a string or undefined).
+_Type:_ [Route](./types.md#route)> with trackpoints for the current bbox. The `routeId` property identifies the route (can be a string or undefined).
 
 ## `clearRoute`
 
@@ -119,18 +119,18 @@ _Type:_ `{ routeId: string | undefined }`
 
 ## `routePoints`
 
-New track points for the default route (route that has been set using [`setRoute()`](./methods#setroute-data) without a `routeId`) are retrieved after a change of bbox.
+New track points for the default route (route that has been set using [`setRoute()`](./methods.md#setroute-data) without a `routeId`) are retrieved after a change of bbox.
 
-_Type:_ Array<[TrackPoint](./types#trackpoint)>
+_Type:_ Array<[TrackPoint](./types.md#trackpoint)>
 
 ## `routePointsWithId`
 
 New track points for a route with a `routeId` are retrieved after a change of bbox.
 
 _Type:_ object with the following properties:
-* **routeId** (string): The `routeId` that was passed when setting the route using [`setRoute()`](./methods#setroute-data)
-* **trackPoints** (`Array<[trackPoint](./types#trackpoint)>`): The additional track points for the route
- 
+* **routeId** (string): The `routeId` that was passed when setting the route using [`setRoute()`](./methods.md#setroute-data)
+* **trackPoints** (`Array<[trackPoint](./types.md#trackpoint)>`): The additional track points for the route
+
 ## `loadStart`, `loadEnd`
 
 This event is fired every time some request is sent to the server and when the response has arrived. It can be used to

@@ -5,7 +5,7 @@ The FacilMap client needs to tell the current bounding box and zoom level of the
 * If a collaborative map is open, the line points in the specified bounding box (simplified for the specified zoom level)
 * If a calculated route is active, the route points in the specified bounding box (simplified for the specified zoom level).
 
-BboxHandler automatically calls [updateBbox()](../client/methods#updatebbox-bbox) whenever the position of the map changes, either because the user panned the map or because it was changed programmatically.
+BboxHandler automatically calls [updateBbox()](../client/methods.md#updatebbox-bbox) whenever the position of the map changes, either because the user panned the map or because it was changed programmatically.
 
 ## Usage
 

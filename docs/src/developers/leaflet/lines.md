@@ -17,7 +17,7 @@ const linesLayer = new LinesLayer(client).addTo(map);
 `LinesLayer` also has the following features:
 * Lines get a tooltip with their name.
 * It automatically reacts to changes. When lines are created, changed or deleted, these changes are reflected on the map. `LinesLayer` can also be added before a collaborative map is opened, and will draw the lines as soon as a map is opened.
-* It shows/hides the appropriate lines if a [filter](./filter) is set.
+* It shows/hides the appropriate lines if a [filter](./filter.md) is set.
 
 ## Handle line clicks
 
@@ -87,4 +87,4 @@ The code that styles lines on FacilMap has been moved into an external module ca
 
 ## Hide a line
 
-Calling `linesLayer.hideLine(lineId)` hides a line until `linesLayer.unhideLine(lineId)` is called. The frontend uses this function to temporarily make a line draggable by calling [client.lineToRoute()](../client/methods#linetoroute-data) to convert the line to a route and hiding the line until the dragging has finished.
+Calling `linesLayer.hideLine(lineId)` hides a line until `linesLayer.unhideLine(lineId)` is called. The frontend uses this function to temporarily make a line draggable by calling [client.lineToRoute()](../client/methods.md#linetoroute-data) to convert the line to a route and hiding the line until the dragging has finished.
