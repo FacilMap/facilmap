@@ -1,15 +1,10 @@
----
-home: true
-heroImage: https://v1.vuepress.vuejs.org/hero.png
-tagline: 
-actionText: User guide →
-actionLink: /users/
-#features:
-#- title: Feature 1 Title
-#  details: Feature 1 Description
-#- title: Feature 2 Title
-#  details: Feature 2 Description
-#- title: Feature 3 Title
-#  details: Feature 3 Description
-#footer: Made by  with ❤️
----
+<main class="home" aria-labelledby="main-title">
+    <header class="hero">
+		<img :src="$withBase('./logo_f.svg')" alt="" width="280" height="280">
+		<h1 id="main-title">{{$title}}</h1>
+		<p class="action">
+			<NavLink class="action-button" :item="{ link: '/users/', text: 'User guide →' }"/>
+			<NavLink class="action-button secondary" :item="{ link: '/developers/', text: 'Developer guide →' }"/>
+		</p>
+    </header>
+</main>
