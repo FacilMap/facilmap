@@ -74,7 +74,15 @@ module.exports = (env: any, argv: any): Configuration => {
 				},
 				{
 					test: /\.(html|ejs)$/,
-					use: "html-loader"
+					loader: "html-loader",
+					options: {
+						sources: {
+							list: [
+								{ tag: "img", attribute: "src", type: "src" },
+								{ tag: "link", attribute: "href", type: "src", filter: (tag: any, attr: any, attrs: any) => attrs.some((a: any) => a.name == "rel" && ["icon"].includes(a.value)) },
+							]
+						}
+					}
 				},
 				{
 					test: /\.vue$/,
@@ -103,13 +111,14 @@ module.exports = (env: any, argv: any): Configuration => {
 			}),
 			new copyPlugin({
 				patterns: [
+					"app-180.png",
+					"app-512.png",
 					"deref.html",
-					"opensearch.xml",
+					"favicon-64.png",
 					"favicon.ico",
 					"favicon.svg",
-					"favicon-64.png",
-					"app-180.png",
-					"app-512.png"
+					"manifest.json",
+					"opensearch.xml"
 				].map((file) => ({ from: `${__dirname}/static/${file}` }))
 			}),
 			...(isDev ? [
