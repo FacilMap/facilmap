@@ -1,7 +1,6 @@
 import { TrackPoints } from 'facilmap-client';
 import { Bbox, BboxWithZoom, Point } from 'facilmap-types';
 import L, { LatLng, LatLngBounds, Map, TooltipOptions } from 'leaflet';
-import 'leaflet-geometryutil';
 
 export const tooltipOptions: TooltipOptions = {
 	direction: "right"

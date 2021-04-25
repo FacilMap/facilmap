@@ -14,8 +14,6 @@ declare module "leaflet" {
         removeInteractiveTarget(targetEl: HTMLElement): void;
     }
 
-    export const GeometryUtil: any;
-
     interface Handler {
         _map: Map;
     }
