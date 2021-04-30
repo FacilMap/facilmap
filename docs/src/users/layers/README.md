@@ -22,6 +22,7 @@ Base layers set the main style of the map. Only one base layer can be shown at t
 | OpenCycleMap | [OpenCycleMap](https://www.opencyclemap.org/) | Strong focus on sign-posted bicycle routes. At higher zoom levels, details about cycling infrastructure are shown. |
 | Hike & Bike Map | [Hike & Bike Map](https://hikebikemap.org/) | Emphasizes hiking trails and off-road tracks. |
 | Mapnik Water | [FreieTonne](https://www.freietonne.de/) | Similar to Mapnik, but emphasizes lakes, rivers and the sea. |
+| CyclOSM | [CyclOSM](https://cyclomap.org/) | A bicycle-oriented map built on top of OpenStreetMap data, which aims at providing a beautiful and practical map for cyclists, no matter their cycling habits or abilities. |
 
 Since these base layers are provided by third-party services, it can happen that some of them are unavailable at some point in time. In that case, FacilMap will show Mapnik as a fallback.
 

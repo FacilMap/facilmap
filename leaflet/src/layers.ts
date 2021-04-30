@@ -73,7 +73,13 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
                 fmName: "Mapnik Water",
                 attribution: '© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
                 noWrap: true
-            })
+            }),
+
+            CycO: L.tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
+                fmName: "CyclOSM",
+                attribution: '© <a href="https://cyclomap.org/" target="_blank">CyclOSM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+                noWrap: true
+            }),
         },
         overlays: {
             OPTM: L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
