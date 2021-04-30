@@ -57,6 +57,12 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
                 noWrap: true
             }),
 
+            CycO: L.tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
+                fmName: "CyclOSM",
+                attribution: '© <a href="https://www.cyclosm.org/" target="_blank">CyclOSM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+                noWrap: true
+            }),
+
             OCyc: L.tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
                 fmName: "OpenCycleMap",
                 attribution: '© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
@@ -72,12 +78,6 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
             MpnW: L.tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
                 fmName: "Mapnik Water",
                 attribution: '© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
-                noWrap: true
-            }),
-
-            CycO: L.tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
-                fmName: "CyclOSM",
-                attribution: '© <a href="https://cyclomap.org/" target="_blank">CyclOSM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
                 noWrap: true
             }),
         },
