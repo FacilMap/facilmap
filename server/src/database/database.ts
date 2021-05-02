@@ -22,7 +22,7 @@ export interface DatabaseEvents {
     line: [padId: PadId, newLine: Line];
     linePoints: [padId: PadId, lineId: ID, points: TrackPoint[]];
     deleteLine: [padId: PadId, data: ObjectWithId];
-    
+
     marker: [padId: PadId, newMarker: Marker];
     deleteMarker: [padId: PadId, data: ObjectWithId];
 
@@ -59,7 +59,9 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 			host: dbConfig.host,
 			port: dbConfig.port,
 			define: {
-				timestamps: false
+				timestamps: false,
+				charset: "utf8mb4",
+				collate: "utf8mb4_general_ci"
 			},
 			logging: debug.enabled("sql") ? console.log : false
 		});
