@@ -69,7 +69,6 @@ export default class DatabaseHistory {
 	afterInit(): void {
 		this._db.pads.PadModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "padId"));
 		this.HistoryModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
-		this.HistoryModel.findOne()
 	}
 
 
