@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title><%= padData ? `${padData.name} – ` : ''%>FacilMap</title>
+		<title><%= padData && padData.name ? `${padData.name} – ` : ''%>FacilMap</title>
 <% if(!padData || padData.searchEngines) { %>
 		<meta name="robots" content="index,nofollow" />
 		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
