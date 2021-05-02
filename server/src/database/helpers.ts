@@ -47,6 +47,7 @@ export const dataDefinition = {
 export function makeNotNullForeignKey(type: string, field: string, error = false): AssociationOptions {
 	return {
 		as: type,
+		onUpdate: "CASCADE",
 		onDelete: error ? "RESTRICT" : "CASCADE",
 		foreignKey: { name: field, allowNull: false }
 	}
