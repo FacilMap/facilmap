@@ -32,7 +32,8 @@ export function getLabelsForHistoryEntry(client: Client, entry: HistoryEntry): H
 		return {
 			description: "Changed pad settings",
 			button: "Revert",
-			confirm: "Do you really want to restore the old version of the pad settings?"
+			confirm: "Do you really want to restore the old version of the pad settings?",
+			...(entry.objectBefore && entry.objectAfter ? { diff: getObjectDiff(entry.objectBefore, entry.objectAfter) } : {})
 		};
 	}
 
