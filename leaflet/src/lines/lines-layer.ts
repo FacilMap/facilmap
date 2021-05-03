@@ -140,30 +140,34 @@ export default class LinesLayer extends FeatureGroup {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
 				...lineTemplate,
-				routePoints: [ ],
-				trackPoints: [ ]
+				routePoints: [],
+				trackPoints: []
 			};
+			line.trackPoints = line.routePoints;
 
+			const routePoints: Point[] = [];
 			let handler: ClickListenerHandle | undefined = undefined;
 
 			const addPoint = (pos: Point) => {
+				routePoints.push(pos);
 				line.routePoints.push(pos);
-				line.trackPoints = [ ...line.routePoints, pos ]; // Add pos a second time so that it gets overwritten by mouseMoveListener
+				if (line.routePoints.length == 1)
+					line.routePoints.push(pos); // Will be updated by handleMouseMove
 				this._addLine(line);
 				handler = addClickListener(this._map, handleClick, handleMouseMove);
 			};
 
 			const handleClick = (pos: Point) => {
 				handler = undefined;
-				if(line.routePoints.length > 0 && pos.lon == line.routePoints[line.routePoints.length-1].lon && pos.lat == line.routePoints[line.routePoints.length-1].lat)
+				if(routePoints.length > 0 && pos.lon == routePoints[routePoints.length-1].lon && pos.lat == routePoints[routePoints.length-1].lat)
 					finishLine(true);
 				else
 					addPoint(pos);
 			}
 
 			const handleMouseMove = (pos: Point) => {
-				if(line.trackPoints!.length > 0) {
-					line.trackPoints![line.trackPoints!.length-1] = pos;
+				if(line.routePoints!.length > 0) {
+					line.routePoints![line.routePoints!.length-1] = pos;
 					this._addLine(line);
 				}
 			}
@@ -175,8 +179,8 @@ export default class LinesLayer extends FeatureGroup {
 
 				delete this._endDrawLine;
 
-				if(save && line.routePoints.length >= 2)
-					resolve(line.routePoints);
+				if(save && routePoints.length >= 2)
+					resolve(routePoints);
 				else
 					resolve(undefined);
 			}
