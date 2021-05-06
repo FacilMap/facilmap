@@ -10,7 +10,7 @@ import { mergeObject } from "../../utils/utils";
 import { isEqual } from "lodash";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
-import { showErrorToast } from "../../utils/toasts";
+import { showErrorToast, showToast } from "../../utils/toasts";
 import "./pad-settings.scss";
 
 extend("padId", {
@@ -109,6 +109,7 @@ export default class PadSettings extends Vue {
 
 	copy(text: string): void {
 		copyToClipboard(text);
+		this.$bvToast.toast("The map link was copied to the clipboard.", { variant: "success", title: "Map link copied" });
 	}
 
 	async deletePad(): Promise<void> {
