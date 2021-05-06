@@ -4,8 +4,6 @@ import { BootstrapVue } from "bootstrap-vue";
 import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 import Main from './main/main';
 import context, { updatePadId, updatePadName } from './context';
-//import "bootstrap/dist/css/bootstrap.css";
-//import "bootswatch/dist/cerulean/bootstrap.css";
 import "./bootstrap.scss";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import withRender from "./map.vue";

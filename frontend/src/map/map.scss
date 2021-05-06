@@ -5,6 +5,10 @@
 .td-buttons {
 	white-space: nowrap;
 	width: 1px;
+
+	> button {
+		margin-left: 0.25rem;
+	}
 }
 
 .fm-drag-handle {
@@ -20,7 +24,7 @@
 .closeable-tab-title {
 	display: inline-flex;
 	width: 100%;
-	
+
 	> span {
 		align-items: center;
 		min-width: 0;
