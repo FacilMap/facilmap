@@ -1,9 +1,9 @@
 import { io, Socket as SocketIO } from "socket.io-client";
 import {
 	Bbox,
-	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindQuery, HistoryEntry, ID, Line, LineCreate,
+	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineCreate,
 	LineExportRequest, LineTemplateRequest, LineToRouteCreate, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
-	PadData, PadDataCreate, PadDataUpdate, PadId, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest,
+	PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest,
 	RouteInfo,
 	RouteRequest,
 	SearchResult,
@@ -110,7 +110,7 @@ export default class Client<DataType = Record<string, string>> {
 	_fixResponseObject<T>(requestName: RequestName, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
-		
+
 		return {
 			...obj,
 			data: this._decodeData((obj as any).data)
@@ -120,7 +120,7 @@ export default class Client<DataType = Record<string, string>> {
 	_fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
 		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
 			return obj;
-		
+
 		return [
 			{
 				...obj[0],
@@ -342,6 +342,14 @@ export default class Client<DataType = Record<string, string>> {
 		return this._emit("updateBbox", bbox).then((obj) => {
 			this._receiveMultiple(obj);
 		});
+	}
+
+	getPad(data: GetPadQuery): Promise<FindPadsResult | undefined> {
+		return this._emit("getPad", data);
+	}
+
+	findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
+		return this._emit("findPads", data);
 	}
 
 	createPad(data: PadDataCreate): Promise<void> {

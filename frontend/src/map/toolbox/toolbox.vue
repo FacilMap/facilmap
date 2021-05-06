@@ -2,7 +2,48 @@
 	<a v-if="isNarrow" href="javascript:" class="fm-toolbox-toggle" v-b-toggle.fm-toolbox-sidebar><Icon icon="menu-hamburger"></Icon></a>
 
 	<Sidebar id="fm-toolbox-sidebar">
-		<b-nav-item v-if="!client.padId && interactive" href="javascript:" v-b-modal.fm-toolbox-create-pad v-b-toggle.fm-toolbox-sidebar>Start collaborative map</b-nav-item>
+		<b-nav-item-dropdown
+			text="Collaborative maps"
+			v-if="interactive"
+			:disabled="!!mapContext.interaction"
+			right
+		>
+			<b-dropdown-item
+				v-for="bookmark in bookmarks"
+				:href="`${urlPrefix}${encodeURIComponent(bookmark.id)}#${hash}`"
+				v-b-toggle.fm-toolbox-sidebar
+				:active="bookmark.id == client.padId"
+			>{{bookmark.customName || bookmark.name}}</b-dropdown-item>
+			<b-dropdown-divider v-if="bookmarks.length > 0"></b-dropdown-divider>
+			<b-dropdown-item
+				v-if="client.padData && !this.isBookmarked"
+				href="javascript:"
+				@click="addBookmark()"
+			>Bookmark {{client.padData.name}}</b-dropdown-item>
+			<b-dropdown-item
+				v-if="bookmarks.length > 0"
+				href="javascript:"
+				v-b-modal.fm-toolbox-manage-bookmarks
+				v-b-toggle.fm-toolbox-sidebar
+			>Manage bookmarks</b-dropdown-item>
+			<b-dropdown-divider v-if="(client.padData && !this.isBookmarked) || bookmarks.length > 0"></b-dropdown-divider>
+			<b-dropdown-item
+				v-if="!client.padId"
+				href="javascript:"
+				v-b-modal.fm-toolbox-create-pad
+				v-b-toggle.fm-toolbox-sidebar
+			>Create a new map</b-dropdown-item>
+			<b-dropdown-item
+				href="javascript:"
+				v-b-modal.fm-toolbox-open-map
+				v-b-toggle.fm-toolbox-sidebar
+			>Open {{client.padId ? "another" : "an existing"}} map</b-dropdown-item>
+			<b-dropdown-item
+				v-if="client.padData"
+				:href="links.facilmap"
+			>Close {{client.padData.name}}</b-dropdown-item>
+		</b-nav-item-dropdown>
+
 		<b-nav-item-dropdown v-if="!client.readonly && client.padData" text="Add" :disabled="!!mapContext.interaction" right>
 			<b-dropdown-item v-for="type in client.types" :disabled="!!mapContext.interaction" href="javascript:" @click="addObject(type)" v-b-toggle.fm-toolbox-sidebar>{{type.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="client.writable == 2"></b-dropdown-divider>
@@ -33,8 +74,6 @@
 			<b-dropdown-item v-if="client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-filter v-b-toggle.fm-toolbox-sidebar>Filter</b-dropdown-item>
 			<b-dropdown-item v-if="client.writable == 2 && client.padData" href="javascript:" v-b-modal.fm-toolbox-edit-pad v-b-toggle.fm-toolbox-sidebar>Settings</b-dropdown-item>
 			<b-dropdown-item v-if="!client.readonly && client.padData" href="javascript:" v-b-modal.fm-toolbox-history v-b-toggle.fm-toolbox-sidebar>Show edit history</b-dropdown-item>
-			<b-dropdown-divider v-if="client.padData"></b-dropdown-divider>
-			<b-dropdown-item v-if="client.padData && interactive" :href="links.facilmap">Exit collaborative map</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Help" right>
 			<b-dropdown-item href="https://docs.facilmap.org/users/" target="_blank">Documentation</b-dropdown-item>
@@ -44,6 +83,8 @@
 		</b-nav-item-dropdown>
 	</Sidebar>
 
+	<OpenMap id="fm-toolbox-open-map"></OpenMap>
+	<ManageBookmarks id="fm-toolbox-manage-bookmarks"></ManageBookmarks>
 	<About id="fm-toolbox-about"></About>
 	<PadSettings v-if="!client.padData" id="fm-toolbox-create-pad" :isCreate="true"></PadSettings>
 	<PadSettings v-if="client.padData" id="fm-toolbox-edit-pad"></PadSettings>

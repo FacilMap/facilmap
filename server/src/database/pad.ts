@@ -1,5 +1,5 @@
-import { DataTypes, Model, Op } from "sequelize";
-import { PadData, PadDataCreate, PadDataUpdate, PadId } from "facilmap-types";
+import { DataTypes, Model, Op, Sequelize } from "sequelize";
+import { FindPadsQuery, FindPadsResult, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults } from "facilmap-types";
 import Database from "./database";
 import { streamEachPromise } from "../utils/streams";
 
@@ -183,6 +183,24 @@ export default class DatabasePads {
 		await this.PadModel.destroy({ where: { id: padData.id } });
 
 		this._db.emit("deletePad", padId);
+	}
+
+	async findPads(query: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
+		const like = query.query.toLowerCase().replace(/[%_\\]/g, "\\$&").replace(/[*]/g, "%").replace(/[?]/g, "_");
+		const { count, rows } = await this.PadModel.findAndCountAll({
+			where: Sequelize.and(
+				{ searchEngines: true },
+				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Pad.name`)), {[Op.like]: `%${like}%`})
+			),
+			offset: query.start ?? 0,
+			...(query.limit != null ? { limit: query.limit } : {}),
+			attributes: ["id", "name", "description"]
+		});
+
+		return {
+			results: rows.map((row) => row.toJSON()),
+			totalLength: count
+		};
 	}
 
 	/*function copyPad(fromPadId, toPadId, callback) {

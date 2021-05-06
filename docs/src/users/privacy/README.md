@@ -17,6 +17,7 @@ The following data is sent to the FacilMap server and *persisted* there:
 
 The following data is persisted in your browser:
 * If you change the [zoom settings](../search/#zoom-settings), these are persisted in the local storage of your browser.
+* If you add [bookmarks](../collaborative/#bookmark-a-map), these are persisted in the local storage of your browser.
 
 ## Layers
 

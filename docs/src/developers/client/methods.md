@@ -49,6 +49,29 @@ Updates the bbox. This will cause all markers, line points and route points with
 * **Events:** Causes events to be fired with the markers, line points and route points within the bbox.
 * **Availability:** Always.
 
+## `getPad(data)`
+
+Finds a collaborative map by ID. This can be used to check if a map with a certain ID exists.
+
+* `data`: An object with the following properties:
+	* `padId`: The read-only, writable or admin ID of the map.
+* **Returns:** A promise that is resolved with undefined (if no map with that ID exists) or with an object with an `id` (read-only ID), `name` and `description` property.
+* **Events:** None.
+* **Availability:** Always.
+
+## `findPads(data)`
+
+Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#paddata) to `true`.
+
+* `data`: An object with the following properties:
+	* `query` (string): A search term. `*` can be used as a wildcard and `?` as a single-character wildcard.
+	* `start`, `limit` (number): If specified, can be used for paging.
+* **Returns:**: A promise that is resolved to an object with the following properties:
+	* `results`: An array of objects with an `id`, `name` and `description` property.
+	* `totalLength`: The total number of results. If paging is used, this number may be higher than the number of `results` returned.
+* **Events:** None.
+* **Availability:** Always.
+
 ## `createPad(data)`
 
 Creates a new collaborative map and opens it.

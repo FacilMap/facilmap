@@ -10,7 +10,7 @@ import { mergeObject } from "../../utils/utils";
 import { isEqual } from "lodash";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
-import { showErrorToast, showToast } from "../../utils/toasts";
+import { showErrorToast } from "../../utils/toasts";
 import "./pad-settings.scss";
 
 extend("padId", {

@@ -8,6 +8,23 @@ import { View, ViewCreate, ViewUpdate } from "./view";
 import { MapEvents, MultipleEvents } from "./events";
 import { SearchResult } from "./searchResult";
 
+export interface GetPadQuery {
+	padId: string;
+}
+
+export interface FindPadsQuery {
+	query: string;
+	start?: number;
+	limit?: number;
+}
+
+export type FindPadsResult = Pick<PadData, "id" | "name" | "description">;
+
+export interface PagedResults<T> {
+	results: T[];
+	totalLength: number;
+}
+
 export interface LineTemplateRequest {
 	typeId: ID
 }
@@ -38,6 +55,8 @@ export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
 export interface RequestDataMap<DataType = Record<string, string>> {
 	updateBbox: BboxWithZoom;
+	getPad: GetPadQuery;
+	findPads: FindPadsQuery;
 	createPad: PadDataCreate;
 	editPad: PadDataUpdate;
 	deletePad: void;
@@ -72,6 +91,8 @@ export interface RequestDataMap<DataType = Record<string, string>> {
 
 export interface ResponseDataMap<DataType = Record<string, string>> {
 	updateBbox: MultipleEvents<MapEvents<DataType>>;
+	getPad: FindPadsResult | undefined;
+	findPads: PagedResults<FindPadsResult>;
 	createPad: MultipleEvents<MapEvents<DataType>>;
 	editPad: PadData;
 	deletePad: void;

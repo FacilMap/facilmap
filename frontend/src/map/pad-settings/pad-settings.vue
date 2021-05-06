@@ -1,6 +1,6 @@
 <FormModal
 	:id="id"
-	:title="isCreate ? 'Start collaborative map' : 'Map settings'"
+	:title="isCreate ? 'Create collaborative map' : 'Map settings'"
 	dialog-class="fm-pad-settings"
 	:no-cancel="noCancel"
 	:is-saving="isSaving"

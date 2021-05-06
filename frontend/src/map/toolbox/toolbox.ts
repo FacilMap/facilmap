@@ -18,10 +18,13 @@ import ManageTypes from "../manage-types/manage-types";
 import EditFilter from "../edit-filter/edit-filter";
 import History from "../history/history";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+import storage, { Bookmark } from "../../utils/storage";
+import ManageBookmarks from "../manage-bookmarks/manage-bookmarks";
+import OpenMap from "../open-map/open-map";
 
 @WithRender
 @Component({
-    components: { About, EditFilter, History, Icon, ManageViews, ManageTypes, PadSettings, SaveView, Sidebar }
+    components: { About, EditFilter, History, Icon, ManageBookmarks, ManageViews, ManageTypes, OpenMap, PadSettings, SaveView, Sidebar }
 })
 export default class Toolbox extends Vue {
 
@@ -34,13 +37,22 @@ export default class Toolbox extends Vue {
 		return context.isNarrow;
 	}
 
+	get urlPrefix(): string {
+		return context.urlPrefix;
+	}
+
+	get hash(): string {
+		const v = this.mapContext;
+		return v.hash && v.hash != "#" ? v.hash : `${v.zoom}/${v.center.lat}/${v.center.lng}`;
+	}
+
 	get links(): Record<'osm' | 'google' | 'bing' | 'facilmap', string> {
 		const v = this.mapContext;
 		return {
 			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
 			google: `https://www.google.com/maps/@${v.center.lat},${v.center.lng},${v.zoom}z`,
 			bing: `https://www.bing.com/maps?cp=${v.center.lat}~${v.center.lng}&lvl=${v.zoom}`,
-			facilmap: `${context.urlPrefix}#${v.hash && v.hash != "#" ? v.hash : `${v.zoom}/${v.center.lat}/${v.center.lng}`}`
+			facilmap: `${context.urlPrefix}#${this.hash}`
 		};
 	}
 
@@ -72,6 +84,18 @@ export default class Toolbox extends Vue {
 			name: overlays[key].options.fmName!,
 			active: this.mapContext.layers.overlays.includes(key)
 		}));
+	}
+
+	get bookmarks(): Bookmark[] {
+		return storage.bookmarks;
+	}
+
+	get isBookmarked(): boolean {
+		return !!this.client.padId && storage.bookmarks.some((bookmark) => bookmark.id == this.client.padId);
+	}
+
+	addBookmark(): void {
+		storage.bookmarks.push({ id: this.client.padId!, padId: this.client.padData!.id, name: this.client.padData!.name });
 	}
 
 	addObject(type: Type): void {

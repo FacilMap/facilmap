@@ -76,7 +76,7 @@ class SocketConnection {
 			this.socket.on(i, async (data, callback) => {
 				try {
 					const res = await this.socketHandlers[i](data);
-					
+
 					if(!callback && res)
 						console.trace("No callback available to send result of socket handler " + i);
 
@@ -170,7 +170,7 @@ class SocketConnection {
 				this.padId = undefined;
 				throw new Error("This pad does not exist");
 			}
-			
+
 			this.padId = pad.id;
 			this.writable = pad.writable;
 
@@ -233,6 +233,29 @@ class SocketConnection {
 			}
 		},
 
+		getPad: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				padId: "string"
+			});
+
+			const padData = await this.database.pads.getPadDataByAnyId(data.padId);
+			return padData && {
+				id: padData.id,
+				name: padData.name,
+				description: padData.description
+			};
+		},
+
+		findPads: async (data) => {
+			this.validateConditions(Writable.READ, data, {
+				query: "string",
+				start: "number",
+				limit: "number"
+			});
+
+			return this.database.pads.findPads(data);
+		},
+
 		createPad: async (data) => {
 			this.validateConditions(Writable.READ, data, {
 				name: "string",
@@ -273,7 +296,7 @@ class SocketConnection {
 				legend1: "string",
 				legend2: "string"
 			});
-			
+
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
 
@@ -385,7 +408,7 @@ class SocketConnection {
 					}
 				}
 			}
-			
+
 			return await this.database.lines.createLine(this.padId, data, fromRoute);
 		},
 
@@ -473,7 +496,7 @@ class SocketConnection {
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
-			
+
 			return await this.database.views.createView(this.padId, data);
 		},
 
@@ -583,10 +606,10 @@ class SocketConnection {
 			// We first update the type (without updating the styles). If that succeeds, we rename the data fields.
 			// Only then we update the object styles (as they often depend on the field values).
 			const newType = await this.database.types.updateType(this.padId, data.id, data, false)
-	
+
 			if(Object.keys(rename).length > 0)
 				await this.database.helpers.renameObjectDataField(this.padId, data.id, rename, newType.type == "line");
-				
+
 			await this.database.types.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line")
 
 			return newType;
@@ -771,7 +794,7 @@ class SocketConnection {
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
-			
+
 			if(this.historyListener)
 				throw new Error("Already listening to history.");
 
@@ -804,12 +827,12 @@ class SocketConnection {
 				throw new Error("No map opened.");
 
 			const historyEntry = await this.database.history.getHistoryEntry(this.padId, data.id);
-			
+
 			if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != Writable.ADMIN)
 				throw new Error("This kind of change can only be reverted in admin mode.");
 
 			this.pauseHistoryListener++;
-			
+
 			try {
 				await this.database.history.revertHistoryEntry(this.padId, data.id);
 			} finally {

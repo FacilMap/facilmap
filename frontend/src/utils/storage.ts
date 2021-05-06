@@ -1,33 +1,58 @@
+import { PadId } from "facilmap-types";
+import { isEqual } from "lodash";
 import Vue from "vue";
+
+export interface Bookmark {
+	/** ID used to open the map */
+	id: PadId;
+	/** Read-only ID of the map */
+	padId: PadId;
+	/** Last known name of the map */
+	name: string;
+	/** If this is defined, it is shown instead of the map name. */
+	customName?: string;
+}
 
 export interface Storage {
 	zoomToAll: boolean;
 	autoZoom: boolean;
+	bookmarks: Bookmark[];
 }
 
-const storage = Vue.observable({
+const storage: Storage = Vue.observable({
 	zoomToAll: false,
-	autoZoom: true
+	autoZoom: true,
+	bookmarks: []
 });
 
 export default storage;
 
-try {
-	const val = localStorage.getItem("facilmap");
-	if (val) {
-		const parsed = JSON.parse(val);
-		storage.zoomToAll = !!parsed.zoomToAll;
-		storage.autoZoom = !!parsed.autoZoom;
+function load(): void {
+	try {
+		const val = localStorage.getItem("facilmap");
+		if (val) {
+			const parsed = JSON.parse(val);
+			storage.zoomToAll = !!parsed.zoomToAll;
+			storage.autoZoom = !!parsed.autoZoom;
+			storage.bookmarks = parsed.bookmarks || [];
+		}
+	} catch (err) {
+		console.error("Error reading local storage", err);
 	}
-} catch (err) {
-	console.error("Error reading local storage", err);
 }
 
-const watcher = new Vue({ data: { storage } });
-watcher.$watch("storage", () => {
+function save() {
 	try {
-		localStorage.setItem("facilmap", JSON.stringify(storage));
+		const currentItem = localStorage.getItem("facilmap");
+		if (!currentItem || !isEqual(JSON.parse(currentItem), storage))
+			localStorage.setItem("facilmap", JSON.stringify(storage));
 	} catch (err) {
 		console.error("Error saving to local storage", err);
 	}
-}, { deep: true });
+}
+
+load();
+window.addEventListener("storage", load);
+
+const watcher = new Vue({ data: { storage } });
+watcher.$watch("storage", save, { deep: true });

@@ -18,6 +18,8 @@ The map name is shown as the title of your browser tab and window. It will also 
 
 If you check the “Accessible for search engines” checkbox, search engines like Google or Duckduckgo will be allowed to list the read-only version of the map. Note that FacilMap itself does not report these maps to the search engines, but when they find them through a link on a public website, it is this setting that allows them to add the map to their results.
 
+Enabling this will also make the map available in FacilMap’s list of public maps in the [open map dialog](../collaborative/#open-an-existing-map).
+
 When this is enabled, an additional field “Short description” is shown. Search engines will list the map with the [map name](#map-name) and this description.
 
 ## Cluster markers

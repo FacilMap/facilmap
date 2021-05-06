@@ -6,9 +6,9 @@ While using a collaborative map, users can still use all of the non-collaborativ
 
 When changing something on the map, there is no need to “Save” the map. Changes are applied immediately.
 
-## Start a collaborative map
+## Create a map
 
-To start a collaborative map, click the “Start collaborative map” button in the [toolbox](../ui/#toolbox).
+To create a collaborative map, click “Collaborative maps” and then “Create a new map” in the [toolbox](../ui/#toolbox).
 
 ![](./save.png)
 
@@ -33,9 +33,23 @@ When creating a collaborative map, some random characters are proposed for the d
 | Change [map settings](../map-settings/) | ✘ | ✘ | ✔ |
 | [Delete map](../map-settings/#delete-the-map) | ✘ | ✘ | ✔ |
 
-## Exit a collaborative map
+## Open an existing map
 
-If you want to go back to the basic FacilMap, click on “Tools” in the [toolbox](../ui/#toolbox) and then “Exit collaborative map”.
+If someone has shared a link to a collaborative map with you, you can simply open that link in your browser to open the map. Alternatively, click “Collaborative maps” and then “Open an existing map” (or, if you are already viewing another map, “Open another map”) in the [toolbox](../ui/#toolbox). A dialog will open where you can paste the link into the text field on top and click “Open” to open the map.
+
+In the bottom section of the dialog you can search for existing collaborative maps that people have [made public](../map-settings/#search-engines). Simply type in a search term and click the search icon to search for maps. You can use `*` as a wildcard and `?` as a single-character wildcard.
+
+## Close a map
+
+If you want to close a collaborative map and go back to the basic FacilMap, click “Collaborative maps” and then “Close …” (where “…” is the name of the open map) in the [toolbox](../ui/#toolbox).
+
+## Bookmark a map
+
+While you can simply add a bookmark in your browser to remember the link to a specific map, FacilMap also brings its own bookmark function.
+
+To bookmark a particular map, open that map and then click “Collaborative maps” and then “Bookmark …” (where “…” is the name of the open map) in the [toolbox](../ui/#toolbox). This will add the map as a new item to the “Collaborative maps” menu. Bookmarks are stored in your browser, so they are not visible to anyone else, but they may get removed if you clean up your browser history.
+
+To reorder, rename or remove bookmarks, click “Manage bookmarks” (only visible if you have any bookmarks).
 
 ## Delete a collaborative map
 
