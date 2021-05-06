@@ -1,5 +1,6 @@
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 import Vue from "vue";
+import decodeURIComponent from "decode-uri-component";
 
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
@@ -36,15 +37,15 @@ if(!location.hash || location.hash == "#") {
         const query = encodeQueryString(queryParams);
         const hash = encodeQueryString(hashParams);
 
-        history.replaceState(null, "", context.urlPrefix + (context.activePadId || "") + (query ? "?" + query : "") + "#" + hash);
+        history.replaceState(null, "", context.urlPrefix + encodeURIComponent(context.activePadId || "") + (query ? "?" + query : "") + "#" + hash);
     }
 }
 
 export function updatePadId(padId: string): void {
     context.activePadId = padId;
- 
+
     if (padId)
-        history.replaceState(null, "", context.urlPrefix + padId + location.search + location.hash);
+        history.replaceState(null, "", context.urlPrefix + encodeURIComponent(padId) + location.search + location.hash);
 }
 
 export function updatePadName(padName: string): void {

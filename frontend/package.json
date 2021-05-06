@@ -39,6 +39,7 @@
     "bootstrap-vue": "^2.21.1",
     "clipboard": "^2.0.8",
     "copy-to-clipboard": "^3.3.1",
+    "decode-uri-component": "^0.2.0",
     "domutils": "^2.5.0",
     "facilmap-client": "3.1.0",
     "facilmap-leaflet": "3.1.0",
@@ -71,6 +72,7 @@
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "^6.4.0",
+    "@types/decode-uri-component": "^0.2.0",
     "@types/file-saver": "^2.0.1",
     "@types/hammerjs": "^2.0.39",
     "@types/jest": "^26.0.21",

@@ -715,6 +715,11 @@
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.5.tgz#b14efa8852b7768d898906613c23f688713e02cd"
   integrity sha512-Q1y515GcOdTHgagaVFhHnIFQ38ygs/kmxdNpvpou+raI9UO3YZcHDngBSYKQklcKlvA7iuQlmIKbzvmxcOE9CQ==
 
+"@types/decode-uri-component@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@types/decode-uri-component/-/decode-uri-component-0.2.0.tgz#0660a5c96fdfefdd570840cc7aeb07293907106e"
+  integrity sha512-Sa61t51csZD7DzzzoYLXVmR/lJE6IXjTlflRQFOOCDw5nmmBQb2FZ5DCxl8sEYtAPPBHj//1jCbxFTu9wc8EZQ==
+
 "@types/dompurify@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-2.2.1.tgz#eebf3af8afe2f577a53acab9d98a3a4cb04bbbe7"

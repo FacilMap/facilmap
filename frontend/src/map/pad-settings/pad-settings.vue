@@ -17,7 +17,7 @@
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="admin-link-input" v-model="padData.adminId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + padData.adminId)">Copy</b-button>
+						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.adminId))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
@@ -32,7 +32,7 @@
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="write-link-input" v-model="padData.writeId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + padData.writeId)">Copy</b-button>
+						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.writeId))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
@@ -47,7 +47,7 @@
 				<b-input-group :prepend="urlPrefix">
 					<b-form-input id="read-link-input" v-model="padData.id" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + padData.id)">Copy</b-button>
+						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.id))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<b-form-invalid-feedback>{{v.errors[0]}}</b-form-invalid-feedback>
