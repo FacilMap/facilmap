@@ -1,21 +1,22 @@
 import WithRender from "./open-map.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Client, InjectClient } from "../../utils/decorators";
+import { Client, InjectClient, InjectContext, InjectMapComponents } from "../../utils/decorators";
 import { extend, ValidationObserver, ValidationProvider } from "vee-validate";
-import context from "../context";
 import { getValidationState } from "../../utils/validation";
 import { showErrorToast } from "../../utils/toasts";
 import Icon from "../ui/icon/icon";
 import { FindPadsResult } from "facilmap-types";
 import "./open-map.scss";
 import decodeURIComponent from "decode-uri-component";
+import { Context } from "../facilmap/facilmap";
+import { MapComponents } from "../leaflet-map/leaflet-map";
 
 const ITEMS_PER_PAGE = 20;
 
-function parsePadId(val: string): { padId: string; hash: string } {
-	if (val.startsWith(context.urlPrefix))
-		val = decodeURIComponent(val.substr(context.urlPrefix.length));
+function parsePadId(val: string, context: Context): { padId: string; hash: string } {
+	if (val.startsWith(context.baseUrl))
+		val = decodeURIComponent(val.substr(context.baseUrl.length));
 
 	const hashIdx = val.indexOf("#");
 	if (hashIdx == -1)
@@ -27,7 +28,8 @@ function parsePadId(val: string): { padId: string; hash: string } {
 extend("openPadId", {
 	validate: async (val: string, data: any) => {
 		const client = data.getClient() as Client;
-		const parsed = parsePadId(val);
+		const context = data.context as Context;
+		const parsed = parsePadId(val, context);
 
 		if (parsed.padId.includes("/"))
 			return "Please enter a valid map ID or URL.";
@@ -39,7 +41,7 @@ extend("openPadId", {
 		return true;
 	},
 
-	params: ["getClient"]
+	params: ["getClient", "context"]
 });
 
 @WithRender
@@ -48,7 +50,9 @@ extend("openPadId", {
 })
 export default class OpenMap extends Vue {
 
+	@InjectContext() context!: Context;
 	@InjectClient() client!: Client;
+	@InjectMapComponents() mapComponents!: MapComponents;
 
 	@Prop({ type: String, required: true }) id!: string;
 
@@ -62,12 +66,8 @@ export default class OpenMap extends Vue {
 	activePage = 1;
 
 	get url(): string {
-		const parsed = parsePadId(this.padId);
-		return context.urlPrefix + encodeURIComponent(parsed.padId) + parsed.hash;
-	}
-
-	get urlPrefix(): string {
-		return context.urlPrefix;
+		const parsed = parsePadId(this.padId, this.context);
+		return this.context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
 	}
 
 	getValidationState = getValidationState;
@@ -77,7 +77,16 @@ export default class OpenMap extends Vue {
 	}
 
 	handleSubmit(): void {
-		location.href = this.url;
+		const parsed = parsePadId(this.padId, this.context);
+		location.replace(parsed.hash || "#");
+		this.context.activePadId = parsed.padId;
+		this.$bvModal.hide(this.id);
+	}
+
+	openResult(result: FindPadsResult): void {
+		location.replace("#");
+		this.context.activePadId = result.id;
+		this.$bvModal.hide(this.id);
 	}
 
 	async search(query: string, page: number): Promise<void> {

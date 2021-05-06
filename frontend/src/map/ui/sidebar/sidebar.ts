@@ -1,16 +1,19 @@
 import WithRender from "./sidebar.vue";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import context from "../../context";
 import $ from "jquery";
 import hammer from "hammerjs";
 import "./sidebar.scss";
+import { InjectContext } from "../../../utils/decorators";
+import { Context } from "../../facilmap/facilmap";
 
 @WithRender
 @Component({
     components: { }
 })
 export default class Sidebar extends Vue {
+
+	@InjectContext() context!: Context;
 
 	@Prop({ type: String, required: true }) readonly id!: string;
 
@@ -28,7 +31,7 @@ export default class Sidebar extends Vue {
 		this.destroyPan();
 	}
 
-	@Watch("isNarrow")
+	@Watch("context.isNarrow")
 	handleNarrowChange(): void {
 		this.destroyPan();
 		setTimeout(() => {
@@ -53,10 +56,6 @@ export default class Sidebar extends Vue {
 			this.pan = undefined;
 		}
 		this.sidebar = undefined;
-	}
-
-	get isNarrow(): boolean {
-		return context.isNarrow;
 	}
 
 	handleDragMove(event: any): void {

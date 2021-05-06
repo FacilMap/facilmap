@@ -9,7 +9,7 @@
 					</b-input-group-prepend>
 					<b-form-input v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)"></b-form-input>
 					<b-input-group-append>
-						<b-dropdown v-if="destination.query.trim() != ''" @show="loadSuggestions(destination)" :menu-class="['fm-route-suggestions', { isPending: !destination.searchSuggestions, isNarrow }]">
+						<b-dropdown v-if="destination.query.trim() != ''" @show="loadSuggestions(destination)" :menu-class="['fm-route-suggestions', { isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }]">
 							<template v-if="destination.searchSuggestions">
 								<template v-for="suggestion in destination.mapSuggestions">
 									<b-dropdown-item

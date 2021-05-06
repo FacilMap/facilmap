@@ -4,6 +4,13 @@
     flex-grow: 1;
     position: relative;
 
+    .fm-leaflet-map-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        position: relative;
+    }
+
     .fm-leaflet-map-inner-container {
         position: relative;
         flex-grow: 1;

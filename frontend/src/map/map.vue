@@ -1,3 +1,11 @@
-<ClientProvider :padId="padId" @padId="handlePadIdChange" @padName="handlePadNameChange">
-	<Main/>
-</ClientProvider>
+<FacilMap
+	:baseUrl="baseUrl"
+	:serverUrl="baseUrl"
+	:padId.sync="padId"
+	:toolbox="toolbox"
+	:search="search"
+	:autofocus="autofocus"
+	:legend="legend"
+	:interactive="interactive"
+	@update:padName="padName = $event"
+></FacilMap>

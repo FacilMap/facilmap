@@ -17,13 +17,22 @@ You can control the display of different components by using the following query
 * `search`: Show the search bar (default: `true`)
 * `autofocus`: Autofocus the search field (default: `false`)
 * `legend`: Show the legend if available (default: `true`)
-* `interactive`: Show certain items (“Create collaborative map”, “Open file”) in the toolbox (default: `false`)
+* `interactive`: Enable [interactive mode](#interactive-mode) (default: `false`)
 
 Example:
 
 ```html
 <iframe style="height: 500px; width: 100%; border: none;" src="https://facilmap.org/mymap?search=false&amp;toolbox=false"></iframe>
 ```
+
+## Interactive mode
+
+When embedding FacilMap into a website, you may want to disable certain UI interactions that make more sense when FacilMap runs as a standalone app. For exapmle, when you want to embed a specific collaborative map, you may want to disable any interactions that will navigate the user away from the map, such as closing the map or navigating to a bookmark. Disabling interactive mode will hide the following UI interactions:
+
+* “Collaborative map” menu in the toolbox, including bookmarks, the “Open collaborative map” dialog and “Close current map”.
+* “Open file” or dragging a geographic file onto the map.
+* “Create collaborative map” dialog when opening a map ID that does not exist.
+* “Close map” button when the open map is deleted.
 
 ## Location hash
 

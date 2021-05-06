@@ -3,12 +3,11 @@ import "./search-form.scss";
 import Vue from "vue";
 import { Component, Ref, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
-import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { isSearchId } from "facilmap-utils";
 import { showErrorToast } from "../../utils/toasts";
 import { FindOnMapResult, SearchResult } from "facilmap-types";
 import SearchResults from "../search-results/search-results";
-import context from "../context";
 import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, ZoomDestination } from "../../utils/zoom";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { Util } from "leaflet";
@@ -17,20 +16,22 @@ import storage from "../../utils/storage";
 import { HashQuery } from "facilmap-leaflet";
 import { FileResultObject, parseFiles } from "../../utils/files";
 import FileResults from "../file-results/file-results";
+import { Context } from "../facilmap/facilmap";
 
 @WithRender
 @Component({
 	components: { Icon, FileResults, SearchResults }
 })
 export default class SearchForm extends Vue {
-	
+
+	@InjectContext() context!: Context;
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
 
 	@Ref() searchInput!: HTMLInputElement;
 
-	autofocus = !context.isNarrow && context.autofocus;
+	autofocus = false;
 	searchString = "";
 	loadingSearchString = "";
 	loadedSearchString = "";
@@ -41,6 +42,10 @@ export default class SearchForm extends Vue {
 	mapResults: FindOnMapResult[] | null = null;
 	fileResult: FileResultObject | null = null;
 
+	created(): void {
+		this.autofocus = !this.context.isNarrow && this.context.autofocus
+	}
+
 	mounted(): void {
 		this.layerId = Util.stamp(this.mapComponents.searchResultsLayer);
 	}
@@ -48,7 +53,7 @@ export default class SearchForm extends Vue {
 	get autoZoom(): boolean {
 		return storage.autoZoom;
 	}
-	
+
 	set autoZoom(autoZoom: boolean) {
 		storage.autoZoom = autoZoom;
 	}

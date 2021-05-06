@@ -83,7 +83,7 @@ module.exports = {
 				},
 				{
 					title: "Server",
-					collapsable: false,
+					collapsable: true,
 					children: [
 						"server/",
 						"server/docker",
@@ -93,7 +93,7 @@ module.exports = {
 				},
 				{
 					title: 'Client',
-					collapsable: false,
+					collapsable: true,
 					children: [
 						"client/",
 						"client/properties",
@@ -105,7 +105,7 @@ module.exports = {
 				},
 				{
 					title: "Leaflet components",
-					collapsable: false,
+					collapsable: true,
 					children: [
 						"leaflet/",
 						"leaflet/bbox",
@@ -122,8 +122,16 @@ module.exports = {
 					]
 				},
 				{
+					title: "Frontend",
+					collapsable: true,
+					children: [
+						"frontend/",
+						"frontend/facilmap"
+					]
+				},
+				{
 					title: 'Development',
-					collapsable: false,
+					collapsable: true,
 					children: [
 						"development/dev-setup",
 						"development/documentation"

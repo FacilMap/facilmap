@@ -3,23 +3,27 @@ import { VNode } from "vue";
 
 export interface ToastOptionsWithActions extends BvToastOptions {
 	actions?: ToastAction[];
+	spinner?: boolean;
 }
 
 export interface ToastAction {
-	onClick?: () => void;
+	onClick?: (e: MouseEvent) => void;
 	label: string;
 	href?: string;
 }
 
-export function toastActions(component: Vue, message: string, actions?: ToastAction[]): VNode | string {
-	if (!actions || actions.length == 0)
+export function toastActions(component: Vue, message: string, actions: ToastAction[] = [], spinner = false): VNode | string {
+	if (actions.length == 0 && !spinner)
 		return message;
 
 	return component.$createElement(
 		"div",
 		{ class: "fm-toast-actions" },
 		[
-			component.$createElement("div", { }, message),
+			component.$createElement("div", { }, [
+				...(spinner ? [component.$createElement("b-spinner", { props: { small: true } }), " "] : []),
+				message
+			]),
 			...actions.map((action) => component.$createElement(
 				"b-button",
 				{
@@ -44,7 +48,7 @@ export function showErrorToast(component: Vue, id: string, title: string, err: a
 }
 
 export function showToast(component: Vue, id: string, title: string, message: string, options?: ToastOptionsWithActions): void {
-	component.$bvToast.toast(toastActions(component, message, options?.actions), {
+	component.$bvToast.toast(toastActions(component, message, options?.actions, options?.spinner), {
 		id,
 		title,
 		noCloseButton: true,

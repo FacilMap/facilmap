@@ -2,7 +2,7 @@ import WithRender from "./leaflet-map.vue";
 import Vue from "vue";
 import { Component, ProvideReactive, Ref, Watch } from "vue-property-decorator";
 import "./leaflet-map.scss";
-import { Client, InjectClient, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
+import { Client, InjectClient, InjectContext, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
@@ -16,8 +16,8 @@ import $ from "jquery";
 import SelectionHandler, { SelectedItem } from "../../utils/selection";
 import { FilterFunc } from "facilmap-utils";
 import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
-import context from "../context";
 import { createEventBus, EventBus } from "./events";
+import { Context } from "../facilmap/facilmap";
 
 /* function createButton(symbol: string, onClick: () => void): Control {
     return Object.assign(new Control(), {
@@ -71,6 +71,7 @@ export interface MapContext extends EventBus {
 export default class LeafletMap extends Vue {
 
     @InjectClient() client!: Client;
+    @InjectContext() context!: Context;
 
     @ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents: MapComponents = null as any;
     @ProvideReactive(MAP_CONTEXT_INJECT_KEY) mapContext: MapContext = null as any;
@@ -80,16 +81,8 @@ export default class LeafletMap extends Vue {
     loaded = false;
     interaction = 0;
 
-    get isNarrow(): boolean {
-        return context.isNarrow;
-    }
-
     get selfUrl(): string {
         return `${location.origin}${location.pathname}${this.mapContext?.hash ? `#${this.mapContext.hash}` : ''}`;
-    }
-
-    get isInFrame(): boolean {
-        return context.isInFrame;
     }
 
     mounted(): void {
@@ -184,6 +177,10 @@ export default class LeafletMap extends Vue {
         selectionHandler.on("fmLongClick", (event: any) => {
             this.mapContext.$emit("fm-map-long-click", { lat: event.latlng.lat, lon: event.latlng.lng });
         });
+    }
+
+    beforeDestroy(): void {
+        this.mapComponents.map.remove();
     }
 
     get activeQuery(): HashQuery | undefined {

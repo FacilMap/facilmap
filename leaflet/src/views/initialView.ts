@@ -7,6 +7,9 @@ export async function getInitialView(client: Client<any>): Promise<UnsavedView |
 		const padData = client.padData || await new Promise<PadData>((resolve, reject) => {
 			client.on("padData", resolve);
 			client.on("serverError", reject);
+
+			if (client.serverError)
+				reject(client.serverError);
 		});
 
 		return padData.defaultView;

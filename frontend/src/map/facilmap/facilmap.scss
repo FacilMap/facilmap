@@ -1,0 +1,46 @@
+.fm-facilmap {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.td-buttons {
+	white-space: nowrap;
+	width: 1px;
+
+	> button {
+		margin-left: 0.25rem;
+	}
+}
+
+.fm-drag-handle {
+	cursor: grab !important;
+}
+
+.btn-toolbar {
+	> * + * {
+		margin-left: 0.25rem;
+	}
+}
+
+.closeable-tab-title {
+	display: inline-flex;
+	width: 100%;
+
+	> span {
+		align-items: center;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		flex-grow: 1;
+	}
+
+	a {
+		padding: 0 !important;
+	}
+
+	object, a, .fm-icon {
+		display: inline-flex;
+		align-items: center;
+	}
+}

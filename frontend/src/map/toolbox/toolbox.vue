@@ -1,5 +1,5 @@
 <div class="fm-toolbox">
-	<a v-if="isNarrow" href="javascript:" class="fm-toolbox-toggle" v-b-toggle.fm-toolbox-sidebar><Icon icon="menu-hamburger"></Icon></a>
+	<a v-if="context.isNarrow" href="javascript:" class="fm-toolbox-toggle" v-b-toggle.fm-toolbox-sidebar><Icon icon="menu-hamburger"></Icon></a>
 
 	<Sidebar id="fm-toolbox-sidebar">
 		<b-nav-item-dropdown
@@ -10,9 +10,10 @@
 		>
 			<b-dropdown-item
 				v-for="bookmark in bookmarks"
-				:href="`${urlPrefix}${encodeURIComponent(bookmark.id)}#${hash}`"
+				:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
 				v-b-toggle.fm-toolbox-sidebar
 				:active="bookmark.id == client.padId"
+				@click.exact.prevent="context.activePadId = bookmark.id"
 			>{{bookmark.customName || bookmark.name}}</b-dropdown-item>
 			<b-dropdown-divider v-if="bookmarks.length > 0"></b-dropdown-divider>
 			<b-dropdown-item
@@ -41,6 +42,7 @@
 			<b-dropdown-item
 				v-if="client.padData"
 				:href="links.facilmap"
+				@click.exact.prevent="context.activePadId = undefined"
 			>Close {{client.padData.name}}</b-dropdown-item>
 		</b-nav-item-dropdown>
 
@@ -64,7 +66,7 @@
 			<b-dropdown-item :href="links.google" target="_blank">Open this on Google Maps</b-dropdown-item>
 			<b-dropdown-item :href="links.bing" target="_blank">Open this on Bing Maps</b-dropdown-item>
 		</b-nav-item-dropdown>
-		<b-nav-item-dropdown text="Tools" right>
+		<b-nav-item-dropdown text="Tools" right v-if="interactive || client.padData">
 			<b-dropdown-item v-if="interactive" href="javascript:" @click="importFile()" v-b-toggle.fm-toolbox-sidebar>Open file</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" target="_blank" v-b-tooltip.hover.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" target="_blank" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>

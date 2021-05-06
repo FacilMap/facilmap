@@ -3,11 +3,14 @@ import "./picker.scss";
 import Vue from "vue";
 import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import { getUniqueId } from "../../../utils/utils";
-import context from "../../context";
+import { InjectContext } from "../../../utils/decorators";
+import { Context } from "../../facilmap/facilmap";
 
 @WithRender
 @Component({ })
 export default class Picker extends Vue {
+
+	@InjectContext() context!: Context;
 
 	@Prop({ type: String, default: () => getUniqueId("fm-picker") }) id!: string;
 	@Prop({ type: String, default: "" }) customClass!: string;
@@ -40,7 +43,7 @@ export default class Picker extends Vue {
 
 	set open(open: boolean) {
 		if (open && !this.open) {
-			if (context.isNarrow)
+			if (this.context.isNarrow)
 				this.modalOpen = true;
 			else
 				this.popoverOpen = true;

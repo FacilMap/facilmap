@@ -3,7 +3,7 @@ import "./route-form.scss";
 import Vue from "vue";
 import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import Icon from "../ui/icon/icon";
-import { InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { isSearchId, round, splitRouteQuery } from "facilmap-utils";
 import Client, { RouteWithTrackPoints } from "facilmap-client";
 import { showErrorToast } from "../../utils/toasts";
@@ -20,7 +20,7 @@ import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import ElevationPlot from "../ui/elevation-plot/elevation-plot";
 import { saveAs } from 'file-saver';
 import { isMapResult } from "../../utils/search";
-import context from "../context";
+import { Context } from "../facilmap/facilmap";
 
 type SearchSuggestion = SearchResult;
 type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -77,7 +77,8 @@ function getIcon(i: number, length: number, highlight = false) {
 	components: { draggable, ElevationPlot, ElevationStats, Icon, RouteMode }
 })
 export default class RouteForm extends Vue {
-	
+
+	@InjectContext() context!: Context;
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
@@ -189,10 +190,6 @@ export default class RouteForm extends Vue {
 		this.routeLayer.remove();
 	}
 
-	get isNarrow(): boolean {
-		return context.isNarrow;
-	}
-
 	get routeObj(): RouteWithTrackPoints | undefined {
 		return this.routeId ? this.client.routes[this.routeId] : this.client.route;
 	}
@@ -203,7 +200,7 @@ export default class RouteForm extends Vue {
 			this.draggable.enableForLayer(this.routeLayer);
 		else
 			this.draggable.disableForLayer(this.routeLayer);
-		
+
 		if (this.hasRoute)
 			this.routeLayer.setStyle({ opacity: active ? 1 : 0.35, raised: active });
 	}
@@ -258,7 +255,7 @@ export default class RouteForm extends Vue {
 		const sugg = this.getSelectedSuggestion(dest);
 		if (!sugg)
 			return undefined;
-		
+
 		if (isMapResult(sugg))
 			return (sugg.kind == "marker" ? "m" : "l") + sugg.id;
 		else
@@ -417,7 +414,7 @@ export default class RouteForm extends Vue {
 				mode,
 				routeId: this.routeId
 			});
-			
+
 			if (route && zoom)
 				flyTo(this.mapComponents.map, getZoomDestinationForRoute(route), smooth);
 		} catch (err) {

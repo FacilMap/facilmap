@@ -2,16 +2,16 @@ import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import WithRender from "./pad-settings.vue";
 import Vue from "vue";
 import { extend, ValidationProvider } from "vee-validate";
-import context from "../context";
 import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 import { clone, generateRandomPadId } from "facilmap-utils";
-import { Client, InjectClient } from "../../utils/decorators";
+import { Client, InjectClient, InjectContext } from "../../utils/decorators";
 import { mergeObject } from "../../utils/utils";
 import { isEqual } from "lodash";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
 import { showErrorToast } from "../../utils/toasts";
 import "./pad-settings.scss";
+import { Context } from "../facilmap/facilmap";
 
 extend("padId", {
 	validate: (id: string) => !id.includes("/"),
@@ -33,6 +33,7 @@ extend("padIdUnique", {
 })
 export default class PadSettings extends Vue {
 
+	@InjectContext() context!: Context;
 	@InjectClient() client!: Client;
 
 	@Ref() padDataValidationProvider?: InstanceType<typeof ValidationProvider>;
@@ -72,10 +73,6 @@ export default class PadSettings extends Vue {
 
 	get isModified(): boolean {
 		return !isEqual(this.padData, this.client.padData);
-	}
-
-	get urlPrefix(): string {
-		return context.urlPrefix;
 	}
 
 	@Watch("client.padData", { deep: true })

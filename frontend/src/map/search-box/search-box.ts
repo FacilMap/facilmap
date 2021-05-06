@@ -2,7 +2,6 @@ import WithRender from "./search-box.vue";
 import Vue from "vue";
 import { Component, ProvideReactive, Ref } from "vue-property-decorator";
 import "./search-box.scss";
-import context from "../context";
 import $ from "jquery";
 import { BTab } from "bootstrap-vue";
 import Icon from "../ui/icon/icon";
@@ -10,11 +9,12 @@ import SearchFormTab from "../search-form/search-form-tab";
 import MarkerInfoTab from "../marker-info/marker-info-tab";
 import LineInfoTab from "../line-info/line-info-tab";
 import hammer from "hammerjs";
-import { InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
+import { InjectContext, InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import RouteFormTab from "../route-form/route-form-tab";
 import { HashQuery } from "facilmap-leaflet";
 import MultipleInfoTab from "../multiple-info/multiple-info-tab";
+import { Context } from "../facilmap/facilmap";
 
 export type SearchBoxContext = Vue;
 
@@ -24,6 +24,7 @@ export type SearchBoxContext = Vue;
 })
 export default class SearchBox extends Vue {
 
+	@InjectContext() context!: Context;
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectMapContext() mapContext!: MapContext;
 
@@ -43,14 +44,6 @@ export default class SearchBox extends Vue {
 	hasFocus = false;
 	isResizing = false;
 	isMounted = false;
-
-	get isNarrow(): boolean {
-		return context.isNarrow;
-	}
-
-	get context(): typeof context {
-		return context;
-	}
 
 	mounted(): void {
 		this.mapContext.$on("fm-search-box-show-tab", this.handleShowTab);
@@ -96,7 +89,7 @@ export default class SearchBox extends Vue {
 	}
 
 	handlePanMove(event: any): void {
-		if (this.isNarrow && this.panStartHeight != null && event.srcEvent.type != "pointercancel")
+		if (this.context.isNarrow && this.panStartHeight != null && event.srcEvent.type != "pointercancel")
 			$(this.searchBox).stop().css("flexBasis", `${this.getSanitizedHeight(this.panStartHeight - event.deltaY)}px`);
 	}
 
@@ -136,7 +129,7 @@ export default class SearchBox extends Vue {
 		if (idx != -1)
 			this.tab = idx;
 
-		if (this.isNarrow && expand) {
+		if (this.context.isNarrow && expand) {
 			setTimeout(() => {
 				const currentHeight = parseInt($(this.searchBox).css("flex-basis"));
 				if (currentHeight < 120) {

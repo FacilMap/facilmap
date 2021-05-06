@@ -4,8 +4,7 @@ import { Component, Prop, Watch } from "vue-property-decorator";
 import { FindOnMapResult, ID, LineCreate, MarkerCreate, SearchResult, Type } from "facilmap-types";
 import "./search-results.scss";
 import Icon from "../ui/icon/icon";
-import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-import context from "../context";
+import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import SearchResultInfo from "../search-result-info/search-result-info";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { SelectedItem } from "../../utils/selection";
@@ -19,13 +18,15 @@ import { mapValues, pickBy, uniq } from "lodash";
 import FormModal from "../ui/form-modal/form-modal";
 import StringMap from "../../utils/string-map";
 import { getUniqueId } from "../../utils/utils";
+import { Context } from "../facilmap/facilmap";
 
 @WithRender
 @Component({
 	components: { FormModal, Icon, SearchResultInfo }
 })
 export default class SearchResults extends Vue {
-	
+
+	@InjectContext() context!: Context;
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
 	@InjectMapComponents() mapComponents!: MapComponents;
@@ -42,10 +43,6 @@ export default class SearchResults extends Vue {
 	customImportModalId = getUniqueId("fm-search-results-custom-import");
 	activeTab = 0;
 	isAdding = false;
-
-	get isNarrow(): boolean {
-		return context.isNarrow;
-	}
 
 	get showZoom(): boolean {
 		return !this.autoZoom || this.unionZoom;
@@ -375,7 +372,7 @@ export default class SearchResults extends Vue {
 				const id = (result.fmTypeId && this.customMapping[result.fmTypeId]) ? this.customMapping[result.fmTypeId] : isMarkerResult(result) ? this.untypedMarkerMapping : this.untypedLineMapping;
 				return id !== false && resolvedMapping[id] ? [{ result, type: resolvedMapping[id] }] : [];
 			});
-			
+
 			if (await this._addToMap(add))
 				this.$bvModal.hide(this.customImportModalId);
 		} catch(err) {

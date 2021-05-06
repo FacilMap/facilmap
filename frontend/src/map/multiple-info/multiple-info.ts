@@ -2,24 +2,25 @@ import WithRender from "./multiple-info.vue";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { ID, Line, Marker } from "facilmap-types";
-import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import "./multiple-info.scss";
 import { combineZoomDestinations, flyTo, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
 import Icon from "../ui/icon/icon";
 import StringMap from "../../utils/string-map";
-import context from "../context";
 import { isLine, isMarker } from "../../utils/utils";
 import MarkerInfo from "../marker-info/marker-info";
 import LineInfo from "../line-info/line-info";
+import { Context } from "../facilmap/facilmap";
 
 @WithRender
 @Component({
 	components: { Icon, MarkerInfo, LineInfo }
 })
 export default class MultipleInfo extends Vue {
-	
+
+	@InjectContext() context!: Context;
 	@InjectClient() client!: Client;
 	@InjectMapContext() mapContext!: MapContext;
 	@InjectMapComponents() mapComponents!: MapComponents;
@@ -30,10 +31,6 @@ export default class MultipleInfo extends Vue {
 	openedObjectId: ID | null = null;
 	openedObjectType: "marker" | "line" | null = null;
 	activeTab = 0;
-
-	get context(): typeof context {
-		return context;
-	}
 
 	isMarker = isMarker;
 	isLine = isLine;
@@ -58,7 +55,7 @@ export default class MultipleInfo extends Vue {
 			else if (this.openedObjectType == "line")
 				openedObject = this.client.lines[this.openedObjectId];
 		}
-		
+
 		return openedObject && this.objects.includes(openedObject) ? openedObject : undefined;
 	}
 
@@ -73,7 +70,7 @@ export default class MultipleInfo extends Vue {
 
 		if (!this.objects || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove ${this.objects.length} objects?`))
 			return;
-		
+
 		this.isDeleting = true;
 
 		try {

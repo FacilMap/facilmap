@@ -14,10 +14,10 @@
 	<template v-if="padData">
 		<ValidationProvider name="Admin link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Admin link" label-for="admin-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
-				<b-input-group :prepend="urlPrefix">
+				<b-input-group :prepend="context.baseUrl">
 					<b-form-input id="admin-link-input" v-model="padData.adminId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.adminId))">Copy</b-button>
+						<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.adminId))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
@@ -29,10 +29,10 @@
 
 		<ValidationProvider name="Editable link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Editable link" label-for="write-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
-				<b-input-group :prepend="urlPrefix">
+				<b-input-group :prepend="context.baseUrl">
 					<b-form-input id="write-link-input" v-model="padData.writeId" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.writeId))">Copy</b-button>
+						<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.writeId))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
@@ -44,10 +44,10 @@
 
 		<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId|padIdUnique:@padData">
 			<b-form-group label="Read-only link" label-for="read-link-input" label-cols-sm="3" :state="v | validationState" class="pad-link">
-				<b-input-group :prepend="urlPrefix">
+				<b-input-group :prepend="context.baseUrl">
 					<b-form-input id="read-link-input" v-model="padData.id" :state="v | validationState"></b-form-input>
 					<b-input-group-append>
-						<b-button @click="copy(urlPrefix + encodeURIComponent(padData.id))">Copy</b-button>
+						<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.id))">Copy</b-button>
 					</b-input-group-append>
 				</b-input-group>
 				<b-form-invalid-feedback>{{v.errors[0]}}</b-form-invalid-feedback>

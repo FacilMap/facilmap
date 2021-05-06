@@ -1,4 +1,4 @@
-<div class="fm-search-results" :class="{ isNarrow }">
+<div class="fm-search-results" :class="{ isNarrow: context.isNarrow }">
 	<b-carousel :interval="0" v-model="activeTab">
 		<b-carousel-slide>
 			<b-alert v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" show variant="danger">No results have been found.</b-alert>

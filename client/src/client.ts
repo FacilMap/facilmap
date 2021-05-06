@@ -302,18 +302,20 @@ export default class Client<DataType = Record<string, string>> {
 			this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
 
 			if(this.padId)
-				this._setPadId(this.padId);
+				this._setPadId(this.padId).catch(() => undefined);
+
+			// TODO: Handle errors
 
 			if(this.bbox)
-				this.updateBbox(this.bbox);
+				this.updateBbox(this.bbox).catch((err) => { console.error("Error updating bbox.", err); });
 
 			if(this._listeningToHistory) // TODO: Execute after setPadId() returns
 				this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
 
 			if(this.route)
-				this.setRoute(this.route);
+				this.setRoute(this.route).catch((err) => { console.error("Error setting route.", err); });
 			for (const route of Object.values(this.routes))
-				this.setRoute(route);
+				this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
 		},
 
 		history: (data) => {

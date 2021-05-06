@@ -2,7 +2,7 @@
 	<ValidationObserver v-slot="observer">
 		<b-form method="get" :action="url" @submit.prevent="observer.handleSubmit(handleSubmit)">
 			<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
-			<ValidationProvider name="Map ID/link" v-slot="v" :rules="{ openPadId: { getClient } }" :debounce="300">
+			<ValidationProvider name="Map ID/link" v-slot="v" :rules="{ openPadId: { getClient, context } }" :debounce="300">
 				<b-form-group :state="v | validationState">
 					<b-input-group>
 						<b-form-input v-model="padId" :state="v | validationState"></b-form-input>
@@ -51,7 +51,12 @@
 						<b-tr v-for="result in results">
 							<b-td>{{result.name}}</b-td>
 							<b-td>{{result.description}}</b-td>
-							<b-td class="td-buttons"><b-button :href="urlPrefix + encodeURIComponent(result.id)">Open</b-button></b-td>
+							<b-td class="td-buttons">
+								<b-button
+									:href="context.baseUrl + encodeURIComponent(result.id)"
+									@click.exact.prevent="openResult(result)"
+								>Open</b-button>
+							</b-td>
 						</b-tr>
 					</b-tbody>
 				</b-table-simple>

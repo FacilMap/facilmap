@@ -61,6 +61,16 @@ export default class HashHandler extends Handler {
 		this.hash.removeFrom(this._map);
 	}
 
+	/**
+	 * Read the hash from location.hash and update the map view.
+	 */
+	update(): void {
+		this.hash.update();
+	}
+
+	/**
+	 * Generate the hash from the map view and update location.hash.
+	 */
 	updateHash = (): void => {
 		this.hash.onMapMove();
 	};
@@ -76,19 +86,19 @@ export default class HashHandler extends Handler {
 		}
 
 		this.fireEvent("fmHash", { hash });
-	
+
 		const viewMatch = hash.match(/^q=v(\d+)$/i);
 		if(viewMatch && this.client.views[viewMatch[1] as any]) {
 			displayView(this._map, this.client.views[viewMatch[1] as any]);
 			return false;
 		}
-	
+
 		let args;
 		if(hash.indexOf("=") != -1 && hash.indexOf("/") == -1)
 			args = decodeLegacyHash(hash);
 		else
 			args = hash.split("/").map(decodeURIComponentTolerantly);
-	
+
 		// This gets called just in L.Hash.update(), so we can already add/remove the layers here
 
 		const layers = args[3]?.split("-");
@@ -99,17 +109,17 @@ export default class HashHandler extends Handler {
 		this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
 
 		this._map.setFmFilter(args[5]);
-	
+
 		return L.Hash.parseHash(args.slice(0, 3).join("/"));
 	};
 
 	formatHash = (mapObj: Map): string => {
 		let result: string | undefined;
-	
+
 		const visibleLayers = getVisibleLayers(mapObj);
-	
+
 		const additionalParts = [ [visibleLayers.baseLayer, ...visibleLayers.overlays].join("-") ];
-		
+
 		if (this.activeQuery) {
 			additionalParts.push(this.activeQuery.query);
 		} else if (mapObj.fmFilter) {
@@ -136,11 +146,11 @@ export default class HashHandler extends Handler {
 				}
 			}
 		}
-		
+
 		if (!result) {
 			result = L.Hash.formatHash(mapObj) + "/" + additionalParts.map(encodeURIComponent).join("/");
 		}
-	
+
 		if(parent !== window) {
 			parent.postMessage({
 				type: "facilmap-hash",
@@ -149,7 +159,7 @@ export default class HashHandler extends Handler {
 		}
 
 		this.fireEvent("fmHash", { hash: result.replace(/^#/, "") });
-	
+
 		return result;
 	};
 
