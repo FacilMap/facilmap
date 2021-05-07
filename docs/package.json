@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "qrcode": "^1.4.4",
-    "vue-qrcode": "^0.3.5"
+    "vue-qrcode": "^0.4.0"
   }
 }

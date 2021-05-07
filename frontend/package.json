@@ -35,7 +35,7 @@
   "dependencies": {
     "@tmcw/togeojson": "^4.3.0",
     "blob": "^0.1.0",
-    "bootstrap": "x",
+    "bootstrap": "4",
     "bootstrap-touchspin": "^4.3.0",
     "bootstrap-vue": "^2.21.1",
     "clipboard": "^2.0.8",
@@ -72,7 +72,7 @@
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
-    "@types/copy-webpack-plugin": "^6.4.0",
+    "@types/copy-webpack-plugin": "^8.0.0",
     "@types/decode-uri-component": "^0.2.0",
     "@types/file-saver": "^2.0.1",
     "@types/hammerjs": "^2.0.39",
@@ -97,7 +97,7 @@
     "style-loader": "^2.0.0",
     "svgo": "^2.2.2",
     "ts-jest": "^26.5.4",
-    "ts-loader": "^8.0.18",
+    "ts-loader": "^9.1.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3",
     "vue-template-compiler": "^2.6.12",
