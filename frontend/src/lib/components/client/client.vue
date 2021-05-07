@@ -1,7 +1,7 @@
 <div class="fm-client-provider" :key="counter">
 	<slot v-if="client"/>
 
-	<b-toast v-else-if="client && client.disconnected" :id="`fm${context.id}-client-disconnected`" variant="danger" title="Disconnected" no-auto-hide no-close-button visible>
+	<b-toast v-if="client && client.disconnected" :id="`fm${context.id}-client-disconnected`" variant="danger" title="Disconnected" no-auto-hide no-close-button visible>
 		<b-spinner small></b-spinner>
 		The connection to the server was lost. Trying to reconnect…
 	</b-toast>
