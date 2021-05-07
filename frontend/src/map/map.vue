@@ -7,5 +7,6 @@
 	:autofocus="autofocus"
 	:legend="legend"
 	:interactive="interactive"
+	update-hash
 	@update:padName="padName = $event"
 ></FacilMap>

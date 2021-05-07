@@ -48,6 +48,8 @@ Note that all of these props are reactive and can be changed while the map is op
 * `autofocus` (boolean, optional): Whether the search field should be focused. Default is `false`.
 * `legend` (boolean, optional): Whether the legend should be shown (if it is available). Default is `true`.
 * `interactive` (boolean, optional): Whether [interactive mode](../embed.md#interactive-mode) should be enabled. Default is `true`.
+* `linkLogo` (boolean, optional): If `true`, the FacilMap logo will be a link that opens the map in a new window. Default is `false`.
+* `updateHash` (boolean, optional): Whether `location.hash` should be synchonised with the current map view. Default is `false`.
 
 ## Events
 

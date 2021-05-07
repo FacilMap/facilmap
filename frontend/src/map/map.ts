@@ -1,16 +1,11 @@
 import $ from 'jquery';
 import Vue from "vue";
 import { BootstrapVue } from "bootstrap-vue";
-import { registerDeobfuscationHandlers } from "../utils/obfuscate";
-import FacilMap from './facilmap/facilmap';
+import { FacilMap } from "../lib";
 import "./bootstrap.scss";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import withRender from "./map.vue";
-import PortalVue from "portal-vue";
-import "../utils/validation";
 import "./map.scss";
-import "../utils/vue";
-import installNonReactive from "vue-nonreactive";
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 
@@ -35,9 +30,6 @@ Vue.use(BootstrapVue, {
 		boundary: "window"
 	}
 });
-Vue.use(PortalVue);
-
-installNonReactive(Vue);
 
 // Dereferrer
 $(document).on("click", "a", function() {
@@ -51,8 +43,6 @@ $(document).on("click", "a", function() {
 		}, 0);
 	}
 });
-
-registerDeobfuscationHandlers();
 
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
@@ -86,7 +76,8 @@ new Vue(withRender({
 		search: toBoolean(queryParams.search, true),
 		autofocus: toBoolean(queryParams.autofocus, parent === window),
 		legend: toBoolean(queryParams.legend, true),
-		interactive: toBoolean(queryParams.interactive, parent === window)
+		interactive: toBoolean(queryParams.interactive, parent === window),
+		linkLogo: parent !== window
 	},
 	watch: {
 		padId: (padId: string | undefined) => {

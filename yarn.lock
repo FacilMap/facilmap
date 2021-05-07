@@ -5460,11 +5460,6 @@ leaflet-graphicscale@^0.0.2:
   resolved "https://registry.yarnpkg.com/leaflet-graphicscale/-/leaflet-graphicscale-0.0.2.tgz#ab620d289e9a7044c2f5107c83be17843aec5303"
   integrity sha1-q2INKJ6acETC9RB8g74XhDrsUwM=
 
-leaflet-hash@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/leaflet-hash/-/leaflet-hash-0.2.1.tgz#c36c718347c5243033b57cb4baea26119d82c701"
-  integrity sha1-w2xxg0fFJDAztXy0uuomEZ2CxwE=
-
 leaflet-highlightable-layers@^1.0.9:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.0.9.tgz#1da83937a07ebe29fd40ec663619017b2f458045"

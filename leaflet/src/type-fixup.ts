@@ -37,6 +37,4 @@ declare module "leaflet" {
         _layers: Record<string, Layer>;
         getPixelBounds(latlng?: LatLngExpression, zoom?: number): Bounds;
     }
-
-    export const Hash: any;
 }

@@ -1,21 +1,11 @@
 import Client from 'facilmap-client';
 import { numberKeys } from 'facilmap-utils';
-import L, { Evented, Handler, LatLng, Map } from 'leaflet';
-import 'leaflet-hash';
+import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
 import { isEqual } from 'lodash';
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
 import { pointsEqual } from '../utils/leaflet';
 import { decodeLegacyHash } from './legacyHash';
-import { displayView, isAtView, UnsavedView } from './views';
-
-export interface ParsedHash extends UnsavedView {
-	center: LatLng;
-	zoom: number;
-	baseLayer: string;
-	overlays: string[];
-	query?: string;
-	filter?: string;
-}
+import { displayView, isAtView } from './views';
 
 export interface HashQuery {
 	query: string;
@@ -23,142 +13,179 @@ export interface HashQuery {
 	zoom?: number;
 }
 
+export interface HashHandlerOptions {
+	simulate?: boolean;
+}
+
 export default class HashHandler extends Handler {
 
+	options: HashHandlerOptions;
 	client: Client<any>;
-	hash: any;
 	activeQuery?: HashQuery;
+	_isActive = false;
 
-	constructor(map: Map, client: Client<any>) {
+	constructor(map: Map, client: Client<any>, options?: HashHandlerOptions) {
 		super(map);
 		this.client = client;
-
-		this.hash = Object.assign(new L.Hash(), {
-			parseHash: this.parseHash,
-			formatHash: this.formatHash
-		});
+		this.options = {
+			simulate: false,
+			...options
+		};
 	}
 
 	addHooks(): void {
-		this.hash.init(this._map);
+		this._map.on("moveend", this.handleMapChange);
+		this._map.on("layeradd", this.handleMapChange);
+		this._map.on("layerremove", this.handleMapChange);
+		this._map.on("fmFilter", this.handleMapChange);
+		this._map.on("filter", this.handleMapChange);
 
-		// hashControl calls hashControl.onHashChange(), which will run hashControl.update() with 100ms delay.
-		// Call hashControl.update() right now so that the subsequent code can rely on the correct map view to be set.
-		this.hash.update();
-		clearTimeout(this.hash.changeTimeout);
-		this.hash.changeTimeout = null;
-
-		this._map.on("layeradd", this.updateHash);
-		this._map.on("layerremove", this.updateHash);
-		this._map.on("fmFilter", this.updateHash);
-		this._map.on("filter", this.updateHash);
+		if (!this.options.simulate) {
+			window.addEventListener("hashchange", this.handleHashChange);
+			this.handleHashChange();
+		}
 	}
 
 	removeHooks(): void {
-		this._map.off("layeradd", this.updateHash);
-		this._map.off("layerremove", this.updateHash);
-		this._map.off("fmFilter", this.updateHash);
-		this.hash.removeFrom(this._map);
+		this._map.off("moveend", this.handleMapChange);
+		this._map.off("layeradd", this.handleMapChange);
+		this._map.off("layerremove", this.handleMapChange);
+		this._map.off("fmFilter", this.handleMapChange);
+		window.removeEventListener("hashchange", this.handleHashChange);
 	}
+
+	handleHashChange = (): void => {
+		if (this._isActive)
+			return;
+
+		this.applyHash();
+	}
+
+	handleMapChange = (): void => {
+		if (this._isActive || !this._map._loaded)
+			return;
+
+		const hash = this.getHash();
+		this.fireEvent("fmHash", { hash });
+
+		if (!this.options.simulate && location.hash != `#${hash}`) {
+			this._isActive = true;
+			setTimeout(() => {
+				this._isActive = false;
+			}, 0);
+			location.replace(`#${hash}`);
+
+			if(parent !== window) {
+				parent.postMessage({
+					type: "facilmap-hash",
+					hash: hash
+				}, "*");
+			}
+		}
+	};
 
 	/**
 	 * Read the hash from location.hash and update the map view.
 	 */
-	update(): void {
-		this.hash.update();
-	}
+	applyHash(hash = location.hash): void {
+		this._isActive = true;
 
-	/**
-	 * Generate the hash from the map view and update location.hash.
-	 */
-	updateHash = (): void => {
-		this.hash.onMapMove();
-	};
+		try {
+			if(hash.indexOf('#') === 0) {
+				hash = hash.substr(1);
+			}
+
+			this.fireEvent("fmHash", { hash });
+
+			const viewMatch = hash.match(/^q=v(\d+)$/i);
+			if(viewMatch && this.client.views[viewMatch[1] as any]) {
+				displayView(this._map, this.client.views[viewMatch[1] as any]);
+				return;
+			}
+
+			let args;
+			if(hash.indexOf("=") != -1 && hash.indexOf("/") == -1)
+				args = decodeLegacyHash(hash);
+			else
+				args = hash.split("/").map(decodeURIComponentTolerantly);
+
+			if (args.length < 3)
+				return;
+
+			// This gets called just in L.Hash.update(), so we can already add/remove the layers here
+
+			const layers = args[3]?.split("-");
+			if(layers && layers.length > 0) {
+				setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1) });
+			}
+
+			this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
+
+			this._map.setFmFilter(args[5]);
+
+			const zoom = parseInt(args[0], 10);
+			const lat = parseFloat(args[1]);
+			const lon = parseFloat(args[2]);
+			if (!isNaN(lat) && !isNaN(lon) && !isNaN(zoom))
+				this._map.setView(latLng(lat, lon), zoom, { animate: false });
+		} finally {
+			this._isActive = false;
+
+			this.handleMapChange();
+		}
+	}
 
 	setQuery(query?: HashQuery): void {
 		this.activeQuery = query;
-		this.updateHash();
+		this.handleMapChange();
 	}
 
-	parseHash = (hash: string, noEmit = false): ParsedHash | false => {
-		if(hash.indexOf('#') === 0) {
-			hash = hash.substr(1);
-		}
-
-		this.fireEvent("fmHash", { hash });
-
-		const viewMatch = hash.match(/^q=v(\d+)$/i);
-		if(viewMatch && this.client.views[viewMatch[1] as any]) {
-			displayView(this._map, this.client.views[viewMatch[1] as any]);
-			return false;
-		}
-
-		let args;
-		if(hash.indexOf("=") != -1 && hash.indexOf("/") == -1)
-			args = decodeLegacyHash(hash);
-		else
-			args = hash.split("/").map(decodeURIComponentTolerantly);
-
-		// This gets called just in L.Hash.update(), so we can already add/remove the layers here
-
-		const layers = args[3]?.split("-");
-		if(layers && layers.length > 0) {
-			setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1) });
-		}
-
-		this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
-
-		this._map.setFmFilter(args[5]);
-
-		return L.Hash.parseHash(args.slice(0, 3).join("/"));
-	};
-
-	formatHash = (mapObj: Map): string => {
+	getHash(): string {
 		let result: string | undefined;
 
-		const visibleLayers = getVisibleLayers(mapObj);
+		const visibleLayers = getVisibleLayers(this._map);
 
 		const additionalParts = [ [visibleLayers.baseLayer, ...visibleLayers.overlays].join("-") ];
 
 		if (this.activeQuery) {
 			additionalParts.push(this.activeQuery.query);
-		} else if (mapObj.fmFilter) {
+		} else if (this._map.fmFilter) {
 			additionalParts.push("");
 		}
 
-		if (mapObj.fmFilter) {
-			additionalParts.push(mapObj.fmFilter);
+		if (this._map.fmFilter) {
+			additionalParts.push(this._map.fmFilter);
 		}
 
-		if (this.activeQuery && !mapObj.fmFilter && isEqual(visibleLayers, defaultVisibleLayers) && this.activeQuery.zoom != null && this.activeQuery.center != null && mapObj.getZoom() == this.activeQuery.zoom && pointsEqual(mapObj.getCenter(), this.activeQuery.center, mapObj, this.activeQuery.zoom)) {
-			result = "#q=" + encodeURIComponent(this.activeQuery.query);
+		if (this.activeQuery && !this._map.fmFilter && isEqual(visibleLayers, defaultVisibleLayers) && this.activeQuery.zoom != null && this.activeQuery.center != null && this._map.getZoom() == this.activeQuery.zoom && pointsEqual(this._map.getCenter(), this.activeQuery.center, this._map, this.activeQuery.zoom)) {
+			result = "q=" + encodeURIComponent(this.activeQuery.query);
 		} else if(!this.activeQuery) {
 			// Check if we have a saved view open
 			const defaultView = (this.client.padData && this.client.padData.defaultViewId && this.client.views[this.client.padData.defaultViewId]);
 			if(isAtView(this._map, defaultView || undefined))
-				result = "#";
+				result = "";
 			else {
 				for(const viewId of numberKeys(this.client.views)) {
 					if(isAtView(this._map, this.client.views[viewId])) {
-						result = `#q=v${encodeURIComponent(viewId)}`;
+						result = `q=v${encodeURIComponent(viewId)}`;
 						break;
 					}
 				}
 			}
 		}
 
-		if (!result) {
-			result = L.Hash.formatHash(mapObj) + "/" + additionalParts.map(encodeURIComponent).join("/");
-		}
+		if (result == null) {
+			const center = this._map.getCenter();
+			const zoom = this._map.getZoom();
+			const precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
 
-		if(parent !== window) {
-			parent.postMessage({
-				type: "facilmap-hash",
-				hash: result.replace(/^#/, "")
-			}, "*");
+			result = [
+				zoom,
+				center.lat.toFixed(precision),
+				center.lng.toFixed(precision),
+				...additionalParts
+			].map(encodeURIComponent).join("/");
 		}
-
-		this.fireEvent("fmHash", { hash: result.replace(/^#/, "") });
 
 		return result;
 	};

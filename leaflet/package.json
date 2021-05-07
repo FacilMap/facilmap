@@ -36,6 +36,7 @@
     "build-module": "webpack --config-name module",
     "clean": "rimraf dist",
     "dev-server": "webpack serve  --mode development --config-name full",
+    "watch": "webpack --config-name module --watch",
     "download-icons": "ts-node ./download-icons.ts",
     "types": "tsc --noEmit src/**/*.ts",
     "lint": "eslint **/*.ts"
@@ -48,7 +49,6 @@
     "leaflet-auto-graticule": "^1.0.9",
     "leaflet-draggable-lines": "^1.0.9",
     "leaflet-freie-tonne": "^1.0.5",
-    "leaflet-hash": "^0.2.1",
     "leaflet-highlightable-layers": "^1.0.9",
     "leaflet.markercluster": "^1.5.0",
     "lodash": "^4.17.21"

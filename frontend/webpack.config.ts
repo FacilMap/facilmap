@@ -20,11 +20,13 @@ module.exports = (env: any, argv: any): Configuration => {
 
 	return {
 		entry: {
+			lib: __dirname + "/src/lib/index.ts",
 			map: includeHotMiddleware(__dirname + "/src/map/map.ts", isDev),
-			table: includeHotMiddleware(__dirname + "/src/table/table.ts", isDev)
+			table: includeHotMiddleware(__dirname + "/src/table/table.ts", isDev),
+			example: includeHotMiddleware(__dirname + "/src/example/example.ts", isDev),
 		},
 		output: {
-			filename: "frontend-[name]-[hash].js",
+			filename: (pathData) => pathData.chunk!.name == "lib" ? "frontend.js" : "frontend-[name]-[chunkhash].js",
 			path: __dirname + "/dist/"
 		},
 		resolve: {
@@ -108,6 +110,11 @@ module.exports = (env: any, argv: any): Configuration => {
 				template: `${__dirname}/src/table/table.ejs`,
 				filename: "table.ejs",
 				chunks: ["table"]
+			}),
+			new htmlPlugin({
+				template: `${__dirname}/src/example/example.html`,
+				filename: "example.html",
+				chunks: ["example"]
 			}),
 			new copyPlugin({
 				patterns: [

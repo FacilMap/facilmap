@@ -4,6 +4,19 @@ The FacilMap frontend is a [Vue.js](https://vuejs.org/) app that provides the ma
 
 The FacilMap frontend is available as the [facilmap-frontend](https://www.npmjs.com/package/facilmap-frontend) package on NPM.
 
+## Setup
+
+The FacilMap frontend uses [Bootstrap-Vue](https://bootstrap-vue.org/), but does not install it by default to provide bigger flexibility. When using the FacilMap frontend, make sure to have it [set up](https://bootstrap-vue.org/docs#using-module-bundlers):
+
+```javascript
+import Vue from "vue";
+import { BootstrapVue } from "bootstrap-vue";
+import "bootstrap/dist/css/bootstrap.css";
+import "bootstrap-vue/dist/bootstrap-vue.css";
+
+Vue.use(BootstrapVue);
+```
+
 ## Structure
 
 The FacilMap server renders a static HTML file, which already contains some metadata about the map (such as the map title and the search engines policy configured for the particular map). It then renders a Vue.js app that renders the FacilMap UI using the [`FacilMap`](./facilmap.md) component. It sets the props and listens to the events of the FacilMap app in a way that the URL and document title are updated as the user opens or closes collaborative maps or their metadata changes.
