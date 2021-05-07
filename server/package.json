@@ -1,6 +1,6 @@
 {
   "name": "facilmap-server",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
   "keywords": [
     "webpack",
@@ -50,10 +50,10 @@
     "event-stream": "^4.0.1",
     "express": "^4.16.4",
     "express-domain-middleware": "^0.1.0",
-    "facilmap-frontend": "3.1.0",
-    "facilmap-leaflet": "3.1.0",
-    "facilmap-types": "3.1.0",
-    "facilmap-utils": "3.1.0",
+    "facilmap-frontend": "3.2.0",
+    "facilmap-leaflet": "3.2.0",
+    "facilmap-types": "3.2.0",
+    "facilmap-utils": "3.2.0",
     "highland": "^2.13.0",
     "json-format": "^1.0.1",
     "leaflet": "^1.7.1",
