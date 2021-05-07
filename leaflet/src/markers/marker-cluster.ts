@@ -46,15 +46,15 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this.client.on("padData", this.handlePadData);
 		if (this.client.padData)
 			this.handlePadData(this.client.padData);
-		
+
 		return this;
 	}
 
 	onRemove(map: Map): this {
 		super.onRemove(map);
-		
+
 		this.client.removeListener("padData", this.handlePadData);
-		
+
 		return this;
 	}
 

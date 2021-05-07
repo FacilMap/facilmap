@@ -25,7 +25,7 @@ test('decodeLegacyHash', () => {
 
 	expect(decodeLegacyHash('lon=13.4385964;lat=52.5198535;zoom=11;layer=MSfR;q=Berlin'))
 		.toEqual([ '11', '52.5198535', '13.4385964', 'MSfR', 'Berlin' ]);
-	
+
 	expect(decodeLegacyHash('lon=13.4385964;lat=52.5198535;zoom=11;layer=MSfR;l.OPTM.visibility=1;q=Berlin'))
 		.toEqual([ '11', '52.5198535', '13.4385964', 'MSfR-OPTM', 'Berlin' ]);
 });

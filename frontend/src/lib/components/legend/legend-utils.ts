@@ -51,7 +51,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 				item.shape = type.defaultShape ?? "";
 			if(type.type == "line" && type.widthFixed)
 				item.width = type.defaultWidth ?? undefined;
-				
+
 			if (item.colour)
 				item.bright = getBrightness(item.colour) > 0.7;
 

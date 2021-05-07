@@ -30,7 +30,7 @@ The different components of the long format have the following meaning:
 * **longitude:** The longitude of the center of the map
 * **layers:** Each layer is identified by a four-character key. If overlays are enabled, they are appended with a `-`. For example `Mpnk` for only Mapnik or `Mpnk-Rlie-grid` for Mapnik, Relief and Graticule.
 * **search term:** Can be one of the following:
-    * The name of a place. Will show all results for this search term.
+	* The name of a place. Will show all results for this search term.
 	* The ID of a specific search result in the form `n123`, `w123`, `r123` (representing its corresponding OpenStreetMap node, way or relation ID)
 	* A [route query](../route/#use-a-route-query), for example `Berlin to Hamburg`
 	* [Coordinates](../search/#search-for-coordinates), for example `52.51704,13.38886` or `geo:52.51704,13.38886?z=11`

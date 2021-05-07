@@ -112,7 +112,7 @@ export default class SelectionHandler extends Handler {
 		const idx = this._searchResultLayers.indexOf(layer);
 		if (idx == -1)
 			return;
-		
+
 		layer.off("click", this.handleClickSearchResult);
 		this._searchResultLayers.splice(idx, 1);
 
@@ -257,7 +257,7 @@ export default class SelectionHandler extends Handler {
 
 	handleBoxSelect = (e: any): void => {
 		const bounds: LatLngBounds = e.bounds;
-		
+
 		const selection = [
 			...this._markersLayer.getLayers()
 				.filter((layer) => layer instanceof MarkerLayer && bounds.contains(layer.getLatLng()))

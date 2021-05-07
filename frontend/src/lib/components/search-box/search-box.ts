@@ -21,7 +21,7 @@ export type SearchBoxContext = Vue;
 
 @WithRender
 @Component({
-    components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, PortalTarget, RouteFormTab, SearchFormTab }
+	components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, PortalTarget, RouteFormTab, SearchFormTab }
 })
 export default class SearchBox extends Vue {
 

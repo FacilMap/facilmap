@@ -12,7 +12,7 @@ import { SearchBoxContext } from "../../search-box/search-box";
 @WithRender
 @Component({})
 export default class ElevationPlot extends Vue {
-	
+
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectSearchBoxContext() searchBoxContext?: SearchBoxContext;
 

@@ -69,7 +69,7 @@ export default class MarkersLayer extends MarkerCluster {
 
 	async showMarker(id: ID, zoom = false): Promise<void> {
 		const marker = this.client.markers[id] || await this.client.getMarker({ id });
-	
+
 		if(zoom)
 			this._map.flyTo([marker.lat, marker.lon], 15);
 
@@ -102,11 +102,11 @@ export default class MarkersLayer extends MarkerCluster {
 
 	/**
 	 * Ignore the position and any filter for this marker until it is unlocked again using unlockMarker().
-	 * 
+	 *
 	 * While a marker is locked, any new position that is received from the server is ignored, the position of the marker layer is left untouched.
 	 * If a filter is applied that would hide the marker, it is also ignored and the marker stays visible. Style updated to the marker are still
 	 * applied.
-	 * 
+	 *
 	 * The purpose of this is to allow the user to edit the position of a marker by dragging it around. Panning/zooming the map would update the
 	 * bbox and the server might resend the marker. In this case we don't want the position to be reset while the user is dragging the marker.
 	*/

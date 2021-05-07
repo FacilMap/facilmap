@@ -93,10 +93,10 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.get("/:padId/gpx", async function(req: Request<PathParams>, res: Response<string>, next) {
 		try {
 			const padData = await database.pads.getPadDataByAnyId(req.params.padId);
-			
+
 			if(!padData)
 				throw new Error(`Map with ID ${req.params.padId} could not be found.`);
-			
+
 			res.set("Content-type", "application/gpx+xml");
 			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
 			exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined).pipe(res);
@@ -108,7 +108,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.get("/:padId/table", async function(req: Request<PathParams>, res: Response<string>, next) {
 		try {
 			const renderedTable = await createTable(database, req.params.padId, req.query.filter as string | undefined, req.query.hide ? (req.query.hide as string).split(',') : []);
-			
+
 			res.type("html");
 			res.send(renderedTable);
 		} catch (e) {

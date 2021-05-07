@@ -11,7 +11,7 @@ import { Layer } from "leaflet";
 
 @WithRender
 @Component({
-    components: { }
+	components: { }
 })
 export default class About extends Vue {
 

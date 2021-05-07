@@ -12,7 +12,7 @@ import { createLinePlaceholderHtml } from "../../utils/ui";
 @WithRender
 @Component({})
 export default class LegendContent extends Vue {
-	
+
 	@InjectMapComponents() mapComponents!: MapComponents;
 
 	@Prop({ type: String }) legend1?: string;

@@ -10,23 +10,23 @@ export const MAP_CONTEXT_INJECT_KEY = "fm-map-context";
 export const SEARCH_BOX_CONTEXT_INJECT_KEY = "fm-search-box-context";
 
 export function InjectContext(): VueDecorator {
-    return InjectReactive(CONTEXT_INJECT_KEY);
+	return InjectReactive(CONTEXT_INJECT_KEY);
 }
 
 export function InjectMapComponents(): VueDecorator {
-    return InjectReactive(MAP_COMPONENTS_INJECT_KEY);
+	return InjectReactive(MAP_COMPONENTS_INJECT_KEY);
 }
 
 export function InjectMapContext(): VueDecorator {
-    return InjectReactive(MAP_CONTEXT_INJECT_KEY);
+	return InjectReactive(MAP_CONTEXT_INJECT_KEY);
 }
 
 export type Client = FmClient<StringMap>;
 
 export function InjectClient(): VueDecorator {
-    return InjectReactive(CLIENT_INJECT_KEY);
+	return InjectReactive(CLIENT_INJECT_KEY);
 }
 
 export function InjectSearchBoxContext(): VueDecorator {
-    return InjectReactive(SEARCH_BOX_CONTEXT_INJECT_KEY);
+	return InjectReactive(SEARCH_BOX_CONTEXT_INJECT_KEY);
 }

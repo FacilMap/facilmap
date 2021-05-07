@@ -140,14 +140,14 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 		url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_type=${encodeURI(type.toUpperCase())}&osm_id=${encodeURI(id)}`,
 		json: true
 	});
-	
+
 	if(!body || body.error) {
 		throw new Error(body ? body.error : "Invalid response from name finder");
 	}
 
 	if(loadElevation && body.lat && body.lon)
 		Object.assign(body, { elevation: await getElevationForPoint(body) });
-	
+
 	return [ _prepareSearchResult(body) ];
 }
 
@@ -159,7 +159,7 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false)
 		}),
 		...(loadElevation ? [getElevationForPoint(lonlatWithZoom)] : [])
 	]);
-	
+
 	if(!body || body.error) {
 		const name = round(lonlatWithZoom.lat, 5) + ", " + round(lonlatWithZoom.lon, 5);
 		return [ {
@@ -442,7 +442,7 @@ function _formatAddress(result: NominatimResult) {
 
 async function _loadUrl(url: string, completeOsmObjects = false) {
 	let bodyBuf = await request(url, { encoding: null });
-	
+
 	if(!bodyBuf)
 		throw new Error("Invalid response from server.");
 
@@ -451,7 +451,7 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 	}
 	else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
 		bodyBuf = await util.promisify(zlib.gunzip.bind(zlib))(bodyBuf);
-	
+
 	const body = stripBomBuf(bodyBuf).toString();
 
 	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
@@ -499,7 +499,7 @@ async function _loadSubRelations($: cheerio.Root) {
 
 		if(promises.length > 0) {
 			const relations = await Promise.all(promises);
-			
+
 			for (const relation of relations) {
 				$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
 			}

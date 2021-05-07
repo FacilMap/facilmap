@@ -9,7 +9,7 @@ import { Context } from "../../facilmap/facilmap";
 
 @WithRender
 @Component({
-    components: { }
+	components: { }
 })
 export default class Sidebar extends Vue {
 

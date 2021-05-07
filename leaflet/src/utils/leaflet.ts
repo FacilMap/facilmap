@@ -75,7 +75,7 @@ export function pointsEqual(latLng1: LatLng, latLng2: LatLng, map: Map, zoom?: n
 
 export interface BasicTrackPoints {
 	[idx: number]: Point & { ele?: number };
-    length: number;
+	length: number;
 }
 
 export function trackPointsToLatLngArray(trackPoints: BasicTrackPoints | undefined): LatLng[] {

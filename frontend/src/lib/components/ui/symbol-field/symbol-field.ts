@@ -36,10 +36,10 @@ export default class SymbolField extends Vue {
 
 		if (this.filter.length == 1)
 			result[this.filter] = getSymbolHtml("currentColor", "1.5em", this.filter);
-		
+
 		if (this.value?.length == 1 && this.value != this.filter)
 			result[this.value] = getSymbolHtml("currentColor", "1.5em", this.filter);
-		
+
 		const lowerFilter = this.filter.trim().toLowerCase();
 		Object.assign(result, pickBy(items, (val, key) => key.toLowerCase().includes(lowerFilter)));
 

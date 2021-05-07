@@ -15,34 +15,34 @@ To run FacilMap using [docker-compose](https://docs.docker.com/compose/), here i
 ```yaml
 version: "2"
 services:
-    facilmap:
-        image: facilmap/facilmap
-        ports:
-            - 8080
-        links:
-            - db
-        environment:
-            USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
-            DB_TYPE: mysql
-            DB_HOST: db
-            DB_NAME: facilmap
-            DB_USER: facilmap
-            DB_PASSWORD: password
-            ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
-            MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
-            MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
-            MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
-            MAXMIND_LICENSE_KEY:
-        restart: unless-stopped
-    db:
-        image: mariadb
-        environment:
-            MYSQL_DATABASE: facilmap
-            MYSQL_USER: facilmap
-            MYSQL_PASSWORD: password
-            MYSQL_RANDOM_ROOT_PASSWORD: "true"
-        cmd: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-        restart: unless-stopped
+	facilmap:
+		image: facilmap/facilmap
+		ports:
+			- 8080
+		links:
+			- db
+		environment:
+			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+			DB_TYPE: mysql
+			DB_HOST: db
+			DB_NAME: facilmap
+			DB_USER: facilmap
+			DB_PASSWORD: password
+			ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+			MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+			MAPZEN_TOKEN: # Get an API key on https://mapzen.com/developers/sign_up (needed for elevation info)
+			MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
+			MAXMIND_LICENSE_KEY:
+		restart: unless-stopped
+	db:
+		image: mariadb
+		environment:
+			MYSQL_DATABASE: facilmap
+			MYSQL_USER: facilmap
+			MYSQL_PASSWORD: password
+			MYSQL_RANDOM_ROOT_PASSWORD: "true"
+		cmd: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+		restart: unless-stopped
 ```
 
 To start FacilMap, run `docker-compose up -d` in the directory of the `docker-compose.yml` file. To upgrade FacilMap, run `docker-compose pull` and then restart it by running `docker-compose up -d`.

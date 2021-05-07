@@ -51,19 +51,19 @@ const baseUrl = location.protocol + "//" + location.host + location.pathname.rep
 const initialPadId = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]);
 
 if(!location.hash || location.hash == "#") {
-    const moveKeys = Object.keys(queryParams).filter((key) => ([ "zoom", "lat", "lon", "layer", "l", "q", "s", "c" ].includes(key)));
-    if(moveKeys.length > 0) {
-        const hashParams: Record<string, string> = { };
-        for (const key of moveKeys) {
-            hashParams[key] = queryParams[key];
-            delete queryParams[key];
-        }
+	const moveKeys = Object.keys(queryParams).filter((key) => ([ "zoom", "lat", "lon", "layer", "l", "q", "s", "c" ].includes(key)));
+	if(moveKeys.length > 0) {
+		const hashParams: Record<string, string> = { };
+		for (const key of moveKeys) {
+			hashParams[key] = queryParams[key];
+			delete queryParams[key];
+		}
 
-        const query = encodeQueryString(queryParams);
-        const hash = encodeQueryString(hashParams);
+		const query = encodeQueryString(queryParams);
+		const hash = encodeQueryString(hashParams);
 
-        history.replaceState(null, "", baseUrl + encodeURIComponent(initialPadId || "") + (query ? "?" + query : "") + "#" + hash);
-    }
+		history.replaceState(null, "", baseUrl + encodeURIComponent(initialPadId || "") + (query ? "?" + query : "") + "#" + hash);
+	}
 }
 
 new Vue(withRender({

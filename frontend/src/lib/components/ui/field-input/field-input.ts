@@ -7,7 +7,7 @@ import "./field-input.scss";
 @WithRender
 @Component({})
 export default class FieldInput extends Vue {
-	
+
 	@Prop({ type: Object, required: true }) field!: Field;
 	@Prop({ type: Boolean, default: false }) ignoreDefault!: boolean;
 	@Prop({ type: String }) value?: string;

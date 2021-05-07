@@ -162,15 +162,15 @@ export default class Client<DataType = Record<string, string>> {
 		}
 
 		this._set(this._listeners, eventName, [ ...(this._listeners[eventName] || [] as any), fn ]);
-    }
+	}
 
-    once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
+	once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
 		const handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			(fn as any)(data);
 		}) as EventHandler<ClientEvents<DataType>, E>;
 		this.on(eventName, handler);
-    }
+	}
 
 	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
 		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents<DataType>, E>> | undefined;

@@ -1,9 +1,9 @@
 import "leaflet";
 
 declare module "leaflet" {
-    interface Layer {
-        options: LayerOptions;
-    }
+	interface Layer {
+		options: LayerOptions;
+	}
 
 	interface Map {
 		_controlCorners: any;
@@ -20,9 +20,9 @@ declare module "leaflet" {
 	}
 
 	interface Handler {
-        _map: Map;
+		_map: Map;
 		_enabled?: boolean;
-    }
+	}
 
 	/*
 	interface lagLngBounds {

@@ -1,40 +1,40 @@
 import "leaflet";
 
 declare module "leaflet" {
-    interface LayerOptions {
-        zIndex?: number;
-        noWrap?: boolean;
-    }
+	interface LayerOptions {
+		zIndex?: number;
+		noWrap?: boolean;
+	}
 
-    interface GridLayerOptions extends LayerOptions {}
+	interface GridLayerOptions extends LayerOptions {}
 
-    interface Layer {
-        options: LayerOptions;
-        addInteractiveTarget(targetEl: HTMLElement): void;
-        removeInteractiveTarget(targetEl: HTMLElement): void;
-    }
+	interface Layer {
+		options: LayerOptions;
+		addInteractiveTarget(targetEl: HTMLElement): void;
+		removeInteractiveTarget(targetEl: HTMLElement): void;
+	}
 
-    interface Handler {
-        _map: Map;
-    }
+	interface Handler {
+		_map: Map;
+	}
 
-    interface Marker {
-        _initIcon(): void;
-    }
+	interface Marker {
+		_initIcon(): void;
+	}
 
-    interface MarkerClusterGroup {
-        options: MarkerClusterGroupOptions;
-    }
+	interface MarkerClusterGroup {
+		options: MarkerClusterGroupOptions;
+	}
 
-    interface GeoJSON {
-        // Cannot override this properly
-        //constructor(geojson?: Array<geojson.Feature> | geojson.GeoJSON, options?: GeoJSONOptions<P>);
-        //addData(geojson: Array<geojson.Feature> | geojson.GeoJSON): this;
-    }
+	interface GeoJSON {
+		// Cannot override this properly
+		//constructor(geojson?: Array<geojson.Feature> | geojson.GeoJSON, options?: GeoJSONOptions<P>);
+		//addData(geojson: Array<geojson.Feature> | geojson.GeoJSON): this;
+	}
 
-    interface Map {
-        _loaded?: true;
-        _layers: Record<string, Layer>;
-        getPixelBounds(latlng?: LatLngExpression, zoom?: number): Bounds;
-    }
+	interface Map {
+		_loaded?: true;
+		_layers: Record<string, Layer>;
+		getPixelBounds(latlng?: LatLngExpression, zoom?: number): Bounds;
+	}
 }

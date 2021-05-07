@@ -136,9 +136,9 @@ Empties all cached objects and disconnects from the server.
 Search for places. Does not persist anything on the server, simply serves as a proxy to the search service.
 
 * `data` (object): An object with the following properties:
-    * `query` (string): The query string
-    * `loadUrls` (boolean): Whether to return the file if `query` is a URL
-    * `elevation` (boolean): Whether to find out the elevation of the result(s). Will make the search significantly slower.
+	* `query` (string): The query string
+	* `loadUrls` (boolean): Whether to return the file if `query` is a URL
+	* `elevation` (boolean): Whether to find out the elevation of the result(s). Will make the search significantly slower.
 * **Returns:** A promise that is resolved with the following value:
 	* If `data.query` is a URL to a GPX/KML/OSM/GeoJSON file and `loadUrls` is `true`, a string with the content of the file.
 	* Otherwise an array of [SearchResults](./types.md#searchresult).
@@ -177,8 +177,8 @@ Calling `setRoute()` with a `routeId` of a route that is already active will rep
 The metadata of a route whose `routeId` is `undefined` is persisted in the [`route`](./properties.md#route) property and its track points in `route.trackPoints`. The metadata of a route whose `routeId` is a string is persisted in the [`routes[routeId]`](./properties.md#routes) property and its track points in `routes[routeId].trackPoints`.
 
 * `data` (object): An object with the following properties:
-    * `routePoints` (array): An array of at least two route points (objects with a `lat` and `lon` property)
-    * `mode` ([RouteMode](./types.md#routemode)): the route mode
+	* `routePoints` (array): An array of at least two route points (objects with a `lat` and `lon` property)
+	* `mode` ([RouteMode](./types.md#routemode)): the route mode
 	* `routeId` (string or undefined): the custom `routeId` to identify the route
 * **Returns:** A promise that is resolved with a [Route](./types.md#route)> object.
 * **Events:** Causes a [`route`](./events.md#route) and a [`routePoints`](./events.md#routepoints) event.
@@ -223,7 +223,7 @@ Export the current route.
 Get the marker with the given ID. This is useful if you want to access a specific marker but it is not loaded as part of the current bbox.
 
 * `data` (object): An object with the following properties:
-    * `id` (number): The ID of the marker to load
+	* `id` (number): The ID of the marker to load
 * **Returns:** A promise that is resolved with a [Marker](./types.md#marker)>. If the marker is not found, the promise rejects.
 * **Events:** None.
 * **Availability:** Only if a collaborative map is opened.

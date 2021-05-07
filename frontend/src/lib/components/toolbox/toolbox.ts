@@ -24,7 +24,7 @@ import { Context } from "../facilmap/facilmap";
 
 @WithRender
 @Component({
-    components: { About, EditFilter, History, Icon, ManageBookmarks, ManageViews, ManageTypes, OpenMap, PadSettings, SaveView, Sidebar }
+	components: { About, EditFilter, History, Icon, ManageBookmarks, ManageViews, ManageTypes, OpenMap, PadSettings, SaveView, Sidebar }
 })
 export default class Toolbox extends Vue {
 

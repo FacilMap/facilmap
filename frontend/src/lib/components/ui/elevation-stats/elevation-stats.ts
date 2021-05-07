@@ -13,7 +13,7 @@ import { numberKeys } from "facilmap-utils";
 	components: { Icon }
 })
 export default class ElevationStats extends Vue {
-	
+
 	@Prop({ type: Object, required: true }) route!: LineWithTrackPoints | RouteWithTrackPoints;
 
 	id = Date.now();

@@ -29,7 +29,7 @@ extend("padIdUnique", {
 
 @WithRender
 @Component({
-    components: { FormModal, ValidationProvider }
+	components: { FormModal, ValidationProvider }
 })
 export default class PadSettings extends Vue {
 

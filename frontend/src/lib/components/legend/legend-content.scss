@@ -9,7 +9,7 @@
 	.fm-legend2 > div > *:last-child {
 		margin-bottom: 0;
 	}
-	
+
 	h3 {
 		font-size: 1.1em;
 		margin: 0 0 5px 0;
@@ -17,16 +17,16 @@
 		font-weight: bold;
 		cursor: pointer;
 	}
-	
+
 	hr {
 		margin: 10px -8px;
 	}
-	
+
 	&#{&}#{&} dl {
 		display: block; // Override display: grid from search-box styles
 		margin-bottom: 0px;
 	}
-	
+
 	dt {
 		margin: 0;
 		width: auto;
@@ -34,16 +34,16 @@
 		display: inline-block;
 		cursor: pointer;
 	}
-	
+
 	dt.fm-marker {
 		width: 16px;
 		text-align: center;
 	}
-	
+
 	dt:after {
 		content: none;
 	}
-	
+
 	dd {
 		line-height: 1.3em;
 		width: auto;
@@ -51,20 +51,20 @@
 		vertical-align: middle;
 		cursor: pointer;
 	}
-	
+
 	dd:after {
 		content: "\a";
 		white-space: pre;
 	}
-	
+
 	.first:not(:first-child) {
 		margin-top: 6px;
 	}
-	
+
 	dl:after {
 		content: none;
 	}
-	
+
 	.filtered {
 		opacity: 0.5;
 	}

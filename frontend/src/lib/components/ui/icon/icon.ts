@@ -5,7 +5,7 @@ import { getSymbolHtml } from "facilmap-leaflet";
 
 @WithRender
 @Component({
-    components: { }
+	components: { }
 })
 export default class Icon extends Vue {
 

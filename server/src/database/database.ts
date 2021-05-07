@@ -16,24 +16,24 @@ import { TypedEventEmitter } from "../utils/events";
 import { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEvents {
-    addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];
-    historyChange: [padId: PadId];
+	addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];
+	historyChange: [padId: PadId];
 
-    line: [padId: PadId, newLine: Line];
-    linePoints: [padId: PadId, lineId: ID, points: TrackPoint[]];
-    deleteLine: [padId: PadId, data: ObjectWithId];
+	line: [padId: PadId, newLine: Line];
+	linePoints: [padId: PadId, lineId: ID, points: TrackPoint[]];
+	deleteLine: [padId: PadId, data: ObjectWithId];
 
-    marker: [padId: PadId, newMarker: Marker];
-    deleteMarker: [padId: PadId, data: ObjectWithId];
+	marker: [padId: PadId, newMarker: Marker];
+	deleteMarker: [padId: PadId, data: ObjectWithId];
 
-    padData: [padId: PadId, padData: PadData];
-    deletePad: [padId: PadId];
+	padData: [padId: PadId, padData: PadData];
+	deletePad: [padId: PadId];
 
-    type: [padId: PadId, newType: Type];
-    deleteType: [padId: PadId, data: ObjectWithId];
+	type: [padId: PadId, newType: Type];
+	deleteType: [padId: PadId, data: ObjectWithId];
 
-    view: [padId: PadId, newView: View];
-    deleteView: [padId: PadId, data: ObjectWithId];
+	view: [padId: PadId, newView: View];
+	deleteView: [padId: PadId, data: ObjectWithId];
 }
 
 export default class Database extends TypedEventEmitter<DatabaseEvents> {

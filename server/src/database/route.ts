@@ -127,7 +127,7 @@ export default class DatabaseRoutes {
 
 		if (!routeId)
 			routeId = await this.generateRouteId();
-		
+
 		const thisTime = Date.now();
 		updateTimes[routeId] = thisTime;
 
