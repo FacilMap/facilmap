@@ -180,6 +180,9 @@ export default class LeafletMap extends Vue {
 	}
 
 	beforeDestroy(): void {
+		this.mapComponents.bboxHandler.disable();
+		this.mapComponents.hashHandler.disable();
+		this.mapComponents.selectionHandler.disable();
 		this.mapComponents.map.remove();
 	}
 
