@@ -19,7 +19,7 @@ const isDevMode = !!process.env.FM_DEV;
 const webpackCompiler = isDevMode ? (() => {
 	const webpack = require(require.resolve("webpack", { paths: [ require.resolve("facilmap-frontend/package.json") ] }));
 	const webpackConfig = require("facilmap-frontend/webpack.config");
-	return webpack(webpackConfig({}, { mode: "development" }));
+	return webpack(webpackConfig({}, { mode: "development" }).find((conf: any) => conf.name == "app"));
 })() : undefined;
 
 const staticMiddleware = isDevMode

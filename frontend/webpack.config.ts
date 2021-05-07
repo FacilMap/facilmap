@@ -3,6 +3,7 @@ import copyPlugin from "copy-webpack-plugin";
 import htmlPlugin from "html-webpack-plugin";
 import { compile, CompilerOptions } from "vue-template-compiler";
 import svgToMiniDataURI from "mini-svg-data-uri";
+import nodeExternals from "webpack-node-externals";
 //import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 function includeHotMiddleware(entry: string | string[], isDev: boolean): string | string[] {
@@ -15,20 +16,11 @@ function includeHotMiddleware(entry: string | string[], isDev: boolean): string 
 	return [ "webpack-hot-middleware/client" ].concat(entry);
 }
 
-module.exports = (env: any, argv: any): Configuration => {
+module.exports = (env: any, argv: any): Configuration[] => {
 	const isDev = argv.mode == "development" || !!process.env.FM_DEV;
+	const path = __dirname + "/dist/";
 
-	return {
-		entry: {
-			lib: __dirname + "/src/lib/index.ts",
-			map: includeHotMiddleware(__dirname + "/src/map/map.ts", isDev),
-			table: includeHotMiddleware(__dirname + "/src/table/table.ts", isDev),
-			example: includeHotMiddleware(__dirname + "/src/example/example.ts", isDev),
-		},
-		output: {
-			filename: (pathData) => pathData.chunk!.name == "lib" ? "frontend.js" : "frontend-[name]-[chunkhash].js",
-			path: __dirname + "/dist/"
-		},
+	const base: Configuration = {
 		resolve: {
 			alias: {
 				vue: "vue/dist/vue.runtime.esm.js"
@@ -101,46 +93,85 @@ module.exports = (env: any, argv: any): Configuration => {
 			],
 		},
 		plugins: [
-			new htmlPlugin({
-				template: `${__dirname}/src/map/map.ejs`,
-				filename: "map.ejs",
-				chunks: ["map"]
-			}),
-			new htmlPlugin({
-				template: `${__dirname}/src/table/table.ejs`,
-				filename: "table.ejs",
-				chunks: ["table"]
-			}),
-			new htmlPlugin({
-				template: `${__dirname}/src/example/example.html`,
-				filename: "example.html",
-				chunks: ["example"]
-			}),
-			new copyPlugin({
-				patterns: [
-					"app-180.png",
-					"app-512.png",
-					"deref.html",
-					"favicon-64.png",
-					"favicon.ico",
-					"favicon.svg",
-					"manifest.json",
-					"opensearch.xml"
-				].map((file) => ({ from: `${__dirname}/static/${file}` }))
-			}),
-			...(isDev ? [
-				new webpack.HotModuleReplacementPlugin()
-			] : [
-				//new BundleAnalyzerPlugin(),
-			]),
-		],
-		devServer: {
-			publicPath: "/dist",
-			//hotOnly: true,
-			disableHostCheck: true,
-			writeToDisk: true,
-			injectClient: false, // https://github.com/webpack/webpack-dev-server/issues/2484
-			port: 8082
-		}
+			//new BundleAnalyzerPlugin(),
+		]
 	};
+
+	return [
+		{
+			...base,
+			name: "app",
+			entry: {
+				map: includeHotMiddleware(__dirname + "/src/map/map.ts", isDev),
+				table: includeHotMiddleware(__dirname + "/src/table/table.ts", isDev),
+				example: includeHotMiddleware(__dirname + "/src/example/example.ts", isDev),
+			},
+			output: {
+				filename: "frontend-[name]-[chunkhash].js",
+				path
+			},
+			plugins: [
+				...base.plugins!,
+				new htmlPlugin({
+					template: `${__dirname}/src/map/map.ejs`,
+					filename: "map.ejs",
+					chunks: ["map"]
+				}),
+				new htmlPlugin({
+					template: `${__dirname}/src/table/table.ejs`,
+					filename: "table.ejs",
+					chunks: ["table"]
+				}),
+				new htmlPlugin({
+					template: `${__dirname}/src/example/example.html`,
+					filename: "example.html",
+					chunks: ["example"]
+				}),
+				new copyPlugin({
+					patterns: [
+						"app-180.png",
+						"app-512.png",
+						"deref.html",
+						"favicon-64.png",
+						"favicon.ico",
+						"favicon.svg",
+						"manifest.json",
+						"opensearch.xml"
+					].map((file) => ({ from: `${__dirname}/static/${file}` }))
+				}),
+				...(isDev ? [
+					new webpack.HotModuleReplacementPlugin()
+				] : [
+					//new BundleAnalyzerPlugin(),
+				]),
+			],
+			devServer: {
+				publicPath: "/dist",
+				//hotOnly: true,
+				disableHostCheck: true,
+				writeToDisk: true,
+				injectClient: false, // https://github.com/webpack/webpack-dev-server/issues/2484
+				port: 8082
+			}
+		},
+		{
+			...base,
+			name: "lib",
+			entry: __dirname + "/src/lib/index.ts",
+			output: {
+				filename: "frontend.js",
+				path
+			},
+			optimization: {
+				minimize: false
+			},
+			externalsType: "commonjs2",
+			externals: nodeExternals({
+				additionalModuleDirs: [
+					`${__dirname}/../node_modules`
+				],
+				allowlist: /\.css$/
+			})
+		}
+	];
 };
