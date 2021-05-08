@@ -5,9 +5,10 @@ import zlib from "zlib";
 import util from "util";
 import { getElevationForPoint, getElevationForPoints } from "./elevation";
 import { ZoomLevel, Point, SearchResult } from "facilmap-types";
-import request from "./utils/request";
 import { Geometry } from "geojson";
 import stripBomBuf from "strip-bom-buf";
+import fetch from "node-fetch";
+import throttle from "p-throttle";
 
 interface NominatimResult {
 	place_id: number;
@@ -75,6 +76,9 @@ const stateAbbr: Record<string, Record<string, string>> = {
 	}
 };
 
+// Respect Nominatim rate limit (https://operations.osmfoundation.org/policies/nominatim/)
+const throttledFetch = throttle({ limit: 1, interval: 1000 })(fetch);
+
 interface PointWithZoom extends Point {
 	zoom?: ZoomLevel;
 }
@@ -113,10 +117,7 @@ export async function find(query: string, loadUrls = false, loadElevation = fals
 }
 
 async function _findQuery(query: string, loadElevation = false): Promise<Array<SearchResult>> {
-	const body = await request({
-		url: nameFinderUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
-		json: true
-	}) as Array<NominatimResult> | NominatimError;
+	const body: Array<NominatimResult> | NominatimError = await throttledFetch(nameFinderUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query)).then((res) => res.json());
 
 	if(!body)
 		throw new Error("Invalid response from name finder.");
@@ -136,10 +137,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 }
 
 async function _findOsmObject(type: string, id: string, loadElevation = false): Promise<Array<SearchResult>> {
-	const body = await request({
-		url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_type=${encodeURI(type.toUpperCase())}&osm_id=${encodeURI(id)}`,
-		json: true
-	});
+	const body = await throttledFetch(`${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_type=${encodeURI(type.toUpperCase())}&osm_id=${encodeURI(id)}`).then((res) => res.json());
 
 	if(!body || body.error) {
 		throw new Error(body ? body.error : "Invalid response from name finder");
@@ -153,10 +151,7 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 
 async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false): Promise<Array<SearchResult>> {
 	const [body, elevation] = await Promise.all([
-		request({
-			url: `${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
-			json: true
-		}),
+		throttledFetch(`${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`).then((res) => res.json()),
 		...(loadElevation ? [getElevationForPoint(lonlatWithZoom)] : [])
 	]);
 
@@ -441,7 +436,7 @@ function _formatAddress(result: NominatimResult) {
 }
 
 async function _loadUrl(url: string, completeOsmObjects = false) {
-	let bodyBuf = await request(url, { encoding: null });
+	let bodyBuf = await fetch(url).then((res) => res.buffer());
 
 	if(!bodyBuf)
 		throw new Error("Invalid response from server.");
@@ -483,13 +478,13 @@ async function _loadSubRelations($: cheerio.Root) {
 
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
-		const promises: Array<ReturnType<typeof request>> = [ ];
+		const promises: Array<Promise<string>> = [ ];
 
 		$("member[type='relation']").each(function(this: cheerio.Element) {
 			const relId = $(this).attr("ref")!;
 			if(!loadedIds.has(relId)) {
 				$(this).remove(); // Remove relation from result, as it will be returned again as part of the sub request
-				promises.push(request("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full"));
+				promises.push(fetch("https://api.openstreetmap.org/api/0.6/relation/" + relId + "/full").then((res) => res.text()));
 				loadedIds.add(relId);
 			}
 		});
