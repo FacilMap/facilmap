@@ -1,7 +1,7 @@
-import request from "../utils/request";
 import config from "../config";
 import { Point, RouteMode } from "facilmap-types";
 import { RawRouteInfo } from "./routing";
+import fetch from "node-fetch";
 
 if (!config.mapboxToken)
 	console.error("Warning: No Mapbox token configured, calculating routes will fail. Please set MAPBOX_TOKEN in the environment or in config.env.");
@@ -36,7 +36,7 @@ export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simpl
 			+ "&overview=" + (simple ? "simplified" : "full")
 			+ "&access_token=" + encodeURIComponent(config.mapboxToken ?? "");
 
-		return request.get({ url, json: true });
+		return fetch(url).then((res) => res.json());
 	}));
 
 	const ret: RawRouteInfo = {

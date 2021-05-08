@@ -1,9 +1,9 @@
 import config from "../config";
-import request from "../utils/request";
 import { calculateDistance, DecodedRouteMode } from "facilmap-utils";
 import { ExtraInfo, Point } from "facilmap-types";
 import { throttle } from "../utils/utils";
 import { RawRouteInfo } from "./routing";
+import fetch from "node-fetch";
 
 if (!config.orsToken)
 	console.error("Warning: No ORS token configured, calculating routes will fail. Please set ORS_TOKEN in the environment or in config.env.");
@@ -56,48 +56,38 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		currentGroup.push(point);
 	}
 
-	let results;
+	const results = await Promise.all(coordGroups.map((coords) => {
+		const req: any = {
+			coordinates: coords.map((point) => [point.lon, point.lat]),
+			radiuses: coords.map(() => -1),
+			instructions: false
+		};
 
-	try {
-		results = await Promise.all(coordGroups.map((coords) => {
-			const req: any = {
-				coordinates: coords.map((point) => [point.lon, point.lat]),
-				radiuses: coords.map(() => -1),
-				instructions: false
+		if(decodedMode.details) {
+			req.elevation = true;
+			req.extra_info = [ "surface", "waytype", "steepness" ];
+			if(decodedMode.mode == "car") {
+				req.extra_info.push("tollways");
+			}
+		}
+		if(decodedMode.avoid) {
+			req.options = {
+				avoid_features: decodedMode.avoid
 			};
+		}
+		if(decodedMode.preference)
+			req.preference = decodedMode.preference;
 
-			if(decodedMode.details) {
-				req.elevation = true;
-				req.extra_info = [ "surface", "waytype", "steepness" ];
-				if(decodedMode.mode == "car") {
-					req.extra_info.push("tollways");
-				}
-			}
-			if(decodedMode.avoid) {
-				req.options = {
-					avoid_features: decodedMode.avoid
-				};
-			}
-			if(decodedMode.preference)
-				req.preference = decodedMode.preference;
-
-			return request.post({
-				url: `${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`,
-				json: true,
-				headers: {
-					'Authorization': config.orsToken,
-					'Accept': '*/*' // Server sends application/geo+json
-				},
-				body: req
-			});
-		}));
-	} catch(err) {
-		console.log(err);
-		if(err.response.body && err.response.body.error)
-			throw new Error(err.response.body.error.message);
-		else
-			throw err;
-	}
+		return fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
+			method: "POST",
+			headers: {
+				...(config.orsToken ? { "Authorization": config.orsToken } : {}),
+				"Accept": "*/*", // Server sends application/geo+json
+				"Content-type": "application/json"
+			},
+			body: JSON.stringify(req)
+		}).then((res) => res.json());
+	}));
 
 	const ret = {
 		trackPoints: [] as Array<Point & { ele?: number }>,
@@ -109,9 +99,12 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 	};
 
 	for(const body of results) {
-		if(body && body.error) {
-			throw new Error(body.error.message);
+		if(body?.error) {
+			throw new Error(body.error?.message || body.error);
 		}
+
+		if (body?.metadata?.system_message)
+			console.log("OpenRouteService:", body?.metadata?.system_message);
 
 		if(!body?.features?.[0])
 			throw new Error("Invalid response from routing server.");

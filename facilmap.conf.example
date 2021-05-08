@@ -33,5 +33,5 @@
 #FM_DEV=
 
 # Set to a comma-separated list of values (or *) to enable debug output by particular components. See https://github.com/visionmedia/debug for the syntax.
-# Some possible values: request, sql, express:*
+# Some possible values: sql, express:*
 #DEBUG=
