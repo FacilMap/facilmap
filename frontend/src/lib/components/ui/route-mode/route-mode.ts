@@ -73,12 +73,11 @@ const constants: {
 		}
 	},
 
-	preferences: ["fastest", "shortest", "recommended"],
+	preferences: ["fastest", "shortest"],
 
 	preferenceText: {
 		fastest: "Fastest",
-		shortest: "Shortest",
-		recommended: "Recommended"
+		shortest: "Shortest"
 	},
 
 	avoid: ["highways", "tollways", "ferries", "fords", "steps"],

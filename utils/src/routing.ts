@@ -3,7 +3,7 @@ import { RouteMode } from "facilmap-types";
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";
 	type: "" | "hgv" | "road" | "mountain" | "electric" | "hiking" | "wheelchair";
-	preference: "fastest" | "shortest" | "recommended";
+	preference: "fastest" | "shortest";
 	details: boolean;
 	avoid: Array<"highways" | "tollways" | "ferries" | "fords" | "steps">;
 }
@@ -71,7 +71,9 @@ export function decodeRouteMode(encodedMode: RouteMode | undefined): DecodedRout
 				decodedMode.mode = "";
 			else if(["hgv", "road", "mountain", "electric", "hiking", "wheelchair"].includes(part))
 				decodedMode.type = part as any;
-			else if(["fastest", "shortest", "recommended"].includes(part))
+			else if (part == "recommended")
+				decodedMode.preference = "fastest";
+			else if(["fastest", "shortest"].includes(part))
 				decodedMode.preference = part as any;
 			else if(part == "details")
 				decodedMode.details = true;

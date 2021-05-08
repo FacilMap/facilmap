@@ -76,7 +76,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 			};
 		}
 		if(decodedMode.preference)
-			req.preference = decodedMode.preference;
+			req.preference = decodedMode.preference == "shortest" ? "shortest" : "recommended";
 
 		return fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
 			method: "POST",

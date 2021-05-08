@@ -163,7 +163,7 @@ To use advanced routing settings, additional keywords can be appended to the rou
 * `hgv`: HGV (truck) routing (in combination with `car`)
 * `road`, `mountain`, `electric`: type of bicycle (in combination with `bicycle`).
 * `hiking`, `wheelchair`: type of pedestrian (in combination with `pedestrian`).
-* `fastest`, `shortest`, `recommended`: Use this routing preference.
+* `fastest`, `shortest`: Use this routing preference.
 * `details`: Load route details (elevation profile, extra info).
 * `highways`, `tollways`, `ferries`, `fords`, `steps`: Avoid these.
 * `avoid`: Has no effect, but can be inserted in front of the avoidance types to make the route mode more readable.
