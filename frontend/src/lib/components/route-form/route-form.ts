@@ -29,6 +29,7 @@ type Suggestion = SearchSuggestion | MapSuggestion;
 interface Destination {
 	query: string;
 	loadingQuery?: string;
+	loadingPromise?: Promise<void>;
 	loadedQuery?: string;
 	searchSuggestions?: SearchSuggestion[];
 	mapSuggestions?: MapSuggestion[];
@@ -263,7 +264,10 @@ export default class RouteForm extends Vue {
 	}
 
 	async loadSuggestions(dest: Destination): Promise<void> {
-		if (dest.loadingQuery == dest.query.trim() || dest.loadedQuery == dest.query.trim())
+		if (dest.loadingQuery == dest.query.trim()) {
+			await dest.loadingPromise;
+			return;
+		} else if (dest.loadedQuery == dest.query.trim())
 			return;
 
 		const idx = this.destinations.indexOf(dest);
@@ -272,12 +276,15 @@ export default class RouteForm extends Vue {
 		Vue.set(dest, "mapSuggestions", undefined);
 		Vue.set(dest, "selectedSuggestion", undefined);
 		Vue.set(dest, "loadingQuery", undefined);
+		Vue.set(dest, "loadingPromise", undefined);
 		Vue.set(dest, "loadedQuery", undefined);
 
 		const query = dest.query.trim();
 
 		if(query != "") {
 			dest.loadingQuery = query;
+			let resolveLoadingPromise = (): void => undefined;
+			dest.loadingPromise = new Promise((resolve) => { resolveLoadingPromise = resolve; });
 
 			try {
 				const [searchResults, mapResults] = await Promise.all([
@@ -327,6 +334,8 @@ export default class RouteForm extends Vue {
 
 				console.warn(err.stack || err);
 				showErrorToast(this, `fm${this.context.id}-route-form-suggestion-error-${idx}`, `Error finding destination “${query}”`, err);
+			} finally {
+				resolveLoadingPromise();
 			}
 		}
 	}
