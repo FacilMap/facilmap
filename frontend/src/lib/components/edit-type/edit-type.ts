@@ -142,7 +142,7 @@ export default class EditType extends Vue {
 
 	editDropdown(field: Field): void {
 		this.editField = field;
-		setTimeout(() => { this.$bvModal.show(`fm${this.context.id}-edit-type-dropdown`); }, 0);
+		setTimeout(() => { this.$bvModal.show(`${this.id}-dropdown`); }, 0);
 	}
 
 }
