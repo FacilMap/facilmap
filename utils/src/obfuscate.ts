@@ -1,7 +1,6 @@
-import { $ } from "./dom";
 
-export function obfuscate($el: cheerio.Cheerio): void {
-	$el.find("a[href^='mailto:']").each(function(this: cheerio.Element) {
+export function obfuscate($el: cheerio.Cheerio, $: cheerio.Root): void {
+	$("a[href^='mailto:']", $el).each(function(this: cheerio.Element) {
 		const $a = $(this);
 		let m = $a.attr("href")!.match(/^mailto:(.*)@(.*)$/i);
 		if(m) {

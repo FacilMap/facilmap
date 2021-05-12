@@ -1,10 +1,11 @@
 import marked, { MarkedOptions } from 'marked';
 import { Field } from "facilmap-types";
-import { createDiv, $ } from './dom';
+import { createDiv } from './dom';
 import { normalizeField } from './filter';
 import { quoteHtml } from './utils';
 import linkifyStr from 'linkifyjs/string';
 import createPurify from 'dompurify';
+import { obfuscate } from './obfuscate';
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (eval("require")("jsdom").JSDOM)("").window);
 
@@ -28,17 +29,17 @@ export function formatField(field: Field, value: string): string {
 }
 
 export function markdownBlock(string: string, options?: MarkedOptions): string {
-	const ret = createDiv();
+	const [ret, $] = createDiv();
 	ret.html(purify.sanitize(marked(string, options)));
-	applyMarkdownModifications(ret);
+	applyMarkdownModifications(ret, $);
 	return ret.html()!;
 }
 
 export function markdownInline(string: string, options?: MarkedOptions): string {
-	const ret = createDiv();
+	const [ret, $] = createDiv();
 	ret.html(purify.sanitize(marked(string, options)));
 	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
-	applyMarkdownModifications(ret);
+	applyMarkdownModifications(ret, $);
 	return ret.html()!;
 }
 
@@ -55,32 +56,14 @@ export function formatTime(seconds: number): string {
 	return hours + ":" + minutes;
 }
 
-function applyMarkdownModifications($el: cheerio.Cheerio): void {
+function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root): void {
 	$("a[href]", $el).attr({
 		target: "_blank",
 		rel: "noopener noreferer"
 	});
 
 
-	$("a[href^='mailto:']", $el).each(function(this: cheerio.Element) {
-		const $a = $(this);
-		let m = $a.attr("href")!.match(/^mailto:(.*)@(.*)$/i);
-		if(m) {
-			$a.attr({
-				href: "#",
-				"data-u": m[1],
-				"data-d": m[2]
-			}).addClass("emobf");
-		}
-
-		m = $a.text().match(/^(.*)@(.*)$/);
-		if(m && $a.children().length == 0) {
-			$a.attr({
-				"data-u2": m[1],
-				"data-d2": m[2]
-			}).addClass("emobf2").html("<span>[obfuscated]</span>");
-		}
-	});
+	obfuscate($el, $);
 }
 
 export function renderOsmTag(key: string, value: string): string {
