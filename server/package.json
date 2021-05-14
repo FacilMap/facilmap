@@ -29,6 +29,7 @@
     "build": "tsc && chmod +x dist/server.js && cpy --cwd=src --parents '**/*' '!**/*.ts' ../dist/",
     "clean": "rimraf dist",
     "server": "dist/server.js dotenv_config_path=../config.env",
+    "ts-server": "ts-node --transpile-only src/server.ts dotenv_config_path=../config.env",
     "dev-server": "FM_DEV=true ts-node --transpile-only src/server.ts dotenv_config_path=../config.env",
     "test": "jest",
     "types": "tsc --noEmit src/**/*.ts",
