@@ -36,7 +36,14 @@ export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simpl
 			+ "&overview=" + (simple ? "simplified" : "full")
 			+ "&access_token=" + encodeURIComponent(config.mapboxToken ?? "");
 
-		return fetch(url).then((res) => res.json());
+		return fetch(
+			url,
+			{
+				headers: {
+					"User-Agent": config.userAgent
+				}
+			}
+		).then((res) => res.json());
 	}));
 
 	const ret: RawRouteInfo = {

@@ -83,7 +83,8 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 			headers: {
 				...(config.orsToken ? { "Authorization": config.orsToken } : {}),
 				"Accept": "*/*", // Server sends application/geo+json
-				"Content-type": "application/json"
+				"Content-type": "application/json",
+				"User-Agent": config.userAgent
 			},
 			body: JSON.stringify(req)
 		}).then((res) => res.json());
