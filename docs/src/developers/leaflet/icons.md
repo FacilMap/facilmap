@@ -44,3 +44,7 @@ The following arguments are expected:
 * `symbol`: Either one of the symbol name that is listed in `symbolList`, or a single letter, or an empty string or undefined to render the default symbol (a dot).
 * `shape`: A shape name that is listed in `shapeList`, or an empty string or undefined to render the default shape (`drop`).
 * `highlight`: If this is set to true, the marker is rendered as highlighted (with an increased border width).
+
+## Get a symbol for an OSM element
+
+Calling `getSymbolForTags(tags)` will make a best attempt to return a symbol that is appropriate for a given OSM element. `tags` should be an object that maps OSM tag keys to values. The function returns a string representing the name of a symbol. If no fitting symbol can be found, an empty string is returned.

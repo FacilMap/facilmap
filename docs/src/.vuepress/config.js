@@ -114,6 +114,7 @@ module.exports = {
 						"leaflet/lines",
 						"leaflet/route",
 						"leaflet/search",
+						"leaflet/overpass",
 						"leaflet/icons",
 						"leaflet/hash",
 						"leaflet/views",

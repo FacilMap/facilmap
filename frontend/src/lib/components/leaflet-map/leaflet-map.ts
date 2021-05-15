@@ -5,7 +5,7 @@ import "./leaflet-map.scss";
 import { Client, InjectClient, InjectContext, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
 import L, { LatLng, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery } from "facilmap-leaflet";
+import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery, OverpassLayer, OverpassPreset, OverpassLoadStatus } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -47,6 +47,7 @@ export interface MapComponents {
 	map: Map;
 	markersLayer: MarkersLayer;
 	mousePosition: L.Control.MousePosition;
+	overpassLayer: OverpassLayer;
 	searchResultsLayer: SearchResultsLayer;
 	selectionHandler: SelectionHandler;
 }
@@ -62,6 +63,10 @@ export interface MapContext extends EventBus {
 	selection: SelectedItem[];
 	fallbackQuery: HashQuery | undefined; // Updated by search-box
 	interaction: boolean;
+	loading: number;
+	overpassPresets: OverpassPreset[];
+	overpassCustom: string | undefined;
+	overpassMessage: string | undefined;
 }
 
 @WithRender
@@ -94,15 +99,43 @@ export default class LeafletMap extends Vue {
 		const bboxHandler = new BboxHandler(map, this.client).enable();
 		const container = this.innerContainer;
 		const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
-		const hashHandler = new HashHandler(map, this.client, { simulate: !this.context.updateHash }).on("fmQueryChange", this.handleNewHashQuery).enable();
 		const linesLayer = new LinesLayer(this.client).addTo(map);
 		const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } }).addTo(map);
 		const markersLayer = new MarkersLayer(this.client).addTo(map);
 		const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
+		const overpassLayer = new OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map);
 		const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
 		const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
 
-		this.mapComponents = Vue.nonreactive({ bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, searchResultsLayer, selectionHandler });
+		// Bind these handlers before hashHandler may change the value
+		this.mapContext = {
+			overpassPresets: [],
+			overpassCustom: undefined,
+			loading: 0
+		} as any;
+		overpassLayer.on("setQuery", ({ query }: any) => {
+			this.mapContext.overpassPresets = query && Array.isArray(query) ? query : [];
+			this.mapContext.overpassCustom = query && typeof query == "string" ? query : undefined;
+		});
+		overpassLayer.on("loadstart", () => {
+			this.mapContext.loading++;
+		});
+		overpassLayer.on("loadend", ({ status, error }: any) => {
+			this.mapContext.loading--;
+
+			if (status == OverpassLoadStatus.COMPLETE)
+				this.mapContext.overpassMessage = undefined;
+			else if (status == OverpassLoadStatus.INCOMPLETE)
+				this.mapContext.overpassMessage = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
+			else if (status == OverpassLoadStatus.TIMEOUT)
+				this.mapContext.overpassMessage = "Zoom in to show POIs.";
+			else if (status == OverpassLoadStatus.ERROR)
+				this.mapContext.overpassMessage = "Error loading POIs: " + error.message;
+		});
+
+		const hashHandler = new HashHandler(map, this.client, { overpassLayer, simulate: !this.context.updateHash }).on("fmQueryChange", this.handleNewHashQuery).enable();
+
+		this.mapComponents = Vue.nonreactive({ bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, overpassLayer, searchResultsLayer, selectionHandler });
 		for (const i of Object.keys(this.mapComponents) as Array<keyof MapComponents>)
 			Vue.nonreactive(this.mapComponents[i]);
 
@@ -132,6 +165,10 @@ export default class LeafletMap extends Vue {
 			selection: [],
 			fallbackQuery: undefined,
 			interaction: false,
+			loading: this.mapContext.loading,
+			overpassPresets: this.mapContext.overpassPresets,
+			overpassCustom: this.mapContext.overpassCustom,
+			overpassMessage: this.mapContext.overpassMessage,
 			...createEventBus()
 		};
 

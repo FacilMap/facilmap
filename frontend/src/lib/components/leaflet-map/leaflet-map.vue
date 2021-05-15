@@ -5,11 +5,13 @@
 		<div class="fm-leaflet-map-inner-container" ref="innerContainer">
 			<div class="fm-leaflet-map"></div>
 
+			<b-alert v-if="mapContext" :show="!!mapContext.overpassMessage" class="fm-overpass-message" variant="warning">{{mapContext.overpassMessage}}</b-alert>
+
 			<a v-if="context.linkLogo" :href="selfUrl" target="_blank" class="fm-open-external" uib-tooltip="Open FacilMap in full size" tooltip-placement="right"></a>
 			<div class="fm-logo">
 				<img src="./logo.png"/>
 			</div>
-			<b-spinner class="fm-leaflet-map-spinner" v-show="client.loading > 0"></b-spinner>
+			<b-spinner class="fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></b-spinner>
 
 			<slot v-if="mapContext"></slot>
 		</div>

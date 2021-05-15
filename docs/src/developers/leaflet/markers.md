@@ -42,7 +42,7 @@ This example will highlight a marker on click:
 
 ```javascript
 markersLayer.on("click", (event) => {
-	markersLayer.setHighlightedMarkers([event.layer.marker.id]);
+	markersLayer.setHighlightedMarkers(new Set([event.layer.marker.id]));
 });
 ```
 

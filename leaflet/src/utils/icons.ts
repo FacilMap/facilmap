@@ -257,3 +257,28 @@ export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, s
 		popupAnchor: [0, -height]
 	});
 }
+
+
+const RELEVANT_TAGS = [
+	"aerialway", "aeroway", "amenity", "barrier", "boundary", "building", "entrance", "craft", "emergency", "geological", "healthcare",
+	"highway", "cycleway", "busway", "abutters", "bus_bay", "junction", "sac_scale", "service", "surface", "tracktype", "traffic_calming",
+	"historic", "landuse", "leisure", "man_made", "military", "natural", "office", "place", "power", "public_transport", "railway",
+	"usage", "route", "shop", "sport", "telecom", "tourism", "water", "waterway", "bridge", "crossing", "access", "religion", "denomination",
+	"plant:source"
+];
+
+export function getSymbolForTags(tags: Record<string, string>): Symbol {
+	const tagWords = Object.entries(tags).flatMap(([k, v]) => (RELEVANT_TAGS.includes(k) ? v.split(/_:/) : []));
+	let result: Symbol = "";
+	let resultMatch: number = 0;
+	for (const icon of Object.keys(rawIcons.osmi)) {
+		const iconWords = icon.split("_");
+		const match = tagWords.filter((word) => iconWords.includes(word)).length;
+		if (match > resultMatch) {
+			resultMatch = match;
+			result = icon;
+		}
+	}
+
+	return result;
+}

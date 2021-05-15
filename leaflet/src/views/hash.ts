@@ -3,6 +3,8 @@ import { numberKeys } from 'facilmap-utils';
 import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
 import { isEqual } from 'lodash';
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
+import OverpassLayer from '../overpass/overpass-layer';
+import { getOverpassPresets, OverpassPreset } from '../overpass/overpass-presets';
 import { pointsEqual } from '../utils/leaflet';
 import { decodeLegacyHash } from './legacyHash';
 import { displayView, isAtView } from './views';
@@ -15,6 +17,7 @@ export interface HashQuery {
 
 export interface HashHandlerOptions {
 	simulate?: boolean;
+	overpassLayer?: OverpassLayer;
 }
 
 export default class HashHandler extends Handler {
@@ -39,6 +42,8 @@ export default class HashHandler extends Handler {
 		this._map.on("layerremove", this.handleMapChange);
 		this._map.on("fmFilter", this.handleMapChange);
 		this._map.on("filter", this.handleMapChange);
+		if (this.options.overpassLayer)
+			this.options.overpassLayer.on("setQuery", this.handleMapChange);
 
 		if (!this.options.simulate) {
 			window.addEventListener("hashchange", this.handleHashChange);
@@ -51,6 +56,8 @@ export default class HashHandler extends Handler {
 		this._map.off("layeradd", this.handleMapChange);
 		this._map.off("layerremove", this.handleMapChange);
 		this._map.off("fmFilter", this.handleMapChange);
+		if (this.options.overpassLayer)
+			this.options.overpassLayer.off("setQuery", this.handleMapChange);
 		window.removeEventListener("hashchange", this.handleHashChange);
 	}
 
@@ -116,7 +123,18 @@ export default class HashHandler extends Handler {
 
 			const layers = args[3]?.split("-");
 			if(layers && layers.length > 0) {
-				setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1) });
+				setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1).filter((layer) => !layer.startsWith("O_") && !layer.startsWith("o_")) });
+			}
+
+			if (this.options.overpassLayer) {
+				let query: string | OverpassPreset[] | undefined = undefined;
+				for (const layer of layers) {
+					if (layer.startsWith("o_"))
+						query = getOverpassPresets(layer.substr(2).split("_"));
+					else if (layer.startsWith("O_"))
+						query = atob(layer.substr(2)).replace(/\./g, '+').replace(/_/g, '/');
+				}
+				this.options.overpassLayer.setQuery(query);
 			}
 
 			this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
@@ -144,8 +162,17 @@ export default class HashHandler extends Handler {
 		let result: string | undefined;
 
 		const visibleLayers = getVisibleLayers(this._map);
+		const layerKeys = [visibleLayers.baseLayer, ...visibleLayers.overlays];
 
-		const additionalParts = [ [visibleLayers.baseLayer, ...visibleLayers.overlays].join("-") ];
+		if (this.options.overpassLayer && !this.options.overpassLayer.isEmpty()) {
+			const query = this.options.overpassLayer.getQuery()!;
+			if (typeof query == "string")
+				layerKeys.push(`O_${btoa(query).replace(/\+/g, '.').replace(/\//g, '_').replace(/=+$/g, '')}`);
+			else
+				layerKeys.push(`o_${query.map((q) => q.key).join("_")}`);
+		}
+
+		const additionalParts = [ layerKeys.join("-") ];
 
 		if (this.activeQuery) {
 			additionalParts.push(this.activeQuery.query);

@@ -100,3 +100,9 @@ hashHandler.on("fmQueryChange", (event) => {
 	submitSearch(event.zoom);
 });
 ```
+
+## Options
+
+The third argument to the `HashHandler` constructor can be an object with some of the following properties:
+* `simulate`: If this is `true`, the actual location hash will neither be read nor updated. The hash handler will only emit an `fmHash` event with the `hash` property of the event object being the location hash representing the current map view.
+* `overpassLayer`: This can be an instance of [OverpassLayer](./overpass.md), causing the overpass query to be persisted in the location hash as well.

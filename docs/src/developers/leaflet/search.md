@@ -56,6 +56,6 @@ A single search result might consist of multiple geometries, for example a marke
 In this example, a search result is highlighted when clicked:
 ```javascript
 resultsLayer.on("click", (event) => {
-	resultsLayer.setHighlightedResults([event.layer._fmSearchResult]);
+	resultsLayer.setHighlightedResults(new Set([event.layer._fmSearchResult]));
 });
 ```

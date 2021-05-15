@@ -41,7 +41,7 @@ This example will highlight a line on click:
 
 ```javascript
 linesLayer.on("click", (event) => {
-	linesLayer.setHighlightedMarkers([event.layer.line.id]);
+	linesLayer.setHighlightedLines(new Set([event.layer.line.id]));
 });
 ```
 

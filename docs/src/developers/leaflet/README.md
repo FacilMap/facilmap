@@ -12,6 +12,7 @@ The Leaflet components are only useful in combination with a [FacilMap client](.
 * [Lines](./lines.md) shows the lines of a collaborative map.
 * [Route](./route.md) allows showing a calculated route on the map.
 * [Search](./search.md) renders search results.
+* [Overpass](./overpass.md) shows amenities and POIs in the current map bounds using the Overpass API.
 * [Icons](./icons.md) provides methods to draw marker icons and shapes.
 * [HashHandler](./hash.md) hooks up the location hash to the current map view.
 * [Views](./views.md) allow controlling the map view and handling saved views.

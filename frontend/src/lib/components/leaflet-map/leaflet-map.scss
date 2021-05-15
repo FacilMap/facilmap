@@ -101,6 +101,13 @@
 		font-weight:bold;
 	}
 
+	.fm-overpass-message {
+		position: absolute;
+		top: 10px;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
 	.fm-leaflet-map-spinner {
 		position:absolute;
 		bottom: 20px;

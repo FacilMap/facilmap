@@ -7,7 +7,9 @@
 		<style type="text/css">
 			html, body { width: 100%; height: 100%; margin: 0; }
 			body { display: flex; flex-direction: column; }
+			#map-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
 			#map { flex-grow: 1; }
+			#overpass-status { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 5px 10px; background: #fff; z-index: 10000; transition: opacity 0.4s; opacity: 0; border-radius: 3px }
 		</style>
 		<script>
 			function log(name) {
@@ -84,6 +86,22 @@
 
 			<input
 				type="button"
+				value="parking+recycling"
+				onclick="overpassLayer.setQuery('(nwr[amenity=parking];nwr[amenity=recycling];);')"
+			/>
+			<input
+				type="button"
+				value="parking+recycling (preset)"
+				onclick="overpassLayer.setQuery(L.FacilMap.getOverpassPresets(['parking', 'recycling']))"
+			/>
+			<input
+				type="button"
+				value="Clear amenities"
+				onclick="overpassLayer.setQuery()"
+			/>
+
+			<input
+				type="button"
 				value="Draw line"
 				onclick="drawLine()"
 			/>
@@ -93,7 +111,10 @@
 				onclick="linesLayer.endDrawLine(confirm('Save?'))"
 			/>
 		</div>
-		<div id="map"></div>
+		<div id="map-container">
+			<div id="map"></div>
+			<div id="overpass-status"></div>
+		</div>
 		<script src="https://unpkg.com/leaflet"></script>
 		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
 
@@ -118,6 +139,7 @@
 					markersLayer.setHighlightedMarkers(new Set([e.layer.marker.id]));
 					linesLayer.setHighlightedLines(new Set());
 					searchResultsLayer.setHighlightedResults(new Set());
+					overpassLayer.setHighlightedElements(new Set());
 				});
 
 			const linesLayer = new L.FacilMap.LinesLayer(client).addTo(map)
@@ -126,12 +148,14 @@
 					markersLayer.setHighlightedMarkers(new Set());
 					linesLayer.setHighlightedLines(new Set([e.layer.line.id]));
 					searchResultsLayer.setHighlightedResults(new Set());
+					overpassLayer.setHighlightedElements(new Set());
 				});
 
 			map.on("click", () => {
 				markersLayer.setHighlightedMarkers(new Set());
 				linesLayer.setHighlightedLines(new Set());
 				searchResultsLayer.setHighlightedResults(new Set());
+				overpassLayer.setHighlightedElements(new Set());
 			});
 
 			const routeLayer1 = new L.FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
@@ -146,9 +170,41 @@
 					markersLayer.setHighlightedMarkers(new Set());
 					linesLayer.setHighlightedLines(new Set());
 					searchResultsLayer.setHighlightedResults(new Set([ e.layer._fmSearchResult ]));
+					overpassLayer.setHighlightedElements(new Set());
 				});
 
-			const hashHandler = new L.FacilMap.HashHandler(map, client).enable();
+			let overpassLoading = 0;
+			const overpassStatus = document.getElementById("overpass-status");
+			const overpassLayer = new L.FacilMap.OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map)
+				.on("click", (e) => {
+					console.log(e.layer._fmOverpassElement.tags);
+					L.DomEvent.stopPropagation(e);
+					markersLayer.setHighlightedMarkers(new Set());
+					linesLayer.setHighlightedLines(new Set());
+					searchResultsLayer.setHighlightedResults(new Set());
+					overpassLayer.setHighlightedElements(new Set([e.layer._fmOverpassElement]));
+				})
+				.on("loadstart", () => {
+					overpassLoading++;
+					overpassStatus.innerText = "Loading POIs…";
+					overpassStatus.style.opacity = 1;
+				})
+				.on("loadend", (e) => {
+					if (--overpassLoading <= 0) {
+						if (e.status == L.FacilMap.OverpassLoadStatus.COMPLETE)
+							overpassStatus.style.opacity = 0;
+						else if (e.status == L.FacilMap.OverpassLoadStatus.INCOMPLETE)
+							overpassStatus.innerText = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
+						else if (e.status == L.FacilMap.OverpassLoadStatus.TIMEOUT)
+							overpassStatus.innerText = "Zoom in to show POIs.";
+						else if (e.status == L.FacilMap.OverpassLoadStatus.ERROR)
+							overpassStatus.innerText = "Error loading POIs: " + e.error.message;
+					}
+
+					console.log("Overpass", e);
+				});
+
+			const hashHandler = new L.FacilMap.HashHandler(map, client, { overpassLayer }).enable();
 
 			async function drawLine() {
 				try {
