@@ -1,5 +1,5 @@
 import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
-import { fmToLeafletBbox, HashQuery } from "facilmap-leaflet";
+import { fmToLeafletBbox, HashQuery, OverpassElement } from "facilmap-leaflet";
 import { RouteWithTrackPoints } from "facilmap-client";
 import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
@@ -33,7 +33,7 @@ export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination
 		return undefined;
 }
 
-export function getZoomDestinationForMarker(marker: Marker<StringMap> | FindOnMapMarker): ZoomDestination {
+export function getZoomDestinationForMarker(marker: Marker<StringMap> | FindOnMapMarker | OverpassElement): ZoomDestination {
 	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
 }
 

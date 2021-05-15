@@ -16,12 +16,13 @@ import { HashQuery } from "facilmap-leaflet";
 import MultipleInfoTab from "../multiple-info/multiple-info-tab";
 import { Context } from "../facilmap/facilmap";
 import { PortalTarget } from "portal-vue";
+import OverpassInfoTab from "../overpass-info/overpass-info-tab";
 
 export type SearchBoxContext = Vue;
 
 @WithRender
 @Component({
-	components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, PortalTarget, RouteFormTab, SearchFormTab }
+	components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, OverpassInfoTab, PortalTarget, RouteFormTab, SearchFormTab }
 })
 export default class SearchBox extends Vue {
 

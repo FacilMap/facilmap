@@ -105,7 +105,7 @@ export default class LeafletMap extends Vue {
 		const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
 		const overpassLayer = new OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map);
 		const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
-		const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer).enable();
+		const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer, overpassLayer).enable();
 
 		// Bind these handlers before hashHandler may change the value
 		this.mapContext = {

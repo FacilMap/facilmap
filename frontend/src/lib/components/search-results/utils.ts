@@ -9,6 +9,13 @@ import StringMap from "../../utils/string-map";
  * field names to values.
  */
 export function mapSearchResultToType(result: SearchResult, type: Type): StringMap {
+	return mapTagsToType({
+		...(result.address ? { address: result.address } : {}),
+		...result.extratags
+	}, type);
+}
+
+export function mapTagsToType(tags: Record<string, string>, type: Type): StringMap {
 	let keyMap = (keys: string[]) => {
 		let ret: Record<string, string> = Object.create(null);
 		for(let key of keys)
@@ -16,17 +23,13 @@ export function mapSearchResultToType(result: SearchResult, type: Type): StringM
 		return ret;
 	};
 
-	let resultData = Object.assign({
-		address: result.address
-	}, result.extratags);
-
 	let fieldKeys = keyMap(type.fields.map((field) => (field.name)));
-	let resultDataKeys = keyMap(Object.keys(resultData));
+	let resultDataKeys = keyMap(Object.keys(tags));
 
 	const ret: StringMap = new StringMap();
 	for(let key in resultDataKeys) {
 		if(fieldKeys[key])
-			ret.set(fieldKeys[key], resultData[resultDataKeys[key]]);
+			ret.set(fieldKeys[key], tags[resultDataKeys[key]]);
 	}
 	return ret;
 }

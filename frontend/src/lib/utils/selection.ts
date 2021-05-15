@@ -1,6 +1,6 @@
 import { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, LatLngBounds, LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
-import { LinesLayer, MarkerLayer, MarkersLayer, SearchResultsLayer } from "facilmap-leaflet";
+import { LinesLayer, MarkerLayer, MarkersLayer, OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
 
 export type SelectedItem = {
@@ -10,6 +10,9 @@ export type SelectedItem = {
 	type: "searchResult";
 	result: SearchResult;
 	layerId: number;
+} | {
+	type: "overpass";
+	element: OverpassElement;
 };
 
 function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
@@ -17,6 +20,8 @@ function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
 		return true;
 	else if (a.type == "searchResult" && b.type == "searchResult")
 		return a.layerId == b.layerId;
+	else if (a.type == "overpass" && b.type == "overpass")
+		return true;
 	else
 		return false;
 }
@@ -30,6 +35,8 @@ function isSame(a: SelectedItem, b: SelectedItem): boolean {
 		return a.id == b.id;
 	else if (a.type == "searchResult" && b.type == "searchResult")
 		return a.result === b.result;
+	else if (a.type == "overpass" && b.type == "overpass")
+		return a.element === b.element;
 	else
 		return false;
 }
@@ -41,6 +48,7 @@ export default class SelectionHandler extends Handler {
 	_markersLayer: MarkersLayer;
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
+	_overpassLayer: OverpassLayer;
 
 	_boxSelectionHandler: BoxSelection;
 	_selectionBeforeBox: SelectedItem[] = [];
@@ -49,7 +57,7 @@ export default class SelectionHandler extends Handler {
 	_mapInteraction: number = 0;
 	_isLongClick: boolean = false;
 
-	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer) {
+	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, overpassLayer: OverpassLayer) {
 		super(map);
 
 		this._boxSelectionHandler = new BoxSelection(map)
@@ -60,6 +68,7 @@ export default class SelectionHandler extends Handler {
 		this._markersLayer = markersLayer;
 		this._linesLayer = linesLayer;
 		this._searchResultLayers = [searchResultsLayer];
+		this._overpassLayer = overpassLayer;
 	}
 
 	enable(): this {
@@ -79,6 +88,7 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.on("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
+		this._overpassLayer.on("click", this.handleClickOverpass);
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
@@ -91,6 +101,7 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.off("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
+		this._overpassLayer.off("click", this.handleClickOverpass);
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
@@ -141,6 +152,9 @@ export default class SelectionHandler extends Handler {
 				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => i.result)
 			));
 		}
+		this._overpassLayer.setHighlightedElements(new Set(
+			byType(items, "overpass").map((i) => i.element)
+		));
 
 		this.fire("fmChangeSelection", { open });
 	}
@@ -191,6 +205,11 @@ export default class SelectionHandler extends Handler {
 	handleClickSearchResult = (e: LeafletEvent): void => {
 		if (e.propagatedFrom?._fmSearchResult)
 			this.handleClickItem({ type: "searchResult", result: e.propagatedFrom._fmSearchResult, layerId: Util.stamp(e.target) }, e);
+	}
+
+	handleClickOverpass = (e: LeafletEvent): void => {
+		if (e.propagatedFrom?._fmOverpassElement)
+			this.handleClickItem({ type: "overpass", element: e.propagatedFrom._fmOverpassElement }, e);
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {

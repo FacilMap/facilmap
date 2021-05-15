@@ -1,11 +1,10 @@
 import WithRender from "./overpass.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
-import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+import { InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { OverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
 import FormModal from "../ui/form-modal/form-modal";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-import { Context } from "../facilmap/facilmap";
 import { extend, ValidationProvider } from "vee-validate";
 import "./overpass.scss";
 import { isEqual } from "lodash";
@@ -20,10 +19,8 @@ extend("customOverpassQuery", async (query: string): Promise<string | true> => {
 })
 export default class Overpass extends Vue {
 
-	@InjectContext() context!: Context;
 	@InjectMapComponents() mapComponents!: MapComponents;
 	@InjectMapContext() mapContext!: MapContext;
-	@InjectClient() client!: Client;
 
 	@Prop({ type: String, required: true }) id!: string;
 
@@ -46,7 +43,7 @@ export default class Overpass extends Vue {
 
 	get isModified(): boolean {
 		if (this.isCustomQueryMode)
-			return !!this.customQuery != !!this.mapContext.overpassCustom || this.customQuery != this.mapContext.overpassCustom;
+			return (!!this.customQuery || !!this.mapContext.overpassCustom) && this.customQuery != this.mapContext.overpassCustom;
 		else
 			return !isEqual(new Set(this.selectedPresets), new Set(this.mapContext.overpassPresets.map((preset) => preset.key)));
 	}

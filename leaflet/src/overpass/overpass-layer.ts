@@ -15,7 +15,7 @@ declare module "leaflet" {
 
 export interface OverpassElement {
 	id: number;
-	tags?: Record<string, string>;
+	tags: Record<string, string>;
 	type: "node" | "way" | "relation";
 	lat: number;
 	lon: number;
@@ -46,6 +46,7 @@ export async function getOverpassElements(query: string | OverpassPreset[], bbox
 
 	return result.elements.map((element: any) => ({
 		...element,
+		tags: element.tags || {},
 		...(element.center ? element.center : {})
 	}));
 }
@@ -130,6 +131,7 @@ export default class OverpassLayer extends FeatureGroup {
 			if (identifier == getElementIdentifier(layer._fmOverpassElement!))
 				(layer as MarkerLayer).setStyle({ highlight: true, raised: true });
 		}
+		this._highlightedElements.add(getElementIdentifier(element));
 	}
 
 	unhighlightElement(element: OverpassElement): void {
@@ -138,6 +140,7 @@ export default class OverpassLayer extends FeatureGroup {
 			if (identifier == getElementIdentifier(layer._fmOverpassElement!))
 				(layer as MarkerLayer).setStyle({ highlight: false, raised: false });
 		}
+		this._highlightedElements.delete(getElementIdentifier(element));
 	}
 
 	setHighlightedElements(elements: Set<OverpassElement>): void {
@@ -147,6 +150,7 @@ export default class OverpassLayer extends FeatureGroup {
 			if (layer.options.highlight != shouldHighlight)
 				layer.setStyle({ highlight: shouldHighlight, raised: shouldHighlight });
 		}
+		this._highlightedElements = new Set([...elements].map((el) => getElementIdentifier(el)));
 	}
 
 	_elementToLayer(element: OverpassElement): MarkerLayer {
@@ -155,13 +159,13 @@ export default class OverpassLayer extends FeatureGroup {
 			marker: {
 				colour: this.options.markerColour!,
 				size: this.options.markerSize!,
-				symbol: (element.tags && getSymbolForTags(element.tags)) || '',
+				symbol: getSymbolForTags(element.tags),
 				shape: this.options.markerShape!
 			},
 			raised: isHighlighted,
 			highlight: isHighlighted
 		});
-		if (element.tags?.name)
+		if (element.tags.name)
 			layer.bindTooltip(element.tags.name, { ...tooltipOptions, offset: [ 20, -20 ] })
 		layer._fmOverpassElement = element;
 		return layer;
@@ -171,7 +175,7 @@ export default class OverpassLayer extends FeatureGroup {
 		if (this._lastRequestController)
 			this._lastRequestController.abort();
 
-		if (!this._map._loaded)
+		if (!this._map?._loaded)
 			return;
 
 		if (this.isEmpty()) {
