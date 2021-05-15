@@ -171,6 +171,9 @@ export default class OverpassLayer extends FeatureGroup {
 		if (this._lastRequestController)
 			this._lastRequestController.abort();
 
+		if (!this._map._loaded)
+			return;
+
 		if (this.isEmpty()) {
 			this.clearLayers();
 			return;

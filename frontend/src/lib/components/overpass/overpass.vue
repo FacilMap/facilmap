@@ -8,7 +8,18 @@
 	ok-title="Apply"
 >
 	<template v-if="!isCustomQueryMode">
-		<b-tabs pills lazy v-model="activeTab">
+		<b-form-input type="search" v-model="searchTerm" placeholder="Search…" autofocus></b-form-input>
+		<hr />
+
+		<div v-if="searchTerm" class="checkbox-grid">
+			<b-form-checkbox
+				v-for="preset in filteredPresets"
+				:checked="preset.isChecked"
+				@input="togglePreset(preset.key)"
+			>{{preset.label}}</b-form-checkbox>
+		</div>
+
+		<b-tabs v-else pills lazy v-model="activeTab">
 			<b-tab v-for="(category, idx) in categories" :title="category.label">
 				<template #title>
 					{{category.label}}

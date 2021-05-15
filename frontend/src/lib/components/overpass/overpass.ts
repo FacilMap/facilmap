@@ -2,7 +2,7 @@ import WithRender from "./overpass.vue";
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-import { overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
+import { OverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
 import FormModal from "../ui/form-modal/form-modal";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { Context } from "../facilmap/facilmap";
@@ -28,6 +28,10 @@ export default class Overpass extends Vue {
 	@Prop({ type: String, required: true }) id!: string;
 
 	activeTab = 0;
+	selectedPresets: string[] = [];
+	customQuery = "";
+	searchTerm = "";
+	isCustomQueryMode = false;
 
 	get categories(): (typeof overpassPresets) {
 		return overpassPresets.map((cat) => {
@@ -40,15 +44,19 @@ export default class Overpass extends Vue {
 		});
 	}
 
-	selectedPresets: string[] = [];
-	customQuery = "";
-	isCustomQueryMode = false;
-
 	get isModified(): boolean {
 		if (this.isCustomQueryMode)
 			return !!this.customQuery != !!this.mapContext.overpassCustom || this.customQuery != this.mapContext.overpassCustom;
 		else
 			return !isEqual(new Set(this.selectedPresets), new Set(this.mapContext.overpassPresets.map((preset) => preset.key)));
+	}
+
+	get filteredPresets(): OverpassPreset[] {
+		if (!this.searchTerm)
+			return [];
+
+		const lowerTerm = this.searchTerm.toLowerCase();
+		return this.categories.map((cat) => cat.presets).flat().flat().filter((preset) => preset.label.toLowerCase().includes(lowerTerm));
 	}
 
 	initialize(): void {
