@@ -64,6 +64,7 @@
 			<b-dropdown-divider></b-dropdown-divider>
 			<b-dropdown-item :href="links.osm" target="_blank">Open this on OpenStreetMap</b-dropdown-item>
 			<b-dropdown-item :href="links.google" target="_blank">Open this on Google Maps</b-dropdown-item>
+			<b-dropdown-item :href="links.googleSatellite" target="_blank">Open this on Google Maps (Satellite)</b-dropdown-item>
 			<b-dropdown-item :href="links.bing" target="_blank">Open this on Bing Maps</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Tools" right v-if="interactive || client.padData">

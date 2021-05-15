@@ -39,11 +39,12 @@ export default class Toolbox extends Vue {
 		return v.hash && v.hash != "#" ? v.hash : `${v.zoom}/${v.center.lat}/${v.center.lng}`;
 	}
 
-	get links(): Record<'osm' | 'google' | 'bing' | 'facilmap', string> {
+	get links(): Record<'osm' | 'google' | 'googleSatellite' | 'bing' | 'facilmap', string> {
 		const v = this.mapContext;
 		return {
 			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
-			google: `https://www.google.com/maps/@${v.center.lat},${v.center.lng},${v.zoom}z`,
+			google: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}`,
+			googleSatellite: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}&basemap=satellite`,
 			bing: `https://www.bing.com/maps?cp=${v.center.lat}~${v.center.lng}&lvl=${v.zoom}`,
 			facilmap: `${this.context.baseUrl}#${this.hash}`
 		};
