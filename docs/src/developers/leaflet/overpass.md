@@ -119,6 +119,8 @@ The `loadend` event object contains a `status` property that gives details about
 * `OverpassLoadStatus.ERROR`: The overpass API has reported an error and no elements were retrieved. The exact error object is available in the `error` property of the event object.
 * `OverpassLoadStatus.ABORTED`: Another request has been started in the meantime (because the user moved the map again while the request was still loading). This result can be ignored (apart from updating the number of pending requests), as another request is in progress (or has already succeeded) that supersedes the current request.
 
+A `clear` event is fired whenever the POIs are cleared (for example if an empty query is applied). If you are persisting the latest load status or present it to the user in some way, you might want to reset that in response to the `clear` event.
+
 Here is an example how the status can be presented to the user:
 ```javascript
 import { OverpassLoadStatus } from "facilmap-leaflet";
@@ -136,6 +138,8 @@ overpassLayer.on("loadend", (event) => {
 		overpassStatus.innerText = "Zoom in to show POIs.";
 	else if (event.status == OverpassLoadStatus.ERROR)
 		overpassStatus.innerText = "Error loading POIs: " + event.error.message;
+}).on("clear", () => {
+	overpassStatus.innerText = "";
 });
 ```
 

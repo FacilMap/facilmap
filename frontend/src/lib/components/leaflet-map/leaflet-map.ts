@@ -132,6 +132,9 @@ export default class LeafletMap extends Vue {
 			else if (status == OverpassLoadStatus.ERROR)
 				this.mapContext.overpassMessage = "Error loading POIs: " + error.message;
 		});
+		overpassLayer.on("clear", () => {
+			this.mapContext.overpassMessage = undefined;
+		});
 
 		const hashHandler = new HashHandler(map, this.client, { overpassLayer, simulate: !this.context.updateHash }).on("fmQueryChange", this.handleNewHashQuery).enable();
 

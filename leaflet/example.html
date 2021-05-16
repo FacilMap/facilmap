@@ -202,6 +202,9 @@
 					}
 
 					console.log("Overpass", e);
+				})
+				.on("clear", () => {
+					overpassStatus.style.opacity = 0;
 				});
 
 			const hashHandler = new L.FacilMap.HashHandler(map, client, { overpassLayer }).enable();

@@ -123,6 +123,9 @@ export default class OverpassLayer extends FeatureGroup {
 		this._query = query;
 		this.redraw();
 		this.fire("setQuery", { query });
+
+		if (this.isEmpty())
+			this.fire("clear");
 	}
 
 	highlightElement(element: OverpassElement): void {
