@@ -3,12 +3,12 @@
 	<head>
 		<meta charset="utf-8">
 		<title><%= padData && padData.name ? `${padData.name} – ` : ''%>FacilMap</title>
-<% if(!padData || padData.searchEngines) { %>
-		<meta name="robots" content="index,nofollow" />
 		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
-<% } else { %>
+<% if(!padData || (isReadOnly && padData.searchEngines)) { -%>
+		<meta name="robots" content="index,nofollow" />
+<% } else { -%>
 		<meta name="robots" content="noindex,nofollow" />
-<% } %>
+<% } -%>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
 		<link rel="icon" href="../../static/favicon.svg">

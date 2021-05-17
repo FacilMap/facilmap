@@ -63,6 +63,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 			res.send(ejs.render(template, {
 				padData: padData,
+				isReadOnly: padData?.id == req.params.padId,
 				config: {}
 			}));
 		}).catch(next);
