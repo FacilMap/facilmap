@@ -13,7 +13,7 @@
 		<ValidationProvider name="Filter" v-slot="v" rules="filter">
 			<b-form-group :state="v | validationState(true)">
 				<b-textarea v-model="filter" rows="5" :state="v | validationState(true)" class="text-monospace"></b-textarea>
-				<template #invalid-feedback><pre v-html="v.errors[0]"></pre></template>
+				<template #invalid-feedback><pre>{{v.errors[0]}}</pre></template>
 			</b-form-group>
 		</ValidationProvider>
 
