@@ -29,7 +29,7 @@ export function displayView(map: Map, view?: UnsavedView | null, _zoomFactor = 0
 
 	setVisibleLayers(map, {
 		baseLayer: view.baseLayer,
-
+		overlays: view.layers
 	});
 
 	const bounds = fmToLeafletBbox(view);
