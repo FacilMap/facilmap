@@ -1,14 +1,6 @@
-<FormModal
-	:id="id"
-	title="Show POIs"
-	dialog-class="fm-overpass"
-	:is-modified="isModified"
-	@submit="save"
-	@show="initialize"
-	ok-title="Apply"
->
-	<template v-if="!isCustomQueryMode">
-		<b-form-input type="search" v-model="searchTerm" placeholder="Search…" autofocus></b-form-input>
+<div class="fm-overpass-form">
+	<template v-if="!mapContext.overpassIsCustom">
+		<b-form-input type="search" v-model="searchTerm" placeholder="Filter…" autofocus></b-form-input>
 		<hr />
 
 		<div v-if="searchTerm" class="checkbox-grid">
@@ -39,12 +31,10 @@
 		</b-tabs>
 	</template>
 	<template v-else>
-		<ValidationProvider name="Custom query" v-slot="v" rules="customOverpassQuery" :debounce="500">
-			<b-form-group :state="v | validationState(true)">
-				<b-textarea v-model="customQuery" rows="5" :state="v | validationState(true)" class="text-monospace"></b-textarea>
-				<template #invalid-feedback><pre v-html="v.errors[0]"></pre></template>
-			</b-form-group>
-		</ValidationProvider>
+		<b-form-group :state="customQueryValidationState">
+			<b-textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="text-monospace" @input="handleCustomQueryInput"></b-textarea>
+			<template #invalid-feedback><pre>{{customQueryValidationError}}</pre></template>
+		</b-form-group>
 
 		<hr />
 
@@ -59,10 +49,12 @@
 		</p>
 	</template>
 
-	<template #footer-left>
-		<b-dropdown dropup text="Mode">
-			<b-dropdown-item :active="!isCustomQueryMode" @click="isCustomQueryMode = false">Presets</b-dropdown-item>
-			<b-dropdown-item :active="isCustomQueryMode" @click="isCustomQueryMode = true">Custom query</b-dropdown-item>
-		</b-dropdown>
-	</template>
-</FormModal>
+	<hr />
+
+	<b-button-toolbar>
+		<b-button
+			@click="toggleIsCustom()"
+			:pressed="mapContext.overpassIsCustom"
+		>Custom query</b-button>
+	</b-button-toolbar>
+</div>

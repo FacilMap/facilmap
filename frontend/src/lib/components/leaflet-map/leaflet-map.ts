@@ -64,8 +64,9 @@ export interface MapContext extends EventBus {
 	fallbackQuery: HashQuery | undefined; // Updated by search-box
 	interaction: boolean;
 	loading: number;
+	overpassIsCustom: boolean;
 	overpassPresets: OverpassPreset[];
-	overpassCustom: string | undefined;
+	overpassCustom: string;
 	overpassMessage: string | undefined;
 }
 
@@ -109,13 +110,17 @@ export default class LeafletMap extends Vue {
 
 		// Bind these handlers before hashHandler may change the value
 		this.mapContext = {
+			overpassIsCustom: false,
 			overpassPresets: [],
-			overpassCustom: undefined,
+			overpassCustom: "",
 			loading: 0
 		} as any;
 		overpassLayer.on("setQuery", ({ query }: any) => {
-			this.mapContext.overpassPresets = query && Array.isArray(query) ? query : [];
-			this.mapContext.overpassCustom = query && typeof query == "string" ? query : undefined;
+			this.mapContext.overpassIsCustom = typeof query == "string";
+			if (this.mapContext.overpassIsCustom)
+				this.mapContext.overpassCustom = query && typeof query == "string" ? query : "";
+			else
+				this.mapContext.overpassPresets = Array.isArray(query) ? query : [];
 		});
 		overpassLayer.on("loadstart", () => {
 			this.mapContext.loading++;
@@ -169,6 +174,7 @@ export default class LeafletMap extends Vue {
 			fallbackQuery: undefined,
 			interaction: false,
 			loading: this.mapContext.loading,
+			overpassIsCustom: this.mapContext.overpassIsCustom,
 			overpassPresets: this.mapContext.overpassPresets,
 			overpassCustom: this.mapContext.overpassCustom,
 			overpassMessage: this.mapContext.overpassMessage,

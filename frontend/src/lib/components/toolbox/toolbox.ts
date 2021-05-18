@@ -21,11 +21,10 @@ import storage, { Bookmark } from "../../utils/storage";
 import ManageBookmarks from "../manage-bookmarks/manage-bookmarks";
 import OpenMap from "../open-map/open-map";
 import { Context } from "../facilmap/facilmap";
-import Overpass from "../overpass/overpass";
 
 @WithRender
 @Component({
-	components: { About, EditFilter, History, Icon, ManageBookmarks, ManageViews, ManageTypes, OpenMap, Overpass, PadSettings, SaveView, Sidebar }
+	components: { About, EditFilter, History, Icon, ManageBookmarks, ManageViews, ManageTypes, OpenMap, PadSettings, SaveView, Sidebar }
 })
 export default class Toolbox extends Vue {
 

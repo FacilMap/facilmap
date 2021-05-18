@@ -62,22 +62,6 @@
 			<b-dropdown-divider v-if="baseLayers.length > 0 && overlays.length > 0"></b-dropdown-divider>
 			<b-dropdown-item v-for="layerInfo in overlays" :active="layerInfo.active" href="javascript:" @click.native.capture.stop="toggleOverlay(layerInfo.key)">{{layerInfo.name}}</b-dropdown-item>
 			<b-dropdown-divider></b-dropdown-divider>
-			<b-dropdown-item
-				href="javascript:"
-				v-b-modal="`fm${context.id}-toolbox-overpass`"
-				v-b-toggle="`fm${context.id}-toolbox-sidebar`"
-			>
-				<div class="d-flex justify-content-between w-100">
-					Show POIs
-					<span>
-						<b-badge
-							v-if="mapContext.overpassPresets.length > 0 || mapContext.overpassCustom"
-							variant="primary"
-						>{{mapContext.overpassCustom ? 1 : mapContext.overpassPresets.length}}</b-badge>
-					</span>
-				</div>
-			</b-dropdown-item>
-			<b-dropdown-divider></b-dropdown-divider>
 			<b-dropdown-item :href="links.osm" target="_blank">Open this on OpenStreetMap</b-dropdown-item>
 			<b-dropdown-item :href="links.google" target="_blank">Open this on Google Maps</b-dropdown-item>
 			<b-dropdown-item :href="links.googleSatellite" target="_blank">Open this on Google Maps (Satellite)</b-dropdown-item>
@@ -112,5 +96,4 @@
 	<ManageTypes v-if="client.padData" :id="`fm${context.id}-toolbox-manage-types`"></ManageTypes>
 	<EditFilter v-if="client.padData" :id="`fm${context.id}-toolbox-edit-filter`"></EditFilter>
 	<History v-if="client.padData" :id="`fm${context.id}-toolbox-history`"></History>
-	<Overpass :id="`fm${context.id}-toolbox-overpass`"></Overpass>
 </div>

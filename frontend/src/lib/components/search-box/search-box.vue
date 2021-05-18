@@ -2,6 +2,7 @@
 	<b-tabs card align="center" v-model="tab" ref="tabsComponent" @changed="handleChanged" @activate-tab="handleActivateTab" no-fade>
 		<SearchFormTab v-if="context.search"></SearchFormTab>
 		<RouteFormTab v-if="context.search"></RouteFormTab>
+		<OverpassFormTab></OverpassFormTab>
 		<MarkerInfoTab></MarkerInfoTab>
 		<LineInfoTab></LineInfoTab>
 		<MultipleInfoTab></MultipleInfoTab>

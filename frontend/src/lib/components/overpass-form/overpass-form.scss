@@ -1,0 +1,17 @@
+.fm-overpass-form {
+	display: flex;
+	flex-direction: column;
+
+	.checkbox-grid {
+		column-width: 160px;
+	}
+
+	pre {
+		color: inherit;
+		font-size: inherit;
+	}
+
+	fieldset + hr, p + hr {
+		margin-top: 0;
+	}
+}
