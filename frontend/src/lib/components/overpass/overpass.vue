@@ -15,7 +15,7 @@
 			<b-form-checkbox
 				v-for="preset in filteredPresets"
 				:checked="preset.isChecked"
-				@input="togglePreset(preset.key)"
+				@input="togglePreset(preset.key, $event)"
 			>{{preset.label}}</b-form-checkbox>
 		</div>
 
@@ -31,7 +31,7 @@
 						<b-form-checkbox
 							v-for="preset in presets"
 							:checked="preset.isChecked"
-							@input="togglePreset(preset.key)"
+							@input="togglePreset(preset.key, $event)"
 						>{{preset.label}}</b-form-checkbox>
 					</div>
 				</template>

@@ -62,11 +62,11 @@ export default class Overpass extends Vue {
 		this.isCustomQueryMode = !!this.mapContext.overpassCustom;
 	}
 
-	togglePreset(key: string): void {
+	togglePreset(key: string, enable: boolean): void {
 		const idx = this.selectedPresets.indexOf(key);
-		if (idx == -1)
+		if (enable && idx == -1)
 			this.selectedPresets.push(key);
-		else
+		else if (!enable && idx != -1)
 			this.selectedPresets.splice(idx, 1);
 	}
 
