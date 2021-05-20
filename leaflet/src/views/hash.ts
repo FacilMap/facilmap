@@ -1,7 +1,7 @@
 import Client from 'facilmap-client';
 import { numberKeys } from 'facilmap-utils';
 import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
-import { isEqual } from 'lodash';
+import { debounce, isEqual } from 'lodash';
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
 import OverpassLayer from '../overpass/overpass-layer';
 import { getOverpassPresets, OverpassPreset } from '../overpass/overpass-presets';
@@ -68,7 +68,7 @@ export default class HashHandler extends Handler {
 		this.applyHash();
 	}
 
-	handleMapChange = (): void => {
+	handleMapChange = debounce((): void => {
 		if (this._isActive || !this._map._loaded)
 			return;
 
@@ -89,7 +89,7 @@ export default class HashHandler extends Handler {
 				}, "*");
 			}
 		}
-	};
+	});
 
 	/**
 	 * Read the hash from location.hash and update the map view.
