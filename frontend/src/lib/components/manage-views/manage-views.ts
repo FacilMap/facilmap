@@ -26,7 +26,7 @@ export default class ManageViews extends Vue {
 	}
 
 	display(view: View): void {
-		displayView(this.mapComponents.map, view);
+		displayView(this.mapComponents.map, view, { overpassLayer: this.mapComponents.overpassLayer });
 	};
 
 	async makeDefault(view: View): Promise<void> {

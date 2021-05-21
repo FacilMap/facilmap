@@ -3,6 +3,7 @@ export * from "./layers";
 export { default as OverpassLayer } from "./overpass/overpass-layer";
 export * from "./overpass/overpass-presets";
 export * from "./overpass/overpass-layer";
+export * from "./overpass/overpass-utils";
 export * from "./click-listener/click-listener";
 import "./filter/map-filter";
 export { default as LinesLayer } from "./lines/lines-layer";

@@ -29,13 +29,13 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 		baseLayers: {
 			Mpnk: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 				fmName: "Mapnik",
-				attribution: '© <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+				attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
 			/*MSfR: L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 				fmName: "MapSurfer Road",
-				attribution: '© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+				attribution: '© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			})*/
 

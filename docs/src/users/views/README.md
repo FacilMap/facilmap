@@ -6,7 +6,7 @@ Saved views represent a particular section of the map with a certain [map style]
 
 To save a view, you must have the map open through its [admin link](../collaborative/#urls). In the [toolbox](../ui/#toolbox), click “Views” and then “Save current view”.
 
-The view will persist the section of the map that you are currently viewing and the [map style](../layers/) (base layers and overlays) that is currently active. If a [filter](../filter) is currently active, you have the option to include that filter as part of the view or not.
+The view will persist the section of the map that you are currently viewing and the [map style](../layers/) (base layers and overlays) that is currently active. If some types of [POIs](../pois/) are currently loaded, you can include those in the view by checking the checkbox. If a [filter](../filter/) is currently active, there is another checkbox to include that filter as part of the view or not.
 
 Saving a view does not directly affect any other users who are looking at the map. Views have to be manually opened, or, in case of the [default view](#default-view), are opened when the user initially opens a map.
 

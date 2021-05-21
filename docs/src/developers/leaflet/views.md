@@ -7,7 +7,7 @@ A view object represents a view. Its shape is documented in the [Client API](../
 
 ## Current view
 
-`getCurrentView(map, includeFilter)` returns a view object that represents the current view of the map. If `includeFilter` is `true`, the current [filter](./filter.md) is included in the object (if there is one), otherwise it is omitted.
+`getCurrentView(map, { includeFilter })` returns a view object that represents the current view of the map. If `includeFilter` is `true`, the current [filter](./filter.md) is included in the object (if there is one), otherwise it is omitted.
 
 `isAtView(map, view)` returns a boolean that indicates whether the current map view is equal to the view represented by the specified view object. If the `view` object is omitted, the method will indicate whether the current map shows the fallback view (the whole world).
 
@@ -34,3 +34,12 @@ const map = L.map('map');
 const client = new Client("https://facilmap.org/", "myMapId");
 displayView(map, await getInitialView(this.client));
 ```
+
+
+## Overpass
+
+To persist the active query of an [Overpass layer](./overpass.md) as part of a saved view, pass the `overpassLayer` object to the various methods:
+* `getCurrentView(map, { overpassLayer })`
+* `isAtView(map, view, { overpassLayer })`
+* `displayView(map, view, { overpassLayer })`
+* `getInitialView(map, view, { overpassLayer })`

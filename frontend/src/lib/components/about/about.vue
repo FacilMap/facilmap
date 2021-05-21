@@ -11,10 +11,13 @@
 		</template>
 
 		<dt class="col-sm-3">Search</dt>
-		<dd class="col-sm-9"><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
+		<dd class="col-sm-9"><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
+
+		<dt class="col-sm-3">POIs</dt>
+		<dd class="col-sm-9"><a href="https://overpass-api.de/" target="_blank">Overpass API</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
 
 		<dt class="col-sm-3">Directions</dt>
-		<dd class="col-sm-9"><a href="https://www.mapbox.com/api-documentation/#directions">Mapbox Directions API</a> / <a href="https://openrouteservice.org/">OpenRouteService</a> / <a href="http://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
+		<dd class="col-sm-9"><a href="https://www.mapbox.com/api-documentation/#directions">Mapbox Directions API</a> / <a href="https://openrouteservice.org/">OpenRouteService</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a></dd>
 
 		<dt class="col-sm-3">GeoIP</dt>
 		<dd class="col-sm-9">This product includes GeoLite2 data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</dd>

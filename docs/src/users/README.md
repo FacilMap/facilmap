@@ -5,6 +5,7 @@ FacilMap is a privacy-friendly, open-source versatile online map that combines d
 * ([Overview over the UI elements](./ui/))
 * [Show different map styles](./layers/), for example maps optimized for driving, cycling, hiking or showing the topography or public transportation networks.
 * [Search for places](./search/)
+* [Show amenities and POIs](./pois/)
 * [Calculate a route](./route/), optionally showing the elevation profile.
 * [Find out what is at a particular point on the map](./click-marker/)
 * [Open geographic files](./files/), for example GPX, KML or GeoJSON files

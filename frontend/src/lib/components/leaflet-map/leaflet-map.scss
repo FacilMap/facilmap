@@ -104,8 +104,22 @@
 	.fm-overpass-message {
 		position: absolute;
 		top: 10px;
-		left: 50%;
-		transform: translateX(-50%);
+		right: 50%;
+		transform: translateX(50%);
+		max-width: calc(100vw - 1050px);
+	}
+
+	&.isNarrow .fm-overpass-message {
+		max-width: none;
+	}
+
+	@media(max-width: 1250px) {
+		&:not(.isNarrow) .fm-overpass-message {
+			top: 69px;
+			right: 10px;
+			transform: none;
+			max-width: 400px;
+		}
 	}
 
 	.fm-leaflet-map-spinner {

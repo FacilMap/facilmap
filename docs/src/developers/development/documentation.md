@@ -16,7 +16,7 @@ To build the documentation, run `yarn run build`. This will create static HTML f
 
 In the documentation, more complex user interactions are illustrated by screencasts. Since the UI looks somewhat different on big screens than on small screens and works somewhat differently on touch devices than on mouse devices, two recordings of the same interaction are shown next to each other, one representing a desktop computer and one representing a smartphone.
 
-The desktop video should have dimensions of 1024×768 pixels and the smartphone video 320×480 pixels. Both should be recorded with 15 fps and in MP4 format with a sensible framerate (the FFMPEG default bitrate has been used so far, using `ffmpeg -i recording_raw.mp4 -o recording.mp4`).
+The desktop video should have dimensions of 1024×768 pixels and the smartphone video 320×480 pixels. Both should be recorded with 15 fps and in MP4 format with a sensible framerate (the FFMPEG default bitrate has been used so far, using `ffmpeg -i recording_raw.mp4 recording.mp4`).
 
 The existing recordings were created using [SimpleScreenRecorder](https://www.maartenbaert.be/simplescreenrecorder/). Chromium shows the dimensions of the viewport when the dev tools are open, which makes it easier to adjust it to the right size. For the mobile recordings, Chromium was configured to simulate an iPhone 4.
 

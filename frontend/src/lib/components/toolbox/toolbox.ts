@@ -108,7 +108,7 @@ export default class Toolbox extends Vue {
 	}
 
 	displayView(view: View): void {
-		displayView(this.mapComponents.map, view);
+		displayView(this.mapComponents.map, view, { overpassLayer: this.mapComponents.overpassLayer });
 	}
 
 	setBaseLayer(key: string): void {

@@ -28,7 +28,7 @@ The different components of the long format have the following meaning:
 * **zoom:** The zoom level of the map, minimum `0`, maximum `18` (might be higher or lower depending on the layers)
 * **latitude:** The latitude of the center of the map, minimum `-90`, maximum `90`
 * **longitude:** The longitude of the center of the map
-* **layers:** Each layer is identified by a four-character key. If overlays are enabled, they are appended with a `-`. For example `Mpnk` for only Mapnik or `Mpnk-Rlie-grid` for Mapnik, Relief and Graticule.
+* **layers:** Each layer is identified by a four-character key. If overlays are enabled, they are appended with a `-`. For example `Mpnk` for only Mapnik or `Mpnk-Rlie-grid` for Mapnik, Relief and Graticule. If any [POIs](../pois/) are enabled, they are added to the overlay list with a dynamic key starting with `o_` (presets) or `O_` (custom query), for example `Mpnk-Rlie-grid-o_parking_recycling` for Mapnik, Relief, Graticule, parking places and recycling bins.
 * **search term:** Can be one of the following:
 	* The name of a place. Will show all results for this search term.
 	* The ID of a specific search result in the form `n123`, `w123`, `r123` (representing its corresponding OpenStreetMap node, way or relation ID)

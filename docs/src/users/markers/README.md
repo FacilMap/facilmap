@@ -14,7 +14,7 @@ The new marker is called “Untitled marker”, has the default style and no des
 
 ## Add a search result as a marker
 
-An alternative way to add a marker is to add a [search result](../search/), a marker from an [opened geographic file](../files/) or a [map point](../click-marker/) as a marker to the collaborative map.
+An alternative way to add a marker is to add a [search result](../search/), a [POI](../pois/), a marker from an [opened geographic file](../files/) or a [map point](../click-marker/) as a marker to the collaborative map.
 
 In the search box tab of that object, click on “Add to map” and then “Marker”. The marker will be created with the name of the result. If the marker is a [custom type](../types/), a mapping from the result info to the marker data is attempted, for example if the marker has a field “Address”, it will be filled with the address of the result.
 

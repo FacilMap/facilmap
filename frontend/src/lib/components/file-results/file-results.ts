@@ -49,7 +49,7 @@ export default class FileResults extends Vue {
 	};
 
 	showView(view: ViewImport): void {
-		displayView(this.mapComponents.map, view);
+		displayView(this.mapComponents.map, view, { overpassLayer: this.mapComponents.overpassLayer });
 	};
 
 	async addView(view: ViewImport): Promise<void> {

@@ -44,6 +44,7 @@ module.exports = {
 						"ui/",
 						"layers/",
 						"search/",
+						"pois/",
 						"route/",
 						"click-marker/",
 						"files/",

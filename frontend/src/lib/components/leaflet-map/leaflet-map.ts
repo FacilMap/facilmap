@@ -3,7 +3,7 @@ import Vue from "vue";
 import { Component, ProvideReactive, Ref, Watch } from "vue-property-decorator";
 import "./leaflet-map.scss";
 import { Client, InjectClient, InjectContext, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
-import L, { LatLng, Map } from "leaflet";
+import L, { LatLng, LatLngBounds, Map } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery, OverpassLayer, OverpassPreset, OverpassLoadStatus } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
@@ -55,6 +55,7 @@ export interface MapComponents {
 export interface MapContext extends EventBus {
 	center: LatLng;
 	zoom: number;
+	bounds: LatLngBounds;
 	layers: VisibleLayers;
 	filter: string | undefined;
 	filterFunc: FilterFunc;
@@ -153,10 +154,10 @@ export default class LeafletMap extends Vue {
 			if (!map._loaded) {
 				try {
 					// Initial view was not set by hash handler
-					displayView(map, await getInitialView(this.client));
+					displayView(map, await getInitialView(this.client), { overpassLayer });
 				} catch (error) {
 					console.error(error);
-					displayView(map);
+					displayView(map, undefined, { overpassLayer });
 				}
 			}
 			this.loaded = true;
@@ -165,6 +166,7 @@ export default class LeafletMap extends Vue {
 		this.mapContext = {
 			center: map._loaded ? map.getCenter() : L.latLng(0, 0),
 			zoom: map._loaded ? map.getZoom() : 1,
+			bounds: map._loaded ? map.getBounds() : L.latLngBounds([0, 0], [0, 0]),
 			layers: getVisibleLayers(map),
 			filter: map.fmFilter,
 			filterFunc: map.fmFilterFunc,
@@ -184,6 +186,7 @@ export default class LeafletMap extends Vue {
 		map.on("moveend", () => {
 			this.mapContext.center = map.getCenter();
 			this.mapContext.zoom = map.getZoom();
+			this.mapContext.bounds = map.getBounds();
 		});
 
 		map.on("fmFilter", () => {

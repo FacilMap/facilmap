@@ -81,12 +81,14 @@ export default class OverpassForm extends Vue {
 			this.customQueryValidationState = null;
 			this.customQueryValidationError = null;
 		} else {
-			this.customQueryAbortController = new AbortController();
+			const abortController = new AbortController();
+			this.customQueryAbortController = abortController;
 			const result = await validateOverpassQuery(query, this.customQueryAbortController.signal);
-			if (!this.customQueryAbortController.signal.aborted) {
+			if (!abortController.signal.aborted) {
 				this.customQueryValidationState = !result;
 				this.customQueryValidationError = result ?? null;
-			}
+			} else
+				return;
 		}
 
 		if (this.customQueryValidationState !== false)

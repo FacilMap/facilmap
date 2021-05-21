@@ -4,7 +4,7 @@ import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
 import { debounce, isEqual } from 'lodash';
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
 import OverpassLayer from '../overpass/overpass-layer';
-import { getOverpassPresets, OverpassPreset } from '../overpass/overpass-presets';
+import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from '../overpass/overpass-utils';
 import { pointsEqual } from '../utils/leaflet';
 import { decodeLegacyHash } from './legacyHash';
 import { displayView, isAtView } from './views';
@@ -106,7 +106,7 @@ export default class HashHandler extends Handler {
 
 			const viewMatch = hash.match(/^q=v(\d+)$/i);
 			if(viewMatch && this.client.views[viewMatch[1] as any]) {
-				displayView(this._map, this.client.views[viewMatch[1] as any]);
+				displayView(this._map, this.client.views[viewMatch[1] as any], { overpassLayer: this.options.overpassLayer });
 				return;
 			}
 
@@ -126,16 +126,8 @@ export default class HashHandler extends Handler {
 				setVisibleLayers(this._map, { baseLayer: layers[0], overlays: layers.slice(1).filter((layer) => !layer.startsWith("O_") && !layer.startsWith("o_")) });
 			}
 
-			if (this.options.overpassLayer) {
-				let query: string | OverpassPreset[] | undefined = undefined;
-				for (const layer of layers) {
-					if (layer.startsWith("o_"))
-						query = getOverpassPresets(layer.substr(2).split("_"));
-					else if (layer.startsWith("O_"))
-						query = atob(layer.substr(2)).replace(/\./g, '+').replace(/_/g, '/');
-				}
-				this.options.overpassLayer.setQuery(query);
-			}
+			if (this.options.overpassLayer)
+				this.options.overpassLayer.setQuery(decodeOverpassQuery(layers.find((l) => isEncodedOverpassQuery(l))));
 
 			this.fire("fmQueryChange", { query: args[4], zoom: args[0] == null });
 
@@ -164,13 +156,8 @@ export default class HashHandler extends Handler {
 		const visibleLayers = getVisibleLayers(this._map);
 		const layerKeys = [visibleLayers.baseLayer, ...visibleLayers.overlays];
 
-		if (this.options.overpassLayer && !this.options.overpassLayer.isEmpty()) {
-			const query = this.options.overpassLayer.getQuery()!;
-			if (typeof query == "string")
-				layerKeys.push(`O_${btoa(query).replace(/\+/g, '.').replace(/\//g, '_').replace(/=+$/g, '')}`);
-			else
-				layerKeys.push(`o_${query.map((q) => q.key).join("_")}`);
-		}
+		if (this.options.overpassLayer && !this.options.overpassLayer.isEmpty())
+			layerKeys.push(encodeOverpassQuery(this.options.overpassLayer.getQuery())!);
 
 		const additionalParts = [ layerKeys.join("-") ];
 
@@ -189,11 +176,11 @@ export default class HashHandler extends Handler {
 		} else if(!this.activeQuery) {
 			// Check if we have a saved view open
 			const defaultView = (this.client.padData && this.client.padData.defaultViewId && this.client.views[this.client.padData.defaultViewId]);
-			if(isAtView(this._map, defaultView || undefined))
+			if(isAtView(this._map, defaultView || undefined, { overpassLayer: this.options.overpassLayer }))
 				result = "";
 			else {
 				for(const viewId of numberKeys(this.client.views)) {
-					if(isAtView(this._map, this.client.views[viewId])) {
+					if(isAtView(this._map, this.client.views[viewId], { overpassLayer: this.options.overpassLayer })) {
 						result = `q=v${encodeURIComponent(viewId)}`;
 						break;
 					}

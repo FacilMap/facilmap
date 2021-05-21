@@ -28,7 +28,7 @@ To add an additional destination, click on the plus icon in the bottom left of t
 
 If you would like to use a specific point on the map as a route destination, you can use the [Map point information](../click-marker/) feature. By pressing a point on the map and holding the mouse/finger there for a second, a new tab opens in the search box with information about what can be found at that point. You can use the “Use as” dropdown menu to use the point as the route start, route destination or to add a new intermediate destination.
 
-You can also use [search results](../search/#show-result-details), [points from an opened file](../files/#show-details) and [markers](../markers/) (on a [collaborative map](../collaborative/)) as route destinations through their own “Use as” menu.
+You can also use [search results](../search/#show-result-details), [POIs](../pois/#show-details), [points from an opened file](../files/#show-details) and [markers](../markers/) (on a [collaborative map](../collaborative/)) as route destinations through their own “Use as” menu.
 
 <Screencast :desktop="require('./click-marker.mp4')" :mobile="require('./click-marker-mobile.mp4')"></Screencast>
 
@@ -46,7 +46,7 @@ To make it more clear which part of the route you are dragging, when you hover a
 
 ## Route modes
 
-The icons at the bottom of the route form can be used to change the means of transportation for which the route should be calculated. Other than driving, cycling and walking there is also a straight line option (useful to calculate the direct distance between two points). 
+The icons at the bottom of the route form can be used to change the means of transportation for which the route should be calculated. Other than driving, cycling and walking there is also a straight line option (useful to calculate the direct distance between two points).
 
 Clicking the cog icon opens a menu where some more specific route modes (for example road bike, mountain bike, electric bike) and some additional settings are available.
 
