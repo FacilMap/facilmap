@@ -105,7 +105,14 @@ export class ClientProvider extends Vue {
 			return;
 		}
 
-		this.$bvToast.hide(`fm${this.context.id}-client-connecting`);
+		// Bootstrap-Vue uses animation frames to show the connecting toast. If the map is loading in a background tab, the toast might not be shown
+		// yet when we are trying to hide it, so the hide operation is skipped and once the loading toast is shown, it stays forever.
+		// We need to wait for two animation frames to make sure that the toast is shown.
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				this.$bvToast.hide(`fm${this.context.id}-client-connecting`);
+			});
+		});
 
 		if (client.serverError?.message?.includes("does not exist") && this.context.interactive) {
 			this.createId = client.padId!;
