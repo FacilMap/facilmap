@@ -25,7 +25,8 @@ export default class HashHandler extends Handler {
 	options: HashHandlerOptions;
 	client: Client<any>;
 	activeQuery?: HashQuery;
-	_isActive = false;
+	_isApplyingHash = false;
+	_lastHash: string | undefined = undefined;
 
 	constructor(map: Map, client: Client<any>, options?: HashHandlerOptions) {
 		super(map);
@@ -62,24 +63,25 @@ export default class HashHandler extends Handler {
 	}
 
 	handleHashChange = (): void => {
-		if (this._isActive)
+		let hash = location.hash;
+		if(hash.indexOf('#') === 0)
+			hash = hash.substr(1);
+
+		if (this._lastHash != null && hash == this._lastHash)
 			return;
 
-		this.applyHash();
+		this.applyHash(hash);
 	}
 
 	handleMapChange = debounce((): void => {
-		if (this._isActive || !this._map._loaded)
+		if (this._isApplyingHash || !this._map._loaded)
 			return;
 
 		const hash = this.getHash();
 		this.fireEvent("fmHash", { hash });
 
 		if (!this.options.simulate && location.hash != `#${hash}`) {
-			this._isActive = true;
-			setTimeout(() => {
-				this._isActive = false;
-			}, 0);
+			this._lastHash = hash;
 			location.replace(`#${hash}`);
 
 			if(parent !== window) {
@@ -94,14 +96,10 @@ export default class HashHandler extends Handler {
 	/**
 	 * Read the hash from location.hash and update the map view.
 	 */
-	applyHash(hash = location.hash): void {
-		this._isActive = true;
+	applyHash(hash: string): void {
+		this._isApplyingHash = true;
 
 		try {
-			if(hash.indexOf('#') === 0) {
-				hash = hash.substr(1);
-			}
-
 			this.fireEvent("fmHash", { hash });
 
 			const viewMatch = hash.match(/^q=v(\d+)$/i);
@@ -118,8 +116,6 @@ export default class HashHandler extends Handler {
 
 			if (args.length < 3)
 				return;
-
-			// This gets called just in L.Hash.update(), so we can already add/remove the layers here
 
 			const layers = args[3]?.split("-");
 			if(layers && layers.length > 0) {
@@ -139,7 +135,7 @@ export default class HashHandler extends Handler {
 			if (!isNaN(lat) && !isNaN(lon) && !isNaN(zoom))
 				this._map.setView(latLng(lat, lon), zoom, { animate: false });
 		} finally {
-			this._isActive = false;
+			this._isApplyingHash = false;
 
 			this.handleMapChange();
 		}
