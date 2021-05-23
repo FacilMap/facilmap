@@ -8,6 +8,7 @@ The following information is stored in the location hash:
 * The coordinates of the centre of the part of the map that you are currently viewing
 * The current zoom level
 * The current [map style](../layers/) (base layer and overlays)
+* The current [POIs](../pois/) (if any)
 * One of the following (depending which is active):
 	* The selected [search](../search/) result, or the search term if none is selected
 	* The [route](../route/)
