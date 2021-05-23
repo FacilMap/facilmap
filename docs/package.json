@@ -16,7 +16,7 @@
   },
   "private": true,
   "devDependencies": {
-    "markdown-it-footnote": "^3.0.2",
+    "markdown-it-footnote": "^3.0.3",
     "rimraf": "^3.0.2",
     "vuepress": "^1.5.3",
     "vuepress-plugin-check-md": "^0.0.2"

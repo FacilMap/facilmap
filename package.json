@@ -15,10 +15,10 @@
     "build": "yarn workspaces run build"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.15.2",
-    "@typescript-eslint/parser": "^4.15.2",
-    "eslint": "^7.21.0",
-    "eslint-plugin-import": "^2.22.1"
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
+    "eslint": "^7.27.0",
+    "eslint-plugin-import": "^2.23.3"
   },
   "version": "0.0.0"
 }
