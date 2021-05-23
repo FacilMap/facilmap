@@ -42,6 +42,7 @@ export default class SearchFormTab extends Vue {
 	handleSetQuery(query: string, zoom = false, smooth = true): void {
 		this.searchForm.setSearchString(query);
 		this.searchForm.search(zoom, undefined, smooth);
+		this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-search-form-tab`);
 	}
 
 }

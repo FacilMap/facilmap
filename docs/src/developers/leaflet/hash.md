@@ -101,6 +101,27 @@ hashHandler.on("fmQueryChange", (event) => {
 });
 ```
 
+## Manual binding
+
+Setting the `simulate` option to `true` will disable the two-way binding between the location hash and the map view. You can use this to set up your own binding using the following features:
+* `hashHandler.getHash()` will return a hash string (without leading `#`) representing the current map view.
+* `hashHandler.applyHash(hash)` will set the map view to the one represented by the given hash string (without leading `#`).
+* The hash handler will emit an `fmHash` event whenever the map view changes. The event object contains a `hash` property containing a hash string (without leading `#`) representing the current map view.
+
+Example setting up a two-way binding between a text field and the map view:
+```javascript
+const hashHandler = new HashHandler(map, client, { simulate: true }).enable();
+hashHandler.on("fmHash", (e) => {
+	hashInput.value = e.hash;
+});
+
+const hashInput = document.getElementById("#hash-input");
+hashInput.value = hashHandler.getHash();
+hashInput.addEventListener("change", () => {
+	hashHandler.applyHash(hashInput.value);
+});
+```
+
 ## Options
 
 The third argument to the `HashHandler` constructor can be an object with some of the following properties:

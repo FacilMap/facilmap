@@ -247,9 +247,6 @@ export default class LeafletMap extends Vue {
 	}
 
 	async handleNewHashQuery(e: any): Promise<void> {
-		if (!e.query)
-			return;
-
 		let smooth = true;
 		if (!this.mapComponents) {
 			// This is called while the hash handler is being enabled, so it is the initial view
@@ -257,7 +254,9 @@ export default class LeafletMap extends Vue {
 			await new Promise((resolve) => { setTimeout(resolve); });
 		}
 
-		if (!await openSpecialQuery(e.query, this.context, this.client, this.mapComponents, this.mapContext, e.zoom, smooth))
+		if (!e.query)
+			this.mapContext.$emit("fm-search-set-query", "", false, false);
+		else if (!await openSpecialQuery(e.query, this.context, this.client, this.mapComponents, this.mapContext, e.zoom, smooth))
 			this.mapContext.$emit("fm-search-set-query", e.query, e.zoom, smooth);
 	}
 
