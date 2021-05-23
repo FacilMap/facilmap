@@ -47,7 +47,7 @@
     "facilmap-utils": "3.2.0",
     "filtrex": "^2.1.0",
     "leaflet-auto-graticule": "^1.0.9",
-    "leaflet-draggable-lines": "^1.0.9",
+    "leaflet-draggable-lines": "^1.0.11",
     "leaflet-freie-tonne": "^1.0.5",
     "leaflet-highlightable-layers": "^1.0.9",
     "leaflet.markercluster": "^1.5.0",

@@ -51,7 +51,7 @@
     "jquery": "^3.6.0",
     "jquery-ui": "^1.12.1",
     "leaflet": "^1.7.1",
-    "leaflet-draggable-lines": "^1.0.9",
+    "leaflet-draggable-lines": "^1.0.11",
     "leaflet-graphicscale": "^0.0.2",
     "leaflet-mouse-position": "^1.0.4",
     "leaflet.heightgraph": "^1.4.0",

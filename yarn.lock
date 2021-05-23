@@ -5486,10 +5486,10 @@ leaflet-auto-graticule@^1.0.9:
   resolved "https://registry.yarnpkg.com/leaflet-auto-graticule/-/leaflet-auto-graticule-1.0.9.tgz#e51469b26986b03faae03c50d49a3e1c1139cc13"
   integrity sha512-mfl2NEHx4zXjCJLGMYLdlRoZUvsc8niOVPBeXScvKvM2DDPTUHm/SHDgpTa+klHocOUZgarG9FIaPCVVi9sMuQ==
 
-leaflet-draggable-lines@^1.0.9:
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/leaflet-draggable-lines/-/leaflet-draggable-lines-1.0.10.tgz#5e03a21699f17931d5da9e5d4656ff55823adad6"
-  integrity sha512-p8Xxc5whEbq32cmEztPJa+nHGbYB3Ugz738Y4B2Wo6c05fFnb8NfCD57OGq1VqKnxj8VTzaye3taDU0VZqbeeg==
+leaflet-draggable-lines@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/leaflet-draggable-lines/-/leaflet-draggable-lines-1.0.11.tgz#8431970c1540b2633d71fb85a222965613ca5bf0"
+  integrity sha512-JzFz1EyHoSodfZjaYAKLHpQQZMVUEheRLBoR7aaWGdjz3fYfi5oPV+0LIkLpkRiQUDmVoJwjamxElnACE9xaWQ==
   dependencies:
     leaflet-geometryutil "^0.10.0"
 
