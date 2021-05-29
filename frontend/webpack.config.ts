@@ -136,6 +136,7 @@ module.exports = (env: any, argv: any): Configuration[] => {
 						"favicon.ico",
 						"favicon.svg",
 						"manifest.json",
+						"sw.js",
 						"opensearch.xml"
 					].map((file) => ({ from: `${__dirname}/static/${file}` }))
 				}),

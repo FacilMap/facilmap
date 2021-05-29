@@ -44,6 +44,9 @@ $(document).on("click", "a", function() {
 	}
 });
 
+if ('serviceWorker' in navigator)
+	navigator.serviceWorker.register('./sw.js');
+
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
 
