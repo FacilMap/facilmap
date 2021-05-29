@@ -47,7 +47,7 @@ If you want to close a collaborative map and go back to the basic FacilMap, clic
 
 While you can simply add a bookmark in your browser to remember the link to a specific map, FacilMap also brings its own bookmark function.
 
-To bookmark a particular map, open that map and then click “Collaborative maps” and then “Bookmark …” (where “…” is the name of the open map) in the [toolbox](../ui/#toolbox). This will add the map as a new item to the “Collaborative maps” menu. Bookmarks are stored in your browser, so they are not visible to anyone else, but they may get removed if you clean up your browser history.
+To bookmark a particular map, open that map and then click “Collaborative maps” and then “Bookmark …” (where “…” is the name of the open map) in the [toolbox](../ui/#toolbox). This will add the map as a new item to the “Collaborative maps” menu. Bookmarks are stored in your browser, so they are not visible to anyone else. When bookmarking a map for the first time, your browser might ask you to allow FacilMap to store data in the persistent storage. Allowing this will make sure that your bookmarks are not removed when your system runs low in disk space or when you clear your browser history.
 
 To reorder, rename or remove bookmarks, click “Manage bookmarks” (only visible if you have any bookmarks).
 
