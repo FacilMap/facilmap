@@ -1,8 +1,8 @@
 import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
 import Database from "./database";
-import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
-import { isEqual, mapValues } from "lodash";
+import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
+import { groupBy, isEqual, mapValues, omit } from "lodash";
 import { wrapAsync } from "../utils/streams";
 import { calculateRouteForLine } from "../routing/routing";
 
@@ -118,8 +118,9 @@ export default class DatabaseLines {
 		});
 
 		this.LinePointModel.init({
-			lat: getLatType(),
-			lon: getLonType(),
+			lat: getVirtualLatType(),
+			lon: getVirtualLonType(),
+			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			ele: { type: DataTypes.INTEGER, allowNull: true }
@@ -127,6 +128,7 @@ export default class DatabaseLines {
 			sequelize: this._db._conn,
 			indexes: [
 				{ fields: [ "lineId", "zoom" ] }
+				// pos index is created in migration
 			],
 			modelName: "LinePoint"
 		});
@@ -252,7 +254,7 @@ export default class DatabaseLines {
 
 		const create = [ ];
 		for(let i=0; i<trackPoints.length; i++) {
-			create.push(Object.assign(JSON.parse(JSON.stringify(trackPoints[i])), { lineId: lineId }));
+			create.push({ ...trackPoints[i], lineId: lineId });
 		}
 
 		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
@@ -269,31 +271,33 @@ export default class DatabaseLines {
 	}
 
 	getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): Highland.Stream<{ id: ID; trackPoints: TrackPoint[] }> {
-		return this._db.helpers._toStream(async () => {
-			const results = await this.LineModel.findAll({
-				attributes: ["id"],
-				where: {
-					[Op.and]: [
-						{
-							padId,
-							"$LinePoints.zoom$": { [Op.lte]: bboxWithZoom.zoom }
-						},
-						makeBboxCondition(bboxWithZoom, "$LinePoints.", "$")
-					]
-				},
-				include: this.LinePointModel
-			});
+		return this._db.helpers._toStream(async () => await this.LineModel.findAll({ attributes: ["id"], where: { padId } }))
+			.map((line) => line.id)
+			.batch(50000)
+			.flatMap(wrapAsync(async (lineIds) => {
+				const linePoints = await this.LinePointModel.findAll({
+					where: {
+						[Op.and]: [
+							{
+								zoom: { [Op.lte]: bboxWithZoom.zoom },
+								lineId: { [Op.in]: lineIds }
+							},
+							makeBboxCondition(bboxWithZoom)
+						]
+					},
+					attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
+				});
 
-			return results.map((res) => {
-				const val = res.toJSON() as any;
-				return { id: val.id, trackPoints: val.LinePoints };
-			});
-		});
+				return Object.entries(groupBy(linePoints, "lineId")).map(([key, val]) => ({
+					id: Number(key),
+					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId"]))
+				}));
+			})).flatten();
 	}
 
 	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {
 		const points = await this.LineModel.build({ id: lineId }).getLinePoints({
-			attributes: [ "lat", "lon", "ele", "zoom", "idx" ],
+			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]]
 		});
 		return points.map((point) => point.toJSON() as TrackPoint);

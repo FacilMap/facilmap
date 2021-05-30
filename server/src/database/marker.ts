@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
-import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
+import { BboxWithExcept, dataDefinition, DataModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
 import Database from "./database";
 import { getElevationForPoint } from "../elevation";
 
@@ -37,8 +37,9 @@ export default class DatabaseMarkers {
 		this._db = database;
 
 		this.MarkerModel.init({
-			"lat" : getLatType(),
-			"lon" : getLonType(),
+			lat: getVirtualLatType(),
+			lon: getVirtualLonType(),
+			pos: getPosType(),
 			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: MarkerModel) { return this.getDataValue("name") || "Untitled marker"; } },
 			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
@@ -47,6 +48,7 @@ export default class DatabaseMarkers {
 			ele: { type: DataTypes.INTEGER, allowNull: true }
 		}, {
 			sequelize: this._db._conn,
+			// pos index is created in migration
 			modelName: "Marker"
 		});
 
@@ -97,7 +99,7 @@ export default class DatabaseMarkers {
 
 		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, data);
 
-		await this._db.helpers._updateObjectStyles(result)
+		await this._db.helpers._updateObjectStyles(result);
 
 		this._db.emit("marker", padId, result);
 		return result;

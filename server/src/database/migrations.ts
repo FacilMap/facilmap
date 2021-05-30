@@ -1,6 +1,6 @@
 import { clone, generateRandomId, promiseProps } from "../utils/utils";
 import { streamEachPromise } from "../utils/streams";
-import Sequelize from "sequelize";
+import Sequelize, { DataTypes } from "sequelize";
 import { isEqual } from "lodash";
 import Database from "./database";
 import { PadModel } from "./pad";
@@ -26,6 +26,7 @@ export default class DatabaseMigrations {
 		await this._elevationMigration();
 		await this._legendMigration();
 		await this._bboxMigration();
+		await this._spatialMigration();
 	}
 
 
@@ -89,12 +90,16 @@ export default class DatabaseMigrations {
 	/** Add all missing columns */
 	async _addColMigrations(): Promise<void> {
 		const queryInterface = this._db._conn.getQueryInterface();
+		const exempt = [
+			// These are added in another migration below
+			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
+		];
 
 		for (const table of [ 'Pad', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
 			const model = this._db._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			for(const attribute in model.rawAttributes) {
-				if(!attributes[attribute])
+				if((model.rawAttributes[attribute].type as any).key !== DataTypes.VIRTUAL.key && !attributes[attribute] && !exempt.some((e) => e[0] == table && e[1] == attribute))
 					await queryInterface.addColumn(model.getTableName(), attribute, model.rawAttributes[attribute]);
 			}
 		}
@@ -224,6 +229,36 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("hasBboxes", "1");
+	}
+
+
+	/** Change lat/lon types into spatial points */
+	async _spatialMigration(): Promise<void> {
+		const queryInterface = this._db._conn.getQueryInterface();
+
+		for (const modelName of ["Marker", "LinePoint", "RoutePoint"]) {
+			// Add 'pos' column
+			const model = this._db._conn.model(modelName);
+			const table = model.getTableName() as string;
+			const attrs = await queryInterface.describeTable(table);
+			if(!attrs.pos) {
+				await queryInterface.addColumn(table, 'pos', {
+					...model.rawAttributes.pos,
+					allowNull: true
+				});
+				await queryInterface.bulkUpdate(table, {
+					pos: Sequelize.fn("POINT", Sequelize.col("lon"), Sequelize.col("lat"))
+				}, {});
+				await queryInterface.changeColumn(table, 'pos', model.rawAttributes.pos);
+				await queryInterface.removeColumn(table, 'lat');
+				await queryInterface.removeColumn(table, 'lon');
+			}
+
+			// We create the index here even in a non-migration case, because adding it to the model definition will cause an error if the column does not exist yet.
+			const indexes: any = await queryInterface.showIndex(table);
+			if (!indexes.some((index: any) => index.name == (Sequelize.Utils as any).underscore(`${table}_pos`)))
+				await queryInterface.addIndex(table, { fields: ["pos"], type: "SPATIAL" });
+		}
 	}
 
 }

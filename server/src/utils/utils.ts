@@ -138,7 +138,7 @@ function getFuncParams(func: Function) {
 }
 
 export function clone<T>(obj: T): T {
-	return JSON.parse(JSON.stringify(obj));
+	return obj == null ? obj : JSON.parse(JSON.stringify(obj));
 }
 
 export function throttle<A extends any[], R>(func: (...args: A) => Promise<R>, parallel = 1): (...args: A) => Promise<R> {

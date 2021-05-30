@@ -23,7 +23,7 @@ export default class DatabaseSearch {
 					{ padId },
 					Sequelize.where(Sequelize.fn("lower", Sequelize.col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 				),
-				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "lat", "lon", "symbol" ] : [ "top", "left", "bottom", "right" ])
+				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "symbol" ] : [ "top", "left", "bottom", "right" ])
 			});
 
 			return objs.map((obj) => ({

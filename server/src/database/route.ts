@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils";
 import { DataTypes, Model, Op } from "sequelize";
 import Database from "./database";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, getLatType, getLonType, makeBboxCondition } from "./helpers";
+import { BboxWithExcept, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers";
 import { WhereOptions } from "sequelize/types/lib/model";
 import { calculateRouteForLine } from "../routing/routing";
 
@@ -35,8 +35,9 @@ export default class DatabaseRoutes {
 
 		this.RoutePointModel.init({
 			routeId: { type: DataTypes.STRING, allowNull: false },
-			lat: getLatType(),
-			lon: getLonType(),
+			lat: getVirtualLatType(),
+			lon: getVirtualLonType(),
+			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			ele: { type: DataTypes.INTEGER, allowNull: true }
@@ -44,6 +45,7 @@ export default class DatabaseRoutes {
 			sequelize: this._db._conn,
 			indexes: [
 				{ fields: [ "routeId", "zoom" ] }
+				// pos index is created in migration
 			],
 			modelName: "RoutePoint"
 		});
@@ -64,7 +66,7 @@ export default class DatabaseRoutes {
 
 		return (await this.RoutePointModel.findAll({
 			where: cond,
-			attributes: [ "lon", "lat", "idx", "ele"],
+			attributes: [ "pos", "lat", "lon", "idx", "ele"],
 			order: [[ "idx", "ASC" ]]
 		})).map((point) => point.toJSON());
 	}
@@ -194,7 +196,7 @@ export default class DatabaseRoutes {
 	async getRoutePointsByIdx(routeId: string, indexes: number[]): Promise<TrackPoint[]> {
 		const data = await this.RoutePointModel.findAll({
 			where: { routeId, idx: indexes },
-			attributes: [ "lon", "lat", "idx", "ele" ],
+			attributes: [ "pos", "lat", "lon", "idx", "ele" ],
 			order: [[ "idx", "ASC" ]]
 		});
 		return data.map((d) => d.toJSON());
@@ -203,7 +205,7 @@ export default class DatabaseRoutes {
 	async getAllRoutePoints(routeId: string): Promise<TrackPoint[]> {
 		const data = await this.RoutePointModel.findAll({
 			where: {routeId},
-			attributes: [ "lon", "lat", "idx", "ele", "zoom"]
+			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
 		});
 		return data.map((d) => d.toJSON());
 	}

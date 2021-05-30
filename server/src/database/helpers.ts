@@ -1,13 +1,51 @@
 import highland from "highland";
 import { streamEachPromise } from "../utils/streams";
 import { clone } from "../utils/utils";
-import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op } from "sequelize";
+import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
 import Database from "./database";
 import { isEqual } from "lodash";
 import { calculateRouteForLine } from "../routing/routing";
 
 const ITEMS_PER_BATCH = 5000;
+
+export function getVirtualLatType(): ModelAttributeColumnOptions {
+	return {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return this.getDataValue("pos")?.coordinates[1];
+		},
+		set(val: number) {
+			const point = clone(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
+			point.coordinates[1] = val;
+			this.setDataValue("pos", point);
+		}
+	};
+}
+
+export function getVirtualLonType(): ModelAttributeColumnOptions {
+	return {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return this.getDataValue("pos")?.coordinates[0];
+		},
+		set(val: number) {
+			const point = clone(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
+			point.coordinates[0] = val;
+			this.setDataValue("pos", point);
+		}
+	};
+}
+
+export function getPosType(): ModelAttributeColumnOptions {
+	return {
+		type: DataTypes.GEOMETRY('POINT', 4326),
+		allowNull: false,
+		get() {
+			return undefined;
+		}
+	};
+}
 
 export function getLatType(): ModelAttributeColumnOptions {
 	return {
@@ -57,51 +95,26 @@ export interface BboxWithExcept extends Bbox {
 	except?: Bbox;
 }
 
-export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, prefix = "", suffix = ""): WhereOptions {
+export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, posField = "pos"): WhereOptions {
 	if(!bbox)
 		return { };
 
 	const conditions = [ ];
-	conditions.push({
-		[prefix + "lat" + suffix]: { [Op.lte]: bbox.top, [Op.gte]: bbox.bottom }
-	});
-
-	if(bbox.right < bbox.left) { // Bbox spans over lon=180
-		conditions.push({
-			[Op.or]: [
-				{ [prefix + "lon" + suffix]: { [Op.gte]: bbox.left } },
-				{ [prefix + "lon" + suffix]: { [Op.lte]: bbox.right } }
-			]
-		});
-	} else {
-		conditions.push({
-			[prefix + "lon" + suffix]: { [Op.gte]: bbox.left, [Op.lte]: bbox.right }
-		});
-	}
+	conditions.push(
+		Sequelize.fn(
+			"MBRContains",
+			Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.left, bbox.bottom), Sequelize.fn("POINT", bbox.right, bbox.top)),
+			Sequelize.col(posField)
+		)
+	);
 
 	if(bbox.except) {
-		const exceptConditions = [ ];
-		exceptConditions.push({
-			[Op.or]: [
-				{ [prefix + "lat" + suffix]: { [Op.gt]: bbox.except.top } },
-				{ [prefix + "lat" + suffix]: { [Op.lt]: bbox.except.bottom } }
-			]
-		});
-
-		if(bbox.except.right < bbox.except.left) {
-			exceptConditions.push({
-				[prefix + "lon" + suffix]: { [Op.lt]: bbox.except.left, [Op.gt]: bbox.except.right }
-			});
-		} else {
-			exceptConditions.push({
-				[Op.or]: [
-					{ [prefix + "lon" + suffix]: { [Op.lt]: bbox.except.left } },
-					{ [prefix + "lon" + suffix]: { [Op.gt]: bbox.except.right } }
-				]
-			});
-		}
 		conditions.push({
-			[Op.or]: exceptConditions
+			[Op.not]: Sequelize.fn(
+				"MBRContains",
+				Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.except.left, bbox.except.bottom), Sequelize.fn("POINT", bbox.except.right, bbox.except.top)),
+				Sequelize.col(posField)
+			)
 		});
 	}
 
