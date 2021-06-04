@@ -260,7 +260,7 @@ export default class DatabaseLines {
 		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
 
 		if(!_noEvent)
-			this._db.emit("linePoints", padId, lineId, points);
+			this._db.emit("linePoints", padId, lineId, points.map((point) => omit(point, ["lineId", "pos"]) as TrackPoint));
 	}
 
 	async deleteLine(padId: PadId, lineId: ID): Promise<Line> {
@@ -290,7 +290,7 @@ export default class DatabaseLines {
 
 				return Object.entries(groupBy(linePoints, "lineId")).map(([key, val]) => ({
 					id: Number(key),
-					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId"]))
+					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId", "pos"]))
 				}));
 			})).flatten();
 	}
@@ -300,7 +300,7 @@ export default class DatabaseLines {
 			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]]
 		});
-		return points.map((point) => point.toJSON() as TrackPoint);
+		return points.map((point) => omit(point.toJSON(), ["pos"]) as TrackPoint);
 	}
 
 }

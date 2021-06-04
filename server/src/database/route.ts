@@ -5,6 +5,7 @@ import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, 
 import { BboxWithExcept, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers";
 import { WhereOptions } from "sequelize/types/lib/model";
 import { calculateRouteForLine } from "../routing/routing";
+import { omit } from "lodash";
 
 const updateTimes: Record<string, number> = {};
 
@@ -68,7 +69,7 @@ export default class DatabaseRoutes {
 			where: cond,
 			attributes: [ "pos", "lat", "lon", "idx", "ele"],
 			order: [[ "idx", "ASC" ]]
-		})).map((point) => point.toJSON());
+		})).map((point) => omit(point.toJSON(), ["pos"]) as TrackPoint);
 	}
 
 	async generateRouteId(): Promise<string> {
@@ -199,7 +200,7 @@ export default class DatabaseRoutes {
 			attributes: [ "pos", "lat", "lon", "idx", "ele" ],
 			order: [[ "idx", "ASC" ]]
 		});
-		return data.map((d) => d.toJSON());
+		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
 	async getAllRoutePoints(routeId: string): Promise<TrackPoint[]> {
@@ -207,7 +208,7 @@ export default class DatabaseRoutes {
 			where: {routeId},
 			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
 		});
-		return data.map((d) => d.toJSON());
+		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
 }

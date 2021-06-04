@@ -43,6 +43,9 @@ export function getPosType(): ModelAttributeColumnOptions {
 		allowNull: false,
 		get() {
 			return undefined;
+		},
+		set() {
+			throw new Error('Cannot set pos directly.');
 		}
 	};
 }
