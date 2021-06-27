@@ -1,6 +1,6 @@
 {
   "name": "facilmap-leaflet",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Utilities to show FacilMap objects on a Leaflet map.",
   "keywords": [
     "webpack",
@@ -42,9 +42,9 @@
     "lint": "eslint **/*.ts"
   },
   "dependencies": {
-    "facilmap-client": "3.3.0",
-    "facilmap-types": "3.3.0",
-    "facilmap-utils": "3.3.0",
+    "facilmap-client": "3.4.0",
+    "facilmap-types": "3.4.0",
+    "facilmap-utils": "3.4.0",
     "filtrex": "^2.1.0",
     "leaflet-auto-graticule": "^1.0.9",
     "leaflet-draggable-lines": "^1.0.11",
