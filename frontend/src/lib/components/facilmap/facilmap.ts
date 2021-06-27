@@ -66,6 +66,7 @@ export default class FacilMap extends Vue {
 
 	mounted(): void {
 		window.addEventListener("resize", this.handleResize);
+		this.handleResize();
 	}
 
 	beforeDestroy(): void {
