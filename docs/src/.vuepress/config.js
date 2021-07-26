@@ -49,7 +49,7 @@ module.exports = {
 						"click-marker/",
 						"files/",
 						"locate/",
-						"hash/",
+						"share/",
 						"app/",
 						"privacy/"
 					]

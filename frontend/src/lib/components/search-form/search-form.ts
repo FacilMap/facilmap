@@ -78,10 +78,11 @@ export default class SearchForm extends Vue {
 		if (this.loadedSearchString) {
 			return {
 				query: this.loadedSearchString,
-				...(this.zoomDestination && normalizeZoomDestination(this.mapComponents.map, this.zoomDestination))
+				...(this.zoomDestination && normalizeZoomDestination(this.mapComponents.map, this.zoomDestination)),
+				description: `Search for ${this.loadedSearchString}`
 			};
 		} else if (this.loadingSearchString)
-			return { query: this.loadingSearchString };
+			return { query: this.loadingSearchString, description: `Search for ${this.loadedSearchString}` };
 		else
 			return undefined;
 	}

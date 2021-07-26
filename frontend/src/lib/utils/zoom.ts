@@ -114,20 +114,20 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 		if (items[0].type == "searchResult") {
 			const destination = getZoomDestinationForSearchResult(items[0].result);
 			if (items[0].result.id && destination)
-				return { query: items[0].result.id, ...normalizeZoomDestination(map, destination) };
+				return { query: items[0].result.id, ...normalizeZoomDestination(map, destination), description: items[0].result.short_name };
 			else
 				return undefined;
 		} else if (items[0].type == "marker") {
 			const marker = client.markers[items[0].id];
 			return {
 				query: `m${items[0].id}`,
-				...(marker ? normalizeZoomDestination(map, getZoomDestinationForMarker(marker)) : {})
+				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: marker.name } : {})
 			};
 		} else if (items[0].type == "line") {
 			const line = client.lines[items[0].id];
 			return {
 				query: `l${items[0].id}`,
-				...(line ? normalizeZoomDestination(map, getZoomDestinationForLine(line)) : {})
+				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: line.name } : {})
 			};
 		}
 	}

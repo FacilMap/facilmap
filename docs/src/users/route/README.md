@@ -96,7 +96,7 @@ At the bottom of the route form, the “Export” button allows you to download 
 
 ## Share a link
 
-FacilMap continuously updates the location hash (the part after the `#` in the address bar of your browser) to represent what you currently view on the map. More information can be found under [Share a link](../hash/).
+FacilMap continuously updates the location hash (the part after the `#` in the address bar of your browser) to represent what you currently view on the map. More information can be found under [Share a link](../share/).
 
 When you calculate a route, this is also persisted in the location hash. This means that you can use the URL straight from the browser address bar to share a link to a specific route.
 

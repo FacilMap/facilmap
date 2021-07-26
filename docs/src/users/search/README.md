@@ -84,7 +84,7 @@ The zoom settings are persisted in your browser (using local storage), so next t
 
 FacilMap supports sharing a link to a search or a particular search result.
 
-FacilMap continuously updates the location hash (the part after the `#` in the address bar of your browser) to represent what you currently view on the map. More information can be found under [Share a link](../hash/).
+FacilMap continuously updates the location hash (the part after the `#` in the address bar of your browser) to represent what you currently view on the map. More information can be found under [Share a link](../share/).
 
 When a particular search result is selected, the location hash contains a reference to that result. When no result is selected, the location hash contains the current search term. If you want to share a link to a search or a particular search result with someone, simply copy the URL from the address bar of your browser.
 

@@ -99,6 +99,7 @@ export default class RouteForm extends Vue {
 		{ query: "" }
 	];
 	submittedQuery: string | null = null;
+	submittedQueryDescription: string | null = null;
 	routeError: string | null = null;
 	hoverDestinationIdx: number | null = null;
 	hoverInsertIdx: number | null = null;
@@ -219,7 +220,8 @@ export default class RouteForm extends Vue {
 			const zoomDest = this.routeObj && getZoomDestinationForRoute(this.routeObj);
 			return {
 				query: this.submittedQuery,
-				...(zoomDest ? normalizeZoomDestination(this.mapComponents.map, zoomDest) : {})
+				...(zoomDest ? normalizeZoomDestination(this.mapComponents.map, zoomDest) : {}),
+				description: `Route from ${this.submittedQueryDescription}`
 			};
 		} else
 			return undefined;
@@ -261,6 +263,17 @@ export default class RouteForm extends Vue {
 			return (sugg.kind == "marker" ? "m" : "l") + sugg.id;
 		else
 			return sugg.id;
+	}
+
+	getSelectedSuggestionName(dest: Destination): string | undefined {
+		const sugg = this.getSelectedSuggestion(dest);
+		if (!sugg)
+			return undefined;
+
+		if (isMapResult(sugg))
+			return sugg.name;
+		else
+			return sugg.short_name;
 	}
 
 	async loadSuggestions(dest: Destination): Promise<void> {
@@ -404,12 +417,20 @@ export default class RouteForm extends Vue {
 				this.destinations.map((dest) => (this.getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
 				mode
 			].join(" by ");
+			this.submittedQueryDescription = [
+				this.destinations.map((dest) => (this.getSelectedSuggestionName(dest) ?? dest.query)).join(" to "),
+				mode
+			].join(" by ");
 
 			await Promise.all(this.destinations.map((dest) => this.loadSuggestions(dest)));
 			const points = this.destinations.map((dest) => this.getSelectedSuggestion(dest));
 
 			this.submittedQuery = [
 				this.destinations.map((dest) => (this.getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
+				mode
+			].join(" by ");
+			this.submittedQueryDescription = [
+				this.destinations.map((dest) => (this.getSelectedSuggestionName(dest) ?? dest.query)).join(" to "),
 				mode
 			].join(" by ");
 
@@ -444,6 +465,7 @@ export default class RouteForm extends Vue {
 	reset(): void {
 		this.$bvToast.hide(`fm${this.context.id}-route-form-error`);
 		this.submittedQuery = null;
+		this.submittedQueryDescription = null;
 		this.routeError = null;
 
 		if(this.suggestionMarker) {

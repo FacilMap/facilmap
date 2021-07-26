@@ -8,4 +8,8 @@ const qrcode = require("vue-qrcode").default;
 export default ({ Vue, options, router, siteData }) => {
 	Vue.component("qrcode", qrcode);
 	Vue.component("NavLink", NavLink);
+
+	router.addRoutes([
+		{ path: '/users/hash/', redirect: '/users/share/' }
+	]);
 };

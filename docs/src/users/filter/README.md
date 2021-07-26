@@ -24,6 +24,6 @@ To show only objects of a particular [type](../types/), use `typeId`. You can fi
 
 ## Share a link
 
-FacilMap continuously updates the [location hash](../hash/) with your current view on the map. Your current filter expression is also saved in the location hash.
+FacilMap continuously updates the [location hash](../share/) with your current view on the map. Your current filter expression is also saved in the location hash.
 
 If you want to share a link to a particular section of the map with a filter expression applied, simply apply the filter and then copy the URL from the address bar of your browser. An example of such a link would be `https://facilmap.org/my-map#6/51.910/8.789/Mpnk//typeId%3D%3D123`.

@@ -1,6 +1,6 @@
 # HashHandler
 
-FacilMap can store the current map view in the location hash. The details can be found in the [User guide](../../users/hash/).
+FacilMap can store the current map view in the location hash. The details can be found in the [User guide](../../users/share/).
 
 `HashHandler` creates a two-way binding between the location hash and the current map view. This means that when the map is loaded and a location hash is set, the map view encoded in the hash is opened. If the location hash changes while the map is open, the new map view is opened. When the map view changes, the location hash is updated to reflect the current map view.
 

@@ -24,7 +24,7 @@ To save a view as the default, in the [toolbox](../ui/#toolbox) click on “View
 
 To make an existing view the default, click “Views” and then “Manage views”. In the dialog, you can use the “Make default” button. The current default view is highlighted in bold.
 
-Be aware that the default view is only applied when the map is opened through a link that has no position already implied in its [location hash](../hash/). For example, opening `https://facilmap.org/my-map` will open the default view, but `https://facilmap.org/my-map#6/53.508/8.284/Mpnk` will open the position indicated in the URL.
+Be aware that the default view is only applied when the map is opened through a link that has no position already implied in its [location hash](../share/). For example, opening `https://facilmap.org/my-map` will open the default view, but `https://facilmap.org/my-map#6/53.508/8.284/Mpnk` will open the position indicated in the URL.
 
 ## Share a link
 

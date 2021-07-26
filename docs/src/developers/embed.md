@@ -27,16 +27,17 @@ Example:
 
 ## Interactive mode
 
-When embedding FacilMap into a website, you may want to disable certain UI interactions that make more sense when FacilMap runs as a standalone app. For exapmle, when you want to embed a specific collaborative map, you may want to disable any interactions that will navigate the user away from the map, such as closing the map or navigating to a bookmark. Disabling interactive mode will hide the following UI interactions:
+When embedding FacilMap into a website, you may want to disable certain UI interactions that make more sense when FacilMap runs as a standalone app. For example, when you want to embed a specific collaborative map, you may want to disable any interactions that will navigate the user away from the map, such as closing the map or navigating to a bookmark. Disabling interactive mode will hide the following UI interactions:
 
 * “Collaborative map” menu in the toolbox, including bookmarks, the “Open collaborative map” dialog and “Close current map”.
+* “Share” dialog.
 * “Open file” or dragging a geographic file onto the map.
 * “Create collaborative map” dialog when opening a map ID that does not exist.
 * “Close map” button when the open map is deleted.
 
 ## Location hash
 
-When a FacilMap is opened directly in the browser, the current view of the map is [added to the location hash](../users/hash/) (the part after the `#` in the URL). This means that users can easily share the current view by copying the URL straight from the address bar of their browser, and reloading the page will not cause the current view to be lost.
+When a FacilMap is opened directly in the browser, the current view of the map is [added to the location hash](../users/share/) (the part after the `#` in the URL). This means that users can easily share the current view by copying the URL straight from the address bar of their browser, and reloading the page will not cause the current view to be lost.
 
 FacilMap emits a [cross-origin message](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) every time it updates the location map. You can listen to it to synchronize the location hash of your website with the one of FacilMap by using the following script:
 

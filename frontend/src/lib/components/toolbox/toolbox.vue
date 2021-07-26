@@ -68,6 +68,7 @@
 			<b-dropdown-item :href="links.bing" target="_blank">Open this on Bing Maps</b-dropdown-item>
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Tools" right v-if="interactive || client.padData">
+			<b-dropdown-item v-if="interactive" href="javascript:" v-b-modal="`fm${context.id}-toolbox-share`" v-b-toggle="`fm${context.id}-toolbox-sidebar`">Share</b-dropdown-item>
 			<b-dropdown-item v-if="interactive" href="javascript:" @click="importFile()" v-b-toggle="`fm${context.id}-toolbox-sidebar`">Open file</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/geojson${filterQuery.q}`" target="_blank" v-b-tooltip.hover.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'">Export as GeoJSON</b-dropdown-item>
 			<b-dropdown-item v-if="client.padData" :href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`" target="_blank" v-b-tooltip.hover.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'">Export as GPX (tracks)</b-dropdown-item>
@@ -94,6 +95,7 @@
 	<SaveView v-if="client.padData" :id="`fm${context.id}-toolbox-save-view`"></SaveView>
 	<ManageViews v-if="client.padData" :id="`fm${context.id}-toolbox-manage-views`"></ManageViews>
 	<ManageTypes v-if="client.padData" :id="`fm${context.id}-toolbox-manage-types`"></ManageTypes>
+	<Share :id="`fm${context.id}-toolbox-share`"></Share>
 	<EditFilter v-if="client.padData" :id="`fm${context.id}-toolbox-edit-filter`"></EditFilter>
 	<History v-if="client.padData" :id="`fm${context.id}-toolbox-history`"></History>
 </div>

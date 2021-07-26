@@ -27,7 +27,7 @@ To avoid overloading the server or your browser, a maximum of 50 POIs are shown 
 
 ## Share a link
 
-When you enable POIs on the map, the types of POIs that you checked are stored in the [location hash](../hash/). To share a link to a specific part of the map with specific types of POIs shown, simply navigate the map to that view and copy the URL from the address bar of your browser.
+When you enable POIs on the map, the types of POIs that you checked are stored in the [location hash](../share/). To share a link to a specific part of the map with specific types of POIs shown, simply navigate the map to that view and copy the URL from the address bar of your browser.
 
 On collaborative maps, POI types can also be saved and shared as part of [saved views](../views/).
 

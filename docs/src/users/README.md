@@ -10,7 +10,7 @@ FacilMap is a privacy-friendly, open-source versatile online map that combines d
 * [Find out what is at a particular point on the map](./click-marker/)
 * [Open geographic files](./files/), for example GPX, KML or GeoJSON files
 * [Show your location on the map](./locate/)
-* [Share a link](./hash/) to a particular view of the map.
+* [Share a link](./share/) to a particular view of the map.
 * Add FacilMap as an [app](./app/) to your device.
 * FacilMap is [privacy-friendly](./privacy/) and does not track you.
 

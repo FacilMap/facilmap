@@ -13,6 +13,7 @@ export interface HashQuery {
 	query: string;
 	center?: LatLng;
 	zoom?: number;
+	description?: string;
 }
 
 export interface HashHandlerOptions {

@@ -62,6 +62,7 @@ export interface MapContext extends EventBus {
 	hash: string;
 	showToolbox: boolean;
 	selection: SelectedItem[];
+	activeQuery: HashQuery | undefined;
 	fallbackQuery: HashQuery | undefined; // Updated by search-box
 	interaction: boolean;
 	loading: number;
@@ -173,6 +174,7 @@ export default class LeafletMap extends Vue {
 			hash: location.hash.replace(/^#/, ""),
 			showToolbox: false,
 			selection: [],
+			activeQuery: undefined,
 			fallbackQuery: undefined,
 			interaction: false,
 			loading: this.mapContext.loading,
@@ -235,15 +237,14 @@ export default class LeafletMap extends Vue {
 		this.mapComponents.map.remove();
 	}
 
-	get activeQuery(): HashQuery | undefined {
+	@Watch("mapContext.selection")
+	@Watch("mapContext.fallbackQuery")
+	handleActiveQueryChange(): void {
 		if (!this.mapContext) // Not mounted yet
-			return undefined;
-		return getHashQuery(this.mapComponents.map, this.client, this.mapContext.selection) || this.mapContext.fallbackQuery;
-	}
+			return;
 
-	@Watch("activeQuery")
-	handleActiveQueryChange(query: HashQuery | undefined): void {
-		this.mapComponents.hashHandler.setQuery(query);
+		this.mapContext.activeQuery = getHashQuery(this.mapComponents.map, this.client, this.mapContext.selection) || this.mapContext.fallbackQuery;
+		this.mapComponents.hashHandler.setQuery(this.mapContext.activeQuery);
 	}
 
 	async handleNewHashQuery(e: any): Promise<void> {
