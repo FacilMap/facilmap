@@ -11,10 +11,11 @@ import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import { isLineResult, isMarkerResult } from "../../utils/search";
 import { flyTo, getZoomDestinationForSearchResult } from "../../utils/zoom";
 import { Context } from "../facilmap/facilmap";
+import Coordinates from "../ui/coordinates/coordinates";
 
 @WithRender
 @Component({
-	components: { Icon }
+	components: { Coordinates, Icon }
 })
 export default class SearchResultInfo extends Vue {
 

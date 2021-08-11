@@ -4,6 +4,9 @@
 		{{element.tags.name || 'Unnamed POI'}}
 	</h2>
 	<dl class="fm-search-box-collapse-point">
+		<dt>Coordinates</dt>
+		<dd><Coordinates :point="element"></Coordinates></dd>
+
 		<template v-for="(value, key) in element.tags">
 			<dt>{{key}}</dt>
 			<dd v-html="renderOsmTag(key, value)"></dd>

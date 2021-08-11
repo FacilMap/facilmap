@@ -5,7 +5,7 @@
 	</h2>
 	<dl class="fm-search-box-collapse-point">
 		<dt class="pos">Coordinates</dt>
-		<dd class="pos">{{marker.lat | round(5)}}, {{marker.lon | round(5)}}</dd>
+		<dd class="pos"><Coordinates :point="marker"></Coordinates></dd>
 
 		<template v-if="marker.ele != null">
 			<dt class="elevation">Elevation</dt>

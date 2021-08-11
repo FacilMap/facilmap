@@ -11,7 +11,7 @@
 		<dd v-if="result.address">{{result.address}}</dd>
 
 		<dt v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
-		<dd v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">{{result.lat | round(5)}}, {{result.lon | round(5)}}</dd>
+		<dd v-if="result.type != 'coordinates' && result.lat != null && result.lon != null"><Coordinates :point="result"></Coordinates></dd>
 
 		<dt v-if="result.elevation != null">Elevation</dt>
 		<dd v-if="result.elevation != null">{{result.elevation}} m</dd>

@@ -13,10 +13,11 @@ import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
 import Icon from "../ui/icon/icon";
 import StringMap from "../../utils/string-map";
 import { Context } from "../facilmap/facilmap";
+import Coordinates from "../ui/coordinates/coordinates";
 
 @WithRender
 @Component({
-	components: { EditMarker, Icon }
+	components: { Coordinates, EditMarker, Icon }
 })
 export default class MarkerInfo extends Vue {
 
