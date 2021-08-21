@@ -49,7 +49,7 @@
     "leaflet-auto-graticule": "^1.0.9",
     "leaflet-draggable-lines": "^1.0.11",
     "leaflet-freie-tonne": "^1.0.5",
-    "leaflet-highlightable-layers": "^1.0.9",
+    "leaflet-highlightable-layers": "^1.1.0",
     "leaflet.markercluster": "^1.5.0",
     "lodash": "^4.17.21"
   },

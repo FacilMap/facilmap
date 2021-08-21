@@ -5498,10 +5498,10 @@ leaflet-graphicscale@^0.0.2:
   resolved "https://registry.yarnpkg.com/leaflet-graphicscale/-/leaflet-graphicscale-0.0.2.tgz#ab620d289e9a7044c2f5107c83be17843aec5303"
   integrity sha1-q2INKJ6acETC9RB8g74XhDrsUwM=
 
-leaflet-highlightable-layers@^1.0.9:
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.0.10.tgz#216dcf629552e4a1c11a82b745fe818c4e10c086"
-  integrity sha512-AYu/1yFV2ne/LPe89vK7nUoEW7NTDMtCEQ/tP4WeJx6WOPAE8C2wj4qlG++aWhMfQtxZpwMzTXBtWMs6Lt9c5g==
+leaflet-highlightable-layers@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.1.0.tgz#243b0dd7407b188a7276d4e4a7078e89a9d2b4d7"
+  integrity sha512-oeKdnkk99Po6dPaK+CfcpCFuP6kLvdweZFDQ6OB6kEblQLnKlHh7oz3ikT15RfDk83vPPrb4H8Hp+UF8VoGPoA==
 
 leaflet-mouse-position@^1.0.4:
   version "1.2.0"
