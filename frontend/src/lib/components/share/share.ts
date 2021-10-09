@@ -42,7 +42,7 @@ export default class Share extends Vue {
 	get layers(): string {
 		const { baseLayers, overlays } = getLayers(this.mapComponents.map);
 		return [
-			baseLayers[this.mapContext.layers.baseLayer].options.fmName || this.mapContext.layers.baseLayer,
+			baseLayers[this.mapContext.layers.baseLayer]?.options.fmName || this.mapContext.layers.baseLayer,
 			...this.mapContext.layers.overlays.map((key) => overlays[key].options.fmName || key)
 		].join(", ");
 	}
