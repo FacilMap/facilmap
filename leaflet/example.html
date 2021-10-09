@@ -161,8 +161,10 @@
 			const routeLayer1 = new L.FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
 			const routeLayer2 = new L.FacilMap.RouteLayer(client, "route2", { raised: true }).addTo(map);
 			const routeDragHandler = new L.FacilMap.RouteDragHandler(map, client).enable();
-			routeDragHandler.enableForLayer(routeLayer1);
-			routeDragHandler.enableForLayer(routeLayer2);
+			setTimeout(() => {
+				routeDragHandler.enableForLayer(routeLayer1);
+				routeDragHandler.enableForLayer(routeLayer2);
+			}, 0);
 
 			const searchResultsLayer = new L.FacilMap.SearchResultsLayer().addTo(map)
 				.on("click", (e) => {

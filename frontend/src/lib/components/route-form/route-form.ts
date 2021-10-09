@@ -198,13 +198,14 @@ export default class RouteForm extends Vue {
 
 	@Watch("active")
 	handleActiveChange(active: boolean): void {
+		if (this.hasRoute)
+			this.routeLayer.setStyle({ opacity: active ? 1 : 0.35, raised: active });
+
+		// Enable dragging after updating the style, since that might re-add the layer to the map
 		if (active)
 			this.draggable.enableForLayer(this.routeLayer);
 		else
 			this.draggable.disableForLayer(this.routeLayer);
-
-		if (this.hasRoute)
-			this.routeLayer.setStyle({ opacity: active ? 1 : 0.35, raised: active });
 	}
 
 	get hasRoute(): boolean {
