@@ -16,9 +16,10 @@ module.exports = (env, argv) => {
 			extensions: [ ".js", ".ts" ]
 		},
 		mode: isDev ? "development" : "production",
-		devtool: isDev ? "cheap-eval-source-map" : "source-map",
+		devtool: isDev ? "eval-source-map" : "source-map",
 		module: {
 			rules: [
+				{ test: /\.js$/, enforce: "pre", use: ["source-map-loader"] },
 				{
 					resource: { and: [ /\.ts/, [
 						__dirname + "/src/"

@@ -28,11 +28,12 @@ module.exports = (env: any, argv: any): Configuration[] => {
 			extensions: ['.ts', '.wasm', '.mjs', '.js', '.json']
 		},
 		mode: isDev ? "development" : "production",
-		devtool: isDev ? "eval-cheap-source-map" : "source-map",
+		devtool: isDev ? "eval-source-map" : "source-map", // Change to inline-cheap-source-map to work with dependency source maps
 		module: {
 			rules: [
+				{ test: /\.js$/, enforce: "pre", use: ["source-map-loader"] },
 				{
-					resource: /\.ts/,
+					resource: /\.ts$/,
 					use: {
 						loader: "ts-loader",
 						options: { onlyCompileBundledFiles: true }

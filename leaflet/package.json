@@ -75,6 +75,7 @@
     "node-fetch": "^2.6.1",
     "rimraf": "^3.0.2",
     "sass-loader": "^11.1.1",
+    "source-map-loader": "^3.0.0",
     "style-loader": "^2.0.0",
     "svgo": "^2.2.2",
     "ts-jest": "^26.5.4",
