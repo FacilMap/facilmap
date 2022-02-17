@@ -9,6 +9,10 @@ You are welcome to contribute code, improve the documentation or raise ideas on 
 Financial contributions are very much appreciated and can be sent through the following channels:
 
 <div style="display: flex; flex-wrap: wrap">
+	<a href="https://liberapay.com/facilmap/" target="_blank" style="display: flex; flex-direction: column; align-items: center">
+		<ClientOnly><qrcode value="https://liberapay.com/facilmap/" :width="164"></qrcode></ClientOnly>
+		Liberapay
+	</a>
 	<a href="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" target="_blank" style="display: flex; flex-direction: column; align-items: center">
 		<ClientOnly><qrcode value="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" :width="164"></qrcode></ClientOnly>
 		PayPal
