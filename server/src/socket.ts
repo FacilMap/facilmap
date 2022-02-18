@@ -36,7 +36,8 @@ export default class Socket {
 	constructor(server: HttpServer, database: Database) {
 		const io = new Server(server, {
 			cors: { origin: true },
-			allowEIO3: true
+			allowEIO3: true,
+			maxHttpBufferSize: 100e6
 		});
 
 		io.sockets.on("connection", (socket: SocketIO) => {
