@@ -1,7 +1,7 @@
 import { CreationAttributes, CreationOptional, DataTypes, ForeignKey, HasManyGetAssociationsMixin, InferAttributes, InferCreationAttributes, Model, Op } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
 import Database from "./database";
-import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
+import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey, validateColour } from "./helpers";
 import { groupBy, isEqual, mapValues, omit } from "lodash";
 import { wrapAsync } from "../utils/streams";
 import { calculateRouteForLine } from "../routing/routing";
@@ -279,7 +279,7 @@ export default class DatabaseLines {
 								zoom: { [Op.lte]: bboxWithZoom.zoom },
 								lineId: { [Op.in]: lineIds }
 							},
-							makeBboxCondition(bboxWithZoom)
+							this._db.helpers.makeBboxCondition(bboxWithZoom)
 						]
 					},
 					attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
