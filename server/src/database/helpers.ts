@@ -252,6 +252,7 @@ export default class DatabaseHelpers {
 				condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
 			}
 
+
 			const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
 			const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
 
