@@ -121,6 +121,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 				{ key: "sportscentre", query: "(way[leisure=sports_centre];node[leisure=sports_centre];rel[leisure=sports_centre];)", label: "Sports centre" },
 				{ key: "surfing", query: "(way[sport=surfing];node[sport=surfing];rel[sport=surfing];)", label: "Surfing" },
 				{ key: "swimming", query: "(way[sport=swimming];node[sport=swimming];rel[sport=swimming];)", label: "Swimming" },
+				{ key: "table_tennis", query: "(way[sport=table_tennis];node[sport=table_tennis];)", label: "Table tennis" },
 				{ key: "tennis", query: "(way[sport=tennis];node[sport=tennis];)", label: "Tennis" },
 				{ key: "volleyball", query: "(way[sport=volleyball];node[sport=volleyball];)", label: "Volleyball" }
 			]
