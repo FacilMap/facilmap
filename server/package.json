@@ -45,7 +45,7 @@
     "compression": "^1.7.3",
     "compressjs": "^1.0.3",
     "dotenv": "^10.0.0",
-    "ejs": "^3.1.5",
+    "ejs": "^3.1.7",
     "event-stream": "^4.0.1",
     "express": "^4.16.4",
     "express-domain-middleware": "^0.1.0",
