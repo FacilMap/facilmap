@@ -81,6 +81,7 @@
 		</b-nav-item-dropdown>
 		<b-nav-item-dropdown text="Help" right>
 			<b-dropdown-item href="https://docs.facilmap.org/users/" target="_blank">Documentation</b-dropdown-item>
+			<b-dropdown-item href="https://matrix.to/#/#facilmap:rankenste.in" target="_blank">Matrix chat room</b-dropdown-item>
 			<b-dropdown-item href="https://github.com/FacilMap/facilmap/issues" target="_blank">Report a problem</b-dropdown-item>
 			<b-dropdown-item href="https://github.com/FacilMap/facilmap/discussions" target="_blank">Ask a question</b-dropdown-item>
 			<b-dropdown-item v-b-modal="`fm${context.id}-toolbox-about`" v-b-toggle="`fm${context.id}-toolbox-sidebar`" href="javascript:">About FacilMap</b-dropdown-item>

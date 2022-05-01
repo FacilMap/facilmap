@@ -24,6 +24,15 @@ Quick links:
 * [Dev setup](https://docs.facilmap.org/developers/development/dev-setup.html)
 
 
+Get help
+========
+
+* Have a look at the [documentation](https://docs.facilmap.org/)
+* Ask questions [on GitHub](https://github.com/FacilMap/facilmap/discussions)
+* Raise bugs and feature requests [on GitHub](https://github.com/FacilMap/facilmap/issues)
+* Join the [Matrix chat room](https://matrix.to/#/#facilmap:rankenste.in)
+
+
 Quick start
 ===========
 
