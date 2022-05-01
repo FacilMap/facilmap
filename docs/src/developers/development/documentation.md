@@ -1,6 +1,6 @@
 # Documentation
 
-The FacilMap documentation is built using [VuePress](https://vuepress.vuejs.org/) from the Markdown files in the [docs](https://github.com/FacilMap/facilmap/tree/master/docs) directory. The [facilmap/facilmap-docs](https://hub.docker.com/r/facilmap/facilmap-docs) Docker image is automatically generated with the latest docs.
+The FacilMap documentation is built using [VuePress](https://vuepress.vuejs.org/) from the Markdown files in the [docs](https://github.com/FacilMap/facilmap/tree/main/docs) directory. The [facilmap/facilmap-docs](https://hub.docker.com/r/facilmap/facilmap-docs) Docker image is automatically generated with the latest docs.
 
 ## Dev setup
 

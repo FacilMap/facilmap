@@ -51,4 +51,4 @@ However, a build to use the components directly in the browser is also available
 
 ## Example
 
-An example that shows all the Leaflet components in actions can be found in [example.html](https://github.com/FacilMap/facilmap/blob/master/leaflet/example.html) ([demo](https://unpkg.com/facilmap-leaflet/example.html)).
+An example that shows all the Leaflet components in actions can be found in [example.html](https://github.com/FacilMap/facilmap/blob/main/leaflet/example.html) ([demo](https://unpkg.com/facilmap-leaflet/example.html)).
