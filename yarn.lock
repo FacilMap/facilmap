@@ -5469,10 +5469,10 @@ klona@^2.0.4:
   resolved "https://registry.yarnpkg.com/klona/-/klona-2.0.4.tgz#7bb1e3affb0cb8624547ef7e8f6708ea2e39dfc0"
   integrity sha512-ZRbnvdg/NxqzC7L9Uyqzf4psi1OM4Cuc+sJAkQPjO6XkQIJTNbfK2Rsmbw8fx1p2mkZdp2FZYo2+LwXYY/uwIA==
 
-leaflet-auto-graticule@^1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/leaflet-auto-graticule/-/leaflet-auto-graticule-1.0.9.tgz#e51469b26986b03faae03c50d49a3e1c1139cc13"
-  integrity sha512-mfl2NEHx4zXjCJLGMYLdlRoZUvsc8niOVPBeXScvKvM2DDPTUHm/SHDgpTa+klHocOUZgarG9FIaPCVVi9sMuQ==
+leaflet-auto-graticule@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/leaflet-auto-graticule/-/leaflet-auto-graticule-1.1.0.tgz#b30f257e52f07e185321276f55ff42072750ed5f"
+  integrity sha512-3d8FDqXpzBpFabske9IiNPrvsQeolIW9vh7s15giSb74fALAKgUe74KdY/zh0KfJMS4kHqCsO8Auo9tCPO2J/Q==
 
 leaflet-draggable-lines@^1.0.11:
   version "1.0.11"
@@ -5481,10 +5481,17 @@ leaflet-draggable-lines@^1.0.11:
   dependencies:
     leaflet-geometryutil "^0.10.0"
 
-leaflet-freie-tonne@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/leaflet-freie-tonne/-/leaflet-freie-tonne-1.0.5.tgz#abd75cf6658d0c637f8a7466f4b346adf50888ed"
-  integrity sha512-Cw501Z6Dk8B6S7lmikgWNdy0K1fujPOThW72sB64loc1WXdOn+Sfq5KvmuRnmrIMK5joVohyHsGgSi5xYLlNCQ==
+leaflet-draggable-lines@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/leaflet-draggable-lines/-/leaflet-draggable-lines-1.1.0.tgz#492c303ee3c09d3e35bca1c5ce17bf804d144b1e"
+  integrity sha512-ah/ZMX9I4a7Jwneyosu8q4KMvEfTcaOnkU/qoHKyfuhfhf0bHmcvTWqdbPCpDidRk3MIZS6nJSrgQZB1r0Pt+Q==
+  dependencies:
+    leaflet-geometryutil "^0.10.1"
+
+leaflet-freie-tonne@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/leaflet-freie-tonne/-/leaflet-freie-tonne-1.1.0.tgz#36c8cd1a736d6402894a89d9e9933134ad625e7e"
+  integrity sha512-okAtR8fG4AxXsTGEZVWrD4576Pj0rS8Znvl40HBOGT5Qf2EQBkdD8cl90s411vznWn/E3lCTOu2LGQxRrRoM1g==
 
 leaflet-geometryutil@^0.10.0:
   version "0.10.0"
@@ -5493,15 +5500,22 @@ leaflet-geometryutil@^0.10.0:
   dependencies:
     leaflet "^1.6.0"
 
+leaflet-geometryutil@^0.10.1:
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/leaflet-geometryutil/-/leaflet-geometryutil-0.10.1.tgz#d9e7f662991dac71d234faf2db9c7641abf57523"
+  integrity sha512-xfyBxv0Ls2H45V4nrzn5ASi/qw0VXgEVAkbXZqQE2Qhs52fMqmWyl7egA5ht2xbyPHqjTN9ssr9lXrmXWE91yw==
+  dependencies:
+    leaflet "^1.6.0"
+
 leaflet-graphicscale@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/leaflet-graphicscale/-/leaflet-graphicscale-0.0.2.tgz#ab620d289e9a7044c2f5107c83be17843aec5303"
   integrity sha1-q2INKJ6acETC9RB8g74XhDrsUwM=
 
-leaflet-highlightable-layers@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.1.0.tgz#243b0dd7407b188a7276d4e4a7078e89a9d2b4d7"
-  integrity sha512-oeKdnkk99Po6dPaK+CfcpCFuP6kLvdweZFDQ6OB6kEblQLnKlHh7oz3ikT15RfDk83vPPrb4H8Hp+UF8VoGPoA==
+leaflet-highlightable-layers@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/leaflet-highlightable-layers/-/leaflet-highlightable-layers-1.2.0.tgz#506c2c65aaf2175a71c2fbc00e580b9bab84b19b"
+  integrity sha512-qNJGKVrN/7Posu/y1HPvilfBycjD3Ou2SKRCWx16lOeA9HlVtwINoVsDlUJf6Yokif4lKE06QEIrxlDwEpFRpg==
 
 leaflet-mouse-position@^1.0.4:
   version "1.2.0"
