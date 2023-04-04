@@ -20,5 +20,6 @@
     "eslint": "^7.27.0",
     "eslint-plugin-import": "^2.23.3"
   },
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "packageManager": "yarn@3.5.0"
 }

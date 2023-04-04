@@ -5,3 +5,10 @@ dist
 yarn-error.log
 .vscode
 config.env
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
