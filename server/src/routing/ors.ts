@@ -1,8 +1,8 @@
-import config from "../config";
+import config from "../config.js";
 import { calculateDistance, DecodedRouteMode } from "facilmap-utils";
 import { ExtraInfo, Point } from "facilmap-types";
-import { throttle } from "../utils/utils";
-import { RawRouteInfo } from "./routing";
+import { throttle } from "../utils/utils.js";
+import { RawRouteInfo } from "./routing.js";
 import fetch from "node-fetch";
 
 if (!config.orsToken)
@@ -56,7 +56,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		currentGroup.push(point);
 	}
 
-	const results = await Promise.all(coordGroups.map((coords) => {
+	const results = await Promise.all(coordGroups.map(async (coords) => {
 		const req: any = {
 			coordinates: coords.map((point) => [point.lon, point.lat]),
 			radiuses: coords.map(() => -1),
@@ -78,7 +78,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		if(decodedMode.preference)
 			req.preference = decodedMode.preference == "shortest" ? "shortest" : "recommended";
 
-		return fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
+		return await fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
 			method: "POST",
 			headers: {
 				...(config.orsToken ? { "Authorization": config.orsToken } : {}),
@@ -87,7 +87,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 				"User-Agent": config.userAgent
 			},
 			body: JSON.stringify(req)
-		}).then((res) => res.json());
+		}).then((res) => res.json() as any);
 	}));
 
 	const ret = {

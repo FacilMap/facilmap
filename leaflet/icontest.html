@@ -18,16 +18,14 @@
 	</head>
 
 	<body>
-		<script src="https://unpkg.com/leaflet"></script>
-		<!-- <script src="https://unpkg.com/socket.io-client/dist/socket.io.js"></script> -->
-		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
+		<script type="module">
+			import * as FacilMap from "facilmap-leaflet";
 
-		<script type="text/javascript">
 			function createIcons(id, createIcon) {
 				const el = document.createElement("div");
 				el.id = id;
 				document.body.appendChild(el);
-				for (const icon of ["", "O", "g", "j", "a", "*", ...L.FacilMap.symbolList]) {
+				for (const icon of ["", "O", "g", "j", "a", "*", ...FacilMap.symbolList]) {
 					const span = document.createElement('span');
 					span.title = icon;
 					span.innerHTML = createIcon(icon);
@@ -35,10 +33,10 @@
 				}
 			}
 
-			createIcons("icons", (icon) => L.FacilMap.getSymbolHtml("#000000", 50, icon));
+			createIcons("icons", (icon) => FacilMap.getSymbolHtml("#000000", 50, icon));
 			for (const shape of ["drop", "rectangle-marker", "circle", "rectangle", "diamond", "pentagon", "hexagon", "triangle", "triangle-down", "star"]) {
-				createIcons(`icons-${shape}`, (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape));
-				createIcons(`icons-${shape}-highlight`, (icon) => L.FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape, true));
+				createIcons(`icons-${shape}`, (icon) => FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape));
+				createIcons(`icons-${shape}-highlight`, (icon) => FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape, true));
 			}
 		</script>
 	</body>

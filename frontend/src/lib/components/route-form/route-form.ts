@@ -15,7 +15,7 @@ import { latLng, LatLng } from "leaflet";
 import draggable from "vuedraggable";
 import RouteMode from "../ui/route-mode/route-mode";
 import DraggableLines from "leaflet-draggable-lines";
-import { throttle } from "lodash";
+import { throttle } from "lodash-es";
 import ElevationStats from "../ui/elevation-stats/elevation-stats";
 import ElevationPlot from "../ui/elevation-plot/elevation-plot";
 import { saveAs } from 'file-saver';

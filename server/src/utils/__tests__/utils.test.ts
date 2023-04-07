@@ -1,4 +1,4 @@
-import { throttle } from "../utils";
+import { throttle } from "../utils.js";
 
 test('throttle', async () => {
 	let runningNow = 0;

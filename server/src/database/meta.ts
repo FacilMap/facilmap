@@ -1,10 +1,10 @@
 import { DataTypes, Model } from "sequelize";
-import Database from "./database";
+import Database from "./database.js";
 
 function createMetaModel() {
 	return class MetaModel extends Model {
-		key!: string;
-		value!: string;
+		declare key: string;
+		declare value: string;
 	};
 }
 

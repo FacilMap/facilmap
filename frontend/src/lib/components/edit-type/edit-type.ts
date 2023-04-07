@@ -6,7 +6,7 @@ import { Field, ID, Line, Marker, Type, TypeUpdate } from "facilmap-types";
 import { clone } from "facilmap-utils";
 import { canControl, IdType } from "../../utils/utils";
 import { mergeTypeObject } from "./edit-type-utils";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { showErrorToast } from "../../utils/toasts";
 import FormModal from "../ui/form-modal/form-modal";
 import { extend, ValidationProvider } from "vee-validate";

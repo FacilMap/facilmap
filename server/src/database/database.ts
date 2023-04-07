@@ -1,18 +1,18 @@
 import { Sequelize } from "sequelize";
 import debug from "debug";
-import DatabaseHelpers from "./helpers";
-import DatabaseHistory from "./history";
-import { DbConfig } from "../config";
-import DatabasePads from "./pad";
-import DatabaseViews from "./view";
-import DatabaseLines from "./line";
-import DatabaseTypes from "./type";
-import DatabaseMarkers from "./marker";
-import DatabaseMeta from "./meta";
-import DatabaseSearch from "./search";
-import DatabaseRoutes from "./route";
-import DatabaseMigrations from "./migrations";
-import { TypedEventEmitter } from "../utils/events";
+import DatabaseHelpers from "./helpers.js";
+import DatabaseHistory from "./history.js";
+import { DbConfig } from "../config.js";
+import DatabasePads from "./pad.js";
+import DatabaseViews from "./view.js";
+import DatabaseLines from "./line.js";
+import DatabaseTypes from "./type.js";
+import DatabaseMarkers from "./marker.js";
+import DatabaseMeta from "./meta.js";
+import DatabaseSearch from "./search.js";
+import DatabaseRoutes from "./route.js";
+import DatabaseMigrations from "./migrations.js";
+import { TypedEventEmitter } from "../utils/events.js";
 import { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEvents {
@@ -92,5 +92,3 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 		await this.migrations._runMigrations()
 	}
 }
-
-module.exports = Database;

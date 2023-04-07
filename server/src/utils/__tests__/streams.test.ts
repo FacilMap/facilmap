@@ -1,4 +1,4 @@
-import { jsonStream } from "../streams";
+import { jsonStream } from "../streams.js";
 import highland from "highland";
 import jsonFormat from "json-format";
 

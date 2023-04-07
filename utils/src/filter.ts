@@ -1,5 +1,5 @@
 import { compileExpression as filtrexCompileExpression } from 'filtrex';
-import { clone, flattenObject, getProperty, quoteRegExp } from "./utils";
+import { clone, flattenObject, getProperty, quoteRegExp } from "./utils.js";
 import { ID, Marker, Line, Type, Field } from "facilmap-types";
 
 export type FilterFunc = (obj: Marker<any> | Line<any>, type: Type) => boolean;
@@ -23,7 +23,7 @@ export function filterHasError(expr: string): Error | undefined {
 	try {
 		if(expr && expr.trim())
 			filtrexCompileExpression(expr, { extraFunctions: customFuncs });
-	} catch(e) {
+	} catch(e: any) {
 		return e;
 	}
 }

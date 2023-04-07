@@ -5,7 +5,7 @@ import { Client, InjectClient, InjectContext } from "../../utils/decorators";
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { canControl, IdType, mergeObject } from "../../utils/utils";
 import { clone } from "facilmap-utils";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { showErrorToast } from "../../utils/toasts";
 import FormModal from "../ui/form-modal/form-modal";
 import { ValidationProvider } from "vee-validate";

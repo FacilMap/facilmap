@@ -1,6 +1,6 @@
 import { FindOnMapResult, SearchResult } from "facilmap-types";
 import { numberKeys } from "facilmap-utils";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { Client } from "./decorators";
 import { FileResult, FileResultObject } from "./files";
 

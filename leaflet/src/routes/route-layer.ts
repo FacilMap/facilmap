@@ -10,7 +10,7 @@ interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 
 export default class RouteLayer extends HighlightablePolyline {
 
-	realOptions!: RouteLayerOptions;
+	declare realOptions: RouteLayerOptions;
 	client: Client<any>;
 	routeId: string | undefined;
 

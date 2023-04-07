@@ -14,7 +14,9 @@
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "main": "./dist/client.js",
+  "main": "./dist/client.mjs",
+  "type": "module",
+  "types": "./dist/client.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
@@ -26,23 +28,21 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
+    "build": "vite build",
     "clean": "rimraf dist",
-    "dev-server": "webpack-dev-server  --mode development"
+    "dev-server": "vite"
   },
   "dependencies": {
     "facilmap-types": "3.4.0",
-    "socket.io-client": "^4.1.2"
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.7",
-    "rimraf": "^3.0.2",
-    "source-map-loader": "^3.0.0",
-    "ts-loader": "^9.2.2",
-    "typescript": "^4.1.3",
-    "webpack": "^5.37.1",
-    "webpack-bundle-analyzer": "^4.4.2",
-    "webpack-cli": "^4.2.0"
+    "@types/geojson": "^7946.0.10",
+    "@types/rollup-plugin-auto-external": "^2.0.2",
+    "rimraf": "^4.4.1",
+    "rollup-plugin-auto-external": "^2.0.0",
+    "typescript": "^5.0.3",
+    "vite": "^4.2.1",
+    "vite-plugin-dts": "^2.2.0"
   }
 }

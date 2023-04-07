@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import Database from "./database/database";
-import Socket from "./socket";
-import config from "./config";
-import { initWebserver } from "./webserver";
+import Database from "./database/database.js";
+import Socket from "./socket.js";
+import config from "./config.js";
+import { initWebserver } from "./webserver.js";
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {

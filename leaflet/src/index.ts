@@ -1,3 +1,4 @@
+import "./type-fixup";
 export { default as BboxHandler } from "./bbox-handler";
 export * from "./layers";
 export { default as OverpassLayer } from "./overpass/overpass-layer";

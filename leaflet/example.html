@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>facilmap-leaflet Example</title>
-		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+		<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 		<style type="text/css">
 			html, body { width: 100%; height: 100%; margin: 0; }
 			body { display: flex; flex-direction: column; }
@@ -23,19 +23,19 @@
 			<input
 				type="button"
 				value="Click listener"
-				onclick="L.FacilMap.addClickListener(map, log('click'), log('move'))"
+				onclick="FacilMap.addClickListener(map, log('click'), log('move'))"
 			/>
 
 			<input
 				type="button"
 				value="Default view"
-				onclick="L.FacilMap.displayView(map)"
+				onclick="FacilMap.displayView(map)"
 			/>
 
 			<input
 				type="button"
 				value="Hamburg"
-				onclick="L.FacilMap.displayView(map, { top: 53.959, left: 8.331, right: 9.650, bottom: 53.767, baseLayer: 'MpnW', layers: ['FrTo'] })"
+				onclick="FacilMap.displayView(map, { top: 53.959, left: 8.331, right: 9.650, bottom: 53.767, baseLayer: 'MpnW', layers: ['FrTo'] })"
 			/>
 
 			<input
@@ -92,7 +92,7 @@
 			<input
 				type="button"
 				value="parking+recycling (preset)"
-				onclick="overpassLayer.setQuery(L.FacilMap.getOverpassPresets(['parking', 'recycling']))"
+				onclick="overpassLayer.setQuery(FacilMap.getOverpassPresets(['parking', 'recycling']))"
 			/>
 			<input
 				type="button"
@@ -115,26 +115,30 @@
 			<div id="map"></div>
 			<div id="overpass-status"></div>
 		</div>
-		<script src="https://unpkg.com/leaflet"></script>
-		<script type="text/javascript" src="dist/facilmap-leaflet.full.js"></script>
 
-		<script type="text/javascript">
-		    var map = L.map('map',{
+		<script type="module">
+			import L from "leaflet";
+			import Client from "facilmap-client";
+			import * as FacilMap from "facilmap-leaflet";
+
+			window.FacilMap = FacilMap;
+
+		    window.map = L.map('map',{
 				center: [0,0],
 				zoom: 5,
 			});
 
-			var client = new FacilMap.Client("http://localhost:40829/");
+			window.client = new Client("http://localhost:40829/");
 
-			L.FacilMap.setVisibleLayers(map);
+			FacilMap.setVisibleLayers(map);
 
-			const layers = L.FacilMap.getLayers(map);
+			const layers = FacilMap.getLayers(map);
 			const byName = (layerMap) => Object.fromEntries(Object.entries(layerMap).map(([key, layer]) => [layer.options.fmName, layer]));
 			L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
 
-			new L.FacilMap.BboxHandler(map, client).enable();
+			new FacilMap.BboxHandler(map, client).enable();
 
-			const markersLayer = new L.FacilMap.MarkersLayer(client).addTo(map)
+			const markersLayer = new FacilMap.MarkersLayer(client).addTo(map)
 				.on("click", (e) => {
 					markersLayer.setHighlightedMarkers(new Set([e.layer.marker.id]));
 					linesLayer.setHighlightedLines(new Set());
@@ -142,7 +146,7 @@
 					overpassLayer.setHighlightedElements(new Set());
 				});
 
-			const linesLayer = new L.FacilMap.LinesLayer(client).addTo(map)
+			window.linesLayer = new FacilMap.LinesLayer(client).addTo(map)
 				.on("click", (e) => {
 					L.DomEvent.stopPropagation(e);
 					markersLayer.setHighlightedMarkers(new Set());
@@ -158,15 +162,15 @@
 				overpassLayer.setHighlightedElements(new Set());
 			});
 
-			const routeLayer1 = new L.FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
-			const routeLayer2 = new L.FacilMap.RouteLayer(client, "route2", { raised: true }).addTo(map);
-			const routeDragHandler = new L.FacilMap.RouteDragHandler(map, client).enable();
+			const routeLayer1 = new FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
+			const routeLayer2 = new FacilMap.RouteLayer(client, "route2", { raised: true }).addTo(map);
+			const routeDragHandler = new FacilMap.RouteDragHandler(map, client).enable();
 			setTimeout(() => {
 				routeDragHandler.enableForLayer(routeLayer1);
 				routeDragHandler.enableForLayer(routeLayer2);
 			}, 0);
 
-			const searchResultsLayer = new L.FacilMap.SearchResultsLayer().addTo(map)
+			window.searchResultsLayer = new FacilMap.SearchResultsLayer().addTo(map)
 				.on("click", (e) => {
 					L.DomEvent.stopPropagation(e);
 					markersLayer.setHighlightedMarkers(new Set());
@@ -177,7 +181,7 @@
 
 			let overpassLoading = 0;
 			const overpassStatus = document.getElementById("overpass-status");
-			const overpassLayer = new L.FacilMap.OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map)
+			window.overpassLayer = new FacilMap.OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map)
 				.on("click", (e) => {
 					console.log(e.layer._fmOverpassElement.tags);
 					L.DomEvent.stopPropagation(e);
@@ -193,13 +197,13 @@
 				})
 				.on("loadend", (e) => {
 					if (--overpassLoading <= 0) {
-						if (e.status == L.FacilMap.OverpassLoadStatus.COMPLETE)
+						if (e.status == FacilMap.OverpassLoadStatus.COMPLETE)
 							overpassStatus.style.opacity = 0;
-						else if (e.status == L.FacilMap.OverpassLoadStatus.INCOMPLETE)
+						else if (e.status == FacilMap.OverpassLoadStatus.INCOMPLETE)
 							overpassStatus.innerText = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
-						else if (e.status == L.FacilMap.OverpassLoadStatus.TIMEOUT)
+						else if (e.status == FacilMap.OverpassLoadStatus.TIMEOUT)
 							overpassStatus.innerText = "Zoom in to show POIs.";
-						else if (e.status == L.FacilMap.OverpassLoadStatus.ERROR)
+						else if (e.status == FacilMap.OverpassLoadStatus.ERROR)
 							overpassStatus.innerText = "Error loading POIs: " + e.error.message;
 					}
 
@@ -209,9 +213,9 @@
 					overpassStatus.style.opacity = 0;
 				});
 
-			const hashHandler = new L.FacilMap.HashHandler(map, client, { overpassLayer }).enable();
+			const hashHandler = new FacilMap.HashHandler(map, client, { overpassLayer }).enable();
 
-			async function drawLine() {
+			window.drawLine = async () => {
 				try {
 					const lineTemplate = await client.getLineTemplate({ typeId: Object.keys(client.types).find((type) => client.types[type].type == "line") });
 					const result = await linesLayer.drawLine(lineTemplate);
@@ -219,7 +223,7 @@
 				} catch (err) {
 					console.error(err);
 				}
-			}
+			};
 		</script>
 	</body>
 </html>

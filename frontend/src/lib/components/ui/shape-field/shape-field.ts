@@ -9,7 +9,7 @@ import Picker from "../picker/picker";
 import { Shape } from "facilmap-types";
 import { extend } from "vee-validate";
 import { arrowNavigation } from "../../../utils/ui";
-import { keyBy, mapValues } from "lodash";
+import { keyBy, mapValues } from "lodash-es";
 import PrerenderedList from "../prerendered-list/prerendered-list";
 
 extend("shape", {

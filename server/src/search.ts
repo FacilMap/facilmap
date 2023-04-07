@@ -1,15 +1,15 @@
-import { round } from "./utils/utils";
+import { round } from "./utils/utils.js";
 import cheerio from "cheerio";
 import compressjs from "compressjs";
 import zlib from "zlib";
 import util from "util";
-import { getElevationForPoint, getElevationForPoints } from "./elevation";
+import { getElevationForPoint, getElevationForPoints } from "./elevation.js";
 import { ZoomLevel, Point, SearchResult } from "facilmap-types";
 import { Geometry } from "geojson";
 import stripBomBuf from "strip-bom-buf";
 import fetch from "node-fetch";
 import throttle from "p-throttle";
-import config from "./config";
+import config from "./config.js";
 
 interface NominatimResult {
 	place_id: number;
@@ -125,7 +125,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 				"User-Agent": config.userAgent
 			}
 		}
-	).then((res) => res.json());
+	).then((res) => res.json() as any);
 
 	if(!body)
 		throw new Error("Invalid response from name finder.");
@@ -152,7 +152,7 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 				"User-Agent": config.userAgent
 			}
 		}
-	).then((res) => res.json());
+	).then((res) => res.json() as any);
 
 	if(!body || body.error) {
 		throw new Error(body ? body.error : "Invalid response from name finder");
@@ -173,7 +173,7 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false)
 					"User-Agent": config.userAgent
 				}
 			}
-		).then((res) => res.json()),
+		).then((res) => res.json() as any),
 		...(loadElevation ? [getElevationForPoint(lonlatWithZoom)] : [])
 	]);
 

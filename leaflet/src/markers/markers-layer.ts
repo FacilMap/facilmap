@@ -11,7 +11,7 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 
 export default class MarkersLayer extends MarkerCluster {
 
-	options!: MarkersLayerOptions;
+	declare options: MarkersLayerOptions;
 	client: Client<any>;
 	markersById: Record<string, MarkerLayer> = {};
 	highlightedMarkerIds = new Set<ID>();

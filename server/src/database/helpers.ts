@@ -1,11 +1,11 @@
 import highland from "highland";
-import { streamEachPromise } from "../utils/streams";
-import { clone } from "../utils/utils";
+import { streamEachPromise } from "../utils/streams.js";
+import { clone } from "../utils/utils.js";
 import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
-import Database from "./database";
-import { isEqual } from "lodash";
-import { calculateRouteForLine } from "../routing/routing";
+import Database from "./database.js";
+import { isEqual } from "lodash-es";
+import { calculateRouteForLine } from "../routing/routing.js";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -75,9 +75,9 @@ export function getLonType(): ModelAttributeColumnOptions {
 export const validateColour = { is: /^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/ };
 
 export class DataModel extends Model {
-	id!: ID;
-	name!: string;
-	value!: string;
+	declare id: ID;
+	declare name: string;
+	declare value: string;
 }
 
 export const dataDefinition = {

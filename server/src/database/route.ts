@@ -1,23 +1,22 @@
-import { generateRandomId } from "../utils/utils";
-import { DataTypes, Model, Op } from "sequelize";
-import Database from "./database";
+import { generateRandomId } from "../utils/utils.js";
+import { DataTypes, Model, Op, WhereOptions } from "sequelize";
+import Database from "./database.js";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers";
-import { WhereOptions } from "sequelize/types/lib/model";
-import { calculateRouteForLine } from "../routing/routing";
-import { omit } from "lodash";
+import { BboxWithExcept, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
+import { calculateRouteForLine } from "../routing/routing.js";
+import { omit } from "lodash-es";
 
 const updateTimes: Record<string, number> = {};
 
 function createRoutePointModel() {
 	return class RoutePointModel extends Model {
-		routeId!: string;
-		lat!: Latitude;
-		lon!: Longitude;
-		zoom!: number;
-		idx!: number;
-		ele!: number | null;
-		toJSON!: () => TrackPoint;
+		declare routeId: string;
+		declare lat: Latitude;
+		declare lon: Longitude;
+		declare zoom: number;
+		declare idx: number;
+		declare ele: number | null;
+		declare toJSON: () => TrackPoint;
 	};
 }
 

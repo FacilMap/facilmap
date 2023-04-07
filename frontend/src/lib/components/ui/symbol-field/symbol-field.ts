@@ -7,7 +7,7 @@ import Icon from "../icon/icon";
 import Picker from "../picker/picker";
 import { extend } from "vee-validate";
 import { arrowNavigation } from "../../../utils/ui";
-import { keyBy, mapValues, pickBy } from "lodash";
+import { keyBy, mapValues, pickBy } from "lodash-es";
 import PrerenderedList from "../prerendered-list/prerendered-list";
 
 extend("symbol", {

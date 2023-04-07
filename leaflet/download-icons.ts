@@ -1,12 +1,13 @@
 import fetch from "node-fetch";
-import yauzl, { Entry } from "yauzl";
+import * as yauzl from "yauzl";
 import util from "util";
-import svgo from "svgo";
+import * as svgo from "svgo";
 import cheerio from "cheerio";
 import highland from "highland";
 import fs from "fs";
+import { fileURLToPath } from 'url';
 
-const outDir = `${__dirname}/assets/icons/osmi`;
+const outDir = fileURLToPath(new URL('./assets/icons/osmi', import.meta.url));
 
 function streamEachPromise<T>(stream: Highland.Stream<T>, handle: (item: T) => Promise<void> | void): Promise<void> {
 	return new Promise((resolve, reject) => {
@@ -20,8 +21,8 @@ function streamEachPromise<T>(stream: Highland.Stream<T>, handle: (item: T) => P
 async function updateIcons() {
     const buffer = await fetch("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip").then((res) => res.buffer());
     const zip = (await util.promisify(yauzl.fromBuffer)(buffer))!;
-    
-    const entryStream = highland<Entry>((push) => {
+
+    const entryStream = highland<yauzl.Entry>((push) => {
         zip.on("entry", (entry) => { push(null, entry); });
         zip.on("error", (err) => { push(err); });
     }).filter((entry) => entry.fileName.endsWith(".svg"));
@@ -29,15 +30,15 @@ async function updateIcons() {
     await streamEachPromise(entryStream, async (entry) => {
         const readStream = (await util.promisify(zip.openReadStream.bind(zip))(entry))!;
         const content = await highland<Buffer>(readStream).collect().map((buffers) => Buffer.concat(buffers)).toPromise(Promise);
-        const cleanedContent = await cleanIcon(content.toString());
+        const cleanedContent = cleanIcon(content.toString());
         const outFile = `${outDir}/${entry.fileName.split('/').slice(-2).join('_')}`;
         await fs.promises.writeFile(outFile, Buffer.from(cleanedContent));
     });
 }
 
-async function cleanIcon(icon: string): Promise<string> {
-    const optimized = await new svgo().optimize(icon);
-    
+function cleanIcon(icon: string): string {
+    const optimized = svgo.optimize(icon);
+
     const $ = cheerio.load(optimized.data, {
         xmlMode: true
     });

@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { Component, Prop } from "vue-property-decorator";
 import WithRender from "./elevation-stats.vue";
-import { sortBy } from "lodash";
+import { sortBy } from "lodash-es";
 import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 import { createElevationStats } from "../../../utils/heightgraph";
 import Icon from "../icon/icon";

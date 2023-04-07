@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"target": "es3",
+		"target": "esnext",
 		"esModuleInterop": true,
 		"strict": true,
 		"sourceMap": true,
@@ -8,7 +8,8 @@
 		"outDir": "dist",
 		"moduleResolution": "node",
 		"noErrorTruncation": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"module": "esnext"
 	},
 	"include": ["src/**/*"]
 }

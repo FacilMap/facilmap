@@ -1,5 +1,5 @@
 import { PadId } from "facilmap-types";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import Vue from "vue";
 
 export interface Bookmark {

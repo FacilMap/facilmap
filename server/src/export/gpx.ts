@@ -1,14 +1,15 @@
-import { streamToArrayPromise, toStream } from "../utils/streams";
+import { streamToArrayPromise, toStream } from "../utils/streams.js";
 import { compile } from "ejs";
 import fs from "fs";
-import Database from "../database/database";
+import Database from "../database/database.js";
 import { Field, PadId, Type } from "facilmap-types";
 import { compileExpression, quoteHtml } from "facilmap-utils";
-import { LineWithTrackPoints } from "../database/line";
-import { keyBy } from "lodash";
+import { LineWithTrackPoints } from "../database/line.js";
+import { keyBy } from "lodash-es";
 import highland from "highland";
+import { fileURLToPath } from "url";
 
-const lineTemplateP = fs.promises.readFile(`${__dirname}/gpx-line.ejs`).then((t) => {
+const lineTemplateP = fs.promises.readFile(fileURLToPath(new URL('./gpx-line.ejs', import.meta.url))).then((t) => {
 	return compile(t.toString());
 });
 lineTemplateP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)

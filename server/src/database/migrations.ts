@@ -1,12 +1,12 @@
-import { clone, generateRandomId, promiseProps } from "../utils/utils";
-import { streamEachPromise } from "../utils/streams";
+import { clone, generateRandomId, promiseProps } from "../utils/utils.js";
+import { streamEachPromise } from "../utils/streams.js";
 import Sequelize, { DataTypes } from "sequelize";
-import { isEqual } from "lodash";
-import Database from "./database";
-import { PadModel } from "./pad";
+import { isEqual } from "lodash-es";
+import Database from "./database.js";
+import { PadModel } from "./pad.js";
 import { Line, Marker } from "facilmap-types";
-import { LinePointModel } from "./line";
-import { getElevationForPoints } from "../elevation";
+import { LinePointModel } from "./line.js";
+import { getElevationForPoints } from "../elevation.js";
 
 const Op = Sequelize.Op;
 

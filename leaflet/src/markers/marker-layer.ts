@@ -16,7 +16,7 @@ export interface MarkerLayerOptions extends MarkerOptions {
 
 export default class MarkerLayer extends LeafletMarker {
 
-	options!: MarkerLayerOptions;
+	declare options: MarkerLayerOptions;
 
 	_fmDragging: boolean = false;
 	_fmDraggingMouseEvent?: LeafletMouseEvent;

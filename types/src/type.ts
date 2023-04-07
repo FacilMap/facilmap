@@ -1,5 +1,5 @@
-import { Colour, ID, RouteMode, Shape, Symbol } from "./base";
-import { PadId } from "./padData";
+import { Colour, ID, RouteMode, Shape, Symbol } from "./base.js";
+import { PadId } from "./padData.js";
 
 type ObjectType = "marker" | "line";
 type FieldType = "textarea" | "dropdown" | "checkbox" | "input";

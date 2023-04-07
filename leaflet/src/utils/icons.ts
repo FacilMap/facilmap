@@ -1,23 +1,8 @@
 import { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
-import L, { Icon } from "leaflet";
-import { memoize } from "lodash";
-
-const rawIconsContext = require.context("../../assets/icons");
-const rawIcons: Record<string, Record<string, string>> = {};
-for (const key of rawIconsContext.keys() as string[]) {
-	const [set, fname] = key.split("/").slice(-2);
-
-	if (!rawIcons[set])
-		rawIcons[set] = {};
-
-	rawIcons[set][fname.replace(/\.svg$/, "")] = rawIconsContext(key);
-}
-
-rawIcons["fontawesome"] = {};
-for (const name of ["arrow-left", "arrow-right", "biking", "car-alt", "chart-line", "copy", "info-circle", "slash", "walking"]) {
-	rawIcons["fontawesome"][name] = require(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
-}
+import { icon, Icon } from "leaflet";
+import { memoize } from "lodash-es";
+import rawIcons from "custom:icons";
 
 export const symbolList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
 
@@ -250,7 +235,7 @@ export function getMarkerHtml(colour: string, height: number, symbol?: Symbol, s
 export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
-	return L.icon({
+	return icon({
 		iconUrl: getMarkerUrl(colour, height, symbol, shape, highlight),
 		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
 		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],

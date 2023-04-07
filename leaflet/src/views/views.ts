@@ -2,7 +2,7 @@ import { View } from "facilmap-types";
 import { fmToLeafletBbox, leafletToFmBbox, pointsEqual } from "../utils/leaflet";
 import { Map } from "leaflet";
 import { getVisibleLayers, setVisibleLayers } from "../layers";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import OverpassLayer from "../overpass/overpass-layer";
 import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from "../overpass/overpass-utils";
 

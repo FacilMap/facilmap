@@ -1,22 +1,22 @@
 import { DataTypes, Model } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
-import { BboxWithExcept, dataDefinition, DataModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
-import Database from "./database";
-import { getElevationForPoint } from "../elevation";
+import { BboxWithExcept, dataDefinition, DataModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import Database from "./database.js";
+import { getElevationForPoint } from "../elevation.js";
 
 function createMarkerModel() {
 	return class MarkerModel extends Model {
-		id!: ID;
-		padId!: PadId;
-		lat!: Latitude;
-		lon!: Longitude;
-		name!: string | null;
-		colour!: string;
-		size!: number;
-		symbol!: string | null;
-		shape!: string | null;
-		ele!: number | null;
-		toJSON!: () => Marker;
+		declare id: ID;
+		declare padId: PadId;
+		declare lat: Latitude;
+		declare lon: Longitude;
+		declare name: string | null;
+		declare colour: string;
+		declare size: number;
+		declare symbol: string | null;
+		declare shape: string | null;
+		declare ele: number | null;
+		declare toJSON: () => Marker;
 	};
 }
 

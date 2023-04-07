@@ -1,5 +1,5 @@
-import { Bbox, ID, Point, RouteMode } from "./base";
-import { ExtraInfo, TrackPoint } from "./line";
+import { Bbox, ID, Point, RouteMode } from "./base.js";
+import { ExtraInfo, TrackPoint } from "./line.js";
 
 export interface RouteInfo extends Bbox {
 	trackPoints: TrackPoint[];

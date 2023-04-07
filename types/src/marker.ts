@@ -1,5 +1,5 @@
-import { Colour, ID, Point, Shape, Symbol } from "./base";
-import { PadId } from "./padData";
+import { Colour, ID, Point, Shape, Symbol } from "./base.js";
+import { PadId } from "./padData.js";
 
 export interface Marker<DataType = Record<string, string>> extends Point {
 	id: ID;

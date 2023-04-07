@@ -4,7 +4,7 @@ import { Component, Prop, Ref, Watch } from "vue-property-decorator";
 import { Field, FieldOptionUpdate, FieldUpdate, Line, Marker, Type } from "facilmap-types";
 import { clone } from "facilmap-utils";
 import { canControl, mergeObject } from "../../utils/utils";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { showErrorToast } from "../../utils/toasts";
 import ColourField from "../ui/colour-field/colour-field";
 import draggable from "vuedraggable";

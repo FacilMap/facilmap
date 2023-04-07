@@ -19,7 +19,7 @@ interface SearchResultsLayerOptions extends LayerOptions {
 
 export default class SearchResultsLayer extends FeatureGroup {
 
-	options!: SearchResultsLayerOptions;
+	declare options: SearchResultsLayerOptions;
 	highlightedResults = new Set<SearchResult>();
 
 	constructor(results?: SearchResult[], options?: SearchResultsLayerOptions) {

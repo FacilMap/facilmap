@@ -5,7 +5,7 @@ import { Client, InjectClient, InjectContext } from "../../utils/decorators";
 import { showErrorToast } from "../../utils/toasts";
 import { getLabelsForHistoryEntry, HistoryEntryLabels } from "./history-utils";
 import { HistoryEntry } from "facilmap-types";
-import { orderBy } from "lodash";
+import { orderBy } from "lodash-es";
 import Icon from "../ui/icon/icon";
 import "./history.scss";
 import { Context } from "../facilmap/facilmap";

@@ -5,7 +5,7 @@ import { InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 import { getOverpassPreset, OverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
 import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 import "./overpass-form.scss";
-import { debounce } from "lodash";
+import { debounce } from "lodash-es";
 
 @WithRender
 @Component({ })

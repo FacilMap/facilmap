@@ -1,11 +1,11 @@
-import { streamEachPromise } from "../utils/streams";
-import { promiseAuto } from "../utils/utils";
+import { streamEachPromise } from "../utils/streams.js";
+import { promiseAuto } from "../utils/utils.js";
 import ejs from "ejs";
-import { getFrontendFile } from "../webserver";
+import { getFrontendFile } from "../webserver.js";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
 import { compileExpression } from "facilmap-utils";
 import * as utils from "facilmap-utils";
-import Database from "../database/database";
+import Database from "../database/database.js";
 
 type TypeWithObjects = Type & {
 	markers: Marker[],

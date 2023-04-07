@@ -1,9 +1,9 @@
 import { Feature, FeatureCollection, LineString, Point } from "geojson";
-import { View } from "./view";
-import { Type } from "./type";
-import { ID } from "./base";
-import { Marker } from "./marker";
-import { Line } from "./line";
+import { View } from "./view.js";
+import { Type } from "./type.js";
+import { ID } from "./base.js";
+import { Marker } from "./marker.js";
+import { Line } from "./line.js";
 
 export type MarkerFeature = Feature<Point, Omit<Marker, "id" | "padId" | "lat" | "lon">>;
 export type LineFeature = Feature<LineString, Omit<Line, "id" | "padId" | "top" | "left" | "right" | "bottom">>;

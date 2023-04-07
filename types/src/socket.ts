@@ -1,12 +1,12 @@
-import { Bbox, BboxWithZoom, ExportFormat, ID, ObjectWithId } from "./base";
-import { PadData, PadDataCreate, PadDataUpdate } from "./padData";
-import { Marker, MarkerCreate, MarkerUpdate } from "./marker";
-import { Line, LineCreate, LineUpdate } from "./line";
-import { LineToRouteCreate, Route, RouteClear, RouteCreate, RouteInfo, RouteRequest } from "./route";
-import { Type, TypeCreate, TypeUpdate } from "./type";
-import { View, ViewCreate, ViewUpdate } from "./view";
-import { MapEvents, MultipleEvents } from "./events";
-import { SearchResult } from "./searchResult";
+import { Bbox, BboxWithZoom, ExportFormat, ID, ObjectWithId } from "./base.js";
+import { PadData, PadDataCreate, PadDataUpdate } from "./padData.js";
+import { Marker, MarkerCreate, MarkerUpdate } from "./marker.js";
+import { Line, LineCreate, LineUpdate } from "./line.js";
+import { LineToRouteCreate, Route, RouteClear, RouteCreate, RouteInfo, RouteRequest } from "./route.js";
+import { Type, TypeCreate, TypeUpdate } from "./type.js";
+import { View, ViewCreate, ViewUpdate } from "./view.js";
+import { MapEvents, MultipleEvents } from "./events.js";
+import { SearchResult } from "./searchResult.js";
 
 export interface GetPadQuery {
 	padId: string;

@@ -1,29 +1,29 @@
 import Sequelize, { Model } from "sequelize";
 import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "facilmap-types";
-import Database from "./database";
-import { makeNotNullForeignKey, validateColour } from "./helpers";
+import Database from "./database.js";
+import { makeNotNullForeignKey, validateColour } from "./helpers.js";
 
 function createTypeModel() {
 	return class TypeModel extends Model {
-		id!: ID;
-		name!: string;
-		type!: "marker" | "line";
-		padId!: PadId;
-		defaultColour!: string | null;
-		colourFixed!: boolean | null;
-		defaultSize!: string | null;
-		sizeFixed!: boolean | null;
-		defaultSymbol!: string | null;
-		symbolFixed!: boolean | null;
-		defaultShape!: string | null;
-		shapeFixed!: boolean | null;
-		defaultWidth!: string | null;
-		widthFixed!: boolean | null;
-		defaultMode!: string | null;
-		modeFixed!: boolean | null;
-		showInLegend!: boolean | null;
-		fields!: Field[];
-		toJSON!: () => Type;
+		declare id: ID;
+		declare name: string;
+		declare type: "marker" | "line";
+		declare padId: PadId;
+		declare defaultColour: string | null;
+		declare colourFixed: boolean | null;
+		declare defaultSize: string | null;
+		declare sizeFixed: boolean | null;
+		declare defaultSymbol: string | null;
+		declare symbolFixed: boolean | null;
+		declare defaultShape: string | null;
+		declare shapeFixed: boolean | null;
+		declare defaultWidth: string | null;
+		declare widthFixed: boolean | null;
+		declare defaultMode: string | null;
+		declare modeFixed: boolean | null;
+		declare showInLegend: boolean | null;
+		declare fields: Field[];
+		declare toJSON: () => Type;
 	};
 }
 

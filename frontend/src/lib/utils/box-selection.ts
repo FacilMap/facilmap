@@ -1,5 +1,5 @@
 import { Evented, LatLngBounds, Map } from "leaflet";
-import { throttle } from "lodash";
+import { throttle } from "lodash-es";
 
 export default class BoxSelection extends Map.BoxZoom {
 

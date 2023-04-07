@@ -1,5 +1,5 @@
-import { View } from "./view";
-import { ID } from "./base";
+import { View } from "./view.js";
+import { ID } from "./base.js";
 
 export type PadId = string;
 

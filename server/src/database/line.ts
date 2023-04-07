@@ -1,10 +1,10 @@
 import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
-import Database from "./database";
-import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
-import { groupBy, isEqual, mapValues, omit } from "lodash";
-import { wrapAsync } from "../utils/streams";
-import { calculateRouteForLine } from "../routing/routing";
+import Database from "./database.js";
+import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { groupBy, isEqual, mapValues, omit } from "lodash-es";
+import { wrapAsync } from "../utils/streams.js";
+import { calculateRouteForLine } from "../routing/routing.js";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -12,37 +12,38 @@ export type LineWithTrackPoints = Line & {
 
 function createLineModel() {
 	return class LineModel extends Model {
-		id!: ID;
-		padId!: PadId;
-		routePoints!: string;
-		mode!: string;
-		colour!: string;
-		width!: number;
-		name!: string | null;
-		distance!: number | null;
-		time!: number | null;
-		ascent!: number | null;
-		descent!: number | null;
-		top!: Latitude;
-		bottom!: Latitude;
-		left!: Longitude;
-		right!: Longitude;
-		extraInfo!: string | null;
+		declare id: ID;
+		declare padId: PadId;
+		declare routePoints: string;
+		declare mode: string;
+		declare colour: string;
+		declare width: number;
+		declare name: string | null;
+		declare distance: number | null;
+		declare time: number | null;
+		declare ascent: number | null;
+		declare descent: number | null;
+		declare top: Latitude;
+		declare bottom: Latitude;
+		declare left: Longitude;
+		declare right: Longitude;
+		declare extraInfo: string | null;
 
-		getLinePoints!: HasManyGetAssociationsMixin<LinePointModel>;
-		toJSON!: () => Line;
+		declare getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
+		declare toJSON: () => Line;
 	}
 }
 
 function createLinePointModel() {
 	return class LinePointModel extends Model {
-		id!: ID;
-		lat!: Latitude;
-		lon!: Longitude;
-		zoom!: number;
-		idx!: number;
-		ele!: number | null;
-		toJSON!: () => TrackPoint;
+		declare id: ID;
+		declare lineId: ID;
+		declare lat: Latitude;
+		declare lon: Longitude;
+		declare zoom: number;
+		declare idx: number;
+		declare ele: number | null;
+		declare toJSON: () => TrackPoint;
 	};
 }
 

@@ -94,7 +94,7 @@ export function promiseAuto<T extends object>(obj: PromiseCreatorMap<T>): Promis
 	function _get(str: keyof T) {
 		const dep = obj[str];
 		if(!dep)
-			throw new Error("Invalid dependency '" + str + "' in promiseAuto().");
+			throw new Error("Invalid dependency '" + String(str) + "' in promiseAuto().");
 
 		if(promises[str])
 			return promises[str];

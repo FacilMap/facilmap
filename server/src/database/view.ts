@@ -1,20 +1,20 @@
 import { DataTypes, Model } from "sequelize";
 import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "facilmap-types";
-import Database from "./database";
-import { getLatType, getLonType, makeNotNullForeignKey } from "./helpers";
+import Database from "./database.js";
+import { getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 
 function createViewModel() {
 	return class ViewModel extends Model {
-		id!: ID;
-		name!: string;
-		baseLayer!: string;
-		layers!: string;
-		top!: Latitude;
-		bottom!: Latitude;
-		left!: Longitude;
-		right!: Longitude;
-		filter!: string | null;
-		toJSON!: () => View;
+		declare id: ID;
+		declare name: string;
+		declare baseLayer: string;
+		declare layers: string;
+		declare top: Latitude;
+		declare bottom: Latitude;
+		declare left: Longitude;
+		declare right: Longitude;
+		declare filter: string | null;
+		declare toJSON: () => View;
 	}
 }
 

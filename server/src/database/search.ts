@@ -1,8 +1,8 @@
 import { FindOnMapResult, PadId } from "facilmap-types";
 import Sequelize, { ModelCtor } from "sequelize";
-import Database from "./database";
-import { LineModel } from "./line";
-import { MarkerModel } from "./marker";
+import Database from "./database.js";
+import { LineModel } from "./line.js";
+import { MarkerModel } from "./marker.js";
 import similarity from "string-similarity";
 
 const Op = Sequelize.Op;

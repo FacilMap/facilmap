@@ -1,7 +1,7 @@
 import WithRender from "./prerendered-list.vue";
 import Vue from "vue";
 import { Component, Prop, Watch } from "vue-property-decorator";
-import { mapValues } from "lodash";
+import { mapValues } from "lodash-es";
 import { quoteHtml } from "facilmap-utils";
 
 @WithRender

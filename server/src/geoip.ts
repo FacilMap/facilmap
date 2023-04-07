@@ -1,23 +1,24 @@
-import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo";
+import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo.js";
 import md5 from "md5-file";
-import cron from "node-cron";
-import maxmind, { Reader, Response } from "maxmind";
+import { schedule } from "node-cron";
+import { open, Reader, Response } from "maxmind";
 import fs from "fs";
 import https from "https";
 import zlib from "zlib";
-import config from "./config";
+import config from "./config.js";
 import { IncomingMessage } from "http";
 import { Bbox } from "facilmap-types";
+import { fileURLToPath } from "url";
 
 const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
-const fname = `${__dirname}/../cache/GeoLite2-City.mmdb`;
+const fname = fileURLToPath(new URL('../cache/GeoLite2-City.mmdb', import.meta.url));
 const tmpfname = fname + ".tmp";
 
 let currentMd5: string | null = null;
 let db: Reader<Response> | null = null;
 
 if(config.maxmindUserId && config.maxmindLicenseKey) {
-	cron.schedule("0 3 * * *", download);
+	schedule("0 3 * * *", download);
 
 	load().catch((err) => {
 		console.trace("Error loading maxmind database", err.stack || err);
@@ -29,7 +30,7 @@ if(config.maxmindUserId && config.maxmindLicenseKey) {
 
 async function load() {
 	if(await fs.promises.access(fname).then(() => true).catch(() => false))
-		db = await maxmind.open(fname);
+		db = await open(fname);
 	else
 		db = null;
 

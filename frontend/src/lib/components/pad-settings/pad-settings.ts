@@ -6,7 +6,7 @@ import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 import { clone, generateRandomPadId } from "facilmap-utils";
 import { Client, InjectClient, InjectContext } from "../../utils/decorators";
 import { mergeObject } from "../../utils/utils";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import copyToClipboard from "copy-to-clipboard";
 import FormModal from "../ui/form-modal/form-modal";
 import { showErrorToast } from "../../utils/toasts";

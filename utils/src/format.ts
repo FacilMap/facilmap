@@ -1,17 +1,17 @@
-import marked, { MarkedOptions } from 'marked';
+import { marked } from 'marked';
 import { Field } from "facilmap-types";
-import { createDiv } from './dom';
-import { normalizeField } from './filter';
-import { quoteHtml } from './utils';
-import linkifyStr from 'linkifyjs/string';
+import { normalizeField } from './filter.js';
+import { quoteHtml } from './utils.js';
+import linkifyStr from 'linkify-string';
 import createPurify from 'dompurify';
-import { obfuscate } from './obfuscate';
+import { obfuscate } from './obfuscate.js';
+import cheerio from 'cheerio';
 
-const purify = createPurify(typeof window !== "undefined" ? window : new (eval("require")("jsdom").JSDOM)("").window);
+const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
-marked.setOptions({
+const markdownOptions: marked.MarkedOptions = {
 	breaks: true
-});
+};
 
 export function formatField(field: Field, value: string): string {
 	value = normalizeField(field, value);
@@ -28,19 +28,21 @@ export function formatField(field: Field, value: string): string {
 	}
 }
 
-export function markdownBlock(string: string, options?: MarkedOptions): string {
-	const [ret, $] = createDiv();
-	ret.html(purify.sanitize(marked(string, options)));
-	applyMarkdownModifications(ret, $);
-	return ret.html()!;
+export function markdownBlock(string: string): string {
+	const $ = cheerio.load("<div/>");
+	const el = $.root();
+	el.html(purify.sanitize(marked(string, markdownOptions)));
+	applyMarkdownModifications(el, $);
+	return el.html()!;
 }
 
-export function markdownInline(string: string, options?: MarkedOptions): string {
-	const [ret, $] = createDiv();
-	ret.html(purify.sanitize(marked(string, options)));
-	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
-	applyMarkdownModifications(ret, $);
-	return ret.html()!;
+export function markdownInline(string: string): string {
+	const $ = cheerio.load("<div/>");
+	const el = $.root();
+	el.html(purify.sanitize(marked(string, markdownOptions)));
+	$("p", el).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
+	applyMarkdownModifications(el, $);
+	return el.html()!;
 }
 
 export function round(number: number, digits: number): number {

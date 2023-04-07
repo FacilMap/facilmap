@@ -12,7 +12,7 @@ interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 
 export default class SearchResultGeoJSON extends GeoJSONLayer {
 
-	options!: SearchResultGeoJSONOptions;
+	declare options: SearchResultGeoJSONOptions;
 
 	constructor(geojson: GeoJSON, options?: SearchResultGeoJSONOptions) {
 		super(geojson, options);

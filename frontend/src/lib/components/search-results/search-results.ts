@@ -14,7 +14,7 @@ import { showErrorToast } from "../../utils/toasts";
 import { lineStringToTrackPoints, mapSearchResultToType } from "./utils";
 import { isFileResult, isLineResult, isMapResult, isMarkerResult, typeExists } from "../../utils/search";
 import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
-import { mapValues, pickBy, uniq } from "lodash";
+import { mapValues, pickBy, uniq } from "lodash-es";
 import FormModal from "../ui/form-modal/form-modal";
 import StringMap from "../../utils/string-map";
 import { getUniqueId } from "../../utils/utils";

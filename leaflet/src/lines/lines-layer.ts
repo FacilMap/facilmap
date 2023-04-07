@@ -11,7 +11,7 @@ interface LinesLayerOptions extends LayerOptions {
 
 export default class LinesLayer extends FeatureGroup {
 
-	options!: LayerOptions;
+	declare options: LayerOptions;
 	client: Client<any>;
 	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	highlightedLinesIds = new Set<ID>();

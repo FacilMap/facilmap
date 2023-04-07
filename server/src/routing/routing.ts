@@ -1,8 +1,8 @@
-import { calculateBbox, isInBbox } from "../utils/geo";
+import { calculateBbox, isInBbox } from "../utils/geo.js";
 import { Bbox, BboxWithZoom, LineCreate, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
 import { decodeRouteMode, DecodedRouteMode, calculateDistance } from "facilmap-utils";
-import { calculateOSRMRoute } from "./osrm";
-import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors";
+import { calculateOSRMRoute } from "./osrm.js";
+import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -36,9 +36,11 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	}
 
 	calculateZoomLevels(route!.trackPoints);
-	Object.assign(route, calculateBbox(route!.trackPoints));
 
-	return route as RouteInfo;
+	return {
+		...route,
+		...calculateBbox(route!.trackPoints)
+	} as RouteInfo;
 }
 
 export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {

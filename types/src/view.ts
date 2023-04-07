@@ -1,5 +1,5 @@
-import { Bbox, ID, Layer } from "./base";
-import { PadId } from "./padData";
+import { Bbox, ID, Layer } from "./base.js";
+import { PadId } from "./padData.js";
 
 export interface View extends Bbox {
 	id: ID;

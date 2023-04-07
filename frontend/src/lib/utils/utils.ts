@@ -1,5 +1,5 @@
 import Vue from "vue";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { clone } from "facilmap-utils";
 import { Field, Line, Marker, Type } from "facilmap-types";
 

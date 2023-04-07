@@ -1,20 +1,20 @@
-import { clone } from "../utils/utils";
+import { clone } from "../utils/utils.js";
 import { Model, DataTypes, FindOptions } from "sequelize";
-import Database from "./database";
+import Database from "./database.js";
 import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadId } from "facilmap-types";
-import { makeNotNullForeignKey } from "./helpers";
+import { makeNotNullForeignKey } from "./helpers.js";
 
 function createHistoryModel() {
 	return class HistoryModel extends Model {
-		id!: ID;
-		time!: Date;
-		type!: HistoryEntryType;
-		action!: HistoryEntryAction;
-		objectId!: ID;
-		objectBefore!: string | null;
-		objectAfter!: string | null;
-		padId!: PadId;
-		toJSON!: () => HistoryEntry;
+		declare id: ID;
+		declare time: Date;
+		declare type: HistoryEntryType;
+		declare action: HistoryEntryAction;
+		declare objectId: ID;
+		declare objectBefore: string | null;
+		declare objectAfter: string | null;
+		declare padId: PadId;
+		declare toJSON: () => HistoryEntry;
 	};
 }
 

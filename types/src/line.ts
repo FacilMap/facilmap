@@ -1,5 +1,5 @@
-import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base";
-import { PadId } from "./padData";
+import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base.js";
+import { PadId } from "./padData.js";
 
 export type ExtraInfo = Record<string, Array<[number, number, number]>>;
 

@@ -1,17 +1,17 @@
-import { promiseProps, stripObject } from "./utils/utils";
-import { streamToArrayPromise } from "./utils/streams";
-import { isInBbox } from "./utils/geo";
+import { promiseProps, stripObject } from "./utils/utils.js";
+import { streamToArrayPromise } from "./utils/streams.js";
+import { isInBbox } from "./utils/geo.js";
 import { Server, Socket as SocketIO } from "socket.io";
 import domain from "domain";
-import { exportLineToGpx } from "./export/gpx";
-import { find } from "./search";
-import { geoipLookup } from "./geoip";
-import { isEqual, omit } from "lodash";
-import Database, { DatabaseEvents } from "./database/database";
+import { exportLineToGpx } from "./export/gpx.js";
+import { find } from "./search.js";
+import { geoipLookup } from "./geoip.js";
+import { isEqual, omit } from "lodash-es";
+import Database, { DatabaseEvents } from "./database/database.js";
 import { Server as HttpServer } from "http";
 import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable } from "facilmap-types";
-import { calculateRoute, prepareForBoundingBox } from "./routing/routing";
-import { RouteWithId } from "./database/route";
+import { calculateRoute, prepareForBoundingBox } from "./routing/routing.js";
+import { RouteWithId } from "./database/route.js";
 
 type SocketHandlers = {
 	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
@@ -74,7 +74,7 @@ class SocketConnection {
 
 	registerSocketHandlers() {
 		for (const i of Object.keys(this.socketHandlers) as Array<keyof SocketHandlers>) {
-			this.socket.on(i, async (data, callback) => {
+			this.socket.on(i, async (data: any, callback: any) => {
 				try {
 					const res = await this.socketHandlers[i](data);
 
@@ -82,7 +82,7 @@ class SocketConnection {
 						console.trace("No callback available to send result of socket handler " + i);
 
 					callback && callback(null, res);
-				} catch (err) {
+				} catch (err: any) {
 					console.log(err.stack);
 
 					callback && callback({ message: err.message, stack: err.stack });

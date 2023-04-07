@@ -1,10 +1,10 @@
-import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams";
-import { clone } from "../utils/utils";
+import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams.js";
+import { clone } from "../utils/utils.js";
 import { compileExpression } from "facilmap-utils";
 import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
-import Database from "../database/database";
-import { keyBy, mapValues, omit } from "lodash";
-import { LineWithTrackPoints } from "../database/line";
+import Database from "../database/database.js";
+import { keyBy, mapValues, omit } from "lodash-es";
+import { LineWithTrackPoints } from "../database/line.js";
 
 export function exportGeoJson(database: Database, padId: PadId, filter?: string): Highland.Stream<string> {
 	return toStream(async () => {

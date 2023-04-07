@@ -1,16 +1,19 @@
 import compression from "compression";
-import ejs from "ejs";
-import express, { Request, Response, NextFunction } from "express";
+import * as ejs from "ejs";
+import express, { Request, Response, static as expressStatic, NextFunction } from "express";
 import fs from "fs";
 import { createServer, Server as HttpServer } from "http";
 import { dirname } from "path";
 import { PadId } from "facilmap-types";
-import { createTable } from "./export/table";
+import { createTable } from "./export/table.js";
 import Database from "./database/database";
-import { exportGeoJson } from "./export/geojson";
-import { exportGpx } from "./export/gpx";
+import { exportGeoJson } from "./export/geojson.js";
+import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
+import { createRequire } from 'module';
 
+// https://stackoverflow.com/a/62499498/242365
+const require = createRequire(import.meta.url);
 const frontendPath = dirname(require.resolve("facilmap-frontend/package.json")); // Do not resolve main property
 
 const isDevMode = !!process.env.FM_DEV;
@@ -26,7 +29,7 @@ const staticMiddleware = isDevMode
 	? require("webpack-dev-middleware")(webpackCompiler, { // require the stuff here so that it doesn't fail if devDependencies are not installed
 		publicPath: "/"
 	})
-	: express.static(frontendPath + "/dist/");
+	: expressStatic(frontendPath + "/dist/");
 
 const hotMiddleware = isDevMode ? require("webpack-hot-middleware")(webpackCompiler) : undefined;
 

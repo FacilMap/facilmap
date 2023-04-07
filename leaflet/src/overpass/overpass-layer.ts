@@ -34,7 +34,7 @@ export interface OverpassLayerOptions extends LayerOptions {
 
 export default class OverpassLayer extends FeatureGroup {
 
-	options!: OverpassLayerOptions;
+	declare options: OverpassLayerOptions;
 	_highlightedElements = new Set<string>();
 	_query: string | OverpassPreset[] | undefined;
 	_lastRequestController?: AbortController;
@@ -147,7 +147,7 @@ export default class OverpassLayer extends FeatureGroup {
 			for (const element of elements)
 				this.addLayer(this._elementToLayer(element));
 			this.fire("loadend", { status: elements.length < this.options.limit! ? OverpassLoadStatus.COMPLETE : OverpassLoadStatus.INCOMPLETE });
-		} catch (error) {
+		} catch (error: any) {
 			if (error.name == "AbortError") {
 				this.fire("loadend", { status: OverpassLoadStatus.ABORTED });
 				return;

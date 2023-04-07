@@ -1,10 +1,10 @@
-import { ID, ObjectWithId } from "./base";
-import { Type } from "./type";
-import { HistoryEntry } from "./historyEntry";
-import { View } from "./view";
-import { Line, TrackPoint } from "./line";
-import { Marker } from "./marker";
-import { PadData } from "./padData";
+import { ID, ObjectWithId } from "./base.js";
+import { Type } from "./type.js";
+import { HistoryEntry } from "./historyEntry.js";
+import { View } from "./view.js";
+import { Line, TrackPoint } from "./line.js";
+import { Marker } from "./marker.js";
+import { PadData } from "./padData.js";
 
 export interface LinePointsEvent {
 	id: ID;
