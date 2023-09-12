@@ -36,7 +36,7 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	}
 
 	calculateZoomLevels(route!.trackPoints);
-	Object.assign(route, calculateBbox(route!.trackPoints));
+	Object.assign(route!, calculateBbox(route!.trackPoints));
 
 	return route as RouteInfo;
 }

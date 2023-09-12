@@ -35,9 +35,7 @@
     "types": "tsc --noEmit src/**/*.ts",
     "lint": "eslint src/**/*.ts"
   },
-  "bin": {
-    "facilmap-server": "./dist/server.js"
-  },
+  "bin": "./dist/server.js",
   "dependencies": {
     "@mapbox/polyline": "^1.1.1",
     "async": "^3.2.0",
@@ -97,9 +95,9 @@
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
-    "typescript": "^4.1.3",
-    "webpack": "^5.37.1",
-    "webpack-dev-middleware": "^4.3.0",
-    "webpack-hot-middleware": "^2.25.0"
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-dev-middleware": "^6.1.1",
+    "webpack-hot-middleware": "^2.25.4"
   }
 }

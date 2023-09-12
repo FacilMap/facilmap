@@ -1,28 +1,25 @@
-import { DataTypes, Model, Op, Sequelize } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
 import { FindPadsQuery, FindPadsResult, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults } from "facilmap-types";
 import Database from "./database";
 import { streamEachPromise } from "../utils/streams";
+import { createModel } from "./helpers";
 
-function createPadModel() {
-	return class PadModel extends Model {
-		id!: PadId;
-		name!: string;
-		writeId!: PadId;
-		adminId!: PadId;
-		searchEngines!: boolean;
-		description!: string;
-		clusterMarkers!: boolean;
-		legend1!: string;
-		legend2!: string;
-		toJSON!: () => PadData;
-	};
-}
-
-export type PadModel = InstanceType<ReturnType<typeof createPadModel>>;
+export interface PadModel extends Model<InferAttributes<PadModel>, InferCreationAttributes<PadModel>> {
+	id: PadId;
+	name: string;
+	writeId: PadId;
+	adminId: PadId;
+	searchEngines: boolean;
+	description: string;
+	clusterMarkers: boolean;
+	legend1: string;
+	legend2: string;
+	toJSON: () => PadData;
+};
 
 export default class DatabasePads {
 
-	PadModel = createPadModel();
+	PadModel = createModel<PadModel>();
 
 	_db: Database;
 

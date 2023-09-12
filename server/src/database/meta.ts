@@ -1,16 +1,15 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import Database from "./database";
+import { createModel } from "./helpers";
 
-function createMetaModel() {
-	return class MetaModel extends Model {
-		key!: string;
-		value!: string;
-	};
+interface MetaModel extends Model<InferAttributes<MetaModel>, InferCreationAttributes<MetaModel>> {
+	key: string;
+	value: string;
 }
 
 export default class DatabaseMeta {
 
-	MetaModel = createMetaModel();
+	MetaModel = createModel<MetaModel>();
 
 	_db: Database;
 

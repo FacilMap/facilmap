@@ -540,7 +540,7 @@ export default class Client<DataType = Record<string, string>> {
 		try {
 			const obj = await this._emit("setPadId", padId);
 			this._receiveMultiple(obj);
-		} catch(err) {
+		} catch(err: any) {
 			this._set(this, 'serverError', err);
 			this._simulateEvent("serverError", err);
 			throw err;

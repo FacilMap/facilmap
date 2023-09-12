@@ -88,10 +88,10 @@ type PromiseCreatorMap<T extends object> = {
 	[P in keyof T]: PromiseLike<T[P]> | ((...args: Array<any>) => Promise<T[P]>)
 };
 
-export function promiseAuto<T extends object>(obj: PromiseCreatorMap<T>): Promise<T> {
+export function promiseAuto<T extends Record<string, any>>(obj: PromiseCreatorMap<T>): Promise<T> {
 	const promises = { } as PromiseMap<T>;
 
-	function _get(str: keyof T) {
+	function _get(str: keyof T & string) {
 		const dep = obj[str];
 		if(!dep)
 			throw new Error("Invalid dependency '" + str + "' in promiseAuto().");
@@ -112,7 +112,7 @@ export function promiseAuto<T extends object>(obj: PromiseCreatorMap<T>): Promis
 	function _getDeps(arr: Array<keyof T>) {
 		const deps = { } as PromiseMap<T>;
 		arr.forEach(function(it) {
-			deps[it] = _get(it);
+			deps[it] = _get(it as string);
 		});
 		return promiseProps(deps);
 	}

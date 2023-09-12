@@ -7,7 +7,7 @@ interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 
 export default class RouteDragHandler extends DraggableLines {
 
-	realOptions!: RouteDragHandlerOptions;
+	declare realOptions: RouteDragHandlerOptions;
 	client: Client<any>;
 
 	constructor(map: Map, client: Client<any>, options?: RouteDragHandlerOptions) {

@@ -13,7 +13,7 @@ import Icon from "../icon/icon";
 })
 export default class Coordinates extends Vue {
 
-	@Prop({ type: String }) point!: Point;
+	@Prop({ type: Object }) point!: Point;
 
 	get formattedCoordinates(): string {
 		return `${round(this.point.lat, 5)}, ${round(this.point.lon, 5)}`;

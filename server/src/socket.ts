@@ -74,7 +74,7 @@ class SocketConnection {
 
 	registerSocketHandlers() {
 		for (const i of Object.keys(this.socketHandlers) as Array<keyof SocketHandlers>) {
-			this.socket.on(i, async (data, callback) => {
+			this.socket.on(i, async (data: any, callback: any): Promise<void> => {
 				try {
 					const res = await this.socketHandlers[i](data);
 
@@ -82,7 +82,7 @@ class SocketConnection {
 						console.trace("No callback available to send result of socket handler " + i);
 
 					callback && callback(null, res);
-				} catch (err) {
+				} catch (err: any) {
 					console.log(err.stack);
 
 					callback && callback({ message: err.message, stack: err.stack });

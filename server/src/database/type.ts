@@ -1,33 +1,30 @@
-import Sequelize, { Model } from "sequelize";
+import Sequelize, { CreationOptional, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "facilmap-types";
 import Database from "./database";
-import { makeNotNullForeignKey, validateColour } from "./helpers";
+import { createModel, getDefaultIdType, makeNotNullForeignKey, validateColour } from "./helpers";
+import { PadModel } from "./pad";
 
-function createTypeModel() {
-	return class TypeModel extends Model {
-		id!: ID;
-		name!: string;
-		type!: "marker" | "line";
-		padId!: PadId;
-		defaultColour!: string | null;
-		colourFixed!: boolean | null;
-		defaultSize!: string | null;
-		sizeFixed!: boolean | null;
-		defaultSymbol!: string | null;
-		symbolFixed!: boolean | null;
-		defaultShape!: string | null;
-		shapeFixed!: boolean | null;
-		defaultWidth!: string | null;
-		widthFixed!: boolean | null;
-		defaultMode!: string | null;
-		modeFixed!: boolean | null;
-		showInLegend!: boolean | null;
-		fields!: Field[];
-		toJSON!: () => Type;
-	};
-}
-
-export type TypeModel = InstanceType<ReturnType<typeof createTypeModel>>;
+export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreationAttributes<TypeModel>> {
+	id: CreationOptional<ID>;
+	name: string;
+	type: "marker" | "line";
+	padId: ForeignKey<PadModel["id"]>;
+	defaultColour: string | null;
+	colourFixed: boolean | null;
+	defaultSize: string | null;
+	sizeFixed: boolean | null;
+	defaultSymbol: string | null;
+	symbolFixed: boolean | null;
+	defaultShape: string | null;
+	shapeFixed: boolean | null;
+	defaultWidth: string | null;
+	widthFixed: boolean | null;
+	defaultMode: string | null;
+	modeFixed: boolean | null;
+	showInLegend: boolean | null;
+	fields: Field[];
+	toJSON: () => Type;
+};
 
 const DEFAULT_TYPES: TypeCreate[] = [
 	{ name: "Marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
@@ -36,7 +33,7 @@ const DEFAULT_TYPES: TypeCreate[] = [
 
 export default class DatabaseTypes {
 
-	TypeModel = createTypeModel();
+	TypeModel = createModel<TypeModel>();
 
 	_db: Database;
 
@@ -44,6 +41,7 @@ export default class DatabaseTypes {
 		this._db = database;
 
 		this.TypeModel.init({
+			id: getDefaultIdType(),
 			name: { type: Sequelize.TEXT, allowNull: false },
 			type: { type: Sequelize.ENUM("marker", "line"), allowNull: false },
 			defaultColour: { type: Sequelize.STRING(6), allowNull: true, validate: validateColour },

@@ -45,7 +45,7 @@ export async function validateOverpassQuery(query: string, signal?: AbortSignal)
 	try {
 		await getOverpassElements(query, latLngBounds([0, 0], [0, 0]), 1, 1, signal);
 		return undefined;
-	} catch (e) {
+	} catch (e: any) {
 		return e.message;
 	}
 }

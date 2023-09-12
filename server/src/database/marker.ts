@@ -1,35 +1,32 @@
-import { DataTypes, Model } from "sequelize";
+import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
-import { BboxWithExcept, dataDefinition, DataModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
+import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers";
 import Database from "./database";
 import { getElevationForPoint } from "../elevation";
+import { PadModel } from "./pad";
+import { Point as GeoJsonPoint } from "geojson";
+import { TypeModel } from "./type";
 
-function createMarkerModel() {
-	return class MarkerModel extends Model {
-		id!: ID;
-		padId!: PadId;
-		lat!: Latitude;
-		lon!: Longitude;
-		name!: string | null;
-		colour!: string;
-		size!: number;
-		symbol!: string | null;
-		shape!: string | null;
-		ele!: number | null;
-		toJSON!: () => Marker;
-	};
+export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
+	id: CreationOptional<ID>;
+	padId: ForeignKey<PadModel["id"]>;
+	pos: GeoJsonPoint;
+	lat: Latitude;
+	lon: Longitude;
+	name: string | null;
+	typeId: ForeignKey<TypeModel["id"]>;
+	colour: string;
+	size: number;
+	symbol: string | null;
+	shape: string | null;
+	ele: number | null;
+	toJSON: () => Marker;
 }
-
-function createMarkerDataModel() {
-	return class MarkerData extends DataModel {};
-}
-
-export type MarkerModel = InstanceType<ReturnType<typeof createMarkerModel>>;
 
 export default class DatabaseMarkers {
 
-	MarkerModel = createMarkerModel();
-	MarkerDataModel = createMarkerDataModel();
+	MarkerModel = createModel<MarkerModel>();
+	MarkerDataModel = createModel<DataModel>();
 
 	_db: Database;
 
@@ -37,6 +34,7 @@ export default class DatabaseMarkers {
 		this._db = database;
 
 		this.MarkerModel.init({
+			id: getDefaultIdType(),
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),

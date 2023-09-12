@@ -342,7 +342,7 @@ export default class RouteForm extends Vue {
 
 				if(dest.selectedSuggestion == null)
 					Vue.set(dest, "selectedSuggestion", this.getSelectedSuggestion(dest));
-			} catch (err) {
+			} catch (err: any) {
 				if(query != dest.loadingQuery)
 					return; // The destination has changed in the meantime
 

@@ -23,7 +23,7 @@ export function filterHasError(expr: string): Error | undefined {
 	try {
 		if(expr && expr.trim())
 			filtrexCompileExpression(expr, { extraFunctions: customFuncs });
-	} catch(e) {
+	} catch(e: any) {
 		return e;
 	}
 }
