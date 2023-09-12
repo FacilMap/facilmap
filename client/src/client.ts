@@ -76,7 +76,8 @@ export default class Client<DataType = Record<string, string>> {
 	_listeningToHistory: boolean = false;
 
 	constructor(server: string, padId?: string) {
-		this._init(server, padId);
+		this.server = server;
+		this.padId = padId;
 	}
 
 	_set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
@@ -130,13 +131,8 @@ export default class Client<DataType = Record<string, string>> {
 		] as T;
 	}
 
-	_init(server: string, padId: string | undefined): void {
-		// Needs to be in a separate method so that we can merge this class with a scope object in the frontend.
-
-		this._set(this, 'server', server);
-		this._set(this, 'padId', padId);
-
-		const serverUrl = typeof location != "undefined" ? new URL(server, location.href) : new URL(server);
+	async connect(): Promise<void> {
+		const serverUrl = typeof location != "undefined" ? new URL(this.server, location.href) : new URL(this.server);
 		const socket = io(serverUrl.origin, {
 			forceNew: true,
 			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
@@ -150,8 +146,12 @@ export default class Client<DataType = Record<string, string>> {
 		setTimeout(() => {
 			this._simulateEvent("loadStart");
 		}, 0);
-		this.once("connect", () => {
-			this._simulateEvent("loadEnd");
+
+		await new Promise<void>((resolve) => {
+			this.once("connect", () => {
+				this._simulateEvent("loadEnd");
+				resolve();
+			});
 		});
 	}
 
@@ -339,55 +339,50 @@ export default class Client<DataType = Record<string, string>> {
 		return this._setPadId(padId);
 	}
 
-	updateBbox(bbox: BboxWithZoom): Promise<void> {
+	async updateBbox(bbox: BboxWithZoom): Promise<void> {
 		this._set(this, 'bbox', bbox);
-		return this._emit("updateBbox", bbox).then((obj) => {
-			this._receiveMultiple(obj);
-		});
+		const obj = await this._emit("updateBbox", bbox);
+		this._receiveMultiple(obj);
 	}
 
-	getPad(data: GetPadQuery): Promise<FindPadsResult | undefined> {
-		return this._emit("getPad", data);
+	async getPad(data: GetPadQuery): Promise<FindPadsResult | undefined> {
+		return await this._emit("getPad", data);
 	}
 
-	findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
-		return this._emit("findPads", data);
+	async findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
+		return await this._emit("findPads", data);
 	}
 
-	createPad(data: PadDataCreate): Promise<void> {
-		return this._emit("createPad", data).then((obj) => {
-			this._set(this, 'readonly', false);
-			this._set(this, 'writable', 2);
-
-			this._receiveMultiple(obj);
-		});
+	async createPad(data: PadDataCreate): Promise<void> {
+		const obj = await this._emit("createPad", data);
+		this._set(this, 'readonly', false);
+		this._set(this, 'writable', 2);
+		this._receiveMultiple(obj);
 	}
 
-	editPad(data: PadDataUpdate): Promise<PadData> {
-		return this._emit("editPad", data);
+	async editPad(data: PadDataUpdate): Promise<PadData> {
+		return await this._emit("editPad", data);
 	}
 
-	deletePad(): Promise<void> {
-		return this._emit("deletePad");
+	async deletePad(): Promise<void> {
+		return await this._emit("deletePad");
 	}
 
-	listenToHistory(): Promise<void> {
-		return this._emit("listenToHistory").then((obj) => {
-			this._set(this, '_listeningToHistory', true);
-			this._receiveMultiple(obj);
-		});
+	async listenToHistory(): Promise<void> {
+		const obj = await this._emit("listenToHistory");
+		this._set(this, '_listeningToHistory', true);
+		this._receiveMultiple(obj);
 	}
 
-	stopListeningToHistory(): Promise<void> {
+	async stopListeningToHistory(): Promise<void> {
 		this._set(this, '_listeningToHistory', false);
-		return this._emit("stopListeningToHistory");
+		return await this._emit("stopListeningToHistory");
 	}
 
-	revertHistoryEntry(data: ObjectWithId): Promise<void> {
-		return this._emit("revertHistoryEntry", data).then((obj) => {
-			this._set(this, 'history', { });
-			this._receiveMultiple(obj);
-		});
+	async revertHistoryEntry(data: ObjectWithId): Promise<void> {
+		const obj = await this._emit("revertHistoryEntry", data);
+		this._set(this, 'history', {});
+		this._receiveMultiple(obj);
 	}
 
 	async getMarker(data: ObjectWithId): Promise<Marker<DataType>> {
@@ -403,46 +398,46 @@ export default class Client<DataType = Record<string, string>> {
 		return marker;
 	}
 
-	editMarker(data: ObjectWithId & MarkerUpdate<DataType>): Promise<Marker<DataType>> {
-		return this._emit("editMarker", data);
+	async editMarker(data: ObjectWithId & MarkerUpdate<DataType>): Promise<Marker<DataType>> {
+		return await this._emit("editMarker", data);
 	}
 
-	deleteMarker(data: ObjectWithId): Promise<Marker<DataType>> {
-		return this._emit("deleteMarker", data);
+	async deleteMarker(data: ObjectWithId): Promise<Marker<DataType>> {
+		return await this._emit("deleteMarker", data);
 	}
 
-	getLineTemplate(data: LineTemplateRequest): Promise<Line<DataType>> {
-		return this._emit("getLineTemplate", data);
+	async getLineTemplate(data: LineTemplateRequest): Promise<Line<DataType>> {
+		return await this._emit("getLineTemplate", data);
 	}
 
-	addLine(data: LineCreate<DataType>): Promise<Line<DataType>> {
-		return this._emit("addLine", data);
+	async addLine(data: LineCreate<DataType>): Promise<Line<DataType>> {
+		return await this._emit("addLine", data);
 	}
 
-	editLine(data: ObjectWithId & LineUpdate<DataType>): Promise<Line<DataType>> {
-		return this._emit("editLine", data);
+	async editLine(data: ObjectWithId & LineUpdate<DataType>): Promise<Line<DataType>> {
+		return await this._emit("editLine", data);
 	}
 
-	deleteLine(data: ObjectWithId): Promise<Line<DataType>> {
-		return this._emit("deleteLine", data);
+	async deleteLine(data: ObjectWithId): Promise<Line<DataType>> {
+		return await this._emit("deleteLine", data);
 	}
 
-	exportLine(data: LineExportRequest): Promise<string> {
-		return this._emit("exportLine", data);
+	async exportLine(data: LineExportRequest): Promise<string> {
+		return await this._emit("exportLine", data);
 	}
 
-	find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
-	find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
-	find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
-		return this._emit("find", data);
+	async find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
+	async find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
+	async find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
+		return await this._emit("find", data);
 	}
 
-	findOnMap(data: FindOnMapQuery): Promise<ResponseData<'findOnMap'>> {
-		return this._emit("findOnMap", data);
+	async findOnMap(data: FindOnMapQuery): Promise<ResponseData<'findOnMap'>> {
+		return await this._emit("findOnMap", data);
 	}
 
-	getRoute(data: RouteRequest): Promise<RouteInfo> {
-		return this._emit("getRoute", data);
+	async getRoute(data: RouteRequest): Promise<RouteInfo> {
+		return await this._emit("getRoute", data);
 	}
 
 	async setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
@@ -469,11 +464,11 @@ export default class Client<DataType = Record<string, string>> {
 		if (data?.routeId) {
 			this._delete(this.routes, data.routeId);
 			this._simulateEvent("clearRoute", { routeId: data.routeId });
-			return this._emit("clearRoute", data);
+			return await this._emit("clearRoute", data);
 		} else if (this.route) {
 			this._set(this, 'route', undefined);
 			this._simulateEvent("clearRoute", { routeId: undefined });
-			return this._emit("clearRoute", data);
+			return await this._emit("clearRoute", data);
 		}
 	}
 
@@ -497,36 +492,36 @@ export default class Client<DataType = Record<string, string>> {
 		return result;
 	}
 
-	exportRoute(data: RouteExportRequest): Promise<string> {
-		return this._emit("exportRoute", data);
+	async exportRoute(data: RouteExportRequest): Promise<string> {
+		return await this._emit("exportRoute", data);
 	}
 
-	addType(data: TypeCreate): Promise<Type> {
-		return this._emit("addType", data);
+	async addType(data: TypeCreate): Promise<Type> {
+		return await this._emit("addType", data);
 	}
 
-	editType(data: ObjectWithId & TypeUpdate): Promise<Type> {
-		return this._emit("editType", data);
+	async editType(data: ObjectWithId & TypeUpdate): Promise<Type> {
+		return await this._emit("editType", data);
 	}
 
-	deleteType(data: ObjectWithId): Promise<Type> {
-		return this._emit("deleteType", data);
+	async deleteType(data: ObjectWithId): Promise<Type> {
+		return await this._emit("deleteType", data);
 	}
 
-	addView(data: ViewCreate): Promise<View> {
-		return this._emit("addView", data);
+	async addView(data: ViewCreate): Promise<View> {
+		return await this._emit("addView", data);
 	}
 
-	editView(data: ObjectWithId & ViewUpdate): Promise<View> {
-		return this._emit("editView", data);
+	async editView(data: ObjectWithId & ViewUpdate): Promise<View> {
+		return await this._emit("editView", data);
 	}
 
-	deleteView(data: ObjectWithId): Promise<View> {
-		return this._emit("deleteView", data);
+	async deleteView(data: ObjectWithId): Promise<View> {
+		return await this._emit("deleteView", data);
 	}
 
-	geoip(): Promise<Bbox | null> {
-		return this._emit("geoip");
+	async geoip(): Promise<Bbox | null> {
+		return await this._emit("geoip");
 	}
 
 	disconnect(): void {

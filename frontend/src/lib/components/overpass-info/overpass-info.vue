@@ -1,33 +1,109 @@
-<div class="fm-overpass-info">
-	<h2>
-		<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-		{{element.tags.name || 'Unnamed POI'}}
-	</h2>
-	<dl class="fm-search-box-collapse-point">
-		<dt>Coordinates</dt>
-		<dd><Coordinates :point="element"></Coordinates></dd>
+<script setup lang="ts">
+	import WithRender from "./overpass-info.vue";
+	import Vue from "vue";
+	import { Component, Prop } from "vue-property-decorator";
+	import { renderOsmTag } from "facilmap-utils";
+	import { Type } from "facilmap-types";
+	import Icon from "../ui/icon/icon";
+	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+	import "./overpass-info.scss";
+	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
+	import { Context } from "../facilmap/facilmap";
+	import { OverpassElement } from "facilmap-leaflet";
+	import Coordinates from "../ui/coordinates/coordinates";
 
-		<template v-for="(value, key) in element.tags">
-			<dt>{{key}}</dt>
-			<dd v-html="renderOsmTag(key, value)"></dd>
-		</template>
-	</dl>
+	@WithRender
+	@Component({
+		components: { Coordinates, Icon }
+	})
+	export default class OverpassInfo extends Vue {
 
-	<b-button-toolbar>
-		<b-button v-b-tooltip.hover="'Zoom to POI'" @click="zoomToElement()" size="sm"><Icon icon="zoom-in" alt="Zoom to POI"></Icon></b-button>
+		@InjectContext() context!: Context;
+		@InjectClient() client!: Client;
+		@InjectMapComponents() mapComponents!: MapComponents;
+		@InjectMapContext() mapContext!: MapContext;
 
-		<b-dropdown v-if="!client.readonly && types.length > 0" :disabled="isAdding" size="sm">
-			<template #button-content>
-				<b-spinner small v-if="isAdding"></b-spinner>
-				Add to map
+		@Prop({ type: Object, required: true }) element!: OverpassElement;
+		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
+		@Prop({ type: Boolean, default: false }) isAdding!: boolean;
+
+		renderOsmTag = renderOsmTag;
+
+		get types(): Type[] {
+			return Object.values(this.client.types).filter((type) => type.type == "marker");
+		}
+
+		zoomToElement(): void {
+			const dest = getZoomDestinationForMarker(this.element);
+			if (dest)
+				flyTo(this.mapComponents.map, dest);
+		}
+
+		useAs(event: "fm-route-set-from" | "fm-route-add-via" | "fm-route-set-to"): void {
+			this.mapContext.$emit(event, `${this.element.lat},${this.element.lon}`);
+			this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-route-form-tab`);
+		}
+
+		useAsFrom(): void {
+			this.useAs("fm-route-set-from");
+		}
+
+		useAsVia(): void {
+			this.useAs("fm-route-add-via");
+		}
+
+		useAsTo(): void {
+			this.useAs("fm-route-set-to");
+		}
+
+	}
+</script>
+
+<template>
+	<div class="fm-overpass-info">
+		<h2>
+			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+			{{element.tags.name || 'Unnamed POI'}}
+		</h2>
+		<dl class="fm-search-box-collapse-point">
+			<dt>Coordinates</dt>
+			<dd><Coordinates :point="element"></Coordinates></dd>
+
+			<template v-for="(value, key) in element.tags">
+				<dt>{{key}}</dt>
+				<dd v-html="renderOsmTag(key, value)"></dd>
 			</template>
-			<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
-		</b-dropdown>
+		</dl>
 
-		<b-dropdown text="Use as" size="sm" v-if="context.search">
-			<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
-			<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
-			<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
-		</b-dropdown>
-	</b-button-toolbar>
-</div>
+		<b-button-toolbar>
+			<b-button v-b-tooltip.hover="'Zoom to POI'" @click="zoomToElement()" size="sm"><Icon icon="zoom-in" alt="Zoom to POI"></Icon></b-button>
+
+			<b-dropdown v-if="!client.readonly && types.length > 0" :disabled="isAdding" size="sm">
+				<template #button-content>
+					<b-spinner small v-if="isAdding"></b-spinner>
+					Add to map
+				</template>
+				<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
+			</b-dropdown>
+
+			<b-dropdown text="Use as" size="sm" v-if="context.search">
+				<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
+				<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
+				<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
+			</b-dropdown>
+		</b-button-toolbar>
+	</div>
+</template>
+
+<style lang="scss">
+	.fm-overpass-info {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+
+		.fm-search-box-collapse-point {
+			min-height: 1.5em;
+		}
+	}
+</style>

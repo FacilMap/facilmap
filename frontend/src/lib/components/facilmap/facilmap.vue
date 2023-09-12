@@ -1,21 +1,181 @@
-<div class="fm-facilmap">
-	<ClientProvider>
-		<LeafletMap>
-			<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
-			<Legend v-if="context.legend"></Legend>
-			<Import v-if="context.interactive"></Import>
-			<ClickMarker></ClickMarker>
+<script lang="ts">
+	import { InjectionKey, inject, provide, reactive, watch, watchEffect } from "vue";
+	import "./facilmap.scss";
+	import Toolbox from "../toolbox/toolbox.vue";
+	import SearchBox from "../search-box/search-box.vue";
+	import Legend from "../legend/legend.vue";
+	import LeafletMap from "../leaflet-map/leaflet-map.vue";
+	import Import from "../import/import.vue";
+	import ClickMarker from "../click-marker/click-marker.vue";
+	import { ClientProvider } from "../client/client.vue";
+	import { computedOnResize } from "../../utils/vue";
+	import { Context, provideContext } from "../../utils/context";
 
-			<template #before>
-				<slot name="before"></slot>
-			</template>
+	let idCounter = 1;
+</script>
 
-			<template #after>
-				<SearchBox></SearchBox>
-				<slot name="after"></slot>
-			</template>
+<script setup lang="ts">
+	const isNarrow = computedOnResize(() => window.innerWidth < 768);
 
-			<slot></slot>
-		</LeafletMap>
-	</ClientProvider>
-</div>
+	const props = withDefaults(defineProps<{
+		baseUrl: string;
+		serverUrl: string;
+		padId?: string;
+		toolbox?: boolean;
+		search?: boolean;
+		autofocus?: boolean;
+		legend?: boolean;
+		interactive?: boolean;
+		linkLogo?: boolean;
+		updateHash?: boolean;
+	}>(), {
+		toolbox: true,
+		search: true,
+		autofocus: false,
+		legend: true,
+		interactive: true,
+		linkLogo: false,
+		updateHash: false
+	});
+
+	const context = reactive<Context>({
+		id: idCounter++,
+		baseUrl: "",
+		serverUrl: "",
+		activePadId: undefined,
+		activePadName: undefined,
+		toolbox: false,
+		search: false,
+		autofocus: false,
+		legend: false,
+		interactive: false,
+		isNarrow: false,
+		linkLogo: false,
+		updateHash: false
+	});
+
+	provideContext(context);
+
+	watchEffect(() => {
+		context.baseUrl = props.baseUrl;
+	});
+
+	watchEffect(() => {
+		context.serverUrl = props.serverUrl;
+	});
+
+	watchEffect(() => {
+		context.activePadId = props.padId;
+	});
+
+	watchEffect(() => {
+		context.toolbox = props.toolbox;
+	});
+
+	watchEffect(() => {
+		context.search = props.search;
+	});
+
+	watchEffect(() => {
+		context.autofocus = props.autofocus;
+	});
+
+	watchEffect(() => {
+		context.legend = props.legend;
+	});
+
+	watchEffect(() => {
+		context.interactive = props.interactive;
+	});
+
+	watchEffect(() => {
+		context.linkLogo = props.linkLogo;
+	});
+
+	watchEffect(() => {
+		context.updateHash = props.updateHash;
+	});
+
+	watch(() => context.activePadId, () => {
+		// TODO:
+		// this.$emit("update:padId", activePadId);
+	});
+
+	watch(() => context.activePadName, () => {
+		// TODO:
+		// this.$emit("update:padName", activePadName);
+	});
+</script>
+
+<template>
+	<div class="fm-facilmap">
+		<ClientProvider>
+			<LeafletMap>
+				<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
+				<Legend v-if="context.legend"></Legend>
+				<Import v-if="context.interactive"></Import>
+				<ClickMarker></ClickMarker>
+
+				<template #before>
+					<slot name="before"></slot>
+				</template>
+
+				<template #after>
+					<SearchBox></SearchBox>
+					<slot name="after"></slot>
+				</template>
+
+				<slot></slot>
+			</LeafletMap>
+		</ClientProvider>
+	</div>
+</template>
+
+<style lang="scss">
+	.fm-facilmap {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+
+	.td-buttons {
+		white-space: nowrap;
+		width: 1px;
+
+		> button {
+			margin-left: 0.25rem;
+		}
+	}
+
+	.fm-drag-handle {
+		cursor: grab !important;
+	}
+
+	.btn-toolbar {
+		> * + * {
+			margin-left: 0.25rem;
+		}
+	}
+
+	.closeable-tab-title {
+		display: inline-flex;
+		width: 100%;
+
+		> span {
+			align-items: center;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			flex-grow: 1;
+		}
+
+		a {
+			padding: 0 !important;
+		}
+
+		object, a, .fm-icon {
+			display: inline-flex;
+			align-items: center;
+		}
+	}
+</style>

@@ -46,10 +46,3 @@ declare module "leaflet" {
 		const BoxZoom: any;
 	}
 }
-
-declare module "vue" {
-	interface VueConstructor {
-		// Injected by vue-nonreactive
-		nonreactive<T>(obj: T): T;
-	}
-}

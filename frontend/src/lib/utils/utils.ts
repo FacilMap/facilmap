@@ -53,3 +53,7 @@ export function isMarker<DataType>(object: Marker<DataType> | Line<DataType>): o
 export function isLine<DataType>(object: Marker<DataType> | Line<DataType>): object is Line<DataType> {
 	return "top" in object && object.top != null;
 }
+
+export function isPromise(object: any): object is Promise<unknown> {
+	return typeof object === 'object' && 'then' in object && typeof object.then === 'function';
+}
