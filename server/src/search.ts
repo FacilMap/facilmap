@@ -35,7 +35,7 @@ interface NominatimResult {
 }
 
 interface NominatimError {
-	error: string;
+	error: { code?: number; message: string } | string;
 }
 
 const nameFinderUrl = "https://nominatim.openstreetmap.org";
@@ -132,7 +132,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 		throw new Error("Invalid response from name finder.");
 
 	if('error' in body)
-		throw new Error(body.error);
+		throw new Error(typeof body.error === 'string' ? body.error : body.error.message);
 
 	const points = body.filter((res) => (res.lon && res.lat));
 	if(loadElevation && points.length > 0) {
@@ -146,8 +146,8 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 }
 
 async function _findOsmObject(type: string, id: string, loadElevation = false): Promise<Array<SearchResult>> {
-	const body = await throttledFetch(
-		`${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_type=${encodeURI(type.toUpperCase())}&osm_id=${encodeURI(id)}`,
+	const body: Array<NominatimResult> | NominatimError = await throttledFetch(
+		`${nameFinderUrl}/lookup?format=jsonv2&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_ids=${encodeURI(type.toUpperCase())}${encodeURI(id)}`,
 		{
 			headers: {
 				"User-Agent": config.userAgent
@@ -155,20 +155,27 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 		}
 	).then((res) => res.json());
 
-	if(!body || body.error) {
-		throw new Error(body ? body.error : "Invalid response from name finder");
+	if(!body)
+		throw new Error("Invalid response from name finder.");
+
+	if('error' in body)
+		throw new Error(typeof body.error === 'string' ? body.error : body.error.message);
+
+	const points = body.filter((res) => (res.lon && res.lat));
+	if(loadElevation && points.length > 0) {
+		const elevations = await getElevationForPoints(points);
+		elevations.forEach((elevation, i) => {
+			points[i].elevation = elevation;
+		});
 	}
 
-	if(loadElevation && body.lat && body.lon)
-		Object.assign(body, { elevation: await getElevationForPoint(body) });
-
-	return [ _prepareSearchResult(body) ];
+	return body.map(_prepareSearchResult);
 }
 
 async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false): Promise<Array<SearchResult>> {
 	const [body, elevation] = await Promise.all([
 		throttledFetch(
-			`${nameFinderUrl}/reverse?format=json&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
+			`${nameFinderUrl}/reverse?format=jsonv2&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
 			{
 				headers: {
 					"User-Agent": config.userAgent
