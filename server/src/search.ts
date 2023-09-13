@@ -20,6 +20,7 @@ interface NominatimResult {
 	lat: string;
 	lon: string;
 	zoom?: number;
+	name: string;
 	display_name: string;
 	place_rank: number;
 	category: string;
@@ -29,7 +30,7 @@ interface NominatimResult {
 	address: Partial<Record<string, string>>;
 	geojson: Geometry;
 	extratags: Record<string, string>;
-	namedetails: Record<string, string>;
+	namedetails: Record<string, string> | null;
 	elevation?: number; // Added by us
 }
 
@@ -230,7 +231,7 @@ function _formatAddress(result: NominatimResult) {
 	// address notation guidelines
 
 	let type = result.type;
-	let name = result.namedetails.name;
+	let name = result.namedetails?.name ?? result.name;
 	const countryCode = result.address.country_code;
 
 	let road = result.address.road;
