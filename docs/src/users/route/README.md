@@ -69,7 +69,7 @@ The icons at the bottom of the route form can be used to change the means of tra
 
 Clicking the cog icon opens a menu where some more specific route modes (for example road bike, mountain bike, electric bike) and some additional settings are available.
 
-For simple driving, cycling or walking, FacilMap uses [Mapbox](https://docs.mapbox.com/api/navigation/directions/) (based on [OSRM](https://www.project-osrm.org/)) to calculate routes. If any advanced settings from the dropdown menu are selected, [OpenRouteService](https://openrouteservice.org/) is used. Mapbox is faster, but OpenRouteService provides more options. If one of the two services doesn’t work properly, it might be worth changing the route mode to make FacilMap use the other.
+For simple driving, cycling or walking, FacilMap uses [Mapbox](https://docs.mapbox.com/api/navigation/directions/) (based on [OSRM](https://project-osrm.org/)) to calculate routes. If any advanced settings from the dropdown menu are selected, [OpenRouteService](https://openrouteservice.org/) is used. Mapbox is faster, but OpenRouteService provides more options. If one of the two services doesn’t work properly, it might be worth changing the route mode to make FacilMap use the other.
 
 <Screencast :desktop="modeMp4" :mobile="modeMobileMp4"></Screencast>
 
