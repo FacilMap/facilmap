@@ -1,3 +1,8 @@
+<script setup lang="ts">
+	import locateMp4 from "@source/users/locate/locate.mp4";
+	import locateMobileMp4 from "@source/users/locate/locate-mobile.mp4";
+</script>
+
 # Show your location
 
 By clicking the crosshair icon on the top left of the screen (under the zoom buttons), FacilMap will attempt to zoom to your location on the map.
@@ -13,4 +18,4 @@ Clicking the cross-hair icon will enable the orange mode. As soon as you move th
 
 Your location will be indicated as a blue circle with a blue dot at the center. Your location may be anywhere within the circle, it is not necessarily at its centre. If the circle is very small, it means that your browser could determine your location very accurately. If the circle is very big, it means that your browser had trouble to make an accurate guess about your location, and you may be anywhere within the circle.
 
-<Screencast :desktop="require('./locate.mp4')" :mobile="require('./locate-mobile.mp4')"></Screencast>
+<Screencast :desktop="locateMp4" :mobile="locateMobileMp4"></Screencast>

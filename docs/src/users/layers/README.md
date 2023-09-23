@@ -1,3 +1,8 @@
+<script setup lang="ts">
+	import layersMp4 from "@source/users/layers/layers.mp4";
+	import layersMobileMp4 from "@source/users/layers/layers-mobile.mp4";
+</script>
+
 # Map styles (layers)
 
 FacilMap embeds the map styles of different OpenStreetMap-based services. Different styles present geographic features in a different way and are useful for different purposes.
@@ -7,7 +12,7 @@ You can switch the style of the map by clicking on the “Map style” item in t
 2. The second section are so-called “overlays”. These are shown on top of the base layer to show additional information on the map. Multiple overlays can be shown at the same time.
 3. The third section contains some links to open the current map area on another map service (such as Google Maps). Clicking these links will open a new browser tab.
 
-<Screencast :desktop="require('./layers.mp4')" :mobile="require('./layers-mobile.mp4')"></Screencast>
+<Screencast :desktop="layersMp4" :mobile="layersMobileMp4"></Screencast>
 
 ## Base layers
 

@@ -1,3 +1,10 @@
+<script setup lang="ts">
+	import customImportMp4 from "@source/users/import/custom-import.mp4";
+	import customImportMobileMp4 from "@source/users/import/custom-import-mobile.mp4";
+	import typesMp4 from "@source/users/import/types.mp4";
+	import typesMobileMp4 from "@source/users/import/types-mobile.mp4";
+</script>
+
 # Import geographic files
 
 FacilMap allows you to [open geographic files](../files/) such as GeoJSON, GPX and KML. When opening a file on a collaborative map, some or all of the objects that are part of the file can be imported to be persisted on the map.
@@ -18,11 +25,11 @@ When [opening a file](../files/) created by FacilMap, FacilMap will offer some a
 
 The saved views in the file will be shown at the top of the file objects and the types at the bottom. You can import them into the map by simply clicking the + on the right. The + will only be shown if an identical view/type does not exist yet on the map. Note that importing views/types will always add new ones rather than updating existing ones, so you might end up with two types called “Marker” and two types called “Line”, which you will have to resolve by hand. If you are importing into an empty map, you might want to [delete the existing types](../types/#delete-a-type) before the import to avoid confusion.
 
-<Screencast :desktop="require('./types.mp4')" :mobile="require('./types-mobile.mp4')"></Screencast>
+<Screencast :desktop="typesMp4" :mobile="typesMobileMp4"></Screencast>
 
 To import all the markers/lines, click “Select all” at the bottom and then “Add selected items to map” and “Custom type mapping…”. This will open a dialog where you can define in detail which objects should be imported as what. If you have already import the types, you can choose the existing types, otherwise an option to import them is offered.
 
-<Screencast :desktop="require('./custom-import.mp4')" :mobile="require('./custom-import-mobile.mp4')"></Screencast>
+<Screencast :desktop="customImportMp4" :mobile="customImportMobileMp4"></Screencast>
 
 The recommended workflow to import an exported map onto a new empty map is:
 1. Delete the default “Marker” and “Line” types on the map

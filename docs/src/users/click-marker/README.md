@@ -1,3 +1,8 @@
+<script setup lang="ts">
+	import markerMp4 from "@source/users/click-marker/marker.mp4";
+	import markerMobileMp4 from "@source/users/click-marker/marker-mobile.mp4";
+</script>
+
 # Map point information
 
 By pressing a specific point on the map and holding the mouse/finger for a second, you can find out more information about that point. A temporary marker appears on the map and a [search box](../ui/#search-box) tab with information about the place is opened.
@@ -8,7 +13,7 @@ The marker and search box tab will disappear again when you click somewhere else
 
 At the bottom of the search box tab, you will find a “Use as” button to [use the map point as a route destination](../route/#use-map-points-as-destinations). If a collaborative map is open, you can use the “Add to map” button to add the point as a marker to the map (which will automatically prefill some fields).
 
-<Screencast :desktop="require('./marker.mp4')" :mobile="require('./marker-mobile.mp4')"></Screencast>
+<Screencast :desktop="markerMp4" :mobile="markerMobileMp4"></Screencast>
 
 ## Share a link
 

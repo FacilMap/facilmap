@@ -1,14 +1,28 @@
+<script setup lang="ts">
+	const props = defineProps<{
+		desktop: string;
+		mobile: string;
+	}>();
+</script>
+
 <template>
-	<div>
-		<img :src="desktop" style="height: 340px">
-		<img :src="mobile" style="height: 340px">
+	<div class="fm-screenshot">
+		<img :src="props.desktop">
+		<img :src="props.mobile">
 	</div>
 </template>
-<script>
-	export default {
-		props: {
-			desktop: String,
-			mobile: String
+
+<style lang="scss">
+	.fm-screenshot {
+		display: flex;
+		gap: 6px;
+
+		> :nth-child(1) {
+			width: calc(68.5% - 3px);
 		}
-	};
-</script>
+
+		> :nth-child(2) {
+			width: calc(31.5% - 3px);
+		}
+	}
+</style>
