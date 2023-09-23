@@ -1,8 +1,17 @@
+<script setup lang="ts">
+	import uiPng from "@source/users/ui/ui.png";
+	import uiMobilePng from "@source/users/ui/ui-mobile.png";
+	import searchboxMp4 from "@source/users/ui/searchbox.mp4";
+	import searchboxMobileMp4 from "@source/users/ui/searchbox-mobile.mp4";
+	import toolboxMp4 from "@source/users/ui/toolbox.mp4";
+	import toolboxMobileMp4 from "@source/users/ui/toolbox-mobile.mp4";
+</script>
+
 # UI elements
 
 When opening FacilMap, you can see the following elements on your screen:
 
-<Screenshot :desktop="require('./ui.png')" :mobile="require('./ui-mobile.png')"></Screenshot>
+<Screenshot :desktop="uiPng" :mobile="uiMobilePng"></Screenshot>
 
 1. The locate button. See [Show your location](../locate/).
 2. The [zoom buttons](#zoom-buttons)
@@ -23,7 +32,7 @@ On top of the search box, you can click the different tabs to switch between dif
 On big screens, you can drag the resize handle on the bottom right of the search box to resize it. Click the resize handle to bring it back to its original size.\
 On small screens, the search box appears at the bottom of the screen. You can drag it into and out of view as it fits by dragging the tab bar on top of the search box.
 
-<Screencast :desktop="require('./searchbox.mp4')" :mobile="require('./searchbox-mobile.mp4')"></Screencast>
+<Screencast :desktop="searchboxMp4" :mobile="searchboxMobileMp4"></Screencast>
 
 ## Toolbox
 
@@ -31,4 +40,4 @@ The toolbox offers a variety of actions organized into different dropdown menus.
 
 On small screens, the toolbox hides behind the menu button on the top right of the screen. Once the toolbox has been opened, it can be closed by swiping it out of the screen, by clicking the X, or by clicking in the empty space to the left of it.
 
-<Screencast :desktop="require('./toolbox.mp4')" :mobile="require('./toolbox-mobile.mp4')"></Screencast>
+<Screencast :desktop="toolboxMp4" :mobile="toolboxMobileMp4"></Screencast>

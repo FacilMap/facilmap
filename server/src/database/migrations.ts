@@ -1,11 +1,11 @@
 import { clone, generateRandomId, promiseProps } from "../utils/utils.js";
 import { streamEachPromise } from "../utils/streams.js";
-import Sequelize, { DataTypes } from "sequelize";
+import Sequelize, { CreationAttributes, DataTypes } from "sequelize";
 import { isEqual } from "lodash-es";
 import Database from "./database.js";
 import { PadModel } from "./pad.js";
 import { Line, Marker } from "facilmap-types";
-import { LinePointModel } from "./line.js";
+import { LineModel, LinePointModel } from "./line.js";
 import { getElevationForPoints } from "../elevation.js";
 
 const Op = Sequelize.Op;
@@ -163,7 +163,7 @@ export default class DatabaseMigrations {
 
 		const lines = await this._db.lines.LineModel.findAll();
 		for(const line of lines) {
-			const trackPoints = await this._db.lines.LineModel.build({ id: line.id }).getLinePoints();
+			const trackPoints = await this._db.lines.LineModel.build({ id: line.id } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints();
 			await this._db.lines._setLinePoints(line.padId, line.id, trackPoints, true);
 		}
 

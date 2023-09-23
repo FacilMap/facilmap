@@ -21,6 +21,8 @@ services:
             MYSQL_USER: facilmap
             MYSQL_PASSWORD: facilmap
             MYSQL_RANDOM_ROOT_PASSWORD: "true"
+        ports:
+            - "127.0.0.1:40830:3306"
     phpmyadmin:
         image: phpmyadmin
         links:

@@ -1,3 +1,12 @@
+<script setup lang="ts">
+	import metadataMp4 from "@source/users/pois/metadata.mp4";
+	import metadataMobileMp4 from "@source/users/pois/metadata-mobile.mp4";
+	import poisMp4 from "@source/users/pois/pois.mp4";
+	import poisMobileMp4 from "@source/users/pois/pois-mobile.mp4";
+	import zoomMp4 from "@source/users/pois/zoom.mp4";
+	import zoomMobileMp4 from "@source/users/pois/zoom-mobile.mp4";
+</script>
+
 # POIs
 
 Using the “POIs” menu in the [search box](../ui/#search-box), you can find amenities and points of interest (POIs) on the map. You can use it for example to show all post boxes, parking places, supermarkets or bus stops in an area.
@@ -6,14 +15,14 @@ Choose a category of POIs and then check some of the POI types to show them on t
 
 When one or more checkboxes are checked, the POIs of this type are shown as black square markers on the map. Only the POIs in the current map view are loaded, so only when you move to a particular area on the map, the POIs for that area are loaded. A maximum of 50 POIs are loaded. If the current area of the map contains more than 50 POIs of the selected type, a yellow message will be shown on the top of the map (see more details [below](#zoom-limitations)). In that case none or only some of the available POIs are shown. Zoom in further to get a complete overview of POIs.
 
-<Screencast :desktop="require('./pois.mp4')" :mobile="require('./pois-mobile.mp4')"></Screencast>
+<Screencast :desktop="poisMp4" :mobile="poisMobileMp4"></Screencast>
 
 
 ## Show details
 
 Clicking on a POI marker will open an additional search box tab with some metadata, such as opening hours, access restrictions and contact details. The metadata tab can be closed by clicking on the X or clicking somewhere else on the map.
 
-<Screencast :desktop="require('./metadata.mp4')" :mobile="require('./metadata-mobile.mp4')"></Screencast>
+<Screencast :desktop="metadataMp4" :mobile="metadataMobileMp4"></Screencast>
 
 
 ## Zoom limitations
@@ -22,7 +31,7 @@ To avoid overloading the server or your browser, a maximum of 50 POIs are shown 
 * “Zoom in to show POIs.” – This is shown when you are zoomed out so far that the server took more than 2 seconds to look for POIs. To avoid overloading the server, the request was canceled and no POIs are shown.
 * “Not all POIs are shown because there are too many results. Zoom in to show all results.” – This means that the server found more than 50 POIs. To save resources, only the first 50 POIs found are shown on the map. This means that the results shown are not all that exist. To get a complete overview of the existing POIs, zoom in further.
 
-<Screencast :desktop="require('./zoom.mp4')" :mobile="require('./zoom-mobile.mp4')"></Screencast>
+<Screencast :desktop="zoomMp4" :mobile="zoomMobileMp4"></Screencast>
 
 
 ## Share a link

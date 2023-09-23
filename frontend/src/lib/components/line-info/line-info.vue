@@ -16,6 +16,7 @@
 	import RouteForm from "../route-form/route-form";
 	import StringMap from "../../utils/string-map";
 	import { Context } from "../facilmap/facilmap";
+	import saveAs from "file-saver";
 
 	@WithRender
 	@Component({

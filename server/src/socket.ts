@@ -74,7 +74,7 @@ class SocketConnection {
 
 	registerSocketHandlers() {
 		for (const i of Object.keys(this.socketHandlers) as Array<keyof SocketHandlers>) {
-			this.socket.on(i, async (data: any, callback: any) => {
+			this.socket.on(i, async (data: any, callback: any): Promise<void> => {
 				try {
 					const res = await this.socketHandlers[i](data);
 

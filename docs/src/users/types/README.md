@@ -1,3 +1,16 @@
+<script setup lang="ts">
+	import dropdownMp4 from "@source/users/types/dropdown.mp4";
+	import dropdownMobileMp4 from "@source/users/types/dropdown-mobile.mp4";
+	import fieldMp4 from "@source/users/types/field.mp4";
+	import fieldMobileMp4 from "@source/users/types/field-mobile.mp4";
+	import fieldStyleMp4 from "@source/users/types/field-style.mp4";
+	import fieldStyleMobileMp4 from "@source/users/types/field-style-mobile.mp4";
+	import stylesMp4 from "@source/users/types/styles.mp4";
+	import stylesMobileMp4 from "@source/users/types/styles-mobile.mp4";
+	import switchTypeMp4 from "@source/users/types/switch-type.mp4";
+	import switchTypeMobileMp4 from "@source/users/types/switch-type-mobile.mp4";
+</script>
+
 # Custom types
 
 By default, a collaborative map has two object types, “Marker” and “Line”. Their styles are freely adjustable and they have one description field. FacilMap allows you to define custom types in addition or in place of the two default types. While geographically, custom types are the same as the default type, they allow you to do the following:
@@ -22,7 +35,7 @@ Using custom types, you can change these defaults. You can also make some or all
 
 Change the default styles by editing the type and adjusting the “Default …” fields. Each field has a “Fixed” checkbox next to it. If that checkbox is checked, this value cannot be adjusted for an individual object of this type and the field will not be shown when editing its data. If the checkbox is unchecked, the value can still be adjustd and what you configure here will only be the initial value.
 
-<Screencast :desktop="require('./styles.mp4')" :mobile="require('./styles-mobile.mp4')"></Screencast>
+<Screencast :desktop="stylesMp4" :mobile="stylesMobileMp4"></Screencast>
 
 ## Show in legend
 
@@ -43,7 +56,7 @@ To create a field, edit the type and click the + icon at the bottom of the field
 
 You can rearrange the order of the fields by dragging the up/down arrow icon on the right.
 
-<Screencast :desktop="require('./field.mp4')" :mobile="require('./field-mobile.mp4')"></Screencast>
+<Screencast :desktop="fieldMp4" :mobile="fieldMobileMp4"></Screencast>
 
 ### Dropdown fields
 
@@ -51,7 +64,7 @@ When you create a dropdown field, you need to specify its options by using the �
 
 To add dropdown options, edit the dropdown and click the + icon under the option list. You can drag the up/down arrows on the right to rearrange the options. Two options of the same dropdown cannot have the same value.
 
-<Screencast :desktop="require('./dropdown.mp4')" :mobile="require('./dropdown-mobile.mp4')"></Screencast>
+<Screencast :desktop="dropdownMp4" :mobile="dropdownMobileMp4"></Screencast>
 
 ## Change a field
 
@@ -78,7 +91,7 @@ Click the “Edit” button next to the field type and check one or more of the 
 
 Note that when one field is controlling a style property, no other field can control that property and no default value can be defined for it anymore (those fields will be disabled). Also, the property cannot be adjusted for an individual object anymore. For example, when a dropdown field controls the colour, when editing the marker, no colour field is shown. The colour of the marker can only be changed by selecting an option from the dropdown field.
 
-<Screencast :desktop="require('./field-style.mp4')" :mobile="require('./field-style-mobile.mp4')"></Screencast>
+<Screencast :desktop="fieldStyleMp4" :mobile="fieldStyleMobileMp4"></Screencast>
 
 ## Change the type of an object
 
@@ -86,7 +99,7 @@ If you have multiple marker types or multiple line types, you can change the typ
 
 Note that objects keep their data internally when you change the type to one that doesn’t have the same fields. If you change the type back later, the values will still be there.
 
-<Screencast :desktop="require('./switch-type.mp4')" :mobile="require('./switch-type-mobile.mp4')"></Screencast>
+<Screencast :desktop="switchTypeMp4" :mobile="switchTypeMobileMp4"></Screencast>
 
 ## Delete a type
 

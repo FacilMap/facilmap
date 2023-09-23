@@ -1,23 +1,23 @@
 import { generateRandomId } from "../utils/utils.js";
-import { DataTypes, Model, Op, WhereOptions } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions, WhereOptions } from "sequelize";
 import Database from "./database.js";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
+import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
-import { omit } from "lodash-es";
+import { omit } from "lodash";
+import { Point as GeoJsonPoint } from "geojson";
 
 const updateTimes: Record<string, number> = {};
 
-function createRoutePointModel() {
-	return class RoutePointModel extends Model {
-		declare routeId: string;
-		declare lat: Latitude;
-		declare lon: Longitude;
-		declare zoom: number;
-		declare idx: number;
-		declare ele: number | null;
-		declare toJSON: () => TrackPoint;
-	};
+interface RoutePointModel extends Model<InferAttributes<RoutePointModel>, InferCreationAttributes<RoutePointModel>> {
+	routeId: string;
+	lat: Latitude;
+	lon: Longitude;
+	pos: GeoJsonPoint;
+	zoom: number;
+	idx: number;
+	ele: number | null;
+	toJSON: () => TrackPoint;
 }
 
 export interface RouteWithId extends Route {
@@ -26,7 +26,7 @@ export interface RouteWithId extends Route {
 
 export default class DatabaseRoutes {
 
-	RoutePointModel = createRoutePointModel();
+	private RoutePointModel = createModel<RoutePointModel>();
 
 	_db: Database;
 

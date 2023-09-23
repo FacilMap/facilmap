@@ -1,30 +1,26 @@
 import { clone } from "../utils/utils.js";
-import { Model, DataTypes, FindOptions } from "sequelize";
+import { Model, DataTypes, FindOptions, InferAttributes, CreationOptional, ForeignKey, InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadId } from "facilmap-types";
-import { makeNotNullForeignKey } from "./helpers.js";
+import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
+import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 
-function createHistoryModel() {
-	return class HistoryModel extends Model {
-		declare id: ID;
-		declare time: Date;
-		declare type: HistoryEntryType;
-		declare action: HistoryEntryAction;
-		declare objectId: ID;
-		declare objectBefore: string | null;
-		declare objectAfter: string | null;
-		declare padId: PadId;
-		declare toJSON: () => HistoryEntry;
-	};
+interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
+	id: CreationOptional<ID>;
+	time: Date;
+	type: HistoryEntryType;
+	action: HistoryEntryAction;
+	objectId: ID;
+	objectBefore: string | null;
+	objectAfter: string | null;
+	padId: ForeignKey<PadData["id"]>;
+	toJSON: () => HistoryEntry;
 }
-
-type HistoryModel = InstanceType<ReturnType<typeof createHistoryModel>>;
 
 export default class DatabaseHistory {
 
 	HISTORY_ENTRIES = 50;
 
-	HistoryModel = createHistoryModel();
+	HistoryModel = createModel<HistoryModel>();
 
 	_db: Database;
 
@@ -32,6 +28,7 @@ export default class DatabaseHistory {
 		this._db = database;
 
 		this.HistoryModel.init({
+			id: getDefaultIdType(),
 			time: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Pad"), allowNull: false },
 			action: { type: DataTypes.ENUM("create", "update", "delete"), allowNull: false },

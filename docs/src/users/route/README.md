@@ -1,10 +1,29 @@
+<script setup lang="ts">
+	import additionalMp4 from "@source/users/route/additional.mp4";
+	import additionalMobileMp4 from "@source/users/route/additional-mobile.mp4";
+	import clickMarkerMp4 from "@source/users/route/click-marker.mp4";
+	import clickMarkerMobileMp4 from "@source/users/route/click-marker-mobile.mp4";
+	import dragMp4 from "@source/users/route/drag.mp4";
+	import dragMobileMp4 from "@source/users/route/drag-mobile.mp4";
+	import elevationMp4 from "@source/users/route/elevation.mp4";
+	import elevationMobileMp4 from "@source/users/route/elevation-mobile.mp4";
+	import modeMp4 from "@source/users/route/mode.mp4";
+	import modeMobileMp4 from "@source/users/route/mode-mobile.mp4";
+	import queryMp4 from "@source/users/route/query.mp4";
+	import queryMobileMp4 from "@source/users/route/query-mobile.mp4";
+	import routeMp4 from "@source/users/route/route.mp4";
+	import routeMobileMp4 from "@source/users/route/route-mobile.mp4";
+	import suggestionsMp4 from "@source/users/route/suggestions.mp4";
+	import suggestionsMobileMp4 from "@source/users/route/suggestions-mobile.mp4";
+</script>
+
 # Calculate a route
 
 FacilMap can calculate the shortest or fastest way to get from one point for another. To calculate a route, open the “Route” tab of the [search box](../ui/#search-box), enter a start and a destination, and press “Go!”.
 
 The route will show up in blue on the map, and information about the distance and duration are shown at the bottom of the route form. The start of the route will be indicated with a green marker and its destination with a red marker. If there are intermediate destinations (see [Add additional destinations](#add-additional-destinations)), these will have yellow markers.
 
-<Screencast :desktop="require('./route.mp4')" :mobile="require('./route-mobile.mp4')"></Screencast>
+<Screencast :desktop="routeMp4" :mobile="routeMobileMp4"></Screencast>
 
 ## Pick destinations
 
@@ -14,7 +33,7 @@ In each destination field, you have the option to type one of the following:
 
 If there are multiple places with the same name that you have typed in, FacilMap will choose the first match. You can change the match by clicking on the dropdown button to the right of the destination. If you are unsure which suggestion is the right one, hovering one will show a temporary yellow marker in its place, and clicking the zoom icon on its left will zoom the map to it.
 
-<Screencast :desktop="require('./suggestions.mp4')" :mobile="require('./suggestions-mobile.mp4')"></Screencast>
+<Screencast :desktop="suggestionsMp4" :mobile="suggestionsMobileMp4"></Screencast>
 
 ## Add additional destinations
 
@@ -22,7 +41,7 @@ You can add additional destinations, for example if you want to calculate a rout
 
 To add an additional destination, click on the plus icon in the bottom left of the route form. To remove a destination, click on the minus icon on the right of the destination. You can rearrange the destinations by dragging the up/down arrow icon on the left of a destination.
 
-<Screencast :desktop="require('./additional.mp4')" :mobile="require('./additional-mobile.mp4')"></Screencast>
+<Screencast :desktop="additionalMp4" :mobile="additionalMobileMp4"></Screencast>
 
 ## Use map points as destinations
 
@@ -30,7 +49,7 @@ If you would like to use a specific point on the map as a route destination, you
 
 You can also use [search results](../search/#show-result-details), [POIs](../pois/#show-details), [points from an opened file](../files/#show-details) and [markers](../markers/) (on a [collaborative map](../collaborative/)) as route destinations through their own “Use as” menu.
 
-<Screencast :desktop="require('./click-marker.mp4')" :mobile="require('./click-marker-mobile.mp4')"></Screencast>
+<Screencast :desktop="clickMarkerMp4" :mobile="clickMarkerMobileMp4"></Screencast>
 
 ## Drag a route
 
@@ -42,7 +61,7 @@ As an alternative to changing the destinations in the route form, you can also d
 
 To make it more clear which part of the route you are dragging, when you hover a destination field or its corresponding marker, both get a dark outline. When hovering a part of the route, a dashed line appears in the route form that indicates where a destination would be inserted if you started dragging the route here.
 
-<Screencast :desktop="require('./drag.mp4')" :mobile="require('./drag-mobile.mp4')"></Screencast>
+<Screencast :desktop="dragMp4" :mobile="dragMobileMp4"></Screencast>
 
 ## Route modes
 
@@ -50,9 +69,9 @@ The icons at the bottom of the route form can be used to change the means of tra
 
 Clicking the cog icon opens a menu where some more specific route modes (for example road bike, mountain bike, electric bike) and some additional settings are available.
 
-For simple driving, cycling or walking, FacilMap uses [Mapbox](https://docs.mapbox.com/api/navigation/directions/) (based on [OSRM](https://www.project-osrm.org/)) to calculate routes. If any advanced settings from the dropdown menu are selected, [OpenRouteService](https://openrouteservice.org/) is used. Mapbox is faster, but OpenRouteService provides more options. If one of the two services doesn’t work properly, it might be worth changing the route mode to make FacilMap use the other.
+For simple driving, cycling or walking, FacilMap uses [Mapbox](https://docs.mapbox.com/api/navigation/directions/) (based on [OSRM](https://project-osrm.org/)) to calculate routes. If any advanced settings from the dropdown menu are selected, [OpenRouteService](https://openrouteservice.org/) is used. Mapbox is faster, but OpenRouteService provides more options. If one of the two services doesn’t work properly, it might be worth changing the route mode to make FacilMap use the other.
 
-<Screencast :desktop="require('./mode.mp4')" :mobile="require('./mode-mobile.mp4')"></Screencast>
+<Screencast :desktop="modeMp4" :mobile="modeMobileMp4"></Screencast>
 
 ## Elevation profile
 
@@ -64,13 +83,13 @@ An elevation graph is shown under the route information. Hovering the elevation 
 
 By default, the elevation graph also highlights different road surfaces (asphalt, gravel, ...) in different colours. Hover “Legend” in the bottom left of the graph to see what the different colours mean, or hover a specific point on the graph to see more details. You can use the arrows on the bottom right of the graph to switch the highlighting from road surfaces to waytypes (road, track, path, ...), steepness or toll roads (only for car routing).
 
-<Screencast :desktop="require('./elevation.mp4')" :mobile="require('./elevation-mobile.mp4')"></Screencast>
+<Screencast :desktop="elevationMp4" :mobile="elevationMobileMp4"></Screencast>
 
 ## Use a route query
 
 You can type a route description in the shape of `A to B` into the search form. This will automatically switch to the routing form with the specified destinations.
 
-<Screencast :desktop="require('./query.mp4')" :mobile="require('./query-mobile.mp4')"></Screencast>
+<Screencast :desktop="queryMp4" :mobile="queryMobileMp4"></Screencast>
 
 If you have [configured FacilMap as a search engine](../search/#configure-a-browser-search-engine) in your browser, this can be a useful shortcut to calculate a route by typing something like `facilmap.org Berlin to Hamburg` or `fm Berlin to Hamburg` into the address bar of your browser (depending which keyword you have configured).
 

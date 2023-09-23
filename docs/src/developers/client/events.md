@@ -15,7 +15,7 @@ client.on("padData", (padData) => {
 
 ## `connect`, `disconnect`, `connect_error`, `error`, `reconnect`, `reconnect_attempt`, `reconnect_error`, `reconnect_failed`
 
-These events come from socket.io and are [documented there under the section “Events”](http://socket.io/docs/client-api/).
+These events come from socket.io and are [documented there](https://socket.io/docs/v4/client-api/#events).
 
 ## `padData`
 

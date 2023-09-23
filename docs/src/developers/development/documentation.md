@@ -22,14 +22,14 @@ The existing recordings were created using [SimpleScreenRecorder](https://www.ma
 
 To embed a video into the documentation, the custom `Screencast` component can be used in Markdown:
 ```jsx
-<Screencast :desktop="require('./recording.mp4')" :mobile="require('./recording-mobile.mp4')"></Screencast>
+<Screencast :desktop="recordingMp4" :mobile="recordingMobileMp4"></Screencast>
 ```
 
 ## Embed screenshots
 
 Screenshots should be saved as PNG, with a size of 1024×768 pixels for desktop and 320×480 pixels for mobile. To show the desktop and mobile screenshots next to each other, use the custom `Screenshot` component in Markdown:
 ```jsx
-<Screenshot :desktop="require('./screenshot.png')" :mobile="require('./screenshot-mobile.png')"></Screenshot>
+<Screenshot :desktop="screenshot.png')" :mobile="screenshot-mobile.png')"></Screenshot>
 ```
 
 ## Docker image

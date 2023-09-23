@@ -343,7 +343,7 @@
 
 					if(dest.selectedSuggestion == null)
 						Vue.set(dest, "selectedSuggestion", this.getSelectedSuggestion(dest));
-				} catch (err) {
+				} catch (err: any) {
 					if(query != dest.loadingQuery)
 						return; // The destination has changed in the meantime
 
@@ -449,7 +449,7 @@
 
 				if (route && zoom)
 					flyTo(this.mapComponents.map, getZoomDestinationForRoute(route), smooth);
-			} catch (err) {
+			} catch (err: any) {
 				showErrorToast(this, `fm${this.context.id}-route-form-error`, "Error calculating route", err);
 			}
 		}
@@ -505,7 +505,7 @@
 				const line = await this.client.addLine({ typeId: type.id, routePoints: this.routeObj!.routePoints, mode: this.routeObj!.mode });
 				this.clear();
 				this.mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
-			} catch (err) {
+			} catch (err: any) {
 				showErrorToast(this, `fm${this.context.id}-route-form-add-error`, "Error adding line", err);
 			} finally {
 				this.isAdding = false;
@@ -519,7 +519,7 @@
 			try {
 				const exported = await this.client.exportRoute({ format });
 				saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
-			} catch(err) {
+			} catch(err: any) {
 				showErrorToast(this, `fm${this.context.id}-route-form-export-error`, "Error exporting route", err);
 			} finally {
 				this.isExporting = false;

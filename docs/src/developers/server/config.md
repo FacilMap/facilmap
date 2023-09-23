@@ -13,7 +13,7 @@ The config of the FacilMap server can be set either by using environment variabl
 | `DB_NAME`             |          | `facilmap`  | The name of the database.                                                                                                        |
 | `DB_USER`             |          | `facilmap`  | The username to connect to the database with.                                                                                    |
 | `DB_PASSWORD`         |          | `facilmap`  | The password to connect to the database with.                                                                                    |
-| `ORS_TOKEN`           | *        |             | [OpenRouteService API key](https://go.openrouteservice.org).                                                                     |
+| `ORS_TOKEN`           | *        |             | [OpenRouteService API key](https://openrouteservice.org/).                                                                     |
 | `MAPBOX_TOKEN`        | *        |             | [Mapbox API key](https://www.mapbox.com/signup/).                                                                                |
 | `MAPZEN_TOKEN`        |          |             | [Mapzen API key](https://mapzen.com/developers/sign_up).                                                                         |
 | `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup).                                                                   |

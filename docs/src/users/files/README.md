@@ -1,3 +1,8 @@
+<script setup lang="ts">
+	import detailsMp4 from "@source/users/files/details.mp4";
+	import detailsMobileMp4 from "@source/users/files/details-mobile.mp4";
+</script>
+
 # Open geographic files
 
 With FacilMap you can open geographic files (such as GPX or KML) exported by other apps/devices or by FacilMap itself.
@@ -30,7 +35,7 @@ The search box tab shows a list of all geographic objects in the opened file. Cl
 
 By clicking the arrow on the right side of an object in the list, you can show some details about this object. You also have the option there to [use it as a route destination](../route/#use-map-points-as-destinations) (only for markers) or to add them to the map (only for [collaborative maps](../collaborative/)). To get back from the details, click on the blue arrow on the left of the heading.
 
-<Screencast :desktop="require('./details.mp4')" :mobile="require('./details-mobile.mp4')"></Screencast>
+<Screencast :desktop="detailsMp4" :mobile="detailsMobileMp4"></Screencast>
 
 ## Open an OpenStreetMap object
 

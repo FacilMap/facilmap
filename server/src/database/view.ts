@@ -1,28 +1,26 @@
-import { DataTypes, Model } from "sequelize";
+import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "facilmap-types";
 import Database from "./database.js";
-import { getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
+import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
+import { PadModel } from "./pad.js";
 
-function createViewModel() {
-	return class ViewModel extends Model {
-		declare id: ID;
-		declare name: string;
-		declare baseLayer: string;
-		declare layers: string;
-		declare top: Latitude;
-		declare bottom: Latitude;
-		declare left: Longitude;
-		declare right: Longitude;
-		declare filter: string | null;
-		declare toJSON: () => View;
-	}
+export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
+	id: CreationOptional<ID>;
+	padId: ForeignKey<PadModel["id"]>;
+	name: string;
+	baseLayer: string;
+	layers: string;
+	top: Latitude;
+	bottom: Latitude;
+	left: Longitude;
+	right: Longitude;
+	filter: string | null;
+	toJSON: () => View;
 }
-
-type ViewModel = InstanceType<ReturnType<typeof createViewModel>>;
 
 export default class DatabaseViews {
 
-	ViewModel = createViewModel();
+	ViewModel = createModel<ViewModel>();
 
 	_db: Database;
 
@@ -30,6 +28,7 @@ export default class DatabaseViews {
 		this._db = database;
 
 		this.ViewModel.init({
+			id: getDefaultIdType(),
 			name : { type: DataTypes.TEXT, allowNull: false },
 			baseLayer : { type: DataTypes.TEXT, allowNull: false },
 			layers : {

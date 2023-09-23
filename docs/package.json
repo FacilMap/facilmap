@@ -8,6 +8,7 @@
     "url": "https://github.com/FacilMap/facilmap.git"
   },
   "license": "AGPL-3.0",
+  "type": "module",
   "scripts": {
     "dev-server": "vuepress dev src",
     "build": "vuepress build src",
@@ -16,13 +17,13 @@
   },
   "private": true,
   "devDependencies": {
-    "markdown-it-footnote": "^3.0.3",
-    "rimraf": "^3.0.2",
-    "vuepress": "^1.5.3",
-    "vuepress-plugin-check-md": "^0.0.2"
+    "@vuepress/plugin-search": "next",
+    "rimraf": "^5.0.1",
+    "vuepress": "next",
+    "vuepress-plugin-check-md": "^0.0.3"
   },
+  "packageManager": "yarn@3.6.3",
   "dependencies": {
-    "qrcode": "^1.4.4",
-    "vue-qrcode": "^0.4.0"
+    "qrcode.vue": "^3.4.1"
   }
 }

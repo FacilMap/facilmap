@@ -1,64 +1,58 @@
-import { DataTypes, HasManyGetAssociationsMixin, Model, Op } from "sequelize";
+import { CreationAttributes, CreationOptional, DataTypes, ForeignKey, HasManyGetAssociationsMixin, InferAttributes, InferCreationAttributes, Model, Op } from "sequelize";
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
 import Database from "./database.js";
-import { BboxWithExcept, dataDefinition, DataModel, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import { groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { wrapAsync } from "../utils/streams.js";
 import { calculateRouteForLine } from "../routing/routing.js";
+import { PadModel } from "./pad";
+import { Point as GeoJsonPoint } from "geojson";
+import { TypeModel } from "./type";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
 }
 
-function createLineModel() {
-	return class LineModel extends Model {
-		declare id: ID;
-		declare padId: PadId;
-		declare routePoints: string;
-		declare mode: string;
-		declare colour: string;
-		declare width: number;
-		declare name: string | null;
-		declare distance: number | null;
-		declare time: number | null;
-		declare ascent: number | null;
-		declare descent: number | null;
-		declare top: Latitude;
-		declare bottom: Latitude;
-		declare left: Longitude;
-		declare right: Longitude;
-		declare extraInfo: string | null;
+export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
+	id: CreationOptional<ID>;
+	padId: ForeignKey<PadModel["id"]>;
+	routePoints: string;
+	typeId: ForeignKey<TypeModel["id"]>;
+	mode: CreationOptional<string>;
+	colour: CreationOptional<string>;
+	width: CreationOptional<number>;
+	name: CreationOptional<string | null>;
+	distance: CreationOptional<number | null>;
+	time: CreationOptional<number | null>;
+	ascent: CreationOptional<number | null>;
+	descent: CreationOptional<number | null>;
+	top: Latitude;
+	bottom: Latitude;
+	left: Longitude;
+	right: Longitude;
+	extraInfo: CreationOptional<string | null>;
 
-		declare getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
-		declare toJSON: () => Line;
-	}
+	getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
+	toJSON: () => Line;
 }
 
-function createLinePointModel() {
-	return class LinePointModel extends Model {
-		declare id: ID;
-		declare lineId: ID;
-		declare lat: Latitude;
-		declare lon: Longitude;
-		declare zoom: number;
-		declare idx: number;
-		declare ele: number | null;
-		declare toJSON: () => TrackPoint;
-	};
+export interface LinePointModel extends Model<InferAttributes<LinePointModel>, InferCreationAttributes<LinePointModel>> {
+	id: CreationOptional<ID>;
+	lineId: ForeignKey<LineModel["id"]>;
+	pos: GeoJsonPoint;
+	lat: Latitude;
+	lon: Longitude;
+	zoom: number;
+	idx: number;
+	ele: number | null;
+	toJSON: () => TrackPoint;
 }
-
-function createLineDataModel() {
-	return class LineData extends DataModel {};
-}
-
-export type LineModel = InstanceType<ReturnType<typeof createLineModel>>;
-export type LinePointModel = InstanceType<ReturnType<typeof createLinePointModel>>;
 
 export default class DatabaseLines {
 
-	LineModel = createLineModel();
-	LinePointModel = createLinePointModel();
-	LineDataModel = createLineDataModel();
+	LineModel = createModel<LineModel>();
+	LinePointModel = createModel<LinePointModel>();
+	LineDataModel = createModel<DataModel>();
 
 	_db: Database;
 
@@ -66,6 +60,7 @@ export default class DatabaseLines {
 		this._db = database;
 
 		this.LineModel.init({
+			id: getDefaultIdType(),
 			routePoints : {
 				type: DataTypes.TEXT,
 				allowNull: false,
@@ -119,6 +114,7 @@ export default class DatabaseLines {
 		});
 
 		this.LinePointModel.init({
+			id: getDefaultIdType(),
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),
@@ -173,7 +169,7 @@ export default class DatabaseLines {
 
 	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
 		const lineTemplate = {
-			...this.LineModel.build({ ...data, padId: padId }).toJSON(),
+			...this.LineModel.build({ ...data, padId: padId } satisfies Partial<CreationAttributes<LineModel>> as any).toJSON(),
 			data: { }
 		} as Line;
 
@@ -297,7 +293,7 @@ export default class DatabaseLines {
 	}
 
 	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {
-		const points = await this.LineModel.build({ id: lineId }).getLinePoints({
+		const points = await this.LineModel.build({ id: lineId } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints({
 			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]]
 		});

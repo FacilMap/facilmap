@@ -1,3 +1,16 @@
+<script setup lang="ts">
+	import addMp4 from "@source/users/markers/add.mp4";
+	import addMobileMp4 from "@source/users/markers/add-mobile.mp4";
+	import addResultMp4 from "@source/users/markers/add-result.mp4";
+	import addResultMobileMp4 from "@source/users/markers/add-result-mobile.mp4";
+	import addResultsMp4 from "@source/users/markers/add-results.mp4";
+	import addResultsMobileMp4 from "@source/users/markers/add-results-mobile.mp4";
+	import moveMp4 from "@source/users/markers/move.mp4";
+	import moveMobileMp4 from "@source/users/markers/move-mobile.mp4";
+	import removeMp4 from "@source/users/markers/remove.mp4";
+	import removeMobileMp4 from "@source/users/markers/remove-mobile.mp4";
+</script>
+
 # Markers
 
 A marker is a point on the map that has a name, a certain style (shape, icon, size, colour) and some data (such as a description). When you add a marker to a map, it is permanently saved there and visible for anyone who is viewing the map.
@@ -8,7 +21,7 @@ By default, a collaborative map has one type of marker called “Marker” that 
 
 To add a marker, click on “Add” in the [toolbox](../ui/#toolbox) and then “Marker”. A message will appear that asks you to click on the map to add a marker, along with a “Cancel” button to cancel the operation. Once you click somewhere on the map, a marker is added there and a [search box](../ui/#search-box) tab opens with information about the marker.
 
-<Screencast :desktop="require('./add.mp4')" :mobile="require('./add-mobile.mp4')"></Screencast>
+<Screencast :desktop="addMp4" :mobile="addMobileMp4"></Screencast>
 
 The new marker is called “Untitled marker”, has the default style and no description. As a next step, you might want to [edit the marker details](#edit-marker-details) to give it a name and change its style.
 
@@ -18,11 +31,11 @@ An alternative way to add a marker is to add a [search result](../search/), a [P
 
 In the search box tab of that object, click on “Add to map” and then “Marker”. The marker will be created with the name of the result. If the marker is a [custom type](../types/), a mapping from the result info to the marker data is attempted, for example if the marker has a field “Address”, it will be filled with the address of the result.
 
-<Screencast :desktop="require('./add-result.mp4')" :mobile="require('./add-result-mobile.mp4')"></Screencast>
+<Screencast :desktop="addResultMp4" :mobile="addResultMobileMp4"></Screencast>
 
 You can also add multiple results at once. In the search form, select multiple items by using the “Select all” button or clicking individual items while holding the Ctrl key. Then click “Add selected items to map” and then “Marker items as Marker”. (In case of an opened geographic file, some of the selected items may be polygons or polylines, these will not be added, as they are not “Marker items”.)
 
-<Screencast :desktop="require('./add-results.mp4')" :mobile="require('./add-results-mobile.mp4')"></Screencast>
+<Screencast :desktop="addResultsMp4" :mobile="addResultsMobileMp4"></Screencast>
 
 ## Show marker details
 
@@ -44,12 +57,12 @@ Click “Save” to save your changes.
 
 To change the position of a marker, select the marker and then click “Move” in its [search box](../ui/#search-box) tab. A message will appear at the top right of the screen. Now drag the marker to the desired position, and once you are done, click “Finish” in the message. To keep it at its old position, cancel the operation by clicking “Cancel”.
 
-<Screencast :desktop="require('./move.mp4')" :mobile="require('./move-mobile.mp4')"></Screencast>
+<Screencast :desktop="moveMp4" :mobile="moveMobileMp4"></Screencast>
 
 ## Remove a marker
 
 To remove a marker from the map, select the marker, click “Remove” and confirm the alert box. Note that removed markers will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
 
-<Screencast :desktop="require('./remove.mp4')" :mobile="require('./remove-mobile.mp4')"></Screencast>
+<Screencast :desktop="removeMp4" :mobile="removeMobileMp4"></Screencast>
 
 You can also remove multiple markers at once by [handling multiple objects](../multiple/).

@@ -1,13 +1,27 @@
 import highland from "highland";
 import { streamEachPromise } from "../utils/streams.js";
 import { clone } from "../utils/utils.js";
-import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize } from "sequelize";
+import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
+import { PadModel } from "./pad";
 
 const ITEMS_PER_BATCH = 5000;
+
+// Workaround for https://github.com/sequelize/sequelize/issues/15898
+export function createModel<ModelInstance extends Model<any, any>>(): ModelStatic<ModelInstance> {
+	return class extends Model {} as any;
+}
+
+export function getDefaultIdType(): ModelAttributeColumnOptions {
+	return {
+		type: DataTypes.INTEGER.UNSIGNED,
+		autoIncrement: true,
+		primaryKey: true
+	};
+}
 
 export function getVirtualLatType(): ModelAttributeColumnOptions {
 	return {
@@ -74,13 +88,14 @@ export function getLonType(): ModelAttributeColumnOptions {
 
 export const validateColour = { is: /^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/ };
 
-export class DataModel extends Model {
-	declare id: ID;
-	declare name: string;
-	declare value: string;
+export interface DataModel extends Model<InferAttributes<DataModel>, InferCreationAttributes<DataModel>> {
+	id: ID;
+	name: string;
+	value: string;
 }
 
 export const dataDefinition = {
+	id: getDefaultIdType(),
 	"name" : { type: DataTypes.TEXT, allowNull: false },
 	"value" : { type: DataTypes.TEXT, allowNull: false }
 };
@@ -265,7 +280,7 @@ export default class DatabaseHelpers {
 				condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
 			}
 
-			const Pad = this._db.pads.PadModel.build({ id: padId });
+			const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
 			const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
 
 			return objs.map((obj) => {
