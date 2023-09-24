@@ -10,18 +10,18 @@ interface AddListener<EventTypes extends Record<keyof EventTypes, any[]>, This> 
 
 export class TypedEventEmitter<EventTypes extends Record<keyof EventTypes, any[]>> extends EventEmitter {
 
-	addListener!: AddListener<EventTypes, this>;
-	on!: AddListener<EventTypes, this>;
-	once!: AddListener<EventTypes, this>;
-	prependListener!: AddListener<EventTypes, this>;
-	prependOnceListener!: AddListener<EventTypes, this>;
-	removeListener!: AddListener<EventTypes, this>;
-	off!: AddListener<EventTypes, this>;
-	removeAllListeners!: (event?: EventName<EventTypes>) => this;
-	listeners!: (event: EventName<EventTypes>) => Function[];
-	rawListeners!: (event: EventName<EventTypes>) => Function[];
-	emit!: <E extends EventName<EventTypes>>(event: E, ...args: EventTypes[E]) => boolean;
-	eventNames!: () => Array<EventName<EventTypes>>;
-	listenerCount!: (type: EventName<EventTypes>) => number;
+	declare addListener: AddListener<EventTypes, this>;
+	declare on: AddListener<EventTypes, this>;
+	declare once: AddListener<EventTypes, this>;
+	declare prependListener: AddListener<EventTypes, this>;
+	declare prependOnceListener: AddListener<EventTypes, this>;
+	declare removeListener: AddListener<EventTypes, this>;
+	declare off: AddListener<EventTypes, this>;
+	declare removeAllListeners: (event?: EventName<EventTypes>) => this;
+	declare listeners: (event: EventName<EventTypes>) => Function[];
+	declare rawListeners: (event: EventName<EventTypes>) => Function[];
+	declare emit: <E extends EventName<EventTypes>>(event: E, ...args: EventTypes[E]) => boolean;
+	declare eventNames: () => Array<EventName<EventTypes>>;
+	declare listenerCount: (type: EventName<EventTypes>) => number;
 
 }
