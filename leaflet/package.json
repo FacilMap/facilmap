@@ -63,7 +63,6 @@
     "@types/lodash-es": "^4.17.7",
     "@types/node-fetch": "^2.6.3",
     "@types/rollup-plugin-auto-external": "^2.0.2",
-    "@types/svgo": "^3.0.0",
     "@types/yauzl": "^2.10.0",
     "cheerio": "^1.0.0-rc.12",
     "fast-glob": "^3.2.12",
