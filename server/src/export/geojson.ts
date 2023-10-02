@@ -1,4 +1,4 @@
-import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams.js";
+import { jsonStream, asyncIteratorToArray, toStream } from "../utils/streams.js";
 import { clone } from "../utils/utils.js";
 import { compileExpression } from "facilmap-utils";
 import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
@@ -18,7 +18,7 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 		const views = database.views.getViews(padId)
 			.map((view) => omit(view, ["id", "padId"]));
 
-		const types = keyBy(await streamToArrayPromise(database.types.getTypes(padId)), "id");
+		const types = keyBy(await asyncIteratorToArray(database.types.getTypes(padId)), "id");
 
 		const markers = database.markers.getPadMarkers(padId)
 			.filter((marker) => filterFunc(marker, types[marker.typeId]))

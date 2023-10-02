@@ -1,5 +1,3 @@
-import highland from "highland";
-import { streamEachPromise } from "../utils/streams.js";
 import { clone } from "../utils/utils.js";
 import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
@@ -7,6 +5,7 @@ import Database from "./database.js";
 import { isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { PadModel } from "./pad";
+import { arrayToAsyncIterator } from "../utils/streams";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -149,15 +148,15 @@ export default class DatabaseHelpers {
 		this._db = db;
 	}
 
-	async _updateObjectStyles(objectStream: Marker | Line | Highland.Stream<Marker> | Highland.Stream<Line> | Highland.Stream<Marker | Line>): Promise<void> {
-		const stream = (highland.isStream(objectStream) ? highland(objectStream) : highland([ objectStream ])) as Highland.Stream<Marker | Line>;
+	async _updateObjectStyles(objects: Marker | Line | AsyncGenerator<Marker | Line, void, void>): Promise<void> {
+		const iterator = Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects]);
 
 		type MarkerData = { object: Marker; type: Type; update: MarkerUpdate; };
 		type LineData = { object: Line; type: Type; update: LineUpdate; };
 		const isLine = (data: MarkerData | LineData): data is LineData => (data.type.type == "line");
 
 		const types: Record<ID, Type> = { };
-		await streamEachPromise(stream, async (object: Marker | Line) => {
+		for await (const object of iterator) {
 			const padId = object.padId;
 
 			if(!types[object.typeId]) {
@@ -234,7 +233,7 @@ export default class DatabaseHelpers {
 			}
 
 			await Promise.all(ret);
-		});
+		}
 	}
 
 	async _padObjectExists(type: string, padId: PadId, id: ID): Promise<boolean> {
@@ -267,33 +266,27 @@ export default class DatabaseHelpers {
 		return data;
 	}
 
-	_toStream<T>(getData: () => Promise<Array<T>>): Highland.Stream<T> {
-		return highland(getData()).flatten() as any;
-	}
+	async* _getPadObjects<T>(type: string, padId: PadId, condition?: FindOptions): AsyncGenerator<T, void, void> {
+		const includeData = [ "Marker", "Line" ].includes(type);
 
-	_getPadObjects<T>(type: string, padId: PadId, condition?: FindOptions): Highland.Stream<T> {
-		return this._toStream(async () => {
-			const includeData = [ "Marker", "Line" ].includes(type);
+		if(includeData) {
+			condition = condition || { };
+			condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
+		}
+
+		const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
+		const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
+
+		for (const obj of objs) {
+			const d: any = obj.toJSON();
 
 			if(includeData) {
-				condition = condition || { };
-				condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
+				d.data = this._dataFromArr((d as any)[type+"Data"]);
+				delete (d as any)[type+"Data"];
 			}
 
-			const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
-			const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
-
-			return objs.map((obj) => {
-				const d: any = obj.toJSON();
-
-				if(includeData) {
-					d.data = this._dataFromArr((d as any)[type+"Data"]);
-					delete (d as any)[type+"Data"];
-				}
-
-				return d;
-			});
-		});
+			yield d;
+		}
 	}
 
 	async _createPadObject<T>(type: string, padId: PadId, data: any): Promise<T> {
@@ -397,10 +390,10 @@ export default class DatabaseHelpers {
 		await model.bulkCreate(this._dataToArr(data, idObj));
 	}
 
-	renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
-		const objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId)) as Highland.Stream<Marker | Line>;
+	async renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
+		const objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId));
 
-		return streamEachPromise(objectStream, async (object) => {
+		for await (const object of objectStream) {
 			const newData = clone(object.data);
 			const newNames: string[] = [ ];
 
@@ -424,7 +417,7 @@ export default class DatabaseHelpers {
 				else
 					await this._db.markers.updateMarker(object.padId, object.id, {data: newData}, true); // Last param true to not create history entry
 			}
-		});
+		}
 	}
 
 	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Array<Record<string, unknown>>): Promise<Array<T>> {

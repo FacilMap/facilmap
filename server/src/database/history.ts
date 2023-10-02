@@ -100,7 +100,7 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(padId: PadId, types?: HistoryEntryType[]): Highland.Stream<HistoryEntry> {
+	getHistory(padId: PadId, types?: HistoryEntryType[]): AsyncGenerator<HistoryEntry, void, never> {
 		const query: FindOptions = { order: [[ "time", "DESC" ]] };
 		if(types)
 			query.where = {type: types};

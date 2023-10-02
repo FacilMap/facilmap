@@ -11,6 +11,7 @@ import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { paths, serve } from "facilmap-frontend/build.js";
 import { Manifest } from "vite";
+import { Writable } from "stream";
 
 const isDevMode = !!process.env.FM_DEV;
 
@@ -123,7 +124,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 			res.set("Content-type", "application/gpx+xml");
 			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
-			exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined).pipe(res);
+			exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined).pipeTo(Writable.toWeb(res));
 		} catch (e) {
 			next(e);
 		}

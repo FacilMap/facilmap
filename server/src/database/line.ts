@@ -2,8 +2,7 @@ import { CreationAttributes, CreationOptional, DataTypes, ForeignKey, HasManyGet
 import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
 import Database from "./database.js";
 import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
-import { groupBy, isEqual, mapValues, omit } from "lodash-es";
-import { wrapAsync } from "../utils/streams.js";
+import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { PadModel } from "./pad";
 import { Point as GeoJsonPoint } from "geojson";
@@ -45,7 +44,7 @@ export interface LinePointModel extends Model<InferAttributes<LinePointModel>, I
 	zoom: number;
 	idx: number;
 	ele: number | null;
-	toJSON: () => TrackPoint;
+	toJSON: () => TrackPoint & { lineId: ID; pos: GeoJsonPoint };
 }
 
 export default class DatabaseLines {
@@ -150,21 +149,20 @@ export default class DatabaseLines {
 		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
 	}
 
-	getPadLines(padId: PadId, fields?: Array<keyof Line>): Highland.Stream<Line> {
+	getPadLines(padId: PadId, fields?: Array<keyof Line>): AsyncGenerator<Line, void, void> {
 		const cond = fields ? { attributes: fields } : { };
 		return this._db.helpers._getPadObjects<Line>("Line", padId, cond);
 	}
 
-	getPadLinesByType(padId: PadId, typeId: ID): Highland.Stream<Line> {
+	getPadLinesByType(padId: PadId, typeId: ID): AsyncGenerator<Line, void, void> {
 		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
 	}
 
-	getPadLinesWithPoints(padId: PadId): Highland.Stream<LineWithTrackPoints> {
-		return this.getPadLines(padId)
-			.flatMap(wrapAsync(async (line): Promise<LineWithTrackPoints> => {
-				const trackPoints = await this.getAllLinePoints(line.id);
-				return { ...line, trackPoints };
-			}));
+	async* getPadLinesWithPoints(padId: PadId): AsyncGenerator<LineWithTrackPoints, void, void> {
+		for await (const line of this.getPadLines(padId)) {
+			const trackPoints = await this.getAllLinePoints(line.id);
+			yield { ...line, trackPoints };
+		}
 	}
 
 	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
@@ -267,29 +265,30 @@ export default class DatabaseLines {
 		return oldLine;
 	}
 
-	getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): Highland.Stream<{ id: ID; trackPoints: TrackPoint[] }> {
-		return this._db.helpers._toStream(async () => await this.LineModel.findAll({ attributes: ["id"], where: { padId } }))
-			.map((line) => line.id)
-			.batch(50000)
-			.flatMap(wrapAsync(async (lineIds) => {
-				const linePoints = await this.LinePointModel.findAll({
-					where: {
-						[Op.and]: [
-							{
-								zoom: { [Op.lte]: bboxWithZoom.zoom },
-								lineId: { [Op.in]: lineIds }
-							},
-							makeBboxCondition(bboxWithZoom)
-						]
-					},
-					attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
-				});
+	async* getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncGenerator<{ id: ID; trackPoints: TrackPoint[] }, void, void> {
+		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { padId } });
+		const chunks = chunk(lines.map((line) => line.id), 50000);
+		for (const lineIds of chunks) {
+			const linePoints = await this.LinePointModel.findAll({
+				where: {
+					[Op.and]: [
+						{
+							zoom: { [Op.lte]: bboxWithZoom.zoom },
+							lineId: { [Op.in]: lineIds }
+						},
+						makeBboxCondition(bboxWithZoom)
+					]
+				},
+				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
+			});
 
-				return Object.entries(groupBy(linePoints, "lineId")).map(([key, val]) => ({
+			for (const [key, val] of Object.entries(groupBy(linePoints, "lineId"))) {
+				yield {
 					id: Number(key),
 					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId", "pos"]))
-				}));
-			})).flatten();
+				};
+			}
+		}
 	}
 
 	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {

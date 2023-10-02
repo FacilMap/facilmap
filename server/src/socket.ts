@@ -1,5 +1,5 @@
 import { promiseProps, stripObject } from "./utils/utils.js";
-import { streamToArrayPromise } from "./utils/streams.js";
+import { asyncIteratorToArray } from "./utils/streams.js";
 import { isInBbox } from "./utils/geo.js";
 import { Server, Socket as SocketIO } from "socket.io";
 import domain from "domain";
@@ -114,15 +114,15 @@ class SocketConnection {
 	getPadObjects(padData: PadData) {
 		const promises: MultipleEventPromises = {
 			padData: [ padData ],
-			view: streamToArrayPromise(this.database.views.getViews(padData.id)),
-			type: streamToArrayPromise(this.database.types.getTypes(padData.id)),
-			line: streamToArrayPromise(this.database.lines.getPadLines(padData.id))
+			view: asyncIteratorToArray(this.database.views.getViews(padData.id)),
+			type: asyncIteratorToArray(this.database.types.getTypes(padData.id)),
+			line: asyncIteratorToArray(this.database.lines.getPadLines(padData.id))
 		};
 
 		if(this.bbox) { // In case bbox is set while fetching pad data
 			Object.assign(promises, {
-				marker: streamToArrayPromise(this.database.markers.getPadMarkers(padData.id, this.bbox)),
-				linePoints: streamToArrayPromise(this.database.lines.getLinePointsForPad(padData.id, this.bbox))
+				marker: asyncIteratorToArray(this.database.markers.getPadMarkers(padData.id, this.bbox)),
+				linePoints: asyncIteratorToArray(this.database.lines.getLinePointsForPad(padData.id, this.bbox))
 			});
 		}
 
@@ -198,8 +198,8 @@ class SocketConnection {
 			const ret: MultipleEventPromises = {};
 
 			if(this.padId && this.padId !== true) {
-				ret.marker = streamToArrayPromise(this.database.markers.getPadMarkers(this.padId, bboxWithExcept));
-				ret.linePoints = streamToArrayPromise(this.database.lines.getLinePointsForPad(this.padId, bboxWithExcept));
+				ret.marker = asyncIteratorToArray(this.database.markers.getPadMarkers(this.padId, bboxWithExcept));
+				ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForPad(this.padId, bboxWithExcept));
 			}
 			if(this.route)
 				ret.routePoints = this.database.routes.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
@@ -805,7 +805,7 @@ class SocketConnection {
 			});
 
 			return promiseProps({
-				history: streamToArrayPromise(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+				history: asyncIteratorToArray(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 			});
 		},
 
@@ -841,7 +841,7 @@ class SocketConnection {
 			}
 
 			return promiseProps({
-				history: streamToArrayPromise(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+				history: asyncIteratorToArray(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 			});
 		},
 

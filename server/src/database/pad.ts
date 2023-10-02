@@ -1,7 +1,6 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
 import { FindPadsQuery, FindPadsResult, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults } from "facilmap-types";
 import Database from "./database.js";
-import { streamEachPromise } from "../utils/streams.js";
 import { createModel } from "./helpers.js";
 
 export interface PadModel extends Model<InferAttributes<PadModel>, InferCreationAttributes<PadModel>> {
@@ -159,21 +158,21 @@ export default class DatabasePads {
 			await this.updatePadData(padData.id, { defaultViewId: null });
 		}
 
-		await streamEachPromise(this._db.markers.getPadMarkers(padData.id), async (marker) => {
+		for await (const marker of this._db.markers.getPadMarkers(padData.id)) {
 			await this._db.markers.deleteMarker(padData.id, marker.id);
-		});
+		}
 
-		await streamEachPromise(this._db.lines.getPadLines(padData.id, ['id']), async (line) => {
+		for await (const line of this._db.lines.getPadLines(padData.id, ['id'])) {
 			await this._db.lines.deleteLine(padData.id, line.id);
-		});
+		}
 
-		await streamEachPromise(this._db.types.getTypes(padData.id), async (type) => {
+		for await (const type of this._db.types.getTypes(padData.id)) {
 			await this._db.types.deleteType(padData.id, type.id);
-		});
+		}
 
-		await streamEachPromise(this._db.views.getViews(padData.id), async (view) => {
+		for await (const view of this._db.views.getViews(padData.id)) {
 			await this._db.views.deleteView(padData.id, view.id);
-		});
+		}
 
 		await this._db.history.clearHistory(padData.id);
 

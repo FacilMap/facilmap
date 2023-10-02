@@ -1,4 +1,4 @@
-import Sequelize, { CreationOptional, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey, validateColour } from "./helpers.js";
@@ -42,24 +42,24 @@ export default class DatabaseTypes {
 
 		this.TypeModel.init({
 			id: getDefaultIdType(),
-			name: { type: Sequelize.TEXT, allowNull: false },
-			type: { type: Sequelize.ENUM("marker", "line"), allowNull: false },
-			defaultColour: { type: Sequelize.STRING(6), allowNull: true, validate: validateColour },
-			colourFixed: { type: Sequelize.BOOLEAN, allowNull: true },
-			defaultSize: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 15 } },
-			sizeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
-			defaultSymbol: { type: Sequelize.TEXT, allowNull: true},
-			symbolFixed: { type: Sequelize.BOOLEAN, allowNull: true},
-			defaultShape: { type: Sequelize.TEXT, allowNull: true },
-			shapeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
-			defaultWidth: { type: Sequelize.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
-			widthFixed: { type: Sequelize.BOOLEAN, allowNull: true },
-			defaultMode: { type: Sequelize.TEXT, allowNull: true },
-			modeFixed: { type: Sequelize.BOOLEAN, allowNull: true },
-			showInLegend: { type: Sequelize.BOOLEAN, allowNull: true },
+			name: { type: DataTypes.TEXT, allowNull: false },
+			type: { type: DataTypes.ENUM("marker", "line"), allowNull: false },
+			defaultColour: { type: DataTypes.STRING(6), allowNull: true, validate: validateColour },
+			colourFixed: { type: DataTypes.BOOLEAN, allowNull: true },
+			defaultSize: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, validate: { min: 15 } },
+			sizeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
+			defaultSymbol: { type: DataTypes.TEXT, allowNull: true},
+			symbolFixed: { type: DataTypes.BOOLEAN, allowNull: true},
+			defaultShape: { type: DataTypes.TEXT, allowNull: true },
+			shapeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
+			defaultWidth: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
+			widthFixed: { type: DataTypes.BOOLEAN, allowNull: true },
+			defaultMode: { type: DataTypes.TEXT, allowNull: true },
+			modeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
+			showInLegend: { type: DataTypes.BOOLEAN, allowNull: true },
 
 			fields: {
-				type: Sequelize.TEXT,
+				type: DataTypes.TEXT,
 				allowNull: false,
 				get: function(this: TypeModel) {
 					const fields = this.getDataValue("fields") as any as string;
@@ -165,7 +165,7 @@ export default class DatabaseTypes {
 		PadModel.hasMany(this.TypeModel, { foreignKey: "padId" });
 	}
 
-	getTypes(padId: PadId): Highland.Stream<Type> {
+	getTypes(padId: PadId): AsyncGenerator<Type, void, void> {
 		return this._db.helpers._getPadObjects<Type>("Type", padId);
 	}
 

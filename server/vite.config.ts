@@ -16,9 +16,6 @@ export default defineConfig({
 			name: 'facilmap-server',
 			fileName: () => 'facilmap-server.mjs',
 			formats: ['es']
-		},
-		rollupOptions: {
-			//external: ["canvas", "pg-hstore"]
 		}
 	}
 });

@@ -1,6 +1,5 @@
-import { streamEachPromise } from "../utils/streams.js";
 import { promiseAuto } from "../utils/utils.js";
-import ejs from "ejs";
+import { render } from "ejs";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
 import { compileExpression } from "facilmap-utils";
 import * as utils from "facilmap-utils";
@@ -21,28 +20,28 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 
 		types: async () => {
 			const types = { } as Record<ID, TypeWithObjects>;
-			await streamEachPromise(database.types.getTypes(padId), (type: Type) => {
+			for await (const type of database.types.getTypes(padId)) {
 				types[type.id] = {
 					...type,
 					markers: [],
 					lines: []
 				};
-			});
+			}
 			return types;
 		},
 
-		markers: (types) => {
-			return streamEachPromise(database.markers.getPadMarkers(padId), (marker: Marker) => {
+		markers: async (types) => {
+			for await (const marker of database.markers.getPadMarkers(padId)) {
 				if(filterFunc(marker, types[marker.typeId]))
 					types[marker.typeId].markers.push(marker);
-			});
+			}
 		},
 
-		lines: (types) => {
-			return streamEachPromise(database.lines.getPadLines(padId), (line: Line) => {
+		lines: async (types) => {
+			for await (const line of database.lines.getPadLines(padId)) {
 				if(filterFunc(line, types[line.typeId]))
 					types[line.typeId].lines.push(line);
-			});
+			}
 		},
 
 		template: readFile(paths.tableEjs).then((t) => t.toString())
@@ -52,7 +51,7 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 				delete results.types[i];
 		}
 
-		return ejs.render(results.template, {
+		return render(results.template, {
 			padData: results.padData,
 			types: results.types,
 			utils,

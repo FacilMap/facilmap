@@ -464,7 +464,7 @@ function _formatAddress(result: NominatimResult) {
 	};
 }
 
-async function _loadUrl(url: string, completeOsmObjects = false) {
+async function _loadUrl(url: string, completeOsmObjects = false): Promise<string> {
 	let bodyBuf = await fetch(
 		url,
 		{
@@ -472,7 +472,7 @@ async function _loadUrl(url: string, completeOsmObjects = false) {
 				"User-Agent": config.userAgent
 			}
 		}
-	).then((res) => res.buffer());
+	).then(async (res) => Buffer.from(await res.arrayBuffer()));
 
 	if(!bodyBuf)
 		throw new Error("Invalid response from server.");

@@ -1,14 +1,10 @@
 import { clone, generateRandomId, promiseProps } from "../utils/utils.js";
-import { streamEachPromise } from "../utils/streams.js";
-import Sequelize, { CreationAttributes, DataTypes } from "sequelize";
+import { CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
 import { isEqual } from "lodash-es";
 import Database from "./database.js";
 import { PadModel } from "./pad.js";
-import { Line, Marker } from "facilmap-types";
 import { LineModel, LinePointModel } from "./line.js";
 import { getElevationForPoints } from "../elevation.js";
-
-const Op = Sequelize.Op;
 
 export default class DatabaseMigrations {
 
@@ -76,13 +72,13 @@ export default class DatabaseMigrations {
 
 			// allow null on Pad.name, Marker.name, Line.name
 			if(["Pads", "Markers", "Lines"].includes(table) && !attributes.name.allowNull)
-				await queryInterface.changeColumn(table, 'name', { type: Sequelize.TEXT, allowNull: true });
+				await queryInterface.changeColumn(table, 'name', { type: DataTypes.TEXT, allowNull: true });
 
 			// Change routing mode field from ENUM to TEXT
 			if(table == "Lines" && attributes.mode.type != "TEXT")
-				await queryInterface.changeColumn(table, "mode", { type: Sequelize.TEXT, allowNull: false, defaultValue: "" });
+				await queryInterface.changeColumn(table, "mode", { type: DataTypes.TEXT, allowNull: false, defaultValue: "" });
 			if(table == "Types" && attributes.defaultMode.type != "TEXT")
-				await queryInterface.changeColumn(table, "defaultMode", { type: Sequelize.TEXT, allowNull: true });
+				await queryInterface.changeColumn(table, "defaultMode", { type: DataTypes.TEXT, allowNull: true });
 		}
 	}
 
@@ -117,9 +113,9 @@ export default class DatabaseMigrations {
 			const newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
 			const dropdowns = newFields.filter((field) => field.type == "dropdown");
 			if(dropdowns.length > 0) {
-				const objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id)) as Highland.Stream<Marker | Line>;
+				const objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id));
 
-				await streamEachPromise(objectStream, (object) => {
+				for await (const object of objectStream) {
 					const newData = clone(object.data);
 					for(const dropdown of dropdowns) {
 						const newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.name])[0];
@@ -131,7 +127,7 @@ export default class DatabaseMigrations {
 
 					if(!isEqual(newData, object.data))
 						return this._db.helpers._updatePadObject(type.type == "line" ? "Line" : "Marker", object.padId, object.id, {data: newData}, true);
-				});
+				}
 
 				dropdowns.forEach((dropdown) => {
 					if(dropdown.default) {
@@ -247,7 +243,7 @@ export default class DatabaseMigrations {
 					allowNull: true
 				});
 				await queryInterface.bulkUpdate(table, {
-					pos: Sequelize.fn("POINT", Sequelize.col("lon"), Sequelize.col("lat"))
+					pos: fn("POINT", col("lon"), col("lat"))
 				}, {});
 				await queryInterface.changeColumn(table, 'pos', model.rawAttributes.pos);
 				await queryInterface.removeColumn(table, 'lat');
@@ -256,7 +252,7 @@ export default class DatabaseMigrations {
 
 			// We create the index here even in a non-migration case, because adding it to the model definition will cause an error if the column does not exist yet.
 			const indexes: any = await queryInterface.showIndex(table);
-			if (!indexes.some((index: any) => index.name == (Sequelize.Utils as any).underscore(`${table}_pos`)))
+			if (!indexes.some((index: any) => index.name == (Utils as any).underscore(`${table}_pos`)))
 				await queryInterface.addIndex(table, { fields: ["pos"], type: "SPATIAL" });
 		}
 	}

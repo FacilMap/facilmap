@@ -68,11 +68,11 @@ export default class DatabaseMarkers {
 		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
-	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): Highland.Stream<Marker> {
+	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): AsyncGenerator<Marker, void, void> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: makeBboxCondition(bbox) });
 	}
 
-	getPadMarkersByType(padId: PadId, typeId: ID): Highland.Stream<Marker> {
+	getPadMarkersByType(padId: PadId, typeId: ID): AsyncGenerator<Marker, void, void> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: { padId: padId, typeId: typeId } });
 	}
 

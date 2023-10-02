@@ -3,31 +3,31 @@
 import highland from "highland";
 import jsonFormat from "json-format";
 
-export function streamEachPromise<T>(stream: Highland.Stream<T>, handle: (item: T) => Promise<void> | void): Promise<void> {
-	return new Promise((resolve, reject) => {
-		stream
-			.flatMap((item) => highland(Promise.resolve(handle(item as T))))
-			.stopOnError(reject)
-			.done(resolve);
+export async function asyncIteratorToArray<T>(iterator: AsyncGenerator<T, any, void>): Promise<Array<T>> {
+	const result: T[] = [];
+	for await (const it of iterator) {
+		result.push(it);
+	}
+	return result;
+}
+
+export async function* arrayToAsyncIterator<T>(array: T[]): AsyncGenerator<T, void, void> {
+	for (const it of array) {
+		yield it;
+	}
+}
+
+export function asyncIteratorToStream<T>(iterator: AsyncGenerator<T, void, void>): ReadableStream<T> {
+	return new ReadableStream<T>({
+		async pull(controller) {
+			const { value, done } = await iterator.next();
+			if (done) {
+				controller.close();
+			} else {
+				controller.enqueue(value);
+			}
+		},
 	});
-}
-
-export function streamToArrayPromise<T>(stream: Highland.Stream<T>): Promise<Array<T>> {
-	return new Promise((resolve, reject) => {
-		stream
-			.stopOnError(reject)
-			.toArray(resolve)
-	})
-}
-
-export function wrapAsync<A extends any[], R>(func: (...args: A) => Promise<R>): (...args: A) => Highland.Stream<R> {
-	return (...args: A) => {
-		return highland(func(...args));
-	};
-}
-
-export function toStream<R>(func: () => Promise<R>): Highland.Stream<R> {
-	return highland(func());
 }
 
 export function jsonStream(template: any, data: Record<string, Highland.Stream<any> | any>): Highland.Stream<string> {

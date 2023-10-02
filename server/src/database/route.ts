@@ -1,5 +1,5 @@
 import { generateRandomId } from "../utils/utils.js";
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions, WhereOptions } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions } from "sequelize";
 import Database from "./database.js";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
