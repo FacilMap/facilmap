@@ -4,10 +4,9 @@
 	import "./client.scss";
 	import { PadData, PadId } from "facilmap-types";
 	import PadSettings from "./pad-settings/pad-settings.vue";
-	import { Client, CLIENT_INJECT_KEY, InjectContext } from "../utils/decorators";
 	import storage from "../utils/storage";
-	import { hideToast, showErrorToast, showToast } from "../utils/toasts";
-	import { provideClient } from "../utils/client";
+	import { hideToast, showErrorToast, showToast } from "./ui/toasts/toasts.vue";
+	import { Client, provideClient } from "../utils/client";
 	import { injectContextRequired } from "../utils/context";
 	import { onBeforeUnmount } from "vue";
 

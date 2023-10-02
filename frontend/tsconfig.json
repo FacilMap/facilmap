@@ -10,7 +10,8 @@
 		"noErrorTruncation": true,
 		"skipLibCheck": true,
 		"experimentalDecorators": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"module": "esnext"
 	},
 	"include": ["src/**/*"]
 }

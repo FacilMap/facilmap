@@ -1,11 +1,12 @@
 import { streamEachPromise } from "../utils/streams.js";
 import { promiseAuto } from "../utils/utils.js";
 import ejs from "ejs";
-import { getFrontendFile } from "../webserver.js";
 import { ID, Line, Marker, PadId, Type } from "facilmap-types";
 import { compileExpression } from "facilmap-utils";
 import * as utils from "facilmap-utils";
 import Database from "../database/database.js";
+import { readFile } from "node:fs/promises";
+import { paths } from "facilmap-frontend/build.js";
 
 type TypeWithObjects = Type & {
 	markers: Marker[],
@@ -44,7 +45,7 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 			});
 		},
 
-		template: getFrontendFile("table.ejs")
+		template: readFile(paths.tableEjs).then((t) => t.toString())
 	}).then((results) => {
 		for(const i of Object.keys(results.types) as unknown as ID[]) {
 			if(results.types[i].markers.length == 0 && results.types[i].lines.length == 0)

@@ -10,7 +10,7 @@ export interface DbConfig {
 	password: string;
 }
 
-interface Config {
+export interface Config {
 	userAgent: string;
 	host?: string;
 	port: number;

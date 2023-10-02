@@ -11,11 +11,11 @@
 <% } -%>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
-		<link rel="icon" href="../../static/favicon.svg">
-		<link rel="mask-icon" href="./favicon.svg" color="#00272a">
-		<link rel="apple-touch-icon" href="./app-180.png">
-		<link rel="manifest" href="./manifest.json">
-		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="./opensearch.xml">
+		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
+		<link rel="mask-icon" href="<%=paths.base%>static/favicon.svg" color="#00272a">
+		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
+		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
+		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="<%=paths.base%>static/opensearch.xml">
 		<style type="text/css">
 			html, body {
 				margin: 0;
@@ -59,7 +59,17 @@
 			@keyframes spinner-border {
 				to { transform: rotate(360deg); }
 			}
+
+<% for (const path of styles) { -%>
+			@import url("<%=paths.base%><%=path%>");
+<% } -%>
 		</style>
+<% for (const path of scripts) { -%>
+		<script type="module" src="<%=paths.base%><%=path%>"></script>
+<% } -%>
+<% for (const path of preloadScripts) { -%>
+		<link rel="modulepreload" src="<%=paths.base%><%=path%>"/>
+<% } -%>
 	</head>
 	<body>
 		<noscript><p><strong>FacilMap requires JavaScript to work.</strong></p></noscript>
@@ -69,7 +79,7 @@
 		</div>
 
 		<script>
-			(function() {
+			/*(function() {
 				window.onload = function() {
 					var loading = document.getElementById("loading");
 					if(loading) {
@@ -77,7 +87,7 @@
 						loading.innerHTML = "Could not load FacilMap!";
 					}
 				};
-			})();
+			})();*/
 		</script>
 	</body>
 </html>

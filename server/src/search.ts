@@ -7,7 +7,6 @@ import { getElevationForPoint, getElevationForPoints } from "./elevation.js";
 import { ZoomLevel, Point, SearchResult } from "facilmap-types";
 import { Geometry } from "geojson";
 import stripBomBuf from "strip-bom-buf";
-import fetch from "node-fetch";
 import throttle from "p-throttle";
 import config from "./config.js";
 

@@ -4,7 +4,7 @@ import util from "util";
 import * as svgo from "svgo";
 import cheerio from "cheerio";
 import highland from "highland";
-import fs from "fs";
+import { writeFile } from "fs/promises";
 import { fileURLToPath } from 'url';
 
 const outDir = fileURLToPath(new URL('./assets/icons/osmi', import.meta.url));
@@ -32,7 +32,7 @@ async function updateIcons() {
         const content = await highland<Buffer>(readStream).collect().map((buffers) => Buffer.concat(buffers)).toPromise(Promise);
         const cleanedContent = cleanIcon(content.toString());
         const outFile = `${outDir}/${entry.fileName.split('/').slice(-2).join('_')}`;
-        await fs.promises.writeFile(outFile, Buffer.from(cleanedContent));
+        await writeFile(outFile, Buffer.from(cleanedContent));
     });
 }
 

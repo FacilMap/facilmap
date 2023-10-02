@@ -7,7 +7,6 @@ installNonReactive(Vue);
 
 export { default as BoxSelection } from "./utils/box-selection";
 export * from "./utils/box-selection";
-export * from "./utils/decorators";
 export * from "./utils/draw";
 export * from "./utils/files";
 export { default as FmHeightgraph } from "./utils/heightgraph";
@@ -17,9 +16,6 @@ export { default as SelectionHandler } from "./utils/selection";
 export * from "./utils/selection";
 export { default as storage } from "./utils/storage";
 export * from "./utils/storage";
-export { default as StringMap } from "./utils/string-map";
-export * from "./utils/string-map";
-export * from "./utils/toasts";
 export * from "./utils/ui";
 export * from "./utils/utils";
 export * from "./utils/validation";
@@ -30,7 +26,7 @@ export * from "../utils/obfuscate";
 
 export { default as About } from "./components/about/about.vue";
 export { default as ClickMarker } from "./components/click-marker/click-marker.vue";
-export * from "./components/client/client.vue";
+export { default as Client } from "./components/client.vue";
 export { default as EditFilter } from "./components/edit-filter/edit-filter.vue";
 export { default as EditLine } from "./components/edit-line/edit-line.vue";
 export { default as EditMarker } from "./components/edit-marker/edit-marker.vue";
@@ -73,4 +69,6 @@ export { default as ShapeField } from "./components/ui/shape-field/shape-field.v
 export { default as Sidebar } from "./components/ui/sidebar/sidebar.vue";
 export { default as SizeField } from "./components/ui/size-field/size-field.vue";
 export { default as SymbolField } from "./components/ui/symbol-field/symbol-field.vue";
+export { default as Toast } from "./components/ui/toasts/toast.vue";
+export * from "./components/ui/toasts/toasts.vue";
 export { default as WidthField } from "./components/ui/width-field/width-field.vue";

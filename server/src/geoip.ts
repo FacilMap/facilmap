@@ -2,17 +2,22 @@ import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo.js";
 import md5 from "md5-file";
 import { schedule } from "node-cron";
 import { open, Reader, Response } from "maxmind";
-import fs from "fs";
+import { createWriteStream } from "fs";
+import { rename } from "node:fs/promises";
 import https from "https";
 import zlib from "zlib";
 import config from "./config.js";
 import { IncomingMessage } from "http";
 import { Bbox } from "facilmap-types";
 import { fileURLToPath } from "url";
+import { fileExists } from "./utils/utils";
+import findCacheDir from "find-cache-dir";
 
-const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
-const fname = fileURLToPath(new URL('../cache/GeoLite2-City.mmdb', import.meta.url));
-const tmpfname = fname + ".tmp";
+const geoliteUrl = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
+const cacheDir = findCacheDir({ name: "facilmap-server", create: true })
+	|| findCacheDir({ name: "facilmap-server", create: true, cwd: fileURLToPath(new URL('./', import.meta['url'])) })!;
+const fname = `${cacheDir}/GeoLite2-City.mmdb`;
+const tmpfname = `${fname}.tmp`;
 
 let currentMd5: string | null = null;
 let db: Reader<Response> | null = null;
@@ -21,15 +26,15 @@ if(config.maxmindUserId && config.maxmindLicenseKey) {
 	schedule("0 3 * * *", download);
 
 	load().catch((err) => {
-		console.trace("Error loading maxmind database", err.stack || err);
+		console.log("Error loading maxmind database", err.stack || err);
 	});
 	download().catch((err) => {
-		console.trace("Error downloading maxmind database", err.stack || err);
+		console.log("Error downloading maxmind database", err.stack || err);
 	});
 }
 
 async function load() {
-	if(await fs.promises.access(fname).then(() => true).catch(() => false))
+	if(await fileExists(fname))
 		db = await open(fname);
 	else
 		db = null;
@@ -41,12 +46,12 @@ async function download() {
 	console.log("Downloading maxmind database");
 
 	if(!currentMd5) {
-		if(await fs.promises.access(fname).then(() => true).catch(() => false))
+		if(await fileExists(fname))
 			currentMd5 = await md5(fname);
 	}
 
 	const res = await new Promise<IncomingMessage>((resolve, reject) => {
-		https.get(url + (currentMd5 || ""), {
+		https.get(geoliteUrl + (currentMd5 || ""), {
 			headers: {
 				Authorization: `Basic ${Buffer.from(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
 			}
@@ -62,7 +67,7 @@ async function download() {
 	const gunzip = zlib.createGunzip();
 	res.pipe(gunzip);
 
-	const file = fs.createWriteStream(tmpfname);
+	const file = createWriteStream(tmpfname);
 	gunzip.pipe(file);
 
 	await new Promise((resolve, reject) => {
@@ -70,7 +75,7 @@ async function download() {
 		file.on("error", reject);
 	});
 
-	await fs.promises.rename(tmpfname, fname);
+	await rename(tmpfname, fname);
 	currentMd5 = await md5(fname);
 
 	await load();

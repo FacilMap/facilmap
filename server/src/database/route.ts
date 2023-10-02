@@ -4,7 +4,7 @@ import Database from "./database.js";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
-import { omit } from "lodash";
+import { omit } from "lodash-es";
 import { Point as GeoJsonPoint } from "geojson";
 
 const updateTimes: Record<string, number> = {};

@@ -30,7 +30,7 @@
     "@types/geojson": "^7946.0.11"
   },
   "devDependencies": {
-    "rimraf": "^5.0.1",
+    "rimraf": "^5.0.4",
     "rollup-plugin-auto-external": "^2.0.0",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",

@@ -1,18 +1,14 @@
 import { streamToArrayPromise, toStream } from "../utils/streams.js";
 import { compile } from "ejs";
-import fs from "fs";
 import Database from "../database/database.js";
 import { Field, PadId, Type } from "facilmap-types";
 import { compileExpression, quoteHtml } from "facilmap-utils";
 import { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import highland from "highland";
-import { fileURLToPath } from "url";
+import gpxLineEjs from "./gpx-line.ejs?raw";
 
-const lineTemplateP = fs.promises.readFile(fileURLToPath(new URL('./gpx-line.ejs', import.meta.url))).then((t) => {
-	return compile(t.toString());
-});
-lineTemplateP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
+const lineTemplate = compile(gpxLineEjs);
 
 function dataToText(fields: Field[], data: Record<string, string>) {
 	if(fields.length == 1 && fields[0].name == "Description")
@@ -79,8 +75,6 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 type LineForExport = Partial<Pick<LineWithTrackPoints, "name" | "data" | "mode" | "trackPoints" | "routePoints">>;
 
 export async function exportLineToGpx(line: LineForExport, type: Type | undefined, useTracks: boolean): Promise<string> {
-	const lineTemplate = await lineTemplateP;
-
 	return lineTemplate({
 		useTracks: (useTracks || line.mode == "track"),
 		time: new Date().toISOString(),

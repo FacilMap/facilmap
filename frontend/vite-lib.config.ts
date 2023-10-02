@@ -2,22 +2,20 @@ import { defineConfig } from 'vite';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import dtsPlugin from 'vite-plugin-dts';
 import autoExternalPlugin from 'rollup-plugin-auto-external';
-import iconsPlugin from "./rollup-icons";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [
 		cssInjectedByJsPlugin(),
 		dtsPlugin({ rollupTypes: true }),
 		autoExternalPlugin(),
-		iconsPlugin()
 	],
 	build: {
 		sourcemap: true,
 		minify: false,
 		lib: {
 			entry: './src/index.ts',
-			name: 'facilmap-leaflet',
-			fileName: () => 'facilmap-leaflet.mjs',
+			name: 'facilmap-frontend',
+			fileName: () => 'facilmap-frontend.mjs',
 			formats: ['es']
 		}
 	},
@@ -26,4 +24,4 @@ export default defineConfig({
 			'facilmap-leaflet': './src/index.ts'
 		}
 	}
-});
+}));

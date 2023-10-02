@@ -8,14 +8,17 @@ export default defineConfig({
 		autoExternalPlugin()
 	],
 	build: {
-		sourcemap: true,
+		sourcemap: false,
 		minify: false,
 		target: "esnext",
 		lib: {
-			entry: './src/index.ts',
+			entry: './src/server.ts',
 			name: 'facilmap-server',
 			fileName: () => 'facilmap-server.mjs',
 			formats: ['es']
+		},
+		rollupOptions: {
+			//external: ["canvas", "pg-hstore"]
 		}
 	}
 });

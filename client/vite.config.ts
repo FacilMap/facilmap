@@ -4,7 +4,7 @@ import autoExternalPlugin from 'rollup-plugin-auto-external';
 
 export default defineConfig({
 	plugins: [
-		dtsPlugin(),
+		dtsPlugin({ rollupTypes: true }),
 		autoExternalPlugin()
 	],
 	build: {
@@ -12,7 +12,7 @@ export default defineConfig({
 		minify: false,
 		lib: {
 			entry: './src/client.ts',
-			fileName: () => 'client.mjs',
+			fileName: () => 'facilmap-client.mjs',
 			formats: ['es']
 		}
 	}

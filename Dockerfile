@@ -21,6 +21,6 @@ RUN cd .. && yarn install
 RUN cd .. && yarn run build
 
 USER root
-RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/cache
+RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/node_modules/.cache
 
 USER facilmap

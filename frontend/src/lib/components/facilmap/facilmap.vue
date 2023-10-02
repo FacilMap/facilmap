@@ -7,7 +7,7 @@
 	import LeafletMap from "../leaflet-map/leaflet-map.vue";
 	import Import from "../import/import.vue";
 	import ClickMarker from "../click-marker/click-marker.vue";
-	import { ClientProvider } from "../client/client.vue";
+	import Client from "../client.vue";
 	import { computedOnResize } from "../../utils/vue";
 	import { Context, provideContext } from "../../utils/context";
 
@@ -37,6 +37,11 @@
 		linkLogo: false,
 		updateHash: false
 	});
+
+	const emit = defineEmits<{
+		(type: "update:padId", padId: string | undefined): void;
+		(type: "update:padName", padName: string | undefined): void;
+	}>();
 
 	const context = reactive<Context>({
 		id: idCounter++,
@@ -97,19 +102,17 @@
 	});
 
 	watch(() => context.activePadId, () => {
-		// TODO:
-		// this.$emit("update:padId", activePadId);
+		emit("update:padId", context.activePadId);
 	});
 
 	watch(() => context.activePadName, () => {
-		// TODO:
-		// this.$emit("update:padName", activePadName);
+		emit("update:padName", context.activePadName);
 	});
 </script>
 
 <template>
 	<div class="fm-facilmap">
-		<ClientProvider>
+		<Client>
 			<LeafletMap>
 				<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
 				<Legend v-if="context.legend"></Legend>
@@ -127,7 +130,7 @@
 
 				<slot></slot>
 			</LeafletMap>
-		</ClientProvider>
+		</Client>
 	</div>
 </template>
 

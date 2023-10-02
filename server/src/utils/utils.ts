@@ -1,5 +1,5 @@
-import { AsyncAutoTasks, Dictionary, auto as asyncAuto } from "async";
 import highland from "highland";
+import { access } from "node:fs/promises";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -78,12 +78,6 @@ export async function promiseProps<T extends object>(obj: PromiseMap<T>): Promis
 }
 
 
-export function auto<R extends Dictionary<any>>(tasks: AsyncAutoTasks<R, Error>): Promise<R> {
-	// typing of async.auto is broken
-	return asyncAuto(tasks) as any;
-}
-
-
 type PromiseCreatorMap<T extends object> = {
 	[P in keyof T]: PromiseLike<T[P]> | ((...args: Array<any>) => Promise<T[P]>)
 };
@@ -152,4 +146,17 @@ export function throttle<A extends any[], R>(func: (...args: A) => Promise<R>, p
 			});
 		});
 	};
+}
+
+export async function fileExists(filename: string): Promise<boolean> {
+	try {
+		await access(filename);
+		return true;
+	} catch (err: any) {
+		if (err.code === 'ENOENT') {
+			return false;
+		} else {
+			throw err;
+		}
+	}
 }

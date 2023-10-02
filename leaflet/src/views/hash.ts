@@ -1,7 +1,7 @@
 import Client from 'facilmap-client';
 import { numberKeys } from 'facilmap-utils';
 import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
-import { debounce, isEqual } from 'lodash';
+import { debounce, isEqual } from 'lodash-es';
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
 import OverpassLayer from '../overpass/overpass-layer';
 import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from '../overpass/overpass-utils';
