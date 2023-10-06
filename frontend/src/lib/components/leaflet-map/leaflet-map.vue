@@ -1,79 +1,20 @@
-<script lang="ts">
-	export interface MapComponents {
-		bboxHandler: BboxHandler;
-		container: HTMLElement;
-		graphicScale: any;
-		hashHandler: HashHandler;
-		linesLayer: LinesLayer;
-		locateControl: L.Control.Locate;
-		map: Map;
-		markersLayer: MarkersLayer;
-		mousePosition: L.Control.MousePosition;
-		overpassLayer: OverpassLayer;
-		searchResultsLayer: SearchResultsLayer;
-		selectionHandler: SelectionHandler;
-	}
-
-	export interface MapContext extends EventBus {
-		center: LatLng;
-		zoom: number;
-		bounds: LatLngBounds;
-		layers: VisibleLayers;
-		filter: string | undefined;
-		filterFunc: FilterFunc;
-		hash: string;
-		showToolbox: boolean;
-		selection: SelectedItem[];
-		activeQuery: HashQuery | undefined;
-		fallbackQuery: HashQuery | undefined; // Updated by search-box
-		interaction: boolean;
-		loading: number;
-		overpassIsCustom: boolean;
-		overpassPresets: OverpassPreset[];
-		overpassCustom: string;
-		overpassMessage: string | undefined;
-	}
-
-	const mapContextInject = Symbol("mapContextInject") as InjectionKey<MapContext>;
-
-	function provideMapContext(mapContext: MapContext): void {
-		provide(mapContextInject, mapContext);
-	}
-
-	export function injectMapContextOptional(): MapContext | undefined {
-		return inject(mapContextInject);
-	}
-
-	export function injectMapContextRequired(): MapContext {
-		const mapContext = injectMapContextOptional();
-		if (!mapContext) {
-			throw new Error("No map context injected.");
-		}
-		return mapContext;
-	}
-</script>
-
 <script setup lang="ts">
-	import WithRender from "./leaflet-map.vue";
-	import Vue, { InjectionKey, Ref, inject, provide } from "vue";
-	import { Component, ProvideReactive, Ref, Watch } from "vue-property-decorator";
-	import "./leaflet-map.scss";
-	import { Client, InjectClient, InjectContext, MAP_COMPONENTS_INJECT_KEY, MAP_CONTEXT_INJECT_KEY } from "../../utils/decorators";
-	import L, { LatLng, LatLngBounds, Map } from "leaflet";
+	import Vue, { computed, markRaw, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+	import L from "leaflet";
 	import "leaflet/dist/leaflet.css";
-	import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, VisibleLayers, HashQuery, OverpassLayer, OverpassPreset, OverpassLoadStatus } from "facilmap-leaflet";
+	import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus } from "facilmap-leaflet";
 	import "leaflet.locatecontrol";
 	import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 	import "leaflet-graphicscale";
 	import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 	import "leaflet-mouse-position";
 	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
-	import $ from "jquery";
-	import SelectionHandler, { SelectedItem } from "../../utils/selection";
-	import { FilterFunc } from "facilmap-utils";
+	import SelectionHandler from "../../utils/selection";
 	import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
-	import { createEventBus, EventBus } from "./events";
-	import { Context } from "../facilmap/facilmap";
+	import { injectClientRequired } from "../../utils/client";
+	import { injectContextRequired } from "../../utils/context";
+	import { MapComponents, provideMapComponents } from "../../utils/map-components";
+	import { MapContext, MapContextData, createMapContext, provideMapContext } from "../../utils/map-context";
 
 	/* function createButton(symbol: string, onClick: () => void): Control {
 		return Object.assign(new Control(), {
@@ -93,195 +34,205 @@
 		});
 	} */
 
-	@WithRender
-	@Component({
-		components: { }
-	})
-	export default class LeafletMap extends Vue {
+	const client = injectClientRequired();
+	const context = injectContextRequired();
 
-		@InjectClient() client!: Client;
-		@InjectContext() context!: Context;
+	const mapComponents = ref<MapComponents>();
+	provideMapComponents(mapComponents);
 
-		@ProvideReactive(MAP_COMPONENTS_INJECT_KEY) mapComponents: MapComponents = null as any;
-		@ProvideReactive(MAP_CONTEXT_INJECT_KEY) mapContext: MapContext = null as any;
+	const mapContext = ref<MapContext>();
+	provideMapContext(mapContext);
 
-		@Ref() innerContainer!: HTMLElement;
+	const innerContainerRef = ref<HTMLElement>();
+	const mapRef = ref<HTMLElement>();
 
-		loaded = false;
-		interaction = 0;
+	const loaded = ref(false);
+	const interaction = ref(0);
 
-		get selfUrl(): string {
-			return `${location.origin}${location.pathname}${this.mapContext?.hash ? `#${this.mapContext.hash}` : ''}`;
-		}
+	const selfUrl = computed(() => {
+		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
+	});
 
-		mounted(): void {
-			const el = this.$el.querySelector(".fm-leaflet-map") as HTMLElement;
-			const map = L.map(el, { boxZoom: false });
+	onMounted(() => {
+		const map = L.map(mapRef.value!, { boxZoom: false });
 
-			map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
+		map._controlCorners.bottomcenter = L.DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
-			const bboxHandler = new BboxHandler(map, this.client).enable();
-			const container = this.innerContainer;
-			const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
-			const linesLayer = new LinesLayer(this.client).addTo(map);
-			const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } }).addTo(map);
-			const markersLayer = new MarkersLayer(this.client).addTo(map);
-			const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
-			const overpassLayer = new OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map);
-			const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
-			const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer, overpassLayer).enable();
+		const bboxHandler = new BboxHandler(map, client.value).enable();
+		const graphicScale = L.control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
+		const linesLayer = new LinesLayer(client.value).addTo(map);
+		const locateControl = L.control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } }).addTo(map);
+		const markersLayer = new MarkersLayer(client.value).addTo(map);
+		const mousePosition = L.control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" }).addTo(map);
+		const overpassLayer = new OverpassLayer([], { markerShape: "rectangle-marker" }).addTo(map);
+		const searchResultsLayer = new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
+		const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer, overpassLayer).enable();
 
-			// Bind these handlers before hashHandler may change the value
-			this.mapContext = {
-				overpassIsCustom: false,
-				overpassPresets: [],
-				overpassCustom: "",
-				loading: 0
-			} as any;
-			overpassLayer.on("setQuery", ({ query }: any) => {
-				this.mapContext.overpassIsCustom = typeof query == "string";
-				if (this.mapContext.overpassIsCustom)
-					this.mapContext.overpassCustom = query && typeof query == "string" ? query : "";
-				else
-					this.mapContext.overpassPresets = Array.isArray(query) ? query : [];
-			});
-			overpassLayer.on("loadstart", () => {
-				this.mapContext.loading++;
-			});
-			overpassLayer.on("loadend", ({ status, error }: any) => {
-				this.mapContext.loading--;
+		// Bind these handlers before hashHandler may change the value
+		mapContext.value = createMapContext({
+			overpassIsCustom: false,
+			overpassPresets: [],
+			overpassCustom: "",
+			loading: 0
+		} satisfies Partial<MapContextData> as any);
 
-				if (status == OverpassLoadStatus.COMPLETE)
-					this.mapContext.overpassMessage = undefined;
-				else if (status == OverpassLoadStatus.INCOMPLETE)
-					this.mapContext.overpassMessage = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
-				else if (status == OverpassLoadStatus.TIMEOUT)
-					this.mapContext.overpassMessage = "Zoom in to show POIs.";
-				else if (status == OverpassLoadStatus.ERROR)
-					this.mapContext.overpassMessage = "Error loading POIs: " + error.message;
-			});
-			overpassLayer.on("clear", () => {
-				this.mapContext.overpassMessage = undefined;
-			});
+		overpassLayer.on("setQuery", ({ query }: any) => {
+			mapContext.value!.overpassIsCustom = typeof query == "string";
+			if (mapContext.value!.overpassIsCustom)
+				mapContext.value!.overpassCustom = query && typeof query == "string" ? query : "";
+			else
+				mapContext.value!.overpassPresets = Array.isArray(query) ? query : [];
+		});
 
-			const hashHandler = new HashHandler(map, this.client, { overpassLayer, simulate: !this.context.updateHash }).on("fmQueryChange", this.handleNewHashQuery).enable();
+		overpassLayer.on("loadstart", () => {
+			mapContext.value!.loading++;
+		});
 
-			this.mapComponents = Vue.nonreactive({ bboxHandler, container, graphicScale, hashHandler, linesLayer, locateControl, map,markersLayer, mousePosition, overpassLayer, searchResultsLayer, selectionHandler });
-			for (const i of Object.keys(this.mapComponents) as Array<keyof MapComponents>)
-				Vue.nonreactive(this.mapComponents[i]);
+		overpassLayer.on("loadend", ({ status, error }: any) => {
+			mapContext.value!.loading--;
 
-			$(this.mapComponents.locateControl._container).find("a").append(getSymbolHtml("currentColor", "1.5em", "screenshot"));
+			if (status == OverpassLoadStatus.COMPLETE)
+				mapContext.value!.overpassMessage = undefined;
+			else if (status == OverpassLoadStatus.INCOMPLETE)
+				mapContext.value!.overpassMessage = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
+			else if (status == OverpassLoadStatus.TIMEOUT)
+				mapContext.value!.overpassMessage = "Zoom in to show POIs.";
+			else if (status == OverpassLoadStatus.ERROR)
+				mapContext.value!.overpassMessage = "Error loading POIs: " + error.message;
+		});
 
-			(async () => {
-				if (!map._loaded) {
-					try {
-						// Initial view was not set by hash handler
-						displayView(map, await getInitialView(this.client), { overpassLayer });
-					} catch (error) {
-						console.error(error);
-						displayView(map, undefined, { overpassLayer });
-					}
-				}
-				this.loaded = true;
-			})();
+		overpassLayer.on("clear", () => {
+			mapContext.value!.overpassMessage = undefined;
+		});
 
-			this.mapContext = {
-				center: map._loaded ? map.getCenter() : L.latLng(0, 0),
-				zoom: map._loaded ? map.getZoom() : 1,
-				bounds: map._loaded ? map.getBounds() : L.latLngBounds([0, 0], [0, 0]),
-				layers: getVisibleLayers(map),
-				filter: map.fmFilter,
-				filterFunc: map.fmFilterFunc,
-				hash: location.hash.replace(/^#/, ""),
-				showToolbox: false,
-				selection: [],
-				activeQuery: undefined,
-				fallbackQuery: undefined,
-				interaction: false,
-				loading: this.mapContext.loading,
-				overpassIsCustom: this.mapContext.overpassIsCustom,
-				overpassPresets: this.mapContext.overpassPresets,
-				overpassCustom: this.mapContext.overpassCustom,
-				overpassMessage: this.mapContext.overpassMessage,
-				...createEventBus()
-			};
+		const hashHandler = new HashHandler(map, client.value, { overpassLayer, simulate: !context.updateHash })
+			.on("fmQueryChange", handleNewHashQuery)
+			.enable();
 
-			map.on("moveend", () => {
-				this.mapContext.center = map.getCenter();
-				this.mapContext.zoom = map.getZoom();
-				this.mapContext.bounds = map.getBounds();
-			});
+		mapComponents.value = {
+			bboxHandler: markRaw(bboxHandler),
+			container: innerContainerRef.value!,
+			graphicScale: markRaw(graphicScale),
+			hashHandler: markRaw(hashHandler),
+			linesLayer: markRaw(linesLayer),
+			locateControl: markRaw(locateControl),
+			map: markRaw(map),
+			markersLayer: markRaw(markersLayer),
+			mousePosition: markRaw(mousePosition),
+			overpassLayer: markRaw(overpassLayer),
+			searchResultsLayer: markRaw(searchResultsLayer),
+			selectionHandler: markRaw(selectionHandler)
+		};
 
-			map.on("fmFilter", () => {
-				this.mapContext.filter = map.fmFilter;
-				this.mapContext.filterFunc = map.fmFilterFunc;
-			});
-
-			map.on("layeradd layerremove", () => {
-				this.mapContext.layers = getVisibleLayers(map);
-			});
-
-			map.on("fmInteractionStart", () => {
-				this.interaction++;
-				this.mapContext.interaction = true;
-			});
-
-			map.on("fmInteractionEnd", () => {
-				this.interaction--;
-				this.mapContext.interaction = this.interaction > 0;
-			});
-
-			hashHandler.on("fmHash", (e: any) => {
-				this.mapContext.hash = e.hash;
-			});
-
-			selectionHandler.on("fmChangeSelection", (event: any) => {
-				const selection = selectionHandler.getSelection();
-				Vue.set(this.mapContext, "selection", selection);
-
-				if (event.open) {
-					setTimeout(() => {
-						this.mapContext.$emit("fm-open-selection", selection);
-					}, 0);
-				}
-			});
-
-			selectionHandler.on("fmLongClick", (event: any) => {
-				this.mapContext.$emit("fm-map-long-click", { lat: event.latlng.lat, lon: event.latlng.lng });
-			});
-		}
-
-		beforeDestroy(): void {
-			this.mapComponents.bboxHandler.disable();
-			this.mapComponents.hashHandler.disable();
-			this.mapComponents.selectionHandler.disable();
-			this.mapComponents.map.remove();
-		}
-
-		@Watch("mapContext.selection")
-		@Watch("mapContext.fallbackQuery")
-		handleActiveQueryChange(): void {
-			if (!this.mapContext) // Not mounted yet
-				return;
-
-			this.mapContext.activeQuery = getHashQuery(this.mapComponents.map, this.client, this.mapContext.selection) || this.mapContext.fallbackQuery;
-			this.mapComponents.hashHandler.setQuery(this.mapContext.activeQuery);
-		}
-
-		async handleNewHashQuery(e: any): Promise<void> {
-			let smooth = true;
-			if (!this.mapComponents) {
-				// This is called while the hash handler is being enabled, so it is the initial view
-				smooth = false;
-				await new Promise((resolve) => { setTimeout(resolve); });
+		watch(() => innerContainerRef.value, () => {
+			if (innerContainerRef.value) {
+				mapComponents.value!.container = innerContainerRef.value;
 			}
+		});
 
-			if (!e.query)
-				this.mapContext.$emit("fm-search-set-query", "", false, false);
-			else if (!await openSpecialQuery(e.query, this.context, this.client, this.mapComponents, this.mapContext, e.zoom, smooth))
-				this.mapContext.$emit("fm-search-set-query", e.query, e.zoom, smooth);
+		mapComponents.value.locateControl._container.querySelector("a")!.insertAdjacentHTML("beforeend", getSymbolHtml("currentColor", "1.5em", "screenshot"));
+
+		(async () => {
+			if (!map._loaded) {
+				try {
+					// Initial view was not set by hash handler
+					displayView(map, await getInitialView(client.value), { overpassLayer });
+				} catch (error) {
+					console.error(error);
+					displayView(map, undefined, { overpassLayer });
+				}
+			}
+			loaded.value = true;
+		})();
+
+		Object.assign(mapContext.value, {
+			center: map._loaded ? map.getCenter() : L.latLng(0, 0),
+			zoom: map._loaded ? map.getZoom() : 1,
+			bounds: map._loaded ? map.getBounds() : L.latLngBounds([0, 0], [0, 0]),
+			layers: getVisibleLayers(map),
+			filter: map.fmFilter,
+			filterFunc: map.fmFilterFunc,
+			hash: location.hash.replace(/^#/, ""),
+			showToolbox: false,
+			selection: [],
+			activeQuery: undefined,
+			fallbackQuery: undefined
+		});
+
+		watch(() => interaction.value, () => {
+			mapContext.value!.interaction = interaction.value > 0;
+		}, { immediate: true });
+
+		map.on("moveend", () => {
+			mapContext.value!.center = map.getCenter();
+			mapContext.value!.zoom = map.getZoom();
+			mapContext.value!.bounds = map.getBounds();
+		});
+
+		map.on("fmFilter", () => {
+			mapContext.value!.filter = map.fmFilter;
+			mapContext.value!.filterFunc = map.fmFilterFunc;
+		});
+
+		map.on("layeradd layerremove", () => {
+			mapContext.value!.layers = getVisibleLayers(map);
+		});
+
+		map.on("fmInteractionStart", () => {
+			interaction.value++;
+		});
+
+		map.on("fmInteractionEnd", () => {
+			interaction.value--;
+		});
+
+		hashHandler.on("fmHash", (e: any) => {
+			mapContext.value!.hash = e.hash;
+		});
+
+		selectionHandler.on("fmChangeSelection", (event: any) => {
+			const selection = selectionHandler.getSelection();
+			mapContext.value!.selection = selection;
+
+			if (event.open) {
+				setTimeout(() => {
+					mapContext.value!.emit("open-selection", { selection });
+				}, 0);
+			}
+		});
+
+		selectionHandler.on("fmLongClick", (event: any) => {
+			mapContext.value!.emit("map-long-click", { point: { lat: event.latlng.lat, lon: event.latlng.lng } });
+		});
+	});
+
+	onBeforeUnmount(() => {
+		mapComponents.value!.bboxHandler.disable();
+		mapComponents.value!.hashHandler.disable();
+		mapComponents.value!.selectionHandler.disable();
+		mapComponents.value!.map.remove();
+	});
+
+	watch([
+		() => mapContext.value?.selection,
+		() => mapContext.value?.fallbackQuery
+	], () => {
+		mapContext.value!.activeQuery = getHashQuery(mapComponents.value!.map, client.value, mapContext.value!.selection) || mapContext.value!.fallbackQuery;
+		mapComponents.value!.hashHandler.setQuery(mapContext.value!.activeQuery);
+	});
+
+	async function handleNewHashQuery(e: any): Promise<void> {
+		let smooth = true;
+		if (!mapComponents.value) {
+			// This is called while the hash handler is being enabled, so it is the initial view
+			smooth = false;
+			await new Promise((resolve) => { setTimeout(resolve); });
 		}
 
+		if (!e.query)
+			mapContext.value!.emit("search-set-query", { query: "", zoom: false, smooth: false });
+		else if (!await openSpecialQuery(e.query, context, client.value, mapComponents.value!, mapContext.value!, e.zoom, smooth))
+			mapContext.value!.emit("search-set-query", { query: e.query, zoom: e.zoom, smooth });
 	}
 </script>
 
@@ -290,16 +241,19 @@
 		<slot name="before" v-if="mapContext"></slot>
 
 		<div class="fm-leaflet-map-wrapper">
-			<div class="fm-leaflet-map-inner-container" ref="innerContainer">
-				<div class="fm-leaflet-map"></div>
+			<div class="fm-leaflet-map-inner-container" ref="innerContainerRef">
+				<div class="fm-leaflet-map" ref="mapRef"></div>
 
-				<b-alert v-if="mapContext" :show="!!mapContext.overpassMessage" class="fm-overpass-message" variant="warning">{{mapContext.overpassMessage}}</b-alert>
+				<div v-if="mapContext && mapContext.overpassMessage" class="alert alert-warning fm-overpass-message">
+					{{mapContext.overpassMessage}}
+				</div>
 
 				<a v-if="context.linkLogo" :href="selfUrl" target="_blank" class="fm-open-external" uib-tooltip="Open FacilMap in full size" tooltip-placement="right"></a>
 				<div class="fm-logo">
 					<img src="./logo.png"/>
 				</div>
-				<b-spinner class="fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></b-spinner>
+
+				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
 
 				<slot v-if="mapContext"></slot>
 			</div>

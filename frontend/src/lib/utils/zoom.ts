@@ -5,12 +5,11 @@ import { SelectedItem } from "./selection";
 import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { MapComponents } from "../components/leaflet-map/leaflet-map";
 import { decodeLonLatUrl } from "facilmap-utils";
-import { EventBus } from "../components/leaflet-map/events";
-import { Client } from "./decorators";
-import StringMap from "./string-map";
-import { Context } from "../components/facilmap/facilmap";
+import { MapContext } from "./map-context";
+import { Client } from "./client";
+import { Context } from "./context";
+import { MapComponents } from "./map-components";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -33,11 +32,11 @@ export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination
 		return undefined;
 }
 
-export function getZoomDestinationForMarker(marker: Marker<StringMap> | FindOnMapMarker | OverpassElement): ZoomDestination {
+export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker | OverpassElement): ZoomDestination {
 	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
 }
 
-export function getZoomDestinationForLine(line: Line<StringMap> | FindOnMapLine): ZoomDestination {
+export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
 	return { bounds: fmToLeafletBbox(line) };
 }
 
@@ -135,10 +134,10 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 	return undefined;
 }
 
-export async function openSpecialQuery(query: string, context: Context, client: Client, mapComponents: MapComponents, mapContext: EventBus, zoom: boolean, smooth = true): Promise<boolean> {
+export async function openSpecialQuery(query: string, context: Context, client: Client, mapComponents: MapComponents, mapContext: MapContext, zoom: boolean, smooth = true): Promise<boolean> {
 	if(query.match(/ to /i)) {
-		mapContext.$emit("fm-route-set-query", query, zoom, smooth);
-		mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-route-form-tab`);
+		mapContext.emit("route-set-query", { query, zoom, smooth });
+		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
 		return true;
 	}
 
@@ -167,7 +166,7 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 				flyTo(mapComponents.map, getZoomDestinationForMarker(marker), smooth);
 
 			setTimeout(() => {
-				mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-marker-info-tab`);
+				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-marker-info-tab` });
 			}, 0);
 
 			return true;
@@ -184,7 +183,7 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 			flyTo(mapComponents.map, getZoomDestinationForLine(line), smooth);
 
 		setTimeout(() => {
-			mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-line-info-tab`);
+			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-line-info-tab` });
 		}, 0);
 
 		return true;

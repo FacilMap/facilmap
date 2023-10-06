@@ -74,7 +74,7 @@
 						<b-button-group>
 							<b-button :disabled="isDeleting[type.id]" @click="openEditDialog(type)">Edit</b-button>
 							<b-button @click="deleteType(type)" class="btn btn-default" :disabled="isDeleting[type.id]">
-								<b-spinner small v-if="isDeleting[type.id]"></b-spinner>
+								<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
 								Delete
 							</b-button>
 						</b-button-group>

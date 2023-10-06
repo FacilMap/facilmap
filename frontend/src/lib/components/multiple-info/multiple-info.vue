@@ -126,7 +126,7 @@
 					<b-button v-b-tooltip.hover="'Zoom to selection'" @click="zoom()" size="sm"><Icon icon="zoom-in" alt="Zoom to selection"></Icon></b-button>
 
 					<b-button v-if="!client.readonly" size="sm" @click="deleteObjects()" :disabled="isDeleting || mapContext.interaction">
-						<b-spinner small v-if="isDeleting"></b-spinner>
+						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 						Remove
 					</b-button>
 				</b-button-toolbar>

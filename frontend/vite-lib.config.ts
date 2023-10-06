@@ -13,15 +13,10 @@ export default defineConfig(({ mode }) => ({
 		sourcemap: true,
 		minify: false,
 		lib: {
-			entry: './src/index.ts',
+			entry: './src/lib/index.ts',
 			name: 'facilmap-frontend',
 			fileName: () => 'facilmap-frontend.mjs',
 			formats: ['es']
-		}
-	},
-	resolve: {
-		alias: {
-			'facilmap-leaflet': './src/index.ts'
 		}
 	}
 }));

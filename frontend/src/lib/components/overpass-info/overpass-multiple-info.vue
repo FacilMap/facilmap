@@ -115,7 +115,7 @@
 
 					<b-dropdown v-if="client.padData && !client.readonly && types.length > 0" :disabled="isAdding">
 						<template #button-content>
-							<b-spinner small v-if="isAdding"></b-spinner>
+							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add to map
 						</template>
 						<b-dropdown-item v-for="type in types" href="javascript:" @click="addToMap(elements, type)">{{type.name}}</b-dropdown-item>

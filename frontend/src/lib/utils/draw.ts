@@ -1,13 +1,13 @@
 import { addClickListener } from "facilmap-leaflet";
 import { ID, Type } from "facilmap-types";
-import { MapComponents } from "../components/leaflet-map/leaflet-map";
-import { Client } from "./decorators";
-import { showToast, showErrorToast } from "./toasts";
 import { getUniqueId } from "./utils";
+import { hideToast, showErrorToast, showToast } from "../components/ui/toasts/toasts.vue";
+import { Client } from "./client";
+import { MapComponents } from "./map-components";
 
-export function drawMarker(type: Type, component: Vue, client: Client, mapComponents: MapComponents): void {
+export function drawMarker(type: Type, client: Client, mapComponents: MapComponents): void {
 	const clickListener = addClickListener(mapComponents.map, async (point) => {
-		component.$bvToast.hide("fm-draw-add-marker");
+		hideToast("fm-draw-add-marker");
 
 		try {
 			const marker = await client.addMarker({
@@ -19,34 +19,34 @@ export function drawMarker(type: Type, component: Vue, client: Client, mapCompon
 			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
 			if (!mapComponents.map.fmFilterFunc(marker, client.types[marker.typeId]))
-				showToast(component, getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
+				showToast(getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
 		} catch (err) {
-			showErrorToast(component, "fm-draw-add-marker", "Error adding marker", err);
+			showErrorToast("fm-draw-add-marker", "Error adding marker", err);
 		}
 	});
 
-	showToast(component, "fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+	showToast("fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
 		actions: [
 			{ label: "Cancel", onClick: () => {
-				component.$bvToast.hide("fm-draw-add-marker");
+				hideToast("fm-draw-add-marker");
 				clickListener.cancel();
 			} }
 		]
 	});
 }
 
-export function moveMarker(markerId: ID, component: Vue, client: Client, mapComponents: MapComponents): void {
+export function moveMarker(markerId: ID, client: Client, mapComponents: MapComponents): void {
 	const markerLayer = mapComponents.markersLayer.markersById[markerId];
 	if(!markerLayer)
 		return;
 
-	component.$bvToast.hide("fm-draw-drag-marker");
+	hideToast("fm-draw-drag-marker");
 
 	mapComponents.map.fire('fmInteractionStart');
 	mapComponents.markersLayer.lockMarker(markerId);
 
 	async function finish(save: boolean) {
-		component.$bvToast.hide("fm-draw-drag-marker");
+		hideToast("fm-draw-drag-marker");
 
 		markerLayer.dragging!.disable();
 
@@ -55,7 +55,7 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 				const pos = markerLayer.getLatLng();
 				await client.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
 			} catch (err) {
-				showErrorToast(component, "fm-draw-drag-marker", "Error moving marker", err);
+				showErrorToast("fm-draw-drag-marker", "Error moving marker", err);
 			}
 		}
 
@@ -63,7 +63,7 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 		mapComponents.map.fire('fmInteractionEnd');
 	}
 
-	showToast(component, "fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+	showToast("fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
 		actions: [
 			{ label: "Save", onClick: () => {
 				finish(true);
@@ -77,13 +77,13 @@ export function moveMarker(markerId: ID, component: Vue, client: Client, mapComp
 	markerLayer.dragging!.enable();
 }
 
-export async function drawLine(type: Type, component: Vue, client: Client, mapComponents: MapComponents): Promise<void> {
+export async function drawLine(type: Type, client: Client, mapComponents: MapComponents): Promise<void> {
 	try {
-		component.$bvToast.hide("fm-draw-add-line");
+		hideToast("fm-draw-add-line");
 
 		const lineTemplate = await client.getLineTemplate({ typeId: type.id });
 
-		showToast(component, "fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+		showToast("fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
 			actions: [
 				{ label: "Finish", onClick: () => {
 					mapComponents.linesLayer.endDrawLine(true);
@@ -96,16 +96,16 @@ export async function drawLine(type: Type, component: Vue, client: Client, mapCo
 
 		const routePoints = await mapComponents.linesLayer.drawLine(lineTemplate);
 
-		component.$bvToast.hide("fm-draw-add-line");
+		hideToast("fm-draw-add-line");
 
 		if (routePoints) {
 			const line = await client.addLine({ typeId: type.id, routePoints });
 			mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 
 			if (!mapComponents.map.fmFilterFunc(line, client.types[line.typeId]))
-				showToast(component, getUniqueId("fm-draw-add-line"), `${type.name} successfully added`, "The line was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
+				showToast(getUniqueId("fm-draw-add-line"), `${type.name} successfully added`, "The line was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
 		}
 	} catch (err) {
-		showErrorToast(component, "fm-draw-add-line", "Error adding line", err);
+		showErrorToast("fm-draw-add-line", "Error adding line", err);
 	}
 }

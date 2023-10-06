@@ -64,7 +64,7 @@
 		</template>
 
 		<template #default="{ close }">
-			<b-alert v-if="Object.keys(items).length == 0" show variant="danger" class="mt-2 mb-1">No shapes could be found.</b-alert>
+			<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No shapes could be found.</div>
 
 			<PrerenderedList
 				:items="items"

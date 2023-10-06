@@ -1,6 +1,6 @@
-import { clone, generateRandomId, promiseProps } from "../utils/utils.js";
+import { generateRandomId, promiseProps } from "../utils/utils.js";
 import { CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
-import { isEqual } from "lodash-es";
+import { clone, isEqual } from "lodash-es";
 import Database from "./database.js";
 import { PadModel } from "./pad.js";
 import { LineModel, LinePointModel } from "./line.js";

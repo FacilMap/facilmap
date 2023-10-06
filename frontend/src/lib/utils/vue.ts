@@ -1,4 +1,4 @@
-import Vue, { Ref, onScopeDispose, shallowReadonly, shallowRef } from "vue";
+import Vue, { Ref, computed, onScopeDispose, ref, shallowReadonly, shallowRef } from "vue";
 import { Field, RouteMode } from "facilmap-types";
 import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
 
@@ -39,4 +39,18 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 	});
 
 	return shallowReadonly(value);
+}
+
+export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
+    const internalValue = ref(getProp() ?? fallbackValue);
+    return computed({
+        get: (): Value => {
+            const propValue = getProp();
+            return propValue !== undefined ? propValue : internalValue.value as Value;
+        },
+        set: (val: Value) => {
+            internalValue.value = val as any;
+            onUpdate(val);
+        }
+    });
 }

@@ -100,9 +100,6 @@
 			createId.value = newClient.padId!;
 			newClient.padId = undefined;
 			newClient.serverError = undefined;
-			setTimeout(() => {
-				this.$bvModal.show(`fm${context.id}-client-create-pad`);
-			}, 0);
 		} else if (newClient.serverError) {
 			showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
 				noCloseButton: true,
@@ -158,7 +155,12 @@
 			spinner
 		/>
 
-		<PadSettings v-if="createId" :id="`fm${context.id}-client-create-pad`" is-create no-cancel :proposed-admin-id="createId"></PadSettings>
+		<PadSettings
+			v-if="createId"
+			is-create
+			no-cancel
+			:proposed-admin-id="createId"
+		></PadSettings>
 	</div>
 </template>
 

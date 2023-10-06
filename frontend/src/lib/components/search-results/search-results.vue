@@ -390,7 +390,7 @@
 	<div class="fm-search-results" :class="{ isNarrow: context.isNarrow }">
 		<b-carousel :interval="0" v-model="activeTab">
 			<b-carousel-slide>
-				<b-alert v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" show variant="danger">No results have been found.</b-alert>
+				<div v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" class="alert alert-danger">No results have been found.</div>
 
 				<div class="fm-search-box-collapse-point">
 					<slot name="before"></slot>
@@ -429,7 +429,7 @@
 
 					<b-dropdown v-if="client.padData && !client.readonly" :disabled="activeSearchResults.length == 0 || isAdding">
 						<template #button-content>
-							<b-spinner small v-if="isAdding"></b-spinner>
+							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add selected item{{activeSearchResults.length == 1 ? '' : 's'}} to map
 						</template>
 						<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">

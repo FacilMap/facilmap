@@ -1,56 +1,62 @@
-import { jsonStream, asyncIteratorToArray, toStream } from "../utils/streams.js";
-import { clone } from "../utils/utils.js";
+import { jsonStream, asyncIteratorToArray } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
 import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
 import Database from "../database/database.js";
-import { keyBy, mapValues, omit } from "lodash-es";
+import { clone, keyBy, mapValues, omit } from "lodash-es";
 import { LineWithTrackPoints } from "../database/line.js";
 
-export function exportGeoJson(database: Database, padId: PadId, filter?: string): Highland.Stream<string> {
-	return toStream(async () => {
-		const padData = await database.pads.getPadData(padId);
+export async function* exportGeoJson(database: Database, padId: PadId, filter?: string): AsyncGenerator<string, void, void> {
+	const padData = await database.pads.getPadData(padId);
 
-		if (!padData)
-			throw new Error(`Pad ${padId} could not be found.`);
+	if (!padData)
+		throw new Error(`Pad ${padId} could not be found.`);
 
-		const filterFunc = compileExpression(filter);
+	const filterFunc = compileExpression(filter);
 
-		const views = database.views.getViews(padId)
-			.map((view) => omit(view, ["id", "padId"]));
+	const types = keyBy(await asyncIteratorToArray(database.types.getTypes(padId)), "id");
 
-		const types = keyBy(await asyncIteratorToArray(database.types.getTypes(padId)), "id");
+	const result = jsonStream({
+		type: "FeatureCollection",
+		...(padData.defaultView ? { bbox: "%bbox%" } : { }),
+		facilmap: {
+			name: "%name%",
+			searchEngines: "%searchEngines%",
+			description: "%description%",
+			clusterMarkers: "%clusterMarkers",
+			views: "%views%",
+			types: "%types%"
+		},
+		features: "%features%"
+	}, {
+		bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
+		name: padData.name,
+		searchEngines: padData.searchEngines,
+		description: padData.description,
+		clusterMarkers: padData.clusterMarkers,
+		views: async function*() {
+			for await (const view of database.views.getViews(padId)) {
+				yield omit(view, ["id", "padId"]);
+			}
+		},
+		types: mapValues(types, (type) => omit(type, ["id", "padId"])),
+		features: async function*() {
+			for await (const marker of database.markers.getPadMarkers(padId)) {
+				if (filterFunc(marker, types[marker.typeId])) {
+					yield markerToGeoJson(marker);
+				}
+			}
 
-		const markers = database.markers.getPadMarkers(padId)
-			.filter((marker) => filterFunc(marker, types[marker.typeId]))
-			.map(markerToGeoJson);
+			for await (const line of database.lines.getPadLinesWithPoints(padId)) {
+				if (filterFunc(line, types[line.typeId])) {
+					yield lineToGeoJson(line);
+				}
+			}
+		}
+	});
 
-		const lines = database.lines.getPadLinesWithPoints(padId)
-			.filter((line) => filterFunc(line, types[line.typeId]))
-			.map(lineToGeoJson);
-
-		return jsonStream({
-			type: "FeatureCollection",
-			...(padData.defaultView ? { bbox: "%bbox%" } : { }),
-			facilmap: {
-				name: "%name%",
-				searchEngines: "%searchEngines%",
-				description: "%description%",
-				clusterMarkers: "%clusterMarkers",
-				views: "%views%",
-				types: "%types%"
-			},
-			features: "%features%"
-		}, {
-			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
-			name: padData.name,
-			searchEngines: padData.searchEngines,
-			description: padData.description,
-			clusterMarkers: padData.clusterMarkers,
-			views,
-			types: mapValues(types, (type) => omit(type, ["id", "padId"])),
-			features: (markers as Highland.Stream<MarkerFeature | LineFeature>).concat(lines as Highland.Stream<MarkerFeature | LineFeature>)
-		});
-	}).flatten();
+	for await (const chunk of result) {
+		yield chunk;
+	}
 }
 
 function markerToGeoJson(marker: Marker): MarkerFeature {

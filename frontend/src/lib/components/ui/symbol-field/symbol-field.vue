@@ -74,7 +74,7 @@
 		<template #default="{ close }">
 			<b-input type="search" v-model="filter" placeholder="Filter" autocomplete="off" autofocus></b-input>
 
-			<b-alert v-if="Object.keys(items).length == 0" show variant="danger" class="mt-2 mb-1">No icons could be found.</b-alert>
+			<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>
 
 			<PrerenderedList
 				:items="items"

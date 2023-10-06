@@ -1,97 +1,71 @@
 <script setup lang="ts">
-	import { Component, Prop, Ref, Watch } from "vue-property-decorator";
-	import WithRender from "./pad-settings.vue";
-	import Vue, { computed, ref, watch } from "vue";
-	import { extend, ValidationProvider } from "vee-validate";
+	import { computed, ref, watch } from "vue";
 	import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
 	import { clone, generateRandomPadId } from "facilmap-utils";
-	import { Client, InjectClient, InjectContext } from "../../utils/decorators";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import copyToClipboard from "copy-to-clipboard";
-	import FormModal from "../ui/form-modal/form-modal";
-	import { showErrorToast } from "../../utils/toasts";
+	import FormModal from "../ui/form-modal/form-modal.vue";
 	import "./pad-settings.scss";
-	import { Context } from "../facilmap/facilmap";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../../utils/client";
-	import { hideToast, showToast } from "../../utils/toasts/toasts.vue";
 	import { useModal } from "../../utils/modal";
-	import { showConfirm } from "../../utils/alert.vue";
-
-	extend("padId", {
-		validate: (id: string) => !id.includes("/"),
-		message: "May not contain a slash."
-	});
-
-	extend("padIdUnique", {
-		validate: (id: string, args: any) => {
-			const padData: PadData = args.padData;
-			return !padData || [padData.id, padData.writeId, padData.adminId].filter((v) => v == id).length <= 1;
-		},
-		message: "The same link cannot be used for different access levels.",
-		params: ["padData"]
-	})
+	import { hideToast, showErrorToast, showToast } from "../ui/toasts/toasts.vue";
+	import { showConfirm } from "../ui/alert.vue";
+	import PadIdEdit from "./pad-id-edit.vue";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
 
-
-	@Ref() padDataValidationProvider?: InstanceType<typeof ValidationProvider>;
-
 	const props = defineProps<{
-		show?: boolean;
 		proposedAdminId?: string;
 		noCancel?: boolean;
 		isCreate?: boolean;
 	}>();
 
 	const emit = defineEmits<{
-		(type: 'update:show', show: boolean): void;
+		(type: 'hidden'): void;
 	}>();
 
-	const id = getUniqueId();
+	const id = getUniqueId("fm-pad-settings");
 	const isSaving = ref(false);
 	const isDeleting = ref(false);
 	const deleteConfirmation = ref("");
-	const padData = ref<PadDataCreate | PadDataUpdate>(undefined as any);
+	const padData = ref<PadDataCreate>(props.isCreate ? {
+		name: "New FacilMap",
+		searchEngines: false,
+		description: "",
+		clusterMarkers: false,
+		adminId: (props.proposedAdminId || generateRandomPadId(16)),
+		writeId: generateRandomPadId(14),
+		id: generateRandomPadId(12),
+		legend1: "",
+		legend2: "",
+		defaultViewId: null
+	} : clone(client.value.padData) as PadDataCreate);
 
-	const modal = useModal({
-		show: computed(() => !!props.show),
-		emit,
-		onShow: () => {
-			if (props.isCreate) {
-				padData.value = {
-					name: "New FacilMap",
-					searchEngines: false,
-					description: "",
-					clusterMarkers: false,
-					adminId: (props.proposedAdminId || generateRandomPadId(16)),
-					writeId: generateRandomPadId(14),
-					id: generateRandomPadId(12),
-					legend1: "",
-					legend2: "",
-					defaultViewId: null
-				};
-			} else {
-				padData.value = clone(client.value.padData as PadDataUpdate);
-			}
-		},
-		onHide: () => {
-			padData.value = undefined; // Disables watchers
-		}
-	});
+	const modal = useModal({ emit });
 
 	const isModified = computed(() => !isEqual(padData.value, client.value.padData));
 
-	watch(() => client.value.padData, (newPadData, oldPadData) => {
-		if (!props.isCreate && padData.value)
-			mergeObject(oldPadData, newPadData, padData.value);
-	}, { deep: true });
+	const idProps = ["id", "writeId", "adminId"] as const;
+	type IdProp = typeof idProps[number];
+	const idTouched = ref(Object.fromEntries(idProps.map((p) => [p, false])) as Record<IdProp, boolean>);
+	const idError = computed(() => Object.fromEntries(idProps.map((prop) => {
+		const val = padData.value[prop];
+		if (!val) {
+			return "Must not be empty.";
+		} else if (val.includes("/")) {
+			return "May not contain a slash.";
+		} else if (idProps.some((p) => p !== prop && padData.value[p] === padData.value[prop])) {
+			return "The same link cannot be used for different access levels.";
+		}
+	}).map((message, i) => [idProps[i], message])) as Record<IdProp, string | undefined>);
 
-	watch(() => padData.value, (padData) => {
-		this.padDataValidationProvider?.validate({ ...padData });
-	}, { deep: true );
+	watch(() => client.value.padData, (newPadData, oldPadData) => {
+		if (!props.isCreate && padData.value && newPadData)
+			mergeObject(oldPadData, newPadData, padData.value as PadData);
+	}, { deep: true });
 
 	async function save(): Promise<void> {
 		isSaving.value = true;
@@ -141,133 +115,111 @@
 </script>
 
 <template>
-	<Teleport to="body">
-		<FormModal
-			:id="id"
-			:title="isCreate ? 'Create collaborative map' : 'Map settings'"
-			dialog-class="fm-pad-settings"
-			:no-cancel="noCancel"
-			:is-saving="isSaving"
-			:is-busy="isDeleting"
-			:is-create="isCreate"
-			:is-modified="isModified"
-			@submit="save"
-		>
-			<template v-if="padData">
-				<ValidationProvider name="Admin link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-					<b-form-group label="Admin link" :label-for="`${id}-admin-link-input`" label-cols-sm="3" :state="v | validationState" class="pad-link">
-						<b-input-group :prepend="context.baseUrl">
-							<b-form-input :id="`${id}-admin-link-input`" v-model="padData.adminId" :state="v | validationState"></b-form-input>
-							<b-input-group-append>
-								<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.adminId))">Copy</b-button>
-							</b-input-group-append>
-						</b-input-group>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-						<template #description>
-							When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views.
-						</template>
-					</b-form-group>
-				</ValidationProvider>
+	<FormModal
+		:id="id"
+		:title="isCreate ? 'Create collaborative map' : 'Map settings'"
+		dialog-class="fm-pad-settings"
+		:no-cancel="noCancel"
+		:is-saving="isSaving"
+		:is-busy="isDeleting"
+		:is-create="isCreate"
+		:is-modified="isModified"
+		@submit="save"
+	>
+		<template v-if="padData">
+			<PadIdEdit
+				:padData="padData"
+				idProp="adminId"
+				label="Admin link"
+				description="When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views."
+			></PadIdEdit>
 
-				<ValidationProvider name="Editable link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-					<b-form-group label="Editable link" :label-for="`${id}-write-link-input`" label-cols-sm="3" :state="v | validationState" class="pad-link">
-						<b-input-group :prepend="context.baseUrl">
-							<b-form-input :id="`${id}-write-link-input`" v-model="padData.writeId" :state="v | validationState"></b-form-input>
-							<b-input-group-append>
-								<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.writeId))">Copy</b-button>
-							</b-input-group-append>
-						</b-input-group>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-						<template #description>
-							When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified.
-						</template>
-					</b-form-group>
-				</ValidationProvider>
+			<PadIdEdit
+				:padData="padData"
+				idProp="writeId"
+				label="Editable link"
+				description="When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified."
+			></PadIdEdit>
 
-				<ValidationProvider name="Read-only link" v-slot="v" rules="required|padId|padIdUnique:@padData">
-					<b-form-group label="Read-only link" :label-for="`${id}-read-link-input`" label-cols-sm="3" :state="v | validationState" class="pad-link">
-						<b-input-group :prepend="context.baseUrl">
-							<b-form-input :id="`${id}-read-link-input`" v-model="padData.id" :state="v | validationState"></b-form-input>
-							<b-input-group-append>
-								<b-button @click="copy(context.baseUrl + encodeURIComponent(padData.id))">Copy</b-button>
-							</b-input-group-append>
-						</b-input-group>
-						<b-form-invalid-feedback>{{v.errors[0]}}</b-form-invalid-feedback>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-						<template #description>
-							When opening the map through this link, markers, lines and views can be seen, but nothing can be changed.
-						</template>
-					</b-form-group>
-				</ValidationProvider>
+			<PadIdEdit
+				:padData="padData"
+				idProp="id"
+				label="Read-only link"
+				description="When opening the map through this link, markers, lines and views can be seen, but nothing can be changed."
+			></PadIdEdit>
 
-				<b-form-group :label-for="`${id}-pad-name-input`" label="Map name" label-cols-sm="3">
-					<b-form-input :id="`${id}-pad-name-input`" v-model="padData.name"></b-form-input>
-				</b-form-group>
+			<div class="row mb-3">
+				<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">Map name</label>
+				<div class="col-sm-9">
+					<input :id="`${id}-pad-name-input`" class="form-control" type="text" v-model="padData.name">
+				</div>
+			</div>
 
-				<b-form-group :label-for="`${id}-search-engines-input`" label="Search engines" label-cols-sm="3" label-class="pt-0">
-					<b-form-checkbox :id="`${id}-search-engines-input`" v-model="padData.searchEngines">Accessible for search engines</b-form-checkbox>
-					<template #description>
+			<div class="row mb-3">
+				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">Search engines</label>
+				<div class="col-sm-9">
+					<input :id="`${id}-search-engines-input`" class="form-check-input" type="checkbox" v-model="padData.searchEngines">
+					<label :for="`${id}-search-engines-input`" class="form-check-label">Accessible for search engines</label>
+					<div class="form-text">
 						If this is enabled, search engines like Google will be allowed to add the read-only version of this map.
-					</template>
-				</b-form-group>
+					</div>
+				</div>
+			</div>
 
-				<b-form-group v-show="padData.searchEngines" label="Short description" :label-for="`${id}-description-input`" label-cols-sm="3">
-					<b-form-input :id="`${id}-description-input`" v-model="padData.description"></b-form-input>
-					<template #description>
+			<div class="row mb-3">
+				<label :for="`${id}-description-input`" class="col-sm-3 col-form-label">Short description</label>
+				<div class="col-sm-9">
+					<input :id="`${id}-description-input`" class="form-control" type="text" v-model="padData.description">
+					<div class="form-text">
 						This description will be shown under the result in search engines.
-					</template>
-				</b-form-group>
+					</div>
+				</div>
+			</div>
 
-				<b-form-group label="Cluster markers" :label-for="`${id}-cluster-markers-input`" label-cols-sm="3" label-class="pt-0">
-					<b-form-checkbox :id="`${id}-cluster-markers-input`" v-model="padData.clusterMarkers">Cluster markers</b-form-checkbox>
-					<template #description>
+			<div class="row mb-3">
+				<label :for="`${id}-cluster-markers-input`" class="col-sm-3 col-form-label">Search engines</label>
+				<div class="col-sm-9">
+					<input :id="`${id}-cluster-markers-input`" class="form-check-input" type="checkbox" v-model="padData.clusterMarkers">
+					<label :for="`${id}-cluster-markers-input`" class="form-check-label">Cluster markers</label>
+					<div class="form-text">
 						If enabled, when there are many markers in one area, they will be replaced by a placeholder at low zoom levels. This improves performance on maps with many markers.
-					</template>
-				</b-form-group>
+					</div>
+				</div>
+			</div>
 
-				<b-form-group label="Legend text" :label-for="`${id}-legend1-input`" label-cols-sm="3">
-					<b-form-textarea :id="`${id}-legend1-input`" v-model="padData.legend1"></b-form-textarea>
-					<b-form-textarea :id="`${id}-legend2-input`" v-model="padData.legend2"></b-form-textarea>
-					<template #description>
+			<div class="row mb-3">
+				<label :for="`${id}-legend1-input`" class="col-sm-3 col-form-label">Legend text</label>
+				<div class="col-sm-9">
+					<textarea :id="`${id}-legend1-input`" class="form-control" type="text" v-model="padData.legend1"></textarea>
+					<textarea :id="`${id}-legend2-input`" class="form-control" type="text" v-model="padData.legend2"></textarea>
+					<div class="form-text">
 						Text that will be shown above and below the legend. Can be formatted with <a href="http://commonmark.org/help/" target="_blank">Markdown</a>.
-					</template>
-				</b-form-group>
+					</div>
+				</div>
+			</div>
+		</template>
 
-				<ValidationProvider vid="padData" ref="padDataValidationProvider" v-slot="v" rules="" immediate>
-					<b-form-group :state="v | validationState">
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
-				</ValidationProvider>
-			</template>
+		<template v-if="padData && !isCreate">
+			<hr/>
 
-			<template #after-form v-if="padData && !isCreate">
-				<hr/>
+			<div class="row mb-3">
+				<label :for="`${id}-delete-input`" class="col-sm-3 col-form-label">Delete map</label>
+				<div class="col-sm-9">
+					<div class="input-group">
+						<input :form="`${id}-delete-form`" :id="`${id}-delete-input`" class="form-control" type="text" v-model="deleteConfirmation">
+						<button :form="`${id}-delete-form`" class="btn btn-danger" type="submit" :disabled="isDeleting || isSaving || deleteConfirmation != 'DELETE'">
+							<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
+							Delete map
+						</button>
+					</div>
+					<div class="form-text">
+						To delete this map, type <code>DELETE</code> into the field and click the “Delete map” button.
+					</div>
+				</div>
+			</div>
+		</template>
+	</FormModal>
 
-				<b-form @submit.prevent="deleteConfirmation == 'DELETE' && deletePad()">
-					<b-form-group label="Delete map" :label-for="`${id}-delete-input`" label-cols-sm="3">
-						<b-input-group>
-							<b-form-input :id="`${id}-delete-input`" v-model="deleteConfirmation" autocomplete="off"></b-form-input>
-							<b-input-group-append>
-								<b-button type="submit" variant="danger" :disabled="isDeleting || isSaving || deleteConfirmation != 'DELETE'">
-									<b-spinner small v-if="isDeleting"></b-spinner>
-									Delete map
-								</b-button>
-							</b-input-group-append>
-						</b-input-group>
-						<template #description>
-							To delete this map, type <code>DELETE</code> into the field and click the “Delete map” button.
-						</template>
-					</b-form-group>
-				</b-form>
-			</template>
-		</FormModal>
-	</Teleport>
+	<form :id="`${id}-delete-form`" @submit.prevent="deleteConfirmation == 'DELETE' && deletePad()">
+	</form>
 </template>
-
-<style lang="scss">
-	.fm-pad-settings {
-		.pad-link input {
-			min-width: 11rem;
-		}
-	}
-</style>

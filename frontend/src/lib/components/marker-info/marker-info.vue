@@ -37,7 +37,7 @@
 		}
 
 		move(): void {
-			moveMarker(this.markerId, this, this.client, this.mapComponents);
+			moveMarker(this.markerId, this.client, this.mapComponents);
 		}
 
 		async deleteMarker(): Promise<void> {
@@ -119,7 +119,7 @@
 			<b-button v-if="!client.readonly" size="sm" v-b-modal="`fm${context.id}-marker-info-edit`" :disabled="isDeleting || mapContext.interaction">Edit data</b-button>
 			<b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isDeleting || mapContext.interaction">Move</b-button>
 			<b-button v-if="!client.readonly" size="sm" @click="deleteMarker()" :disabled="isDeleting || mapContext.interaction">
-				<b-spinner small v-if="isDeleting"></b-spinner>
+				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
 			</b-button>
 		</b-button-toolbar>

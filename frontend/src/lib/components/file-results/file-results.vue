@@ -105,7 +105,7 @@
 								{{" "}}
 								<span class="result-type">(View)</span>
 							</span>
-							<b-spinner small v-if="isAddingView.includes(view)"></b-spinner>
+							<div v-if="isAddingView.includes(view)" class="spinner-border spinner-border-sm"></div>
 							<a href="javascript:" v-else-if="client.padData && client.writable == 2 && !viewExists(view)" @click="addView(view)" v-b-tooltip.hover.right="'Add this view to the map'"><Icon icon="plus" alt="Add"></Icon></a>
 						</b-list-group-item>
 					</b-list-group>
@@ -123,7 +123,7 @@
 								{{" "}}
 								<span class="result-type">(Type)</span>
 							</span>
-							<b-spinner small v-if="isAddingType.includes(type)"></b-spinner>
+							<div v-if="isAddingType.includes(type)" class="spinner-border spinner-border-sm"></div>
 							<a href="javascript:" v-else-if="client.padData && client.writable == 2 && !typeExists(type)" @click="addType(type)" v-b-tooltip.hover.right="'Add this type to the map'"><Icon icon="plus" alt="Add"></Icon></a>
 						</b-list-group-item>
 					</b-list-group>

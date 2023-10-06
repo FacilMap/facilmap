@@ -1,112 +1,145 @@
 <script setup lang="ts">
-	import WithRender from "./sidebar.vue";
-	import Vue from "vue";
-	import { Component, Prop, Watch } from "vue-property-decorator";
-	import $ from "jquery";
 	import hammer from "hammerjs";
-	import "./sidebar.scss";
-	import { InjectContext } from "../../../utils/decorators";
-	import { Context } from "../../facilmap/facilmap";
+	import { injectContextRequired } from "../../../utils/context";
+	import { ref, watchEffect } from "vue";
+	import { useRefWithOverride } from "../../../utils/vue";
 
-	@WithRender
-	@Component({
-		components: { }
-	})
-	export default class Sidebar extends Vue {
+	const context = injectContextRequired();
 
-		@InjectContext() context!: Context;
+	const props = defineProps<{
+		visible?: boolean;
+	}>();
 
-		@Prop({ type: String, required: true }) readonly id!: string;
+	const emit = defineEmits<{
+		(type: "update:visible", visible: boolean): void;
+	}>();
 
-		sidebar?: HTMLElement;
-		pan?: HammerManager;
+	const innerSidebarRef = ref<HTMLElement>();
 
-		touchStartX: number | null = null;
-		sidebarVisible = false;
+	const sidebarVisible = useRefWithOverride(false, () => props.visible, (visible) => {
+		emit("update:visible", visible);
+	});
 
-		mounted(): void {
-			this.initPan();
+	watchEffect((onCleanup) => {
+		if (innerSidebarRef.value) {
+			const pan = new hammer.Manager(innerSidebarRef.value);
+			pan.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));
+			pan.on("pan", handleDragMove);
+			pan.on("panend", handleDragEnd);
+
+			onCleanup(() => {
+				pan.destroy();
+			});
 		}
+	});
 
-		beforeDestroy(): void {
-			this.destroyPan();
+	function handleDragMove(event: any): void {
+		Object.assign(innerSidebarRef.value!.style, {
+			transform: `translateX(${event.deltaX})`,
+			transition: "none"
+		});
+	}
+
+	function handleDragEnd(event: any): void {
+		Object.assign(innerSidebarRef.value!.style, {
+			transform: "",
+			transition: ""
+		});
+
+		if (event.velocityX > 0.3 || event.deltaX > innerSidebarRef.value!.offsetWidth / 2) {
+			sidebarVisible.value = false;
 		}
+	}
 
-		@Watch("context.isNarrow")
-		handleNarrowChange(): void {
-			this.destroyPan();
-			setTimeout(() => {
-				this.initPan();
-			}, 0);
+	function handleSidebarKeyDown(event: KeyboardEvent): void {
+		if (event.key === "Escape") {
+			sidebarVisible.value = false;
 		}
+	}
 
-		initPan(): void {
-			this.sidebar = (this.$el as any).querySelector(".b-sidebar");
-
-			if (this.sidebar) {
-				this.pan = new hammer.Manager(this.sidebar);
-				this.pan.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));
-				this.pan.on("pan", this.handleDragMove);
-				this.pan.on("panend", this.handleDragEnd);
-			}
-		}
-
-		destroyPan(): void {
-			if (this.pan) {
-				this.pan.destroy();
-				this.pan = undefined;
-			}
-			this.sidebar = undefined;
-		}
-
-		handleDragMove(event: any): void {
-			$(this.sidebar!).css("margin-right", `-${event.deltaX}px`);
-		}
-
-		handleDragEnd(event: any): void {
-			if (event.velocityX > 0.3 || event.deltaX > this.sidebar!.offsetWidth / 2) {
-				this.sidebarVisible = false;
-			} else {
-				$(this.sidebar!).animate({
-					marginRight: 0
-				});
-			}
-		}
-
-		handleSidebarHidden(): void {
-			$(this.sidebar!).css("margin-right", "");
-		}
-
+	function handleBackdropClick(): void {
+		sidebarVisible.value = false;
 	}
 </script>
 
 <template>
 	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow }">
-		<b-sidebar shadow backdrop right v-if="context.isNarrow" :id="id" v-model="sidebarVisible" @hidden="handleSidebarHidden" ref="sidebar">
-			<b-navbar toggleable="true">
-				<b-navbar-nav>
-					<slot></slot>
-				</b-navbar-nav>
-			</b-navbar>
-		</b-sidebar>
+		<template v-if="context.isNarrow">
+			<div class="fm-sidebar-outer bg-light text-dark" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
+				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>
+				<div class="fm-sidebar-inner shadow" ref="innerSidebarRef">
+					<div class="navbar navbar-expand">
+						<div class="container-fluid">
+							<slot></slot>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
 
-		<b-navbar variant="light" v-if="!context.isNarrow">
-			<b-navbar-nav>
+		<div v-if="!context.isNarrow" class="navbar">
+			<div class="container-fluid">
 				<slot></slot>
-			</b-navbar-nav>
-		</b-navbar>
+			</div>
+		</div>
 	</div>
 </template>
 
 <style lang="scss">
 	.fm-sidebar {
 
-		.b-sidebar {
-			max-width: 80%;
+		.navbar-toggler {
+			position: absolute;
+			top: 10px;
+			right: 10px;
 		}
 
-		.b-sidebar-body {
+		.fm-sidebar-outer {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 1035;
+			pointer-events: none;
+
+			.fm-sidebar.show & {
+				pointer-events: auto;
+			}
+		}
+
+		.fm-sidebar-backdrop {
+			position: fixed;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: -1;
+			opacity: 0;
+			transition: opacity 0.3s;
+
+			.fm-sidebar.show & {
+				opacity: 0.6;
+			}
+		}
+
+		.fm-sidebar-inner {
+			display: flex;
+			flex-direction: column;
+			position: fixed;
+			top: 0;
+			right: 0;
+			width: 320px;
+			max-width: 80%;
+			height: 100%;
+			overflow: auto;
 			touch-action: pan-y;
+			transform: translateX(100%);
+			transition: transform 0.3s;
+
+			.fm-sidebar.show {
+				transform: translateX(0);
+			}
 		}
 
 		&.isNarrow {

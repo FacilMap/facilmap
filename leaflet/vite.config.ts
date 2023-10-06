@@ -7,7 +7,7 @@ import iconsPlugin from "./rollup-icons";
 export default defineConfig({
 	plugins: [
 		cssInjectedByJsPlugin(),
-		dtsPlugin({ rollupTypes: true }),
+		dtsPlugin({ rollupTypes: true, clearPureImport: false }),
 		autoExternalPlugin(),
 		iconsPlugin()
 	],

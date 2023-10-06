@@ -1,7 +1,4 @@
-/// <reference path="../deps.d.ts" />
-
-import highland from "highland";
-import jsonFormat from "json-format";
+import { ReadableStream } from "stream/web";
 
 export async function asyncIteratorToArray<T>(iterator: AsyncGenerator<T, any, void>): Promise<Array<T>> {
 	const result: T[] = [];
@@ -30,33 +27,38 @@ export function asyncIteratorToStream<T>(iterator: AsyncGenerator<T, void, void>
 	});
 }
 
-export function jsonStream(template: any, data: Record<string, Highland.Stream<any> | any>): Highland.Stream<string> {
-	let lastIndent = '';
+export function jsonStream(template: any, data: Record<string, AsyncGenerator<any, any, void> | Promise<any> | any | (() => AsyncGenerator<any, any, void> | Promise<any> | any)>): ReadableStream<string> {
+	return asyncIteratorToStream((async function*() {
+		let lastIndent = '';
 
-	const streams = jsonFormat(template).split(/"%([a-zA-Z0-9-_]+)%"/).map((part, i) => {
-		if (i % 2 == 0) {
-			const lastLineBreak = part.lastIndexOf('\n');
-			if (lastLineBreak != -1)
-				lastIndent = part.substr(lastLineBreak + 1).match(/^(\t*)/)![1];
+		const parts = JSON.stringify(template, undefined, "\t").split(/"%([a-zA-Z0-9-_]+)%"/);
+		for (let i = 0; i < parts.length; i++) {
+			const part = parts[i];
 
-			return highland([ part ]);
+			if (i % 2 == 0) {
+				const lastLineBreak = part.lastIndexOf('\n');
+				if (lastLineBreak != -1)
+					lastIndent = part.slice(lastLineBreak + 1).match(/^(\t*)/)![1];
+
+				yield part;
+			} else {
+				const value = await (typeof data[part] === 'function' ? data[part]() : data[part]);
+
+				if (typeof value === 'object' && value && Symbol.asyncIterator in value) {
+					let first = true;
+					const indent = lastIndent + "\t";
+					yield '[\n';
+					for await (const obj of value) {
+						const prefix = first ? '' : ',\n';
+						first = false;
+						yield prefix + JSON.stringify(obj, undefined, "\t").replace(/^/gm, indent);
+					}
+					yield '\n' + lastIndent + ']';
+				} else {
+					const indent = lastIndent;
+					yield JSON.stringify(value, undefined, "\t").replace(/\n/g, '\n' + indent);
+				}
+			}
 		}
-		else if (highland.isStream(data[part])) {
-			let first = true;
-			const indent = lastIndent + "\t";
-			return highland([ '[\n' ]).concat(
-				data[part].map((obj: any) => {
-					const prefix = first ? '' : ',\n';
-					first = false;
-					return prefix + jsonFormat(obj).replace(/^/gm, indent);
-				})
-			).concat([ '\n' + lastIndent + ']' ]);
-		} else {
-			const value = Promise.resolve(typeof data[part] == 'function' ? data[part]() : data[part]);
-			const indent = lastIndent;
-			return highland(value).map((val) => jsonFormat(val).replace(/\n/g, '\n' + indent));
-		}
-	});
-
-	return highland(streams).flatten();
+	})());
 }

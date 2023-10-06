@@ -190,7 +190,7 @@
 
 			<b-dropdown size="sm" :disabled="isExporting">
 				<template #button-content>
-					<b-spinner small v-if="isExporting"></b-spinner>
+					<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 					Export
 				</template>
 
@@ -211,7 +211,7 @@
 			<b-button v-if="!client.readonly && line.mode != 'track'" size="sm" @click="moveLine()" :disabled="isDeleting || mapContext.interaction">Edit waypoints</b-button>
 
 			<b-button v-if="!client.readonly" size="sm" @click="deleteLine()" :disabled="isDeleting || mapContext.interaction">
-				<b-spinner small v-if="isDeleting"></b-spinner>
+				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
 			</b-button>
 		</b-button-toolbar>

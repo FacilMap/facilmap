@@ -142,7 +142,7 @@
 							<b-form-input v-model="padId" :state="v | validationState"></b-form-input>
 							<b-input-group-append>
 								<b-button type="submit" variant="primary" :disabled="!padId">
-									<b-spinner small v-if="observer.pending"></b-spinner>
+									<div v-if="observer.pending" class="spinner-border spinner-border-sm"></div>
 									Open
 								</b-button>
 							</b-input-group-append>
@@ -161,15 +161,15 @@
 				<b-form-input type="search" v-model="searchQuery" placeholder="Search term"></b-form-input>
 				<b-input-group-append>
 					<b-button type="submit" variant="secondary" :disabled="isSearching">
-						<b-spinner small v-if="isSearching"></b-spinner>
+						<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
 						<Icon v-else icon="search" alt="Search"></Icon>
 					</b-button>
 				</b-input-group-append>
 			</b-input-group>
 
-			<b-alert v-if="submittedSearchQuery && results.length == 0" variant="danger" show>
+			<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger">
 				No maps could be found.
-			</b-alert>
+			</div>
 
 			<template v-if="submittedSearchQuery && results.length > 0">
 				<div class="table-wrapper">

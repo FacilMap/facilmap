@@ -606,7 +606,7 @@
 										>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></b-dropdown-item>
 									</template>
 								</template>
-								<b-spinner v-else></b-spinner>
+								<div v-else class="spinner-border"></div>
 							</b-dropdown>
 							<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" v-b-tooltip.hover.right="'Remove this destination'"><Icon icon="minus" alt="Remove" size="1.0em"></Icon></b-button>
 						</b-input-group-append>
@@ -627,7 +627,7 @@
 			<template v-if="routeError">
 				<hr />
 
-				<b-alert variant="danger" show>{{routeError}}</b-alert>
+				<div class="alert alert-danger">{{routeError}}</div>
 			</template>
 
 			<template v-if="routeObj">
@@ -650,7 +650,7 @@
 
 					<b-dropdown v-if="lineTypes.length > 0" size="sm" :disabled="isAdding">
 						<template #button-content>
-							<b-spinner small v-if="isAdding"></b-spinner>
+							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add to map
 						</template>
 
@@ -658,7 +658,7 @@
 					</b-dropdown>
 					<b-dropdown size="sm" :disabled="isExporting">
 						<template #button-content>
-							<b-spinner small v-if="isExporting"></b-spinner>
+							<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 							Export
 						</template>
 

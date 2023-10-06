@@ -3,7 +3,6 @@
   "version": "3.4.0",
   "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
   "keywords": [
-    "webpack",
     "maps",
     "osm",
     "facilmap"
@@ -33,16 +32,16 @@
     "dev-server": "vite"
   },
   "dependencies": {
-    "facilmap-types": "3.4.0",
+    "facilmap-types": "workspace:^",
     "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.11",
-    "@types/rollup-plugin-auto-external": "^2.0.2",
-    "rimraf": "^5.0.4",
+    "@types/rollup-plugin-auto-external": "^2.0.3",
+    "rimraf": "^5.0.5",
     "rollup-plugin-auto-external": "^2.0.0",
     "typescript": "^5.2.2",
-    "vite": "^4.4.9",
-    "vite-plugin-dts": "^3.5.4"
+    "vite": "^4.4.11",
+    "vite-plugin-dts": "^3.6.0"
   }
 }

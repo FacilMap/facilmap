@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { InjectionKey, inject, provide, reactive, watch, watchEffect } from "vue";
-	import "./facilmap.scss";
+	import { reactive, watch, watchEffect } from "vue";
 	import Toolbox from "../toolbox/toolbox.vue";
 	import SearchBox from "../search-box/search-box.vue";
 	import Legend from "../legend/legend.vue";
@@ -15,8 +14,6 @@
 </script>
 
 <script setup lang="ts">
-	const isNarrow = computedOnResize(() => window.innerWidth < 768);
-
 	const props = withDefaults(defineProps<{
 		baseUrl: string;
 		serverUrl: string;

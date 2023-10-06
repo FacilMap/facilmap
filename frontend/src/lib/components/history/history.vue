@@ -110,7 +110,7 @@
 	>
 		<p><em>Here you can inspect and revert the last 50 changes to the map.</em></p>
 		<div v-if="isLoading" class="d-flex justify-content-center">
-			<b-spinner></b-spinner>
+			<div class="spinner-border"></div>
 		</div>
 		<b-table-simple v-else striped hover>
 			<b-thead>
@@ -132,7 +132,7 @@
 					</b-td>
 					<b-td class="td-buttons">
 						<b-button v-if="entry.labels.button" block :disabled="!!reverting" @click="revert(entry)">
-							<b-spinner small v-if="reverting === entry"></b-spinner>
+							<div v-if="reverting === entry" class="spinner-border spinner-border-sm"></div>
 							{{entry.labels.button}}
 						</b-button>
 					</b-td>

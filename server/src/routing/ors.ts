@@ -1,7 +1,6 @@
 import config from "../config.js";
 import { calculateDistance, DecodedRouteMode } from "facilmap-utils";
 import { ExtraInfo, Point } from "facilmap-types";
-import { throttle } from "../utils/utils.js";
 import { RawRouteInfo } from "./routing.js";
 
 if (!config.orsToken)
@@ -33,9 +32,7 @@ export function getMaximumDistanceBetweenRoutePoints(decodedMode: DecodedRouteMo
 	return MAX_DISTANCE[decodedMode.mode];
 }
 
-export const calculateORSRoute = throttle(calculateRouteInternal, 4);
-
-async function calculateRouteInternal(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
+export async function calculateORSRoute(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
 	if (!config.orsToken)
 		throw new Error("Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.");
 

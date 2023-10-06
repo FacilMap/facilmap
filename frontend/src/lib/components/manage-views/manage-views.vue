@@ -75,14 +75,14 @@
 							@click="makeDefault(view)"
 							:disabled="!!isSavingDefaultView || isDeleting[view.id]"
 						>
-							<b-spinner small v-if="isSavingDefaultView == view.id"></b-spinner>
+							<div v-if="isSavingDefaultView == view.id" class="spinner-border spinner-border-sm"></div>
 							Make default
 						</b-button>
 						<b-button
 							@click="deleteView(view)"
 							:disabled="isDeleting[view.id] || isSavingDefaultView == view.id"
 						>
-							<b-spinner small v-if="isDeleting[view.id]"></b-spinner>
+							<div v-if="isDeleting[view.id]" class="spinner-border spinner-border-sm"></div>
 							Delete
 						</b-button>
 					</b-td>

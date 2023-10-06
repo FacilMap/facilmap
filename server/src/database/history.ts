@@ -1,8 +1,8 @@
-import { clone } from "../utils/utils.js";
 import { Model, DataTypes, FindOptions, InferAttributes, CreationOptional, ForeignKey, InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
 import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
+import { clone } from "lodash-es";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;

@@ -1,8 +1,7 @@
-import { clone } from "../utils/utils.js";
 import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
 import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
-import { isEqual } from "lodash-es";
+import { clone, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";

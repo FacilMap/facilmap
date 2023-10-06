@@ -1,4 +1,3 @@
-import highland from "highland";
 import { access } from "node:fs/promises";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -129,23 +128,6 @@ function getFuncParams(func: Function) {
 	}
 	const params = match[1];
 	return params == "" ? [ ] : params.split(FN_ARG_SPLIT);
-}
-
-export function clone<T>(obj: T): T {
-	return obj == null ? obj : JSON.parse(JSON.stringify(obj));
-}
-
-export function throttle<A extends any[], R>(func: (...args: A) => Promise<R>, parallel = 1): (...args: A) => Promise<R> {
-	const stream = highland<() => Promise<void>>();
-	stream.map((func) => (highland(func()))).parallel(parallel).done(() => undefined);
-
-	return (...args: A): Promise<R> => {
-		return new Promise<R>((resolve, reject) => {
-			stream.write(() => {
-				return func(...args).then(resolve).catch(reject);
-			});
-		});
-	};
 }
 
 export async function fileExists(filename: string): Promise<boolean> {
