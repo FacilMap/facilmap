@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { PadDataCreate } from 'facilmap-types';
-	import { Ref, computed, ref } from 'vue';
+	import { computed, ref } from 'vue';
 	import { getUniqueId } from '../../utils/utils';
 	import copyToClipboard from 'copy-to-clipboard';
 	import { showToast } from '../ui/toasts/toasts.vue';

@@ -1,9 +1,6 @@
-import Vue from "vue";
 import { registerDeobfuscationHandlers } from "../utils/obfuscate";
-import installNonReactive from "vue-nonreactive";
 
 registerDeobfuscationHandlers();
-installNonReactive(Vue);
 
 export { default as BoxSelection } from "./utils/box-selection";
 export * from "./utils/box-selection";

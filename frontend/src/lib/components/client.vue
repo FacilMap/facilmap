@@ -1,7 +1,6 @@
 <script setup lang="ts">
-	import Vue, { onMounted, ref, watch } from "vue";
+	import { onMounted, ref, toRaw, watch } from "vue";
 	import FmClient from "facilmap-client";
-	import "./client.scss";
 	import { PadData, PadId } from "facilmap-types";
 	import PadSettings from "./pad-settings/pad-settings.vue";
 	import storage from "../utils/storage";
@@ -9,6 +8,7 @@
 	import { Client, provideClient } from "../utils/client";
 	import { injectContextRequired } from "../utils/context";
 	import { onBeforeUnmount } from "vue";
+	import Toast from "./ui/toasts/toast.vue";
 
 	const context = injectContextRequired();
 
@@ -81,7 +81,7 @@
 			newClient.on("serverError", () => { resolve(); });
 		});
 
-		if (connectingClient.value !== newClient) {
+		if (toRaw(connectingClient.value) !== newClient) {
 			// Another client has been initiated in the meantime
 			newClient.disconnect();
 			return;

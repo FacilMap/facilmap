@@ -1,12 +1,11 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { PadData, PadDataCreate, PadDataUpdate } from "facilmap-types";
+	import { PadData, PadDataCreate } from "facilmap-types";
 	import { clone, generateRandomPadId } from "facilmap-utils";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import copyToClipboard from "copy-to-clipboard";
 	import FormModal from "../ui/form-modal/form-modal.vue";
-	import "./pad-settings.scss";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../../utils/client";
 	import { useModal } from "../../utils/modal";

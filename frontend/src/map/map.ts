@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { createApp, defineComponent, h, ref, watch } from "vue";
 //import { FacilMap } from "../lib";
+import FacilMap from "../lib/components/facilmap/facilmap.vue";
 import "./bootstrap.scss";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "./map.scss";
@@ -67,7 +68,7 @@ if(!location.hash || location.hash == "#") {
 	}
 }
 
-/* const Root = defineComponent({
+const Root = defineComponent({
 	setup() {
 		const padId = ref(initialPadId);
 		const padName = ref<string | undefined>(undefined);
@@ -87,7 +88,7 @@ if(!location.hash || location.hash == "#") {
 		return () => h(FacilMap, {
 			baseUrl,
 			serverUrl: baseUrl,
-			padId: padId,
+			padId: padId.value,
 			toolbox: toBoolean(queryParams.toolbox, true),
 			search: toBoolean(queryParams.search, true),
 			autofocus: toBoolean(queryParams.autofocus, parent === window),
@@ -101,14 +102,6 @@ if(!location.hash || location.hash == "#") {
 });
 
 createApp(Root)
-	.mount('#loading');
-*/
+	.mount(document.getElementById("app")!);
 
-const Root = defineComponent({
-	setup() {
-		return () => h("div", {}, "Test");
-	}
-});
-
-createApp(Root)
-	.mount('#loading');
+document.getElementById("loading")!.remove();

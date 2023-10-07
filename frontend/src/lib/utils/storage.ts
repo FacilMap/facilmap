@@ -1,6 +1,6 @@
 import { PadId } from "facilmap-types";
 import { isEqual } from "lodash-es";
-import Vue from "vue";
+import { reactive, watch } from "vue";
 
 export interface Bookmark {
 	/** ID used to open the map */
@@ -19,7 +19,7 @@ export interface Storage {
 	bookmarks: Bookmark[];
 }
 
-const storage: Storage = Vue.observable({
+const storage: Storage = reactive({
 	zoomToAll: false,
 	autoZoom: true,
 	bookmarks: []
@@ -60,5 +60,4 @@ function save() {
 load();
 window.addEventListener("storage", load);
 
-const watcher = new Vue({ data: { storage } });
-watcher.$watch("storage", save, { deep: true });
+watch(() => storage, save, { deep: true });

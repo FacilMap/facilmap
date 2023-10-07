@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { reactive, watch, watchEffect } from "vue";
 	import Toolbox from "../toolbox/toolbox.vue";
-	import SearchBox from "../search-box/search-box.vue";
-	import Legend from "../legend/legend.vue";
+	// import SearchBox from "../search-box/search-box.vue";
+	// import Legend from "../legend/legend.vue";
 	import LeafletMap from "../leaflet-map/leaflet-map.vue";
-	import Import from "../import/import.vue";
-	import ClickMarker from "../click-marker/click-marker.vue";
+	// import Import from "../import/import.vue";
+	// import ClickMarker from "../click-marker/click-marker.vue";
 	import Client from "../client.vue";
-	import { computedOnResize } from "../../utils/vue";
 	import { Context, provideContext } from "../../utils/context";
+import { computedOnResize } from "../../utils/vue";
 
 	let idCounter = 1;
 </script>
@@ -98,6 +98,11 @@
 		context.updateHash = props.updateHash;
 	});
 
+	const isNarrow = computedOnResize(() => window.innerWidth < 768)
+	watchEffect(() => {
+		context.isNarrow = isNarrow.value;
+	});
+
 	watch(() => context.activePadId, () => {
 		emit("update:padId", context.activePadId);
 	});
@@ -112,16 +117,16 @@
 		<Client>
 			<LeafletMap>
 				<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
-				<Legend v-if="context.legend"></Legend>
+				<!--<Legend v-if="context.legend"></Legend>
 				<Import v-if="context.interactive"></Import>
-				<ClickMarker></ClickMarker>
+				<ClickMarker></ClickMarker>-->
 
 				<template #before>
 					<slot name="before"></slot>
 				</template>
 
 				<template #after>
-					<SearchBox></SearchBox>
+					<!-- <SearchBox></SearchBox> -->
 					<slot name="after"></slot>
 				</template>
 

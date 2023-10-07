@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { createApp, Ref, nextTick, reactive, ref } from "vue";
+	import { createApp, Ref, nextTick, reactive, ref, watch, toRaw, VNodeRef, ComponentPublicInstance } from "vue";
 	import { Toast } from "bootstrap";
 	import Toasts from "./toasts.vue";
+	import { mapRef } from "../../../utils/vue";
 
 	export interface ToastOptions {
 		actions?: ToastAction[];
@@ -26,10 +27,14 @@
 
 	export const toastContainer = document.createElement("div");
 	document.body.appendChild(toastContainer);
-	createApp(Toasts).mount(toastContainer);
+	const appMountP = Promise.resolve().then(() => {
+		createApp(Toasts).mount(toastContainer);
+	}).catch((err) => {
+		console.error("Error rendering toast container", err);
+	});
 
 	const toasts = ref<ToastInstance[]>([]);
-	const toastRefs = reactive(new Map<ToastInstance, Ref<HTMLElement | undefined>>());
+	const toastRefs = reactive(new Map<ToastInstance, HTMLElement>());
 
 	export async function showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void> {
 		if (err.stack)
@@ -42,7 +47,7 @@
 		});
 	}
 
-	export async function toastErrors<C extends (...args: any[]) => any>(callback: C): C {
+	export function toastErrors<C extends (...args: any[]) => any>(callback: C): C {
 		return ((...args) => {
 			try {
 				const result = callback(...args);
@@ -58,22 +63,22 @@
 	}
 
 	export async function showToast(id: string | undefined, title: string, message: string, options: ToastOptions = {}): Promise<void> {
+		await appMountP;
 		if (id != null) {
 			hideToast(id);
 		}
 
 		const toast: ToastInstance = { ...options, id, title, message };
-		const toastRef = ref<HTMLElement | undefined>();
 		toasts.value.push(toast);
-		toastRefs.set(toast, toastRef);
 
 		await nextTick();
 
 		await new Promise<void>((resolve) => {
-			toastRef.value!.addEventListener("shown.bs.toast", () => resolve());
-			Toast.getOrCreateInstance(toastRef.value!, { autohide: !options.noAutoHide }).show();
+			const toastRef = toastRefs.get(toast)!;
+			toastRef.addEventListener("shown.bs.toast", () => resolve());
+			Toast.getOrCreateInstance(toastRef, { autohide: !options.noAutoHide }).show();
 
-			toastRef.value!.addEventListener("hidden.bs.toast", () => {
+			toastRef.addEventListener("hidden.bs.toast", () => {
 				toasts.value = toasts.value.filter((t) => t !== toast);
 				toastRefs.delete(toast);
 				toast.onHidden?.();
@@ -82,10 +87,11 @@
 	}
 
 	async function hideToastInstance(toast: ToastInstance): Promise<void> {
+		await appMountP;
 		await new Promise<void>((resolve) => {
 			const toastRef = toastRefs.get(toast)!;
-			toastRef.value!.addEventListener("hidden.bs.toast", () => resolve());
-			Toast.getInstance(toastRef.value!)!.hide();
+			toastRef.addEventListener("hidden.bs.toast", () => resolve());
+			Toast.getInstance(toastRef)!.hide();
 		});
 	}
 
@@ -98,11 +104,19 @@
 </script>
 
 <script setup lang="ts">
+	// This script must not be empty, otherwise Vue assumes this component is using the Options API
 </script>
 
 <template>
-	<div class="toast-container position-fixed bottom-0 end-0 p-3">
-		<div v-for="toast in toasts" class="toast" role="alert" aria-live="assertive" aria-atomic="true" :ref="toastRefs.get(toast)">
+	<div class="toast-container position-fixed top-0 end-0 p-3">
+		<div
+			v-for="toast in toasts"
+			class="toast"
+			role="alert"
+			aria-live="assertive"
+			aria-atomic="true"
+			:ref="mapRef(toastRefs, toast)"
+		>
 			<div class="toast-header">
 				<strong class="me-auto">{{toast.title}}</strong>
 				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" aria-label="Close"></button>

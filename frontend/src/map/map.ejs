@@ -17,7 +17,7 @@
 		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
 		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="<%=paths.base%>static/opensearch.xml">
 		<style type="text/css">
-			html, body {
+			html, body, #app {
 				margin: 0;
 				padding: 0;
 				display: flex;
@@ -78,8 +78,11 @@
 			<div id="spinner"></div>
 		</div>
 
+		<div id="app">
+		</div>
+
 		<script>
-			/*(function() {
+			(function() {
 				window.onload = function() {
 					var loading = document.getElementById("loading");
 					if(loading) {
@@ -87,7 +90,7 @@
 						loading.innerHTML = "Could not load FacilMap!";
 					}
 				};
-			})();*/
+			})();
 		</script>
 	</body>
 </html>

@@ -2,12 +2,14 @@ import { defineConfig } from 'vite';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import { fileURLToPath } from "url";
 import { paths } from "./build.js";
+import vuePlugin from "@vitejs/plugin-vue";
 
 export default defineConfig({
 	base: paths.base,
 	//appType: "custom",
 	plugins: [
-		cssInjectedByJsPlugin()
+		cssInjectedByJsPlugin(),
+		vuePlugin()
 	],
 	assetsInclude: [
 		"**/*.ejs"

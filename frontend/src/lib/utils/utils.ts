@@ -1,4 +1,3 @@
-import Vue from "vue";
 import { isEqual } from "lodash-es";
 import { clone } from "facilmap-utils";
 import { Field, Line, Marker, Type } from "facilmap-types";
@@ -20,7 +19,7 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 		)
 			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
 		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
-			Vue.set(targetObject, i, clone(newObject[i]));
+			targetObject[i] = clone(newObject[i]);
 	}
 }
 

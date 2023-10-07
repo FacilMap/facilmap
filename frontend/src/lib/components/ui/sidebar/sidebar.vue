@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import hammer from "hammerjs";
 	import { injectContextRequired } from "../../../utils/context";
-	import { ref, watchEffect } from "vue";
+	import { ref, watch, watchEffect } from "vue";
 	import { useRefWithOverride } from "../../../utils/vue";
 
 	const context = injectContextRequired();
@@ -34,8 +34,9 @@
 	});
 
 	function handleDragMove(event: any): void {
+		console.log(event.deltaX);
 		Object.assign(innerSidebarRef.value!.style, {
-			transform: `translateX(${event.deltaX})`,
+			transform: `translateX(${Math.max(0, event.deltaX)}px)`,
 			transition: "none"
 		});
 	}
@@ -65,23 +66,23 @@
 <template>
 	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow }">
 		<template v-if="context.isNarrow">
-			<div class="fm-sidebar-outer bg-light text-dark" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
+			<div class="fm-sidebar-outer" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
 				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>
-				<div class="fm-sidebar-inner shadow" ref="innerSidebarRef">
-					<div class="navbar navbar-expand">
+				<div class="fm-sidebar-inner bg-body" ref="innerSidebarRef" :class="{ shadow: sidebarVisible }">
+					<nav class="navbar">
 						<div class="container-fluid">
 							<slot></slot>
 						</div>
-					</div>
+					</nav>
 				</div>
 			</div>
 		</template>
 
-		<div v-if="!context.isNarrow" class="navbar">
+		<nav v-if="!context.isNarrow" class="navbar navbar-expand bg-light">
 			<div class="container-fluid">
 				<slot></slot>
 			</div>
-		</div>
+		</nav>
 	</div>
 </template>
 
@@ -103,7 +104,7 @@
 			z-index: 1035;
 			pointer-events: none;
 
-			.fm-sidebar.show & {
+			&.show {
 				pointer-events: auto;
 			}
 		}
@@ -117,10 +118,10 @@
 			z-index: -1;
 			opacity: 0;
 			transition: opacity 0.3s;
+		}
 
-			.fm-sidebar.show & {
-				opacity: 0.6;
-			}
+		.fm-sidebar-outer.show .fm-sidebar-backdrop {
+			opacity: 0.6;
 		}
 
 		.fm-sidebar-inner {
@@ -135,11 +136,11 @@
 			overflow: auto;
 			touch-action: pan-y;
 			transform: translateX(100%);
-			transition: transform 0.3s;
+			transition: transform 0.3s, box-shadow 0.3s;
+		}
 
-			.fm-sidebar.show {
-				transform: translateX(0);
-			}
+		.fm-sidebar-outer.show .fm-sidebar-inner {
+			transform: translateX(0);
 		}
 
 		&.isNarrow {

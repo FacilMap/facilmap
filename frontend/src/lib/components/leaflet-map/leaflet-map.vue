@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import Vue, { computed, markRaw, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from "vue";
 	import L from "leaflet";
 	import "leaflet/dist/leaflet.css";
 	import { BboxHandler, getSymbolHtml, displayView, getInitialView, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus } from "facilmap-leaflet";

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { onBeforeUnmount, onMounted } from 'vue';
-	import { ToastOptions, hideToast, showToast } from './toasts.vue';
+	import { hideToast, showToast } from './toasts.vue';
+	import type { ToastOptions } from "./toasts.vue";
 
 	const props = defineProps<Omit<ToastOptions, "onHidden"> & {
 		id: string;

@@ -1,26 +1,26 @@
-import Vue, { Ref, computed, onScopeDispose, ref, shallowReadonly, shallowRef } from "vue";
+import { ComponentPublicInstance, Ref, computed, onScopeDispose, ref, shallowReadonly, shallowRef } from "vue";
 import { Field, RouteMode } from "facilmap-types";
 import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
 
-Vue.directive("fm-scroll-into-view", {
-	inserted(el, binding) {
-		if (binding.value)
-			el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-	},
+// Vue.directive("fm-scroll-into-view", {
+// 	inserted(el, binding) {
+// 		if (binding.value)
+// 			el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+// 	},
 
-	update(el, binding) {
-		if (binding.value && !binding.oldValue)
-			el.scrollIntoView({ behavior: "smooth", block: "nearest" })
-	}
-});
+// 	update(el, binding) {
+// 		if (binding.value && !binding.oldValue)
+// 			el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+// 	}
+// });
 
-Vue.filter('round', (number: number, digits: number) => round(number, digits));
+// Vue.filter('round', (number: number, digits: number) => round(number, digits));
 
-Vue.filter('fmFieldContent', (value: string, field: Field) => formatField(field, value));
+// Vue.filter('fmFieldContent', (value: string, field: Field) => formatField(field, value));
 
-Vue.filter('fmFormatTime', (value: number) => formatTime(value));
+// Vue.filter('fmFormatTime', (value: number) => formatTime(value));
 
-Vue.filter('fmRouteMode', (value: RouteMode) => formatRouteMode(value));
+// Vue.filter('fmRouteMode', (value: RouteMode) => formatRouteMode(value));
 
 /**
  * Returns a computed property that is recomputed every time the window is resized.
@@ -53,4 +53,14 @@ export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => V
             onUpdate(val);
         }
     });
+}
+
+export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K): (ref: Element | ComponentPublicInstance | null) => void {
+	return (ref) => {
+		if (ref) {
+			map.set(key, ref);
+		} else {
+			map.delete(key);
+		}
+	};
 }

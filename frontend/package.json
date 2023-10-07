@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@tmcw/togeojson": "^5.8.1",
+    "@vitejs/plugin-vue": "^4.4.0",
     "blob": "^0.1.0",
     "bootstrap": "^5.3.2",
     "bootstrap-touchspin": "^4.7.3",
@@ -72,7 +73,6 @@
     "vite-plugin-dts": "^3.6.0",
     "vue": "^3.3.4",
     "vue-color": "^2.8.1",
-    "vue-nonreactive": "^0.1.0",
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {

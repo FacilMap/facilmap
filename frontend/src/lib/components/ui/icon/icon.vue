@@ -1,24 +1,16 @@
 <script setup lang="ts">
-	import WithRender from "./icon.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
 	import { getSymbolHtml } from "facilmap-leaflet";
+	import { computed } from "vue";
 
-	@WithRender
-	@Component({
-		components: { }
-	})
-	export default class Icon extends Vue {
+	const props = withDefaults(defineProps<{
+		icon: string | undefined;
+		alt?: string; // TODO
+		size?: string;
+	}>(), {
+		size: "1.35em"
+	});
 
-		@Prop({ type: String }) icon!: string | undefined;
-		@Prop({ type: String }) alt?: string; // TODO
-		@Prop({ type: String, default: "1.35em" }) size!: string;
-
-		get iconCode(): string {
-			return getSymbolHtml("currentColor", this.size, this.icon);
-		}
-
-	}
+	const iconCode = computed(() => getSymbolHtml("currentColor", props.size, props.icon));
 </script>
 
 <template>
