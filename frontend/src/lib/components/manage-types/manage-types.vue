@@ -1,93 +1,97 @@
 <script setup lang="ts">
-	import { Component, Prop } from "vue-property-decorator";
-	import WithRender from "./manage-types.vue";
-	import Vue from "vue";
 	import { ID, Type } from "facilmap-types";
-	import { Client, InjectClient, InjectContext } from "../../utils/decorators";
-	import { showErrorToast } from "../../utils/toasts";
-	import EditType from "../edit-type/edit-type";
-	import { Context } from "../facilmap/facilmap";
+	import EditType from "../edit-type/edit-type.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../../utils/client";
+	import { computed, ref } from "vue";
+	import { hideToast, showErrorToast } from "../ui/toasts/toasts.vue";
+	import { showConfirm } from "../ui/alert.vue";
+	import Modal from "../ui/modal/modal.vue";
 
-	@WithRender
-	@Component({
-		components: { EditType }
-	})
-	export default class ManageTypes extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
+	const isDeleting = ref<Record<ID, boolean>>({ });
+	const editDialogTypeId = ref<ID | null>(); // null: create dialog
 
-		@Prop({ type: String, required: true }) id!: string;
+	const isBusy = computed(() => Object.values(isDeleting.value).some((v) => v));
 
-		isDeleting: Record<ID, boolean> = { };
-		showEditDialog = false;
-		editDialogTypeId: ID | null = null;
+	async function deleteType(type: Type): Promise<void> {
+		hideToast(`fm${context.id}-manage-types-delete-${type.id}`);
+		isDeleting.value[type.id] = true;
 
-		isBusy(): boolean {
-			return Object.values(this.isDeleting).some((v) => v);
-		}
-
-		openEditDialog(type: Type | null): void {
-			this.editDialogTypeId = type && type.id;
-			this.showEditDialog = true;
-			setTimeout(() => { this.$bvModal.show(`fm${this.context.id}-manage-types-edit-type`); }, 0);
-		}
-
-		openCreateDialog(): void {
-			this.openEditDialog(null);
-		}
-
-		async deleteType(type: Type): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-manage-types-delete-${type.id}`);
-			Vue.set(this.isDeleting, type.id, true);
-
-			try {
-				if (!await this.$bvModal.msgBoxConfirm(`Do you really want to delete the type “${type.name}”?`))
-					return;
-
-				await this.client.deleteType({ id: type.id });
-			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
-			} finally {
-				Vue.delete(this.isDeleting, type.id);
+		try {
+			if (!await showConfirm({
+				title: "Delete type",
+				message: `Do you really want to delete the type “${type.name}”?`,
+				variant: "danger"
+			})) {
+				return;
 			}
-		}
 
+			await client.value.deleteType({ id: type.id });
+		} catch (err) {
+			showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
+		} finally {
+			delete isDeleting.value[type.id];
+		}
 	}
 </script>
 
 <template>
-	<b-modal :id="id" title="Manage Types" ok-only ok-title="Close" :busy="isBusy()" size="lg" dialog-class="fm-manage-types">
-		<b-table-simple striped hover>
-			<b-thead>
-				<b-tr>
-					<b-th>Name</b-th>
-					<b-th>Type</b-th>
-					<b-th>Edit</b-th>
-				</b-tr>
-			</b-thead>
-			<b-tbody>
-				<b-tr v-for="type in client.types">
-					<b-td>{{type.name}}</b-td>
-					<b-td>{{type.type}}</b-td>
-					<b-td class="td-buttons">
-						<b-button-group>
-							<b-button :disabled="isDeleting[type.id]" @click="openEditDialog(type)">Edit</b-button>
-							<b-button @click="deleteType(type)" class="btn btn-default" :disabled="isDeleting[type.id]">
+	<Modal
+		title="Manage Types"
+		ok-only
+		:busy="isBusy"
+		size="lg"
+		dialog-class="fm-manage-types"
+	>
+		<table class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Edit</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="type in client.types">
+					<td>{{type.name}}</td>
+					<td>{{type.type}}</td>
+					<td class="td-buttons">
+						<div class="btn-group">
+							<button
+								type="button"
+								class="btn btn-light"
+								:disabled="isDeleting[type.id]"
+								@click="editDialogTypeId = type.id"
+							>Edit</button>
+							<button
+								type="button"
+								@click="deleteType(type)"
+								class="btn btn-light"
+								:disabled="isDeleting[type.id]"
+							>
 								<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
 								Delete
-							</b-button>
-						</b-button-group>
-					</b-td>
-				</b-tr>
-			</b-tbody>
-			<b-tfoot>
-				<b-tr>
-					<b-td colspan="3"><b-button type="button" @click="openCreateDialog()">Create</b-button></b-td>
-				</b-tr>
-			</b-tfoot>
-		</b-table-simple>
+							</button>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="3">
+						<button
+							type="button"
+							class="btn btn-light"
+							@click="editDialogTypeId = null"
+						>Create</button>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
 
-		<EditType v-if="showEditDialog" :id="`fm${context.id}-manage-types-edit-type`" :typeId="editDialogTypeId"></EditType>
-	</b-modal>
+		<EditType v-if="editDialogTypeId !== undefined" :typeId="editDialogTypeId"></EditType>
+	</Modal>
 </template>

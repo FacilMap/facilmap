@@ -16,7 +16,7 @@
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult, typeExists } from "../../utils/search";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 	import { mapValues, pickBy, uniq } from "lodash-es";
-	import FormModal from "../ui/form-modal/form-modal";
+	import FormModal from "../ui/modal/modal";
 	import StringMap from "../../utils/string-map";
 	import { getUniqueId } from "../../utils/utils";
 	import { Context } from "../facilmap/facilmap";

@@ -1,11 +1,7 @@
 <script setup lang="ts">
-	import WithRender from "./colour-field.vue";
-	import Vue from "vue";
-	import { Component, Ref } from "vue-property-decorator";
 	import { ColorMixin, Hue, Saturation } from "vue-color";
 	import "./colour-field.scss";
-	import Picker from "../picker/picker";
-	import { extend } from "vee-validate";
+	import Picker from "../picker/picker.vue";
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../../utils/ui";
 

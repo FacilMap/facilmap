@@ -137,24 +137,20 @@
 	<!-- <PadSettings
 		v-if="dialog === 'edit-pad' && client.padData"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-edit-pad`"
 	></PadSettings>
 
 	<Share
 		v-if="dialog === 'share'"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-share`"
 	></Share>
 
 	<EditFilter
 		v-if="dialog === 'edit-filter' && client.padData"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-edit-filter`"
 	></EditFilter>
 
 	<History
 		v-if="dialog === 'history' && client.padData"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-history`"
 	></History> -->
 </template>

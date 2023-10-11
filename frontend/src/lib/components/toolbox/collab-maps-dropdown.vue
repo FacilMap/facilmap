@@ -108,19 +108,16 @@
 	<!-- <OpenMap
 		v-if="dialog === 'open-map'"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-open-map`"
 	></OpenMap>
 
 	<ManageBookmarks
 		v-if="dialog === 'manage-bookmarks'"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-manage-bookmarks`"
 	></ManageBookmarks>
 
 	<PadSettings
 		v-if="dialog === 'create-pad'"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-create-pad`"
 		:isCreate="true"
 	></PadSettings> -->
 </template>

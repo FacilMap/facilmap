@@ -67,6 +67,5 @@
 	<About
 		v-if="dialog === 'about'"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-about`"
 	></About>
 </template>

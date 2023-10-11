@@ -57,7 +57,7 @@ export { default as ColourField } from "./components/ui/colour-field/colour-fiel
 export { default as ElevationPlot } from "./components/ui/elevation-plot/elevation-plot.vue";
 export { default as ElevationStats } from "./components/ui/elevation-stats/elevation-stats.vue";
 export { default as FieldInput } from "./components/ui/field-input/field-input.vue";
-export { default as FormModal } from "./components/ui/form-modal/form-modal.vue";
+export { default as FormModal } from "./components/ui/modal/modal.vue";
 export { default as Icon } from "./components/ui/icon/icon.vue";
 export { default as Picker } from "./components/ui/picker/picker.vue";
 export { default as PrerenderedList } from "./components/ui/prerendered-list/prerendered-list.vue";

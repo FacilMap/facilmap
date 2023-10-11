@@ -65,12 +65,10 @@
 	<!-- <SaveView
 		v-if="dialog === 'save-view' && client.padData"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-save-view`"
 	></SaveView>
 
 	<ManageViews
 		v-if="dialog === 'manage-views' && client.padData"
 		@hidden="dialog = undefined"
-		:id="`fm${context.id}-toolbox-manage-views`"
 	></ManageViews> -->
 </template>

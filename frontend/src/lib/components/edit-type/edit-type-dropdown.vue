@@ -10,7 +10,7 @@
 	import ColourField from "../ui/colour-field/colour-field";
 	import draggable from "vuedraggable";
 	import Icon from "../ui/icon/icon";
-	import FormModal from "../ui/form-modal/form-modal";
+	import FormModal from "../ui/modal/modal";
 	import ShapeField from "../ui/shape-field/shape-field";
 	import SizeField from "../ui/size-field/size-field";
 	import SymbolField from "../ui/symbol-field/symbol-field";

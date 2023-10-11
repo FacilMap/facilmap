@@ -6,6 +6,7 @@
 	import { injectMapComponentsRequired } from "../../utils/map-components";
 	import { injectMapContextRequired } from "../../utils/map-context";
 	// import ManageTypes from "../manage-types/manage-types.vue";
+	import vLinkDisabled from "../../utils/link-disabled";
 
 	const emit = defineEmits<{
 		(type: "hide-sidebar"): void;
@@ -41,14 +42,13 @@
 			class="nav-link dropdown-toggle"
 			href="javascript:"
 			data-bs-toggle="dropdown"
-			:class="{ disabled: !!mapContext.interaction }"
-			:tabindex="mapContext.interaction ? -1 : undefined"
+			v-link-disabled="mapContext.interaction"
 		>Add</a>
 		<ul class="dropdown-menu dropdown-menu-end">
 			<li v-for="type in client.types">
 				<a
 					class="dropdown-item"
-					:disabled="!!mapContext.interaction"
+					v-link-disabled="mapContext.interaction"
 					href="javascript:"
 					@click="addObject(type); emit('hide-sidebar')"
 				>{{type.name}}</a>
@@ -61,7 +61,7 @@
 			<li v-if="client.writable == 2">
 				<a
 					class="dropdown-item"
-					:disabled="!!mapContext.interaction"
+					v-link-disabled="!!mapContext.interaction"
 					href="javascript:"
 					@click="dialog = 'manage-types'; emit('hide-sidebar')"
 				>Manage types</a>

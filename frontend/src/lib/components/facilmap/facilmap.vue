@@ -9,6 +9,7 @@
 	import Client from "../client.vue";
 	import { Context, provideContext } from "../../utils/context";
 import { computedOnResize } from "../../utils/vue";
+import { useMaxBreakpoint } from "../../utils/bootstrap";
 
 	let idCounter = 1;
 </script>
@@ -98,7 +99,7 @@ import { computedOnResize } from "../../utils/vue";
 		context.updateHash = props.updateHash;
 	});
 
-	const isNarrow = computedOnResize(() => window.innerWidth < 768)
+	const isNarrow = useMaxBreakpoint("sm");
 	watchEffect(() => {
 		context.isNarrow = isNarrow.value;
 	});

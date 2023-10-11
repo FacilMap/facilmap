@@ -13,7 +13,7 @@ $(document).on("click", "a", function() {
 	const el = $(this);
 	const href = el.attr("href");
 	if(href && href.match(/^\s*(https?:)?\/\//i)) {
-		el.attr("href", "deref.html?"+encodeURIComponent(href));
+		el.attr("href", "app/static/deref.html?"+encodeURIComponent(href));
 
 		setTimeout(function() {
 			el.attr("href", href!);

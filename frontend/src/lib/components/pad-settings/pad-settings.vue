@@ -5,7 +5,7 @@
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import copyToClipboard from "copy-to-clipboard";
-	import FormModal from "../ui/form-modal/form-modal.vue";
+	import FormModal from "../ui/modal/modal.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../../utils/client";
 	import { useModal } from "../../utils/modal";

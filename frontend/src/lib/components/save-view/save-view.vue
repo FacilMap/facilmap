@@ -4,7 +4,7 @@
 	import { Component, Prop } from "vue-property-decorator";
 	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 	import { getCurrentView, getLayers } from "facilmap-leaflet";
-	import FormModal from "../ui/form-modal/form-modal";
+	import FormModal from "../ui/modal/modal";
 	import { ValidationProvider } from "vee-validate";
 	import { showErrorToast } from "../../utils/toasts";
 	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";

@@ -55,7 +55,7 @@
 			<li v-for="layerInfo in baseLayers">
 				<a
 					class="dropdown-item"
-					:active="layerInfo.active"
+					:class="{ active: layerInfo.active }"
 					href="javascript:"
 					@click.native.capture.stop="doSetBaseLayer(layerInfo.key)"
 				>{{layerInfo.name}}</a>
@@ -68,7 +68,7 @@
 			<li v-for="layerInfo in overlays">
 				<a
 					class="dropdown-item"
-					:active="layerInfo.active"
+					:class="{ active: layerInfo.active }"
 					href="javascript:"
 					@click.native.capture.stop="doToggleOverlay(layerInfo.key)"
 				>{{layerInfo.name}}</a>

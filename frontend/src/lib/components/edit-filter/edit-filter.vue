@@ -7,7 +7,7 @@
 	import { Component, Prop } from "vue-property-decorator";
 	import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 	import { Type } from "facilmap-types";
-	import FormModal from "../ui/form-modal/form-modal";
+	import FormModal from "../ui/modal/modal";
 	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 	extend("filter", (filter: string): string | true => {

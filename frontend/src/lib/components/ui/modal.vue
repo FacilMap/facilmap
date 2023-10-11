@@ -1,20 +1,22 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { useModal } from "../../../utils/modal";
+	import { useModal } from "../../utils/modal";
 
 	const props = withDefaults(defineProps<{
-		show?: boolean;
 		title?: string;
 		dialogClass?: string;
+		/** If true, the user is prevented from closing the dialog. */
 		noCancel?: boolean;
 		isSaving?: boolean;
 		isBusy?: boolean;
+		/** If true, the Save button will always be shown (also if isModified is false). */
 		isCreate?: boolean;
+		/** If false, the Save button will be hidden (unless noCancel is true). */
 		isModified?: boolean;
 		size?: "sm" | "default" | "lg" | "xl";
-		okTitle?: string;
+		okLabel?: string;
 	}>(), {
-		isModified: true,
+		isModified: false,
 		size: "lg"
 	});
 
@@ -40,7 +42,7 @@
 <template>
 	<Teleport to="body">
 		<div
-			class="modal fade fm-form-modal"
+			class="modal fade fm-modal"
 			:class="[
 				props.size !== 'default' ? `modal-${props.size}` : undefined,
 				dialogClass
@@ -70,9 +72,10 @@
 							v-if="!noCancel"
 							type="button"
 							class="btn btn-light"
+							:class="isModified || isCreate ? 'btn-light' : 'btn-primary'"
 							@click="modal.hide()"
 							:disabled="isSaving || isBusy"
-						>Cancel</button>
+						>{{isModified || isCreate ? 'Cancel' : 'Close'}}</button>
 
 						<button
 							v-if="noCancel || isModified || isCreate"
@@ -80,7 +83,7 @@
 							class="btn btn-primary"
 							@click="submit()"
 							:disabled="isSaving || isBusy"
-						>OK</button>
+						>{{props.okLabel ?? 'Save'}}</button>
 					</div>
 				</form>
 			</div>

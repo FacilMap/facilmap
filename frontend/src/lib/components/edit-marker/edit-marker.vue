@@ -8,7 +8,7 @@
 	import { clone } from "facilmap-utils";
 	import { isEqual } from "lodash-es";
 	import { showErrorToast } from "../../utils/toasts";
-	import FormModal from "../ui/form-modal/form-modal";
+	import FormModal from "../ui/modal/modal";
 	import { ValidationProvider } from "vee-validate";
 	import ColourField from "../ui/colour-field/colour-field";
 	import SymbolField from "../ui/symbol-field/symbol-field";

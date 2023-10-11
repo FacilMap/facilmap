@@ -14,7 +14,7 @@ declare module "bootstrap" {
 	}
 }
 
-const vTooltip: Directive<Element, string> = {
+const vTooltip: Directive<Element, string | undefined> = {
 	mounted(el, binding) {
 		el._fmTooltip = new Tooltip(el, {
 			placement: (
@@ -30,11 +30,11 @@ const vTooltip: Directive<Element, string> = {
 
 	updated(el, binding) {
 		if (el._fmTooltip) {
-			el._fmTooltip._newContent = { '.tooltip-inner': binding.value };
+			el._fmTooltip._newContent = { '.tooltip-inner': binding.value ?? "" };
 
 			const tooltipInner = el._fmTooltip.tip?.querySelector<HTMLElement>('.tooltip-inner');
 			if (tooltipInner) {
-				tooltipInner.innerText = binding.value;
+				tooltipInner.innerText = binding.value ?? "";
 			}
 		}
 	},
