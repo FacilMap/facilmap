@@ -27,7 +27,7 @@ export interface Layers {
 export function createDefaultLayers(): Layers & { fallbackLayer: string | undefined } {
 	return {
 		baseLayers: {
-			Mpnk: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+			Mpnk: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 				fmName: "Mapnik",
 				attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
@@ -39,7 +39,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})*/
 
-			ToPl: L.tileLayer("https://sg.geodatenzentrum.de/wmts_topplus_web_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
+			ToPl: L.tileLayer("https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
 				fmName: "TopPlus",
 				attribution: '© <a href="https://www.bkg.bund.de/">Bundesamt für Kartographie und Geodäsie</a> ' + (new Date()).getFullYear(),
 				noWrap: true
