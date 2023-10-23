@@ -22,10 +22,10 @@
 	})
 	export default class OverpassMultipleInfo extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		@Prop({ type: Array, required: true }) elements!: OverpassElement[];
 

@@ -22,10 +22,10 @@
 	})
 	export default class MarkerInfo extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		@Prop({ type: IdType, required: true }) markerId!: ID;
 		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;

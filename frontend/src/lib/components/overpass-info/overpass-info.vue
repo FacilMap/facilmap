@@ -19,10 +19,10 @@
 	})
 	export default class OverpassInfo extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapComponents() mapComponents!: MapComponents;
-		@InjectMapContext() mapContext!: MapContext;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapComponents = injectMapComponentsRequired();
+		const mapContext = injectMapContextRequired();
 
 		@Prop({ type: Object, required: true }) element!: OverpassElement;
 		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;

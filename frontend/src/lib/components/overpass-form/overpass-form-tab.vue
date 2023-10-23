@@ -13,7 +13,7 @@
 	})
 	export default class OverpassFormTab extends Vue {
 
-		@InjectContext() context!: Context;
+		const context = injectContextRequired();
 
 	}
 </script>

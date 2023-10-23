@@ -58,7 +58,7 @@
 	})
 	export default class EditTypeDropdown extends Vue {
 
-		@InjectContext() context!: Context;
+		const context = injectContextRequired();
 
 		@Prop({ type: String, required: true }) id!: string;
 		@Prop({ type: Object, required: true }) type!: Type;

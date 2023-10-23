@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+	import { computed, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from "vue";
 	import { Popover } from "bootstrap";
+	import { useResizeObserver } from "../../utils/vue";
 
 	/**
 	 * Like Bootstrap Popover, but uses an existing popover element rather than creating a new one. This way, the popover
@@ -38,6 +39,8 @@
 		element: HTMLElement | undefined;
 		show: boolean;
 		hideOnOutsideClick?: boolean;
+		/** If true, the width of the popover will be fixed to the width of the element. */
+		enforceElementWidth?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -103,6 +106,8 @@
 
 	onMounted(() => {
 		document.addEventListener('click', handleDocumentClick, { capture: true });
+
+		// TODO: Handle element blur (and focus?)
 	});
 
 	onBeforeUnmount(() => {
@@ -111,12 +116,19 @@
 			CustomPopover.getInstance(props.element)?.dispose()
 		}
 	});
+
+	const elementSize = useResizeObserver(computed(() => props.enforceElementWidth ? props.element : undefined));
 </script>
 
 <template>
-	<div v-if="renderPopover" class="popover fade bs-popover-auto" ref="popoverContent">
+	<div
+		v-if="renderPopover"
+		class="popover fade bs-popover-auto"
+		ref="popoverContent"
+		:style="props.enforceElementWidth && elementSize ? { maxWidth: 'none', width: `${elementSize.contentRect.width}px` } : undefined"
+	>
 		<div class="popover-arrow"></div>
-		<h3 class="popover-header">
+		<h3 v-if="$slots.header" class="popover-header">
 			<slot name="header"></slot>
 		</h3>
 		<div class="popover-body">

@@ -21,8 +21,8 @@
 	})
 	export default class History extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
 
 		@Prop({ type: String, required: true }) id!: string;
 

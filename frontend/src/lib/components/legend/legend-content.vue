@@ -14,7 +14,7 @@
 	@Component({})
 	export default class LegendContent extends Vue {
 
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const mapComponents = injectMapComponentsRequired();
 
 		@Prop({ type: String }) legend1?: string;
 		@Prop({ type: String }) legend2?: string;

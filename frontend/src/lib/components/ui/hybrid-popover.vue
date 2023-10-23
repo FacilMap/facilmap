@@ -14,8 +14,10 @@
 
 	const props = defineProps<{
 		show: boolean;
-		title: string;
+		title?: string;
 		customClass?: string;
+		/** If true, the width of the popover will be fixed to the width of the element. */
+		enforceElementWidth?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -60,6 +62,10 @@
 	const handleClick = () => {
 		show.value = !show.value;
 	};
+
+	const close = () => {
+		show.value = false;
+	};
 </script>
 
 <template>
@@ -68,23 +74,30 @@
 			<slot name="trigger"></slot>
 		</span>
 
-		<Popover :show="showPopover" @update:show="handleShowPopoverChange" :element="trigger" :class="props.customClass" hide-on-outside-click>
+		<Popover
+			:show="showPopover"
+			@update:show="handleShowPopoverChange"
+			:element="trigger"
+			:class="props.customClass"
+			hide-on-outside-click
+			:enforce-element-width="props.enforceElementWidth"
+		>
 			<template v-slot:header>
 				{{props.title}}
 			</template>
-			<slot></slot>
+			<slot :is-modal="false" :close="close"></slot>
 		</Popover>
 
 		<Teleport to="body">
 			<div v-if="showModal" class="modal fade" :class="props.customClass" tabindex="-1" aria-hidden="true" :ref="modal.ref">
 				<div class="modal-dialog modal-dialog-scrollable">
 					<div class="modal-content">
-						<div class="modal-header">
+						<div v-if="props.title" class="modal-header">
 							<h1 class="modal-title fs-5">{{props.title}}</h1>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<slot></slot>
+							<slot :is-modal="false" :close="close"></slot>
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>

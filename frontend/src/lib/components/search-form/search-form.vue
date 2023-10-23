@@ -1,200 +1,171 @@
 <script setup lang="ts">
-	import WithRender from "./search-form.vue";
-	import "./search-form.scss";
-	import Vue from "vue";
-	import { Component, Ref, Watch } from "vue-property-decorator";
-	import Icon from "../ui/icon/icon";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
+	import Icon from "../ui/icon.vue";
 	import { isSearchId } from "facilmap-utils";
-	import { showErrorToast } from "../../utils/toasts";
+	import { hideToast, showErrorToast } from "../ui/toasts/toasts.vue";
 	import { FindOnMapResult, SearchResult } from "facilmap-types";
-	import SearchResults from "../search-results/search-results";
-	import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, ZoomDestination } from "../../utils/zoom";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+	import SearchResults from "../search-results/search-results.vue";
+	import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
 	import { Util } from "leaflet";
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
 	import { HashQuery } from "facilmap-leaflet";
 	import { FileResultObject, parseFiles } from "../../utils/files";
-	import FileResults from "../file-results/file-results";
-	import { Context } from "../facilmap/facilmap";
+	import FileResults from "../file-results/file-results.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { computed, ref, watch } from "vue";
+	import { injectClientRequired } from "../client-context.vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, FileResults, SearchResults }
-	})
-	export default class SearchForm extends Vue {
+	const emit = defineEmits<{
+		(type: "hash-query-change", query: HashQuery | undefined): void;
+	}>();
 
-		@InjectContext() context!: Context;
-		@InjectMapComponents() mapComponents!: MapComponents;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		@Ref() searchInput!: HTMLInputElement;
+	const autofocus = ref(!context.isNarrow && context.autofocus);
+	const layerId = Util.stamp(mapContext.components.searchResultsLayer);
 
-		autofocus = false;
-		searchString = "";
-		loadingSearchString = "";
-		loadedSearchString = "";
-		searchCounter = 0;
-		layerId: number = null as any;
+	const searchInput = ref<HTMLInputElement>();
 
-		searchResults: SearchResult[] | null = null;
-		mapResults: FindOnMapResult[] | null = null;
-		fileResult: FileResultObject | null = null;
+	const searchString = ref("");
+	const loadingSearchString = ref("");
+	const loadedSearchString = ref("");
+	const searchCounter = ref(0);
 
-		created(): void {
-			this.autofocus = !this.context.isNarrow && this.context.autofocus
-		}
+	const searchResults = ref<SearchResult[]>();
+	const mapResults = ref<FindOnMapResult[]>();
+	const fileResult = ref<FileResultObject>();
 
-		mounted(): void {
-			this.layerId = Util.stamp(this.mapComponents.searchResultsLayer);
-		}
+	const zoomDestination = computed(() => getZoomDestinationForResults([
+		...(searchResults.value || []),
+		...(mapResults.value || []),
+		...(fileResult.value?.features || [])
+	]));
 
-		get autoZoom(): boolean {
-			return storage.autoZoom;
-		}
+	const hashQuery = computed(() => {
+		if (loadedSearchString.value) {
+			return {
+				query: loadedSearchString.value,
+				...(zoomDestination.value && normalizeZoomDestination(mapContext.components.map, zoomDestination.value)),
+				description: `Search for ${loadedSearchString.value}`
+			};
+		} else if (loadingSearchString.value)
+			return { query: loadingSearchString.value, description: `Search for ${loadedSearchString.value}` };
+		else
+			return undefined;
+	});
 
-		set autoZoom(autoZoom: boolean) {
-			storage.autoZoom = autoZoom;
-		}
+	watch(hashQuery, (hashQuery: HashQuery | undefined) => {
+		emit("hash-query-change", hashQuery);
+	});
 
-		get zoomToAll(): boolean {
-			return storage.zoomToAll;
-		}
+	function setSearchString(query: string) {
+		searchString.value = query;
+	}
 
-		set zoomToAll(zoomToAll: boolean) {
-			storage.zoomToAll = zoomToAll;
-		}
+	function handleSubmit(): void {
+		searchInput.value?.blur();
 
-		get zoomDestination(): ZoomDestination | undefined {
-			return getZoomDestinationForResults([
-				...(this.searchResults || []),
-				...(this.mapResults || []),
-				...(this.fileResult?.features || [])
-			]);
-		}
+		search(storage.autoZoom, storage.zoomToAll);
+	}
 
-		get hashQuery(): HashQuery | undefined {
-			if (this.loadedSearchString) {
-				return {
-					query: this.loadedSearchString,
-					...(this.zoomDestination && normalizeZoomDestination(this.mapComponents.map, this.zoomDestination)),
-					description: `Search for ${this.loadedSearchString}`
-				};
-			} else if (this.loadingSearchString)
-				return { query: this.loadingSearchString, description: `Search for ${this.loadedSearchString}` };
-			else
-				return undefined;
-		}
+	async function search(zoom: boolean, zoomToAll?: boolean, smooth = true): Promise<void> {
+		if (searchString.value != loadedSearchString.value) {
+			reset();
 
-		@Watch("hashQuery")
-		handleHashQueryChange(hashQuery: HashQuery | undefined): void {
-			this.$emit("hash-query-change", hashQuery);
-		}
+			const counter = ++searchCounter.value;
 
-		setSearchString(searchString: string): void {
-			this.searchString = searchString;
-		}
-
-		handleSubmit(): void {
-			this.searchInput.blur();
-
-			this.search(this.autoZoom, this.zoomToAll);
-		}
-
-		async search(zoom: boolean, zoomToAll?: boolean, smooth = true): Promise<void> {
-			if (this.searchString != this.loadedSearchString) {
-				this.reset();
-
-				const counter = ++this.searchCounter;
-
-				if(this.searchString.trim() != "") {
-					try {
-						if (await openSpecialQuery(this.searchString, this.context, this.client, this.mapComponents, this.mapContext, zoom)) {
-							this.searchString = "";
-							return;
-						}
-
-						const query = this.searchString;
-						this.loadingSearchString = this.searchString;
-
-						const [searchResults, mapResults] = await Promise.all([
-							this.client.find({ query, loadUrls: true, elevation: true }),
-							this.client.padData ? this.client.findOnMap({ query }) : undefined
-						]);
-
-						if (counter != this.searchCounter)
-							return; // Another search has been started in the meantime
-
-						this.loadingSearchString = "";
-						this.loadedSearchString = query;
-
-						if(isSearchId(query) && Array.isArray(searchResults) && searchResults.length > 0 && searchResults[0].display_name) {
-							this.searchString = searchResults[0].display_name;
-							this.loadedSearchString = query;
-						}
-
-						if(typeof searchResults == "string") {
-							this.searchResults = null;
-							this.mapResults = null;
-							this.fileResult = parseFiles([ searchResults ]);
-							this.mapComponents.searchResultsLayer.setResults(this.fileResult.features);
-						} else {
-							this.searchResults = searchResults;
-							this.mapComponents.searchResultsLayer.setResults(searchResults);
-							this.mapResults = mapResults ?? null;
-							this.fileResult = null;
-						}
-					} catch(err) {
-						showErrorToast(this, `fm${this.context.id}-search-form-error`, "Search error", err);
+			if(searchString.value.trim() != "") {
+				try {
+					if (await openSpecialQuery(searchString.value, context, client, mapContext, zoom)) {
+						searchString.value = "";
 						return;
 					}
+
+					const query = searchString.value;
+					loadingSearchString.value = searchString.value;
+
+					const [newSearchResults, newMapResults] = await Promise.all([
+						client.find({ query, loadUrls: true, elevation: true }),
+						client.padData ? client.findOnMap({ query }) : undefined
+					]);
+
+					if (counter != searchCounter.value)
+						return; // Another search has been started in the meantime
+
+					loadingSearchString.value = "";
+					loadedSearchString.value = query;
+
+					if(isSearchId(query) && Array.isArray(newSearchResults) && newSearchResults.length > 0 && newSearchResults[0].display_name) {
+						searchString.value = newSearchResults[0].display_name;
+						loadedSearchString.value = query;
+					}
+
+					if(typeof newSearchResults == "string") {
+						searchResults.value = undefined;
+						mapResults.value = undefined;
+						fileResult.value = parseFiles([ newSearchResults ]);
+						mapContext.components.searchResultsLayer.setResults(fileResult.value.features);
+					} else {
+						searchResults.value = newSearchResults;
+						mapContext.components.searchResultsLayer.setResults(newSearchResults);
+						mapResults.value = newMapResults ?? undefined;
+						fileResult.value = undefined;
+					}
+				} catch(err) {
+					showErrorToast(`fm${context.id}-search-form-error`, "Search error", err);
+					return;
 				}
 			}
-
-			if (zoomToAll || (zoomToAll == null && (this.searchResults?.length ?? 0) + (this.mapResults?.length ?? 0) > 1)) {
-				if (zoom)
-					this.zoomToAllResults(smooth);
-			} else if (this.mapResults && this.mapResults.length > 0 && (this.mapResults[0].similarity == 1 || (!this.searchResults || this.searchResults.length == 0))) {
-				this.mapComponents.selectionHandler.setSelectedItems([{ type: this.mapResults[0].kind, id: this.mapResults[0].id }])
-				if (zoom)
-					this.zoomToResult(this.mapResults[0], smooth);
-			} else if (this.searchResults && this.searchResults.length > 0) {
-				this.mapComponents.selectionHandler.setSelectedItems([{ type: "searchResult", result: this.searchResults[0], layerId: this.layerId }]);
-				if (zoom)
-					this.zoomToResult(this.searchResults[0], smooth);
-			} else if (this.fileResult) {
-				if (zoom)
-					this.zoomToAllResults(smooth);
-			}
 		}
 
-		reset(): void {
-			this.searchCounter++;
-
-			this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((item) => item.type != "searchResult" || item.layerId != this.layerId));
-			this.$bvToast.hide(`fm${this.context.id}-search-form-error`);
-			this.loadingSearchString = "";
-			this.loadedSearchString = "";
-			this.searchResults = null;
-			this.mapResults = null;
-			this.fileResult = null;
-			this.mapComponents.searchResultsLayer.setResults([]);
-		};
-
-		zoomToResult(result: SearchResult | FindOnMapResult, smooth = true): void {
-			const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
-			if (dest)
-				flyTo(this.mapComponents.map, dest, smooth);
+		if (zoomToAll || (zoomToAll == null && (searchResults.value?.length ?? 0) + (mapResults.value?.length ?? 0) > 1)) {
+			if (zoom)
+				zoomToAllResults(smooth);
+		} else if (mapResults.value && mapResults.value.length > 0 && (mapResults.value[0].similarity == 1 || (!searchResults.value || searchResults.value.length == 0))) {
+			mapContext.components.selectionHandler.setSelectedItems([{ type: mapResults.value[0].kind, id: mapResults.value[0].id }])
+			if (zoom)
+				zoomToResult(mapResults.value[0], smooth);
+		} else if (searchResults.value && searchResults.value.length > 0) {
+			mapContext.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
+			if (zoom)
+				zoomToResult(searchResults.value[0], smooth);
+		} else if (fileResult.value) {
+			if (zoom)
+				zoomToAllResults(smooth);
 		}
-
-		zoomToAllResults(smooth = true): void {
-			if (this.zoomDestination)
-				flyTo(this.mapComponents.map, this.zoomDestination, smooth);
-		}
-
 	}
+
+	function reset(): void {
+		searchCounter.value++;
+
+		mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((item) => item.type != "searchResult" || item.layerId != this.layerId));
+		hideToast(`fm${context.id}-search-form-error`);
+		loadingSearchString.value = "";
+		loadedSearchString.value = "";
+		searchResults.value = undefined;
+		mapResults.value = undefined;
+		fileResult.value = undefined;
+		mapContext.components.searchResultsLayer.setResults([]);
+	};
+
+	function zoomToResult(result: SearchResult | FindOnMapResult, smooth = true): void {
+		const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
+		if (dest)
+			flyTo(mapContext.components.map, dest, smooth);
+	}
+
+	function zoomToAllResults(smooth = true): void {
+		if (zoomDestination.value)
+			flyTo(mapContext.components.map, zoomDestination.value, smooth);
+	}
+
+	defineExpose({
+		setSearchString,
+		search
+	});
 </script>
 
 <template>
@@ -207,8 +178,8 @@
 						<b-button type="submit"><Icon icon="search" alt="Search"></Icon></b-button>
 						<b-button v-if="searchResults || mapResults || fileResult" @click="reset()"><Icon icon="remove" alt="Clear"></Icon></b-button>
 						<b-dropdown>
-							<b-dropdown-item @click.native.capture.stop.prevent="autoZoom = !autoZoom"><Icon :icon="autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results</b-dropdown-item>
-							<b-dropdown-item @click.native.capture.stop.prevent="zoomToAll = !zoomToAll"><Icon :icon="zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results</b-dropdown-item>
+							<b-dropdown-item @click.native.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"><Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results</b-dropdown-item>
+							<b-dropdown-item @click.native.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"><Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results</b-dropdown-item>
 						</b-dropdown>
 					</b-input-group-append>
 				</b-input-group>
@@ -218,16 +189,16 @@
 		<FileResults
 			v-if="fileResult"
 			:file="fileResult"
-			:auto-zoom="autoZoom"
-			:union-zoom="zoomToAll"
+			:auto-zoom="storage.autoZoom"
+			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
 		/>
 		<SearchResults
 			v-else-if="searchResults || mapResults"
 			:search-results="searchResults"
 			:map-results="mapResults"
-			:auto-zoom="autoZoom"
-			:union-zoom="zoomToAll"
+			:auto-zoom="storage.autoZoom"
+			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
 		></SearchResults>
 	</div>

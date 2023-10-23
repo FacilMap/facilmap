@@ -33,8 +33,8 @@
 	})
 	export default class EditType extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
 
 		@Ref() typeValidationProvider?: InstanceType<typeof ValidationProvider>;
 

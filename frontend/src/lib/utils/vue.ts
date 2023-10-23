@@ -1,4 +1,4 @@
-import { ComponentPublicInstance, Ref, computed, onScopeDispose, ref, shallowReadonly, shallowRef } from "vue";
+import { ComponentPublicInstance, DeepReadonly, Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
 import { Field, RouteMode } from "facilmap-types";
 import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
 
@@ -63,4 +63,22 @@ export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K
 			map.delete(key);
 		}
 	};
+}
+
+export function useResizeObserver(element: Ref<HTMLElement | undefined>): DeepReadonly<Ref<ResizeObserverEntry | undefined>> {
+	const entry = ref<ResizeObserverEntry>();
+	const observer = new ResizeObserver((entries) => {
+		entry.value = entries[0];
+	});
+
+	watch(element, (value, oldValue, onCleanup) => {
+		if (value) {
+			observer.observe(value);
+			onCleanup(() => {
+				observer.unobserve(value);
+			});
+		}
+	}, { immediate: true });
+
+	return readonly(entry);
 }

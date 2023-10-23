@@ -3,12 +3,12 @@
 	import { View } from "facilmap-types";
 	// import SaveView from "../save-view/save-view.vue";
 	// import ManageViews from "../manage-views/manage-views.vue";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
-	import { injectMapComponentsRequired } from "../../utils/map-components";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
 	const client = injectClientRequired();
-	const mapComponents = injectMapComponentsRequired();
+	const mapContext = injectMapContextRequired();
 
 	const emit = defineEmits<{
 		(type: "hide-sidebar"): void;
@@ -20,7 +20,7 @@
 	>();
 
 	function doDisplayView(view: View): void {
-		displayView(mapComponents.value.map, view, { overpassLayer: mapComponents.value.overpassLayer });
+		displayView(mapContext.components.map, view, { overpassLayer: mapContext.components.overpassLayer });
 	}
 </script>
 

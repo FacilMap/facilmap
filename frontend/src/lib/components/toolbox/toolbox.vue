@@ -2,7 +2,7 @@
 	import Sidebar from "../ui/sidebar/sidebar.vue";
 	import Icon from "../ui/icon/icon.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
 	import AddDropdown from "./add-dropdown.vue";
 	import CollabMapsDropdown from "./collab-maps-dropdown.vue";

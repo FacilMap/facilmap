@@ -15,9 +15,9 @@
 	})
 	export default class RouteFormTab extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		@Ref() routeForm!: RouteForm;
 

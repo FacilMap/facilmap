@@ -14,6 +14,14 @@ declare module "bootstrap" {
 	}
 }
 
+const allTooltips = new Set<Tooltip>();
+
+export function hideAllTooltips(): void {
+	for (const tooltip of allTooltips) {
+		tooltip.hide();
+	}
+}
+
 const vTooltip: Directive<Element, string | undefined> = {
 	mounted(el, binding) {
 		el._fmTooltip = new Tooltip(el, {
@@ -26,6 +34,7 @@ const vTooltip: Directive<Element, string | undefined> = {
 			title: binding.value ?? '',
 			trigger: 'hover'
 		});
+		allTooltips.add(el._fmTooltip);
 	},
 
 	updated(el, binding) {
@@ -41,6 +50,7 @@ const vTooltip: Directive<Element, string | undefined> = {
 
 	beforeUnmount(el) {
 		if (el._fmTooltip) {
+			allTooltips.delete(el._fmTooltip);
 			el._fmTooltip.dispose();
 		}
 	}

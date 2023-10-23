@@ -1,203 +1,173 @@
 <script setup lang="ts">
-	import WithRender from "./search-box.vue";
-	import Vue from "vue";
-	import { Component, ProvideReactive, Ref } from "vue-property-decorator";
-	import "./search-box.scss";
 	import $ from "jquery";
-	import { BTab } from "bootstrap-vue";
-	import Icon from "../ui/icon/icon";
-	import SearchFormTab from "../search-form/search-form-tab";
-	import MarkerInfoTab from "../marker-info/marker-info-tab";
-	import LineInfoTab from "../line-info/line-info-tab";
+	import Icon from "../ui/icon.vue";
 	import hammer from "hammerjs";
-	import { InjectContext, InjectMapComponents, InjectMapContext, SEARCH_BOX_CONTEXT_INJECT_KEY } from "../../utils/decorators";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import RouteFormTab from "../route-form/route-form-tab";
-	import { HashQuery } from "facilmap-leaflet";
-	import MultipleInfoTab from "../multiple-info/multiple-info-tab";
-	import { Context } from "../facilmap/facilmap";
-	import { PortalTarget } from "portal-vue";
-	import OverpassInfoTab from "../overpass-info/overpass-info-tab";
-	import OverpassFormTab from "../overpass-form/overpass-form-tab";
+	import { injectContextRequired } from "../../utils/context";
+	import { defineComponent, onMounted, ref, watch } from "vue";
+	import { injectSearchBoxContextRequired } from "./search-box-context.vue";
+	import { hideAllTooltips } from "../../utils/tooltip";
+	import vTooltip from "../../utils/tooltip";
+	import { useEventListener } from "../../utils/utils";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
-	export type SearchBoxContext = Vue;
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
+	const searchBoxContext = injectSearchBoxContextRequired();
 
-	@WithRender
-	@Component({
-		components: { Icon, LineInfoTab, MarkerInfoTab, MultipleInfoTab, OverpassInfoTab, OverpassFormTab, PortalTarget, RouteFormTab, SearchFormTab }
-	})
-	export default class SearchBox extends Vue {
+	const containerRef = ref<HTMLElement>();
+	const cardHeaderRef = ref<HTMLElement>();
+	const resizeHandleRef = ref<HTMLElement>();
 
-		@InjectContext() context!: Context;
-		@InjectMapComponents() mapComponents!: MapComponents;
-		@InjectMapContext() mapContext!: MapContext;
+	const panStartHeight = ref<number>();
+	const restoreHeight = ref<number>();
+	const resizeStartHeight = ref<number>();
+	const resizeStartWidth = ref<number>();
+	const hasFocus = ref(false);
+	const isResizing = ref(false);
 
-		@ProvideReactive(SEARCH_BOX_CONTEXT_INJECT_KEY) searchBoxContext = new Vue();
+	useEventListener(searchBoxContext, "expand", handleExpand);
 
-		@Ref() tabsComponent!: any;
-		@Ref() searchBox!: HTMLElement;
-		@Ref() resizeHandle!: HTMLElement;
-		cardHeader!: HTMLElement;
+	onMounted(() => {
+		const pan = new hammer.Manager(cardHeaderRef.value!);
+		pan.add(new hammer.Pan({ direction: hammer.DIRECTION_VERTICAL }));
+		pan.on("panstart", handlePanStart);
+		pan.on("pan", handlePanMove);
+		pan.on("panend", handlePanEnd);
 
-		tab = 0;
-		tabHistory = [0];
-		panStartHeight: number | null = null;
-		restoreHeight: number | null = null;
-		resizeStartHeight: number | null = null;
-		resizeStartWidth: number | null = null;
-		hasFocus = false;
-		isResizing = false;
-		isMounted = false;
+		const resize = new hammer.Manager(resizeHandleRef.value!);
+		resize.add(new hammer.Pan({ direction: hammer.DIRECTION_ALL }));
+		resize.add(new hammer.Tap());
+		resize.on("panstart", handleResizeStart);
+		resize.on("pan", handleResizeMove);
+		resize.on("panend", handleResizeEnd);
+		resize.on("tap", handleResizeClick);
+	});
 
-		mounted(): void {
-			this.mapContext.$on("fm-search-box-show-tab", this.handleShowTab);
-
-			this.cardHeader = this.searchBox.querySelector(".card-header")!;
-			this.cardHeader.addEventListener("contextmenu", (e) => {
-				e.preventDefault();
-			});
-
-			const pan = new hammer.Manager(this.cardHeader);
-			pan.add(new hammer.Pan({ direction: hammer.DIRECTION_VERTICAL }));
-			pan.on("panstart", this.handlePanStart);
-			pan.on("pan", this.handlePanMove);
-			pan.on("panend", this.handlePanEnd);
-
-			const resize = new hammer.Manager(this.resizeHandle);
-			resize.add(new hammer.Pan({ direction: hammer.DIRECTION_ALL }));
-			resize.add(new hammer.Tap());
-			resize.on("panstart", this.handleResizeStart);
-			resize.on("pan", this.handleResizeMove);
-			resize.on("panend", this.handleResizeEnd);
-			resize.on("tap", this.handleResizeClick);
-
-			this.$watch(() => this.tabsComponent?.tabs[this.tab]?.$attrs?.["fm-hash-query"], (hashQuery: HashQuery | undefined) => {
-				this.mapContext.fallbackQuery = hashQuery;
-			});
-
-			this.isMounted = true;
-		}
-
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-search-box-show-tab", this.handleShowTab);
-			this.cardHeader = undefined as any;
-		}
-
-		get hasTabs(): boolean {
-			return this.isMounted && this.tabsComponent?.tabs.length > 0;
-		}
-
-		handlePanStart(event: any): void {
-			this.restoreHeight = null;
-			this.panStartHeight = parseInt($(this.searchBox).css("flex-basis"));
-		}
-
-		handlePanMove(event: any): void {
-			if (this.context.isNarrow && this.panStartHeight != null && event.srcEvent.type != "pointercancel")
-				$(this.searchBox).stop().css("flexBasis", `${this.getSanitizedHeight(this.panStartHeight - event.deltaY)}px`);
-		}
-
-		handlePanEnd(): void {
-			this.mapComponents.map.invalidateSize({ pan: false });
-		}
-
-		getSanitizedHeight(height: number): number {
-			const maxHeight = (this.searchBox.offsetParent as HTMLElement).offsetHeight - 5;
-			return Math.max(0, Math.min(maxHeight, height));
-		}
-
-		handleActivateTab(idx: number): void {
-			this.restoreHeight = null;
-			this.tabHistory = [
-				...this.tabHistory.filter((tab) => tab != idx),
-				idx
-			];
-		}
-
-		handleChanged(newTabs: BTab[], oldTabs: BTab[]): void {
-			if (this.restoreHeight != null && newTabs.length < oldTabs.length) {
-				$(this.searchBox).animate({ flexBasis: this.restoreHeight }, () => {
-					this.mapComponents.map.invalidateSize({ pan: false });
-				});
-				this.restoreHeight = null;
-			}
-
-			const lastActiveTab = this.tabHistory[this.tabHistory.length - 1];
-			this.tabHistory = this.tabHistory.map((idx) => newTabs.indexOf(oldTabs[idx])).filter((idx) => idx != -1);
-			if (!newTabs.includes(oldTabs[lastActiveTab]))
-				this.tab = this.tabHistory[this.tabHistory.length - 1];
-		}
-
-		handleShowTab(id: string, expand = true): void {
-			const idx = this.tabsComponent.tabs.findIndex((tab: any) => tab.id == id);
-			if (idx != -1)
-				this.tab = idx;
-
-			if (this.context.isNarrow && expand) {
-				setTimeout(() => {
-					const currentHeight = parseInt($(this.searchBox).css("flex-basis"));
-					if (currentHeight < 120) {
-						this.restoreHeight = currentHeight;
-						$(this.searchBox).animate({ flexBasis: 170 }, () => {
-							this.mapComponents.map.invalidateSize({ pan: false });
-						});
-					}
-				}, 0);
-			}
-		}
-
-		handleResizeStart(event: any): void {
-			this.isResizing = true;
-			this.resizeStartWidth = this.searchBox.offsetWidth;
-			this.resizeStartHeight = this.searchBox.offsetHeight;
-			this.$root.$emit('bv::hide::tooltip');
-			this.searchBoxContext.$emit("resizestart");
-		}
-
-		handleResizeMove(event: any): void {
-			this.searchBox.style.width = `${this.resizeStartWidth + event.deltaX}px`;
-			this.searchBox.style.height = `${this.resizeStartHeight + event.deltaY}px`;
-			this.searchBoxContext.$emit("resize");
-		}
-
-		handleResizeEnd(event: any): void {
-			this.isResizing = false;
-			this.searchBoxContext.$emit("resizeend");
-		}
-
-		handleResizeClick(): void {
-			this.searchBox.style.width = "";
-			this.searchBox.style.height = "";
-			this.$root.$emit('bv::hide::tooltip');
-			this.searchBoxContext.$emit("resizereset");
-		}
-
-		handleFocusIn(e: FocusEvent): void {
-			if ((e.target as HTMLElement).closest("input,textarea"))
-				this.hasFocus = true;
-		}
-
-		handleFocusOut(e: FocusEvent): void {
-			this.hasFocus = false;
-		}
-
+	function handlePanStart(): void {
+		restoreHeight.value = undefined;
+		panStartHeight.value = parseInt($(containerRef.value!).css("flex-basis"));
 	}
+
+	function handlePanMove(event: any): void {
+		if (context.isNarrow && panStartHeight.value != null && event.srcEvent.type != "pointercancel")
+			$(containerRef.value!).stop().css("flexBasis", `${getSanitizedHeight(panStartHeight.value - event.deltaY)}px`);
+	}
+
+	function handlePanEnd(): void {
+		mapContext.components.map.invalidateSize({ pan: false });
+	}
+
+	function getSanitizedHeight(height: number): number {
+		const maxHeight = (containerRef.value!.offsetParent as HTMLElement).offsetHeight - 5;
+		return Math.max(0, Math.min(maxHeight, height));
+	}
+
+	function handleExpand(): void {
+		if (context.isNarrow) {
+			const currentHeight = parseInt(getComputedStyle(containerRef.value!).flexBasis);
+			if (currentHeight < 120) {
+				restoreHeight.value = currentHeight;
+				containerRef.value!.style.flexBasis = '170px';
+			}
+		}
+	}
+
+	function handleResizeStart(): void {
+		isResizing.value = true;
+		resizeStartWidth.value = containerRef.value!.offsetWidth;
+		resizeStartHeight.value = containerRef.value!.offsetHeight;
+		hideAllTooltips();
+		searchBoxContext.emit("resizestart");
+	}
+
+	function handleResizeMove(event: any): void {
+		containerRef.value!.style.width = `${resizeStartWidth.value + event.deltaX}px`;
+		containerRef.value!.style.height = `${resizeStartHeight.value + event.deltaY}px`;
+		searchBoxContext.emit("resize");
+	}
+
+	function handleResizeEnd(): void {
+		isResizing.value = false;
+		searchBoxContext.emit("resizeend");
+	}
+
+	function handleResizeClick(): void {
+		containerRef.value!.style.width = "";
+		containerRef.value!.style.height = "";
+		hideAllTooltips();
+		searchBoxContext.emit("resizereset");
+	}
+
+	function handleFocusIn(e: FocusEvent): void {
+		if ((e.target as HTMLElement).closest("input,textarea"))
+			hasFocus.value = true;
+	}
+
+	function handleFocusOut(e: FocusEvent): void {
+		hasFocus.value = false;
+	}
+
+	function handleTransitionEnd(): void {
+		mapContext.components.map.invalidateSize({ pan: false });
+	}
+
+	const TabContent = defineComponent({
+		setup() {
+			return searchBoxContext.activeTab?.content;
+		}
+	});
+
+	watch(() => searchBoxContext.activeTab?.hashQuery, (hashQuery) => {
+		mapContext.setFallbackQuery(hashQuery);
+	});
 </script>
 
 <template>
-	<b-card v-show="hasTabs" no-body ref="searchBox" class="fm-search-box" :class="{ isNarrow: context.isNarrow, hasFocus }" @focusin="handleFocusIn" @focusout="handleFocusOut">
-		<b-tabs card align="center" v-model="tab" ref="tabsComponent" @changed="handleChanged" @activate-tab="handleActivateTab" no-fade>
-			<SearchFormTab v-if="context.search"></SearchFormTab>
-			<RouteFormTab v-if="context.search"></RouteFormTab>
-			<OverpassFormTab v-if="context.search"></OverpassFormTab>
-			<MarkerInfoTab></MarkerInfoTab>
-			<LineInfoTab></LineInfoTab>
-			<MultipleInfoTab></MultipleInfoTab>
-			<OverpassInfoTab></OverpassInfoTab>
-			<portal-target name="fm-search-box" multiple></portal-target>
-		</b-tabs>
-		<a v-show="!context.isNarrow" href="javascript:" class="fm-search-box-resize" v-b-tooltip.hover.right="'Drag to resize, click to reset'" ref="resizeHandle"><Icon icon="resize-horizontal"></Icon></a>
-	</b-card>
+	<div
+		class="card fm-search-box"
+		v-show="searchBoxContext.tabs.size > 0"
+		no-body
+		ref="containerRef"
+		:class="{ isNarrow: context.isNarrow, hasFocus }"
+		@focusin="handleFocusIn"
+		@focusout="handleFocusOut"
+		@transitionend="handleTransitionEnd"
+	>
+		<div class="card-header" ref="cardHeaderRef" @contextmenu.prevent>
+			<ul class="nav nav-tabs card-header-tabs">
+				<li
+					v-for="[tabId, tab] in searchBoxContext.tabs"
+					class="nav-item"
+				>
+					<a
+						class="nav-link"
+						:class="{ active: tabId === searchBoxContext.activeTabId }"
+						:aria-current="tabId === searchBoxContext.activeTabId ? 'true' : undefined"
+						href="javascript:"
+					>{{tab.value.title}}</a>
+
+					<a
+						v-if="tab.value.onClose"
+						href="javascript:"
+						@click="tab.value.onClose()"
+					><Icon icon="remove" alt="Close"></Icon></a>
+				</li>
+			</ul>
+		</div>
+
+		<div class="card-body">
+			<TabContent></TabContent>
+		</div>
+
+		<a
+			v-show="!context.isNarrow"
+			href="javascript:"
+			class="fm-search-box-resize"
+			v-tooltip.right="'Drag to resize, click to reset'"
+			ref="resizeHandleRef"
+		><Icon icon="resize-horizontal"></Icon></a>
+	</div>
+
 </template>
 
 <style lang="scss">
@@ -226,6 +196,7 @@
 		&.isNarrow {
 			min-height: 55px;
 			flex-basis: 55px;
+			transition: flex-basis 0.4s;
 			overflow: hidden;
 
 			height: auto !important; /* Override resize height from non-narrow mode */

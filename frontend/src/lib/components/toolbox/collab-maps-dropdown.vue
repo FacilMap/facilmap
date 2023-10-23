@@ -4,9 +4,9 @@
 	// import ManageBookmarks from "../manage-bookmarks/manage-bookmarks.vue";
 	// import OpenMap from "../open-map/open-map.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
-	import { injectMapContextRequired } from "../../utils/map-context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
@@ -23,16 +23,16 @@
 	>();
 
 	const hash = computed(() => {
-		const v = mapContext.value;
+		const v = mapContext;
 		return v.hash && v.hash != "#" ? v.hash : `${v.zoom}/${v.center.lat}/${v.center.lng}`;
 	});
 
 	const isBookmarked = computed(() => {
-		return !!client.value.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.padId);
+		return !!client.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.padId);
 	});
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.padId!, padId: client.value.padData!.id, name: client.value.padData!.name });
+		storage.bookmarks.push({ id: client.padId!, padId: client.padData!.id, name: client.padData!.name });
 	}
 </script>
 

@@ -2,11 +2,11 @@ import { addClickListener } from "facilmap-leaflet";
 import { ID, Type } from "facilmap-types";
 import { getUniqueId } from "./utils";
 import { hideToast, showErrorToast, showToast } from "../components/ui/toasts/toasts.vue";
-import { Client } from "./client";
-import { MapComponents } from "./map-components";
+import { Client } from "../components/client-context.vue";
+import { MapContext } from "../components/leaflet-map/leaflet-map.vue";
 
-export function drawMarker(type: Type, client: Client, mapComponents: MapComponents): void {
-	const clickListener = addClickListener(mapComponents.map, async (point) => {
+export function drawMarker(type: Type, client: Client, mapContext: MapContext): void {
+	const clickListener = addClickListener(mapContext.components.map, async (point) => {
 		hideToast("fm-draw-add-marker");
 
 		try {
@@ -16,9 +16,9 @@ export function drawMarker(type: Type, client: Client, mapComponents: MapCompone
 				typeId: type.id
 			});
 
-			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
+			mapContext.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
-			if (!mapComponents.map.fmFilterFunc(marker, client.types[marker.typeId]))
+			if (!mapContext.components.map.fmFilterFunc(marker, client.types[marker.typeId]))
 				showToast(getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
 		} catch (err) {
 			showErrorToast("fm-draw-add-marker", "Error adding marker", err);

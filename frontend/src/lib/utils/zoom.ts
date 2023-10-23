@@ -6,10 +6,9 @@ import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchRe
 import { Geometry } from "geojson";
 import { isMapResult } from "./search";
 import { decodeLonLatUrl } from "facilmap-utils";
-import { MapContext } from "./map-context";
 import { Client } from "./client";
 import { Context } from "./context";
-import { MapComponents } from "./map-components";
+import { MapContext } from "../components/leaflet-map/leaflet-map.vue";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -134,7 +133,7 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 	return undefined;
 }
 
-export async function openSpecialQuery(query: string, context: Context, client: Client, mapComponents: MapComponents, mapContext: MapContext, zoom: boolean, smooth = true): Promise<boolean> {
+export async function openSpecialQuery(query: string, context: Context, client: Client, mapContext: MapContext, zoom: boolean, smooth = true): Promise<boolean> {
 	if(query.match(/ to /i)) {
 		mapContext.emit("route-set-query", { query, zoom, smooth });
 		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
@@ -144,7 +143,7 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 	const lonlat = decodeLonLatUrl(query);
 	if(lonlat) {
 		if (zoom)
-			flyTo(mapComponents.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
+			flyTo(mapContext.components.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
 		return true;
 	}
 
@@ -160,10 +159,10 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 		}
 
 		if (marker) {
-			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
+			mapContext.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
 
 			if (zoom)
-				flyTo(mapComponents.map, getZoomDestinationForMarker(marker), smooth);
+				flyTo(mapContext.components.map, getZoomDestinationForMarker(marker), smooth);
 
 			setTimeout(() => {
 				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-marker-info-tab` });
@@ -177,10 +176,10 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 	if (lineId && client.lines[lineId]) {
 		const line = client.lines[lineId];
 
-		mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
+		mapContext.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
 
 		if (zoom)
-			flyTo(mapComponents.map, getZoomDestinationForLine(line), smooth);
+			flyTo(mapContext.components.map, getZoomDestinationForLine(line), smooth);
 
 		setTimeout(() => {
 			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-line-info-tab` });

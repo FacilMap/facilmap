@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { ref } from 'vue';
 	import { isPromise } from '../../utils/utils';
-import { toastErrors } from './toasts/toasts.vue';
+	import { toastErrors } from './toasts/toasts.vue';
 
 	const emit = defineEmits<{
 		(type: "submit"): void | Promise<void>;
@@ -12,14 +12,18 @@ import { toastErrors } from './toasts/toasts.vue';
 	const isSubmitting = ref(false);
 
 	const submit = toastErrors(async () => {
+		formTouched.value = true;
+
 		if (formRef.value!.checkValidity()) {
 			const result = emit("submit");
 			if (isPromise(result)) {
 				isSubmitting.value = true;
 				try {
-					await
-		} else {
-			formTouched.value = true;
+					await result;
+				} finally {
+					isSubmitting.value = false;
+				}
+			}
 		}
 	});
 </script>

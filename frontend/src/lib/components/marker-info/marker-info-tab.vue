@@ -16,10 +16,10 @@
 	})
 	export default class MarkerInfoTab extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		mounted(): void {
 			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);

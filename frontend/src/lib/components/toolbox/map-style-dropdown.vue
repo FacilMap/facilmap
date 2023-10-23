@@ -1,14 +1,12 @@
 <script setup lang="ts">
 	import { getLayers, setBaseLayer, toggleOverlay } from "facilmap-leaflet";
 	import { computed } from "vue";
-	import { injectMapComponentsRequired } from "../../utils/map-components";
-	import { injectMapContextRequired } from "../../utils/map-context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
-	const mapComponents = injectMapComponentsRequired();
 	const mapContext = injectMapContextRequired();
 
 	const links = computed(() => {
-		const v = mapContext.value;
+		const v = mapContext;
 		return {
 			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
 			google: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}`,
@@ -18,29 +16,29 @@
 	});
 
 	const baseLayers = computed(() => {
-		const { baseLayers } = getLayers(mapComponents.value.map);
+		const { baseLayers } = getLayers(mapContext.components.map);
 		return Object.keys(baseLayers).map((key) => ({
 			key,
 			name: baseLayers[key].options.fmName!,
-			active: mapContext.value.layers.baseLayer === key
+			active: mapContext.layers.baseLayer === key
 		}));
 	});
 
 	const overlays = computed(() => {
-		const { overlays } = getLayers(mapComponents.value.map);
+		const { overlays } = getLayers(mapContext.components.map);
 		return Object.keys(overlays).map((key) => ({
 			key,
 			name: overlays[key].options.fmName!,
-			active: mapContext.value.layers.overlays.includes(key)
+			active: mapContext.layers.overlays.includes(key)
 		}));
 	});
 
 	function doSetBaseLayer(key: string): void {
-		setBaseLayer(mapComponents.value.map, key);
+		setBaseLayer(mapContext.components.map, key);
 	}
 
 	function doToggleOverlay(key: string): void {
-		toggleOverlay(mapComponents.value.map, key);
+		toggleOverlay(mapContext.components.map, key);
 	}
 </script>
 

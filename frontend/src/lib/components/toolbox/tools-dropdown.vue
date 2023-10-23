@@ -4,9 +4,9 @@
 	// import History from "../history/history.vue";
 	// import Share from "../share/share.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
-	import { injectMapContextRequired } from "../../utils/map-context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import vTooltip from "../../utils/tooltip";
 
 	const context = injectContextRequired();
@@ -29,7 +29,7 @@
 	>();
 
 	const filterQuery = computed(() => {
-		const v = mapContext.value;
+		const v = mapContext;
 		if (v.filter) {
 			return {
 				q: `?filter=${encodeURIComponent(v.filter)}`,
@@ -41,7 +41,7 @@
 	});
 
 	function importFile(): void {
-		mapContext.value.emit("import-file");
+		mapContext.emit("import-file");
 	}
 </script>
 

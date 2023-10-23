@@ -18,10 +18,10 @@
 	})
 	export default class Legend extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		@Ref() absoluteContainer?: HTMLElement;
 

@@ -21,10 +21,10 @@
 	})
 	export default class MultipleInfo extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+		const context = injectContextRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
+		const mapComponents = injectMapComponentsRequired();
 
 		@Prop({ type: Array, required: true }) objects!: Array<Marker<StringMap> | Line<StringMap>>;
 

@@ -65,7 +65,6 @@
     "osmtogeojson": "^3.0.0-beta.5",
     "pluralize": "^8.0.0",
     "popper-max-size-modifier": "^0.2.0",
-    "portal-vue": "^3.0.0",
     "rollup-plugin-auto-external": "^2.0.0",
     "tablesorter": "^2.31.3",
     "vite": "^4.4.11",

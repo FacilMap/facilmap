@@ -7,7 +7,7 @@
 	import copyToClipboard from "copy-to-clipboard";
 	import FormModal from "../ui/modal/modal.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { useModal } from "../../utils/modal";
 	import { hideToast, showErrorToast, showToast } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -41,11 +41,11 @@
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
-	} : clone(client.value.padData) as PadDataCreate);
+	} : clone(client.padData) as PadDataCreate);
 
 	const modal = useModal({ emit });
 
-	const isModified = computed(() => !isEqual(padData.value, client.value.padData));
+	const isModified = computed(() => !isEqual(padData.value, client.padData));
 
 	const idProps = ["id", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];
@@ -61,7 +61,7 @@
 		}
 	}).map((message, i) => [idProps[i], message])) as Record<IdProp, string | undefined>);
 
-	watch(() => client.value.padData, (newPadData, oldPadData) => {
+	watch(() => client.padData, (newPadData, oldPadData) => {
 		if (!props.isCreate && padData.value && newPadData)
 			mergeObject(oldPadData, newPadData, padData.value as PadData);
 	}, { deep: true });
@@ -72,9 +72,9 @@
 
 		try {
 			if(props.isCreate)
-				await client.value.createPad(padData.value as PadDataCreate);
+				await client.createPad(padData.value as PadDataCreate);
 			else
-				await client.value.editPad(padData.value);
+				await client.editPad(padData.value);
 
 			modal.hide();
 		} catch (err) {
@@ -103,7 +103,7 @@
 		isDeleting.value = true;
 
 		try {
-			await client.value.deletePad();
+			await client.deletePad();
 			modal.hide();
 		} catch (err) {
 			showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);

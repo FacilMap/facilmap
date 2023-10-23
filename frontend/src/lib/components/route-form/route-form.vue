@@ -80,10 +80,10 @@
 	})
 	export default class RouteForm extends Vue {
 
-		@InjectContext() context!: Context;
-		@InjectMapComponents() mapComponents!: MapComponents;
-		@InjectClient() client!: Client;
-		@InjectMapContext() mapContext!: MapContext;
+		const context = injectContextRequired();
+		const mapComponents = injectMapComponentsRequired();
+		const client = injectClientRequired();
+		const mapContext = injectMapContextRequired();
 
 		@Ref() submitButton!: HTMLButtonElement;
 

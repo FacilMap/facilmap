@@ -1,51 +1,34 @@
 <script setup lang="ts">
-	import WithRender from "./search-form-tab.vue";
-	import Vue from "vue";
-	import { Component, Ref } from "vue-property-decorator";
-	import { InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import SearchForm from "./search-form";
-	import "./search-form-tab.scss";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+	import SearchForm from "./search-form.vue";
 	import { Util } from "leaflet";
 	import { HashQuery } from "facilmap-leaflet";
-	import { Context } from "../facilmap/facilmap";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { ref } from "vue";
+	import { useEventListener } from "../../utils/utils";
+	import { injectSearchBoxContextRequired } from "../search-box/search-box-context.vue";
 
-	@WithRender
-	@Component({
-		components: { SearchForm }
-	})
-	export default class SearchFormTab extends Vue {
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
+	const searchBoxContext = injectSearchBoxContextRequired();
 
-		@InjectContext() context!: Context;
-		@InjectMapContext() mapContext!: MapContext;
-		@InjectMapComponents() mapComponents!: MapComponents;
+	const searchForm = ref<InstanceType<typeof SearchForm>>();
 
-		@Ref() searchForm!: SearchForm;
+	const hashQuery = ref<HashQuery | undefined>(undefined);
 
-		hashQuery: HashQuery | null | undefined = null;
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
+	useEventListener(mapContext, "search-set-query", handleSetQuery);
 
-		mounted(): void {
-			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
-			this.mapContext.$on("fm-search-set-query", this.handleSetQuery);
-		}
+	function handleOpenSelection(): void {
+		const layerId = Util.stamp(mapContext.components.searchResultsLayer);
+		if (mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerId))
+			searchBoxContext.activateTab(`fm${context.id}-search-form-tab`);
+	}
 
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
-			this.mapContext.$off("fm-search-set-query", this.handleSetQuery);
-		}
-
-		handleOpenSelection(): void {
-			const layerId = Util.stamp(this.mapComponents.searchResultsLayer);
-			if (this.mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerId))
-				this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-search-form-tab`);
-		}
-
-		handleSetQuery(query: string, zoom = false, smooth = true): void {
-			this.searchForm.setSearchString(query);
-			this.searchForm.search(zoom, undefined, smooth);
-			this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-search-form-tab`, !!query);
-		}
-
+	function handleSetQuery({ query, zoom = false, smooth = true }: { query: string; zoom?: boolean; smooth?: boolean }): void {
+		searchForm.value!.setSearchString(query);
+		searchForm.value!.search(zoom, undefined, smooth);
+		searchBoxContext.activateTab(`fm${context.id}-search-form-tab`, !!query);
 	}
 </script>
 

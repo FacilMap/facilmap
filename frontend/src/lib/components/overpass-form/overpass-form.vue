@@ -12,8 +12,8 @@
 	@Component({ })
 	export default class OverpassForm extends Vue {
 
-		@InjectMapComponents() mapComponents!: MapComponents;
-		@InjectMapContext() mapContext!: MapContext;
+		const mapComponents = injectMapComponentsRequired();
+		const mapContext = injectMapContextRequired();
 
 		activeTab = 0;
 		searchTerm = "";

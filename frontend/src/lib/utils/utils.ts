@@ -1,9 +1,13 @@
 import { isEqual } from "lodash-es";
 import { clone } from "facilmap-utils";
 import { Field, Line, Marker, Type } from "facilmap-types";
+import { Emitter } from "mitt";
+import { DeepReadonly, onBeforeUnmount, onMounted } from "vue";
 
 /** Can be used as the "type" of props that accept an ID */
 export const IdType = Number;
+
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
@@ -55,4 +59,24 @@ export function isLine<DataType>(object: Marker<DataType> | Line<DataType>): obj
 
 export function isPromise(object: any): object is Promise<unknown> {
 	return typeof object === 'object' && 'then' in object && typeof object.then === 'function';
+}
+
+export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: Emitter<EventMap> | DeepReadonly<Emitter<EventMap>>, type: EventType, listener: (data: EventMap[EventType]) => void): void {
+	onMounted(() => {
+		emitter.on(type, listener);
+	});
+
+	onBeforeUnmount(() => {
+		emitter.off(type, listener);
+	});
+}
+
+export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: EventTarget, ...args: Args): void {
+	onMounted(() => {
+		(element as any).addEventListener(...args);
+	});
+
+	onBeforeUnmount(() => {
+		(element as any).removeEventListener(...args);
+	});
 }

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 	import { Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
-	import { injectClientRequired } from "../../utils/client";
+	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
-	import { injectMapComponentsRequired } from "../../utils/map-components";
-	import { injectMapContextRequired } from "../../utils/map-context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	// import ManageTypes from "../manage-types/manage-types.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
 
@@ -13,7 +12,6 @@
 	}>();
 
 	const client = injectClientRequired();
-	const mapComponents = injectMapComponentsRequired();
 	const mapContext = injectMapContextRequired();
 
 	const dialog = ref<
@@ -28,11 +26,11 @@
 	}
 
 	function addMarker(type: Type): void {
-		drawMarker(type, client.value, mapComponents.value);
+		drawMarker(type, client, mapContext.components);
 	}
 
 	function addLine(type: Type): void {
-		drawLine(type, client.value, mapComponents.value);
+		drawLine(type, client, mapContext.components);
 	}
 </script>
 
