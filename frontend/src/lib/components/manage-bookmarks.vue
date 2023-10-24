@@ -65,15 +65,15 @@
 						<b-input v-model="bookmark.customName" :placeholder="bookmark.name"></b-input>
 					</b-td>
 					<b-td class="td-buttons text-right">
-						<b-button @click="deleteBookmark(bookmark)">Delete</b-button>
-						<b-button class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></b-button>
+						<button type="button" class="btn btn-light" @click="deleteBookmark(bookmark)">Delete</button>
+						<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
 					</b-td>
 				</b-tr>
 			</draggable>
 			<b-tfoot v-if="client.padData && !isBookmarked">
 				<b-tr>
 					<b-td colspan="3">
-						<b-button @click="addBookmark()">Bookmark current map</b-button>
+						<button type="button" class="btn btn-light" @click="addBookmark()">Bookmark current map</button>
 					</b-td>
 				</b-tr>
 			</b-tfoot>

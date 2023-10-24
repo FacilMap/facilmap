@@ -123,12 +123,25 @@
 				</div>
 
 				<b-button-toolbar>
-					<b-button v-b-tooltip.hover="'Zoom to selection'" @click="zoom()" size="sm"><Icon icon="zoom-in" alt="Zoom to selection"></Icon></b-button>
+					<button
+						type="button"
+						class="btn btn-light btn-sm"
+						v-b-tooltip.hover="'Zoom to selection'"
+						@click="zoom()"
+					>
+						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
+					</button>
 
-					<b-button v-if="!client.readonly" size="sm" @click="deleteObjects()" :disabled="isDeleting || mapContext.interaction">
+					<button
+						v-if="!client.readonly"
+						type="button"
+						class="btn btn-light btn-sm"
+						@click="deleteObjects()"
+						:disabled="isDeleting || mapContext.interaction"
+					>
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 						Remove
-					</b-button>
+					</button>
 				</b-button-toolbar>
 			</b-carousel-slide>
 

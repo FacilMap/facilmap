@@ -250,16 +250,16 @@
 							</ValidationProvider>
 						</b-td>
 						<b-td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-							<b-button @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></b-button>
+							<button type="button" class="btn btn-light" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>
 						</b-td>
 						<b-td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-							<b-button class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></b-button>
+							<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
 						</b-td>
 					</b-tr>
 				</draggable>
 				<b-tfoot v-if="fieldValue.type != 'checkbox'">
 					<b-tr>
-						<b-td><b-button @click="addOption()"><Icon icon="plus" alt="Add"></Icon></b-button></b-td>
+						<b-td><button type="button" class="btn btn-light" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button></b-td>
 					</b-tr>
 				</b-tfoot>
 			</b-table-simple>

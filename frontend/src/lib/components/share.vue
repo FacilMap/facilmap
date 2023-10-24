@@ -112,21 +112,17 @@
 
 		<b-tabs>
 			<b-tab title="Share link">
-				<b-input-group class="mt-2">
-					<b-form-input :value="url" readonly></b-form-input>
-					<b-input-group-append>
-						<b-button @click="copyUrl()">Copy</b-button>
-					</b-input-group-append>
-				</b-input-group>
+				<div class="input-group mt-2">
+					<input class="form-control" :value="url" readonly />
+					<button type="button" class="btn btn-light" @click="copyUrl()">Copy</button>
+				</div>
 				<p class="mt-2">Share this link with others to allow them to open your map. <a href="https://docs.facilmap.org/users/share/" target="_blank">Learn more</a></p>
 			</b-tab>
 			<b-tab title="Embed">
-				<b-input-group class="mt-2">
+				<div class="input-group mt-2">
 					<b-form-textarea :value="embedCode" readonly></b-form-textarea>
-					<b-input-group-append>
-						<b-button @click="copyEmbedCode()">Copy</b-button>
-					</b-input-group-append>
-				</b-input-group>
+					<button type="button" class="btn btn-light" @click="copyEmbedCode()">Copy</button>
+				</div>
 				<p class="mt-2">Add this HTML code to a web page to embed FacilMap. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
 			</b-tab>
 		</b-tabs>

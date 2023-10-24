@@ -279,31 +279,31 @@
 							</ValidationProvider>
 						</b-td>
 						<b-td>
-							<b-input-group>
+							<div class="input-group">
 								<b-form-select
 									v-model="field.type"
 									:options="[{ value: 'input', text: 'Text field' }, { value: 'textarea', text: 'Text area' }, { value: 'dropdown', text: 'Dropdown' }, { value: 'checkbox', text: 'Checkbox' }]"
 								></b-form-select>
-								<b-input-group-append v-if="['dropdown', 'checkbox'].includes(field.type)">
-									<b-button @click="editDropdown(field)">Edit</b-button>
-								</b-input-group-append>
-							</b-input-group>
+								<template v-if="['dropdown', 'checkbox'].includes(field.type)">
+									<button type="button" class="btn btn-light" @click="editDropdown(field)">Edit</button>
+								</template>
+							</div>
 						</b-td>
 						<b-td class="text-center">
 							<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
 						</b-td>
 						<b-td class="td-buttons">
-							<b-button @click="deleteField(field)">Delete</b-button>
+							<button type="button" class="btn btn-light" @click="deleteField(field)">Delete</button>
 						</b-td>
 						<b-td class="td-buttons">
-							<b-button class="fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></b-button>
+							<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
 						</b-td>
 					</b-tr>
 				</draggable>
 				<b-tfoot>
 					<b-tr>
 						<b-td colspan="4">
-							<b-button @click="createField()"><Icon icon="plus" alt="Add"></Icon></b-button>
+							<button type="button" class="btn btn-light" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
 						</b-td>
 						<b-td class="move"></b-td>
 					</b-tr>

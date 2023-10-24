@@ -16,6 +16,7 @@
 		content: Slot | undefined;
 		onClose?: () => void;
 		hashQuery?: HashQuery;
+		class?: string;
 	}
 
 	interface SearchBoxContextData {

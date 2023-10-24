@@ -155,7 +155,7 @@
 			</ul>
 		</div>
 
-		<div class="card-body">
+		<div class="card-body" :class="searchBoxContext.activeTab?.class">
 			<TabContent></TabContent>
 		</div>
 

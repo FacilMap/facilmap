@@ -101,7 +101,7 @@
 	>
 		<template v-if="line">
 			<b-form-group label="Name" :label-for="`${id}-name-input`" label-cols-sm="3">
-				<b-form-input :id="`${id}-name-input`" v-model="line.name"></b-form-input>
+				<input class="form-control" :id="`${id}-name-input`" v-model="line.name" />
 			</b-form-group>
 
 			<b-form-group label="Routing mode" v-if="canControl.includes('mode') && line.mode != 'track'" label-cols-sm="3">
@@ -121,15 +121,27 @@
 				</b-form-group>
 			</ValidationProvider>
 
-			<b-form-group v-for="(field, idx in client.types[line.typeId].fields" :label="field.name" :label-for="`fm-edit-line-${idx}-input`" label-cols-sm="3">
+			<b-form-group v-for="(field, idx) in client.types[line.typeId].fields" :label="field.name" :label-for="`fm-edit-line-${idx}-input`" label-cols-sm="3">
 				<FieldInput :id="`${id}-${idx}-input`" :field="field" :value="line.data.get(field.name)" @input="line.data.set(field.name, $event)"></FieldInput>
 			</b-form-group>
 		</template>
 
 		<template #footer-left>
-			<b-dropdown dropup v-if="types.length > 1" text="Change type">
-				<b-dropdown-item v-for="type in types" :active="type.id == line.typeId" @click="line.typeId = type.id">{{type.name}}</b-dropdown-item>
-			</b-dropdown>
+			<div v-if="types.length > 1" class="dropup">
+				<button type="button" class="btn btn-light dropdown-toggle">Change type</button>
+				<ul class="dropdown-menu">
+					<template v-for="type in types">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								:class="{ active: type.id == line.typeId }"
+								@click="line.typeId = type.id"
+							>{{type.name}}</a>
+						</li>
+					</template>
+				</ul>
+			</div>
 		</template>
 	</FormModal>
 </template>

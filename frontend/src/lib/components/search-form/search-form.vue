@@ -10,7 +10,7 @@
 	import storage from "../../utils/storage";
 	import { HashQuery } from "facilmap-leaflet";
 	import { FileResultObject, parseFiles } from "../../utils/files";
-	import FileResults from "../file-results/file-results.vue";
+	import FileResults from "../file-results.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, ref, watch } from "vue";
@@ -170,21 +170,49 @@
 
 <template>
 	<div class="fm-search-form">
-		<b-form @submit.prevent="handleSubmit()">
-			<b-form-group>
-				<b-input-group>
-					<b-form-input type="search" v-model="searchString" :autofocus="autofocus" ref="searchInput"></b-form-input>
-					<b-input-group-append>
-						<b-button type="submit"><Icon icon="search" alt="Search"></Icon></b-button>
-						<b-button v-if="searchResults || mapResults || fileResult" @click="reset()"><Icon icon="remove" alt="Clear"></Icon></b-button>
-						<b-dropdown>
-							<b-dropdown-item @click.native.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"><Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results</b-dropdown-item>
-							<b-dropdown-item @click.native.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"><Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results</b-dropdown-item>
-						</b-dropdown>
-					</b-input-group-append>
-				</b-input-group>
-			</b-form-group>
-		</b-form>
+		<form action="javascript:" @submit.prevent="handleSubmit()">
+			<div class="input-group">
+				<input type="search" class="form-control" v-model="searchString" :autofocus="autofocus" ref="searchInput" />
+				<button
+					type="submit"
+					class="btn btn-light"
+				>
+					<Icon icon="search" alt="Search"></Icon>
+				</button>
+				<button
+					v-if="searchResults || mapResults || fileResult"
+					type="button"
+					class="btn btn-light"
+					@click="reset()"
+				>
+					<Icon icon="remove" alt="Clear"></Icon>
+				</button>
+				<div class="dropdown">
+					<button type="button" class="btn btn-light dropdown-toggle"></button>
+					<ul class="dropdown-menu">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click.native.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
+							>
+								<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results
+							</a>
+						</li>
+
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click.native.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
+							>
+								<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</form>
 
 		<FileResults
 			v-if="fileResult"

@@ -561,67 +561,117 @@
 			<draggable v-model="destinations" handle=".fm-drag-handle" @end="reroute(true)">
 				<b-form-group v-for="(destination, idx) in destinations" :class="{ active: hoverDestinationIdx == idx }">
 					<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
-					<b-input-group @mouseenter="destinationMouseOver(idx)" @mouseleave="destinationMouseOut(idx)" :state="getValidationState(destination)">
-						<b-input-group-prepend>
-							<b-input-group-text class="px-2"><a href="javascript:" class="fm-drag-handle" @contextmenu.prevent><Icon icon="resize-vertical" alt="Reorder"></Icon></a></b-input-group-text>
-						</b-input-group-prepend>
-						<b-form-input v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)"></b-form-input>
-						<b-input-group-append>
-							<b-dropdown v-if="destination.query.trim() != ''" @show="loadSuggestions(destination)" :menu-class="['fm-route-suggestions', { isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }]">
+					<div
+						class="input-group"
+						@mouseenter="destinationMouseOver(idx)"
+						@mouseleave="destinationMouseOut(idx)"
+						:state="getValidationState(destination)"
+					>
+						<b-input-group-text class="px-2"><a href="javascript:" class="fm-drag-handle" @contextmenu.prevent><Icon icon="resize-vertical" alt="Reorder"></Icon></a></b-input-group-text>
+						<input class="form-control" v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)" />
+						<div
+							v-if="destination.query.trim() != ''"
+							class="dropdown"
+							v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
+						>
+							<button type="button" class="btn btn-light dropdown-toggle"></button>
+							<ul
+								class="dropdown-menu fm-route-suggestions"
+								:class="{ isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }"
+							>
 								<template v-if="destination.searchSuggestions">
 									<template v-for="suggestion in destination.mapSuggestions">
-										<b-dropdown-item
-											:active="suggestion === getSelectedSuggestion(destination)"
+										<li
 											@mouseenter.native="suggestionMouseOver(suggestion)"
 											@mouseleave.native="suggestionMouseOut(suggestion)"
-											@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
-											class="fm-route-form-suggestions-zoom"
-										><Icon icon="zoom-in" alt="Zoom"></Icon></b-dropdown-item>
-										<b-dropdown-item
-										:active="suggestion === getSelectedSuggestion(destination)"
-											@mouseenter.native="suggestionMouseOver(suggestion)"
-											@mouseleave.native="suggestionMouseOut(suggestion)"
-											@click="destination.selectedSuggestion = suggestion; reroute(true)"
-										>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</b-dropdown-item>
+										>
+											<a
+												href="javascript:"
+												class="dropdown-item fm-route-form-suggestions-zoom"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click="destination.selectedSuggestion = suggestion; reroute(true)"
+											>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
+										</li>
 									</template>
-									<b-dropdown-divider
-										v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0"
-										class="fm-route-form-suggestions-divider"
-									></b-dropdown-divider>
+
+									<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
+										<hr class="dropdown-divider fm-route-form-suggestions-divider">
+									</li>
+
 									<template v-for="suggestion in destination.searchSuggestions">
-										<b-dropdown-item
-											href="javascript:"
-											:active="suggestion === getSelectedSuggestion(destination)"
+										<li
 											@mouseenter.native="suggestionMouseOver(suggestion)"
 											@mouseleave.native="suggestionMouseOut(suggestion)"
-											@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
-											class="fm-route-form-suggestions-zoom"
-										><Icon icon="zoom-in" alt="Zoom"></Icon></b-dropdown-item>
-										<b-dropdown-item
-											href="javascript:"
-											:active="suggestion === getSelectedSuggestion(destination)"
-											@mouseenter.native="suggestionMouseOver(suggestion)"
-											@mouseleave.native="suggestionMouseOut(suggestion)"
-											@click="destination.selectedSuggestion = suggestion; reroute(true)"
-										>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></b-dropdown-item>
+										>
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+												class="fm-route-form-suggestions-zoom"
+											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click="destination.selectedSuggestion = suggestion; reroute(true)"
+											>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
+										</li>
 									</template>
 								</template>
 								<div v-else class="spinner-border"></div>
-							</b-dropdown>
-							<b-button v-if="destinations.length > 2" @click="removeDestination(idx); reroute(false)" v-b-tooltip.hover.right="'Remove this destination'"><Icon icon="minus" alt="Remove" size="1.0em"></Icon></b-button>
-						</b-input-group-append>
-					</b-input-group>
+							</ul>
+						</div>
+						<button
+							v-if="destinations.length > 2"
+							type="button"
+							class="btn btn-light"
+							@click="removeDestination(idx); reroute(false)"
+							v-b-tooltip.hover.right="'Remove this destination'"
+						>
+							<Icon icon="minus" alt="Remove" size="1.0em"></Icon>
+						</button>
+					</div>
 				</b-form-group>
 				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === destinations.length }"/>
 			</draggable>
 
 			<b-button-toolbar>
-				<b-button @click="addDestination()" v-b-tooltip.hover.bottom="'Add another destination'" :tabindex="destinations.length+1"><Icon icon="plus" alt="Add"></Icon></b-button>
+				<button
+					type="button"
+					class="btn btn-light"
+					@click="addDestination()"
+					v-b-tooltip.hover.bottom="'Add another destination'"
+					:tabindex="destinations.length+1"
+				>
+					<Icon icon="plus" alt="Add"></Icon>
+				</button>
 
 				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)" tooltip-placement="bottom"></RouteMode>
 
-				<b-button type="submit" variant="primary" :tabindex="destinations.length+7" class="flex-grow-1" ref="submitButton">Go!</b-button>
-				<b-button v-if="hasRoute" type="button" :tabindex="destinations.length+8" @click="reset()" v-b-tooltip.hover.right="'Clear route'"><Icon icon="remove" alt="Clear"></Icon></b-button>
+				<button
+					type="submit"
+					class="btn btn-primary flex-grow-1"
+					:tabindex="destinations.length+7"
+					ref="submitButton"
+				>Go!</button>
+				<button
+					v-if="hasRoute"
+					type="button"
+					class="btn btn-light"
+					:tabindex="destinations.length+8"
+					@click="reset()"
+					v-b-tooltip.hover.right="'Clear route'"
+				>
+					<Icon icon="remove" alt="Clear"></Icon>
+				</button>
 			</b-button-toolbar>
 
 			<template v-if="routeError">
@@ -646,34 +696,59 @@
 				<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
 				<b-button-toolbar v-if="showToolbar && !client.readonly">
-					<b-button v-b-tooltip.hover="'Zoom to route'" @click="zoomToRoute()" size="sm"><Icon icon="zoom-in" alt="Zoom to route"></Icon></b-button>
+					<button
+						type="button"
+						class="btn btn-light btn-sm"
+						v-b-tooltip.hover="'Zoom to route'"
+						@click="zoomToRoute()"
+					>
+						<Icon icon="zoom-in" alt="Zoom to route"></Icon>
+					</button>
 
-					<b-dropdown v-if="lineTypes.length > 0" size="sm" :disabled="isAdding">
-						<template #button-content>
+					<div v-if="lineTypes.length > 0" class="dropdown">
+						<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
 							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add to map
-						</template>
+						</button>
 
-						<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(type)">{{type.name}}</b-dropdown-item>
-					</b-dropdown>
-					<b-dropdown size="sm" :disabled="isExporting">
-						<template #button-content>
+						<ul class="dropdown-menu">
+							<template v-for="type in lineTypes">
+								<li>
+									<a
+										href="javascript:"
+										class="dropdown-item"
+										@click="addToMap(type)"
+									>{{type.name}}</a>
+								</li>
+							</template>
+						</ul>
+					</div>
+					<div class="dropdown">
+						<button type="button class="btn btn-light btn-sm dropdown-toggle" :disabled="isExporting">
 							<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 							Export
-						</template>
+						</button>
 
-						<b-dropdown-item
-							href="javascript:"
-							@click="exportRoute('gpx-trk')"
-							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-						>Export as GPX track</b-dropdown-item>
-						<b-dropdown-item
-							href="javascript:"
-							@click="exportRoute('gpx-rte')"
-							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-						>Export as GPX route</b-dropdown-item>
+						<ul class="dropdown-menu">
+							<li>
+								<a
+									href="javascript:"
+									class="dropdown-item"
+									@click="exportRoute('gpx-trk')"
+									v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+								>Export as GPX track</a>
+							</li>
+							<li>
+								<a
+									href="javascript:"
+									class="dropdown-item"
+									@click="exportRoute('gpx-rte')"
+									v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+								>Export as GPX route</a>
+							</li>
+						</ul>
 					</b-dropdown>
-				</b-button-toolbar>
+				</div>
 			</template>
 		</b-form>
 	</div>

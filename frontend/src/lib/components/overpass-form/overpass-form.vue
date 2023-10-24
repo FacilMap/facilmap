@@ -104,7 +104,7 @@
 <template>
 	<div class="fm-overpass-form">
 		<template v-if="!mapContext.overpassIsCustom">
-			<b-form-input type="search" v-model="searchTerm" placeholder="Filter…" autofocus></b-form-input>
+			<input class="form-control" type="search" v-model="searchTerm" placeholder="Filter…" autofocus />
 			<hr />
 
 			<div v-if="searchTerm" class="checkbox-grid">
@@ -156,10 +156,12 @@
 		<hr />
 
 		<b-button-toolbar>
-			<b-button
+			<button
+				type="button"
+				class="btn btn-light"
+				:class="{ active: mapContext.overpassIsCustom }"
 				@click="toggleIsCustom()"
-				:pressed="mapContext.overpassIsCustom"
-			>Custom query</b-button>
+			>Custom query</button>
 		</b-button-toolbar>
 	</div>
 </template>

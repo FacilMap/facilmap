@@ -157,11 +157,16 @@
 				{{line.name}}
 			</h2>
 			<b-button-toolbar v-if="!isMoving">
-				<b-button
+				<button
 					v-if="line.ascent != null"
-					:pressed.sync="showElevationPlot"
+					type="button"
+					class="btn btn-light"
+					:class="{ active: showElevationPlot }"
+					@click="showElevationPlot = !showElevationPlot"
 					v-b-tooltip.hover.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
-				><Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon></b-button>
+				>
+					<Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon>
+				</button>
 
 			</b-button-toolbar>
 		</div>
@@ -186,34 +191,68 @@
 		</div>
 
 		<b-button-toolbar v-if="!isMoving">
-			<b-button v-b-tooltip.hover="'Zoom to line'" @click="zoomToLine()" size="sm"><Icon icon="zoom-in" alt="Zoom to line"></Icon></b-button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				v-b-tooltip.hover="'Zoom to line'"
+				@click="zoomToLine()"
+			>
+				<Icon icon="zoom-in" alt="Zoom to line"></Icon>
+			</button>
 
-			<b-dropdown size="sm" :disabled="isExporting">
-				<template #button-content>
+			<div class="dropdown">
+				<button type="button" class="btn btn-light dropdown-toggle btn-sm" :disabled="isExporting">
 					<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 					Export
-				</template>
+				</button>
 
-				<b-dropdown-item
-					href="javascript:"
-					@click="exportRoute('gpx-trk')"
-					v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-				>Export as GPX track</b-dropdown-item>
-				<b-dropdown-item
-					href="javascript:"
-					@click="exportRoute('gpx-rte')"
-					v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-				>Export as GPX route</b-dropdown-item>
-			</b-dropdown>
+				<ul class="dropdown-menu">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="exportRoute('gpx-trk')"
+							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+						>Export as GPX track</a>
+					</li>
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="exportRoute('gpx-rte')"
+							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+						>Export as GPX route</a>
+					</li>
+				</ul>
+			</div>
 
-			<b-button v-if="!client.readonly" size="sm" v-b-modal="`fm${context.id}-line-info-edit`" :disabled="isDeleting || mapContext.interaction">Edit data</b-button>
+			<button
+				v-if="!client.readonly"
+				type="button"
+				class="btn btn-light btn-sm"
+				size="sm"
+				v-b-modal="`fm${context.id}-line-info-edit`"
+				:disabled="isDeleting || mapContext.interaction"
+			>Edit data</button>
 
-			<b-button v-if="!client.readonly && line.mode != 'track'" size="sm" @click="moveLine()" :disabled="isDeleting || mapContext.interaction">Edit waypoints</b-button>
+			<button
+				v-if="!client.readonly && line.mode != 'track'"
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="moveLine()"
+				:disabled="isDeleting || mapContext.interaction"
+			>Edit waypoints</button>
 
-			<b-button v-if="!client.readonly" size="sm" @click="deleteLine()" :disabled="isDeleting || mapContext.interaction">
+			<button
+				v-if="!client.readonly"
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="deleteLine()"
+				:disabled="isDeleting || mapContext.interaction"
+			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
-			</b-button>
+			</button>
 		</b-button-toolbar>
 
 		<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>

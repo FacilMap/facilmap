@@ -79,21 +79,61 @@
 		</dl>
 
 		<b-button-toolbar>
-			<b-button v-b-tooltip.hover="'Zoom to search result'" @click="zoomToResult()" size="sm"><Icon icon="zoom-in" alt="Zoom to search result"></Icon></b-button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				v-b-tooltip.hover="'Zoom to search result'"
+				@click="zoomToResult()"
+			>
+				<Icon icon="zoom-in" alt="Zoom to search result"></Icon>
+			</button>
 
-			<b-dropdown v-if="!client.readonly && types.length > 0" :disabled="isAdding" size="sm">
-				<template #button-content>
+			<div v-if="!client.readonly && types.length > 0" class="dropdown">
+				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
 					<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 					Add to map
-				</template>
-				<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
-			</b-dropdown>
+				</button>
+				<ul class="dropdown-menu">
+					<template v-for="type in types">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="$emit('add-to-map', type)"
+							>{{type.name}}</a>
+						</li>
+					</template>
+				</ul>
+			</div>
 
-			<b-dropdown v-if="isMarker && context.search" text="Use as" size="sm">
-				<b-dropdown-item href="javascript:" @click="$emit('use-as-from')">Route start</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="$emit('use-as-via')">Route via</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="$emit('use-as-to')">Route destination</b-dropdown-item>
-			</b-dropdown>
+			<div v-if="isMarker && context.search" class="dropdown">
+				<button type="button" class="btn btn-light btn-sm dropdown-toggle">Use as</button>
+				<ul class="dropdown-menu">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="$emit('use-as-from')"
+						>Route start</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="$emit('use-as-via')"
+						>Route via</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="$emit('use-as-to')"
+						>Route destination</a>
+					</li>
+				</ul>
+			</div>
 		</b-button-toolbar>
 	</div>
 </template>

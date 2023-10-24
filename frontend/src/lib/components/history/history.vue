@@ -128,13 +128,29 @@
 						{{entry.labels.description}}
 					</b-td>
 					<b-td class="td-buttons">
-						<b-button v-if="entry.labels.diff" @click="handleInfoClick($event.target, entry)" @blur="handleInfoBlur()"><Icon icon="info-sign"></Icon></b-button>
+						<button
+							v-if="entry.labels.diff"
+							type="button"
+							class="btn btn-light"
+							@click="handleInfoClick($event.target, entry)"
+							@blur="handleInfoBlur()"
+						>
+							<Icon icon="info-sign"></Icon>
+						</button>
 					</b-td>
 					<b-td class="td-buttons">
-						<b-button v-if="entry.labels.button" block :disabled="!!reverting" @click="revert(entry)">
-							<div v-if="reverting === entry" class="spinner-border spinner-border-sm"></div>
-							{{entry.labels.button}}
-						</b-button>
+						<div class="d-grid">
+							<button
+								v-if="entry.labels.button"
+								type="button"
+								class="btn btn-light"
+								:disabled="!!reverting"
+								@click="revert(entry)"
+							>
+								<div v-if="reverting === entry" class="spinner-border spinner-border-sm"></div>
+								{{entry.labels.button}}
+							</button>
+						</div>
 					</b-td>
 				</b-tr>
 			</b-tbody>

@@ -70,21 +70,25 @@
 				<b-tr v-for="view in client.views">
 					<b-td :class="{ 'font-weight-bold': client.padData.defaultView && view.id == client.padData.defaultView.id }"><a href="javascript:" @click="display(view)">{{view.name}}</a></b-td>
 					<b-td class="td-buttons text-right">
-						<b-button
+						<button
+							type="button"
+							class="btn btn-light"
 							v-show="!client.padData.defaultView || view.id !== client.padData.defaultView.id"
 							@click="makeDefault(view)"
 							:disabled="!!isSavingDefaultView || isDeleting[view.id]"
 						>
 							<div v-if="isSavingDefaultView == view.id" class="spinner-border spinner-border-sm"></div>
 							Make default
-						</b-button>
-						<b-button
+						</button>
+						<button
+							type="button"
+							class="btn btn-light"
 							@click="deleteView(view)"
 							:disabled="isDeleting[view.id] || isSavingDefaultView == view.id"
 						>
 							<div v-if="isDeleting[view.id]" class="spinner-border spinner-border-sm"></div>
 							Delete
-						</b-button>
+						</button>
 					</b-td>
 				</b-tr>
 			</b-tbody>

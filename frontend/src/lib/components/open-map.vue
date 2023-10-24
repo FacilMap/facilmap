@@ -138,15 +138,13 @@
 				<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
 				<ValidationProvider name="Map ID/link" v-slot="v" :rules="{ openPadId: { getClient, context } }" :debounce="300">
 					<b-form-group :state="v | validationState">
-						<b-input-group>
-							<b-form-input v-model="padId" :state="v | validationState"></b-form-input>
-							<b-input-group-append>
-								<b-button type="submit" variant="primary" :disabled="!padId">
-									<div v-if="observer.pending" class="spinner-border spinner-border-sm"></div>
-									Open
-								</b-button>
-							</b-input-group-append>
-						</b-input-group>
+						<div class="input-group">
+							<input class="form-control" v-model="padId" :state="v | validationState" />
+							<button type="submit" class="btn btn-primary" :disabled="!padId">
+								<div v-if="observer.pending" class="spinner-border spinner-border-sm"></div>
+								Open
+							</button>
+						</div>
 						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 					</b-form-group>
 				</ValidationProvider>
@@ -157,15 +155,13 @@
 
 		<h4>Search public maps</h4>
 		<b-form @submit.prevent="search(searchQuery, 1)" class="results">
-			<b-input-group>
-				<b-form-input type="search" v-model="searchQuery" placeholder="Search term"></b-form-input>
-				<b-input-group-append>
-					<b-button type="submit" variant="secondary" :disabled="isSearching">
-						<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
-						<Icon v-else icon="search" alt="Search"></Icon>
-					</b-button>
-				</b-input-group-append>
-			</b-input-group>
+			<div class="input-group">
+				<input class="form-control" type="search" v-model="searchQuery" placeholder="Search term" />
+				<button type="submit" class="btn btn-secondary" :disabled="isSearching">
+					<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
+					<Icon v-else icon="search" alt="Search"></Icon>
+				</button>
+			</div>
 
 			<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger">
 				No maps could be found.
@@ -186,10 +182,12 @@
 								<b-td>{{result.name}}</b-td>
 								<b-td>{{result.description}}</b-td>
 								<b-td class="td-buttons">
-									<b-button
+									<button
+										type="button"
+										class="btn btn-light"
 										:href="context.baseUrl + encodeURIComponent(result.id)"
 										@click.exact.prevent="openResult(result)"
-									>Open</b-button>
+									>Open</button>
 								</b-td>
 							</b-tr>
 						</b-tbody>

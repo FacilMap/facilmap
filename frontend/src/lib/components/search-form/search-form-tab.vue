@@ -7,6 +7,7 @@
 	import { ref } from "vue";
 	import { useEventListener } from "../../utils/utils";
 	import { injectSearchBoxContextRequired } from "../search-box/search-box-context.vue";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	const context = injectContextRequired();
 	const mapContext = injectMapContextRequired();
@@ -33,9 +34,14 @@
 </script>
 
 <template>
-	<b-tab title="Search" :id="`fm${context.id}-search-form-tab`" class="fm-search-form-tab" :fm-hash-query="hashQuery">
+	<SearchBoxTab
+		:id="`fm${context.id}-search-form-tab`"
+		title="Search"
+		:hashQuery="hashQuery"
+		class="fm-search-form-tab"
+	>
 		<SearchForm ref="searchForm" @hash-query-change="hashQuery = $event"></SearchForm>
-	</b-tab>
+	</SearchBoxTab>
 </template>
 
 <style lang="scss">

@@ -111,15 +111,32 @@
 				</div>
 
 				<b-button-toolbar v-if="client.padData && !client.readonly">
-					<b-button v-b-tooltip.hover="'Zoom to selection'" @click="zoom()" size="sm"><Icon icon="zoom-in" alt="Zoom to selection"></Icon></b-button>
+					<button
+						type="button"
+						class="btn btn-light btn-sm"
+						v-b-tooltip.hover="'Zoom to selection'"
+						@click="zoom()"
+					>
+						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
+					</button>
 
-					<b-dropdown v-if="client.padData && !client.readonly && types.length > 0" :disabled="isAdding">
-						<template #button-content>
+					<div v-if="client.padData && !client.readonly && types.length > 0" class="dropdown">
+						<button type="button" class="btn btn-light dropdown-toggle" :disabled="isAdding">
 							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add to map
-						</template>
-						<b-dropdown-item v-for="type in types" href="javascript:" @click="addToMap(elements, type)">{{type.name}}</b-dropdown-item>
-					</b-dropdown>
+						</button>
+						<ul class="dropdown-menu">
+							<template v-for="type in types">
+								<li>
+									<a
+										href="javascript:"
+										class="dropdown-item"
+										@click="addToMap(elements, type)"
+									>{{type.name}}</a>
+								</li>
+							</template>
+						</ul>
+					</div>
 				</b-button-toolbar>
 			</b-carousel-slide>
 

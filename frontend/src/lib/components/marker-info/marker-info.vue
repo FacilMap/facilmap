@@ -108,20 +108,68 @@
 		</dl>
 
 		<b-button-toolbar>
-			<b-button v-b-tooltip.hover="'Zoom to marker'" @click="zoomToMarker()" size="sm"><Icon icon="zoom-in" alt="Zoom to marker"></Icon></b-button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				v-b-tooltip.hover="'Zoom to marker'"
+				@click="zoomToMarker()"
+			>
+				<Icon icon="zoom-in" alt="Zoom to marker"></Icon>
+			</button>
 
-			<b-dropdown text="Use as" size="sm" v-if="context.search">
-				<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
-			</b-dropdown>
+			<div v-if="context.search" class="dropdown">
+				<button type="button" class="btn btn-light btn-sm dropdown-toggle">Use as</button>
+				<ul class="dropdown-menu">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsFrom()"
+						>Route start</a>
+					</li>
 
-			<b-button v-if="!client.readonly" size="sm" v-b-modal="`fm${context.id}-marker-info-edit`" :disabled="isDeleting || mapContext.interaction">Edit data</b-button>
-			<b-button v-if="!client.readonly" size="sm" @click="move()" :disabled="isDeleting || mapContext.interaction">Move</b-button>
-			<b-button v-if="!client.readonly" size="sm" @click="deleteMarker()" :disabled="isDeleting || mapContext.interaction">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsVia()"
+						>Route via</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsTo()"
+						>Route destination</a>
+					</li>
+				</ul>
+			</div>
+
+			<button
+				v-if="!client.readonly"
+				type="button"
+				class="btn btn-light btn-sm"
+				v-b-modal="`fm${context.id}-marker-info-edit`"
+				:disabled="isDeleting || mapContext.interaction"
+			>Edit data</button>
+			<button
+				v-if="!client.readonly"
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="move()"
+				:disabled="isDeleting || mapContext.interaction"
+			>Move</button>
+			<button
+				v-if="!client.readonly"
+				type="button"
+				class="btn btn-light btn-sm"
+				@click="deleteMarker()"
+				:disabled="isDeleting || mapContext.interaction"
+			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
-			</b-button>
+			</button>
 		</b-button-toolbar>
 
 		<EditMarker :id="`fm${context.id}-marker-info-edit`" :markerId="markerId"></EditMarker>

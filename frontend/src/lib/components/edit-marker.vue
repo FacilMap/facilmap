@@ -100,7 +100,7 @@
 	>
 		<template v-if="marker">
 			<b-form-group label="Name" label-for="`${id}-name-input`" label-cols-sm="3">
-				<b-form-input :id="`${id}-name-input`" v-model="marker.name"></b-form-input>
+				<input class="form-control" :id="`${id}-name-input`" v-model="marker.name" />
 			</b-form-group>
 
 			<ValidationProvider v-if="canControl.includes('colour')" name="Colour" v-slot="v" rules="required|colour">
@@ -136,9 +136,21 @@
 		</template>
 
 		<template #footer-left>
-			<b-dropdown dropup v-if="types.length > 1" text="Change type">
-				<b-dropdown-item v-for="type in types" :active="type.id == marker.typeId" @click="marker.typeId = type.id">{{type.name}}</b-dropdown-item>
-			</b-dropdown>
+			<div v-if="types.length > 1" class="dropup">
+				<button type="button" class="btn btn-light dropdown-toggle">Change type</button>
+				<ul class="dropdown-menu">
+					<template v-for="type in types">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								:class="{ active: type.id == marker.typeId }"
+								@click="marker.typeId = type.id"
+							>{{type.name}}</a>
+						</li>
+					</template>
+				</ul>
+			</div>
 		</template>
 	</FormModal>
 </template>

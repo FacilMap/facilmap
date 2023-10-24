@@ -425,24 +425,53 @@
 				</div>
 
 				<b-button-toolbar v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0">
-					<b-button @click="toggleSelectAll" :pressed="isAllSelected">Select all</b-button>
+					<button
+						type="button"
+						class="btn btn-light"
+						:class="{ active: isAllSelected }"
+						@click="toggleSelectAll"
+					>Select all</button>
 
-					<b-dropdown v-if="client.padData && !client.readonly" :disabled="activeSearchResults.length == 0 || isAdding">
-						<template #button-content>
+					<div v-if="client.padData && !client.readonly" class="dropdown">
+						<button type="button" class="btn btn-light dropdown-toggle" :disabled="activeSearchResults.length == 0 || isAdding">
 							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add selected item{{activeSearchResults.length == 1 ? '' : 's'}} to map
-						</template>
-						<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
-							<b-dropdown-item v-for="type in markerTypes" href="javascript:" @click="addToMap(activeMarkerSearchResults, type)">Marker items as {{type.name}}</b-dropdown-item>
-						</template>
-						<template v-if="activeLineSearchResults.length > 0 && lineTypes.length ">
-							<b-dropdown-item v-for="type in lineTypes" href="javascript:" @click="addToMap(activeLineSearchResults, type)">Line/polygon items as {{type.name}}</b-dropdown-item>
-						</template>
-						<template v-if="hasCustomTypes">
-							<b-dropdown-divider></b-dropdown-divider>
-							<b-dropdown-item href="javascript:" v-b-modal="customImportModalId">Custom type mapping…</b-dropdown-item>
-						</template>
-					</b-dropdown>
+						</button>
+						<ul class="dropdown-menu">
+							<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
+								<template v-for="type in markerTypes">
+									<li>
+										<a
+											href="javascript:"
+											class="dropdown-item"
+											@click="addToMap(activeMarkerSearchResults, type)"
+										>Marker items as {{type.name}}</a>
+									</li>
+								</template>
+							</template>
+							<template v-if="activeLineSearchResults.length > 0 && lineTypes.length ">
+								<template v-for="type in lineTypes">
+									<li>
+										<a
+											href="javascript:"
+											class="dropdown-item"
+											@click="addToMap(activeLineSearchResults, type)"
+										>Line/polygon items as {{type.name}}</a>
+									</li>
+								</template>
+							</template>
+							<template v-if="hasCustomTypes">
+								<li><hr class="dropdown-divider"></li>
+								<li>
+									<a
+										href="javascript:"
+										class="dropdown-item"
+										v-b-modal="customImportModalId"
+									>Custom type mapping…</a>
+								</li>
+							</template>
+						</ul>
+					</div>
 				</b-button-toolbar>
 			</b-carousel-slide>
 

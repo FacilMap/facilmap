@@ -77,21 +77,61 @@
 		</dl>
 
 		<b-button-toolbar>
-			<b-button v-b-tooltip.hover="'Zoom to POI'" @click="zoomToElement()" size="sm"><Icon icon="zoom-in" alt="Zoom to POI"></Icon></b-button>
+			<button
+				type="button"
+				class="btn btn-light btn-sm"
+				v-b-tooltip.hover="'Zoom to POI'"
+				@click="zoomToElement()"
+			>
+				<Icon icon="zoom-in" alt="Zoom to POI"></Icon>
+			</button>
 
-			<b-dropdown v-if="!client.readonly && types.length > 0" :disabled="isAdding" size="sm">
-				<template #button-content>
+			<div v-if="!client.readonly && types.length > 0" class="dropdown">
+				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
 					<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 					Add to map
-				</template>
-				<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
-			</b-dropdown>
+				</button>
+				<ul class="dropdown-menu">
+					<template v-for="type in types">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="$emit('add-to-map', type)"
+							>{{type.name}}</a>
+						</li>
+					</template>
+				</ul>
+			</div>
 
-			<b-dropdown text="Use as" size="sm" v-if="context.search">
-				<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
-				<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
-			</b-dropdown>
+			<div v-if="context.search" class="dropdown">
+				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">Use as</button>
+				<ul class="dropdown-menu">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsFrom()"
+						>Route start</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsVia()"
+						>Route via</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="useAsTo()"
+						>Route destination</a>
+					</li>
+				</ul>
+			</div>
 		</b-button-toolbar>
 	</div>
 </template>
