@@ -1,17 +1,17 @@
 <script setup lang="ts">
-	import WithRender from "./open-map.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents } from "../../utils/decorators";
-	import { extend, ValidationObserver, ValidationProvider } from "vee-validate";
-	import { getValidationState } from "../../utils/validation";
-	import { showErrorToast } from "../../utils/toasts";
-	import Icon from "../ui/icon/icon";
+	import { getValidationState } from "../utils/validation";
+	import Icon from "./ui/icon.vue";
 	import { FindPadsResult } from "facilmap-types";
-	import "./open-map.scss";
 	import decodeURIComponent from "decode-uri-component";
-	import { Context } from "../facilmap/facilmap";
-	import { MapComponents } from "../leaflet-map/leaflet-map";
+	import { Context, injectContextRequired } from "../utils/context";
+	import { injectClientContextRequired, injectClientRequired } from "./client-context.vue";
+	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import { computed, ref } from "vue";
+	import { hideToast, showErrorToast } from "./ui/toasts/toasts.vue";
+
+	const emit = defineEmits<{
+		(type: "hide"): void;
+	}>();
 
 	const ITEMS_PER_PAGE = 20;
 
@@ -45,96 +45,79 @@
 		params: ["getClient", "context"]
 	});
 
-	@WithRender
-	@Component({
-		components: { Icon, ValidationObserver, ValidationProvider }
-	})
-	export default class OpenMap extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const clientContext = injectClientContextRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const padId = ref("");
+	const searchQuery = ref("");
+	const submittedSearchQuery = ref<string>();
+	const isSearching = ref(false);
+	const results = ref<FindPadsResult[]>([]);
+	const pages = ref(0);
+	const activePage = ref(1);
 
-		@Prop({ type: String, required: true }) id!: string;
+	const url = computed(() => {
+		const parsed = parsePadId(padId.value, context);
+		return context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
+	});
 
-		padId = "";
+	function handleSubmit(): void {
+		const parsed = parsePadId(padId.value, context);
+		clientContext.openPad(parsed.padId);
+		this.$bvModal.hide(this.id);
 
-		searchQuery = "";
-		submittedSearchQuery: string | null = null;
-		isSearching = false;
-		results: FindPadsResult[] = [];
-		pages = 0;
-		activePage = 1;
-
-		get url(): string {
-			const parsed = parsePadId(this.padId, this.context);
-			return this.context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
-		}
-
-		getValidationState = getValidationState;
-
-		getClient(): Client {
-			return this.client;
-		}
-
-		handleSubmit(): void {
-			const parsed = parsePadId(this.padId, this.context);
-			this.context.activePadId = parsed.padId;
-			this.$bvModal.hide(this.id);
-
-			setTimeout(() => {
-				// TODO: This is called too early
-				this.mapComponents.hashHandler.applyHash(parsed.hash);
-			}, 0);
-		}
-
-		openResult(result: FindPadsResult): void {
-			this.context.activePadId = result.id;
-			this.$bvModal.hide(this.id);
-
-			setTimeout(() => {
-				// TODO: This is called too early
-				this.mapComponents.hashHandler.applyHash("#");
-			}, 0);
-		}
-
-		async search(query: string, page: number): Promise<void> {
-			if (!query) {
-				this.submittedSearchQuery = null;
-				this.results = [];
-				this.pages = 0;
-				this.activePage = 1;
-				return;
-			}
-
-			this.isSearching = true;
-			this.$bvToast.hide(`fm${this.context.id}-open-map-search-error`);
-
-			try {
-				const results = await this.client.findPads({
-					query,
-					start: (page - 1) * ITEMS_PER_PAGE,
-					limit: ITEMS_PER_PAGE
-				});
-				this.submittedSearchQuery = query;
-				this.activePage = page;
-				this.results = results.results;
-				this.pages = Math.ceil(results.totalLength / ITEMS_PER_PAGE);
-			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-open-map-search-error`, "Error searching for public maps", err);
-			} finally {
-				this.isSearching = false;
-			}
-		}
-
+		setTimeout(() => {
+			// TODO: This is called too early
+			mapContext.components.hashHandler.applyHash(parsed.hash);
+		}, 0);
 	}
 
+	function openResult(result: FindPadsResult): void {
+		clientContext.openPad(result.id);
+		this.$bvModal.hide(this.id);
+
+		setTimeout(() => {
+			// TODO: This is called too early
+			this.mapComponents.hashHandler.applyHash("#");
+		}, 0);
+	}
+
+	async function search(query: string, page: number): Promise<void> {
+		if (!query) {
+			submittedSearchQuery.value = undefined;
+			results.value = [];
+			pages.value = 0;
+			activePage.value = 1;
+			return;
+		}
+
+		isSearching.value = true;
+		hideToast(`fm${context.id}-open-map-search-error`);
+
+		try {
+			const newResults = await client.findPads({
+				query,
+				start: (page - 1) * ITEMS_PER_PAGE,
+				limit: ITEMS_PER_PAGE
+			});
+			submittedSearchQuery.value = query;
+			activePage.value = page;
+			results.value = newResults.results;
+			pages.value = Math.ceil(newResults.totalLength / ITEMS_PER_PAGE);
+		} catch (err) {
+			showErrorToast(`fm${context.id}-open-map-search-error`, "Error searching for public maps", err);
+		} finally {
+			isSearching.value = false;
+		}
+	}
 </script>
 
 <template>
 	<b-modal :id="id" title="Open collaborative map" ok-only ok-title="Close" ok-variant="secondary" size="lg" dialog-class="fm-open-map" scrollable>
 		<ValidationObserver v-slot="observer">
-			<b-form method="get" :action="url" @submit.prevent="observer.handleSubmit(handleSubmit)">
+			<form method="get" :action="url" @submit.prevent="observer.handleSubmit(handleSubmit)">
 				<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
 				<ValidationProvider name="Map ID/link" v-slot="v" :rules="{ openPadId: { getClient, context } }" :debounce="300">
 					<b-form-group :state="v | validationState">
@@ -148,13 +131,13 @@
 						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 					</b-form-group>
 				</ValidationProvider>
-			</b-form>
+			</form>
 		</ValidationObserver>
 
 		<hr/>
 
 		<h4>Search public maps</h4>
-		<b-form @submit.prevent="search(searchQuery, 1)" class="results">
+		<form action="javascript:" @submit.prevent="search(searchQuery, 1)" class="results">
 			<div class="input-group">
 				<input class="form-control" type="search" v-model="searchQuery" placeholder="Search term" />
 				<button type="submit" class="btn btn-secondary" :disabled="isSearching">
@@ -169,29 +152,29 @@
 
 			<template v-if="submittedSearchQuery && results.length > 0">
 				<div class="table-wrapper">
-					<b-table-simple hover striped>
-						<b-thead>
-							<b-tr>
-								<b-th>Name</b-th>
-								<b-th>Description</b-th>
-								<b-th></b-th>
-							</b-tr>
-						</b-thead>
-						<b-tbody>
-							<b-tr v-for="result in results">
-								<b-td>{{result.name}}</b-td>
-								<b-td>{{result.description}}</b-td>
-								<b-td class="td-buttons">
+					<table class="table table-hover table-striped">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Description</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="result in results">
+								<td>{{result.name}}</td>
+								<td>{{result.description}}</td>
+								<td class="td-buttons">
 									<button
 										type="button"
 										class="btn btn-light"
 										:href="context.baseUrl + encodeURIComponent(result.id)"
 										@click.exact.prevent="openResult(result)"
 									>Open</button>
-								</b-td>
-							</b-tr>
-						</b-tbody>
-					</b-table-simple>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 
 				<b-pagination
@@ -203,7 +186,7 @@
 					@input="search(submittedSearchQuery, $event)"
 				></b-pagination>
 			</template>
-		</b-form>
+		</form>
 	</b-modal>
 </template>
 

@@ -12,6 +12,7 @@
 	import { Context } from "../facilmap/facilmap";
 	import { OverpassElement } from "facilmap-leaflet";
 	import Coordinates from "../ui/coordinates/coordinates";
+	import vTooltip from "../../utils/tooltip";
 
 	@WithRender
 	@Component({
@@ -80,7 +81,7 @@
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
-				v-b-tooltip.hover="'Zoom to POI'"
+				v-tooltip.hover="'Zoom to POI'"
 				@click="zoomToElement()"
 			>
 				<Icon icon="zoom-in" alt="Zoom to POI"></Icon>

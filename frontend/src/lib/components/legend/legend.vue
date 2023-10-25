@@ -10,7 +10,7 @@
 	import { getLegendItems, LegendType } from "./legend-utils";
 	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 	import { Context } from "../facilmap/facilmap";
-	import { Portal } from "portal-vue";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -76,11 +76,11 @@
 		<b-card v-if="!context.isNarrow" class="fm-legend-absolute" :style="{ transform: `scale(${scale})` }" ref="absoluteContainer">
 			<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2"></LegendContent>
 		</b-card>
-		<portal v-else to="fm-search-box">
-			<b-tab title="Legend">
+		<template v-else>
+			<SearchBoxTab :id="`fm${context.id}-legend-tab" title="Legend">
 				<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2" no-popover></LegendContent>
-			</b-tab>
-		</portal>
+			</SearchBoxTab>
+		</template>
 	</div>
 </template>
 

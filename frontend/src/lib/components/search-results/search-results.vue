@@ -20,6 +20,8 @@
 	import StringMap from "../../utils/string-map";
 	import { getUniqueId } from "../../utils/utils";
 	import { Context } from "../facilmap/facilmap";
+	import vTooltip from "../../utils/tooltip";
+	import { vScrollIntoView } from "../../utils/vue";
 
 	@WithRender
 	@Component({
@@ -395,31 +397,41 @@
 				<div class="fm-search-box-collapse-point">
 					<slot name="before"></slot>
 
-					<b-list-group v-if="mapResults && mapResults.length > 0">
-						<b-list-group-item  v-for="result in mapResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
+					<ul v-if="mapResults && mapResults.length > 0" class="list-group">
+						<li
+							v-for="result in mapResults"
+							class="list-group-item"
+							:class="{ active: activeResults.includes(result) }"
+							v-scroll-into-view="activeResults.includes(result)"
+						>
 							<span>
 								<a href="javascript:" @click="handleClick(result, $event)">{{result.name}}</a>
 								{{" "}}
 								<span class="result-type">({{client.types[result.typeId].name}})</span>
 							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.hover.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
 
 					<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
 
-					<b-list-group v-if="searchResults && searchResults.length > 0">
-						<b-list-group-item v-for="result in searchResults" :active="activeResults.includes(result)" v-fm-scroll-into-view="activeResults.includes(result)">
+					<ul v-if="searchResults && searchResults.length > 0" class="list-group">
+						<li
+							v-for="result in searchResults"
+							class="list-group-item"
+							:class="{ active: activeResults.includes(result) }"
+							v-scroll-into-view="activeResults.includes(result)"
+						>
 							<span>
 								<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
 								{{" "}}
 								<span class="result-type" v-if="result.type">({{result.type}})</span>
 							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-b-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-b-tooltip.hover.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
 
 					<slot name="after"></slot>
 				</div>
@@ -501,28 +513,28 @@
 			@submit="customImport"
 			@show="initializeCustomImport"
 		>
-			<b-table-simple striped hover>
-				<b-thead>
-					<b-tr>
-						<b-th>Type</b-th>
-						<b-th>Map to…</b-th>
-					</b-tr>
-				</b-thead>
-				<b-tbody>
-					<b-tr v-for="(options, importTypeId) in customMappingOptions">
-						<b-td><label :for="`${customImportModalId}-map-type-${importTypeId}`">{{customTypes[importTypeId].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{customTypes[importTypeId].name}}” ({{activeFileResultsByType[importTypeId].length}})</label></b-td>
-						<b-td><b-form-select :id="`${customImportModalId}-map-type-${importTypeId}`" v-model="customMapping[importTypeId]" :options="options"></b-form-select></b-td>
-					</b-tr>
-					<b-tr v-if="untypedMarkers.length > 0">
-						<b-td><label :for="`${customImportModalId}-map-untyped-markers`">Untyped markers ({{untypedMarkers}})</label></b-td>
-						<b-td><b-form-select :id="`${customImportModalId}-map-untyped-markers`" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions"></b-form-select></b-td>
-					</b-tr>
-					<b-tr v-if="untypedLines.length > 0">
-						<b-td><label :for="`${customImportModalId}-map-untyped-lines`">Untyped lines/polygons ({{untypedLines}})</label></b-td>
-						<b-td><b-form-select :id="`${customImportModalId}-map-untyped-lines`" v-model="untypedLineMapping" :options="untypedLineMappingOptions"></b-form-select></b-td>
-					</b-tr>
-				</b-tbody>
-			</b-table-simple>
+			<table class="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Map to…</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(options, importTypeId) in customMappingOptions">
+						<td><label :for="`${customImportModalId}-map-type-${importTypeId}`">{{customTypes[importTypeId].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{customTypes[importTypeId].name}}” ({{activeFileResultsByType[importTypeId].length}})</label></td>
+						<td><b-form-select :id="`${customImportModalId}-map-type-${importTypeId}`" v-model="customMapping[importTypeId]" :options="options"></b-form-select></td>
+					</tr>
+					<tr v-if="untypedMarkers.length > 0">
+						<td><label :for="`${customImportModalId}-map-untyped-markers`">Untyped markers ({{untypedMarkers}})</label></td>
+						<td><b-form-select :id="`${customImportModalId}-map-untyped-markers`" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions"></b-form-select></td>
+					</tr>
+					<tr v-if="untypedLines.length > 0">
+						<td><label :for="`${customImportModalId}-map-untyped-lines`">Untyped lines/polygons ({{untypedLines}})</label></td>
+						<td><b-form-select :id="`${customImportModalId}-map-untyped-lines`" v-model="untypedLineMapping" :options="untypedLineMappingOptions"></b-form-select></td>
+					</tr>
+				</tbody>
+			</table>
 		</FormModal>
 	</div>
 </template>

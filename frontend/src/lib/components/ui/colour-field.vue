@@ -65,14 +65,12 @@
 <template>
 	<Picker custom-class="fm-colour-field" @keydown="handleKeyDown">
 		<template #preview>
-			<b-input-group-text :style="previewStyle">
-				<span style="width: 1.4em"></span>
-			</b-input-group-text>
+			<span style="width: 1.4em" :style="previewStyle"></span>
 		</template>
 
 		<template #default="{ isModal }">
 			<div class="fm-colour-field-content">
-				<b-input v-show="isModal" :value="value" @update="emit('input', $event)" :style="previewStyle"></b-input>
+				<input class="form-control" v-show="isModal" :value="value" @update="emit('input', $event)" :style="previewStyle" />
 				<Saturation :value="val" @change="handleChange"></Saturation>
 				<Hue :value="val" @change="handleChange"></Hue>
 				<ul ref="gridRef">

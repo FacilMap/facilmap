@@ -4,12 +4,13 @@
 	// import ManageBookmarks from "../manage-bookmarks/manage-bookmarks.vue";
 	// import OpenMap from "../open-map/open-map.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
+	import { injectClientContextRequired, injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
+	const clientContext = injectClientContextRequired();
 	const mapContext = injectMapContextRequired();
 
 	const emit = defineEmits<{
@@ -51,7 +52,7 @@
 					class="dropdown-item"
 					:class="{ active: bookmark.id == client.padId }"
 					:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
-					@click.exact.prevent="context.activePadId = bookmark.id; emit('hide-sidebar')"
+					@click.exact.prevent="clientContext.openPad(bookmark.id); emit('hide-sidebar')"
 				>{{bookmark.customName || bookmark.name}}</a>
 			</li>
 
@@ -99,7 +100,7 @@
 				<a
 					class="dropdown-item"
 					:href="`${context.baseUrl}#${hash}`"
-					@click.exact.prevent="context.activePadId = undefined"
+					@click.exact.prevent="clientContext.openPad(undefined)"
 				>Close {{client.padData.name}}</a>
 			</li>
 		</ul>

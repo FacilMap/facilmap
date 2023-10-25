@@ -48,35 +48,35 @@
 <template>
 	<b-modal :id="id" title="Manage Bookmarks" ok-only ok-title="Close" size="lg" dialog-class="fm-manage-bookmarks">
 		<p>Bookmarks are a quick way to remember and access collaborative maps. They are saved in your browser, other users will not be able to see them.</p>
-		<b-table-simple striped hover>
-			<b-thead>
-				<b-tr>
-					<b-th>Map ID</b-th>
-					<b-th>Name</b-th>
-					<b-th></b-th>
-				</b-tr>
-			</b-thead>
+		<table class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th>Map ID</th>
+					<th>Name</th>
+					<th></th>
+				</tr>
+			</thead>
 			<draggable v-model="bookmarks" tag="tbody" handle=".fm-drag-handle">
-				<b-tr v-for="bookmark in bookmarks">
-					<b-td :class="{ 'font-weight-bold': bookmark.id == client.padId }">
+				<tr v-for="bookmark in bookmarks">
+					<td :class="{ 'font-weight-bold': bookmark.id == client.padId }">
 						{{bookmark.id}}
-					</b-td>
-					<b-td>
-						<b-input v-model="bookmark.customName" :placeholder="bookmark.name"></b-input>
-					</b-td>
-					<b-td class="td-buttons text-right">
+					</td>
+					<td>
+						<input class="form-control" v-model="bookmark.customName" :placeholder="bookmark.name" />
+					</td>
+					<td class="td-buttons text-right">
 						<button type="button" class="btn btn-light" @click="deleteBookmark(bookmark)">Delete</button>
 						<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
-					</b-td>
-				</b-tr>
+					</td>
+				</tr>
 			</draggable>
-			<b-tfoot v-if="client.padData && !isBookmarked">
-				<b-tr>
-					<b-td colspan="3">
+			<tfoot v-if="client.padData && !isBookmarked">
+				<tr>
+					<td colspan="3">
 						<button type="button" class="btn btn-light" @click="addBookmark()">Bookmark current map</button>
-					</b-td>
-				</b-tr>
-			</b-tfoot>
-		</b-table-simple>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
 	</b-modal>
 </template>

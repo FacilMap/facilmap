@@ -160,7 +160,7 @@
 		<template v-if="type">
 			<ValidationProvider name="Name" v-slot="v" rules="required">
 				<b-form-group label="Name" :label-for="`${id}-name-input`" label-cols-sm="3" :state="v | validationState">
-					<b-input :id="`${id}-name-input`" v-model="type.name" :state="v | validationState"></b-input>
+					<input class="form-control" :id="`${id}-name-input`" v-model="type.name" :state="v | validationState" />
 					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
 				</b-form-group>
 			</ValidationProvider>
@@ -258,57 +258,59 @@
 			</b-form-group>
 
 			<h2>Fields</h2>
-			<b-table-simple striped hover responsive>
-				<b-thead>
-					<b-tr>
-						<b-th style="width: 35%; min-width: 150px">Name</b-th>
-						<b-th style="width: 35%; min-width: 120px">Type</b-th>
-						<b-th style="width: 35%; min-width: 150px">Default value</b-th>
-						<b-th>Delete</b-th>
-						<b-th></b-th>
-					</b-tr>
-				</b-thead>
-				<draggable v-model="type.fields" tag="tbody" handle=".fm-drag-handle">
-					<b-tr v-for="field in type.fields">
-						<b-td>
-							<ValidationProvider :name="`Field name (${field.name})`" v-slot="v" rules="required|uniqueFieldName:@type">
-								<b-form-group :state="v | validationState">
-									<b-input v-model="field.name" :state="v | validationState" />
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
-							</ValidationProvider>
-						</b-td>
-						<b-td>
-							<div class="input-group">
-								<b-form-select
-									v-model="field.type"
-									:options="[{ value: 'input', text: 'Text field' }, { value: 'textarea', text: 'Text area' }, { value: 'dropdown', text: 'Dropdown' }, { value: 'checkbox', text: 'Checkbox' }]"
-								></b-form-select>
-								<template v-if="['dropdown', 'checkbox'].includes(field.type)">
-									<button type="button" class="btn btn-light" @click="editDropdown(field)">Edit</button>
-								</template>
-							</div>
-						</b-td>
-						<b-td class="text-center">
-							<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
-						</b-td>
-						<b-td class="td-buttons">
-							<button type="button" class="btn btn-light" @click="deleteField(field)">Delete</button>
-						</b-td>
-						<b-td class="td-buttons">
-							<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
-						</b-td>
-					</b-tr>
-				</draggable>
-				<b-tfoot>
-					<b-tr>
-						<b-td colspan="4">
-							<button type="button" class="btn btn-light" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
-						</b-td>
-						<b-td class="move"></b-td>
-					</b-tr>
-				</b-tfoot>
-			</b-table-simple>
+			<div class="table-responseive">
+				<table class="table table-hover table-striped">
+					<thead>
+						<tr>
+							<th style="width: 35%; min-width: 150px">Name</th>
+							<th style="width: 35%; min-width: 120px">Type</th>
+							<th style="width: 35%; min-width: 150px">Default value</th>
+							<th>Delete</th>
+							<th></th>
+						</tr>
+					</thead>
+					<draggable v-model="type.fields" tag="tbody" handle=".fm-drag-handle">
+						<tr v-for="field in type.fields">
+							<td>
+								<ValidationProvider :name="`Field name (${field.name})`" v-slot="v" rules="required|uniqueFieldName:@type">
+									<b-form-group :state="v | validationState">
+										<input class="form-control" v-model="field.name" :state="v | validationState" />
+										<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
+									</b-form-group>
+								</ValidationProvider>
+							</td>
+							<td>
+								<div class="input-group">
+									<b-form-select
+										v-model="field.type"
+										:options="[{ value: 'input', text: 'Text field' }, { value: 'textarea', text: 'Text area' }, { value: 'dropdown', text: 'Dropdown' }, { value: 'checkbox', text: 'Checkbox' }]"
+									></b-form-select>
+									<template v-if="['dropdown', 'checkbox'].includes(field.type)">
+										<button type="button" class="btn btn-light" @click="editDropdown(field)">Edit</button>
+									</template>
+								</div>
+							</td>
+							<td class="text-center">
+								<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
+							</td>
+							<td class="td-buttons">
+								<button type="button" class="btn btn-light" @click="deleteField(field)">Delete</button>
+							</td>
+							<td class="td-buttons">
+								<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+							</td>
+						</tr>
+					</draggable>
+					<tfoot>
+						<tr>
+							<td colspan="4">
+								<button type="button" class="btn btn-light" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
+							</td>
+							<td class="move"></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
 
 			<ValidationProvider vid="type" ref="typeValidationProvider" v-slot="v" rules="" immediate>
 				<b-form-group :state="v | validationState">

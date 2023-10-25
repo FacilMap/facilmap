@@ -1,10 +1,7 @@
 import { InjectionKey, inject, provide } from "vue";
 
-export interface Context {
+export interface WritableContext {
 	id: number;
-	activePadId: string | undefined;
-	activePadName: string | undefined;
-	serverUrl: string;
 	baseUrl: string;
 	toolbox: boolean;
 	search: boolean;
@@ -15,6 +12,8 @@ export interface Context {
 	linkLogo: boolean;
 	updateHash: boolean;
 }
+
+export type Context = Readonly<WritableContext>;
 
 const contextInject = Symbol("contextInject") as InjectionKey<Context>;
 

@@ -15,6 +15,7 @@
 	import { showErrorToast } from "../../utils/toasts";
 	import StringMap from "../../utils/string-map";
 	import { mapTagsToType } from "../search-results/utils";
+	import vTooltip from "../../utils/tooltip";
 
 	@WithRender
 	@Component({
@@ -99,22 +100,22 @@
 		<b-carousel v-else :interval="0" v-model="activeTab">
 			<b-carousel-slide>
 				<div class="fm-search-box-collapse-point">
-					<b-list-group>
-						<b-list-group-item v-for="element in elements" active>
+					<ul class="list-group">
+						<li v-for="element in elements" class="list-group-item active">
 							<span>
 								<a href="javascript:" @click="$emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
 							</span>
-							<a href="javascript:" @click="zoomToElement(element)" v-b-tooltip.hover.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="openElement(element)" v-b-tooltip.hover.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
 				</div>
 
 				<b-button-toolbar v-if="client.padData && !client.readonly">
 					<button
 						type="button"
 						class="btn btn-light btn-sm"
-						v-b-tooltip.hover="'Zoom to selection'"
+						v-tooltip="'Zoom to selection'"
 						@click="zoom()"
 					>
 						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>

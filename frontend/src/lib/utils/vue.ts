@@ -1,26 +1,16 @@
-import { ComponentPublicInstance, DeepReadonly, Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
-import { Field, RouteMode } from "facilmap-types";
-import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
+import { ComponentPublicInstance, DeepReadonly, Directive, Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
 
-// Vue.directive("fm-scroll-into-view", {
-// 	inserted(el, binding) {
-// 		if (binding.value)
-// 			el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-// 	},
+export const vScrollIntoView: Directive<Element, string | undefined> = {
+	mounted(el, binding) {
+		if (binding.value)
+			el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+	},
 
-// 	update(el, binding) {
-// 		if (binding.value && !binding.oldValue)
-// 			el.scrollIntoView({ behavior: "smooth", block: "nearest" })
-// 	}
-// });
-
-// Vue.filter('round', (number: number, digits: number) => round(number, digits));
-
-// Vue.filter('fmFieldContent', (value: string, field: Field) => formatField(field, value));
-
-// Vue.filter('fmFormatTime', (value: number) => formatTime(value));
-
-// Vue.filter('fmRouteMode', (value: RouteMode) => formatRouteMode(value));
+	updated(el, binding) {
+		if (binding.value && !binding.oldValue)
+			el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+	}
+};
 
 /**
  * Returns a computed property that is recomputed every time the window is resized.

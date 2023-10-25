@@ -6,6 +6,7 @@
 	import "./overpass-form-tab.scss";
 	import { Context } from "../facilmap/facilmap";
 	import OverpassForm from "./overpass-form";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -19,9 +20,13 @@
 </script>
 
 <template>
-	<b-tab title="POIs" :id="`fm${context.id}-overpass-form-tab`" class="fm-overpass-form-tab">
+	<SearchBoxTab
+		title="POIs"
+		:id="`fm${context.id}-overpass-form-tab`"
+		class="fm-overpass-form-tab"
+	>
 		<OverpassForm></OverpassForm>
-	</b-tab>
+	</SearchBoxTab>
 </template>
 
 <style lang="scss">

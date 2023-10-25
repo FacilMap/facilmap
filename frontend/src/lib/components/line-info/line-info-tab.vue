@@ -9,6 +9,7 @@
 	import Icon from "../ui/icon/icon";
 	import StringMap from "../../utils/string-map";
 	import { Context } from "../facilmap/facilmap";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -66,14 +67,14 @@
 </script>
 
 <template>
-	<b-tab v-if="lineId" :id="`fm${context.id}-line-info-tab`">
-		<template #title>
-			<span class="closeable-tab-title">
-				<span>{{title}}</span>
-				<object><a href="javascript:" @click="close()"><Icon icon="remove" alt="Close"></Icon></a></object>
-			</span>
-		</template>
-
-		<LineInfo :lineId="lineId"></LineInfo>
-	</b-tab>
+	<template v-if="lineId">
+		<SearchBoxTab
+			:id="`fm${context.id}-line-info-tab`"
+			:title="title"
+			isCloseable
+			@close="close()"
+		>
+			<LineInfo :lineId="lineId"></LineInfo>
+		</SearchBoxTab>
+	</template>
 </template>

@@ -115,28 +115,36 @@
 				>{{preset.label}}</b-form-checkbox>
 			</div>
 
-			<b-tabs v-else pills lazy v-model="activeTab">
-				<b-tab v-for="(category, idx) in categories" :title="category.label">
-					<template #title>
-						{{category.label}}
-						<b-badge v-if="category.checked > 0" :variant="activeTab == idx ? 'secondary' : 'primary'">{{category.checked}}</b-badge>
-					</template>
-					<template v-for="presets in category.presets">
-						<hr />
-						<div class="checkbox-grid">
-							<b-form-checkbox
-								v-for="preset in presets"
-								:checked="preset.isChecked"
-								@input="togglePreset(preset.key, $event)"
-							>{{preset.label}}</b-form-checkbox>
-						</div>
-					</template>
-				</b-tab>
-			</b-tabs>
+			<ul class="nav nav-pills">
+				<template v-for="(category, idx) in categories">
+					<li class="nav-item">
+						<a
+							href="javascript:"
+							class="nav-link"
+							:class="{ active: activeTab === idx }"
+							@click="activeTab = idx"
+						>
+							{{category.label}}
+							<b-badge v-if="category.checked > 0" :variant="activeTab == idx ? 'secondary' : 'primary'">{{category.checked}}</b-badge>
+						</a>
+					</li>
+				</template>
+			</ul>
+
+			<template v-for="presets in categories[activeTab].presets">
+				<hr />
+				<div class="checkbox-grid">
+					<b-form-checkbox
+						v-for="preset in presets"
+						:checked="preset.isChecked"
+						@input="togglePreset(preset.key, $event)"
+					>{{preset.label}}</b-form-checkbox>
+				</div>
+			</template>
 		</template>
 		<template v-else>
 			<b-form-group :state="customQueryValidationState">
-				<b-textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="text-monospace" @input="handleCustomQueryInput"></b-textarea>
+				<textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="form-control text-monospace" @input="handleCustomQueryInput"></textarea>
 				<template #invalid-feedback><pre>{{customQueryValidationError}}</pre></template>
 			</b-form-group>
 

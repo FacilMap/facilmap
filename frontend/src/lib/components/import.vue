@@ -2,18 +2,17 @@
 	import WithRender from "./import.vue";
 	import Vue from "vue";
 	import { Component, Ref } from "vue-property-decorator";
-	import { InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import { showErrorToast } from "../../utils/toasts";
-	import { FileResultObject, parseFiles } from "../../utils/files";
+	import { InjectContext, InjectMapComponents, InjectMapContext } from "../utils/decorators";
+	import { MapComponents, MapContext } from "./leaflet-map.vue";
+	import { showErrorToast } from "../utils/toasts";
+	import { FileResultObject, parseFiles } from "../utils/files";
 	import pluralize from "pluralize";
-	import Icon from "../ui/icon/icon";
+	import Icon from "./ui/icon.vue";
 	import "./import.scss";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import { Util } from "leaflet";
-	import FileResults from "../file-results/file-results";
-	import { Portal } from "portal-vue";
-	import { Context } from "../facilmap/facilmap";
+	import FileResults from "./file-results.vue";
+	import SearchBoxTab from "./search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -140,21 +139,21 @@
 <template>
 	<div>
 		<input type="file" multiple="multiple" class="d-none" ref="fileInput" @change="importFiles(fileInput.files)">
-		<portal to="fm-search-box">
-			<b-tab v-for="(file, idx) in files" :id="`fm${context.id}-import-tab-${idx}`" class="fm-import-tab">
-				<template #title>
-					<span class="closeable-tab-title">
-						<span>{{file.title}}</span>
-						<object><a href="javascript:" @click="close(idx)"><Icon icon="remove" alt="Close"></Icon></a></object>
-					</span>
-				</template>
+		<template v-for="(file, idx) in files">
+			<SearchBoxTab
+				:id="`fm${context.id}-import-tab-${idx}`"
+				class="fm-import-tab"
+				isCloseable
+				:title="file.title"
+				@close="close(idx)"
+			>
 				<FileResults
 					:file="file"
 					:layer-id="layerIds[idx]"
 					auto-zoom
 				></FileResults>
-			</b-tab>
-		</portal>
+			</SearchBoxTab>
+		</template>
 	</div>
 </template>
 

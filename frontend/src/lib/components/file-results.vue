@@ -12,6 +12,7 @@
 	import "./file-results.scss";
 	import { typeExists, viewExists } from "../../utils/search";
 	import { Context } from "../facilmap/facilmap";
+	import vTooltip from "../utils/tooltip";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -98,17 +99,27 @@
 			<template #before>
 				<template v-if="hasViews">
 					<h3>Views</h3>
-					<b-list-group>
-						<b-list-group-item v-for="view in file.views">
+					<ul class="list-group">
+						<li v-for="view in file.views" class="list-group-item">
 							<span>
 								<a href="javascript:" @click="showView(view)">{{view.name}}</a>
 								{{" "}}
 								<span class="result-type">(View)</span>
 							</span>
-							<div v-if="isAddingView.includes(view)" class="spinner-border spinner-border-sm"></div>
-							<a href="javascript:" v-else-if="client.padData && client.writable == 2 && !viewExists(view)" @click="addView(view)" v-b-tooltip.hover.right="'Add this view to the map'"><Icon icon="plus" alt="Add"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<template v-if="isAddingView.includes(view)">
+								<div class="spinner-border spinner-border-sm"></div>
+							</template>
+							<template v-else-if="client.padData && client.writable == 2 && !viewExists(view)">
+								<a
+									href="javascript:"
+									@click="addView(view)"
+									v-tooltip.right="'Add this view to the map'"
+								>
+									<Icon icon="plus" alt="Add"></Icon>
+								</a>
+							</template>
+						</li>
+					</ul>
 				</template>
 				<h3 v-if="hasViews || hasTypes">Markers/Lines</h3>
 			</template>
@@ -116,17 +127,27 @@
 			<template #after>
 				<template v-if="hasTypes">
 					<h3>Types</h3>
-					<b-list-group>
-						<b-list-group-item v-for="type in file.types">
+					<ul class="list-group">
+						<li v-for="type in file.types" class="list-group-item">
 							<span>
 								{{type.name}}
 								{{" "}}
 								<span class="result-type">(Type)</span>
 							</span>
-							<div v-if="isAddingType.includes(type)" class="spinner-border spinner-border-sm"></div>
-							<a href="javascript:" v-else-if="client.padData && client.writable == 2 && !typeExists(type)" @click="addType(type)" v-b-tooltip.hover.right="'Add this type to the map'"><Icon icon="plus" alt="Add"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<template v-if="isAddingType.includes(type)">
+								<div class="spinner-border spinner-border-sm"></div>
+							</template>
+							<template v-else-if="client.padData && client.writable == 2 && !typeExists(type)">
+								<a
+									href="javascript:"
+									@click="addType(type)"
+									v-tooltip.right="'Add this type to the map'"
+								>
+									<Icon icon="plus" alt="Add"></Icon>
+								</a>
+							</template>
+						</li>
+					</ul>
 				</template>
 			</template>
 

@@ -112,22 +112,22 @@
 		<div v-if="isLoading" class="d-flex justify-content-center">
 			<div class="spinner-border"></div>
 		</div>
-		<b-table-simple v-else striped hover>
-			<b-thead>
-				<b-tr>
-					<b-th style="min-width: 12rem">Date</b-th>
-					<b-th style="min-width: 15rem">Action</b-th>
-					<b-th></b-th>
-					<b-th>Restore</b-th>
-				</b-tr>
-			</b-thead>
-			<b-tbody>
-				<b-tr v-for="entry in history">
-					<b-td class="align-middle">{{entry.time}}</b-td>
-					<b-td class="align-middle">
+		<table v-else class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th style="min-width: 12rem">Date</th>
+					<th style="min-width: 15rem">Action</th>
+					<th></th>
+					<th>Restore</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="entry in history">
+					<td class="align-middle">{{entry.time}}</td>
+					<td class="align-middle">
 						{{entry.labels.description}}
-					</b-td>
-					<b-td class="td-buttons">
+					</td>
+					<td class="td-buttons">
 						<button
 							v-if="entry.labels.diff"
 							type="button"
@@ -137,8 +137,8 @@
 						>
 							<Icon icon="info-sign"></Icon>
 						</button>
-					</b-td>
-					<b-td class="td-buttons">
+					</td>
+					<td class="td-buttons">
 						<div class="d-grid">
 							<button
 								v-if="entry.labels.button"
@@ -151,28 +151,28 @@
 								{{entry.labels.button}}
 							</button>
 						</div>
-					</b-td>
-				</b-tr>
-			</b-tbody>
-		</b-table-simple>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 
 		<b-popover v-if="popover" :target="popover.target" show placement="bottom" custom-class="fm-history-popover">
-			<b-table-simple hover small>
-				<b-thead>
-					<b-tr>
-						<b-th>Field</b-th>
-						<b-th>Before</b-th>
-						<b-th>After</b-th>
-					</b-tr>
-				</b-thead>
-				<b-tbody>
-					<b-tr v-for="diffItem in popover.entry.labels.diff">
-						<b-td><code>{{diffItem.index}}</code></b-td>
-						<b-td>{{diffItem.before}}</b-td>
-						<b-td>{{diffItem.after}}</b-td>
-					</b-tr>
-				</b-tbody>
-			</b-table-simple>
+			<table class="table table-hover table-sm">
+				<thead>
+					<tr>
+						<th>Field</th>
+						<th>Before</th>
+						<th>After</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="diffItem in popover.entry.labels.diff">
+						<td><code>{{diffItem.index}}</code></td>
+						<td>{{diffItem.before}}</td>
+						<td>{{diffItem.after}}</td>
+					</tr>
+				</tbody>
+			</table>
 		</b-popover>
 	</b-modal>
 </template>

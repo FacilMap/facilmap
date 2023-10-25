@@ -17,6 +17,8 @@
 	import StringMap from "../../utils/string-map";
 	import { Context } from "../facilmap/facilmap";
 	import saveAs from "file-saver";
+	import vTooltip from "../../utils/tooltip";
+import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
 
 	@WithRender
 	@Component({
@@ -163,7 +165,7 @@
 					class="btn btn-light"
 					:class="{ active: showElevationPlot }"
 					@click="showElevationPlot = !showElevationPlot"
-					v-b-tooltip.hover.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
+					v-tooltip.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
 				>
 					<Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon>
 				</button>
@@ -174,7 +176,7 @@
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
 			<dl>
 				<dt class="distance">Distance</dt>
-				<dd class="distance">{{line.distance | round(2)}} km <span v-if="line.time != null">({{line.time | fmFormatTime}} h {{line.mode | fmRouteMode}})</span></dd>
+				<dd class="distance">{{round(line.distance, 2)}} km <span v-if="line.time != null">({{formatTime(line.time)}} h {{formatRouteMode(line.mode)}})</span></dd>
 
 				<template v-if="line.ascent != null">
 					<dt class="elevation">Climb/drop</dt>
@@ -183,7 +185,7 @@
 
 				<template v-if="line.ascent == null || !showElevationPlot" v-for="field in client.types[line.typeId].fields">
 					<dt>{{field.name}}</dt>
-					<dd v-html="$options.filters.fmFieldContent(line.data.get(field.name), field)"></dd>
+					<dd v-html="formatField(field, line.data.get(field.name))"></dd>
 				</template>
 			</dl>
 
@@ -194,7 +196,7 @@
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
-				v-b-tooltip.hover="'Zoom to line'"
+				v-tooltip="'Zoom to line'"
 				@click="zoomToLine()"
 			>
 				<Icon icon="zoom-in" alt="Zoom to line"></Icon>
@@ -212,7 +214,7 @@
 							href="javascript:"
 							class="dropdown-item"
 							@click="exportRoute('gpx-trk')"
-							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+							v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
 						>Export as GPX track</a>
 					</li>
 					<li>
@@ -220,7 +222,7 @@
 							href="javascript:"
 							class="dropdown-item"
 							@click="exportRoute('gpx-rte')"
-							v-b-tooltip.hover.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+							v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
 						>Export as GPX route</a>
 					</li>
 				</ul>

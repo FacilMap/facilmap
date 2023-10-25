@@ -14,6 +14,7 @@
 	import MarkerInfo from "../marker-info/marker-info";
 	import LineInfo from "../line-info/line-info";
 	import { Context } from "../facilmap/facilmap";
+	import vTooltip from "../../utils/tooltip";
 
 	@WithRender
 	@Component({
@@ -109,24 +110,24 @@
 		<b-carousel :interval="0" v-model="activeTab">
 			<b-carousel-slide>
 				<div class="fm-search-box-collapse-point">
-					<b-list-group>
-						<b-list-group-item v-for="object in objects" active>
+					<ul class="list-group">
+						<li v-for="object in objects" class="list-group-item active">
 							<span>
 								<a href="javascript:" @click="$emit('click-object', object, $event)">{{object.name}}</a>
 								{{" "}}
 								<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>
 							</span>
-							<a href="javascript:" @click="zoomToObject(object)" v-b-tooltip.hover.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="openObject(object)" v-b-tooltip.hover.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</b-list-group-item>
-					</b-list-group>
+							<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="openObject(object)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
 				</div>
 
 				<b-button-toolbar>
 					<button
 						type="button"
 						class="btn btn-light btn-sm"
-						v-b-tooltip.hover="'Zoom to selection'"
+						v-tooltip="'Zoom to selection'"
 						@click="zoom()"
 					>
 						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>

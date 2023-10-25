@@ -111,9 +111,9 @@
 		mapContext.components.map.invalidateSize({ pan: false });
 	}
 
-	const TabContent = defineComponent({
-		setup() {
-			return searchBoxContext.activeTab?.content;
+	const TabContent = defineComponent<{ isActive: boolean }>({
+		setup(props) {
+			return () => searchBoxContext.activeTab?.content?.(props);
 		}
 	});
 
@@ -155,9 +155,11 @@
 			</ul>
 		</div>
 
-		<div class="card-body" :class="searchBoxContext.activeTab?.class">
-			<TabContent></TabContent>
-		</div>
+		<template v-for="[tabId, tab] in searchBoxContext.tabs">
+			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.value.class">
+				<TabContent :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
+			</div>
+		</template>
 
 		<a
 			v-show="!context.isNarrow"

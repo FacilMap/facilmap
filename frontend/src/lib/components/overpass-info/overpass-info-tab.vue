@@ -1,20 +1,4 @@
 <script setup lang="ts">
-</script>
-
-<template>
-	<b-tab v-if="elements.length > 0" :id="`fm${context.id}-overpass-info-tab`">
-		<template #title>
-			<span class="closeable-tab-title">
-				<span>{{elements.length == 1 ? (elements[0].tags.name || "Unnamed POI") : `${elements.length} POIs`}}</span>
-				<object><a href="javascript:" @click="close()"><Icon icon="remove" alt="Close"></Icon></a></object>
-			</span>
-		</template>
-
-		<OverpassMultipleInfo :elements="elements" @click-element="handleElementClick"></OverpassMultipleInfo>
-	</b-tab>
-</template>
-
-<style lang="scss">
 	import WithRender from "./overpass-info-tab.vue";
 	import Vue from "vue";
 	import { Component } from "vue-property-decorator";
@@ -24,6 +8,7 @@
 	import { Context } from "../facilmap/facilmap";
 	import { OverpassElement } from "facilmap-leaflet";
 	import OverpassMultipleInfo from "./overpass-multiple-info";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -65,4 +50,17 @@
 		}
 
 	}
-</style>
+</script>
+
+<template>
+	<template v-if="elements.length > 0">
+		<SearchBoxTab
+			:id="`fm${context.id}-overpass-info-tab`"
+			:title="elements.length == 1 ? (elements[0].tags.name || 'Unnamed POI') : `${elements.length} POIs`"
+			isCloseable
+			@close="close()"
+		>
+			<OverpassMultipleInfo :elements="elements" @click-element="handleElementClick"></OverpassMultipleInfo>
+		</SearchBoxTab>
+	</b-tab>
+</template>

@@ -13,7 +13,7 @@
 
 	export interface SearchBoxTab {
 		title: string;
-		content: Slot | undefined;
+		content: Slot<{ isActive: boolean }> | undefined;
 		onClose?: () => void;
 		hashQuery?: HashQuery;
 		class?: string;

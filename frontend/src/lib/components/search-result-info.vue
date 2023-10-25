@@ -13,6 +13,7 @@
 	import { flyTo, getZoomDestinationForSearchResult } from "../../utils/zoom";
 	import { Context } from "../facilmap/facilmap";
 	import Coordinates from "../ui/coordinates/coordinates";
+	import vTooltip from "../utils/tooltip";
 
 	@WithRender
 	@Component({
@@ -82,7 +83,7 @@
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
-				v-b-tooltip.hover="'Zoom to search result'"
+				v-tooltip="'Zoom to search result'"
 				@click="zoomToResult()"
 			>
 				<Icon icon="zoom-in" alt="Zoom to search result"></Icon>

@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { reactive, watch, watchEffect } from "vue";
-	import Toolbox from "../toolbox/toolbox.vue";
-	import SearchBox from "../search-box/search-box.vue";
+	import { reactive, readonly, ref, watch, watchEffect } from "vue";
+	import Toolbox from "./toolbox/toolbox.vue";
+	import SearchBox from "./search-box/search-box.vue";
 	// import Legend from "../legend/legend.vue";
-	import LeafletMap from "../leaflet-map/leaflet-map.vue";
+	import LeafletMap from "./leaflet-map/leaflet-map.vue";
 	// import Import from "../import/import.vue";
 	// import ClickMarker from "../click-marker/click-marker.vue";
-	import Client from "../client.vue";
-	import { Context, provideContext } from "../../utils/context";
-	import { useMaxBreakpoint } from "../../utils/bootstrap";
-	import SearchBoxContext from "../search-box/search-box-context.vue";
+	import ClientContext from "./client-context.vue";
+	import { Context, WritableContext, provideContext } from "../utils/context";
+	import { useMaxBreakpoint } from "../utils/bootstrap";
+	import SearchBoxContext from "./search-box/search-box-context.vue";
 
 	let idCounter = 1;
 </script>
@@ -18,7 +18,7 @@
 	const props = withDefaults(defineProps<{
 		baseUrl: string;
 		serverUrl: string;
-		padId?: string;
+		padId: string | undefined;
 		toolbox?: boolean;
 		search?: boolean;
 		autofocus?: boolean;
@@ -41,12 +41,9 @@
 		(type: "update:padName", padName: string | undefined): void;
 	}>();
 
-	const context = reactive<Context>({
+	const context = reactive<WritableContext>({
 		id: idCounter++,
 		baseUrl: "",
-		serverUrl: "",
-		activePadId: undefined,
-		activePadName: undefined,
 		toolbox: false,
 		search: false,
 		autofocus: false,
@@ -57,18 +54,10 @@
 		updateHash: false
 	});
 
-	provideContext(context);
+	provideContext(readonly(context));
 
 	watchEffect(() => {
 		context.baseUrl = props.baseUrl;
-	});
-
-	watchEffect(() => {
-		context.serverUrl = props.serverUrl;
-	});
-
-	watchEffect(() => {
-		context.activePadId = props.padId;
 	});
 
 	watchEffect(() => {
@@ -104,18 +93,23 @@
 		context.isNarrow = isNarrow.value;
 	});
 
-	watch(() => context.activePadId, () => {
-		emit("update:padId", context.activePadId);
+	const clientRef = ref<InstanceType<typeof ClientContext>>();
+	watch(() => clientRef.value?.client?.padId, () => {
+		if (clientRef.value?.client && clientRef.value.client.padId !== props.padId) {
+			emit("update:padId", clientRef.value.client.padId);
+		}
 	});
 
-	watch(() => context.activePadName, () => {
-		emit("update:padName", context.activePadName);
+	watch(() => clientRef.value?.client?.padData?.name, () => {
+		if (clientRef.value?.client) {
+			emit("update:padName", clientRef.value.client.padData?.name);
+		}
 	});
 </script>
 
 <template>
 	<div class="fm-facilmap">
-		<Client>
+		<ClientContext :padId="padId" :serverUrl="serverUrl" ref="clientRef">
 			<LeafletMap>
 				<SearchBoxContext>
 					<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
@@ -143,7 +137,7 @@
 					<OverpassInfoTab></OverpassInfoTab>-->
 				</SearchBoxContext>
 			</LeafletMap>
-		</Client>
+		</ClientContext>
 	</div>
 </template>
 

@@ -17,7 +17,9 @@
 
 	const searchBoxContext = injectSearchBoxContextRequired();
 
-	const slots = useSlots();
+	const slots = defineSlots<{
+		default(props: { isActive: boolean }): any;
+	}>();
 
 	const tab = computed((): SearchBoxTab => ({
 		title: props.title,

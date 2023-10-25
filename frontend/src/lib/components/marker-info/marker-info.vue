@@ -15,6 +15,8 @@
 	import StringMap from "../../utils/string-map";
 	import { Context } from "../facilmap/facilmap";
 	import Coordinates from "../ui/coordinates/coordinates";
+	import vTooltip from "../../utils/tooltip";
+import { formatField } from "facilmap-utils";
 
 	@WithRender
 	@Component({
@@ -103,7 +105,7 @@
 
 			<template v-for="field in client.types[marker.typeId].fields">
 				<dt>{{field.name}}</dt>
-				<dd v-html="$options.filters.fmFieldContent(marker.data.get(field.name), field)"></dd>
+				<dd v-html="formatField(field, marker.data.get(field.name))"></dd>
 			</template>
 		</dl>
 
@@ -111,7 +113,7 @@
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
-				v-b-tooltip.hover="'Zoom to marker'"
+				v-tooltip="'Zoom to marker'"
 				@click="zoomToMarker()"
 			>
 				<Icon icon="zoom-in" alt="Zoom to marker"></Icon>

@@ -46,5 +46,5 @@ export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: 
 
 	mergeObject(oldObject, newObject, targetObject);
 
-	Vue.set(targetObject, "fields", mergeFields(oldObject.fields, newObject.fields, customFields));
+	targetObject.fields = mergeFields(oldObject.fields, newObject.fields, customFields);
 };

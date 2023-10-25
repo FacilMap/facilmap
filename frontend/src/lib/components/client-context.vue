@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { defineComponent, onMounted, ref, toRaw, watch } from "vue";
+	import { defineComponent, onMounted, reactive, ref, toRaw, watch } from "vue";
 	import FmClient from "facilmap-client";
 	import { PadData, PadId } from "facilmap-types";
 	import PadSettings from "./pad-settings/pad-settings.vue";
@@ -12,11 +12,12 @@
 
 	export type Client = FmClient;
 
-	const clientInject = Symbol("clientInject") as InjectionKey<Client>;
+	export type ClientContext = {
+		openPad(padId: string | undefined): void;
+	};
 
-	export function provideClient(client: Client): void {
-		return provide(clientInject, client);
-	}
+	const clientInject = Symbol("clientInject") as InjectionKey<Client>;
+	const clientContextInject = Symbol("clientContextInject") as InjectionKey<ClientContext>;
 
 	export function injectClientOptional(): Client | undefined {
 		return inject(clientInject);
@@ -29,6 +30,18 @@
 		}
 		return client;
 	}
+
+	export function injectClientContextOptional(): ClientContext | undefined {
+		return inject(clientContextInject);
+	}
+
+	export function injectClientContextRequired(): ClientContext {
+		const clientContext = injectClientContextOptional();
+		if (!clientContext) {
+			throw new Error("No client context injected.");
+		}
+		return clientContext;
+	}
 </script>
 
 <script setup lang="ts">
@@ -37,24 +50,42 @@
 	const client = ref<Client>();
 	const connectingClient = ref<Client>();
 
+	const props = defineProps<{
+		padId: string | undefined;
+		serverUrl: string;
+	}>();
+
+	const emit = defineEmits<{
+		(type: "update:padId", padId: string | undefined): void;
+	}>();
+
+	const clientContext = reactive<ClientContext>({
+		openPad: (padId) => {
+			emit("update:padId", padId);
+		}
+	});
+
 	const createId = ref<string>();
 	const counter = ref(1);
 
-	async function connect(): Promise<void> {
+	watch([
+		() => props.padId,
+		() => props.serverUrl
+	], async () => {
 		const existingClient = connectingClient.value || client.value;
-		if (existingClient && existingClient.server == context.serverUrl && existingClient.padId == context.activePadId)
+		if (existingClient && existingClient.server == props.serverUrl && existingClient.padId == props.padId)
 			return;
 
 		hideToast(`fm${context.id}-client-connecting`);
 		hideToast(`fm${context.id}-client-error`);
 		hideToast(`fm${context.id}-client-deleted`);
 		createId.value = undefined;
-		if (context.activePadId)
+		if (props.padId)
 			showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true });
 		else
 			showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
 
-		const newClient = new FmClient(context.serverUrl, context.activePadId);
+		const newClient = new FmClient(props.serverUrl, props.padId);
 		connectingClient.value = newClient;
 		newClient.connect();
 
@@ -75,8 +106,6 @@
 
 			lastPadId = newClient.padId;
 			lastPadData = newClient.padData;
-			context.activePadId = newClient.padId;
-			context.activePadName = newClient.padData?.name;
 		});
 
 		newClient.on("deletePad", () => {
@@ -89,7 +118,7 @@
 						onClick: (e) => {
 							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 								e.preventDefault();
-								context.activePadId = undefined;
+								clientContext.openPad(undefined);
 							}
 						}
 					}
@@ -98,7 +127,7 @@
 		})
 
 		await new Promise<void>((resolve) => {
-			newClient.once(context.activePadId ? "padData" : "connect", () => { resolve(); });
+			newClient.once(props.padId ? "padData" : "connect", () => { resolve(); });
 			newClient.on("serverError", () => { resolve(); });
 		});
 
@@ -131,7 +160,7 @@
 						onClick: (e) => {
 							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 								e.preventDefault();
-								context.activePadId = undefined;
+								clientContext.openPad(undefined);
 							}
 						}
 					}
@@ -143,21 +172,10 @@
 		connectingClient.value = undefined;
 		client.value?.disconnect();
 		client.value = newClient;
-	}
-
-	onMounted(() => {
-		connect();
-	});
+	}, { immediate: true });
 
 	onBeforeUnmount(() => {
 		client.value?.disconnect();
-	});
-
-	watch([
-		() => context.activePadId,
-		() => context.serverUrl
-	], () => {
-		connect();
 	});
 
 	const ClientProvider = defineComponent({
@@ -165,6 +183,11 @@
 			provide(clientInject, client.value!);
 			return slots.default;
 		}
+	});
+
+	defineExpose({
+		client,
+		clientContext
 	});
 </script>
 

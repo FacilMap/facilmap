@@ -1,55 +1,44 @@
 <script setup lang="ts">
 	import RouteForm from "./route-form.vue";
 	import { HashQuery } from "facilmap-leaflet";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { ref } from "vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { useEventListener } from "../../utils/utils";
 
 	const context = injectContextRequired();
 	const mapContext = injectMapContextRequired();
-	const mapComponents = injectMapComponentsRequired();
 
-	@Ref() routeForm!: RouteForm;
+	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
-	tabActive = false;
-	hashQuery: HashQuery | null | undefined = null;
+	const tabActive = ref(false);
+	const hashQuery = ref<HashQuery>();
 
-	mounted(): void {
-		this.mapContext.$on("fm-route-set-query", this.setQuery);
-		this.mapContext.$on("fm-route-set-from", this.setFrom);
-		this.mapContext.$on("fm-route-add-via", this.addVia);
-		this.mapContext.$on("fm-route-set-to", this.setTo);
-	}
+	useEventListener(mapContext, "route-set-query", (data) => {
+		routeForm.value!.setQuery(data);
+	});
+	useEventListener(mapContext, "route-set-from", (data) => {
+		routeForm.value!.setFrom(data);
+	});
+	useEventListener(mapContext, "route-add-via", (data) => {
+		routeForm.value!.addVia(data);
+	});
+	useEventListener(mapContext, "route-set-to", (data) => {
+		routeForm.value!.setTo(data);
+	});
 
-	beforeDestroy(): void {
-		this.mapContext.$off("fm-route-set-query", this.setQuery);
-		this.mapContext.$off("fm-route-set-from", this.setFrom);
-		this.mapContext.$off("fm-route-add-via", this.addVia);
-		this.mapContext.$off("fm-route-set-to", this.setTo);
-	}
-
-	activate(): void {
-		this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-route-form-tab`);
-	}
-
-	setQuery(...args: any[]): void {
-		(this.routeForm.setQuery as any)(...args);
-	}
-
-	setFrom(...args: any[]): void {
-		(this.routeForm.setFrom as any)(...args);
-	}
-
-	addVia(...args: any[]): void {
-		(this.routeForm.addVia as any)(...args);
-	}
-
-	setTo(...args: any[]): void {
-		(this.routeForm.setTo as any)(...args);
+	function activate(): void {
+		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
 	}
 </script>
 
 <template>
-	<b-tab title="Route" :id="`fm${context.id}-route-form-tab`" :active.sync="tabActive" :fm-hash-query="hashQuery">
-		<RouteForm :active="tabActive" @activate="activate()" ref="routeForm" @hash-query-change="hashQuery = $event"></RouteForm>
-	</b-tab>
+	<SearchBoxTab title="Route" :id="`fm${context.id}-route-form-tab`" :hashQuery="hashQuery">
+		<template #default="slotProps">
+			<RouteForm :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="hashQuery = $event"></RouteForm>
+		</template>
+	</SearchBoxTab>
 </template>
 
 <style lang="scss">

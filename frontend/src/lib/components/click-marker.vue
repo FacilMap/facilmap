@@ -4,15 +4,15 @@
 	import { lineStringToTrackPoints, mapSearchResultToType } from "./search-results/utils";
 	import { hideToast, showErrorToast } from "./ui/toasts/toasts.vue";
 	import { SearchResultsLayer } from "facilmap-leaflet";
-	import SearchResultInfo from "./search-result-info/search-result-info.vue";
+	import SearchResultInfo from "./search-result-info.vue";
 	import Icon from "./ui/icon.vue";
 	import { Util } from "leaflet";
-	import { Portal } from "portal-vue";
 	import { injectContextRequired } from "../utils/context";
 	import { injectClientRequired } from "./client-context.vue";
 	import { computed, markRaw, ref, watch } from "vue";
 	import { useEventListener } from "../utils/utils";
 	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import SearchBoxTab from "./search-box/search-box-tab.vue"
 
 	const context = injectContextRequired();
 	const mapContext = injectMapContextRequired();
@@ -150,14 +150,13 @@
 </script>
 
 <template>
-	<portal to="fm-search-box">
-		<b-tab v-for="(result, idx) in activeResults" :id="`fm${context.id}-click-marker-tab-${idx}`">
-			<template #title>
-				<span class="closeable-tab-title">
-					<span>{{result.short_name}}</span>
-					<object><a href="javascript:" @click="close(result)"><Icon icon="remove" alt="Close"></Icon></a></object>
-				</span>
-			</template>
+	<template v-for="(result, idx) in activeResults">
+		<SearchBoxTab
+			:id="`fm${context.id}-click-marker-tab-${idx}`"
+			:title="result.short_name"
+			isCloseable
+			@close="close(result)"
+		>
 			<SearchResultInfo
 				:result="result"
 				:is-adding="isAdding"
@@ -166,6 +165,6 @@
 				@use-as-via="useAsVia(result)"
 				@use-as-to="useAsTo(result)"
 			></SearchResultInfo>
-		</b-tab>
-	</portal>
+		</SearchBoxTab>
+	</template>
 </template>

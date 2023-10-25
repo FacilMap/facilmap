@@ -10,6 +10,7 @@
 	import StringMap from "../../utils/string-map";
 	import { isLine, isMarker } from "../../utils/utils";
 	import { Context } from "../facilmap/facilmap";
+	import SearchBoxTab from "../search-box/search-box-tab.vue";
 
 	@WithRender
 	@Component({
@@ -71,14 +72,14 @@
 </script>
 
 <template>
-	<b-tab v-if="objects" :id="`fm${context.id}-multiple-info-tab`">
-		<template #title>
-			<span class="closeable-tab-title">
-				<span>{{title}}</span>
-				<object><a href="javascript:" @click="close()"><Icon icon="remove" alt="Close"></Icon></a></object>
-			</span>
-		</template>
-
-		<MultipleInfo :objects="objects" @click-object="handleObjectClick"></MultipleInfo>
-	</b-tab>
+	<template v-if="objects">
+		<SearchBoxTab
+			:id="`fm${context.id}-multiple-info-tab`"
+			:title="title"
+			isCloseable
+			@close="close()"
+		>
+			<MultipleInfo :objects="objects" @click-object="handleObjectClick"></MultipleInfo>
+		</SearchBoxTab>
+	</template>
 </template>
