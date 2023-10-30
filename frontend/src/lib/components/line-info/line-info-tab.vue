@@ -1,68 +1,49 @@
 <script setup lang="ts">
-	import WithRender from "./line-info-tab.vue";
-	import Vue from "vue";
-	import { Component, Watch } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { ID, Line } from "facilmap-types";
-	import LineInfo from "./line-info";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import Icon from "../ui/icon/icon";
-	import StringMap from "../../utils/string-map";
-	import { Context } from "../facilmap/facilmap";
+	import { computed, watch } from "vue";
+	import LineInfo from "./line-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { useEventListener } from "../../utils/utils";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, LineInfo }
-	})
-	export default class LineInfoTab extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-		mounted(): void {
-			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
+	const lineId = computed(() => {
+		if (mapContext.selection.length == 1 && mapContext.selection[0].type == "line")
+			return mapContext.selection[0].id;
+		else
+			return undefined;
+	});
+
+	const line = computed(() => {
+		return lineId.value != null ? client.lines[lineId.value] : undefined;
+	});
+
+	watch(line, () => {
+		if (!line.value && lineId.value != null) {
+			close();
 		}
+	});
 
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
-		}
+	const title = computed(() => {
+		if (line.value != null)
+			return line.value.name;
+		else
+			return undefined;
+	});
 
-		get lineId(): ID | undefined {
-			if (this.mapContext.selection.length == 1 && this.mapContext.selection[0].type == "line")
-				return this.mapContext.selection[0].id;
-			else
-				return undefined;
-		}
+	function handleOpenSelection(): void {
+		if (line.value)
+			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-line-info-tab` })
+	}
 
-		get line(): Line<StringMap> | undefined {
-			return this.lineId != null ? this.client.lines[this.lineId] : undefined;
-		}
-
-		@Watch("line")
-		handleChangeLine(line: Line | undefined): void {
-			if (!line && this.lineId != null)
-				this.close();
-		}
-
-		get title(): string | undefined {
-			if (this.line != null)
-				return this.line.name;
-			else
-				return undefined;
-		}
-
-		handleOpenSelection(): void {
-			if (this.line)
-				this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-line-info-tab`)
-		}
-
-		close(): void {
-			this.mapComponents.selectionHandler.setSelectedItems([]);
-		}
-
+	function close(): void {
+		mapContext.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 
@@ -70,7 +51,7 @@
 	<template v-if="lineId">
 		<SearchBoxTab
 			:id="`fm${context.id}-line-info-tab`"
-			:title="title"
+			:title="title ?? ''"
 			isCloseable
 			@close="close()"
 		>

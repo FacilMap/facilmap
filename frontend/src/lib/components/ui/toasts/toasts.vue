@@ -1,8 +1,17 @@
 <script lang="ts">
-	import { createApp, nextTick, reactive, ref } from "vue";
+	import { createApp, nextTick, onScopeDispose, reactive, ref } from "vue";
 	import { Toast } from "bootstrap";
 	import Toasts from "./toasts.vue";
 	import { mapRef } from "../../../utils/vue";
+	import { getUniqueId } from "../../../utils/utils";
+
+	export interface ToastContext {
+		showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void>;
+		toastErrors<C extends (...args: any[]) => any>(callback: C): C;
+		showToast(id: string | undefined, title: string, message: string, options?: ToastOptions): Promise<void>;
+		hideToast(id: string): Promise<void>;
+		dispose(): void;
+	}
 
 	export interface ToastOptions {
 		actions?: ToastAction[];
@@ -20,9 +29,11 @@
 	}
 
 	interface ToastInstance extends ToastOptions {
+		key: string;
 		id: string | undefined;
 		title: string;
 		message: string;
+		contextId: string;
 	}
 
 	export const toastContainer = document.createElement("div");
@@ -36,47 +47,76 @@
 	const toasts = ref<ToastInstance[]>([]);
 	const toastRefs = reactive(new Map<ToastInstance, HTMLElement>());
 
-	export async function showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void> {
-		if (err.stack)
-			console.error(err.stack);
+	export function useToasts(): ToastContext {
+		const contextId = getUniqueId("fm-toast-context");
+		const result: ToastContext = {
+			showErrorToast: async (id, title, err, options) => {
+				if (err.stack)
+					console.error(err.stack);
 
-		await showToast(id, title, err.message || err, {
-			variant: "danger",
-			noCloseButton: false,
-			...options
-		});
-	}
-
-	export function toastErrors<C extends (...args: any[]) => any>(callback: C): C {
-		return ((...args) => {
-			try {
-				const result = callback(...args);
-				Promise.resolve(result).catch((err) => {
-					showErrorToast(undefined, 'Unexpected error', err);
-					throw err;
+				await result.showToast(id, title, err.message || err, {
+					variant: "danger",
+					noCloseButton: false,
+					...options
 				});
-				return result;
-			} catch (err: any) {
-				showErrorToast(undefined, 'Unexpected error', err);
+			},
+
+			toastErrors: <C extends (...args: any[]) => any>(callback: C) => {
+				return ((...args) => {
+					try {
+						const result = callback(...args);
+						Promise.resolve(result).catch((err) => {
+							result.showErrorToast(undefined, 'Unexpected error', err);
+							throw err;
+						});
+						return result;
+					} catch (err: any) {
+						result.showErrorToast(undefined, 'Unexpected error', err);
+					}
+				}) as C;
+			},
+
+			showToast: async (id, title, message, options = {}) => {
+				await appMountP;
+				if (id != null) {
+					result.hideToast(id);
+				}
+
+				const toast: ToastInstance = { ...options, key: getUniqueId("fm-toast"), id, title, message, contextId };
+				toasts.value.push(toast);
+
+				await nextTick();
+
+				await showToastInstance(toast);
+			},
+
+			hideToast: async (id) => {
+				const toastsToHide = toasts.value.filter((t) => t.contextId === contextId && t.id === id);
+				await Promise.all(toastsToHide.map(async (toast) => {
+					await hideToastInstance(toast);
+				}));
+			},
+
+			dispose: async () => {
+				const toastsToHide = toasts.value.filter((t) => t.contextId === contextId);
+				await Promise.all(toastsToHide.map(async (toast) => {
+					await hideToastInstance(toast);
+				}));
 			}
-		}) as C;
+		};
+
+		onScopeDispose(() => {
+			result.dispose();
+		});
+
+		return result;
 	}
 
-	export async function showToast(id: string | undefined, title: string, message: string, options: ToastOptions = {}): Promise<void> {
-		await appMountP;
-		if (id != null) {
-			hideToast(id);
-		}
-
-		const toast: ToastInstance = { ...options, id, title, message };
-		toasts.value.push(toast);
-
-		await nextTick();
-
+	async function showToastInstance(toast: ToastInstance): Promise<void> {
 		await new Promise<void>((resolve) => {
 			const toastRef = toastRefs.get(toast)!;
 			toastRef.addEventListener("shown.bs.toast", () => resolve());
-			Toast.getOrCreateInstance(toastRef, { autohide: !options.noAutoHide }).show();
+			Toast.getOrCreateInstance(toastRef, { autohide: !toast.noAutoHide }).show();
 
 			toastRef.addEventListener("hidden.bs.toast", () => {
 				toasts.value = toasts.value.filter((t) => t !== toast);
@@ -94,13 +134,6 @@
 			Toast.getInstance(toastRef)!.hide();
 		});
 	}
-
-	export async function hideToast(id: string): Promise<void> {
-		const toastsToHide = toasts.value.filter((t) => t.id === id);
-		await Promise.all(toastsToHide.map(async (toast) => {
-			await hideToastInstance(toast);
-		}));
-	}
 </script>
 
 <script setup lang="ts">
@@ -111,6 +144,7 @@
 	<div class="toast-container position-fixed top-0 end-0 p-3">
 		<div
 			v-for="toast in toasts"
+			:key="toast.key"
 			class="toast"
 			role="alert"
 			aria-live="assertive"
@@ -130,7 +164,7 @@
 				</div>
 
 				<div class="fm-toast-actions">
-					<template v-for="action in toast.actions">
+					<template v-for="(action, idx) in toast.actions" :key="idx">
 						<button
 							v-if="!action.href"
 							type="button"

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 	import { onBeforeUnmount, onMounted } from 'vue';
-	import { hideToast, showToast } from './toasts.vue';
+	import { useToasts } from './toasts.vue';
 	import type { ToastOptions } from "./toasts.vue";
+
+	const toasts = useToasts();
 
 	const props = defineProps<Omit<ToastOptions, "onHidden"> & {
 		id: string;
@@ -15,7 +17,7 @@
 
 	onMounted(() => {
 		const { id, title, message, ...options } = props;
-		showToast(id, title, message, {
+		toasts.showToast(id, title, message, {
 			...options,
 			onHidden: () => {
 				emit("hidden");
@@ -24,6 +26,6 @@
 	});
 
 	onBeforeUnmount(() => {
-		hideToast(props.id);
+		toasts.hideToast(props.id);
 	});
 </script>

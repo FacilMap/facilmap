@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import Sidebar from "../ui/sidebar/sidebar.vue";
-	import Icon from "../ui/icon/icon.vue";
+	import Sidebar from "../ui/sidebar.vue";
+	import Icon from "../ui/icon.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";

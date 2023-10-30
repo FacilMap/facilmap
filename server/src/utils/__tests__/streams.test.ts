@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import { arrayToAsyncIterator, asyncIteratorToArray, jsonStream } from "../streams.js";
 
 test('jsonStream', async () => {

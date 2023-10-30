@@ -1,15 +1,17 @@
 <script setup lang="ts">
 	import { ID, Type } from "facilmap-types";
-	import EditType from "../edit-type/edit-type.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
+	import EditType from "./edit-type/edit-type.vue";
+	import { injectContextRequired } from "./../utils/context";
+	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
-	import { hideToast, showErrorToast } from "../ui/toasts/toasts.vue";
-	import { showConfirm } from "../ui/alert.vue";
-	import Modal from "../ui/modal/modal.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
+	import { showConfirm } from "./ui/alert.vue";
+	import ModalDialog from "./ui/modal-dialog.vue";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
+
+	const toasts = useToasts();
 
 	const isDeleting = ref<Record<ID, boolean>>({ });
 	const editDialogTypeId = ref<ID | null>(); // null: create dialog
@@ -17,7 +19,7 @@
 	const isBusy = computed(() => Object.values(isDeleting.value).some((v) => v));
 
 	async function deleteType(type: Type): Promise<void> {
-		hideToast(`fm${context.id}-manage-types-delete-${type.id}`);
+		toasts.hideToast(`fm${context.id}-manage-types-delete-${type.id}`);
 		isDeleting.value[type.id] = true;
 
 		try {
@@ -31,7 +33,7 @@
 
 			await client.deleteType({ id: type.id });
 		} catch (err) {
-			showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
+			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
 		} finally {
 			delete isDeleting.value[type.id];
 		}
@@ -39,12 +41,12 @@
 </script>
 
 <template>
-	<Modal
+	<ModalDialog
 		title="Manage Types"
 		ok-only
 		:busy="isBusy"
 		size="lg"
-		dialog-class="fm-manage-types"
+		class="fm-manage-types"
 	>
 		<table class="table table-striped table-hover">
 			<thead>
@@ -55,7 +57,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="type in client.types">
+				<tr v-for="type in client.types" :key="type.id">
 					<td>{{type.name}}</td>
 					<td>{{type.type}}</td>
 					<td class="td-buttons">
@@ -93,5 +95,5 @@
 		</table>
 
 		<EditType v-if="editDialogTypeId !== undefined" :typeId="editDialogTypeId"></EditType>
-	</Modal>
+	</ModalDialog>
 </template>

@@ -1,4 +1,4 @@
-import { ComponentPublicInstance, DeepReadonly, Directive, Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
+import { ComponentPublicInstance, DeepReadonly, Directive, Ref, computed, onScopeDispose, reactive, readonly, ref, shallowReadonly, shallowRef, toRef, watch } from "vue";
 
 export const vScrollIntoView: Directive<Element, string | undefined> = {
 	mounted(el, binding) {
@@ -55,10 +55,14 @@ export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K
 	};
 }
 
-export function useResizeObserver(element: Ref<HTMLElement | undefined>): DeepReadonly<Ref<ResizeObserverEntry | undefined>> {
+export function useResizeObserver(
+	element: Ref<HTMLElement | undefined>,
+	callback?: (entry: ResizeObserverEntry) => void
+): DeepReadonly<Ref<ResizeObserverEntry | undefined>> {
 	const entry = ref<ResizeObserverEntry>();
 	const observer = new ResizeObserver((entries) => {
 		entry.value = entries[0];
+		callback?.(entry.value);
 	});
 
 	watch(element, (value, oldValue, onCleanup) => {
@@ -71,4 +75,21 @@ export function useResizeObserver(element: Ref<HTMLElement | undefined>): DeepRe
 	}, { immediate: true });
 
 	return readonly(entry);
+}
+
+export function reactiveReadonlyView<T extends Record<any, any>>(source: Ref<Record<any, any>> | (() => T)): Readonly<T> {
+	const sourceRef = toRef(source);
+	const result = reactive<any>({});
+	watch(() => Object.entries(sourceRef.value), () => {
+		const keys = Object.keys(sourceRef.value);
+		for (const key of Object.keys(result)) {
+			if (!keys.includes(key)) {
+				delete result[key];
+			}
+		}
+		for (const [key, value] of Object.entries(sourceRef.value)) {
+			result[key] = value;
+		}
+	}, { immediate: true, flush: 'sync' });
+	return shallowReadonly(result);
 }

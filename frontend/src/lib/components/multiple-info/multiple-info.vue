@@ -83,7 +83,7 @@
 						await this.client.deleteLine({ id: object.id });
 				}
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-multiple-info-delete`, "Error deleting objects", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-multiple-info-delete`, "Error deleting objects", err);
 			} finally {
 				this.isDeleting = false;
 			}
@@ -123,7 +123,7 @@
 					</ul>
 				</div>
 
-				<b-button-toolbar>
+				<div class="btn-group">
 					<button
 						type="button"
 						class="btn btn-light btn-sm"
@@ -143,7 +143,7 @@
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 						Remove
 					</button>
-				</b-button-toolbar>
+				</div>
 			</b-carousel-slide>
 
 			<b-carousel-slide>

@@ -4,8 +4,10 @@
 	import { round } from "facilmap-utils";
 	import Icon from "./icon.vue";
 	import { computed } from "vue";
-	import { showToast } from "./toasts/toasts.vue";
+	import { useToasts } from "./toasts/toasts.vue";
 	import vTooltip from "../../utils/tooltip";
+
+	const toasts = useToasts();
 
 	const props = defineProps<{
 		point: Point;
@@ -15,7 +17,7 @@
 
 	function copy(): void {
 		copyToClipboard(formattedCoordinates.value);
-		showToast(undefined, "Coordinates copied", "The coordinates were copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Coordinates copied", "The coordinates were copied to the clipboard.", { variant: "success" });
 	}
 </script>
 

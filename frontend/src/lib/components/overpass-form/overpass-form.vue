@@ -108,11 +108,18 @@
 			<hr />
 
 			<div v-if="searchTerm" class="checkbox-grid">
-				<b-form-checkbox
-					v-for="preset in filteredPresets"
-					:checked="preset.isChecked"
-					@input="togglePreset(preset.key, $event)"
-				>{{preset.label}}</b-form-checkbox>
+				<template v-for="preset in filteredPresets">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="" // TODO
+						:checked="preset.isChecked"
+						@change="togglePreset(preset.key, $event)"
+					/>
+					<label :for="" class="form-check-label">
+						{{preset.label}}
+					</label>
+				</template>
 			</div>
 
 			<ul class="nav nav-pills">
@@ -125,7 +132,11 @@
 							@click="activeTab = idx"
 						>
 							{{category.label}}
-							<b-badge v-if="category.checked > 0" :variant="activeTab == idx ? 'secondary' : 'primary'">{{category.checked}}</b-badge>
+							<span
+								v-if="category.checked > 0"
+								class="badge"
+								:class="activeTab == idx ? 'bg-secondary' : 'bg-primary'"
+							>{{category.checked}}</span>
 						</a>
 					</li>
 				</template>
@@ -134,19 +145,24 @@
 			<template v-for="presets in categories[activeTab].presets">
 				<hr />
 				<div class="checkbox-grid">
-					<b-form-checkbox
-						v-for="preset in presets"
-						:checked="preset.isChecked"
-						@input="togglePreset(preset.key, $event)"
-					>{{preset.label}}</b-form-checkbox>
+					<template v-for="preset in presets">
+						<input
+							type="checkbox"
+							class="form-check-input"
+							:id="" // TODO
+							:checked="preset.isChecked"
+							@change="togglePreset(preset.key, $event)"
+						/>
+						<label :for="" class="form-check-label">
+							{{preset.label}}
+						</label>
+					</template>
 				</div>
 			</template>
 		</template>
 		<template v-else>
-			<b-form-group :state="customQueryValidationState">
-				<textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="form-control text-monospace" @input="handleCustomQueryInput"></textarea>
-				<template #invalid-feedback><pre>{{customQueryValidationError}}</pre></template>
-			</b-form-group>
+			<textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="form-control text-monospace" @input="handleCustomQueryInput"></textarea>
+			<div class="invalid-feedback" v-if="customQueryValidationError"><pre>{{customQueryValidationError}}</pre></div>
 
 			<hr />
 
@@ -163,14 +179,14 @@
 
 		<hr />
 
-		<b-button-toolbar>
+		<div class="btn-group">
 			<button
 				type="button"
 				class="btn btn-light"
 				:class="{ active: mapContext.overpassIsCustom }"
 				@click="toggleIsCustom()"
 			>Custom query</button>
-		</b-button-toolbar>
+		</div>
 	</div>
 </template>
 

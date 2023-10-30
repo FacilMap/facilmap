@@ -104,12 +104,12 @@
 					title: (files.length == 1 && files[0].name) || pluralize("file", files.length, true)
 				};
 				if (result.features.length == 0 && result.errors)
-					showErrorToast(this, `fm${this.context.id}-import-error`, "Parsing error", `The selected ${pluralize("file", files.length)} could not be parsed.`);
+					toasts.showErrorToast(this, `fm${this.context.id}-import-error`, "Parsing error", `The selected ${pluralize("file", files.length)} could not be parsed.`);
 				else if (result.features.length == 0)
-					showErrorToast(this, `fm${this.context.id}-import-error`, "No geometries", `The selected ${pluralize("file", files.length)} did not contain any geometries.`);
+					toasts.showErrorToast(this, `fm${this.context.id}-import-error`, "No geometries", `The selected ${pluralize("file", files.length)} did not contain any geometries.`);
 				else {
 					if (result.errors)
-						showErrorToast(this, `fm${this.context.id}-import-error`, "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
+						toasts.showErrorToast(this, `fm${this.context.id}-import-error`, "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
 
 					const layer = new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(this.mapComponents.map);
 					this.mapComponents.map.flyToBounds(layer.getBounds());
@@ -122,7 +122,7 @@
 					}, 0);
 				}
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-import-error`, "Error reading files", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-import-error`, "Error reading files", err);
 			}
 		}
 

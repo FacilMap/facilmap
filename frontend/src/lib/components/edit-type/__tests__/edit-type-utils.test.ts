@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import { mergeTypeObject } from "../edit-type-utils";
 
 function merge(oldType: any, newType: any, targetType: any): any {

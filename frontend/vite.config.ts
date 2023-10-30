@@ -28,5 +28,8 @@ export default defineConfig({
 			]
 		},
 		sourcemap: true,
+	},
+	test: {
+		environment: 'happy-dom'
 	}
 });

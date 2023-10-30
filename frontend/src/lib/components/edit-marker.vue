@@ -77,7 +77,7 @@
 				await this.client.editMarker(this.marker);
 				this.$bvModal.hide(this.id);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-edit-marker-error`, "Error saving marker", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-edit-marker-error`, "Error saving marker", err);
 			} finally {
 				this.isSaving = false;
 			}
@@ -91,48 +91,68 @@
 	<FormModal
 		:id="id"
 		title="Edit Marker"
-		dialog-class="fm-edit-marker"
+		class="fm-edit-marker"
 		:is-saving="isSaving"
 		:is-modified="isModified"
-		@submit="save"
+		@submit="$event.waitUntil(save)"
 		@show="initialize"
 		@hidden="clear"
 	>
 		<template v-if="marker">
-			<b-form-group label="Name" label-for="`${id}-name-input`" label-cols-sm="3">
-				<input class="form-control" :id="`${id}-name-input`" v-model="marker.name" />
-			</b-form-group>
+			<div class="row mb-3">
+				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+				<div class="col-sm-9">
+					<input class="form-control" :id="`${id}-name-input`" v-model="marker.name" />
+				</div>
+			</div>
 
 			<ValidationProvider v-if="canControl.includes('colour')" name="Colour" v-slot="v" rules="required|colour">
-				<b-form-group label="Colour" :label-for="`${id}-colour-input`" label-cols-sm="3" :state="v | validationState">
-					<ColourField :id="`${id}-colour-input`" v-model="marker.colour" :state="v | validationState"></ColourField>
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
+					<div class="col-sm-9">
+						<ColourField :id="`${id}-colour-input`" v-model="marker.colour" :state="v | validationState"></ColourField>
+						<div class="invalid-feedback" v-if="v.errors[0]"><span v-html="v.errors[0]"></span></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<ValidationProvider v-if="canControl.includes('size')" name="Size" v-slot="v" rules="size">
-				<b-form-group label="Size" :label-for="`${id}-size-input`" label-cols-sm="3">
-					<SizeField :id="`${id}-size-input`" v-model="marker.size"></SizeField>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">Size</label>
+					<div class="col-sm-9">
+						<SizeField :id="`${id}-size-input`" v-model="marker.size"></SizeField>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<ValidationProvider v-if="canControl.includes('symbol')" name="Icon" v-slot="v" rules="symbol">
-				<b-form-group label="Icon" :label-for="`${id}-symbol-input`" label-cols-sm="3" :state="v | validationState">
-					<SymbolField :id="`${id}-symbol-input`" v-model="marker.symbol" :state="v | validationState"></SymbolField>
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-symbol-input`" class="col-sm-3 col-form-label">Icon</label>
+					<div class="col-sm-9">
+						<SymbolField :id="`${id}-symbol-input`" v-model="marker.symbol" :state="v | validationState"></SymbolField>
+						<div class="invalid-feedback" v-if="v.errors[0]"><span v-html="v.errors[0]"></span></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<ValidationProvider v-if="canControl.includes('shape')" name="Shape" v-slot="v" rules="shape">
-				<b-form-group label="Shape" :label-for="`${id}-shape-input`" label-cols-sm="3" :state="v | validationState">
-					<ShapeField :id="`${id}-shape-input`" v-model="marker.shape" :state="v | validationState"></ShapeField>
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-shape-input`" class="col-sm-3 col-form-label">Shape</label>
+					<div class="col-sm-9">
+						<ShapeField :id="`${id}-shape-input`" v-model="marker.shape" :state="v | validationState"></ShapeField>
+						<div class="invalid-feedback" v-if="v.errors[0]"><span v-html="v.errors[0]"></span></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
-			<b-form-group v-for="(field, idx in client.types[marker.typeId].fields" :label="field.name" :label-for="`fm-edit-marker-${idx}-input`" label-cols-sm="3">
-				<FieldInput :id="`fm-edit-marker-${idx}-input`" :field="field" :value="marker.data.get(field.name)" @input="marker.data.set(field.name, $event)"></FieldInput>
-			</b-form-group>
+			<template v-for="(field, idx) in client.types[marker.typeId].fields">
+				<div class="row mb-3" :key="field.name">
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label">{{field.name}}</label>
+					<div class="col-sm-9">
+						<FieldInput :id="`fm-edit-marker-${idx}-input`" :field="field" :value="marker.data.get(field.name)" @input="marker.data.set(field.name, $event)"></FieldInput>
+					</div>
+				</div>
+			</template>
 		</template>
 
 		<template #footer-left>

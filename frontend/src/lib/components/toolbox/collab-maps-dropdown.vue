@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	// import PadSettings from "../pad-settings/pad-settings.vue";
+	import PadSettings from "../pad-settings/pad-settings.vue";
 	import storage from "../../utils/storage";
-	// import ManageBookmarks from "../manage-bookmarks/manage-bookmarks.vue";
-	// import OpenMap from "../open-map/open-map.vue";
+	import ManageBookmarksDialog from "../manage-bookmarks-dialog.vue";
+	import OpenMap from "../open-map.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientContextRequired, injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
@@ -47,7 +47,7 @@
 			:tabindex="mapContext.interaction ? -1 : undefined"
 		>Collaborative maps</a>
 		<ul class="dropdown-menu dropdown-menu-end">
-			<li v-for="bookmark in storage.bookmarks">
+			<li v-for="bookmark in storage.bookmarks" :key="bookmark.id">
 				<a
 					class="dropdown-item"
 					:class="{ active: bookmark.id == client.padId }"
@@ -106,19 +106,19 @@
 		</ul>
 	</li>
 
-	<!-- <OpenMap
+	<OpenMap
 		v-if="dialog === 'open-map'"
 		@hidden="dialog = undefined"
 	></OpenMap>
 
-	<ManageBookmarks
+	<ManageBookmarksDialog
 		v-if="dialog === 'manage-bookmarks'"
 		@hidden="dialog = undefined"
-	></ManageBookmarks>
+	></ManageBookmarksDialog>
 
 	<PadSettings
 		v-if="dialog === 'create-pad'"
 		@hidden="dialog = undefined"
 		:isCreate="true"
-	></PadSettings> -->
+	></PadSettings>
 </template>

@@ -4,17 +4,18 @@
 	import { clone, generateRandomPadId } from "facilmap-utils";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
-	import copyToClipboard from "copy-to-clipboard";
-	import FormModal from "../ui/modal/modal.vue";
+	import ModalDialog from "../ui/modal-dialog.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../client-context.vue";
 	import { useModal } from "../../utils/modal";
-	import { hideToast, showErrorToast, showToast } from "../ui/toasts/toasts.vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import PadIdEdit from "./pad-id-edit.vue";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
+
+	const toasts = useToasts();
 
 	const props = defineProps<{
 		proposedAdminId?: string;
@@ -47,20 +48,6 @@
 
 	const isModified = computed(() => !isEqual(padData.value, client.padData));
 
-	const idProps = ["id", "writeId", "adminId"] as const;
-	type IdProp = typeof idProps[number];
-	const idTouched = ref(Object.fromEntries(idProps.map((p) => [p, false])) as Record<IdProp, boolean>);
-	const idError = computed(() => Object.fromEntries(idProps.map((prop) => {
-		const val = padData.value[prop];
-		if (!val) {
-			return "Must not be empty.";
-		} else if (val.includes("/")) {
-			return "May not contain a slash.";
-		} else if (idProps.some((p) => p !== prop && padData.value[p] === padData.value[prop])) {
-			return "The same link cannot be used for different access levels.";
-		}
-	}).map((message, i) => [idProps[i], message])) as Record<IdProp, string | undefined>);
-
 	watch(() => client.padData, (newPadData, oldPadData) => {
 		if (!props.isCreate && padData.value && newPadData)
 			mergeObject(oldPadData, newPadData, padData.value as PadData);
@@ -68,7 +55,7 @@
 
 	async function save(): Promise<void> {
 		isSaving.value = true;
-		hideToast(`fm${context.id}-pad-settings-error`);
+		toasts.hideToast(`fm${context.id}-pad-settings-error`);
 
 		try {
 			if(props.isCreate)
@@ -78,19 +65,14 @@
 
 			modal.hide();
 		} catch (err) {
-			showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
 		} finally {
 			isSaving.value = false;
 		}
 	};
 
-	function copy(text: string): void {
-		copyToClipboard(text);
-		showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success" });
-	}
-
 	async function deletePad(): Promise<void> {
-		hideToast(`fm${context.id}-pad-settings-error`);
+		toasts.hideToast(`fm${context.id}-pad-settings-error`);
 
 		if (!await showConfirm({
 			title: "Delete map",
@@ -106,7 +88,7 @@
 			await client.deletePad();
 			modal.hide();
 		} catch (err) {
-			showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -114,16 +96,16 @@
 </script>
 
 <template>
-	<FormModal
+	<ModalDialog
 		:id="id"
 		:title="isCreate ? 'Create collaborative map' : 'Map settings'"
-		dialog-class="fm-pad-settings"
+		class="fm-pad-settings"
 		:no-cancel="noCancel"
 		:is-saving="isSaving"
 		:is-busy="isDeleting"
 		:is-create="isCreate"
 		:is-modified="isModified"
-		@submit="save"
+		@submit="$event.waitUntil(save())"
 	>
 		<template v-if="padData">
 			<PadIdEdit
@@ -217,7 +199,7 @@
 				</div>
 			</div>
 		</template>
-	</FormModal>
+	</ModalDialog>
 
 	<form :id="`${id}-delete-form`" @submit.prevent="deleteConfirmation == 'DELETE' && deletePad()">
 	</form>

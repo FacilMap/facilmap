@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import { decodeLegacyHash, decodeQueryString } from "../legacyHash";
 
 test('decodeQueryString', () => {

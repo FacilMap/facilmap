@@ -78,7 +78,7 @@
 				await this.client.editLine(omit(this.line, "trackPoints"));
 				this.$bvModal.hide(this.id);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-edit-line-error`, "Error saving line", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-edit-line-error`, "Error saving line", err);
 			} finally {
 				this.isSaving = false;
 			}
@@ -92,38 +92,55 @@
 	<FormModal
 		:id="id"
 		title="Edit Line"
-		dialog-class="fm-edit-line"
+		class="fm-edit-line"
 		:is-saving="isSaving"
 		:is-modified="isModified"
-		@submit="save"
+		@submit="$event.waitUntil(save())"
 		@hidden="clear"
 		@show="initialize"
 	>
 		<template v-if="line">
-			<b-form-group label="Name" :label-for="`${id}-name-input`" label-cols-sm="3">
-				<input class="form-control" :id="`${id}-name-input`" v-model="line.name" />
-			</b-form-group>
+			<div class="row mb-3">
+				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+				<div class="col-sm-9">
+					<input class="form-control" :id="`${id}-name-input`" v-model="line.name" />
+				</div>
+			</div>
 
-			<b-form-group label="Routing mode" v-if="canControl.includes('mode') && line.mode != 'track'" label-cols-sm="3">
-				<RouteMode v-model="line.mode"></RouteMode>
-			</b-form-group>
+			<div v-if="canControl.includes('mode') && line.mode !== 'track'" class="row mb-3">
+				<label class="col-sm-3 col-form-label">Routing mode</label>
+				<div class="col-sm-9">
+					<RouteMode v-model="line.mode"></RouteMode>
+				</div>
+			</div>
 
 			<ValidationProvider v-if="canControl.includes('colour')" name="Colour" v-slot="v" rules="required|colour">
-				<b-form-group label="Colour" :label-for="`${id}-colour-input`" label-cols-sm="3" :state="v | validationState">
-					<ColourField :id="`${id}-colour-input`" v-model="line.colour" :state="v | validationState"></ColourField>
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
+					<div class="col-sm-9">
+						<ColourField :id="`${id}-colour-input`" v-model="line.colour" :state="v | validationState"></ColourField>
+						<div class="invalid-feedback" v-if="v.errors[0]"><span v-html="v.errors[0]"></span></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<ValidationProvider v-if="canControl.includes('width')" name="Width" v-slot="v" rules="width">
-				<b-form-group label="Width" :label-for="`${id}-width-input`" label-cols-sm="3">
-					<WidthField :id="`${id}-width-input`" v-model="line.width"></WidthField>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">Width</label>
+					<div class="col-sm-9">
+						<WidthField :id="`${id}-width-input`" v-model="line.width"></WidthField>
+					</div>
+				</div>
 			</ValidationProvider>
 
-			<b-form-group v-for="(field, idx) in client.types[line.typeId].fields" :label="field.name" :label-for="`fm-edit-line-${idx}-input`" label-cols-sm="3">
-				<FieldInput :id="`${id}-${idx}-input`" :field="field" :value="line.data.get(field.name)" @input="line.data.set(field.name, $event)"></FieldInput>
-			</b-form-group>
+			<template v-for="(field, idx) in client.types[line.typeId].fields">
+				<div class="row mb-3" :key="field.name">
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label">{{field.name}}</label>
+					<div class="col-sm-9">
+						<FieldInput :id="`${id}-${idx}-input`" :field="field" :value="line.data.get(field.name)" @input="line.data.set(field.name, $event)"></FieldInput>
+					</div>
+				</div>
+			</template>
 		</template>
 
 		<template #footer-left>

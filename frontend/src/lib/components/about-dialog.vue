@@ -1,15 +1,15 @@
 <script setup lang="ts">
 	import packageJson from "../../../../package.json";
 	import { getLayers } from "facilmap-leaflet";
-	import { Layer } from "leaflet";
+	import { Layer, Util } from "leaflet";
 	import { computed } from "vue";
-	import Modal from "./ui/modal.vue";
+	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 
 	const mapContext = injectMapContextRequired();
 
 	const emit = defineEmits<{
-		(type: "hidden"): void;
+		hidden: [];
 	}>();
 
 	const layers = computed((): Layer[] => {
@@ -22,9 +22,9 @@
 </script>
 
 <template>
-	<Modal
+	<ModalDialog
 		:title="`About FacilMap ${fmVersion}`"
-		dialogClass="fm-about"
+		class="fm-about"
 		size="lg"
 		@hidden="emit('hidden')"
 	>
@@ -36,8 +36,8 @@
 		<dl class="row">
 			<template v-for="layer in layers">
 				<template v-if="layer.options.attribution">
-					<dt class="col-sm-3">{{layer.options.fmName}}</dt>
-					<dd class="col-sm-9" v-html="layer.options.attribution"></dd>
+					<dt :key="`name-${Util.stamp(layer)}`" class="col-sm-3">{{layer.options.fmName}}</dt>
+					<dd :key="`attribution-${Util.stamp(layer)}`" class="col-sm-9" v-html="layer.options.attribution"></dd>
 				</template>
 			</template>
 
@@ -78,7 +78,7 @@
 			<li><a href="https://zavoloklom.github.io/material-design-iconic-font/index.html" target="_blank">Material Design Iconic Font</a></li>
 			<li><a href="https://fontawesome.com/" target="_blank">Font Awesome</a></li>
 		</ul>
-	</Modal>
+	</ModalDialog>
 </template>
 
 <style lang="scss">

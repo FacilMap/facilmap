@@ -1,0 +1,214 @@
+<script setup lang="ts">
+	import { getCurrentView, getLayers } from "facilmap-leaflet";
+	import ModalDialog from "./ui/modal-dialog.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
+	import { injectContextRequired } from "../utils/context";
+	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import { injectClientRequired } from "./client-context.vue";
+	import { computed, ref } from "vue";
+	import vValidity from "./ui/validated-form/validity";
+	import { getUniqueId } from "../utils/utils";
+	import { round } from "facilmap-utils";
+
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
+	const client = injectClientRequired();
+
+	const toasts = useToasts();
+
+	const id = getUniqueId("fm-save-view");
+
+	const name = ref("");
+	const includeOverpass = ref(false);
+	const includeFilter = ref(false);
+	const makeDefault = ref(false);
+
+	const nameError = computed(() => {
+		if (!name.value) {
+			return "Must not be empty.";
+		} else {
+			return undefined;
+		}
+	});
+
+	const modalRef = ref<InstanceType<typeof ModalDialog>>();
+
+	const baseLayer = computed(() => {
+		const { baseLayers } = getLayers(mapContext.components.map);
+		return baseLayers[mapContext.layers.baseLayer].options.fmName || mapContext.layers.baseLayer;
+	});
+
+	const overlays = computed(() => {
+		const { overlays } = getLayers(mapContext.components.map);
+		return mapContext.layers.overlays.map((key) => overlays[key].options.fmName || key).join(", ") || "—";
+	});
+
+	async function save(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-save-view-error`);
+
+		try {
+			const view = await client.addView({
+				...getCurrentView(mapContext.components.map, {
+					includeFilter: includeFilter.value,
+					overpassLayer: includeOverpass.value ? mapContext.components.overpassLayer : undefined
+				}),
+				name: name.value
+			});
+
+			if (makeDefault.value) {
+				await client.editPad({ defaultViewId: view.id });
+			}
+
+			modalRef.value?.modal.hide();
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-save-view-error`, "Error saving view", err);
+		}
+	};
+</script>
+
+<template>
+	<ModalDialog
+		title="Save current view"
+		class="fm-save-view"
+		:isCreate="true"
+		ref="modalRef"
+		@submit="$event.waitUntil(save())"
+	>
+		<div class="row mb-3">
+			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+			<div class="col-sm-9">
+				<input
+					class="form-control"
+					:id="`${id}-name-input`"
+					v-model="name"
+					v-validity="nameError"
+					autofocus
+				/>
+				<div class="invalid-feedback" v-if="nameError">
+					{{nameError}}
+				</div>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label :for="`${id}-topleft-input`" class="col-sm-3 col-form-label">Top left</label>
+			<div class="col-sm-9">
+				<input
+					class="form-control-plaintext"
+					readonly
+					:id="`${id}-topleft-input`"
+					:value="`${round(mapContext.bounds.getNorth(), 5)}, ${round(mapContext.bounds.getWest(), 5)}`"
+				/>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label :for="`${id}-bottomright-input`" class="col-sm-3 col-form-label">Bottom right</label>
+			<div class="col-sm-9">
+				<input
+					class="form-control-plaintext"
+					readonly
+					:id="`${id}-bottomright-input`"
+					:value="`${round(mapContext.bounds.getSouth(), 5)}, ${round(mapContext.bounds.getEast(), 5)}`"
+				/>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label :for="`${id}-base-layer-input`" class="col-sm-3 col-form-label">Base layer</label>
+			<div class="col-sm-9">
+				<input
+					class="form-control-plaintext"
+					readonly
+					:id="`${id}-base-layer-input`"
+					:value="baseLayer"
+				/>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<label :for="`${id}-overlays-input`" class="col-sm-3 col-form-label">Overlays</label>
+			<div class="col-sm-9">
+				<input
+					class="form-control-plaintext"
+					readonly
+					:id="`${id}-overlays-input`"
+					:value="overlays"
+				/>
+			</div>
+		</div>
+
+		<template v-if="mapContext.overpassIsCustom ? !mapContext.overpassCustom : mapContext.overpassPresets.length == 0">
+			<div class="row mb-3">
+				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">POIs</label>
+				<div class="col-sm-9">
+					<input
+						class="form-control-plaintext"
+						readonly
+						:id="`${id}-overpass-input`"
+						value="—"
+					/>
+				</div>
+			</div>
+		</template>
+
+		<template v-else>
+			<div class="row mb-3">
+				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">POIs</label>
+				<div class="col-sm-9">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-overpass-input`"
+						v-model="includeOverpass"
+					/>
+					<label class="form-check-label" :for="`${id}-overpass-input`">
+						Include POIs (<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template>)
+					</label>
+				</div>
+			</div>
+		</template>
+
+		<template v-if="!mapContext.filter">
+			<div class="row mb-3">
+				<label :for="`${id}-filter-input`" class="col-sm-3 col-form-label">Filter</label>
+				<div class="col-sm-9">
+					<input class="form-control" :id="`${id}-filter-input`" value="—" plaintext />
+				</div>
+			</div>
+		</template>
+
+		<template v-else>
+			<div class="row mb-3">
+				<label :for="`${id}-filter-checkbox`" class="col-sm-3 col-form-label">Filter</label>
+				<div class="col-sm-9">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-filter-checkbox`"
+						v-model="includeFilter"
+					/>
+					<label :for="`${id}-filter-checkbox`" class="form-check-label">
+						Include current filter (<code>{{mapContext.filter}}</code>)
+					</label>
+				</div>
+			</div>
+		</template>
+
+		<div class="row mb-3">
+			<label :for="`${id}-make-default-input`" class="col-sm-3 col-form-label">Default view</label>
+			<div class="col-sm-9">
+				<input
+					type="checkbox"
+					class="form-check-input"
+					:id="`${id}-make-default-input`"
+					v-model="makeDefault"
+				/>
+				<label :for="`${id}-make-default-input`" class="form-check-label">Make default view</label>
+			</div>
+		</div>
+	</ModalDialog>
+</template>
+
+<style lang="scss">
+</style>

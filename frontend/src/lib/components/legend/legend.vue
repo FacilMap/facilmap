@@ -1,83 +1,70 @@
 <script setup lang="ts">
-	import "./legend.scss";
-	import WithRender from "./legend.vue";
-	import Vue from "vue";
-	import { Component, Ref } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 	import { round } from "facilmap-utils";
-	import $ from "jquery";
-	import LegendContent from "./legend-content";
-	import { getLegendItems, LegendType } from "./legend-utils";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import { Context } from "../facilmap/facilmap";
+	import LegendContent from "./legend-content.vue";
+	import { getLegendItems } from "./legend-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { computed, ref } from "vue";
+	import { useDomEventListener } from "../../utils/utils";
+	import { useResizeObserver } from "../../utils/vue";
 
-	@WithRender
-	@Component({
-		components: { LegendContent, Portal }
-	})
-	export default class Legend extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const absoluteContainerRef = ref<HTMLElement>();
 
-		@Ref() absoluteContainer?: HTMLElement;
+	const scale = ref(1);
 
-		scale = 1;
+	useDomEventListener(window, "resize", updateMaxScale);
+	useResizeObserver(absoluteContainerRef, updateMaxScale);
+	updateMaxScale();
 
-		mounted(): void {
-			$(window).on("resize", this.updateMaxScale);
-			this.updateMaxScale();
+	function updateMaxScale(): void {
+		if (absoluteContainerRef.value) {
+			const mapContainer = mapContext.components.map.getContainer();
+			const maxHeight = mapContainer.offsetHeight - 100;
+			const maxWidth = mapContainer.offsetWidth - 20;
+
+			const currentHeight = absoluteContainerRef.value.offsetHeight;
+			const currentWidth = absoluteContainerRef.value.offsetWidth;
+
+			const newScale = round(Math.min(1, maxHeight / currentHeight, maxWidth / currentWidth), 4);
+			if (isFinite(newScale) && newScale != scale.value)
+				scale.value = newScale;
 		}
-
-		updated(): void {
-			this.updateMaxScale();
-		}
-
-		beforeDestroy(): void {
-			$(window).off("resize", this.updateMaxScale);
-		}
-
-		updateMaxScale(): void {
-			if (this.absoluteContainer) {
-				const mapContainer = this.mapComponents.map.getContainer();
-				const maxHeight = mapContainer.offsetHeight - 100;
-				const maxWidth = mapContainer.offsetWidth - 20;
-
-				const currentHeight = this.absoluteContainer.offsetHeight;
-				const currentWidth = this.absoluteContainer.offsetWidth;
-
-				const newScale = round(Math.min(1, maxHeight / currentHeight, maxWidth / currentWidth), 4);
-				if (isFinite(newScale) && newScale != this.scale)
-					this.scale = newScale;
-			}
-		}
-
-		get legend1(): string {
-			return this.client.padData?.legend1?.trim() || "";
-		}
-
-		get legend2(): string {
-			return this.client.padData?.legend2?.trim() || "";
-		}
-
-		get legendItems(): LegendType[] {
-			return getLegendItems(this.client, this.mapContext);
-		}
-
 	}
 
+	const legend1 = computed(() => {
+		return client.padData?.legend1?.trim() || "";
+	});
+
+	const legend2 = computed(() => {
+		return client.padData?.legend2?.trim() || "";
+	});
+
+	const legendItems = computed(() => {
+		return getLegendItems(client, mapContext);
+	});
 </script>
 
 <template>
 	<div class="fm-legend" v-if="legendItems.length > 0 || legend1 || legend2">
-		<b-card v-if="!context.isNarrow" class="fm-legend-absolute" :style="{ transform: `scale(${scale})` }" ref="absoluteContainer">
-			<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2"></LegendContent>
-		</b-card>
+		<template v-if="!context.isNarrow">
+			<div
+				class="fm-legend-absolute card"
+				:style="{ transform: `scale(${scale})` }"
+				ref="absoluteContainer"
+			>
+				<div class="card-body">
+					<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2"></LegendContent>
+				</div>
+			</div>
+		</template>
 		<template v-else>
-			<SearchBoxTab :id="`fm${context.id}-legend-tab" title="Legend">
+			<SearchBoxTab :id="`fm${context.id}-legend-tab`" title="Legend">
 				<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2" no-popover></LegendContent>
 			</SearchBoxTab>
 		</template>

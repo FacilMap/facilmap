@@ -3,13 +3,15 @@
 	import { computed, ref } from 'vue';
 	import { getUniqueId } from '../../utils/utils';
 	import copyToClipboard from 'copy-to-clipboard';
-	import { showToast } from '../ui/toasts/toasts.vue';
+	import { useToasts } from '../ui/toasts/toasts.vue';
 	import { injectContextRequired } from '../../utils/context';
 
 	const idProps = ["id", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];
 
 	const context = injectContextRequired();
+
+	const toasts = useToasts();
 
 	const props = defineProps<{
 		padData: PadDataCreate;
@@ -29,12 +31,14 @@
 			return "May not contain a slash.";
 		} else if (idProps.some((p) => p !== props.idProp && props.padData[p] === props.padData[props.idProp])) {
 			return "The same link cannot be used for different access levels.";
+		} else {
+			return undefined;
 		}
 	});
 
 	function copy(text: string): void {
 		copyToClipboard(text);
-		showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success" });
 	}
 </script>
 

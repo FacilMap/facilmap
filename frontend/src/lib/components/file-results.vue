@@ -61,7 +61,7 @@
 			try {
 				await this.client.addView(view);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing view", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing view", err);
 			} finally {
 				this.isAddingView = this.isAddingView.filter((v) => v !== view);
 			}
@@ -78,7 +78,7 @@
 			try {
 				await this.client.addType(type);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing type", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing type", err);
 			} finally {
 				this.isAddingType = this.isAddingType.filter((t) => t !== type);
 			}

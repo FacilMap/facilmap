@@ -1,153 +1,145 @@
 <script setup lang="ts">
-	import WithRender from "./line-info.vue";
-	import Vue from "vue";
-	import { Component, Prop, Ref } from "vue-property-decorator";
 	import { ExportFormat, ID, Line } from "facilmap-types";
 	import { IdType } from "../../utils/utils";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { showErrorToast, showToast } from "../../utils/toasts";
-	import EditLine from "../edit-line/edit-line";
-	import ElevationStats from "../ui/elevation-stats/elevation-stats";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import ElevationPlot from "../ui/elevation-plot/elevation-plot";
-	import Icon from "../ui/icon/icon";
-	import "./line-info.scss";
+	import EditLine from "../edit-line.vue";
+	import ElevationStats from "../ui/elevation-stats.vue";
+	import ElevationPlot from "../ui/elevation-plot.vue";
+	import Icon from "../ui/icon.vue";
 	import { flyTo, getZoomDestinationForLine } from "../../utils/zoom";
-	import RouteForm from "../route-form/route-form";
-	import StringMap from "../../utils/string-map";
-	import { Context } from "../facilmap/facilmap";
-	import saveAs from "file-saver";
+	import RouteForm from "../route-form/route-form.vue";
+	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
-import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
+	import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { computed, ref } from "vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { showConfirm } from "../ui/alert.vue";
 
-	@WithRender
-	@Component({
-		components: { EditLine, ElevationPlot, ElevationStats, Icon, RouteForm }
-	})
-	export default class LineInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const toasts = useToasts();
 
-		@Ref() routeForm?: RouteForm;
+	const props = withDefaults(defineProps<{
+		lineId: ID;
+		showBackButton?: boolean;
+	}>(), {
+		showBackButton: false
+	});
 
-		@Prop({ type: IdType, required: true }) lineId!: ID;
-		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
+	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
-		isDeleting = false;
-		isExporting = false;
-		showElevationPlot = false;
-		isMoving = false;
+	const isDeleting = ref(false);
+	const isExporting = ref(false);
+	const showElevationPlot = ref(false);
+	const isMoving = ref(false);
 
-		get line(): Line<StringMap> | undefined {
-			return this.client.lines[this.lineId];
+	const line = computed(() => client.lines[props.lineId]);
+
+	async function deleteLine(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-line-info-delete`);
+
+		if (!line.value || !await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${line.value.name}”?` }))
+			return;
+
+		isDeleting.value = true;
+
+		try {
+			await client.deleteLine({ id: props.lineId });
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-line-info-delete`, "Error deleting line", err);
+		} finally {
+			isDeleting.value = false;
 		}
+	}
 
-		async deleteLine(): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-line-info-delete`);
+	function zoomToLine(): void {
+		if (line.value)
+			flyTo(mapContext.components.map, getZoomDestinationForLine(line.value));
+	}
 
-			if (!this.line || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove the line “${this.line.name}”?`))
-				return;
+	async function exportRoute(format: ExportFormat): Promise<void> {
+		if (!line.value)
+			return;
 
-			this.isDeleting = true;
+		toasts.hideToast(`fm${context.id}-line-info-export-error`);
+		isExporting.value = true;
 
-			try {
-				await this.client.deleteLine({ id: this.lineId });
-			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-line-info-delete`, "Error deleting line", err);
-			} finally {
-				this.isDeleting = false;
-			}
+		try {
+			const exported = await client.exportLine({ id: line.value.id, format });
+			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${line.value.name}.gpx`);
+		} catch(err) {
+			toasts.showErrorToast(`fm${context.id}-line-info-export-error`, "Error exporting line", err);
+		} finally {
+			isExporting.value = false;
 		}
+	}
 
-		zoomToLine(): void {
-			if (this.line)
-				flyTo(this.mapComponents.map, getZoomDestinationForLine(this.line));
+	async function moveLine(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-line-info-move-error`);
+
+		if (!line.value)
+			return;
+
+		mapContext.components.map.fire('fmInteractionStart');
+		const routeId = `l${line.value.id}`;
+
+		try {
+			await client.lineToRoute({ id: line.value.id, routeId });
+
+			mapContext.components.linesLayer.hideLine(line.value.id);
+
+			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
+				actions: [
+					{ label: "Finish", onClick: () => { done(true); }},
+					{ label: "Cancel", onClick: () => { done(false); } }
+				]
+			});
+
+			isMoving.value = true;
+
+			await new Promise((resolve) => {
+				setTimeout(resolve);
+			});
+
+			const done = async (save: boolean) => {
+				const route = client.routes[routeId];
+				if (save && !route)
+					return;
+
+				toasts.hideToast(`fm${context.id}-line-info-move`);
+
+				try {
+					if(save)
+						await client.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
+				} catch (err) {
+					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
+				} finally {
+					mapContext.components.map.fire('fmInteractionEnd');
+					isMoving.value = false;
+
+					// Clear route after editing line so that the server can take the trackPoints from the route
+					client.clearRoute({ routeId }).catch((err) => {
+						console.error("Error clearing route", err);
+					});
+
+					mapContext.components.linesLayer.unhideLine(line.value.id);
+				}
+			};
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
+
+			toasts.hideToast(`fm${context.id}-line-info-move`);
+			mapContext.components.map.fire('fmInteractionEnd');
+			isMoving.value = false;
+			client.clearRoute({ routeId }).catch((err) => {
+				console.error("Error clearing route", err);
+			});
+			mapContext.components.linesLayer.unhideLine(line.value.id);
 		}
-
-		async exportRoute(format: ExportFormat): Promise<void> {
-			if (!this.line)
-				return;
-
-			this.$bvToast.hide(`fm${this.context.id}-line-info-export-error`);
-			this.isExporting = true;
-
-			try {
-				const exported = await this.client.exportLine({ id: this.line.id, format });
-				saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${this.line.name}.gpx`);
-			} catch(err) {
-				showErrorToast(this, `fm${this.context.id}-line-info-export-error`, "Error exporting line", err);
-			} finally {
-				this.isExporting = false;
-			}
-		}
-
-		async moveLine(): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-line-info-move-error`);
-
-			if (!this.line)
-				return;
-
-			this.mapComponents.map.fire('fmInteractionStart');
-			const routeId = `l${this.line.id}`;
-
-			try {
-				await this.client.lineToRoute({ id: this.line.id, routeId });
-
-				this.mapComponents.linesLayer.hideLine(this.line.id);
-
-				showToast(this, `fm${this.context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
-					actions: [
-						{ label: "Finish", onClick: () => { done(true); }},
-						{ label: "Cancel", onClick: () => { done(false); } }
-					]
-				});
-
-				this.isMoving = true;
-
-				await new Promise((resolve) => {
-					setTimeout(resolve);
-				});
-
-				const done = async (save: boolean) => {
-					const route = this.client.routes[routeId];
-					if (save && !route)
-						return;
-
-					this.$bvToast.hide(`fm${this.context.id}-line-info-move`);
-
-					try {
-						if(save)
-							await this.client.editLine({ id: this.line!.id, routePoints: route.routePoints, mode: route.mode });
-					} catch (err) {
-						showErrorToast(this, `fm${this.context.id}-line-info-move-error`, "Error saving line", err);
-					} finally {
-						this.mapComponents.map.fire('fmInteractionEnd');
-						this.isMoving = false;
-
-						// Clear route after editing line so that the server can take the trackPoints from the route
-						this.client.clearRoute({ routeId }).catch((err) => {
-							console.error("Error clearing route", err);
-						});
-
-						this.mapComponents.linesLayer.unhideLine(this.line!.id);
-					}
-				};
-			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-line-info-move-error`, "Error saving line", err);
-
-				this.$bvToast.hide(`fm${this.context.id}-line-info-move`);
-				this.mapComponents.map.fire('fmInteractionEnd');
-				this.isMoving = false;
-				this.client.clearRoute({ routeId }).catch((err) => {
-					console.error("Error clearing route", err);
-				});
-				this.mapComponents.linesLayer.unhideLine(this.line!.id);
-			}
-		}
-
 	}
 </script>
 
@@ -158,7 +150,7 @@ import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils"
 				<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
 				{{line.name}}
 			</h2>
-			<b-button-toolbar v-if="!isMoving">
+			<div v-if="!isMoving" class="btn-group">
 				<button
 					v-if="line.ascent != null"
 					type="button"
@@ -169,8 +161,7 @@ import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils"
 				>
 					<Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon>
 				</button>
-
-			</b-button-toolbar>
+			</div>
 		</div>
 
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
@@ -183,16 +174,18 @@ import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils"
 					<dd class="elevation"><ElevationStats :route="line"></ElevationStats></dd>
 				</template>
 
-				<template v-if="line.ascent == null || !showElevationPlot" v-for="field in client.types[line.typeId].fields">
-					<dt>{{field.name}}</dt>
-					<dd v-html="formatField(field, line.data.get(field.name))"></dd>
+				<template v-if="line.ascent == null || !showElevationPlot">
+					<template v-for="field in client.types[line.typeId].fields" :key="field.name">
+						<dt>{{field.name}}</dt>
+						<dd v-html="formatField(field, line.data.get(field.name))"></dd>
+					</template>
 				</template>
 			</dl>
 
 			<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
 		</div>
 
-		<b-button-toolbar v-if="!isMoving">
+		<div v-if="!isMoving" class="btn-group">
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
@@ -255,7 +248,7 @@ import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils"
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
 			</button>
-		</b-button-toolbar>
+		</div>
 
 		<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>
 

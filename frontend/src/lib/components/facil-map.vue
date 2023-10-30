@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { reactive, readonly, ref, watch, watchEffect } from "vue";
+	import { readonly, ref, watch } from "vue";
 	import Toolbox from "./toolbox/toolbox.vue";
 	import SearchBox from "./search-box/search-box.vue";
 	// import Legend from "../legend/legend.vue";
@@ -7,9 +7,10 @@
 	// import Import from "../import/import.vue";
 	// import ClickMarker from "../click-marker/click-marker.vue";
 	import ClientContext from "./client-context.vue";
-	import { Context, WritableContext, provideContext } from "../utils/context";
+	import { WritableContext, provideContext } from "../utils/context";
 	import { useMaxBreakpoint } from "../utils/bootstrap";
 	import SearchBoxContext from "./search-box/search-box-context.vue";
+import { reactiveReadonlyView } from "../utils/vue";
 
 	let idCounter = 1;
 </script>
@@ -41,57 +42,22 @@
 		(type: "update:padName", padName: string | undefined): void;
 	}>();
 
-	const context = reactive<WritableContext>({
+	const isNarrow = useMaxBreakpoint("sm");
+
+	const context = reactiveReadonlyView<WritableContext>(() => ({
 		id: idCounter++,
-		baseUrl: "",
-		toolbox: false,
-		search: false,
-		autofocus: false,
-		legend: false,
-		interactive: false,
-		isNarrow: false,
-		linkLogo: false,
-		updateHash: false
-	});
+		baseUrl: props.baseUrl,
+		toolbox: props.toolbox,
+		search: props.search,
+		autofocus: props.autofocus,
+		legend: props.legend,
+		interactive: props.interactive,
+		isNarrow: isNarrow.value,
+		linkLogo: props.linkLogo,
+		updateHash: props.updateHash
+	}));
 
 	provideContext(readonly(context));
-
-	watchEffect(() => {
-		context.baseUrl = props.baseUrl;
-	});
-
-	watchEffect(() => {
-		context.toolbox = props.toolbox;
-	});
-
-	watchEffect(() => {
-		context.search = props.search;
-	});
-
-	watchEffect(() => {
-		context.autofocus = props.autofocus;
-	});
-
-	watchEffect(() => {
-		context.legend = props.legend;
-	});
-
-	watchEffect(() => {
-		context.interactive = props.interactive;
-	});
-
-	watchEffect(() => {
-		context.linkLogo = props.linkLogo;
-	});
-
-	watchEffect(() => {
-		context.updateHash = props.updateHash;
-	});
-
-	const isNarrow = useMaxBreakpoint("sm");
-	watchEffect(() => {
-		context.isNarrow = isNarrow.value;
-	});
 
 	const clientRef = ref<InstanceType<typeof ClientContext>>();
 	watch(() => clientRef.value?.client?.padId, () => {

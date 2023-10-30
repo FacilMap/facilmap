@@ -53,7 +53,7 @@ import { formatField } from "facilmap-utils";
 			try {
 				await this.client.deleteMarker({ id: this.markerId });
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-marker-info-delete`, "Error deleting marker", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-marker-info-delete`, "Error deleting marker", err);
 			} finally {
 				this.isDeleting = false;
 			}
@@ -109,7 +109,7 @@ import { formatField } from "facilmap-utils";
 			</template>
 		</dl>
 
-		<b-button-toolbar>
+		<div class="btn-group">
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
@@ -172,7 +172,7 @@ import { formatField } from "facilmap-utils";
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 				Remove
 			</button>
-		</b-button-toolbar>
+		</div>
 
 		<EditMarker :id="`fm${context.id}-marker-info-edit`" :markerId="markerId"></EditMarker>
 	</div>

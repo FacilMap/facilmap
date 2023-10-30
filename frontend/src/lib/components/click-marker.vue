@@ -2,10 +2,9 @@
 	import { LineCreate, MarkerCreate, Point, SearchResult, Type } from "facilmap-types";
 	import { round } from "facilmap-utils";
 	import { lineStringToTrackPoints, mapSearchResultToType } from "./search-results/utils";
-	import { hideToast, showErrorToast } from "./ui/toasts/toasts.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import SearchResultInfo from "./search-result-info.vue";
-	import Icon from "./ui/icon.vue";
 	import { Util } from "leaflet";
 	import { injectContextRequired } from "../utils/context";
 	import { injectClientRequired } from "./client-context.vue";
@@ -17,6 +16,8 @@
 	const context = injectContextRequired();
 	const mapContext = injectMapContextRequired();
 	const client = injectClientRequired();
+
+	const toasts = useToasts();
 
 	let lastClick = 0;
 
@@ -86,13 +87,8 @@
 		layers.value.splice(idx, 1);
 	}
 
-	function clear(): void {
-		for (let i = activeResults.value.length - 1; i >= 0; i--)
-			close(activeResults.value[i]);
-	}
-
 	async function addToMap(result: SearchResult, type: Type): Promise<void> {
-		hideToast(`fm${context.id}-click-marker-add-error`);
+		toasts.hideToast(`fm${context.id}-click-marker-add-error`);
 		isAdding.value = true;
 
 		try {
@@ -125,7 +121,7 @@
 
 			close(result);
 		} catch (err) {
-			showErrorToast(`fm${context.id}-click-marker-add-error`, "Error adding to map", err);
+			toasts.showErrorToast(`fm${context.id}-click-marker-add-error`, "Error adding to map", err);
 		} finally {
 			isAdding.value = false;
 		}
@@ -150,7 +146,7 @@
 </script>
 
 <template>
-	<template v-for="(result, idx) in activeResults">
+	<template v-for="(result, idx) in activeResults" :key="result.id">
 		<SearchBoxTab
 			:id="`fm${context.id}-click-marker-tab-${idx}`"
 			:title="result.short_name"

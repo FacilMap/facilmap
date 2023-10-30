@@ -80,3 +80,37 @@ export function useDomEventListener<Element extends EventTarget, Args extends Pa
 		(element as any).removeEventListener(...args);
 	});
 }
+
+/**
+ * An event whose handler can be delayed in a similar fashion to the native ExtendableEvent
+ * (https://developer.mozilla.org/en-US/docs/Web/API/ExtendableEvent/ExtendableEvent).
+ * This enables a pattern described here: https://github.com/vuejs/vue/issues/5443#issuecomment-379284227
+ * as a workaround for the fact that Vue event handlers cannot be async.
+ */
+export interface ExtendableEventMixin {
+	waitUntil(promise: Promise<void>): void;
+	_hasAwaited?: boolean;
+	_promises?: Array<Promise<void>>;
+	_awaitPromises(): Promise<void>;
+}
+
+export const extendableEventMixin: ExtendableEventMixin = {
+	waitUntil(promise) {
+		if (this._hasAwaited) {
+			throw new Error("Cannot call waitUntil() after event has been processed.");
+		} else if (this._promises) {
+			this._promises.push(promise);
+		} else {
+			this._promises = [promise];
+		}
+	},
+
+	async _awaitPromises() {
+		if (this._hasAwaited) {
+			throw new Error("Event has already been awaited.");
+		} else {
+			this._hasAwaited = true;
+			await Promise.all(this._promises ?? []);
+		}
+	}
+}

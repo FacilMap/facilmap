@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { displayView } from "facilmap-leaflet";
 	import { View } from "facilmap-types";
-	// import SaveView from "../save-view/save-view.vue";
-	// import ManageViews from "../manage-views/manage-views.vue";
+	import SaveViewDialog from "../save-view-dialog.vue";
+	import ManageViewsDialog from "../manage-views-dialog.vue";
 	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
@@ -32,7 +32,7 @@
 			data-bs-toggle="dropdown"
 		>Views</a>
 		<ul class="dropdown-menu dropdown-menu-end">
-			<li v-for="view in client.views">
+			<li v-for="view in client.views" :key="view.id">
 				<a
 					class="dropdown-item"
 					href="javascript:"
@@ -62,13 +62,13 @@
 		</ul>
 	</li>
 
-	<!-- <SaveView
+	<SaveViewDialog
 		v-if="dialog === 'save-view' && client.padData"
 		@hidden="dialog = undefined"
-	></SaveView>
+	></SaveViewDialog>
 
-	<ManageViews
+	<ManageViewsDialog
 		v-if="dialog === 'manage-views' && client.padData"
 		@hidden="dialog = undefined"
-	></ManageViews> -->
+	></ManageViewsDialog>
 </template>

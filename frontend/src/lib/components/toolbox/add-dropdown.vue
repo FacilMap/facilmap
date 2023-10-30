@@ -4,8 +4,9 @@
 	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	// import ManageTypes from "../manage-types/manage-types.vue";
+	import ManageTypes from "../manage-types.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
+	import { useToasts } from "../ui/toasts/toasts.vue";
 
 	const emit = defineEmits<{
 		(type: "hide-sidebar"): void;
@@ -13,6 +14,7 @@
 
 	const client = injectClientRequired();
 	const mapContext = injectMapContextRequired();
+	const toasts = useToasts();
 
 	const dialog = ref<
 		| "manage-types"
@@ -26,11 +28,11 @@
 	}
 
 	function addMarker(type: Type): void {
-		drawMarker(type, client, mapContext.components);
+		drawMarker(type, client, mapContext, toasts);
 	}
 
 	function addLine(type: Type): void {
-		drawLine(type, client, mapContext.components);
+		drawLine(type, client, mapContext, toasts);
 	}
 </script>
 
@@ -43,7 +45,7 @@
 			v-link-disabled="mapContext.interaction"
 		>Add</a>
 		<ul class="dropdown-menu dropdown-menu-end">
-			<li v-for="type in client.types">
+			<li v-for="type in client.types" :key="type.id">
 				<a
 					class="dropdown-item"
 					v-link-disabled="mapContext.interaction"
@@ -67,8 +69,8 @@
 		</ul>
 	</li>
 
-	<!-- <ManageTypes
+	<ManageTypes
 		v-if="dialog === 'manage-types' && client.padData"
 		@hidden="dialog = undefined"
-	></ManageTypes> -->
+	></ManageTypes>
 </template>

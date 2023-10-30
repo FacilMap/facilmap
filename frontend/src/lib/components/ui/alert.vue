@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { computed, createApp, defineComponent, h, ref, VNode, VNodeArrayChildren, withDirectives } from 'vue';
 	import Alert from "./alert.vue";
-	import vValidity from '../../utils/validity';
+	import vValidity from './validated-form/validity';
 	import { useModal } from '../../utils/modal';
 
 	export type AlertProps = {
@@ -117,7 +117,8 @@
 		ok: false
 	});
 
-	const modal = useModal({
+	const modalRef = ref<HTMLElement>();
+	const modal = useModal(modalRef, {
 		onShown: () => {
 			emit('shown');
 		},
@@ -143,7 +144,7 @@
 
 <template>
 	<Teleport to="body">
-		<div class="modal fade" tabindex="-1" aria-hidden="true" :ref="modal.ref">
+		<div class="modal fade" tabindex="-1" aria-hidden="true" ref="modalRef">
 			<div class="modal-dialog">
 				<form class="modal-content" :class="{ 'was-validated': formTouched }" @submit.prevent="handleSubmit()" novalidate ref="formRef">
 					<div class="modal-header">

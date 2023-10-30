@@ -26,7 +26,7 @@
 	const inputRef = ref<HTMLInputElement>();
 
 	watchEffect((onCleanup) => {
-		if (isOpen) {
+		if (isOpen.value) {
 			document.body.addEventListener("keydown", handleBodyKeyDown);
 
 			onCleanup(() => {
@@ -88,6 +88,9 @@
 						ref="inputRef"
 						@keydown="handleInputKeyDown"
 					>
+				</div>
+				<div class="invalid-feedback" v-if="props.validationError">
+					{{props.validationError}}
 				</div>
 			</template>
 

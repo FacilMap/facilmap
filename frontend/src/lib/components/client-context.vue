@@ -4,7 +4,7 @@
 	import { PadData, PadId } from "facilmap-types";
 	import PadSettings from "./pad-settings/pad-settings.vue";
 	import storage from "../utils/storage";
-	import { hideToast, showErrorToast, showToast } from "./ui/toasts/toasts.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../utils/context";
 	import { onBeforeUnmount } from "vue";
 	import Toast from "./ui/toasts/toast.vue";
@@ -47,6 +47,8 @@
 <script setup lang="ts">
 	const context = injectContextRequired();
 
+	const toasts = useToasts();
+
 	const client = ref<Client>();
 	const connectingClient = ref<Client>();
 
@@ -76,14 +78,14 @@
 		if (existingClient && existingClient.server == props.serverUrl && existingClient.padId == props.padId)
 			return;
 
-		hideToast(`fm${context.id}-client-connecting`);
-		hideToast(`fm${context.id}-client-error`);
-		hideToast(`fm${context.id}-client-deleted`);
+		toasts.hideToast(`fm${context.id}-client-connecting`);
+		toasts.hideToast(`fm${context.id}-client-error`);
+		toasts.hideToast(`fm${context.id}-client-deleted`);
 		createId.value = undefined;
 		if (props.padId)
-			showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true });
 		else
-			showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
 
 		const newClient = new FmClient(props.serverUrl, props.padId);
 		connectingClient.value = newClient;
@@ -109,7 +111,7 @@
 		});
 
 		newClient.on("deletePad", () => {
-			showToast(`fm${context.id}-client-deleted`, "Map deleted", "This map has been deleted.", {
+			toasts.showToast(`fm${context.id}-client-deleted`, "Map deleted", "This map has been deleted.", {
 				variant: "danger",
 				actions: context.interactive ? [
 					{
@@ -142,7 +144,7 @@
 		// We need to wait for two animation frames to make sure that the toast is shown.
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
-				hideToast(`fm${context.id}-client-connecting`);
+				toasts.hideToast(`fm${context.id}-client-connecting`);
 			});
 		});
 
@@ -151,7 +153,7 @@
 			newClient.padId = undefined;
 			newClient.serverError = undefined;
 		} else if (newClient.serverError) {
-			showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
+			toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
 				noCloseButton: true,
 				actions: context.interactive ? [
 					{

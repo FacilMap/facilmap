@@ -80,7 +80,7 @@
 
 				this.mapComponents.selectionHandler.setSelectedItems(selection, true);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-overpass-multiple-info-add-error`, "Error adding to map", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-overpass-multiple-info-add-error`, "Error adding to map", err);
 			} finally {
 				this.isAdding = false;
 			}
@@ -111,7 +111,7 @@
 					</ul>
 				</div>
 
-				<b-button-toolbar v-if="client.padData && !client.readonly">
+				<div v-if="client.padData && !client.readonly" class="btn-group">
 					<button
 						type="button"
 						class="btn btn-light btn-sm"
@@ -138,7 +138,7 @@
 							</template>
 						</ul>
 					</div>
-				</b-button-toolbar>
+				</div>
 			</b-carousel-slide>
 
 			<b-carousel-slide>

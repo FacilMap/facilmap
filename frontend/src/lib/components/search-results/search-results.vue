@@ -225,7 +225,7 @@
 
 				return true;
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-search-result-info-add-error`, "Error adding to map", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-search-result-info-add-error`, "Error adding to map", err);
 				return false;
 			} finally {
 				this.isAdding = false;
@@ -379,7 +379,7 @@
 				if (await this._addToMap(add))
 					this.$bvModal.hide(this.customImportModalId);
 			} catch(err) {
-				showErrorToast(this, `fm${this.context.id}-search-result-info-add-error`, "Error importing to map", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-search-result-info-add-error`, "Error importing to map", err);
 			} finally {
 				this.isCustomImportSaving = false;
 			}
@@ -436,7 +436,7 @@
 					<slot name="after"></slot>
 				</div>
 
-				<b-button-toolbar v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0">
+				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-group">
 					<button
 						type="button"
 						class="btn btn-light"
@@ -484,7 +484,7 @@
 							</template>
 						</ul>
 					</div>
-				</b-button-toolbar>
+				</div>
 			</b-carousel-slide>
 
 			<b-carousel-slide>
@@ -506,11 +506,11 @@
 		<FormModal
 			:id="customImportModalId"
 			title="Custom Import"
-			dialog-class="fm-search-results-custom-import"
+			class="fm-search-results-custom-import"
 			:is-saving="isCustomImportSaving"
 			is-create
 			ok-title="Import"
-			@submit="customImport"
+			@submit="$event.waitUntil(customImport)"
 			@show="initializeCustomImport"
 		>
 			<table class="table table-striped table-hover">
@@ -523,15 +523,27 @@
 				<tbody>
 					<tr v-for="(options, importTypeId) in customMappingOptions">
 						<td><label :for="`${customImportModalId}-map-type-${importTypeId}`">{{customTypes[importTypeId].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{customTypes[importTypeId].name}}” ({{activeFileResultsByType[importTypeId].length}})</label></td>
-						<td><b-form-select :id="`${customImportModalId}-map-type-${importTypeId}`" v-model="customMapping[importTypeId]" :options="options"></b-form-select></td>
+						<td>
+							<select :id="`${customImportModalId}-map-type-${importTypeId}`" v-model="customMapping[importTypeId]" :options="options">
+								<option v-for="option in options" :key="option.value" :value="option.value">{{option.text}}</option>
+							</select>
+						</td>
 					</tr>
 					<tr v-if="untypedMarkers.length > 0">
 						<td><label :for="`${customImportModalId}-map-untyped-markers`">Untyped markers ({{untypedMarkers}})</label></td>
-						<td><b-form-select :id="`${customImportModalId}-map-untyped-markers`" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions"></b-form-select></td>
+						<td>
+							<select :id="`${customImportModalId}-map-untyped-markers`" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions">
+								<option v-for="option in untypedMarkerMappingOptions" :key="option.value" :value="option.value">{{option.text}}</option>
+							</select>
+						</td>
 					</tr>
 					<tr v-if="untypedLines.length > 0">
 						<td><label :for="`${customImportModalId}-map-untyped-lines`">Untyped lines/polygons ({{untypedLines}})</label></td>
-						<td><b-form-select :id="`${customImportModalId}-map-untyped-lines`" v-model="untypedLineMapping" :options="untypedLineMappingOptions"></b-form-select></td>
+						<td>
+							<select :id="`${customImportModalId}-map-untyped-lines`" v-model="untypedLineMapping" :options="untypedLineMappingOptions">
+								<option v-for="option in untypedLineMappingOptions" :key="option.value" :value="option.value">{{option.text}}</option>
+							</select>
+						</td>
 					</tr>
 				</tbody>
 			</table>

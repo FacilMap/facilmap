@@ -1,11 +1,11 @@
-import "./legend.scss";
 import { ID, Shape, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
 import { getBrightness } from "facilmap-utils";
-import { MapContext } from "../leaflet-map/leaflet-map";
-import { Client } from "../../utils/decorators";
+import { Client } from "../client-context.vue";
+import { MapContext } from "../leaflet-map/leaflet-map.vue";
 
 export interface LegendType {
+	key: string;
 	type: Type['type'];
 	typeId: ID;
 	name: string;
@@ -16,6 +16,7 @@ export interface LegendType {
 }
 
 export interface LegendItem {
+	key: string;
 	value: string;
 	label?: string;
 	field?: string;
@@ -41,7 +42,12 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 		const fields: Record<string, string[]> = Object.create(null);
 
 		if (type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
-			const item: LegendItem = { value: type.name, label: type.name, filtered: true };
+			const item: LegendItem = {
+				key: `legend-item-${type.id}`,
+				value: type.name,
+				label: type.name,
+				filtered: true
+			};
 
 			if(type.colourFixed)
 				item.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
@@ -65,7 +71,14 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 			fields[field.name] = [ ];
 
 			(field.options || [ ]).forEach((option, idx) => {
-				const item: LegendItem = { value: option.value, label: option.value, field: field.name, filtered: true, first: idx == 0 };
+				const item: LegendItem = {
+					key: `legend-item-${type.id}-${field.name}`,
+					value: option.value,
+					label: option.value,
+					field: field.name,
+					filtered: true,
+					first: idx == 0
+				};
 
 				if(field.type == "checkbox") {
 					item.value = idx == 0 ? "0" : "1";
@@ -96,6 +109,7 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 
 		if(items.length == 0) {
 			const item: LegendItem = {
+				key: `legend-item-${type.id}`,
 				value: type.name,
 				label: type.name,
 				filtered: true
@@ -107,7 +121,16 @@ export function getLegendItems(client: Client, mapContext: MapContext): LegendTy
 			items.push(item);
 		}
 
-		const legendType: LegendType = { type: type.type, typeId: type.id, name: type.name, items: items, filtered: true, defaultColour: type.defaultColour ?? undefined, defaultShape: type.defaultShape ?? undefined };
+		const legendType: LegendType = {
+			key: `legend-type-${type.id}`,
+			type: type.type,
+			typeId: type.id,
+			name: type.name,
+			items,
+			filtered: true,
+			defaultColour: type.defaultColour ?? undefined,
+			defaultShape: type.defaultShape ?? undefined
+		};
 
 		// Check which fields are filtered
 		allCombinations(fields, (data) => {

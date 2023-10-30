@@ -7,7 +7,7 @@
 	import { Component, Prop } from "vue-property-decorator";
 	import { Client, InjectClient, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
 	import { Type } from "facilmap-types";
-	import FormModal from "../ui/modal/modal";
+	import ModalDialog from "./ui/modal-dialog.vue";
 	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
 
 	extend("filter", (filter: string): string | true => {
@@ -16,7 +16,7 @@
 
 	@WithRender
 	@Component({
-		components: { FormModal, ValidationProvider }
+		components: { FormModal: ModalDialog, ValidationProvider }
 	})
 	export default class EditFilter extends Vue {
 
@@ -49,10 +49,10 @@
 </script>
 
 <template>
-	<FormModal
+	<ModalDialog
 		:id="id"
 		title="Filter"
-		dialog-class="fm-edit-filter"
+		class="fm-edit-filter"
 		:is-modified="isModified"
 		@submit="save"
 		@show="initialize"
@@ -62,10 +62,8 @@
 			<p>Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.</p>
 
 			<ValidationProvider name="Filter" v-slot="v" rules="filter">
-				<b-form-group :state="v | validationState(true)">
-					<textarea class="form-control" v-model="filter" rows="5" :state="v | validationState(true)" class="text-monospace"></textarea>
-					<template #invalid-feedback><pre>{{v.errors[0]}}</pre></template>
-				</b-form-group>
+				<textarea class="form-control" v-model="filter" rows="5" :state="v | validationState(true)" class="text-monospace"></textarea>
+				<div class="invalid-feedback" v-if="v.errors[0]"><pre>{{v.errors[0]}}</pre></div>
 			</ValidationProvider>
 
 			<hr />
@@ -258,7 +256,7 @@
 				</table>
 			</div>
 		</template>
-	</FormModal>
+	</ModalDialog>
 </template>
 
 <style lang="scss">

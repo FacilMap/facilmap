@@ -19,16 +19,12 @@ export interface ModalConfig {
 
 export interface ModalActions {
 	hide: () => void;
-	/** Apply this ref to the .modal element to enable the modal */
-	ref: Ref<HTMLElement | undefined>;
 }
 
 /**
  * Enables a Bootstrap modal dialog on the element that is saved in the returned {@link ModalActions#ref}.
  */
-export function useModal({ emit, onShown, onHide }: ModalConfig): ModalActions {
-	const modalRef = ref<HTMLElement>();
-
+export function useModal(modalRef: Ref<HTMLElement | undefined>, { emit, onShown, onHide }: ModalConfig): ModalActions {
 	const modal = ref<Modal>();
 
 	const handleShow = (e: Event) => {
@@ -97,8 +93,7 @@ export function useModal({ emit, onShown, onHide }: ModalConfig): ModalActions {
 	});
 
 	return {
-		hide,
-		ref: modalRef
+		hide
 	};
 }
 

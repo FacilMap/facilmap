@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { createApp, defineComponent, h, ref, watch } from "vue";
 //import { FacilMap } from "../lib";
-import FacilMap from "../lib/components/facilmap/facilmap.vue";
+import FacilMap from "../lib/components/facil-map.vue";
 import "./bootstrap.scss";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "./map.scss";

@@ -5,7 +5,6 @@
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { isEqual } from "lodash-es";
 	import { showErrorToast } from "../ui/toasts/toasts.vue";
-	import Modal from "../ui/modal/modal.vue";
 	import ColourField from "../ui/colour-field/colour-field";
 	import ShapeField from "../ui/shape-field/shape-field";
 	import SymbolField from "../ui/symbol-field/symbol-field";
@@ -130,7 +129,7 @@
 
 				this.$bvModal.hide(this.id);
 			} catch (err) {
-				showErrorToast(this, `fm${this.context.id}-edit-type-error`, this.isCreate ? "Error creating type" : "Error saving type", err);
+				toasts.showErrorToast(this, `fm${this.context.id}-edit-type-error`, this.isCreate ? "Error creating type" : "Error saving type", err);
 			} finally {
 				this.isSaving = false;
 			}
@@ -149,33 +148,42 @@
 	<FormModal
 		:id="id"
 		title="Edit Type"
-		dialog-class="fm-edit-type"
+		class="fm-edit-type"
 		:is-saving="isSaving"
 		:is-modified="isModified"
 		:is-create="isCreate"
-		@submit="save"
+		@submit="$event.waitUntil(save)"
 		@hidden="clear"
 		@show="initialize"
 	>
 		<template v-if="type">
 			<ValidationProvider name="Name" v-slot="v" rules="required">
-				<b-form-group label="Name" :label-for="`${id}-name-input`" label-cols-sm="3" :state="v | validationState">
-					<input class="form-control" :id="`${id}-name-input`" v-model="type.name" :state="v | validationState" />
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+					<div class="col-sm-9">
+						<input class="form-control" :id="`${id}-name-input`" v-model="type.name" :state="v | validationState" />
+						<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<ValidationProvider name="Type" v-slot="v" rules="required">
-				<b-form-group label="Type" :label-for="`${id}-type-input`" label-cols-sm="3" :state="v | validationState">
-					<b-form-select
-						:id="`${id}-type-input`"
-						v-model="type.type"
-						:disabled="!isCreate"
-						:options="[{ value: 'marker', text: 'Marker' }, { value: 'line', text: 'Line' }]"
-						:state="v | validationState"
-					></b-form-select>
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="row mb-3">
+					<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">Type</label>
+					<div class="col-sm-9">
+						<select
+							:id="`${id}-type-input`"
+							v-model="type.type"
+							class="form-select"
+							:disabled="!isCreate"
+							:state="v | validationState"
+						>
+							<option value="marker">Marker</option>
+							<option value="line">Line</option>
+						</select>
+						<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+					</div>
+				</div>
 			</ValidationProvider>
 
 			<template v-if="canControl.length > 0">
@@ -188,74 +196,167 @@
 				</p>
 
 				<ValidationProvider v-if="canControl.includes('colour')" name="Default colour" v-slot="v" :rules="type.colourFixed ? 'required|colour' : 'colour'">
-					<b-form-group label="Default colour" :label-for="`${id}-default-color-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><ColourField :id="`${id}-default-colour-input`" v-model="type.defaultColour" :state="v | validationState"></ColourField></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.colourFixed" @change="setTimeout(() => { v.validate(type.defaultColour); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-colour-input`" class="col-sm-3 col-form-label">Default colour</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<ColourField :id="`${id}-default-colour-input`" v-model="type.defaultColour" :state="v | validationState"></ColourField>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-colour-fixed`"
+										v-model="type.colourFixed"
+										@update="setTimeout(() => { v.validate(type.defaultColour); })"
+									/>
+									<label :for="`${id}-default-colour-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<ValidationProvider v-if="canControl.includes('size')" name="Default size" v-slot="v" :rules="type.sizeFixed ? 'required|size' : 'size'">
-					<b-form-group label="Default size" :label-for="`${id}-default-size-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><SizeField :id="`${id}-default-size-input`" v-model="type.defaultSize" :state="v | validationState"></SizeField></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.sizeFixed" @change="setTimeout(() => { v.validate(type.defaultSize); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-size-input`" class="col-sm-3 col-form-label">Default size</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<SizeField :id="`${id}-default-size-input`" v-model="type.defaultSize" :state="v | validationState"></SizeField>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-size-fixed`"
+										v-model="type.sizeFixed"
+										@update="setTimeout(() => { v.validate(type.defaultSize); })"
+									/>
+									<label :for="`${id}-default-size-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<ValidationProvider v-if="canControl.includes('symbol')" name="Default icon" v-slot="v" rules="symbol">
-					<b-form-group label="Default icon" :label-for="`${id}-default-symbol-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><SymbolField :id="`${id}-default-symbol-input`" v-model="type.defaultSymbol" :state="v | validationState"></SymbolField></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.symbolFixed" @change="setTimeout(() => { v.validate(type.defaultSymbol); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-symbol-input`" class="col-sm-3 col-form-label">Default icon</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<SymbolField :id="`${id}-default-symbol-input`" v-model="type.defaultSymbol" :state="v | validationState"></SymbolField>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-symbol-fixed`"
+										v-model="type.symbolFixed"
+										@update="setTimeout(() => { v.validate(type.defaultSymbol); })"
+									/>
+									<label :for="`${id}-default-symbol-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<ValidationProvider v-if="canControl.includes('shape')" name="Default shape" v-slot="v" rules="shape">
-					<b-form-group label="Default shape" :label-for="`${id}-default-shape-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><ShapeField :id="`${id}-default-shape-input`" v-model="type.defaultShape" :state="v | validationState"></ShapeField></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.shapeFixed" @change="setTimeout(() => { v.validate(type.defaultShape); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-shape-input`" class="col-sm-3 col-form-label">Default shape</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<ShapeField :id="`${id}-default-shape-input`" v-model="type.defaultShape" :state="v | validationState"></ShapeField>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-shape-fixed`"
+										v-model="type.shapeFixed"
+										@update="setTimeout(() => { v.validate(type.defaultShape); })"
+									/>
+									<label :for="`${id}-default-shape-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<ValidationProvider v-if="canControl.includes('width')" name="Default width" v-slot="v" :rules="type.widthFixed ? 'required|width' : 'width'">
-					<b-form-group label="Default width" :label-for="`${id}-default-width-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><WidthField :id="`${id}-default-width-input`" v-model="type.defaultWidth" :state="v | validationState"></WidthField></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.widthFixed" @change="setTimeout(() => { v.validate(type.defaultWidth); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-width-input`" class="col-sm-3 col-form-label">Default width</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<WidthField :id="`${id}-default-width-input`" v-model="type.defaultWidth" :state="v | validationState"></WidthField>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-width-fixed`"
+										v-model="type.widthFixed"
+										@update="setTimeout(() => { v.validate(type.defaultWidth); })"
+									/>
+									<label :for="`${id}-default-width-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<ValidationProvider v-if="canControl.includes('mode')" name="Default routing mode" v-slot="v" :rules="type.modeFixed ? 'required' : ''">
-					<b-form-group label="Default routing mode" :label-for="`${id}-default-mode-input`" label-cols-sm="3" :state="v | validationState">
-						<b-row align-v="center">
-							<b-col><RouteMode :id="`${id}-default-mode-input`" v-model="type.defaultMode" min="1"></RouteMode></b-col>
-							<b-col sm="3"><b-checkbox v-model="type.modeFixed" @change="setTimeout(() => { v.validate(type.defaultMode); })">Fixed</b-checkbox></b-col>
-						</b-row>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
+					<div class="row mb-3">
+						<label :for="`${id}-default-mode-input`" class="col-sm-3 col-form-label">Default routing mode</label>
+						<div class="col-sm-9">
+							<div class="row align-items-center">
+								<div class="col-sm-9">
+									<RouteMode :id="`${id}-default-mode-input`" v-model="type.defaultMode" min="1"></RouteMode>
+								</div>
+								<div class="col-sm-3">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-mode-fixed`"
+										v-model="type.modeFixed"
+										@update="setTimeout(() => { v.validate(type.defaultMode); })"
+									/>
+									<label :for="`${id}-default-mode-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+							<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
+						</div>
+					</div>
 				</ValidationProvider>
 
 				<hr/>
 			</template>
 
-			<b-form-group label="Legend" :label-for="`${id}-show-in-legend-input`" label-cols-sm="3" label-class="pt-0">
-				<b-checkbox v-model="type.showInLegend">Show in legend</b-checkbox>
-				<template #description>
-					An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.
-				</template>
-			</b-form-group>
+			<div class="row mb-3">
+				<label :for="`${id}-show-in-legend-input`" class="col-sm-3 col-form-label">Legend</label>
+				<div class="col-sm-9">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-in-legend-input`"
+						v-model="type.showInLegend"
+					/>
+					<label :for="`${id}-show-in-legend-input`" class="form-check-label">Show in legend</label>
+					<div class="form-text">
+						An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.
+					</div>
+				</div>
+			</div>
 
 			<h2>Fields</h2>
 			<div class="table-responseive">
@@ -273,18 +374,18 @@
 						<tr v-for="field in type.fields">
 							<td>
 								<ValidationProvider :name="`Field name (${field.name})`" v-slot="v" rules="required|uniqueFieldName:@type">
-									<b-form-group :state="v | validationState">
-										<input class="form-control" v-model="field.name" :state="v | validationState" />
-										<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-									</b-form-group>
+									<input class="form-control" v-model="field.name" :state="v | validationState" />
+									<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 								</ValidationProvider>
 							</td>
 							<td>
 								<div class="input-group">
-									<b-form-select
-										v-model="field.type"
-										:options="[{ value: 'input', text: 'Text field' }, { value: 'textarea', text: 'Text area' }, { value: 'dropdown', text: 'Dropdown' }, { value: 'checkbox', text: 'Checkbox' }]"
-									></b-form-select>
+									<select class="form-select" v-model="field.type">
+										<option value="input">Text field</option>
+										<option value="textarea">Text area</option>
+										<option value="dropdown">Dropdown</option>
+										<option value="checkbox">Checkbox</option>
+									</select>
 									<template v-if="['dropdown', 'checkbox'].includes(field.type)">
 										<button type="button" class="btn btn-light" @click="editDropdown(field)">Edit</button>
 									</template>
@@ -313,9 +414,7 @@
 			</div>
 
 			<ValidationProvider vid="type" ref="typeValidationProvider" v-slot="v" rules="" immediate>
-				<b-form-group :state="v | validationState">
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 			</ValidationProvider>
 
 			<EditTypeDropdown v-if="editField != null" :id="`${id}-dropdown`" :type="type" :field="editField"></EditTypeDropdown>

@@ -25,5 +25,8 @@ export default defineConfig({
 		alias: {
 			'facilmap-leaflet': './src/index.ts'
 		}
+	},
+	test: {
+		environment: 'happy-dom'
 	}
 });

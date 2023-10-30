@@ -77,7 +77,7 @@
 			</template>
 		</dl>
 
-		<b-button-toolbar>
+		<div class="btn-group">
 			<button
 				type="button"
 				class="btn btn-light btn-sm"
@@ -133,7 +133,7 @@
 					</li>
 				</ul>
 			</div>
-		</b-button-toolbar>
+		</div>
 	</div>
 </template>
 

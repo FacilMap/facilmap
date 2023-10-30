@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
 	import { isSearchId } from "facilmap-utils";
-	import { hideToast, showErrorToast } from "../ui/toasts/toasts.vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
 	import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
@@ -23,6 +23,8 @@
 	const context = injectContextRequired();
 	const client = injectClientRequired();
 	const mapContext = injectMapContextRequired();
+
+	const toasts = useToasts();
 
 	const autofocus = ref(!context.isNarrow && context.autofocus);
 	const layerId = Util.stamp(mapContext.components.searchResultsLayer);
@@ -115,7 +117,7 @@
 						fileResult.value = undefined;
 					}
 				} catch(err) {
-					showErrorToast(`fm${context.id}-search-form-error`, "Search error", err);
+					toasts.showErrorToast(`fm${context.id}-search-form-error`, "Search error", err);
 					return;
 				}
 			}
@@ -142,7 +144,7 @@
 		searchCounter.value++;
 
 		mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((item) => item.type != "searchResult" || item.layerId != this.layerId));
-		hideToast(`fm${context.id}-search-form-error`);
+		toasts.hideToast(`fm${context.id}-search-form-error`);
 		loadingSearchString.value = "";
 		loadedSearchString.value = "";
 		searchResults.value = undefined;
@@ -194,7 +196,7 @@
 							<a
 								href="javascript:"
 								class="dropdown-item"
-								@click.native.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
+								@click.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
 							>
 								<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results
 							</a>
@@ -204,7 +206,7 @@
 							<a
 								href="javascript:"
 								class="dropdown-item"
-								@click.native.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
+								@click.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
 							>
 								<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
 							</a>

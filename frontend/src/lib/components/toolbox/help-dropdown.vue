@@ -1,9 +1,6 @@
 <script setup lang="ts">
-	import About from "../about/about.vue";
-	import { injectContextRequired } from "../../utils/context";
+	import AboutDialog from "../about-dialog.vue";
 	import { ref } from "vue";
-
-	const context = injectContextRequired();
 
 	const emit = defineEmits<{
 		(type: "hide-sidebar"): void;
@@ -64,8 +61,8 @@
 		</ul>
 	</li>
 
-	<About
+	<AboutDialog
 		v-if="dialog === 'about'"
 		@hidden="dialog = undefined"
-	></About>
+	></AboutDialog>
 </template>

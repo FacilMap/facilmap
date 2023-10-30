@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import { getValidationState } from "../utils/validation";
 	import Icon from "./ui/icon.vue";
 	import { FindPadsResult } from "facilmap-types";
 	import decodeURIComponent from "decode-uri-component";
@@ -7,10 +6,18 @@
 	import { injectClientContextRequired, injectClientRequired } from "./client-context.vue";
 	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import { computed, ref } from "vue";
-	import { hideToast, showErrorToast } from "./ui/toasts/toasts.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
+	import Pagination from "./ui/pagination.vue";
+	import ModalDialog from "./ui/modal-dialog.vue";
+	import { getUniqueId } from "../utils/utils";
+	import ValidatedForm from "./ui/validated-form/validated-form.vue";
+	import pDebounce from "p-debounce";
+	import vValidity from "./ui/validated-form/validity";
+
+	const toasts = useToasts();
 
 	const emit = defineEmits<{
-		(type: "hide"): void;
+		hidden: [];
 	}>();
 
 	const ITEMS_PER_PAGE = 20;
@@ -26,29 +33,12 @@
 			return { padId: val.substr(0, hashIdx), hash: val.substr(hashIdx) };
 	}
 
-	extend("openPadId", {
-		validate: async (val: string, data: any) => {
-			const client = data.getClient() as Client;
-			const context = data.context as Context;
-			const parsed = parsePadId(val, context);
-
-			if (parsed.padId.includes("/"))
-				return "Please enter a valid map ID or URL.";
-
-			const padInfo = await client.getPad({ padId: parsed.padId });
-			if (!padInfo)
-				return "No map with this ID could be found.";
-
-			return true;
-		},
-
-		params: ["getClient", "context"]
-	});
-
 	const context = injectContextRequired();
 	const client = injectClientRequired();
 	const clientContext = injectClientContextRequired();
 	const mapContext = injectMapContextRequired();
+
+	const id = getUniqueId("fm-open-map");
 
 	const padId = ref("");
 	const searchQuery = ref("");
@@ -58,6 +48,9 @@
 	const pages = ref(0);
 	const activePage = ref(1);
 
+	const modalRef = ref<InstanceType<typeof ModalDialog>>();
+	const openFormRef = ref<InstanceType<typeof ValidatedForm>>();
+
 	const url = computed(() => {
 		const parsed = parsePadId(padId.value, context);
 		return context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
@@ -66,7 +59,7 @@
 	function handleSubmit(): void {
 		const parsed = parsePadId(padId.value, context);
 		clientContext.openPad(parsed.padId);
-		this.$bvModal.hide(this.id);
+		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
 			// TODO: This is called too early
@@ -76,11 +69,11 @@
 
 	function openResult(result: FindPadsResult): void {
 		clientContext.openPad(result.id);
-		this.$bvModal.hide(this.id);
+		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
 			// TODO: This is called too early
-			this.mapComponents.hashHandler.applyHash("#");
+			mapContext.components.hashHandler.applyHash("#");
 		}, 0);
 	}
 
@@ -94,7 +87,7 @@
 		}
 
 		isSearching.value = true;
-		hideToast(`fm${context.id}-open-map-search-error`);
+		toasts.hideToast(`fm${context.id}-open-map-search-error`);
 
 		try {
 			const newResults = await client.findPads({
@@ -107,87 +100,137 @@
 			results.value = newResults.results;
 			pages.value = Math.ceil(newResults.totalLength / ITEMS_PER_PAGE);
 		} catch (err) {
-			showErrorToast(`fm${context.id}-open-map-search-error`, "Error searching for public maps", err);
+			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, "Error searching for public maps", err);
 		} finally {
 			isSearching.value = false;
 		}
 	}
+
+	const debouncedValidatePadId = pDebounce(async (padId: string) => {
+		const padInfo = await client.getPad({ padId });
+		if (!padInfo) {
+			return "No map with this ID could be found.";
+		}
+	}, 300);
+
+	// eslint-disable-next-line vue/no-async-in-computed-properties
+	const openFormError = computed(async () => {
+		const parsed = parsePadId(padId.value, context);
+
+		if (parsed.padId.includes("/")) {
+			return "Please enter a valid map ID or URL.";
+		}
+
+		return debouncedValidatePadId(parsed.padId);
+	});
 </script>
 
 <template>
-	<b-modal :id="id" title="Open collaborative map" ok-only ok-title="Close" ok-variant="secondary" size="lg" dialog-class="fm-open-map" scrollable>
-		<ValidationObserver v-slot="observer">
-			<form method="get" :action="url" @submit.prevent="observer.handleSubmit(handleSubmit)">
-				<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
-				<ValidationProvider name="Map ID/link" v-slot="v" :rules="{ openPadId: { getClient, context } }" :debounce="300">
-					<b-form-group :state="v | validationState">
-						<div class="input-group">
-							<input class="form-control" v-model="padId" :state="v | validationState" />
-							<button type="submit" class="btn btn-primary" :disabled="!padId">
-								<div v-if="observer.pending" class="spinner-border spinner-border-sm"></div>
-								Open
-							</button>
-						</div>
-						<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-					</b-form-group>
-				</ValidationProvider>
-			</form>
-		</ValidationObserver>
+	<ModalDialog
+		title="Open collaborative map"
+		size="lg"
+		class="fm-open-map"
+		ref="modalRef"
+		@hidden="emit('hidden')"
+	>
+		<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
+		<div class="input-group">
+			<input
+				class="form-control"
+				v-model="padId"
+				v-validity="openFormError"
+				:form="`${id}-open-form`"
+			/>
+			<button
+				type="submit"
+				class="btn btn-primary"
+				:disabled="!padId"
+				:form="`${id}-open-form`"
+			>
+				<div v-if="openFormRef?.formData.isValidating" class="spinner-border spinner-border-sm"></div>
+				Open
+			</button>
+		</div>
+		<div class="invalid-feedback" v-if="openFormError">
+			{{openFormError}}
+		</div>
 
 		<hr/>
 
 		<h4>Search public maps</h4>
-		<form action="javascript:" @submit.prevent="search(searchQuery, 1)" class="results">
-			<div class="input-group">
-				<input class="form-control" type="search" v-model="searchQuery" placeholder="Search term" />
-				<button type="submit" class="btn btn-secondary" :disabled="isSearching">
-					<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
-					<Icon v-else icon="search" alt="Search"></Icon>
-				</button>
+
+		<div class="input-group">
+			<input
+				class="form-control"
+				type="search"
+				v-model="searchQuery"
+				placeholder="Search term"
+				:form="`${id}-open-form`"
+			/>
+			<button
+				type="submit"
+				class="btn btn-secondary"
+				:disabled="isSearching"
+				:form="`${id}-open-form`"
+			>
+				<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
+				<Icon v-else icon="search" alt="Search"></Icon>
+			</button>
+		</div>
+
+		<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger">
+			No maps could be found.
+		</div>
+
+		<template v-if="submittedSearchQuery && results.length > 0">
+			<div class="table-wrapper">
+				<table class="table table-hover table-striped">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Description</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="result in results" :key="result.id">
+							<td>{{result.name}}</td>
+							<td>{{result.description}}</td>
+							<td class="td-buttons">
+								<button
+									type="button"
+									class="btn btn-light"
+									:href="context.baseUrl + encodeURIComponent(result.id)"
+									@click.exact.prevent="openResult(result)"
+								>Open</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 
-			<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger">
-				No maps could be found.
-			</div>
+			<Pagination
+				v-if="pages > 1"
+				:pages="pages"
+				:value="activePage"
+				@update="search(submittedSearchQuery, $event)"
+			></Pagination>
+		</template>
+	</ModalDialog>
 
-			<template v-if="submittedSearchQuery && results.length > 0">
-				<div class="table-wrapper">
-					<table class="table table-hover table-striped">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Description</th>
-								<th></th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="result in results">
-								<td>{{result.name}}</td>
-								<td>{{result.description}}</td>
-								<td class="td-buttons">
-									<button
-										type="button"
-										class="btn btn-light"
-										:href="context.baseUrl + encodeURIComponent(result.id)"
-										@click.exact.prevent="openResult(result)"
-									>Open</button>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+	<ValidatedForm
+		:id="`${id}-open-form`"
+		method="get"
+		:action="url"
+		@submit="handleSubmit"
+		ref="openFormRef"
+	></ValidatedForm>
 
-				<b-pagination
-					v-if="pages > 1"
-					:total-rows="pages"
-					:per-page="1"
-					:value="activePage"
-					align="center"
-					@input="search(submittedSearchQuery, $event)"
-				></b-pagination>
-			</template>
-		</form>
-	</b-modal>
+	<ValidatedForm
+		:id="`${id}-search-form`"
+		@submit="$event.waitUntil(search(searchQuery, 1))"
+		class="results"
+	></ValidatedForm>
 </template>
 
 <style lang="scss">

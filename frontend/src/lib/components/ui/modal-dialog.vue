@@ -1,13 +1,14 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { computed, ref } from "vue";
 	import { useModal } from "../../utils/modal";
+	import ValidatedForm, { CustomSubmitEvent } from "./validated-form/validated-form.vue";
+	import { reactiveReadonlyView } from "../../utils/vue";
 
 	const props = withDefaults(defineProps<{
 		title?: string;
-		dialogClass?: string;
+		class?: string;
 		/** If true, the user is prevented from closing the dialog. */
 		noCancel?: boolean;
-		isSaving?: boolean;
 		isBusy?: boolean;
 		/** If true, the Save button will always be shown (also if isModified is false). */
 		isCreate?: boolean;
@@ -22,21 +23,24 @@
 
 	const emit = defineEmits<{
 		(type: "hidden"): void;
-		(type: "submit"): void;
+		(type: "submit", event: CustomSubmitEvent): void;
 	}>();
 
-	const modal = useModal({ emit });
+	const modalRef = ref<HTMLElement>();
+	const modal = useModal(modalRef, { emit });
 
-	const formRef = ref<HTMLFormElement>();
-	const formTouched = ref(false);
+	const validatedFormRef = ref<InstanceType<typeof ValidatedForm>>();
+	const isSubmitting = computed(() => validatedFormRef.value?.formData.isSubmitting);
 
-	const submit = () => {
-		if (formRef.value!.checkValidity()) {
-			emit("submit");
-		} else {
-			formTouched.value = true;
-		}
-	};
+	function handleSubmit(event: CustomSubmitEvent) {
+		emit("submit", event);
+	}
+
+	const expose = reactiveReadonlyView(() => ({
+		formData: validatedFormRef.value?.formData,
+		modal
+	}));
+	defineExpose(expose);
 </script>
 
 <template>
@@ -45,26 +49,32 @@
 			class="modal fade fm-modal"
 			:class="[
 				props.size !== 'default' ? `modal-${props.size}` : undefined,
-				dialogClass
+				props.class
 			]"
 			tabindex="-1"
 			aria-hidden="true"
-			:ref="modal.ref"
-			:data-bs-backdrop="isSaving || isBusy || props.noCancel ? 'static' : 'true'"
-			:data-bs-keyboard="isSaving || isBusy || noCancel || isModified ? 'false' : 'true'"
-			@hide.bs.modal="(isSaving || isBusy) && $event.preventDefault()"
+			ref="modalRef"
+			:data-bs-backdrop="isSubmitting || isBusy || props.noCancel ? 'static' : 'true'"
+			:data-bs-keyboard="isSubmitting || isBusy || noCancel || isModified ? 'false' : 'true'"
+			v-on="{
+				'hide.bs.modal': (e: any) => {
+					if (isSubmitting || isBusy) {
+						e.preventDefault();
+					}
+				}
+			}"
 		>
-			<div class="modal-dialog">
-				<form class="modal-content" @submit.prevent="submit()" novalidate ref="formRef" :class="{ 'was-validated': formTouched }">
+			<div class="modal-dialog modal-dialog-scrollable">
+				<ValidatedForm class="modal-content" @submit="handleSubmit" ref="validatedFormRef">
 					<div class="modal-header">
 						<h1 class="modal-title fs-5">{{props.title}}</h1>
 						<button v-if="!noCancel" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<slot></slot>
+						<slot v-bind="expose"></slot>
 					</div>
 					<div class="modal-footer">
-						<slot name="footer-left"></slot>
+						<slot name="footer-left" v-bind="expose"></slot>
 
 						<div style="flex-grow: 1"></div>
 
@@ -74,18 +84,17 @@
 							class="btn btn-light"
 							:class="isModified || isCreate ? 'btn-light' : 'btn-primary'"
 							@click="modal.hide()"
-							:disabled="isSaving || isBusy"
+							:disabled="isSubmitting || isBusy"
 						>{{isModified || isCreate ? 'Cancel' : 'Close'}}</button>
 
 						<button
 							v-if="noCancel || isModified || isCreate"
 							type="submit"
 							class="btn btn-primary"
-							@click="submit()"
-							:disabled="isSaving || isBusy"
+							:disabled="isSubmitting || isBusy"
 						>{{props.okLabel ?? 'Save'}}</button>
 					</div>
-				</form>
+				</ValidatedForm>
 			</div>
 		</div>
 	</Teleport>

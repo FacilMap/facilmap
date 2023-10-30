@@ -146,7 +146,7 @@
 
 			const idx = this.type.fields.indexOf(this.field);
 			if (idx === -1)
-				showErrorToast(this, `fm${this.context.id}-edit-type-dropdown-error`, "Error updating field", new Error("The field cannot be found on the type anymore."));
+				toasts.showErrorToast(this, `fm${this.context.id}-edit-type-dropdown-error`, "Error updating field", new Error("The field cannot be found on the type anymore."));
 			else {
 				Vue.nextTick(() => {
 					Vue.set(this.type.fields, idx, this.fieldValue);
@@ -166,7 +166,7 @@
 	<FormModal
 		:id="id"
 		:title="fieldValue && `Edit ${fieldValue.type == 'checkbox' ? 'Checkbox' : 'Dropdown'}`"
-		dialog-class="fm-edit-type-dropdown"
+		class="fm-edit-type-dropdown"
 		:is-modified="isModified"
 		@submit="save"
 		@show="initialize"
@@ -175,87 +175,90 @@
 		ok-title="OK"
 	>
 		<template v-if="fieldValue">
-			<b-form-group label="Control" label-cols-sm="3">
-				<div class="form-check">
-					<input
-						:id="`${id}-control-colour`"
-						class="form-check-input"
-						type="checkbox"
-						v-model="fieldValue.controlColour"
-						:disabled="!canControl.includes('colour')"
-					/>
-					<label
-						class="form-check-label"
-						:for="`${id}-control-colour`"
-					>
-						Control {{type.type}} colour
-					</label>
-				</div>
+			<div class="row mb-3">
+				<label class="col-sm-3 col-form-label">Control</label>
+				<div class="col-sm-9">
+					<div class="form-check">
+						<input
+							:id="`${id}-control-colour`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="fieldValue.controlColour"
+							:disabled="!canControl.includes('colour')"
+						/>
+						<label
+							class="form-check-label"
+							:for="`${id}-control-colour`"
+						>
+							Control {{type.type}} colour
+						</label>
+					</div>
 
-				<div v-if="type.type == 'marker'" class="form-check">
-					<input
-						:id="`${id}-control-size`"
-						class="form-check-input"
-						type="checkbox"
-						v-model="fieldValue.controlSize"
-						:disabled="!canControl.includes('size')"
-					/>
-					<label
-						class="form-check-label"
-						:for="`${id}-control-size`"
-					>
-						Control {{type.type}} size
-					</label>
-				</div>
+					<div v-if="type.type == 'marker'" class="form-check">
+						<input
+							:id="`${id}-control-size`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="fieldValue.controlSize"
+							:disabled="!canControl.includes('size')"
+						/>
+						<label
+							class="form-check-label"
+							:for="`${id}-control-size`"
+						>
+							Control {{type.type}} size
+						</label>
+					</div>
 
-				<div v-if="type.type == 'marker'" class="form-check">
-					<input
-						:id="`${id}-control-symbol`"
-						class="form-check-input"
-						type="checkbox"
-						v-model="fieldValue.controlSymbol"
-						:disabled="!canControl.includes('symbol')"
-					/>
-					<label
-						class="form-check-label"
-						:for="`${id}-control-symbol`"
-					>
-						Control {{type.type}} icon
-					</label>
-				</div>
+					<div v-if="type.type == 'marker'" class="form-check">
+						<input
+							:id="`${id}-control-symbol`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="fieldValue.controlSymbol"
+							:disabled="!canControl.includes('symbol')"
+						/>
+						<label
+							class="form-check-label"
+							:for="`${id}-control-symbol`"
+						>
+							Control {{type.type}} icon
+						</label>
+					</div>
 
-				<div v-if="type.type == 'marker'" class="form-check">
-					<input
-						:id="`${id}-control-shape`"
-						class="form-check-input"
-						type="checkbox"
-						v-model="fieldValue.controlShape"
-						:disabled="!canControl.includes('shape')"
-					/>
-					<label
-						class="form-check-label"
-						:for="`${id}-control-shape`"
-					>
-						Control {{type.type}} shape
-					</label>
-				</div>
+					<div v-if="type.type == 'marker'" class="form-check">
+						<input
+							:id="`${id}-control-shape`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="fieldValue.controlShape"
+							:disabled="!canControl.includes('shape')"
+						/>
+						<label
+							class="form-check-label"
+							:for="`${id}-control-shape`"
+						>
+							Control {{type.type}} shape
+						</label>
+					</div>
 
-				<div v-if="type.type == 'line'" class="form-check">
-					<input
-						:id="`${id}-control-width`"
-						class="form-check-input"
-						type="checkbox"
-						v-model="fieldValue.controlWidth"
-						:disabled="!canControl.includes('width')"
-					/>
-					<label
-						class="form-check-label"
-						:for="`${id}-control-width`"
-					>
-						Control {{type.type}} width
-					</label>
+					<div v-if="type.type == 'line'" class="form-check">
+						<input
+							:id="`${id}-control-width`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="fieldValue.controlWidth"
+							:disabled="!canControl.includes('width')"
+						/>
+						<label
+							class="form-check-label"
+							:for="`${id}-control-width`"
+						>
+							Control {{type.type}} width
+						</label>
+					</div>
 				</div>
-			</b-form-group>
+			</div>
 			<table v-if="fieldValue.type != 'checkbox' || controlNumber > 0" class="table table-striped table-hover">
 				<thead>
 					<tr>
@@ -277,50 +280,38 @@
 						</td>
 						<td class="field">
 							<ValidationProvider :name="`Label (${option.value})`" v-slot="v" :rules="fieldValue.type == 'checkbox' ? '' : 'uniqueFieldOptionValue:@field'">
-								<b-form-group :state="v | validationState">
-									<input class="form-control" v-model="option.value" :state="v | validationState" />
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<input class="form-control" v-model="option.value" :state="v | validationState" />
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.controlColour" class="field">
 							<ValidationProvider :name="`Colour (${option.value})`" v-slot="v" rules="required|colour">
-								<b-form-group :state="v | validationState">
-									<ColourField v-model="option.colour" :state="v | validationState"></ColourField>
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<ColourField v-model="option.colour" :state="v | validationState"></ColourField>
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.controlSize" class="field">
 							<ValidationProvider :name="`Size (${option.value})`" v-slot="v" rules="required|size">
-								<b-form-group :state="v | validationState">
-									<SizeField v-model="option.size" :state="v | validationState"></SizeField>
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<SizeField v-model="option.size" :state="v | validationState"></SizeField>
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.controlSymbol" class="field">
 							<ValidationProvider :name="`Icon (${option.value})`" v-slot="v" rules="symbol">
-								<b-form-group :state="v | validationState">
-									<SymbolField v-model="option.symbol" :state="v | validationState"></SymbolField>
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<SymbolField v-model="option.symbol" :state="v | validationState"></SymbolField>
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.controlShape" class="field">
 							<ValidationProvider :name="`Shape (${option.value})`" v-slot="v" rules="shape">
-								<b-form-group :state="v | validationState">
-									<ShapeField v-model="option.shape" :state="v | validationState"></ShapeField>
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<ShapeField v-model="option.shape" :state="v | validationState"></ShapeField>
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.controlWidth" class="field">
 							<ValidationProvider :name="`Width (${option.value})`" v-slot="v" rules="required|width">
-								<b-form-group :state="v | validationState">
-									<WidthField v-model="option.width" :state="v | validationState"></WidthField>
-									<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-								</b-form-group>
+								<WidthField v-model="option.width" :state="v | validationState"></WidthField>
+								<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 							</ValidationProvider>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
@@ -339,9 +330,7 @@
 			</table>
 
 			<ValidationProvider vid="field" ref="fieldValidationProvider" v-slot="v" rules="fieldOptionNumber" immediate>
-				<b-form-group :state="v | validationState">
-					<template #invalid-feedback><span v-html="v.errors[0]"></span></template>
-				</b-form-group>
+				<div class="invalid-feedback" v-if="v.errors[0]" v-html="v.errors[0]"></div>
 			</ValidationProvider>
 		</template>
 	</FormModal>

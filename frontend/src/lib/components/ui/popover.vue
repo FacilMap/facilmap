@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { computed, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from "vue";
-	import { Popover } from "bootstrap";
+	import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+	import { Popover, Tooltip } from "bootstrap";
 	import { useResizeObserver } from "../../utils/vue";
 
 	/**
@@ -35,13 +35,16 @@
 </script>
 
 <script lang="ts" setup>
-	const props = defineProps<{
+	const props = withDefaults(defineProps<{
 		element: HTMLElement | undefined;
 		show: boolean;
 		hideOnOutsideClick?: boolean;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
-	}>();
+		placement?: Tooltip.PopoverPlacement
+	}>(), {
+		placement: "bottom"
+	});
 
 	const emit = defineEmits<{
 		(type: "update:show", show: boolean): void;
@@ -55,7 +58,7 @@
 		await nextTick();
 		if (props.element) {
 			CustomPopover.getOrCreateInstance(props.element, {
-				placement: 'bottom',
+				placement: props.placement,
 				content: popoverContent.value!,
 				trigger: 'manual'
 			}).show();
@@ -79,22 +82,31 @@
 		renderPopover.value = false;
 	};
 
-	watch(() => props.element, (el, prevEl) => {
-		if (prevEl) {
-			prevEl.removeEventListener("hidden.bs.popover", handleHidden);
-			CustomPopover.getInstance(prevEl)?.dispose();
-		}
+	watch([
+		() => props.element,
+		() => props.placement
+	], ([el], oldValues, onCleanup) => {
+		if (el) {
+			el.addEventListener("hidden.bs.popover", handleHidden);
 
-		if (props.element) {
-			props.element.addEventListener("hidden.bs.popover", handleHidden);
+			if (props.show) {
+				show();
+			}
+
+			onCleanup(() => {
+				el.removeEventListener("hidden.bs.popover", handleHidden);
+				CustomPopover.getInstance(el)?.dispose();
+			});
 		}
 	}, { immediate: true });
 
-	watch(() => props.show && !!props.element, async (shouldShow) => {
-		if (shouldShow) {
-			show();
-		} else {
-			hide();
+	watch(() => props.show, () => {
+		if (props.element) {
+			if (props.show) {
+				show();
+			} else {
+				hide();
+			}
 		}
 	}, { immediate: true });
 

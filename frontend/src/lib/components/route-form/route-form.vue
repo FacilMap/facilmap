@@ -2,7 +2,7 @@
 	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
 	import { formatRouteMode, formatTime, isSearchId, round, splitRouteQuery } from "facilmap-utils";
-	import { hideToast, showErrorToast } from "../ui/toasts/toasts.vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
 	import { getMarkerIcon, HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
@@ -74,6 +74,8 @@
 	const context = injectContextRequired();
 	const client = injectClientRequired();
 	const mapContext = injectMapContextRequired();
+
+	const toasts = useToasts();
 
 	const submitButton = ref<HTMLButtonElement>();
 
@@ -269,7 +271,7 @@
 			return;
 
 		const idx = destinations.value.indexOf(dest);
-		hideToast(`fm${context.id}-route-form-suggestion-error-${idx}`);
+		toasts.hideToast(`fm${context.id}-route-form-suggestion-error-${idx}`);
 		dest.searchSuggestions = undefined;
 		dest.mapSuggestions = undefined;
 		dest.selectedSuggestion = undefined;
@@ -331,7 +333,7 @@
 					return; // The destination has changed in the meantime
 
 				console.warn(err.stack || err);
-				showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, `Error finding destination “${query}”`, err);
+				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, `Error finding destination “${query}”`, err);
 			} finally {
 				resolveLoadingPromise();
 			}
@@ -433,7 +435,7 @@
 			if (route && zoom)
 				flyTo(mapContext.components.map, getZoomDestinationForRoute(route), smooth);
 		} catch (err: any) {
-			showErrorToast(`fm${context.id}-route-form-error`, "Error calculating route", err);
+			toasts.showErrorToast(`fm${context.id}-route-form-error`, "Error calculating route", err);
 		}
 	}
 
@@ -448,7 +450,7 @@
 	}
 
 	function reset(): void {
-		hideToast(`fm${context.id}-route-form-error`);
+		toasts.hideToast(`fm${context.id}-route-form-error`);
 		submittedQuery.value = undefined;
 		submittedQueryDescription.value = undefined;
 		routeError.value = undefined;
@@ -481,7 +483,7 @@
 	}
 
 	async function addToMap(type: Type): Promise<void> {
-		hideToast(`fm${context.id}-route-form-add-error`);
+		toasts.hideToast(`fm${context.id}-route-form-add-error`);
 		isAdding.value = true;
 
 		try {
@@ -489,21 +491,21 @@
 			clear();
 			mapContext.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 		} catch (err: any) {
-			showErrorToast(`fm${context.id}-route-form-add-error`, "Error adding line", err);
+			toasts.showErrorToast(`fm${context.id}-route-form-add-error`, "Error adding line", err);
 		} finally {
 			isAdding.value = false;
 		}
 	}
 
 	async function exportRoute(format: ExportFormat): Promise<void> {
-		hideToast(`fm${context.id}-route-form-export-error`);
+		toasts.hideToast(`fm${context.id}-route-form-export-error`);
 		isExporting.value = true;
 
 		try {
 			const exported = await client.exportRoute({ format });
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
 		} catch(err: any) {
-			showErrorToast(`fm${context.id}-route-form-export-error`, "Error exporting route", err);
+			toasts.showErrorToast(`fm${context.id}-route-form-export-error`, "Error exporting route", err);
 		} finally {
 			isExporting.value = false;
 		}
@@ -541,94 +543,96 @@
 	<div class="fm-route-form">
 		<form action="javascript:" @submit.prevent="handleSubmit">
 			<Draggable v-model="destinations" handle=".fm-drag-handle" @end="reroute(true)">
-				<b-form-group v-for="(destination, idx) in destinations" :class="{ active: hoverDestinationIdx == idx }">
-					<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
-					<div
-						class="input-group"
-						@mouseenter="destinationMouseOver(idx)"
-						@mouseleave="destinationMouseOut(idx)"
-						:state="getValidationState(destination)"
-					>
-						<span class="input-group-text px-2">
-							<a href="javascript:" class="fm-drag-handle" @contextmenu.prevent>
-								<Icon icon="resize-vertical" alt="Reorder"></Icon>
-							</a>
-						</span>
-						<input class="form-control" v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)" />
+				<template v-for="(destination, idx) in destinations" :key="idx">
+					<div class="destination" :class="{ active: hoverDestinationIdx == idx }">
+						<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
 						<div
-							v-if="destination.query.trim() != ''"
-							class="dropdown"
-							v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
+							class="input-group"
+							@mouseenter="destinationMouseOver(idx)"
+							@mouseleave="destinationMouseOut(idx)"
+							:state="getValidationState(destination)"
 						>
-							<button type="button" class="btn btn-light dropdown-toggle"></button>
-							<ul
-								class="dropdown-menu fm-route-suggestions"
-								:class="{ isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }"
+							<span class="input-group-text px-2">
+								<a href="javascript:" class="fm-drag-handle" @contextmenu.prevent>
+									<Icon icon="resize-vertical" alt="Reorder"></Icon>
+								</a>
+							</span>
+							<input class="form-control" v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)" />
+							<div
+								v-if="destination.query.trim() != ''"
+								class="dropdown"
+								v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
 							>
-								<template v-if="destination.searchSuggestions">
-									<template v-for="suggestion in destination.mapSuggestions">
-										<li
-											@mouseenter.native="suggestionMouseOver(suggestion)"
-											@mouseleave.native="suggestionMouseOut()"
-										>
-											<a
-												href="javascript:"
-												class="dropdown-item fm-route-form-suggestions-zoom"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+								<button type="button" class="btn btn-light dropdown-toggle"></button>
+								<ul
+									class="dropdown-menu fm-route-suggestions"
+									:class="{ isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }"
+								>
+									<template v-if="destination.searchSuggestions">
+										<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
+											<li
+												@mouseenter="suggestionMouseOver(suggestion)"
+												@mouseleave="suggestionMouseOut()"
+											>
+												<a
+													href="javascript:"
+													class="dropdown-item fm-route-form-suggestions-zoom"
+													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+													@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 
-											<a
-												href="javascript:"
-												class="dropdown-item"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
+												<a
+													href="javascript:"
+													class="dropdown-item"
+													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+													@click="destination.selectedSuggestion = suggestion; reroute(true)"
+												>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
+											</li>
+										</template>
+
+										<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
+											<hr class="dropdown-divider fm-route-form-suggestions-divider">
 										</li>
-									</template>
 
-									<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
-										<hr class="dropdown-divider fm-route-form-suggestions-divider">
-									</li>
-
-									<template v-for="suggestion in destination.searchSuggestions">
-										<li
-											@mouseenter.native="suggestionMouseOver(suggestion)"
-											@mouseleave.native="suggestionMouseOut()"
-										>
-											<a
-												href="javascript:"
-												class="dropdown-item fm-route-form-suggestions-zoom"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-											<a
-												href="javascript:"
-												class="dropdown-item"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
-										</li>
+										<template v-for="suggestion in destination.searchSuggestions" :key="suggestion.id">
+											<li
+												@mouseenter.native="suggestionMouseOver(suggestion)"
+												@mouseleave.native="suggestionMouseOut()"
+											>
+												<a
+													href="javascript:"
+													class="dropdown-item fm-route-form-suggestions-zoom"
+													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+													@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+												<a
+													href="javascript:"
+													class="dropdown-item"
+													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+													@click="destination.selectedSuggestion = suggestion; reroute(true)"
+												>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
+											</li>
+										</template>
 									</template>
-								</template>
-								<div v-else class="spinner-border"></div>
-							</ul>
+									<div v-else class="spinner-border"></div>
+								</ul>
+							</div>
+							<button
+								v-if="destinations.length > 2"
+								type="button"
+								class="btn btn-light"
+								@click="removeDestination(idx); reroute(false)"
+								v-tooltip.right="'Remove this destination'"
+							>
+								<Icon icon="minus" alt="Remove" size="1.0em"></Icon>
+							</button>
 						</div>
-						<button
-							v-if="destinations.length > 2"
-							type="button"
-							class="btn btn-light"
-							@click="removeDestination(idx); reroute(false)"
-							v-tooltip.right="'Remove this destination'"
-						>
-							<Icon icon="minus" alt="Remove" size="1.0em"></Icon>
-						</button>
 					</div>
-				</b-form-group>
+				</template>
 				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === destinations.length }"/>
 			</draggable>
 
-			<b-button-toolbar>
+			<div class="btn-group">
 				<button
 					type="button"
 					class="btn btn-light"
@@ -657,7 +661,7 @@
 				>
 					<Icon icon="remove" alt="Clear"></Icon>
 				</button>
-			</b-button-toolbar>
+			</div>
 
 			<template v-if="routeError">
 				<hr />
@@ -752,13 +756,9 @@
 			flex-grow: 1;
 		}
 
-		.form-group {
-			margin-bottom: 0;
-
-			&.active .input-group {
-				box-shadow: 0 0 3px;
-				border-radius: 0.25rem;
-			}
+		.destination.active .input-group {
+			box-shadow: 0 0 3px;
+			border-radius: 0.25rem;
 		}
 
 		hr.fm-route-form-hover-insert {

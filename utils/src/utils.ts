@@ -140,3 +140,9 @@ export function getProperty(obj: any, key: any): any { // eslint-disable-line no
 	else
 		return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : (undefined as any);
 }
+
+export async function sleep(ms: number): Promise<void> {
+	await new Promise<void>((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}

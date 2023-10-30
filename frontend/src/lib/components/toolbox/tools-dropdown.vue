@@ -1,15 +1,13 @@
 <script setup lang="ts">
-	// import PadSettings from "../pad-settings/pad-settings.vue";
-	// import EditFilter from "../edit-filter/edit-filter.vue";
-	// import History from "../history/history.vue";
-	// import Share from "../share/share.vue";
-	import { injectContextRequired } from "../../utils/context";
+	import PadSettings from "../pad-settings/pad-settings.vue";
+	import EditFilter from "../edit-filter.vue";
+	import HistoryDialog from "../history-dialog/history-dialog.vue";
+	import ShareDialog from "../share-dialog.vue";
 	import { injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import vTooltip from "../../utils/tooltip";
 
-	const context = injectContextRequired();
 	const client = injectClientRequired();
 	const mapContext = injectMapContextRequired();
 
@@ -134,23 +132,23 @@
 		</ul>
 	</li>
 
-	<!-- <PadSettings
+	<PadSettings
 		v-if="dialog === 'edit-pad' && client.padData"
 		@hidden="dialog = undefined"
 	></PadSettings>
 
-	<Share
+	<ShareDialog
 		v-if="dialog === 'share'"
 		@hidden="dialog = undefined"
-	></Share>
+	></ShareDialog>
 
 	<EditFilter
 		v-if="dialog === 'edit-filter' && client.padData"
 		@hidden="dialog = undefined"
 	></EditFilter>
 
-	<History
+	<HistoryDialog
 		v-if="dialog === 'history' && client.padData"
 		@hidden="dialog = undefined"
-	></History> -->
+	></HistoryDialog>
 </template>
