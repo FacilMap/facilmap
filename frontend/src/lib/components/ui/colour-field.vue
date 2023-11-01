@@ -3,7 +3,7 @@
 	import Picker from "./picker.vue";
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../utils/ui";
-	import { computed, nextTick, ref } from "vue";
+	import { StyleValue, computed, nextTick, ref } from "vue";
 
 	function normalizeData(value: string) {
 		return ColorMixin.data.apply({ value }).val;
@@ -27,17 +27,27 @@
 </script>
 
 <script setup lang="ts">
+	const props = defineProps<{
+		modelValue: string | undefined;
+		validationError?: string | undefined;
+	}>();
+
 	const emit = defineEmits<{
-		(type: "input", colour: string): void;
+		"update:modelValue": [colour: string];
 	}>();
 
 	const gridRef = ref<HTMLElement>();
 
-	const value = ref<string>();
+	const value = computed({
+		get: () => props.modelValue,
+		set: (value) => {
+			emit("update:modelValue", value!);
+		}
+	});
 
 	const val = computed(() => normalizeData(value.value ?? ""));
 
-	const previewStyle = computed((): Partial<CSSStyleDeclaration> => {
+	const previewStyle = computed((): StyleValue => {
 		const bg = isValidColour(value.value) ? value.value : 'ffffff';
 		return {
 			backgroundColor: `#${bg}`,
@@ -45,15 +55,23 @@
 		};
 	});
 
+	const validationError = computed(() => {
+		if (props.validationError) {
+			return props.validationError;
+		} else {
+			return validateColour(val.value);
+		}
+	});
+
 	function handleChange(val: any): void {
-		emit('input', normalizeData(val).hex.replace(/^#/, '').toLowerCase());
+		emit('update:modelValue', normalizeData(val).hex.replace(/^#/, '').toLowerCase());
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
 		if (gridRef.value) {
 			const newVal = arrowNavigation(colours, value.value, gridRef.value, event);
 			if (newVal) {
-				emit('input', newVal);
+				emit('update:modelValue', newVal);
 				nextTick(() => {
 					(gridRef.value?.querySelector(".active a") as HTMLAnchorElement | undefined)?.focus();
 				});
@@ -63,19 +81,28 @@
 </script>
 
 <template>
-	<Picker custom-class="fm-colour-field" @keydown="handleKeyDown">
+	<Picker
+		customClass="fm-colour-field"
+		@keydown="handleKeyDown"
+		:validationError="validationError"
+	>
 		<template #preview>
 			<span style="width: 1.4em" :style="previewStyle"></span>
 		</template>
 
 		<template #default="{ isModal }">
 			<div class="fm-colour-field-content">
-				<input class="form-control" v-show="isModal" :value="value" @update="emit('input', $event)" :style="previewStyle" />
+				<input
+					class="form-control"
+					v-show="isModal"
+					v-model="value"
+					:style="previewStyle"
+				/>
 				<Saturation :value="val" @change="handleChange"></Saturation>
 				<Hue :value="val" @change="handleChange"></Hue>
 				<ul ref="gridRef">
-					<li v-for="colour in colours" :class="{ active: value == colour }">
-						<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="emit('input', colour)"></a>
+					<li v-for="colour in colours" :key="colour" :class="{ active: value == colour }">
+						<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="emit('update:modelValue', colour)"></a>
 					</li>
 				</ul>
 			</div>

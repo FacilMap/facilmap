@@ -1,14 +1,14 @@
 <script setup lang="ts">
 	import { quoteHtml } from "facilmap-utils";
-	import { Ref, computed, ref, watchEffect } from "vue";
+	import { computed, ref, watchEffect } from "vue";
 
 	const props = defineProps<{
-		value: string;
+		value: string | undefined;
 		items: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
-		(type: "click", item: string): void;
+		click: [item: string];
 	}>();
 
 	const containerRef = ref<HTMLElement>();

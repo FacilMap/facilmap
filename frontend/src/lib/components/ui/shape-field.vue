@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getMarkerUrl, shapeList } from "facilmap-leaflet";
-	import Icon from "./icon.vue";
 	import { quoteHtml } from "facilmap-utils";
 	import Picker from "./picker.vue";
 	import { Shape } from "facilmap-types";
@@ -16,41 +15,45 @@
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		value: Shape;
+		modelValue: Shape | undefined;
 		id?: string;
+		validationError?: string | undefined;
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update", value: Shape): void;
+		"update:modelValue": [value: Shape];
 	}>();
 
 	const value = computed({
-		get: () => props.value,
-		set: (value: Shape) => {
-			emit("update", value);
+		get: () => props.modelValue,
+		set: (value) => {
+			emit("update:modelValue", value!);
 		}
 	});
 
-	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.value));
+	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue));
 
 	const validationError = computed(() => {
-		if (!shapeList.includes(props.value)) {
+		if (props.validationError) {
+			return props.validationError;
+		} else if (props.modelValue && !shapeList.includes(props.modelValue)) {
 			return "Unknown shape";
+		} else {
+			return undefined;
 		}
 	});
 
 	function handleClick(shape: Shape, close: () => void): void {
-		emit("update", shape);
+		emit("update:modelValue", shape);
 		close();
 	}
 
-	function handleKeyDown(event: KeyboardEvent): void {
-		const newVal = arrowNavigation(Object.keys(items), props.value, gridRef.value!.containerRef!, event);
+	async function handleKeyDown(event: KeyboardEvent): Promise<void> {
+		const newVal = arrowNavigation(Object.keys(items), props.modelValue, gridRef.value!.containerRef!, event);
 		if (newVal) {
-			emit('update', newVal);
-			nextTick(() => {
-				gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
-			});
+			emit("update:modelValue", newVal);
+			await nextTick();
+			gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
 		}
 	}
 </script>
@@ -73,7 +76,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="value"
+				:value="modelValue"
 				@click="handleClick($event, close)"
 				ref="gridRef"
 			></PrerenderedList>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { LineCreate, MarkerCreate, Point, SearchResult, Type } from "facilmap-types";
+	import { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
 	import { round } from "facilmap-utils";
 	import { lineStringToTrackPoints, mapSearchResultToType } from "./search-results/utils";
 	import { useToasts } from "./ui/toasts/toasts.vue";
@@ -92,7 +92,7 @@
 		isAdding.value = true;
 
 		try {
-			const obj: Partial<MarkerCreate & LineCreate> = {
+			const obj: Partial<Marker<CRU.CREATE> & Line<CRU.CREATE>> = {
 				name: result.short_name,
 				data: mapSearchResultToType(result, type)
 			};

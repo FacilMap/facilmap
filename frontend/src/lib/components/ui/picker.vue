@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, watchEffect } from "vue";
+	import { computed, ref, watchEffect } from "vue";
 	import HybridPopover from "./hybrid-popover.vue";
 
 	const props = withDefaults(defineProps<{
@@ -7,7 +7,7 @@
 		customClass?: string;
 		disabled?: boolean;
 		validationError?: string;
-		value?: string;
+		modelValue?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 	}>(), {
@@ -16,9 +16,16 @@
 	});
 
 	const emit = defineEmits<{
-		(type: "keydown", event: KeyboardEvent): void;
-		(type: "input", value: string): void;
+		keydown: [event: KeyboardEvent];
+		"update:modelValue": [value: string];
 	}>();
+
+	const value = computed({
+		get: () => props.modelValue,
+		set: (value) => {
+			emit("update:modelValue", value!);
+		}
+	});
 
 	const isOpen = ref(false);
 
@@ -70,6 +77,7 @@
 		<HybridPopover
 			v-model:show="isOpen"
 			:enforceElementWidth="props.enforceElementWidth"
+			:customClass="props.customClass"
 		>
 			<template #trigger>
 				<div class="input-group">
@@ -81,10 +89,9 @@
 						class="form-control"
 						autocomplete="off"
 						:disabled="disabled"
-						:value="value"
+						v-model="value"
 						v-validity="props.validationError"
 						:id="id"
-						@update="emit('input', $event)"
 						ref="inputRef"
 						@keydown="handleInputKeyDown"
 					>

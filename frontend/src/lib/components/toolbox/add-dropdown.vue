@@ -4,12 +4,12 @@
 	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import ManageTypes from "../manage-types.vue";
+	import ManageTypesDialog from "../manage-types-dialog.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 
 	const emit = defineEmits<{
-		(type: "hide-sidebar"): void;
+		"hide-sidebar": [];
 	}>();
 
 	const client = injectClientRequired();
@@ -69,8 +69,8 @@
 		</ul>
 	</li>
 
-	<ManageTypes
+	<ManageTypesDialog
 		v-if="dialog === 'manage-types' && client.padData"
 		@hidden="dialog = undefined"
-	></ManageTypes>
+	></ManageTypesDialog>
 </template>

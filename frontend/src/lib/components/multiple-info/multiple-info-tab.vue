@@ -1,73 +1,52 @@
 <script setup lang="ts">
-	import WithRender from "./multiple-info-tab.vue";
-	import Vue from "vue";
-	import { Component } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import MultipleInfo from "./multiple-info";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import Icon from "../ui/icon/icon";
+	import MultipleInfo from "./multiple-info.vue";
 	import { Line, Marker } from "facilmap-types";
-	import StringMap from "../../utils/string-map";
-	import { isLine, isMarker } from "../../utils/utils";
-	import { Context } from "../facilmap/facilmap";
+	import { isLine, isMarker, useEventListener } from "../../utils/utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { computed } from "vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, MultipleInfo }
-	})
-	export default class MultipleInfoTab extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-		mounted(): void {
-			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
+	const objects = computed(() => {
+		const objects = mapContext.selection.flatMap((item): Array<Marker | Line> => {
+			if (item.type == "marker" && client.markers[item.id])
+				return [client.markers[item.id]];
+			else if (item.type == "line" && client.lines[item.id])
+				return [client.lines[item.id]];
+			else
+				return [];
+		});
+		return objects.length > 1 ? objects : undefined;
+	});
+
+	function handleOpenSelection(): void {
+		if (objects.value)
+			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-multiple-info-tab` });
+	}
+
+	const title = computed(() => objects.value ? `${objects.value.length} objects` : "");
+
+	function handleObjectClick(object: Marker | Line, event: MouseEvent): void {
+		const item = mapContext.selection.find((it) => {
+			return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
+		});
+		if (item) {
+			if (event.ctrlKey)
+				mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it !== item), true);
+			else
+				mapContext.components.selectionHandler.setSelectedItems([item], true);
 		}
+	}
 
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
-		}
-
-		get objects(): Array<Marker<StringMap> | Line<StringMap>> | undefined {
-			const objects = this.mapContext.selection.flatMap((item): Array<Marker<StringMap> | Line<StringMap>> => {
-				if (item.type == "marker" && this.client.markers[item.id])
-					return [this.client.markers[item.id]];
-				else if (item.type == "line" && this.client.lines[item.id])
-					return [this.client.lines[item.id]];
-				else
-					return [];
-			});
-			return objects.length > 1 ? objects : undefined;
-		}
-
-		handleOpenSelection(): void {
-			if (this.objects)
-				this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-multiple-info-tab`);
-		}
-
-		get title(): string | undefined {
-			return this.objects ? `${this.objects.length} objects` : undefined;
-		}
-
-		handleObjectClick(object: Marker<StringMap> | Line<StringMap>, event: MouseEvent): void {
-			const item = this.mapContext.selection.find((it) => {
-				return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
-			});
-			if (item) {
-				if (event.ctrlKey)
-					this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((it) => it !== item), true);
-				else
-					this.mapComponents.selectionHandler.setSelectedItems([item], true);
-			}
-		}
-
-		close(): void {
-			this.mapComponents.selectionHandler.setSelectedItems([]);
-		}
-
+	function close(): void {
+		mapContext.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 

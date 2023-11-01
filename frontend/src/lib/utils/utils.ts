@@ -4,10 +4,10 @@ import { Field, Line, Marker, Type } from "facilmap-types";
 import { Emitter } from "mitt";
 import { DeepReadonly, onBeforeUnmount, onMounted } from "vue";
 
-/** Can be used as the "type" of props that accept an ID */
-export const IdType = Number;
-
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+// https://stackoverflow.com/a/62085569/242365
+export type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
@@ -27,7 +27,7 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 	}
 }
 
-export function canControl<T extends Marker | Line = Marker | Line>(type: Type, ignoreField?: Field | null): Array<keyof T> {
+export function canControl<T extends Marker | Line = Marker | Line>(type: Type, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
 	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)
@@ -39,7 +39,7 @@ export function canControl<T extends Marker | Line = Marker | Line>(type: Type, 
 				return false;
 		}
 		return true;
-	}) as Array<keyof T>;
+	}) as Array<T extends any ? keyof T : never>;
 }
 
 
@@ -49,11 +49,11 @@ export function getUniqueId(scope = ""): string {
 	return `${scope ? `${scope}-` : ""}${idCounter++}`;
 }
 
-export function isMarker<DataType>(object: Marker<DataType> | Line<DataType>): object is Marker<DataType> {
+export function isMarker(object: Marker | Line): object is Marker {
 	return "lat" in object && object.lat != null;
 }
 
-export function isLine<DataType>(object: Marker<DataType> | Line<DataType>): object is Line<DataType> {
+export function isLine(object: Marker | Line): object is Line {
 	return "top" in object && object.top != null;
 }
 
@@ -112,5 +112,21 @@ export const extendableEventMixin: ExtendableEventMixin = {
 			this._hasAwaited = true;
 			await Promise.all(this._promises ?? []);
 		}
+	}
+}
+
+export function validations<V>(val: V, funcs: Array<(val: V) => string | undefined>): string | undefined {
+	for (const func of funcs) {
+		const result = func(val);
+		if (result) {
+			return result;
+		}
+	}
+	return undefined;
+}
+
+export function validateRequired(val: any): string | undefined {
+	if (val == null || val === "") {
+		return "Must not be empty.";
 	}
 }

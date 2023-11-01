@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { ID, Type } from "facilmap-types";
-	import EditType from "./edit-type/edit-type.vue";
-	import { injectContextRequired } from "./../utils/context";
+	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
+	import { injectContextRequired } from "../utils/context";
 	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
@@ -10,8 +10,11 @@
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
-
 	const toasts = useToasts();
+
+	const emit = defineEmits<{
+		hidden: [];
+	}>();
 
 	const isDeleting = ref<Record<ID, boolean>>({ });
 	const editDialogTypeId = ref<ID | null>(); // null: create dialog
@@ -43,10 +46,11 @@
 <template>
 	<ModalDialog
 		title="Manage Types"
-		ok-only
-		:busy="isBusy"
+		okOnly
+		:isBusy="isBusy"
 		size="lg"
 		class="fm-manage-types"
+		@hidden="emit('hidden')"
 	>
 		<table class="table table-striped table-hover">
 			<thead>
@@ -94,6 +98,6 @@
 			</tfoot>
 		</table>
 
-		<EditType v-if="editDialogTypeId !== undefined" :typeId="editDialogTypeId"></EditType>
+		<EditTypeDialog v-if="editDialogTypeId !== undefined" :typeId="editDialogTypeId ?? undefined"></EditTypeDialog>
 	</ModalDialog>
 </template>

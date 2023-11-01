@@ -21,7 +21,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update:show", show: boolean): void;
+		"update:show": [show: boolean];
 	}>();
 
 	const show = useRefWithOverride(false, () => props.show, (show) => {

@@ -1,5 +1,5 @@
 import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { ID, Latitude, Longitude, PadId, View, ViewCreate, ViewUpdate } from "facilmap-types";
+import { CRU, ID, Latitude, Longitude, PadId, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 import { PadModel } from "./pad.js";
@@ -61,7 +61,7 @@ export default class DatabaseViews {
 		return this._db.helpers._getPadObjects<View>("View", padId);
 	}
 
-	async createView(padId: PadId, data: ViewCreate): Promise<View> {
+	async createView(padId: PadId, data: View<CRU.CREATE>): Promise<View> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -78,7 +78,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: ViewUpdate): Promise<View> {
+	async updateView(padId: PadId, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
 		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
 
 		this._db.emit("view", padId, newData);

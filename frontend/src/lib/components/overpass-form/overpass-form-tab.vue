@@ -1,22 +1,9 @@
 <script setup lang="ts">
-	import WithRender from "./overpass-form-tab.vue";
-	import Vue from "vue";
-	import { Component } from "vue-property-decorator";
-	import { InjectContext } from "../../utils/decorators";
-	import "./overpass-form-tab.scss";
-	import { Context } from "../facilmap/facilmap";
-	import OverpassForm from "./overpass-form";
+	import OverpassForm from "./overpass-form.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+import { injectContextRequired } from "../../utils/context";
 
-	@WithRender
-	@Component({
-		components: { OverpassForm }
-	})
-	export default class OverpassFormTab extends Vue {
-
-		const context = injectContextRequired();
-
-	}
+	const context = injectContextRequired();
 </script>
 
 <template>

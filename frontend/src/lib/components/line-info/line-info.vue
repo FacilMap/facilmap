@@ -1,7 +1,6 @@
 <script setup lang="ts">
-	import { ExportFormat, ID, Line } from "facilmap-types";
-	import { IdType } from "../../utils/utils";
-	import EditLine from "../edit-line.vue";
+	import { ExportFormat, ID } from "facilmap-types";
+	import EditLineDialog from "../edit-line-dialog.vue";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
 	import Icon from "../ui/icon.vue";
@@ -148,7 +147,7 @@
 		<div class="d-flex align-items-center">
 			<h2 class="flex-grow-1">
 				<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-				{{line.name}}
+				{{line.name || "Untitled line"}}
 			</h2>
 			<div v-if="!isMoving" class="btn-group">
 				<button
@@ -177,7 +176,7 @@
 				<template v-if="line.ascent == null || !showElevationPlot">
 					<template v-for="field in client.types[line.typeId].fields" :key="field.name">
 						<dt>{{field.name}}</dt>
-						<dd v-html="formatField(field, line.data.get(field.name))"></dd>
+						<dd v-html="formatField(field, line.data[field.name])"></dd>
 					</template>
 				</template>
 			</dl>
@@ -252,7 +251,7 @@
 
 		<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>
 
-		<EditLine :id="`fm${context.id}-line-info-edit`" :line-id="lineId"></EditLine>
+		<EditLineDialog :id="`fm${context.id}-line-info-edit`" :line-id="lineId"></EditLineDialog>
 	</div>
 </template>
 

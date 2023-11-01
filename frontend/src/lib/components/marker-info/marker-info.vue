@@ -1,90 +1,84 @@
 <script setup lang="ts">
-	import WithRender from "./marker-info.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
-	import { FindOnMapResult, ID, Marker } from "facilmap-types";
-	import { IdType } from "../../utils/utils";
+	import { FindOnMapResult, ID } from "facilmap-types";
 	import { moveMarker } from "../../utils/draw";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { showErrorToast } from "../../utils/toasts";
-	import EditMarker from "../edit-marker/edit-marker";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import "./marker-info.scss";
+	import EditMarkerDialog from "../edit-marker-dialog.vue";
 	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
-	import Icon from "../ui/icon/icon";
-	import StringMap from "../../utils/string-map";
-	import { Context } from "../facilmap/facilmap";
-	import Coordinates from "../ui/coordinates/coordinates";
+	import Icon from "../ui/icon.vue";
+	import Coordinates from "../ui/coordinates.vue";
 	import vTooltip from "../../utils/tooltip";
-import { formatField } from "facilmap-utils";
+	import { formatField } from "facilmap-utils";
+	import { computed, ref } from "vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { showConfirm } from "../ui/alert.vue";
 
-	@WithRender
-	@Component({
-		components: { Coordinates, EditMarker, Icon }
-	})
-	export default class MarkerInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
+	const toasts = useToasts();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const props = withDefaults(defineProps<{
+		markerId: ID;
+		showBackButton: boolean;
+	}>(), {
+		showBackButton: false
+	});
 
-		@Prop({ type: IdType, required: true }) markerId!: ID;
-		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
+	const isDeleting = ref(false);
 
-		isDeleting = false;
+	const marker = computed(() => client.markers[props.markerId]);
 
-		get marker(): Marker<StringMap> | undefined {
-			return this.client.markers[this.markerId];
+	function move(): void {
+		moveMarker(props.markerId, client, mapContext, toasts);
+	}
+
+	async function deleteMarker(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-marker-info-delete`);
+
+		if (!marker.value || !await showConfirm({ title: "Remove marker", message: `Do you really want to remove the marker “${marker.value.name}”?` }))
+			return;
+
+		isDeleting.value = true;
+
+		try {
+			await client.deleteMarker({ id: props.markerId });
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, "Error deleting marker", err);
+		} finally {
+			isDeleting.value = false;
 		}
+	}
 
-		move(): void {
-			moveMarker(this.markerId, this.client, this.mapComponents);
-		}
+	function zoomToMarker(): void {
+		if (marker.value)
+			flyTo(mapContext.components.map, getZoomDestinationForMarker(marker.value));
+	}
 
-		async deleteMarker(): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-marker-info-delete`);
+	function useAs(event: "route-set-from" | "route-add-via" | "route-set-to"): void {
+		if (!marker.value)
+			return;
 
-			if (!this.marker || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove the marker “${this.marker.name}”?`))
-				return;
+		const markerSuggestion: FindOnMapResult = { ...marker.value, kind: "marker", similarity: 1 };
+		mapContext.emit(event, {
+			query: marker.value.name,
+			mapSuggestions: [markerSuggestion],
+			selectedSuggestion: markerSuggestion
+		});
+		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
+	}
 
-			this.isDeleting = true;
+	function useAsFrom(): void {
+		useAs("route-set-from");
+	}
 
-			try {
-				await this.client.deleteMarker({ id: this.markerId });
-			} catch (err) {
-				toasts.showErrorToast(this, `fm${this.context.id}-marker-info-delete`, "Error deleting marker", err);
-			} finally {
-				this.isDeleting = false;
-			}
-		}
+	function useAsVia(): void {
+		useAs("route-add-via");
+	}
 
-		zoomToMarker(): void {
-			if (this.marker)
-				flyTo(this.mapComponents.map, getZoomDestinationForMarker(this.marker));
-		}
-
-		useAs(event: "fm-route-set-from" | "fm-route-add-via" | "fm-route-set-to"): void {
-			if (!this.marker)
-				return;
-
-			const markerSuggestion: FindOnMapResult = { ...this.marker, kind: "marker", similarity: 1 };
-			this.mapContext.$emit(event, this.marker.name, [], [markerSuggestion], markerSuggestion);
-			this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-route-form-tab`);
-		}
-
-		useAsFrom(): void {
-			this.useAs("fm-route-set-from");
-		}
-
-		useAsVia(): void {
-			this.useAs("fm-route-add-via");
-		}
-
-		useAsTo(): void {
-			this.useAs("fm-route-set-to");
-		}
-
+	function useAsTo(): void {
+		useAs("route-set-to");
 	}
 </script>
 
@@ -92,7 +86,7 @@ import { formatField } from "facilmap-utils";
 	<div class="fm-marker-info" v-if="marker">
 		<h2>
 			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-			{{marker.name}}
+			{{marker.name || "Untitled marker"}}
 		</h2>
 		<dl class="fm-search-box-collapse-point">
 			<dt class="pos">Coordinates</dt>
@@ -103,9 +97,9 @@ import { formatField } from "facilmap-utils";
 				<dd class="elevation">{{marker.ele}} m</dd>
 			</template>
 
-			<template v-for="field in client.types[marker.typeId].fields">
+			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">
 				<dt>{{field.name}}</dt>
-				<dd v-html="formatField(field, marker.data.get(field.name))"></dd>
+				<dd v-html="formatField(field, marker.data[field.name])"></dd>
 			</template>
 		</dl>
 
@@ -174,7 +168,7 @@ import { formatField } from "facilmap-utils";
 			</button>
 		</div>
 
-		<EditMarker :id="`fm${context.id}-marker-info-edit`" :markerId="markerId"></EditMarker>
+		<EditMarkerDialog :id="`fm${context.id}-marker-info-edit`" :markerId="markerId"></EditMarkerDialog>
 	</div>
 </template>
 

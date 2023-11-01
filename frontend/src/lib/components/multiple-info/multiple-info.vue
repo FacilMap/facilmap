@@ -1,107 +1,93 @@
 <script setup lang="ts">
-	import WithRender from "./multiple-info.vue";
-	import Vue from "vue";
-	import { Component, Prop, Watch } from "vue-property-decorator";
 	import { ID, Line, Marker } from "facilmap-types";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { showErrorToast } from "../../utils/toasts";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import "./multiple-info.scss";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
-	import Icon from "../ui/icon/icon";
-	import StringMap from "../../utils/string-map";
+	import Icon from "../ui/icon.vue";
 	import { isLine, isMarker } from "../../utils/utils";
-	import MarkerInfo from "../marker-info/marker-info";
-	import LineInfo from "../line-info/line-info";
-	import { Context } from "../facilmap/facilmap";
-	import vTooltip from "../../utils/tooltip";
+	import MarkerInfo from "../marker-info/marker-info.vue";
+	import LineInfo from "../line-info/line-info.vue";
+	import { computed, ref, watch } from "vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { showConfirm } from "../ui/alert.vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, MarkerInfo, LineInfo }
-	})
-	export default class MultipleInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
+	const toasts = useToasts();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const props = defineProps<{
+		objects: Array<Marker | Line>;
+	}>();
 
-		@Prop({ type: Array, required: true }) objects!: Array<Marker<StringMap> | Line<StringMap>>;
+	const isDeleting = ref(false);
+	const openedObjectId = ref<ID>();
+	const openedObjectType = ref<"marker" | "line">();
+	const activeTab = ref(0);
 
-		isDeleting = false;
-		openedObjectId: ID | null = null;
-		openedObjectType: "marker" | "line" | null = null;
-		activeTab = 0;
+	function zoomToObject(object: Marker | Line): void {
+		const zoomDestination = isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined;
+		if (zoomDestination)
+			flyTo(mapContext.components.map, zoomDestination);
+	}
 
-		isMarker = isMarker;
-		isLine = isLine;
+	function openObject(object: Marker | Line): void {
+		openedObjectId.value = object.id;
+		openedObjectType.value = isMarker(object) ? "marker" : isLine(object) ? "line" : undefined;
+		activeTab.value = 1;
+	}
 
-		zoomToObject(object: Marker<StringMap> | Line<StringMap>): void {
-			const zoomDestination = isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined;
-			if (zoomDestination)
-				flyTo(this.mapComponents.map, zoomDestination);
+	const openedObject = computed(() => {
+		let openedObject: Marker | Line | undefined = undefined;
+		if (openedObjectId.value != null) {
+			if (openedObjectType.value == "marker")
+				openedObject = client.markers[openedObjectId.value];
+			else if (openedObjectType.value == "line")
+				openedObject = client.lines[openedObjectId.value];
 		}
 
-		openObject(object: Marker<StringMap> | Line<StringMap>): void {
-			this.openedObjectId = object.id;
-			this.openedObjectType = isMarker(object) ? "marker" : isLine(object) ? "line" : null;
-			this.activeTab = 1;
-		}
+		return openedObject && props.objects.includes(openedObject) ? openedObject : undefined;
+	});
 
-		get openedObject(): Marker<StringMap> | Line<StringMap> | undefined {
-			let openedObject: Marker<StringMap> | Line<StringMap> | undefined = undefined;
-			if (this.openedObjectId != null) {
-				if (this.openedObjectType == "marker")
-					openedObject = this.client.markers[this.openedObjectId];
-				else if (this.openedObjectType == "line")
-					openedObject = this.client.lines[this.openedObjectId];
-			}
+	watch(openedObject, () => {
+		if (!openedObject.value)
+			activeTab.value = 0;
+	});
 
-			return openedObject && this.objects.includes(openedObject) ? openedObject : undefined;
-		}
+	async function deleteObjects(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-multiple-info-delete`);
 
-		@Watch("openedObject")
-		handleOpenedObjectChange(): void {
-			if (!this.openedObject)
-				this.activeTab = 0;
-		}
+		if (!props.objects || !await showConfirm({ title: "Delete objects", message: `Do you really want to remove ${props.objects.length} objects?` }))
+			return;
 
-		async deleteObjects(): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-multiple-info-delete`);
+		isDeleting.value = true;
 
-			if (!this.objects || !await this.$bvModal.msgBoxConfirm(`Do you really want to remove ${this.objects.length} objects?`))
-				return;
-
-			this.isDeleting = true;
-
-			try {
-				for (const object of this.objects) {
-					if (isMarker(object))
-						await this.client.deleteMarker({ id: object.id });
-					else if (isLine(object))
-						await this.client.deleteLine({ id: object.id });
-				}
-			} catch (err) {
-				toasts.showErrorToast(this, `fm${this.context.id}-multiple-info-delete`, "Error deleting objects", err);
-			} finally {
-				this.isDeleting = false;
-			}
-		}
-
-		zoom(): void {
-			const zoomDestination = combineZoomDestinations(this.objects.map((object) => {
+		try {
+			for (const object of props.objects) {
 				if (isMarker(object))
-					return getZoomDestinationForMarker(object);
+					await client.deleteMarker({ id: object.id });
 				else if (isLine(object))
-					return getZoomDestinationForLine(object);
-				else
-					return undefined;
-			}));
-			if (zoomDestination)
-				flyTo(this.mapComponents.map, zoomDestination);
+					await client.deleteLine({ id: object.id });
+			}
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, "Error deleting objects", err);
+		} finally {
+			isDeleting.value = false;
 		}
+	}
 
+	function zoom(): void {
+		const zoomDestination = combineZoomDestinations(props.objects.map((object) => {
+			if (isMarker(object))
+				return getZoomDestinationForMarker(object);
+			else if (isLine(object))
+				return getZoomDestinationForLine(object);
+			else
+				return undefined;
+		}));
+		if (zoomDestination)
+			flyTo(mapContext.components.map, zoomDestination);
 	}
 </script>
 
@@ -111,7 +97,7 @@
 			<b-carousel-slide>
 				<div class="fm-search-box-collapse-point">
 					<ul class="list-group">
-						<li v-for="object in objects" class="list-group-item active">
+						<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
 							<span>
 								<a href="javascript:" @click="$emit('click-object', object, $event)">{{object.name}}</a>
 								{{" "}}

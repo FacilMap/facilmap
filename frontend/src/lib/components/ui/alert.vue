@@ -108,9 +108,9 @@
 	});
 
 	const emit = defineEmits<{
-		(type: 'shown'): void;
-		(type: 'hide', result: AlertResult): void;
-		(type: 'hidden', result: AlertResult): void;
+		shown: [];
+		hide: [result: AlertResult];
+		hidden: [result: AlertResult];
 	}>();
 
 	const result = ref<AlertResult>({

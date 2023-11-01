@@ -106,30 +106,31 @@
 
 <script setup lang="ts">
 	const props = withDefaults(defineProps<{
-		value?: RouteModeType;
+		modelValue?: RouteModeType;
 		tabindex?: number;
 		disabled?: boolean;
 		tooltipPlacement?: string;
+		validationError?: string | undefined;
 	}>(), {
 		tooltipPlacement: "top"
 	});
 
 	const emit = defineEmits<{
-		(type: "update", value: RouteModeType): void;
+		"update:modelValue": [value: RouteModeType];
 	}>();
 
 	const id = getUniqueId("fm-route-mode");
 
-	const decodedMode = ref(decodeRouteMode(props.value ?? ""));
+	const decodedMode = ref(decodeRouteMode(props.modelValue ?? ""));
 
-	watch(() => props.value, () => {
-		decodedMode.value = decodeRouteMode(props.value ?? "");
+	watch(() => props.modelValue, () => {
+		decodedMode.value = decodeRouteMode(props.modelValue ?? "");
 	});
 
 	watch(() => decodedMode.value, () => {
 		const newValue = encodeRouteMode(decodedMode.value);
-		if (newValue !== props.value) {
-			emit("update", newValue);
+		if (newValue !== props.modelValue) {
+			emit("update:modelValue", newValue);
 		}
 	});
 
@@ -164,22 +165,28 @@
 </script>
 
 <template>
-	<div class="btn-group fm-route-mode" role="group">
-		<template v-for="(mode, idx) in constants.modes">
-			<input
-				type="radio"
-				class="btn-check"
-				:id="`${id}-mode-${mode}`"
-				:name="`${id}-mode`"
-				:checked="decodedMode.mode == mode"
-				:tabindex="tabindex != null ? tabindex + idx : undefined"
-				v-tooltip:[tooltipPlacement]="`Go ${constants.modeTitle[mode]}`"
-				:disabled="disabled"
-			/>
-			<label class="btn btn-light" :for="`${id}-mode-${mode}`">
-				<Icon :icon="constants.modeIcon[mode]" :alt="constants.modeAlt[mode]"></Icon>
-			</label>
-		</template>
+	<div class="fm-route-mode">
+		<div class="btn-group" role="group">
+			<template v-for="(mode, idx) in constants.modes" :key="mode">
+				<input
+					type="radio"
+					class="btn-check"
+					:id="`${id}-mode-${mode}`"
+					:name="`${id}-mode`"
+					:checked="decodedMode.mode == mode"
+					:tabindex="tabindex != null ? tabindex + idx : undefined"
+					v-tooltip:[tooltipPlacement]="`Go ${constants.modeTitle[mode]}`"
+					:disabled="disabled"
+				/>
+				<label class="btn btn-light" :for="`${id}-mode-${mode}`">
+					<Icon :icon="constants.modeIcon[mode]" :alt="constants.modeAlt[mode]"></Icon>
+				</label>
+			</template>
+		</div>
+
+		<div class="invalid-feedback" v-if="props.validationError">
+			{{props.validationError}}
+		</div>
 
 		<div class="dropdown fm-route-mode-customize">
 			<button
@@ -197,7 +204,7 @@
 					<a
 						class="dropdown-item"
 						href="javascript:"
-						@click.native.capture.stop.prevent="decodedMode.details = !decodedMode.details"
+						@click.capture.stop.prevent="decodedMode.details = !decodedMode.details"
 					>
 						<Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> Load route details (elevation, road types, …)
 					</a>
@@ -205,12 +212,12 @@
 
 				<li><hr class="dropdown-divider"></li>
 
-				<template v-for="t in types">
+				<template v-for="t in types" :key="t.id">
 					<li>
 						<a
 							class="dropdown-item column"
 							href="javascript:"
-							@click.native.capture.stop.prevent="setMode(t[0], t[1])"
+							@click.capture.stop.prevent="setMode(t[0], t[1])"
 						>
 							<Icon :icon="isTypeActive(t[0], t[1]) ? 'check' : 'unchecked'"></Icon> {{constants.typeText[t[0]][t[1]]}}
 						</a>
@@ -219,13 +226,13 @@
 
 				<li><hr class="dropdown-divider"></li>
 
-				<template v-for="(pText, p) in constants.preferenceText">
+				<template v-for="(pText, p) in constants.preferenceText" :key="p">
 					<template v-if="decodedMode.mode">
 						<li>
 							<a
 								class="dropdown-item column"
 								href="javascript:"
-								@click.native.capture.stop.prevent="decodedMode.preference = p"
+								@click.capture.stop.prevent="decodedMode.preference = p"
 							>
 								<Icon :icon="decodedMode.preference == p ? 'check' : 'unchecked'"></Icon> {{pText}}
 							</a>
@@ -235,13 +242,13 @@
 
 				<li><hr class="dropdown-divider"></li>
 
-				<template v-for="avoid in constants.avoid">
+				<template v-for="avoid in constants.avoid" :key="avoid">
 					<template v-if="constants.avoidAllowed[avoid](decodedMode.mode, decodedMode.type)">
 						<li>
 							<a
 								class="dropdown-item column"
 								href="javascript:"
-								@click.native.capture.stop.prevent="toggleAvoid(avoid)"
+								@click.capture.stop.prevent="toggleAvoid(avoid)"
 							>
 								<Icon :icon="decodedMode.avoid.includes(avoid) ? 'check' : 'unchecked'"></Icon> Avoid {{constants.avoidText[avoid]}}
 							</a>

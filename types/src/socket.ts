@@ -1,22 +1,25 @@
-import { Bbox, BboxWithZoom, ExportFormat, ID, ObjectWithId } from "./base.js";
-import { PadData, PadDataCreate, PadDataUpdate } from "./padData.js";
-import { Marker, MarkerCreate, MarkerUpdate } from "./marker.js";
-import { Line, LineCreate, LineUpdate } from "./line.js";
-import { LineToRouteCreate, Route, RouteClear, RouteCreate, RouteInfo, RouteRequest } from "./route.js";
-import { Type, TypeCreate, TypeUpdate } from "./type.js";
-import { View, ViewCreate, ViewUpdate } from "./view.js";
+import { Bbox, bboxWithZoomValidator, exportFormatValidator, idValidator, objectWithIdValidator } from "./base.js";
+import { PadData, padDataValidator } from "./padData.js";
+import { Marker, markerValidator } from "./marker.js";
+import { Line, lineValidator } from "./line.js";
+import { Route, RouteInfo, lineToRouteCreateValidator, routeClearValidator, routeCreateValidator, routeRequestValidator } from "./route.js";
+import { Type, typeValidator } from "./type.js";
+import { View, viewValidator } from "./view.js";
 import { MapEvents, MultipleEvents } from "./events.js";
 import { SearchResult } from "./searchResult.js";
+import * as z from "zod";
 
-export interface GetPadQuery {
-	padId: string;
-}
+export const getPadQueryValidator = z.object({
+	padId: z.string()
+});
+export type GetPadQuery = z.infer<typeof getPadQueryValidator>;
 
-export interface FindPadsQuery {
-	query: string;
-	start?: number;
-	limit?: number;
-}
+export const findPadsQueryValidator = z.object({
+	query: z.string(),
+	start: z.number().optional(),
+	limit: z.number().optional()
+});
+export type FindPadsQuery = z.infer<typeof findPadsQueryValidator>;
 
 export type FindPadsResult = Pick<PadData, "id" | "name" | "description">;
 
@@ -25,88 +28,99 @@ export interface PagedResults<T> {
 	totalLength: number;
 }
 
-export interface LineTemplateRequest {
-	typeId: ID
-}
+export const lineTemplateRequestValidator = z.object({
+	typeId: idValidator
+});
+export type LineTemplateRequest = z.infer<typeof lineTemplateRequestValidator>;
 
-export interface LineExportRequest {
-	id: ID;
-	format: ExportFormat
-}
+export const lineExportRequestValidator = z.object({
+	id: idValidator,
+	format: exportFormatValidator
+});
+export type LineExportRequest = z.infer<typeof lineExportRequestValidator>;
 
-export interface RouteExportRequest {
-	format: ExportFormat;
-	routeId?: string;
-}
+export const routeExportRequestValidator = z.object({
+	format: exportFormatValidator,
+	routeId: z.string().optional()
+});
+export type RouteExportRequest = z.infer<typeof routeExportRequestValidator>;
 
-export interface FindQuery {
-	query: string;
-	loadUrls?: boolean;
-	elevation?: boolean;
-}
+export const findQueryValidator = z.object({
+	query: z.string(),
+	loadUrls: z.boolean().optional(),
+	elevation: z.boolean().optional()
+});
+export type FindQuery = z.infer<typeof findQueryValidator>;
 
-export interface FindOnMapQuery {
-	query: string;
-}
+export const findOnMapQueryValidator = z.object({
+	query: z.string()
+});
+export type FindOnMapQuery = z.infer<typeof findOnMapQueryValidator>;
 
 export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "symbol"> & { kind: "marker"; similarity: number };
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
-export interface RequestDataMap<DataType = Record<string, string>> {
-	updateBbox: BboxWithZoom;
-	getPad: GetPadQuery;
-	findPads: FindPadsQuery;
-	createPad: PadDataCreate;
-	editPad: PadDataUpdate;
-	deletePad: void;
-	listenToHistory: void;
-	stopListeningToHistory: void;
-	revertHistoryEntry: ObjectWithId;
-	getMarker: ObjectWithId;
-	addMarker: MarkerCreate<DataType>;
-	editMarker: ObjectWithId & MarkerUpdate<DataType>;
-	deleteMarker: ObjectWithId;
-	getLineTemplate: LineTemplateRequest;
-	addLine: LineCreate<DataType>;
-	editLine: ObjectWithId & LineUpdate<DataType>;
-	deleteLine: ObjectWithId;
-	exportLine: LineExportRequest;
-	find: FindQuery;
-	findOnMap: FindOnMapQuery;
-	getRoute: RouteRequest;
-	setRoute: RouteCreate;
-	clearRoute: RouteClear | undefined;
-	lineToRoute: LineToRouteCreate;
-	exportRoute: RouteExportRequest;
-	addType: TypeCreate;
-	editType: ObjectWithId & TypeUpdate;
-	deleteType: ObjectWithId;
-	addView: ViewCreate;
-	editView: ObjectWithId & ViewUpdate;
-	deleteView: ObjectWithId;
-	geoip: void;
-	setPadId: string;
+export const requestDataValidators = {
+	updateBbox: bboxWithZoomValidator,
+	getPad: getPadQueryValidator,
+	findPads: findPadsQueryValidator,
+	createPad: padDataValidator.create,
+	editPad: padDataValidator.update,
+	deletePad: z.void(),
+	listenToHistory: z.void(),
+	stopListeningToHistory: z.void(),
+	revertHistoryEntry: objectWithIdValidator,
+	getMarker: objectWithIdValidator,
+	addMarker: markerValidator.create,
+	editMarker: markerValidator.update,
+	deleteMarker: objectWithIdValidator,
+	getLineTemplate: lineTemplateRequestValidator,
+	addLine: lineValidator.create,
+	editLine: lineValidator.update,
+	deleteLine: objectWithIdValidator,
+	exportLine: lineExportRequestValidator,
+	find: findQueryValidator,
+	findOnMap: findOnMapQueryValidator,
+	getRoute: routeRequestValidator,
+	setRoute: routeCreateValidator,
+	clearRoute: routeClearValidator.or(z.undefined()),
+	lineToRoute: lineToRouteCreateValidator,
+	exportRoute: routeExportRequestValidator,
+	addType: typeValidator.create,
+	editType: typeValidator.update,
+	deleteType: objectWithIdValidator,
+	addView: viewValidator.create,
+	editView: viewValidator.update,
+	deleteView: objectWithIdValidator,
+	geoip: z.void(),
+	setPadId: z.string()
 }
 
-export interface ResponseDataMap<DataType = Record<string, string>> {
-	updateBbox: MultipleEvents<MapEvents<DataType>>;
+type RawRequestDataMap = {
+	[K in keyof typeof requestDataValidators]: z.infer<typeof requestDataValidators[K]>;
+};
+export interface RequestDataMap extends RawRequestDataMap {
+}
+
+export interface ResponseDataMap {
+	updateBbox: MultipleEvents<MapEvents>;
 	getPad: FindPadsResult | undefined;
 	findPads: PagedResults<FindPadsResult>;
-	createPad: MultipleEvents<MapEvents<DataType>>;
+	createPad: MultipleEvents<MapEvents>;
 	editPad: PadData;
 	deletePad: void;
-	listenToHistory: MultipleEvents<MapEvents<DataType>>;
+	listenToHistory: MultipleEvents<MapEvents>;
 	stopListeningToHistory: void;
-	revertHistoryEntry: MultipleEvents<MapEvents<DataType>>;
-	getMarker: Marker<DataType>;
-	addMarker: Marker<DataType>;
-	editMarker: Marker<DataType>;
-	deleteMarker: Marker<DataType>;
-	getLineTemplate: Line<DataType>;
-	addLine: Line<DataType>;
-	editLine: Line<DataType>;
-	deleteLine: Line<DataType>;
+	revertHistoryEntry: MultipleEvents<MapEvents>;
+	getMarker: Marker;
+	addMarker: Marker;
+	editMarker: Marker;
+	deleteMarker: Marker;
+	getLineTemplate: Line;
+	addLine: Line;
+	editLine: Line;
+	deleteLine: Line;
 	exportLine: string;
 	find: string | SearchResult[];
 	findOnMap: Array<FindOnMapResult>;
@@ -122,9 +136,9 @@ export interface ResponseDataMap<DataType = Record<string, string>> {
 	editView: View;
 	deleteView: View;
 	geoip: Bbox | null;
-	setPadId: MultipleEvents<MapEvents<DataType>>;
+	setPadId: MultipleEvents<MapEvents>;
 }
 
 export type RequestName = keyof RequestDataMap;
-export type RequestData<E extends RequestName, DataType = Record<string, string>> = RequestDataMap<DataType>[E];
-export type ResponseData<E extends RequestName, DataType = Record<string, string>> = ResponseDataMap<DataType>[E];
+export type RequestData<E extends RequestName> = RequestDataMap[E];
+export type ResponseData<E extends RequestName> = ResponseDataMap[E];

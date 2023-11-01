@@ -1,18 +1,27 @@
-import { Colour, ID, Point, Shape, Symbol } from "./base.js";
-import { PadId } from "./padData.js";
+import { colourValidator, idValidator, pointValidator, shapeValidator, sizeValidator, symbolValidator } from "./base.js";
+import { CRU, CRUType, cruValidator } from "./cru";
+import { padIdValidator } from "./padData.js";
+import * as z from "zod";
 
-export interface Marker<DataType = Record<string, string>> extends Point {
-	id: ID;
-	name: string;
-	colour: Colour;
-	size: number;
-	symbol: Symbol;
-	shape: Shape;
-	ele?: number;
-	typeId: ID;
-	data: DataType;
-	padId: PadId;
-}
-
-export type MarkerCreate<DataType = Record<string, string>> = Partial<Omit<Marker<DataType>, "id" | "padId">> & Pick<Marker<DataType>, keyof Point | 'typeId'>;
-export type MarkerUpdate<DataType = Record<string, string>> = Partial<MarkerCreate<DataType>>;
+export const markerValidator = cruValidator({
+	allPartialCreate: {
+		colour: colourValidator,
+		size: sizeValidator,
+		data: z.record(z.string())
+	},
+	allPartialUpdate: {
+		...pointValidator.shape,
+		name: z.string().optional(),
+		symbol: symbolValidator.optional(),
+		shape: shapeValidator.optional(),
+		ele: z.number().optional(),
+		typeId: idValidator
+	},
+	exceptCreate: {
+		id: idValidator
+	},
+	onlyRead: {
+		padId: padIdValidator
+	}
+});
+export type Marker<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof markerValidator>;

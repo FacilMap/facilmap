@@ -67,7 +67,7 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			coordinates: [marker.lon, marker.lat]
 		},
 		properties: {
-			name: marker.name,
+			name: marker.name || "Untitled marker",
 			colour: marker.colour,
 			size: marker.size,
 			symbol: marker.symbol,
@@ -86,7 +86,7 @@ function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 			coordinates: line.trackPoints.map((trackPoint) => [trackPoint.lon, trackPoint.lat])
 		},
 		properties: {
-			name: line.name,
+			name: line.name || "Untitled line",
 			mode: line.mode,
 			colour: line.colour,
 			width: line.width,

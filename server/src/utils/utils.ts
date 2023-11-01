@@ -10,51 +10,6 @@ export function generateRandomId(length: number): string {
 	return randomPadId;
 }
 
-const FAILURE = Symbol('failure');
-
-export function stripObject(obj: object, structure: object): boolean {
-	return _stripObject(obj, structure) !== FAILURE;
-}
-
-function _stripObject(obj: any, type: any): any {
-	if(obj === undefined)
-		return obj;
-	else if(obj === null)
-		return obj;
-	else if(type instanceof Array) {
-		if(!(obj instanceof Array))
-			return FAILURE;
-
-		for(let i=0; i<obj.length; i++) {
-			if((obj[i] = _stripObject(obj[i], type[0])) === FAILURE)
-				return FAILURE;
-		}
-		return obj;
-	}
-	else if(typeof type == "function")
-		return (obj instanceof type) ? obj : FAILURE;
-	else if(type instanceof Object) {
-		if(!(obj instanceof Object))
-			return FAILURE;
-
-		for(const i in obj) {
-			if(type[i] == null || obj[i] === undefined)
-				delete obj[i];
-			else if((obj[i] = _stripObject(obj[i], type[i])) === FAILURE)
-				return FAILURE;
-		}
-		return obj;
-	}
-	else if(type == "number" && typeof obj == "string")
-		return obj == "" ? null : isNaN(obj = Number(obj)) ? FAILURE : obj;
-	else if(type == "string" && typeof obj == "number")
-		return ""+obj;
-	else if(typeof type == "string")
-		return (typeof obj == type) ? obj : FAILURE;
-	else
-		return FAILURE;
-}
-
 export function round(number: number, digits: number): number {
 	const fac = Math.pow(10, digits);
 	return Math.round(number*fac)/fac;

@@ -11,7 +11,7 @@
 	const mapContext = injectMapContextRequired();
 
 	const emit = defineEmits<{
-		(type: "hide-sidebar"): void;
+		"hide-sidebar": [];
 	}>();
 
 	const dialog = ref<

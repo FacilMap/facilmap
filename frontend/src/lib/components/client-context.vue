@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { defineComponent, onMounted, reactive, ref, toRaw, watch } from "vue";
+	import { defineComponent, InjectionKey, inject, onBeforeUnmount, provide, reactive, ref, toRaw, watch } from "vue";
 	import FmClient from "facilmap-client";
 	import { PadData, PadId } from "facilmap-types";
-	import PadSettings from "./pad-settings/pad-settings.vue";
+	import PadSettingsDialog from "./pad-settings-dialog/pad-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../utils/context";
-	import { onBeforeUnmount } from "vue";
 	import Toast from "./ui/toasts/toast.vue";
-	import { InjectionKey, Ref, inject, provide } from "vue";
 
 	export type Client = FmClient;
 
@@ -58,7 +56,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update:padId", padId: string | undefined): void;
+		"update:padId": [padId: string | undefined];
 	}>();
 
 	const clientContext = reactive<ClientContext>({
@@ -211,12 +209,12 @@
 		/>
 
 		<ClientProvider v-if="client" :key="counter">
-			<PadSettings
+			<PadSettingsDialog
 				v-if="createId"
 				is-create
 				no-cancel
 				:proposed-admin-id="createId"
-			></PadSettings>
+			></PadSettingsDialog>
 		</ClientProvider>
 	</div>
 </template>

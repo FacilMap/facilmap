@@ -1,68 +1,39 @@
 <script setup lang="ts">
-	import WithRender from "./marker-info-tab.vue";
-	import Vue from "vue";
-	import { Component, Watch } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { ID, Marker } from "facilmap-types";
-	import MarkerInfo from "./marker-info";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import Icon from "../ui/icon/icon";
-	import StringMap from "../../utils/string-map";
-	import { Context } from "../facilmap/facilmap";
+	import { computed, watch } from "vue";
+	import MarkerInfo from "./marker-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue"
+	import { useEventListener } from "../../utils/utils";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, MarkerInfo }
-	})
-	export default class MarkerInfoTab extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-		mounted(): void {
-			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
-		}
+	const markerId = computed(() => {
+		if (mapContext.selection.length == 1 && mapContext.selection[0].type == "marker")
+			return mapContext.selection[0].id;
+		else
+			return undefined;
+	});
 
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
-		}
+	const marker = computed(() => markerId.value != null ? client.markers[markerId.value] : undefined);
 
-		get markerId(): ID | undefined {
-			if (this.mapContext.selection.length == 1 && this.mapContext.selection[0].type == "marker")
-				return this.mapContext.selection[0].id;
-			else
-				return undefined;
-		}
+	watch(marker, () => {
+		if (!marker.value && markerId.value != null)
+			close();
+	});
 
-		get marker(): Marker<StringMap> | undefined {
-			return this.markerId != null ? this.client.markers[this.markerId] : undefined;
-		}
+	function handleOpenSelection(): void {
+		if (marker.value)
+			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-marker-info-tab` });
+	}
 
-		@Watch("marker")
-		handleChangeMarker(marker: Marker<StringMap> | undefined): void {
-			if (!marker && this.markerId != null)
-				this.close();
-		}
-
-		handleOpenSelection(): void {
-			if (this.marker)
-				this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-marker-info-tab`);
-		}
-
-		get title(): string | undefined {
-			if (this.marker != null)
-				return this.marker.name;
-			else
-				return undefined;
-		}
-
-		close(): void {
-			this.mapComponents.selectionHandler.setSelectedItems([]);
-		}
-
+	function close(): void {
+		mapContext.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 
@@ -70,7 +41,7 @@
 	<template v-if="markerId">
 		<SearchBoxTab
 			:id="`fm${context.id}-marker-info-tab`"
-			:title="title"
+			:title="marker?.name ?? ''"
 			isCloseable
 			@close="close()"
 		>

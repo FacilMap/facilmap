@@ -1,5 +1,5 @@
 import { CreationAttributes, CreationOptional, DataTypes, ForeignKey, HasManyGetAssociationsMixin, InferAttributes, InferCreationAttributes, Model, Op } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Line, LineCreate, ExtraInfo, LineUpdate, Longitude, PadId, Point, Route, TrackPoint } from "facilmap-types";
+import { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU } from "facilmap-types";
 import Database from "./database.js";
 import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -87,7 +87,7 @@ export default class DatabaseLines {
 			mode : { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "0000ff", validate: validateColour },
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
-			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: LineModel) { return this.getDataValue("name") || "Untitled line"; } },
+			name : { type: DataTypes.TEXT, allowNull: true },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
 			time : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
 			ascent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
@@ -189,7 +189,7 @@ export default class DatabaseLines {
 		return this._db.helpers._getPadObject<Line>("Line", padId, lineId);
 	}
 
-	async createLine(padId: PadId, data: LineCreate, trackPointsFromRoute?: Route): Promise<Line> {
+	async createLine(padId: PadId, data: Line<CRU.CREATE>, trackPointsFromRoute?: Route): Promise<Line> {
 		const type = await this._db.types.getType(padId, data.typeId);
 
 		if(type.defaultColour && !data.colour)
@@ -215,7 +215,7 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: LineUpdate, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async updateLine(padId: PadId, lineId: ID, data: Line<CRU.UPDATE>, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
 		const update = {
 			...data,

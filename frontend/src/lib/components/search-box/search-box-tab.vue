@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { computed, onBeforeUnmount, onMounted, reactive, useSlots } from 'vue';
+	import { computed, onBeforeUnmount, onMounted } from 'vue';
 	import { SearchBoxTab, injectSearchBoxContextRequired } from './search-box-context.vue';
 	import { HashQuery } from 'facilmap-leaflet';
 
@@ -12,7 +12,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "close"): void;
+		close: [];
 	}>();
 
 	const searchBoxContext = injectSearchBoxContextRequired();

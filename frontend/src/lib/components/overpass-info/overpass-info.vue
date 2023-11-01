@@ -1,63 +1,53 @@
 <script setup lang="ts">
-	import WithRender from "./overpass-info.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
 	import { renderOsmTag } from "facilmap-utils";
-	import { Type } from "facilmap-types";
-	import Icon from "../ui/icon/icon";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import "./overpass-info.scss";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
+	import Icon from "../ui/icon.vue";
 	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
-	import { Context } from "../facilmap/facilmap";
 	import { OverpassElement } from "facilmap-leaflet";
-	import Coordinates from "../ui/coordinates/coordinates";
+	import Coordinates from "../ui/coordinates.vue";
 	import vTooltip from "../../utils/tooltip";
+	import { computed } from "vue";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
-	@WithRender
-	@Component({
-		components: { Coordinates, Icon }
-	})
-	export default class OverpassInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapComponents = injectMapComponentsRequired();
-		const mapContext = injectMapContextRequired();
+	const props = withDefaults(defineProps<{
+		element: OverpassElement;
+		showBackButton?: boolean;
+		isAdding?: boolean;
+	}>(), {
+		showBackButton: false,
+		isAdding: false
+	});
 
-		@Prop({ type: Object, required: true }) element!: OverpassElement;
-		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
-		@Prop({ type: Boolean, default: false }) isAdding!: boolean;
+	const types = computed(() => {
+		return Object.values(client.types).filter((type) => type.type == "marker");
+	});
 
-		renderOsmTag = renderOsmTag;
+	function zoomToElement(): void {
+		const dest = getZoomDestinationForMarker(props.element);
+		if (dest)
+			flyTo(mapContext.components.map, dest);
+	}
 
-		get types(): Type[] {
-			return Object.values(this.client.types).filter((type) => type.type == "marker");
-		}
+	function useAs(event: "route-set-from" | "route-add-via" | "route-set-to"): void {
+		mapContext.emit(event, { query: `${props.element.lat},${props.element.lon}` });
+		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
+	}
 
-		zoomToElement(): void {
-			const dest = getZoomDestinationForMarker(this.element);
-			if (dest)
-				flyTo(this.mapComponents.map, dest);
-		}
+	function useAsFrom(): void {
+		useAs("route-set-from");
+	}
 
-		useAs(event: "fm-route-set-from" | "fm-route-add-via" | "fm-route-set-to"): void {
-			this.mapContext.$emit(event, `${this.element.lat},${this.element.lon}`);
-			this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-route-form-tab`);
-		}
+	function useAsVia(): void {
+		useAs("route-add-via");
+	}
 
-		useAsFrom(): void {
-			this.useAs("fm-route-set-from");
-		}
-
-		useAsVia(): void {
-			this.useAs("fm-route-add-via");
-		}
-
-		useAsTo(): void {
-			this.useAs("fm-route-set-to");
-		}
-
+	function useAsTo(): void {
+		useAs("route-set-to");
 	}
 </script>
 
@@ -71,7 +61,7 @@
 			<dt>Coordinates</dt>
 			<dd><Coordinates :point="element"></Coordinates></dd>
 
-			<template v-for="(value, key) in element.tags">
+			<template v-for="(value, key) in element.tags" :key="key">
 				<dt>{{key}}</dt>
 				<dd v-html="renderOsmTag(key, value)"></dd>
 			</template>
@@ -93,7 +83,7 @@
 					Add to map
 				</button>
 				<ul class="dropdown-menu">
-					<template v-for="type in types">
+					<template v-for="type in types" :key="type.id">
 						<li>
 							<a
 								href="javascript:"

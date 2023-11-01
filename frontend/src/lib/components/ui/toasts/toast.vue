@@ -12,7 +12,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "hidden"): void;
+		hidden: [];
 	}>();
 
 	onMounted(() => {

@@ -1,15 +1,8 @@
 import { ComponentPublicInstance, DeepReadonly, Directive, Ref, computed, onScopeDispose, reactive, readonly, ref, shallowReadonly, shallowRef, toRef, watch } from "vue";
 
-export const vScrollIntoView: Directive<Element, string | undefined> = {
-	mounted(el, binding) {
-		if (binding.value)
-			el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-	},
-
-	updated(el, binding) {
-		if (binding.value && !binding.oldValue)
-			el.scrollIntoView({ behavior: "smooth", block: "nearest" })
-	}
+export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
+	if (binding.value)
+		el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
 
 /**

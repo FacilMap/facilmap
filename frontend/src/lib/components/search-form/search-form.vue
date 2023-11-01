@@ -17,7 +17,7 @@
 	import { injectClientRequired } from "../client-context.vue";
 
 	const emit = defineEmits<{
-		(type: "hash-query-change", query: HashQuery | undefined): void;
+		"hash-query-change": [query: HashQuery | undefined];
 	}>();
 
 	const context = injectContextRequired();

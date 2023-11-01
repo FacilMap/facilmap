@@ -1,5 +1,5 @@
 import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
-import { Line, Marker, PadId, ID, LineUpdate, MarkerUpdate, Type, Bbox } from "facilmap-types";
+import { Line, Marker, PadId, ID, Type, Bbox, CRU } from "facilmap-types";
 import Database from "./database.js";
 import { clone, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
@@ -150,8 +150,8 @@ export default class DatabaseHelpers {
 	async _updateObjectStyles(objects: Marker | Line | AsyncGenerator<Marker | Line, void, void>): Promise<void> {
 		const iterator = Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects]);
 
-		type MarkerData = { object: Marker; type: Type; update: MarkerUpdate; };
-		type LineData = { object: Line; type: Type; update: LineUpdate; };
+		type MarkerData = { object: Marker; type: Type; update: Marker<CRU.UPDATE>; };
+		type LineData = { object: Line; type: Type; update: Line<CRU.UPDATE>; };
 		const isLine = (data: MarkerData | LineData): data is LineData => (data.type.type == "line");
 
 		const types: Record<ID, Type> = { };
@@ -167,7 +167,7 @@ export default class DatabaseHelpers {
 			const data = {
 				object,
 				type: types[object.typeId],
-				update: { } as MarkerUpdate | LineUpdate
+				update: { } as Marker<CRU.UPDATE> | Line<CRU.UPDATE>
 			} as MarkerData | LineData;
 
 			if(data.type.colourFixed && data.type.defaultColour && object.colour != data.type.defaultColour)

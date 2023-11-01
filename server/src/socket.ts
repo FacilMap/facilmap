@@ -1,4 +1,4 @@
-import { promiseProps, stripObject } from "./utils/utils.js";
+import { promiseProps } from "./utils/utils.js";
 import { asyncIteratorToArray } from "./utils/streams.js";
 import { isInBbox } from "./utils/geo.js";
 import { Server, Socket as SocketIO } from "socket.io";
@@ -9,13 +9,15 @@ import { geoipLookup } from "./geoip.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { DatabaseEvents } from "./database/database.js";
 import { Server as HttpServer } from "http";
-import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable } from "facilmap-types";
+import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable, requestDataValidators } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "./routing/routing.js";
 import { RouteWithId } from "./database/route.js";
 
-type SocketHandlers = {
+type ValidatedSocketHandlers = {
 	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
-} & {
+};
+
+type UnvalidatedSocketHandlers = {
 	error: (data: Error) => void;
 	disconnect: () => void;
 };
@@ -73,19 +75,28 @@ class SocketConnection {
 	}
 
 	registerSocketHandlers() {
-		for (const i of Object.keys(this.socketHandlers) as Array<keyof SocketHandlers>) {
-			this.socket.on(i, async (data: any, callback: any): Promise<void> => {
-				try {
-					const res = await this.socketHandlers[i](data);
+		for (const i of Object.keys(this.unvalidatedSocketHandlers) as Array<keyof UnvalidatedSocketHandlers>) {
+			this.socket.on(i, (data: any) => {
+				this.unvalidatedSocketHandlers[i](data);
+			});
+		}
 
-					if(!callback && res)
+		for (const i of Object.keys(this.validatedSocketHandlers) as Array<keyof ValidatedSocketHandlers>) {
+			this.socket.on(i, async (data: unknown, callback: unknown): Promise<void> => {
+				const validatedCallback = typeof callback === 'function' ? callback : undefined;
+
+				try {
+					const validatedData = requestDataValidators[i].parse(data);
+					const res = await this.validatedSocketHandlers[i](validatedData as any);
+
+					if(!validatedCallback && res)
 						console.trace("No callback available to send result of socket handler " + i);
 
-					callback && callback(null, res);
+					validatedCallback?.(null, res);
 				} catch (err: any) {
 					console.log(err.stack);
 
-					callback && callback({ message: err.message, stack: err.stack });
+					validatedCallback?.({ message: err.message, stack: err.stack });
 				}
 			});
 		}
@@ -129,23 +140,44 @@ class SocketConnection {
 		return promiseProps(promises);
 	}
 
-	validateConditions(minimumPermissions: Writable, data?: any, structure?: object) {
-		if(structure && !stripObject(data, structure))
-			throw new Error("Invalid parameters.");
-
+	validatePermissions(minimumPermissions: Writable) {
 		if (minimumPermissions == Writable.ADMIN && ![Writable.ADMIN].includes(this.writable!))
 			throw new Error('Only available in admin mode.');
 		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(this.writable!))
 			throw new Error('Only available in write mode.');
 	}
 
-	socketHandlers: SocketHandlers = {
+	unvalidatedSocketHandlers: UnvalidatedSocketHandlers = {
 		error: (err) => {
 			console.error("Error! Disconnecting client.");
 			console.error(err.stack);
 			this.socket.disconnect();
 		},
 
+		disconnect: () => {
+			if(this.padId)
+				this.unregisterDatabaseHandlers();
+
+			if (this.historyListener) {
+				this.historyListener();
+				this.historyListener = undefined;
+			}
+
+			if(this.route) {
+				this.database.routes.deleteRoute(this.route.id).catch((err) => {
+					console.error("Error clearing route", err.stack || err);
+				});
+			}
+
+			for (const routeId of Object.keys(this.routes)) {
+				this.database.routes.deleteRoute(this.routes[routeId].id).catch((err) => {
+					console.error("Error clearing route", err.stack || err);
+				});
+			}
+		}
+	};
+
+	validatedSocketHandlers: ValidatedSocketHandlers = {
 		setPadId: async (padId) => {
 			if(typeof padId != "string")
 				throw new Error("Invalid pad id");
@@ -181,13 +213,7 @@ class SocketConnection {
 		},
 
 		updateBbox: async (bbox) => {
-			this.validateConditions(Writable.READ, bbox, {
-				top: "number",
-				left: "number",
-				bottom: "number",
-				right: "number",
-				zoom: "number"
-			});
+			this.validatePermissions(Writable.READ);
 
 			const bboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
 			if(this.bbox && bbox.zoom == this.bbox.zoom)
@@ -212,32 +238,8 @@ class SocketConnection {
 			return await promiseProps(ret);
 		},
 
-		disconnect: () => {
-			if(this.padId)
-				this.unregisterDatabaseHandlers();
-
-			if (this.historyListener) {
-				this.historyListener();
-				this.historyListener = undefined;
-			}
-
-			if(this.route) {
-				this.database.routes.deleteRoute(this.route.id).catch((err) => {
-					console.error("Error clearing route", err.stack || err);
-				});
-			}
-
-			for (const routeId of Object.keys(this.routes)) {
-				this.database.routes.deleteRoute(this.routes[routeId].id).catch((err) => {
-					console.error("Error clearing route", err.stack || err);
-				});
-			}
-		},
-
 		getPad: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				padId: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			const padData = await this.database.pads.getPadDataByAnyId(data.padId);
 			return padData && {
@@ -248,28 +250,13 @@ class SocketConnection {
 		},
 
 		findPads: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				query: "string",
-				start: "number",
-				limit: "number"
-			});
+			this.validatePermissions(Writable.READ);
 
 			return this.database.pads.findPads(data);
 		},
 
 		createPad: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				name: "string",
-				defaultViewId: "number",
-				id: "string",
-				writeId: "string",
-				adminId: "string",
-				searchEngines: "boolean",
-				description: "string",
-				clusterMarkers: "boolean",
-				legend1: "string",
-				legend2: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			if(this.padId)
 				throw new Error("Pad already loaded.");
@@ -285,18 +272,7 @@ class SocketConnection {
 		},
 
 		editPad: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				name: "string",
-				defaultViewId: "number",
-				id: "string",
-				writeId: "string",
-				adminId: "string",
-				searchEngines: "boolean",
-				description: "string",
-				clusterMarkers: "boolean",
-				legend1: "string",
-				legend2: "string"
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -305,7 +281,7 @@ class SocketConnection {
 		},
 
 		deletePad: async () => {
-			this.validateConditions(Writable.ADMIN);
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -314,9 +290,7 @@ class SocketConnection {
 		},
 
 		getMarker: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				id: "number"
-			} );
+			this.validatePermissions(Writable.READ);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -325,17 +299,7 @@ class SocketConnection {
 		},
 
 		addMarker: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				lat: "number",
-				lon: "number",
-				name: "string",
-				colour: "string",
-				size: "number",
-				symbol: "string",
-				shape: "string",
-				typeId: "number",
-				data: Object
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -344,18 +308,7 @@ class SocketConnection {
 		},
 
 		editMarker: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				id: "number",
-				lat: "number",
-				lon: "number",
-				name: "string",
-				colour: "string",
-				size: "number",
-				symbol: "string",
-				shape: "string",
-				typeId: "number",
-				data: Object
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -364,9 +317,7 @@ class SocketConnection {
 		},
 
 		deleteMarker: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				id: "number"
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -375,9 +326,7 @@ class SocketConnection {
 		},
 
 		getLineTemplate: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				typeId: "number"
-			}); // || data.typeId == null)
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -386,16 +335,7 @@ class SocketConnection {
 		},
 
 		addLine: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				routePoints: [ { lat: "number", lon: "number" } ],
-				trackPoints: [ { lat: "number", lon: "number" } ],
-				mode: "string",
-				colour: "string",
-				width: "number",
-				name: "string",
-				typeId: "number",
-				data: Object
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -414,17 +354,7 @@ class SocketConnection {
 		},
 
 		editLine: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				id: "number",
-				routePoints: [ { lat: "number", lon: "number" } ],
-				trackPoints: [ { lat: "number", lon: "number" } ],
-				mode: "string",
-				colour: "string",
-				width: "number",
-				name: "string",
-				typeId: "number",
-				data: Object
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -443,9 +373,7 @@ class SocketConnection {
 		},
 
 		deleteLine: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				id: "number"
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -454,10 +382,7 @@ class SocketConnection {
 		},
 
 		exportLine: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				id: "string",
-				format: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -484,16 +409,7 @@ class SocketConnection {
 		},
 
 		addView: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				name: "string",
-				baseLayer: "string",
-				layers: [ "string" ],
-				top: "number",
-				left: "number",
-				right: "number",
-				bottom: "number",
-				filter: "string"
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -502,16 +418,7 @@ class SocketConnection {
 		},
 
 		editView: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				id: "number",
-				baseLayer: "string",
-				layers: [ "string" ],
-				top: "number",
-				left: "number",
-				right: "number",
-				bottom: "number",
-				filter: "string"
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -520,9 +427,7 @@ class SocketConnection {
 		},
 
 		deleteView: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				id: "number"
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -531,25 +436,7 @@ class SocketConnection {
 		},
 
 		addType: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				id: "number",
-				name: "string",
-				type: "string",
-				defaultColour: "string", colourFixed: "boolean",
-				defaultSize: "number", sizeFixed: "boolean",
-				defaultSymbol: "string", symbolFixed: "boolean",
-				defaultShape: "string", shapeFixed: "boolean",
-				defaultWidth: "number", widthFixed: "boolean",
-				defaultMode: "string", modeFixed: "boolean",
-				showInLegend: "boolean",
-				fields: [ {
-					name: "string",
-					type: "string",
-					default: "string",
-					controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
-					options: [ { key: "string", value: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
-				}]
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -558,25 +445,7 @@ class SocketConnection {
 		},
 
 		editType: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				id: "number",
-				name: "string",
-				defaultColour: "string", colourFixed: "boolean",
-				defaultSize: "number", sizeFixed: "boolean",
-				defaultSymbol: "string", symbolFixed: "boolean",
-				defaultShape: "string", shapeFixed: "boolean",
-				defaultWidth: "number", widthFixed: "boolean",
-				defaultMode: "string", modeFixed: "boolean",
-				showInLegend: "boolean",
-				fields: [ {
-					name: "string",
-					oldName: "string",
-					type: "string",
-					default: "string",
-					controlColour: "boolean", controlSize: "boolean", controlSymbol: "boolean", controlShape: "boolean", controlWidth: "boolean",
-					options: [ { key: "string", value: "string", oldValue: "string", colour: "string", size: "number", "symbol": "string", shape: "string", width: "number" } ]
-				}]
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -617,9 +486,7 @@ class SocketConnection {
 		},
 
 		deleteType: async (data) => {
-			this.validateConditions(Writable.ADMIN, data, {
-				id: "number"
-			});
+			this.validatePermissions(Writable.ADMIN);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -628,19 +495,13 @@ class SocketConnection {
 		},
 
 		find: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				query: "string",
-				loadUrls: "boolean",
-				elevation: "boolean"
-			});
+			this.validatePermissions(Writable.READ);
 
 			return await find(data.query, data.loadUrls, data.elevation);
 		},
 
 		findOnMap: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				query: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -649,16 +510,13 @@ class SocketConnection {
 		},
 
 		getRoute: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				destinations: [ { lat: "number", lon: "number" } ],
-				mode: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			return await calculateRoute(data.destinations, data.mode);
 		},
 
 		setRoute: async (data) => {
-			this.validateConditions(Writable.READ, data, { routePoints: [ { lat: "number", lon: "number" } ], mode: "string", routeId: "string" });
+			this.validatePermissions(Writable.READ);
 
 			const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
 
@@ -703,9 +561,7 @@ class SocketConnection {
 
 		clearRoute: async (data) => {
 			if (data) {
-				this.validateConditions(Writable.READ, data, {
-					routeId: "string"
-				});
+				this.validatePermissions(Writable.READ);
 			}
 
 			let route;
@@ -722,10 +578,7 @@ class SocketConnection {
 		},
 
 		lineToRoute: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				id: "number",
-				routeId: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -766,10 +619,7 @@ class SocketConnection {
 		},
 
 		exportRoute: async (data) => {
-			this.validateConditions(Writable.READ, data, {
-				format: "string",
-				routeId: "string"
-			});
+			this.validatePermissions(Writable.READ);
 
 			const route = data.routeId ? this.routes[data.routeId] : this.route;
 			if (!route) {
@@ -791,7 +641,7 @@ class SocketConnection {
 		},
 
 		listenToHistory: async () => {
-			this.validateConditions(Writable.WRITE);
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");
@@ -810,7 +660,7 @@ class SocketConnection {
 		},
 
 		stopListeningToHistory: () => {
-			this.validateConditions(Writable.WRITE);
+			this.validatePermissions(Writable.WRITE);
 
 			if(!this.historyListener)
 				throw new Error("Not listening to history.");
@@ -820,9 +670,7 @@ class SocketConnection {
 		},
 
 		revertHistoryEntry: async (data) => {
-			this.validateConditions(Writable.WRITE, data, {
-				id: "number"
-			});
+			this.validatePermissions(Writable.WRITE);
 
 			if (!isPadId(this.padId))
 				throw new Error("No map opened.");

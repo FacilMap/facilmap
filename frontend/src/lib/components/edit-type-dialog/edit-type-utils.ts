@@ -1,6 +1,5 @@
-import { FieldUpdate, Type, TypeUpdate } from "facilmap-types";
+import { CRU, FieldUpdate, Type } from "facilmap-types";
 import { clone } from "facilmap-utils";
-import Vue from "vue";
 import { mergeObject } from "../../utils/utils";
 
 function getIdxForInsertingField(targetFields: FieldUpdate[], targetField: FieldUpdate, mergedFields: FieldUpdate[]): number {
@@ -41,7 +40,7 @@ function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customF
 	return mergedFields;
 }
 
-export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type & TypeUpdate): void {
+export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type & Type<CRU.UPDATE>): void {
 	let customFields = clone(targetObject.fields);
 
 	mergeObject(oldObject, newObject, targetObject);

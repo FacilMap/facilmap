@@ -5,8 +5,7 @@
 	import { injectContextRequired } from "../../utils/context";
 	import { defineComponent, onMounted, ref, watch } from "vue";
 	import { injectSearchBoxContextRequired } from "./search-box-context.vue";
-	import { hideAllTooltips } from "../../utils/tooltip";
-	import vTooltip from "../../utils/tooltip";
+	import vTooltip, { hideAllTooltips } from "../../utils/tooltip";
 	import { useEventListener } from "../../utils/utils";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 
@@ -137,6 +136,7 @@
 			<ul class="nav nav-tabs card-header-tabs">
 				<li
 					v-for="[tabId, tab] in searchBoxContext.tabs"
+					:key="tabId"
 					class="nav-item"
 				>
 					<a
@@ -155,7 +155,7 @@
 			</ul>
 		</div>
 
-		<template v-for="[tabId, tab] in searchBoxContext.tabs">
+		<template v-for="[tabId, tab] in searchBoxContext.tabs" :key="tabId">
 			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.value.class">
 				<TabContent :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
 			</div>

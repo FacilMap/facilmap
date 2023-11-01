@@ -5,22 +5,31 @@
 	import { arrowNavigation } from "../../utils/ui";
 	import { keyBy, mapValues, pickBy } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";
-	import { computed, ref } from "vue";
+	import { computed, nextTick, ref } from "vue";
 
-	const items = mapValues(keyBy(symbolList, (s) => s), (s) => getSymbolHtml("currentColor", "1.5em", s));
+	const allItems = mapValues(keyBy(symbolList, (s) => s), (s) => getSymbolHtml("currentColor", "1.5em", s));
 </script>
 
 <script setup lang="ts">
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		value: string;
+		modelValue: string | undefined;
 		id?: string;
+		isRequired?: boolean;
+		validationError?: string | undefined;
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update", value: string): void;
+		"update:modelValue": [value: string];
 	}>();
+
+	const value = computed({
+		get: () => props.modelValue,
+		set: (value) => {
+			emit("update:modelValue", value!);
+		}
+	});
 
 	const filter = ref("");
 
@@ -30,33 +39,36 @@
 		if (filter.value.length == 1)
 			result[filter.value] = getSymbolHtml("currentColor", "1.5em", filter.value);
 
-		if (props.value?.length == 1 && props.value != filter.value)
-			result[props.value] = getSymbolHtml("currentColor", "1.5em", filter.value);
+		if (props.modelValue?.length == 1 && props.modelValue != filter.value)
+			result[props.modelValue] = getSymbolHtml("currentColor", "1.5em", filter.value);
 
 		const lowerFilter = filter.value.trim().toLowerCase();
-		Object.assign(result, pickBy(items, (val, key) => key.toLowerCase().includes(lowerFilter)));
+		Object.assign(result, pickBy(allItems, (val, key) => key.toLowerCase().includes(lowerFilter)));
 
 		return result;
 	});
 
 	const validationError = computed(() => {
-		if (props.value.length !== 1 && symbolList.includes(props.value)) {
+		if (props.validationError) {
+			return props.validationError;
+		} else if (props.modelValue && props.modelValue.length !== 1 && symbolList.includes(props.modelValue)) {
 			return "Unknown icon";
+		} else {
+			return undefined;
 		}
 	});
 
 	function handleClick(symbol: string, close: () => void): void {
-		emit("update", symbol);
+		emit("update:modelValue", symbol);
 		close();
 	}
 
-	function handleKeyDown(event: KeyboardEvent): void {
-		const newVal = arrowNavigation(Object.keys(items.value), props.value, gridRef.value!.containerRef!, event);
+	async function handleKeyDown(event: KeyboardEvent): Promise<void> {
+		const newVal = arrowNavigation(Object.keys(items.value), props.modelValue, gridRef.value!.containerRef!, event);
 		if (newVal) {
-			emit('update', newVal);
-			setTimeout(() => {
-				gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
-			}, 0);
+			emit("update:modelValue", newVal);
+			await nextTick();
+			gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
 		}
 	}
 </script>
@@ -71,7 +83,7 @@
 		enforceElementWidth
 	>
 		<template #preview>
-			<Icon :icon="value"></Icon>
+			<Icon :icon="modelValue"></Icon>
 		</template>
 
 		<template #default="{ close }">
@@ -88,7 +100,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="value"
+				:value="modelValue"
 				@click="handleClick($event, close)"
 				ref="grid"
 			></PrerenderedList>

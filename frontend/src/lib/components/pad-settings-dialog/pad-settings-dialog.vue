@@ -1,13 +1,12 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { PadData, PadDataCreate } from "facilmap-types";
+	import { CRU, PadData } from "facilmap-types";
 	import { clone, generateRandomPadId } from "facilmap-utils";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../client-context.vue";
-	import { useModal } from "../../utils/modal";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import PadIdEdit from "./pad-id-edit.vue";
@@ -24,14 +23,13 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: 'hidden'): void;
+		hidden: [];
 	}>();
 
 	const id = getUniqueId("fm-pad-settings");
-	const isSaving = ref(false);
 	const isDeleting = ref(false);
 	const deleteConfirmation = ref("");
-	const padData = ref<PadDataCreate>(props.isCreate ? {
+	const padData = ref<PadData<CRU.CREATE>>(props.isCreate ? {
 		name: "New FacilMap",
 		searchEngines: false,
 		description: "",
@@ -42,9 +40,9 @@
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
-	} : clone(client.padData) as PadDataCreate);
+	} : clone(client.padData) as PadData<CRU.CREATE>);
 
-	const modal = useModal({ emit });
+	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
 	const isModified = computed(() => !isEqual(padData.value, client.padData));
 
@@ -54,20 +52,17 @@
 	}, { deep: true });
 
 	async function save(): Promise<void> {
-		isSaving.value = true;
 		toasts.hideToast(`fm${context.id}-pad-settings-error`);
 
 		try {
 			if(props.isCreate)
-				await client.createPad(padData.value as PadDataCreate);
+				await client.createPad(padData.value as PadData<CRU.CREATE>);
 			else
 				await client.editPad(padData.value);
 
-			modal.hide();
+			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
-		} finally {
-			isSaving.value = false;
 		}
 	};
 
@@ -86,7 +81,7 @@
 
 		try {
 			await client.deletePad();
-			modal.hide();
+			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);
 		} finally {
@@ -97,20 +92,21 @@
 
 <template>
 	<ModalDialog
-		:id="id"
 		:title="isCreate ? 'Create collaborative map' : 'Map settings'"
 		class="fm-pad-settings"
-		:no-cancel="noCancel"
-		:is-saving="isSaving"
-		:is-busy="isDeleting"
-		:is-create="isCreate"
-		:is-modified="isModified"
+		:noCancel="noCancel"
+		:isBusy="isDeleting"
+		:isCreate="isCreate"
+		:isModified="isModified"
+		ref="modalRef"
 		@submit="$event.waitUntil(save())"
+		@hidden="emit('hidden')"
 	>
 		<template v-if="padData">
 			<PadIdEdit
 				:padData="padData"
 				idProp="adminId"
+				v-model="padData.adminId"
 				label="Admin link"
 				description="When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views."
 			></PadIdEdit>
@@ -118,6 +114,7 @@
 			<PadIdEdit
 				:padData="padData"
 				idProp="writeId"
+				v-model="padData.writeId"
 				label="Editable link"
 				description="When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified."
 			></PadIdEdit>
@@ -125,6 +122,7 @@
 			<PadIdEdit
 				:padData="padData"
 				idProp="id"
+				v-model="padData.id"
 				label="Read-only link"
 				description="When opening the map through this link, markers, lines and views can be seen, but nothing can be changed."
 			></PadIdEdit>
@@ -188,7 +186,7 @@
 				<div class="col-sm-9">
 					<div class="input-group">
 						<input :form="`${id}-delete-form`" :id="`${id}-delete-input`" class="form-control" type="text" v-model="deleteConfirmation">
-						<button :form="`${id}-delete-form`" class="btn btn-danger" type="submit" :disabled="isDeleting || isSaving || deleteConfirmation != 'DELETE'">
+						<button :form="`${id}-delete-form`" class="btn btn-danger" type="submit" :disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != 'DELETE'">
 							<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 							Delete map
 						</button>

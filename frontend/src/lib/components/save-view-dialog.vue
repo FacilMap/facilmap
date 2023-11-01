@@ -13,8 +13,11 @@
 	const context = injectContextRequired();
 	const mapContext = injectMapContextRequired();
 	const client = injectClientRequired();
-
 	const toasts = useToasts();
+
+	const emit = defineEmits<{
+		hidden: [];
+	}>();
 
 	const id = getUniqueId("fm-save-view");
 
@@ -73,6 +76,7 @@
 		:isCreate="true"
 		ref="modalRef"
 		@submit="$event.waitUntil(save())"
+		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>

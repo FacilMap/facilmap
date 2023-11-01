@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import PadSettings from "../pad-settings/pad-settings.vue";
-	import EditFilter from "../edit-filter.vue";
+	import PadSettingsDialog from "../pad-settings-dialog/pad-settings-dialog.vue";
+	import EditFilter from "../edit-filter-dialog.vue";
 	import HistoryDialog from "../history-dialog/history-dialog.vue";
 	import ShareDialog from "../share-dialog.vue";
 	import { injectClientRequired } from "../client-context.vue";
@@ -16,7 +16,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "hide-sidebar"): void;
+		"hide-sidebar": [];
 	}>();
 
 	const dialog = ref<
@@ -132,10 +132,10 @@
 		</ul>
 	</li>
 
-	<PadSettings
+	<PadSettingsDialog
 		v-if="dialog === 'edit-pad' && client.padData"
 		@hidden="dialog = undefined"
-	></PadSettings>
+	></PadSettingsDialog>
 
 	<ShareDialog
 		v-if="dialog === 'share'"

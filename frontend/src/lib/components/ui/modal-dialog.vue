@@ -22,8 +22,8 @@
 	});
 
 	const emit = defineEmits<{
-		(type: "hidden"): void;
-		(type: "submit", event: CustomSubmitEvent): void;
+		hidden: [];
+		submit: [event: CustomSubmitEvent];
 	}>();
 
 	const modalRef = ref<HTMLElement>();

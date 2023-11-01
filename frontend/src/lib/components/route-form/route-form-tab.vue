@@ -12,7 +12,6 @@
 
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
-	const tabActive = ref(false);
 	const hashQuery = ref<HashQuery>();
 
 	useEventListener(mapContext, "route-set-query", (data) => {

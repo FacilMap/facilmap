@@ -119,13 +119,13 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 			const marker = client.markers[items[0].id];
 			return {
 				query: `m${items[0].id}`,
-				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: marker.name } : {})
+				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: marker.name || "Untitled marker" } : {})
 			};
 		} else if (items[0].type == "line") {
 			const line = client.lines[items[0].id];
 			return {
 				query: `l${items[0].id}`,
-				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: line.name } : {})
+				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: line.name || "Untitled line" } : {})
 			};
 		}
 	}

@@ -5,20 +5,20 @@ import { computed } from "vue";
 	const props = withDefaults(defineProps<{
 		field: Field;
 		ignoreDefault?: boolean;
-		value?: string;
+		modelValue?: string;
 		id?: string;
 	}>(), {
 		ignoreDefault: false
 	});
 
 	const emit = defineEmits<{
-		(type: "update", value: string | undefined): void;
+		"update:modelValue": [value: string | undefined];
 	}>();
 
-	const effectiveValue = computed<string | undefined>({
-		get: () => (props.value ?? (props.ignoreDefault ? undefined : props.field.default) ?? ''),
+	const value = computed<string | undefined>({
+		get: () => (props.modelValue ?? (props.ignoreDefault ? undefined : props.field.default) ?? ''),
 		set: (value) => {
-			emit("update", value);
+			emit("update:modelValue", value);
 		}
 	});
 </script>
@@ -26,11 +26,11 @@ import { computed } from "vue";
 <template>
 	<div class="fm-field-input">
 		<template v-if="field.type === 'textarea'">
-			<textarea class="form-control" :id="id" v-model="effectiveValue"></textarea>
+			<textarea class="form-control" :id="id" v-model="value"></textarea>
 		</template>
 		<template v-else-if="field.type === 'dropdown'">
-			<select class="form-select" :id="id" v-model="effectiveValue">
-				<option v-for="option in props.field.options">
+			<select class="form-select" :id="id" v-model="value">
+				<option v-for="option in props.field.options" :key="option.value">
 					{{option.value}}
 				</option>
 			</select>
@@ -40,12 +40,12 @@ import { computed } from "vue";
 				type="checkbox"
 				class="form-check-input"
 				:id="id"
-				:checked="effectiveValue === '1'"
-				@input="effectiveValue = $event ? '1' : '0'"
+				:checked="value === '1'"
+				@input="value = $event ? '1' : '0'"
 			/>
 		</template>
 		<template v-else>
-			<input type="text" class="form-control" :id="id" v-model="effectiveValue"/>
+			<input type="text" class="form-control" :id="id" v-model="value"/>
 		</template>
 	</div>
 </template>

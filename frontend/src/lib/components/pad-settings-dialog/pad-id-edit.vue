@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { PadDataCreate } from 'facilmap-types';
+	import { CRU, PadData } from 'facilmap-types';
 	import { computed, ref } from 'vue';
 	import { getUniqueId } from '../../utils/utils';
 	import copyToClipboard from 'copy-to-clipboard';
@@ -14,13 +14,25 @@
 	const toasts = useToasts();
 
 	const props = defineProps<{
-		padData: PadDataCreate;
+		padData: PadData<CRU.CREATE>;
 		idProp: IdProp;
+		modelValue: string;
 		label: string;
 		description: string;
 	}>();
 
+	const emit = defineEmits<{
+		"update:modelValue": [string];
+	}>();
+
 	const id = getUniqueId("fm-pad-settings-pad-id-edit");
+
+	const value = computed({
+		get: () => props.modelValue,
+		set: (val) => {
+			emit("update:modelValue", val);
+		}
+	});
 
 	const touched = ref(false);
 	const error = computed(() => {
@@ -51,7 +63,7 @@
 					:id="`${id}-input`"
 					class="form-control fm-pad-settings-pad-id-edit"
 					type="text"
-					v-model="padData[idProp]"
+					v-model="value"
 					v-validity="error"
 					@input="touched = true"
 					@blur="touched = true"

@@ -2,15 +2,22 @@
 	import { readonly, ref, watch } from "vue";
 	import Toolbox from "./toolbox/toolbox.vue";
 	import SearchBox from "./search-box/search-box.vue";
-	// import Legend from "../legend/legend.vue";
+	import Legend from "./legend/legend.vue";
 	import LeafletMap from "./leaflet-map/leaflet-map.vue";
-	// import Import from "../import/import.vue";
-	// import ClickMarker from "../click-marker/click-marker.vue";
+	import ImportTab from "./import-tab.vue";
+	import ClickMarkerTab from "./click-marker-tab.vue";
 	import ClientContext from "./client-context.vue";
 	import { WritableContext, provideContext } from "../utils/context";
 	import { useMaxBreakpoint } from "../utils/bootstrap";
 	import SearchBoxContext from "./search-box/search-box-context.vue";
-import { reactiveReadonlyView } from "../utils/vue";
+	import { reactiveReadonlyView } from "../utils/vue";
+	import SearchFormTab from "./search-form/search-form-tab.vue";
+	import RouteFormTab from "./route-form/route-form-tab.vue";
+	import OverpassFormTab from "./overpass-form/overpass-form-tab.vue";
+	import MarkerInfoTab from "./marker-info/marker-info-tab.vue";
+	import LineInfoTab from "./line-info/line-info-tab.vue";
+	import MultipleInfoTab from "./multiple-info/multiple-info-tab.vue";
+	import OverpassInfoTab from "./overpass-info/overpass-info-tab.vue";
 
 	let idCounter = 1;
 </script>
@@ -38,8 +45,8 @@ import { reactiveReadonlyView } from "../utils/vue";
 	});
 
 	const emit = defineEmits<{
-		(type: "update:padId", padId: string | undefined): void;
-		(type: "update:padName", padName: string | undefined): void;
+		"update:padId": [padId: string | undefined];
+		"update:padName": [padName: string | undefined];
 	}>();
 
 	const isNarrow = useMaxBreakpoint("sm");
@@ -76,12 +83,20 @@ import { reactiveReadonlyView } from "../utils/vue";
 <template>
 	<div class="fm-facilmap">
 		<ClientContext :padId="padId" :serverUrl="serverUrl" ref="clientRef">
-			<LeafletMap>
-				<SearchBoxContext>
+			<SearchBoxContext>
+				<LeafletMap>
 					<Toolbox v-if="context.toolbox" :interactive="context.interactive"></Toolbox>
-					<!--<Legend v-if="context.legend"></Legend>
-					<Import v-if="context.interactive"></Import>
-					<ClickMarker></ClickMarker>-->
+
+					<SearchFormTab v-if="context.search"></SearchFormTab>
+					<RouteFormTab v-if="context.search"></RouteFormTab>
+					<OverpassFormTab v-if="context.search"></OverpassFormTab>
+					<MarkerInfoTab></MarkerInfoTab>
+					<LineInfoTab></LineInfoTab>
+					<MultipleInfoTab></MultipleInfoTab>
+					<OverpassInfoTab></OverpassInfoTab>
+					<ImportTab v-if="context.interactive"></ImportTab>
+					<ClickMarkerTab></ClickMarkerTab>
+					<Legend v-if="context.legend"></Legend>
 
 					<template #before>
 						<slot name="before"></slot>
@@ -93,16 +108,8 @@ import { reactiveReadonlyView } from "../utils/vue";
 					</template>
 
 					<slot></slot>
-
-					<!--<SearchFormTab v-if="context.search"></SearchFormTab>
-					<RouteFormTab v-if="context.search"></RouteFormTab>
-					<OverpassFormTab v-if="context.search"></OverpassFormTab>
-					<MarkerInfoTab></MarkerInfoTab>
-					<LineInfoTab></LineInfoTab>
-					<MultipleInfoTab></MultipleInfoTab>
-					<OverpassInfoTab></OverpassInfoTab>-->
-				</SearchBoxContext>
-			</LeafletMap>
+				</LeafletMap>
+			</SearchBoxContext>
 		</ClientContext>
 	</div>
 </template>

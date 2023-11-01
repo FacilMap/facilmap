@@ -1,37 +1,49 @@
-import { Bbox, Colour, ID, Point, RouteMode, ZoomLevel } from "./base.js";
-import { PadId } from "./padData.js";
+import { bboxValidator, colourValidator, idValidator, pointValidator, routeModeValidator, zoomLevelValidator } from "./base.js";
+import { CRU, CRUType, cruValidator } from "./cru";
+import { padIdValidator } from "./padData.js";
+import * as z from "zod";
 
-export type ExtraInfo = Record<string, Array<[number, number, number]>>;
+export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));
+export type ExtraInfo = z.infer<typeof extraInfoValidator>;
 
-interface LineBase<DataType = Record<string, string>> {
-	id: ID;
-	routePoints: Point[];
-	mode: RouteMode;
-	colour: Colour;
-	width: number;
-	name: string;
-	typeId: ID;
-	data: DataType;
-	extraInfo?: ExtraInfo;
-	padId: PadId;
-}
+export const trackPointValidator = cruValidator({
+	all: {
+		...pointValidator.shape,
+		ele: z.number().optional()
+	},
+	onlyRead: {
+		idx: z.number(),
+		zoom: zoomLevelValidator
+	}
+});
+export type TrackPoint<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof trackPointValidator>;
 
-export interface Line<DataType = Record<string, string>> extends LineBase<DataType>, Bbox {
-	distance: number;
-	ascent?: number;
-	descent?: number;
-	time?: number;
-}
-
-export interface TrackPoint extends Point {
-	idx: number;
-	zoom: ZoomLevel;
-	ele?: number;
-}
-
-export type TrackPointCreate = Omit<TrackPoint, "idx" | "zoom">;
-
-export type LineCreate<DataType = Record<string, string>> = Partial<Omit<LineBase<DataType>, "id" | "padId">> & Pick<LineBase<DataType>, "routePoints" | "typeId"> & {
-	trackPoints?: TrackPointCreate[];
-};
-export type LineUpdate<DataType = Record<string, string>> = Partial<LineCreate<DataType>>;
+export const lineValidator = cruValidator({
+	allPartialCreate: {
+		mode: routeModeValidator,
+		colour: colourValidator,
+		width: z.number(),
+		data: z.record(z.string())
+	},
+	allPartialUpdate: {
+		routePoints: z.array(pointValidator).min(2),
+		name: z.string().optional(),
+		typeId: idValidator,
+		extraInfo: extraInfoValidator.optional()
+	},
+	exceptCreate: {
+		id: idValidator
+	},
+	onlyRead: {
+		...bboxValidator.shape,
+		distance: z.number(),
+		ascent: z.number().optional(),
+		descent: z.number().optional(),
+		time: z.number().optional(),
+		padId: padIdValidator
+	},
+	onlyCreate: {
+		trackPoints: z.array(trackPointValidator.create)
+	}
+});
+export type Line<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof lineValidator>;

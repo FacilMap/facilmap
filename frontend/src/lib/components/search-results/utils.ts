@@ -1,6 +1,8 @@
-import { Point, SearchResult, Type } from "facilmap-types";
+import { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
 import { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
-import StringMap from "../../utils/string-map";
+import { FileResult } from "../../utils/files";
+import { SelectedItem } from "../../utils/selection";
+import { Client } from "../client-context.vue";
 
 /**
  * Prefills the fields of a type with information from a search result. The "address" and "extratags" from
@@ -8,14 +10,14 @@ import StringMap from "../../utils/string-map";
  * returned object is an object that can be used as "data" for a marker and line, so an object that maps
  * field names to values.
  */
-export function mapSearchResultToType(result: SearchResult, type: Type): StringMap {
+export function mapSearchResultToType(result: SearchResult, type: Type): Record<string, string> {
 	return mapTagsToType({
 		...(result.address ? { address: result.address } : {}),
 		...result.extratags
 	}, type);
 }
 
-export function mapTagsToType(tags: Record<string, string>, type: Type): StringMap {
+export function mapTagsToType(tags: Record<string, string>, type: Type): Record<string, string> {
 	let keyMap = (keys: string[]) => {
 		let ret: Record<string, string> = Object.create(null);
 		for(let key of keys)
@@ -26,10 +28,10 @@ export function mapTagsToType(tags: Record<string, string>, type: Type): StringM
 	let fieldKeys = keyMap(type.fields.map((field) => (field.name)));
 	let resultDataKeys = keyMap(Object.keys(tags));
 
-	const ret: StringMap = new StringMap();
+	const ret: Record<string, string> = Object.create(null);
 	for(let key in resultDataKeys) {
 		if(fieldKeys[key])
-			ret.set(fieldKeys[key], tags[resultDataKeys[key]]);
+			ret[fieldKeys[key]] = tags[resultDataKeys[key]];
 	}
 	return ret;
 }
@@ -46,4 +48,55 @@ export function lineStringToTrackPoints(geometry: LineString | MultiLineString |
 		coords = [geometry.coordinates];
 
 	return coords.flat().map((latlng) => ({ lat: latlng[1], lon: latlng[0] }));
+}
+
+export async function addSearchResultsToMap(data: Array<{ result: SearchResult | FileResult; type: Type }>, client: Client): Promise<SelectedItem[]> {
+	const selection: SelectedItem[] = [];
+
+	for (const { result, type } of data) {
+		const obj: Partial<Marker<CRU.CREATE> & Line<CRU.CREATE>> = {
+			name: result.short_name
+		};
+
+		if("fmProperties" in result && result.fmProperties) { // Import GeoJSON
+			Object.assign(obj, result.fmProperties);
+			delete obj.typeId;
+		} else {
+			obj.data = mapSearchResultToType(result, type)
+		}
+
+		if(type.type == "marker") {
+			const marker = await client.addMarker({
+				...obj,
+				lat: result.lat ?? (result.geojson as Point).coordinates[1],
+				lon: result.lon ?? (result.geojson as Point).coordinates[0],
+				typeId: type.id
+			});
+
+			selection.push({ type: "marker", id: marker.id });
+		} else if(type.type == "line") {
+			if (obj.routePoints) {
+				const line = await client.addLine({
+					...obj,
+					routePoints: obj.routePoints,
+					typeId: type.id
+				});
+
+				selection.push({ type: "line", id: line.id });
+			} else {
+				const trackPoints = lineStringToTrackPoints(result.geojson as any);
+				const line = await client.addLine({
+					...obj,
+					typeId: type.id,
+					routePoints: [trackPoints[0], trackPoints[trackPoints.length-1]],
+					trackPoints: trackPoints,
+					mode: "track"
+				});
+
+				selection.push({ type: "line", id: line.id });
+			}
+		}
+	}
+
+	return selection;
 }

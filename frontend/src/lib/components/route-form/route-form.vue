@@ -89,8 +89,8 @@
 	});
 
 	const emit = defineEmits<{
-		(type: "activate"): void;
-		(type: "hash-query-change", hashQuery: HashQuery | undefined): void;
+		activate: [];
+		"hash-query-change": [hashQuery: HashQuery | undefined];
 	}>();
 
 	const routeObj = computed(() => props.routeId ? client.routes[props.routeId] : client.route);
@@ -578,7 +578,7 @@
 													href="javascript:"
 													class="dropdown-item fm-route-form-suggestions-zoom"
 													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+													@click.capture.stop.prevent="suggestionZoom(suggestion)"
 												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 
 												<a
@@ -596,14 +596,14 @@
 
 										<template v-for="suggestion in destination.searchSuggestions" :key="suggestion.id">
 											<li
-												@mouseenter.native="suggestionMouseOver(suggestion)"
-												@mouseleave.native="suggestionMouseOut()"
+												@mouseenter="suggestionMouseOver(suggestion)"
+												@mouseleave="suggestionMouseOut()"
 											>
 												<a
 													href="javascript:"
 													class="dropdown-item fm-route-form-suggestions-zoom"
 													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click.native.capture.stop.prevent="suggestionZoom(suggestion)"
+													@click.capture.stop.prevent="suggestionZoom(suggestion)"
 												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 												<a
 													href="javascript:"
@@ -643,7 +643,7 @@
 					<Icon icon="plus" alt="Add"></Icon>
 				</button>
 
-				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @input="reroute(false)" tooltip-placement="bottom"></RouteMode>
+				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @update:modelValue="reroute(false)" tooltip-placement="bottom"></RouteMode>
 
 				<button
 					type="submit"
@@ -701,7 +701,7 @@
 						</button>
 
 						<ul class="dropdown-menu">
-							<template v-for="type in lineTypes">
+							<template v-for="type in lineTypes" :key="type.id">
 								<li>
 									<a
 										href="javascript:"

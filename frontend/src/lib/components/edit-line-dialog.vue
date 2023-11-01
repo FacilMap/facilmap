@@ -1,0 +1,142 @@
+<script setup lang="ts">
+	import { ID } from "facilmap-types";
+	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
+	import { clone } from "facilmap-utils";
+	import { isEqual, omit } from "lodash-es";
+	import ModalDialog from "./ui/modal-dialog.vue";
+	import ColourField from "./ui/colour-field.vue";
+	import FieldInput from "./ui/field-input.vue";
+	import RouteMode from "./ui/route-mode.vue";
+	import WidthField from "./ui/width-field.vue";
+	import { injectContextRequired } from "../utils/context";
+	import { injectClientRequired } from "./client-context.vue";
+	import { computed, ref, toRef, watch } from "vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
+
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const toasts = useToasts();
+
+	const props = defineProps<{
+		lineId: ID;
+	}>();
+
+	const emit = defineEmits<{
+		hidden: [];
+	}>();
+
+	const id = getUniqueId("fm-edit-line-dialog");
+
+	const modalRef = ref<InstanceType<typeof ModalDialog>>();
+
+	const originalLine = toRef(() => client.lines[props.lineId]);
+
+	const line = ref(clone(originalLine.value));
+
+	const isModified = computed(() => !isEqual(line.value, originalLine.value));
+
+	const types = computed(() => Object.values(client.types).filter((type) => type.type === "line"));
+
+	const resolvedCanControl = computed(() => canControl(client.types[line.value.typeId]));
+
+	watch(originalLine, (newLine, oldLine) => {
+		if (!newLine) {
+			modalRef.value?.modal.hide();
+			// TODO: Show message
+		} else {
+			mergeObject(oldLine, newLine, line.value);
+		}
+	});
+
+	async function save(): Promise<void> {
+		toasts.hideToast(`fm${context.id}-edit-line-error`);
+
+		try {
+			await client.editLine(omit(line.value, "trackPoints"));
+			modalRef.value?.modal.hide();
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-edit-line-error`, "Error saving line", err);
+		}
+	}
+
+	const colourValidationError = computed(() => validateRequired(line.value.colour));
+</script>
+
+<template>
+	<ModalDialog
+		title="Edit Line"
+		class="fm-edit-line"
+		:isModified="isModified"
+		@submit="$event.waitUntil(save())"
+		@hidden="emit('hidden')"
+	>
+		<template #default>
+			<div class="row mb-3">
+				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+				<div class="col-sm-9">
+					<input class="form-control" :id="`${id}-name-input`" v-model="line.name" />
+				</div>
+			</div>
+
+			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track'" class="row mb-3">
+				<label class="col-sm-3 col-form-label">Routing mode</label>
+				<div class="col-sm-9">
+					<RouteMode v-model="line.mode"></RouteMode>
+				</div>
+			</div>
+
+			<template v-if="resolvedCanControl.includes('colour')">
+				<div class="row mb-3">
+					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
+					<div class="col-sm-9">
+						<ColourField
+							:id="`${id}-colour-input`"
+							v-model="line.colour"
+							:validationError="colourValidationError"
+						></ColourField>
+					</div>
+				</div>
+			</template>
+
+			<template v-if="resolvedCanControl.includes('width')">
+				<div class="row mb-3">
+					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">Width</label>
+					<div class="col-sm-9">
+						<WidthField :id="`${id}-width-input`" v-model="line.width"></WidthField>
+					</div>
+				</div>
+			</template>
+
+			<template v-for="(field, idx) in client.types[line.typeId].fields" :key="field.name">
+				<div class="row mb-3">
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label">{{field.name}}</label>
+					<div class="col-sm-9">
+						<FieldInput
+							:id="`${id}-${idx}-input`"
+							:field="field"
+							v-model="line.data[field.name]"
+						></FieldInput>
+					</div>
+				</div>
+			</template>
+		</template>
+
+		<template #footer-left>
+			<div v-if="types.length > 1" class="dropup">
+				<button type="button" class="btn btn-light dropdown-toggle">Change type</button>
+				<ul class="dropdown-menu">
+					<template v-for="type in types" :key="type.id">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								:class="{ active: type.id == line.typeId }"
+								@click="line.typeId = type.id"
+							>{{type.name}}</a>
+						</li>
+					</template>
+				</ul>
+			</div>
+		</template>
+	</ModalDialog>
+</template>

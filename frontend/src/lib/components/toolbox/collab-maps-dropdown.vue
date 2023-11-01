@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	import PadSettings from "../pad-settings/pad-settings.vue";
+	import PadSettingsDialog from "../pad-settings-dialog/pad-settings-dialog.vue";
 	import storage from "../../utils/storage";
 	import ManageBookmarksDialog from "../manage-bookmarks-dialog.vue";
-	import OpenMap from "../open-map.vue";
+	import OpenMapDialog from "../open-map-dialog.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientContextRequired, injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
@@ -14,7 +14,7 @@
 	const mapContext = injectMapContextRequired();
 
 	const emit = defineEmits<{
-		(type: "hide-sidebar"): void;
+		"hide-sidebar": [];
 	}>();
 
 	const dialog = ref<
@@ -106,19 +106,19 @@
 		</ul>
 	</li>
 
-	<OpenMap
+	<OpenMapDialog
 		v-if="dialog === 'open-map'"
 		@hidden="dialog = undefined"
-	></OpenMap>
+	></OpenMapDialog>
 
 	<ManageBookmarksDialog
 		v-if="dialog === 'manage-bookmarks'"
 		@hidden="dialog = undefined"
 	></ManageBookmarksDialog>
 
-	<PadSettings
+	<PadSettingsDialog
 		v-if="dialog === 'create-pad'"
 		@hidden="dialog = undefined"
 		:isCreate="true"
-	></PadSettings>
+	></PadSettingsDialog>
 </template>

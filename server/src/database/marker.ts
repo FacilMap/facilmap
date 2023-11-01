@@ -1,5 +1,5 @@
 import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
+import { BboxWithZoom, CRU, ID, Latitude, Longitude, Marker, PadId } from "facilmap-types";
 import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint } from "../elevation.js";
@@ -38,7 +38,7 @@ export default class DatabaseMarkers {
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),
-			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: MarkerModel) { return this.getDataValue("name") || "Untitled marker"; } },
+			name : { type: DataTypes.TEXT, allowNull: true },
 			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
 			symbol : { type: DataTypes.TEXT, allowNull: true },
@@ -80,7 +80,7 @@ export default class DatabaseMarkers {
 		return this._db.helpers._getPadObject("Marker", padId, markerId);
 	}
 
-	async createMarker(padId: PadId, data: MarkerCreate): Promise<Marker> {
+	async createMarker(padId: PadId, data: Marker<CRU.CREATE>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
 		const elevation = await getElevationForPoint(data);
 
@@ -103,7 +103,7 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: MarkerUpdate, doNotUpdateStyles = false): Promise<Marker> {
+	async updateMarker(padId: PadId, markerId: ID, data: Marker<CRU.UPDATE>, doNotUpdateStyles = false): Promise<Marker> {
 		const update = { ...data };
 
 		if (update.lat != null && update.lon != null)

@@ -1,5 +1,5 @@
 import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { Field, ID, PadId, Type, TypeCreate, TypeUpdate } from "facilmap-types";
+import { CRU, Field, ID, PadId, Type } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import { PadModel } from "./pad.js";
@@ -26,7 +26,7 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	toJSON: () => Type;
 };
 
-const DEFAULT_TYPES: TypeCreate[] = [
+const DEFAULT_TYPES: Type<CRU.CREATE>[] = [
 	{ name: "Marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
 	{ name: "Line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
 ];
@@ -173,7 +173,7 @@ export default class DatabaseTypes {
 		return this._db.helpers._getPadObject<Type>("Type", padId, typeId);
 	}
 
-	async createType(padId: PadId, data: TypeCreate): Promise<Type> {
+	async createType(padId: PadId, data: Type<CRU.CREATE>): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -182,7 +182,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: TypeUpdate, _doNotUpdateStyles?: boolean): Promise<Type> {
+	async updateType(padId: PadId, typeId: ID, data: Type<CRU.UPDATE>, _doNotUpdateStyles?: boolean): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 

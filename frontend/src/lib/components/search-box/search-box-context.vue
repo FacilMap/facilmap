@@ -104,3 +104,7 @@
 
 	provide(contextInject, readonly(searchBoxContext));
 </script>
+
+<template>
+	<slot></slot>
+</template>

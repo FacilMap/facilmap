@@ -45,7 +45,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 			if (filterFunc(marker, types[marker.typeId])) {
 				yield (
 					`\t<wpt lat="${quoteHtml(marker.lat)}" lon="${quoteHtml(marker.lon)}"${marker.ele != null ? ` ele="${quoteHtml(marker.ele)}"` : ""}>\n` +
-					`\t\t<name>${quoteHtml(marker.name)}</name>\n` +
+					`\t\t<name>${quoteHtml(marker.name || "Untitled marker")}</name>\n` +
 					`\t\t<desc>${quoteHtml(dataToText(types[marker.typeId].fields, marker.data))}</desc>\n` +
 					`\t</wpt>\n`
 				);
@@ -57,7 +57,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 				if (useTracks || line.mode == "track") {
 					yield (
 						`\t<trk>\n` +
-						`\t\t<name>${quoteHtml(line.name)}</name>\n` +
+						`\t\t<name>${quoteHtml(line.name || "Untitled line")}</name>\n` +
 						`\t\t<desc>${dataToText(types[line.typeId].fields, line.data)}</desc>\n` +
 						`\t\t<trkseg>\n` +
 						line.trackPoints.map((trackPoint) => (
@@ -69,7 +69,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 				} else {
 					yield (
 						`\t<rte>\n` +
-						`\t\t<name>${quoteHtml(line.name)}</name>\n` +
+						`\t\t<name>${quoteHtml(line.name || "Untitled line")}</name>\n` +
 						`\t\t<desc>${quoteHtml(dataToText(types[line.typeId].fields, line.data))}</desc>\n` +
 						line.routePoints.map((routePoint) => (
 							`\t\t<rtept lat="${quoteHtml(routePoint.lat)}" lon="${quoteHtml(routePoint.lon)}" />\n`

@@ -212,8 +212,8 @@
 			<Pagination
 				v-if="pages > 1"
 				:pages="pages"
-				:value="activePage"
-				@update="search(submittedSearchQuery, $event)"
+				:modelValue="activePage"
+				@update:modelValue="search(submittedSearchQuery, $event)"
 			></Pagination>
 		</template>
 	</ModalDialog>

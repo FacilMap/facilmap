@@ -27,7 +27,8 @@
     "tsconfig.json"
   ],
   "dependencies": {
-    "@types/geojson": "^7946.0.11"
+    "@types/geojson": "^7946.0.11",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "rimraf": "^5.0.5",

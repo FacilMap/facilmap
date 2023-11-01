@@ -1,103 +1,89 @@
 <script setup lang="ts">
-	import WithRender from "./overpass-form.vue";
-	import Vue from "vue";
-	import { Component, Watch } from "vue-property-decorator";
-	import { InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { getOverpassPreset, OverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import "./overpass-form.scss";
+	import { getOverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
 	import { debounce } from "lodash-es";
+	import { computed, ref, watch } from "vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { injectContextRequired } from "../../utils/context";
 
-	@WithRender
-	@Component({ })
-	export default class OverpassForm extends Vue {
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
 
-		const mapComponents = injectMapComponentsRequired();
-		const mapContext = injectMapContextRequired();
+	const activeTab = ref(0);
+	const searchTerm = ref("");
+	const customQuery = ref("");
+	const customQueryValidationState = ref<boolean>();
+	const customQueryValidationError = ref<string>();
+	const customQueryAbortController = ref<AbortController>();
 
-		activeTab = 0;
-		searchTerm = "";
-		customQuery = "";
-		customQueryValidationState: boolean | null = null;
-		customQueryValidationError: string | null = null;
-		customQueryAbortController?: AbortController;
+	const validateCustomQueryDebounced = debounce(validateCustomQuery, 500);
 
-		created(): void {
-			this.validateCustomQueryDebounced = debounce(this.validateCustomQuery, 500);
-		}
-
-		get categories(): (typeof overpassPresets) {
-			return overpassPresets.map((cat) => {
-				const presets = cat.presets.map((presets) => presets.map((preset) => ({ ...preset, isChecked: this.mapContext.overpassPresets.includes(preset) })));
-				return {
-					...cat,
-					presets,
-					checked: presets.flat().filter((preset) => preset.isChecked).length
-				}
-			});
-		}
-
-		get filteredPresets(): OverpassPreset[] {
-			if (!this.searchTerm)
-				return [];
-
-			const lowerTerm = this.searchTerm.toLowerCase();
-			return this.categories.map((cat) => cat.presets).flat().flat().filter((preset) => preset.label.toLowerCase().includes(lowerTerm));
-		}
-
-		@Watch("mapContext.overpassCustom", { immediate: true })
-		handleCustomQueryChange(customQuery: string): void {
-			this.customQuery = customQuery;
-		}
-
-		togglePreset(key: string, enable: boolean): void {
-			const without = this.mapContext.overpassPresets.filter((p) => p.key != key);
-			this.mapComponents.overpassLayer.setQuery([
-				...without,
-				...(enable ? [getOverpassPreset(key)!] : [])
-			]);
-		}
-
-		toggleIsCustom(): void {
-			if (this.mapContext.overpassIsCustom) {
-				this.mapComponents.overpassLayer.setQuery(this.mapContext.overpassPresets);
-				if (this.customQueryAbortController)
-					this.customQueryAbortController.abort();
-			} else {
-				this.mapComponents.overpassLayer.setQuery(this.mapContext.overpassCustom);
-				this.validateCustomQuery();
+	const categories = computed(() => {
+		return overpassPresets.map((cat) => {
+			const presets = cat.presets.map((presets) => presets.map((preset) => ({ ...preset, isChecked: mapContext.overpassPresets.includes(preset) })));
+			return {
+				...cat,
+				presets,
+				checked: presets.flat().filter((preset) => preset.isChecked).length
 			}
+		});
+	});
+
+	const filteredPresets = computed(() => {
+		if (!searchTerm.value)
+			return [];
+
+		const lowerTerm = searchTerm.value.toLowerCase();
+		return categories.value.map((cat) => cat.presets).flat().flat().filter((preset) => preset.label.toLowerCase().includes(lowerTerm));
+	});
+
+	watch(() => mapContext.overpassCustom, () => {
+		customQuery.value = mapContext.overpassCustom;
+	}, { immediate: true });
+
+	function togglePreset(key: string, enable: boolean): void {
+		const without = mapContext.overpassPresets.filter((p) => p.key != key);
+		mapContext.components.overpassLayer.setQuery([
+			...without,
+			...(enable ? [getOverpassPreset(key)!] : [])
+		]);
+	}
+
+	function  toggleIsCustom(): void {
+		if (mapContext.overpassIsCustom) {
+			mapContext.components.overpassLayer.setQuery(mapContext.overpassPresets);
+			if (customQueryAbortController.value)
+				customQueryAbortController.value.abort();
+		} else {
+			mapContext.components.overpassLayer.setQuery(mapContext.overpassCustom);
+			validateCustomQuery();
+		}
+	}
+
+	function handleCustomQueryInput(): void {
+		if (customQueryAbortController.value)
+			customQueryAbortController.value.abort();
+		validateCustomQueryDebounced();
+	}
+
+	async function validateCustomQuery(): Promise<void> {
+		const query = customQuery.value;
+
+		if (!query) {
+			customQueryValidationState.value = undefined;
+			customQueryValidationError.value = undefined;
+		} else {
+			const abortController = new AbortController();
+			customQueryAbortController.value = abortController;
+			const result = await validateOverpassQuery(query, customQueryAbortController.value.signal);
+			if (!abortController.signal.aborted) {
+				customQueryValidationState.value = !result;
+				customQueryValidationError.value = result;
+			} else
+				return;
 		}
 
-		handleCustomQueryInput(): void {
-			if (this.customQueryAbortController)
-				this.customQueryAbortController.abort();
-			this.validateCustomQueryDebounced();
-		}
-
-		async validateCustomQuery(): Promise<void> {
-			const query = this.customQuery;
-
-			if (!query) {
-				this.customQueryValidationState = null;
-				this.customQueryValidationError = null;
-			} else {
-				const abortController = new AbortController();
-				this.customQueryAbortController = abortController;
-				const result = await validateOverpassQuery(query, this.customQueryAbortController.signal);
-				if (!abortController.signal.aborted) {
-					this.customQueryValidationState = !result;
-					this.customQueryValidationError = result ?? null;
-				} else
-					return;
-			}
-
-			if (this.customQueryValidationState !== false)
-				this.mapComponents.overpassLayer.setQuery(query);
-		}
-
-		validateCustomQueryDebounced!: () => void;
-
+		if (customQueryValidationState.value !== false)
+			mapContext.components.overpassLayer.setQuery(query);
 	}
 </script>
 
@@ -108,22 +94,22 @@
 			<hr />
 
 			<div v-if="searchTerm" class="checkbox-grid">
-				<template v-for="preset in filteredPresets">
+				<template v-for="preset in filteredPresets" :key="preset.key">
 					<input
 						type="checkbox"
 						class="form-check-input"
-						:id="" // TODO
+						:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
 						:checked="preset.isChecked"
-						@change="togglePreset(preset.key, $event)"
+						@update="togglePreset(preset.key, $event)"
 					/>
-					<label :for="" class="form-check-label">
+					<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
 						{{preset.label}}
 					</label>
 				</template>
 			</div>
 
 			<ul class="nav nav-pills">
-				<template v-for="(category, idx) in categories">
+				<template v-for="(category, idx) in categories" :key="idx">
 					<li class="nav-item">
 						<a
 							href="javascript:"
@@ -142,18 +128,18 @@
 				</template>
 			</ul>
 
-			<template v-for="presets in categories[activeTab].presets">
+			<template v-for="(presets, idx) in categories[activeTab].presets" :key="idx">
 				<hr />
 				<div class="checkbox-grid">
-					<template v-for="preset in presets">
+					<template v-for="preset in presets" :key="preset.key">
 						<input
 							type="checkbox"
 							class="form-check-input"
-							:id="" // TODO
+							:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
 							:checked="preset.isChecked"
-							@change="togglePreset(preset.key, $event)"
+							@update="togglePreset(preset.key, $event)"
 						/>
-						<label :for="" class="form-check-label">
+						<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
 							{{preset.label}}
 						</label>
 					</template>

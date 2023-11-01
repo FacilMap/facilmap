@@ -11,7 +11,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update:visible", visible: boolean): void;
+		"update:visible": [visible: boolean];
 	}>();
 
 	const innerSidebarRef = ref<HTMLElement>();

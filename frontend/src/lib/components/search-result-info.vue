@@ -1,56 +1,43 @@
 <script setup lang="ts">
-	import WithRender from "./search-result-info.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
 	import { renderOsmTag } from "facilmap-utils";
-	import { SearchResult, Type } from "facilmap-types";
-	import Icon from "../ui/icon/icon";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import "./search-result-info.scss";
-	import { FileResult } from "../../utils/files";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import { isLineResult, isMarkerResult } from "../../utils/search";
-	import { flyTo, getZoomDestinationForSearchResult } from "../../utils/zoom";
-	import { Context } from "../facilmap/facilmap";
-	import Coordinates from "../ui/coordinates/coordinates";
+	import { Point, SearchResult } from "facilmap-types";
+	import Icon from "./ui/icon.vue";
+	import { FileResult } from "../utils/files";
+	import { isLineResult, isMarkerResult } from "../utils/search";
+	import { flyTo, getZoomDestinationForSearchResult } from "../utils/zoom";
+	import Coordinates from "./ui/coordinates.vue";
 	import vTooltip from "../utils/tooltip";
+	import { computed } from "vue";
+	import { injectContextRequired } from "../utils/context";
+	import { injectClientRequired } from "./client-context.vue";
+	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 
-	@WithRender
-	@Component({
-		components: { Coordinates, Icon }
-	})
-	export default class SearchResultInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapComponents = injectMapComponentsRequired();
-		const mapContext = injectMapContextRequired();
+	const props = withDefaults(defineProps<{
+		result: SearchResult | FileResult;
+		showBackButton?: boolean;
+		isAdding?: boolean;
+	}>(), {
+		showBackButton: false,
+		isAdding: false
+	});
 
-		@Prop({ type: Object, required: true }) result!: SearchResult | FileResult;
-		@Prop({ type: Boolean, default: false }) showBackButton!: boolean;
-		@Prop({ type: Boolean, default: false }) isAdding!: boolean;
+	const isMarker = computed(() => isMarkerResult(props.result));
 
-		renderOsmTag = renderOsmTag;
+	const isLine = computed(() => isLineResult(props.result));
 
-		get isMarker(): boolean {
-			return isMarkerResult(this.result);
-		}
+	const types = computed(() => {
+		// Result can be both marker and line
+		return Object.values(client.types).filter((type) => (isMarker.value && type.type == "marker") || (isLine.value && type.type == "line"));
+	});
 
-		get isLine(): boolean {
-			return isLineResult(this.result);
-		}
-
-		get types(): Type[] {
-			// Result can be both marker and line
-			return Object.values(this.client.types).filter((type) => (this.isMarker && type.type == "marker") || (this.isLine && type.type == "line"));
-		}
-
-		zoomToResult(): void {
-			const dest = getZoomDestinationForSearchResult(this.result);
-			if (dest)
-				flyTo(this.mapComponents.map, dest);
-		}
-
+	function zoomToResult(): void {
+		const dest = getZoomDestinationForSearchResult(props.result);
+		if (dest)
+			flyTo(mapContext.components.map, dest);
 	}
 </script>
 
@@ -61,19 +48,27 @@
 			{{result.short_name}}
 		</h2>
 		<dl class="fm-search-box-collapse-point">
-			<dt v-if="result.type">Type</dt>
-			<dd v-if="result.type">{{result.type}}</dd>
+			<template v-if="result.type">
+				<dt>Type</dt>
+				<dd>{{result.type}}</dd>
+			</template>
 
-			<dt v-if="result.address">Address</dt>
-			<dd v-if="result.address">{{result.address}}</dd>
+			<template v-if="result.address">
+				<dt>Address</dt>
+				<dd>{{result.address}}</dd>
+			</template>
 
-			<dt v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">Coordinates</dt>
-			<dd v-if="result.type != 'coordinates' && result.lat != null && result.lon != null"><Coordinates :point="result"></Coordinates></dd>
+			<template v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">
+				<dt>Coordinates</dt>
+				<dd><Coordinates :point="result as Point"></Coordinates></dd>
+			</template>
 
-			<dt v-if="result.elevation != null">Elevation</dt>
-			<dd v-if="result.elevation != null">{{result.elevation}} m</dd>
+			<template v-if="result.elevation != null">
+				<dt>Elevation</dt>
+				<dd>{{result.elevation}} m</dd>
+			</template>
 
-			<template v-for="(value, key) in result.extratags">
+			<template v-for="(value, key) in result.extratags" :key="key">
 				<dt>{{key}}</dt>
 				<dd v-html="renderOsmTag(key, value)"></dd>
 			</template>
@@ -95,7 +90,7 @@
 					Add to map
 				</button>
 				<ul class="dropdown-menu">
-					<template v-for="type in types">
+					<template v-for="type in types" :key="type.id">
 						<li>
 							<a
 								href="javascript:"

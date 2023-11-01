@@ -1,31 +1,41 @@
-import { View } from "./view.js";
-import { ID } from "./base.js";
+import { viewValidator } from "./view.js";
+import { idValidator } from "./base.js";
+import * as z from "zod";
+import { CRU, CRUType, cruValidator } from "./cru";
 
-export type PadId = string;
-
-export interface PadDataBase {
-	id: PadId;
-	writeId: PadId;
-	adminId: PadId;
-	name: string;
-	searchEngines: boolean;
-	description: string;
-	clusterMarkers: boolean;
-	legend1: string;
-	legend2: string;
-	defaultViewId: ID | null;
-}
+export const padIdValidator = z.string();
+export type PadId = z.infer<typeof padIdValidator>;
 
 export enum Writable {
 	READ = 0,
 	WRITE = 1,
 	ADMIN = 2
 }
+export const writableValidator = z.nativeEnum(Writable);
 
-export type PadData = Omit<PadDataBase, "writeId" | "adminId"> & Partial<Pick<PadDataBase, "writeId" | "adminId">> & {
-	writable: Writable;
-	defaultView?: View;
-}
+export const padDataValidator = cruValidator({
+	allPartialUpdate: {
+		id: padIdValidator,
+		name: z.string(),
+		searchEngines: z.boolean(),
+		description: z.string(),
+		clusterMarkers: z.boolean(),
+		legend1: z.string(),
+		legend2: z.string(),
+		defaultViewId: idValidator.or(z.null())
+	},
+	onlyRead: {
+		writable: writableValidator,
+		defaultView: viewValidator.read.optional()
+	},
+	exceptCreate: {
+		writeId: padIdValidator.optional(),
+		adminId: padIdValidator.optional()
+	},
+	onlyCreate: {
+		writeId: padIdValidator,
+		adminId: padIdValidator
+	}
+});
 
-export type PadDataCreate = PadDataBase;
-export type PadDataUpdate = Partial<PadDataCreate>;
+export type PadData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof padDataValidator>;

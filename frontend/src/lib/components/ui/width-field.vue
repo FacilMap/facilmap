@@ -2,24 +2,27 @@
 import { computed } from 'vue';
 
 	const props = defineProps<{
-		value: number;
-		id?: string;
+		modelValue: number | undefined;
+		validationError?: string | undefined;
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update", value: number): void;
+		"update:modelValue": [value: number];
 	}>();
 
 	const value = computed({
-		get: () => props.value,
-		set: (value: number) => {
-			emit("update", value);
+		get: () => props.modelValue,
+		set: (value) => {
+			emit("update:modelValue", value!);
 		}
 	});
 </script>
 
 <template>
-	<input type="range" class="custom-range" min="1" v-model="value" />
+	<input type="range" class="custom-range" min="1" v-model="value" v-validity="props.validationError" />
+	<div class="invalid-feedback" v-if="props.validationError">
+		{{props.validationError}}
+	</div>
 </template>
 
 <style lang="scss">

@@ -1,91 +1,81 @@
 <script setup lang="ts">
-	import WithRender from "./overpass-multiple-info.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import "./overpass-multiple-info.scss";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
-	import Icon from "../ui/icon/icon";
-	import { Context } from "../facilmap/facilmap";
-	import OverpassInfo from "./overpass-info";
+	import Icon from "../ui/icon.vue";
+	import OverpassInfo from "./overpass-info.vue";
 	import { OverpassElement } from "facilmap-leaflet";
-	import { MarkerCreate, Type } from "facilmap-types";
+	import { CRU, Marker, Type } from "facilmap-types";
 	import { SelectedItem } from "../../utils/selection";
-	import { showErrorToast } from "../../utils/toasts";
-	import StringMap from "../../utils/string-map";
 	import { mapTagsToType } from "../search-results/utils";
 	import vTooltip from "../../utils/tooltip";
+	import { injectContextRequired } from "../../utils/context";
+	import { injectClientRequired } from "../client-context.vue";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { computed, ref } from "vue";
+	import { useToasts } from "../ui/toasts/toasts.vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, OverpassInfo }
-	})
-	export default class OverpassMultipleInfo extends Vue {
+	const context = injectContextRequired();
+	const client = injectClientRequired();
+	const mapContext = injectMapContextRequired();
+	const toasts = useToasts();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	const props = defineProps<{
+		elements: OverpassElement[];
+	}>();
 
-		@Prop({ type: Array, required: true }) elements!: OverpassElement[];
+	const openedElement = ref<OverpassElement>();
+	const activeTab = ref(0);
+	const isAdding = ref(false);
 
-		openedElement: OverpassElement | null = null;
-		activeTab = 0;
-		isAdding = false;
+	const types = computed(() => {
+		return Object.values(client.types).filter((type) => type.type == "marker");
+	});
 
-		get types(): Type[] {
-			return Object.values(this.client.types).filter((type) => type.type == "marker");
-		}
+	function zoomToElement(element: OverpassElement): void {
+		const zoomDestination = getZoomDestinationForMarker(element);
+		if (zoomDestination)
+			flyTo(mapContext.components.map, zoomDestination);
+	}
 
-		zoomToElement(element: OverpassElement): void {
-			const zoomDestination = getZoomDestinationForMarker(element);
-			if (zoomDestination)
-				flyTo(this.mapComponents.map, zoomDestination);
-		}
+	function openElement(element: OverpassElement): void {
+		openedElement.value = element;
+		activeTab.value = 1;
+	}
 
-		openElement(element: OverpassElement): void {
-			this.openedElement = element;
-			this.activeTab = 1;
-		}
+	function zoom(): void {
+		const zoomDestination = combineZoomDestinations(props.elements.map((element) => getZoomDestinationForMarker(element)));
+		if (zoomDestination)
+			flyTo(mapContext.components.map, zoomDestination);
+	}
 
-		zoom(): void {
-			const zoomDestination = combineZoomDestinations(this.elements.map((element) => getZoomDestinationForMarker(element)));
-			if (zoomDestination)
-				flyTo(this.mapComponents.map, zoomDestination);
-		}
+	async function addToMap(elements: OverpassElement[], type: Type): Promise<void> {
+		toasts.hideToast(`fm${context.id}-overpass-multiple-info-add-error`);
+		isAdding.value = true;
 
-		async addToMap(elements: OverpassElement[], type: Type): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-overpass-multiple-info-add-error`);
-			this.isAdding = true;
+		try {
+			const selection: SelectedItem[] = [];
 
-			try {
-				const selection: SelectedItem[] = [];
+			for (const element of elements) {
+				const obj: Partial<Marker<CRU.CREATE>> = {
+					name: element.tags.name || "",
+					data: mapTagsToType(element.tags || {}, type)
+				};
 
-				for (const element of elements) {
-					const obj: Partial<MarkerCreate<StringMap>> = {
-						name: element.tags.name || "",
-						data: mapTagsToType(element.tags || {}, type)
-					};
+				const marker = await client.addMarker({
+					...obj,
+					lat: element.lat,
+					lon: element.lon,
+					typeId: type.id
+				});
 
-					const marker = await this.client.addMarker({
-						...obj,
-						lat: element.lat,
-						lon: element.lon,
-						typeId: type.id
-					});
-
-					selection.push({ type: "marker", id: marker.id });
-				}
-
-				this.mapComponents.selectionHandler.setSelectedItems(selection, true);
-			} catch (err) {
-				toasts.showErrorToast(this, `fm${this.context.id}-overpass-multiple-info-add-error`, "Error adding to map", err);
-			} finally {
-				this.isAdding = false;
+				selection.push({ type: "marker", id: marker.id });
 			}
-		}
 
+			mapContext.components.selectionHandler.setSelectedItems(selection, true);
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-overpass-multiple-info-add-error`, "Error adding to map", err);
+		} finally {
+			isAdding.value = false;
+		}
 	}
 </script>
 
@@ -101,7 +91,7 @@
 			<b-carousel-slide>
 				<div class="fm-search-box-collapse-point">
 					<ul class="list-group">
-						<li v-for="element in elements" class="list-group-item active">
+						<li v-for="element in elements" :key="element.id" class="list-group-item active">
 							<span>
 								<a href="javascript:" @click="$emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
 							</span>
@@ -127,7 +117,7 @@
 							Add to map
 						</button>
 						<ul class="dropdown-menu">
-							<template v-for="type in types">
+							<template v-for="type in types" :key="type.id">
 								<li>
 									<a
 										href="javascript:"

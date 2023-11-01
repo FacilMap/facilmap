@@ -1,5 +1,5 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
-import { FindPadsQuery, FindPadsResult, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults } from "facilmap-types";
+import { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults } from "facilmap-types";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 
@@ -72,7 +72,7 @@ export default class DatabasePads {
 		return obj?.toJSON();
 	}
 
-	async createPad(data: PadDataCreate): Promise<PadData> {
+	async createPad(data: PadData<CRU.CREATE>): Promise<PadData> {
 		if(!data.id || data.id.length == 0)
 			throw new Error("Invalid read-only ID");
 		if(!data.writeId || data.writeId.length == 0)
@@ -94,7 +94,7 @@ export default class DatabasePads {
 		return createdObj.toJSON() as PadData;
 	}
 
-	async updatePadData(padId: PadId, data: PadDataUpdate): Promise<PadData> {
+	async updatePadData(padId: PadId, data: PadData<CRU.UPDATE>): Promise<PadData> {
 		const oldData = await this.getPadData(padId);
 
 		if(!oldData)

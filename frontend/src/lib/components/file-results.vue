@@ -1,90 +1,80 @@
 <script setup lang="ts">
-	import WithRender from "./file-results.vue";
-	import Vue from "vue";
-	import { Component, Prop } from "vue-property-decorator";
-	import { FileResultObject } from "../../utils/files";
-	import { Client, InjectClient, InjectContext, InjectMapComponents } from "../../utils/decorators";
-	import { showErrorToast } from "../../utils/toasts";
-	import Icon from "../ui/icon/icon";
-	import SearchResults from "../search-results/search-results";
+	import { FileResultObject } from "../utils/files";
+	import Icon from "./ui/icon.vue";
+	import SearchResults from "./search-results/search-results.vue";
 	import { displayView } from "facilmap-leaflet";
-	import { MapComponents } from "../leaflet-map/leaflet-map";
-	import "./file-results.scss";
-	import { typeExists, viewExists } from "../../utils/search";
-	import { Context } from "../facilmap/facilmap";
+	import { typeExists, viewExists } from "../utils/search";
 	import vTooltip from "../utils/tooltip";
+	import { injectContextRequired } from "../utils/context";
+	import { injectClientRequired } from "./client-context.vue";
+	import { computed, ref } from "vue";
+	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
 
-	@WithRender
-	@Component({
-		components: { Icon, SearchResults }
-	})
-	export default class FileResults extends Vue {
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
+	const client = injectClientRequired();
+	const toasts = useToasts();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapComponents = injectMapComponentsRequired();
-
-		@Prop({ type: Number, required: true }) layerId!: number;
-		@Prop({ type: Object, required: true }) file!: FileResultObject;
-
+	const props = withDefaults(defineProps<{
+		layerId: number;
+		file: FileResultObject;
 		/** When clicking a search result, union zoom to it. Normal zoom is done when clicking the zoom button. */
-		@Prop({ type: Boolean, default: false }) unionZoom!: boolean;
+		unionZoom?: boolean;
 		/** When clicking or selecting a search result, zoom to it. */
-		@Prop({ type: Boolean, default: false }) autoZoom!: boolean;
+		autoZoom?: boolean;
+	}>(), {
+		unionZoom: false,
+		autoZoom: false
+	});
 
-		isAddingView: Array<ViewImport> = [];
-		isAddingType: Array<TypeImport> = [];
+	const isAddingView = ref(new Set<ViewImport>());
+	const isAddingType = ref(new Set<TypeImport>());
 
-		get hasViews(): boolean {
-			return this.file.views.length > 0;
-		}
+	const hasViews = computed(() => props.file.views.length > 0);
 
-		get hasTypes(): boolean {
-			return Object.keys(this.file.types).length > 0;
-		}
+	const hasTypes = computed(() => Object.keys(props.file.types).length > 0);
 
-		viewExists(view: ViewImport): boolean {
-			return viewExists(this.client, view);
-		};
+	const existingViews = computed(() => {
+		return new Map(props.file.views.map((view) => [view, viewExists(client, view)]));
+	});
 
-		showView(view: ViewImport): void {
-			displayView(this.mapComponents.map, view, { overpassLayer: this.mapComponents.overpassLayer });
-		};
-
-		async addView(view: ViewImport): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-file-result-import-error`);
-			this.isAddingView.push(view);
-
-			try {
-				await this.client.addView(view);
-			} catch (err) {
-				toasts.showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing view", err);
-			} finally {
-				this.isAddingView = this.isAddingView.filter((v) => v !== view);
-			}
-		};
-
-		typeExists(type: TypeImport): boolean {
-			return typeExists(this.client, type);
-		};
-
-		async addType(type: TypeImport): Promise<void> {
-			this.$bvToast.hide(`fm${this.context.id}-file-result-import-error`);
-			this.isAddingType.push(type);
-
-			try {
-				await this.client.addType(type);
-			} catch (err) {
-				toasts.showErrorToast(this, `fm${this.context.id}-file-result-import-error`, "Error importing type", err);
-			} finally {
-				this.isAddingType = this.isAddingType.filter((t) => t !== type);
-			}
-		};
-
+	function showView(view: ViewImport): void {
+		displayView(mapContext.components.map, view, { overpassLayer: mapContext.components.overpassLayer });
 	}
+
+	async function addView(view: ViewImport): Promise<void> {
+		toasts.hideToast(`fm${context.id}-file-result-import-error`);
+		isAddingView.value.add(view);
+
+		try {
+			await client.addView(view);
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing view", err);
+		} finally {
+			isAddingView.value.delete(view);
+		}
+	};
+
+	const existingTypes = computed(() => {
+		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(client, type)]));
+	});
+
+	async function addType(type: TypeImport): Promise<void> {
+		toasts.hideToast(`fm${context.id}-file-result-import-error`);
+		isAddingType.value.add(type);
+
+		try {
+			await client.addType(type);
+		} catch (err) {
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing type", err);
+		} finally {
+			isAddingType.value.delete(type);
+		}
+	};
 </script>
 
 <template>
@@ -100,16 +90,17 @@
 				<template v-if="hasViews">
 					<h3>Views</h3>
 					<ul class="list-group">
+						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="view in file.views" class="list-group-item">
 							<span>
 								<a href="javascript:" @click="showView(view)">{{view.name}}</a>
 								{{" "}}
 								<span class="result-type">(View)</span>
 							</span>
-							<template v-if="isAddingView.includes(view)">
+							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.padData && client.writable == 2 && !viewExists(view)">
+							<template v-else-if="client.padData && client.writable == 2 && !existingViews.get(view)">
 								<a
 									href="javascript:"
 									@click="addView(view)"
@@ -128,16 +119,17 @@
 				<template v-if="hasTypes">
 					<h3>Types</h3>
 					<ul class="list-group">
+						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="type in file.types" class="list-group-item">
 							<span>
 								{{type.name}}
 								{{" "}}
 								<span class="result-type">(Type)</span>
 							</span>
-							<template v-if="isAddingType.includes(type)">
+							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.padData && client.writable == 2 && !typeExists(type)">
+							<template v-else-if="client.padData && client.writable == 2 && !existingTypes.get(type)">
 								<a
 									href="javascript:"
 									@click="addType(type)"

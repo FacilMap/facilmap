@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { range } from 'lodash-es';
-import { computed } from 'vue';
+	import { range } from 'lodash-es';
+	import { computed } from 'vue';
 
 	const props = defineProps<{
 		pages: number;
-		value: number;
+		modelValue: number;
 	}>();
 
 	const emit = defineEmits<{
-		(type: "update", page: number): void;
+		"update:modelValue": [page: number];
 	}>();
 
 	function handleClick(page: number): void {
-		emit("update", page);
+		emit("update:modelValue", page);
 	}
 
-	const isPrevDisabled = computed(() => props.value === 0);
-	const isNextDisabled = computed(() => props.value === props.pages - 1);
-	const pagesFrom = computed(() => Math.max(0, Math.min(props.value - 1, props.pages - 3)));
-	const pagesTo = computed(() => Math.min(props.pages - 1, Math.max(props.value + 1, 2)));
+	const isPrevDisabled = computed(() => props.modelValue === 0);
+	const isNextDisabled = computed(() => props.modelValue === props.pages - 1);
+	const pagesFrom = computed(() => Math.max(0, Math.min(props.modelValue - 1, props.pages - 3)));
+	const pagesTo = computed(() => Math.min(props.pages - 1, Math.max(props.modelValue + 1, 2)));
 	const pageLinks = computed(() => range(pagesFrom.value, pagesTo.value));
 	const showEllipsisBefore = computed(() => pagesFrom.value > 0);
 	const showEllipsisAfter = computed(() => pagesTo.value < props.pages - 1);
@@ -42,7 +42,7 @@ import { computed } from 'vue';
 				:href="isPrevDisabled ? undefined : 'javascript:'"
 				class="page-link"
 				aria-label="Previous"
-				@click="handleClick(value - 1)"
+				@click="handleClick(props.modelValue - 1)"
 			>
 				<span aria-hidden="true">‹</span>
 			</a>
@@ -52,8 +52,8 @@ import { computed } from 'vue';
 			<span class="page-link">…</span>
 		</li>
 
-		<template v-for="page in pageLinks">
-			<li class="page-item" :class="{ active: page === props.value }">
+		<template v-for="page in pageLinks" :key="page">
+			<li class="page-item" :class="{ active: page === props.modelValue }">
 				<a href="javascript:" class="page-link" @click="handleClick(page)">{{page}}</a>
 			</li>
 		</template>
@@ -67,7 +67,7 @@ import { computed } from 'vue';
 				:href="isNextDisabled ? undefined : 'javascript:'"
 				class="page-link"
 				aria-label="Next"
-				@click="handleClick(value + 1)"
+				@click="handleClick(props.modelValue + 1)"
 			>
 				<span aria-hidden="true">›</span>
 			</a>

@@ -86,7 +86,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		(type: "submit", event: CustomSubmitEvent): void;
+		submit: [event: CustomSubmitEvent];
 	}>();
 
 	const formRef = ref<HTMLFormElement>();

@@ -1,54 +1,35 @@
 <script setup lang="ts">
-	import WithRender from "./overpass-info-tab.vue";
-	import Vue from "vue";
-	import { Component } from "vue-property-decorator";
-	import { Client, InjectClient, InjectContext, InjectMapComponents, InjectMapContext } from "../../utils/decorators";
-	import { MapComponents, MapContext } from "../leaflet-map/leaflet-map";
-	import Icon from "../ui/icon/icon";
-	import { Context } from "../facilmap/facilmap";
 	import { OverpassElement } from "facilmap-leaflet";
-	import OverpassMultipleInfo from "./overpass-multiple-info";
+	import OverpassMultipleInfo from "./overpass-multiple-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { useEventListener } from "../../utils/utils";
+	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import { injectContextRequired } from "../../utils/context";
+	import { computed } from "vue";
 
-	@WithRender
-	@Component({
-		components: { Icon, OverpassMultipleInfo }
-	})
-	export default class OverpassInfoTab extends Vue {
+	const context = injectContextRequired();
+	const mapContext = injectMapContextRequired();
 
-		const context = injectContextRequired();
-		const client = injectClientRequired();
-		const mapContext = injectMapContextRequired();
-		const mapComponents = injectMapComponentsRequired();
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-		mounted(): void {
-			this.mapContext.$on("fm-open-selection", this.handleOpenSelection);
-		}
+	const elements = computed(() => {
+		return mapContext.selection.flatMap((item) => (item.type == "overpass" ? [item.element] : []));
+	});
 
-		beforeDestroy(): void {
-			this.mapContext.$off("fm-open-selection", this.handleOpenSelection);
-		}
+	function handleOpenSelection(): void {
+		if (elements.value.length > 0)
+			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-overpass-info-tab` });
+	}
 
-		get elements(): OverpassElement[] {
-			return this.mapContext.selection.flatMap((item) => (item.type == "overpass" ? [item.element] : []));
-		}
+	function handleElementClick(element: OverpassElement, event: MouseEvent): void {
+		if (event.ctrlKey)
+			mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it.type != "overpass" || it.element !== element), true);
+		else
+			mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it.type == "overpass" && it.element === element), true);
+	}
 
-		handleOpenSelection(): void {
-			if (this.elements.length > 0)
-				this.mapContext.$emit("fm-search-box-show-tab", `fm${this.context.id}-overpass-info-tab`);
-		}
-
-		handleElementClick(element: OverpassElement, event: MouseEvent): void {
-			if (event.ctrlKey)
-				this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((it) => it.type != "overpass" || it.element !== element), true);
-			else
-				this.mapComponents.selectionHandler.setSelectedItems(this.mapContext.selection.filter((it) => it.type == "overpass" && it.element === element), true);
-		}
-
-		close(): void {
-			this.mapComponents.selectionHandler.setSelectedItems([]);
-		}
-
+	function close(): void {
+		mapContext.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 
@@ -62,5 +43,5 @@
 		>
 			<OverpassMultipleInfo :elements="elements" @click-element="handleElementClick"></OverpassMultipleInfo>
 		</SearchBoxTab>
-	</b-tab>
+	</template>
 </template>

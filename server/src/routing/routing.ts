@@ -1,5 +1,5 @@
 import { calculateBbox, isInBbox } from "../utils/geo.js";
-import { Bbox, BboxWithZoom, LineCreate, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
+import { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
 import { decodeRouteMode, DecodedRouteMode, calculateDistance } from "facilmap-utils";
 import { calculateOSRMRoute } from "./osrm.js";
 import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
@@ -43,7 +43,7 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	} as RouteInfo;
 }
 
-export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
+export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
 	const result: Partial<RouteInfo> = {};
 
 	if(trackPointsFromRoute) {
