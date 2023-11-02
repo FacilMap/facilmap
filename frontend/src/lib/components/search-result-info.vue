@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { renderOsmTag } from "facilmap-utils";
-	import { Point, SearchResult } from "facilmap-types";
+	import type { Point, SearchResult } from "facilmap-types";
 	import Icon from "./ui/icon.vue";
-	import { FileResult } from "../utils/files";
+	import type { FileResult } from "../utils/files";
 	import { isLineResult, isMarkerResult } from "../utils/search";
 	import { flyTo, getZoomDestinationForSearchResult } from "../utils/zoom";
 	import Coordinates from "./ui/coordinates.vue";
@@ -74,61 +74,63 @@
 			</template>
 		</dl>
 
-		<div class="btn-group" role="group">
-			<button
-				type="button"
-				class="btn btn-light btn-sm"
-				v-tooltip="'Zoom to search result'"
-				@click="zoomToResult()"
-			>
-				<Icon icon="zoom-in" alt="Zoom to search result"></Icon>
-			</button>
-
-			<div v-if="!client.readonly && types.length > 0" class="dropdown">
-				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
-					<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-					Add to map
+		<div>
+			<div class="btn-group" role="group">
+				<button
+					type="button"
+					class="btn btn-light btn-sm"
+					v-tooltip="'Zoom to search result'"
+					@click="zoomToResult()"
+				>
+					<Icon icon="zoom-in" alt="Zoom to search result"></Icon>
 				</button>
-				<ul class="dropdown-menu">
-					<template v-for="type in types" :key="type.id">
+
+				<div v-if="!client.readonly && types.length > 0" class="dropdown">
+					<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
+						<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
+						Add to map
+					</button>
+					<ul class="dropdown-menu">
+						<template v-for="type in types" :key="type.id">
+							<li>
+								<a
+									href="javascript:"
+									class="dropdown-item"
+									@click="$emit('add-to-map', type)"
+								>{{type.name}}</a>
+							</li>
+						</template>
+					</ul>
+				</div>
+
+				<div v-if="isMarker && context.search" class="dropdown">
+					<button type="button" class="btn btn-light btn-sm dropdown-toggle">Use as</button>
+					<ul class="dropdown-menu">
 						<li>
 							<a
 								href="javascript:"
 								class="dropdown-item"
-								@click="$emit('add-to-map', type)"
-							>{{type.name}}</a>
+								@click="$emit('use-as-from')"
+							>Route start</a>
 						</li>
-					</template>
-				</ul>
-			</div>
 
-			<div v-if="isMarker && context.search" class="dropdown">
-				<button type="button" class="btn btn-light btn-sm dropdown-toggle">Use as</button>
-				<ul class="dropdown-menu">
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="$emit('use-as-from')"
-						>Route start</a>
-					</li>
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="$emit('use-as-via')"
+							>Route via</a>
+						</li>
 
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="$emit('use-as-via')"
-						>Route via</a>
-					</li>
-
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="$emit('use-as-to')"
-						>Route destination</a>
-					</li>
-				</ul>
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="$emit('use-as-to')"
+							>Route destination</a>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -1,8 +1,8 @@
-import { ID, Shape, Symbol, Type } from "facilmap-types";
+import type { ID, Shape, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
 import { getBrightness } from "facilmap-utils";
-import { Client } from "../client-context.vue";
-import { MapContext } from "../leaflet-map/leaflet-map.vue";
+import type { Client } from "../client-context.vue";
+import type { MapContext } from "../leaflet-map/leaflet-map.vue";
 
 export interface LegendType {
 	key: string;

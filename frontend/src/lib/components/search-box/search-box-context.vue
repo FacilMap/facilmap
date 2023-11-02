@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { HashQuery } from "facilmap-leaflet";
+	import type { HashQuery } from "facilmap-leaflet";
 	import mitt, { Emitter } from "mitt";
-	import { InjectionKey, inject, provide, Ref, Slot, reactive, ref, readonly, DeepReadonly, watch, nextTick } from "vue";
+	import { InjectionKey, inject, provide, Ref, reactive, ref, readonly, DeepReadonly, watch, nextTick } from "vue";
+	import type { Slot } from "vue";
 
 	export type SearchBoxEventMap = {
 		"resizestart": void;

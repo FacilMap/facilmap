@@ -3,7 +3,7 @@
 	import Icon from "../ui/icon.vue";
 	import { formatRouteMode, formatTime, isSearchId, round, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
+	import type { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
 	import { getMarkerIcon, HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, LatLng } from "leaflet";

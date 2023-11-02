@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import { FindOnMapResult, ID } from "facilmap-types";
+	import type { FindOnMapResult, ID } from "facilmap-types";
 	import { moveMarker } from "../../utils/draw";
 	import EditMarkerDialog from "../edit-marker-dialog.vue";
 	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import Coordinates from "../ui/coordinates.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { formatField } from "facilmap-utils";
+	import { formatField, normalizeMarkerName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { injectClientRequired } from "../client-context.vue";
@@ -27,6 +27,7 @@
 	});
 
 	const isDeleting = ref(false);
+	const showEditDialog = ref(false);
 
 	const marker = computed(() => client.markers[props.markerId]);
 
@@ -62,7 +63,7 @@
 
 		const markerSuggestion: FindOnMapResult = { ...marker.value, kind: "marker", similarity: 1 };
 		mapContext.emit(event, {
-			query: marker.value.name,
+			query: normalizeMarkerName(marker.value.name),
 			mapSuggestions: [markerSuggestion],
 			selectedSuggestion: markerSuggestion
 		});
@@ -86,7 +87,7 @@
 	<div class="fm-marker-info" v-if="marker">
 		<h2>
 			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-			{{marker.name || "Untitled marker"}}
+			{{normalizeMarkerName(marker.name)}}
 		</h2>
 		<dl class="fm-search-box-collapse-point">
 			<dt class="pos">Coordinates</dt>
@@ -146,7 +147,7 @@
 				v-if="!client.readonly"
 				type="button"
 				class="btn btn-light btn-sm"
-				v-b-modal="`fm${context.id}-marker-info-edit`"
+				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
 			>Edit data</button>
 			<button
@@ -168,7 +169,11 @@
 			</button>
 		</div>
 
-		<EditMarkerDialog :id="`fm${context.id}-marker-info-edit`" :markerId="markerId"></EditMarkerDialog>
+		<EditMarkerDialog
+			v-if="showEditDialog"
+			:markerId="markerId"
+			@hidden="showEditDialog = false"
+		></EditMarkerDialog>
 	</div>
 </template>
 

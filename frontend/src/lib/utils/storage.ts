@@ -1,4 +1,4 @@
-import { PadId } from "facilmap-types";
+import type { PadId } from "facilmap-types";
 import { isEqual } from "lodash-es";
 import { reactive, watch } from "vue";
 

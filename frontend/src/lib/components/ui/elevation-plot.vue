@@ -1,11 +1,10 @@
 <script setup lang="ts">
 	import FmHeightgraph from "../../utils/heightgraph";
-	import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
-	import $ from "jquery";
+	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectSearchBoxContextOptional, injectSearchBoxContextRequired } from "../search-box/search-box-context.vue";
+	import { injectSearchBoxContextOptional } from "../search-box/search-box-context.vue";
 	import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useDomEventListener, useEventListener } from "../../utils/utils";
+	import { useDomEventListener, useEventListener } from "../../utils/utils";
 
 	const props = defineProps<{
 		route: RouteWithTrackPoints | LineWithTrackPoints;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Type } from "facilmap-types";
+	import type { Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
 	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";

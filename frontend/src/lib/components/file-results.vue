@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { FileResultObject } from "../utils/files";
+	import type { FileResultObject } from "../utils/files";
 	import Icon from "./ui/icon.vue";
 	import SearchResults from "./search-results/search-results.vue";
 	import { displayView } from "facilmap-leaflet";

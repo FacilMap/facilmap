@@ -2,9 +2,9 @@ import 'leaflet.heightgraph';
 import { Control, Map, Polyline } from 'leaflet';
 import "leaflet.heightgraph/src/L.Control.Heightgraph.css";
 import "./heightgraph.scss";
-import { TrackPoints } from 'facilmap-client';
-import { ExtraInfo, TrackPoint } from 'facilmap-types';
-import { FeatureCollection } from "geojson";
+import type { TrackPoints } from 'facilmap-client';
+import type { ExtraInfo, TrackPoint } from 'facilmap-types';
+import type { FeatureCollection } from "geojson";
 import { calculateDistance, round } from 'facilmap-utils';
 
 function trackSegment(trackPoints: TrackPoints, fromIdx: number, toIdx: number): TrackPoint[] {

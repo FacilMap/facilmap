@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ID, Line, Marker } from "facilmap-types";
+	import type { ID, Line, Marker } from "facilmap-types";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import { isLine, isMarker } from "../../utils/utils";
@@ -11,6 +11,7 @@
 	import { injectClientRequired } from "../client-context.vue";
 	import { injectContextRequired } from "../../utils/context";
 	import { showConfirm } from "../ui/alert.vue";
+	import { useCarousel } from "../../utils/carousel";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
@@ -24,7 +25,9 @@
 	const isDeleting = ref(false);
 	const openedObjectId = ref<ID>();
 	const openedObjectType = ref<"marker" | "line">();
-	const activeTab = ref(0);
+
+	const carouselRef = ref<HTMLElement>();
+	const carousel = useCarousel(carouselRef);
 
 	function zoomToObject(object: Marker | Line): void {
 		const zoomDestination = isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined;
@@ -35,7 +38,7 @@
 	function openObject(object: Marker | Line): void {
 		openedObjectId.value = object.id;
 		openedObjectType.value = isMarker(object) ? "marker" : isLine(object) ? "line" : undefined;
-		activeTab.value = 1;
+		carousel.setTab(1);
 	}
 
 	const openedObject = computed(() => {
@@ -52,7 +55,7 @@
 
 	watch(openedObject, () => {
 		if (!openedObject.value)
-			activeTab.value = 0;
+			carousel.setTab(0);
 	});
 
 	async function deleteObjects(): Promise<void> {
@@ -93,8 +96,8 @@
 
 <template>
 	<div class="fm-multiple-info">
-		<b-carousel :interval="0" v-model="activeTab">
-			<b-carousel-slide>
+		<div class="carousel slide" ref="carouselRef">
+			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
 				<div class="fm-search-box-collapse-point">
 					<ul class="list-group">
 						<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
@@ -130,23 +133,23 @@
 						Remove
 					</button>
 				</div>
-			</b-carousel-slide>
+			</div>
 
-			<b-carousel-slide>
+			<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
 				<MarkerInfo
 					v-if="openedObject && isMarker(openedObject)"
 					:markerId="openedObject.id"
 					show-back-button
-					@back="activeTab = 0"
+					@back="carousel.setTab(0)"
 				></MarkerInfo>
 				<LineInfo
 					v-else-if="openedObject && isLine(openedObject)"
 					:lineId="openedObject.id"
 					show-back-button
-					@back="activeTab = 0"
+					@back="carousel.setTab(0)"
 				></LineInfo>
-			</b-carousel-slide>
-		</b-carousel>
+			</div>
+		</div>
 	</div>
 </template>
 

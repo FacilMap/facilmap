@@ -146,3 +146,11 @@ export async function sleep(ms: number): Promise<void> {
 		setTimeout(resolve, ms);
 	});
 }
+
+export function normalizeMarkerName(name: string | undefined): string {
+	return name || "Untitled marker";
+}
+
+export function normalizeLineName(name: string | undefined): string {
+	return name || "Untitled line";
+}

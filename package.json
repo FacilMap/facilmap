@@ -23,5 +23,9 @@
     "eslint-plugin-vue": "^9.18.1"
   },
   "version": "0.0.0",
-  "packageManager": "yarn@3.6.3"
+  "packageManager": "yarn@3.6.3",
+  "resolutions": {
+    "vite": "4.5.0",
+    "rollup": "3.29.4"
+  }
 }

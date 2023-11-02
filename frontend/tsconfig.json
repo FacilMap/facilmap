@@ -11,7 +11,8 @@
 		"skipLibCheck": true,
 		"experimentalDecorators": true,
 		"resolveJsonModule": true,
-		"module": "esnext"
+		"module": "esnext",
+		"importsNotUsedAsValues": "error"
 	},
 	"include": ["src/**/*"]
 }

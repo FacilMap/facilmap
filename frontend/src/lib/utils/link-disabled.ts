@@ -1,4 +1,4 @@
-import { Directive } from "vue";
+import type { Directive } from "vue";
 
 const vLinkDisabled: Directive<HTMLAnchorElement, boolean> = (el, binding) => {
 	if (binding.value) {

@@ -2,9 +2,9 @@
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import OverpassInfo from "./overpass-info.vue";
-	import { OverpassElement } from "facilmap-leaflet";
-	import { CRU, Marker, Type } from "facilmap-types";
-	import { SelectedItem } from "../../utils/selection";
+	import type { OverpassElement } from "facilmap-leaflet";
+	import type { CRU, Marker, Type } from "facilmap-types";
+	import type { SelectedItem } from "../../utils/selection";
 	import { mapTagsToType } from "../search-results/utils";
 	import vTooltip from "../../utils/tooltip";
 	import { injectContextRequired } from "../../utils/context";
@@ -12,6 +12,7 @@
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { useCarousel } from "../../utils/carousel";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
@@ -23,8 +24,10 @@
 	}>();
 
 	const openedElement = ref<OverpassElement>();
-	const activeTab = ref(0);
 	const isAdding = ref(false);
+
+	const carouselRef = ref<HTMLElement>();
+	const carousel = useCarousel(carouselRef);
 
 	const types = computed(() => {
 		return Object.values(client.types).filter((type) => type.type == "marker");
@@ -38,7 +41,7 @@
 
 	function openElement(element: OverpassElement): void {
 		openedElement.value = element;
-		activeTab.value = 1;
+		carousel.setTab(1);
 	}
 
 	function zoom(): void {
@@ -81,67 +84,70 @@
 
 <template>
 	<div class="fm-overpass-multiple-info">
-		<OverpassInfo
-			v-if="elements.length == 1"
-			:element="elements[0]"
-			:is-adding="isAdding"
-			@add-to-map="addToMap(elements, $event)"
-		></OverpassInfo>
-		<b-carousel v-else :interval="0" v-model="activeTab">
-			<b-carousel-slide>
-				<div class="fm-search-box-collapse-point">
-					<ul class="list-group">
-						<li v-for="element in elements" :key="element.id" class="list-group-item active">
-							<span>
-								<a href="javascript:" @click="$emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
-							</span>
-							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</li>
-					</ul>
-				</div>
-
-				<div v-if="client.padData && !client.readonly" class="btn-group">
-					<button
-						type="button"
-						class="btn btn-light btn-sm"
-						v-tooltip="'Zoom to selection'"
-						@click="zoom()"
-					>
-						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
-					</button>
-
-					<div v-if="client.padData && !client.readonly && types.length > 0" class="dropdown">
-						<button type="button" class="btn btn-light dropdown-toggle" :disabled="isAdding">
-							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-							Add to map
-						</button>
-						<ul class="dropdown-menu">
-							<template v-for="type in types" :key="type.id">
-								<li>
-									<a
-										href="javascript:"
-										class="dropdown-item"
-										@click="addToMap(elements, type)"
-									>{{type.name}}</a>
-								</li>
-							</template>
+		<template v-if="elements.length == 1">
+			<OverpassInfo
+				:element="elements[0]"
+				:is-adding="isAdding"
+				@add-to-map="addToMap(elements, $event)"
+			></OverpassInfo>
+		</template>
+		<template v-else>
+			<div class="carousel slide" ref="carouselRef">
+				<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
+					<div class="fm-search-box-collapse-point">
+						<ul class="list-group">
+							<li v-for="element in elements" :key="element.id" class="list-group-item active">
+								<span>
+									<a href="javascript:" @click="$emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
+								</span>
+								<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+								<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+							</li>
 						</ul>
 					</div>
-				</div>
-			</b-carousel-slide>
 
-			<b-carousel-slide>
-				<OverpassInfo
-					v-if="openedElement"
-					:element="openedElement"
-					show-back-button
-					:is-adding="isAdding"
-					@back="activeTab = 0"
-					@add-to-map="addToMap([openedElement], $event)"
-				></OverpassInfo>
-			</b-carousel-slide>
-		</b-carousel>
+					<div v-if="client.padData && !client.readonly" class="btn-group">
+						<button
+							type="button"
+							class="btn btn-light btn-sm"
+							v-tooltip="'Zoom to selection'"
+							@click="zoom()"
+						>
+							<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
+						</button>
+
+						<div v-if="client.padData && !client.readonly && types.length > 0" class="dropdown">
+							<button type="button" class="btn btn-light dropdown-toggle" :disabled="isAdding">
+								<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
+								Add to map
+							</button>
+							<ul class="dropdown-menu">
+								<template v-for="type in types" :key="type.id">
+									<li>
+										<a
+											href="javascript:"
+											class="dropdown-item"
+											@click="addToMap(elements, type)"
+										>{{type.name}}</a>
+									</li>
+								</template>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
+					<OverpassInfo
+						v-if="openedElement"
+						:element="openedElement"
+						show-back-button
+						:is-adding="isAdding"
+						@back="carousel.setTab(0)"
+						@add-to-map="addToMap([openedElement], $event)"
+					></OverpassInfo>
+				</div>
+			</div>
+		</template>
 	</div>
 </template>
 

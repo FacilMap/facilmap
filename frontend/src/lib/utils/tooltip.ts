@@ -1,5 +1,5 @@
 import { Tooltip } from "bootstrap";
-import { Directive } from "vue";
+import type { Directive } from "vue";
 
 declare global {
 	interface Element {

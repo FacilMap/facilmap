@@ -1,10 +1,7 @@
 import { viewValidator } from "./view.js";
-import { idValidator } from "./base.js";
+import { idValidator, padIdValidator } from "./base.js";
 import * as z from "zod";
 import { CRU, CRUType, cruValidator } from "./cru";
-
-export const padIdValidator = z.string();
-export type PadId = z.infer<typeof padIdValidator>;
 
 export enum Writable {
 	READ = 0,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ID } from "facilmap-types";
+	import type { ID } from "facilmap-types";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
 	import { clone } from "facilmap-utils";
 	import { isEqual } from "lodash-es";

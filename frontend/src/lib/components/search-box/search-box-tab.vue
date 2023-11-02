@@ -1,7 +1,8 @@
 <script setup lang="ts">
 	import { computed, onBeforeUnmount, onMounted } from 'vue';
-	import { SearchBoxTab, injectSearchBoxContextRequired } from './search-box-context.vue';
-	import { HashQuery } from 'facilmap-leaflet';
+	import { injectSearchBoxContextRequired } from './search-box-context.vue';
+	import type { SearchBoxTab } from './search-box-context.vue';
+	import type { HashQuery } from 'facilmap-leaflet';
 
 	const props = defineProps<{
 		id: string;
@@ -39,3 +40,7 @@
 		searchBoxContext.removeTab(props.id);
 	});
 </script>
+
+<!-- eslint-disable-next-line vue/valid-template-root -->
+<template>
+</template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import RouteForm from "./route-form.vue";
-	import { HashQuery } from "facilmap-leaflet";
+	import type { HashQuery } from "facilmap-leaflet";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { ref } from "vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";

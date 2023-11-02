@@ -1,8 +1,8 @@
-import { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
-import { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
-import { FileResult } from "../../utils/files";
-import { SelectedItem } from "../../utils/selection";
-import { Client } from "../client-context.vue";
+import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
+import type { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
+import type { FileResult } from "../../utils/files";
+import type { SelectedItem } from "../../utils/selection";
+import type { Client } from "../client-context.vue";
 
 /**
  * Prefills the fields of a type with information from a search result. The "address" and "extratags" from

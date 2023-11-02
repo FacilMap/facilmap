@@ -1,5 +1,5 @@
 import { jsonStream, asyncIteratorToArray } from "../utils/streams.js";
-import { compileExpression } from "facilmap-utils";
+import { compileExpression, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
 import Database from "../database/database.js";
 import { clone, keyBy, mapValues, omit } from "lodash-es";
@@ -67,7 +67,7 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			coordinates: [marker.lon, marker.lat]
 		},
 		properties: {
-			name: marker.name || "Untitled marker",
+			name: normalizeMarkerName(marker.name),
 			colour: marker.colour,
 			size: marker.size,
 			symbol: marker.symbol,
@@ -86,7 +86,7 @@ function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 			coordinates: line.trackPoints.map((trackPoint) => [trackPoint.lon, trackPoint.lat])
 		},
 		properties: {
-			name: line.name || "Untitled line",
+			name: normalizeLineName(line.name),
 			mode: line.mode,
 			colour: line.colour,
 			width: line.width,

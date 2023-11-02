@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
+	import type { Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
 	import { clone } from "facilmap-utils";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
 	import { isEqual } from "lodash-es";

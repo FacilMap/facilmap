@@ -1,21 +1,24 @@
 <script lang="ts">
 	import { DeepReadonly, inject, InjectionKey, Ref, computed, onMounted, ref, defineComponent, provide } from "vue";
-	import L, { LatLng, LatLngBounds, Map } from "leaflet";
+	import type L from "leaflet";
+	import type { LatLng, LatLngBounds, Map } from "leaflet";
 	import "leaflet/dist/leaflet.css";
-	import { BboxHandler, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, VisibleLayers, HashQuery, OverpassPreset } from "facilmap-leaflet";
+	import type { BboxHandler, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, VisibleLayers, HashQuery, OverpassPreset } from "facilmap-leaflet";
 	import "leaflet.locatecontrol";
 	import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 	import "leaflet-graphicscale";
 	import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 	import "leaflet-mouse-position";
 	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
-	import SelectionHandler, { SelectedItem } from "../../utils/selection";
+	import type SelectionHandler from "../../utils/selection";
+	import type { SelectedItem } from "../../utils/selection";
 	import { injectClientRequired } from "../client-context.vue";
 	import { injectContextRequired } from "../../utils/context";
-	import { FindOnMapResult, Point, SearchResult } from "facilmap-types";
-	import { FilterFunc } from "facilmap-utils";
-	import { Emitter } from "mitt";
+	import type { FindOnMapResult, Point, SearchResult } from "facilmap-types";
+	import type { FilterFunc } from "facilmap-utils";
+	import type { Emitter } from "mitt";
 	import { createMapContext } from "./components";
+import vTooltip from "../../utils/tooltip";
 
 	export type MapContextEvents = {
 		"import-file": void;
@@ -95,6 +98,7 @@
 	const mapRef = ref<HTMLElement>();
 
 	const loaded = ref(false);
+	const fatalError = ref<string>();
 
 	const selfUrl = computed(() => {
 		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
@@ -103,7 +107,13 @@
 	const mapContext = ref<MapContext>();
 
 	onMounted(async () => {
-		mapContext.value = await createMapContext(client, context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
+		try {
+			mapContext.value = await createMapContext(client, context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
+			loaded.value = true;
+		} catch (err: any) {
+			console.error(err);
+			fatalError.value = err.message;
+		}
 	});
 
 	const MapContextProvider = defineComponent({
@@ -128,7 +138,13 @@
 					{{mapContext.overpassMessage}}
 				</div>
 
-				<a v-if="context.linkLogo" :href="selfUrl" target="_blank" class="fm-open-external" uib-tooltip="Open FacilMap in full size" tooltip-placement="right"></a>
+				<a
+					v-if="context.linkLogo"
+					:href="selfUrl"
+					target="_blank"
+					class="fm-open-external"
+					v-tooltip.right="'Open FacilMap in full size'"
+				></a>
 				<div class="fm-logo">
 					<img src="./logo.png"/>
 				</div>
@@ -146,8 +162,8 @@
 		</div>
 
 		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || client.serverError || client.deleted)"></div>
-		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError">
-			Loading...
+		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError" :class="{ 'fatal-error': !!fatalError }">
+			{{fatalError || 'Loading...'}}
 		</div>
 	</div>
 </template>
@@ -254,6 +270,10 @@
 			z-index:100000;
 			font-size:1.5em;
 			font-weight:bold;
+
+			&.fatal-error {
+				color: #d00;
+			}
 		}
 
 		.fm-overpass-message {

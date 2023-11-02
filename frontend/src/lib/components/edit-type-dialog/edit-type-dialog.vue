@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Field, ID, Type } from "facilmap-types";
+	import type { Field, ID, Type } from "facilmap-types";
 	import { clone } from "facilmap-utils";
 	import { canControl, getUniqueId, validateRequired, validations } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";

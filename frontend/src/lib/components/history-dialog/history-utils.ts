@@ -1,6 +1,6 @@
-import { HistoryEntry } from "facilmap-types";
+import type { HistoryEntry } from "facilmap-types";
 import { getObjectDiff, ObjectDiffItem } from "facilmap-utils";
-import { Client } from "../client-context.vue";
+import type { Client } from "../client-context.vue";
 
 function existsNow(client: Client, entry: HistoryEntry) {
 	// Look through the history of this particular object and see if the last entry indicates that the object exists now

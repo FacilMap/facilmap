@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
+	import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
 	import { round } from "facilmap-utils";
 	import { lineStringToTrackPoints, mapSearchResultToType } from "./search-results/utils";
 	import { useToasts } from "./ui/toasts/toasts.vue";

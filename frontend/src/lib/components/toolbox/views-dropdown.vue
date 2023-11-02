@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { displayView } from "facilmap-leaflet";
-	import { View } from "facilmap-types";
+	import type { View } from "facilmap-types";
 	import SaveViewDialog from "../save-view-dialog.vue";
 	import ManageViewsDialog from "../manage-views-dialog.vue";
 	import { injectClientRequired } from "../client-context.vue";

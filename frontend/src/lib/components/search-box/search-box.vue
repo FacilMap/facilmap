@@ -110,7 +110,10 @@
 		mapContext.components.map.invalidateSize({ pan: false });
 	}
 
-	const TabContent = defineComponent<{ isActive: boolean }>({
+	const TabContent = defineComponent({
+		props: {
+			isActive: Boolean
+		},
 		setup(props) {
 			return () => searchBoxContext.activeTab?.content?.(props);
 		}
@@ -221,14 +224,8 @@
 			}
 		}
 
-		.tabs, .tab-content, .vue-portal-target {
-			display: flex;
-			flex-direction: column;
+		.card-body {
 			min-height: 0;
-		}
-
-		.tabs, .tab-content, .tab-pane {
-			flex-grow: 1;
 		}
 
 		.card-header {

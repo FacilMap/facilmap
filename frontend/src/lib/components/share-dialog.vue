@@ -2,7 +2,7 @@
 	import { getLayers } from "facilmap-leaflet";
 	import copyToClipboard from "copy-to-clipboard";
 	import { getLegendItems } from "./legend/legend-utils";
-	import { Writable } from "facilmap-types";
+	import type { Writable } from "facilmap-types";
 	import { quoteHtml, round } from "facilmap-utils";
 	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import { injectClientRequired } from "./client-context.vue";

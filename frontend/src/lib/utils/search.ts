@@ -1,8 +1,8 @@
-import { FindOnMapResult, SearchResult } from "facilmap-types";
+import type { FindOnMapResult, SearchResult } from "facilmap-types";
 import { numberKeys } from "facilmap-utils";
 import { isEqual } from "lodash-es";
-import { Client } from "./decorators";
-import { FileResult, FileResultObject } from "./files";
+import type { FileResult, FileResultObject } from "./files";
+import type { Client } from "../components/client-context.vue";
 
 const VIEW_KEYS: Array<keyof FileResultObject["views"][0]> = ["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"];
 const TYPE_KEYS: Array<keyof FileResultObject["types"][0]> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"];

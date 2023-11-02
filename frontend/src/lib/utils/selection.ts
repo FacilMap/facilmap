@@ -1,4 +1,4 @@
-import { ID, SearchResult } from "facilmap-types";
+import type { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, LatLngBounds, LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
 import { LinesLayer, MarkerLayer, MarkersLayer, OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ID, Type } from "facilmap-types";
+	import type { ID, Type } from "facilmap-types";
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
 	import { injectContextRequired } from "../utils/context";
 	import { injectClientRequired } from "./client-context.vue";

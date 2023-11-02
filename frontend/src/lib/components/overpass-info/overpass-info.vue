@@ -2,7 +2,7 @@
 	import { renderOsmTag } from "facilmap-utils";
 	import Icon from "../ui/icon.vue";
 	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
-	import { OverpassElement } from "facilmap-leaflet";
+	import type { OverpassElement } from "facilmap-leaflet";
 	import Coordinates from "../ui/coordinates.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { computed } from "vue";

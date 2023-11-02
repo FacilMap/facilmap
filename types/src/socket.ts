@@ -61,15 +61,17 @@ export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "l
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
+const voidValidator = z.null().or(z.undefined()) as any as z.ZodVoid;
+
 export const requestDataValidators = {
 	updateBbox: bboxWithZoomValidator,
 	getPad: getPadQueryValidator,
 	findPads: findPadsQueryValidator,
 	createPad: padDataValidator.create,
 	editPad: padDataValidator.update,
-	deletePad: z.void(),
-	listenToHistory: z.void(),
-	stopListeningToHistory: z.void(),
+	deletePad: voidValidator,
+	listenToHistory: voidValidator,
+	stopListeningToHistory: voidValidator,
 	revertHistoryEntry: objectWithIdValidator,
 	getMarker: objectWithIdValidator,
 	addMarker: markerValidator.create,
@@ -93,7 +95,7 @@ export const requestDataValidators = {
 	addView: viewValidator.create,
 	editView: viewValidator.update,
 	deleteView: objectWithIdValidator,
-	geoip: z.void(),
+	geoip: voidValidator,
 	setPadId: z.string()
 }
 

@@ -2,7 +2,7 @@
 	import { getMarkerUrl, shapeList } from "facilmap-leaflet";
 	import { quoteHtml } from "facilmap-utils";
 	import Picker from "./picker.vue";
-	import { Shape } from "facilmap-types";
+	import type { Shape } from "facilmap-types";
 	import { arrowNavigation } from "../../utils/ui";
 	import { keyBy, mapValues } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";

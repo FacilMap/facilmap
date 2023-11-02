@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import SearchForm from "./search-form.vue";
 	import { Util } from "leaflet";
-	import { HashQuery } from "facilmap-leaflet";
+	import type { HashQuery } from "facilmap-leaflet";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { ref } from "vue";

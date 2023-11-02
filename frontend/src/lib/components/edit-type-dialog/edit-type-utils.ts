@@ -1,4 +1,4 @@
-import { CRU, FieldUpdate, Type } from "facilmap-types";
+import type { CRU, FieldUpdate, Type } from "facilmap-types";
 import { clone } from "facilmap-utils";
 import { mergeObject } from "../../utils/utils";
 

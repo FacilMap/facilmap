@@ -1,7 +1,7 @@
 import { isEqual } from "lodash-es";
 import { clone } from "facilmap-utils";
-import { Field, Line, Marker, Type } from "facilmap-types";
-import { Emitter } from "mitt";
+import type { Field, Line, Marker, Type } from "facilmap-types";
+import type { Emitter } from "mitt";
 import { DeepReadonly, onBeforeUnmount, onMounted } from "vue";
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

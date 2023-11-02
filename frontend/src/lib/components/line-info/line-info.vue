@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ExportFormat, ID } from "facilmap-types";
+	import type { ExportFormat, ID } from "facilmap-types";
 	import EditLineDialog from "../edit-line-dialog.vue";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
@@ -8,7 +8,7 @@
 	import RouteForm from "../route-form/route-form.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
-	import { formatField, formatRouteMode, formatTime, round } from "facilmap-utils";
+	import { formatField, formatRouteMode, formatTime, normalizeLineName, round } from "facilmap-utils";
 	import { injectContextRequired } from "../../utils/context";
 	import { injectClientRequired } from "../client-context.vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
@@ -31,6 +31,7 @@
 
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
+	const showEditDialog = ref(false);
 	const isDeleting = ref(false);
 	const isExporting = ref(false);
 	const showElevationPlot = ref(false);
@@ -147,7 +148,7 @@
 		<div class="d-flex align-items-center">
 			<h2 class="flex-grow-1">
 				<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-				{{line.name || "Untitled line"}}
+				{{normalizeLineName(line.name)}}
 			</h2>
 			<div v-if="!isMoving" class="btn-group">
 				<button
@@ -225,7 +226,7 @@
 				type="button"
 				class="btn btn-light btn-sm"
 				size="sm"
-				v-b-modal="`fm${context.id}-line-info-edit`"
+				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
 			>Edit data</button>
 
@@ -251,7 +252,11 @@
 
 		<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>
 
-		<EditLineDialog :id="`fm${context.id}-line-info-edit`" :line-id="lineId"></EditLineDialog>
+		<EditLineDialog
+			v-if="showEditDialog"
+			:lineId="lineId"
+			@hidden="showEditDialog = false"
+		></EditLineDialog>
 	</div>
 </template>
 

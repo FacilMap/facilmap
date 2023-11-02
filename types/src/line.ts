@@ -1,6 +1,5 @@
-import { bboxValidator, colourValidator, idValidator, pointValidator, routeModeValidator, zoomLevelValidator } from "./base.js";
+import { bboxValidator, colourValidator, idValidator, padIdValidator, pointValidator, routeModeValidator, zoomLevelValidator } from "./base.js";
 import { CRU, CRUType, cruValidator } from "./cru";
-import { padIdValidator } from "./padData.js";
 import * as z from "zod";
 
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));

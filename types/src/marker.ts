@@ -1,6 +1,5 @@
-import { colourValidator, idValidator, pointValidator, shapeValidator, sizeValidator, symbolValidator } from "./base.js";
+import { colourValidator, idValidator, padIdValidator, pointValidator, shapeValidator, sizeValidator, symbolValidator } from "./base.js";
 import { CRU, CRUType, cruValidator } from "./cru";
-import { padIdValidator } from "./padData.js";
 import * as z from "zod";
 
 export const markerValidator = cruValidator({

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RouteMode as RouteModeType } from "facilmap-types";
+	import type { RouteMode as RouteModeType } from "facilmap-types";
 	import { DecodedRouteMode, decodeRouteMode, encodeRouteMode } from "facilmap-utils";
 	import Icon from "./icon.vue";
 	import { computed, ref, watch } from "vue";

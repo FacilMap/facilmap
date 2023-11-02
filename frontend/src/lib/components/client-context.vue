@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { defineComponent, InjectionKey, inject, onBeforeUnmount, provide, reactive, ref, toRaw, watch } from "vue";
+	import { defineComponent, InjectionKey, inject, onBeforeUnmount, provide, reactive, ref, toRaw, watch, readonly } from "vue";
 	import FmClient from "facilmap-client";
-	import { PadData, PadId } from "facilmap-types";
+	import type { PadData, PadId } from "facilmap-types";
 	import PadSettingsDialog from "./pad-settings-dialog/pad-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { useToasts } from "./ui/toasts/toasts.vue";
@@ -64,6 +64,7 @@
 			emit("update:padId", padId);
 		}
 	});
+	provide(clientContextInject, readonly(clientContext));
 
 	const createId = ref<string>();
 	const counter = ref(1);
@@ -181,7 +182,8 @@
 	const ClientProvider = defineComponent({
 		setup(props, { slots }) {
 			provide(clientInject, client.value!);
-			return slots.default;
+			provide("test", "testValue");
+			return () => slots.default?.();
 		}
 	});
 

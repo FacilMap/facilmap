@@ -9,12 +9,12 @@ import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import SelectionHandler from "../../utils/selection";
-import { Client } from "../client-context.vue";
-import { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "./leaflet-map.vue";
+import type { Client } from "../client-context.vue";
+import type { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "./leaflet-map.vue";
 import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
-import { Context } from "../../utils/context";
+import type { Context } from "../../utils/context";
 import mitt from "mitt";
-import { Optional } from "../../utils/utils";
+import type { Optional } from "../../utils/utils";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 

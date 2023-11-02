@@ -1,14 +1,14 @@
 import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
 import { fmToLeafletBbox, HashQuery, OverpassElement } from "facilmap-leaflet";
-import { RouteWithTrackPoints } from "facilmap-client";
-import { SelectedItem } from "./selection";
-import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
-import { Geometry } from "geojson";
+import type { RouteWithTrackPoints } from "facilmap-client";
+import type { SelectedItem } from "./selection";
+import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
+import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { decodeLonLatUrl } from "facilmap-utils";
-import { Client } from "./client";
-import { Context } from "./context";
-import { MapContext } from "../components/leaflet-map/leaflet-map.vue";
+import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+import type { Client } from "./client";
+import type { Context } from "./context";
+import type { MapContext } from "../components/leaflet-map/leaflet-map.vue";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -119,13 +119,13 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 			const marker = client.markers[items[0].id];
 			return {
 				query: `m${items[0].id}`,
-				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: marker.name || "Untitled marker" } : {})
+				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: normalizeMarkerName(marker.name) } : {})
 			};
 		} else if (items[0].type == "line") {
 			const line = client.lines[items[0].id];
 			return {
 				query: `l${items[0].id}`,
-				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: line.name || "Untitled line" } : {})
+				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: normalizeLineName(line.name) } : {})
 			};
 		}
 	}

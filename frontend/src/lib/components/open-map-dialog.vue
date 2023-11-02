@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "./ui/icon.vue";
-	import { FindPadsResult } from "facilmap-types";
+	import type { FindPadsResult } from "facilmap-types";
 	import decodeURIComponent from "decode-uri-component";
 	import { Context, injectContextRequired } from "../utils/context";
 	import { injectClientContextRequired, injectClientRequired } from "./client-context.vue";

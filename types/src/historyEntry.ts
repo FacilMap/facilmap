@@ -1,8 +1,8 @@
-import { ID } from "./base.js";
+import { ID, PadId } from "./base.js";
 import { Marker } from "./marker.js";
 import { Line } from "./line.js";
 import { View } from "./view.js";
-import { PadData, PadId } from "./padData.js";
+import { PadData } from "./padData.js";
 import { Type } from "./type.js";
 
 export type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";

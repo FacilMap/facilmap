@@ -2,13 +2,13 @@
 	import Icon from "../ui/icon.vue";
 	import { isSearchId } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
 	import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
 	import { Util } from "leaflet";
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
-	import { HashQuery } from "facilmap-leaflet";
+	import type { HashQuery } from "facilmap-leaflet";
 	import { FileResultObject, parseFiles } from "../../utils/files";
 	import FileResults from "../file-results.vue";
 	import { injectContextRequired } from "../../utils/context";

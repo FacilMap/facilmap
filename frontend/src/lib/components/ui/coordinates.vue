@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Point } from "facilmap-types";
+	import type { Point } from "facilmap-types";
 	import copyToClipboard from "copy-to-clipboard";
 	import { round } from "facilmap-utils";
 	import Icon from "./icon.vue";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { CRU, PadData } from 'facilmap-types';
+	import type { CRU, PadData } from 'facilmap-types';
 	import { computed, ref } from 'vue';
 	import { getUniqueId } from '../../utils/utils';
 	import copyToClipboard from 'copy-to-clipboard';

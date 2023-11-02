@@ -1,6 +1,5 @@
-import { colourValidator, idValidator, routeModeValidator, shapeValidator, sizeValidator, symbolValidator, widthValidator } from "./base.js";
+import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, symbolValidator, widthValidator } from "./base.js";
 import { CRU, CRUType, cruValidator } from "./cru";
-import { padIdValidator } from "./padData.js";
 import * as z from "zod";
 
 export const objectTypeValidator = z.enum(["marker", "line"]);

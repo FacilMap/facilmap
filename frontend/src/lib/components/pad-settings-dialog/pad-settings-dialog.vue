@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { CRU, PadData } from "facilmap-types";
+	import type { CRU, PadData } from "facilmap-types";
 	import { clone, generateRandomPadId } from "facilmap-utils";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";

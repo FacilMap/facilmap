@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { getMarkerHtml, getSymbolHtml } from "facilmap-leaflet";
 	import { makeTypeFilter, markdownBlock } from "facilmap-utils";
-	import { LegendItem, LegendType } from "./legend-utils";
+	import type { LegendItem, LegendType } from "./legend-utils";
 	import { createLinePlaceholderHtml } from "../../utils/ui";
 	import Popover from "../ui/popover.vue";
 	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";

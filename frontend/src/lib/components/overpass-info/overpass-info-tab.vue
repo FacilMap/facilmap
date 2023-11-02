@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { OverpassElement } from "facilmap-leaflet";
+	import type { OverpassElement } from "facilmap-leaflet";
 	import OverpassMultipleInfo from "./overpass-multiple-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { useEventListener } from "../../utils/utils";

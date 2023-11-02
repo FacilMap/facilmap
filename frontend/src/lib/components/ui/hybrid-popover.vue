@@ -38,7 +38,7 @@
 			showPopover.value = false;
 		} else if (!showModal.value && !showPopover.value) {
 			if (shouldUseModal.value) {
-				showModal.value = true;
+				modal.hide();
 			} else {
 				showPopover.value = true;
 			}
@@ -47,7 +47,8 @@
 
 	const trigger = ref<HTMLElement>();
 
-	const modal = useModal({
+	const modalRef = ref<HTMLElement>();
+	const modal = useModal(modalRef, {
 		onHidden: () => {
 			showModal.value = false;
 			show.value = false;
@@ -89,7 +90,7 @@
 		</Popover>
 
 		<Teleport to="body">
-			<div v-if="showModal" class="modal fade" :class="props.customClass" tabindex="-1" aria-hidden="true" :ref="modal.ref">
+			<div v-if="showModal" class="modal fade" :class="props.customClass" tabindex="-1" aria-hidden="true" ref="modalRef">
 				<div class="modal-dialog modal-dialog-scrollable">
 					<div class="modal-content">
 						<div v-if="props.title" class="modal-header">

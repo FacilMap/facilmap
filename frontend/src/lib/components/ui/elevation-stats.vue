@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { sortBy } from "lodash-es";
-	import { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
+	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 	import { createElevationStats } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
 	import { numberKeys, round } from "facilmap-utils";

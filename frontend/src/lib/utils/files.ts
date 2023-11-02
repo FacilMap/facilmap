@@ -1,8 +1,8 @@
 import { gpx, kml, tcx } from "@tmcw/togeojson";
 import osmtogeojson from "osmtogeojson";
 import $ from "jquery";
-import { Feature, Geometry } from "geojson";
-import { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
+import type { Feature, Geometry } from "geojson";
+import type { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 
 type FmFeatureProperties = Partial<MarkerFeature["properties"]> | Partial<LineFeature["properties"]>;

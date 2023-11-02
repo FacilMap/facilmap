@@ -1,9 +1,9 @@
 <script setup lang="ts">
-	import { FindOnMapResult, SearchResult, Type } from "facilmap-types";
+	import type { FindOnMapResult, SearchResult, Type } from "facilmap-types";
 	import Icon from "../ui/icon.vue";
 	import SearchResultInfo from "../search-result-info.vue";
-	import { SelectedItem } from "../../utils/selection";
-	import { FileResult, FileResultObject } from "../../utils/files";
+	import type { SelectedItem } from "../../utils/selection";
+	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { addSearchResultsToMap } from "./utils";
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
@@ -15,6 +15,7 @@
 	import { computed, ref, watch } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
+	import { useCarousel } from "../../utils/carousel";
 
 	const context = injectContextRequired();
 	const client = injectClientRequired();
@@ -36,7 +37,8 @@
 		customTypes: () => ({})
 	});
 
-	const activeTab = ref(0);
+	const carouselRef = ref<HTMLElement>();
+	const carousel = useCarousel(carouselRef);
 	const isAdding = ref(false);
 	const customImport = ref(false);
 
@@ -96,12 +98,12 @@
 	});
 
 	function closeResult(): void {
-		activeTab.value = 0;
+		carousel.setTab(0);
 	}
 
 	watch(openResult, () => {
-		if (!openResult.value && activeTab.value != 0)
-			activeTab.value = 0;
+		if (!openResult.value && carousel.tab != 0)
+			carousel.setTab(0);
 	});
 
 	function handleClick(result: SearchResult | FileResult | FindOnMapResult, event: MouseEvent): void {
@@ -135,7 +137,7 @@
 					await client.getMarker({ id: result.id });
 				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-${result.kind}-info-tab`, expand: false });
 			} else
-				activeTab.value = 1;
+				carousel.setTab(1);
 		}, 0);
 	}
 
@@ -203,8 +205,8 @@
 
 <template>
 	<div class="fm-search-results" :class="{ isNarrow: context.isNarrow }">
-		<b-carousel :interval="0" v-model="activeTab">
-			<b-carousel-slide>
+		<div class="carousel slide" ref="carouselRef">
+			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
 				<div v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)" class="alert alert-danger">No results have been found.</div>
 
 				<div class="fm-search-box-collapse-point">
@@ -300,9 +302,9 @@
 						</ul>
 					</div>
 				</div>
-			</b-carousel-slide>
+			</div>
 
-			<b-carousel-slide>
+			<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
 				<SearchResultInfo
 					v-if="openResult"
 					:result="openResult"
@@ -314,8 +316,8 @@
 					@use-as-via="useAsVia(openResult)"
 					@use-as-to="useAsTo(openResult)"
 				></SearchResultInfo>
-			</b-carousel-slide>
-		</b-carousel>
+			</div>
+		</div>
 
 		<CustomImportDialog
 			v-if="customImport"

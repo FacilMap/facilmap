@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { Field } from "facilmap-types";
-import { computed } from "vue";
+	import type { Field } from "facilmap-types";
+	import { computed } from "vue";
 
 	const props = withDefaults(defineProps<{
 		field: Field;

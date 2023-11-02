@@ -1,9 +1,9 @@
 import { addClickListener } from "facilmap-leaflet";
-import { ID, Type } from "facilmap-types";
+import type { ID, Type } from "facilmap-types";
 import { getUniqueId } from "./utils";
-import { ToastContext } from "../components/ui/toasts/toasts.vue";
-import { Client } from "../components/client-context.vue";
-import { MapContext } from "../components/leaflet-map/leaflet-map.vue";
+import type { ToastContext } from "../components/ui/toasts/toasts.vue";
+import type { Client } from "../components/client-context.vue";
+import type { MapContext } from "../components/leaflet-map/leaflet-map.vue";
 
 export function drawMarker(type: Type, client: Client, mapContext: MapContext, toasts: ToastContext): void {
 	const clickListener = addClickListener(mapContext.components.map, async (point) => {

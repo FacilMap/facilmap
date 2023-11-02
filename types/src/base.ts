@@ -28,6 +28,9 @@ export type Width = z.infer<typeof widthValidator>;
 export const idValidator = z.number();
 export type ID = z.infer<typeof idValidator>;
 
+export const padIdValidator = z.string();
+export type PadId = z.infer<typeof padIdValidator>;
+
 export const routeModeValidator = z.string();
 export type RouteMode = z.infer<typeof routeModeValidator>;
 

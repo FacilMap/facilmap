@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ID, View } from "facilmap-types";
+	import type { ID, View } from "facilmap-types";
 	import { displayView } from "facilmap-leaflet";
 	import { injectContextRequired } from "../utils/context";
 	import { injectClientRequired } from "./client-context.vue";

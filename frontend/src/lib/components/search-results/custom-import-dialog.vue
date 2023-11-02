@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { ID, Type } from "facilmap-types";
-	import { FileResult, FileResultObject } from "../../utils/files";
+	import type { ID, Type } from "facilmap-types";
+	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { addSearchResultsToMap } from "./utils";
 	import { isLineResult, isMarkerResult, typeExists } from "../../utils/search";
 	import { mapValues, pickBy, uniq } from "lodash-es";
