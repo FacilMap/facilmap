@@ -132,16 +132,18 @@
 				<hr />
 				<div class="checkbox-grid">
 					<template v-for="preset in presets" :key="preset.key">
-						<input
-							type="checkbox"
-							class="form-check-input"
-							:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
-							:checked="preset.isChecked"
-							@update="togglePreset(preset.key, $event)"
-						/>
-						<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
-							{{preset.label}}
-						</label>
+						<div class="form-check">
+							<input
+								type="checkbox"
+								class="form-check-input"
+								:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
+								:checked="preset.isChecked"
+								@update="togglePreset(preset.key, $event)"
+							/>
+							<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
+								{{preset.label}}
+							</label>
+						</div>
 					</template>
 				</div>
 			</template>
@@ -165,10 +167,10 @@
 
 		<hr />
 
-		<div class="btn-group">
+		<div class="btn-toolbar">
 			<button
 				type="button"
-				class="btn btn-light"
+				class="btn btn-secondary"
 				:class="{ active: mapContext.overpassIsCustom }"
 				@click="toggleIsCustom()"
 			>Custom query</button>

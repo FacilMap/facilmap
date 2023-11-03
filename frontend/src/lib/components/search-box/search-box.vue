@@ -112,10 +112,11 @@
 
 	const TabContent = defineComponent({
 		props: {
-			isActive: Boolean
+			isActive: { type: Boolean, required: true },
+			tabId: { type: String, required: true }
 		},
 		setup(props) {
-			return () => searchBoxContext.activeTab?.content?.(props);
+			return () => searchBoxContext.tabs.get(props.tabId)?.value.content?.({ isActive: props.isActive });
 		}
 	});
 
@@ -147,6 +148,7 @@
 						:class="{ active: tabId === searchBoxContext.activeTabId }"
 						:aria-current="tabId === searchBoxContext.activeTabId ? 'true' : undefined"
 						href="javascript:"
+						@click="searchBoxContext.activateTab(tabId, true)"
 					>{{tab.value.title}}</a>
 
 					<a
@@ -160,7 +162,7 @@
 
 		<template v-for="[tabId, tab] in searchBoxContext.tabs" :key="tabId">
 			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.value.class">
-				<TabContent :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
+				<TabContent :tabId="tabId" :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
 			</div>
 		</template>
 

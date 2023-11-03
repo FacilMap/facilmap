@@ -177,42 +177,44 @@
 				<input type="search" class="form-control" v-model="searchString" :autofocus="autofocus" ref="searchInput" />
 				<button
 					type="submit"
-					class="btn btn-light"
+					class="btn btn-secondary"
 				>
 					<Icon icon="search" alt="Search"></Icon>
 				</button>
 				<button
 					v-if="searchResults || mapResults || fileResult"
 					type="button"
-					class="btn btn-light"
+					class="btn btn-secondary"
 					@click="reset()"
 				>
 					<Icon icon="remove" alt="Clear"></Icon>
 				</button>
-				<div class="dropdown">
-					<button type="button" class="btn btn-light dropdown-toggle"></button>
-					<ul class="dropdown-menu">
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
-							>
-								<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results
-							</a>
-						</li>
+				<button
+					type="button"
+					class="btn btn-secondary dropdown-toggle"
+					data-bs-toggle="dropdown"
+				></button>
+				<ul class="dropdown-menu">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
+						>
+							<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results
+						</a>
+					</li>
 
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
-							>
-								<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
-							</a>
-						</li>
-					</ul>
-				</div>
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
+						>
+							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
+						</a>
+					</li>
+				</ul>
 			</div>
 		</form>
 

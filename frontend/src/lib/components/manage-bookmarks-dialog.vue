@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import storage, { Bookmark } from "../utils/storage";
 	import Icon from "./ui/icon.vue";
-	import draggable from "vuedraggable";
+	import Draggable from "vuedraggable";
 	import { injectClientRequired } from "./client-context.vue";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -43,24 +43,31 @@
 					<th></th>
 				</tr>
 			</thead>
-			<draggable v-model="storage.bookmarks" tag="tbody" handle=".fm-drag-handle">
-				<tr v-for="bookmark in storage.bookmarks" :key="bookmark.id">
-					<td :class="{ 'font-weight-bold': bookmark.id == client.padId }">
-						{{bookmark.id}}
-					</td>
-					<td>
-						<input class="form-control" v-model="bookmark.customName" :placeholder="bookmark.name" />
-					</td>
-					<td class="td-buttons text-right">
-						<button type="button" class="btn btn-light" @click="deleteBookmark(bookmark)">Delete</button>
-						<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
-					</td>
-				</tr>
-			</draggable>
+			<Draggable
+				v-model="storage.bookmarks"
+				tag="tbody"
+				handle=".fm-drag-handle"
+				:itemKey="(bookmark: any) => storage.bookmarks.indexOf(bookmark)"
+			>
+				<template #item="{ element: bookmark }">
+					<tr>
+						<td :class="{ 'font-weight-bold': bookmark.id == client.padId }">
+							{{bookmark.id}}
+						</td>
+						<td>
+							<input class="form-control" v-model="bookmark.customName" :placeholder="bookmark.name" />
+						</td>
+						<td class="td-buttons text-right">
+							<button type="button" class="btn btn-secondary" @click="deleteBookmark(bookmark)">Delete</button>
+							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+						</td>
+					</tr>
+				</template>
+			</Draggable>
 			<tfoot v-if="client.padData && !isBookmarked">
 				<tr>
 					<td colspan="3">
-						<button type="button" class="btn btn-light" @click="addBookmark()">Bookmark current map</button>
+						<button type="button" class="btn btn-secondary" @click="addBookmark()">Bookmark current map</button>
 					</td>
 				</tr>
 			</tfoot>

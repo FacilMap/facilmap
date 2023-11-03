@@ -82,7 +82,7 @@
 					<td class="td-buttons text-right">
 						<button
 							type="button"
-							class="btn btn-light"
+							class="btn btn-secondary"
 							v-show="!client.padData?.defaultView || view.id !== client.padData.defaultView.id"
 							@click="makeDefault(view)"
 							:disabled="!!isSavingDefaultView || isDeleting.has(view.id)"
@@ -92,7 +92,7 @@
 						</button>
 						<button
 							type="button"
-							class="btn btn-light"
+							class="btn btn-secondary"
 							@click="deleteView(view)"
 							:disabled="isDeleting.has(view.id) || isSavingDefaultView == view.id"
 						>

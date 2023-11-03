@@ -107,7 +107,7 @@
 		<div class="btn-group">
 			<button
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				v-tooltip="'Zoom to marker'"
 				@click="zoomToMarker()"
 			>
@@ -115,7 +115,7 @@
 			</button>
 
 			<div v-if="context.search" class="dropdown">
-				<button type="button" class="btn btn-light btn-sm dropdown-toggle">Use as</button>
+				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Use as</button>
 				<ul class="dropdown-menu">
 					<li>
 						<a
@@ -146,21 +146,21 @@
 			<button
 				v-if="!client.readonly"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
 			>Edit data</button>
 			<button
 				v-if="!client.readonly"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				@click="move()"
 				:disabled="isDeleting || mapContext.interaction"
 			>Move</button>
 			<button
 				v-if="!client.readonly"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				@click="deleteMarker()"
 				:disabled="isDeleting || mapContext.interaction"
 			>

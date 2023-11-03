@@ -542,8 +542,13 @@
 <template>
 	<div class="fm-route-form">
 		<form action="javascript:" @submit.prevent="handleSubmit">
-			<Draggable v-model="destinations" handle=".fm-drag-handle" @end="reroute(true)">
-				<template v-for="(destination, idx) in destinations" :key="idx">
+			<Draggable
+				v-model="destinations"
+				handle=".fm-drag-handle"
+				@end="reroute(true)"
+				:itemKey="(destination: any) => destinations.indexOf(destination)"
+			>
+				<template #item="{ element: destination, index: idx }">
 					<div class="destination" :class="{ active: hoverDestinationIdx == idx }">
 						<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
 						<div
@@ -558,15 +563,12 @@
 								</a>
 							</span>
 							<input class="form-control" v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)" />
-							<div
-								v-if="destination.query.trim() != ''"
-								class="dropdown"
-								v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
-							>
-								<button type="button" class="btn btn-light dropdown-toggle"></button>
+							<template v-if="destination.query.trim() != ''">
+								<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"></button>
 								<ul
 									class="dropdown-menu fm-route-suggestions"
 									:class="{ isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }"
+									v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
 								>
 									<template v-if="destination.searchSuggestions">
 										<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
@@ -616,11 +618,11 @@
 									</template>
 									<div v-else class="spinner-border"></div>
 								</ul>
-							</div>
+							</template>
 							<button
 								v-if="destinations.length > 2"
 								type="button"
-								class="btn btn-light"
+								class="btn btn-secondary"
 								@click="removeDestination(idx); reroute(false)"
 								v-tooltip.right="'Remove this destination'"
 							>
@@ -629,13 +631,15 @@
 						</div>
 					</div>
 				</template>
-				<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === destinations.length }"/>
+				<template #footer>
+					<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === destinations.length }"/>
+				</template>
 			</draggable>
 
-			<div class="btn-group">
+			<div class="btn-toolbar">
 				<button
 					type="button"
-					class="btn btn-light"
+					class="btn btn-secondary"
 					@click="addDestination()"
 					v-tooltip.bottom="'Add another destination'"
 					:tabindex="destinations.length+1"
@@ -654,7 +658,7 @@
 				<button
 					v-if="hasRoute"
 					type="button"
-					class="btn btn-light"
+					class="btn btn-secondary"
 					:tabindex="destinations.length+8"
 					@click="reset()"
 					v-tooltip.right="'Clear route'"
@@ -687,7 +691,7 @@
 				<div v-if="showToolbar && !client.readonly" class="btn-group" role="group">
 					<button
 						type="button"
-						class="btn btn-light btn-sm"
+						class="btn btn-secondary btn-sm"
 						v-tooltip="'Zoom to route'"
 						@click="zoomToRoute()"
 					>
@@ -695,7 +699,7 @@
 					</button>
 
 					<div v-if="lineTypes.length > 0" class="dropdown">
-						<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
+						<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
 							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add to map
 						</button>
@@ -713,7 +717,7 @@
 						</ul>
 					</div>
 					<div class="dropdown">
-						<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isExporting">
+						<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isExporting">
 							<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 							Export
 						</button>
@@ -775,9 +779,6 @@
 	}
 
 	.fm-route-suggestions.show {
-		display: grid !important;
-		grid-template-columns: auto 1fr;
-
 		opacity: 0.6;
 
 		&.isPending {
@@ -786,16 +787,21 @@
 			justify-content: center;
 		}
 
+		> li {
+			display: flex;
+
+			> :nth-child(2) {
+				flex-grow: 1;
+			}
+		}
+
 		.dropdown-item {
+			width: auto;
 			padding: 0.25rem 0.75rem 0.25rem 0.25rem;
-		}
 
-		.fm-route-form-suggestions-zoom .dropdown-item {
-			padding: 0.25rem 0.25rem 0.25rem 0.75rem;
-		}
-
-		.fm-route-form-suggestions-divider {
-			grid-column: 1 / span 2;
+			&.fm-route-form-suggestions-zoom {
+				padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+			}
 		}
 	}
 </style>

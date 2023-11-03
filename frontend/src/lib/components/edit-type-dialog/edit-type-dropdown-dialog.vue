@@ -4,7 +4,7 @@
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ColourField from "../ui/colour-field.vue";
-	import draggable from "vuedraggable";
+	import Draggable from "vuedraggable";
 	import Icon from "../ui/icon.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import ShapeField from "../ui/shape-field.vue";
@@ -244,43 +244,50 @@
 					<th v-if="fieldValue.type != 'checkbox'" class="move"></th>
 				</tr>
 			</thead>
-			<draggable v-model="fieldValue.options" tag="tbody" handle=".fm-drag-handle">
-				<tr v-for="(option, idx) in fieldValue.options" :key="idx">
-					<td v-if="fieldValue.type == 'checkbox'">
-						<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
-					</td>
-					<td class="field">
-						<input class="form-control" v-model="option.value" v-validity="optionValidationErrors![idx].value" />
-						<div class="invalid-feedback" v-if="optionValidationErrors![idx].value">
-							{{optionValidationErrors![idx].value}}
-						</div>
-					</td>
-					<td v-if="fieldValue.controlColour" class="field">
-						<ColourField v-model="option.colour" :validationError="optionValidationErrors![idx].colour"></ColourField>
-					</td>
-					<td v-if="fieldValue.controlSize" class="field">
-						<SizeField v-model="option.size" :validationError="optionValidationErrors![idx].colour"></SizeField>
-					</td>
-					<td v-if="fieldValue.controlSymbol" class="field">
-						<SymbolField v-model="option.symbol"></SymbolField>
-					</td>
-					<td v-if="fieldValue.controlShape" class="field">
-						<ShapeField v-model="option.shape"></ShapeField>
-					</td>
-					<td v-if="fieldValue.controlWidth" class="field">
-						<WidthField v-model="option.width" :validationError="optionValidationErrors![idx].width"></WidthField>
-					</td>
-					<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-						<button type="button" class="btn btn-light" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>
-					</td>
-					<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-						<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
-					</td>
-				</tr>
-			</draggable>
+			<Draggable
+				v-model="fieldValue.options"
+				tag="tbody"
+				handle=".fm-drag-handle"
+				:itemKey="(option: any) => fieldValue.options!.indexOf(option)"
+			>
+				<template #item="{ element: option, index: idx }">
+					<tr>
+						<td v-if="fieldValue.type == 'checkbox'">
+							<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
+						</td>
+						<td class="field">
+							<input class="form-control" v-model="option.value" v-validity="optionValidationErrors![idx].value" />
+							<div class="invalid-feedback" v-if="optionValidationErrors![idx].value">
+								{{optionValidationErrors![idx].value}}
+							</div>
+						</td>
+						<td v-if="fieldValue.controlColour" class="field">
+							<ColourField v-model="option.colour" :validationError="optionValidationErrors![idx].colour"></ColourField>
+						</td>
+						<td v-if="fieldValue.controlSize" class="field">
+							<SizeField v-model="option.size" :validationError="optionValidationErrors![idx].colour"></SizeField>
+						</td>
+						<td v-if="fieldValue.controlSymbol" class="field">
+							<SymbolField v-model="option.symbol"></SymbolField>
+						</td>
+						<td v-if="fieldValue.controlShape" class="field">
+							<ShapeField v-model="option.shape"></ShapeField>
+						</td>
+						<td v-if="fieldValue.controlWidth" class="field">
+							<WidthField v-model="option.width" :validationError="optionValidationErrors![idx].width"></WidthField>
+						</td>
+						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
+							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>
+						</td>
+						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
+							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+						</td>
+					</tr>
+				</template>
+			</Draggable>
 			<tfoot v-if="fieldValue.type != 'checkbox'">
 				<tr>
-					<td><button type="button" class="btn btn-light" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button></td>
+					<td><button type="button" class="btn btn-secondary" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button></td>
 				</tr>
 			</tfoot>
 		</table>

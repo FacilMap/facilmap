@@ -168,14 +168,14 @@
 						<button
 							v-if="!action.href"
 							type="button"
-							class="btn btn-light btn-sm"
+							class="btn btn-secondary btn-sm"
 							@click="action.onClick"
 						>{{action.label}}</button>
 
 						<a
 							v-if="action.href"
 							:href="action.href"
-							class="btn btn-light btn-sm"
+							class="btn btn-secondary btn-sm"
 							@click="action.onClick"
 						>{{action.label}}</a>
 					</template>

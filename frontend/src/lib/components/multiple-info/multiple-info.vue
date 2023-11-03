@@ -115,7 +115,7 @@
 				<div class="btn-group">
 					<button
 						type="button"
-						class="btn btn-light btn-sm"
+						class="btn btn-secondary btn-sm"
 						v-tooltip="'Zoom to selection'"
 						@click="zoom()"
 					>
@@ -125,7 +125,7 @@
 					<button
 						v-if="!client.readonly"
 						type="button"
-						class="btn btn-light btn-sm"
+						class="btn btn-secondary btn-sm"
 						@click="deleteObjects()"
 						:disabled="isDeleting || mapContext.interaction"
 					>

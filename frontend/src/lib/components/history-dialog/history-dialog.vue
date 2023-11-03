@@ -117,7 +117,7 @@
 						<button
 							v-if="entry.labels.diff"
 							type="button"
-							class="btn btn-light"
+							class="btn btn-secondary"
 							@click="toggleDiffPopover(entry.id)"
 							:ref="mapRef(diffButtonRefs, entry.id)"
 						>
@@ -153,7 +153,7 @@
 							<button
 								v-if="entry.labels.button"
 								type="button"
-								class="btn btn-light"
+								class="btn btn-secondary"
 								:disabled="!!isReverting"
 								@click="revert(entry)"
 							>

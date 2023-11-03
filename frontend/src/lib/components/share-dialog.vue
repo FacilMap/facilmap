@@ -170,7 +170,7 @@
 		<template v-if="activeShareTab === 0">
 			<div class="input-group mt-2">
 				<input class="form-control" :value="url" readonly />
-				<button type="button" class="btn btn-light" @click="copyUrl()">Copy</button>
+				<button type="button" class="btn btn-secondary" @click="copyUrl()">Copy</button>
 			</div>
 			<p class="mt-2">Share this link with others to allow them to open your map. <a href="https://docs.facilmap.org/users/share/" target="_blank">Learn more</a></p>
 		</template>
@@ -178,7 +178,7 @@
 		<template v-else-if="activeShareTab === 1">
 			<div class="input-group mt-2">
 				<textarea class="form-control" :value="embedCode" readonly></textarea>
-				<button type="button" class="btn btn-light" @click="copyEmbedCode()">Copy</button>
+				<button type="button" class="btn btn-secondary" @click="copyEmbedCode()">Copy</button>
 			</div>
 			<p class="mt-2">Add this HTML code to a web page to embed FacilMap. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
 		</template>

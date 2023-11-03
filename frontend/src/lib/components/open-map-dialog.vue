@@ -199,7 +199,7 @@
 							<td class="td-buttons">
 								<button
 									type="button"
-									class="btn btn-light"
+									class="btn btn-secondary"
 									:href="context.baseUrl + encodeURIComponent(result.id)"
 									@click.exact.prevent="openResult(result)"
 								>Open</button>

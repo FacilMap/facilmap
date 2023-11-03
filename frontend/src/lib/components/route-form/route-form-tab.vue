@@ -33,7 +33,12 @@
 </script>
 
 <template>
-	<SearchBoxTab title="Route" :id="`fm${context.id}-route-form-tab`" :hashQuery="hashQuery">
+	<SearchBoxTab
+		title="Route"
+		:id="`fm${context.id}-route-form-tab`"
+		:hashQuery="hashQuery"
+		class="fm-route-form-tab"
+	>
 		<template #default="slotProps">
 			<RouteForm :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="hashQuery = $event"></RouteForm>
 		</template>

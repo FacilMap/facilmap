@@ -70,7 +70,7 @@
 		<div class="btn-group">
 			<button
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				v-tooltip.hover="'Zoom to POI'"
 				@click="zoomToElement()"
 			>
@@ -78,7 +78,7 @@
 			</button>
 
 			<div v-if="!client.readonly && types.length > 0" class="dropdown">
-				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">
+				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
 					<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 					Add to map
 				</button>
@@ -96,7 +96,7 @@
 			</div>
 
 			<div v-if="context.search" class="dropdown">
-				<button type="button" class="btn btn-light btn-sm dropdown-toggle" :disabled="isAdding">Use as</button>
+				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">Use as</button>
 				<ul class="dropdown-menu">
 					<li>
 						<a

@@ -1,5 +1,55 @@
+$btn-transition: color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out; // Delete background-color from transition
+$secondary: #fff;
+$enable-shadows: true;
+$enable-gradients: true;
+
 @import "bootstrap/scss/bootstrap";
 
 html,body {
 	font-size: 14px;
+}
+
+// Set button style to bootstrap v3 theme
+@each $color, $value in $theme-colors {
+	.btn-#{$color} {
+		$border: darken($value, 14%);
+		--#{$prefix}btn-border-color: #{$border};
+		--#{$prefix}btn-hover-border-color: #{darken($border, 12%)};
+		--#{$prefix}btn-active-border-color: #{$border};
+
+		--#{$prefix}btn-hover-bg: #{darken($value, 12%)};
+		--#{$prefix}btn-active-bg: #{darken($value, 12%)};
+		--#{$prefix}btn-disabled-bg: #{darken($value, 12%)};
+
+		--#{$prefix}btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
+		--#{$prefix}btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+
+		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
+		background-repeat: repeat-x;
+
+		&:hover,
+		&:focus-visible {
+			background-position: 0 -15px;
+		}
+
+		.btn-check + &:hover {
+			// Bootstrap disables hover styles for checkbox buttons. Here we reset them to the
+			// default button hover styles.
+			color: var(--#{$prefix}btn-hover-color);
+			background-color: var(--#{$prefix}btn-hover-bg);
+			border-color: var(--#{$prefix}btn-hover-border-color);
+		}
+
+		.btn-check:checked + &,
+		:not(.btn-check) + &:active,
+		&:first-child:active,
+		&.active,
+		&.show,
+		&:disabled,
+  		&.disabled,
+  		fieldset:disabled & {
+			// Disable gradient-y
+			background-image: none;
+		}
+	}
 }

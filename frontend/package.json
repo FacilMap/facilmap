@@ -75,7 +75,7 @@
     "vite-plugin-dts": "^3.6.0",
     "vue": "^3.3.4",
     "vue-color": "^2.8.1",
-    "vuedraggable": "^2.24.3"
+    "vuedraggable": "next"
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.7",

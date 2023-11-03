@@ -9,7 +9,7 @@
 	import ShapeField from "../ui/shape-field.vue";
 	import SymbolField from "../ui/symbol-field.vue";
 	import RouteMode from "../ui/route-mode.vue";
-	import draggable from "vuedraggable";
+	import Draggable from "vuedraggable";
 	import FieldInput from "../ui/field-input.vue";
 	import Icon from "../ui/icon.vue";
 	import WidthField from "../ui/width-field.vue";
@@ -408,46 +408,53 @@
 						<th></th>
 					</tr>
 				</thead>
-				<draggable v-model="type.fields" tag="tbody" handle=".fm-drag-handle">
-					<tr v-for="(field, idx) in type.fields" :key="idx">
-						<td>
-							<input
-								class="form-control"
-								v-model="field.name"
-								v-validity="fieldValidationErrors[idx].name"
-							/>
-							<div class="invalid-feedback" v-if="fieldValidationErrors[idx].name">
-								{{fieldValidationErrors[idx].name}}
-							</div>
-						</td>
-						<td>
-							<div class="input-group">
-								<select class="form-select" v-model="field.type">
-									<option value="input">Text field</option>
-									<option value="textarea">Text area</option>
-									<option value="dropdown">Dropdown</option>
-									<option value="checkbox">Checkbox</option>
-								</select>
-								<template v-if="['dropdown', 'checkbox'].includes(field.type)">
-									<button type="button" class="btn btn-light" @click="editDropdown(field)">Edit</button>
-								</template>
-							</div>
-						</td>
-						<td class="text-center">
-							<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
-						</td>
-						<td class="td-buttons">
-							<button type="button" class="btn btn-light" @click="deleteField(field)">Delete</button>
-						</td>
-						<td class="td-buttons">
-							<button type="button" class="btn btn-light fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
-						</td>
-					</tr>
-				</draggable>
+				<Draggable
+					v-model="type.fields"
+					tag="tbody"
+					handle=".fm-drag-handle"
+					itemKey="(field: any) => type.fields.indexOf(field)"
+				>
+					<template #item="{ element: field, index: idx }">
+						<tr>
+							<td>
+								<input
+									class="form-control"
+									v-model="field.name"
+									v-validity="fieldValidationErrors[idx].name"
+								/>
+								<div class="invalid-feedback" v-if="fieldValidationErrors[idx].name">
+									{{fieldValidationErrors[idx].name}}
+								</div>
+							</td>
+							<td>
+								<div class="input-group">
+									<select class="form-select" v-model="field.type">
+										<option value="input">Text field</option>
+										<option value="textarea">Text area</option>
+										<option value="dropdown">Dropdown</option>
+										<option value="checkbox">Checkbox</option>
+									</select>
+									<template v-if="['dropdown', 'checkbox'].includes(field.type)">
+										<button type="button" class="btn btn-secondary" @click="editDropdown(field)">Edit</button>
+									</template>
+								</div>
+							</td>
+							<td class="text-center">
+								<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
+							</td>
+							<td class="td-buttons">
+								<button type="button" class="btn btn-secondary" @click="deleteField(field)">Delete</button>
+							</td>
+							<td class="td-buttons">
+								<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+							</td>
+						</tr>
+					</template>
+				</Draggable>
 				<tfoot>
 					<tr>
 						<td colspan="4">
-							<button type="button" class="btn btn-light" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
+							<button type="button" class="btn btn-secondary" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
 						</td>
 						<td class="move"></td>
 					</tr>

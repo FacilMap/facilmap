@@ -81,8 +81,8 @@
 						<button
 							v-if="!noCancel"
 							type="button"
-							class="btn btn-light"
-							:class="isModified || isCreate ? 'btn-light' : 'btn-primary'"
+							class="btn btn-secondary"
+							:class="isModified || isCreate ? 'btn-secondary' : 'btn-primary'"
 							@click="modal.hide()"
 							:disabled="isSubmitting || isBusy"
 						>{{isModified || isCreate ? 'Cancel' : 'Close'}}</button>

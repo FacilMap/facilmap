@@ -154,7 +154,7 @@
 				<button
 					v-if="line.ascent != null"
 					type="button"
-					class="btn btn-light"
+					class="btn btn-secondary"
 					:class="{ active: showElevationPlot }"
 					@click="showElevationPlot = !showElevationPlot"
 					v-tooltip.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
@@ -188,7 +188,7 @@
 		<div v-if="!isMoving" class="btn-group">
 			<button
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				v-tooltip="'Zoom to line'"
 				@click="zoomToLine()"
 			>
@@ -196,7 +196,7 @@
 			</button>
 
 			<div class="dropdown">
-				<button type="button" class="btn btn-light dropdown-toggle btn-sm" :disabled="isExporting">
+				<button type="button" class="btn btn-secondary dropdown-toggle btn-sm" :disabled="isExporting" data-bs-toggle="dropdown">
 					<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
 					Export
 				</button>
@@ -224,7 +224,7 @@
 			<button
 				v-if="!client.readonly"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				size="sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
@@ -233,7 +233,7 @@
 			<button
 				v-if="!client.readonly && line.mode != 'track'"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				@click="moveLine()"
 				:disabled="isDeleting || mapContext.interaction"
 			>Edit waypoints</button>
@@ -241,7 +241,7 @@
 			<button
 				v-if="!client.readonly"
 				type="button"
-				class="btn btn-light btn-sm"
+				class="btn btn-secondary btn-sm"
 				@click="deleteLine()"
 				:disabled="isDeleting || mapContext.interaction"
 			>

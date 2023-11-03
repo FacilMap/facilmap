@@ -123,7 +123,7 @@
 
 		<template #footer-left>
 			<div v-if="types.length > 1" class="dropup">
-				<button type="button" class="btn btn-light dropdown-toggle">Change type</button>
+				<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">Change type</button>
 				<ul class="dropdown-menu">
 					<template v-for="type in types" :key="type.id">
 						<li>

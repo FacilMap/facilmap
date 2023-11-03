@@ -68,14 +68,14 @@
 						<div class="btn-group">
 							<button
 								type="button"
-								class="btn btn-light"
+								class="btn btn-secondary"
 								:disabled="isDeleting[type.id]"
 								@click="editDialogTypeId = type.id"
 							>Edit</button>
 							<button
 								type="button"
 								@click="deleteType(type)"
-								class="btn btn-light"
+								class="btn btn-secondary"
 								:disabled="isDeleting[type.id]"
 							>
 								<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
@@ -90,7 +90,7 @@
 					<td colspan="3">
 						<button
 							type="button"
-							class="btn btn-light"
+							class="btn btn-secondary"
 							@click="editDialogTypeId = null"
 						>Create</button>
 					</td>

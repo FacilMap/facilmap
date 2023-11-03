@@ -50,51 +50,103 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 	trackPoints: TrackPoints;
 }
 
-export default class Client {
-	disconnected: boolean = true;
-	server!: string;
-	padId: string | undefined = undefined;
-	bbox: BboxWithZoom | undefined = undefined;
-	socket!: SocketIO;
-	padData: PadData | undefined = undefined;
-	readonly: boolean | undefined = undefined;
-	writable: Writable | undefined = undefined;
-	deleted: boolean = false;
-	markers: Record<ID, Marker> = { };
-	lines: Record<ID, LineWithTrackPoints> = { };
-	views: Record<ID, View> = { };
-	types: Record<ID, Type> = { };
-	history: Record<ID, HistoryEntry> = { };
-	route: RouteWithTrackPoints | undefined = undefined;
-	routes: Record<string, RouteWithTrackPoints> = { };
-	serverError: Error | undefined = undefined;
-	loading: number = 0;
+interface ClientState {
+	disconnected: boolean;
+	server: string;
+	padId: string | undefined;
+	bbox: BboxWithZoom | undefined;
+	readonly: boolean | undefined;
+	writable: Writable | undefined;
+	deleted: boolean;
+	serverError: Error | undefined;
+	loading: number;
+	listeningToHistory: boolean;
+}
 
-	_listeners: {
+interface ClientData {
+	padData: PadData | undefined;
+	markers: Record<ID, Marker>;
+	lines: Record<ID, LineWithTrackPoints>;
+	views: Record<ID, View>;
+	types: Record<ID, Type>;
+	history: Record<ID, HistoryEntry>;
+	route: RouteWithTrackPoints | undefined;
+	routes: Record<string, RouteWithTrackPoints>;
+}
+
+export default class Client {
+	private socket: SocketIO;
+	private state: ClientState;
+	private data: ClientData;
+
+	private listeners: {
 		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
-	_listeningToHistory: boolean = false;
 
 	constructor(server: string, padId?: string) {
-		this.server = server;
-		this.padId = padId;
+		this.state = this._makeReactive({
+			disconnected: true,
+			server,
+			padId,
+			bbox: undefined,
+			readonly: undefined,
+			writable: undefined,
+			deleted: false,
+			serverError: undefined,
+			loading: 0,
+			listeningToHistory: false
+		});
+
+		this.data = this._makeReactive({
+			padData: undefined,
+			markers: { },
+			lines: { },
+			views: { },
+			types: { },
+			history: { },
+			route: undefined,
+			routes: { }
+		});
+
+		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
+		const socket = io(serverUrl.origin, {
+			forceNew: true,
+			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
+		});
+		this.socket = socket;
+
+		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
+			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
+		}
+
+		Promise.resolve().then(() => {
+			this._simulateEvent("loadStart");
+		});
+
+		this.once("connect", () => {
+			this._simulateEvent("loadEnd");
+		});
 	}
 
-	_set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
+	protected _makeReactive<O extends object>(object: O): O {
+		return object;
+	}
+
+	protected _set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
 		object[key] = value;
 	}
 
-	_delete<O>(object: O, key: keyof O): void {
+	protected _delete<O>(object: O, key: keyof O): void {
 		delete object[key];
 	}
 
-	_decodeData(data: Record<string, string>): Record<string, string> {
+	protected _decodeData(data: Record<string, string>): Record<string, string> {
 		const result = Object.create(null);
 		Object.assign(result, data);
 		return result;
 	}
 
-	_fixResponseObject<T>(requestName: RequestName, obj: T): T {
+	private _fixResponseObject<T>(requestName: RequestName, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
 
@@ -104,7 +156,7 @@ export default class Client {
 		};
 	}
 
-	_fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
+	private _fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
 		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
 			return obj;
 
@@ -117,37 +169,13 @@ export default class Client {
 		] as T;
 	}
 
-	async connect(): Promise<void> {
-		const serverUrl = typeof location != "undefined" ? new URL(this.server, location.href) : new URL(this.server);
-		const socket = io(serverUrl.origin, {
-			forceNew: true,
-			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
-		});
-		this._set(this, 'socket', socket);
-
-		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
-			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
-		}
-
-		setTimeout(() => {
-			this._simulateEvent("loadStart");
-		}, 0);
-
-		await new Promise<void>((resolve) => {
-			this.once("connect", () => {
-				this._simulateEvent("loadEnd");
-				resolve();
-			});
-		});
-	}
-
 	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
-		if(!this._listeners[eventName]) {
+		if(!this.listeners[eventName]) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
 				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
-		this._set(this._listeners, eventName, [ ...(this._listeners[eventName] || [] as any), fn ]);
+		this.listeners[eventName] = [...(this.listeners[eventName] || [] as any), fn];
 	}
 
 	once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
@@ -159,13 +187,13 @@ export default class Client {
 	}
 
 	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
+		const listeners = this.listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
-			this._set(this._listeners, eventName, listeners.filter((listener) => (listener !== fn)) as any);
+			this.listeners[eventName] = listeners.filter((listener) => (listener !== fn)) as any;
 		}
 	}
 
-	async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
+	private async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
 		try {
 			this._simulateEvent("loadStart");
 
@@ -188,49 +216,49 @@ export default class Client {
 		}
 	}
 
-	_handlers: {
+	private _handlers: {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} = {
 		padData: (data) => {
-			this._set(this, 'padData', data);
+			this._set(this.data, 'padData', data);
 
 			if(data.writable != null) {
-				this._set(this, 'readonly', data.writable == 0);
-				this._set(this, 'writable', data.writable);
+				this._set(this.state, 'readonly', data.writable == 0);
+				this._set(this.state, 'writable', data.writable);
 			}
 
-			const id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
+			const id = this.state.writable == 2 ? data.adminId : this.state.writable == 1 ? data.writeId : data.id;
 			if(id != null)
-				this._set(this, 'padId', id);
+				this._set(this.state, 'padId', id);
 		},
 
 		deletePad: () => {
-			this._set(this, 'readonly', true);
-			this._set(this, 'writable', 0);
-			this._set(this, 'deleted', true);
+			this._set(this.state, 'readonly', true);
+			this._set(this.state, 'writable', 0);
+			this._set(this.state, 'deleted', true);
 		},
 
 		marker: (data) => {
-			this._set(this.markers, data.id, data);
+			this._set(this.data.markers, data.id, data);
 		},
 
 		deleteMarker: (data) => {
-			this._delete(this.markers, data.id);
+			this._delete(this.data.markers, data.id);
 		},
 
 		line: (data) => {
-			this._set(this.lines, data.id, {
+			this._set(this.data.lines, data.id, {
 				...data,
-				trackPoints: this.lines[data.id]?.trackPoints || { length: 0 }
+				trackPoints: this.data.lines[data.id]?.trackPoints || { length: 0 }
 			});
 		},
 
 		deleteLine: (data) => {
-			this._delete(this.lines, data.id);
+			this._delete(this.data.lines, data.id);
 		},
 
 		linePoints: (data) => {
-			const line = this.lines[data.id];
+			const line = this.data.lines[data.id];
 			if(line == null)
 				return console.error("Received line points for non-existing line "+data.id+".");
 
@@ -238,16 +266,16 @@ export default class Client {
 		},
 
 		routePoints: (data) => {
-			if(!this.route) {
+			if(!this.data.route) {
 				console.error("Received route points for non-existing route.");
 				return;
 			}
 
-			this._set(this.route, 'trackPoints', this._mergeTrackPoints(this.route.trackPoints, data));
+			this._set(this.data.route, 'trackPoints', this._mergeTrackPoints(this.data.route.trackPoints, data));
 		},
 
 		routePointsWithId: (data) => {
-			const route = this.routes[data.routeId];
+			const route = this.data.routes[data.routeId];
 			if(!route) {
 				console.error("Received route points for non-existing route.");
 				return;
@@ -257,76 +285,76 @@ export default class Client {
 		},
 
 		view: (data) => {
-			this._set(this.views, data.id, data);
+			this._set(this.data.views, data.id, data);
 		},
 
 		deleteView: (data) => {
-			this._delete(this.views, data.id);
-			if (this.padData) {
-				if(this.padData.defaultViewId == data.id)
-					this._set(this.padData, 'defaultViewId', null);
+			this._delete(this.data.views, data.id);
+			if (this.data.padData) {
+				if(this.data.padData.defaultViewId == data.id)
+					this._set(this.data.padData, 'defaultViewId', null);
 			}
 		},
 
 		type: (data) => {
-			this._set(this.types, data.id, data);
+			this._set(this.data.types, data.id, data);
 		},
 
 		deleteType: (data) => {
-			this._delete(this.types, data.id);
+			this._delete(this.data.types, data.id);
 		},
 
 		disconnect: () => {
-			this._set(this, 'disconnected', true);
-			this._set(this, 'markers', { });
-			this._set(this, 'lines', { });
-			this._set(this, 'views', { });
-			this._set(this, 'history', { });
+			this._set(this.state, 'disconnected', true);
+			this._set(this.data, 'markers', { });
+			this._set(this.data, 'lines', { });
+			this._set(this.data, 'views', { });
+			this._set(this.data, 'history', { });
 		},
 
 		connect: () => {
-			this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
+			this._set(this.state, 'disconnected', false); // Otherwise it gets set when padData arrives
 
-			if(this.padId)
-				this._setPadId(this.padId).catch(() => undefined);
+			if(this.state.padId)
+				this._setPadId(this.state.padId).catch(() => undefined);
 
 			// TODO: Handle errors
 
-			if(this.bbox)
-				this.updateBbox(this.bbox).catch((err) => { console.error("Error updating bbox.", err); });
+			if(this.state.bbox)
+				this.updateBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
 
-			if(this._listeningToHistory) // TODO: Execute after setPadId() returns
+			if(this.state.listeningToHistory) // TODO: Execute after setPadId() returns
 				this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
 
-			if(this.route)
-				this.setRoute(this.route).catch((err) => { console.error("Error setting route.", err); });
-			for (const route of Object.values(this.routes))
+			if(this.data.route)
+				this.setRoute(this.data.route).catch((err) => { console.error("Error setting route.", err); });
+			for (const route of Object.values(this.data.routes))
 				this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
 		},
 
 		history: (data) => {
-			this._set(this.history, data.id, data);
+			this._set(this.data.history, data.id, data);
 			// TODO: Limit to 50 entries
 		},
 
 		loadStart: () => {
-			this._set(this, 'loading', this.loading + 1);
+			this._set(this.state, 'loading', this.state.loading + 1);
 		},
 
 		loadEnd: () => {
-			this._set(this, 'loading', this.loading - 1);
+			this._set(this.state, 'loading', this.state.loading - 1);
 		}
 	};
 
 	setPadId(padId: PadId): Promise<void> {
-		if(this.padId != null)
+		if(this.state.padId != null)
 			throw new Error("Pad ID already set.");
 
 		return this._setPadId(padId);
 	}
 
 	async updateBbox(bbox: BboxWithZoom): Promise<void> {
-		this._set(this, 'bbox', bbox);
+		this._set(this.state, 'bbox', bbox);
 		const obj = await this._emit("updateBbox", bbox);
 		this._receiveMultiple(obj);
 	}
@@ -341,8 +369,8 @@ export default class Client {
 
 	async createPad(data: PadData<CRU.CREATE>): Promise<void> {
 		const obj = await this._emit("createPad", data);
-		this._set(this, 'readonly', false);
-		this._set(this, 'writable', 2);
+		this._set(this.state, 'readonly', false);
+		this._set(this.state, 'writable', 2);
 		this._receiveMultiple(obj);
 	}
 
@@ -356,31 +384,31 @@ export default class Client {
 
 	async listenToHistory(): Promise<void> {
 		const obj = await this._emit("listenToHistory");
-		this._set(this, '_listeningToHistory', true);
+		this._set(this.state, 'listeningToHistory', true);
 		this._receiveMultiple(obj);
 	}
 
 	async stopListeningToHistory(): Promise<void> {
-		this._set(this, '_listeningToHistory', false);
+		this._set(this.state, 'listeningToHistory', false);
 		return await this._emit("stopListeningToHistory");
 	}
 
 	async revertHistoryEntry(data: ObjectWithId): Promise<void> {
 		const obj = await this._emit("revertHistoryEntry", data);
-		this._set(this, 'history', {});
+		this._set(this.data, 'history', {});
 		this._receiveMultiple(obj);
 	}
 
 	async getMarker(data: ObjectWithId): Promise<Marker> {
 		const marker = await this._emit("getMarker", data);
-		this._set(this.markers, marker.id, marker);
+		this._set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
 	async addMarker(data: Marker<CRU.CREATE>): Promise<Marker> {
 		const marker = await this._emit("addMarker", data);
 		// If the marker is out of view, we will not recieve it in an event. Add it here manually to make sure that we have it.
-		this._set(this.markers, marker.id, marker);
+		this._set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
@@ -438,9 +466,9 @@ export default class Client {
 		};
 
 		if (data.routeId)
-			this._set(this.routes, data.routeId, result);
+			this._set(this.data.routes, data.routeId, result);
 		else
-			this._set(this, "route", result);
+			this._set(this.data, "route", result);
 
 		this._simulateEvent("route", result);
 		return result;
@@ -448,11 +476,11 @@ export default class Client {
 
 	async clearRoute(data?: RouteClear): Promise<void> {
 		if (data?.routeId) {
-			this._delete(this.routes, data.routeId);
+			this._delete(this.data.routes, data.routeId);
 			this._simulateEvent("clearRoute", { routeId: data.routeId });
 			return await this._emit("clearRoute", data);
-		} else if (this.route) {
-			this._set(this, 'route', undefined);
+		} else if (this.data.route) {
+			this._set(this.data, 'route', undefined);
 			this._simulateEvent("clearRoute", { routeId: undefined });
 			return await this._emit("clearRoute", data);
 		}
@@ -470,9 +498,9 @@ export default class Client {
 		};
 
 		if (data.routeId)
-			this._set(this.routes, data.routeId, result);
+			this._set(this.data.routes, data.routeId, result);
 		else
-			this._set(this, "route", result);
+			this._set(this.data, "route", result);
 
 		this._simulateEvent("route", result);
 		return result;
@@ -515,30 +543,30 @@ export default class Client {
 		this.socket.disconnect();
 	}
 
-	async _setPadId(padId: string): Promise<void> {
-		this._set(this, 'serverError', undefined);
-		this._set(this, 'padId', padId);
+	private async _setPadId(padId: string): Promise<void> {
+		this._set(this.state, 'serverError', undefined);
+		this._set(this.state, 'padId', padId);
 		try {
 			const obj = await this._emit("setPadId", padId);
 			this._receiveMultiple(obj);
 		} catch(err: any) {
-			this._set(this, 'serverError', err);
+			this._set(this.state, 'serverError', err);
 			this._simulateEvent("serverError", err);
 			throw err;
 		}
 	}
 
-	_receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
+	private _receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
 		if (obj) {
 			for(const i of Object.keys(obj) as EventName<ClientEvents>[])
 				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
+	private _simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
 		const fixedData = this._fixEventObject(eventName, data);
 
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
+		const listeners = this.listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
 			listeners.forEach(function(listener: EventHandler<ClientEvents, E>) {
 				listener(...fixedData);
@@ -546,7 +574,7 @@ export default class Client {
 		}
 	}
 
-	_mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
+	private _mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
 		const ret = { ...(existingTrackPoints || { }) } as TrackPoints;
 
 		for(let i=0; i<newTrackPoints.length; i++) {
@@ -560,5 +588,77 @@ export default class Client {
 		}
 
 		return ret;
+	}
+
+	get disconnected(): boolean {
+		return this.state.disconnected;
+	}
+
+	get server(): string {
+		return this.state.server;
+	}
+
+	get padId(): string | undefined {
+		return this.state.padId;
+	}
+
+	get bbox(): BboxWithZoom | undefined {
+		return this.state.bbox;
+	}
+
+	get readonly(): boolean | undefined {
+		return this.state.readonly;
+	}
+
+	get writable(): Writable | undefined {
+		return this.state.writable;
+	}
+
+	get deleted(): boolean {
+		return this.state.deleted;
+	}
+
+	get serverError(): Error | undefined {
+		return this.state.serverError;
+	}
+
+	get loading(): number {
+		return this.state.loading;
+	}
+
+	get listeningToHistory(): boolean {
+		return this.state.listeningToHistory;
+	}
+
+	get padData(): PadData | undefined {
+		return this.data.padData;
+	}
+
+	get markers(): Record<ID, Marker> {
+		return this.data.markers;
+	}
+
+	get lines(): Record<ID, LineWithTrackPoints> {
+		return this.data.lines;
+	}
+
+	get views(): Record<ID, View> {
+		return this.data.views;
+	}
+
+	get types(): Record<ID, Type> {
+		return this.data.types;
+	}
+
+	get history(): Record<ID, HistoryEntry> {
+		return this.data.history;
+	}
+
+	get route(): RouteWithTrackPoints | undefined {
+		return this.data.route;
+	}
+
+	get routes(): Record<string, RouteWithTrackPoints> {
+		return this.data.routes;
 	}
 }

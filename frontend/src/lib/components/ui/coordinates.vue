@@ -26,7 +26,7 @@
 		<span>{{formattedCoordinates}}</span>
 		<button
 			type="button"
-			class="btn btn-light"
+			class="btn btn-secondary"
 		 	@click="copy()"
 			v-tooltip="'Copy to clipboard'"
 		>

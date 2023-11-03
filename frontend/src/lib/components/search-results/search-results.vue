@@ -256,13 +256,18 @@
 				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-group">
 					<button
 						type="button"
-						class="btn btn-light"
+						class="btn btn-secondary"
 						:class="{ active: isAllSelected }"
 						@click="toggleSelectAll"
 					>Select all</button>
 
 					<div v-if="client.padData && !client.readonly" class="dropdown">
-						<button type="button" class="btn btn-light dropdown-toggle" :disabled="activeSearchResults.length == 0 || isAdding">
+						<button
+							type="button"
+							class="btn btn-secondary dropdown-toggle"
+							:disabled="activeSearchResults.length == 0 || isAdding"
+							data-bs-toggle="dropdown"
+						>
 							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 							Add selected item{{activeSearchResults.length == 1 ? '' : 's'}} to map
 						</button>

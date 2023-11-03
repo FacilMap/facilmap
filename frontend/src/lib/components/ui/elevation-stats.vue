@@ -30,7 +30,7 @@
 		</span>
 
 		<button
-			class="btn btn-light"
+			class="btn btn-secondary"
 			ref="statsButtonRef"
 			v-tooltip="'Show elevation statistics'"
 		>

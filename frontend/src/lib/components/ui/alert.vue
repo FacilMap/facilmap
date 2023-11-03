@@ -155,7 +155,7 @@
 						<slot>{{props.message}}</slot>
 					</div>
 					<div class="modal-footer">
-						<button v-if="type === 'confirm'" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+						<button v-if="type === 'confirm'" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 						<button type="submit" class="btn" :class="`btn-${props.variant ?? 'primary'}`">OK</button>
 					</div>
 				</form>

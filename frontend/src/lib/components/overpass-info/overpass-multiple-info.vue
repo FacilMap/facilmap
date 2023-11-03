@@ -109,7 +109,7 @@
 					<div v-if="client.padData && !client.readonly" class="btn-group">
 						<button
 							type="button"
-							class="btn btn-light btn-sm"
+							class="btn btn-secondary btn-sm"
 							v-tooltip="'Zoom to selection'"
 							@click="zoom()"
 						>
@@ -117,7 +117,7 @@
 						</button>
 
 						<div v-if="client.padData && !client.readonly && types.length > 0" class="dropdown">
-							<button type="button" class="btn btn-light dropdown-toggle" :disabled="isAdding">
+							<button type="button" class="btn btn-secondary dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
 								<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
 								Add to map
 							</button>

@@ -69,7 +69,7 @@
 					@blur="touched = true"
 				>
 				<button
-					class="btn btn-light"
+					class="btn btn-secondary"
 					type="button"
 					@click="copy(context.baseUrl + encodeURIComponent(padData[idProp]))"
 				>Copy</button>

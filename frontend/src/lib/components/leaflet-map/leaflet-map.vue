@@ -18,7 +18,7 @@
 	import type { FilterFunc } from "facilmap-utils";
 	import type { Emitter } from "mitt";
 	import { createMapContext } from "./components";
-import vTooltip from "../../utils/tooltip";
+	import vTooltip from "../../utils/tooltip";
 
 	export type MapContextEvents = {
 		"import-file": void;

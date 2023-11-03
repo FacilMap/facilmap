@@ -8,7 +8,11 @@
 	import { injectContextRequired } from "../utils/context";
 	import Toast from "./ui/toasts/toast.vue";
 
-	export type Client = FmClient;
+	export class Client extends FmClient {
+		override _makeReactive<O extends object>(object: O): O {
+			return reactive(object);
+		}
+	};
 
 	export type ClientContext = {
 		openPad(padId: string | undefined): void;
@@ -86,9 +90,8 @@
 		else
 			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
 
-		const newClient = new FmClient(props.serverUrl, props.padId);
+		const newClient = new Client(props.serverUrl, props.padId);
 		connectingClient.value = newClient;
-		newClient.connect();
 
 		let lastPadId: PadId | undefined = undefined;
 		let lastPadData: PadData | undefined = undefined;
@@ -149,8 +152,6 @@
 
 		if (newClient.serverError?.message?.includes("does not exist") && context.interactive) {
 			createId.value = newClient.padId!;
-			newClient.padId = undefined;
-			newClient.serverError = undefined;
 		} else if (newClient.serverError) {
 			toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
 				noCloseButton: true,
