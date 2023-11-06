@@ -5,29 +5,29 @@
 	import { Util } from "leaflet";
 	import FileResults from "./file-results.vue";
 	import SearchBoxTab from "./search-box/search-box-tab.vue";
-	import { injectContextRequired } from "../utils/context";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
-	import { computed, markRaw, ref } from "vue";
+	import { computed, markRaw, ref, shallowReactive } from "vue";
 	import { useDomEventListener, useEventListener } from "../utils/utils";
 	import { useToasts } from "./ui/toasts/toasts.vue";
+	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 	const toasts = useToasts();
 
 	const fileInputRef = ref<HTMLInputElement>();
 
 	const files = ref<Array<FileResultObject & { title: string }>>([]);
-	const layers = ref<SearchResultsLayer[]>([]);
+	const layers = shallowReactive<SearchResultsLayer[]>([]);
 
 	useEventListener(mapContext, "import-file", handleImportFile);
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-	useDomEventListener(mapContext.components.container, "dragenter", handleMapDragEnter);
-	useDomEventListener(mapContext.components.container, "dragover", handleMapDragOver);
-	useDomEventListener(mapContext.components.container, "drop", handleMapDrop);
+	useDomEventListener(mapContext.value.components.container, "dragenter", handleMapDragEnter);
+	useDomEventListener(mapContext.value.components.container, "dragover", handleMapDragOver);
+	useDomEventListener(mapContext.value.components.container, "drop", handleMapDrop);
 
-	const layerIds = computed(() => layers.value.map((layer) => Util.stamp(layer)));
+	const layerIds = computed(() => layers.map((layer) => Util.stamp(layer)));
 
 	function handleImportFile(): void {
 		fileInputRef.value?.click();
@@ -35,8 +35,8 @@
 
 	function handleOpenSelection(): void {
 		for (let i = 0; i < layerIds.value.length; i++) {
-			if (mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i])) {
-				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-import-tab-${i}` });
+			if (mapContext.value.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i])) {
+				searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${i}`);
 				break;
 			}
 		}
@@ -86,14 +86,14 @@
 				if (result.errors)
 					toasts.showErrorToast(`fm${context.id}-import-error`, "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
 
-				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.components.map));
-				mapContext.components.map.flyToBounds(layer.getBounds());
-				mapContext.components.selectionHandler.addSearchResultLayer(layer);
+				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.value.components.map));
+				mapContext.value.components.map.flyToBounds(layer.getBounds());
+				mapContext.value.components.selectionHandler.addSearchResultLayer(layer);
 
 				files.value.push(result);
-				layers.value.push(layer);
+				layers.push(layer);
 				setTimeout(() => {
-					mapContext.emit("search-box-show-tab", { id: `fm${context.id}-import-tab-${files.value.length - 1}` });
+					searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${files.value.length - 1}`);
 				}, 0);
 			}
 		} catch (err) {
@@ -103,9 +103,9 @@
 
 	function close(idx: number): void {
 		files.value.splice(idx, 1);
-		mapContext.components.selectionHandler.removeSearchResultLayer(layers.value[idx]);
-		layers.value[idx].remove();
-		layers.value.splice(idx, 1);
+		mapContext.value.components.selectionHandler.removeSearchResultLayer(layers[idx]);
+		layers[idx].remove();
+		layers.splice(idx, 1);
 	}
 </script>
 

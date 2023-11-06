@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import OverpassForm from "./overpass-form.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { injectContextRequired } from "../../utils/context";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
 </script>

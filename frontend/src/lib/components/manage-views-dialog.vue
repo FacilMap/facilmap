@@ -1,17 +1,15 @@
 <script setup lang="ts">
 	import type { ID, View } from "facilmap-types";
 	import { displayView } from "facilmap-leaflet";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { showConfirm } from "./ui/alert.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 
 	const emit = defineEmits<{
@@ -26,7 +24,7 @@
 	});
 
 	function display(view: View): void {
-		displayView(mapContext.components.map, view, { overpassLayer: mapContext.components.overpassLayer });
+		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
 	};
 
 	async function makeDefault(view: View): Promise<void> {
@@ -34,7 +32,7 @@
 		toasts.hideToast(`fm${context.id}-save-view-error-default`);
 
 		try {
-			await client.editPad({ defaultViewId: view.id });
+			await client.value.editPad({ defaultViewId: view.id });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, "Error setting default view", err);
 		} finally {
@@ -51,7 +49,7 @@
 
 			isDeleting.value.add(view.id);
 
-			await client.deleteView({ id: view.id });
+			await client.value.deleteView({ id: view.id });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, `Error deleting view “${view.name}”`, err);
 		} finally {

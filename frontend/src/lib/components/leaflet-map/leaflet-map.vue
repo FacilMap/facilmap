@@ -1,98 +1,19 @@
-<script lang="ts">
-	import { DeepReadonly, inject, InjectionKey, Ref, computed, onMounted, ref, defineComponent, provide } from "vue";
-	import type L from "leaflet";
-	import type { LatLng, LatLngBounds, Map } from "leaflet";
+<script setup lang="ts">
+	import { Ref, computed, onMounted, ref } from "vue";
 	import "leaflet/dist/leaflet.css";
-	import type { BboxHandler, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, VisibleLayers, HashQuery, OverpassPreset } from "facilmap-leaflet";
 	import "leaflet.locatecontrol";
 	import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 	import "leaflet-graphicscale";
 	import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 	import "leaflet-mouse-position";
 	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
-	import type SelectionHandler from "../../utils/selection";
-	import type { SelectedItem } from "../../utils/selection";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import type { FindOnMapResult, Point, SearchResult } from "facilmap-types";
-	import type { FilterFunc } from "facilmap-utils";
-	import type { Emitter } from "mitt";
-	import { createMapContext } from "./components";
+	import { createMapContext } from "./leaflet-map-components";
 	import vTooltip from "../../utils/tooltip";
+	import type { MapContext } from "../facil-map-context-provider/map-context";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
-	export type MapContextEvents = {
-		"import-file": void;
-		"open-selection": { selection: SelectedItem[] };
-		"search-box-show-tab": { id: string; expand?: boolean };
-		"search-set-query": { query: string; zoom?: boolean; smooth?: boolean };
-		"route-set-query": { query: string; zoom?: boolean; smooth?: boolean };
-		"route-set-from": { query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult };
-		"route-add-via": { query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult };
-		"route-set-to": { query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult };
-		"map-long-click": { point: Point };
-	};
-
-	export interface MapComponents {
-		bboxHandler: BboxHandler;
-		container: HTMLElement;
-		graphicScale: any;
-		hashHandler: HashHandler;
-		linesLayer: LinesLayer;
-		locateControl: L.Control.Locate;
-		map: Map;
-		markersLayer: MarkersLayer;
-		mousePosition: L.Control.MousePosition;
-		overpassLayer: OverpassLayer;
-		searchResultsLayer: SearchResultsLayer;
-		selectionHandler: SelectionHandler;
-	}
-
-	export type MapContextData = {
-		center: LatLng;
-		zoom: number;
-		bounds: LatLngBounds;
-		layers: VisibleLayers;
-		filter: string | undefined;
-		filterFunc: FilterFunc;
-		hash: string;
-		showToolbox: boolean;
-		selection: SelectedItem[];
-		activeQuery: HashQuery | undefined;
-		fallbackQuery: HashQuery | undefined;
-		setFallbackQuery: (query: HashQuery | undefined) => void;
-		interaction: boolean;
-		loading: number;
-		overpassIsCustom: boolean;
-		overpassPresets: OverpassPreset[];
-		overpassCustom: string;
-		overpassMessage: string | undefined;
-		components: MapComponents;
-	};
-
-	export type WritableMapContext = MapContextData & Emitter<MapContextEvents>;
-
-	export type MapContext = DeepReadonly<Omit<WritableMapContext, "components">> & {
-		readonly components: Readonly<WritableMapContext["components"]>;
-	};
-
-	const mapContextInject = Symbol("mapContextInject") as InjectionKey<MapContext>;
-
-	export function injectMapContextOptional(): MapContext | undefined {
-		return inject(mapContextInject);
-	}
-
-	export function injectMapContextRequired(): MapContext {
-		const mapContext = injectMapContextOptional();
-		if (!mapContext) {
-			throw new Error("No map context injected.");
-		}
-		return mapContext;
-	}
-</script>
-
-<script setup lang="ts">
-	const client = injectClientRequired();
 	const context = injectContextRequired();
+	const client = requireClientContext(context);
 
 	const innerContainerRef = ref<HTMLElement>();
 	const mapRef = ref<HTMLElement>();
@@ -108,7 +29,7 @@
 
 	onMounted(async () => {
 		try {
-			mapContext.value = await createMapContext(client, context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
+			mapContext.value = await createMapContext(context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
 			loaded.value = true;
 		} catch (err: any) {
 			console.error(err);
@@ -116,19 +37,12 @@
 		}
 	});
 
-	const MapContextProvider = defineComponent({
-		setup(props, { slots }) {
-			provide(mapContextInject, mapContext.value!);
-			return slots.default;
-		}
-	});
+	context.provideComponent("map", mapContext);
 </script>
 
 <template>
 	<div class="fm-leaflet-map-container" :class="{ isNarrow: context.isNarrow }">
-		<MapContextProvider v-if="mapContext">
-			<slot name="before"></slot>
-		</MapContextProvider>
+		<slot v-if="mapContext" name="before"></slot>
 
 		<div class="fm-leaflet-map-wrapper">
 			<div class="fm-leaflet-map-inner-container" ref="innerContainerRef">
@@ -139,7 +53,7 @@
 				</div>
 
 				<a
-					v-if="context.linkLogo"
+					v-if="context.settings.linkLogo"
 					:href="selfUrl"
 					target="_blank"
 					class="fm-open-external"
@@ -151,14 +65,9 @@
 
 				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
 
-				<MapContextProvider v-if="mapContext">
-					<slot></slot>
-				</MapContextProvider>
+				<slot v-if="mapContext"></slot>
 			</div>
-
-			<MapContextProvider v-if="mapContext">
-				<slot name="after"></slot>
-			</MapContextProvider>
+			<slot v-if="mapContext" name="after"></slot>
 		</div>
 
 		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || client.serverError || client.deleted)"></div>

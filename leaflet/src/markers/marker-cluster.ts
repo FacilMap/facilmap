@@ -10,10 +10,10 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 
 export default class MarkerCluster extends MarkerClusterGroup {
 
-	client: Client<any>;
+	client: Client;
 	_maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
 
-	constructor(client: Client<any>, options?: MarkerClusterOptions) {
+	constructor(client: Client, options?: MarkerClusterOptions) {
 		super({
 			showCoverageOnHover: false,
 			maxClusterRadius: 50,

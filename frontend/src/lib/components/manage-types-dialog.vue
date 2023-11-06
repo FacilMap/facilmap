@@ -1,15 +1,14 @@
 <script setup lang="ts">
 	import type { ID, Type } from "facilmap-types";
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { showConfirm } from "./ui/alert.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
+	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 	const toasts = useToasts();
 
 	const emit = defineEmits<{
@@ -34,7 +33,7 @@
 				return;
 			}
 
-			await client.deleteType({ id: type.id });
+			await client.value.deleteType({ id: type.id });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
 		} finally {

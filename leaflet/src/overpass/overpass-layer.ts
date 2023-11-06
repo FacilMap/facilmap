@@ -36,10 +36,10 @@ export default class OverpassLayer extends FeatureGroup {
 
 	declare options: OverpassLayerOptions;
 	_highlightedElements = new Set<string>();
-	_query: string | OverpassPreset[] | undefined;
+	_query: string | ReadonlyArray<Readonly<OverpassPreset>> | undefined;
 	_lastRequestController?: AbortController;
 
-	constructor(query?: string | OverpassPreset[], options?: OverpassLayerOptions) {
+	constructor(query?: string | ReadonlyArray<Readonly<OverpassPreset>>, options?: OverpassLayerOptions) {
 		super([], {
 			markerColour: "000000",
 			markerSize: 35,
@@ -67,11 +67,11 @@ export default class OverpassLayer extends FeatureGroup {
 		return isOverpassQueryEmpty(this._query);
 	}
 
-	getQuery(): string | OverpassPreset[] | undefined {
+	getQuery(): string | ReadonlyArray<Readonly<OverpassPreset>> | undefined {
 		return this._query;
 	}
 
-	setQuery(query?: string | OverpassPreset[]): void {
+	setQuery(query?: string | ReadonlyArray<Readonly<OverpassPreset>>): void {
 		this._query = query;
 		this.redraw();
 		this.fire("setQuery", { query });

@@ -8,7 +8,6 @@
 		"declaration": true,
 		"outDir": "dist",
 		"moduleResolution": "node",
-		"noErrorTruncation": true,
 		"skipLibCheck": true
 	},
 	"include": ["src/**/*"]

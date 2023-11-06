@@ -2,16 +2,16 @@
 	import { getOverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
 	import { debounce } from "lodash-es";
 	import { computed, ref, watch } from "vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectContextRequired } from "../../utils/context";
+	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import vValidity from "../ui/validated-form/validity";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
+	const mapContext = requireMapContext(context);
 
 	const activeTab = ref(0);
 	const searchTerm = ref("");
 	const customQuery = ref("");
-	const customQueryValidationState = ref<boolean>();
+	const customQueryWasValidated = ref(false);
 	const customQueryValidationError = ref<string>();
 	const customQueryAbortController = ref<AbortController>();
 
@@ -19,7 +19,10 @@
 
 	const categories = computed(() => {
 		return overpassPresets.map((cat) => {
-			const presets = cat.presets.map((presets) => presets.map((preset) => ({ ...preset, isChecked: mapContext.overpassPresets.includes(preset) })));
+			const presets = cat.presets.map((presets) => presets.map((preset) => ({
+				...preset,
+				isChecked: mapContext.value.overpassPresets.some((p) => p.key === preset.key)
+			})));
 			return {
 				...cat,
 				presets,
@@ -36,25 +39,25 @@
 		return categories.value.map((cat) => cat.presets).flat().flat().filter((preset) => preset.label.toLowerCase().includes(lowerTerm));
 	});
 
-	watch(() => mapContext.overpassCustom, () => {
-		customQuery.value = mapContext.overpassCustom;
+	watch(() => mapContext.value.overpassCustom, () => {
+		customQuery.value = mapContext.value.overpassCustom;
 	}, { immediate: true });
 
 	function togglePreset(key: string, enable: boolean): void {
-		const without = mapContext.overpassPresets.filter((p) => p.key != key);
-		mapContext.components.overpassLayer.setQuery([
+		const without = mapContext.value.overpassPresets.filter((p) => p.key != key);
+		mapContext.value.components.overpassLayer.setQuery([
 			...without,
 			...(enable ? [getOverpassPreset(key)!] : [])
 		]);
 	}
 
-	function  toggleIsCustom(): void {
-		if (mapContext.overpassIsCustom) {
-			mapContext.components.overpassLayer.setQuery(mapContext.overpassPresets);
+	function toggleIsCustom(): void {
+		if (mapContext.value.overpassIsCustom) {
+			mapContext.value.components.overpassLayer.setQuery(mapContext.value.overpassPresets);
 			if (customQueryAbortController.value)
 				customQueryAbortController.value.abort();
 		} else {
-			mapContext.components.overpassLayer.setQuery(mapContext.overpassCustom);
+			mapContext.value.components.overpassLayer.setQuery(mapContext.value.overpassCustom);
 			validateCustomQuery();
 		}
 	}
@@ -69,21 +72,20 @@
 		const query = customQuery.value;
 
 		if (!query) {
-			customQueryValidationState.value = undefined;
+			customQueryWasValidated.value = false;
 			customQueryValidationError.value = undefined;
+			mapContext.value.components.overpassLayer.setQuery(query);
 		} else {
 			const abortController = new AbortController();
 			customQueryAbortController.value = abortController;
 			const result = await validateOverpassQuery(query, customQueryAbortController.value.signal);
 			if (!abortController.signal.aborted) {
-				customQueryValidationState.value = !result;
+				customQueryWasValidated.value = true;
 				customQueryValidationError.value = result;
+				mapContext.value.components.overpassLayer.setQuery(query);
 			} else
 				return;
 		}
-
-		if (customQueryValidationState.value !== false)
-			mapContext.components.overpassLayer.setQuery(query);
 	}
 </script>
 
@@ -93,52 +95,16 @@
 			<input class="form-control" type="search" v-model="searchTerm" placeholder="Filter…" autofocus />
 			<hr />
 
-			<div v-if="searchTerm" class="checkbox-grid">
-				<template v-for="preset in filteredPresets" :key="preset.key">
-					<input
-						type="checkbox"
-						class="form-check-input"
-						:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
-						:checked="preset.isChecked"
-						@update="togglePreset(preset.key, $event)"
-					/>
-					<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
-						{{preset.label}}
-					</label>
-				</template>
-			</div>
-
-			<ul class="nav nav-pills">
-				<template v-for="(category, idx) in categories" :key="idx">
-					<li class="nav-item">
-						<a
-							href="javascript:"
-							class="nav-link"
-							:class="{ active: activeTab === idx }"
-							@click="activeTab = idx"
-						>
-							{{category.label}}
-							<span
-								v-if="category.checked > 0"
-								class="badge"
-								:class="activeTab == idx ? 'bg-secondary' : 'bg-primary'"
-							>{{category.checked}}</span>
-						</a>
-					</li>
-				</template>
-			</ul>
-
-			<template v-for="(presets, idx) in categories[activeTab].presets" :key="idx">
-				<hr />
+			<template v-if="searchTerm">
 				<div class="checkbox-grid">
-					<template v-for="preset in presets" :key="preset.key">
+					<template v-for="preset in filteredPresets" :key="preset.key">
 						<div class="form-check">
 							<input
 								type="checkbox"
 								class="form-check-input"
 								:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
 								:checked="preset.isChecked"
-								@update="togglePreset(preset.key, $event)"
+								@change="togglePreset(preset.key, ($event.target as HTMLInputElement).checked)"
 							/>
 							<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
 								{{preset.label}}
@@ -147,10 +113,62 @@
 					</template>
 				</div>
 			</template>
+
+			<template v-else>
+				<ul class="nav nav-pills">
+					<template v-for="(category, idx) in categories" :key="idx">
+						<li class="nav-item">
+							<a
+								href="javascript:"
+								class="nav-link"
+								:class="{ active: activeTab === idx }"
+								@click="activeTab = idx"
+							>
+								{{category.label}}
+								<span
+									v-if="category.checked > 0"
+									class="badge"
+									:class="activeTab == idx ? 'text-bg-secondary' : 'text-bg-primary'"
+								>{{category.checked}}</span>
+							</a>
+						</li>
+					</template>
+				</ul>
+
+				<template v-for="(presets, idx) in categories[activeTab].presets" :key="idx">
+					<hr />
+					<div class="checkbox-grid">
+						<template v-for="preset in presets" :key="preset.key">
+							<div class="form-check">
+								<input
+									type="checkbox"
+									class="form-check-input"
+									:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
+									:checked="preset.isChecked"
+									@change="togglePreset(preset.key, ($event.target as HTMLInputElement).checked)"
+								/>
+								<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
+									{{preset.label}}
+								</label>
+							</div>
+						</template>
+					</div>
+				</template>
+			</template>
 		</template>
 		<template v-else>
-			<textarea v-model="customQuery" rows="5" :state="customQueryValidationState" class="form-control text-monospace" @input="handleCustomQueryInput"></textarea>
-			<div class="invalid-feedback" v-if="customQueryValidationError"><pre>{{customQueryValidationError}}</pre></div>
+			<form action="javascript:" :class="{ 'was-validated': customQueryWasValidated }">
+				<textarea
+					v-model="customQuery"
+					rows="5"
+					class="form-control text-monospace"
+					@input="handleCustomQueryInput"
+					v-validity="customQueryValidationError"
+				></textarea>
+				<div class="invalid-feedback" v-if="customQueryValidationError">
+					<pre>{{customQueryValidationError}}</pre>
+				</div>
+			</form>
 
 			<hr />
 
@@ -195,6 +213,12 @@
 
 		fieldset + hr, p + hr {
 			margin-top: 0;
+		}
+
+		.nav-link {
+			display: flex;
+			gap: 5px;
+			align-items: center;
 		}
 	}
 </style>

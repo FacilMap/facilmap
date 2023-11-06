@@ -15,8 +15,6 @@
 	const statsButtonRef = ref<HTMLElement>();
 	const showStatsPopover = ref(false);
 
-	const id = Date.now();
-
 	const statsArr = computed(() => {
 		const stats = createElevationStats(props.route.extraInfo, props.route.trackPoints)
 		return stats && sortBy([...numberKeys(stats)].map((i) => ({ i, distance: stats[i] })), 'i');
@@ -26,7 +24,7 @@
 <template>
 	<span class="fm-elevation-stats">
 		<span>
-			<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}} m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}} m
+			<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}}&#x202F;m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}}&#x202F;m
 		</span>
 
 		<button
@@ -44,14 +42,14 @@
 		>
 			<dl class="row">
 				<dt class="col-6">Total ascent</dt>
-				<dd class="col-6">{{route.ascent}} m</dd>
+				<dd class="col-6">{{route.ascent}}&#x202F;m</dd>
 
 				<dt class="col-6">Total descent</dt>
-				<dd class="col-6">{{route.descent}} m</dd>
+				<dd class="col-6">{{route.descent}}&#x202F;m</dd>
 
-				<template v-for="stat in statsArr">
+				<template v-for="stat in statsArr" :key="stat.i">
 					<dt class="col-6">{{stat.i == 0 ? '0%' : stat.i < 0 ? "≤ "+stat.i+"%" : "≥ "+stat.i+"%"}}</dt>
-					<dd class="col-6">{{round(stat.distance, 2)}} km</dd>
+					<dd class="col-6">{{round(stat.distance, 2)}}&#x202F;km</dd>
 				</template>
 			</dl>
 		</Popover>

@@ -19,7 +19,7 @@ export function getOverpassBbox(bbox: LatLngBounds): string {
 	return [bbox.getSouth(), bbox.getWest(), bbox.getNorth(), bbox.getEast()].join(",");
 }
 
-export async function getOverpassElements(query: string | OverpassPreset[], bbox: LatLngBounds, timeout: number, limit: number, signal?: AbortSignal): Promise<OverpassElement[]> {
+export async function getOverpassElements(query: string | ReadonlyArray<Readonly<OverpassPreset>>, bbox: LatLngBounds, timeout: number, limit: number, signal?: AbortSignal): Promise<OverpassElement[]> {
 	const normalizedQuery = typeof query == "string" ? `${query}${query[query.length - 1] == ";" ? "" : ";"}` : `(${query.map((q) => `${q.query};`).join("")});`;
 	const data = `[out:json][timeout:${timeout}][bbox:${getOverpassBbox(bbox)}];${normalizedQuery}out center ${limit};`;
 
@@ -50,7 +50,7 @@ export async function validateOverpassQuery(query: string, signal?: AbortSignal)
 	}
 }
 
-export function isOverpassQueryEmpty(query: string | OverpassPreset[] | undefined): boolean {
+export function isOverpassQueryEmpty(query: string | ReadonlyArray<Readonly<OverpassPreset>> | undefined): boolean {
 	return !query || (Array.isArray(query) && query.length == 0);
 }
 
@@ -58,7 +58,7 @@ export function isEncodedOverpassQuery(shortQuery: string): boolean {
 	return !!shortQuery && (shortQuery.substr(0, 2).toLowerCase() == "o_");
 }
 
-export function encodeOverpassQuery(query: string | OverpassPreset[] | undefined): string | undefined {
+export function encodeOverpassQuery(query: string | ReadonlyArray<Readonly<OverpassPreset>> | undefined): string | undefined {
 	if (isOverpassQueryEmpty(query))
 		return undefined;
 	else if (typeof query == "string")

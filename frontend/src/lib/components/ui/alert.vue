@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { computed, createApp, defineComponent, h, ref, VNode, VNodeArrayChildren, withDirectives } from 'vue';
+	import { computed, createApp, defineComponent, h, ref, VNode, VNodeArrayChildren, withDirectives } from "vue";
 	import Alert from "./alert.vue";
-	import vValidity from './validated-form/validity';
-	import { useModal } from '../../utils/modal';
+	import vValidity from "./validated-form/validity";
+	import { useModal } from "../../utils/modal";
+	import type { ThemeColour } from "../../utils/bootstrap";
 
 	export type AlertProps = {
 		title: string;
 		message: string;
 		type?: "alert" | "confirm";
-		variant?: "success" | "danger" | "warning";
+		variant?: ThemeColour;
 		show?: boolean;
 	};
 

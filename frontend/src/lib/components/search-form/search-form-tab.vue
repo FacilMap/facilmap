@@ -2,16 +2,14 @@
 	import SearchForm from "./search-form.vue";
 	import { Util } from "leaflet";
 	import type { HashQuery } from "facilmap-leaflet";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { ref } from "vue";
 	import { useEventListener } from "../../utils/utils";
-	import { injectSearchBoxContextRequired } from "../search-box/search-box-context.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
+	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
-	const searchBoxContext = injectSearchBoxContextRequired();
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	const searchForm = ref<InstanceType<typeof SearchForm>>();
 
@@ -21,15 +19,15 @@
 	useEventListener(mapContext, "search-set-query", handleSetQuery);
 
 	function handleOpenSelection(): void {
-		const layerId = Util.stamp(mapContext.components.searchResultsLayer);
-		if (mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerId))
-			searchBoxContext.activateTab(`fm${context.id}-search-form-tab`);
+		const layerId = Util.stamp(mapContext.value.components.searchResultsLayer);
+		if (mapContext.value.selection.some((item) => item.type == "searchResult" && item.layerId == layerId))
+			searchBoxContext.value.activateTab(`fm${context.id}-search-form-tab`);
 	}
 
 	function handleSetQuery({ query, zoom = false, smooth = true }: { query: string; zoom?: boolean; smooth?: boolean }): void {
 		searchForm.value!.setSearchString(query);
 		searchForm.value!.search(zoom, undefined, smooth);
-		searchBoxContext.activateTab(`fm${context.id}-search-form-tab`, !!query);
+		searchBoxContext.value.activateTab(`fm${context.id}-search-form-tab`, !!query);
 	}
 </script>
 

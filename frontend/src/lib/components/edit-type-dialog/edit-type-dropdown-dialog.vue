@@ -14,7 +14,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { computed, ref, watch } from "vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import { injectContextRequired } from "../../utils/context";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	function getControlNumber(type: Type, field: FieldUpdate): number {
 		return [

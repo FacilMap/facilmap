@@ -9,12 +9,13 @@ import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import SelectionHandler from "../../utils/selection";
-import type { Client } from "../client-context.vue";
-import type { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "./leaflet-map.vue";
 import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
-import type { Context } from "../../utils/context";
 import mitt from "mitt";
 import type { Optional } from "../../utils/utils";
+import type { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "../facil-map-context-provider/map-context";
+import type { ClientContext } from "../facil-map-context-provider/client-context";
+import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
+import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -58,7 +59,7 @@ function createMap(element: HTMLElement, mapContext: MapContextWithoutComponents
 	return map;
 }
 
-function createBboxHandler(map: Map, client: Client): BboxHandler {
+function createBboxHandler(map: Map, client: ClientContext): BboxHandler {
 	const bboxHandler = new BboxHandler(map, client).enable();
 	onScopeDispose(() => {
 		bboxHandler.disable();
@@ -70,7 +71,7 @@ function createGraphicScale(map: Map): any {
 	return control.graphicScale({ fill: "hollow", position: "bottomcenter" }).addTo(map);
 }
 
-function createLinesLayer(map: Map, client: Client): LinesLayer {
+function createLinesLayer(map: Map, client: ClientContext): LinesLayer {
 	return new LinesLayer(client).addTo(map);
 }
 
@@ -80,7 +81,7 @@ function createLocateControl(map: Map): L.Control.Locate {
 	return locateControl;
 }
 
-function createMarkersLayer(map: Map, client: Client): MarkersLayer {
+function createMarkersLayer(map: Map, client: ClientContext): MarkersLayer {
 	return new MarkersLayer(client).addTo(map);
 }
 
@@ -152,8 +153,8 @@ function createSelectionHandler(map: Map, mapContext: MapContextWithoutComponent
 	return selectionHandler;
 }
 
-function createHashHandler(map: Map, client: Client, context: Context, mapContext: MapContextWithoutComponents, overpassLayer: OverpassLayer): HashHandler {
-	const hashHandler = new HashHandler(map, client, { overpassLayer, simulate: !context.updateHash })
+function createHashHandler(map: Map, client: ClientContext, context: FacilMapContext, mapContext: MapContextWithoutComponents, overpassLayer: OverpassLayer): HashHandler {
+	const hashHandler = new HashHandler(map, client, { overpassLayer, simulate: !context.settings.updateHash })
 		.on("fmQueryChange", async (e: any) => {
 			let smooth = true;
 			if (!mapContext.components) {
@@ -180,7 +181,9 @@ function createHashHandler(map: Map, client: Client, context: Context, mapContex
 	return hashHandler;
 }
 
-function createMapComponents(client: Client, context: Context, mapContext: MapContextWithoutComponents, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): MapComponents {
+function createMapComponents(context: FacilMapContext, mapContext: MapContextWithoutComponents, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): MapComponents {
+	const client = requireClientContext(context).value;
+
 	const map = createMap(mapRef.value!, mapContext);
 	const bboxHandler = createBboxHandler(map, client);
 	const graphicScale = createGraphicScale(map);
@@ -217,7 +220,7 @@ function createMapComponents(client: Client, context: Context, mapContext: MapCo
 	return mapComponents;
 }
 
-export async function createMapContext(client: Client, context: Context, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): Promise<WritableMapContext> {
+export async function createMapContext(context: FacilMapContext, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): Promise<WritableMapContext> {
 	const mapContextWithoutComponents: MapContextWithoutComponents = reactive(Object.assign(mitt<MapContextEvents>(), {
 		center: latLng(0, 0),
 		zoom: 1,
@@ -242,7 +245,7 @@ export async function createMapContext(client: Client, context: Context, mapRef:
 	} satisfies Omit<MapContextData, 'components'>));
 
 	const mapContext: WritableMapContext = Object.assign(mapContextWithoutComponents, {
-		components: createMapComponents(client, context, mapContextWithoutComponents, mapRef, innerContainerRef)
+		components: createMapComponents(context, mapContextWithoutComponents, mapRef, innerContainerRef)
 	});
 
 	const map = mapContext.components.map;
@@ -251,7 +254,7 @@ export async function createMapContext(client: Client, context: Context, mapRef:
 	if (!map._loaded) {
 		try {
 			// Initial view was not set by hash handler
-			displayView(map, await getInitialView(client), { overpassLayer });
+			displayView(map, await getInitialView(context.components.client), { overpassLayer });
 		} catch (error) {
 			console.error(error);
 			displayView(map, undefined, { overpassLayer });
@@ -262,7 +265,7 @@ export async function createMapContext(client: Client, context: Context, mapRef:
 		() => mapContext.selection,
 		() => mapContext.fallbackQuery
 	], () => {
-		mapContext.activeQuery = getHashQuery(mapContext.components.map, client, mapContext.selection) || mapContext.fallbackQuery;
+		mapContext.activeQuery = getHashQuery(mapContext.components.map, context.components.client, mapContext.selection) || mapContext.fallbackQuery;
 		mapContext.components.hashHandler.setQuery(mapContext.activeQuery);
 	});
 

@@ -42,7 +42,7 @@ export const lineValidator = cruValidator({
 		padId: padIdValidator
 	},
 	onlyCreate: {
-		trackPoints: z.array(trackPointValidator.create)
+		trackPoints: z.array(trackPointValidator.create).optional()
 	}
 });
 export type Line<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof lineValidator>;

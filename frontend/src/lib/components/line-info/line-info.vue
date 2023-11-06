@@ -4,21 +4,21 @@
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
 	import Icon from "../ui/icon.vue";
-	import { flyTo, getZoomDestinationForLine } from "../../utils/zoom";
+	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
 	import { formatField, formatRouteMode, formatTime, normalizeLineName, round } from "facilmap-utils";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
 
@@ -29,6 +29,10 @@
 		showBackButton: false
 	});
 
+	const emit = defineEmits<{
+		back: [];
+	}>();
+
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
 	const showEditDialog = ref(false);
@@ -37,18 +41,18 @@
 	const showElevationPlot = ref(false);
 	const isMoving = ref(false);
 
-	const line = computed(() => client.lines[props.lineId]);
+	const line = computed(() => client.value.lines[props.lineId]);
 
 	async function deleteLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
 
-		if (!line.value || !await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${line.value.name}”?` }))
+		if (!await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${line.value.name}”?` }))
 			return;
 
 		isDeleting.value = true;
 
 		try {
-			await client.deleteLine({ id: props.lineId });
+			await client.value.deleteLine({ id: props.lineId });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-delete`, "Error deleting line", err);
 		} finally {
@@ -56,20 +60,12 @@
 		}
 	}
 
-	function zoomToLine(): void {
-		if (line.value)
-			flyTo(mapContext.components.map, getZoomDestinationForLine(line.value));
-	}
-
 	async function exportRoute(format: ExportFormat): Promise<void> {
-		if (!line.value)
-			return;
-
 		toasts.hideToast(`fm${context.id}-line-info-export-error`);
 		isExporting.value = true;
 
 		try {
-			const exported = await client.exportLine({ id: line.value.id, format });
+			const exported = await client.value.exportLine({ id: line.value.id, format });
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${line.value.name}.gpx`);
 		} catch(err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-export-error`, "Error exporting line", err);
@@ -81,16 +77,13 @@
 	async function moveLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-move-error`);
 
-		if (!line.value)
-			return;
-
-		mapContext.components.map.fire('fmInteractionStart');
+		mapContext.value.components.map.fire('fmInteractionStart');
 		const routeId = `l${line.value.id}`;
 
 		try {
-			await client.lineToRoute({ id: line.value.id, routeId });
+			await client.value.lineToRoute({ id: line.value.id, routeId });
 
-			mapContext.components.linesLayer.hideLine(line.value.id);
+			mapContext.value.components.linesLayer.hideLine(line.value.id);
 
 			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
 				actions: [
@@ -106,7 +99,7 @@
 			});
 
 			const done = async (save: boolean) => {
-				const route = client.routes[routeId];
+				const route = client.value.routes[routeId];
 				if (save && !route)
 					return;
 
@@ -114,40 +107,42 @@
 
 				try {
 					if(save)
-						await client.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
+						await client.value.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
 				} catch (err) {
 					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
 				} finally {
-					mapContext.components.map.fire('fmInteractionEnd');
+					mapContext.value.components.map.fire('fmInteractionEnd');
 					isMoving.value = false;
 
 					// Clear route after editing line so that the server can take the trackPoints from the route
-					client.clearRoute({ routeId }).catch((err) => {
+					client.value.clearRoute({ routeId }).catch((err) => {
 						console.error("Error clearing route", err);
 					});
 
-					mapContext.components.linesLayer.unhideLine(line.value.id);
+					mapContext.value.components.linesLayer.unhideLine(line.value.id);
 				}
 			};
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
 
 			toasts.hideToast(`fm${context.id}-line-info-move`);
-			mapContext.components.map.fire('fmInteractionEnd');
+			mapContext.value.components.map.fire('fmInteractionEnd');
 			isMoving.value = false;
-			client.clearRoute({ routeId }).catch((err) => {
+			client.value.clearRoute({ routeId }).catch((err) => {
 				console.error("Error clearing route", err);
 			});
-			mapContext.components.linesLayer.unhideLine(line.value.id);
+			mapContext.value.components.linesLayer.unhideLine(line.value.id);
 		}
 	}
+
+	const zoomDestination = computed(() => getZoomDestinationForLine(line.value));
 </script>
 
 <template>
 	<div class="fm-line-info" v-if="line">
 		<div class="d-flex align-items-center">
 			<h2 class="flex-grow-1">
-				<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+				<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 				{{normalizeLineName(line.name)}}
 			</h2>
 			<div v-if="!isMoving" class="btn-group">
@@ -167,7 +162,7 @@
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
 			<dl>
 				<dt class="distance">Distance</dt>
-				<dd class="distance">{{round(line.distance, 2)}} km <span v-if="line.time != null">({{formatTime(line.time)}} h {{formatRouteMode(line.mode)}})</span></dd>
+				<dd class="distance">{{round(line.distance, 2)}}&#x202F;km <span v-if="line.time != null">({{formatTime(line.time)}}&#x202F;h {{formatRouteMode(line.mode)}})</span></dd>
 
 				<template v-if="line.ascent != null">
 					<dt class="elevation">Climb/drop</dt>
@@ -186,40 +181,31 @@
 		</div>
 
 		<div v-if="!isMoving" class="btn-group">
-			<button
-				type="button"
-				class="btn btn-secondary btn-sm"
-				v-tooltip="'Zoom to line'"
-				@click="zoomToLine()"
-			>
-				<Icon icon="zoom-in" alt="Zoom to line"></Icon>
-			</button>
+			<ZoomToObjectButton
+				v-if="zoomDestination"
+				label="line"
+				size="sm"
+				:destination="zoomDestination"
+			></ZoomToObjectButton>
 
-			<div class="dropdown">
-				<button type="button" class="btn btn-secondary dropdown-toggle btn-sm" :disabled="isExporting" data-bs-toggle="dropdown">
-					<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
-					Export
-				</button>
-
-				<ul class="dropdown-menu">
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="exportRoute('gpx-trk')"
-							v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-						>Export as GPX track</a>
-					</li>
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="exportRoute('gpx-rte')"
-							v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-						>Export as GPX route</a>
-					</li>
-				</ul>
-			</div>
+			<DropdownMenu size="sm" :isBusy="isExporting" label="Export">
+				<li>
+					<a
+						href="javascript:"
+						class="dropdown-item"
+						@click="exportRoute('gpx-trk')"
+						v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+					>Export as GPX track</a>
+				</li>
+				<li>
+					<a
+						href="javascript:"
+						class="dropdown-item"
+						@click="exportRoute('gpx-rte')"
+						v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+					>Export as GPX route</a>
+				</li>
+			</DropdownMenu>
 
 			<button
 				v-if="!client.readonly"

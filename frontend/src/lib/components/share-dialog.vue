@@ -4,17 +4,15 @@
 	import { getLegendItems } from "./legend/legend-utils";
 	import type { Writable } from "facilmap-types";
 	import { quoteHtml, round } from "facilmap-utils";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
-	import { injectClientRequired } from "./client-context.vue";
-	import { injectContextRequired } from "../utils/context";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
 
@@ -32,15 +30,15 @@
 	const activeShareTab = ref(0);
 
 	const layers = computed(() => {
-		const { baseLayers, overlays } = getLayers(mapContext.components.map);
+		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
 		return [
-			baseLayers[mapContext.layers.baseLayer]?.options.fmName || mapContext.layers.baseLayer,
-			...mapContext.layers.overlays.map((key) => overlays[key].options.fmName || key)
+			baseLayers[mapContext.value.layers.baseLayer]?.options.fmName || mapContext.value.layers.baseLayer,
+			...mapContext.value.layers.overlays.map((key) => overlays[key].options.fmName || key)
 		].join(", ");
 	});
 
 	const hasLegend = computed(() => {
-		return !!client.padData && getLegendItems(client, mapContext).length > 0;
+		return !!client.value.padData && getLegendItems(context).length > 0;
 	});
 
 	const padIdTypes = computed(() => {
@@ -48,7 +46,7 @@
 			{ value: 2, text: 'Admin' },
 			{ value: 1, text: 'Writable' },
 			{ value: 0, text: 'Read-only' }
-		].filter((option) => client.writable != null && option.value <= client.writable);
+		].filter((option) => client.value.writable != null && option.value <= client.value.writable);
 	});
 
 	const url = computed(() => {
@@ -62,9 +60,9 @@
 		const paramsStr = params.toString();
 
 		return context.baseUrl
-			+ (client.padData ? encodeURIComponent((padIdType.value == 2 && client.padData.adminId) || (padIdType.value == 1 && client.padData.writeId) || client.padData.id) : '')
+			+ (client.value.padData ? encodeURIComponent((padIdType.value == 2 && client.value.padData.adminId) || (padIdType.value == 1 && client.value.padData.writeId) || client.value.padData.id) : '')
 			+ (paramsStr ? `?${paramsStr}` : '')
-			+ (includeMapView.value && mapContext.hash ? `#${mapContext.hash}` : '');
+			+ (includeMapView.value && mapContext.value.hash ? `#${mapContext.value.hash}` : '');
 	});
 
 	const embedCode = computed(() => {
@@ -92,47 +90,54 @@
 		<div class="row mb-3">
 			<label class="col-sm-3 col-form-label">Settings</label>
 			<div class="col-sm-9">
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-include-map-view-input`"
-					v-model="includeMapView"
-					:disabled="!client.padData"
-				/>
-				<label :for="`${id}-include-map-view-input`" class="form-check-label">
-					Include current map view (centre: <code>{{round(mapContext.center.lat, 5)}},{{round(mapContext.center.lng, 5)}}</code>; zoom level: <code>{{mapContext.zoom}}</code>; layer(s): {{layers}}<template v-if="mapContext.overpassIsCustom ? !!mapContext.overpassCustom : mapContext.overpassPresets.length > 0">; POIs: <code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template></template><template v-if="mapContext.activeQuery">; active object(s): <template v-if="mapContext.activeQuery.description">{{mapContext.activeQuery.description}}</template><code v-else>{{mapContext.activeQuery.query}}</code></template><template v-if="mapContext.filter">; filter: <code>{{mapContext.filter}}</code></template>)
-				</label>
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-include-map-view-input`"
+						v-model="includeMapView"
+						:disabled="!client.padData"
+					/>
+					<label :for="`${id}-include-map-view-input`" class="form-check-label">
+						Include current map view (centre: <code>{{round(mapContext.center.lat, 5)}},{{round(mapContext.center.lng, 5)}}</code>; zoom level: <code>{{mapContext.zoom}}</code>; layer(s): {{layers}}<template v-if="mapContext.overpassIsCustom ? !!mapContext.overpassCustom : mapContext.overpassPresets.length > 0">; POIs: <code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template></template><template v-if="mapContext.activeQuery">; active object(s): <template v-if="mapContext.activeQuery.description">{{mapContext.activeQuery.description}}</template><code v-else>{{mapContext.activeQuery.query}}</code></template><template v-if="mapContext.filter">; filter: <code>{{mapContext.filter}}</code></template>)
+					</label>
+				</div>
 
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-show-toolbox-input`"
-					v-model="showToolbox"
-				/>
-				<label :for="`${id}-show-toolbox-input`" class="form-check-label">
-					Show toolbox
-				</label>
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-toolbox-input`"
+						v-model="showToolbox"
+					/>
+					<label :for="`${id}-show-toolbox-input`" class="form-check-label">
+						Show toolbox
+					</label>
+				</div>
 
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-show-search-input`"
-					v-model="showSearch"
-				/>
-				<label :for="`${id}-show-search-input`" class="form-check-label">
-					Show search box
-				</label>
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-search-input`"
+						v-model="showSearch"
+					/>
+					<label :for="`${id}-show-search-input`" class="form-check-label">
+						Show search box
+					</label>
+				</div>
 
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-show-legend-input`"
-					v-model="showLegend"
-					v-if="hasLegend"
-				/>
-				<label :for="`${id}-show-legend-input`" class="form-check-label">
-					Show legend
-				</label>
+				<div class="form-check" v-if="hasLegend">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-legend-input`"
+						v-model="showLegend"
+					/>
+					<label :for="`${id}-show-legend-input`" class="form-check-label">
+						Show legend
+					</label>
+				</div>
 			</div>
 		</div>
 

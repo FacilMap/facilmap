@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { formatRouteMode, formatTime, isSearchId, round, splitRouteQuery } from "facilmap-utils";
+	import { formatRouteMode, formatTime, isSearchId, normalizeMarkerName, round, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
 	import { getMarkerIcon, HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -13,18 +13,19 @@
 	import { throttle } from "lodash-es";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
-	import { saveAs } from 'file-saver';
+	import { saveAs } from "file-saver";
 	import { isMapResult } from "../../utils/search";
 	import vTooltip from "../../utils/tooltip";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
 	type Suggestion = SearchSuggestion | MapSuggestion;
 
-	interface Destination {
+	interface Destination extends RouteDestination {
 		query: string;
 		loadingQuery?: string;
 		loadingPromise?: Promise<void>;
@@ -72,8 +73,8 @@
 	}
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
 
@@ -93,7 +94,7 @@
 		"hash-query-change": [hashQuery: HashQuery | undefined];
 	}>();
 
-	const routeObj = computed(() => props.routeId ? client.routes[props.routeId] : client.route);
+	const routeObj = computed(() => props.routeId ? client.value.routes[props.routeId] : client.value.route);
 	const hasRoute = computed(() => !!routeObj.value);
 
 	const routeMode = ref(routeObj.value?.mode ?? "car");
@@ -111,14 +112,15 @@
 	const isExporting = ref(false);
 	const suggestionMarker = ref<MarkerLayer>();
 
-	const routeLayer = new RouteLayer(client, props.routeId, { weight: 7, opacity: 1, raised: true });
+	// TODO: Handle client.value change
+	const routeLayer = new RouteLayer(client.value, props.routeId, { weight: 7, opacity: 1, raised: true });
 	routeLayer.on("click", (e) => {
 		if (!props.active && !(e.originalEvent as any).ctrlKey) {
 			emit("activate");
 		}
 	});
 
-	const draggable = new DraggableLines(mapContext.components.map, {
+	const draggable = new DraggableLines(mapContext.value.components.map, {
 		enableForLayer: false,
 		tempMarkerOptions: () => ({
 			icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
@@ -181,7 +183,7 @@
 	} as any);
 
 	onMounted(() => {
-		routeLayer.addTo(mapContext.components.map);
+		routeLayer.addTo(mapContext.value.components.map);
 		draggable.enable();
 	});
 
@@ -190,14 +192,15 @@
 		routeLayer.remove();
 	});
 
-	const lineTypes = computed(() => Object.values(client.types).filter((type) => type.type == "line"));
+	const lineTypes = computed(() => Object.values(client.value.types).filter((type) => type.type == "line"));
+
+	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
 	const hashQuery = computed(() => {
 		if (submittedQuery.value) {
-			const zoomDest = routeObj.value && getZoomDestinationForRoute(routeObj.value);
 			return {
 				query: submittedQuery.value,
-				...(zoomDest ? normalizeZoomDestination(mapContext.components.map, zoomDest) : {}),
+				...(zoomDestination.value ? normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value) : {}),
 				description: `Route from ${submittedQueryDescription.value}`
 			};
 		} else
@@ -217,6 +220,10 @@
 
 	watch(hashQuery, (hashQuery) => {
 		emit("hash-query-change", hashQuery);
+	});
+
+	watch(routeMode, () => {
+		reroute(false);
 	});
 
 	function addDestination(): void {
@@ -288,15 +295,15 @@
 
 			try {
 				const [searchResults, mapResults] = await Promise.all([
-					client.find({ query: query }),
+					client.value.find({ query: query }),
 					(async () => {
-						if (client.padData) {
+						if (client.value.padData) {
 							const m = query.match(/^m(\d+)$/);
 							if (m) {
-								const marker = await client.getMarker({ id: Number(m[1]) });
+								const marker = await client.value.getMarker({ id: Number(m[1]) });
 								return marker ? [{ kind: "marker" as const, similarity: 1, ...marker }] : [];
 							} else
-								return (await client.findOnMap({ query })).filter((res) => res.kind == "marker") as MapSuggestion[];
+								return (await client.value.findOnMap({ query })).filter((res) => res.kind == "marker") as MapSuggestion[];
 						}
 					})()
 				])
@@ -320,7 +327,7 @@
 					const referencedMapResult = mapResults.find((res) => query == `m${res.id}`);
 					if(referencedMapResult) {
 						if (dest.query == query)
-							dest.query = referencedMapResult.name;
+							dest.query = normalizeMarkerName(referencedMapResult.name);
 						dest.loadedQuery = referencedMapResult.name;
 						dest.selectedSuggestion = referencedMapResult;
 					}
@@ -349,7 +356,7 @@
 				symbol: "",
 				shape: "drop"
 			}
-		})).addTo(mapContext.components.map));
+		})).addTo(mapContext.value.components.map));
 	}
 
 	function suggestionMouseOut(): void {
@@ -360,7 +367,7 @@
 	}
 
 	function suggestionZoom(suggestion: Suggestion): void {
-		mapContext.components.map.flyTo([suggestion.lat!, suggestion.lon!]);
+		mapContext.value.components.map.flyTo([suggestion.lat!, suggestion.lon!]);
 	}
 
 	function destinationMouseOver(idx: number): void {
@@ -426,14 +433,14 @@
 				return;
 			}
 
-			const route = await client.setRoute({
+			const route = await client.value.setRoute({
 				routePoints: points.map((point) => ({ lat: point!.lat!, lon: point!.lon! })),
 				mode,
 				routeId: props.routeId
 			});
 
 			if (route && zoom)
-				flyTo(mapContext.components.map, getZoomDestinationForRoute(route), smooth);
+				flyTo(mapContext.value.components.map, getZoomDestinationForRoute(route), smooth);
 		} catch (err: any) {
 			toasts.showErrorToast(`fm${context.id}-route-form-error`, "Error calculating route", err);
 		}
@@ -460,7 +467,7 @@
 			suggestionMarker.value = undefined;
 		}
 
-		client.clearRoute({ routeId: props.routeId });
+		client.value.clearRoute({ routeId: props.routeId });
 	}
 
 	function clear(): void {
@@ -470,11 +477,6 @@
 			{ query: "" },
 			{ query: "" }
 		];
-	}
-
-	function zoomToRoute(): void {
-		if (routeObj.value)
-			flyTo(mapContext.components.map, getZoomDestinationForRoute(routeObj.value));
 	}
 
 	function handleSubmit(event: Event): void {
@@ -487,9 +489,9 @@
 		isAdding.value = true;
 
 		try {
-			const line = await client.addLine({ typeId: type.id, routePoints: routeObj.value!.routePoints, mode: routeObj.value!.mode });
+			const line = await client.value.addLine({ typeId: type.id, routePoints: routeObj.value!.routePoints, mode: routeObj.value!.mode });
 			clear();
-			mapContext.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 		} catch (err: any) {
 			toasts.showErrorToast(`fm${context.id}-route-form-add-error`, "Error adding line", err);
 		} finally {
@@ -502,7 +504,7 @@
 		isExporting.value = true;
 
 		try {
-			const exported = await client.exportRoute({ format });
+			const exported = await client.value.exportRoute({ format });
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
 		} catch(err: any) {
 			toasts.showErrorToast(`fm${context.id}-route-form-export-error`, "Error exporting route", err);
@@ -562,62 +564,66 @@
 									<Icon icon="resize-vertical" alt="Reorder"></Icon>
 								</a>
 							</span>
-							<input class="form-control" v-model="destination.query" :placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'" :tabindex="idx+1" :state="getValidationState(destination)" @blur="loadSuggestions(destination)" />
+							<input
+								class="form-control"
+								v-model="destination.query"
+								:placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'"
+								:tabindex="idx+1"
+								:state="getValidationState(destination)"
+								@blur="loadSuggestions(destination)"
+							/>
 							<template v-if="destination.query.trim() != ''">
-								<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"></button>
-								<ul
-									class="dropdown-menu fm-route-suggestions"
-									:class="{ isPending: !destination.searchSuggestions, isNarrow: context.isNarrow }"
-									v-on="{ 'show.bs.dropdown': () => { loadSuggestions(destination); } }"
+								<DropdownMenu
+									menuClass="fm-route-form-suggestions"
+									noWrapper
+									@update:isOpen="$event && loadSuggestions(destination)"
+									:isLoading="!destination.searchSuggestions"
 								>
-									<template v-if="destination.searchSuggestions">
-										<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
-											<li
-												@mouseenter="suggestionMouseOver(suggestion)"
-												@mouseleave="suggestionMouseOut()"
-											>
-												<a
-													href="javascript:"
-													class="dropdown-item fm-route-form-suggestions-zoom"
-													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click.capture.stop.prevent="suggestionZoom(suggestion)"
-												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+									<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
+										<li
+											@mouseenter="suggestionMouseOver(suggestion)"
+											@mouseleave="suggestionMouseOut()"
+										>
+											<a
+												href="javascript:"
+												class="dropdown-item fm-route-form-suggestions-zoom"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click.capture.stop.prevent="suggestionZoom(suggestion)"
+											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 
-												<a
-													href="javascript:"
-													class="dropdown-item"
-													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click="destination.selectedSuggestion = suggestion; reroute(true)"
-												>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
-											</li>
-										</template>
-
-										<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
-											<hr class="dropdown-divider fm-route-form-suggestions-divider">
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click="destination.selectedSuggestion = suggestion; reroute(true)"
+											>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
 										</li>
-
-										<template v-for="suggestion in destination.searchSuggestions" :key="suggestion.id">
-											<li
-												@mouseenter="suggestionMouseOver(suggestion)"
-												@mouseleave="suggestionMouseOut()"
-											>
-												<a
-													href="javascript:"
-													class="dropdown-item fm-route-form-suggestions-zoom"
-													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click.capture.stop.prevent="suggestionZoom(suggestion)"
-												><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-												<a
-													href="javascript:"
-													class="dropdown-item"
-													:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-													@click="destination.selectedSuggestion = suggestion; reroute(true)"
-												>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
-											</li>
-										</template>
 									</template>
-									<div v-else class="spinner-border"></div>
-								</ul>
+
+									<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
+										<hr class="dropdown-divider fm-route-form-suggestions-divider">
+									</li>
+
+									<template v-for="suggestion in destination.searchSuggestions" :key="suggestion.id">
+										<li
+											@mouseenter="suggestionMouseOver(suggestion)"
+											@mouseleave="suggestionMouseOut()"
+										>
+											<a
+												href="javascript:"
+												class="dropdown-item fm-route-form-suggestions-zoom"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click.capture.stop.prevent="suggestionZoom(suggestion)"
+											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
+												@click="destination.selectedSuggestion = suggestion; reroute(true)"
+											>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
+										</li>
+									</template>
+								</DropdownMenu>
 							</template>
 							<button
 								v-if="destinations.length > 2"
@@ -647,7 +653,7 @@
 					<Icon icon="plus" alt="Add"></Icon>
 				</button>
 
-				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" @update:modelValue="reroute(false)" tooltip-placement="bottom"></RouteMode>
+				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" tooltip-placement="bottom"></RouteMode>
 
 				<button
 					type="submit"
@@ -678,7 +684,7 @@
 
 				<dl>
 					<dt>Distance</dt>
-					<dd>{{round(routeObj.distance, 2)}} km <span v-if="routeObj.time != null">({{formatTime(routeObj.time)}} h {{formatRouteMode(routeObj.mode)}})</span></dd>
+					<dd>{{round(routeObj.distance, 2)}}&#x202F;km <span v-if="routeObj.time != null">({{formatTime(routeObj.time)}}&#x202F;h {{formatRouteMode(routeObj.mode)}})</span></dd>
 
 					<template v-if="routeObj.ascent != null">
 						<dt>Climb/drop</dt>
@@ -688,59 +694,53 @@
 
 				<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
-				<div v-if="showToolbar && !client.readonly" class="btn-group" role="group">
-					<button
-						type="button"
-						class="btn btn-secondary btn-sm"
-						v-tooltip="'Zoom to route'"
-						@click="zoomToRoute()"
+				<div v-if="showToolbar && !client.readonly" class="btn-toolbar" role="group">
+					<ZoomToObjectButton
+						v-if="zoomDestination"
+						label="route"
+						size="sm"
+						:destination="zoomDestination"
+					></ZoomToObjectButton>
+
+					<DropdownMenu
+						v-if="lineTypes.length > 0"
+						size="sm"
+						:isBusy="isAdding"
+						label="Add to map"
 					>
-						<Icon icon="zoom-in" alt="Zoom to route"></Icon>
-					</button>
-
-					<div v-if="lineTypes.length > 0" class="dropdown">
-						<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
-							<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-							Add to map
-						</button>
-
-						<ul class="dropdown-menu">
-							<template v-for="type in lineTypes" :key="type.id">
-								<li>
-									<a
-										href="javascript:"
-										class="dropdown-item"
-										@click="addToMap(type)"
-									>{{type.name}}</a>
-								</li>
-							</template>
-						</ul>
-					</div>
-					<div class="dropdown">
-						<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isExporting">
-							<div v-if="isExporting" class="spinner-border spinner-border-sm"></div>
-							Export
-						</button>
-
-						<ul class="dropdown-menu">
+						<template v-for="type in lineTypes" :key="type.id">
 							<li>
 								<a
 									href="javascript:"
 									class="dropdown-item"
-									@click="exportRoute('gpx-trk')"
-									v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-								>Export as GPX track</a>
+									@click="addToMap(type)"
+								>{{type.name}}</a>
 							</li>
-							<li>
-								<a
-									href="javascript:"
-									class="dropdown-item"
-									@click="exportRoute('gpx-rte')"
-									v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-								>Export as GPX route</a>
-							</li>
-						</ul>
-					</div>
+						</template>
+					</DropdownMenu>
+
+					<DropdownMenu
+						size="sm"
+						:isBusy="isExporting"
+						label="Export"
+					>
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="exportRoute('gpx-trk')"
+								v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
+							>Export as GPX track</a>
+						</li>
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click="exportRoute('gpx-rte')"
+								v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
+							>Export as GPX route</a>
+						</li>
+					</DropdownMenu>
 				</div>
 			</template>
 		</form>
@@ -778,14 +778,8 @@
 		}
 	}
 
-	.fm-route-suggestions.show {
+	.dropdown-menu.fm-route-form-suggestions.show {
 		opacity: 0.6;
-
-		&.isPending {
-			display: flex !important;
-			align-items: center;
-			justify-content: center;
-		}
 
 		> li {
 			display: flex;

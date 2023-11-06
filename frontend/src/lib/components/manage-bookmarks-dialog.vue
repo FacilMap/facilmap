@@ -2,18 +2,19 @@
 	import storage, { Bookmark } from "../utils/storage";
 	import Icon from "./ui/icon.vue";
 	import Draggable from "vuedraggable";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
+	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
-	const client = injectClientRequired();
+	const context = injectContextRequired();
+	const client = requireClientContext(context);
 
 	const emit = defineEmits<{
 		hidden: [];
 	}>();
 
 	const isBookmarked = computed(() => {
-		return !!client.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.padId);
+		return !!client.value.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.padId);
 	});
 
 	function deleteBookmark(bookmark: Bookmark): void {
@@ -23,7 +24,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.padId!, padId: client.padData!.id, name: client.padData!.name });
+		storage.bookmarks.push({ id: client.value.padId!, padId: client.value.padData!.id, name: client.value.padData!.name });
 	}
 </script>
 

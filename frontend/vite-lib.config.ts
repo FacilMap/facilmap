@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
-import dtsPlugin from 'vite-plugin-dts';
-import autoExternalPlugin from 'rollup-plugin-auto-external';
+import { defineConfig } from "vite";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+import dtsPlugin from "vite-plugin-dts";
+import autoExternalPlugin from "rollup-plugin-auto-external";
 
 export default defineConfig(({ mode }) => ({
 	plugins: [

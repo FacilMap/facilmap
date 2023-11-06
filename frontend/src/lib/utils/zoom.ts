@@ -6,9 +6,10 @@ import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, Sea
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
 import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
-import type { Client } from "./client";
-import type { Context } from "./context";
-import type { MapContext } from "../components/leaflet-map/leaflet-map.vue";
+import type { ClientContext } from "../components/facil-map-context-provider/client-context";
+import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
+import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import { toRef } from "vue";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -107,7 +108,7 @@ export function flyTo(map: Map, destination: ZoomDestination, smooth = true): vo
 		map.setView(dest.center, dest.zoom, { animate: false });
 }
 
-export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): HashQuery | undefined {
+export function getHashQuery(map: Map, client: ClientContext, items: SelectedItem[]): HashQuery | undefined {
 	if (items.length == 1) {
 		if (items[0].type == "searchResult") {
 			const destination = getZoomDestinationForSearchResult(items[0].result);
@@ -133,39 +134,43 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 	return undefined;
 }
 
-export async function openSpecialQuery(query: string, context: Context, client: Client, mapContext: MapContext, zoom: boolean, smooth = true): Promise<boolean> {
-	if(query.match(/ to /i)) {
-		mapContext.emit("route-set-query", { query, zoom, smooth });
-		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
+export async function openSpecialQuery(query: string, context: FacilMapContext, zoom: boolean, smooth = true): Promise<boolean> {
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
+	const searchBoxContext = toRef(() => context.components.searchBox);
+
+	if(searchBoxContext.value && query.match(/ to /i)) {
+		mapContext.value.emit("route-set-query", { query, zoom, smooth });
+		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`);
 		return true;
 	}
 
 	const lonlat = decodeLonLatUrl(query);
 	if(lonlat) {
 		if (zoom)
-			flyTo(mapContext.components.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
+			flyTo(mapContext.value.components.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
 		return true;
 	}
 
 	const markerId = Number(query.match(/^m(\d+)$/)?.[1]);
 	if (markerId) {
-		let marker = client.markers[markerId];
+		let marker = client.value.markers[markerId];
 		if (!marker) {
 			try {
-				marker = await client.getMarker({ id: markerId });
+				marker = await client.value.getMarker({ id: markerId });
 			} catch (err) {
 				console.error("Could not find marker", err);
 			}
 		}
 
 		if (marker) {
-			mapContext.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
 
 			if (zoom)
-				flyTo(mapContext.components.map, getZoomDestinationForMarker(marker), smooth);
+				flyTo(mapContext.value.components.map, getZoomDestinationForMarker(marker), smooth);
 
 			setTimeout(() => {
-				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-marker-info-tab` });
+				searchBoxContext.value?.activateTab(`fm${context.id}-marker-info-tab`);
 			}, 0);
 
 			return true;
@@ -173,16 +178,16 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 	}
 
 	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
-	if (lineId && client.lines[lineId]) {
-		const line = client.lines[lineId];
+	if (lineId && client.value.lines[lineId]) {
+		const line = client.value.lines[lineId];
 
-		mapContext.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
+		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
 
 		if (zoom)
-			flyTo(mapContext.components.map, getZoomDestinationForLine(line), smooth);
+			flyTo(mapContext.value.components.map, getZoomDestinationForLine(line), smooth);
 
 		setTimeout(() => {
-			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-line-info-tab` });
+			searchBoxContext.value?.activateTab(`fm${context.id}-line-info-tab`);
 		}, 0);
 
 		return true;

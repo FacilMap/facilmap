@@ -4,7 +4,6 @@
 		"esModuleInterop": true,
 		"strict": true,
 		"moduleResolution": "node",
-		"noErrorTruncation": true,
 		"skipLibCheck": true,
 		"experimentalDecorators": true,
 		"module": "esnext"

@@ -22,7 +22,7 @@ export * from "../utils/obfuscate";
 
 export { default as AboutDialog } from "./components/about-dialog.vue";
 export { default as ClickMarkerTab } from "./components/click-marker-tab.vue";
-export { default as ClientContext } from "./components/client-context.vue";
+export { default as ClientContext } from "./components/client-provider.vue";
 export { default as EditFilterDialog } from "./components/edit-filter-dialog.vue";
 export { default as EditLineDialog } from "./components/edit-line-dialog.vue";
 export { default as EditMarkerDialog } from "./components/edit-marker-dialog.vue";

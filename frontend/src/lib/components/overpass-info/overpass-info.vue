@@ -1,18 +1,19 @@
 <script setup lang="ts">
 	import { renderOsmTag } from "facilmap-utils";
 	import Icon from "../ui/icon.vue";
-	import { flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
+	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import type { OverpassElement } from "facilmap-leaflet";
 	import Coordinates from "../ui/coordinates.vue";
-	import vTooltip from "../../utils/tooltip";
 	import { computed } from "vue";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import type { Type } from "facilmap-types";
+	import UseAsDropdown from "../ui/use-as-dropdown.vue";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+import type { RouteDestination } from "../facil-map-context-provider/map-context";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
 
 	const props = withDefaults(defineProps<{
 		element: OverpassElement;
@@ -23,38 +24,28 @@
 		isAdding: false
 	});
 
+	const emit = defineEmits<{
+		back: [];
+		"add-to-map": [type: Type];
+	}>();
+
 	const types = computed(() => {
-		return Object.values(client.types).filter((type) => type.type == "marker");
+		return Object.values(client.value.types).filter((type) => type.type == "marker");
 	});
 
-	function zoomToElement(): void {
-		const dest = getZoomDestinationForMarker(props.element);
-		if (dest)
-			flyTo(mapContext.components.map, dest);
-	}
+	const zoomDestination = computed(() => getZoomDestinationForMarker(props.element));
 
-	function useAs(event: "route-set-from" | "route-add-via" | "route-set-to"): void {
-		mapContext.emit(event, { query: `${props.element.lat},${props.element.lon}` });
-		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
-	}
-
-	function useAsFrom(): void {
-		useAs("route-set-from");
-	}
-
-	function useAsVia(): void {
-		useAs("route-add-via");
-	}
-
-	function useAsTo(): void {
-		useAs("route-set-to");
-	}
+	const routeDestination = computed<RouteDestination>(() => {
+		return {
+			query: `${props.element.lat},${props.element.lon}`
+		};
+	});
 </script>
 
 <template>
 	<div class="fm-overpass-info">
 		<h2>
-			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{element.tags.name || 'Unnamed POI'}}
 		</h2>
 		<dl class="fm-search-box-collapse-point">
@@ -67,62 +58,35 @@
 			</template>
 		</dl>
 
-		<div class="btn-group">
-			<button
-				type="button"
-				class="btn btn-secondary btn-sm"
-				v-tooltip.hover="'Zoom to POI'"
-				@click="zoomToElement()"
+		<div class="btn-toolbar">
+			<ZoomToObjectButton
+				label="POI"
+				size="sm"
+				:destination="zoomDestination"
+			></ZoomToObjectButton>
+
+			<DropdownMenu
+				v-if="!client.readonly && types.length > 0"
+				size="sm"
+				:isBusy="isAdding"
+				label="Add to map"
 			>
-				<Icon icon="zoom-in" alt="Zoom to POI"></Icon>
-			</button>
-
-			<div v-if="!client.readonly && types.length > 0" class="dropdown">
-				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
-					<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-					Add to map
-				</button>
-				<ul class="dropdown-menu">
-					<template v-for="type in types" :key="type.id">
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="$emit('add-to-map', type)"
-							>{{type.name}}</a>
-						</li>
-					</template>
-				</ul>
-			</div>
-
-			<div v-if="context.search" class="dropdown">
-				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">Use as</button>
-				<ul class="dropdown-menu">
+				<template v-for="type in types" :key="type.id">
 					<li>
 						<a
 							href="javascript:"
 							class="dropdown-item"
-							@click="useAsFrom()"
-						>Route start</a>
+							@click="emit('add-to-map', type)"
+						>{{type.name}}</a>
 					</li>
+				</template>
+			</DropdownMenu>
 
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="useAsVia()"
-						>Route via</a>
-					</li>
-
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="useAsTo()"
-						>Route destination</a>
-					</li>
-				</ul>
-			</div>
+			<UseAsDropdown
+				size="sm"
+				:isDisabled="isAdding"
+				:destination="routeDestination"
+			></UseAsDropdown>
 		</div>
 	</div>
 </template>

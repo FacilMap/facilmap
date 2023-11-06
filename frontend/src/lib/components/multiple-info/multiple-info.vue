@@ -6,20 +6,23 @@
 	import MarkerInfo from "../marker-info/marker-info.vue";
 	import LineInfo from "../line-info/line-info.vue";
 	import { computed, ref, watch } from "vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectContextRequired } from "../../utils/context";
 	import { showConfirm } from "../ui/alert.vue";
 	import { useCarousel } from "../../utils/carousel";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 
 	const props = defineProps<{
 		objects: Array<Marker | Line>;
+	}>();
+
+	const emit = defineEmits<{
+		"click-object": [object: Marker | Line, event: MouseEvent];
 	}>();
 
 	const isDeleting = ref(false);
@@ -32,7 +35,7 @@
 	function zoomToObject(object: Marker | Line): void {
 		const zoomDestination = isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined;
 		if (zoomDestination)
-			flyTo(mapContext.components.map, zoomDestination);
+			flyTo(mapContext.value.components.map, zoomDestination);
 	}
 
 	function openObject(object: Marker | Line): void {
@@ -45,9 +48,9 @@
 		let openedObject: Marker | Line | undefined = undefined;
 		if (openedObjectId.value != null) {
 			if (openedObjectType.value == "marker")
-				openedObject = client.markers[openedObjectId.value];
+				openedObject = client.value.markers[openedObjectId.value];
 			else if (openedObjectType.value == "line")
-				openedObject = client.lines[openedObjectId.value];
+				openedObject = client.value.lines[openedObjectId.value];
 		}
 
 		return openedObject && props.objects.includes(openedObject) ? openedObject : undefined;
@@ -69,9 +72,9 @@
 		try {
 			for (const object of props.objects) {
 				if (isMarker(object))
-					await client.deleteMarker({ id: object.id });
+					await client.value.deleteMarker({ id: object.id });
 				else if (isLine(object))
-					await client.deleteLine({ id: object.id });
+					await client.value.deleteLine({ id: object.id });
 			}
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, "Error deleting objects", err);
@@ -80,8 +83,8 @@
 		}
 	}
 
-	function zoom(): void {
-		const zoomDestination = combineZoomDestinations(props.objects.map((object) => {
+	const zoomDestination = computed(() => {
+		return combineZoomDestinations(props.objects.map((object) => {
 			if (isMarker(object))
 				return getZoomDestinationForMarker(object);
 			else if (isLine(object))
@@ -89,38 +92,32 @@
 			else
 				return undefined;
 		}));
-		if (zoomDestination)
-			flyTo(mapContext.components.map, zoomDestination);
-	}
+	});
 </script>
 
 <template>
 	<div class="fm-multiple-info">
 		<div class="carousel slide" ref="carouselRef">
 			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-				<div class="fm-search-box-collapse-point">
-					<ul class="list-group">
-						<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
-							<span>
-								<a href="javascript:" @click="$emit('click-object', object, $event)">{{object.name}}</a>
-								{{" "}}
-								<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>
-							</span>
-							<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="openObject(object)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-						</li>
-					</ul>
-				</div>
+				<ul class="list-group">
+					<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
+						<span>
+							<a href="javascript:" @click="emit('click-object', object, $event)">{{object.name}}</a>
+							{{" "}}
+							<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>
+						</span>
+						<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+						<a href="javascript:" @click="openObject(object)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+					</li>
+				</ul>
 
 				<div class="btn-group">
-					<button
-						type="button"
-						class="btn btn-secondary btn-sm"
-						v-tooltip="'Zoom to selection'"
-						@click="zoom()"
-					>
-						<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
-					</button>
+					<ZoomToObjectButton
+						v-if="zoomDestination"
+						label="selection"
+						size="sm"
+						:destination="zoomDestination"
+					></ZoomToObjectButton>
 
 					<button
 						v-if="!client.readonly"
@@ -155,20 +152,6 @@
 
 <style lang="scss">
 	.fm-multiple-info {
-		&, .carousel, .carousel-inner, .carousel-item.active, .carousel-item-prev, .carousel-item-next, .carousel-caption {
-			display: flex;
-			flex-direction: column;
-			min-height: 0;
-		}
-
-		.carousel-item {
-			float: none;
-		}
-
-		.carousel-inner {
-			flex-direction: row;
-		}
-
 		.list-group-item {
 			display: flex;
 			align-items: center;
@@ -176,25 +159,6 @@
 			> :first-child {
 				flex-grow: 1;
 			}
-		}
-
-		.list-group-item.active a {
-			color: inherit;
-		}
-
-		.carousel-caption {
-			position: static;
-			padding: 0;
-			color: inherit;
-			text-align: inherit;
-		}
-
-		.fm-search-box-collapse-point {
-			min-height: 3em;
-		}
-
-		.btn-toolbar {
-			margin-top: 0.5rem;
 		}
 	}
 </style>

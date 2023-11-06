@@ -7,20 +7,23 @@
 	import type { SelectedItem } from "../../utils/selection";
 	import { mapTagsToType } from "../search-results/utils";
 	import vTooltip from "../../utils/tooltip";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { useCarousel } from "../../utils/carousel";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 
 	const props = defineProps<{
 		elements: OverpassElement[];
+	}>();
+
+	const emit = defineEmits<{
+		"click-element": [element: OverpassElement, event: MouseEvent];
 	}>();
 
 	const openedElement = ref<OverpassElement>();
@@ -30,24 +33,18 @@
 	const carousel = useCarousel(carouselRef);
 
 	const types = computed(() => {
-		return Object.values(client.types).filter((type) => type.type == "marker");
+		return Object.values(client.value.types).filter((type) => type.type == "marker");
 	});
 
 	function zoomToElement(element: OverpassElement): void {
 		const zoomDestination = getZoomDestinationForMarker(element);
 		if (zoomDestination)
-			flyTo(mapContext.components.map, zoomDestination);
+			flyTo(mapContext.value.components.map, zoomDestination);
 	}
 
 	function openElement(element: OverpassElement): void {
 		openedElement.value = element;
 		carousel.setTab(1);
-	}
-
-	function zoom(): void {
-		const zoomDestination = combineZoomDestinations(props.elements.map((element) => getZoomDestinationForMarker(element)));
-		if (zoomDestination)
-			flyTo(mapContext.components.map, zoomDestination);
 	}
 
 	async function addToMap(elements: OverpassElement[], type: Type): Promise<void> {
@@ -63,7 +60,7 @@
 					data: mapTagsToType(element.tags || {}, type)
 				};
 
-				const marker = await client.addMarker({
+				const marker = await client.value.addMarker({
 					...obj,
 					lat: element.lat,
 					lon: element.lon,
@@ -73,13 +70,15 @@
 				selection.push({ type: "marker", id: marker.id });
 			}
 
-			mapContext.components.selectionHandler.setSelectedItems(selection, true);
+			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-overpass-multiple-info-add-error`, "Error adding to map", err);
 		} finally {
 			isAdding.value = false;
 		}
 	}
+
+	const zoomDestination = computed(() => combineZoomDestinations(props.elements.map((element) => getZoomDestinationForMarker(element))));
 </script>
 
 <template>
@@ -94,45 +93,39 @@
 		<template v-else>
 			<div class="carousel slide" ref="carouselRef">
 				<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-					<div class="fm-search-box-collapse-point">
-						<ul class="list-group">
-							<li v-for="element in elements" :key="element.id" class="list-group-item active">
-								<span>
-									<a href="javascript:" @click="$emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
-								</span>
-								<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-								<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-							</li>
-						</ul>
-					</div>
+					<ul class="list-group">
+						<li v-for="element in elements" :key="element.id" class="list-group-item active">
+							<span>
+								<a href="javascript:" @click="emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
+							</span>
+							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
 
 					<div v-if="client.padData && !client.readonly" class="btn-group">
-						<button
-							type="button"
-							class="btn btn-secondary btn-sm"
-							v-tooltip="'Zoom to selection'"
-							@click="zoom()"
-						>
-							<Icon icon="zoom-in" alt="Zoom to selection"></Icon>
-						</button>
+						<ZoomToObjectButton
+							v-if="zoomDestination"
+							label="selection"
+							size="sm"
+							:destination="zoomDestination"
+						></ZoomToObjectButton>
 
-						<div v-if="client.padData && !client.readonly && types.length > 0" class="dropdown">
-							<button type="button" class="btn btn-secondary dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
-								<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-								Add to map
-							</button>
-							<ul class="dropdown-menu">
-								<template v-for="type in types" :key="type.id">
-									<li>
-										<a
-											href="javascript:"
-											class="dropdown-item"
-											@click="addToMap(elements, type)"
-										>{{type.name}}</a>
-									</li>
-								</template>
-							</ul>
-						</div>
+						<DropdownMenu
+							v-if="client.padData && !client.readonly && types.length > 0"
+							:isBusy="isAdding"
+							label="Add to map"
+						>
+							<template v-for="type in types" :key="type.id">
+								<li>
+									<a
+										href="javascript:"
+										class="dropdown-item"
+										@click="addToMap(elements, type)"
+									>{{type.name}}</a>
+								</li>
+							</template>
+						</DropdownMenu>
 					</div>
 				</div>
 
@@ -153,20 +146,6 @@
 
 <style lang="scss">
 	.fm-overpass-multiple-info {
-		&, .carousel, .carousel-inner, .carousel-item.active, .carousel-item-prev, .carousel-item-next, .carousel-caption {
-			display: flex;
-			flex-direction: column;
-			min-height: 0;
-		}
-
-		.carousel-item {
-			float: none;
-		}
-
-		.carousel-inner {
-			flex-direction: row;
-		}
-
 		.list-group-item {
 			display: flex;
 			align-items: center;
@@ -174,25 +153,6 @@
 			> :first-child {
 				flex-grow: 1;
 			}
-		}
-
-		.list-group-item.active a {
-			color: inherit;
-		}
-
-		.carousel-caption {
-			position: static;
-			padding: 0;
-			color: inherit;
-			text-align: inherit;
-		}
-
-		.fm-search-box-collapse-point {
-			min-height: 3em;
-		}
-
-		.btn-toolbar {
-			margin-top: 0.5rem;
 		}
 	}
 </style>

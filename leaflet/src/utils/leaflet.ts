@@ -1,5 +1,5 @@
-import { Bbox, BboxWithZoom, Point } from 'facilmap-types';
-import L, { LatLng, LatLngBounds, Map, TooltipOptions } from 'leaflet';
+import { Bbox, BboxWithZoom, Point } from "facilmap-types";
+import L, { LatLng, LatLngBounds, Map, TooltipOptions } from "leaflet";
 
 export const tooltipOptions: TooltipOptions = {
 	direction: "right"

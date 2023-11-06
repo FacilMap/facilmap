@@ -2,17 +2,15 @@
 	import { getCurrentView, getLayers } from "facilmap-leaflet";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
-	import { injectContextRequired } from "../utils/context";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
 	import vValidity from "./ui/validated-form/validity";
 	import { getUniqueId } from "../utils/utils";
 	import { round } from "facilmap-utils";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
-	const client = injectClientRequired();
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
 	const toasts = useToasts();
 
 	const emit = defineEmits<{
@@ -37,29 +35,29 @@
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
 	const baseLayer = computed(() => {
-		const { baseLayers } = getLayers(mapContext.components.map);
-		return baseLayers[mapContext.layers.baseLayer].options.fmName || mapContext.layers.baseLayer;
+		const { baseLayers } = getLayers(mapContext.value.components.map);
+		return baseLayers[mapContext.value.layers.baseLayer].options.fmName || mapContext.value.layers.baseLayer;
 	});
 
 	const overlays = computed(() => {
-		const { overlays } = getLayers(mapContext.components.map);
-		return mapContext.layers.overlays.map((key) => overlays[key].options.fmName || key).join(", ") || "—";
+		const { overlays } = getLayers(mapContext.value.components.map);
+		return mapContext.value.layers.overlays.map((key) => overlays[key].options.fmName || key).join(", ") || "—";
 	});
 
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-save-view-error`);
 
 		try {
-			const view = await client.addView({
-				...getCurrentView(mapContext.components.map, {
+			const view = await client.value.addView({
+				...getCurrentView(mapContext.value.components.map, {
 					includeFilter: includeFilter.value,
-					overpassLayer: includeOverpass.value ? mapContext.components.overpassLayer : undefined
+					overpassLayer: includeOverpass.value ? mapContext.value.components.overpassLayer : undefined
 				}),
 				name: name.value
 			});
 
 			if (makeDefault.value) {
-				await client.editPad({ defaultViewId: view.id });
+				await client.value.editPad({ defaultViewId: view.id });
 			}
 
 			modalRef.value?.modal.hide();

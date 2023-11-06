@@ -1,10 +1,10 @@
-import Client from 'facilmap-client';
-import { ID, Marker, ObjectWithId } from 'facilmap-types';
-import { Map } from 'leaflet';
-import { tooltipOptions } from '../utils/leaflet';
-import { numberKeys, quoteHtml } from 'facilmap-utils';
-import MarkerCluster, { MarkerClusterOptions } from './marker-cluster';
-import MarkerLayer from './marker-layer';
+import Client from "facilmap-client";
+import { ID, Marker, ObjectWithId } from "facilmap-types";
+import { Map } from "leaflet";
+import { tooltipOptions } from "../utils/leaflet";
+import { numberKeys, quoteHtml } from "facilmap-utils";
+import MarkerCluster, { MarkerClusterOptions } from "./marker-cluster";
+import MarkerLayer from "./marker-layer";
 
 export interface MarkersLayerOptions extends MarkerClusterOptions {
 }
@@ -12,14 +12,14 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 export default class MarkersLayer extends MarkerCluster {
 
 	declare options: MarkersLayerOptions;
-	client: Client<any>;
+	client: Client;
 	markersById: Record<string, MarkerLayer> = {};
 	highlightedMarkerIds = new Set<ID>();
 
 	/** The position of these markers will not be touched until they are unlocked again. */
 	lockedMarkerIds = new Set<ID>();
 
-	constructor(client: Client<any>, options?: MarkersLayerOptions) {
+	constructor(client: Client, options?: MarkersLayerOptions) {
 		super(client, options);
 		this.client = client;
 	}

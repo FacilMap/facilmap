@@ -12,13 +12,15 @@
 	import Popover from "./popover.vue";
 	import { useRefWithOverride } from "../../utils/vue";
 
-	const props = defineProps<{
-		show: boolean;
+	const props = withDefaults(defineProps<{
+		show?: boolean;
 		title?: string;
 		customClass?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
-	}>();
+	}>(), {
+		show: undefined
+	});
 
 	const emit = defineEmits<{
 		"update:show": [show: boolean];

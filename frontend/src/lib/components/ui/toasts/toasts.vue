@@ -4,6 +4,7 @@
 	import Toasts from "./toasts.vue";
 	import { mapRef } from "../../../utils/vue";
 	import { getUniqueId } from "../../../utils/utils";
+	import type { ThemeColour } from "../../../utils/bootstrap";
 
 	export interface ToastContext {
 		showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void>;
@@ -16,7 +17,7 @@
 	export interface ToastOptions {
 		actions?: ToastAction[];
 		spinner?: boolean;
-		variant?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark";
+		variant?: ThemeColour;
 		noCloseButton?: boolean;
 		noAutoHide?: boolean;
 		onHidden?: () => void;

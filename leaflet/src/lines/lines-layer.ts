@@ -12,12 +12,12 @@ interface LinesLayerOptions extends LayerOptions {
 export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
-	client: Client<any>;
+	client: Client;
 	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	highlightedLinesIds = new Set<ID>();
 	hiddenLinesIds = new Set<ID>();
 
-	constructor(client: Client<any>, options?: LinesLayerOptions) {
+	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
 		this.client = client;
 	}
@@ -136,7 +136,7 @@ export default class LinesLayer extends FeatureGroup {
 
 	_endDrawLine?: (save: boolean) => void;
 
-	drawLine(lineTemplate: Line<any>): Promise<Point[] | undefined> {
+	drawLine(lineTemplate: Line): Promise<Point[] | undefined> {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
 				...lineTemplate,

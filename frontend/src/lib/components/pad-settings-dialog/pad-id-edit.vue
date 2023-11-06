@@ -1,10 +1,10 @@
 <script setup lang="ts">
-	import type { CRU, PadData } from 'facilmap-types';
-	import { computed, ref } from 'vue';
-	import { getUniqueId } from '../../utils/utils';
-	import copyToClipboard from 'copy-to-clipboard';
-	import { useToasts } from '../ui/toasts/toasts.vue';
-	import { injectContextRequired } from '../../utils/context';
+	import type { CRU, PadData } from "facilmap-types";
+	import { computed, ref } from "vue";
+	import { getUniqueId } from "../../utils/utils";
+	import copyToClipboard from "copy-to-clipboard";
+	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const idProps = ["id", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];

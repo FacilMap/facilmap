@@ -15,15 +15,14 @@
 	import WidthField from "../ui/width-field.vue";
 	import SizeField from "../ui/size-field.vue";
 	import EditTypeDropdownDialog from "./edit-type-dropdown-dialog.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import vValidity from "../ui/validated-form/validity";
 	import { showConfirm } from "../ui/alert.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 
 	const toasts = useToasts();
 
@@ -40,7 +39,7 @@
 	const isCreate = computed(() => props.typeId == null);
 
 	const originalType = computed(() => {
-		return props.typeId != null ? client.types[props.typeId] : undefined;
+		return props.typeId != null ? client.value.types[props.typeId] : undefined;
 	});
 
 	const initialType = computed<Type>(() => {
@@ -97,9 +96,9 @@
 
 		try {
 			if (isCreate.value)
-				await client.addType(type.value);
+				await client.value.addType(type.value);
 			else
-				await client.editType(type.value);
+				await client.value.editType(type.value);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {

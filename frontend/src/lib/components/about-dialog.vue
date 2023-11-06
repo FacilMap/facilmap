@@ -4,16 +4,17 @@
 	import { Layer, Util } from "leaflet";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import { injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
-	const mapContext = injectMapContextRequired();
+	const context = injectContextRequired();
+	const mapContext = requireMapContext(context);
 
 	const emit = defineEmits<{
 		hidden: [];
 	}>();
 
 	const layers = computed((): Layer[] => {
-		const { baseLayers, overlays } = getLayers(mapContext.components.map);
+		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
 		return [...Object.values(baseLayers), ...Object.values(overlays)];
 	});
 

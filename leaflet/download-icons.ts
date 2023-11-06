@@ -5,7 +5,7 @@ import * as svgo from "svgo";
 import cheerio from "cheerio";
 import highland from "highland";
 import { writeFile } from "fs/promises";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const outDir = fileURLToPath(new URL('./assets/icons/osmi', import.meta.url));
 

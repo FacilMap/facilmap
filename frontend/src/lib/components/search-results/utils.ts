@@ -1,8 +1,9 @@
 import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
-import type { LineString, MultiLineString, MultiPolygon, Polygon, Position } from "geojson";
+import type { LineString, MultiLineString, MultiPolygon, Point as GeoJSONPoint, Polygon, Position } from "geojson";
 import type { FileResult } from "../../utils/files";
 import type { SelectedItem } from "../../utils/selection";
-import type { Client } from "../client-context.vue";
+import type { ClientContext } from "../facil-map-context-provider/client-context";
+import type { Ref } from "vue";
 
 /**
  * Prefills the fields of a type with information from a search result. The "address" and "extratags" from
@@ -50,7 +51,7 @@ export function lineStringToTrackPoints(geometry: LineString | MultiLineString |
 	return coords.flat().map((latlng) => ({ lat: latlng[1], lon: latlng[0] }));
 }
 
-export async function addSearchResultsToMap(data: Array<{ result: SearchResult | FileResult; type: Type }>, client: Client): Promise<SelectedItem[]> {
+export async function addSearchResultsToMap(data: Array<{ result: SearchResult | FileResult; type: Type }>, client: Ref<ClientContext>): Promise<SelectedItem[]> {
 	const selection: SelectedItem[] = [];
 
 	for (const { result, type } of data) {
@@ -66,17 +67,17 @@ export async function addSearchResultsToMap(data: Array<{ result: SearchResult |
 		}
 
 		if(type.type == "marker") {
-			const marker = await client.addMarker({
+			const marker = await client.value.addMarker({
 				...obj,
-				lat: result.lat ?? (result.geojson as Point).coordinates[1],
-				lon: result.lon ?? (result.geojson as Point).coordinates[0],
+				lat: result.lat ?? (result.geojson as GeoJSONPoint).coordinates[1],
+				lon: result.lon ?? (result.geojson as GeoJSONPoint).coordinates[0],
 				typeId: type.id
 			});
 
 			selection.push({ type: "marker", id: marker.id });
 		} else if(type.type == "line") {
 			if (obj.routePoints) {
-				const line = await client.addLine({
+				const line = await client.value.addLine({
 					...obj,
 					routePoints: obj.routePoints,
 					typeId: type.id
@@ -85,7 +86,7 @@ export async function addSearchResultsToMap(data: Array<{ result: SearchResult |
 				selection.push({ type: "line", id: line.id });
 			} else {
 				const trackPoints = lineStringToTrackPoints(result.geojson as any);
-				const line = await client.addLine({
+				const line = await client.value.addLine({
 					...obj,
 					typeId: type.id,
 					routePoints: [trackPoints[0], trackPoints[trackPoints.length-1]],

@@ -1,10 +1,10 @@
-import 'bootstrap';
-import $ from 'jquery';
-import 'tablesorter/dist/js/jquery.tablesorter';
-import 'tablesorter/dist/js/widgets/widget-uitheme.min.js';
-import 'tablesorter/dist/js/widgets/widget-resizable.min.js';
-import 'tablesorter/dist/css/theme.bootstrap_3.min.css';
-import './table.css';
+import "bootstrap";
+import $ from "jquery";
+import "tablesorter/dist/js/jquery.tablesorter";
+import "tablesorter/dist/js/widgets/widget-uitheme.min.js";
+import "tablesorter/dist/js/widgets/widget-resizable.min.js";
+import "tablesorter/dist/css/theme.bootstrap_3.min.css";
+import "./table.css";
 import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 import "bootstrap/dist/css/bootstrap.css";
 

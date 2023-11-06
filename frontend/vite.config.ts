@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
+import { defineConfig } from "vite";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import { fileURLToPath } from "url";
 import { paths } from "./build.js";
 import vuePlugin from "@vitejs/plugin-vue";

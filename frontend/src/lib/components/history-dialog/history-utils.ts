@@ -1,8 +1,8 @@
 import type { HistoryEntry } from "facilmap-types";
 import { getObjectDiff, ObjectDiffItem } from "facilmap-utils";
-import type { Client } from "../client-context.vue";
+import type { ClientContext } from "../facil-map-context-provider/client-context";
 
-function existsNow(client: Client, entry: HistoryEntry) {
+function existsNow(client: ClientContext, entry: HistoryEntry) {
 	// Look through the history of this particular object and see if the last entry indicates that the object exists now
 
 	let ret = null;
@@ -27,7 +27,7 @@ export interface HistoryEntryLabels {
 	diff?: Array<ObjectDiffItem>;
 }
 
-export function getLabelsForHistoryEntry(client: Client, entry: HistoryEntry): HistoryEntryLabels {
+export function getLabelsForHistoryEntry(client: ClientContext, entry: HistoryEntry): HistoryEntryLabels {
 	if(entry.type == "Pad") {
 		return {
 			description: "Changed pad settings",

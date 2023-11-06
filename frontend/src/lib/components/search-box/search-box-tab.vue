@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	import { computed, onBeforeUnmount, onMounted } from 'vue';
-	import { injectSearchBoxContextRequired } from './search-box-context.vue';
-	import type { SearchBoxTab } from './search-box-context.vue';
-	import type { HashQuery } from 'facilmap-leaflet';
+	import { computed, watch } from "vue";
+	import type { HashQuery } from "facilmap-leaflet";
+	import { injectContextRequired, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import type { SearchBoxTab } from "../facil-map-context-provider/search-box-context";
 
 	const props = defineProps<{
 		id: string;
@@ -16,7 +16,8 @@
 		close: [];
 	}>();
 
-	const searchBoxContext = injectSearchBoxContextRequired();
+	const context = injectContextRequired();
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	const slots = defineSlots<{
 		default(props: { isActive: boolean }): any;
@@ -32,13 +33,9 @@
 		} : undefined
 	}));
 
-	onMounted(() => {
-		searchBoxContext.addTab(props.id, tab);
-	});
-
-	onBeforeUnmount(() => {
-		searchBoxContext.removeTab(props.id);
-	});
+	watch(searchBoxContext, () => {
+		searchBoxContext.value.provideTab(props.id, tab);
+	}, { immediate: true });
 </script>
 
 <!-- eslint-disable-next-line vue/valid-template-root -->

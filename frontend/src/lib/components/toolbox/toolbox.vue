@@ -1,8 +1,6 @@
 <script setup lang="ts">
 	import Sidebar from "../ui/sidebar.vue";
 	import Icon from "../ui/icon.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
 	import AddDropdown from "./add-dropdown.vue";
 	import CollabMapsDropdown from "./collab-maps-dropdown.vue";
@@ -10,9 +8,10 @@
 	import MapStyleDropdown from "./map-style-dropdown.vue";
 	import ToolsDropdown from "./tools-dropdown.vue";
 	import ViewsDropdown from "./views-dropdown.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 
 	const props = withDefaults(defineProps<{
 		interactive?: boolean;

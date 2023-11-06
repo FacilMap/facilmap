@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Ref, onScopeDispose, reactive, readonly, ref, watchEffect } from 'vue';
-	import { ExtendableEventMixin, extendableEventMixin } from '../../../utils/utils';
-	import { useToasts } from '../toasts/toasts.vue';
+	import { Ref, onScopeDispose, reactive, readonly, ref, watchEffect } from "vue";
+	import { ExtendableEventMixin, extendableEventMixin } from "../../../utils/utils";
+	import { useToasts } from "../toasts/toasts.vue";
 
 	export interface ValidatedFormData {
 		isTouched: boolean;

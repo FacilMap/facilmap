@@ -1,8 +1,8 @@
-import { compileExpression as filtrexCompileExpression } from 'filtrex';
+import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { clone, flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import { ID, Marker, Line, Type, Field } from "facilmap-types";
+import { ID, Marker, Line, Type, Field, CRU } from "facilmap-types";
 
-export type FilterFunc = (obj: Marker<any> | Line<any>, type: Type) => boolean;
+export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
@@ -108,7 +108,7 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 	return ret;
 }
 
-export function prepareObject<T extends Marker | Marker<Map<string, string>> | Line | Line<Map<string, string>>>(obj: T, type: Type): T & { type?: Type["type"] } {
+export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: Type): T & { type?: Type["type"] } {
 	obj = clone(obj);
 
 	for (const field of type.fields) {

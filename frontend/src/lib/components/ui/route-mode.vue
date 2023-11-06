@@ -4,7 +4,8 @@
 	import Icon from "./icon.vue";
 	import { computed, ref, watch } from "vue";
 	import { getUniqueId } from "../../utils/utils";
-	import vTooltip from "../../utils/tooltip";
+	import vTooltip, { TooltipPlacement } from "../../utils/tooltip";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	type Mode = Exclude<DecodedRouteMode['mode'], 'track'>;
 	type Type = DecodedRouteMode['type'];
@@ -109,7 +110,7 @@
 		modelValue?: RouteModeType;
 		tabindex?: number;
 		disabled?: boolean;
-		tooltipPlacement?: string;
+		tooltipPlacement?: TooltipPlacement;
 		validationError?: string | undefined;
 	}>(), {
 		tooltipPlacement: "top"
@@ -132,7 +133,7 @@
 		if (newValue !== props.modelValue) {
 			emit("update:modelValue", newValue);
 		}
-	});
+	}, { deep: true });
 
 	const types = computed(() => (Object.keys(constants.types) as Mode[]).map((mode) => constants.types[mode].map((type) => ([mode, type] as [Mode, Type]))).flat());
 
@@ -184,74 +185,76 @@
 			</template>
 
 			<div class="btn-group">
-				<button
-					type="button"
-					class="btn btn-secondary dropdown-toggle"
+				<DropdownMenu
 					:tabindex="tabindex != null ? tabindex + constants.modes.length : undefined"
-					v-tooltip:tooltipPlacement="'Customize'"
-					:disabled="disabled"
-					data-bs-toggle="dropdown"
+					tooltip="Customize"
+					:tooltipPlacement="tooltipPlacement"
+					:isDisabled="disabled"
+					noWrapper
+					menuClass="fm-route-mode-customize"
 				>
-					<Icon icon="cog" alt="Custom"/>
-				</button>
+					<template #label>
+						<Icon icon="cog" alt="Custom"/>
+					</template>
 
-				<ul class="dropdown-menu fm-route-mode-customize">
-					<li>
-						<a
-							class="dropdown-item"
-							href="javascript:"
-							@click.capture.stop.prevent="decodedMode.details = !decodedMode.details"
-						>
-							<Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> Load route details (elevation, road types, …)
-						</a>
-					</li>
-
-					<li><hr class="dropdown-divider"></li>
-
-					<template v-for="t in types" :key="t.id">
-						<li class="column">
+					<template #default>
+						<li>
 							<a
 								class="dropdown-item"
 								href="javascript:"
-								@click.capture.stop.prevent="setMode(t[0], t[1])"
+								@click.capture.stop.prevent="decodedMode.details = !decodedMode.details"
 							>
-								<Icon :icon="isTypeActive(t[0], t[1]) ? 'check' : 'unchecked'"></Icon> {{constants.typeText[t[0]][t[1]]}}
+								<Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> Load route details (elevation, road types, …)
 							</a>
 						</li>
-					</template>
 
-					<li><hr class="dropdown-divider"></li>
+						<li><hr class="dropdown-divider"></li>
 
-					<template v-for="(pText, p) in constants.preferenceText" :key="p">
-						<template v-if="decodedMode.mode">
+						<template v-for="t in types" :key="t.id">
 							<li class="column">
 								<a
 									class="dropdown-item"
 									href="javascript:"
-									@click.capture.stop.prevent="decodedMode.preference = p"
+									@click.capture.stop.prevent="setMode(t[0], t[1])"
 								>
-									<Icon :icon="decodedMode.preference == p ? 'check' : 'unchecked'"></Icon> {{pText}}
+									<Icon :icon="isTypeActive(t[0], t[1]) ? 'check' : 'unchecked'"></Icon> {{constants.typeText[t[0]][t[1]]}}
 								</a>
 							</li>
 						</template>
-					</template>
 
-					<li><hr class="dropdown-divider"></li>
+						<li><hr class="dropdown-divider"></li>
 
-					<template v-for="avoid in constants.avoid" :key="avoid">
-						<template v-if="constants.avoidAllowed[avoid](decodedMode.mode, decodedMode.type)">
-							<li class="column">
-								<a
-									class="dropdown-item"
-									href="javascript:"
-									@click.capture.stop.prevent="toggleAvoid(avoid)"
-								>
-									<Icon :icon="decodedMode.avoid.includes(avoid) ? 'check' : 'unchecked'"></Icon> Avoid {{constants.avoidText[avoid]}}
-								</a>
-							</li>
+						<template v-for="(pText, p) in constants.preferenceText" :key="p">
+							<template v-if="decodedMode.mode">
+								<li class="column">
+									<a
+										class="dropdown-item"
+										href="javascript:"
+										@click.capture.stop.prevent="decodedMode.preference = p"
+									>
+										<Icon :icon="decodedMode.preference == p ? 'check' : 'unchecked'"></Icon> {{pText}}
+									</a>
+								</li>
+							</template>
+						</template>
+
+						<li><hr class="dropdown-divider"></li>
+
+						<template v-for="avoid in constants.avoid" :key="avoid">
+							<template v-if="constants.avoidAllowed[avoid](decodedMode.mode, decodedMode.type)">
+								<li class="column">
+									<a
+										class="dropdown-item"
+										href="javascript:"
+										@click.capture.stop.prevent="toggleAvoid(avoid)"
+									>
+										<Icon :icon="decodedMode.avoid.includes(avoid) ? 'check' : 'unchecked'"></Icon> Avoid {{constants.avoidText[avoid]}}
+									</a>
+								</li>
+							</template>
 						</template>
 					</template>
-				</ul>
+				</DropdownMenu>
 			</div>
 		</div>
 

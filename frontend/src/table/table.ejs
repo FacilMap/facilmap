@@ -90,12 +90,12 @@
 			} else {
 				if(!hide.includes("Distance")) {
 -%>
-							<td><%=utils.round(object.distance, 2)%> km</td>
+							<td><%=utils.round(object.distance, 2)%>&#x202F;km</td>
 <%
 				}
 				if(!hide.includes("Time")) {
 -%>
-							<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%> h <%=utils.formatRouteMode(object.mode)%><% } %></td>
+							<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%>&#x202F;h <%=utils.formatRouteMode(object.mode)%><% } %></td>
 <%
 				}
 			}

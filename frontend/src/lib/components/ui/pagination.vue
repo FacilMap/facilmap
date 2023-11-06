@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { range } from 'lodash-es';
-	import { computed } from 'vue';
+	import { range } from "lodash-es";
+	import { computed } from "vue";
 
 	const props = defineProps<{
 		pages: number;

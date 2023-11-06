@@ -1,13 +1,13 @@
-import Client from 'facilmap-client';
-import { numberKeys } from 'facilmap-utils';
-import { Evented, Handler, latLng, LatLng, Map } from 'leaflet';
-import { debounce, isEqual } from 'lodash-es';
-import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from '../layers';
-import OverpassLayer from '../overpass/overpass-layer';
-import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from '../overpass/overpass-utils';
-import { pointsEqual } from '../utils/leaflet';
-import { decodeLegacyHash } from './legacyHash';
-import { displayView, isAtView } from './views';
+import Client from "facilmap-client";
+import { numberKeys } from "facilmap-utils";
+import { Evented, Handler, latLng, LatLng, Map } from "leaflet";
+import { debounce, isEqual } from "lodash-es";
+import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from "../layers";
+import OverpassLayer from "../overpass/overpass-layer";
+import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from "../overpass/overpass-utils";
+import { pointsEqual } from "../utils/leaflet";
+import { decodeLegacyHash } from "./legacyHash";
+import { displayView, isAtView } from "./views";
 
 export interface HashQuery {
 	query: string;
@@ -24,12 +24,12 @@ export interface HashHandlerOptions {
 export default class HashHandler extends Handler {
 
 	options: HashHandlerOptions;
-	client: Client<any>;
+	client: Client;
 	activeQuery?: HashQuery;
 	_isApplyingHash = false;
 	_lastHash: string | undefined = undefined;
 
-	constructor(map: Map, client: Client<any>, options?: HashHandlerOptions) {
+	constructor(map: Map, client: Client, options?: HashHandlerOptions) {
 		super(map);
 		this.client = client;
 		this.options = {

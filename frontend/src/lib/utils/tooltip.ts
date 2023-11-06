@@ -22,6 +22,8 @@ export function hideAllTooltips(): void {
 	}
 }
 
+export type TooltipPlacement = "top" | "left" | "right" | "bottom";
+
 const vTooltip: Directive<Element, string | undefined> = {
 	mounted(el, binding) {
 		el._fmTooltip = new Tooltip(el, {

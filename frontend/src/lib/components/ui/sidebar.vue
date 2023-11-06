@@ -2,13 +2,15 @@
 	import hammer from "hammerjs";
 	import { ref, watchEffect } from "vue";
 	import { useRefWithOverride } from "../../utils/vue";
-	import { injectContextRequired } from "../../utils/context";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
 
-	const props = defineProps<{
+	const props = withDefaults(defineProps<{
 		visible?: boolean;
-	}>();
+	}>(), {
+		visible: undefined
+	});
 
 	const emit = defineEmits<{
 		"update:visible": [visible: boolean];
@@ -34,7 +36,6 @@
 	});
 
 	function handleDragMove(event: any): void {
-		console.log(event.deltaX);
 		Object.assign(innerSidebarRef.value!.style, {
 			transform: `translateX(${Math.max(0, event.deltaX)}px)`,
 			transition: "none"

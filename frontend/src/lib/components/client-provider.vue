@@ -1,58 +1,25 @@
 <script lang="ts">
-	import { defineComponent, InjectionKey, inject, onBeforeUnmount, provide, reactive, ref, toRaw, watch, readonly } from "vue";
-	import FmClient from "facilmap-client";
+	import { onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
+	import Client from "facilmap-client";
 	import type { PadData, PadId } from "facilmap-types";
 	import PadSettingsDialog from "./pad-settings-dialog/pad-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { useToasts } from "./ui/toasts/toasts.vue";
-	import { injectContextRequired } from "../utils/context";
 	import Toast from "./ui/toasts/toast.vue";
+	import type { ClientContext } from "./facil-map-context-provider/client-context";
+	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
-	export class Client extends FmClient {
-		override _makeReactive<O extends object>(object: O): O {
-			return reactive(object);
-		}
+	class ReactiveClient extends Client {
+		_makeReactive = reactive as any;
 	};
-
-	export type ClientContext = {
-		openPad(padId: string | undefined): void;
-	};
-
-	const clientInject = Symbol("clientInject") as InjectionKey<Client>;
-	const clientContextInject = Symbol("clientContextInject") as InjectionKey<ClientContext>;
-
-	export function injectClientOptional(): Client | undefined {
-		return inject(clientInject);
-	}
-
-	export function injectClientRequired(): Client {
-		const client = injectClientOptional();
-		if (!client) {
-			throw new Error("No client injected.");
-		}
-		return client;
-	}
-
-	export function injectClientContextOptional(): ClientContext | undefined {
-		return inject(clientContextInject);
-	}
-
-	export function injectClientContextRequired(): ClientContext {
-		const clientContext = injectClientContextOptional();
-		if (!clientContext) {
-			throw new Error("No client context injected.");
-		}
-		return clientContext;
-	}
 </script>
 
 <script setup lang="ts">
 	const context = injectContextRequired();
-
 	const toasts = useToasts();
 
-	const client = ref<Client>();
-	const connectingClient = ref<Client>();
+	const client = ref<ClientContext>();
+	const connectingClient = ref<ClientContext>();
 
 	const props = defineProps<{
 		padId: string | undefined;
@@ -63,15 +30,12 @@
 		"update:padId": [padId: string | undefined];
 	}>();
 
-	const clientContext = reactive<ClientContext>({
-		openPad: (padId) => {
-			emit("update:padId", padId);
-		}
-	});
-	provide(clientContextInject, readonly(clientContext));
-
 	const createId = ref<string>();
 	const counter = ref(1);
+
+	function openPad(padId: string | undefined): void {
+		emit("update:padId", padId);
+	}
 
 	watch([
 		() => props.padId,
@@ -90,7 +54,9 @@
 		else
 			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
 
-		const newClient = new Client(props.serverUrl, props.padId);
+		const newClient: ClientContext = Object.assign(new ReactiveClient(props.serverUrl, props.padId), {
+			openPad
+		});
 		connectingClient.value = newClient;
 
 		let lastPadId: PadId | undefined = undefined;
@@ -115,14 +81,14 @@
 		newClient.on("deletePad", () => {
 			toasts.showToast(`fm${context.id}-client-deleted`, "Map deleted", "This map has been deleted.", {
 				variant: "danger",
-				actions: context.interactive ? [
+				actions: context.settings.interactive ? [
 					{
 						label: "Close map",
 						href: context.baseUrl,
 						onClick: (e) => {
 							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 								e.preventDefault();
-								clientContext.openPad(undefined);
+								openPad(undefined);
 							}
 						}
 					}
@@ -150,19 +116,19 @@
 			});
 		});
 
-		if (newClient.serverError?.message?.includes("does not exist") && context.interactive) {
+		if (newClient.serverError?.message?.includes("does not exist") && context.settings.interactive) {
 			createId.value = newClient.padId!;
 		} else if (newClient.serverError) {
 			toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
 				noCloseButton: true,
-				actions: context.interactive ? [
+				actions: context.settings.interactive ? [
 					{
 						label: "Close map",
 						href: context.baseUrl,
 						onClick: (e) => {
 							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 								e.preventDefault();
-								clientContext.openPad(undefined);
+								newClient.openPad(undefined);
 							}
 						}
 					}
@@ -180,52 +146,25 @@
 		client.value?.disconnect();
 	});
 
-	const ClientProvider = defineComponent({
-		setup(props, { slots }) {
-			provide(clientInject, client.value!);
-			provide("test", "testValue");
-			return () => slots.default?.();
-		}
-	});
-
-	defineExpose({
-		client,
-		clientContext
-	});
+	context.provideComponent("client", client);
 </script>
 
 <template>
-	<div class="fm-client-provider">
-		<ClientProvider v-if="client" :key="counter">
-			<slot />
-		</ClientProvider>
+	<Toast
+		v-if="client && client.disconnected"
+		:id="`fm${context.id}-client-disconnected`"
+		variant="danger"
+		title="Disconnected"
+		message="The connection to the server was lost. Trying to reconnect…"
+		no-auto-hide
+		no-close-button visible
+		spinner
+	/>
 
-		<Toast
-			v-if="client && client.disconnected"
-			:id="`fm${context.id}-client-disconnected`"
-			variant="danger"
-			title="Disconnected"
-			message="The connection to the server was lost. Trying to reconnect…"
-			no-auto-hide
-			no-close-button visible
-			spinner
-		/>
-
-		<ClientProvider v-if="client" :key="counter">
-			<PadSettingsDialog
-				v-if="createId"
-				is-create
-				no-cancel
-				:proposed-admin-id="createId"
-			></PadSettingsDialog>
-		</ClientProvider>
-	</div>
+	<PadSettingsDialog
+		v-if="createId"
+		is-create
+		no-cancel
+		:proposed-admin-id="createId"
+	></PadSettingsDialog>
 </template>
-
-<style lang="scss">
-	.fm-client-provider {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-	}
-</style>

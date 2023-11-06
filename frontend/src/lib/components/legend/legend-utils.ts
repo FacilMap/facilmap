@@ -1,8 +1,8 @@
 import type { ID, Shape, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
 import { getBrightness } from "facilmap-utils";
-import type { Client } from "../client-context.vue";
-import type { MapContext } from "../leaflet-map/leaflet-map.vue";
+import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
+import { requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 export interface LegendType {
 	key: string;
@@ -30,7 +30,10 @@ export interface LegendItem {
 	bright?: boolean;
 }
 
-export function getLegendItems(client: Client, mapContext: MapContext): LegendType[] {
+export function getLegendItems(context: FacilMapContext): LegendType[] {
+	const client = requireClientContext(context).value;
+	const mapContext = requireMapContext(context).value;
+
 	const legendItems: LegendType[] = [ ];
 	for (const i in client.types) {
 		const type = client.types[i];

@@ -14,9 +14,9 @@ export default class BboxHandler extends Handler {
 
 	margin = 50;
 
-	client: Client<any>;
+	client: Client;
 
-	constructor(map: Map, client: Client<any>) {
+	constructor(map: Map, client: Client) {
 		super(map);
 		this.client = client;
 	}

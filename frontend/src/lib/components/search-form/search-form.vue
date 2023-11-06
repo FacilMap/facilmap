@@ -11,23 +11,22 @@
 	import type { HashQuery } from "facilmap-leaflet";
 	import { FileResultObject, parseFiles } from "../../utils/files";
 	import FileResults from "../file-results.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, ref, watch } from "vue";
-	import { injectClientRequired } from "../client-context.vue";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
 	}>();
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
 
-	const autofocus = ref(!context.isNarrow && context.autofocus);
-	const layerId = Util.stamp(mapContext.components.searchResultsLayer);
+	const autofocus = ref(!context.isNarrow && context.settings.autofocus);
+	const layerId = Util.stamp(mapContext.value.components.searchResultsLayer);
 
 	const searchInput = ref<HTMLInputElement>();
 
@@ -50,7 +49,7 @@
 		if (loadedSearchString.value) {
 			return {
 				query: loadedSearchString.value,
-				...(zoomDestination.value && normalizeZoomDestination(mapContext.components.map, zoomDestination.value)),
+				...(zoomDestination.value && normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value)),
 				description: `Search for ${loadedSearchString.value}`
 			};
 		} else if (loadingSearchString.value)
@@ -81,7 +80,7 @@
 
 			if(searchString.value.trim() != "") {
 				try {
-					if (await openSpecialQuery(searchString.value, context, client, mapContext, zoom)) {
+					if (await openSpecialQuery(searchString.value, context, zoom)) {
 						searchString.value = "";
 						return;
 					}
@@ -90,8 +89,8 @@
 					loadingSearchString.value = searchString.value;
 
 					const [newSearchResults, newMapResults] = await Promise.all([
-						client.find({ query, loadUrls: true, elevation: true }),
-						client.padData ? client.findOnMap({ query }) : undefined
+						client.value.find({ query, loadUrls: true, elevation: true }),
+						client.value.padData ? client.value.findOnMap({ query }) : undefined
 					]);
 
 					if (counter != searchCounter.value)
@@ -109,10 +108,10 @@
 						searchResults.value = undefined;
 						mapResults.value = undefined;
 						fileResult.value = parseFiles([ newSearchResults ]);
-						mapContext.components.searchResultsLayer.setResults(fileResult.value.features);
+						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
 					} else {
 						searchResults.value = newSearchResults;
-						mapContext.components.searchResultsLayer.setResults(newSearchResults);
+						mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
 						mapResults.value = newMapResults ?? undefined;
 						fileResult.value = undefined;
 					}
@@ -127,11 +126,11 @@
 			if (zoom)
 				zoomToAllResults(smooth);
 		} else if (mapResults.value && mapResults.value.length > 0 && (mapResults.value[0].similarity == 1 || (!searchResults.value || searchResults.value.length == 0))) {
-			mapContext.components.selectionHandler.setSelectedItems([{ type: mapResults.value[0].kind, id: mapResults.value[0].id }])
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: mapResults.value[0].kind, id: mapResults.value[0].id }])
 			if (zoom)
 				zoomToResult(mapResults.value[0], smooth);
 		} else if (searchResults.value && searchResults.value.length > 0) {
-			mapContext.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
 			if (zoom)
 				zoomToResult(searchResults.value[0], smooth);
 		} else if (fileResult.value) {
@@ -143,25 +142,25 @@
 	function reset(): void {
 		searchCounter.value++;
 
-		mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((item) => item.type != "searchResult" || item.layerId != this.layerId));
+		mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((item) => item.type != "searchResult" || item.layerId != layerId));
 		toasts.hideToast(`fm${context.id}-search-form-error`);
 		loadingSearchString.value = "";
 		loadedSearchString.value = "";
 		searchResults.value = undefined;
 		mapResults.value = undefined;
 		fileResult.value = undefined;
-		mapContext.components.searchResultsLayer.setResults([]);
+		mapContext.value.components.searchResultsLayer.setResults([]);
 	};
 
 	function zoomToResult(result: SearchResult | FindOnMapResult, smooth = true): void {
 		const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
 		if (dest)
-			flyTo(mapContext.components.map, dest, smooth);
+			flyTo(mapContext.value.components.map, dest, smooth);
 	}
 
 	function zoomToAllResults(smooth = true): void {
 		if (zoomDestination.value)
-			flyTo(mapContext.components.map, zoomDestination.value, smooth);
+			flyTo(mapContext.value.components.map, zoomDestination.value, smooth);
 	}
 
 	defineExpose({
@@ -189,12 +188,7 @@
 				>
 					<Icon icon="remove" alt="Clear"></Icon>
 				</button>
-				<button
-					type="button"
-					class="btn btn-secondary dropdown-toggle"
-					data-bs-toggle="dropdown"
-				></button>
-				<ul class="dropdown-menu">
+				<DropdownMenu noWrapper>
 					<li>
 						<a
 							href="javascript:"
@@ -214,7 +208,7 @@
 							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
 						</a>
 					</li>
-				</ul>
+				</DropdownMenu>
 			</div>
 		</form>
 
@@ -224,6 +218,7 @@
 			:auto-zoom="storage.autoZoom"
 			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
+			class="fm-search-box-collapse-point"
 		/>
 		<SearchResults
 			v-else-if="searchResults || mapResults"
@@ -232,6 +227,7 @@
 			:auto-zoom="storage.autoZoom"
 			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
+			class="fm-search-box-collapse-point"
 		></SearchResults>
 	</div>
 </template>
@@ -248,6 +244,10 @@
 
 		.fm-search-results {
 			margin-top: 1rem;
+		}
+
+		.fm-search-box-collapse-point {
+			min-height: 3em;
 		}
 	}
 </style>

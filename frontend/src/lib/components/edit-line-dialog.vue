@@ -8,13 +8,13 @@
 	import FieldInput from "./ui/field-input.vue";
 	import RouteMode from "./ui/route-mode.vue";
 	import WidthField from "./ui/width-field.vue";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref, toRef, watch } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
+	import DropdownMenu from "./ui/dropdown-menu.vue";
+	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 	const toasts = useToasts();
 
 	const props = defineProps<{
@@ -29,15 +29,15 @@
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const originalLine = toRef(() => client.lines[props.lineId]);
+	const originalLine = toRef(() => client.value.lines[props.lineId]);
 
 	const line = ref(clone(originalLine.value));
 
 	const isModified = computed(() => !isEqual(line.value, originalLine.value));
 
-	const types = computed(() => Object.values(client.types).filter((type) => type.type === "line"));
+	const types = computed(() => Object.values(client.value.types).filter((type) => type.type === "line"));
 
-	const resolvedCanControl = computed(() => canControl(client.types[line.value.typeId]));
+	const resolvedCanControl = computed(() => canControl(client.value.types[line.value.typeId]));
 
 	watch(originalLine, (newLine, oldLine) => {
 		if (!newLine) {
@@ -52,7 +52,7 @@
 		toasts.hideToast(`fm${context.id}-edit-line-error`);
 
 		try {
-			await client.editLine(omit(line.value, "trackPoints"));
+			await client.value.editLine(omit(line.value, "trackPoints"));
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-edit-line-error`, "Error saving line", err);
@@ -122,21 +122,18 @@
 		</template>
 
 		<template #footer-left>
-			<div v-if="types.length > 1" class="dropup">
-				<button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">Change type</button>
-				<ul class="dropdown-menu">
-					<template v-for="type in types" :key="type.id">
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								:class="{ active: type.id == line.typeId }"
-								@click="line.typeId = type.id"
-							>{{type.name}}</a>
-						</li>
-					</template>
-				</ul>
-			</div>
+			<DropdownMenu v-if="types.length > 1" class="dropup" label="Change type">
+				<template v-for="type in types" :key="type.id">
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							:class="{ active: type.id == line.typeId }"
+							@click="line.typeId = type.id"
+						>{{type.name}}</a>
+					</li>
+				</template>
+			</DropdownMenu>
 		</template>
 	</ModalDialog>
 </template>

@@ -5,14 +5,13 @@
 	import { getUniqueId, mergeObject } from "../../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import PadIdEdit from "./pad-id-edit.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 
 	const toasts = useToasts();
 
@@ -40,13 +39,13 @@
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
-	} : clone(client.padData) as PadData<CRU.CREATE>);
+	} : clone(client.value.padData) as PadData<CRU.CREATE>);
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const isModified = computed(() => !isEqual(padData.value, client.padData));
+	const isModified = computed(() => !isEqual(padData.value, client.value.padData));
 
-	watch(() => client.padData, (newPadData, oldPadData) => {
+	watch(() => client.value.padData, (newPadData, oldPadData) => {
 		if (!props.isCreate && padData.value && newPadData)
 			mergeObject(oldPadData, newPadData, padData.value as PadData);
 	}, { deep: true });
@@ -56,9 +55,9 @@
 
 		try {
 			if(props.isCreate)
-				await client.createPad(padData.value as PadData<CRU.CREATE>);
+				await client.value.createPad(padData.value as PadData<CRU.CREATE>);
 			else
-				await client.editPad(padData.value);
+				await client.value.editPad(padData.value);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
@@ -80,7 +79,7 @@
 		isDeleting.value = true;
 
 		try {
-			await client.deletePad();
+			await client.value.deletePad();
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);

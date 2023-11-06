@@ -1,5 +1,5 @@
-import { defineClientConfig } from '@vuepress/client';
-import QrcodeVue from 'qrcode.vue';
+import { defineClientConfig } from "@vuepress/client";
+import QrcodeVue from "qrcode.vue";
 import Screencast from "./components/Screencast.vue";
 import Screenshot from "./components/Screenshot.vue";
 

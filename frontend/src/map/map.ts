@@ -1,34 +1,11 @@
-import $ from 'jquery';
+import $ from "jquery";
 import { createApp, defineComponent, h, ref, watch } from "vue";
 //import { FacilMap } from "../lib";
 import FacilMap from "../lib/components/facil-map.vue";
 import "./bootstrap.scss";
-import "bootstrap-vue/dist/bootstrap-vue.css";
 import "./map.scss";
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
-
-/*Vue.use(BootstrapVue, {
-	BDropdown: {
-		popperOpts: {
-			positionFixed: true,
-			// modifiers: {
-			// 	preventOverflow: {
-			// 		enabled: false
-			// 	},
-			// 	hide: {
-			// 		enabled: false
-			// 	}
-			// }
-		},
-		boundary: "window",
-		noFlip: true
-	},
-	BTooltip: {
-		popperOpts: { positionFixed: true },
-		boundary: "window"
-	}
-});*/
 
 // Dereferrer
 $(document).on("click", "a", function() {
@@ -89,12 +66,15 @@ const Root = defineComponent({
 			baseUrl,
 			serverUrl: baseUrl,
 			padId: padId.value,
-			toolbox: toBoolean(queryParams.toolbox, true),
-			search: toBoolean(queryParams.search, true),
-			autofocus: toBoolean(queryParams.autofocus, parent === window),
-			legend: toBoolean(queryParams.legend, true),
-			interactive: toBoolean(queryParams.interactive, parent === window),
-			linkLogo: parent !== window,
+			settings: {
+				toolbox: toBoolean(queryParams.toolbox, true),
+				search: toBoolean(queryParams.search, true),
+				autofocus: toBoolean(queryParams.autofocus, parent === window),
+				legend: toBoolean(queryParams.legend, true),
+				interactive: toBoolean(queryParams.interactive, parent === window),
+				linkLogo: parent !== window,
+				updateHash: true
+			},
 			"onUpdate:padId": (v) => padId.value = v,
 			"onUpdate:padName": (v) => padName.value = v
 		});

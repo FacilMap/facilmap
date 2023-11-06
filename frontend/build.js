@@ -1,6 +1,6 @@
-import { createServer } from 'vite';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { createServer } from "vite";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const dist = `${root}/dist`;

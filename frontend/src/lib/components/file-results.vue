@@ -5,18 +5,16 @@
 	import { displayView } from "facilmap-leaflet";
 	import { typeExists, viewExists } from "../utils/search";
 	import vTooltip from "../utils/tooltip";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
 	import { computed, ref } from "vue";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
-	const client = injectClientRequired();
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
 	const toasts = useToasts();
 
 	const props = withDefaults(defineProps<{
@@ -43,7 +41,7 @@
 	});
 
 	function showView(view: ViewImport): void {
-		displayView(mapContext.components.map, view, { overpassLayer: mapContext.components.overpassLayer });
+		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
 	}
 
 	async function addView(view: ViewImport): Promise<void> {
@@ -51,7 +49,7 @@
 		isAddingView.value.add(view);
 
 		try {
-			await client.addView(view);
+			await client.value.addView(view);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing view", err);
 		} finally {
@@ -68,7 +66,7 @@
 		isAddingType.value.add(type);
 
 		try {
-			await client.addType(type);
+			await client.value.addType(type);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing type", err);
 		} finally {

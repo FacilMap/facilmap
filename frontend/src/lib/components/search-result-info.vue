@@ -1,29 +1,38 @@
 <script setup lang="ts">
 	import { renderOsmTag } from "facilmap-utils";
-	import type { Point, SearchResult } from "facilmap-types";
+	import type { FindOnMapResult, Point, SearchResult, Type } from "facilmap-types";
 	import Icon from "./ui/icon.vue";
 	import type { FileResult } from "../utils/files";
-	import { isLineResult, isMarkerResult } from "../utils/search";
-	import { flyTo, getZoomDestinationForSearchResult } from "../utils/zoom";
+	import { isFileResult, isLineResult, isMarkerResult } from "../utils/search";
+	import { getZoomDestinationForSearchResult } from "../utils/zoom";
 	import Coordinates from "./ui/coordinates.vue";
-	import vTooltip from "../utils/tooltip";
-	import { computed } from "vue";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
+	import { computed, toRaw } from "vue";
+	import DropdownMenu from "./ui/dropdown-menu.vue";
+	import UseAsDropdown from "./ui/use-as-dropdown.vue";
+	import ZoomToObjectButton from "./ui/zoom-to-object-button.vue";
+	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import type { RouteDestination } from "./facil-map-context-provider/map-context";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
 
 	const props = withDefaults(defineProps<{
 		result: SearchResult | FileResult;
 		showBackButton?: boolean;
 		isAdding?: boolean;
+		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
+		searchResults?: SearchResult[];
+		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
+		mapResults?: FindOnMapResult[];
 	}>(), {
 		showBackButton: false,
 		isAdding: false
 	});
+
+	const emit = defineEmits<{
+		back: [];
+		"add-to-map": [type: Type];
+	}>();
 
 	const isMarker = computed(() => isMarkerResult(props.result));
 
@@ -31,20 +40,35 @@
 
 	const types = computed(() => {
 		// Result can be both marker and line
-		return Object.values(client.types).filter((type) => (isMarker.value && type.type == "marker") || (isLine.value && type.type == "line"));
+		return Object.values(client.value.types).filter((type) => (isMarker.value && type.type == "marker") || (isLine.value && type.type == "line"));
 	});
 
-	function zoomToResult(): void {
-		const dest = getZoomDestinationForSearchResult(props.result);
-		if (dest)
-			flyTo(mapContext.components.map, dest);
-	}
+	const zoomDestination = computed(() => getZoomDestinationForSearchResult(props.result));
+
+	const routeDestination = computed<RouteDestination | undefined>(() => {
+		if (isFileResult(props.result)) {
+			if (props.result.lat != null && props.result.lon != null) {
+				return { query: `${props.result.lat},${props.result.lon}` };
+			} else if (props.result.geojson?.type === "Point") {
+				return { query: `${props.result.geojson.coordinates[1]},${props.result.geojson.coordinates[0]}` };
+			} else {
+				return undefined;
+			}
+		} else {
+			return {
+				query: props.result.short_name,
+				searchSuggestions: (props.searchResults || props.mapResults) ? props.searchResults : [props.result],
+				mapSuggestions: props.mapResults,
+				selectedSuggestion: props.result
+			};
+		}
+	});
 </script>
 
 <template>
 	<div class="fm-search-result-info" v-if="result">
 		<h2>
-			<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
+			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{result.short_name}}
 		</h2>
 		<dl class="fm-search-box-collapse-point">
@@ -65,7 +89,7 @@
 
 			<template v-if="result.elevation != null">
 				<dt>Elevation</dt>
-				<dd>{{result.elevation}} m</dd>
+				<dd>{{result.elevation}}&#x202F;m</dd>
 			</template>
 
 			<template v-for="(value, key) in result.extratags" :key="key">
@@ -75,62 +99,36 @@
 		</dl>
 
 		<div>
-			<div class="btn-group" role="group">
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					v-tooltip="'Zoom to search result'"
-					@click="zoomToResult()"
+			<div class="btn-toolbar" role="group">
+				<ZoomToObjectButton
+					v-if="zoomDestination"
+					label="search result"
+					size="sm"
+					:destination="zoomDestination"
+				></ZoomToObjectButton>
+
+				<DropdownMenu
+					v-if="!client.readonly && types.length > 0"
+					size="sm"
+					:isBusy="isAdding"
+					label="Add to map"
 				>
-					<Icon icon="zoom-in" alt="Zoom to search result"></Icon>
-				</button>
-
-				<div v-if="!client.readonly && types.length > 0" class="dropdown">
-					<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" :disabled="isAdding" data-bs-toggle="dropdown">
-						<div v-if="isAdding" class="spinner-border spinner-border-sm"></div>
-						Add to map
-					</button>
-					<ul class="dropdown-menu">
-						<template v-for="type in types" :key="type.id">
-							<li>
-								<a
-									href="javascript:"
-									class="dropdown-item"
-									@click="$emit('add-to-map', type)"
-								>{{type.name}}</a>
-							</li>
-						</template>
-					</ul>
-				</div>
-
-				<div v-if="isMarker && context.search" class="dropdown">
-					<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Use as</button>
-					<ul class="dropdown-menu">
+					<template v-for="type in types" :key="type.id">
 						<li>
 							<a
 								href="javascript:"
 								class="dropdown-item"
-								@click="$emit('use-as-from')"
-							>Route start</a>
+								@click="emit('add-to-map', type)"
+							>{{type.name}}</a>
 						</li>
+					</template>
+				</DropdownMenu>
 
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="$emit('use-as-via')"
-							>Route via</a>
-						</li>
-
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="$emit('use-as-to')"
-							>Route destination</a>
-						</li>
-					</ul>
-				</div>
+				<UseAsDropdown
+					v-if="isMarker && routeDestination"
+					size="sm"
+					:destination="routeDestination"
+				></UseAsDropdown>
 			</div>
 		</div>
 	</div>

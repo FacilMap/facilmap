@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { onBeforeUnmount, onMounted } from 'vue';
-	import { useToasts } from './toasts.vue';
+	import { onBeforeUnmount, onMounted } from "vue";
+	import { useToasts } from "./toasts.vue";
 	import type { ToastOptions } from "./toasts.vue";
 
 	const toasts = useToasts();

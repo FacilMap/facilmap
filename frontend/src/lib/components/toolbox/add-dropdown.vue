@@ -1,19 +1,20 @@
 <script setup lang="ts">
 	import type { Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
-	import { injectClientRequired } from "../client-context.vue";
 	import { ref } from "vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import ManageTypesDialog from "../manage-types-dialog.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import { useToasts } from "../ui/toasts/toasts.vue";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
 	}>();
 
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const context = injectContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 
 	const dialog = ref<
@@ -28,46 +29,46 @@
 	}
 
 	function addMarker(type: Type): void {
-		drawMarker(type, client, mapContext, toasts);
+		drawMarker(type, context, toasts);
 	}
 
 	function addLine(type: Type): void {
-		drawLine(type, client, mapContext, toasts);
+		drawLine(type, context, toasts);
 	}
 </script>
 
 <template>
-	<li class="nav-item dropdown">
-		<a
-			class="nav-link dropdown-toggle"
-			href="javascript:"
-			data-bs-toggle="dropdown"
-			v-link-disabled="mapContext.interaction"
-		>Add</a>
-		<ul class="dropdown-menu dropdown-menu-end">
-			<li v-for="type in client.types" :key="type.id">
-				<a
-					class="dropdown-item"
-					v-link-disabled="mapContext.interaction"
-					href="javascript:"
-					@click="addObject(type); emit('hide-sidebar')"
-				>{{type.name}}</a>
-			</li>
+	<DropdownMenu
+		tag="li"
+		class="nav-item"
+		isLink
+		:isDisabled="mapContext.interaction"
+		buttonClass="nav-link"
+		menuClass="dropdown-menu-end"
+		label="Add"
+	>
+		<li v-for="type in client.types" :key="type.id">
+			<a
+				class="dropdown-item"
+				v-link-disabled="mapContext.interaction"
+				href="javascript:"
+				@click="addObject(type); emit('hide-sidebar')"
+			>{{type.name}}</a>
+		</li>
 
-			<li v-if="client.writable == 2">
-				<hr class="dropdown-divider">
-			</li>
+		<li v-if="client.writable == 2">
+			<hr class="dropdown-divider">
+		</li>
 
-			<li v-if="client.writable == 2">
-				<a
-					class="dropdown-item"
-					v-link-disabled="!!mapContext.interaction"
-					href="javascript:"
-					@click="dialog = 'manage-types'; emit('hide-sidebar')"
-				>Manage types</a>
-			</li>
-		</ul>
-	</li>
+		<li v-if="client.writable == 2">
+			<a
+				class="dropdown-item"
+				v-link-disabled="!!mapContext.interaction"
+				href="javascript:"
+				@click="dialog = 'manage-types'; emit('hide-sidebar')"
+			>Manage types</a>
+		</li>
+	</DropdownMenu>
 
 	<ManageTypesDialog
 		v-if="dialog === 'manage-types' && client.padData"

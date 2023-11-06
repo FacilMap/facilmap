@@ -3,16 +3,14 @@
 	import LegendContent from "./legend-content.vue";
 	import { getLegendItems } from "./legend-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectContextRequired } from "../../utils/context";
 	import { computed, ref } from "vue";
 	import { useDomEventListener } from "../../utils/utils";
 	import { useResizeObserver } from "../../utils/vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const absoluteContainerRef = ref<HTMLElement>();
 
@@ -24,7 +22,7 @@
 
 	function updateMaxScale(): void {
 		if (absoluteContainerRef.value) {
-			const mapContainer = mapContext.components.map.getContainer();
+			const mapContainer = mapContext.value.components.map.getContainer();
 			const maxHeight = mapContainer.offsetHeight - 100;
 			const maxWidth = mapContainer.offsetWidth - 20;
 
@@ -38,15 +36,15 @@
 	}
 
 	const legend1 = computed(() => {
-		return client.padData?.legend1?.trim() || "";
+		return client.value.padData?.legend1?.trim() || "";
 	});
 
 	const legend2 = computed(() => {
-		return client.padData?.legend2?.trim() || "";
+		return client.value.padData?.legend2?.trim() || "";
 	});
 
 	const legendItems = computed(() => {
-		return getLegendItems(client, mapContext);
+		return getLegendItems(context);
 	});
 </script>
 

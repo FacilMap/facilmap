@@ -3,33 +3,33 @@
 	import OverpassMultipleInfo from "./overpass-multiple-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { useEventListener } from "../../utils/utils";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectContextRequired } from "../../utils/context";
 	import { computed } from "vue";
+	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
 	const elements = computed(() => {
-		return mapContext.selection.flatMap((item) => (item.type == "overpass" ? [item.element] : []));
+		return mapContext.value.selection.flatMap((item) => (item.type == "overpass" ? [item.element] : []));
 	});
 
 	function handleOpenSelection(): void {
 		if (elements.value.length > 0)
-			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-overpass-info-tab` });
+			searchBoxContext.value.activateTab(`fm${context.id}-overpass-info-tab`);
 	}
 
 	function handleElementClick(element: OverpassElement, event: MouseEvent): void {
 		if (event.ctrlKey)
-			mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it.type != "overpass" || it.element !== element), true);
+			mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it.type != "overpass" || it.element !== element), true);
 		else
-			mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it.type == "overpass" && it.element === element), true);
+			mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it.type == "overpass" && it.element === element), true);
 	}
 
 	function close(): void {
-		mapContext.components.selectionHandler.setSelectedItems([]);
+		mapContext.value.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 

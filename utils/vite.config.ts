@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
-import dtsPlugin from 'vite-plugin-dts';
-import autoExternalPlugin from 'rollup-plugin-auto-external';
+import { defineConfig } from "vite";
+import dtsPlugin from "vite-plugin-dts";
+import autoExternalPlugin from "rollup-plugin-auto-external";
 
 export default defineConfig({
 	plugins: [

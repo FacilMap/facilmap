@@ -1,5 +1,5 @@
-import $ from 'jquery';
-import './obfuscate.scss';
+import $ from "jquery";
+import "./obfuscate.scss";
 import { deobfuscate } from "facilmap-utils";
 
 export function registerDeobfuscationHandlers(): void {

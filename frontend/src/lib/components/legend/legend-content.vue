@@ -4,11 +4,12 @@
 	import type { LegendItem, LegendType } from "./legend-utils";
 	import { createLinePlaceholderHtml } from "../../utils/ui";
 	import Popover from "../ui/popover.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed, reactive, ref } from "vue";
 	import { mapRef } from "../../utils/vue";
+	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
-	const mapContext = injectMapContextRequired();
+	const context = injectContextRequired();
+	const mapContext = requireMapContext(context);
 
 	const props = withDefaults(defineProps<{
 		legend1?: string;
@@ -48,7 +49,7 @@
 			}
 		}
 
-		mapContext.components.map.setFmFilter(makeTypeFilter(mapContext.components.map.fmFilter, typeInfo.typeId, filters));
+		mapContext.value.components.map.setFmFilter(makeTypeFilter(mapContext.value.components.map.fmFilter, typeInfo.typeId, filters));
 	}
 
 	function makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): string {

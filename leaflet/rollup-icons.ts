@@ -1,7 +1,7 @@
 import { Plugin } from "rollup";
-import glob from 'fast-glob';
-import { readFile } from 'fs/promises';
-import { createRequire } from 'module';
+import glob from "fast-glob";
+import { readFile } from "fs/promises";
+import { createRequire } from "module";
 
 // https://stackoverflow.com/a/62499498/242365
 const require = createRequire(import.meta.url);

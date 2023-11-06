@@ -1,24 +1,20 @@
 <script setup lang="ts">
 	import FmHeightgraph from "../../utils/heightgraph";
 	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectSearchBoxContextOptional } from "../search-box/search-box-context.vue";
-	import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+	import { onBeforeUnmount, onMounted, ref, toRef, watch } from "vue";
 	import { useDomEventListener, useEventListener } from "../../utils/utils";
+	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const props = defineProps<{
 		route: RouteWithTrackPoints | LineWithTrackPoints;
 	}>();
 
-	const mapContext = injectMapContextRequired();
-	const searchBoxContext = injectSearchBoxContextOptional();
+	const context = injectContextRequired();
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = toRef(() => context.components.searchBox);
 
-
-
-	if (searchBoxContext) {
-		useEventListener(searchBoxContext, "resizeend", handleResize);
-		useEventListener(searchBoxContext, "resizereset", handleResize);
-	}
+	useEventListener(searchBoxContext, "resizeend", handleResize);
+	useEventListener(searchBoxContext, "resizereset", handleResize);
 
 	useDomEventListener(window, "resize", handleResize);
 
@@ -28,16 +24,16 @@
 
 	onMounted(() => {
 		elevationPlot = new FmHeightgraph();
-		elevationPlot._map = mapContext.components.map;
+		elevationPlot._map = mapContext.value.components.map;
 
 		handleTrackPointsChange();
 
-		containerRef.value!.append(elevationPlot.onAdd(mapContext.components.map));
+		containerRef.value!.append(elevationPlot.onAdd(mapContext.value.components.map));
 		handleResize();
 	});
 
 	onBeforeUnmount(() => {
-		elevationPlot!.onRemove(mapContext.components.map);
+		elevationPlot!.onRemove(mapContext.value.components.map);
 	});
 
 	function handleTrackPointsChange() {

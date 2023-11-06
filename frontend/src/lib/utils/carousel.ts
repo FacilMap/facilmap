@@ -30,16 +30,16 @@ export function useCarousel(element: Ref<HTMLElement | undefined>): Readonly<Car
 				carousel.to(context.tab);
 			}
 
-			newRef.addEventListener("slide.bs.carousel", handleSlide);
+			newRef.addEventListener("slid.bs.carousel", handleSlid);
 
 			onCleanup(() => {
 				carousel.dispose();
-				newRef.removeEventListener("slide.bs.carousel", handleSlide);
+				newRef.removeEventListener("slid.bs.carousel", handleSlid);
 			});
 		}
 	});
 
-	function handleSlide(e: Event) {
+	function handleSlid(e: Event) {
 		const event = e as Event & Carousel.Event;
 		context.tab = event.to;
 	}

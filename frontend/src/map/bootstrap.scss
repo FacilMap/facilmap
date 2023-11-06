@@ -1,7 +1,8 @@
 $btn-transition: color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out; // Delete background-color from transition
-$secondary: #fff;
 $enable-shadows: true;
 $enable-gradients: true;
+
+$secondary: #fff;
 
 @import "bootstrap/scss/bootstrap";
 
@@ -52,4 +53,8 @@ html,body {
 			background-image: none;
 		}
 	}
+}
+
+.list-group-item.active a {
+	color: inherit;
 }

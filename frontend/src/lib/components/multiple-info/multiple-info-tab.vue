@@ -3,23 +3,22 @@
 	import type { Line, Marker } from "facilmap-types";
 	import { isLine, isMarker, useEventListener } from "../../utils/utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
 	import { computed } from "vue";
+	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
 	const objects = computed(() => {
-		const objects = mapContext.selection.flatMap((item): Array<Marker | Line> => {
-			if (item.type == "marker" && client.markers[item.id])
-				return [client.markers[item.id]];
-			else if (item.type == "line" && client.lines[item.id])
-				return [client.lines[item.id]];
+		const objects = mapContext.value.selection.flatMap((item): Array<Marker | Line> => {
+			if (item.type == "marker" && client.value.markers[item.id])
+				return [client.value.markers[item.id]];
+			else if (item.type == "line" && client.value.lines[item.id])
+				return [client.value.lines[item.id]];
 			else
 				return [];
 		});
@@ -28,25 +27,25 @@
 
 	function handleOpenSelection(): void {
 		if (objects.value)
-			mapContext.emit("search-box-show-tab", { id: `fm${context.id}-multiple-info-tab` });
+			searchBoxContext.value.activateTab(`fm${context.id}-multiple-info-tab`);
 	}
 
 	const title = computed(() => objects.value ? `${objects.value.length} objects` : "");
 
 	function handleObjectClick(object: Marker | Line, event: MouseEvent): void {
-		const item = mapContext.selection.find((it) => {
+		const item = mapContext.value.selection.find((it) => {
 			return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
 		});
 		if (item) {
 			if (event.ctrlKey)
-				mapContext.components.selectionHandler.setSelectedItems(mapContext.selection.filter((it) => it !== item), true);
+				mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it !== item), true);
 			else
-				mapContext.components.selectionHandler.setSelectedItems([item], true);
+				mapContext.value.components.selectionHandler.setSelectedItems([item], true);
 		}
 	}
 
 	function close(): void {
-		mapContext.components.selectionHandler.setSelectedItems([]);
+		mapContext.value.components.selectionHandler.setSelectedItems([]);
 	}
 </script>
 

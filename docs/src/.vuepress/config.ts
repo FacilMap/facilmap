@@ -1,9 +1,9 @@
-import { description } from '../../package.json';
-import { defaultTheme, defineUserConfig } from 'vuepress';
-import backToTopPlugin from '@vuepress/plugin-back-to-top';
-import mediumZoomPlugin from '@vuepress/plugin-medium-zoom';
-//import checkMdPluin from 'vuepress-plugin-check-md';
-import { searchPlugin } from '@vuepress/plugin-search';
+import { description } from "../../package.json";
+import { defaultTheme, defineUserConfig } from "vuepress";
+import backToTopPlugin from "@vuepress/plugin-back-to-top";
+import mediumZoomPlugin from "@vuepress/plugin-medium-zoom";
+//import checkMdPluin from "vuepress-plugin-check-md";
+import { searchPlugin } from "@vuepress/plugin-search";
 
 export default defineUserConfig({
 	title: 'FacilMap',

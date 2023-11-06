@@ -5,18 +5,19 @@
 	import Icon from "../ui/icon.vue";
 	import { computed, onScopeDispose, reactive, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { injectClientRequired } from "../client-context.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { mapRef } from "../../utils/vue";
 	import { getUniqueId } from "../../utils/utils";
 	import Popover from "../ui/popover.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	type HistoryEntryWithLabels = HistoryEntry & {
 		labels: HistoryEntryLabels;
 	};
 
-	const client = injectClientRequired();
+	const context = injectContextRequired();
+	const client = requireClientContext(context);
 
 	const toasts = useToasts();
 
@@ -33,7 +34,7 @@
 	const id = getUniqueId("fm-history-dialog");
 
 	try {
-		await client.listenToHistory();
+		await client.value.listenToHistory();
 	} catch (err) {
 		toasts.showErrorToast(`${id}-listen-error`, "Error loading history", err);
 	} finally {
@@ -42,7 +43,7 @@
 
 	onScopeDispose(async () => {
 		try {
-			await client.stopListeningToHistory();
+			await client.value.stopListeningToHistory();
 		} catch (err) {
 			console.error("Error stopping listening to history", err);
 		}
@@ -57,7 +58,7 @@
 		isReverting.value = entry;
 
 		try {
-			await client.revertHistoryEntry({ id: entry.id });
+			await client.value.revertHistoryEntry({ id: entry.id });
 		} catch (err) {
 			toasts.showErrorToast(`${id}-revert-error`, "Error loading history", err);
 		} finally {
@@ -67,10 +68,10 @@
 
 	const history = computed((): HistoryEntryWithLabels[] => {
 		return orderBy(
-			Object.values(client.history).map((entry) => ({
+			Object.values(client.value.history).map((entry) => ({
 				...entry,
 				time: entry.time.replace(/\.\d+/, ""),
-				labels: getLabelsForHistoryEntry(client, entry)
+				labels: getLabelsForHistoryEntry(client.value, entry)
 			})),
 			["time"],
 			["desc"]

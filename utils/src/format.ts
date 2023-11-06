@@ -1,11 +1,11 @@
-import { marked } from 'marked';
+import { marked } from "marked";
 import { Field } from "facilmap-types";
-import { normalizeField } from './filter.js';
-import { quoteHtml } from './utils.js';
-import linkifyStr from 'linkify-string';
-import createPurify from 'dompurify';
-import { obfuscate } from './obfuscate.js';
-import cheerio from 'cheerio';
+import { normalizeField } from "./filter.js";
+import { quoteHtml } from "./utils.js";
+import linkifyStr from "linkify-string";
+import createPurify from "dompurify";
+import { obfuscate } from "./obfuscate.js";
+import cheerio from "cheerio";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 

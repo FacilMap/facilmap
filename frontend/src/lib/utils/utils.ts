@@ -2,7 +2,7 @@ import { isEqual } from "lodash-es";
 import { clone } from "facilmap-utils";
 import type { Field, Line, Marker, Type } from "facilmap-types";
 import type { Emitter } from "mitt";
-import { DeepReadonly, onBeforeUnmount, onMounted } from "vue";
+import { DeepReadonly, Ref, onBeforeUnmount, onMounted, watchEffect } from "vue";
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -61,13 +61,15 @@ export function isPromise(object: any): object is Promise<unknown> {
 	return typeof object === 'object' && 'then' in object && typeof object.then === 'function';
 }
 
-export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: Emitter<EventMap> | DeepReadonly<Emitter<EventMap>>, type: EventType, listener: (data: EventMap[EventType]) => void): void {
-	onMounted(() => {
-		emitter.on(type, listener);
-	});
-
-	onBeforeUnmount(() => {
-		emitter.off(type, listener);
+export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: Ref<Emitter<EventMap> | DeepReadonly<Emitter<EventMap>> | undefined>, type: EventType, listener: (data: EventMap[EventType]) => void): void {
+	watchEffect((onCleanup) => {
+		if (emitter.value) {
+			const val = emitter.value;
+			val.on(type, listener);
+			onCleanup(() => {
+				val.off(type, listener);
+			});
+		}
 	});
 }
 

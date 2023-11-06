@@ -2,9 +2,6 @@
 	import Icon from "./ui/icon.vue";
 	import type { FindPadsResult } from "facilmap-types";
 	import decodeURIComponent from "decode-uri-component";
-	import { Context, injectContextRequired } from "../utils/context";
-	import { injectClientContextRequired, injectClientRequired } from "./client-context.vue";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import Pagination from "./ui/pagination.vue";
@@ -13,6 +10,8 @@
 	import ValidatedForm from "./ui/validated-form/validated-form.vue";
 	import pDebounce from "p-debounce";
 	import vValidity from "./ui/validated-form/validity";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import type { FacilMapContext } from "./facil-map-context-provider/facil-map-context";
 
 	const toasts = useToasts();
 
@@ -22,7 +21,7 @@
 
 	const ITEMS_PER_PAGE = 20;
 
-	function parsePadId(val: string, context: Context): { padId: string; hash: string } {
+	function parsePadId(val: string, context: FacilMapContext): { padId: string; hash: string } {
 		if (val.startsWith(context.baseUrl))
 			val = decodeURIComponent(val.substr(context.baseUrl.length));
 
@@ -34,9 +33,8 @@
 	}
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
-	const clientContext = injectClientContextRequired();
-	const mapContext = injectMapContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
 
 	const id = getUniqueId("fm-open-map");
 
@@ -58,22 +56,22 @@
 
 	function handleSubmit(): void {
 		const parsed = parsePadId(padId.value, context);
-		clientContext.openPad(parsed.padId);
+		client.value.openPad(parsed.padId);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
 			// TODO: This is called too early
-			mapContext.components.hashHandler.applyHash(parsed.hash);
+			mapContext.value.components.hashHandler.applyHash(parsed.hash);
 		}, 0);
 	}
 
 	function openResult(result: FindPadsResult): void {
-		clientContext.openPad(result.id);
+		client.value.openPad(result.id);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
 			// TODO: This is called too early
-			mapContext.components.hashHandler.applyHash("#");
+			mapContext.value.components.hashHandler.applyHash("#");
 		}, 0);
 	}
 
@@ -90,7 +88,7 @@
 		toasts.hideToast(`fm${context.id}-open-map-search-error`);
 
 		try {
-			const newResults = await client.findPads({
+			const newResults = await client.value.findPads({
 				query,
 				start: (page - 1) * ITEMS_PER_PAGE,
 				limit: ITEMS_PER_PAGE
@@ -107,7 +105,7 @@
 	}
 
 	const debouncedValidatePadId = pDebounce(async (padId: string) => {
-		const padInfo = await client.getPad({ padId });
+		const padInfo = await client.value.getPad({ padId });
 		if (!padInfo) {
 			return "No map with this ID could be found.";
 		}

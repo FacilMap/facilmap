@@ -1,33 +1,33 @@
 <script setup lang="ts">
-	import { filterHasError } from 'facilmap-utils';
+	import { filterHasError } from "facilmap-utils";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import { computed, ref } from 'vue';
-	import { injectMapContextRequired } from './leaflet-map/leaflet-map.vue';
-	import { injectClientRequired } from './client-context.vue';
-	import vValidity from './ui/validated-form/validity';
+	import { computed, ref } from "vue";
+	import vValidity from "./ui/validated-form/validity";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
-	const mapContext = injectMapContextRequired();
-	const client = injectClientRequired();
+	const context = injectContextRequired();
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
 
 	const emit = defineEmits<{
 		hidden: [];
 	}>();
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
-	const filter = ref(mapContext.filter ?? "");
+	const filter = ref(mapContext.value.filter ?? "");
 
-	const types = computed(() => Object.values(client.types));
+	const types = computed(() => Object.values(client.value.types));
 
 	const validationError = computed(() => {
 		return filterHasError(filter.value)?.message;
 	});
 
 	const isModified = computed(() => {
-		return filter.value != (mapContext.filter ?? "");
+		return filter.value != (mapContext.value.filter ?? "");
 	});
 
 	function save(): void {
-		mapContext.components.map.setFmFilter(filter.value || undefined);
+		mapContext.value.components.map.setFmFilter(filter.value || undefined);
 		modalRef.value?.modal.hide();
 	}
 </script>

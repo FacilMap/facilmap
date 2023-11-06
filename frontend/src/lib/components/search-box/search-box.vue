@@ -2,16 +2,72 @@
 	import $ from "jquery";
 	import Icon from "../ui/icon.vue";
 	import hammer from "hammerjs";
-	import { injectContextRequired } from "../../utils/context";
-	import { defineComponent, onMounted, ref, watch } from "vue";
-	import { injectSearchBoxContextRequired } from "./search-box-context.vue";
+	import { Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
 	import vTooltip, { hideAllTooltips } from "../../utils/tooltip";
 	import { useEventListener } from "../../utils/utils";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
+	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
+	import mitt from "mitt";
+	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
-	const searchBoxContext = injectSearchBoxContextRequired();
+	const mapContext = requireMapContext(context);
+
+	const tabs = reactive(new Map<string, SearchBoxTab>());
+	const activeTabId = ref<string | undefined>();
+	const tabHistory = ref<string[]>([]);
+
+	function provideTab(id: string, tabRef: Ref<SearchBoxTab>) {
+		if (tabs.has(id)) {
+			throw new Error(`Tab with ID ${id} already present.`);
+		}
+
+		watch(tabRef, (tab) => {
+			tabs.set(id, tab);
+		}, { immediate: true });
+
+		if (activeTabId.value == null) {
+			activateTab(id);
+		}
+
+		onScopeDispose(() => {
+			tabs.delete(id);
+
+			const isActive = activeTabId.value === id;
+			tabHistory.value = tabHistory.value.filter((v) => v !== id);
+			if (isActive) {
+				activeTabId.value = tabHistory.value.pop();
+			}
+		});
+	}
+
+	function activateTab(id: string, expand?: boolean) {
+		activeTabId.value = id;
+		tabHistory.value.push(id);
+
+		if (expand) {
+			nextTick(() => {
+				searchBoxContext.emit("expand");
+			});
+		}
+	}
+
+	const searchBoxContext: WritableSearchBoxContext = reactive(Object.assign(mitt<SearchBoxEventMap>(), {
+		tabs,
+		activeTabId: undefined,
+		activeTab: undefined,
+		provideTab,
+		activateTab
+	}));
+
+	context.provideComponent("searchBox", toRef(readonly(searchBoxContext)));
+
+	watch([
+		activeTabId,
+		() => activeTabId.value != null ? tabs.get(activeTabId.value) : undefined
+	], ([tabId, tab]) => {
+		searchBoxContext.activeTabId = tabId;
+		searchBoxContext.activeTab = tab ? readonly(tab) : undefined;
+	});
 
 	const containerRef = ref<HTMLElement>();
 	const cardHeaderRef = ref<HTMLElement>();
@@ -24,7 +80,7 @@
 	const hasFocus = ref(false);
 	const isResizing = ref(false);
 
-	useEventListener(searchBoxContext, "expand", handleExpand);
+	useEventListener(toRef(searchBoxContext), "expand", handleExpand);
 
 	onMounted(() => {
 		const pan = new hammer.Manager(cardHeaderRef.value!);
@@ -53,7 +109,7 @@
 	}
 
 	function handlePanEnd(): void {
-		mapContext.components.map.invalidateSize({ pan: false });
+		mapContext.value.components.map.invalidateSize({ pan: false });
 	}
 
 	function getSanitizedHeight(height: number): number {
@@ -107,7 +163,7 @@
 	}
 
 	function handleTransitionEnd(): void {
-		mapContext.components.map.invalidateSize({ pan: false });
+		mapContext.value.components.map.invalidateSize({ pan: false });
 	}
 
 	const TabContent = defineComponent({
@@ -116,12 +172,12 @@
 			tabId: { type: String, required: true }
 		},
 		setup(props) {
-			return () => searchBoxContext.tabs.get(props.tabId)?.value.content?.({ isActive: props.isActive });
+			return () => searchBoxContext.tabs.get(props.tabId)?.content?.({ isActive: props.isActive });
 		}
 	});
 
 	watch(() => searchBoxContext.activeTab?.hashQuery, (hashQuery) => {
-		mapContext.setFallbackQuery(hashQuery);
+		mapContext.value.setFallbackQuery(hashQuery);
 	});
 </script>
 
@@ -129,39 +185,42 @@
 	<div
 		class="card fm-search-box"
 		v-show="searchBoxContext.tabs.size > 0"
-		no-body
 		ref="containerRef"
 		:class="{ isNarrow: context.isNarrow, hasFocus }"
 		@focusin="handleFocusIn"
 		@focusout="handleFocusOut"
 		@transitionend="handleTransitionEnd"
 	>
-		<div class="card-header" ref="cardHeaderRef" @contextmenu.prevent>
+		<div
+			class="card-header"
+			ref="cardHeaderRef"
+			@contextmenu="($event as PointerEvent).pointerType === 'touch' && context.isNarrow && $event.preventDefault()"
+		>
 			<ul class="nav nav-tabs card-header-tabs">
 				<li
 					v-for="[tabId, tab] in searchBoxContext.tabs"
 					:key="tabId"
-					class="nav-item"
-				>
+					class="nav-item nav-link"
+					:class="{ active: tabId === searchBoxContext.activeTabId }"
+				> <!-- nav-link class on the <li> rather than the <a> so that we can have multiple <a> children -->
 					<a
-						class="nav-link"
-						:class="{ active: tabId === searchBoxContext.activeTabId }"
 						:aria-current="tabId === searchBoxContext.activeTabId ? 'true' : undefined"
 						href="javascript:"
+						:class="{ active: tabId === searchBoxContext.activeTabId }"
 						@click="searchBoxContext.activateTab(tabId, true)"
-					>{{tab.value.title}}</a>
+					>{{tab.title}}</a>
 
 					<a
-						v-if="tab.value.onClose"
+						v-if="tab.onClose"
 						href="javascript:"
-						@click="tab.value.onClose()"
+						@click="tab.onClose()"
 					><Icon icon="remove" alt="Close"></Icon></a>
 				</li>
 			</ul>
 		</div>
 
 		<template v-for="[tabId, tab] in searchBoxContext.tabs" :key="tabId">
-			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.value.class">
+			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.class">
 				<TabContent :tabId="tabId" :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
 			</div>
 		</template>
@@ -195,8 +254,16 @@
 				opacity: 1;
 			}
 
-			.nav-tabs .nav-item a {
-				padding: 0.1rem 0.3rem;
+			> .card-header .nav-tabs .nav-item {
+				padding: 0;
+
+				> :nth-child(1) {
+					padding: 0.1rem 0.1rem 0.1rem 0.3rem;
+				}
+
+				> :nth-child(2) {
+					padding: 0.1rem 0.3rem 0.1rem 0.1rem;
+				}
 			}
 		}
 
@@ -209,9 +276,10 @@
 			height: auto !important; /* Override resize height from non-narrow mode */
 			width: auto !important; /* Override resize width from non-narrow mode */
 
-			.card-header {
+			> .card-header {
 				padding-top: 11px;
 				position: relative;
+				-webkit-touch-callout: none;
 
 				::before {
 					content: "";
@@ -226,47 +294,50 @@
 			}
 		}
 
-		.card-body {
+		> .card-body {
 			min-height: 0;
+			overflow: auto;
 		}
 
-		.card-header {
+		> .card-header {
 			display: flex;
 			flex-direction: column;
 			flex-shrink: 0;
 			padding: 0.3rem 0.3rem 0 0.3rem;
-		}
 
-		.nav-tabs {
-			display: grid;
-			grid-auto-columns: 1fr;
-			grid-auto-flow: column;
-			text-align: center;
-			gap: 5px;
-			margin: 0;
+			.nav-tabs {
+				display: grid;
+				grid-auto-columns: 1fr;
+				grid-auto-flow: column;
+				text-align: center;
+				gap: 5px;
+				margin: 0;
 
-			.nav-item {
-				min-width: 0;
+				.nav-item {
+					min-width: 0;
+					display: flex;
+
+					a {
+						text-decoration: inherit; // Set to none in ".nav-link" style, but apply that to the <li> rather than the <a>
+					}
+
+					> :nth-child(1) {
+						flex-grow: 1;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+						overflow: hidden;
+					}
+
+					> :nth-child(2) {
+						flex-shrink: 0;
+					}
+				}
 			}
-
-			.nav-item a {
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				overflow: hidden;
-				font-size: 14px;
-			}
-		}
-
-		.tab-pane.active {
-			display: flex;
-			flex-direction: column;
-			overflow: auto;
 		}
 
 		.fm-search-box-collapse-point {
 			overflow: auto;
 		}
-
 
 		hr {
 			width: 100%;

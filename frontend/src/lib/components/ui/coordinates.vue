@@ -27,7 +27,7 @@
 		<button
 			type="button"
 			class="btn btn-secondary"
-		 	@click="copy()"
+			@click="copy()"
 			v-tooltip="'Copy to clipboard'"
 		>
 			<Icon icon="copy" alt="Copy to clipboard"></Icon>
@@ -37,6 +37,9 @@
 
 <style lang="scss">
 	.fm-coordinates {
+		display: inline-flex;
+		align-items: center;
+
 		button {
 			margin-left: 0.5rem;
 			padding: 0 0.25rem;

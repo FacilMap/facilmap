@@ -2,6 +2,7 @@ import type { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, LatLngBounds, LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
 import { LinesLayer, MarkerLayer, MarkersLayer, OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
+import type { DeepReadonly } from "vue";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -15,7 +16,7 @@ export type SelectedItem = {
 	element: OverpassElement;
 };
 
-function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
+function isAllowedSibling(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>) {
 	if (["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))
 		return true;
 	else if (a.type == "searchResult" && b.type == "searchResult")
@@ -26,11 +27,11 @@ function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
 		return false;
 }
 
-function byType<T extends SelectedItem["type"]>(items: SelectedItem[], type: T): Array<SelectedItem & { type: T }> {
+function byType<T extends SelectedItem["type"]>(items: Array<DeepReadonly<SelectedItem>>, type: T): Array<SelectedItem & { type: T }> {
 	return items.filter((i) => i.type === type) as any;
 }
 
-function isSame(a: SelectedItem, b: SelectedItem): boolean {
+function isSame(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>): boolean {
 	if ((a.type == "marker" && b.type == "marker") || (a.type == "line" && b.type == "line"))
 		return a.id == b.id;
 	else if (a.type == "searchResult" && b.type == "searchResult")
@@ -43,7 +44,7 @@ function isSame(a: SelectedItem, b: SelectedItem): boolean {
 
 export default class SelectionHandler extends Handler {
 
-	_selection: SelectedItem[] = [];
+	_selection: Array<DeepReadonly<SelectedItem>> = [];
 
 	_markersLayer: MarkersLayer;
 	_linesLayer: LinesLayer;
@@ -51,7 +52,7 @@ export default class SelectionHandler extends Handler {
 	_overpassLayer: OverpassLayer;
 
 	_boxSelectionHandler: BoxSelection;
-	_selectionBeforeBox: SelectedItem[] = [];
+	_selectionBeforeBox: Array<DeepReadonly<SelectedItem>> = [];
 	_isBoxInteraction = false;
 
 	_mapInteraction: number = 0;
@@ -133,11 +134,11 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems(without);
 	}
 
-	getSelection(): SelectedItem[] {
+	getSelection(): Array<DeepReadonly<SelectedItem>> {
 		return this._selection;
 	}
 
-	setSelectedItems(items: SelectedItem[], open = false): void {
+	setSelectedItems(items: Array<DeepReadonly<SelectedItem>>, open = false): void {
 		this._selection = items;
 
 		this._markersLayer.setHighlightedMarkers(new Set(

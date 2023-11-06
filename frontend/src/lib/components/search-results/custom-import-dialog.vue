@@ -6,13 +6,12 @@
 	import { mapValues, pickBy, uniq } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { getUniqueId } from "../../utils/utils";
-	import { injectContextRequired } from "../../utils/context";
-	import { injectClientRequired } from "../client-context.vue";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = injectClientRequired();
+	const client = requireClientContext(context);
 	const toasts = useToasts();
 
 	const props = withDefaults(defineProps<{
@@ -37,24 +36,24 @@
 		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId) => {
 			const options: Array<{ key: string; value: string | false; text: string; disabled?: boolean }> = [];
 
-			for (const type of Object.values(client.types)) {
+			for (const type of Object.values(client.value.types)) {
 				if (type.name == customType.name && type.type == customType.type)
 					options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
-			if (client.writable == 2 && !typeExists(client, customType))
+			if (client.value.writable == 2 && !typeExists(client, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 
 			options.push({ key: "false1", value: false, text: "Do not import" });
 			options.push({ key: "false2", value: false, text: "──────────", disabled: true });
 
-			for (const type of Object.values(client.types)) {
+			for (const type of Object.values(client.value.types)) {
 				if (type.name != customType.name && type.type == customType.type)
 					options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
-				if (client.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client, customType2))
+				if (client.value.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client, customType2))
 					options.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: `Import type “${customType2.name}”` });
 			}
 
@@ -80,11 +79,11 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (client.writable && customType.type == "marker" && !typeExists(client, customType))
+			if (client.value.writable && customType.type == "marker" && !typeExists(client, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 
-		for (const type of Object.values(client.types)) {
+		for (const type of Object.values(client.value.types)) {
 			if (type.type == "marker")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 		}
@@ -98,11 +97,11 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (client.writable && customType.type == "line")
+			if (client.value.writable && customType.type == "line")
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 
-		for (const type of Object.values(client.types)) {
+		for (const type of Object.values(client.value.types)) {
 			if (type.type == "line")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 		}
@@ -119,9 +118,9 @@
 				if (id !== false) {
 					const m = id.match(/^([ei])(.*)$/);
 					if (m && m[1] == "e")
-						resolvedMapping[id] = client.types[m[2] as any];
+						resolvedMapping[id] = client.value.types[m[2] as any];
 					else if (m && m[1] == "i")
-						resolvedMapping[id] = await client.addType(props.customTypes[m[2] as any]);
+						resolvedMapping[id] = await client.value.addType(props.customTypes[m[2] as any]);
 				}
 			}
 

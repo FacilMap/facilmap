@@ -6,41 +6,40 @@
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import SearchResultInfo from "./search-result-info.vue";
 	import { Util } from "leaflet";
-	import { injectContextRequired } from "../utils/context";
-	import { injectClientRequired } from "./client-context.vue";
-	import { computed, markRaw, ref, watch } from "vue";
+	import { computed, markRaw, nextTick, ref, shallowReactive, watch } from "vue";
 	import { useEventListener } from "../utils/utils";
-	import { injectMapContextRequired } from "./leaflet-map/leaflet-map.vue";
 	import SearchBoxTab from "./search-box/search-box-tab.vue"
+	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
-	const client = injectClientRequired();
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	const toasts = useToasts();
 
 	let lastClick = 0;
 
 	const activeResults = ref<SearchResult[]>([]);
-	const layers = ref<SearchResultsLayer[]>([]);
+	const layers = shallowReactive<SearchResultsLayer[]>([]);
 	const isAdding = ref(false);
 
 	useEventListener(mapContext, "map-long-click", handleMapLongClick);
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
-	const layerIds = computed(() => layers.value.map((layer) => Util.stamp(layer)));
+	const layerIds = computed(() => layers.map((layer) => Util.stamp(layer)));
 
-	watch(() => mapContext.selection, () => {
+	watch(() => mapContext.value.selection, () => {
 		for (let i = activeResults.value.length - 1; i >= 0; i--) {
-			if (!mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i]))
+			if (!mapContext.value.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i]))
 				close(activeResults.value[i]);
 		}
 	});
 
 	function handleOpenSelection(): void {
 		for (let i = 0; i < layerIds.value.length; i++) {
-			if (mapContext.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i])) {
-				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-click-marker-tab-${i}` });
+			if (mapContext.value.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i])) {
+				searchBoxContext.value.activateTab(`fm${context.id}-click-marker-tab-${i}`);
 				break;
 			}
 		}
@@ -50,8 +49,8 @@
 		const now = Date.now();
 		lastClick = now;
 
-		const results = await client.find({
-			query: `geo:${round(point.lat, 5)},${round(point.lon, 5)}?z=${mapContext.zoom}`,
+		const results = await client.value.find({
+			query: `geo:${round(point.lat, 5)},${round(point.lon, 5)}?z=${mapContext.value.zoom}`,
 			loadUrls: false,
 			elevation: true
 		});
@@ -62,17 +61,16 @@
 		}
 
 		if (results.length > 0) {
-			const layer = new SearchResultsLayer([results[0]]).addTo(mapContext.components.map);
-			mapContext.components.selectionHandler.addSearchResultLayer(layer);
+			const layer = new SearchResultsLayer([results[0]]).addTo(mapContext.value.components.map);
+			mapContext.value.components.selectionHandler.addSearchResultLayer(layer);
 
 			activeResults.value.push(results[0]);
-			layers.value.push(markRaw(layer));
+			layers.push(markRaw(layer));
 
-			mapContext.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: results[0], layerId: Util.stamp(layer) }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: results[0], layerId: Util.stamp(layer) }]);
 
-			setTimeout(() => {
-				mapContext.emit("search-box-show-tab", { id: `fm${context.id}-click-marker-tab-${activeResults.value.length - 1}` });
-			}, 0);
+			await nextTick();
+			searchBoxContext.value.activateTab(`fm${context.id}-click-marker-tab-${activeResults.value.length - 1}`);
 		}
 	}
 
@@ -81,10 +79,10 @@
 		if (idx == -1)
 			return;
 
-		mapContext.components.selectionHandler.removeSearchResultLayer(layers.value[idx]);
-		layers.value[idx].remove();
+		mapContext.value.components.selectionHandler.removeSearchResultLayer(layers[idx]);
+		layers[idx].remove();
 		activeResults.value.splice(idx, 1);
-		layers.value.splice(idx, 1);
+		layers.splice(idx, 1);
 	}
 
 	async function addToMap(result: SearchResult, type: Type): Promise<void> {
@@ -98,17 +96,17 @@
 			};
 
 			if(type.type == "marker") {
-				const marker = await client.addMarker({
+				const marker = await client.value.addMarker({
 					...obj,
 					lat: result.lat!,
 					lon: result.lon!,
 					typeId: type.id
 				});
 
-				mapContext.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
+				mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 			} else if(type.type == "line") {
 				const trackPoints = lineStringToTrackPoints(result.geojson as any);
-				const line = await client.addLine({
+				const line = await client.value.addLine({
 					...obj,
 					typeId: type.id,
 					routePoints: [trackPoints[0], trackPoints[trackPoints.length-1]],
@@ -116,7 +114,7 @@
 					mode: "track"
 				});
 
-				mapContext.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
+				mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 			}
 
 			close(result);
@@ -125,23 +123,6 @@
 		} finally {
 			isAdding.value = false;
 		}
-	}
-
-	function useAs(result: SearchResult, event: "route-set-from" | "route-add-via" | "route-set-to"): void {
-		mapContext.emit(event, { query: result.short_name, searchSuggestions: [result], selectedSuggestion: result });
-		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
-	}
-
-	function useAsFrom(result: SearchResult): void {
-		useAs(result, "route-set-from");
-	}
-
-	function useAsVia(result: SearchResult): void {
-		useAs(result, "route-add-via");
-	}
-
-	function useAsTo(result: SearchResult): void {
-		useAs(result, "route-set-to");
 	}
 </script>
 
@@ -157,9 +138,6 @@
 				:result="result"
 				:is-adding="isAdding"
 				@add-to-map="addToMap(result, $event)"
-				@use-as-from="useAsFrom(result)"
-				@use-as-via="useAsVia(result)"
-				@use-as-to="useAsTo(result)"
 			></SearchResultInfo>
 		</SearchBoxTab>
 	</template>

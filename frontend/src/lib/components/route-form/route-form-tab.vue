@@ -3,12 +3,12 @@
 	import type { HashQuery } from "facilmap-leaflet";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { ref } from "vue";
-	import { injectMapContextRequired } from "../leaflet-map/leaflet-map.vue";
-	import { injectContextRequired } from "../../utils/context";
 	import { useEventListener } from "../../utils/utils";
+	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const mapContext = injectMapContextRequired();
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
 
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
@@ -28,7 +28,7 @@
 	});
 
 	function activate(): void {
-		mapContext.emit("search-box-show-tab", { id: `fm${context.id}-route-form-tab` });
+		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`);
 	}
 </script>
 

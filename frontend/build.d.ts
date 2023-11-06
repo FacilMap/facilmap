@@ -1,4 +1,4 @@
-import { InlineConfig, ViteDevServer } from 'vite';
+import { InlineConfig, ViteDevServer } from "vite";
 
 export const paths: {
     root: string;
