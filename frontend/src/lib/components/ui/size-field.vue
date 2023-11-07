@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { computed } from "vue";
-	import vValidity from "./validated-form/validity";
+	import vValidity, { vValidityContext } from "./validated-form/validity";
+	import vTooltip from "../../utils/tooltip";
 
 	const props = defineProps<{
 		modelValue: number | undefined;
@@ -28,11 +29,23 @@
 </script>
 
 <template>
-	<input type="range" class="custom-range" min="15" v-model="value" v-validity="validationError" />
-	<div class="invalid-feedback" v-if="validationError">
-		{{validationError}}
+	<div v-validity-context class="fm-size-field">
+		<input
+			type="range"
+			class="custom-range"
+			min="15"
+			v-model="value"
+			v-validity="validationError"
+			v-tooltip="value != null ? `${value}` : undefined"
+		/>
+		<div class="invalid-feedback">
+			{{validationError}}
+		</div>
 	</div>
 </template>
 
 <style lang="scss">
+	.fm-size-field input {
+		width: 100%;
+	}
 </style>

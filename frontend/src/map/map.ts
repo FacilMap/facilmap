@@ -1,9 +1,6 @@
 import $ from "jquery";
 import { createApp, defineComponent, h, ref, watch } from "vue";
-//import { FacilMap } from "../lib";
-import FacilMap from "../lib/components/facil-map.vue";
-import "./bootstrap.scss";
-import "./map.scss";
+import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 

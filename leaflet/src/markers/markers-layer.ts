@@ -133,11 +133,6 @@ export default class MarkersLayer extends MarkerCluster {
 			const layer = new MarkerLayer([ 0, 0 ]);
 			this.markersById[marker.id] = layer;
 			this.addLayer(layer);
-
-			layer.bindTooltip("", { ...tooltipOptions, offset: [ 20, -15 ] });
-			layer.on("tooltipopen", () => {
-				this.markersById[marker.id].setTooltipContent(quoteHtml(this.client.markers[marker.id].name));
-			});
 		}
 
 		(this.markersById[marker.id] as any).marker = marker;
@@ -148,6 +143,17 @@ export default class MarkersLayer extends MarkerCluster {
 			this.markersById[marker.id].setLatLng([ marker.lat, marker.lon ]);
 
 		this.markersById[marker.id].setStyle({ marker, highlight, raised: highlight });
+
+		if (marker.name) {
+			const quoted = quoteHtml(marker.name);
+			if (this.markersById[marker.id]._tooltip) {
+				this.markersById[marker.id].setTooltipContent(quoted);
+			} else {
+				this.markersById[marker.id].bindTooltip(quoted, { ...tooltipOptions, offset: [ 20, -15 ] });
+			}
+		} else if (this.markersById[marker.id]._tooltip) {
+			this.markersById[marker.id].unbindTooltip();
+		}
 	}
 
 	_deleteMarker(marker: ObjectWithId): void {

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 	import type { Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
-	import { clone } from "facilmap-utils";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
-	import { isEqual } from "lodash-es";
+	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourField from "../ui/colour-field.vue";
 	import Draggable from "vuedraggable";
 	import Icon from "../ui/icon.vue";
@@ -15,6 +14,7 @@
 	import { computed, ref, watch } from "vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { vValidityContext } from "../ui/validated-form/validity";
 
 	function getControlNumber(type: Type, field: FieldUpdate): number {
 		return [
@@ -48,7 +48,7 @@
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
 	const initialField = computed(() => {
-		const field: FieldUpdate = clone(props.field);
+		const field: FieldUpdate = cloneDeep(props.field);
 
 		if(field.type == 'checkbox') {
 			if(!field.options || field.options.length != 2) {
@@ -71,7 +71,7 @@
 		return field;
 	});
 
-	const fieldValue = ref(clone(initialField.value));
+	const fieldValue = ref(cloneDeep(initialField.value));
 
 	watch(() => props.field, (newField, oldField) => {
 		if (fieldValue.value) {
@@ -149,7 +149,7 @@
 		<div class="row mb-3">
 			<label class="col-sm-3 col-form-label">Control</label>
 			<div class="col-sm-9">
-				<div class="form-check">
+				<div class="form-check fm-form-check-with-label">
 					<input
 						:id="`${id}-control-colour`"
 						class="form-check-input"
@@ -255,9 +255,9 @@
 						<td v-if="fieldValue.type == 'checkbox'">
 							<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
 						</td>
-						<td class="field">
+						<td class="field" v-validity-context>
 							<input class="form-control" v-model="option.value" v-validity="optionValidationErrors![idx].value" />
-							<div class="invalid-feedback" v-if="optionValidationErrors![idx].value">
+							<div class="invalid-feedback">
 								{{optionValidationErrors![idx].value}}
 							</div>
 						</td>
@@ -292,7 +292,7 @@
 			</tfoot>
 		</table>
 
-		<div class="invalid-feedback" v-if="validationError">
+		<div class="fm-form-invalid-feedback" v-if="validationError">
 			{{validationError}}
 		</div>
 	</ModalDialog>

@@ -73,6 +73,7 @@
 	const cardHeaderRef = ref<HTMLElement>();
 	const resizeHandleRef = ref<HTMLElement>();
 
+	const isPanning = ref<boolean>();
 	const panStartHeight = ref<number>();
 	const restoreHeight = ref<number>();
 	const resizeStartHeight = ref<number>();
@@ -99,6 +100,7 @@
 	});
 
 	function handlePanStart(): void {
+		isPanning.value = true;
 		restoreHeight.value = undefined;
 		panStartHeight.value = parseInt($(containerRef.value!).css("flex-basis"));
 	}
@@ -109,6 +111,7 @@
 	}
 
 	function handlePanEnd(): void {
+		isPanning.value = false;
 		mapContext.value.components.map.invalidateSize({ pan: false });
 	}
 
@@ -186,7 +189,7 @@
 		class="card fm-search-box"
 		v-show="searchBoxContext.tabs.size > 0"
 		ref="containerRef"
-		:class="{ isNarrow: context.isNarrow, hasFocus }"
+		:class="{ isNarrow: context.isNarrow, hasFocus, isPanning }"
 		@focusin="handleFocusIn"
 		@focusout="handleFocusOut"
 		@transitionend="handleTransitionEnd"
@@ -270,8 +273,11 @@
 		&.isNarrow {
 			min-height: 55px;
 			flex-basis: 55px;
-			transition: flex-basis 0.4s;
 			overflow: hidden;
+
+			&:not(.isPanning) {
+				transition: flex-basis 0.4s;
+			}
 
 			height: auto !important; /* Override resize height from non-narrow mode */
 			width: auto !important; /* Override resize width from non-narrow mode */

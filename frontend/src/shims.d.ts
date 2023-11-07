@@ -1,8 +1,9 @@
-declare module "vue-color" {
-	export const ColorMixin: any;
+declare module "@ckpack/vue-color" {
 	export const Hue: any;
 	export const Saturation: any;
 }
+
+declare module "@ckpack/vue-color/src/mixin/color.js";
 
 declare module "@tmcw/togeojson" {
 	export const gpx: any;

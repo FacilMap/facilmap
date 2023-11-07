@@ -1,3 +1,6 @@
+import "./bootstrap.scss";
+import "./styles.scss";
+
 import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 
 registerDeobfuscationHandlers();

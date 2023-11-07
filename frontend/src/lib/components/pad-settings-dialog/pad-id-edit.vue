@@ -5,6 +5,7 @@
 	import copyToClipboard from "copy-to-clipboard";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import vValidity, { vValidityContext } from "../ui/validated-form/validity";
 
 	const idProps = ["id", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];
@@ -55,10 +56,10 @@
 </script>
 
 <template>
-	<div class="row mb-3" :class="{ 'was-validated': touched }">
+	<div class="row mb-3" v-validity-context>
 		<label :for="`${id}-input`" class="col-sm-3 col-form-label">{{props.label}}</label>
 		<div class="col-sm-9">
-			<div class="input-group">
+			<div class="input-group has-validation">
 				<input
 					:id="`${id}-input`"
 					class="form-control fm-pad-settings-pad-id-edit"
@@ -67,15 +68,15 @@
 					v-validity="error"
 					@input="touched = true"
 					@blur="touched = true"
-				>
+				/>
 				<button
 					class="btn btn-secondary"
 					type="button"
 					@click="copy(context.baseUrl + encodeURIComponent(padData[idProp]))"
 				>Copy</button>
-			</div>
-			<div v-if="error" class="invalid-feedback">
-				{{error}}
+				<div class="invalid-feedback">
+					{{error}}
+				</div>
 			</div>
 			<div v-if="!error" class="form-text">
 				{{props.description}}

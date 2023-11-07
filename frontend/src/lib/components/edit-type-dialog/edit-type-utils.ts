@@ -1,6 +1,6 @@
 import type { CRU, FieldUpdate, Type } from "facilmap-types";
-import { clone } from "facilmap-utils";
 import { mergeObject } from "../../utils/utils";
+import { cloneDeep } from "lodash-es";
 
 function getIdxForInsertingField(targetFields: FieldUpdate[], targetField: FieldUpdate, mergedFields: FieldUpdate[]): number {
 	// Check which field comes after the field in the target field list, and return the index of that field in mergedFields
@@ -27,7 +27,7 @@ function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customF
 		else if(!customField)
 			return Object.assign({}, newField, {oldName: newField.name});
 
-		let mergedField = clone(customField);
+		let mergedField = cloneDeep(customField);
 		mergeObject(oldField, newField, mergedField);
 
 		return mergedField;
@@ -41,7 +41,7 @@ function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customF
 }
 
 export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type & Type<CRU.UPDATE>): void {
-	let customFields = clone(targetObject.fields);
+	let customFields = cloneDeep(targetObject.fields);
 
 	mergeObject(oldObject, newObject, targetObject);
 

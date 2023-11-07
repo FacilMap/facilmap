@@ -64,7 +64,7 @@
 					<td>{{type.name}}</td>
 					<td>{{type.type}}</td>
 					<td class="td-buttons">
-						<div class="btn-group">
+						<div class="btn-toolbar">
 							<button
 								type="button"
 								class="btn btn-secondary"

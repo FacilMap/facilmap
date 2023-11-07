@@ -26,11 +26,14 @@
 		submit: [event: CustomSubmitEvent];
 	}>();
 
-	const modalRef = ref<HTMLElement>();
-	const modal = useModal(modalRef, { emit });
-
 	const validatedFormRef = ref<InstanceType<typeof ValidatedForm>>();
 	const isSubmitting = computed(() => validatedFormRef.value?.formData.isSubmitting);
+
+	const modalRef = ref<HTMLElement>();
+	const modal = useModal(modalRef, {
+		emit,
+		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified)
+	});
 
 	function handleSubmit(event: CustomSubmitEvent) {
 		emit("submit", event);
@@ -54,21 +57,21 @@
 			tabindex="-1"
 			aria-hidden="true"
 			ref="modalRef"
-			:data-bs-backdrop="isSubmitting || isBusy || props.noCancel ? 'static' : 'true'"
-			:data-bs-keyboard="isSubmitting || isBusy || noCancel || isModified ? 'false' : 'true'"
-			v-on="{
-				'hide.bs.modal': (e: any) => {
-					if (isSubmitting || isBusy) {
-						e.preventDefault();
-					}
-				}
-			}"
+			:data-bs-backdrop="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'static' : 'true'"
+			:data-bs-keyboard="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'false' : 'true'"
 		>
 			<div class="modal-dialog modal-dialog-scrollable">
 				<ValidatedForm class="modal-content" @submit="handleSubmit" ref="validatedFormRef">
 					<div class="modal-header">
 						<h1 class="modal-title fs-5">{{props.title}}</h1>
-						<button v-if="!noCancel" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button
+							v-if="!props.noCancel"
+							:disabled="isSubmitting || props.isBusy"
+							@click="modal.hide()"
+							type="button"
+							class="btn-close"
+							aria-label="Close"
+						></button>
 					</div>
 					<div class="modal-body">
 						<slot v-bind="expose"></slot>
@@ -79,19 +82,19 @@
 						<div style="flex-grow: 1"></div>
 
 						<button
-							v-if="!noCancel"
+							v-if="!props.noCancel"
 							type="button"
 							class="btn btn-secondary"
-							:class="isModified || isCreate ? 'btn-secondary' : 'btn-primary'"
+							:class="props.isModified || props.isCreate ? 'btn-secondary' : 'btn-primary'"
 							@click="modal.hide()"
-							:disabled="isSubmitting || isBusy"
-						>{{isModified || isCreate ? 'Cancel' : 'Close'}}</button>
+							:disabled="isSubmitting || props.isBusy"
+						>{{props.isModified || props.isCreate ? 'Cancel' : 'Close'}}</button>
 
 						<button
-							v-if="noCancel || isModified || isCreate"
+							v-if="props.noCancel || props.isModified || props.isCreate"
 							type="submit"
 							class="btn btn-primary"
-							:disabled="isSubmitting || isBusy"
+							:disabled="isSubmitting || props.isBusy"
 						>{{props.okLabel ?? 'Save'}}</button>
 					</div>
 				</ValidatedForm>

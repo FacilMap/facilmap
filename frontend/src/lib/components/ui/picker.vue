@@ -1,6 +1,7 @@
 <script setup lang="ts">
-	import { computed, ref, watchEffect } from "vue";
+	import { StyleValue, computed, ref, watchEffect } from "vue";
 	import HybridPopover from "./hybrid-popover.vue";
+	import vValidity, { vValidityContext } from "./validated-form/validity";
 
 	const props = withDefaults(defineProps<{
 		id?: string;
@@ -10,6 +11,7 @@
 		modelValue?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
+		previewStyle?: StyleValue;
 	}>(), {
 		enforceElementWidth: false,
 		disabled: false
@@ -80,8 +82,11 @@
 			:customClass="props.customClass"
 		>
 			<template #trigger>
-				<div class="input-group">
-					<span class="input-group-text" @click="inputRef?.focus()">
+				<div class="input-group has-validation" v-validity-context>
+					<span
+						class="input-group-text"
+						@click="inputRef?.focus()"
+						:style="props.previewStyle">
 						<slot name="preview"></slot>
 					</span>
 					<input
@@ -94,10 +99,10 @@
 						:id="id"
 						ref="inputRef"
 						@keydown="handleInputKeyDown"
-					>
-				</div>
-				<div class="invalid-feedback" v-if="props.validationError">
-					{{props.validationError}}
+					/>
+					<div class="invalid-feedback">
+						{{props.validationError}}
+					</div>
 				</div>
 			</template>
 

@@ -206,7 +206,7 @@ export default class LinesLayer extends FeatureGroup {
 		if(!this.linesById[line.id]) {
 			this.linesById[line.id] = new HighlightablePolyline([ ]);
 
-			if(line.id != null) { // We don't want a popup for lines that we are drawing right now
+			if(line.id != null) {
 				this.linesById[line.id]
 					.bindTooltip("", { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 					.on("tooltipopen", () => {
@@ -231,6 +231,17 @@ export default class LinesLayer extends FeatureGroup {
 
 		(this.linesById[line.id] as any).line = line;
 		this.linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
+
+		if (line.name && line.id != null) { // We don't want a popup for lines that we are drawing right now
+			const quoted = quoteHtml(line.name);
+			if (this.linesById[line.id]._tooltip) {
+				this.linesById[line.id].setTooltipContent(quoted);
+			} else {
+				this.linesById[line.id].bindTooltip(quoted, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] });
+			}
+		} else if (this.linesById[line.id]._tooltip) {
+			this.linesById[line.id].unbindTooltip();
+		}
 
 		if (!this.hasLayer(this.linesById[line.id]))
 			this.addLayer(this.linesById[line.id]);

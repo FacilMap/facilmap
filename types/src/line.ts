@@ -7,8 +7,10 @@ export type ExtraInfo = z.infer<typeof extraInfoValidator>;
 
 export const trackPointValidator = cruValidator({
 	all: {
-		...pointValidator.shape,
-		ele: z.number().optional()
+		...pointValidator.shape
+	},
+	allPartialCreate: {
+		ele: z.number().or(z.null())
 	},
 	onlyRead: {
 		idx: z.number(),
@@ -26,9 +28,9 @@ export const lineValidator = cruValidator({
 	},
 	allPartialUpdate: {
 		routePoints: z.array(pointValidator).min(2),
-		name: z.string().optional(),
+		name: z.string(),
 		typeId: idValidator,
-		extraInfo: extraInfoValidator.optional()
+		extraInfo: extraInfoValidator.or(z.null())
 	},
 	exceptCreate: {
 		id: idValidator
@@ -36,12 +38,12 @@ export const lineValidator = cruValidator({
 	onlyRead: {
 		...bboxValidator.shape,
 		distance: z.number(),
-		ascent: z.number().optional(),
-		descent: z.number().optional(),
-		time: z.number().optional(),
+		ascent: z.number().or(z.null()),
+		descent: z.number().or(z.null()),
+		time: z.number().or(z.null()),
 		padId: padIdValidator
 	},
-	onlyCreate: {
+	exceptRead: {
 		trackPoints: z.array(trackPointValidator.create).optional()
 	}
 });

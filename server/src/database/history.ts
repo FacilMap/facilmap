@@ -2,7 +2,7 @@ import { Model, DataTypes, FindOptions, InferAttributes, CreationOptional, Forei
 import Database from "./database.js";
 import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
-import { clone } from "lodash-es";
+import { cloneDeep } from "lodash-es";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
@@ -77,7 +77,7 @@ export default class DatabaseHistory {
 			attributes: [ "id" ]
 		})).map(it => it.id);
 
-		const dataClone = clone(data);
+		const dataClone = cloneDeep(data);
 		if(data.type != "Pad") {
 			if(dataClone.objectBefore) {
 				delete (dataClone.objectBefore as any).id;

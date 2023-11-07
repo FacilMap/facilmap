@@ -23,11 +23,11 @@ export const padDataValidator = cruValidator({
 	},
 	onlyRead: {
 		writable: writableValidator,
-		defaultView: viewValidator.read.optional()
+		defaultView: viewValidator.read.or(z.null())
 	},
 	exceptCreate: {
-		writeId: padIdValidator.optional(),
-		adminId: padIdValidator.optional()
+		writeId: padIdValidator.or(z.null()),
+		adminId: padIdValidator.or(z.null())
 	},
 	onlyCreate: {
 		writeId: padIdValidator,

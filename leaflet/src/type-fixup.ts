@@ -9,6 +9,7 @@ declare module "leaflet" {
 	interface GridLayerOptions extends LayerOptions {}
 
 	interface Layer {
+		_tooltip?: Tooltip;
 		options: LayerOptions;
 		addInteractiveTarget(targetEl: HTMLElement): void;
 		removeInteractiveTarget(targetEl: HTMLElement): void;

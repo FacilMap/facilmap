@@ -9,7 +9,7 @@
 	import { getUniqueId } from "../utils/utils";
 	import ValidatedForm from "./ui/validated-form/validated-form.vue";
 	import pDebounce from "p-debounce";
-	import vValidity from "./ui/validated-form/validity";
+	import vValidity, { vValidityContext } from "./ui/validated-form/validity";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { FacilMapContext } from "./facil-map-context-provider/facil-map-context";
 
@@ -132,7 +132,7 @@
 		@hidden="emit('hidden')"
 	>
 		<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
-		<div class="input-group">
+		<div class="input-group has-validation" v-validity-context>
 			<input
 				class="form-control"
 				v-model="padId"
@@ -148,9 +148,9 @@
 				<div v-if="openFormRef?.formData.isValidating" class="spinner-border spinner-border-sm"></div>
 				Open
 			</button>
-		</div>
-		<div class="invalid-feedback" v-if="openFormError">
-			{{openFormError}}
+			<div class="invalid-feedback">
+				{{openFormError}}
+			</div>
 		</div>
 
 		<hr/>

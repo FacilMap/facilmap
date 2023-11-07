@@ -55,21 +55,24 @@ export type Field<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof fieldValid
 export type FieldUpdate = Field<CRU.UPDATE>;
 
 export const typeValidator = cruValidator({
+	allPartialCreate: {
+		defaultColour: colourValidator.or(z.null()),
+		colourFixed: z.boolean().or(z.null()),
+		defaultSize: sizeValidator.or(z.null()),
+		sizeFixed: z.boolean().or(z.null()),
+		defaultSymbol: symbolValidator.or(z.null()),
+		symbolFixed: z.boolean().or(z.null()),
+		defaultShape: shapeValidator.or(z.null()),
+		shapeFixed: z.boolean().or(z.null()),
+		defaultWidth: widthValidator.or(z.null()),
+		widthFixed: z.boolean().or(z.null()),
+		defaultMode: routeModeValidator.or(z.null()),
+		modeFixed: z.boolean().or(z.null()),
+		showInLegend: z.boolean().or(z.null()),
+	},
+
 	allPartialUpdate: {
-		name: z.string(),
-		defaultColour: colourValidator.optional(),
-		colourFixed: z.boolean().optional(),
-		defaultSize: sizeValidator.optional(),
-		sizeFixed: z.boolean().optional(),
-		defaultSymbol: symbolValidator.optional(),
-		symbolFixed: z.boolean().optional(),
-		defaultShape: shapeValidator.optional(),
-		shapeFixed: z.boolean().optional(),
-		defaultWidth: widthValidator.optional(),
-		widthFixed: z.boolean().optional(),
-		defaultMode: routeModeValidator.optional(),
-		modeFixed: z.boolean().optional(),
-		showInLegend: z.boolean().optional(),
+		name: z.string()
 	},
 
 	exceptCreate: {

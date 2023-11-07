@@ -21,7 +21,7 @@
 
 	const props = withDefaults(defineProps<{
 		markerId: ID;
-		showBackButton: boolean;
+		showBackButton?: boolean;
 	}>(), {
 		showBackButton: false
 	});
@@ -89,7 +89,7 @@
 			</template>
 		</dl>
 
-		<div class="btn-group">
+		<div class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				label="marker"

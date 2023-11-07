@@ -1,8 +1,7 @@
 <script setup lang="ts">
 	import type { ID } from "facilmap-types";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
-	import { clone } from "facilmap-utils";
-	import { isEqual, omit } from "lodash-es";
+	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourField from "./ui/colour-field.vue";
 	import FieldInput from "./ui/field-input.vue";
@@ -31,7 +30,7 @@
 
 	const originalLine = toRef(() => client.value.lines[props.lineId]);
 
-	const line = ref(clone(originalLine.value));
+	const line = ref(cloneDeep(originalLine.value));
 
 	const isModified = computed(() => !isEqual(line.value, originalLine.value));
 
@@ -69,6 +68,7 @@
 		:isModified="isModified"
 		@submit="$event.waitUntil(save())"
 		@hidden="emit('hidden')"
+		ref="modalRef"
 	>
 		<template #default>
 			<div class="row mb-3">
@@ -102,7 +102,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">Width</label>
 					<div class="col-sm-9">
-						<WidthField :id="`${id}-width-input`" v-model="line.width"></WidthField>
+						<WidthField
+							:id="`${id}-width-input`"
+							v-model="line.width"
+							class="fm-form-range-with-label"
+						></WidthField>
 					</div>
 				</div>
 			</template>

@@ -1,7 +1,7 @@
 import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
 import { Line, Marker, PadId, ID, Type, Bbox, CRU } from "facilmap-types";
 import Database from "./database.js";
-import { clone, isEqual } from "lodash-es";
+import { cloneDeep, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";
@@ -28,7 +28,7 @@ export function getVirtualLatType(): ModelAttributeColumnOptions {
 			return this.getDataValue("pos")?.coordinates[1];
 		},
 		set(val: number) {
-			const point = clone(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
+			const point = cloneDeep(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
 			point.coordinates[1] = val;
 			this.setDataValue("pos", point);
 		}
@@ -42,7 +42,7 @@ export function getVirtualLonType(): ModelAttributeColumnOptions {
 			return this.getDataValue("pos")?.coordinates[0];
 		},
 		set(val: number) {
-			const point = clone(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
+			const point = cloneDeep(this.getDataValue("pos")) ?? { type: "Point", coordinates: [0, 0] };
 			point.coordinates[0] = val;
 			this.setDataValue("pos", point);
 		}
@@ -393,7 +393,7 @@ export default class DatabaseHelpers {
 		const objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId));
 
 		for await (const object of objectStream) {
-			const newData = clone(object.data);
+			const newData = cloneDeep(object.data);
 			const newNames: string[] = [ ];
 
 			for(const oldName in rename) {

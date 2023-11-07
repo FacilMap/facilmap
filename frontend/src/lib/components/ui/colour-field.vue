@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { ColorMixin, Hue, Saturation } from "vue-color";
+	import ColorMixin from "@ckpack/vue-color/src/mixin/color.js";
+	import { Hue, Saturation } from "@ckpack/vue-color";
 	import Picker from "./picker.vue";
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../utils/ui";
 	import { StyleValue, computed, nextTick, ref } from "vue";
 
 	function normalizeData(value: string) {
-		return ColorMixin.data.apply({ value }).val;
+		return ColorMixin.data.apply({ modelValue: value }).val;
 	}
 
 	function isValidColour(colour?: string) {
@@ -15,7 +16,7 @@
 
 	function validateColour(colour: string): string | undefined {
 		if (!isValidColour(colour)) {
-			return "Needs to be in 3-digit or 6-digit hex format, for example <code>f00</code> or <code>0000ff</code>.";
+			return "Needs to be in 3-digit or 6-digit hex format, for example f00 or 0000ff.";
 		}
 	}
 
@@ -59,12 +60,12 @@
 		if (props.validationError) {
 			return props.validationError;
 		} else {
-			return validateColour(val.value);
+			return validateColour(value.value ?? "");
 		}
 	});
 
 	function handleChange(val: any): void {
-		emit('update:modelValue', normalizeData(val).hex.replace(/^#/, '').toLowerCase());
+		value.value = normalizeData(val).hex.replace(/^#/, '').toLowerCase();
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
@@ -83,11 +84,13 @@
 <template>
 	<Picker
 		customClass="fm-colour-field"
+		v-model="value"
 		@keydown="handleKeyDown"
 		:validationError="validationError"
+		:previewStyle="previewStyle"
 	>
 		<template #preview>
-			<span style="width: 1.4em" :style="previewStyle"></span>
+			<span style="width: 1.4em"></span>
 		</template>
 
 		<template #default="{ isModal }">

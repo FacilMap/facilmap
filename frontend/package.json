@@ -37,6 +37,7 @@
     "test-watch": "vitest"
   },
   "dependencies": {
+    "@ckpack/vue-color": "^1.5.0",
     "@tmcw/togeojson": "^5.8.1",
     "@vitejs/plugin-vue": "^4.4.0",
     "blob": "^0.1.0",
@@ -73,7 +74,6 @@
     "vite-plugin-css-injected-by-js": "^3.3.0",
     "vite-plugin-dts": "^3.6.0",
     "vue": "^3.3.4",
-    "vue-color": "^2.8.1",
     "vuedraggable": "next"
   },
   "devDependencies": {

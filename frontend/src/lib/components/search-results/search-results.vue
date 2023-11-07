@@ -231,7 +231,7 @@
 
 				<slot name="after"></slot>
 
-				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-group">
+				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-toolbar">
 					<button
 						type="button"
 						class="btn btn-secondary"

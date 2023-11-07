@@ -73,17 +73,17 @@
 
 <template>
 	<div class="bb-popover">
-		<span ref="trigger" @click="handleClick()">
+		<div ref="trigger" @click="handleClick()">
 			<slot name="trigger"></slot>
-		</span>
+		</div>
 
 		<Popover
 			:show="showPopover"
 			@update:show="handleShowPopoverChange"
 			:element="trigger"
 			:class="props.customClass"
-			hide-on-outside-click
-			:enforce-element-width="props.enforceElementWidth"
+			hideOnOutsideClick
+			:enforceElementWidth="props.enforceElementWidth"
 		>
 			<template v-slot:header>
 				{{props.title}}

@@ -38,7 +38,7 @@ export default class DatabaseMarkers {
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),
-			name : { type: DataTypes.TEXT, allowNull: true },
+			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: MarkerModel) { return this.getDataValue("name") || ""; } },
 			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
 			symbol : { type: DataTypes.TEXT, allowNull: true },

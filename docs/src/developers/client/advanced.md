@@ -28,7 +28,9 @@ Note that client always replaces whole objects rather than updating individual p
 
 ```javascript
 class ReactiveClient extends Client {
-	_makeReactive = Vue.reactive;
+	_makeReactive(object) {
+		return Vue.reactive(object);
+	}
 }
 ```
 
@@ -36,8 +38,13 @@ class ReactiveClient extends Client {
 
 ```javascript
 class ReactiveClient extends Client {
-	_set = Vue.set;
-	_delete = Vue.delete;
+	_set(object, key, value) {
+		Vue.set(object, key, value);
+	}
+
+	_delete(object, key) {
+		Vue.delete(object, key);
+	}
 }
 ```
 

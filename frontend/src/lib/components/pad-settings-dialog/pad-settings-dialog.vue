@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
 	import type { CRU, PadData } from "facilmap-types";
-	import { clone, generateRandomPadId } from "facilmap-utils";
+	import { generateRandomPadId } from "facilmap-utils";
 	import { getUniqueId, mergeObject } from "../../utils/utils";
-	import { isEqual } from "lodash-es";
+	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -28,7 +28,8 @@
 	const id = getUniqueId("fm-pad-settings");
 	const isDeleting = ref(false);
 	const deleteConfirmation = ref("");
-	const padData = ref<PadData<CRU.CREATE>>(props.isCreate ? {
+
+	const initialPadData: PadData<CRU.CREATE> | undefined = props.isCreate ? {
 		name: "New FacilMap",
 		searchEngines: false,
 		description: "",
@@ -39,11 +40,15 @@
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
-	} : clone(client.value.padData) as PadData<CRU.CREATE>);
+	} : undefined;
+
+	const originalPadData = computed(() => props.isCreate ? initialPadData! : client.value.padData as PadData<CRU.CREATE>);
+
+	const padData = ref(cloneDeep(originalPadData.value));
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const isModified = computed(() => !isEqual(padData.value, client.value.padData));
+	const isModified = computed(() => !isEqual(padData.value, originalPadData.value));
 
 	watch(() => client.value.padData, (newPadData, oldPadData) => {
 		if (!props.isCreate && padData.value && newPadData)
@@ -58,7 +63,6 @@
 				await client.value.createPad(padData.value as PadData<CRU.CREATE>);
 			else
 				await client.value.editPad(padData.value);
-
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
@@ -91,12 +95,13 @@
 
 <template>
 	<ModalDialog
-		:title="isCreate ? 'Create collaborative map' : 'Map settings'"
+		:title="props.isCreate ? 'Create collaborative map' : 'Map settings'"
 		class="fm-pad-settings"
-		:noCancel="noCancel"
+		:noCancel="props.noCancel"
 		:isBusy="isDeleting"
-		:isCreate="isCreate"
+		:isCreate="props.isCreate"
 		:isModified="isModified"
+		:okLabel="props.isCreate ? 'Create' : undefined"
 		ref="modalRef"
 		@submit="$event.waitUntil(save())"
 		@hidden="emit('hidden')"
@@ -129,15 +134,29 @@
 			<div class="row mb-3">
 				<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">Map name</label>
 				<div class="col-sm-9">
-					<input :id="`${id}-pad-name-input`" class="form-control" type="text" v-model="padData.name">
+					<input
+						:id="`${id}-pad-name-input`"
+						class="form-control"
+						type="text"
+						v-model="padData.name"
+					/>
 				</div>
 			</div>
 
 			<div class="row mb-3">
 				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">Search engines</label>
 				<div class="col-sm-9">
-					<input :id="`${id}-search-engines-input`" class="form-check-input" type="checkbox" v-model="padData.searchEngines">
-					<label :for="`${id}-search-engines-input`" class="form-check-label">Accessible for search engines</label>
+					<div class="form-check fm-form-check-with-label">
+						<input
+							:id="`${id}-search-engines-input`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="padData.searchEngines"
+						/>
+						<label :for="`${id}-search-engines-input`" class="form-check-label">
+							Accessible for search engines
+						</label>
+					</div>
 					<div class="form-text">
 						If this is enabled, search engines like Google will be allowed to add the read-only version of this map.
 					</div>
@@ -147,7 +166,12 @@
 			<div class="row mb-3">
 				<label :for="`${id}-description-input`" class="col-sm-3 col-form-label">Short description</label>
 				<div class="col-sm-9">
-					<input :id="`${id}-description-input`" class="form-control" type="text" v-model="padData.description">
+					<input
+						:id="`${id}-description-input`"
+						class="form-control"
+						type="text"
+						v-model="padData.description"
+					/>
 					<div class="form-text">
 						This description will be shown under the result in search engines.
 					</div>
@@ -157,8 +181,17 @@
 			<div class="row mb-3">
 				<label :for="`${id}-cluster-markers-input`" class="col-sm-3 col-form-label">Search engines</label>
 				<div class="col-sm-9">
-					<input :id="`${id}-cluster-markers-input`" class="form-check-input" type="checkbox" v-model="padData.clusterMarkers">
-					<label :for="`${id}-cluster-markers-input`" class="form-check-label">Cluster markers</label>
+					<div class="form-check fm-form-check-with-label">
+						<input
+							:id="`${id}-cluster-markers-input`"
+							class="form-check-input"
+							type="checkbox"
+							v-model="padData.clusterMarkers"
+						/>
+						<label :for="`${id}-cluster-markers-input`" class="form-check-label">
+							Cluster markers
+						</label>
+					</div>
 					<div class="form-text">
 						If enabled, when there are many markers in one area, they will be replaced by a placeholder at low zoom levels. This improves performance on maps with many markers.
 					</div>
@@ -168,8 +201,18 @@
 			<div class="row mb-3">
 				<label :for="`${id}-legend1-input`" class="col-sm-3 col-form-label">Legend text</label>
 				<div class="col-sm-9">
-					<textarea :id="`${id}-legend1-input`" class="form-control" type="text" v-model="padData.legend1"></textarea>
-					<textarea :id="`${id}-legend2-input`" class="form-control" type="text" v-model="padData.legend2"></textarea>
+					<textarea
+						:id="`${id}-legend1-input`"
+						class="form-control"
+						type="text"
+						v-model="padData.legend1"
+					></textarea>
+					<textarea
+						:id="`${id}-legend2-input`"
+						class="form-control mt-1"
+						type="text"
+						v-model="padData.legend2"
+					></textarea>
 					<div class="form-text">
 						Text that will be shown above and below the legend. Can be formatted with <a href="http://commonmark.org/help/" target="_blank">Markdown</a>.
 					</div>
@@ -177,15 +220,26 @@
 			</div>
 		</template>
 
-		<template v-if="padData && !isCreate">
+		<template v-if="padData && !props.isCreate">
 			<hr/>
 
 			<div class="row mb-3">
 				<label :for="`${id}-delete-input`" class="col-sm-3 col-form-label">Delete map</label>
 				<div class="col-sm-9">
 					<div class="input-group">
-						<input :form="`${id}-delete-form`" :id="`${id}-delete-input`" class="form-control" type="text" v-model="deleteConfirmation">
-						<button :form="`${id}-delete-form`" class="btn btn-danger" type="submit" :disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != 'DELETE'">
+						<input
+							:form="`${id}-delete-form`"
+							:id="`${id}-delete-input`"
+							class="form-control"
+							type="text"
+							v-model="deleteConfirmation"
+						/>
+						<button
+							:form="`${id}-delete-form`"
+							class="btn btn-danger"
+							type="submit"
+							:disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != 'DELETE'"
+						>
 							<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 							Delete map
 						</button>

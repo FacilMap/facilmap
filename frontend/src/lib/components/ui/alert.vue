@@ -72,25 +72,27 @@
 			getContent: () => h('div', {
 				class: touched.value ? 'was-validated' : ''
 			}, [
-				withDirectives(h('input', {
-					type: "text",
-					class: `form-control${touched.value ? ' was-validated' : ''}`,
-					value: value.value,
-					onInput: (e: InputEvent) => {
-						value.value = (e.target as HTMLInputElement).value;
-						touched.value = true;
-					},
-					onBlur: () => {
-						touched.value = true;
-					},
-					autofocus: true,
-					ref: inputRef
-				}), [
-					[vValidity, validationError.value]
-				]),
-				...(validationError.value ? [h('div', {
+				withDirectives(
+					h('input', {
+						type: "text",
+						class: `form-control${touched.value ? ' was-validated' : ''}`,
+						value: value.value,
+						onInput: (e: InputEvent) => {
+							value.value = (e.target as HTMLInputElement).value;
+							touched.value = true;
+						},
+						onBlur: () => {
+							touched.value = true;
+						},
+						autofocus: true,
+						ref: inputRef
+					}), [
+						[vValidity, validationError.value]
+					]
+				),
+				h('div', {
 					class: "invalid-feedback"
-				}, validationError.value)] : [])
+				}, validationError.value)
 			]),
 			onShown: () => {
 				inputRef.value!.focus();

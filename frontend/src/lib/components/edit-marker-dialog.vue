@@ -1,8 +1,7 @@
 <script setup lang="ts">
 	import type { ID } from "facilmap-types";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
-	import { clone } from "facilmap-utils";
-	import { isEqual } from "lodash-es";
+	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourField from "./ui/colour-field.vue";
 	import SymbolField from "./ui/symbol-field.vue";
@@ -31,7 +30,7 @@
 
 	const originalMarker = toRef(() => client.value.markers[props.markerId]);
 
-	const marker = ref(clone(originalMarker.value));
+	const marker = ref(cloneDeep(originalMarker.value));
 
 	const isModified = computed(() => !isEqual(marker.value, client.value.markers[props.markerId]));
 
@@ -67,6 +66,7 @@
 		title="Edit Marker"
 		class="fm-edit-marker"
 		:isModified="isModified"
+		ref="modalRef"
 		@submit="$event.waitUntil(save())"
 		@hidden="emit('hidden')"
 	>
@@ -82,7 +82,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
 					<div class="col-sm-9">
-						<ColourField :id="`${id}-colour-input`" v-model="marker.colour" :validationError="colourValidationError"></ColourField>
+						<ColourField
+							:id="`${id}-colour-input`"
+							v-model="marker.colour"
+							:validationError="colourValidationError"
+						></ColourField>
 					</div>
 				</div>
 			</template>
@@ -91,7 +95,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">Size</label>
 					<div class="col-sm-9">
-						<SizeField :id="`${id}-size-input`" v-model="marker.size"></SizeField>
+						<SizeField
+							:id="`${id}-size-input`"
+							v-model="marker.size"
+							class="fm-form-range-with-label"
+						></SizeField>
 					</div>
 				</div>
 			</template>

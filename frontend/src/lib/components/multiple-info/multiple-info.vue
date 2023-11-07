@@ -111,7 +111,7 @@
 					</li>
 				</ul>
 
-				<div class="btn-group">
+				<div class="btn-toolbar">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						label="selection"

@@ -1,6 +1,6 @@
 import { generateRandomId, promiseProps } from "../utils/utils.js";
 import { CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
-import { clone, isEqual } from "lodash-es";
+import { cloneDeep, isEqual } from "lodash-es";
 import Database from "./database.js";
 import { PadModel } from "./pad.js";
 import { LineModel, LinePointModel } from "./line.js";
@@ -116,7 +116,7 @@ export default class DatabaseMigrations {
 				const objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id));
 
 				for await (const object of objectStream) {
-					const newData = clone(object.data);
+					const newData = cloneDeep(object.data);
 					for(const dropdown of dropdowns) {
 						const newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.name])[0];
 						if(newVal)

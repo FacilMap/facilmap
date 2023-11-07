@@ -145,7 +145,7 @@
 				<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 				{{normalizeLineName(line.name)}}
 			</h2>
-			<div v-if="!isMoving" class="btn-group">
+			<div v-if="!isMoving" class="btn-toolbar">
 				<button
 					v-if="line.ascent != null"
 					type="button"
@@ -180,7 +180,7 @@
 			<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
 		</div>
 
-		<div v-if="!isMoving" class="btn-group">
+		<div v-if="!isMoving" class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				label="line"

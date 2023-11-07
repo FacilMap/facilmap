@@ -1,6 +1,6 @@
 <script setup lang="ts">
-	import { SlotsType, computed, defineComponent, h, ref, useSlots, watch, watchEffect } from "vue";
-	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
+	import { SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
+	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint, PopperConfigFunction } from "../../utils/bootstrap";
 	import { Dropdown } from "bootstrap";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
@@ -39,7 +39,7 @@
 	}>();
 
 	const buttonRef = ref<InstanceType<typeof AttributePreservingElement>>();
-	const dropdownRef = ref<Dropdown>();
+	const dropdownRef = shallowRef<Dropdown>();
 
 	const isNarrow = useMaxBreakpoint("sm");
 
@@ -60,26 +60,22 @@
 		}
 	}
 
-	type PopperConfig = ReturnType<Dropdown.PopperConfigFunction>;
-
 	watch(() => buttonRef.value?.elementRef, (newRef, oldRef, onCleanup) => {
 		if (newRef) {
-			const dropdown = new CustomDropdown(newRef, {
-				popperConfig: ((defaultConfig: PopperConfig): PopperConfig => {
-					const result: PopperConfig = {
-						...defaultConfig,
-						modifiers: [
-							...(defaultConfig.modifiers ?? []),
-							...maxSizeModifiers
-						],
-						strategy: "fixed"
-					};
-					return result;
-				}) as any // Typing of popperConfig is wrong and does not contain the function argument
+			const popperConfig: PopperConfigFunction = (defaultConfig) => ({
+				...defaultConfig,
+				modifiers: [
+					...(defaultConfig.modifiers ?? []),
+					...maxSizeModifiers
+				],
+				strategy: "fixed"
 			});
-			dropdownRef.value = dropdown;
+			dropdownRef.value = new CustomDropdown(newRef, {
+				popperConfig: popperConfig as any
+			});
 			onCleanup(() => {
-				dropdown.dispose();
+				dropdownRef.value!.dispose();
+				dropdownRef.value = undefined;
 			});
 		}
 	}, { immediate: true });

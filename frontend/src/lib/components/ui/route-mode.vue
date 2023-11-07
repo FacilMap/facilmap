@@ -258,7 +258,7 @@
 			</div>
 		</div>
 
-		<div class="invalid-feedback" v-if="props.validationError">
+		<div class="invalid-feedback fm-form-invalid-feedback" v-if="props.validationError">
 			{{props.validationError}}
 		</div>
 	</div>

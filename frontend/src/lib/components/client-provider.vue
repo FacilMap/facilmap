@@ -10,7 +10,9 @@
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	class ReactiveClient extends Client {
-		_makeReactive = reactive as any;
+		_makeReactive<O extends object>(obj: O) {
+			return reactive(obj) as O;
+		}
 	};
 </script>
 

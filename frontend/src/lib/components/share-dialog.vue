@@ -90,7 +90,7 @@
 		<div class="row mb-3">
 			<label class="col-sm-3 col-form-label">Settings</label>
 			<div class="col-sm-9">
-				<div class="form-check">
+				<div class="form-check fm-form-check-with-label">
 					<input
 						type="checkbox"
 						class="form-check-input"

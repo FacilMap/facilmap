@@ -46,12 +46,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ckpack/vue-color@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@ckpack/vue-color@npm:1.5.0"
+  dependencies:
+    "@ctrl/tinycolor": ^3.6.0
+    material-colors: ^1.2.6
+  peerDependencies:
+    vue: ^3.2.0
+  checksum: 8411b9fe0080378c347ea0421757a8652b52e7514596b227d18e07ff1b55eca061b008b8740fddbe9e6848f84fe7196e6abfe4c1a4d2929eb2b3224bcd62e078
+  languageName: node
+  linkType: hard
+
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"
   dependencies:
     "@jridgewell/trace-mapping": 0.3.9
   checksum: 5718f267085ed8edb3e7ef210137241775e607ee18b77d95aa5bd7514f47f5019aa2d82d96b3bf342ef7aa890a346fa1044532ff7cc3009e7d24fce3ce6200fa
+  languageName: node
+  linkType: hard
+
+"@ctrl/tinycolor@npm:^3.6.0":
+  version: 3.6.1
+  resolution: "@ctrl/tinycolor@npm:3.6.1"
+  checksum: cefec6fcaaa3eb8ddf193f981e097dccf63b97b93b1e861cb18c645654824c831a568f444996e15ee509f255658ed82fba11c5365494a6e25b9b12ac454099e0
   languageName: node
   linkType: hard
 
@@ -2309,13 +2328,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clamp@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "clamp@npm:1.0.1"
-  checksum: 799bd7083736eb975cd4a9a7e8f1a1e38cc3cb6be0384f9732c1da263accb3205385e5c2880e661a0d5a74e0066bfbf8fcd17dd2f509595ce52dd04c84522833
-  languageName: node
-  linkType: hard
-
 "clean-css@npm:^4.2.1":
   version: 4.2.4
   resolution: "clean-css@npm:4.2.4"
@@ -3731,6 +3743,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "facilmap-frontend@workspace:frontend"
   dependencies:
+    "@ckpack/vue-color": ^1.5.0
     "@tmcw/togeojson": ^5.8.1
     "@types/bootstrap": ^5.2.8
     "@types/decode-uri-component": ^0.2.0
@@ -3793,7 +3806,6 @@ __metadata:
     vite-plugin-dts: ^3.6.0
     vitest: ^0.34.6
     vue: ^3.3.4
-    vue-color: ^2.8.1
     vue-template-compiler: ^2.7.14
     vue-template-loader: ^1.1.0
     vuedraggable: next
@@ -3940,6 +3952,7 @@ __metadata:
     jsdom: ^22.1.0
     linkify-string: ^4.1.1
     linkifyjs: ^4.1.1
+    lodash-es: ^4.17.21
     marked: ^9.1.0
     rimraf: ^5.0.5
     rollup-plugin-auto-external: ^2.0.0
@@ -5498,13 +5511,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.throttle@npm:^4.0.0":
-  version: 4.1.1
-  resolution: "lodash.throttle@npm:4.1.1"
-  checksum: 129c0a28cee48b348aef146f638ef8a8b197944d4e9ec26c1890c19d9bf5a5690fe11b655c77a4551268819b32d27f4206343e30c78961f60b561b8608c8c805
-  languageName: node
-  linkType: hard
-
 "lodash@npm:^4.17.21, lodash@npm:~4.17.15":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
@@ -5639,7 +5645,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"material-colors@npm:^1.0.0":
+"material-colors@npm:^1.2.6":
   version: 1.2.6
   resolution: "material-colors@npm:1.2.6"
   checksum: 72d005ccccb82bab68eef3cd757e802668634fc86976dedb9fc564ce994f2d3258273766b7efecb7404a0031969e2d72201a1b74169763f0a53c0dd8d649209f
@@ -7965,13 +7971,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinycolor2@npm:^1.1.2":
-  version: 1.6.0
-  resolution: "tinycolor2@npm:1.6.0"
-  checksum: 6df4d07fceeedc0a878d7bac47e2cd47c1ceeb1078340a9eb8a295bc0651e17c750f73d47b3028d829f30b85c15e0572c0fd4142083e4c21a30a597e47f47230
-  languageName: node
-  linkType: hard
-
 "tinypool@npm:^0.7.0":
   version: 0.7.0
   resolution: "tinypool@npm:0.7.0"
@@ -8581,18 +8580,6 @@ __metadata:
   bin:
     vitest: vitest.mjs
   checksum: 45f5c1987fa8c76dbaf5db379bbdb4f6e3713c484e850149af38247b627e70016c1863286fd7fcfab08a1d98430f66ba1f45af6f14f5c467ded4b1ea6f26afa3
-  languageName: node
-  linkType: hard
-
-"vue-color@npm:^2.8.1":
-  version: 2.8.1
-  resolution: "vue-color@npm:2.8.1"
-  dependencies:
-    clamp: ^1.0.1
-    lodash.throttle: ^4.0.0
-    material-colors: ^1.0.0
-    tinycolor2: ^1.1.2
-  checksum: 3c9e5f42f304f5d333a9ac9916dc0cd796d34a98d0fd8b2fc3eac93eb56eef949f6aa7eef6ac5ec609eb0a038b2a2b3b73e83d29567dc99b5e0df8ea9fe64659
   languageName: node
   linkType: hard
 

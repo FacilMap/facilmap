@@ -7,6 +7,9 @@ declare global {
 	interface Element {
 		_fmValidityPromise?: Promise<string | undefined>;
 		_fmValidityToasts?: ToastContext;
+
+		_fmValidityInputListener?: () => void;
+		_fmValidityTouched?: boolean;
 	}
 }
 
@@ -15,7 +18,7 @@ type Value = string | undefined | Promise<string | undefined>;
 
 const updateValidity: Directive<FormElement, Value> = (el, binding) => {
 	if (!el._fmValidityToasts) {
-		el._fmValidityToasts = useToasts();
+		el._fmValidityToasts = useToasts(true);
 	}
 
 	const formData = el.form && getValidatedForm(el.form);
@@ -57,3 +60,29 @@ const vValidity: Directive<FormElement, Value> = {
 };
 
 export default vValidity;
+
+
+const updateValidityContext: Directive<FormElement, void> = (el, binding) => {
+	if (!el._fmValidityInputListener) {
+		el._fmValidityInputListener = () => {
+			el._fmValidityTouched = true;
+			el.classList.add("was-validated");
+		};
+		el.addEventListener("input", el._fmValidityInputListener);
+	}
+
+	if (el._fmValidityTouched) {
+		el.classList.add("was-validated");
+	}
+};
+
+export const vValidityContext: Directive<FormElement, void> = {
+	mounted: updateValidityContext,
+	updated: updateValidityContext,
+	beforeUnmount: (el) => {
+		if (el._fmValidityInputListener) {
+			el.removeEventListener("input", el._fmValidityInputListener);
+			delete el._fmValidityInputListener;
+		}
+	}
+};

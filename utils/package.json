@@ -39,6 +39,7 @@
     "jsdom": "^22.1.0",
     "linkify-string": "^4.1.1",
     "linkifyjs": "^4.1.1",
+    "lodash-es": "^4.17.21",
     "marked": "^9.1.0"
   },
   "devDependencies": {

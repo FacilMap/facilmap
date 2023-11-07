@@ -1,6 +1,7 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
-import { clone, flattenObject, getProperty, quoteRegExp } from "./utils.js";
+import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
 import { ID, Marker, Line, Type, Field, CRU } from "facilmap-types";
+import { cloneDeep } from "lodash-es";
 
 export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;
 
@@ -109,7 +110,7 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 }
 
 export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: Type): T & { type?: Type["type"] } {
-	obj = clone(obj);
+	obj = cloneDeep(obj);
 
 	for (const field of type.fields) {
 		if (Object.getPrototypeOf(obj.data)?.set)

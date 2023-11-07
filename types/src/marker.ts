@@ -4,16 +4,16 @@ import * as z from "zod";
 
 export const markerValidator = cruValidator({
 	allPartialCreate: {
+		name: z.string(),
+		symbol: symbolValidator.or(z.null()),
+		shape: shapeValidator.or(z.null()),
+		ele: z.number().or(z.null()),
 		colour: colourValidator,
 		size: sizeValidator,
 		data: z.record(z.string())
 	},
 	allPartialUpdate: {
 		...pointValidator.shape,
-		name: z.string().optional(),
-		symbol: symbolValidator.optional(),
-		shape: shapeValidator.optional(),
-		ele: z.number().optional(),
 		typeId: idValidator
 	},
 	exceptCreate: {

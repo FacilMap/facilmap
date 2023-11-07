@@ -3,7 +3,7 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { computed, ref } from "vue";
-	import vValidity from "./ui/validated-form/validity";
+	import vValidity, { vValidityContext } from "./ui/validated-form/validity";
 	import { getUniqueId } from "../utils/utils";
 	import { round } from "facilmap-utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -78,7 +78,7 @@
 	>
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
-			<div class="col-sm-9">
+			<div class="col-sm-9" v-validity-context>
 				<input
 					class="form-control"
 					:id="`${id}-name-input`"
@@ -86,7 +86,7 @@
 					v-validity="nameError"
 					autofocus
 				/>
-				<div class="invalid-feedback" v-if="nameError">
+				<div class="invalid-feedback">
 					{{nameError}}
 				</div>
 			</div>
@@ -158,15 +158,17 @@
 			<div class="row mb-3">
 				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">POIs</label>
 				<div class="col-sm-9">
-					<input
-						type="checkbox"
-						class="form-check-input"
-						:id="`${id}-overpass-input`"
-						v-model="includeOverpass"
-					/>
-					<label class="form-check-label" :for="`${id}-overpass-input`">
-						Include POIs (<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template>)
-					</label>
+					<div class="form-check fm-form-check-with-label">
+						<input
+							type="checkbox"
+							class="form-check-input"
+							:id="`${id}-overpass-input`"
+							v-model="includeOverpass"
+						/>
+						<label class="form-check-label" :for="`${id}-overpass-input`">
+							Include POIs (<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template>)
+						</label>
+					</div>
 				</div>
 			</div>
 		</template>
@@ -184,15 +186,17 @@
 			<div class="row mb-3">
 				<label :for="`${id}-filter-checkbox`" class="col-sm-3 col-form-label">Filter</label>
 				<div class="col-sm-9">
-					<input
-						type="checkbox"
-						class="form-check-input"
-						:id="`${id}-filter-checkbox`"
-						v-model="includeFilter"
-					/>
-					<label :for="`${id}-filter-checkbox`" class="form-check-label">
-						Include current filter (<code>{{mapContext.filter}}</code>)
-					</label>
+					<div class="form-check fm-form-check-with-label">
+						<input
+							type="checkbox"
+							class="form-check-input"
+							:id="`${id}-filter-checkbox`"
+							v-model="includeFilter"
+						/>
+						<label :for="`${id}-filter-checkbox`" class="form-check-label">
+							Include current filter (<code>{{mapContext.filter}}</code>)
+						</label>
+					</div>
 				</div>
 			</div>
 		</template>
@@ -200,13 +204,15 @@
 		<div class="row mb-3">
 			<label :for="`${id}-make-default-input`" class="col-sm-3 col-form-label">Default view</label>
 			<div class="col-sm-9">
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-make-default-input`"
-					v-model="makeDefault"
-				/>
-				<label :for="`${id}-make-default-input`" class="form-check-label">Make default view</label>
+				<div class="form-check fm-form-check-with-label">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-make-default-input`"
+						v-model="makeDefault"
+					/>
+					<label :for="`${id}-make-default-input`" class="form-check-label">Make default view</label>
+				</div>
 			</div>
 		</div>
 	</ModalDialog>

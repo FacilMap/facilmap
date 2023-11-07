@@ -48,7 +48,7 @@
 	const toasts = ref<ToastInstance[]>([]);
 	const toastRefs = reactive(new Map<ToastInstance, HTMLElement>());
 
-	export function useToasts(): ToastContext {
+	export function useToasts(noScope = false): ToastContext {
 		const contextId = getUniqueId("fm-toast-context");
 		const result: ToastContext = {
 			showErrorToast: async (id, title, err, options) => {
@@ -106,9 +106,11 @@
 			}
 		};
 
-		onScopeDispose(() => {
-			result.dispose();
-		});
+		if (!noScope) {
+			onScopeDispose(() => {
+				result.dispose();
+			});
+		}
 
 		return result;
 	}
@@ -142,7 +144,7 @@
 </script>
 
 <template>
-	<div class="toast-container position-fixed top-0 end-0 p-3">
+	<div class="toast-container position-fixed top-0 end-0 p-3 fm-toasts">
 		<div
 			v-for="toast in toasts"
 			:key="toast.key"
@@ -187,9 +189,13 @@
 </template>
 
 <style lang="scss">
-	.fm-toast-actions {
-		button + button {
-			margin-left: 5px;
+	.fm-toasts {
+		z-index: 10002;
+
+		.fm-toast-actions {
+			button + button {
+				margin-left: 5px;
+			}
 		}
 	}
 </style>

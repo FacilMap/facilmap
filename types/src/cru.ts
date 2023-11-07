@@ -115,14 +115,14 @@ export function cruValidator<
 			...declaration.exceptRead,
 			...declaration.exceptUpdate
 		}),
-		update: {
+		update: z.object({
 			...declaration.all,
 			...Object.fromEntries(Object.entries(declaration.allPartialCreate ?? {}).map(([k, v]) => [k, v.optional()])),
 			...Object.fromEntries(Object.entries(declaration.allPartialUpdate ?? {}).map(([k, v]) => [k, v.optional()])),
 			...declaration.onlyUpdate,
 			...declaration.exceptRead,
 			...declaration.exceptCreate
-		}
+		})
 	} as any;
 }
 

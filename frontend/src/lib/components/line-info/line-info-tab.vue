@@ -4,6 +4,7 @@
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { useEventListener } from "../../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+import { normalizeLineName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -31,7 +32,7 @@
 
 	const title = computed(() => {
 		if (line.value != null)
-			return line.value.name;
+			return normalizeLineName(line.value.name);
 		else
 			return undefined;
 	});

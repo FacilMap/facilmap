@@ -1,5 +1,4 @@
-import { isEqual } from "lodash-es";
-import { clone } from "facilmap-utils";
+import { cloneDeep, isEqual } from "lodash-es";
 import type { Field, Line, Marker, Type } from "facilmap-types";
 import type { Emitter } from "mitt";
 import { DeepReadonly, Ref, onBeforeUnmount, onMounted, watchEffect } from "vue";
@@ -23,7 +22,7 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 		)
 			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
 		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
-			targetObject[i] = clone(newObject[i]);
+			targetObject[i] = cloneDeep(newObject[i]);
 	}
 }
 

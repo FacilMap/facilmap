@@ -1,9 +1,8 @@
 <script setup lang="ts">
 	import type { Field, ID, Type } from "facilmap-types";
-	import { clone } from "facilmap-utils";
 	import { canControl, getUniqueId, validateRequired, validations } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
-	import { isEqual } from "lodash-es";
+	import { cloneDeep, isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import ColourField from "../ui/colour-field.vue";
 	import ShapeField from "../ui/shape-field.vue";
@@ -17,7 +16,7 @@
 	import EditTypeDropdownDialog from "./edit-type-dropdown-dialog.vue";
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import vValidity from "../ui/validated-form/validity";
+	import vValidity, { vValidityContext } from "../ui/validated-form/validity";
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -43,7 +42,7 @@
 	});
 
 	const initialType = computed<Type>(() => {
-		const type = isCreate.value ? { fields: [] } as any : clone(originalType.value)!;
+		const type = isCreate.value ? { fields: [] } as any : cloneDeep(originalType.value)!;
 
 		for(const field of type.fields) {
 			field.oldName = field.name;
@@ -52,7 +51,7 @@
 		return type;
 	});
 
-	const type = ref(clone(initialType.value));
+	const type = ref(cloneDeep(initialType.value));
 	const editField = ref<Field>();
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
@@ -184,9 +183,9 @@
 	>
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
-			<div class="col-sm-9">
+			<div class="col-sm-9" v-validity-context>
 				<input class="form-control" :id="`${id}-name-input`" v-model="type.name" v-validity="nameValidationError" />
-				<div class="invalid-feedback" v-if="nameValidationError">
+				<div class="invalid-feedback">
 					{{nameValidationError}}
 				</div>
 			</div>
@@ -194,7 +193,7 @@
 
 		<div class="row mb-3">
 			<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">Type</label>
-			<div class="col-sm-9">
+			<div class="col-sm-9" v-validity-context>
 				<select
 					:id="`${id}-type-input`"
 					v-model="type.type"
@@ -205,7 +204,7 @@
 					<option value="marker">Marker</option>
 					<option value="line">Line</option>
 				</select>
-				<div class="invalid-feedback" v-if="typeValidationError">
+				<div class="invalid-feedback">
 					{{typeValidationError}}
 				</div>
 			</div>
@@ -233,13 +232,15 @@
 								></ColourField>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-colour-fixed`"
-									v-model="type.colourFixed"
-								/>
-								<label :for="`${id}-default-colour-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-colour-fixed`"
+										v-model="type.colourFixed"
+									/>
+									<label :for="`${id}-default-colour-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -259,13 +260,15 @@
 								></SizeField>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-size-fixed`"
-									v-model="type.sizeFixed"
-								/>
-								<label :for="`${id}-default-size-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-size-fixed`"
+										v-model="type.sizeFixed"
+									/>
+									<label :for="`${id}-default-size-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -285,13 +288,15 @@
 								></SymbolField>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-symbol-fixed`"
-									v-model="type.symbolFixed"
-								/>
-								<label :for="`${id}-default-symbol-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-symbol-fixed`"
+										v-model="type.symbolFixed"
+									/>
+									<label :for="`${id}-default-symbol-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -311,13 +316,15 @@
 								></ShapeField>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-shape-fixed`"
-									v-model="type.shapeFixed"
-								/>
-								<label :for="`${id}-default-shape-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-shape-fixed`"
+										v-model="type.shapeFixed"
+									/>
+									<label :for="`${id}-default-shape-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -337,13 +344,15 @@
 								></WidthField>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-width-fixed`"
-									v-model="type.widthFixed"
-								/>
-								<label :for="`${id}-default-width-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-width-fixed`"
+										v-model="type.widthFixed"
+									/>
+									<label :for="`${id}-default-width-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -363,13 +372,15 @@
 								></RouteMode>
 							</div>
 							<div class="col-sm-3">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`${id}-default-mode-fixed`"
-									v-model="type.modeFixed"
-								/>
-								<label :for="`${id}-default-mode-fixed`" class="form-check-label">Fixed</label>
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-mode-fixed`"
+										v-model="type.modeFixed"
+									/>
+									<label :for="`${id}-default-mode-fixed`" class="form-check-label">Fixed</label>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -382,13 +393,15 @@
 		<div class="row mb-3">
 			<label :for="`${id}-show-in-legend-input`" class="col-sm-3 col-form-label">Legend</label>
 			<div class="col-sm-9">
-				<input
-					type="checkbox"
-					class="form-check-input"
-					:id="`${id}-show-in-legend-input`"
-					v-model="type.showInLegend"
-				/>
-				<label :for="`${id}-show-in-legend-input`" class="form-check-label">Show in legend</label>
+				<div class="form-check fm-form-check-with-label">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-in-legend-input`"
+						v-model="type.showInLegend"
+					/>
+					<label :for="`${id}-show-in-legend-input`" class="form-check-label">Show in legend</label>
+				</div>
 				<div class="form-text">
 					An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.
 				</div>
@@ -415,13 +428,13 @@
 				>
 					<template #item="{ element: field, index: idx }">
 						<tr>
-							<td>
+							<td v-validity-context>
 								<input
 									class="form-control"
 									v-model="field.name"
 									v-validity="fieldValidationErrors[idx].name"
 								/>
-								<div class="invalid-feedback" v-if="fieldValidationErrors[idx].name">
+								<div class="invalid-feedback">
 									{{fieldValidationErrors[idx].name}}
 								</div>
 							</td>

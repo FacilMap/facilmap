@@ -44,14 +44,16 @@
 	>
 		<p>Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.</p>
 
-		<textarea
-			class="form-control text-monospace"
-			v-model="filter"
-			rows="5"
-			v-validity="validationError"
-		></textarea>
-		<div class="invalid-feedback" v-if="validationError">
-			<pre>{{validationError}}</pre>
+		<div class="was-validated">
+			<textarea
+				class="form-control text-monospace"
+				v-model="filter"
+				rows="5"
+				v-validity="validationError"
+			></textarea>
+			<div class="invalid-feedback" v-if="validationError">
+				<pre>{{validationError}}</pre>
+			</div>
 		</div>
 
 		<hr />

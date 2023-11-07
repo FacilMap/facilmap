@@ -103,7 +103,7 @@
 						</li>
 					</ul>
 
-					<div v-if="client.padData && !client.readonly" class="btn-group">
+					<div v-if="client.padData && !client.readonly" class="btn-toolbar">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
 							label="selection"

@@ -47,7 +47,7 @@ export default class Socket {
 			d.add(socket);
 
 			d.on("error", function(err) {
-				console.error("Uncaught error in socket:", err.stack);
+				console.error("Uncaught error in socket:", err);
 				socket.disconnect();
 			});
 
@@ -150,7 +150,7 @@ class SocketConnection {
 	unvalidatedSocketHandlers: UnvalidatedSocketHandlers = {
 		error: (err) => {
 			console.error("Error! Disconnecting client.");
-			console.error(err.stack);
+			console.error(err);
 			this.socket.disconnect();
 		},
 
@@ -165,13 +165,13 @@ class SocketConnection {
 
 			if(this.route) {
 				this.database.routes.deleteRoute(this.route.id).catch((err) => {
-					console.error("Error clearing route", err.stack || err);
+					console.error("Error clearing route", err);
 				});
 			}
 
 			for (const routeId of Object.keys(this.routes)) {
 				this.database.routes.deleteRoute(this.routes[routeId].id).catch((err) => {
-					console.error("Error clearing route", err.stack || err);
+					console.error("Error clearing route", err);
 				});
 			}
 		}
@@ -196,9 +196,9 @@ class SocketConnection {
 			if(admin)
 				pad = { ...admin, writable: Writable.ADMIN };
 			else if(write)
-				pad = { ...write, writable: Writable.WRITE, adminId: undefined };
+				pad = { ...write, writable: Writable.WRITE, adminId: null };
 			else if(read)
-				pad = { ...read, writable: Writable.READ, writeId: undefined, adminId: undefined };
+				pad = { ...read, writable: Writable.READ, writeId: null, adminId: null };
 			else {
 				this.padId = undefined;
 				throw new Error("This pad does not exist");

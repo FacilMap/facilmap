@@ -100,29 +100,6 @@ export function encodeQueryString(obj: Record<string, string>): string {
 	return pairs.join("&");
 }
 
-function applyPrototypes(source: any, target: any): void {
-	if (typeof source === 'object' && source != null) {
-		if (Array.isArray(source)) {
-			for (let i = 0; i < source.length; i++)
-				applyPrototypes(source[i], target[i]);
-		} else {
-			Object.setPrototypeOf(target, Object.getPrototypeOf(source));
-
-			for (const key of Object.keys(source))
-				applyPrototypes(source[key], target[key]);
-		}
-	}
-}
-
-export function clone<T>(obj: T): T {
-	if (typeof obj !== "object" || !obj)
-		return obj;
-
-	const result = JSON.parse(JSON.stringify(obj));
-	applyPrototypes(obj, result);
-	return result;
-}
-
 export function* numberKeys(obj: Record<number, any>): Generator<number> {
 	for (const idx of Object.keys(obj)) {
 		// https://stackoverflow.com/a/175787/242365

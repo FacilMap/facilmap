@@ -26,10 +26,10 @@ if(config.maxmindUserId && config.maxmindLicenseKey) {
 	schedule("0 3 * * *", download);
 
 	load().catch((err) => {
-		console.log("Error loading maxmind database", err.stack || err);
+		console.log("Error loading maxmind database", err);
 	});
 	download().catch((err) => {
-		console.log("Error downloading maxmind database", err.stack || err);
+		console.log("Error downloading maxmind database", err);
 	});
 }
 

@@ -4,6 +4,7 @@
 	import SearchBoxTab from "../search-box/search-box-tab.vue"
 	import { useEventListener } from "../../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -40,7 +41,7 @@
 	<template v-if="markerId">
 		<SearchBoxTab
 			:id="`fm${context.id}-marker-info-tab`"
-			:title="marker?.name ?? ''"
+			:title="marker ? normalizeMarkerName(marker.name) : ''"
 			isCloseable
 			@close="close()"
 		>

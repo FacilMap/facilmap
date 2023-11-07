@@ -2,7 +2,7 @@ import { jsonStream, asyncIteratorToArray } from "../utils/streams.js";
 import { compileExpression, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
 import Database from "../database/database.js";
-import { clone, keyBy, mapValues, omit } from "lodash-es";
+import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
 import { LineWithTrackPoints } from "../database/line.js";
 
 export async function* exportGeoJson(database: Database, padId: PadId, filter?: string): AsyncGenerator<string, void, void> {
@@ -72,7 +72,7 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			size: marker.size,
 			symbol: marker.symbol,
 			shape: marker.shape,
-			data: clone(marker.data),
+			data: cloneDeep(marker.data),
 			typeId: marker.typeId
 		}
 	};

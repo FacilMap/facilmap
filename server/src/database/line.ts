@@ -87,7 +87,7 @@ export default class DatabaseLines {
 			mode : { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "0000ff", validate: validateColour },
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
-			name : { type: DataTypes.TEXT, allowNull: true },
+			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: LineModel) { return this.getDataValue("name") || ""; } },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
 			time : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
 			ascent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
