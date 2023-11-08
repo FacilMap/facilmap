@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import { Ref, createApp, h, ref, toRef, withDirectives } from "vue";
-import ValidatedForm, { CustomSubmitEvent, ValidatedFormData } from "../validated-form.vue";
+import { type Ref, createApp, h, ref, toRef, withDirectives } from "vue";
+import ValidatedForm, { type CustomSubmitEvent, type ValidatedFormData } from "../validated-form.vue";
 import { sleep } from "facilmap-utils";
 import vValidity from "../validity";
 

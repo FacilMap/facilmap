@@ -38,7 +38,7 @@
 
 	function handleTrackPointsChange() {
 		if (elevationPlot && props.route.trackPoints) {
-			elevationPlot.addData(props.route.extraInfo, props.route.trackPoints);
+			elevationPlot.addData(props.route.extraInfo ?? {}, props.route.trackPoints);
 		}
 	}
 

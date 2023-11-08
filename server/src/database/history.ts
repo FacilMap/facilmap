@@ -1,6 +1,6 @@
-import { Model, DataTypes, FindOptions, InferAttributes, CreationOptional, ForeignKey, InferCreationAttributes } from "sequelize";
+import { Model, DataTypes, type FindOptions, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 

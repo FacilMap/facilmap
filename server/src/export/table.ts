@@ -1,6 +1,6 @@
 import { promiseAuto } from "../utils/utils.js";
 import { render } from "ejs";
-import { ID, Line, Marker, PadId, Type } from "facilmap-types";
+import type { ID, Line, Marker, PadId, Type } from "facilmap-types";
 import { compileExpression } from "facilmap-utils";
 import * as utils from "facilmap-utils";
 import Database from "../database/database.js";

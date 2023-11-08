@@ -1,4 +1,4 @@
-import { ComponentPublicInstance, DeepReadonly, Directive, Ref, computed, onScopeDispose, reactive, readonly, ref, shallowReadonly, shallowRef, toRef, watch } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, reactive, readonly, ref, shallowReadonly, shallowRef, toRef, watch } from "vue";
 
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)

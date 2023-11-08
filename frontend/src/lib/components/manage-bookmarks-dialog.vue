@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import storage, { Bookmark } from "../utils/storage";
+	import storage, { type Bookmark } from "../utils/storage";
 	import Icon from "./ui/icon.vue";
 	import Draggable from "vuedraggable";
 	import { computed } from "vue";

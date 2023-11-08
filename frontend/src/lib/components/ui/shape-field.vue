@@ -15,7 +15,7 @@
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		modelValue: Shape | undefined;
+		modelValue: Shape | undefined | null;
 		id?: string;
 		validationError?: string | undefined;
 	}>();
@@ -31,7 +31,7 @@
 		}
 	});
 
-	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue));
+	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue ?? undefined));
 
 	const validationError = computed(() => {
 		if (props.validationError) {

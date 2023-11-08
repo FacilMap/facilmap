@@ -1,4 +1,4 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 

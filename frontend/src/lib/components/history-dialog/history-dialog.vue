@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { getLabelsForHistoryEntry, HistoryEntryLabels } from "./history-utils";
+	import { getLabelsForHistoryEntry, type HistoryEntryLabels } from "./history-utils";
 	import type { HistoryEntry, ID } from "facilmap-types";
 	import { orderBy } from "lodash-es";
 	import Icon from "../ui/icon.vue";

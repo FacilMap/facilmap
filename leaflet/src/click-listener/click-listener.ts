@@ -1,5 +1,5 @@
-import { Point } from "facilmap-types";
-import { DomEvent, Layer, LeafletMouseEvent, Map } from "leaflet";
+import type { Point } from "facilmap-types";
+import { DomEvent, Layer, type LeafletMouseEvent, Map } from "leaflet";
 import "./click-listener.scss";
 
 class TransparentLayer extends Layer {

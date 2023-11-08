@@ -1,4 +1,4 @@
-import { computed, Ref, ref } from "vue";
+import { computed, type Ref, ref } from "vue";
 import maxSize from "popper-max-size-modifier";
 import type { Modifier, ModifierArguments, Options } from "@popperjs/core";
 

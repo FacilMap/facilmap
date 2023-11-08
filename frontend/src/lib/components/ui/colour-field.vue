@@ -4,7 +4,7 @@
 	import Picker from "./picker.vue";
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../utils/ui";
-	import { StyleValue, computed, nextTick, ref } from "vue";
+	import { type StyleValue, computed, nextTick, ref } from "vue";
 
 	function normalizeData(value: string) {
 		return ColorMixin.data.apply({ modelValue: value }).val;
@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 	const props = defineProps<{
-		modelValue: string | undefined;
+		modelValue: string | undefined | null;
 		validationError?: string | undefined;
 	}>();
 
@@ -49,7 +49,7 @@
 	const val = computed(() => normalizeData(value.value ?? ""));
 
 	const previewStyle = computed((): StyleValue => {
-		const bg = isValidColour(value.value) ? value.value : 'ffffff';
+		const bg = isValidColour(value.value ?? undefined) ? value.value : 'ffffff';
 		return {
 			backgroundColor: `#${bg}`,
 			color: makeTextColour(`#${bg}`)

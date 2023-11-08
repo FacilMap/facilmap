@@ -1,5 +1,5 @@
 import { latLngBounds, LatLngBounds } from "leaflet";
-import { getOverpassPresets, OverpassPreset } from "./overpass-presets";
+import { getOverpassPresets, type OverpassPreset } from "./overpass-presets";
 
 const OVERPASS_API = "https://overpass.kumi.systems/api/interpreter";
 

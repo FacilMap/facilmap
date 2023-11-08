@@ -1,13 +1,3 @@
 {
-	"compilerOptions": {
-		"target": "esnext",
-		"module": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "dist",
-		"moduleResolution": "node",
-		"skipLibCheck": true
-	}
+	"extends": "../tsconfig.json"
 }

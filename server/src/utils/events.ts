@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { EventHandler, EventName } from "facilmap-types";
+import type { EventHandler, EventName } from "facilmap-types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */

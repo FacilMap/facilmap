@@ -1,9 +1,9 @@
 import { generateRandomId, promiseProps } from "../utils/utils.js";
-import { CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
+import { type CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
 import { cloneDeep, isEqual } from "lodash-es";
 import Database from "./database.js";
-import { PadModel } from "./pad.js";
-import { LineModel, LinePointModel } from "./line.js";
+import type { PadModel } from "./pad.js";
+import type { LineModel, LinePointModel } from "./line.js";
 import { getElevationForPoints } from "../elevation.js";
 
 export default class DatabaseMigrations {

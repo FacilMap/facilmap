@@ -1,4 +1,4 @@
-import { Point } from "facilmap-types";
+import type { Point } from "facilmap-types";
 
 export function splitRouteQuery(query: string): { queries: string[], mode: string | null } {
 	const splitQuery = query.split(/(^|\s+)(from|to|via|by)(\s+|$)/).filter((item, i) => (i%2 == 0)); // Filter out every second item (whitespace parantheses)

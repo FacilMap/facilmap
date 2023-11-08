@@ -71,12 +71,12 @@
 
 	function copyUrl(): void {
 		copyToClipboard(url.value);
-		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success", autoHide: true });
 	}
 
 	function copyEmbedCode(): void {
 		copyToClipboard(embedCode.value);
-		toasts.showToast(undefined, "Embed code copied", "The code to embed FacilMap was copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Embed code copied", "The code to embed FacilMap was copied to the clipboard.", { variant: "success", autoHide: true });
 	}
 </script>
 

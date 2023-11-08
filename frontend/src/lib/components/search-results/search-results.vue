@@ -1,26 +1,24 @@
 <script setup lang="ts">
-	import type { FindOnMapResult, SearchResult, Type } from "facilmap-types";
+	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import Icon from "../ui/icon.vue";
 	import SearchResultInfo from "../search-result-info.vue";
 	import type { SelectedItem } from "../../utils/selection";
 	import type { FileResult, FileResultObject } from "../../utils/files";
-	import { addSearchResultsToMap } from "./utils";
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
+	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../../utils/add";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 	import vTooltip from "../../utils/tooltip";
 	import { vScrollIntoView } from "../../utils/vue";
 	import { computed, ref, toRef, watch } from "vue";
-	import { useToasts } from "../ui/toasts/toasts.vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
 	import { useCarousel } from "../../utils/carousel";
-	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
-	const toasts = useToasts();
 
 	const props = withDefaults(defineProps<{
 		searchResults?: Array<SearchResult | FileResult>;
@@ -39,7 +37,6 @@
 
 	const carouselRef = ref<HTMLElement>();
 	const carousel = useCarousel(carouselRef);
-	const isAdding = ref(false);
 	const customImport = ref(false);
 
 	const showZoom = computed(() => !props.autoZoom || props.unionZoom);
@@ -83,14 +80,6 @@
 
 	const activeFileResults = computed(() => {
 		return activeResults.value.filter(isFileResult);
-	});
-
-	const markerTypes = computed(() => {
-		return Object.values(client.value.types).filter((type) => type.type == "marker");
-	});
-
-	const lineTypes = computed(() => {
-		return Object.values(client.value.types).filter((type) => type.type == "line");
 	});
 
 	const hasCustomTypes = computed(() => {
@@ -163,19 +152,8 @@
 		}
 	}
 
-	async function addToMap(results: Array<SearchResult | FileResult>, type: Type): Promise<void> {
-		toasts.hideToast(`fm${context.id}-search-result-info-add-error`);
-		isAdding.value = true;
-
-		try {
-			const selection = await addSearchResultsToMap(results.map((result) => ({ result, type })), client);
-			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
-		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-search-result-info-add-error`, "Error adding to map", err);
-		} finally {
-			isAdding.value = false;
-		}
-	}
+	const activeMarkersWithTags = computed(() => searchResultsToMarkersWithTags(activeMarkerSearchResults.value));
+	const activeLinesWithTags = computed(() => searchResultsToLinesWithTags(activeLineSearchResults.value));
 </script>
 
 <template>
@@ -239,35 +217,12 @@
 						@click="toggleSelectAll"
 					>Select all</button>
 
-					<DropdownMenu
-						v-if="client.padData && !client.readonly"
+					<AddToMapDropdown
 						:label="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`"
-						:isDisabled="activeSearchResults.length == 0"
-						:isBusy="isAdding"
+						:markers="activeMarkersWithTags"
+						:lines="activeLinesWithTags"
 					>
-						<template v-if="activeMarkerSearchResults.length > 0 && markerTypes.length ">
-							<template v-for="type in markerTypes" :key="type.id">
-								<li>
-									<a
-										href="javascript:"
-										class="dropdown-item"
-										@click="addToMap(activeMarkerSearchResults, type)"
-									>Marker items as {{type.name}}</a>
-								</li>
-							</template>
-						</template>
-						<template v-if="activeLineSearchResults.length > 0 && lineTypes.length ">
-							<template v-for="type in lineTypes" :key="type.id">
-								<li>
-									<a
-										href="javascript:"
-										class="dropdown-item"
-										@click="addToMap(activeLineSearchResults, type)"
-									>Line/polygon items as {{type.name}}</a>
-								</li>
-							</template>
-						</template>
-						<template v-if="hasCustomTypes">
+						<template v-if="hasCustomTypes" #after>
 							<li><hr class="dropdown-divider"></li>
 							<li>
 								<a
@@ -277,7 +232,7 @@
 								>Custom type mapping…</a>
 							</li>
 						</template>
-					</DropdownMenu>
+					</AddToMapDropdown>
 				</div>
 			</div>
 
@@ -286,11 +241,9 @@
 					v-if="openResult"
 					:result="openResult"
 					showBackButton
-					:isAdding="isAdding"
 					:searchSuggestions="props.searchResults"
 					:mapSuggestions="props.mapResults"
 					@back="closeResult()"
-					@add-to-map="addToMap([openResult], $event)"
 				></SearchResultInfo>
 			</div>
 		</div>

@@ -17,7 +17,7 @@
 
 	function copy(): void {
 		copyToClipboard(formattedCoordinates.value);
-		toasts.showToast(undefined, "Coordinates copied", "The coordinates were copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Coordinates copied", "The coordinates were copied to the clipboard.", { variant: "success", autoHide: true });
 	}
 </script>
 

@@ -32,7 +32,7 @@
     "dev-server": "FM_DEV=true DOTENV_CONFIG_PATH=../config.env node ./esrun.js",
     "test": "vitest run",
     "test-watch": "vitest",
-    "types": "tsc --noEmit src/**/*.ts",
+    "check-types": "tsc --noEmit",
     "lint": "eslint src/**/*.ts"
   },
   "main": "./dist/facilmap-server.mjs",

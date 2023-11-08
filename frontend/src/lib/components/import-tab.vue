@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { FileResultObject, parseFiles } from "../utils/files";
+	import { type FileResultObject, parseFiles } from "../utils/files";
 	import pluralize from "pluralize";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import { Util } from "leaflet";

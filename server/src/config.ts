@@ -1,4 +1,4 @@
-import { Options as SequelizeOptions } from "sequelize";
+import type { Options as SequelizeOptions } from "sequelize";
 import "dotenv/config";
 
 export interface DbConfig {

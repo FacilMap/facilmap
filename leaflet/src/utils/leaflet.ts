@@ -1,5 +1,5 @@
-import { Bbox, BboxWithZoom, Point } from "facilmap-types";
-import L, { LatLng, LatLngBounds, Map, TooltipOptions } from "leaflet";
+import type { Bbox, BboxWithZoom, Point } from "facilmap-types";
+import { LatLng, LatLngBounds, Map, latLng, type TooltipOptions, latLngBounds } from "leaflet";
 
 export const tooltipOptions: TooltipOptions = {
 	direction: "right"
@@ -22,7 +22,7 @@ export function leafletToFmBbox(bbox: LatLngBounds, zoom?: number): Bbox & { zoo
 }
 
 export function fmToLeafletBbox(bbox: Bbox): LatLngBounds {
-	return L.latLngBounds(L.latLng(bbox.bottom, bbox.left), L.latLng(bbox.top, bbox.right));
+	return latLngBounds(latLng(bbox.bottom, bbox.left), latLng(bbox.top, bbox.right));
 }
 
 /**
@@ -66,14 +66,14 @@ export function disconnectSegmentsOutsideViewport(trackPoints: LatLng[], bounds:
  * @returns {boolean} Whether the two points are roughly equal.
  */
 export function pointsEqual(latLng1: LatLng, latLng2: LatLng, map: Map, zoom?: number): boolean {
-	latLng1 = L.latLng(latLng1);
-	latLng2 = L.latLng(latLng2);
+	latLng1 = latLng(latLng1);
+	latLng2 = latLng(latLng2);
 
 	return map.project(latLng1, zoom).distanceTo(map.project(latLng2, zoom)) < 1;
 }
 
 export interface BasicTrackPoints {
-	[idx: number]: Point & { ele?: number };
+	[idx: number]: Point & { ele?: number | null };
 	length: number;
 }
 
@@ -82,7 +82,7 @@ export function trackPointsToLatLngArray(trackPoints: BasicTrackPoints | undefin
 	if (trackPoints) {
 		for (let i = 0; i < trackPoints.length; i++) {
 			if (trackPoints[i]) {
-				result.push(new LatLng(trackPoints[i]!.lat, trackPoints[i]!.lon, trackPoints[i]!.ele));
+				result.push(new LatLng(trackPoints[i]!.lat, trackPoints[i]!.lon, trackPoints[i]!.ele ?? undefined));
 			}
 		}
 	}

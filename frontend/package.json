@@ -34,7 +34,8 @@
     "clean": "rimraf dist",
     "dev-server": "vite",
     "test": "vitest run",
-    "test-watch": "vitest"
+    "test-watch": "vitest",
+    "check-types": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@ckpack/vue-color": "^1.5.0",
@@ -104,6 +105,7 @@
     "typescript": "^5.2.2",
     "vitest": "^0.34.6",
     "vue-template-compiler": "^2.7.14",
-    "vue-template-loader": "^1.1.0"
+    "vue-template-loader": "^1.1.0",
+    "vue-tsc": "^1.8.22"
   }
 }

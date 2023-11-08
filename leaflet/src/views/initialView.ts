@@ -1,6 +1,6 @@
 import Client from "facilmap-client";
-import { PadData } from "facilmap-types";
-import { UnsavedView } from "./views";
+import type { PadData } from "facilmap-types";
+import type { UnsavedView } from "./views";
 
 export async function getInitialView(client: Client): Promise<UnsavedView | undefined> {
 	if(client.padId) {
@@ -12,7 +12,7 @@ export async function getInitialView(client: Client): Promise<UnsavedView | unde
 				reject(client.serverError);
 		});
 
-		return padData.defaultView;
+		return padData.defaultView ?? undefined;
 	}
 
 	try {

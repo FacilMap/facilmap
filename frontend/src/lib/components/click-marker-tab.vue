@@ -1,8 +1,6 @@
 <script setup lang="ts">
-	import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
+	import type { Point, SearchResult } from "facilmap-types";
 	import { round } from "facilmap-utils";
-	import { lineStringToTrackPoints, mapSearchResultToType } from "./search-results/utils";
-	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import SearchResultInfo from "./search-result-info.vue";
 	import { Util } from "leaflet";
@@ -16,13 +14,10 @@
 	const client = requireClientContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
-	const toasts = useToasts();
-
 	let lastClick = 0;
 
 	const activeResults = ref<SearchResult[]>([]);
 	const layers = shallowReactive<SearchResultsLayer[]>([]);
-	const isAdding = ref(false);
 
 	useEventListener(mapContext, "map-long-click", handleMapLongClick);
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
@@ -84,46 +79,6 @@
 		activeResults.value.splice(idx, 1);
 		layers.splice(idx, 1);
 	}
-
-	async function addToMap(result: SearchResult, type: Type): Promise<void> {
-		toasts.hideToast(`fm${context.id}-click-marker-add-error`);
-		isAdding.value = true;
-
-		try {
-			const obj: Partial<Marker<CRU.CREATE> & Line<CRU.CREATE>> = {
-				name: result.short_name,
-				data: mapSearchResultToType(result, type)
-			};
-
-			if(type.type == "marker") {
-				const marker = await client.value.addMarker({
-					...obj,
-					lat: result.lat!,
-					lon: result.lon!,
-					typeId: type.id
-				});
-
-				mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
-			} else if(type.type == "line") {
-				const trackPoints = lineStringToTrackPoints(result.geojson as any);
-				const line = await client.value.addLine({
-					...obj,
-					typeId: type.id,
-					routePoints: [trackPoints[0], trackPoints[trackPoints.length-1]],
-					trackPoints: trackPoints,
-					mode: "track"
-				});
-
-				mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
-			}
-
-			close(result);
-		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-click-marker-add-error`, "Error adding to map", err);
-		} finally {
-			isAdding.value = false;
-		}
-	}
 </script>
 
 <template>
@@ -134,11 +89,7 @@
 			isCloseable
 			@close="close(result)"
 		>
-			<SearchResultInfo
-				:result="result"
-				:is-adding="isAdding"
-				@add-to-map="addToMap(result, $event)"
-			></SearchResultInfo>
+			<SearchResultInfo :result="result"></SearchResultInfo>
 		</SearchBoxTab>
 	</template>
 </template>

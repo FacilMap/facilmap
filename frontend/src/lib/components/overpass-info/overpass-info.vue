@@ -5,15 +5,12 @@
 	import type { OverpassElement } from "facilmap-leaflet";
 	import Coordinates from "../ui/coordinates.vue";
 	import { computed } from "vue";
-	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import type { Type } from "facilmap-types";
 	import UseAsDropdown from "../ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import type { RouteDestination } from "../facil-map-context-provider/map-context";
-
-	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import { overpassElementsToMarkersWithTags } from "../../utils/add";
+	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
 	const props = withDefaults(defineProps<{
 		element: OverpassElement;
@@ -29,10 +26,6 @@ import type { RouteDestination } from "../facil-map-context-provider/map-context
 		"add-to-map": [type: Type];
 	}>();
 
-	const types = computed(() => {
-		return Object.values(client.value.types).filter((type) => type.type == "marker");
-	});
-
 	const zoomDestination = computed(() => getZoomDestinationForMarker(props.element));
 
 	const routeDestination = computed<RouteDestination>(() => {
@@ -40,6 +33,8 @@ import type { RouteDestination } from "../facil-map-context-provider/map-context
 			query: `${props.element.lat},${props.element.lon}`
 		};
 	});
+
+	const markersWithTags = computed(() => overpassElementsToMarkersWithTags([props.element]));
 </script>
 
 <template>
@@ -65,22 +60,10 @@ import type { RouteDestination } from "../facil-map-context-provider/map-context
 				:destination="zoomDestination"
 			></ZoomToObjectButton>
 
-			<DropdownMenu
-				v-if="!client.readonly && types.length > 0"
+			<AddToMapDropdown
+				:markers="markersWithTags"
 				size="sm"
-				:isBusy="isAdding"
-				label="Add to map"
-			>
-				<template v-for="type in types" :key="type.id">
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							@click="emit('add-to-map', type)"
-						>{{type.name}}</a>
-					</li>
-				</template>
-			</DropdownMenu>
+			></AddToMapDropdown>
 
 			<UseAsDropdown
 				size="sm"

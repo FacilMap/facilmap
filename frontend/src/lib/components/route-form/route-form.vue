@@ -3,8 +3,8 @@
 	import Icon from "../ui/icon.vue";
 	import { formatRouteMode, formatTime, isSearchId, normalizeMarkerName, round, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { ExportFormat, FindOnMapResult, SearchResult, Type } from "facilmap-types";
-	import { getMarkerIcon, HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
+	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
+	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, LatLng } from "leaflet";
 	import Draggable from "vuedraggable";
@@ -15,11 +15,13 @@
 	import ElevationPlot from "../ui/elevation-plot.vue";
 	import { saveAs } from "file-saver";
 	import { isMapResult } from "../../utils/search";
+	import type { LineWithTags } from "../../utils/add";
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import type { RouteDestination } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -108,7 +110,6 @@
 	const routeError = ref<string>();
 	const hoverDestinationIdx = ref<number>();
 	const hoverInsertIdx = ref<number>();
-	const isAdding = ref(false);
 	const isExporting = ref(false);
 	const suggestionMarker = ref<MarkerLayer>();
 
@@ -191,8 +192,6 @@
 		draggable.disable();
 		routeLayer.remove();
 	});
-
-	const lineTypes = computed(() => Object.values(client.value.types).filter((type) => type.type == "line"));
 
 	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
@@ -484,20 +483,10 @@
 		route(true);
 	}
 
-	async function addToMap(type: Type): Promise<void> {
-		toasts.hideToast(`fm${context.id}-route-form-add-error`);
-		isAdding.value = true;
-
-		try {
-			const line = await client.value.addLine({ typeId: type.id, routePoints: routeObj.value!.routePoints, mode: routeObj.value!.mode });
-			clear();
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
-		} catch (err: any) {
-			toasts.showErrorToast(`fm${context.id}-route-form-add-error`, "Error adding line", err);
-		} finally {
-			isAdding.value = false;
-		}
-	}
+	const linesWithTags = computed((): LineWithTags[] | undefined => routeObj.value && [{
+		routePoints: routeObj.value.routePoints,
+		mode: routeObj.value.mode
+	}]);
 
 	async function exportRoute(format: ExportFormat): Promise<void> {
 		toasts.hideToast(`fm${context.id}-route-form-export-error`);
@@ -577,7 +566,7 @@
 									menuClass="fm-route-form-suggestions"
 									noWrapper
 									@update:isOpen="$event && loadSuggestions(destination)"
-									:isLoading="!destination.searchSuggestions"
+									:isLoading="!destination.searchSuggestions && !destination.mapSuggestions"
 								>
 									<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
 										<li
@@ -702,22 +691,10 @@
 						:destination="zoomDestination"
 					></ZoomToObjectButton>
 
-					<DropdownMenu
-						v-if="lineTypes.length > 0"
+					<AddToMapDropdown
+						:lines="linesWithTags"
 						size="sm"
-						:isBusy="isAdding"
-						label="Add to map"
-					>
-						<template v-for="type in lineTypes" :key="type.id">
-							<li>
-								<a
-									href="javascript:"
-									class="dropdown-item"
-									@click="addToMap(type)"
-								>{{type.name}}</a>
-							</li>
-						</template>
-					</DropdownMenu>
+					></AddToMapDropdown>
 
 					<DropdownMenu
 						size="sm"

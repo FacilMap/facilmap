@@ -1,9 +1,9 @@
 import Client from "facilmap-client";
-import { ID, Marker, ObjectWithId } from "facilmap-types";
+import type { ID, Marker, ObjectWithId } from "facilmap-types";
 import { Map } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
-import MarkerCluster, { MarkerClusterOptions } from "./marker-cluster";
+import MarkerCluster, { type MarkerClusterOptions } from "./marker-cluster";
 import MarkerLayer from "./marker-layer";
 
 export interface MarkersLayerOptions extends MarkerClusterOptions {

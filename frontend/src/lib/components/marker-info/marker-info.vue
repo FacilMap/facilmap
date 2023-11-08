@@ -42,7 +42,7 @@
 	async function deleteMarker(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-marker-info-delete`);
 
-		if (!await showConfirm({ title: "Remove marker", message: `Do you really want to remove the marker “${marker.value.name}”?` }))
+		if (!await showConfirm({ title: "Remove marker", message: `Do you really want to remove the marker “${normalizeMarkerName(marker.value.name)}”?` }))
 			return;
 
 		isDeleting.value = true;

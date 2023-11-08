@@ -19,7 +19,7 @@
 		spinner?: boolean;
 		variant?: ThemeColour;
 		noCloseButton?: boolean;
-		noAutoHide?: boolean;
+		autoHide?: boolean;
 		onHidden?: () => void;
 	}
 
@@ -65,12 +65,12 @@
 			toastErrors: <C extends (...args: any[]) => any>(callback: C) => {
 				return ((...args) => {
 					try {
-						const result = callback(...args);
-						Promise.resolve(result).catch((err) => {
+						const res = callback(...args);
+						Promise.resolve(res).catch((err) => {
 							result.showErrorToast(undefined, 'Unexpected error', err);
 							throw err;
 						});
-						return result;
+						return res;
 					} catch (err: any) {
 						result.showErrorToast(undefined, 'Unexpected error', err);
 					}
@@ -119,7 +119,7 @@
 		await new Promise<void>((resolve) => {
 			const toastRef = toastRefs.get(toast)!;
 			toastRef.addEventListener("shown.bs.toast", () => resolve());
-			Toast.getOrCreateInstance(toastRef, { autohide: !toast.noAutoHide }).show();
+			Toast.getOrCreateInstance(toastRef, { autohide: !!toast.autoHide }).show();
 
 			toastRef.addEventListener("hidden.bs.toast", () => {
 				toasts.value = toasts.value.filter((t) => t !== toast);
@@ -149,16 +149,23 @@
 			v-for="toast in toasts"
 			:key="toast.key"
 			class="toast"
+			:class="{ 'border-0': toast.variant }"
 			role="alert"
 			aria-live="assertive"
 			aria-atomic="true"
 			:ref="mapRef(toastRefs, toast)"
 		>
-			<div class="toast-header">
+			<div
+				class="toast-header bg-opacity-25"
+				:class="toast.variant && `bg-${toast.variant} bg-opacity-25`"
+			>
 				<strong class="me-auto">{{toast.title}}</strong>
 				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" aria-label="Close"></button>
 			</div>
-			<div class="toast-body">
+			<div
+				class="toast-body bg-opacity-10"
+				:class="toast.variant && `bg-${toast.variant} bg-opacity-10`"
+			>
 				<div>
 					<div v-if="toast.spinner" class="spinner-border spinner-border-sm" role="status">
 						<span class="visually-hidden">Loading...</span>

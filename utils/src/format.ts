@@ -1,5 +1,5 @@
-import { marked } from "marked";
-import { Field } from "facilmap-types";
+import { marked, type MarkedOptions } from "marked";
+import type { Field } from "facilmap-types";
 import { normalizeField } from "./filter.js";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
@@ -9,7 +9,7 @@ import cheerio from "cheerio";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
-const markdownOptions: marked.MarkedOptions = {
+const markdownOptions: MarkedOptions = {
 	breaks: true
 };
 

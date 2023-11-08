@@ -1,6 +1,6 @@
 import config from "../config.js";
-import { Point, RouteMode } from "facilmap-types";
-import { RawRouteInfo } from "./routing.js";
+import type { Point, RouteMode } from "facilmap-types";
+import type { RawRouteInfo } from "./routing.js";
 
 if (!config.mapboxToken)
 	console.error("Warning: No Mapbox token configured, calculating routes will fail. Please set MAPBOX_TOKEN in the environment or in config.env.");

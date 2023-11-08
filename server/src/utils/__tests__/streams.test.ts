@@ -1,5 +1,51 @@
-import { expect, test } from "vitest";
-import { arrayToAsyncIterator, asyncIteratorToArray, jsonStream } from "../streams.js";
+import { describe, expect, test } from "vitest";
+import { arrayToAsyncIterator, asyncIteratorToArray, jsonStream, streamPromiseToStream } from "../streams.js";
+import { ReadableStream } from "stream/web";
+
+describe("streamPromiseToStream", () => {
+	test("retrieves data for resolved promise", async () => {
+		const streamPromise = Promise.resolve(new ReadableStream<string>({
+			start(controller) {
+				controller.enqueue("Test");
+				controller.close();
+			}
+		}));
+
+		const stream = streamPromiseToStream(streamPromise);
+
+		let result = "";
+		for await (const chunk of stream) {
+			result += chunk;
+		}
+
+		expect(result).toEqual("Test");
+	});
+
+	test("passes on error from underlying stream", async () => {
+		const streamPromise = Promise.resolve(new ReadableStream<string>({
+			start(controller) {
+				controller.error(new Error("Test"));
+			}
+		}));
+
+		const stream = streamPromiseToStream(streamPromise);
+		const reader = stream.getReader();
+
+		await expect(async () => {
+			await reader.read();
+		}).rejects.toThrow("Test");
+	});
+
+	test("passes on error for rejected promise", async () => {
+		const streamPromise = Promise.reject(new Error("Test"));
+
+		const stream = streamPromiseToStream(streamPromise);
+
+		await expect(async () => {
+			await stream.getReader().read();
+		}).rejects.toThrow("Test");
+	});
+});
 
 test('jsonStream', async () => {
 	const template = {

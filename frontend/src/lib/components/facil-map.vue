@@ -21,7 +21,7 @@
 		baseUrl: string;
 		serverUrl: string;
 		padId: string | undefined;
-		settings: Partial<FacilMapSettings>;
+		settings?: Partial<FacilMapSettings>;
 	}>();
 
 	const emit = defineEmits<{
@@ -43,6 +43,10 @@
 		if (client.value) {
 			emit("update:padName", client.value.padData?.name);
 		}
+	});
+
+	defineExpose({
+		context
 	});
 </script>
 

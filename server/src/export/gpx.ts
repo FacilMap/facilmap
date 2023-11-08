@@ -1,11 +1,12 @@
 import { asyncIteratorToArray, asyncIteratorToStream } from "../utils/streams.js";
 import { compile } from "ejs";
 import Database from "../database/database.js";
-import { Field, PadId, Type } from "facilmap-types";
+import type { Field, PadId, Type } from "facilmap-types";
 import { compileExpression, normalizeLineName, normalizeMarkerName, quoteHtml } from "facilmap-utils";
-import { LineWithTrackPoints } from "../database/line.js";
+import type { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import gpxLineEjs from "./gpx-line.ejs?raw";
+import type { ReadableStream } from "stream/web";
 
 const lineTemplate = compile(gpxLineEjs);
 

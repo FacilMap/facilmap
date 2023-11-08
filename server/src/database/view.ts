@@ -1,8 +1,8 @@
-import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { CRU, ID, Latitude, Longitude, PadId, View } from "facilmap-types";
+import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
+import type { CRU, ID, Latitude, Longitude, PadId, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
-import { PadModel } from "./pad.js";
+import type { PadModel } from "./pad.js";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
 	id: CreationOptional<ID>;
@@ -78,7 +78,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+	async updateView(padId: PadId, viewId: ID, data: Omit<View<CRU.UPDATE>, "id">): Promise<View> {
 		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
 
 		this._db.emit("view", padId, newData);

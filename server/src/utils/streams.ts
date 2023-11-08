@@ -1,4 +1,4 @@
-import { ReadableStream } from "stream/web";
+import { ReadableStream, TransformStream } from "stream/web";
 
 export async function asyncIteratorToArray<T>(iterator: AsyncGenerator<T, any, void>): Promise<Array<T>> {
 	const result: T[] = [];
@@ -25,6 +25,16 @@ export function asyncIteratorToStream<T>(iterator: AsyncGenerator<T, void, void>
 			}
 		},
 	});
+}
+
+export function streamPromiseToStream<T>(streamPromise: Promise<ReadableStream<T>>): ReadableStream<T> {
+	const transform = new TransformStream({
+		async start() {
+			const stream = await streamPromise;
+			stream.pipeTo(transform.writable);
+		}
+	});
+	return transform.readable;
 }
 
 export function jsonStream(template: any, data: Record<string, AsyncGenerator<any, any, void> | Promise<any> | any | (() => AsyncGenerator<any, any, void> | Promise<any> | any)>): ReadableStream<string> {

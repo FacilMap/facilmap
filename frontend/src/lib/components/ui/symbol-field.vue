@@ -14,7 +14,7 @@
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		modelValue: string | undefined;
+		modelValue: string | undefined | null;
 		id?: string;
 		isRequired?: boolean;
 		validationError?: string | undefined;

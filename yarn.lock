@@ -3808,6 +3808,7 @@ __metadata:
     vue: ^3.3.4
     vue-template-compiler: ^2.7.14
     vue-template-loader: ^1.1.0
+    vue-tsc: ^1.8.22
     vuedraggable: next
   languageName: unknown
   linkType: soft
@@ -8639,7 +8640,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vue-tsc@npm:^1.8.20":
+"vue-tsc@npm:^1.8.20, vue-tsc@npm:^1.8.22":
   version: 1.8.22
   resolution: "vue-tsc@npm:1.8.22"
   dependencies:

@@ -1,17 +1,7 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"target": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "dist",
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"experimentalDecorators": true,
-		"resolveJsonModule": true,
-		"module": "esnext",
-		"importsNotUsedAsValues": "error"
+		"resolveJsonModule": true
 	},
 	"include": ["src/**/*"]
 }

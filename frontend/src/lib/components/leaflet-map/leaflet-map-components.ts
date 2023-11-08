@@ -1,4 +1,4 @@
-import { Ref, ref, watch, onScopeDispose, markRaw, reactive } from "vue";
+import { type Ref, ref, watch, onScopeDispose, markRaw, reactive, nextTick } from "vue";
 import L, { latLng, latLngBounds, Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView } from "facilmap-leaflet";
@@ -160,12 +160,12 @@ function createHashHandler(map: Map, client: ClientContext, context: FacilMapCon
 			if (!mapContext.components) {
 				// This is called while the hash handler is being enabled, so it is the initial view
 				smooth = false;
-				await new Promise((resolve) => { setTimeout(resolve); });
+				await nextTick();
 			}
 
 			if (!e.query)
 				mapContext.emit("search-set-query", { query: "", zoom: false, smooth: false });
-			else if (!await openSpecialQuery(e.query, context, client, mapContext as WritableMapContext, e.zoom, smooth))
+			else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
 				mapContext.emit("search-set-query", { query: e.query, zoom: e.zoom, smooth });
 		})
 		.enable();
@@ -221,6 +221,8 @@ function createMapComponents(context: FacilMapContext, mapContext: MapContextWit
 }
 
 export async function createMapContext(context: FacilMapContext, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): Promise<WritableMapContext> {
+	const client = requireClientContext(context);
+
 	const mapContextWithoutComponents: MapContextWithoutComponents = reactive(Object.assign(mitt<MapContextEvents>(), {
 		center: latLng(0, 0),
 		zoom: 1,
@@ -254,7 +256,7 @@ export async function createMapContext(context: FacilMapContext, mapRef: Ref<HTM
 	if (!map._loaded) {
 		try {
 			// Initial view was not set by hash handler
-			displayView(map, await getInitialView(context.components.client), { overpassLayer });
+			displayView(map, await getInitialView(client.value), { overpassLayer });
 		} catch (error) {
 			console.error(error);
 			displayView(map, undefined, { overpassLayer });
@@ -265,7 +267,7 @@ export async function createMapContext(context: FacilMapContext, mapRef: Ref<HTM
 		() => mapContext.selection,
 		() => mapContext.fallbackQuery
 	], () => {
-		mapContext.activeQuery = getHashQuery(mapContext.components.map, context.components.client, mapContext.selection) || mapContext.fallbackQuery;
+		mapContext.activeQuery = getHashQuery(mapContext.components.map, client.value, mapContext.selection) || mapContext.fallbackQuery;
 		mapContext.components.hashHandler.setQuery(mapContext.activeQuery);
 	});
 

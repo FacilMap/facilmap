@@ -1,8 +1,8 @@
-import { FindOnMapResult, PadId } from "facilmap-types";
-import { ModelStatic, Op, and, col, fn, where } from "sequelize";
+import type { FindOnMapResult, PadId } from "facilmap-types";
+import { type ModelStatic, Op, and, col, fn, where } from "sequelize";
 import Database from "./database.js";
-import { LineModel } from "./line.js";
-import { MarkerModel } from "./marker.js";
+import type { LineModel } from "./line.js";
+import type { MarkerModel } from "./marker.js";
 import { compareTwoStrings } from "string-similarity";
 
 export default class DatabaseSearch {

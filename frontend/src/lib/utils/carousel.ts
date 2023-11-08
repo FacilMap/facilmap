@@ -1,5 +1,5 @@
 import { Carousel } from "bootstrap";
-import { Ref, reactive, readonly, watch } from "vue";
+import { type Ref, reactive, readonly, watch } from "vue";
 
 export interface CarouselContext {
 	tab: number;

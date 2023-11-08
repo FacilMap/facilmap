@@ -1,5 +1,5 @@
 import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
-import { fmToLeafletBbox, HashQuery, OverpassElement } from "facilmap-leaflet";
+import { fmToLeafletBbox, type HashQuery, type OverpassElement } from "facilmap-leaflet";
 import type { RouteWithTrackPoints } from "facilmap-client";
 import type { SelectedItem } from "./selection";
 import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";

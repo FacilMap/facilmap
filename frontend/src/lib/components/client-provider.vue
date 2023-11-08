@@ -158,7 +158,7 @@
 		variant="danger"
 		title="Disconnected"
 		message="The connection to the server was lost. Trying to reconnect…"
-		no-auto-hide
+		auto-hide
 		no-close-button visible
 		spinner
 	/>

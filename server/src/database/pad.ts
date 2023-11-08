@@ -1,5 +1,5 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
-import { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults } from "facilmap-types";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
+import type { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults } from "facilmap-types";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 

@@ -1,4 +1,4 @@
-import { RouteMode } from "facilmap-types";
+import type { RouteMode } from "facilmap-types";
 
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";

@@ -1,7 +1,7 @@
 import config from "../config.js";
-import { calculateDistance, DecodedRouteMode } from "facilmap-utils";
-import { ExtraInfo, Point } from "facilmap-types";
-import { RawRouteInfo } from "./routing.js";
+import { calculateDistance, type DecodedRouteMode } from "facilmap-utils";
+import type { ExtraInfo, Point } from "facilmap-types";
+import type { RawRouteInfo } from "./routing.js";
 
 if (!config.orsToken)
 	console.error("Warning: No ORS token configured, calculating routes will fail. Please set ORS_TOKEN in the environment or in config.env.");

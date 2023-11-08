@@ -51,7 +51,7 @@
 
 	function copy(text: string): void {
 		copyToClipboard(text);
-		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success" });
+		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success", autoHide: true });
 	}
 </script>
 

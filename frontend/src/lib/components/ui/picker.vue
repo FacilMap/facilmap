@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { StyleValue, computed, ref, watchEffect } from "vue";
+	import { type StyleValue, computed, ref, watchEffect } from "vue";
 	import HybridPopover from "./hybrid-popover.vue";
 	import vValidity, { vValidityContext } from "./validated-form/validity";
 
@@ -8,7 +8,7 @@
 		customClass?: string;
 		disabled?: boolean;
 		validationError?: string;
-		modelValue?: string;
+		modelValue?: string | null;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 		previewStyle?: StyleValue;

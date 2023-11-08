@@ -1,6 +1,6 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import { ID, Marker, Line, Type, Field, CRU } from "facilmap-types";
+import { type ID, type Marker, type Line, type Type, type Field, CRU } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;

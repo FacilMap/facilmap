@@ -16,7 +16,7 @@
 	const showStatsPopover = ref(false);
 
 	const statsArr = computed(() => {
-		const stats = createElevationStats(props.route.extraInfo, props.route.trackPoints)
+		const stats = createElevationStats(props.route.extraInfo ?? {}, props.route.trackPoints)
 		return stats && sortBy([...numberKeys(stats)].map((i) => ({ i, distance: stats[i] })), 'i');
 	});
 </script>

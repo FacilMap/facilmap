@@ -1,7 +1,7 @@
 import { cloneDeep, isEqual } from "lodash-es";
-import type { Field, Line, Marker, Type } from "facilmap-types";
+import type { CRU, Field, Line, Marker, Type } from "facilmap-types";
 import type { Emitter } from "mitt";
-import { DeepReadonly, Ref, onBeforeUnmount, onMounted, watchEffect } from "vue";
+import { type DeepReadonly, type Ref, onBeforeUnmount, onMounted, watchEffect } from "vue";
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -48,12 +48,12 @@ export function getUniqueId(scope = ""): string {
 	return `${scope ? `${scope}-` : ""}${idCounter++}`;
 }
 
-export function isMarker(object: Marker | Line): object is Marker {
+export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
 	return "lat" in object && object.lat != null;
 }
 
-export function isLine(object: Marker | Line): object is Line {
-	return "top" in object && object.top != null;
+export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Line<Mode> {
+	return "routePoints" in object && object.routePoints != null;
 }
 
 export function isPromise(object: any): object is Promise<unknown> {

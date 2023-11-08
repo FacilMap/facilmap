@@ -1,7 +1,7 @@
 import { viewValidator } from "./view.js";
 import { idValidator, padIdValidator } from "./base.js";
 import * as z from "zod";
-import { CRU, CRUType, cruValidator } from "./cru";
+import { CRU, type CRUType, cruValidator } from "./cru";
 
 export enum Writable {
 	READ = 0,
@@ -26,8 +26,8 @@ export const padDataValidator = cruValidator({
 		defaultView: viewValidator.read.or(z.null())
 	},
 	exceptCreate: {
-		writeId: padIdValidator.or(z.null()),
-		adminId: padIdValidator.or(z.null())
+		writeId: padIdValidator.optional(),
+		adminId: padIdValidator.optional()
 	},
 	onlyCreate: {
 		writeId: padIdValidator,

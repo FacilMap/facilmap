@@ -1,5 +1,5 @@
 import type { HistoryEntry } from "facilmap-types";
-import { getObjectDiff, ObjectDiffItem } from "facilmap-utils";
+import { getObjectDiff, type ObjectDiffItem } from "facilmap-utils";
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 
 function existsNow(client: ClientContext, entry: HistoryEntry) {

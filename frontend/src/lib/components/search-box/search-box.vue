@@ -2,7 +2,7 @@
 	import $ from "jquery";
 	import Icon from "../ui/icon.vue";
 	import hammer from "hammerjs";
-	import { Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
+	import { type Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
 	import vTooltip, { hideAllTooltips } from "../../utils/tooltip";
 	import { useEventListener } from "../../utils/utils";
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
@@ -35,7 +35,7 @@
 			const isActive = activeTabId.value === id;
 			tabHistory.value = tabHistory.value.filter((v) => v !== id);
 			if (isActive) {
-				activeTabId.value = tabHistory.value.pop();
+				activeTabId.value = tabHistory.value[tabHistory.value.length - 1];
 			}
 		});
 	}

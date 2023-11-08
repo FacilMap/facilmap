@@ -1,12 +1,12 @@
-import { CreationAttributes, CreationOptional, DataTypes, ForeignKey, HasManyGetAssociationsMixin, InferAttributes, InferCreationAttributes, Model, Op } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU } from "facilmap-types";
+import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU } from "facilmap-types";
 import Database from "./database.js";
-import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
-import { PadModel } from "./pad";
-import { Point as GeoJsonPoint } from "geojson";
-import { TypeModel } from "./type";
+import type { PadModel } from "./pad";
+import type { Point as GeoJsonPoint } from "geojson";
+import type { TypeModel } from "./type";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -215,7 +215,7 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: Line<CRU.UPDATE>, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE>, "id">, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
 		const update = {
 			...data,

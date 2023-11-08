@@ -1,12 +1,4 @@
 {
-	"compilerOptions": {
-		"target": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"experimentalDecorators": true,
-		"module": "esnext"
-	},
+	"extends": "../tsconfig.json",
 	"include": ["src/**/*"]
 }

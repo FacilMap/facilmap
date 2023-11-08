@@ -1,7 +1,7 @@
-import { GeoJSON, Geometry, Feature } from "geojson";
-import { FeatureGroup, GeoJSON as GeoJSONLayer, GeoJSONOptions, Layer, PathOptions } from "leaflet";
+import type { GeoJSON, Geometry, Feature } from "geojson";
+import { FeatureGroup, GeoJSON as GeoJSONLayer, type GeoJSONOptions, Layer, type PathOptions } from "leaflet";
 import { HighlightablePolygon, HighlightablePolyline } from "leaflet-highlightable-layers";
-import MarkerLayer, { MarkerLayerOptions } from "../markers/marker-layer";
+import MarkerLayer, { type MarkerLayerOptions } from "../markers/marker-layer";
 
 interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 	marker?: MarkerLayerOptions['marker'];

@@ -1,9 +1,9 @@
-import { ID, Line, LinePointsEvent, ObjectWithId, Point } from "facilmap-types";
-import { FeatureGroup, latLng, LayerOptions, Map, PolylineOptions } from "leaflet";
-import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
-import { BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
+import type { ID, Line, LinePointsEvent, ObjectWithId, Point } from "facilmap-types";
+import { FeatureGroup, latLng, type LayerOptions, Map, type PolylineOptions } from "leaflet";
+import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
+import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
-import { addClickListener, ClickListenerHandle } from "../click-listener/click-listener";
+import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
 import Client from "facilmap-client";
 
 interface LinesLayerOptions extends LayerOptions {

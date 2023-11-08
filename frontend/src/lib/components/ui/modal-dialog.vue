@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, ref } from "vue";
 	import { useModal } from "../../utils/modal";
-	import ValidatedForm, { CustomSubmitEvent } from "./validated-form/validated-form.vue";
+	import ValidatedForm, { type CustomSubmitEvent } from "./validated-form/validated-form.vue";
 	import { reactiveReadonlyView } from "../../utils/vue";
 
 	const props = withDefaults(defineProps<{

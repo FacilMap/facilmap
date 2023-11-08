@@ -9,7 +9,7 @@
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
 	import type { HashQuery } from "facilmap-leaflet";
-	import { FileResultObject, parseFiles } from "../../utils/files";
+	import { type FileResultObject, parseFiles } from "../../utils/files";
 	import FileResults from "../file-results.vue";
 	import { computed, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";

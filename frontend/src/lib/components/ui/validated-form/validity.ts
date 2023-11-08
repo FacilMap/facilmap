@@ -1,7 +1,7 @@
 import type { Directive } from "vue";
 import { isPromise } from "../../../utils/utils";
 import { getValidatedForm } from "./validated-form.vue";
-import { ToastContext, useToasts } from "../toasts/toasts.vue";
+import { type ToastContext, useToasts } from "../toasts/toasts.vue";
 
 declare global {
 	interface Element {

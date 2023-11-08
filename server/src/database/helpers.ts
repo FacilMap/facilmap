@@ -1,9 +1,9 @@
-import { AssociationOptions, Model, ModelAttributeColumnOptions, ModelCtor, WhereOptions, DataTypes, FindOptions, Op, Sequelize, ModelStatic, InferAttributes, InferCreationAttributes, CreationAttributes } from "sequelize";
-import { Line, Marker, PadId, ID, Type, Bbox, CRU } from "facilmap-types";
+import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
+import { type Line, type Marker, type PadId, type ID, type Type, type Bbox, CRU } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
-import { PadModel } from "./pad";
+import type { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";
 
 const ITEMS_PER_BATCH = 5000;
@@ -412,9 +412,9 @@ export default class DatabaseHelpers {
 
 			if(!isEqual(object.data, newData)) {
 				if(isLine)
-					await this._db.lines.updateLine(object.padId, object.id, {data: newData}, true); // Last param true to not create history entry
+					await this._db.lines.updateLine(object.padId, object.id, { data: newData }, true); // Last param true to not create history entry
 				else
-					await this._db.markers.updateMarker(object.padId, object.id, {data: newData}, true); // Last param true to not create history entry
+					await this._db.markers.updateMarker(object.padId, object.id, { data: newData }, true); // Last param true to not create history entry
 			}
 		}
 	}

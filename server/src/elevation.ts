@@ -1,4 +1,4 @@
-import { Point } from "facilmap-types";
+import type { Point } from "facilmap-types";
 
 // const API_URL = "https://elevation.mapzen.com/height";
 // const LIMIT = 500;

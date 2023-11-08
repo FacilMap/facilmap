@@ -4,7 +4,7 @@
 	import vTooltip from "../../utils/tooltip";
 
 	const props = defineProps<{
-		modelValue: number | undefined;
+		modelValue: number | null | undefined;
 		validationError?: string | undefined;
 	}>();
 

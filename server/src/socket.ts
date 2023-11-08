@@ -6,12 +6,12 @@ import domain from "domain";
 import { exportLineToGpx } from "./export/gpx.js";
 import { find } from "./search.js";
 import { geoipLookup } from "./geoip.js";
-import { isEqual, omit } from "lodash-es";
-import Database, { DatabaseEvents } from "./database/database.js";
+import { cloneDeep, isEqual, omit } from "lodash-es";
+import Database, { type DatabaseEvents } from "./database/database.js";
 import { Server as HttpServer } from "http";
-import { Bbox, BboxWithZoom, EventHandler, EventName, MapEvents, MultipleEvents, PadData, PadId, RequestData, RequestName, ResponseData, Writable, requestDataValidators } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type EventHandler, type EventName, type MapEvents, type MultipleEvents, type PadData, type PadId, type RequestData, type RequestName, type ResponseData, Writable, requestDataValidators } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "./routing/routing.js";
-import { RouteWithId } from "./database/route.js";
+import type { RouteWithId } from "./database/route.js";
 
 type ValidatedSocketHandlers = {
 	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
@@ -196,9 +196,9 @@ class SocketConnection {
 			if(admin)
 				pad = { ...admin, writable: Writable.ADMIN };
 			else if(write)
-				pad = { ...write, writable: Writable.WRITE, adminId: null };
+				pad = omit({ ...write, writable: Writable.WRITE }, ["adminId"]);
 			else if(read)
-				pad = { ...read, writable: Writable.READ, writeId: null, adminId: null };
+				pad = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
 			else {
 				this.padId = undefined;
 				throw new Error("This pad does not exist");
@@ -744,11 +744,11 @@ class SocketConnection {
 
 		padData: (padId, data) => {
 			if(padId == this.padId) {
-				const dataClone = JSON.parse(JSON.stringify(data));
+				const dataClone = cloneDeep(data);
 				if(this.writable == Writable.READ)
-					dataClone.writeId = null;
+					delete dataClone.writeId;
 				if(this.writable != Writable.ADMIN)
-					dataClone.adminId = null;
+					delete dataClone.adminId;
 
 				this.padId = data.id;
 

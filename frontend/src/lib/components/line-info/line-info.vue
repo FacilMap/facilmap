@@ -46,7 +46,7 @@
 	async function deleteLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
 
-		if (!await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${line.value.name}”?` }))
+		if (!await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${normalizeLineName(line.value.name)}”?` }))
 			return;
 
 		isDeleting.value = true;
@@ -66,7 +66,7 @@
 
 		try {
 			const exported = await client.value.exportLine({ id: line.value.id, format });
-			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${line.value.name}.gpx`);
+			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${normalizeLineName(line.value.name)}.gpx`);
 		} catch(err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-export-error`, "Error exporting line", err);
 		} finally {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 	import type { ID, Type } from "facilmap-types";
 	import type { FileResult, FileResultObject } from "../../utils/files";
-	import { addSearchResultsToMap } from "./utils";
 	import { isLineResult, isMarkerResult, typeExists } from "../../utils/search";
 	import { mapValues, pickBy, uniq } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
@@ -9,6 +8,7 @@
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { type LineWithTags, type MarkerWithTags, addToMap, searchResultToLineWithTags, searchResultToMarkerWithTags } from "../../utils/add";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -41,7 +41,7 @@
 					options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
-			if (client.value.writable == 2 && !typeExists(client, customType))
+			if (client.value.writable == 2 && !typeExists(client.value, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 
 			options.push({ key: "false1", value: false, text: "Do not import" });
@@ -53,7 +53,7 @@
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
-				if (client.value.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client, customType2))
+				if (client.value.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client.value, customType2))
 					options.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: `Import type “${customType2.name}”` });
 			}
 
@@ -79,7 +79,7 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (client.value.writable && customType.type == "marker" && !typeExists(client, customType))
+			if (client.value.writable && customType.type == "marker" && !typeExists(client.value, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 
@@ -129,7 +129,15 @@
 				return id !== false && resolvedMapping[id] ? [{ result, type: resolvedMapping[id] }] : [];
 			});
 
-			await addSearchResultsToMap(add, client);
+			await addToMap(client.value, add.flatMap(({ result, type }): Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }> => {
+				if (type.type === 'marker') {
+					const marker = searchResultToMarkerWithTags(result);
+					return marker ? [{ marker, type }] : [];
+				} else {
+					const line = searchResultToLineWithTags(result);
+					return line ? [{ line, type }] : [];
+				};
+			}));
 
 			modalRef.value?.modal.hide();
 		} catch(err) {

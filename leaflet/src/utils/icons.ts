@@ -1,4 +1,4 @@
-import { Shape, Symbol } from "facilmap-types";
+import type { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
 import { icon, Icon } from "leaflet";
 import { memoize } from "lodash-es";

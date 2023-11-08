@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import debug from "debug";
 import DatabaseHelpers from "./helpers.js";
 import DatabaseHistory from "./history.js";
-import { DbConfig } from "../config.js";
+import type { DbConfig } from "../config.js";
 import DatabasePads from "./pad.js";
 import DatabaseViews from "./view.js";
 import DatabaseLines from "./line.js";
@@ -13,7 +13,7 @@ import DatabaseSearch from "./search.js";
 import DatabaseRoutes from "./route.js";
 import DatabaseMigrations from "./migrations.js";
 import { TypedEventEmitter } from "../utils/events.js";
-import { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
+import type { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEvents {
 	addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];

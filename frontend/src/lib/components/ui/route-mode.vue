@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { RouteMode as RouteModeType } from "facilmap-types";
-	import { DecodedRouteMode, decodeRouteMode, encodeRouteMode } from "facilmap-utils";
+	import { type DecodedRouteMode, decodeRouteMode, encodeRouteMode } from "facilmap-utils";
 	import Icon from "./icon.vue";
 	import { computed, ref, watch } from "vue";
 	import { getUniqueId } from "../../utils/utils";
-	import vTooltip, { TooltipPlacement } from "../../utils/tooltip";
+	import vTooltip, { type TooltipPlacement } from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	type Mode = Exclude<DecodedRouteMode['mode'], 'track'>;
@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 	const props = withDefaults(defineProps<{
-		modelValue?: RouteModeType;
+		modelValue?: RouteModeType | null;
 		tabindex?: number;
 		disabled?: boolean;
 		tooltipPlacement?: TooltipPlacement;

@@ -1,9 +1,9 @@
-import Client, { RouteWithTrackPoints } from "facilmap-client";
-import { Map, PolylineOptions } from "leaflet";
-import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
+import Client, { type RouteWithTrackPoints } from "facilmap-client";
+import { Map, type PolylineOptions } from "leaflet";
+import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
-import { RouteClear, RoutePointsEvent } from "facilmap-types";
+import type { RouteClear, RoutePointsEvent } from "facilmap-types";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 }

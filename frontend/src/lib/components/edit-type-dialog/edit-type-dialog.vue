@@ -90,7 +90,7 @@
 
 		for (const prop of [ "defaultWidth", "defaultSize", "defaultColour" ] as const) {
 			if(type.value[prop] == "")
-				type.value[prop] = undefined;
+				type.value[prop] = null;
 		}
 
 		try {

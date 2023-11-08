@@ -1,14 +1,14 @@
 import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo.js";
 import md5 from "md5-file";
 import { schedule } from "node-cron";
-import { open, Reader, Response } from "maxmind";
+import { open, Reader, type Response } from "maxmind";
 import { createWriteStream } from "fs";
 import { rename } from "node:fs/promises";
 import https from "https";
 import zlib from "zlib";
 import config from "./config.js";
 import { IncomingMessage } from "http";
-import { Bbox } from "facilmap-types";
+import type { Bbox } from "facilmap-types";
 import { fileURLToPath } from "url";
 import { fileExists } from "./utils/utils";
 import findCacheDir from "find-cache-dir";

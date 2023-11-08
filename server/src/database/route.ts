@@ -1,11 +1,11 @@
 import { generateRandomId } from "../utils/utils.js";
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions } from "sequelize";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
-import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
+import type { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
+import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
-import { Point as GeoJsonPoint } from "geojson";
+import { type Point as GeoJsonPoint } from "geojson";
 
 const updateTimes: Record<string, number> = {};
 
@@ -171,10 +171,10 @@ export default class DatabaseRoutes {
 			routePoints: line.routePoints,
 			trackPoints: linePoints,
 			distance: line.distance,
-			time: line.time,
-			ascent: line.ascent,
-			descent: line.descent,
-			extraInfo: line.extraInfo,
+			time: line.time ?? undefined,
+			ascent: line.ascent ?? undefined,
+			descent: line.descent ?? undefined,
+			extraInfo: line.extraInfo ?? undefined,
 			top: line.top,
 			left: line.left,
 			bottom: line.bottom,

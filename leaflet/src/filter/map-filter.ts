@@ -1,5 +1,5 @@
 import { Map } from "leaflet";
-import { compileExpression, FilterFunc } from "facilmap-utils";
+import { compileExpression, type FilterFunc } from "facilmap-utils";
 
 declare module "leaflet" {
 	interface Map {

@@ -1,17 +1,17 @@
 import compression from "compression";
 import * as ejs from "ejs";
-import express, { Request, Response, static as expressStatic, NextFunction } from "express";
+import express, { type Request, type Response, static as expressStatic, type NextFunction } from "express";
 import { readFile } from "node:fs/promises";
 import { createServer, Server as HttpServer } from "http";
-import { PadId } from "facilmap-types";
+import type { PadId } from "facilmap-types";
 import { createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { paths, serve } from "facilmap-frontend/build.js";
-import { Manifest } from "vite";
-import { Writable } from "stream";
+import type { Manifest } from "vite";
+import { Readable, Writable } from "stream";
 
 const isDevMode = !!process.env.FM_DEV;
 
@@ -150,7 +150,9 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 			res.set("Content-type", "application/geo+json");
 			res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
-			exportGeoJson(database, req.params.padId, req.query.filter as string | undefined).pipe(res);
+
+			const result = exportGeoJson(database, req.params.padId, req.query.filter as string | undefined);
+			Readable.fromWeb(result).pipe(res);
 		} catch (e) {
 			next(e);
 		}

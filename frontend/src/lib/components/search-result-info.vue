@@ -3,30 +3,25 @@
 	import type { FindOnMapResult, Point, SearchResult, Type } from "facilmap-types";
 	import Icon from "./ui/icon.vue";
 	import type { FileResult } from "../utils/files";
-	import { isFileResult, isLineResult, isMarkerResult } from "../utils/search";
+	import { isFileResult, isMarkerResult } from "../utils/search";
+	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../utils/add";
 	import { getZoomDestinationForSearchResult } from "../utils/zoom";
 	import Coordinates from "./ui/coordinates.vue";
-	import { computed, toRaw } from "vue";
-	import DropdownMenu from "./ui/dropdown-menu.vue";
+	import { computed } from "vue";
 	import UseAsDropdown from "./ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "./ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { RouteDestination } from "./facil-map-context-provider/map-context";
-
-	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	import AddToMapDropdown from "./ui/add-to-map-dropdown.vue";
 
 	const props = withDefaults(defineProps<{
 		result: SearchResult | FileResult;
 		showBackButton?: boolean;
-		isAdding?: boolean;
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		searchResults?: SearchResult[];
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		mapResults?: FindOnMapResult[];
 	}>(), {
-		showBackButton: false,
-		isAdding: false
+		showBackButton: false
 	});
 
 	const emit = defineEmits<{
@@ -35,13 +30,6 @@
 	}>();
 
 	const isMarker = computed(() => isMarkerResult(props.result));
-
-	const isLine = computed(() => isLineResult(props.result));
-
-	const types = computed(() => {
-		// Result can be both marker and line
-		return Object.values(client.value.types).filter((type) => (isMarker.value && type.type == "marker") || (isLine.value && type.type == "line"));
-	});
 
 	const zoomDestination = computed(() => getZoomDestinationForSearchResult(props.result));
 
@@ -63,6 +51,9 @@
 			};
 		}
 	});
+
+	const markersWithTags = computed(() => searchResultsToMarkersWithTags([props.result]));
+	const linesWithTags = computed(() => searchResultsToLinesWithTags([props.result]));
 </script>
 
 <template>
@@ -107,22 +98,11 @@
 					:destination="zoomDestination"
 				></ZoomToObjectButton>
 
-				<DropdownMenu
-					v-if="!client.readonly && types.length > 0"
+				<AddToMapDropdown
+					:markers="markersWithTags"
+					:lines="linesWithTags"
 					size="sm"
-					:isBusy="isAdding"
-					label="Add to map"
-				>
-					<template v-for="type in types" :key="type.id">
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="emit('add-to-map', type)"
-							>{{type.name}}</a>
-						</li>
-					</template>
-				</DropdownMenu>
+				></AddToMapDropdown>
 
 				<UseAsDropdown
 					v-if="isMarker && routeDestination"

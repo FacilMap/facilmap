@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Ref, onScopeDispose, reactive, readonly, ref, watchEffect } from "vue";
-	import { ExtendableEventMixin, extendableEventMixin } from "../../../utils/utils";
+	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect } from "vue";
+	import { type ExtendableEventMixin, extendableEventMixin } from "../../../utils/utils";
 	import { useToasts } from "../toasts/toasts.vue";
 
 	export interface ValidatedFormData {

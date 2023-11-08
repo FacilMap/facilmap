@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { InjectionKey, Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch } from "vue";
+	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch } from "vue";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
 	import { reactiveReadonlyView } from "../../utils/vue";
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings, WritableFacilMapContext } from "./facil-map-context";

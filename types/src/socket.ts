@@ -1,12 +1,12 @@
-import { Bbox, bboxWithZoomValidator, exportFormatValidator, idValidator, objectWithIdValidator } from "./base.js";
-import { PadData, padDataValidator } from "./padData.js";
-import { Marker, markerValidator } from "./marker.js";
-import { Line, lineValidator } from "./line.js";
-import { Route, RouteInfo, lineToRouteCreateValidator, routeClearValidator, routeCreateValidator, routeRequestValidator } from "./route.js";
-import { Type, typeValidator } from "./type.js";
-import { View, viewValidator } from "./view.js";
-import { MapEvents, MultipleEvents } from "./events.js";
-import { SearchResult } from "./searchResult.js";
+import { type Bbox, bboxWithZoomValidator, exportFormatValidator, idValidator, objectWithIdValidator } from "./base.js";
+import { type PadData, padDataValidator } from "./padData.js";
+import { type Marker, markerValidator } from "./marker.js";
+import { type Line, lineValidator } from "./line.js";
+import { type Route, type RouteInfo, lineToRouteCreateValidator, routeClearValidator, routeCreateValidator, routeRequestValidator } from "./route.js";
+import { type Type, typeValidator } from "./type.js";
+import { type View, viewValidator } from "./view.js";
+import type { MapEvents, MultipleEvents } from "./events.js";
+import type { SearchResult } from "./searchResult.js";
 import * as z from "zod";
 
 export const getPadQueryValidator = z.object({

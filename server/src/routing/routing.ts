@@ -1,6 +1,6 @@
 import { calculateBbox, isInBbox } from "../utils/geo.js";
-import { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
-import { decodeRouteMode, DecodedRouteMode, calculateDistance } from "facilmap-utils";
+import type { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
+import { decodeRouteMode, type DecodedRouteMode, calculateDistance } from "facilmap-utils";
 import { calculateOSRMRoute } from "./osrm.js";
 import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
 

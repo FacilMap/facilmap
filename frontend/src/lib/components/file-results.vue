@@ -37,7 +37,7 @@
 	const hasTypes = computed(() => Object.keys(props.file.types).length > 0);
 
 	const existingViews = computed(() => {
-		return new Map(props.file.views.map((view) => [view, viewExists(client, view)]));
+		return new Map(props.file.views.map((view) => [view, viewExists(client.value, view)]));
 	});
 
 	function showView(view: ViewImport): void {
@@ -58,7 +58,7 @@
 	};
 
 	const existingTypes = computed(() => {
-		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(client, type)]));
+		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(client.value, type)]));
 	});
 
 	async function addType(type: TypeImport): Promise<void> {

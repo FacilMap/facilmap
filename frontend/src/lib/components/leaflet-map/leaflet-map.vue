@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Ref, computed, onMounted, ref } from "vue";
+	import { type Ref, computed, onMounted, ref } from "vue";
 	import "leaflet/dist/leaflet.css";
 	import "leaflet.locatecontrol";
 	import "leaflet.locatecontrol/dist/L.Control.Locate.css";

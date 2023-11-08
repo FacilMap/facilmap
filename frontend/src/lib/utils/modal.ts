@@ -1,5 +1,5 @@
 import { Modal } from "bootstrap";
-import { Ref, shallowRef, watch, watchEffect } from "vue";
+import { type Ref, shallowRef, watch, watchEffect } from "vue";
 
 export interface ModalConfig {
 	emit?: {

@@ -1,11 +1,11 @@
-import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { BboxWithZoom, CRU, ID, Latitude, Longitude, Marker, PadId } from "facilmap-types";
-import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
+import type { BboxWithZoom, CRU, ID, Latitude, Longitude, Marker, PadId } from "facilmap-types";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint } from "../elevation.js";
-import { PadModel } from "./pad.js";
-import { Point as GeoJsonPoint } from "geojson";
-import { TypeModel } from "./type.js";
+import type { PadModel } from "./pad.js";
+import type { Point as GeoJsonPoint } from "geojson";
+import type { TypeModel } from "./type.js";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -103,7 +103,7 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: Marker<CRU.UPDATE>, doNotUpdateStyles = false): Promise<Marker> {
+	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE>, "id">, doNotUpdateStyles = false): Promise<Marker> {
 		const update = { ...data };
 
 		if (update.lat != null && update.lon != null)
