@@ -828,12 +828,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bootstrap@npm:^5.2.8":
-  version: 5.2.8
-  resolution: "@types/bootstrap@npm:5.2.8"
+"@types/bootstrap@npm:^5.2.9":
+  version: 5.2.9
+  resolution: "@types/bootstrap@npm:5.2.9"
   dependencies:
     "@popperjs/core": ^2.9.2
-  checksum: c61aa007b4bcda8a10a764c3e53c608cc5bcf1b1a822b6bb628aa248bb0cbb398b4bc70d671c5eb0a3348c8218fa39c0d0340e71534b92ce785cb47817867dab
+  checksum: e5cb53bafb573f3baefee82979b9b2412f2ce565e3d1bdbf1c5906f0acee6b5cfdbac10c7ee60b406cbadc46e5c2b0a600550eaabbcfc5f86eb303c1ede2af78
   languageName: node
   linkType: hard
 
@@ -3745,7 +3745,7 @@ __metadata:
   dependencies:
     "@ckpack/vue-color": ^1.5.0
     "@tmcw/togeojson": ^5.8.1
-    "@types/bootstrap": ^5.2.8
+    "@types/bootstrap": ^5.2.9
     "@types/decode-uri-component": ^0.2.0
     "@types/file-saver": ^2.0.5
     "@types/hammerjs": ^2.0.42

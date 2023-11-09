@@ -16,7 +16,7 @@ export interface RouteDestination {
 
 export type MapContextEvents = {
 	"import-file": void;
-	"open-selection": { selection: SelectedItem[] };
+	"open-selection": { selection: DeepReadonly<SelectedItem[]> };
 	"search-set-query": { query: string; zoom?: boolean; smooth?: boolean };
 	"route-set-query": { query: string; zoom?: boolean; smooth?: boolean };
 	"route-set-from": RouteDestination;
@@ -49,7 +49,7 @@ export type MapContextData = {
 	filterFunc: FilterFunc;
 	hash: string;
 	showToolbox: boolean;
-	selection: SelectedItem[];
+	selection: DeepReadonly<SelectedItem>[];
 	activeQuery: HashQuery | undefined;
 	fallbackQuery: HashQuery | undefined;
 	setFallbackQuery: (query: HashQuery | undefined) => void;

@@ -1,4 +1,4 @@
-import Client from "facilmap-client";
+import type Client from "facilmap-client";
 import type { ID, Marker, ObjectWithId } from "facilmap-types";
 import { Map } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";

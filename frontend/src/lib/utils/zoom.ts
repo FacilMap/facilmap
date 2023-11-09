@@ -9,7 +9,7 @@ import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName } from "facilma
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
-import { toRef } from "vue";
+import { toRef, type DeepReadonly } from "vue";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -17,7 +17,7 @@ export type ZoomDestination = {
 	bounds?: LatLngBounds;
 };
 
-export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination | undefined {
+export function getZoomDestinationForGeoJSON(geojson: DeepReadonly<Geometry>): ZoomDestination | undefined {
 	if (geojson.type == "GeometryCollection")
 		return combineZoomDestinations(geojson.geometries.map((geo) => getZoomDestinationForGeoJSON(geo)));
 	else if (geojson.type == "Point")
@@ -44,7 +44,7 @@ export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDes
 	return { bounds: fmToLeafletBbox(route) };
 }
 
-export function getZoomDestinationForSearchResult(result: SearchResult): ZoomDestination | undefined {
+export function getZoomDestinationForSearchResult(result: DeepReadonly<SearchResult>): ZoomDestination | undefined {
 	const dest: ZoomDestination = {};
 
 	if (result.boundingbox)
@@ -108,7 +108,7 @@ export function flyTo(map: Map, destination: ZoomDestination, smooth = true): vo
 		map.setView(dest.center, dest.zoom, { animate: false });
 }
 
-export function getHashQuery(map: Map, client: ClientContext, items: SelectedItem[]): HashQuery | undefined {
+export function getHashQuery(map: Map, client: ClientContext, items: DeepReadonly<SelectedItem>[]): HashQuery | undefined {
 	if (items.length == 1) {
 		if (items[0].type == "searchResult") {
 			const destination = getZoomDestinationForSearchResult(items[0].result);

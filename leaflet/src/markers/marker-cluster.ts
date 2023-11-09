@@ -1,5 +1,5 @@
 import { Map, MarkerClusterGroup, type MarkerClusterGroupOptions } from "leaflet";
-import Client from "facilmap-client";
+import type Client from "facilmap-client";
 import type { PadData } from "facilmap-types";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";

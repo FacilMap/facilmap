@@ -1,4 +1,4 @@
-import Client from "facilmap-client";
+import type Client from "facilmap-client";
 import { numberKeys } from "facilmap-utils";
 import { Evented, Handler, latLng, LatLng, Map } from "leaflet";
 import { debounce, isEqual } from "lodash-es";

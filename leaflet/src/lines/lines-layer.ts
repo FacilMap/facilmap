@@ -4,7 +4,7 @@ import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-h
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
-import Client from "facilmap-client";
+import type Client from "facilmap-client";
 
 interface LinesLayerOptions extends LayerOptions {
 }

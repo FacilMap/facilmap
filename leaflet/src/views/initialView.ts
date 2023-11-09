@@ -1,4 +1,4 @@
-import Client from "facilmap-client";
+import type Client from "facilmap-client";
 import type { PadData } from "facilmap-types";
 import type { UnsavedView } from "./views";
 

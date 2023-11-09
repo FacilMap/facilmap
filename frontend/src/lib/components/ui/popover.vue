@@ -2,7 +2,6 @@
 	import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 	import { Popover, Tooltip } from "bootstrap";
 	import { useResizeObserver } from "../../utils/vue";
-	import type { PopperConfigFunction } from "../../utils/bootstrap";
 
 	/**
 	 * Like Bootstrap Popover, but uses an existing popover element rather than creating a new one. This way, the popover
@@ -58,15 +57,14 @@
 		renderPopover.value = true;
 		await nextTick();
 		if (props.element) {
-			const popperConfig: PopperConfigFunction = (defaultConfig) => ({
-				...defaultConfig,
-				strategy: "fixed"
-			});
 			CustomPopover.getOrCreateInstance(props.element, {
 				placement: props.placement,
 				content: popoverContent.value!,
 				trigger: 'manual',
-				popperConfig: popperConfig as any
+				popperConfig: (defaultConfig) => ({
+					...defaultConfig,
+					strategy: "fixed"
+				})
 			}).show();
 		}
 	};

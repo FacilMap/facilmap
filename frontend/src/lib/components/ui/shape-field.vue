@@ -76,7 +76,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="modelValue"
+				:value="modelValue ?? undefined"
 				@click="handleClick($event, close)"
 				ref="gridRef"
 			></PrerenderedList>

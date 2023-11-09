@@ -3,11 +3,21 @@ import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
 import autoExternalPlugin from "rollup-plugin-auto-external";
 import iconsPlugin from "./rollup-icons";
+import { appendFile, readFile } from "fs/promises";
 
 export default defineConfig({
 	plugins: [
 		cssInjectedByJsPlugin(),
-		dtsPlugin({ rollupTypes: true, clearPureImport: false }),
+		dtsPlugin({
+			rollupTypes: true,
+			clearPureImport: false,
+			async afterBuild() {
+				// Due to https://github.com/microsoft/rushstack/issues/1709, our module augmentations are lost during
+				// the type rollup. As an ugly workaround, we simply append them here.
+				const filterFile = await readFile("./src/type-extensions.ts");
+				await appendFile("./dist/facilmap-leaflet.d.ts", filterFile);
+			},
+		}),
 		autoExternalPlugin(),
 		iconsPlugin()
 	],

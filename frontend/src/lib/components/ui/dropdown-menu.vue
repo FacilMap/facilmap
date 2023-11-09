@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
-	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint, type PopperConfigFunction } from "../../utils/bootstrap";
+	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
 	import { Dropdown } from "bootstrap";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
@@ -62,16 +62,15 @@
 
 	watch(() => buttonRef.value?.elementRef, (newRef, oldRef, onCleanup) => {
 		if (newRef) {
-			const popperConfig: PopperConfigFunction = (defaultConfig) => ({
-				...defaultConfig,
-				modifiers: [
-					...(defaultConfig.modifiers ?? []),
-					...maxSizeModifiers
-				],
-				strategy: "fixed"
-			});
 			dropdownRef.value = new CustomDropdown(newRef, {
-				popperConfig: popperConfig as any
+				popperConfig: (defaultConfig) => ({
+					...defaultConfig,
+					modifiers: [
+						...(defaultConfig.modifiers ?? []),
+						...maxSizeModifiers
+					],
+					strategy: "fixed"
+				})
 			});
 			onCleanup(() => {
 				dropdownRef.value!.dispose();

@@ -1,4 +1,5 @@
-import Client, { type RouteWithTrackPoints } from "facilmap-client";
+import type Client from "facilmap-client";
+import { type RouteWithTrackPoints } from "facilmap-client";
 import { Map, type PolylineOptions } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";

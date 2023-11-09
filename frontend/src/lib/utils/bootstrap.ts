@@ -1,6 +1,6 @@
 import { computed, type Ref, ref } from "vue";
 import maxSize from "popper-max-size-modifier";
-import type { Modifier, ModifierArguments, Options } from "@popperjs/core";
+import type { Modifier, ModifierArguments } from "@popperjs/core";
 
 const breakpointMinWidth = {
 	// See https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
@@ -77,9 +77,3 @@ export const maxSizeModifiers: Array<Partial<Modifier<any, any>>> = [
 		}
 	}
 ];
-
-/**
- * The type of the `popperConfig` configuration option of various Bootstrap components, since the typing is wrong.
- * See https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67333
- */
-export type PopperConfigFunction = (defaultConfig: Partial<Options>) => Partial<Options>;

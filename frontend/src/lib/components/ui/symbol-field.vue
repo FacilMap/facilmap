@@ -83,7 +83,7 @@
 		enforceElementWidth
 	>
 		<template #preview>
-			<Icon :icon="modelValue"></Icon>
+			<Icon :icon="modelValue ?? undefined"></Icon>
 		</template>
 
 		<template #default="{ close }">
@@ -100,7 +100,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="modelValue"
+				:value="modelValue ?? undefined"
 				@click="handleClick($event, close)"
 				ref="grid"
 			></PrerenderedList>
