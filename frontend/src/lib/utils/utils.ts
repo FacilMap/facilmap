@@ -1,12 +1,14 @@
 import { cloneDeep, isEqual } from "lodash-es";
 import type { CRU, Field, Line, Marker, Type } from "facilmap-types";
 import type { Emitter } from "mitt";
-import { type DeepReadonly, type Ref, onBeforeUnmount, onMounted, watchEffect } from "vue";
+import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vue";
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 // https://stackoverflow.com/a/62085569/242365
 export type DistributedKeyOf<T> = T extends any ? keyof T : never;
+
+export type AnyRef<T> = T | Ref<T> | (() => T);
 
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
@@ -60,10 +62,14 @@ export function isPromise(object: any): object is Promise<unknown> {
 	return typeof object === 'object' && 'then' in object && typeof object.then === 'function';
 }
 
-export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: Ref<Emitter<EventMap> | DeepReadonly<Emitter<EventMap>> | undefined>, type: EventType, listener: (data: EventMap[EventType]) => void): void {
+export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: AnyRef<Emitter<EventMap> | DeepReadonly<Emitter<EventMap>> | undefined>, type: EventType, listener: (data: EventMap[EventType]) => void): void {
+	const emitterRef = toRef(emitter);
+
 	watchEffect((onCleanup) => {
-		if (emitter.value) {
-			const val = emitter.value;
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+
+		if (emitterRef.value) {
+			const val = emitterRef.value;
 			val.on(type, listener);
 			onCleanup(() => {
 				val.off(type, listener);
@@ -72,13 +78,18 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 	});
 }
 
-export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: EventTarget, ...args: Args): void {
-	onMounted(() => {
-		(element as any).addEventListener(...args);
-	});
+export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: AnyRef<EventTarget | undefined>, ...args: Args): void {
+	watchEffect((onCleanup) => {
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
 
-	onBeforeUnmount(() => {
-		(element as any).removeEventListener(...args);
+		const elementRef = toRef(element);
+		if (elementRef.value) {
+			const el = elementRef.value as any;
+			el.addEventListener(...args);
+			onCleanup(() => {
+				el.removeEventListener(...args);
+			});
+		}
 	});
 }
 
@@ -130,4 +141,64 @@ export function validateRequired(val: any): string | undefined {
 	if (val == null || val === "") {
 		return "Must not be empty.";
 	}
+}
+
+/**
+ * Registers a focus handler on the given element that does not fire when the focus was given through a click.
+ */
+export function useNonClickFocusHandler(element: AnyRef<HTMLElement | undefined>, onFocus: (e: FocusEvent) => void): void {
+	let lastEvent: {
+		timeout: ReturnType<typeof setTimeout>;
+		hadMouseDown?: boolean;
+		focusEvent?: FocusEvent;
+	} | undefined;
+
+	useDomEventListener(element, "mousedown", () => {
+		lastEvent = {
+			...lastEvent,
+			timeout: lastEvent?.timeout ?? setTimeout(handleTimeout, 0),
+			hadMouseDown: true
+		};
+	});
+
+	useDomEventListener(element, "focus", (e: Event) => {
+		lastEvent = {
+			...lastEvent,
+			timeout: lastEvent?.timeout ?? setTimeout(handleTimeout, 0),
+			focusEvent: e as FocusEvent
+		};
+	});
+
+	function handleTimeout() {
+		if (lastEvent?.focusEvent && !lastEvent.hadMouseDown) {
+			onFocus(lastEvent.focusEvent);
+		}
+		lastEvent = undefined;
+	}
+}
+
+/**
+ * Registers a click handler on the given element that does not fire when the click is caused by a drag.
+ */
+export function useNonDragClickHandler(element: AnyRef<HTMLElement | undefined>, onClick: (e: MouseEvent) => void): void {
+	let hasMoved = false;
+
+	useDomEventListener(element, "mousedown", () => {
+		hasMoved = false;
+		const scope = effectScope();
+		scope.run(() => {
+			useDomEventListener(document, "mousemove", () => {
+				hasMoved = true;
+			}, { capture: true });
+			useDomEventListener(document, "mouseup", () => {
+				scope.stop();
+			}, { capture: true });
+		});
+	});
+
+	useDomEventListener(element, "click", (e) => {
+		if (!hasMoved) {
+			onClick(e as MouseEvent);
+		}
+	});
 }

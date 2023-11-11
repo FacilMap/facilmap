@@ -20,6 +20,8 @@ export function useCarousel(element: Ref<HTMLElement | undefined>): Readonly<Car
 	});
 
 	watch(element, (newRef, oldRef, onCleanup) => {
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+
 		if (newRef) {
 			const carousel = new Carousel(newRef, {
 				interval: 0,

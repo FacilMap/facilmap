@@ -140,7 +140,6 @@
 					</ul>
 				</template>
 			</template>
-
 		</SearchResults>
 	</div>
 </template>

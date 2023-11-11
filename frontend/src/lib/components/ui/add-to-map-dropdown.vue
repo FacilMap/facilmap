@@ -6,6 +6,7 @@
 	import type { SelectedItem } from '../../utils/selection';
 	import { type LineWithTags, type MarkerWithTags, addToMap } from '../../utils/add';
 	import type { ButtonSize } from '../../utils/bootstrap';
+	import DropdownMenu from "./dropdown-menu.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -17,6 +18,8 @@
 		lines?: LineWithTags[];
 		label?: string;
 		size?: ButtonSize;
+		/** If true, the markers/lines entries are assumed to refer to a single object, omitting the prefix "Marker/line/polgon items as" */
+		isSingle?: boolean;
 	}>(), {
 		label: "Add to map"
 	})
@@ -82,7 +85,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addMarkers(type)"
-					>{{props.lines ? 'Marker items as ' : ''}}{{type.name}}</a>
+					>{{!props.isSingle && props.lines ? 'Marker items as ' : ''}}{{type.name}}</a>
 				</li>
 			</template>
 		</template>
@@ -93,7 +96,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addLines(type)"
-					>{{props.markers ? 'Line/polygon items as ' : ''}}{{type.name}}</a>
+					>{{!props.isSingle && props.markers ? 'Line/polygon items as ' : ''}}{{type.name}}</a>
 				</li>
 			</template>
 		</template>

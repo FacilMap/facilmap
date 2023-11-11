@@ -5,10 +5,11 @@
 	import { Util } from "leaflet";
 	import FileResults from "./file-results.vue";
 	import SearchBoxTab from "./search-box/search-box-tab.vue";
-	import { computed, markRaw, ref, shallowReactive } from "vue";
+	import { computed, markRaw, readonly, ref, shallowReactive, toRef } from "vue";
 	import { useDomEventListener, useEventListener } from "../utils/utils";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import type { WritableImportTabContext } from "./facil-map-context-provider/import-tab-context";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -20,7 +21,6 @@
 	const files = ref<Array<FileResultObject & { title: string }>>([]);
 	const layers = shallowReactive<SearchResultsLayer[]>([]);
 
-	useEventListener(mapContext, "import-file", handleImportFile);
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
 	useDomEventListener(mapContext.value.components.container, "dragenter", handleMapDragEnter);
@@ -29,14 +29,18 @@
 
 	const layerIds = computed(() => layers.map((layer) => Util.stamp(layer)));
 
-	function handleImportFile(): void {
-		fileInputRef.value?.click();
-	}
+	const importTabContext = ref<WritableImportTabContext>({
+		openFilePicker() {
+			fileInputRef.value?.click();
+		}
+	});
+
+	context.provideComponent("importTab", toRef(readonly(importTabContext)));
 
 	function handleOpenSelection(): void {
 		for (let i = 0; i < layerIds.value.length; i++) {
 			if (mapContext.value.selection.some((item) => item.type == "searchResult" && item.layerId == layerIds.value[i])) {
-				searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${i}`);
+				searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${i}`, { expand: true });
 				break;
 			}
 		}
@@ -93,7 +97,7 @@
 				files.value.push(result);
 				layers.push(layer);
 				setTimeout(() => {
-					searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${files.value.length - 1}`);
+					searchBoxContext.value.activateTab(`fm${context.id}-import-tab-${files.value.length - 1}`, { expand: true });
 				}, 0);
 			}
 		} catch (err) {

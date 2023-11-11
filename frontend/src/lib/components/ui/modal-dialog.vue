@@ -3,6 +3,7 @@
 	import { useModal } from "../../utils/modal";
 	import ValidatedForm, { type CustomSubmitEvent } from "./validated-form/validated-form.vue";
 	import { reactiveReadonlyView } from "../../utils/vue";
+	import type { ThemeColour } from "../../utils/bootstrap";
 
 	const props = withDefaults(defineProps<{
 		title?: string;
@@ -12,31 +13,62 @@
 		isBusy?: boolean;
 		/** If true, the Save button will always be shown (also if isModified is false). */
 		isCreate?: boolean;
-		/** If false, the Save button will be hidden (unless noCancel is true). */
+		/** If false, a Close button will be shown instead of a Save button (except is isCreate is true). */
 		isModified?: boolean;
 		size?: "sm" | "default" | "lg" | "xl";
+		/**
+		 * If specified, the dialog will be shrunk a bit to make the underlying dialog partly visible in case of stacked dialogs.
+		 * 0 represents a non-stacked dialog (default), 1 should be the first stacked dialog, ...
+		 */
+		stackLevel?: number;
 		okLabel?: string;
+		okVariant?: ThemeColour;
+		/** If true, the OK button is focused when the dialog is opened. */
+		okFocus?: boolean;
 	}>(), {
 		isModified: false,
 		size: "lg"
 	});
 
 	const emit = defineEmits<{
+		shown: [];
+		hide: [];
 		hidden: [];
 		submit: [event: CustomSubmitEvent];
 	}>();
 
 	const validatedFormRef = ref<InstanceType<typeof ValidatedForm>>();
 	const isSubmitting = computed(() => validatedFormRef.value?.formData.isSubmitting);
+	const submitRef = ref<HTMLElement>();
 
 	const modalRef = ref<HTMLElement>();
 	const modal = useModal(modalRef, {
-		emit,
+		onShown: () => {
+			if (props.okFocus) {
+				submitRef.value?.focus();
+			} else {
+				modalRef.value?.querySelector<HTMLElement>("[autofocus],.fm-autofocus")?.focus();
+			}
+
+			emit("shown");
+		},
+		onHide: () => {
+			emit("hide");
+		},
+		onHidden: () => {
+			emit("hidden");
+		},
 		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified)
 	});
 
+	const isCloseButton = computed(() => !props.isCreate && !props.isModified);
+
 	function handleSubmit(event: CustomSubmitEvent) {
-		emit("submit", event);
+		if (isCloseButton.value) {
+			modal.hide();
+		} else {
+			emit("submit", event);
+		}
 	}
 
 	const expose = reactiveReadonlyView(() => ({
@@ -60,8 +92,13 @@
 			:data-bs-backdrop="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'static' : 'true'"
 			:data-bs-keyboard="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'false' : 'true'"
 		>
-			<div class="modal-dialog modal-dialog-scrollable">
-				<ValidatedForm class="modal-content" @submit="handleSubmit" ref="validatedFormRef">
+			<div class="modal-dialog modal-dialog-scrollable" :style="props.stackLevel ? { padding: `${20*props.stackLevel}px ${40*props.stackLevel}px` } : undefined">
+				<ValidatedForm
+					class="modal-content"
+					@submit="handleSubmit"
+					ref="validatedFormRef"
+					:noValidate="isCloseButton"
+				>
 					<div class="modal-header">
 						<h1 class="modal-title fs-5">{{props.title}}</h1>
 						<button
@@ -82,20 +119,20 @@
 						<div style="flex-grow: 1"></div>
 
 						<button
-							v-if="!props.noCancel"
+							v-if="!props.noCancel && !isCloseButton"
 							type="button"
 							class="btn btn-secondary"
-							:class="props.isModified || props.isCreate ? 'btn-secondary' : 'btn-primary'"
 							@click="modal.hide()"
 							:disabled="isSubmitting || props.isBusy"
-						>{{props.isModified || props.isCreate ? 'Cancel' : 'Close'}}</button>
+						>Cancel</button>
 
 						<button
-							v-if="props.noCancel || props.isModified || props.isCreate"
 							type="submit"
 							class="btn btn-primary"
+							:class="props.okVariant && `btn-${props.okVariant}`"
 							:disabled="isSubmitting || props.isBusy"
-						>{{props.okLabel ?? 'Save'}}</button>
+							ref="submitRef"
+						>{{props.okLabel ?? (isCloseButton ? 'Close' : 'Save')}}</button>
 					</div>
 				</ValidatedForm>
 			</div>

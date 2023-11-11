@@ -2,14 +2,14 @@
 	import type { Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
-	import ColourField from "../ui/colour-field.vue";
+	import ColourPicker from "../ui/colour-picker.vue";
 	import Draggable from "vuedraggable";
 	import Icon from "../ui/icon.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import ShapeField from "../ui/shape-field.vue";
-	import SizeField from "../ui/size-field.vue";
-	import SymbolField from "../ui/symbol-field.vue";
-	import WidthField from "../ui/width-field.vue";
+	import ShapePicker from "../ui/shape-picker.vue";
+	import SizePicker from "../ui/size-picker.vue";
+	import SymbolPicker from "../ui/symbol-picker.vue";
+	import WidthPicker from "../ui/width-picker.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { computed, ref, watch } from "vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -96,7 +96,12 @@
 	}
 
 	async function deleteOption(option: FieldOptionUpdate): Promise<void> {
-		if (!await showConfirm({ title: "Delete option", message: `Do you really want to delete the option “${option.value}”?` }))
+		if (!await showConfirm({
+			title: "Delete option",
+			message: `Do you really want to delete the option “${option.value}”?`,
+			variant: "danger",
+			okLabel: "Delete"
+		}))
 			return;
 
 		var idx = fieldValue.value.options!.indexOf(option);
@@ -144,7 +149,8 @@
 		@submit="save()"
 		@hidden="emit('hidden')"
 		:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
-		okLabel="OK"
+		:okLabel="isModified ? 'OK' : undefined"
+		:stackLevel="2"
 	>
 		<div class="row mb-3">
 			<label class="col-sm-3 col-form-label">Control</label>
@@ -262,19 +268,19 @@
 							</div>
 						</td>
 						<td v-if="fieldValue.controlColour" class="field">
-							<ColourField v-model="option.colour" :validationError="optionValidationErrors![idx].colour"></ColourField>
+							<ColourPicker v-model="option.colour" :validationError="optionValidationErrors![idx].colour"></ColourPicker>
 						</td>
 						<td v-if="fieldValue.controlSize" class="field">
-							<SizeField v-model="option.size" :validationError="optionValidationErrors![idx].colour"></SizeField>
+							<SizePicker v-model="option.size" :validationError="optionValidationErrors![idx].colour"></SizePicker>
 						</td>
 						<td v-if="fieldValue.controlSymbol" class="field">
-							<SymbolField v-model="option.symbol"></SymbolField>
+							<SymbolPicker v-model="option.symbol"></SymbolPicker>
 						</td>
 						<td v-if="fieldValue.controlShape" class="field">
-							<ShapeField v-model="option.shape"></ShapeField>
+							<ShapePicker v-model="option.shape"></ShapePicker>
 						</td>
 						<td v-if="fieldValue.controlWidth" class="field">
-							<WidthField v-model="option.width" :validationError="optionValidationErrors![idx].width"></WidthField>
+							<WidthPicker v-model="option.width" :validationError="optionValidationErrors![idx].width"></WidthPicker>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
 							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>

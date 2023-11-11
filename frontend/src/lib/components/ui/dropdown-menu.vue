@@ -61,6 +61,8 @@
 	}
 
 	watch(() => buttonRef.value?.elementRef, (newRef, oldRef, onCleanup) => {
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+
 		if (newRef) {
 			dropdownRef.value = new CustomDropdown(newRef, {
 				popperConfig: (defaultConfig) => ({
@@ -137,6 +139,12 @@
 			emit("update:isOpen", true);
 		}
 	}
+
+	watchEffect(() => {
+		if (props.isDisabled || props.isBusy) {
+			dropdownRef.value?.hide();
+		}
+	});
 
 </script>
 

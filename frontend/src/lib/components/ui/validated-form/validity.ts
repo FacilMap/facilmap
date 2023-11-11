@@ -69,7 +69,11 @@ const updateValidityContext: Directive<FormElement, void> = (el, binding) => {
 			el.classList.add("was-validated");
 		};
 		el.addEventListener("input", el._fmValidityInputListener);
+		el.addEventListener("blur", el._fmValidityInputListener);
+		el.addEventListener("focusout", el._fmValidityInputListener);
 	}
+
+	el.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input,textarea,select")?.form?.addEventListener("submit", el._fmValidityInputListener);
 
 	if (el._fmValidityTouched) {
 		el.classList.add("was-validated");
@@ -78,10 +82,18 @@ const updateValidityContext: Directive<FormElement, void> = (el, binding) => {
 
 export const vValidityContext: Directive<FormElement, void> = {
 	mounted: updateValidityContext,
+	beforeUpdate: (el) => {
+		if (el._fmValidityInputListener) {
+			el.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input,textarea,select")?.removeEventListener("submit", el._fmValidityInputListener); // Added again during updated
+		}
+	},
 	updated: updateValidityContext,
 	beforeUnmount: (el) => {
 		if (el._fmValidityInputListener) {
 			el.removeEventListener("input", el._fmValidityInputListener);
+			el.removeEventListener("blur", el._fmValidityInputListener);
+			el.removeEventListener("focusout", el._fmValidityInputListener);
+			el.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input,textarea,select")?.removeEventListener("submit", el._fmValidityInputListener);
 			delete el._fmValidityInputListener;
 		}
 	}

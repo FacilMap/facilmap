@@ -92,11 +92,16 @@
 <template>
 	<div class="fm-overpass-form">
 		<template v-if="!mapContext.overpassIsCustom">
-			<input class="form-control" type="search" v-model="searchTerm" placeholder="Filter…" autofocus />
+			<input
+				class="form-control fm-autofocus"
+				type="search"
+				v-model="searchTerm"
+				placeholder="Filter…"
+			/>
 			<hr />
 
 			<template v-if="searchTerm">
-				<div class="checkbox-grid">
+				<div class="checkbox-grid fm-search-box-collapse-point">
 					<template v-for="preset in filteredPresets" :key="preset.key">
 						<div class="form-check">
 							<input
@@ -135,25 +140,29 @@
 					</template>
 				</ul>
 
-				<template v-for="(presets, idx) in categories[activeTab].presets" :key="idx">
-					<hr />
-					<div class="checkbox-grid">
-						<template v-for="preset in presets" :key="preset.key">
-							<div class="form-check">
-								<input
-									type="checkbox"
-									class="form-check-input"
-									:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
-									:checked="preset.isChecked"
-									@change="togglePreset(preset.key, ($event.target as HTMLInputElement).checked)"
-								/>
-								<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
-									{{preset.label}}
-								</label>
-							</div>
-						</template>
-					</div>
-				</template>
+				<hr />
+
+				<div class="fm-search-box-collapse-point">
+					<template v-for="(presets, idx) in categories[activeTab].presets" :key="idx">
+						<hr v-if="idx > 0" />
+						<div class="checkbox-grid">
+							<template v-for="preset in presets" :key="preset.key">
+								<div class="form-check">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`fm${context.id}-overpass-form-preset-${preset.key}`"
+										:checked="preset.isChecked"
+										@change="togglePreset(preset.key, ($event.target as HTMLInputElement).checked)"
+									/>
+									<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
+										{{preset.label}}
+									</label>
+								</div>
+							</template>
+						</div>
+					</template>
+				</div>
 			</template>
 		</template>
 		<template v-else>
@@ -200,6 +209,7 @@
 	.fm-overpass-form {
 		display: flex;
 		flex-direction: column;
+		min-height: 0;
 
 		.checkbox-grid {
 			column-width: 160px;

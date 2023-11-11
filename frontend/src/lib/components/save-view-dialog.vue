@@ -177,7 +177,7 @@
 			<div class="row mb-3">
 				<label :for="`${id}-filter-input`" class="col-sm-3 col-form-label">Filter</label>
 				<div class="col-sm-9">
-					<input class="form-control" :id="`${id}-filter-input`" value="—" plaintext />
+					<input class="form-control-plaintext" :id="`${id}-filter-input`" value="—" />
 				</div>
 			</div>
 		</template>

@@ -4,7 +4,6 @@
 	import hammer from "hammerjs";
 	import { type Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
 	import vTooltip, { hideAllTooltips } from "../../utils/tooltip";
-	import { useEventListener } from "../../utils/utils";
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
 	import mitt from "mitt";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -26,7 +25,7 @@
 		}, { immediate: true });
 
 		if (activeTabId.value == null) {
-			activateTab(id);
+			activateTab(id, { autofocus: context.settings.autofocus });
 		}
 
 		onScopeDispose(() => {
@@ -36,17 +35,28 @@
 			tabHistory.value = tabHistory.value.filter((v) => v !== id);
 			if (isActive) {
 				activeTabId.value = tabHistory.value[tabHistory.value.length - 1];
+				if (restoreHeight.value && context.isNarrow && containerRef.value) {
+					containerRef.value.style.flexBasis = `${restoreHeight.value}px`;
+				}
+				restoreHeight.value = undefined;
 			}
 		});
 	}
 
-	function activateTab(id: string, expand?: boolean) {
+	function activateTab(id: string, { expand = false, autofocus = false }: { expand?: boolean; autofocus?: boolean } = {}) {
 		activeTabId.value = id;
 		tabHistory.value.push(id);
+		restoreHeight.value = undefined;
 
 		if (expand) {
 			nextTick(() => {
-				searchBoxContext.emit("expand");
+				doExpand();
+			});
+		}
+
+		if (autofocus && !context.isNarrow) {
+			nextTick(() => {
+				containerRef.value?.querySelector<HTMLElement>(":scope > .card-body.active [autofocus],:scope > .card-body.active .fm-autofocus")?.focus();
 			});
 		}
 	}
@@ -80,8 +90,6 @@
 	const resizeStartWidth = ref<number>();
 	const hasFocus = ref(false);
 	const isResizing = ref(false);
-
-	useEventListener(toRef(searchBoxContext), "expand", handleExpand);
 
 	onMounted(() => {
 		const pan = new hammer.Manager(cardHeaderRef.value!);
@@ -120,7 +128,7 @@
 		return Math.max(0, Math.min(maxHeight, height));
 	}
 
-	function handleExpand(): void {
+	function doExpand(): void {
 		if (context.isNarrow) {
 			const currentHeight = parseInt(getComputedStyle(containerRef.value!).flexBasis);
 			if (currentHeight < 120) {
@@ -210,7 +218,7 @@
 						:aria-current="tabId === searchBoxContext.activeTabId ? 'true' : undefined"
 						href="javascript:"
 						:class="{ active: tabId === searchBoxContext.activeTabId }"
-						@click="searchBoxContext.activateTab(tabId, true)"
+						@click="searchBoxContext.activateTab(tabId, { expand: true, autofocus: true })"
 					>{{tab.title}}</a>
 
 					<a
@@ -223,7 +231,7 @@
 		</div>
 
 		<template v-for="[tabId, tab] in searchBoxContext.tabs" :key="tabId">
-			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="tab.class">
+			<div v-show="tabId === searchBoxContext.activeTabId" class="card-body" :class="[tab.class, { active: tabId === searchBoxContext.activeTabId }]">
 				<TabContent :tabId="tabId" :isActive="tabId === searchBoxContext.activeTabId"></TabContent>
 			</div>
 		</template>
@@ -301,6 +309,8 @@
 		}
 
 		> .card-body {
+			display: flex;
+			flex-direction: column;
 			min-height: 0;
 			overflow: auto;
 		}
@@ -347,6 +357,7 @@
 
 		hr {
 			width: 100%;
+			margin: 0.5rem 0;
 		}
 
 		.list-group-item {

@@ -52,9 +52,9 @@
 		toasts.hideToast(`fm${context.id}-client-deleted`);
 		createId.value = undefined;
 		if (props.padId)
-			toasts.showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true, noCloseButton: true });
 		else
-			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true, noCloseButton: true });
 
 		const newClient: ClientContext = Object.assign(new ReactiveClient(props.serverUrl, props.padId), {
 			openPad
@@ -82,6 +82,7 @@
 
 		newClient.on("deletePad", () => {
 			toasts.showToast(`fm${context.id}-client-deleted`, "Map deleted", "This map has been deleted.", {
+				noCloseButton: true,
 				variant: "danger",
 				actions: context.settings.interactive ? [
 					{

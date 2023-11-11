@@ -14,6 +14,7 @@
 	import { useCarousel } from "../../utils/carousel";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
+	import { normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -124,7 +125,7 @@
 			if (isMapResult(result)) {
 				if (result.kind == "marker" && !client.value.markers[result.id])
 					await client.value.getMarker({ id: result.id });
-				searchBoxContext.value?.activateTab(`fm${context.id}-${result.kind}-info-tab`, false);
+				searchBoxContext.value?.activateTab(`fm${context.id}-${result.kind}-info-tab`);
 			} else
 				carousel.setTab(1);
 		}, 0);
@@ -158,61 +159,63 @@
 
 <template>
 	<div class="fm-search-results" :class="{ isNarrow: context.isNarrow }">
-		<div class="carousel slide" ref="carouselRef">
+		<div class="carousel slide fm-flex-carousel" ref="carouselRef">
 			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-				<div
-					v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)"
-					class="alert alert-danger"
-				>
-					No results have been found.
+				<div class="fm-search-box-collapse-point">
+					<div
+						v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)"
+						class="alert alert-danger"
+					>
+						No results have been found.
+					</div>
+
+					<slot name="before"></slot>
+
+					<ul v-if="mapResults && mapResults.length > 0" class="list-group">
+						<!-- eslint-disable-next-line vue/require-v-for-key -->
+						<li
+							v-for="result in mapResults"
+							class="list-group-item"
+							:class="{ active: activeResults.includes(result) }"
+							v-scroll-into-view="activeResults.includes(result)"
+						>
+							<span>
+								<a href="javascript:" @click="handleClick(result, $event)">{{isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name)}}</a>
+								{{" "}}
+								<span class="result-type">({{client.types[result.typeId].name}})</span>
+							</span>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
+
+					<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
+
+					<ul v-if="searchResults && searchResults.length > 0" class="list-group">
+						<!-- eslint-disable-next-line vue/require-v-for-key -->
+						<li
+							v-for="result in searchResults"
+							class="list-group-item"
+							:class="{ active: activeResults.includes(result) }"
+							v-scroll-into-view="activeResults.includes(result)"
+						>
+							<span>
+								<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
+								{{" "}}
+								<span class="result-type" v-if="result.type">({{result.type}})</span>
+							</span>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						</li>
+					</ul>
+
+					<slot name="after"></slot>
 				</div>
 
-				<slot name="before"></slot>
-
-				<ul v-if="mapResults && mapResults.length > 0" class="list-group">
-					<!-- eslint-disable-next-line vue/require-v-for-key -->
-					<li
-						v-for="result in mapResults"
-						class="list-group-item"
-						:class="{ active: activeResults.includes(result) }"
-						v-scroll-into-view="activeResults.includes(result)"
-					>
-						<span>
-							<a href="javascript:" @click="handleClick(result, $event)">{{result.name}}</a>
-							{{" "}}
-							<span class="result-type">({{client.types[result.typeId].name}})</span>
-						</span>
-						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-						<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-					</li>
-				</ul>
-
-				<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
-
-				<ul v-if="searchResults && searchResults.length > 0" class="list-group">
-					<!-- eslint-disable-next-line vue/require-v-for-key -->
-					<li
-						v-for="result in searchResults"
-						class="list-group-item"
-						:class="{ active: activeResults.includes(result) }"
-						v-scroll-into-view="activeResults.includes(result)"
-					>
-						<span>
-							<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
-							{{" "}}
-							<span class="result-type" v-if="result.type">({{result.type}})</span>
-						</span>
-						<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-						<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
-					</li>
-				</ul>
-
-				<slot name="after"></slot>
-
-				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-toolbar">
+				<div v-if="client.padData && !client.readonly && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
 					<button
 						type="button"
-						class="btn btn-secondary"
+						class="btn btn-secondary btn-sm"
 						:class="{ active: isAllSelected }"
 						@click="toggleSelectAll"
 					>Select all</button>
@@ -221,6 +224,7 @@
 						:label="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`"
 						:markers="activeMarkersWithTags"
 						:lines="activeLinesWithTags"
+						size="sm"
 					>
 						<template v-if="hasCustomTypes" #after>
 							<li><hr class="dropdown-divider"></li>
@@ -259,6 +263,10 @@
 
 <style lang="scss">
 	.fm-search-results.fm-search-results {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+
 		.list-group-item {
 			display: flex;
 			align-items: center;

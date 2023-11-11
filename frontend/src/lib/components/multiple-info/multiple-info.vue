@@ -11,6 +11,8 @@
 	import { useCarousel } from "../../utils/carousel";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import vTooltip from "../../utils/tooltip";
+	import { normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -64,7 +66,12 @@
 	async function deleteObjects(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-multiple-info-delete`);
 
-		if (!props.objects || !await showConfirm({ title: "Delete objects", message: `Do you really want to remove ${props.objects.length} objects?` }))
+		if (!props.objects || !await showConfirm({
+			title: "Delete objects",
+			message: `Do you really want to remove ${props.objects.length} objects?`,
+			variant: "danger",
+			okLabel: "Delete"
+		}))
 			return;
 
 		isDeleting.value = true;
@@ -97,12 +104,12 @@
 
 <template>
 	<div class="fm-multiple-info">
-		<div class="carousel slide" ref="carouselRef">
+		<div class="carousel slide fm-flex-carousel" ref="carouselRef">
 			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-				<ul class="list-group">
+				<ul class="list-group fm-search-box-collapse-point">
 					<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
 						<span>
-							<a href="javascript:" @click="emit('click-object', object, $event)">{{object.name}}</a>
+							<a href="javascript:" @click="emit('click-object', object, $event)">{{isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name)}}</a>
 							{{" "}}
 							<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>
 						</span>
@@ -111,7 +118,7 @@
 					</li>
 				</ul>
 
-				<div class="btn-toolbar">
+				<div class="btn-toolbar mt-2">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						label="selection"
@@ -127,7 +134,7 @@
 						:disabled="isDeleting || mapContext.interaction"
 					>
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-						Remove
+						Delete
 					</button>
 				</div>
 			</div>
@@ -152,6 +159,10 @@
 
 <style lang="scss">
 	.fm-multiple-info {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+
 		.list-group-item {
 			display: flex;
 			align-items: center;

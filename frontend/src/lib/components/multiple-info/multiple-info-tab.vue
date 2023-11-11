@@ -27,7 +27,7 @@
 
 	function handleOpenSelection(): void {
 		if (objects.value)
-			searchBoxContext.value.activateTab(`fm${context.id}-multiple-info-tab`);
+			searchBoxContext.value.activateTab(`fm${context.id}-multiple-info-tab`, { expand: true });
 	}
 
 	const title = computed(() => objects.value ? `${objects.value.length} objects` : "");

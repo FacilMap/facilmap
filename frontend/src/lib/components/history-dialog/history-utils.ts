@@ -22,52 +22,62 @@ function existsNow(client: ClientContext, entry: HistoryEntry) {
 
 export interface HistoryEntryLabels {
 	description: string;
-	button: string;
-	confirm: string;
+	revert?: {
+		title: string;
+		message: string;
+		button: string;
+		okLabel: string;
+	},
 	diff?: Array<ObjectDiffItem>;
 }
 
 export function getLabelsForHistoryEntry(client: ClientContext, entry: HistoryEntry): HistoryEntryLabels {
 	if(entry.type == "Pad") {
 		return {
-			description: "Changed pad settings",
-			button: "Revert",
-			confirm: "Do you really want to restore the old version of the pad settings?",
-			...(entry.objectBefore && entry.objectAfter ? { diff: getObjectDiff(entry.objectBefore, entry.objectAfter) } : {})
+			description: "Changed map settings",
+			revert: {
+				title: "Revert map settings",
+				message: "Do you really want to restore the old version of the map settings?",
+				button: "Revert",
+				okLabel: "Revert"
+			},
+			...(entry.objectBefore && entry.objectAfter ? { diff: getObjectDiff(entry.objectBefore, entry.objectAfter) } : {}),
 		};
 	}
 
-	const nameStrBefore = entry.objectBefore && entry.objectBefore.name ? "“" + entry.objectBefore.name + "”" : "";
-	const nameStrAfter = entry.objectAfter && entry.objectAfter.name ? "“" + entry.objectAfter.name + "”" : "";
-
+	const nameStrBefore = entry.objectBefore && entry.objectBefore.name ? `“${entry.objectBefore.name}”` : "";
+	const nameStrAfter = entry.objectAfter && entry.objectAfter.name ? `“${entry.objectAfter.name}”` : "";
 	const exists = existsNow(client, entry);
-
-	const ret: Partial<HistoryEntryLabels> = {
-		description: {
-			create: "Created",
-			update: "Changed",
-			delete: "Deleted"
-		}[entry.action] + " " + entry.type + " " + entry.objectId + " " + (nameStrBefore && nameStrAfter && nameStrBefore != nameStrAfter ? nameStrBefore + " (new name: " + nameStrAfter + ")" : (nameStrBefore || nameStrAfter)),
-	};
-
-	if(entry.action == "create") {
-		if(exists) {
-			ret.button = "Revert (delete)";
-			ret.confirm = "delete";
+	const descriptionAction = { create: "Created", update: "Changed", delete: "Deleted" }[entry.action];
+	const descriptionName = (nameStrBefore && nameStrAfter && nameStrBefore != nameStrAfter ? `${nameStrBefore} (new name: ${nameStrAfter})` : (nameStrBefore || nameStrAfter));
+	const diff = entry.objectBefore && entry.objectAfter ? getObjectDiff(entry.objectBefore, entry.objectAfter) : undefined;
+	const revert = (
+		entry.action === "create" ? (
+			exists ? {
+				title: `Delete ${entry.type}`,
+				button: "Revert (delete)",
+				message: "delete",
+				okLabel: "Delete"
+			} : undefined
+		) : exists ? {
+			title: `Revert ${entry.type}`,
+			button: "Revert",
+			message: "restore the old version of",
+			okLabel: "Revert"
+		} : {
+			title: `Restore ${entry.type}`,
+			button: "Restore",
+			message: "restore",
+			okLabel: "Restore"
 		}
-	} else if(exists) {
-			ret.button = "Revert";
-			ret.confirm = "restore the old version of";
-	} else {
-		ret.button = "Restore";
-		ret.confirm = "restore";
-	}
+	);
 
-	if(ret.confirm)
-		ret.confirm = "Do you really want to " + ret.confirm + " " + ((nameStrBefore || nameStrAfter) ? "the " + entry.type + " " + (nameStrBefore || nameStrAfter) : "this " + entry.type);
-
-	if(entry.objectBefore && entry.objectAfter)
-		ret.diff = getObjectDiff(entry.objectBefore, entry.objectAfter);
-
-	return ret as HistoryEntryLabels;
+	return {
+		description: `${descriptionAction} ${entry.type} ${entry.objectId} ${descriptionName}`,
+		revert: revert && {
+			...revert,
+			message: `Do you really want to ${revert.message} ${((nameStrBefore || nameStrAfter) ? `the ${entry.type} ${(nameStrBefore || nameStrAfter)}` : `this ${entry.type}`)}?`
+		},
+		...(diff ? { diff } : {})
+	};
 }

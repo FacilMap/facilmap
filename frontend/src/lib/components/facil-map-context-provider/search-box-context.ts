@@ -7,7 +7,6 @@ export type SearchBoxEventMap = {
 	"resize": void;
 	"resizeend": void;
 	"resizereset": void;
-	"expand": void;
 }
 
 export interface SearchBoxTab {
@@ -23,7 +22,7 @@ export interface SearchBoxContextData {
 	activeTabId: string | undefined;
 	activeTab: SearchBoxTab | undefined;
 	provideTab: (id: string, tabRef: Ref<SearchBoxTab>) => void;
-	activateTab: (id: string, expand?: boolean) => void;
+	activateTab: (id: string, options?: { expand?: boolean; autofocus?: boolean }) => void;
 }
 
 export type WritableSearchBoxContext = SearchBoxContextData & Emitter<SearchBoxEventMap>;

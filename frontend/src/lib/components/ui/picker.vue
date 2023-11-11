@@ -1,7 +1,8 @@
 <script setup lang="ts">
-	import { type StyleValue, computed, ref, watchEffect } from "vue";
+	import { type StyleValue, computed, ref } from "vue";
 	import HybridPopover from "./hybrid-popover.vue";
 	import vValidity, { vValidityContext } from "./validated-form/validity";
+	import { useDomEventListener, useNonClickFocusHandler, useNonDragClickHandler } from "../../utils/utils";
 
 	const props = withDefaults(defineProps<{
 		id?: string;
@@ -20,6 +21,7 @@
 	const emit = defineEmits<{
 		keydown: [event: KeyboardEvent];
 		"update:modelValue": [value: string];
+		focusPopover: [];
 	}>();
 
 	const value = computed({
@@ -29,47 +31,75 @@
 		}
 	});
 
+	const focusFilterOnNextOpen = ref(false);
 	const isOpen = ref(false);
 
 	const containerRef = ref<HTMLElement>();
 	const inputRef = ref<HTMLInputElement>();
 
-	watchEffect((onCleanup) => {
+	useDomEventListener(document.body, "keydown", handleBodyKeyDownCapture, { capture: true });
+	useDomEventListener(document.body, "keydown", handleBodyKeyDown, { capture: true });
+
+	function handleBodyKeyDownCapture(e: Event): void {
 		if (isOpen.value) {
-			document.body.addEventListener("keydown", handleBodyKeyDown);
-
-			onCleanup(() => {
-				document.body.addEventListener("keydown", handleBodyKeyDown);
-			});
+			const event = e as KeyboardEvent;
+			if (event.key == "Enter") {
+				inputRef.value?.focus();
+				isOpen.value = false;
+				event.preventDefault();
+				event.stopPropagation();
+			} else if (event.key == "Escape") {
+				isOpen.value = false;
+				event.preventDefault();
+				event.stopPropagation();
+				inputRef.value?.focus();
+			}
 		}
-	});
+	}
 
-	function handleBodyKeyDown(event: KeyboardEvent): void {
-		if (event.key == "Enter") {
-			inputRef.value?.focus();
-			isOpen.value = false;
-			event.preventDefault();
-		} else if (["ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(event.key)) {
-			emit("keydown", event);
-		} else if (event.key == "Escape" && isOpen.value) {
-			isOpen.value = false;
-			event.preventDefault();
-			inputRef.value?.focus();
+	function handleBodyKeyDown(e: Event): void {
+		if (isOpen.value) {
+			emit("keydown", e as KeyboardEvent);
 		}
 	}
 
 	function handleInputKeyDown(event: KeyboardEvent): void {
-		if (["ArrowDown", "ArrowUp"].includes(event.key)) {
-			if (!isOpen.value) {
-				isOpen.value = true;
-				event.preventDefault();
-			} else
-				emit("keydown", event);
-			event.stopPropagation(); // To not be picked up by handleBodyKeyDown()
+		if (["ArrowDown", "ArrowUp"].includes(event.key) && !isOpen.value) {
+			focusFilterOnNextOpen.value = true;
+			isOpen.value = true;
+			event.preventDefault();
+			event.stopPropagation();
 		} else if (event.key == "Escape" && isOpen.value) {
 			event.preventDefault();
 			event.stopPropagation(); // Prevent closing outer modal
 			isOpen.value = false;
+		}
+	}
+
+	useNonClickFocusHandler(() => inputRef.value, open);
+	useNonDragClickHandler(() => inputRef.value, open);
+
+	function open() {
+		focusFilterOnNextOpen.value = true;
+		isOpen.value = true;
+	}
+
+	function handleInputDblClick() {
+		focusFilterOnNextOpen.value = false;
+		inputRef.value?.focus();
+	}
+
+	function handleToggleButtonClick() {
+		if (isOpen.value) {
+			isOpen.value = false;
+		} else {
+			open();
+		}
+	}
+
+	function handleShown() {
+		if (focusFilterOnNextOpen.value) {
+			emit("focusPopover");
 		}
 	}
 </script>
@@ -80,13 +110,16 @@
 			v-model:show="isOpen"
 			:enforceElementWidth="props.enforceElementWidth"
 			:customClass="props.customClass"
+			@shown="handleShown"
+			ignoreClick
 		>
 			<template #trigger>
 				<div class="input-group has-validation" v-validity-context>
 					<span
 						class="input-group-text"
 						@click="inputRef?.focus()"
-						:style="props.previewStyle">
+						:style="props.previewStyle"
+					>
 						<slot name="preview"></slot>
 					</span>
 					<input
@@ -99,7 +132,15 @@
 						:id="id"
 						ref="inputRef"
 						@keydown="handleInputKeyDown"
+						@dblclick="handleInputDblClick"
 					/>
+					<button
+						type="button"
+						class="btn btn-secondary dropdown-toggle"
+						:class="{ active: isOpen }"
+						tabindex="-1"
+						@click="handleToggleButtonClick()"
+					></button>
 					<div class="invalid-feedback">
 						{{props.validationError}}
 					</div>
@@ -110,35 +151,6 @@
 				<slot :is-modal="isModal" :close="close"></slot>
 			</template>
 		</HybridPopover>
-
-		<!-- <b-popover
-			:target="`${id}-input-group`"
-			:container="body"
-			triggers="manual"
-			placement="bottom"
-			:fallback-placement="[]"
-			:custom-class="`fm-picker-popover ${uniqueClass} ${customClass}`"
-			:delay="0"
-			boundary="viewport"
-			@show="handleOpenPopover"
-			@hidden="handleClosePopover"
-			:show.sync="popoverOpen"
-		>
-			<div @focusin.stop="handlePopoverFocus" class="fm-field-popover-content">
-				<slot :is-modal="false" :close="close"></slot>
-			</div>
-		</b-popover>
-
-		<b-modal
-			:id="`${id}-modal`"
-			v-model="modalOpen"
-			:body-class="`fm-picker-modal ${customClass}`"
-			ok-only
-			hide-header
-			scrollable
-		>
-			<slot :is-modal="true" :close="close"></slot>
-		</b-modal> -->
 	</div>
 </template>
 

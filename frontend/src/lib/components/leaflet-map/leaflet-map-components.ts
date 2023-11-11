@@ -16,6 +16,7 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+import { sleep } from "facilmap-utils";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -128,7 +129,7 @@ function createSearchResultsLayer(map: Map): SearchResultsLayer {
 	return new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } }).addTo(map);
 }
 
-function createSelectionHandler(map: Map, mapContext: MapContextWithoutComponents, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, overpassLayer: OverpassLayer): SelectionHandler {
+function createSelectionHandler(map: Map, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, overpassLayer: OverpassLayer): SelectionHandler {
 	const selectionHandler = new SelectionHandler(map, markersLayer, linesLayer, searchResultsLayer, overpassLayer).enable()
 
 	selectionHandler.on("fmChangeSelection", (event: any) => {
@@ -143,7 +144,7 @@ function createSelectionHandler(map: Map, mapContext: MapContextWithoutComponent
 	});
 
 	selectionHandler.on("fmLongClick", (event: any) => {
-		mapContext.emit("map-long-click", { point: { lat: event.latlng.lat, lon: event.latlng.lng } });
+		context.components.clickMarkerTab?.openClickMarker({ lat: event.latlng.lat, lon: event.latlng.lng });
 	});
 
 	onScopeDispose(() => {
@@ -157,16 +158,19 @@ function createHashHandler(map: Map, client: ClientContext, context: FacilMapCon
 	const hashHandler = new HashHandler(map, client, { overpassLayer, simulate: !context.settings.updateHash })
 		.on("fmQueryChange", async (e: any) => {
 			let smooth = true;
+			let autofocus = false;
 			if (!mapContext.components) {
 				// This is called while the hash handler is being enabled, so it is the initial view
 				smooth = false;
-				await nextTick();
+				autofocus = context.settings.autofocus;
+				await sleep(0); // Wait for components to be initialized (needed by openSpecialQuery())
 			}
 
+			const searchFormTab = context.components.searchFormTab;
 			if (!e.query)
-				mapContext.emit("search-set-query", { query: "", zoom: false, smooth: false });
+				searchFormTab?.setQuery("", false, false);
 			else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
-				mapContext.emit("search-set-query", { query: e.query, zoom: e.zoom, smooth });
+				searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus);
 		})
 		.enable();
 
@@ -193,7 +197,7 @@ function createMapComponents(context: FacilMapContext, mapContext: MapContextWit
 	const mousePosition = createMousePosition(map);
 	const overpassLayer = createOverpassLayer(map, mapContext);
 	const searchResultsLayer = createSearchResultsLayer(map);
-	const selectionHandler = createSelectionHandler(map, mapContext, markersLayer, linesLayer, searchResultsLayer, overpassLayer);
+	const selectionHandler = createSelectionHandler(map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, overpassLayer);
 	const hashHandler = createHashHandler(map, client, context, mapContext, overpassLayer);
 
 	const mapComponents: MapComponents = {

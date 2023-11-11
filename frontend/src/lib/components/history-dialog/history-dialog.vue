@@ -3,7 +3,7 @@
 	import type { HistoryEntry, ID } from "facilmap-types";
 	import { orderBy } from "lodash-es";
 	import Icon from "../ui/icon.vue";
-	import { computed, onScopeDispose, reactive, ref } from "vue";
+	import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { mapRef } from "../../utils/vue";
@@ -33,15 +33,17 @@
 
 	const id = getUniqueId("fm-history-dialog");
 
-	try {
-		await client.value.listenToHistory();
-	} catch (err) {
-		toasts.showErrorToast(`${id}-listen-error`, "Error loading history", err);
-	} finally {
-		isLoading.value = false;
-	}
+	onMounted(async () => {
+		try {
+			await client.value.listenToHistory();
+		} catch (err) {
+			toasts.showErrorToast(`${id}-listen-error`, "Error loading history", err);
+		} finally {
+			isLoading.value = false;
+		}
+	});
 
-	onScopeDispose(async () => {
+	onBeforeUnmount(async () => {
 		try {
 			await client.value.stopListeningToHistory();
 		} catch (err) {
@@ -52,7 +54,12 @@
 	async function revert(entry: HistoryEntryWithLabels): Promise<void> {
 		toasts.hideToast(`${id}-revert-error`);
 
-		if (!await showConfirm({ title: entry.labels.button, message: entry.labels.confirm }))
+		if (!await showConfirm({
+			title: entry.labels.revert!.button,
+			message: entry.labels.revert!.message,
+			variant: "warning",
+			okLabel: entry.labels.revert!.okLabel
+		}))
 			return;
 
 		isReverting.value = entry;
@@ -82,7 +89,7 @@
 		const isShown = activeDiffPopoverId.value === entryId;
 		const show = force ?? (activeDiffPopoverId.value !== entryId);
 		if (isShown !== show) {
-			activeDiffPopoverId.value = show ? activeDiffPopoverId.value : undefined;
+			activeDiffPopoverId.value = show ? entryId : undefined;
 		}
 	}
 </script>
@@ -99,7 +106,7 @@
 		<div v-if="isLoading" class="d-flex justify-content-center">
 			<div class="spinner-border"></div>
 		</div>
-		<table v-else class="table table-striped table-hover">
+		<table v-else class="table table-striped table-hover history-entries">
 			<thead>
 				<tr>
 					<th style="min-width: 12rem">Date</th>
@@ -152,14 +159,14 @@
 					<td class="td-buttons">
 						<div class="d-grid">
 							<button
-								v-if="entry.labels.button"
+								v-if="entry.labels.revert"
 								type="button"
 								class="btn btn-secondary"
 								:disabled="!!isReverting"
 								@click="revert(entry)"
 							>
 								<div v-if="isReverting === entry" class="spinner-border spinner-border-sm"></div>
-								{{entry.labels.button}}
+								{{entry.labels.revert.button}}
 							</button>
 						</div>
 					</td>
@@ -176,6 +183,13 @@
 		.popover-body {
 			max-height: 70vh;
 			overflow: auto;
+		}
+	}
+
+	.fm-history {
+		.history-entries > tbody > tr {
+			// Make sure that lines without button have the same height as lines with button
+			height: calc(/* button line-height */ 1.5rem + /* button padding */ 2 * 0.375rem + /* button border */ 2 * 1px + /* td padding */ 2 * 0.5rem + /* td border-bottom */ 1px);
 		}
 	}
 </style>

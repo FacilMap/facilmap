@@ -1,4 +1,3 @@
-import type { FindOnMapResult, Point, SearchResult } from "facilmap-types";
 import type { BboxHandler, HashHandler, HashQuery, LinesLayer, MarkersLayer, OverpassLayer, OverpassPreset, SearchResultsLayer, VisibleLayers } from "facilmap-leaflet";
 import type { LatLng, LatLngBounds, Map } from "leaflet";
 import type { FilterFunc } from "facilmap-utils";
@@ -7,22 +6,8 @@ import type { DeepReadonly } from "vue";
 import type { SelectedItem } from "../../utils/selection";
 import type SelectionHandler from "../../utils/selection";
 
-export interface RouteDestination {
-	query: string;
-	searchSuggestions?: SearchResult[];
-	mapSuggestions?: FindOnMapResult[];
-	selectedSuggestion?: SearchResult | FindOnMapResult;
-}
-
 export type MapContextEvents = {
-	"import-file": void;
 	"open-selection": { selection: DeepReadonly<SelectedItem[]> };
-	"search-set-query": { query: string; zoom?: boolean; smooth?: boolean };
-	"route-set-query": { query: string; zoom?: boolean; smooth?: boolean };
-	"route-set-from": RouteDestination;
-	"route-add-via": RouteDestination;
-	"route-set-to": RouteDestination;
-	"map-long-click": { point: Point };
 };
 
 export interface MapComponents {

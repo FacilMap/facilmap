@@ -25,7 +25,6 @@
 
 	const toasts = useToasts();
 
-	const autofocus = ref(!context.isNarrow && context.settings.autofocus);
 	const layerId = Util.stamp(mapContext.value.components.searchResultsLayer);
 
 	const searchInput = ref<HTMLInputElement>();
@@ -173,7 +172,7 @@
 	<div class="fm-search-form">
 		<form action="javascript:" @submit.prevent="handleSubmit()">
 			<div class="input-group">
-				<input type="search" class="form-control" v-model="searchString" :autofocus="autofocus" ref="searchInput" />
+				<input type="search" class="form-control fm-autofocus" v-model="searchString" ref="searchInput" />
 				<button
 					type="submit"
 					class="btn btn-secondary"
@@ -218,7 +217,6 @@
 			:auto-zoom="storage.autoZoom"
 			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
-			class="fm-search-box-collapse-point"
 		/>
 		<SearchResults
 			v-else-if="searchResults || mapResults"
@@ -227,7 +225,6 @@
 			:auto-zoom="storage.autoZoom"
 			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
-			class="fm-search-box-collapse-point"
 		></SearchResults>
 	</div>
 </template>

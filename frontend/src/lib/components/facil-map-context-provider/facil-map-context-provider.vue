@@ -46,7 +46,7 @@
 
 	const components = shallowReactive<FacilMapComponents>({});
 
-	function provideComponent<K extends keyof FacilMapComponents>(key: K, componentRef: Ref<FacilMapComponents[K]>) {
+	function provideComponent<K extends keyof FacilMapComponents>(key: K, componentRef: Readonly<Ref<FacilMapComponents[K]>>) {
 		if (key in components) {
 			throw new Error(`Component "${key}"" is already provided.`);
 		}

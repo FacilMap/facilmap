@@ -19,7 +19,7 @@ export function getGridColumnsCount(grid: Element): number {
 export function arrowNavigation<V>(values: V[], value: V | undefined, grid: Element, event: KeyboardEvent): V | undefined {
 	if (!["ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(event.key) || event.shiftKey || event.ctrlKey || event.metaKey)
 		return;
-	if (["ArrowLeft", "ArrowRight"].includes(event.key) && (event.target as HTMLElement | undefined)?.closest("input"))
+	if (["ArrowLeft", "ArrowRight"].includes(event.key) && (event.target as HTMLElement | undefined)?.closest("input:not(.fm-keyboard-navigation-exception)"))
 		return;
 
 	event.preventDefault();

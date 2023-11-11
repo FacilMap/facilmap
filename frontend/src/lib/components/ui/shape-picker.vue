@@ -48,12 +48,13 @@
 		close();
 	}
 
-	async function handleKeyDown(event: KeyboardEvent): Promise<void> {
+	function handleKeyDown(event: KeyboardEvent): void {
 		const newVal = arrowNavigation(Object.keys(items), props.modelValue, gridRef.value!.containerRef!, event);
 		if (newVal) {
 			emit("update:modelValue", newVal);
-			await nextTick();
-			gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
+			nextTick(() => {
+				gridRef.value?.containerRef?.querySelector<HTMLElement>(".active > a")?.focus();
+			});
 		}
 	}
 </script>
@@ -65,7 +66,6 @@
 		customClass="fm-shape-field"
 		:validationError="validationError"
 		@keydown="handleKeyDown"
-		enforceElementWidth
 	>
 		<template #preview>
 			<span style="width: 1.4em"><img :src="valueSrc"></span>
@@ -79,6 +79,7 @@
 				:value="modelValue ?? undefined"
 				@click="handleClick($event, close)"
 				ref="gridRef"
+				noFocus
 			></PrerenderedList>
 		</template>
 	</Picker>
@@ -86,6 +87,8 @@
 
 <style lang="scss">
 	.fm-shape-field {
+		max-width: none;
+
 		.popover-body {
 			display: flex;
 			flex-direction: column;
@@ -100,7 +103,7 @@
 			padding: 0;
 			list-style-type: none;
 			display: grid;
-			grid-template-columns: repeat(5, 37px);
+			grid-template-columns: repeat(5, 40px);
 			overflow-y: auto;
 
 			li {
@@ -113,7 +116,7 @@
 				justify-content: center;
 				flex-grow: 1;
 				color: inherit;
-				padding: 5px 8px;
+				padding: 5px;
 			}
 		}
 	}

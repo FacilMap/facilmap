@@ -38,13 +38,13 @@
 		class="fm-edit-filter"
 		:isModified="isModified"
 		@submit="save"
-		okLabel="Apply"
+		:okLabel="isModified ? 'Apply' : undefined"
 		ref="modalRef"
 		@hidden="emit('hidden')"
 	>
 		<p>Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.</p>
 
-		<div class="was-validated">
+		<div :class="{ 'was-validated': filter }">
 			<textarea
 				class="form-control text-monospace"
 				v-model="filter"

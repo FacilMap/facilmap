@@ -465,25 +465,25 @@ function _formatAddress(result: NominatimResult) {
 }
 
 async function _loadUrl(url: string, completeOsmObjects = false): Promise<string> {
-	let bodyBuf = await fetch(
+	let bodyBuf = new Uint8Array(await fetch(
 		url,
 		{
 			headers: {
 				"User-Agent": config.userAgent
 			}
 		}
-	).then(async (res) => Buffer.from(await res.arrayBuffer()));
+	).then<ArrayBuffer>(async (res) => await res.arrayBuffer()));
 
 	if(!bodyBuf)
 		throw new Error("Invalid response from server.");
 
 	if(bodyBuf[0] == 0x42 && bodyBuf[1] == 0x5a && bodyBuf[2] == 0x68) {// bzip2
-		bodyBuf = Buffer.from(compressjs.Bzip2.decompressFile(bodyBuf));
+		bodyBuf = Buffer.from(compressjs.Bzip2.decompressFile(Buffer.from(bodyBuf)));
 	}
 	else if(bodyBuf[0] == 0x1f && bodyBuf[1] == 0x8b && bodyBuf[2] == 0x08) // gzip
 		bodyBuf = await util.promisify(zlib.gunzip.bind(zlib))(bodyBuf);
 
-	const body = stripBomBuf(bodyBuf).toString();
+	const body = new TextDecoder().decode(stripBomBuf(bodyBuf));
 
 	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
 		return body;

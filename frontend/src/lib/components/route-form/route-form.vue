@@ -19,7 +19,7 @@
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
@@ -83,9 +83,11 @@
 	const submitButton = ref<HTMLButtonElement>();
 
 	const props = withDefaults(defineProps<{
+		/** If false, the route layer will be opaque and not draggable. */
 		active?: boolean;
 		routeId?: string;
 		showToolbar?: boolean;
+		noClear?: boolean;
 	}>(), {
 		active: true,
 		showToolbar: true
@@ -205,6 +207,10 @@
 		} else
 			return undefined;
 	});
+
+	const destinationsMeta = computed(() => destinations.value.map((destination) => ({
+		isInvalid: getValidationState(destination) === false
+	})));
 
 	watchEffect(() => {
 		if (hasRoute.value)
@@ -502,7 +508,7 @@
 		}
 	}
 
-	function setQuery({ query, zoom = true, smooth = true }: { query: string; zoom?: boolean; smooth?: boolean }): void {
+	function setQuery(query: string, zoom = true, smooth = true): void {
 		clear();
 		const split = splitRouteQuery(query);
 		destinations.value = split.queries.map((query) => ({ query }));
@@ -546,7 +552,6 @@
 							class="input-group"
 							@mouseenter="destinationMouseOver(idx)"
 							@mouseleave="destinationMouseOut(idx)"
-							:state="getValidationState(destination)"
 						>
 							<span class="input-group-text px-2">
 								<a href="javascript:" class="fm-drag-handle" @contextmenu.prevent>
@@ -558,7 +563,8 @@
 								v-model="destination.query"
 								:placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'"
 								:tabindex="idx+1"
-								:state="getValidationState(destination)"
+								:class="{ 'is-invalid': destinationsMeta[idx].isInvalid }"
+								:autofocus="idx === 0"
 								@blur="loadSuggestions(destination)"
 							/>
 							<template v-if="destination.query.trim() != ''">
@@ -651,7 +657,7 @@
 					ref="submitButton"
 				>Go!</button>
 				<button
-					v-if="hasRoute"
+					v-if="hasRoute && !props.noClear"
 					type="button"
 					class="btn btn-secondary"
 					:tabindex="destinations.length+8"
@@ -694,6 +700,7 @@
 					<AddToMapDropdown
 						:lines="linesWithTags"
 						size="sm"
+						isSingle
 					></AddToMapDropdown>
 
 					<DropdownMenu
@@ -740,6 +747,10 @@
 		.destination.active .input-group {
 			box-shadow: 0 0 3px;
 			border-radius: 0.25rem;
+		}
+
+		.destination:first-child {
+			margin-top: calc(-0.5rem + 2px); // Offset space of first fm-route-form-hover-insert
 		}
 
 		hr.fm-route-form-hover-insert {

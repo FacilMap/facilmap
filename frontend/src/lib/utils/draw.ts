@@ -1,6 +1,5 @@
 import { addClickListener } from "facilmap-leaflet";
 import type { ID, Type } from "facilmap-types";
-import { getUniqueId } from "./utils";
 import type { ToastContext } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -20,19 +19,29 @@ export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastCo
 
 			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
-			if (!mapContext.value.components.map.fmFilterFunc(marker, client.value.types[marker.typeId]))
-				toasts.showToast(getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
+			if (!mapContext.value.components.map.fmFilterFunc(marker, client.value.types[marker.typeId])) {
+				toasts.showToast(
+					undefined,
+					`${type.name} successfully added`,
+					"The marker was successfully added, but the active filter is preventing it from being shown.",
+					{ variant: "success", autoHide: true }
+				);
+			}
 		} catch (err) {
 			toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
 		}
 	});
 
 	toasts.showToast("fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+		noCloseButton: true,
 		actions: [
-			{ label: "Cancel", onClick: () => {
-				toasts.hideToast("fm-draw-add-marker");
-				clickListener.cancel();
-			} }
+			{
+				label: "Cancel",
+				onClick: () => {
+					toasts.hideToast("fm-draw-add-marker");
+					clickListener.cancel();
+				}
+			}
 		]
 	});
 }
@@ -69,13 +78,21 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 	}
 
 	toasts.showToast("fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+		noCloseButton: true,
 		actions: [
-			{ label: "Save", onClick: () => {
-				finish(true);
-			}},
-			{ label: "Cancel", onClick: () => {
-				finish(false);
-			} }
+			{
+				label: "Save",
+				variant: "primary",
+				onClick: () => {
+					finish(true);
+				}
+			},
+			{
+				label: "Cancel",
+				onClick: () => {
+					finish(false);
+				}
+			}
 		]
 	});
 
@@ -92,13 +109,21 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
 
 		toasts.showToast("fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+			noCloseButton: true,
 			actions: [
-				{ label: "Finish", onClick: () => {
-					mapContext.value.components.linesLayer.endDrawLine(true);
-				}},
-				{ label: "Cancel", onClick: () => {
-					mapContext.value.components.linesLayer.endDrawLine(false);
-				} }
+				{
+					label: "Finish",
+					variant: "primary",
+					onClick: () => {
+						mapContext.value.components.linesLayer.endDrawLine(true);
+					}
+				},
+				{
+					label: "Cancel",
+					onClick: () => {
+						mapContext.value.components.linesLayer.endDrawLine(false);
+					}
+				}
 			]
 		});
 
@@ -110,8 +135,14 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 			const line = await client.value.addLine({ typeId: type.id, routePoints });
 			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 
-			if (!mapContext.value.components.map.fmFilterFunc(line, client.value.types[line.typeId]))
-				toasts.showToast(getUniqueId("fm-draw-add-line"), `${type.name} successfully added`, "The line was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
+			if (!mapContext.value.components.map.fmFilterFunc(line, client.value.types[line.typeId])) {
+				toasts.showToast(
+					undefined,
+					`${type.name} successfully added`,
+					"The line was successfully added, but the active filter is preventing it from being shown.",
+					{ variant: "success", autoHide: true }
+				);
+			}
 		}
 	} catch (err) {
 		toasts.showErrorToast("fm-draw-add-line", "Error adding line", err);

@@ -18,7 +18,7 @@
 
 	function handleOpenSelection(): void {
 		if (elements.value.length > 0)
-			searchBoxContext.value.activateTab(`fm${context.id}-overpass-info-tab`);
+			searchBoxContext.value.activateTab(`fm${context.id}-overpass-info-tab`, { expand: true });
 	}
 
 	function handleElementClick(element: OverpassElement, event: MouseEvent): void {

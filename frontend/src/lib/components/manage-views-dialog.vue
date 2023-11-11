@@ -44,7 +44,12 @@
 		toasts.hideToast(`fm${context.id}-save-view-error-${view.id}`);
 
 		try {
-			if (!await showConfirm({ title: "Delete view", message: `Do you really want to delete the view “${view.name}”?` }))
+			if (!await showConfirm({
+				title: "Delete view",
+				message: `Do you really want to delete the view “${view.name}”?`,
+				variant: "danger",
+				okLabel: "Delete"
+			}))
 				return;
 
 			isDeleting.value.add(view.id);
@@ -61,7 +66,6 @@
 <template>
 	<ModalDialog
 		title="Manage Views"
-		okOnly
 		:isBusy="isBusy"
 		size="lg"
 		class="fm-manage-views"

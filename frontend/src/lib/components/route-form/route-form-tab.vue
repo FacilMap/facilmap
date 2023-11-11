@@ -2,33 +2,39 @@
 	import RouteForm from "./route-form.vue";
 	import type { HashQuery } from "facilmap-leaflet";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { ref } from "vue";
-	import { useEventListener } from "../../utils/utils";
-	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { readonly, ref, toRef } from "vue";
+	import { injectContextRequired, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import type { WritableRouteFormTabContext } from "../facil-map-context-provider/route-form-tab-context";
 
 	const context = injectContextRequired();
-	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
 	const hashQuery = ref<HashQuery>();
 
-	useEventListener(mapContext, "route-set-query", (data) => {
-		routeForm.value!.setQuery(data);
-	});
-	useEventListener(mapContext, "route-set-from", (data) => {
-		routeForm.value!.setFrom(data);
-	});
-	useEventListener(mapContext, "route-add-via", (data) => {
-		routeForm.value!.addVia(data);
-	});
-	useEventListener(mapContext, "route-set-to", (data) => {
-		routeForm.value!.setTo(data);
+	const routeFormTabContext = ref<WritableRouteFormTabContext>({
+		setQuery(query, zoom, smooth) {
+			routeForm.value!.setQuery(query, zoom, smooth);
+		},
+
+		setFrom(destination) {
+			routeForm.value!.setFrom(destination);
+		},
+
+		addVia(destination) {
+			routeForm.value!.addVia(destination);
+		},
+
+		setTo(destination) {
+			routeForm.value!.setTo(destination);
+		}
 	});
 
+	context.provideComponent("routeFormTab", toRef(readonly(routeFormTabContext)));
+
 	function activate(): void {
-		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`);
+		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { expand: true });
 	}
 </script>
 

@@ -37,22 +37,22 @@
     "filtrex": "^2.2.3",
     "jquery": "^3.7.1",
     "jsdom": "^22.1.0",
-    "linkify-string": "^4.1.1",
-    "linkifyjs": "^4.1.1",
+    "linkify-string": "^4.1.2",
+    "linkifyjs": "^4.1.2",
     "lodash-es": "^4.17.21",
-    "marked": "^9.1.0"
+    "marked": "^9.1.6"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.32",
-    "@types/dompurify": "^3.0.3",
-    "@types/jquery": "^3.5.21",
-    "@types/jsdom": "^21.1.3",
-    "@types/linkifyjs": "^2.1.5",
+    "@types/cheerio": "^0.22.34",
+    "@types/dompurify": "^3.0.5",
+    "@types/jquery": "^3.5.27",
+    "@types/jsdom": "^21.1.5",
+    "@types/linkifyjs": "^2.1.7",
     "rimraf": "^5.0.5",
     "rollup-plugin-auto-external": "^2.0.0",
     "typescript": "^5.2.2",
-    "vite": "^4.4.11",
-    "vite-plugin-dts": "^3.6.0",
+    "vite": "^4.5.0",
+    "vite-plugin-dts": "^3.6.3",
     "vitest": "^0.34.6"
   }
 }

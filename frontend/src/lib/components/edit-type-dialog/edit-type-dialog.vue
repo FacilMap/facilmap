@@ -4,15 +4,15 @@
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import ColourField from "../ui/colour-field.vue";
-	import ShapeField from "../ui/shape-field.vue";
-	import SymbolField from "../ui/symbol-field.vue";
+	import ColourPicker from "../ui/colour-picker.vue";
+	import ShapePicker from "../ui/shape-picker.vue";
+	import SymbolPicker from "../ui/symbol-picker.vue";
 	import RouteMode from "../ui/route-mode.vue";
 	import Draggable from "vuedraggable";
 	import FieldInput from "../ui/field-input.vue";
 	import Icon from "../ui/icon.vue";
-	import WidthField from "../ui/width-field.vue";
-	import SizeField from "../ui/size-field.vue";
+	import WidthPicker from "../ui/width-picker.vue";
+	import SizePicker from "../ui/size-picker.vue";
 	import EditTypeDropdownDialog from "./edit-type-dropdown-dialog.vue";
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
@@ -77,7 +77,12 @@
 	}
 
 	async function deleteField(field: Field): Promise<void> {
-		if (!await showConfirm({ title: "Delete field", message: `Do you really want to delete the field “${field.name}”?` }))
+		if (!await showConfirm({
+			title: "Delete field",
+			message: `Do you really want to delete the field “${field.name}”?`,
+			variant: "danger",
+			okLabel: "Delete"
+		}))
 			return;
 
 		var idx = type.value.fields.indexOf(field);
@@ -178,6 +183,7 @@
 		class="fm-edit-type"
 		:isModified="isModified"
 		:isCreate="isCreate"
+		:stackLevel="1"
 		@submit="$event.waitUntil(save())"
 		@hidden="emit('hidden')"
 	>
@@ -225,11 +231,11 @@
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<ColourField
+								<ColourPicker
 									:id="`${id}-default-colour-input`"
 									v-model="type.defaultColour"
 									:validationError="defaultColourValidationError"
-								></ColourField>
+								></ColourPicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">
@@ -253,11 +259,11 @@
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<SizeField
+								<SizePicker
 									:id="`${id}-default-size-input`"
 									v-model="type.defaultSize"
 									:validationError="defaultSizeValidationError"
-								></SizeField>
+								></SizePicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">
@@ -281,11 +287,11 @@
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<SymbolField
+								<SymbolPicker
 									:id="`${id}-default-symbol-input`"
 									v-model="type.defaultSymbol"
 									:validationError="defaultSymbolValidationError"
-								></SymbolField>
+								></SymbolPicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">
@@ -309,11 +315,11 @@
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<ShapeField
+								<ShapePicker
 									:id="`${id}-default-shape-input`"
 									v-model="type.defaultShape"
 									:validationError="defaultShapeValidationError"
-								></ShapeField>
+								></ShapePicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">
@@ -337,11 +343,11 @@
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<WidthField
+								<WidthPicker
 									:id="`${id}-default-width-input`"
 									v-model="type.defaultWidth"
 									:validationError="defaultWidthValidationError"
-								></WidthField>
+								></WidthPicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">

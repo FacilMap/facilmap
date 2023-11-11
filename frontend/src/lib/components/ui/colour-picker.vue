@@ -15,7 +15,7 @@
 	}
 
 	function validateColour(colour: string): string | undefined {
-		if (!isValidColour(colour)) {
+		if (colour && !isValidColour(colour)) {
 			return "Needs to be in 3-digit or 6-digit hex format, for example f00 or 0000ff.";
 		}
 	}
@@ -105,7 +105,12 @@
 				<Hue :value="val" @change="handleChange"></Hue>
 				<ul ref="gridRef">
 					<li v-for="colour in colours" :key="colour" :class="{ active: value == colour }">
-						<a href="javascript:" :style="{ backgroundColor: `#${colour}` }" @click="emit('update:modelValue', colour)"></a>
+						<a
+							href="javascript:"
+							:style="{ backgroundColor: `#${colour}` }"
+							@click="emit('update:modelValue', colour)"
+							tabindex="-1"
+						></a>
 					</li>
 				</ul>
 			</div>

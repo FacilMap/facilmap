@@ -2,8 +2,8 @@
 	import { computed, createApp, defineComponent, h, ref, type VNode, type VNodeArrayChildren, withDirectives } from "vue";
 	import Alert from "./alert.vue";
 	import vValidity from "./validated-form/validity";
-	import { useModal } from "../../utils/modal";
 	import type { ThemeColour } from "../../utils/bootstrap";
+	import ModalDialog from "./modal-dialog.vue";
 
 	export type AlertProps = {
 		title: string;
@@ -11,6 +11,8 @@
 		type?: "alert" | "confirm";
 		variant?: ThemeColour;
 		show?: boolean;
+		okLabel?: string;
+		okFocus?: boolean;
 	};
 
 	export interface AlertResult {
@@ -45,16 +47,16 @@
 		});
 	}
 
-	export async function showAlert(props: Omit<AlertProps, 'type' | 'show'>): Promise<void> {
-		await renderAlert({ ...props, type: 'alert' });
+	export async function showAlert(props: Omit<AlertProps, 'type' | 'show' | 'okFocus'>): Promise<void> {
+		await renderAlert({ ...props, okFocus: true, type: 'alert' });
 	}
 
-	export async function showConfirm(props: Omit<AlertProps, 'type' | 'show'>): Promise<boolean> {
-		const result = await renderAlert({ ...props, type: 'confirm' });
+	export async function showConfirm(props: Omit<AlertProps, 'type' | 'show' | 'okFocus'>): Promise<boolean> {
+		const result = await renderAlert({ ...props, okFocus: true, type: 'confirm' });
 		return result.ok;
 	}
 
-	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'show' | 'message'> & {
+	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'show' | 'message' | 'okFocus'> & {
 		initialValue?: string;
 		/** Validate the value. Return an empty string or undefined to indicate validity. */
 		validate?: (value: string) => string | undefined;
@@ -68,6 +70,7 @@
 		const result = await renderAlert({
 			...props,
 			message: '',
+			okFocus: false,
 			type: 'confirm',
 			getContent: () => h('div', {
 				class: touched.value ? 'was-validated' : ''
@@ -75,7 +78,7 @@
 				withDirectives(
 					h('input', {
 						type: "text",
-						class: `form-control${touched.value ? ' was-validated' : ''}`,
+						class: "form-control",
 						value: value.value,
 						onInput: (e: InputEvent) => {
 							value.value = (e.target as HTMLInputElement).value;
@@ -107,7 +110,9 @@
 
 <script setup lang="ts">
 	const props = withDefaults(defineProps<AlertProps>(), {
-		type: "alert"
+		type: "alert",
+		okLabel: "OK",
+		okFocus: true
 	});
 
 	const emit = defineEmits<{
@@ -120,49 +125,27 @@
 		ok: false
 	});
 
-	const modalRef = ref<HTMLElement>();
-	const modal = useModal(modalRef, {
-		onShown: () => {
-			emit('shown');
-		},
-		onHide: () => {
-			emit('hide', result.value);
-		},
-		onHidden: () => {
-			emit('hidden', result.value);
-		}
-	});
+	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const formRef = ref<HTMLFormElement>();
-	const formTouched = ref(false);
 	const handleSubmit = () => {
-		if (formRef.value!.checkValidity()) {
-			result.value.ok = true;
-			modal.hide();
-		} else {
-			formTouched.value = true;
-		}
+		result.value.ok = true;
+		modalRef.value!.modal.hide();
 	};
 </script>
 
 <template>
-	<Teleport to="body">
-		<div class="modal fade" tabindex="-1" aria-hidden="true" ref="modalRef">
-			<div class="modal-dialog">
-				<form class="modal-content" :class="{ 'was-validated': formTouched }" @submit.prevent="handleSubmit()" novalidate ref="formRef">
-					<div class="modal-header">
-						<h1 class="modal-title fs-5">{{props.title}}</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<slot>{{props.message}}</slot>
-					</div>
-					<div class="modal-footer">
-						<button v-if="type === 'confirm'" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn" :class="`btn-${props.variant ?? 'primary'}`">OK</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</Teleport>
+	<ModalDialog
+		:title="props.title"
+		:isCreate="props.type === 'confirm'"
+		:okLabel="props.okLabel"
+		:okVariant="props.variant"
+		:okFocus="props.okFocus"
+		@shown="emit('shown')"
+		@hide="emit('hide', result)"
+		@hidden="emit('hidden', result)"
+		@submit="handleSubmit"
+		ref="modalRef"
+	>
+		<slot>{{props.message}}</slot>
+	</ModalDialog>
 </template>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect } from "vue";
+	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect, toRef } from "vue";
 	import { type ExtendableEventMixin, extendableEventMixin } from "../../../utils/utils";
 	import { useToasts } from "../toasts/toasts.vue";
 
@@ -16,7 +16,11 @@
 
 	const allForms = reactive(new Map<Ref<HTMLFormElement | undefined>, ValidatedFormData>());
 
-	export function useValidatedForm(formRef: Ref<HTMLFormElement | undefined>, onSubmit: (event: CustomSubmitEvent) => void): Readonly<ValidatedFormData> {
+	export function useValidatedForm(
+		formRef: Ref<HTMLFormElement | undefined>,
+		onSubmit: (event: CustomSubmitEvent) => void,
+		{ noValidate }: { noValidate?: Ref<boolean> } = {}
+	): Readonly<ValidatedFormData> {
 		const toasts = useToasts();
 		const validationPromises = new Map<Element, Promise<any>>();
 		const isValidating = reactive(new Map<Element, boolean>());
@@ -29,16 +33,20 @@
 				data.isTouched = true;
 				data.isSubmitting = true;
 
-				await Promise.all(validationPromises.values());
+				try {
+					if (!noValidate?.value) {
+						await Promise.all(validationPromises.values());
 
-				if (formRef.value!.checkValidity()) {
-					try {
-						const event = { ...extendableEventMixin };
-						onSubmit(event);
-						await event._awaitPromises();
-					} finally {
-						data.isSubmitting = false;
+						if (!formRef.value!.checkValidity()) {
+							return;
+						}
 					}
+
+					const event = { ...extendableEventMixin };
+					onSubmit(event);
+					await event._awaitPromises();
+				} finally {
+					data.isSubmitting = false;
 				}
 			}),
 			setValidationPromise: (element, promise) => {
@@ -83,6 +91,7 @@
 	const props = defineProps<{
 		action?: string;
 		target?: string;
+		noValidate?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -92,6 +101,8 @@
 	const formRef = ref<HTMLFormElement>();
 	const formData = useValidatedForm(formRef, (event) => {
 		emit("submit", event);
+	}, {
+		noValidate: toRef(() => props.noValidate)
 	});
 
 	defineExpose({ formData });
@@ -102,7 +113,6 @@
 		@submit.prevent="formData.submit()"
 		novalidate
 		ref="formRef"
-		:class="{ 'was-validated': formData.isTouched }"
 		:action="props.action"
 		:target="props.target ?? 'javascript:'"
 	>

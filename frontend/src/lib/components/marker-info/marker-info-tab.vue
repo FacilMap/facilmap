@@ -29,7 +29,7 @@
 
 	function handleOpenSelection(): void {
 		if (marker.value)
-			searchBoxContext.value.activateTab(`fm${context.id}-marker-info-tab`);
+			searchBoxContext.value.activateTab(`fm${context.id}-marker-info-tab`, { expand: true });
 	}
 
 	function close(): void {

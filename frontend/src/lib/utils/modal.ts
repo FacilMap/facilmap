@@ -2,13 +2,6 @@ import { Modal } from "bootstrap";
 import { type Ref, shallowRef, watch, watchEffect } from "vue";
 
 export interface ModalConfig {
-	emit?: {
-		/**
-		 * Emitted when the modal is closed and the fade-out animation has finished. Should cause the parent component to remove the
-		 * modal from the tree.
-		 */
-		(type: 'hidden'): void;
-	};
 	/** Will be called when the fade-in animation has finished. */
 	onShown?: (event: Modal.Event) => void;
 	/** Will be called before the fade-out animation when the modal is closed. */
@@ -26,7 +19,7 @@ export interface ModalActions {
 /**
  * Enables a Bootstrap modal dialog on the element that is saved in the returned {@link ModalActions#ref}.
  */
-export function useModal(modalRef: Ref<HTMLElement | undefined>, { emit, onShown, onHide, static: isStatic }: ModalConfig): ModalActions {
+export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic }: ModalConfig): ModalActions {
 	const modal = shallowRef<Modal>();
 
 	const handleShow = (e: Event) => {
@@ -46,12 +39,12 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { emit, onShown
 	};
 
 	const handleHidden = (e: Event) => {
-		if (emit) {
-			emit('hidden');
-		}
+		onHidden?.(e as Modal.Event);
 	};
 
 	watch(modalRef, (newRef, oldRef, onCleanup) => {
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+
 		if (newRef) {
 			modal.value = new Modal(newRef);
 

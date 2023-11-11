@@ -12,7 +12,7 @@
 	import UseAsDropdown from "../ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -42,7 +42,12 @@
 	async function deleteMarker(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-marker-info-delete`);
 
-		if (!await showConfirm({ title: "Remove marker", message: `Do you really want to remove the marker “${normalizeMarkerName(marker.value.name)}”?` }))
+		if (!await showConfirm({
+			title: "Delete marker",
+			message: `Do you really want to delete the marker “${normalizeMarkerName(marker.value.name)}”?`,
+			variant: "danger",
+			okLabel: "Delete"
+		}))
 			return;
 
 		isDeleting.value = true;
@@ -124,7 +129,7 @@
 				:disabled="isDeleting || mapContext.interaction"
 			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				Remove
+				Delete
 			</button>
 		</div>
 

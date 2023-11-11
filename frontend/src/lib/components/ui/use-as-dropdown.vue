@@ -1,13 +1,13 @@
 <script setup lang="ts">
 	import { toRef } from "vue";
 	import type { ButtonSize } from "../../utils/bootstrap";
-	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import DropdownMenu from "./dropdown-menu.vue";
 
 	const context = injectContextRequired();
-	const mapContext = requireMapContext(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
+	const routeFormContext = toRef(() => context.components.routeFormTab);
 
 	const props = defineProps<{
 		destination: RouteDestination;
@@ -15,15 +15,22 @@
 		size?: ButtonSize;
 	}>();
 
-	function useAs(event: "route-set-from" | "route-add-via" | "route-set-to"): void {
-		mapContext.value.emit(event, props.destination);
-		searchBoxContext.value!.activateTab(`fm${context.id}-route-form-tab`);
+	function useAs(type: "from" | "via" | "to"): void {
+		if (type === "from") {
+			routeFormContext.value!.setFrom(props.destination);
+		} else if (type === "via") {
+			routeFormContext.value!.addVia(props.destination);
+		} else if (type === "to") {
+			routeFormContext.value!.setTo(props.destination);
+		}
+
+		searchBoxContext.value!.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 	}
 </script>
 
 <template>
 	<DropdownMenu
-		v-if="searchBoxContext && context.settings.search"
+		v-if="searchBoxContext && routeFormContext && context.settings.search"
 		:size="props.size"
 		:isDisabled="props.isDisabled"
 		label="Use as"
@@ -32,7 +39,7 @@
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('route-set-from')"
+				@click="useAs('from')"
 			>Route start</a>
 		</li>
 
@@ -40,7 +47,7 @@
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('route-add-via')"
+				@click="useAs('via')"
 			>Route via</a>
 		</li>
 
@@ -48,7 +55,7 @@
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('route-set-to')"
+				@click="useAs('to')"
 			>Route destination</a>
 		</li>
 	</DropdownMenu>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import PadSettingsDialog from "../pad-settings-dialog/pad-settings-dialog.vue";
-	import EditFilter from "../edit-filter-dialog.vue";
+	import EditFilterDialog from "../edit-filter-dialog.vue";
 	import HistoryDialog from "../history-dialog/history-dialog.vue";
 	import ShareDialog from "../share-dialog.vue";
-	import { computed, ref } from "vue";
+	import { computed, ref, toRef } from "vue";
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -11,6 +11,7 @@
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const importTabContext = toRef(() => context.components.importTab);
 
 	const props = defineProps<{
 		interactive: boolean;
@@ -38,10 +39,6 @@
 			return { q: "", a: "" };
 		}
 	});
-
-	function importFile(): void {
-		mapContext.value.emit("import-file");
-	}
 </script>
 
 <template>
@@ -61,11 +58,11 @@
 			>Share</a>
 		</li>
 
-		<li v-if="props.interactive">
+		<li v-if="props.interactive && importTabContext">
 			<a
 				class="dropdown-item"
 				href="javascript:"
-				@click="importFile(); emit('hide-sidebar')"
+				@click="importTabContext.openFilePicker(); emit('hide-sidebar')"
 			>Open file</a>
 		</li>
 
@@ -143,10 +140,10 @@
 		@hidden="dialog = undefined"
 	></ShareDialog>
 
-	<EditFilter
+	<EditFilterDialog
 		v-if="dialog === 'edit-filter' && client.padData"
 		@hidden="dialog = undefined"
-	></EditFilter>
+	></EditFilterDialog>
 
 	<HistoryDialog
 		v-if="dialog === 'history' && client.padData"

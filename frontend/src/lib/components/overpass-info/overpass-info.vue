@@ -8,7 +8,7 @@
 	import type { Type } from "facilmap-types";
 	import UseAsDropdown from "../ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/map-context";
+	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
@@ -63,6 +63,7 @@
 			<AddToMapDropdown
 				:markers="markersWithTags"
 				size="sm"
+				isSingle
 			></AddToMapDropdown>
 
 			<UseAsDropdown

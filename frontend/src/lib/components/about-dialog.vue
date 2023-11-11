@@ -31,8 +31,8 @@
 	>
 		<p><a href="https://github.com/facilmap/facilmap" target="_blank"><strong>FacilMap</strong></a> is available under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License, Version 3</a>.</p>
 		<p>If something does not work or you have a suggestion for improvement, please report on the <a href="https://github.com/FacilMap/facilmap/issues" target="_blank">issue tracker</a>.</p>
-		<p>If you have a question, please have a look at the <a href="https://docs.facilmap.org/users/">documentation</a> or raise a question in the <a href="https://github.com/FacilMap/facilmap/discussions">discussion forum</a>.</p>
-		<p><a href="https://docs.facilmap.org/users/privacy/">Privacy information</a></p>
+		<p>If you have a question, please have a look at the <a href="https://docs.facilmap.org/users/" target="_blank">documentation</a>, raise a question in the <a href="https://github.com/FacilMap/facilmap/discussions" target="_blank">discussion forum</a> or ask in the <a href="https://matrix.to/#/#facilmap:rankenste.in" target="_blank">Matrix chat</a>.</p>
+		<p><a href="https://docs.facilmap.org/users/privacy/" target="_blank">Privacy information</a></p>
 		<h4>Map data</h4>
 		<dl class="row">
 			<template v-for="layer in layers">
@@ -60,17 +60,18 @@
 			<li><a href="https://sequelize.org/" target="_blank">Sequelize</a></li>
 			<li><a href="https://socket.io/" target="_blank">socket.io</a></li>
 			<li><a href="https://www.typescriptlang.org/" target="_blank">TypeScript</a></li>
-			<li><a href="https://webpack.js.org/" target="_blank">Webpack</a></li>
-			<li><a href="https://jquery.com/" target="_blank">jQuery</a></li>
 			<li><a href="https://vuejs.org/" target="_blank">Vue.js</a></li>
-			<li><a href="https://github.com/chjj/marked" target="_blank">Marked</a></li>
+			<li><a href="https://vitejs.dev/" target="_blank">Vite</a></li>
 			<li><a href="https://getbootstrap.com/" target="_blank">Bootstrap</a></li>
-			<li><a href="https://bootstrap-vue.org/" target="_blank">BootstrapVue</a></li>
 			<li><a href="https://leafletjs.com/" target="_blank">Leaflet</a></li>
 			<li><a href="http://project-osrm.org/" target="_blank">OSRM</a></li>
 			<li><a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a></li>
 			<li><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a></li>
 			<li><a href="https://github.com/joewalnes/filtrex" target="_blank">Filtrex</a></li>
+			<li><a href="https://github.com/chjj/marked" target="_blank">Marked</a></li>
+			<li><a href="https://github.com/cure53/DOMPurify" target="_blank">DOMPurify</a></li>
+			<li><a href="https://expressjs.com/" target="_blank">Express</a></li>
+			<li><a href="https://vuepress.vuejs.org/" target="_blank">Vuepress</a></li>
 		</ul>
 		<h4>Icons</h4>
 		<ul>

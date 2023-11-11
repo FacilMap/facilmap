@@ -32,6 +32,7 @@
 	});
 
 	const filter = ref("");
+	const filterRef = ref<HTMLElement>();
 
 	const items = computed(() => {
 		const result: Record<string, string> = {};
@@ -51,7 +52,7 @@
 	const validationError = computed(() => {
 		if (props.validationError) {
 			return props.validationError;
-		} else if (props.modelValue && props.modelValue.length !== 1 && symbolList.includes(props.modelValue)) {
+		} else if (props.modelValue && props.modelValue.length !== 1 && !symbolList.includes(props.modelValue)) {
 			return "Unknown icon";
 		} else {
 			return undefined;
@@ -66,10 +67,15 @@
 	async function handleKeyDown(event: KeyboardEvent): Promise<void> {
 		const newVal = arrowNavigation(Object.keys(items.value), props.modelValue, gridRef.value!.containerRef!, event);
 		if (newVal) {
+			filterRef.value?.focus();
 			emit("update:modelValue", newVal);
 			await nextTick();
 			gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
 		}
+	}
+
+	function handleFocusPopover() {
+		filterRef.value?.focus();
 	}
 </script>
 
@@ -81,6 +87,7 @@
 		:validationError="validationError"
 		@keydown="handleKeyDown"
 		enforceElementWidth
+		@focusPopover="handleFocusPopover()"
 	>
 		<template #preview>
 			<Icon :icon="modelValue ?? undefined"></Icon>
@@ -89,11 +96,12 @@
 		<template #default="{ close }">
 			<input
 				type="search"
-				class="form-control"
+				class="form-control fm-keyboard-navigation-exception"
 				v-model="filter"
 				placeholder="Filter"
 				autocomplete="off"
-				autofocus
+				ref="filterRef"
+				tabindex="-1"
 			/>
 
 			<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>
@@ -101,8 +109,9 @@
 			<PrerenderedList
 				:items="items"
 				:value="modelValue ?? undefined"
+				noFocus
 				@click="handleClick($event, close)"
-				ref="grid"
+				ref="gridRef"
 			></PrerenderedList>
 		</template>
 	</Picker>

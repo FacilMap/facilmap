@@ -138,10 +138,11 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	const mapContext = requireMapContext(context);
 	const client = requireClientContext(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
+	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
-	if(searchBoxContext.value && query.match(/ to /i)) {
-		mapContext.value.emit("route-set-query", { query, zoom, smooth });
-		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`);
+	if(searchBoxContext.value && routeFormTabContext.value && query.match(/ to /i)) {
+		routeFormTabContext.value.setQuery(query, zoom, smooth);
+		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 		return true;
 	}
 

@@ -20,6 +20,7 @@
 		variant?: ThemeColour;
 		noCloseButton?: boolean;
 		autoHide?: boolean;
+		onHide?: () => void;
 		onHidden?: () => void;
 	}
 
@@ -27,6 +28,7 @@
 		onClick?: (e: MouseEvent) => void;
 		label: string;
 		href?: string;
+		variant?: ThemeColour;
 	}
 
 	interface ToastInstance extends ToastOptions {
@@ -121,6 +123,10 @@
 			toastRef.addEventListener("shown.bs.toast", () => resolve());
 			Toast.getOrCreateInstance(toastRef, { autohide: !!toast.autoHide }).show();
 
+			toastRef.addEventListener("hide.bs.toast", () => {
+				toast.onHide?.();
+			});
+
 			toastRef.addEventListener("hidden.bs.toast", () => {
 				toasts.value = toasts.value.filter((t) => t !== toast);
 				toastRefs.delete(toast);
@@ -173,19 +179,21 @@
 					{{toast.message}}
 				</div>
 
-				<div class="fm-toast-actions">
+				<div v-if="(toast.actions?.length ?? 0) > 0" class="btn-toolbar mt-2 pt-2 border-top">
 					<template v-for="(action, idx) in toast.actions" :key="idx">
 						<button
 							v-if="!action.href"
 							type="button"
-							class="btn btn-secondary btn-sm"
+							class="btn btn-sm"
+							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
 						>{{action.label}}</button>
 
 						<a
 							v-if="action.href"
 							:href="action.href"
-							class="btn btn-secondary btn-sm"
+							class="btn btn-sm"
+							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
 						>{{action.label}}</a>
 					</template>
@@ -198,11 +206,5 @@
 <style lang="scss">
 	.fm-toasts {
 		z-index: 10002;
-
-		.fm-toast-actions {
-			button + button {
-				margin-left: 5px;
-			}
-		}
 	}
 </style>

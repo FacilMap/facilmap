@@ -46,7 +46,12 @@
 	async function deleteLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
 
-		if (!await showConfirm({ title: "Remove line", message: `Do you really want to remove the line “${normalizeLineName(line.value.name)}”?` }))
+		if (!await showConfirm({
+			title: "Delete line",
+			message: `Do you really want to delete the line “${normalizeLineName(line.value.name)}”?`,
+			variant: "danger",
+			okLabel: "Delete"
+		}))
 			return;
 
 		isDeleting.value = true;
@@ -85,19 +90,6 @@
 
 			mapContext.value.components.linesLayer.hideLine(line.value.id);
 
-			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
-				actions: [
-					{ label: "Finish", onClick: () => { done(true); }},
-					{ label: "Cancel", onClick: () => { done(false); } }
-				]
-			});
-
-			isMoving.value = true;
-
-			await new Promise((resolve) => {
-				setTimeout(resolve);
-			});
-
 			const done = async (save: boolean) => {
 				const route = client.value.routes[routeId];
 				if (save && !route)
@@ -122,6 +114,16 @@
 					mapContext.value.components.linesLayer.unhideLine(line.value.id);
 				}
 			};
+
+			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
+				noCloseButton: true,
+				actions: [
+					{ label: "Finish", variant: "primary", onClick: () => { done(true); }},
+					{ label: "Cancel", onClick: () => { done(false); } }
+				]
+			});
+
+			isMoving.value = true;
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
 
@@ -232,11 +234,18 @@
 				:disabled="isDeleting || mapContext.interaction"
 			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				Remove
+				Delete
 			</button>
 		</div>
 
-		<RouteForm v-if="isMoving" active ref="routeForm" :route-id="`l${line.id}`" :show-toolbar="false"></RouteForm>
+		<RouteForm
+			v-if="isMoving"
+			active
+			ref="routeForm"
+			:routeId="`l${line.id}`"
+			:showToolbar="false"
+			noClear
+		></RouteForm>
 
 		<EditLineDialog
 			v-if="showEditDialog"

@@ -7,6 +7,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { sleep } from "facilmap-utils";
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -21,19 +22,13 @@
 		| "manage-types"
 	>();
 
-	function addObject(type: Type): void {
-		if(type.type == "marker")
-			addMarker(type);
-		else if(type.type == "line")
-			addLine(type);
-	}
-
-	function addMarker(type: Type): void {
-		drawMarker(type, context, toasts);
-	}
-
-	function addLine(type: Type): void {
-		drawLine(type, context, toasts);
+	async function addObject(type: Type): Promise<void> {
+		if(type.type == "marker") {
+			await sleep(0); // For some reason this is necessary for the dropdown to close itself
+			drawMarker(type, context, toasts);
+		} else if(type.type == "line") {
+			drawLine(type, context, toasts);
+		}
 	}
 </script>
 

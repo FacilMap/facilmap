@@ -18,12 +18,17 @@
 		customClass?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
+		/** If true, a click of the reference element will not toggle the popover. */
+		ignoreClick?: boolean;
 	}>(), {
 		show: undefined
 	});
 
 	const emit = defineEmits<{
 		"update:show": [show: boolean];
+		shown: [];
+		hide: [];
+		hidden: [];
 	}>();
 
 	const show = useRefWithOverride(false, () => props.show, (show) => {
@@ -35,7 +40,7 @@
 	const shouldUseModal = useMaxBreakpoint("xs");
 
 	watch(show, () => {
-		if (!show) {
+		if (!show.value) {
 			showModal.value = false;
 			showPopover.value = false;
 		} else if (!showModal.value && !showPopover.value) {
@@ -51,9 +56,16 @@
 
 	const modalRef = ref<HTMLElement>();
 	const modal = useModal(modalRef, {
+		onShown: () => {
+			emit("shown");
+		},
+		onHide: () => {
+			emit("hide");
+		},
 		onHidden: () => {
 			showModal.value = false;
 			show.value = false;
+			emit("hidden");
 		}
 	});
 
@@ -63,7 +75,9 @@
 	};
 
 	const handleClick = () => {
-		show.value = !show.value;
+		if (!props.ignoreClick) {
+			show.value = !show.value;
+		}
 	};
 
 	const close = () => {
@@ -72,7 +86,7 @@
 </script>
 
 <template>
-	<div class="bb-popover">
+	<div class="fm-hybrid-popover">
 		<div ref="trigger" @click="handleClick()">
 			<slot name="trigger"></slot>
 		</div>
@@ -84,6 +98,9 @@
 			:class="props.customClass"
 			hideOnOutsideClick
 			:enforceElementWidth="props.enforceElementWidth"
+			@shown="emit('shown')"
+			@hide="emit('hide')"
+			@hidden="emit('hidden')"
 		>
 			<template v-slot:header>
 				{{props.title}}

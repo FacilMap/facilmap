@@ -23,6 +23,8 @@
 	});
 
 	watchEffect((onCleanup) => {
+		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+
 		if (innerSidebarRef.value) {
 			const pan = new hammer.Manager(innerSidebarRef.value);
 			pan.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));

@@ -28,7 +28,8 @@
 			if (!await showConfirm({
 				title: "Delete type",
 				message: `Do you really want to delete the type “${type.name}”?`,
-				variant: "danger"
+				variant: "danger",
+				okLabel: "Delete"
 			})) {
 				return;
 			}
@@ -45,7 +46,6 @@
 <template>
 	<ModalDialog
 		title="Manage Types"
-		okOnly
 		:isBusy="isBusy"
 		size="lg"
 		class="fm-manage-types"
@@ -64,23 +64,21 @@
 					<td>{{type.name}}</td>
 					<td>{{type.type}}</td>
 					<td class="td-buttons">
-						<div class="btn-toolbar">
-							<button
-								type="button"
-								class="btn btn-secondary"
-								:disabled="isDeleting[type.id]"
-								@click="editDialogTypeId = type.id"
-							>Edit</button>
-							<button
-								type="button"
-								@click="deleteType(type)"
-								class="btn btn-secondary"
-								:disabled="isDeleting[type.id]"
-							>
-								<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
-								Delete
-							</button>
-						</div>
+						<button
+							type="button"
+							class="btn btn-secondary"
+							:disabled="isDeleting[type.id]"
+							@click="editDialogTypeId = type.id"
+						>Edit</button>
+						<button
+							type="button"
+							@click="deleteType(type)"
+							class="btn btn-secondary"
+							:disabled="isDeleting[type.id]"
+						>
+							<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
+							Delete
+						</button>
 					</td>
 				</tr>
 			</tbody>
@@ -97,6 +95,10 @@
 			</tfoot>
 		</table>
 
-		<EditTypeDialog v-if="editDialogTypeId !== undefined" :typeId="editDialogTypeId ?? undefined"></EditTypeDialog>
+		<EditTypeDialog
+			v-if="editDialogTypeId !== undefined"
+			:typeId="editDialogTypeId ?? undefined"
+			@hidden="editDialogTypeId = undefined"
+		></EditTypeDialog>
 	</ModalDialog>
 </template>

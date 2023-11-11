@@ -9,7 +9,7 @@
 	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 	import { createMapContext } from "./leaflet-map-components";
 	import vTooltip from "../../utils/tooltip";
-	import type { MapContext } from "../facil-map-context-provider/map-context";
+	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
@@ -25,7 +25,7 @@
 		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
 	});
 
-	const mapContext = ref<MapContext>();
+	const mapContext = ref<WritableMapContext>();
 
 	onMounted(async () => {
 		try {

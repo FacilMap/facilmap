@@ -3,11 +3,11 @@
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import ColourField from "./ui/colour-field.vue";
-	import SymbolField from "./ui/symbol-field.vue";
-	import ShapeField from "./ui/shape-field.vue";
+	import ColourPicker from "./ui/colour-picker.vue";
+	import SymbolPicker from "./ui/symbol-picker.vue";
+	import ShapePicker from "./ui/shape-picker.vue";
 	import FieldInput from "./ui/field-input.vue";
-	import SizeField from "./ui/size-field.vue";
+	import SizePicker from "./ui/size-picker.vue";
 	import { computed, ref, toRef, watch } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
@@ -82,11 +82,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
 					<div class="col-sm-9">
-						<ColourField
+						<ColourPicker
 							:id="`${id}-colour-input`"
 							v-model="marker.colour"
 							:validationError="colourValidationError"
-						></ColourField>
+						></ColourPicker>
 					</div>
 				</div>
 			</template>
@@ -95,11 +95,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">Size</label>
 					<div class="col-sm-9">
-						<SizeField
+						<SizePicker
 							:id="`${id}-size-input`"
 							v-model="marker.size"
 							class="fm-form-range-with-label"
-						></SizeField>
+						></SizePicker>
 					</div>
 				</div>
 			</template>
@@ -108,7 +108,7 @@
 				<div class="row mb-3">
 					<label :for="`${id}-symbol-input`" class="col-sm-3 col-form-label">Icon</label>
 					<div class="col-sm-9">
-						<SymbolField :id="`${id}-symbol-input`" v-model="marker.symbol"></SymbolField>
+						<SymbolPicker :id="`${id}-symbol-input`" v-model="marker.symbol"></SymbolPicker>
 					</div>
 				</div>
 			</template>
@@ -117,7 +117,7 @@
 				<div class="row mb-3">
 					<label :for="`${id}-shape-input`" class="col-sm-3 col-form-label">Shape</label>
 					<div class="col-sm-9">
-						<ShapeField :id="`${id}-shape-input`" v-model="marker.shape"></ShapeField>
+						<ShapePicker :id="`${id}-shape-input`" v-model="marker.shape"></ShapePicker>
 					</div>
 				</div>
 			</template>

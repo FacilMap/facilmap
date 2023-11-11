@@ -75,7 +75,8 @@
 		if (!await showConfirm({
 			title: "Delete map",
 			message: `Are you sure you want to delete the map “${padData.value.name}”? Deleted maps cannot be restored!`,
-			variant: "danger"
+			variant: "danger",
+			okLabel: "Delete map"
 		})) {
 			return;
 		}

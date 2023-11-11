@@ -10,7 +10,7 @@
 	import { computed } from "vue";
 	import UseAsDropdown from "./ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "./ui/zoom-to-object-button.vue";
-	import type { RouteDestination } from "./facil-map-context-provider/map-context";
+	import type { RouteDestination } from "./facil-map-context-provider/route-form-tab-context";
 	import AddToMapDropdown from "./ui/add-to-map-dropdown.vue";
 
 	const props = withDefaults(defineProps<{
@@ -89,27 +89,26 @@
 			</template>
 		</dl>
 
-		<div>
-			<div class="btn-toolbar" role="group">
-				<ZoomToObjectButton
-					v-if="zoomDestination"
-					label="search result"
-					size="sm"
-					:destination="zoomDestination"
-				></ZoomToObjectButton>
+		<div class="btn-toolbar">
+			<ZoomToObjectButton
+				v-if="zoomDestination"
+				label="search result"
+				size="sm"
+				:destination="zoomDestination"
+			></ZoomToObjectButton>
 
-				<AddToMapDropdown
-					:markers="markersWithTags"
-					:lines="linesWithTags"
-					size="sm"
-				></AddToMapDropdown>
+			<AddToMapDropdown
+				:markers="markersWithTags"
+				:lines="linesWithTags"
+				size="sm"
+				isSingle
+			></AddToMapDropdown>
 
-				<UseAsDropdown
-					v-if="isMarker && routeDestination"
-					size="sm"
-					:destination="routeDestination"
-				></UseAsDropdown>
-			</div>
+			<UseAsDropdown
+				v-if="isMarker && routeDestination"
+				size="sm"
+				:destination="routeDestination"
+			></UseAsDropdown>
 		</div>
 	</div>
 </template>

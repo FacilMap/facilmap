@@ -3,10 +3,10 @@
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import ColourField from "./ui/colour-field.vue";
+	import ColourPicker from "./ui/colour-picker.vue";
 	import FieldInput from "./ui/field-input.vue";
 	import RouteMode from "./ui/route-mode.vue";
-	import WidthField from "./ui/width-field.vue";
+	import WidthPicker from "./ui/width-picker.vue";
 	import { computed, ref, toRef, watch } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
@@ -89,11 +89,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
 					<div class="col-sm-9">
-						<ColourField
+						<ColourPicker
 							:id="`${id}-colour-input`"
 							v-model="line.colour"
 							:validationError="colourValidationError"
-						></ColourField>
+						></ColourPicker>
 					</div>
 				</div>
 			</template>
@@ -102,11 +102,11 @@
 				<div class="row mb-3">
 					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">Width</label>
 					<div class="col-sm-9">
-						<WidthField
+						<WidthPicker
 							:id="`${id}-width-input`"
 							v-model="line.width"
 							class="fm-form-range-with-label"
-						></WidthField>
+						></WidthPicker>
 					</div>
 				</div>
 			</template>

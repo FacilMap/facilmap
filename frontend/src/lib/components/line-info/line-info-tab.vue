@@ -39,7 +39,7 @@ import { normalizeLineName } from "facilmap-utils";
 
 	function handleOpenSelection(): void {
 		if (line.value)
-			searchBoxContext.value.activateTab(`fm${context.id}-line-info-tab`)
+			searchBoxContext.value.activateTab(`fm${context.id}-line-info-tab`, { expand: true })
 	}
 
 	function close(): void {
