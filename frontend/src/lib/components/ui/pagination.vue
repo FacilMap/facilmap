@@ -17,9 +17,9 @@
 
 	const isPrevDisabled = computed(() => props.modelValue === 0);
 	const isNextDisabled = computed(() => props.modelValue === props.pages - 1);
-	const pagesFrom = computed(() => Math.max(0, Math.min(props.modelValue - 1, props.pages - 3)));
-	const pagesTo = computed(() => Math.min(props.pages - 1, Math.max(props.modelValue + 1, 2)));
-	const pageLinks = computed(() => range(pagesFrom.value, pagesTo.value));
+	const pagesFrom = computed(() => Math.max(0, Math.min(props.modelValue - 2, props.pages - 3)));
+	const pagesTo = computed(() => Math.min(props.pages - 1, Math.max(props.modelValue + 2, 2)));
+	const pageLinks = computed(() => range(pagesFrom.value, pagesTo.value + 1));
 	const showEllipsisBefore = computed(() => pagesFrom.value > 0);
 	const showEllipsisAfter = computed(() => pagesTo.value < props.pages - 1);
 </script>
@@ -54,7 +54,7 @@
 
 		<template v-for="page in pageLinks" :key="page">
 			<li class="page-item" :class="{ active: page === props.modelValue }">
-				<a href="javascript:" class="page-link" @click="handleClick(page)">{{page}}</a>
+				<a href="javascript:" class="page-link" @click="handleClick(page)">{{page + 1}}</a>
 			</li>
 		</template>
 

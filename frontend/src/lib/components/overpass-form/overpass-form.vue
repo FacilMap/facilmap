@@ -1,9 +1,8 @@
 <script setup lang="ts">
 	import { getOverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
-	import { debounce } from "lodash-es";
 	import { computed, ref, watch } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import vValidity from "../ui/validated-form/validity";
+	import ValidatedField from "../ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -11,11 +10,6 @@
 	const activeTab = ref(0);
 	const searchTerm = ref("");
 	const customQuery = ref("");
-	const customQueryWasValidated = ref(false);
-	const customQueryValidationError = ref<string>();
-	const customQueryAbortController = ref<AbortController>();
-
-	const validateCustomQueryDebounced = debounce(validateCustomQuery, 500);
 
 	const categories = computed(() => {
 		return overpassPresets.map((cat) => {
@@ -54,37 +48,20 @@
 	function toggleIsCustom(): void {
 		if (mapContext.value.overpassIsCustom) {
 			mapContext.value.components.overpassLayer.setQuery(mapContext.value.overpassPresets);
-			if (customQueryAbortController.value)
-				customQueryAbortController.value.abort();
 		} else {
 			mapContext.value.components.overpassLayer.setQuery(mapContext.value.overpassCustom);
-			validateCustomQuery();
 		}
 	}
 
-	function handleCustomQueryInput(): void {
-		if (customQueryAbortController.value)
-			customQueryAbortController.value.abort();
-		validateCustomQueryDebounced();
-	}
-
-	async function validateCustomQuery(): Promise<void> {
-		const query = customQuery.value;
-
-		if (!query) {
-			customQueryWasValidated.value = false;
-			customQueryValidationError.value = undefined;
+	async function validateCustomQuery(query: string, signal: AbortSignal): Promise<string | undefined> {
+		if (query) {
+			const result = await validateOverpassQuery(query, signal);
+			if (result) {
+				return result;
+			}
+		}
+		if (!signal.aborted) {
 			mapContext.value.components.overpassLayer.setQuery(query);
-		} else {
-			const abortController = new AbortController();
-			customQueryAbortController.value = abortController;
-			const result = await validateOverpassQuery(query, customQueryAbortController.value.signal);
-			if (!abortController.signal.aborted) {
-				customQueryWasValidated.value = true;
-				customQueryValidationError.value = result;
-				mapContext.value.components.overpassLayer.setQuery(query);
-			} else
-				return;
 		}
 	}
 </script>
@@ -166,18 +143,27 @@
 			</template>
 		</template>
 		<template v-else>
-			<form action="javascript:" :class="{ 'was-validated': customQueryWasValidated }">
-				<textarea
-					v-model="customQuery"
-					rows="5"
-					class="form-control text-monospace"
-					@input="handleCustomQueryInput"
-					v-validity="customQueryValidationError"
-				></textarea>
-				<div class="invalid-feedback" v-if="customQueryValidationError">
-					<pre>{{customQueryValidationError}}</pre>
-				</div>
-			</form>
+			<ValidatedField
+				tag="form"
+				action="javascript:"
+				:value="customQuery"
+				:validators="[validateCustomQuery]"
+				:reportValid="!!customQuery"
+				immediate
+				:debounceMs="500"
+			>
+				<template #default="slotProps">
+					<textarea
+						v-model="customQuery"
+						rows="5"
+						class="form-control text-monospace"
+						:ref="slotProps.inputRef"
+					></textarea>
+					<div class="invalid-feedback" v-if="slotProps.validationError">
+						<pre>{{slotProps.validationError}}</pre>
+					</div>
+				</template>
+			</ValidatedField>
 
 			<hr />
 

@@ -64,7 +64,7 @@
 	function togglePopover(itemKey: string, show: boolean) {
 		const isShown = activePopoverKey.value === itemKey;
 		if (isShown !== show) {
-			activePopoverKey.value = show ? activePopoverKey.value : undefined;
+			activePopoverKey.value = show ? itemKey : undefined;
 		}
 	}
 </script>
@@ -80,9 +80,9 @@
 			<hr v-if="idx > 0">
 			<h3 @click="toggleFilter(type)" :class="{ filtered: type.filtered }">{{type.name}}</h3>
 			<dl>
-				<template v-for="item in type.items" :key="item.key">
+				<template v-for="(item, idx) in type.items" :key="item.key">
 					<dt
-						:class="[ 'fm-legend-symbol', 'fm-' + type.type, { filtered: item.filtered, first: item.first, bright: item.bright } ]"
+						:class="[ 'fm-legend-symbol', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
 						@click="toggleFilter(type, item)"
 						v-html="makeSymbol(type, item)"
 						@mouseenter="togglePopover(item.key, true)"
@@ -90,7 +90,7 @@
 						:ref="mapRef(itemIconRefs, item.key)"
 					></dt>
 					<dd
-						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: item.first, bright: item.bright } ]"
+						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
 						@click="toggleFilter(type, item)"
 						:style="item.strikethrough ? {'text-decoration': 'line-through'} : {}"
 						@mouseenter="togglePopover(item.key, true)"
@@ -135,7 +135,6 @@
 
 <style lang="scss">
 	.fm-legend-content {
-
 		font-size: 12px;
 
 		.fm-legend1 > div > *:first-child {
@@ -159,59 +158,64 @@
 		}
 
 		&#{&}#{&} dl {
-			display: block; // Override display: grid from search-box styles
-			margin-bottom: 0px;
-		}
+			// In narrow mode, SearchBox sets some styles for dl. We need to take care of overriding them here.
 
-		dt {
-			margin: 0;
-			width: auto;
-			padding-right: 1ex;
-			display: inline-block;
-			cursor: pointer;
-		}
+			display: grid;
+			grid-template-columns: calc(11px + 1ex) calc(50px - 11px) 1fr;
+			margin: 0px;
+			gap: 0;
+			align-items: center;
 
-		dt.fm-marker {
-			width: 16px;
-			text-align: center;
-		}
+			> * {
+				margin: 0;
+				cursor: pointer;
+			}
 
-		dt:after {
-			content: none;
-		}
+			dd {
+				height: 18px;
+			}
 
-		dd {
-			line-height: 1.3em;
-			width: auto;
-			display: inline;
-			vertical-align: middle;
-			cursor: pointer;
-		}
+			dt.fm-marker {
+				grid-column: 1 / 2;
+			}
 
-		dd:after {
-			content: "\a";
-			white-space: pre;
-		}
+			dd.fm-marker {
+				grid-column: 2 / 4;
+			}
 
-		.first:not(:first-child) {
-			margin-top: 6px;
-		}
+			dt.fm-line {
+				grid-column: 1 / 3;
+			}
 
-		dl:after {
-			content: none;
-		}
+			dd.fm-line {
+				grid-column: 3 / 4;
+			}
 
-		.filtered {
-			opacity: 0.5;
+			dt:after,dl:after {
+				content: none;
+			}
+
+			.first {
+				margin-top: 6px;
+			}
+
+			.filtered {
+				opacity: 0.5;
+			}
 		}
 	}
 
-	.fm-legend-popover .popover-body {
-		display: flex;
-		align-items: center;
+	.fm-legend-popover {
+		max-width: none;
 
-		p {
-			margin: 0 0 0 0.5em;
+		.popover-body {
+			display: flex;
+			align-items: center;
+			width: max-content;
+
+			p {
+				margin: 0 0 0 0.5em;
+			}
 		}
 	}
 

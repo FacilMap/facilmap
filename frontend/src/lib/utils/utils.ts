@@ -202,3 +202,12 @@ export function useNonDragClickHandler(element: AnyRef<HTMLElement | undefined>,
 		}
 	});
 }
+
+export function useUnloadHandler(hasUnsavedModifications: AnyRef<boolean>): void {
+	const hasUnsavedModificationsRef = toRef(hasUnsavedModifications);
+	useDomEventListener(window, "beforeunload", (e) => {
+		if (hasUnsavedModificationsRef.value) {
+			e.preventDefault();
+		}
+	});
+}

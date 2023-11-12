@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { Field, ID, Type } from "facilmap-types";
-	import { canControl, getUniqueId, validateRequired, validations } from "../../utils/utils";
+	import { canControl, getUniqueId, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
@@ -16,9 +16,9 @@
 	import EditTypeDropdownDialog from "./edit-type-dropdown-dialog.vue";
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import vValidity, { vValidityContext } from "../ui/validated-form/validity";
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import ValidatedField from "../ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -121,60 +121,11 @@
 		type.value.fields[idx] = field;
 	}
 
-	const nameValidationError = computed(() => validateRequired(type.value.name));
-	const typeValidationError = computed(() => validateRequired(type.value.type));
-	const defaultColourValidationError = computed(() => {
-		if (type.value.colourFixed) {
-			return validateRequired(type.value.defaultColour);
-		} else {
-			return undefined;
+	function validateFieldName(name: string) {
+		if (type.value.fields.filter((field) => field.name == name).length > 1) {
+			return "Multiple fields cannot have the same name.";
 		}
-	});
-	const defaultSizeValidationError = computed(() => {
-		if (type.value.sizeFixed) {
-			return validateRequired(type.value.defaultSize);
-		} else {
-			return undefined;
-		}
-	});
-	const defaultSymbolValidationError = computed(() => {
-		if (type.value.symbolFixed) {
-			return validateRequired(type.value.defaultSymbol);
-		} else {
-			return undefined;
-		}
-	});
-	const defaultShapeValidationError = computed(() => {
-		if (type.value.shapeFixed) {
-			return validateRequired(type.value.defaultShape);
-		} else {
-			return undefined;
-		}
-	});
-	const defaultWidthValidationError = computed(() => {
-		if (type.value.widthFixed) {
-			return validateRequired(type.value.defaultWidth);
-		} else {
-			return undefined;
-		}
-	});
-	const defaultModeValidationError = computed(() => {
-		if (type.value.modeFixed) {
-			return validateRequired(type.value.defaultMode);
-		} else {
-			return undefined;
-		}
-	});
-	const fieldValidationErrors = computed(() => type.value.fields.map((field) => ({
-		name: validations(field.name, [
-			validateRequired,
-			(name) => {
-				if (type.value.fields.filter((field) => field.name == name).length > 1) {
-					return "Multiple fields cannot have the same name.";
-				}
-			}
-		])
-	})));
+	}
 </script>
 
 <template>
@@ -183,37 +134,49 @@
 		class="fm-edit-type"
 		:isModified="isModified"
 		:isCreate="isCreate"
-		:stackLevel="1"
+		ref="modalRef"
 		@submit="$event.waitUntil(save())"
 		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
-			<div class="col-sm-9" v-validity-context>
-				<input class="form-control" :id="`${id}-name-input`" v-model="type.name" v-validity="nameValidationError" />
-				<div class="invalid-feedback">
-					{{nameValidationError}}
-				</div>
-			</div>
+			<ValidatedField
+				:value="type.name"
+				:validators="[validateRequired]"
+				class="col-sm-9 position-relative"
+			>
+				<template #default="slotProps">
+					<input class="form-control" :id="`${id}-name-input`" v-model="type.name" :ref="slotProps.inputRef" />
+					<div class="invalid-tooltip">
+						{{slotProps.validationError}}
+					</div>
+				</template>
+			</ValidatedField>
 		</div>
 
 		<div class="row mb-3">
 			<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">Type</label>
-			<div class="col-sm-9" v-validity-context>
-				<select
-					:id="`${id}-type-input`"
-					v-model="type.type"
-					class="form-select"
-					:disabled="!isCreate"
-					v-validity="typeValidationError"
-				>
-					<option value="marker">Marker</option>
-					<option value="line">Line</option>
-				</select>
-				<div class="invalid-feedback">
-					{{typeValidationError}}
-				</div>
-			</div>
+			<ValidatedField
+				:value="type.type"
+				:validators="[validateRequired]"
+				class="col-sm-9 position-relative"
+			>
+				<template #default="slotProps">
+					<select
+						:id="`${id}-type-input`"
+						v-model="type.type"
+						class="form-select"
+						:disabled="!isCreate"
+						:ref="slotProps.inputRef"
+					>
+						<option value="marker">Marker</option>
+						<option value="line">Line</option>
+					</select>
+					<div class="invalid-tooltip">
+						{{slotProps.validationError}}
+					</div>
+				</template>
+			</ValidatedField>
 		</div>
 
 		<template v-if="resolvedCanControl.length > 0">
@@ -234,7 +197,7 @@
 								<ColourPicker
 									:id="`${id}-default-colour-input`"
 									v-model="type.defaultColour"
-									:validationError="defaultColourValidationError"
+									:validators="type.colourFixed ? [validateRequired] : []"
 								></ColourPicker>
 							</div>
 							<div class="col-sm-3">
@@ -262,11 +225,12 @@
 								<SizePicker
 									:id="`${id}-default-size-input`"
 									v-model="type.defaultSize"
-									:validationError="defaultSizeValidationError"
+									:validators="type.sizeFixed ? [validateRequired] : []"
+									class="fm-custom-range-with-label"
 								></SizePicker>
 							</div>
 							<div class="col-sm-3">
-								<div class="form-check">
+								<div class="form-check fm-form-check-with-label">
 									<input
 										type="checkbox"
 										class="form-check-input"
@@ -290,7 +254,7 @@
 								<SymbolPicker
 									:id="`${id}-default-symbol-input`"
 									v-model="type.defaultSymbol"
-									:validationError="defaultSymbolValidationError"
+									:validators="type.symbolFixed ? [validateRequired] : []"
 								></SymbolPicker>
 							</div>
 							<div class="col-sm-3">
@@ -318,7 +282,7 @@
 								<ShapePicker
 									:id="`${id}-default-shape-input`"
 									v-model="type.defaultShape"
-									:validationError="defaultShapeValidationError"
+									:validators="type.shapeFixed ? [validateRequired] : []"
 								></ShapePicker>
 							</div>
 							<div class="col-sm-3">
@@ -346,11 +310,12 @@
 								<WidthPicker
 									:id="`${id}-default-width-input`"
 									v-model="type.defaultWidth"
-									:validationError="defaultWidthValidationError"
+									:validators="type.widthFixed ? [validateRequired] : []"
+									class="fm-custom-range-with-label"
 								></WidthPicker>
 							</div>
 							<div class="col-sm-3">
-								<div class="form-check">
+								<div class="form-check fm-form-check-with-label">
 									<input
 										type="checkbox"
 										class="form-check-input"
@@ -374,7 +339,7 @@
 								<RouteMode
 									:id="`${id}-default-mode-input`"
 									v-model="type.defaultMode"
-									:validationError="defaultModeValidationError"
+									:validators="type.modeFixed ? [validateRequired] : []"
 								></RouteMode>
 							</div>
 							<div class="col-sm-3">
@@ -432,18 +397,25 @@
 					handle=".fm-drag-handle"
 					itemKey="(field: any) => type.fields.indexOf(field)"
 				>
-					<template #item="{ element: field, index: idx }">
+					<template #item="{ element: field }">
 						<tr>
-							<td v-validity-context>
-								<input
-									class="form-control"
-									v-model="field.name"
-									v-validity="fieldValidationErrors[idx].name"
-								/>
-								<div class="invalid-feedback">
-									{{fieldValidationErrors[idx].name}}
-								</div>
-							</td>
+							<ValidatedField
+								tag="td"
+								class="position-relative"
+								:value="field.name"
+								:validators="[validateRequired, validateFieldName]"
+							>
+								<template #default="slotProps">
+									<input
+										class="form-control"
+										v-model="field.name"
+										:ref="slotProps.inputRef"
+									/>
+									<div class="invalid-tooltip">
+										{{slotProps.validationError}}
+									</div>
+								</template>
+							</ValidatedField>
 							<td>
 								<div class="input-group">
 									<select class="form-select" v-model="field.type">

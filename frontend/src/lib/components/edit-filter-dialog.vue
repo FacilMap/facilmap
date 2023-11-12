@@ -2,8 +2,8 @@
 	import { filterHasError } from "facilmap-utils";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, ref } from "vue";
-	import vValidity from "./ui/validated-form/validity";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import ValidatedField from "./ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -18,9 +18,9 @@
 
 	const types = computed(() => Object.values(client.value.types));
 
-	const validationError = computed(() => {
-		return filterHasError(filter.value)?.message;
-	});
+	function validateFilter(filter: string) {
+		return filterHasError(filter)?.message;
+	}
 
 	const isModified = computed(() => {
 		return filter.value != (mapContext.value.filter ?? "");
@@ -44,17 +44,26 @@
 	>
 		<p>Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.</p>
 
-		<div :class="{ 'was-validated': filter }">
-			<textarea
-				class="form-control text-monospace"
-				v-model="filter"
-				rows="5"
-				v-validity="validationError"
-			></textarea>
-			<div class="invalid-feedback" v-if="validationError">
-				<pre>{{validationError}}</pre>
-			</div>
-		</div>
+		<ValidatedField
+			:value="filter"
+			:validators="[
+				validateFilter
+			]"
+			:reportValid="!!filter"
+			immediate
+		>
+			<template #default="slotProps">
+				<textarea
+					class="form-control text-monospace"
+					v-model="filter"
+					rows="5"
+					:ref="slotProps.inputRef"
+				></textarea>
+				<div class="invalid-feedback" v-if="slotProps.validationError">
+					<pre>{{slotProps.validationError}}</pre>
+				</div>
+			</template>
+		</ValidatedField>
 
 		<hr />
 

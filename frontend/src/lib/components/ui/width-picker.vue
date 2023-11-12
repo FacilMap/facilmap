@@ -1,11 +1,12 @@
 <script setup lang="ts">
 	import { computed } from "vue";
-	import vValidity, { vValidityContext } from "./validated-form/validity";
 	import vTooltip from "../../utils/tooltip";
+	import type { Validator } from "./validated-form/validated-field.vue";
+	import ValidatedField from "./validated-form/validated-field.vue";
 
 	const props = defineProps<{
 		modelValue: number | undefined | null;
-		validationError?: string | undefined;
+		validators?: Array<Validator<number | undefined | null>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -21,19 +22,25 @@
 </script>
 
 <template>
-	<div v-validity-context>
-		<input
-			type="range"
-			class="custom-range"
-			min="1"
-			v-model="value"
-			v-validity="props.validationError"
-			v-tooltip="value != null ? `${value}` : undefined"
-		/>
-		<div class="invalid-feedback">
-			{{props.validationError}}
-		</div>
-	</div>
+	<ValidatedField
+		:value="value"
+		:validators="props.validators"
+		class="position-relative"
+	>
+		<template #default="slotProps">
+			<input
+				type="range"
+				class="custom-range"
+				min="1"
+				v-model.number="value"
+				:ref="slotProps.inputRef"
+				v-tooltip="value != null ? `${value}` : undefined"
+			/>
+			<div class="invalid-tooltip">
+				{{slotProps.validationError}}
+			</div>
+		</template>
+	</ValidatedField>
 </template>
 
 <style lang="scss">

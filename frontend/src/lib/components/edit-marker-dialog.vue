@@ -57,8 +57,6 @@
 			toasts.showErrorToast(`fm${context.id}-edit-marker-error`, "Error saving marker", err);
 		}
 	}
-
-	const colourValidationError = computed(() => validateRequired(marker.value.colour));
 </script>
 
 <template>
@@ -85,7 +83,7 @@
 						<ColourPicker
 							:id="`${id}-colour-input`"
 							v-model="marker.colour"
-							:validationError="colourValidationError"
+							:validators="[validateRequired]"
 						></ColourPicker>
 					</div>
 				</div>
@@ -98,7 +96,7 @@
 						<SizePicker
 							:id="`${id}-size-input`"
 							v-model="marker.size"
-							class="fm-form-range-with-label"
+							class="fm-custom-range-with-label"
 						></SizePicker>
 					</div>
 				</div>

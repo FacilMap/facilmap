@@ -51,13 +51,15 @@
 			}),
 			setValidationPromise: (element, promise) => {
 				if (promise) {
-					validationPromises.set(element, promise);
-					isValidating.set(element, true);
-					promise.finally(() => {
-						if (validationPromises.get(element) === promise) {
-							isValidating.set(element, false);
-						}
-					});
+					if (validationPromises.get(element) !== promise) {
+						validationPromises.set(element, promise);
+						isValidating.set(element, true);
+						promise.finally(() => {
+							if (validationPromises.get(element) === promise) {
+								isValidating.set(element, false);
+							}
+						});
+					}
 				} else {
 					validationPromises.delete(element);
 					isValidating.delete(element);
@@ -115,6 +117,7 @@
 		ref="formRef"
 		:action="props.action"
 		:target="props.target ?? 'javascript:'"
+		:class="{ 'fm-was-validated': formData.isTouched }"
 	>
 		<slot :formData="formData"/>
 	</form>

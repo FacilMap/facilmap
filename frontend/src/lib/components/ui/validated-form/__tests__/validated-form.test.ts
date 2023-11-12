@@ -1,30 +1,40 @@
 import { describe, expect, test, vi } from "vitest";
-import { type Ref, createApp, h, ref, toRef, withDirectives } from "vue";
-import ValidatedForm, { type CustomSubmitEvent, type ValidatedFormData } from "../validated-form.vue";
+import { createApp, h, ref } from "vue";
+import ValidatedForm, { getValidatedForm, type CustomSubmitEvent, type ValidatedFormData } from "../validated-form.vue";
 import { sleep } from "facilmap-utils";
-import vValidity from "../validity";
+import { isPromise } from "../../../../utils/utils";
 
 function mockForm({ onSubmit, validationError }: {
 	onSubmit?: (event: CustomSubmitEvent) => void;
-	validationError?: Ref<string | undefined | Promise<string | undefined>>;
+	validationError?: string | undefined | Promise<string | undefined>;
 }): {
 	formData: Readonly<ValidatedFormData>;
 } {
-	let formRef = ref<InstanceType<typeof ValidatedForm>>();
-
+	const formRef = ref<InstanceType<typeof ValidatedForm>>();
+	const inputRef = ref<HTMLInputElement>();
 	const app = createApp({
 		setup() {
 			return () => h(ValidatedForm, {
 				onSubmit,
 				ref: formRef
 			}, () => [
-				withDirectives(h('input'), [[vValidity, validationError?.value]])
+				h('input', {
+					ref: inputRef
+				})
 			]);
 		}
 	});
 	const div = document.createElement('div');
 	document.body.appendChild(div);
 	app.mount(div);
+
+	if (isPromise(validationError)) {
+		getValidatedForm(inputRef.value!.form!)!.setValidationPromise(inputRef.value!, validationError.then((res) => {
+			inputRef.value!.setCustomValidity(res || "");
+		}));
+	} else if (validationError) {
+		inputRef.value!.setCustomValidity(validationError);
+	}
 
 	return {
 		formData: formRef.value!.formData
@@ -63,7 +73,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 		const onSubmit = vi.fn();
 		const { formData } = mockForm({
 			onSubmit,
-			validationError: toRef(undefined)
+			validationError: undefined
 		});
 
 		expect(onSubmit).toBeCalledTimes(0);
@@ -75,7 +85,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 		const onSubmit = vi.fn();
 		const { formData } = mockForm({
 			onSubmit,
-			validationError: toRef(Promise.resolve(undefined))
+			validationError: Promise.resolve(undefined)
 		});
 
 		expect(onSubmit).toBeCalledTimes(0);
@@ -87,7 +97,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 		const onSubmit = vi.fn();
 		const { formData } = mockForm({
 			onSubmit,
-			validationError: toRef("Error")
+			validationError: "Error"
 		});
 
 		expect(onSubmit).toBeCalledTimes(0);
@@ -99,7 +109,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 		const onSubmit = vi.fn();
 		const { formData } = mockForm({
 			onSubmit,
-			validationError: toRef(Promise.resolve("Error"))
+			validationError: Promise.resolve("Error")
 		});
 
 		expect(onSubmit).toBeCalledTimes(0);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, toRef, watch } from "vue";
+	import { computed, ref, toRef, watch } from "vue";
 	import Toolbox from "./toolbox/toolbox.vue";
 	import SearchBox from "./search-box/search-box.vue";
 	import Legend from "./legend/legend.vue";
@@ -29,6 +29,13 @@
 		"update:padName": [padName: string | undefined];
 	}>();
 
+	const padId = computed({
+		get: () => props.padId,
+		set: (padId) => {
+			emit("update:padId", padId);
+		}
+	});
+
 	const contextRef = ref<InstanceType<typeof FacilMapContext>>();
 	const context = toRef(() => contextRef.value?.context);
 	const client = toRef(() => context.value?.components.client);
@@ -57,7 +64,7 @@
 			:settings="props.settings"
 			ref="contextRef"
 		>
-			<ClientProvider :padId="padId" :serverUrl="serverUrl"></ClientProvider>
+			<ClientProvider v-model:padId="padId" :serverUrl="serverUrl"></ClientProvider>
 
 			<LeafletMap v-if="context?.components.client">
 				<Toolbox v-if="context.settings.toolbox" :interactive="context.settings.interactive"></Toolbox>

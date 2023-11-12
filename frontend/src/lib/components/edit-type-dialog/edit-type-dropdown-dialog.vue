@@ -14,7 +14,7 @@
 	import { computed, ref, watch } from "vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { vValidityContext } from "../ui/validated-form/validity";
+	import ValidatedField from "../ui/validated-form/validated-field.vue";
 
 	function getControlNumber(type: Type, field: FieldUpdate): number {
 		return [
@@ -123,15 +123,6 @@
 		}
 	}
 
-	const optionValidationErrors = computed(() => fieldValue.value.options?.map((option) => {
-		return {
-			value: validateOptionValue(option),
-			colour: validateRequired(option.colour),
-			size: validateRequired(option.size),
-			width: validateRequired(option.width)
-		};
-	}));
-
 	const validationError = computed(() => {
 		if (controlNumber.value > 0 && (fieldValue.value.options?.length ?? 0) === 0) {
 			return "Controlling fields need to have at least one option.";
@@ -150,7 +141,7 @@
 		@hidden="emit('hidden')"
 		:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
 		:okLabel="isModified ? 'OK' : undefined"
-		:stackLevel="2"
+		ref="modalRef"
 	>
 		<div class="row mb-3">
 			<label class="col-sm-3 col-form-label">Control</label>
@@ -261,17 +252,34 @@
 						<td v-if="fieldValue.type == 'checkbox'">
 							<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
 						</td>
-						<td class="field" v-validity-context>
-							<input class="form-control" v-model="option.value" v-validity="optionValidationErrors![idx].value" />
-							<div class="invalid-feedback">
-								{{optionValidationErrors![idx].value}}
-							</div>
-						</td>
+						<ValidatedField
+							tag="td"
+							class="field position-relative"
+							:value="option"
+							:validators="[validateOptionValue]"
+						>
+							<template #default="slotProps">
+								<input
+									class="form-control"
+									v-model="option.value"
+									:ref="slotProps.inputRef"
+								/>
+								<div class="invalid-tooltip">
+									{{slotProps.validationError}}
+								</div>
+							</template>
+						</ValidatedField>
 						<td v-if="fieldValue.controlColour" class="field">
-							<ColourPicker v-model="option.colour" :validationError="optionValidationErrors![idx].colour"></ColourPicker>
+							<ColourPicker
+								v-model="option.colour"
+								:validators="[validateRequired]"
+							></ColourPicker>
 						</td>
 						<td v-if="fieldValue.controlSize" class="field">
-							<SizePicker v-model="option.size" :validationError="optionValidationErrors![idx].colour"></SizePicker>
+							<SizePicker
+								v-model="option.size"
+								:validators="[validateRequired]"
+							></SizePicker>
 						</td>
 						<td v-if="fieldValue.controlSymbol" class="field">
 							<SymbolPicker v-model="option.symbol"></SymbolPicker>
@@ -280,7 +288,10 @@
 							<ShapePicker v-model="option.shape"></ShapePicker>
 						</td>
 						<td v-if="fieldValue.controlWidth" class="field">
-							<WidthPicker v-model="option.width" :validationError="optionValidationErrors![idx].width"></WidthPicker>
+							<WidthPicker
+								v-model="option.width"
+								:validators="[validateRequired]"
+							></WidthPicker>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
 							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>

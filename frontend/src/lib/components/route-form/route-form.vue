@@ -13,7 +13,6 @@
 	import { throttle } from "lodash-es";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
-	import { saveAs } from "file-saver";
 	import { isMapResult } from "../../utils/search";
 	import type { LineWithTags } from "../../utils/add";
 	import vTooltip from "../../utils/tooltip";
@@ -22,6 +21,7 @@
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
+	import ExportDropdown from "../ui/export-dropdown.vue";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -112,7 +112,6 @@
 	const routeError = ref<string>();
 	const hoverDestinationIdx = ref<number>();
 	const hoverInsertIdx = ref<number>();
-	const isExporting = ref(false);
 	const suggestionMarker = ref<MarkerLayer>();
 
 	// TODO: Handle client.value change
@@ -494,18 +493,8 @@
 		mode: routeObj.value.mode
 	}]);
 
-	async function exportRoute(format: ExportFormat): Promise<void> {
-		toasts.hideToast(`fm${context.id}-route-form-export-error`);
-		isExporting.value = true;
-
-		try {
-			const exported = await client.value.exportRoute({ format });
-			saveAs(new Blob([exported], { type: "application/gpx+xml" }), "FacilMap route.gpx");
-		} catch(err: any) {
-			toasts.showErrorToast(`fm${context.id}-route-form-export-error`, "Error exporting route", err);
-		} finally {
-			isExporting.value = false;
-		}
+	async function getExport(format: ExportFormat): Promise<string> {
+		return await client.value.exportRoute({ format });
 	}
 
 	function setQuery(query: string, zoom = true, smooth = true): void {
@@ -563,8 +552,10 @@
 								v-model="destination.query"
 								:placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'"
 								:tabindex="idx+1"
-								:class="{ 'is-invalid': destinationsMeta[idx].isInvalid }"
-								:autofocus="idx === 0"
+								:class="{
+									'is-invalid': destinationsMeta[idx].isInvalid,
+									'fm-autofocus': idx === 0
+								}"
 								@blur="loadSuggestions(destination)"
 							/>
 							<template v-if="destination.query.trim() != ''">
@@ -703,28 +694,11 @@
 						isSingle
 					></AddToMapDropdown>
 
-					<DropdownMenu
+					<ExportDropdown
+						filename="FacilMap route"
+						:getExport="getExport"
 						size="sm"
-						:isBusy="isExporting"
-						label="Export"
-					>
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="exportRoute('gpx-trk')"
-								v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-							>Export as GPX track</a>
-						</li>
-						<li>
-							<a
-								href="javascript:"
-								class="dropdown-item"
-								@click="exportRoute('gpx-rte')"
-								v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-							>Export as GPX route</a>
-						</li>
-					</DropdownMenu>
+					></ExportDropdown>
 				</div>
 			</template>
 		</form>

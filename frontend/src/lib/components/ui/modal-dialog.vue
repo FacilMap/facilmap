@@ -1,9 +1,9 @@
 <script setup lang="ts">
-	import { computed, ref } from "vue";
+	import { computed, readonly, ref, toRef } from "vue";
 	import { useModal } from "../../utils/modal";
 	import ValidatedForm, { type CustomSubmitEvent } from "./validated-form/validated-form.vue";
-	import { reactiveReadonlyView } from "../../utils/vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
+	import { useUnloadHandler } from "../../utils/utils";
 
 	const props = withDefaults(defineProps<{
 		title?: string;
@@ -16,15 +16,8 @@
 		/** If false, a Close button will be shown instead of a Save button (except is isCreate is true). */
 		isModified?: boolean;
 		size?: "sm" | "default" | "lg" | "xl";
-		/**
-		 * If specified, the dialog will be shrunk a bit to make the underlying dialog partly visible in case of stacked dialogs.
-		 * 0 represents a non-stacked dialog (default), 1 should be the first stacked dialog, ...
-		 */
-		stackLevel?: number;
 		okLabel?: string;
 		okVariant?: ThemeColour;
-		/** If true, the OK button is focused when the dialog is opened. */
-		okFocus?: boolean;
 	}>(), {
 		isModified: false,
 		size: "lg"
@@ -44,11 +37,12 @@
 	const modalRef = ref<HTMLElement>();
 	const modal = useModal(modalRef, {
 		onShown: () => {
-			if (props.okFocus) {
-				submitRef.value?.focus();
-			} else {
-				modalRef.value?.querySelector<HTMLElement>("[autofocus],.fm-autofocus")?.focus();
-			}
+			const focusEl = (
+				modalRef.value?.querySelector<HTMLElement>("[autofocus],.fm-autofocus")
+				?? modalRef.value?.querySelector<HTMLElement>("input:not([type=button]):not([type=hidden]):not([type=image]):not([type=reset]):not([type=submit]),textarea,select")
+				?? submitRef.value
+			);
+			focusEl?.focus();
 
 			emit("shown");
 		},
@@ -61,6 +55,8 @@
 		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified)
 	});
 
+	useUnloadHandler(() => props.isModified);
+
 	const isCloseButton = computed(() => !props.isCreate && !props.isModified);
 
 	function handleSubmit(event: CustomSubmitEvent) {
@@ -71,10 +67,10 @@
 		}
 	}
 
-	const expose = reactiveReadonlyView(() => ({
-		formData: validatedFormRef.value?.formData,
+	const expose = readonly({
+		formData: toRef(() => validatedFormRef.value?.formData),
 		modal
-	}));
+	});
 	defineExpose(expose);
 </script>
 
@@ -92,7 +88,7 @@
 			:data-bs-backdrop="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'static' : 'true'"
 			:data-bs-keyboard="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'false' : 'true'"
 		>
-			<div class="modal-dialog modal-dialog-scrollable" :style="props.stackLevel ? { padding: `${20*props.stackLevel}px ${40*props.stackLevel}px` } : undefined">
+			<div class="modal-dialog modal-dialog-scrollable">
 				<ValidatedForm
 					class="modal-content"
 					@submit="handleSubmit"

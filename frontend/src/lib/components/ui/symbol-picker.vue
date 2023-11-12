@@ -6,6 +6,7 @@
 	import { keyBy, mapValues, pickBy } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";
 	import { computed, nextTick, ref } from "vue";
+	import type { Validator } from "./validated-form/validated-field.vue";
 
 	const allItems = mapValues(keyBy(symbolList, (s) => s), (s) => getSymbolHtml("currentColor", "1.5em", s));
 </script>
@@ -17,7 +18,7 @@
 		modelValue: string | undefined | null;
 		id?: string;
 		isRequired?: boolean;
-		validationError?: string | undefined;
+		validators?: Array<Validator<string | undefined | null>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -49,15 +50,11 @@
 		return result;
 	});
 
-	const validationError = computed(() => {
-		if (props.validationError) {
-			return props.validationError;
-		} else if (props.modelValue && props.modelValue.length !== 1 && !symbolList.includes(props.modelValue)) {
+	function validateSymbol(symbol: string | null | undefined) {
+		if (symbol && symbol.length !== 1 && !symbolList.includes(symbol)) {
 			return "Unknown icon";
-		} else {
-			return undefined;
 		}
-	});
+	}
 
 	function handleClick(symbol: string, close: () => void): void {
 		emit("update:modelValue", symbol);
@@ -84,7 +81,7 @@
 		:id="id"
 		v-model="value"
 		customClass="fm-symbol-field"
-		:validationError="validationError"
+		:validators="[...props.validators ?? [], validateSymbol]"
 		@keydown="handleKeyDown"
 		enforceElementWidth
 		@focusPopover="handleFocusPopover()"

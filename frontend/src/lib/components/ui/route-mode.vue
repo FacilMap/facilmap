@@ -166,7 +166,7 @@
 </script>
 
 <template>
-	<div class="fm-route-mode">
+	<div class="fm-route-mode position-relative">
 		<div class="btn-group" role="group">
 			<template v-for="(mode, idx) in constants.modes" :key="mode">
 				<input
@@ -258,7 +258,7 @@
 			</div>
 		</div>
 
-		<div class="invalid-feedback fm-form-invalid-feedback" v-if="props.validationError">
+		<div class="invalid-tooltip fm-form-invalid-feedback" v-if="props.validationError">
 			{{props.validationError}}
 		</div>
 	</div>

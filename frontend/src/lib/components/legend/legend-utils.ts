@@ -75,7 +75,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 
 			(field.options || [ ]).forEach((option, idx) => {
 				const item: LegendItem = {
-					key: `legend-item-${type.id}-${field.name}`,
+					key: `legend-item-${type.id}-${field.name}-${option.value}`,
 					value: option.value,
 					label: option.value,
 					field: field.name,

@@ -45,6 +45,8 @@ export type MapContextData = {
 	overpassCustom: string;
 	overpassMessage: string | undefined;
 	components: MapComponents;
+	loaded: boolean;
+	fatalError: string | undefined;
 };
 
 export type WritableMapContext = MapContextData & Emitter<MapContextEvents>;

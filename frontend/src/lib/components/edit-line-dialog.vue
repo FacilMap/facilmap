@@ -57,8 +57,6 @@
 			toasts.showErrorToast(`fm${context.id}-edit-line-error`, "Error saving line", err);
 		}
 	}
-
-	const colourValidationError = computed(() => validateRequired(line.value.colour));
 </script>
 
 <template>
@@ -92,7 +90,7 @@
 						<ColourPicker
 							:id="`${id}-colour-input`"
 							v-model="line.colour"
-							:validationError="colourValidationError"
+							:validators="[validateRequired]"
 						></ColourPicker>
 					</div>
 				</div>
@@ -105,7 +103,7 @@
 						<WidthPicker
 							:id="`${id}-width-input`"
 							v-model="line.width"
-							class="fm-form-range-with-label"
+							class="fm-custom-range-with-label"
 						></WidthPicker>
 					</div>
 				</div>

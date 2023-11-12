@@ -1,11 +1,11 @@
 <script setup lang="ts">
 	import { computed } from "vue";
-	import vValidity, { vValidityContext } from "./validated-form/validity";
 	import vTooltip from "../../utils/tooltip";
+	import ValidatedField, { type Validator } from "./validated-form/validated-field.vue";
 
 	const props = defineProps<{
 		modelValue: number | null | undefined;
-		validationError?: string | undefined;
+		validators?: Array<Validator<number | null | undefined>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -18,30 +18,28 @@
 			emit("update:modelValue", value!);
 		}
 	});
-
-	const validationError = computed(() => {
-		if (props.validationError) {
-			return props.validationError;
-		} else {
-			return undefined;
-		}
-	});
 </script>
 
 <template>
-	<div v-validity-context class="fm-size-field">
-		<input
-			type="range"
-			class="custom-range"
-			min="15"
-			v-model="value"
-			v-validity="validationError"
-			v-tooltip="value != null ? `${value}` : undefined"
-		/>
-		<div class="invalid-feedback">
-			{{validationError}}
-		</div>
-	</div>
+	<ValidatedField
+		class="fm-size-field position-relative"
+		:value="value"
+		:validators="props.validators"
+	>
+		<template #default="slotProps">
+			<input
+				type="range"
+				class="custom-range"
+				min="15"
+				v-model.number="value"
+				:ref="slotProps.inputRef"
+				v-tooltip="value != null ? `${value}` : undefined"
+			/>
+			<div class="invalid-tooltip">
+				{{slotProps.validationError}}
+			</div>
+		</template>
+	</ValidatedField>
 </template>
 
 <style lang="scss">

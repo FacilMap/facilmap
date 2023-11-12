@@ -7,6 +7,7 @@
 	import { keyBy, mapValues } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";
 	import { computed, nextTick, ref } from "vue";
+	import type { Validator } from "./validated-form/validated-field.vue";
 
 	const items = mapValues(keyBy(shapeList, (s) => s), (s) => `<img src="${quoteHtml(getMarkerUrl("#000000", 25, undefined, s))}">`);
 </script>
@@ -17,7 +18,7 @@
 	const props = defineProps<{
 		modelValue: Shape | undefined | null;
 		id?: string;
-		validationError?: string | undefined;
+		validators?: Array<Validator<string | undefined | null>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -33,15 +34,11 @@
 
 	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue ?? undefined));
 
-	const validationError = computed(() => {
-		if (props.validationError) {
-			return props.validationError;
-		} else if (props.modelValue && !shapeList.includes(props.modelValue)) {
+	function validateShape(shape: string | null | undefined) {
+		if (shape && !shapeList.includes(shape)) {
 			return "Unknown shape";
-		} else {
-			return undefined;
 		}
-	});
+	}
 
 	function handleClick(shape: Shape, close: () => void): void {
 		emit("update:modelValue", shape);
@@ -64,7 +61,7 @@
 		:id="id"
 		v-model="value"
 		customClass="fm-shape-field"
-		:validationError="validationError"
+		:validators="[...props.validators ?? [], validateShape]"
 		@keydown="handleKeyDown"
 	>
 		<template #preview>

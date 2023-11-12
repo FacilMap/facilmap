@@ -6,15 +6,14 @@
 	import Icon from "../ui/icon.vue";
 	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
-	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
 	import { formatField, formatRouteMode, formatTime, normalizeLineName, round } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import ExportDropdown from "../ui/export-dropdown.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -37,7 +36,6 @@
 
 	const showEditDialog = ref(false);
 	const isDeleting = ref(false);
-	const isExporting = ref(false);
 	const showElevationPlot = ref(false);
 	const isMoving = ref(false);
 
@@ -65,18 +63,8 @@
 		}
 	}
 
-	async function exportRoute(format: ExportFormat): Promise<void> {
-		toasts.hideToast(`fm${context.id}-line-info-export-error`);
-		isExporting.value = true;
-
-		try {
-			const exported = await client.value.exportLine({ id: line.value.id, format });
-			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${normalizeLineName(line.value.name)}.gpx`);
-		} catch(err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-export-error`, "Error exporting line", err);
-		} finally {
-			isExporting.value = false;
-		}
+	async function getExport(format: ExportFormat): Promise<string> {
+		return await client.value.exportLine({ id: line.value.id, format });
 	}
 
 	async function moveLine(): Promise<void> {
@@ -190,24 +178,11 @@
 				:destination="zoomDestination"
 			></ZoomToObjectButton>
 
-			<DropdownMenu size="sm" :isBusy="isExporting" label="Export">
-				<li>
-					<a
-						href="javascript:"
-						class="dropdown-item"
-						@click="exportRoute('gpx-trk')"
-						v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-					>Export as GPX track</a>
-				</li>
-				<li>
-					<a
-						href="javascript:"
-						class="dropdown-item"
-						@click="exportRoute('gpx-rte')"
-						v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-					>Export as GPX route</a>
-				</li>
-			</DropdownMenu>
+			<ExportDropdown
+				:filename="normalizeLineName(line.name)"
+				:getExport="getExport"
+				size="sm"
+			></ExportDropdown>
 
 			<button
 				v-if="!client.readonly"

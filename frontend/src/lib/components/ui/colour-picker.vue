@@ -5,6 +5,7 @@
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../utils/ui";
 	import { type StyleValue, computed, nextTick, ref } from "vue";
+	import { type Validator } from "./validated-form/validated-field.vue";
 
 	function normalizeData(value: string) {
 		return ColorMixin.data.apply({ modelValue: value }).val;
@@ -14,7 +15,7 @@
 		return !!colour?.match(/^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/);
 	}
 
-	function validateColour(colour: string): string | undefined {
+	function validateColour(colour: string | undefined | null): string | undefined {
 		if (colour && !isValidColour(colour)) {
 			return "Needs to be in 3-digit or 6-digit hex format, for example f00 or 0000ff.";
 		}
@@ -30,7 +31,7 @@
 <script setup lang="ts">
 	const props = defineProps<{
 		modelValue: string | undefined | null;
-		validationError?: string | undefined;
+		validators?: Array<Validator<string | undefined | null>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -56,14 +57,6 @@
 		};
 	});
 
-	const validationError = computed(() => {
-		if (props.validationError) {
-			return props.validationError;
-		} else {
-			return validateColour(value.value ?? "");
-		}
-	});
-
 	function handleChange(val: any): void {
 		value.value = normalizeData(val).hex.replace(/^#/, '').toLowerCase();
 	}
@@ -86,7 +79,7 @@
 		customClass="fm-colour-field"
 		v-model="value"
 		@keydown="handleKeyDown"
-		:validationError="validationError"
+		:validators="[...props.validators ?? [], validateColour]"
 		:previewStyle="previewStyle"
 	>
 		<template #preview>

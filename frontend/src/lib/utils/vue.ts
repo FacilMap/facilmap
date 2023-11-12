@@ -1,4 +1,4 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, reactive, readonly, ref, shallowReadonly, shallowRef, toRef, watch } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
 
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)
@@ -70,21 +70,4 @@ export function useResizeObserver(
 	}, { immediate: true });
 
 	return readonly(entry);
-}
-
-export function reactiveReadonlyView<T extends Record<any, any>>(source: Ref<Record<any, any>> | (() => T)): Readonly<T> {
-	const sourceRef = toRef(source);
-	const result = reactive<any>({});
-	watch(() => Object.entries(sourceRef.value), () => {
-		const keys = Object.keys(sourceRef.value);
-		for (const key of Object.keys(result)) {
-			if (!keys.includes(key)) {
-				delete result[key];
-			}
-		}
-		for (const [key, value] of Object.entries(sourceRef.value)) {
-			result[key] = value;
-		}
-	}, { immediate: true, flush: 'sync' });
-	return shallowReadonly(result);
 }

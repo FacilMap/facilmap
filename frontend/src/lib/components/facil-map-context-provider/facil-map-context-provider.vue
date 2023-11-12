@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch } from "vue";
+	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch, reactive, readonly, shallowReadonly } from "vue";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
-	import { reactiveReadonlyView } from "../../utils/vue";
-	import type { FacilMapComponents, FacilMapContext, FacilMapSettings, WritableFacilMapContext } from "./facil-map-context";
+	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
 
 	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
 
@@ -60,11 +59,11 @@
 		});
 	}
 
-	const context = reactiveReadonlyView((): WritableFacilMapContext => ({
+	const context: FacilMapContext = shallowReadonly(reactive({
 		id: idCounter++,
-		baseUrl: props.baseUrl,
-		isNarrow: isNarrow.value,
-		settings: {
+		baseUrl: toRef(() => props.baseUrl),
+		isNarrow,
+		settings: readonly(toRef(() => ({
 			toolbox: true,
 			search: true,
 			autofocus: false,
@@ -73,8 +72,8 @@
 			linkLogo: false,
 			updateHash: false,
 			...props.settings
-		},
-		components,
+		}))),
+		components: shallowReadonly(components),
 		provideComponent
 	}));
 

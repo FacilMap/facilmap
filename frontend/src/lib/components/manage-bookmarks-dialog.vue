@@ -52,7 +52,7 @@
 			>
 				<template #item="{ element: bookmark }">
 					<tr>
-						<td :class="{ 'font-weight-bold': bookmark.id == client.padId }">
+						<td class="align-middle" :class="{ 'font-weight-bold': bookmark.id == client.padId }">
 							{{bookmark.id}}
 						</td>
 						<td>

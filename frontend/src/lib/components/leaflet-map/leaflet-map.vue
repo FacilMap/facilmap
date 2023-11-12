@@ -7,7 +7,7 @@
 	import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
 	import "leaflet-mouse-position";
 	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
-	import { createMapContext } from "./leaflet-map-components";
+	import { useMapContext } from "./leaflet-map-components";
 	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -29,7 +29,7 @@
 
 	onMounted(async () => {
 		try {
-			mapContext.value = await createMapContext(context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
+			mapContext.value = await useMapContext(context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
 			loaded.value = true;
 		} catch (err: any) {
 			console.error(err);

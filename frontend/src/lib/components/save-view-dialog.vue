@@ -3,10 +3,10 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { computed, ref } from "vue";
-	import vValidity, { vValidityContext } from "./ui/validated-form/validity";
-	import { getUniqueId } from "../utils/utils";
+	import { getUniqueId, validateRequired } from "../utils/utils";
 	import { round } from "facilmap-utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import ValidatedField from "./ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -23,14 +23,6 @@
 	const includeOverpass = ref(false);
 	const includeFilter = ref(false);
 	const makeDefault = ref(false);
-
-	const nameError = computed(() => {
-		if (!name.value) {
-			return "Must not be empty.";
-		} else {
-			return undefined;
-		}
-	});
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
@@ -78,18 +70,25 @@
 	>
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
-			<div class="col-sm-9" v-validity-context>
-				<input
-					class="form-control"
-					:id="`${id}-name-input`"
-					v-model="name"
-					v-validity="nameError"
-					autofocus
-				/>
-				<div class="invalid-feedback">
-					{{nameError}}
-				</div>
-			</div>
+			<ValidatedField
+				:value="name"
+				:validators="[
+					validateRequired
+				]"
+				class="col-sm-9 position-relative"
+			>
+				<template #default="slotProps">
+					<input
+						class="form-control"
+						:id="`${id}-name-input`"
+						v-model="name"
+						:ref="slotProps.inputRef"
+					/>
+					<div class="invalid-tooltip">
+						{{slotProps.validationError}}
+					</div>
+				</template>
+			</ValidatedField>
 		</div>
 
 		<div class="row mb-3">

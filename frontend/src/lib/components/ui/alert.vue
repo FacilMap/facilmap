@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { computed, createApp, defineComponent, h, ref, type VNode, type VNodeArrayChildren, withDirectives } from "vue";
+	import { createApp, defineComponent, h, ref, type VNode, type VNodeArrayChildren } from "vue";
 	import Alert from "./alert.vue";
-	import vValidity from "./validated-form/validity";
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import ModalDialog from "./modal-dialog.vue";
+	import ValidatedField from "./validated-form/validated-field.vue";
 
 	export type AlertProps = {
 		title: string;
@@ -12,7 +12,6 @@
 		variant?: ThemeColour;
 		show?: boolean;
 		okLabel?: string;
-		okFocus?: boolean;
 	};
 
 	export interface AlertResult {
@@ -47,35 +46,35 @@
 		});
 	}
 
-	export async function showAlert(props: Omit<AlertProps, 'type' | 'show' | 'okFocus'>): Promise<void> {
-		await renderAlert({ ...props, okFocus: true, type: 'alert' });
+	export async function showAlert(props: Omit<AlertProps, 'type' | 'show'>): Promise<void> {
+		await renderAlert({ ...props, type: 'alert' });
 	}
 
-	export async function showConfirm(props: Omit<AlertProps, 'type' | 'show' | 'okFocus'>): Promise<boolean> {
-		const result = await renderAlert({ ...props, okFocus: true, type: 'confirm' });
+	export async function showConfirm(props: Omit<AlertProps, 'type' | 'show'>): Promise<boolean> {
+		const result = await renderAlert({ ...props, type: 'confirm' });
 		return result.ok;
 	}
 
-	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'show' | 'message' | 'okFocus'> & {
+	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'show' | 'message'> & {
 		initialValue?: string;
 		/** Validate the value. Return an empty string or undefined to indicate validity. */
 		validate?: (value: string) => string | undefined;
 	}): Promise<string | undefined> {
 		const value = ref(initialValue);
 		const submitted = ref(false);
-		const validationError = computed(() => submitted.value ? undefined : validate?.(value.value));
 		const touched = ref(false);
 		const inputRef = ref<HTMLInputElement>();
 
 		const result = await renderAlert({
 			...props,
 			message: '',
-			okFocus: false,
 			type: 'confirm',
-			getContent: () => h('div', {
-				class: touched.value ? 'was-validated' : ''
-			}, [
-				withDirectives(
+			getContent: () => h(ValidatedField, {
+				class: ['position-relative', touched.value ? 'was-validated' : ''],
+				value: value.value,
+				validators: validate ? [validate] as any : []
+			}, {
+				default: (slotProps: any) => [
 					h('input', {
 						type: "text",
 						class: "form-control",
@@ -87,16 +86,16 @@
 						onBlur: () => {
 							touched.value = true;
 						},
-						autofocus: true,
-						ref: inputRef
-					}), [
-						[vValidity, validationError.value]
-					]
-				),
-				h('div', {
-					class: "invalid-feedback"
-				}, validationError.value)
-			]),
+						ref: (el) => {
+							slotProps.inputRef(el);
+							inputRef.value = el as any;
+						}
+					}),
+					h('div', {
+						class: "invalid-tooltip"
+					}, slotProps.validationError)
+				]
+			}),
 			onShown: () => {
 				inputRef.value!.focus();
 			}
@@ -111,8 +110,7 @@
 <script setup lang="ts">
 	const props = withDefaults(defineProps<AlertProps>(), {
 		type: "alert",
-		okLabel: "OK",
-		okFocus: true
+		okLabel: "OK"
 	});
 
 	const emit = defineEmits<{
@@ -139,7 +137,6 @@
 		:isCreate="props.type === 'confirm'"
 		:okLabel="props.okLabel"
 		:okVariant="props.variant"
-		:okFocus="props.okFocus"
 		@shown="emit('shown')"
 		@hide="emit('hide', result)"
 		@hidden="emit('hidden', result)"
