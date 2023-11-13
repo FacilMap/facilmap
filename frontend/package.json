@@ -17,15 +17,18 @@
     "url": "https://github.com/FacilMap/facilmap.git"
   },
   "type": "module",
-  "main": "./dist/frontend.js",
-  "typings": "./dist/src/lib/index.d.ts",
+  "main": "./dist/lib/facilmap-frontend.mjs",
+  "typings": "./dist/lib/facilmap-frontend.d.ts",
   "files": [
     "dist",
     "src",
     "static",
     "iframe-test.html",
     "README.md",
-    "tsconfig.json"
+    "tsconfig.json",
+    "build.js",
+    "build.d.ts",
+    "public"
   ],
   "scripts": {
     "build": "yarn build:lib && yarn build:app",
@@ -65,7 +68,6 @@
     "p-debounce": "^4.0.0",
     "pluralize": "^8.0.0",
     "popper-max-size-modifier": "^0.2.0",
-    "rollup-plugin-auto-external": "^2.0.0",
     "tablesorter": "^2.31.3",
     "vite": "^4.5.0",
     "vite-plugin-css-injected-by-js": "^3.3.0",

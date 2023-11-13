@@ -1,5 +1,5 @@
 import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
-import { type Line, type Marker, type PadId, type ID, type Type, type Bbox, CRU } from "facilmap-types";
+import type { Line, Marker, PadId, ID, Type, Bbox, CRU } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";

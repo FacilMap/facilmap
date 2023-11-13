@@ -3,12 +3,12 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const dist = `${root}/dist`;
+const dist = `${root}/dist/app`;
 
 export const paths = {
     root,
     dist,
-    base: '/app/',
+    base: '/_app/',
     mapEntry: "src/map/map.ts",
     mapEjs: `${root}/src/map/map.ejs`,
     tableEntry: "src/table/table.ts",

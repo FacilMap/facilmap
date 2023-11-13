@@ -13,7 +13,7 @@
 	import LineInfoTab from "./line-info/line-info-tab.vue";
 	import MultipleInfoTab from "./multiple-info/multiple-info-tab.vue";
 	import OverpassInfoTab from "./overpass-info/overpass-info-tab.vue";
-	import FacilMapContext from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import FacilMapContextProvider from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { FacilMapSettings } from "./facil-map-context-provider/facil-map-context";
 	import ClientProvider from "./client-provider.vue";
 
@@ -36,7 +36,7 @@
 		}
 	});
 
-	const contextRef = ref<InstanceType<typeof FacilMapContext>>();
+	const contextRef = ref<InstanceType<typeof FacilMapContextProvider>>();
 	const context = toRef(() => contextRef.value?.context);
 	const client = toRef(() => context.value?.components.client);
 
@@ -59,7 +59,7 @@
 
 <template>
 	<div class="fm-facilmap">
-		<FacilMapContext
+		<FacilMapContextProvider
 			:baseUrl="props.baseUrl"
 			:settings="props.settings"
 			ref="contextRef"
@@ -93,7 +93,7 @@
 
 				<slot></slot>
 			</LeafletMap>
-		</FacilMapContext>
+		</FacilMapContextProvider>
 	</div>
 </template>
 

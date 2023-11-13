@@ -3,7 +3,7 @@ import { FeatureGroup, latLng, Layer, type LayerOptions } from "leaflet";
 import MarkerLayer from "../markers/marker-layer";
 import { getSymbolForTags } from "../utils/icons";
 import { tooltipOptions } from "../utils/leaflet";
-import { type OverpassPreset } from "./overpass-presets";
+import type { OverpassPreset } from "./overpass-presets";
 import { getOverpassElements, isOverpassQueryEmpty, type OverpassElement } from "./overpass-utils";
 
 declare module "leaflet" {

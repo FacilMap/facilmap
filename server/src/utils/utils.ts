@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access } from "fs/promises";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 

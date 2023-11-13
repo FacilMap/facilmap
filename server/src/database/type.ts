@@ -2,7 +2,7 @@ import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes
 import type { CRU, Field, ID, PadId, Type } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey, validateColour } from "./helpers.js";
-import { type PadModel } from "./pad.js";
+import type { PadModel } from "./pad.js";
 
 export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreationAttributes<TypeModel>> {
 	id: CreationOptional<ID>;

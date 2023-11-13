@@ -5,7 +5,7 @@ import type { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteM
 import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
-import { type Point as GeoJsonPoint } from "geojson";
+import type { Point as GeoJsonPoint } from "geojson";
 
 const updateTimes: Record<string, number> = {};
 

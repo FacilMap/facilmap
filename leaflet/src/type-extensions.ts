@@ -1,4 +1,4 @@
-import { type FilterFunc as _TypeExtensions_FilterFunc } from "facilmap-utils";
+import type { FilterFunc as _TypeExtensions_FilterFunc } from "facilmap-utils";
 
 // These should really go in other places, but due to https://github.com/microsoft/rushstack/issues/1709, we append
 // this file manually to the declarations output during the vite build. Hence the import names need to be unique.

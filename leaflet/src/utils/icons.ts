@@ -2,7 +2,7 @@ import type { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
 import { icon, type Icon } from "leaflet";
 import { memoize } from "lodash-es";
-import rawIcons from "custom:icons";
+import rawIcons from "virtual:icons";
 
 export const symbolList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
 

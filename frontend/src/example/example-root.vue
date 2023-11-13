@@ -14,35 +14,33 @@
 </script>
 
 <template>
-	<div>
-		<FacilMap
-			:baseUrl="serverUrl"
-			:serverUrl="serverUrl"
-			v-model:padId="padId1"
-			@update:padName="padName1 = $event"
-			ref="map1Ref"
-		>
-			<template #before>
-				<div>{{padId1}} | {{padName1}}</div>
-				<div>
-					#{{map1Ref?.context?.components.map?.hash}}
-				</div>
-			</template>
-		</FacilMap>
+	<FacilMap
+		:baseUrl="serverUrl"
+		:serverUrl="serverUrl"
+		v-model:padId="padId1"
+		@update:padName="padName1 = $event"
+		ref="map1Ref"
+	>
+		<template #before>
+			<div>{{padId1}} | {{padName1}}</div>
+			<div>
+				#{{map1Ref?.context?.components.map?.hash}}
+			</div>
+		</template>
+	</FacilMap>
 
-		<FacilMap
-			:baseUrl="serverUrl"
-			:serverUrl="serverUrl"
-			v-model:padId="padId2"
-			@update:padName="padName2 = $event"
-			ref="map2Ref"
-		>
-			<template #before>
-				<div>{{padId2}} | {{padName2}}</div>
-				<div>
-					#{{map2Ref?.context?.components.map?.hash}}
-				</div>
-			</template>
-		</FacilMap>
-	</div>
+	<FacilMap
+		:baseUrl="serverUrl"
+		:serverUrl="serverUrl"
+		v-model:padId="padId2"
+		@update:padName="padName2 = $event"
+		ref="map2Ref"
+	>
+		<template #before>
+			<div>{{padId2}} | {{padName2}}</div>
+			<div>
+				#{{map2Ref?.context?.components.map?.hash}}
+			</div>
+		</template>
+	</FacilMap>
 </template>

@@ -65,3 +65,57 @@ class ReactiveClient extends Client {
 	}
 }
 ```
+
+### React
+
+```javascript
+class ObservableClient extends Client {
+	_observers = new Set();
+
+	subscribe(callback) {
+		this._observers.add(callback);
+		return () => {
+			this._observers.delete(callback);
+		};
+	}
+
+	_triggerObservers() {
+		for (const observer of this._observers) {
+			observer();
+		}
+	}
+
+	_set(object, key, value) {
+		object[key] = value;
+		this._triggerObservers();
+	}
+
+	_delete(object, key) {
+		delete object[key];
+		this._triggerObservers();
+	}
+}
+
+function useClientObserver(client, selector) {
+	React.useSyncExternalStore(
+		(callback) => client.subscribe(callback),
+		() => selector(client)
+	);
+}
+
+const MarkerInfo = ({ client, markerId }) => {
+	const marker = useClientObserver(client, (client) => client.markers[markerId]);
+	return (
+		<div>
+			Marker name: {marker?.name}
+		</div>
+	);
+}
+```
+
+Keep in mind that React’s `useSyncExternalStore` will rerender the component if the resulting _object reference_ changes.
+This means one the one hand that you cannot use this example implementation on a higher up object of the client (such as
+`client` itself or `client.markers`), as their identity never changes, causing your component to never rerender. And on
+the other hand that you should avoid using it on objects created in the selector (such as returning
+`[client.padData.id, client.padData.name]` in order to get multiple values at once), as it will cause your component to
+rerender every time the selector is called.

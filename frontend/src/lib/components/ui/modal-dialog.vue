@@ -52,7 +52,8 @@
 		onHidden: () => {
 			emit("hidden");
 		},
-		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified)
+		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified),
+		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel)
 	});
 
 	useUnloadHandler(() => props.isModified);
@@ -85,8 +86,6 @@
 			tabindex="-1"
 			aria-hidden="true"
 			ref="modalRef"
-			:data-bs-backdrop="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'static' : 'true'"
-			:data-bs-keyboard="isSubmitting || props.isBusy || props.noCancel || props.isModified ? 'false' : 'true'"
 		>
 			<div class="modal-dialog modal-dialog-scrollable">
 				<ValidatedForm

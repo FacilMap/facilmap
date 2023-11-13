@@ -5,7 +5,7 @@
 	import { makeTextColour } from "facilmap-utils";
 	import { arrowNavigation } from "../../utils/ui";
 	import { type StyleValue, computed, nextTick, ref } from "vue";
-	import { type Validator } from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validated-field.vue";
 
 	function normalizeData(value: string) {
 		return ColorMixin.data.apply({ modelValue: value }).val;

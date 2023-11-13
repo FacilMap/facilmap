@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import { type Ref, shallowRef, watch, watchEffect, reactive, readonly } from "vue";
 
 export interface ModalConfig {
@@ -8,8 +8,10 @@ export interface ModalConfig {
 	onHide?: (event: Modal.Event) => void;
 	/** Will be called after the fade-out animation when the modal is closed. */
 	onHidden?: (event: Modal.Event) => void;
-	/** If true, the modal will not be closed by clicking the backdrop or pressing Escape. */
+	/** If true, the modal can not be closed by clicking the backdrop. */
 	static?: Ref<boolean>;
+	/** If true, the modal can not be closed by pressing Escape. */
+	noEscape?: Ref<boolean>;
 }
 
 export interface ModalActions {
@@ -19,7 +21,7 @@ export interface ModalActions {
 /**
  * Enables a Bootstrap modal dialog on the element that is saved in the returned {@link ModalActions#ref}.
  */
-export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic }: ModalConfig): Readonly<ModalActions> {
+export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic, noEscape }: ModalConfig): Readonly<ModalActions> {
 	const modal = shallowRef<Modal>();
 
 	const handleShown = (e: Event) => {
@@ -79,7 +81,7 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 		if (modal.value) {
 			const config = (modal.value as any)._config as Modal.Options;
 			config.backdrop = isStatic?.value ? "static" : true;
-			config.keyboard = !isStatic?.value;
+			config.keyboard = !noEscape?.value;
 		}
 	});
 

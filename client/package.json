@@ -37,9 +37,7 @@
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.13",
-    "@types/rollup-plugin-auto-external": "^2.0.5",
     "rimraf": "^5.0.5",
-    "rollup-plugin-auto-external": "^2.0.0",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vite-plugin-dts": "^3.6.3"

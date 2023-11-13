@@ -24,6 +24,7 @@
 	}): Promise<AlertResult> {
 		return await new Promise<AlertResult>((resolve) => {
 			const el = document.createElement('div');
+			el.classList.add("fm-alert-container");
 			document.body.appendChild(el);
 			const app = createApp(defineComponent({
 				setup() {
@@ -146,3 +147,9 @@
 		<slot>{{props.message}}</slot>
 	</ModalDialog>
 </template>
+
+<style lang="scss">
+	.fm-alert-container {
+		position: absolute;
+	}
+</style>

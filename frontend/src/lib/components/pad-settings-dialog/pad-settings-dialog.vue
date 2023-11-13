@@ -22,6 +22,7 @@
 	}>();
 
 	const emit = defineEmits<{
+		hide: [];
 		hidden: [];
 	}>();
 
@@ -63,6 +64,7 @@
 				await client.value.createPad(padData.value as PadData<CRU.CREATE>);
 			else
 				await client.value.editPad(padData.value);
+			console.log('created');
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
@@ -105,6 +107,7 @@
 		:okLabel="props.isCreate ? 'Create' : undefined"
 		ref="modalRef"
 		@submit="$event.waitUntil(save())"
+		@hide="emit('hide')"
 		@hidden="emit('hidden')"
 	>
 		<template v-if="padData">

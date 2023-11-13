@@ -59,7 +59,8 @@
 			@keyframes spinner-border {
 				to { transform: rotate(360deg); }
 			}
-
+		</style>
+		<style type="text/css">
 <% for (const path of styles) { -%>
 			@import url("<%=paths.base%><%=path%>");
 <% } -%>
@@ -68,7 +69,7 @@
 		<script type="module" src="<%=paths.base%><%=path%>"></script>
 <% } -%>
 <% for (const path of preloadScripts) { -%>
-		<link rel="modulepreload" src="<%=paths.base%><%=path%>"/>
+		<link rel="modulepreload" href="<%=paths.base%><%=path%>"/>
 <% } -%>
 	</head>
 	<body>

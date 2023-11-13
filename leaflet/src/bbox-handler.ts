@@ -1,5 +1,5 @@
 import type Client from "facilmap-client";
-import { type ClientEvents } from "facilmap-client";
+import type { ClientEvents } from "facilmap-client";
 import type { EventHandler } from "facilmap-types";
 import { Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";

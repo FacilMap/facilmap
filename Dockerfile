@@ -1,4 +1,4 @@
-FROM node:15.12-alpine
+FROM node:21-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD yarn run server
@@ -21,6 +21,6 @@ RUN cd .. && yarn install
 RUN cd .. && yarn run build
 
 USER root
-RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/node_modules/.cache
+RUN chown -R root:root /opt/facilmap && mkdir -p /opt/facilmap/server/node_modules/.cache && chown -R facilmap:facilmap /opt/facilmap/server/node_modules/.cache
 
 USER facilmap

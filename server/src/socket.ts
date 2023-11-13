@@ -1,14 +1,14 @@
 import { promiseProps } from "./utils/utils.js";
 import { asyncIteratorToArray } from "./utils/streams.js";
 import { isInBbox } from "./utils/geo.js";
-import { Server, Socket as SocketIO } from "socket.io";
+import { Server, type Socket as SocketIO } from "socket.io";
 import domain from "domain";
 import { exportLineToGpx } from "./export/gpx.js";
 import { find } from "./search.js";
 import { geoipLookup } from "./geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "./database/database.js";
-import { Server as HttpServer } from "http";
+import type { Server as HttpServer } from "http";
 import { type Bbox, type BboxWithZoom, type EventHandler, type EventName, type MapEvents, type MultipleEvents, type PadData, type PadId, type RequestData, type RequestName, type ResponseData, Writable, requestDataValidators } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "./routing/routing.js";
 import type { RouteWithId } from "./database/route.js";

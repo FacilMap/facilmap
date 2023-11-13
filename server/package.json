@@ -27,7 +27,7 @@
   "scripts": {
     "build": "vite build",
     "clean": "rimraf dist",
-    "server": "DOTENV_CONFIG_PATH=../config.env facilmap-server",
+    "server": "DOTENV_CONFIG_PATH=../config.env node ./bin/facilmap-server.js",
     "ts-server": "DOTENV_CONFIG_PATH=../config.env node ./esrun.js",
     "dev-server": "FM_DEV=true DOTENV_CONFIG_PATH=../config.env node ./esrun.js",
     "test": "vitest run",
@@ -81,7 +81,6 @@
     "cpy-cli": "^5.0.0",
     "debug": "^4.3.4",
     "rimraf": "^5.0.5",
-    "rollup-plugin-auto-external": "^2.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",

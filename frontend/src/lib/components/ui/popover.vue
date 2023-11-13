@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { computed, ref, toRef, watch, watchEffect } from "vue";
-	import { Popover, Tooltip } from "bootstrap";
+	import Popover from "bootstrap/js/dist/popover";
+	import Tooltip from "bootstrap/js/dist/tooltip";
 	import { useResizeObserver } from "../../utils/vue";
-	import { getUniqueId, useDomEventListener } from "../../utils/utils";
+	import { useDomEventListener } from "../../utils/utils";
 
 	/**
 	 * Like Bootstrap Popover, but uses an existing popover element rather than creating a new one. This way, the popover

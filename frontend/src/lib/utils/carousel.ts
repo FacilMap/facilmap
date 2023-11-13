@@ -1,4 +1,4 @@
-import { Carousel } from "bootstrap";
+import Carousel from "bootstrap/js/dist/carousel";
 import { type Ref, reactive, readonly, watch } from "vue";
 
 export interface CarouselContext {

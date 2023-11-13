@@ -1,4 +1,4 @@
-import { Plugin } from "rollup";
+import type { Plugin } from "rollup";
 import glob from "fast-glob";
 import { readFile } from "fs/promises";
 import { createRequire } from "module";
@@ -8,15 +8,15 @@ const require = createRequire(import.meta.url);
 
 export default function iconPlugin(): Plugin {
 	return {
-		name: 'custom:icons',
+		name: 'virtual:icons',
 		resolveId: (id) => {
-			if (id === 'custom:icons') {
+			if (id === 'virtual:icons') {
 				return id;
 			}
 		},
 		load: async (id) => {
-			if (id === 'custom:icons') {
-				const icons/*: Record<string, Record<string, string>>*/ = {};
+			if (id === 'virtual:icons') {
+				const icons: Record<string, Record<string, string>> = {};
 				for (const path of await glob('./assets/icons/*/*.svg')) {
 					const [set, fname] = path.split("/").slice(-2);
 

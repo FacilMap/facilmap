@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { createApp, nextTick, onScopeDispose, reactive, ref } from "vue";
-	import { Toast } from "bootstrap";
+	/// <reference types="vite/client" />
+
+	import { createApp, nextTick, onScopeDispose, reactive, ref, type App } from "vue";
+	import Toast from "bootstrap/js/dist/toast";
 	import Toasts from "./toasts.vue";
 	import { mapRef } from "../../../utils/vue";
 	import { getUniqueId } from "../../../utils/utils";
@@ -40,11 +42,19 @@
 	}
 
 	export const toastContainer = document.createElement("div");
+	toastContainer.classList.add("fm-toast-container");
 	document.body.appendChild(toastContainer);
+
+	let app: App | undefined;
 	const appMountP = Promise.resolve().then(() => {
-		createApp(Toasts).mount(toastContainer);
+		app = createApp(Toasts);
+		app.mount(toastContainer);
 	}).catch((err) => {
 		console.error("Error rendering toast container", err);
+	});
+	import.meta.hot?.dispose(() => {
+		app?.unmount();
+		toastContainer.remove();
 	});
 
 	const toasts = ref<ToastInstance[]>([]);
@@ -204,6 +214,10 @@
 </template>
 
 <style lang="scss">
+	.fm-toast-container {
+		position: absolute;
+	}
+
 	.fm-toasts {
 		z-index: 10002;
 	}

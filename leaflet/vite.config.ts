@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
-import autoExternalPlugin from "rollup-plugin-auto-external";
 import iconsPlugin from "./rollup-icons";
 import { appendFile, readFile } from "fs/promises";
 
@@ -18,7 +17,6 @@ export default defineConfig({
 				await appendFile("./dist/facilmap-leaflet.d.ts", filterFile);
 			},
 		}),
-		autoExternalPlugin(),
 		iconsPlugin()
 	],
 	build: {
@@ -29,6 +27,9 @@ export default defineConfig({
 			name: 'facilmap-leaflet',
 			fileName: () => 'facilmap-leaflet.mjs',
 			formats: ['es']
+		},
+		rollupOptions: {
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && id !== "virtual:icons" && /* resolved internal modules */ !id.startsWith("/")
 		}
 	},
 	resolve: {

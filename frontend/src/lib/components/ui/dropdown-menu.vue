@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
 	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
-	import { Dropdown } from "bootstrap";
+	import Dropdown from "bootstrap/js/dist/dropdown";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";

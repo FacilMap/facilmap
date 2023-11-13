@@ -3,6 +3,7 @@ import { createApp, defineComponent, h, ref, watch } from "vue";
 import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
+import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
 
 // Dereferrer
 $(document).on("click", "a", function() {

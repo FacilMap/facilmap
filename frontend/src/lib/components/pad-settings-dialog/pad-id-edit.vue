@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { CRU, PadData } from "facilmap-types";
+	import { padIdValidator, type CRU, type PadData } from "facilmap-types";
 	import { computed, ref } from "vue";
 	import { getUniqueId, validateRequired } from "../../utils/utils";
 	import copyToClipboard from "copy-to-clipboard";
@@ -38,9 +38,14 @@
 	const touched = ref(false);
 
 	function validatePadId(id: string) {
-		if (id.includes("/")) {
-			return "May not contain a slash.";
-		} else if (idProps.some((p) => p !== props.idProp && props.padData[p] === id)) {
+		if (id) {
+			const result = padIdValidator.safeParse(id);
+			if (!result.success) {
+				return result.error.format()._errors.join("\n");
+			}
+		}
+
+		if (idProps.some((p) => p !== props.idProp && props.padData[p] === id)) {
 			return "The same link cannot be used for different access levels.";
 		}
 	}

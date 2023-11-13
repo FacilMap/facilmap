@@ -28,7 +28,13 @@ export type Width = z.infer<typeof widthValidator>;
 export const idValidator = z.number();
 export type ID = z.infer<typeof idValidator>;
 
-export const padIdValidator = z.string();
+export const forbiddenPadIds = [
+	"_app" // Static frontend resources are hosted under https://facilmap.org/_app/, so a pad with such an ID would not be accessible
+];
+export const padIdValidator = z.string()
+	.min(1)
+	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
+	.refine((val) => !forbiddenPadIds.includes(val), { message: `The following IDs are not allowed: ${forbiddenPadIds.join(", ")}.` });
 export type PadId = z.infer<typeof padIdValidator>;
 
 export const routeModeValidator = z.string();

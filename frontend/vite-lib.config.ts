@@ -1,15 +1,16 @@
 import { defineConfig } from "vite";
-import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+//import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
-import autoExternalPlugin from "rollup-plugin-auto-external";
+import vuePlugin from "@vitejs/plugin-vue";
 
 export default defineConfig(({ mode }) => ({
 	plugins: [
-		cssInjectedByJsPlugin(),
+		//cssInjectedByJsPlugin(),
 		dtsPlugin({ rollupTypes: true }),
-		autoExternalPlugin(),
+		vuePlugin()
 	],
 	build: {
+		outDir: "./dist/lib",
 		sourcemap: true,
 		minify: false,
 		lib: {
@@ -17,6 +18,9 @@ export default defineConfig(({ mode }) => ({
 			name: 'facilmap-frontend',
 			fileName: () => 'facilmap-frontend.mjs',
 			formats: ['es']
+		},
+		rollupOptions: {
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/")
 		}
 	}
 }));

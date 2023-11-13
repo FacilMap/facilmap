@@ -70,8 +70,8 @@
 			<slot v-if="mapContext" name="after"></slot>
 		</div>
 
-		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || client.serverError || client.deleted)"></div>
-		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError" :class="{ 'fatal-error': !!fatalError }">
+		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || (client.serverError && !client.isCreatePad) || client.deleted)"></div>
+		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError && !client.isCreatePad" :class="{ 'fatal-error': !!fatalError }">
 			{{fatalError || 'Loading...'}}
 		</div>
 	</div>

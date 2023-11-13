@@ -9,11 +9,9 @@
 	import type { ClientContext } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
-	class ReactiveClient extends Client {
-		_makeReactive<O extends object>(obj: O) {
-			return reactive(obj) as O;
-		}
-	};
+	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
+		return !!serverError?.message?.includes("does not exist");
+	}
 </script>
 
 <script setup lang="ts">
@@ -32,9 +30,6 @@
 		"update:padId": [padId: string | undefined];
 	}>();
 
-	const createId = ref<string>();
-	const counter = ref(1);
-
 	function openPad(padId: string | undefined): void {
 		emit("update:padId", padId);
 	}
@@ -50,15 +45,26 @@
 		toasts.hideToast(`fm${context.id}-client-connecting`);
 		toasts.hideToast(`fm${context.id}-client-error`);
 		toasts.hideToast(`fm${context.id}-client-deleted`);
-		createId.value = undefined;
 		if (props.padId)
 			toasts.showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true, noCloseButton: true });
 		else
 			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true, noCloseButton: true });
 
-		const newClient: ClientContext = Object.assign(new ReactiveClient(props.serverUrl, props.padId), {
-			openPad
-		});
+		class CustomClient extends Client implements ClientContext {
+			_makeReactive<O extends object>(obj: O) {
+				return reactive(obj) as O;
+			}
+
+			openPad(padId: string | undefined) {
+				openPad(padId);
+			}
+
+			get isCreatePad() {
+				return context.settings.interactive && isPadNotFoundError(super.serverError);
+			}
+		}
+
+		const newClient = new CustomClient(props.serverUrl, props.padId);
 		connectingClient.value = newClient;
 
 		let lastPadId: PadId | undefined = undefined;
@@ -119,9 +125,7 @@
 			});
 		});
 
-		if (newClient.serverError?.message?.includes("does not exist") && context.settings.interactive) {
-			createId.value = newClient.padId!;
-		} else if (newClient.serverError) {
+		if (newClient.serverError && !newClient.isCreatePad) {
 			toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
 				noCloseButton: true,
 				actions: context.settings.interactive ? [
@@ -139,7 +143,6 @@
 			});
 		}
 
-		counter.value++;
 		connectingClient.value = undefined;
 		client.value?.disconnect();
 		client.value = newClient;
@@ -150,6 +153,12 @@
 	});
 
 	context.provideComponent("client", client);
+
+	function handleCreateDialogHide() {
+		if (client.value?.isCreatePad) {
+			client.value.openPad(undefined);
+		}
+	}
 </script>
 
 <template>
@@ -165,9 +174,9 @@
 	/>
 
 	<PadSettingsDialog
-		v-if="createId"
-		is-create
-		no-cancel
-		:proposed-admin-id="createId"
+		v-if="client?.isCreatePad"
+		isCreate
+		:proposedAdminId="client.padId"
+		@hide="handleCreateDialogHide"
 	></PadSettingsDialog>
 </template>

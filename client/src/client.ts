@@ -369,6 +369,7 @@ export default class Client {
 
 	async createPad(data: PadData<CRU.CREATE>): Promise<void> {
 		const obj = await this._emit("createPad", data);
+		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'readonly', false);
 		this._set(this.state, 'writable', 2);
 		this._receiveMultiple(obj);

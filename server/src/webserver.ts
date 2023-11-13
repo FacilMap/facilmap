@@ -1,24 +1,14 @@
 import compression from "compression";
-import * as ejs from "ejs";
-import express, { type Request, type Response, static as expressStatic, type NextFunction } from "express";
-import { readFile } from "node:fs/promises";
-import { createServer, Server as HttpServer } from "http";
+import express, { type Request, type Response, type NextFunction } from "express";
+import { createServer, type Server as HttpServer } from "http";
 import type { PadId } from "facilmap-types";
 import { createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
-import { paths, serve } from "facilmap-frontend/build.js";
-import type { Manifest } from "vite";
 import { Readable, Writable } from "stream";
-
-const isDevMode = !!process.env.FM_DEV;
-
-async function getManifest(): Promise<Manifest> {
-	const manifest = await readFile(paths.manifest);
-	return JSON.parse(manifest.toString());
-}
+import { getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
 
 type PathParams = {
 	padId: PadId
@@ -27,54 +17,34 @@ type PathParams = {
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
 	const padMiddleware = async function(req: Request<PathParams>, res: Response<string>, next: NextFunction) {
 		try {
-			const [template, padData, manifest] = await Promise.all([
-				readFile(paths.mapEjs).then((t) => t.toString()),
-				(async () => {
-					if(req.params && req.params.padId) {
-						return database.pads.getPadDataByAnyId(req.params.padId).then((padData) => {
-							if (!padData)
-								throw new Error();
-							return padData;
-						}).catch(() => {
-							// Error will be handled on the client side when it tries to fetch the pad data
-							return {
-								id: undefined,
-								searchEngines: false,
-								description: ""
-							};
-						});
-					}
-				})(),
-				!isDevMode ? getManifest() : undefined
-			]);
-
-			let scripts: string[], preloadScripts: string[], styles: string[];
-			if (isDevMode) {
-				scripts = ["@vite/client", paths.mapEntry];
-				preloadScripts = [];
-				styles = [];
+			let params: RenderMapParams;
+			if(req.params?.padId) {
+				const padData = await database.pads.getPadDataByAnyId(req.params.padId);
+				if (padData) {
+					params = {
+						padData,
+						isReadOnly: padData.id === req.params.padId
+					};
+				} else {
+					res.status(404);
+					params = {
+						padData: {
+							searchEngines: false,
+							name: "",
+							description: ""
+						},
+						isReadOnly: true
+					};
+				}
 			} else {
-				const mainChunk = manifest![paths.mapEntry];
-				scripts = [mainChunk.file];
-				preloadScripts = [...mainChunk.imports ?? [], ...mainChunk.dynamicImports ?? []].map((key) => manifest![key].file);
-				styles = mainChunk.css ?? [];
+				params = {
+					padData: undefined,
+					isReadOnly: true
+				};
 			}
 
 			res.type("html");
-
-			if (padData && padData.id == null) {
-				res.status(404);
-			}
-
-			res.send(ejs.render(template, {
-				padData: padData,
-				isReadOnly: padData?.id == req.params.padId,
-				config: {},
-				scripts,
-				preloadScripts,
-				styles,
-				paths
-			}));
+			res.send(await renderMap(params));
 		} catch (err: any) {
 			next(err);
 		}
@@ -84,33 +54,9 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.use(domainMiddleware);
 	app.use(compression());
 
-	/* app.get("/frontend-:hash.js", function(req, res, next) {
-		res.setHeader('Cache-Control', 'public, max-age=31557600'); // one year
-
-		next();
-	}); */
-
 	app.get("/", padMiddleware);
-	//app.get("/map.ejs", padMiddleware);
-	//app.get("/table.ejs", padMiddleware);
 
-	if (isDevMode) {
-		const devServer = await serve({
-			server: {
-				middlewareMode: true,
-				/* hmr: {
-					protocol: 'ws',
-					host: '127.0.0.1'
-				} */
-				//origin: "http://localhost:40829"
-			},
-			appType: "custom"
-		});
-
-		app.use(devServer.middlewares);
-	} else {
-		app.use(paths.base, expressStatic(paths.dist));
-	}
+	app.use(await getStaticFrontendMiddleware());
 
 	// If no file with this name has been found, we render a pad
 	app.get("/:padId", padMiddleware);
@@ -132,10 +78,13 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.get("/:padId/table", async function(req: Request<PathParams>, res: Response<string>, next) {
 		try {
-			const renderedTable = await createTable(database, req.params.padId, req.query.filter as string | undefined, req.query.hide ? (req.query.hide as string).split(',') : []);
-
 			res.type("html");
-			res.send(renderedTable);
+			res.send(await createTable(
+				database,
+				req.params.padId,
+				req.query.filter as string | undefined,
+				req.query.hide ? (req.query.hide as string).split(',') : []
+			));
 		} catch (e) {
 			next(e);
 		}
