@@ -17,14 +17,13 @@ Install facilmap-client as a dependency using npm or yarn:
 npm install -S facilmap-client
 ```
 
-or load the client directly from facilmap.org (along with socket.io, which is needed by facilmap-client):
+or import the client from a CDN (only recommended for test purposes):
 
 ```html
-<script src="https://unpkg.com/socket.io-client@4"></script>
-<script src="https://unpkg.com/facilmap-client@3"></script>
+<script type="module">
+	import Client from "https://esm.sh/facilmap-client";
+</script>
 ```
-
-The client class will be available as the global `FacilMap.Client` variable.
 
 
 ## TypeScript
