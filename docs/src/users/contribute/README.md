@@ -10,19 +10,23 @@ Financial contributions are very much appreciated and can be sent through the fo
 
 <div style="display: flex; flex-wrap: wrap">
 	<a href="https://liberapay.com/facilmap/" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="https://liberapay.com/facilmap/" :size="164" :margin="5" level="M" render-as="svg"></qrcode>
+		<qrcode value="https://liberapay.com/facilmap/" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
 		Liberapay
 	</a>
+	<a href="https://ko-fi.com/facilmap" target="_blank" style="display: flex; flex-direction: column; align-items: center">
+		<qrcode value="https://ko-fi.com/facilmap" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
+		Ko-fi
+	</a>
 	<a href="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<ClientOnly><qrcode value="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" :size="164" :margin="5" level="M" render-as="svg"></qrcode></ClientOnly>
+		<qrcode value="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
 		PayPal
 	</a>
 	<a href="https://www.patreon.com/facilmap" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<ClientOnly><qrcode value="https://www.patreon.com/facilmap" :size="164" :margin="5" level="M" render-as="svg"></qrcode></ClientOnly>
+		<qrcode value="https://www.patreon.com/facilmap" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
 		Patreon
 	</a>
 	<a href="bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv" style="display: flex; flex-direction: column; align-items: center">
-		<ClientOnly><qrcode value="bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv" :size="164" :margin="5" level="M" render-as="svg"></qrcode></ClientOnly>
+		<qrcode value="bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
 		Bitcoin
 	</a>
 </div>
