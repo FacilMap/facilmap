@@ -99,10 +99,12 @@ export const requestDataValidators = {
 	setPadId: z.string()
 }
 
-type RawRequestDataMap = {
-	[K in keyof typeof requestDataValidators]: z.infer<typeof requestDataValidators[K]>;
+export type RequestDataMap = {
+	[K in keyof typeof requestDataValidators]: z.input<typeof requestDataValidators[K]>;
 };
-export interface RequestDataMap extends RawRequestDataMap {
+
+export type ValidatedRequestDataMap = {
+	[K in keyof typeof requestDataValidators]: z.output<typeof requestDataValidators[K]>;
 }
 
 export interface ResponseDataMap {
@@ -143,4 +145,5 @@ export interface ResponseDataMap {
 
 export type RequestName = keyof RequestDataMap;
 export type RequestData<E extends RequestName> = RequestDataMap[E];
+export type ValidatedRequestData<E extends RequestName> = ValidatedRequestDataMap[E];
 export type ResponseData<E extends RequestName> = ResponseDataMap[E];

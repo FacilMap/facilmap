@@ -1,5 +1,5 @@
 import { jsonStream, asyncIteratorToArray, streamPromiseToStream } from "../utils/streams.js";
-import { compileExpression, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+import { compileExpression, normalizeLineName, normalizeMarkerName, normalizePadName } from "facilmap-utils";
 import type { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
 import Database from "../database/database.js";
 import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
@@ -31,7 +31,7 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 			features: "%features%"
 		}, {
 			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
-			name: padData.name,
+			name: normalizePadName(padData.name),
 			searchEngines: padData.searchEngines,
 			description: padData.description,
 			clusterMarkers: padData.clusterMarkers,

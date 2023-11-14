@@ -22,7 +22,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `size` (number, min: 15): The height of the marker in pixels
 * `symbol` (string): The symbol name for the marker. Default is an empty string.
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
-* `elevation` (number): The elevation of this marker in metres (set by the server)
+* `ele` (number or null): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
 * `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
 
@@ -50,7 +50,7 @@ separately through `linePoints` events.
 * `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
 * `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`) (set by the server)
 * `left`, `top`, `right`, `bottom` (number): The bounding box of the line (set by the server)
-* `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code>): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
+* `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code> or null): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
 * `typeId` (number): The ID of the type of this line
 * `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
 * `trackPoints`:
@@ -68,7 +68,7 @@ their `idx` property.
 * `lat` (number, min: -90, max: 90): The latitude of this point
 * `lon` (number, min: -180, max: 180): The longitude of this point
 * `zoom` (number, min: 1, max: 20): The miminum zoom level from which this track point makes sense to show
-* `ele` (number): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
+* `ele` (number or null): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
 
 ## PadData
 

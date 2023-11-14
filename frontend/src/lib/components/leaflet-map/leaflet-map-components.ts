@@ -5,7 +5,7 @@ import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, 
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
-import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
+import "leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import SelectionHandler from "../../utils/selection";

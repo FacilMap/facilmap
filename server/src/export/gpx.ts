@@ -2,7 +2,7 @@ import { asyncIteratorToArray, asyncIteratorToStream } from "../utils/streams.js
 import { compile } from "ejs";
 import Database from "../database/database.js";
 import type { Field, PadId, Type } from "facilmap-types";
-import { compileExpression, normalizeLineName, normalizeMarkerName, quoteHtml } from "facilmap-utils";
+import { compileExpression, normalizeLineName, normalizeMarkerName, normalizePadName, quoteHtml } from "facilmap-utils";
 import type { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import gpxLineEjs from "./gpx-line.ejs?raw";
@@ -37,7 +37,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 			`<?xml version="1.0" encoding="UTF-8"?>\n` +
 			`<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n` +
 			`\t<metadata>\n` +
-			`\t\t<name>${quoteHtml(padData.name)}</name>\n` +
+			`\t\t<name>${quoteHtml(normalizePadName(padData.name))}</name>\n` +
 			`\t\t<time>${quoteHtml(new Date().toISOString())}</time>\n` +
 			`\t</metadata>\n`
 		);

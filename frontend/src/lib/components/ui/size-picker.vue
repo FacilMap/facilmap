@@ -22,7 +22,7 @@
 
 <template>
 	<ValidatedField
-		class="fm-size-field position-relative"
+		class="fm-size-picker position-relative"
 		:value="value"
 		:validators="props.validators"
 	>
@@ -43,7 +43,7 @@
 </template>
 
 <style lang="scss">
-	.fm-size-field input {
+	.fm-size-picker input {
 		width: 100%;
 	}
 </style>

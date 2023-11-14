@@ -124,6 +124,10 @@ export async function sleep(ms: number): Promise<void> {
 	});
 }
 
+export function normalizePadName(name: string | undefined): string {
+	return name || "Unnamed map";
+}
+
 export function normalizeMarkerName(name: string | undefined): string {
 	return name || "Untitled marker";
 }

@@ -9,12 +9,12 @@ import { geoipLookup } from "./geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "./database/database.js";
 import type { Server as HttpServer } from "http";
-import { type Bbox, type BboxWithZoom, type EventHandler, type EventName, type MapEvents, type MultipleEvents, type PadData, type PadId, type RequestData, type RequestName, type ResponseData, Writable, requestDataValidators } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type EventHandler, type EventName, type MapEvents, type MultipleEvents, type PadData, type PadId, type RequestName, type ResponseData, type ValidatedRequestData, Writable, requestDataValidators } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "./routing/routing.js";
 import type { RouteWithId } from "./database/route.js";
 
 type ValidatedSocketHandlers = {
-	[requestName in RequestName]: RequestData<requestName> extends void ? () => any : (data: RequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
+	[requestName in RequestName]: ValidatedRequestData<requestName> extends void ? () => any : (data: ValidatedRequestData<requestName>) => ResponseData<requestName> | PromiseLike<ResponseData<requestName>>;
 };
 
 type UnvalidatedSocketHandlers = {

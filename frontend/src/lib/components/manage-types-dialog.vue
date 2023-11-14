@@ -6,6 +6,7 @@
 	import { showConfirm } from "./ui/alert.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import DropdownMenu from "./ui/dropdown-menu.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -16,7 +17,7 @@
 	}>();
 
 	const isDeleting = ref<Record<ID, boolean>>({ });
-	const editDialogTypeId = ref<ID | null>(); // null: create dialog
+	const editDialogTypeId = ref<ID | "createMarkerType" | "createLineType">();
 
 	const isBusy = computed(() => Object.values(isDeleting.value).some((v) => v));
 
@@ -85,19 +86,31 @@
 			<tfoot>
 				<tr>
 					<td colspan="3">
-						<button
-							type="button"
-							class="btn btn-secondary"
-							@click="editDialogTypeId = null"
-						>Create</button>
+						<DropdownMenu label="Create">
+							<li>
+								<a
+									href="javascript:"
+									class="dropdown-item"
+									@click="editDialogTypeId = 'createMarkerType'"
+								>Marker type</a>
+							</li>
+
+							<li>
+								<a
+									href="javascript:"
+									class="dropdown-item"
+									@click="editDialogTypeId = 'createLineType'"
+								>Line type</a>
+							</li>
+						</DropdownMenu>
 					</td>
 				</tr>
 			</tfoot>
 		</table>
 
 		<EditTypeDialog
-			v-if="editDialogTypeId !== undefined"
-			:typeId="editDialogTypeId ?? undefined"
+			v-if="editDialogTypeId"
+			:typeId="editDialogTypeId"
 			@hidden="editDialogTypeId = undefined"
 		></EditTypeDialog>
 	</ModalDialog>

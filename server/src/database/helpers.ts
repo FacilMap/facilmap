@@ -150,8 +150,8 @@ export default class DatabaseHelpers {
 	async _updateObjectStyles(objects: Marker | Line | AsyncGenerator<Marker | Line, void, void>): Promise<void> {
 		const iterator = Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects]);
 
-		type MarkerData = { object: Marker; type: Type; update: Marker<CRU.UPDATE>; };
-		type LineData = { object: Line; type: Type; update: Line<CRU.UPDATE>; };
+		type MarkerData = { object: Marker; type: Type; update: Marker<CRU.UPDATE_VALIDATED>; };
+		type LineData = { object: Line; type: Type; update: Line<CRU.UPDATE_VALIDATED>; };
 		const isLine = (data: MarkerData | LineData): data is LineData => (data.type.type == "line");
 
 		const types: Record<ID, Type> = { };
@@ -167,7 +167,7 @@ export default class DatabaseHelpers {
 			const data = {
 				object,
 				type: types[object.typeId],
-				update: { } as Marker<CRU.UPDATE> | Line<CRU.UPDATE>
+				update: { } as Marker<CRU.UPDATE_VALIDATED> | Line<CRU.UPDATE_VALIDATED>
 			} as MarkerData | LineData;
 
 			if(data.type.colourFixed && data.type.defaultColour && object.colour != data.type.defaultColour)

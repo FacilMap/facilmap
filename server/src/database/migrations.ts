@@ -67,18 +67,180 @@ export default class DatabaseMigrations {
 	async _changeColMigrations(): Promise<void> {
 		const queryInterface = this._db._conn.getQueryInterface();
 
-		for (const table of [ 'Pads', 'Markers', 'Lines', 'Types' ]) {
-			const attributes: any = await queryInterface.describeTable(table);
+		//////////
+		// Pads //
+		//////////
 
-			// allow null on Pad.name, Marker.name, Line.name
-			if(["Pads", "Markers", "Lines"].includes(table) && !attributes.name.allowNull)
-				await queryInterface.changeColumn(table, 'name', { type: DataTypes.TEXT, allowNull: true });
+		const padsAttributes = await queryInterface.describeTable("Pads");
 
-			// Change routing mode field from ENUM to TEXT
-			if(table == "Lines" && attributes.mode.type != "TEXT")
-				await queryInterface.changeColumn(table, "mode", { type: DataTypes.TEXT, allowNull: false, defaultValue: "" });
-			if(table == "Types" && attributes.defaultMode.type != "TEXT")
-				await queryInterface.changeColumn(table, "defaultMode", { type: DataTypes.TEXT, allowNull: true });
+		// Forbid null pad name
+		if (padsAttributes.name.allowNull) {
+			await this._db.pads.PadModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Pads", "name", this._db.pads.PadModel.getAttributes().name);
+		}
+
+
+		/////////////
+		// Markers //
+		/////////////
+
+		const markersAttributes = await queryInterface.describeTable("Markers");
+
+		// Forbid null marker name
+		if (markersAttributes.name.allowNull) {
+			await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Markers", "name", this._db.markers.MarkerModel.getAttributes().name);
+		}
+
+		// Remove marker colour default value
+		if (markersAttributes.colour.defaultValue) {
+			await queryInterface.changeColumn("Markers", "colour", this._db.markers.MarkerModel.getAttributes().colour);
+		}
+
+		// Remove marker size default value
+		if (markersAttributes.size.defaultValue) {
+			await queryInterface.changeColumn("Markers", "size", this._db.markers.MarkerModel.getAttributes().size);
+		}
+
+		// Forbid null marker symbol
+		if (markersAttributes.symbol.allowNull) {
+			await this._db.markers.MarkerModel.update({ symbol: "" }, { where: { symbol: null as any } });
+			await queryInterface.changeColumn("Markers", "symbol", this._db.markers.MarkerModel.getAttributes().symbol);
+		}
+
+		// Forbid null marker shape
+		if (markersAttributes.shape.allowNull) {
+			await this._db.markers.MarkerModel.update({ shape: "" }, { where: { shape: null as any } });
+			await queryInterface.changeColumn("Markers", "shape", this._db.markers.MarkerModel.getAttributes().shape);
+		}
+
+
+		///////////
+		// Lines //
+		///////////
+
+		const linesAttributes = await queryInterface.describeTable("Lines");
+
+		// Forbid null line name
+		if (linesAttributes.name.allowNull) {
+			await this._db.lines.LineModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Lines", "name", this._db.lines.LineModel.getAttributes().name);
+		}
+
+		// Change line mode field from ENUM to TEXT
+		// Remove line mode default value
+		if (linesAttributes.mode.type != "TEXT" || linesAttributes.mode.defaultValue) {
+			await queryInterface.changeColumn("Lines", "mode", this._db.lines.LineModel.getAttributes().mode);
+		}
+
+		// Remove line width default value
+		if (linesAttributes.width.defaultValue) {
+			await queryInterface.changeColumn("Lines", "width", this._db.lines.LineModel.getAttributes().width);
+		}
+
+		// Remove line colour default value
+		if (linesAttributes.colour.defaultValue) {
+			await queryInterface.changeColumn("Lines", "colour", this._db.lines.LineModel.getAttributes().colour);
+		}
+
+
+		///////////
+		// Types //
+		///////////
+
+		const typesAttributes = await queryInterface.describeTable("Types");
+
+		// Forbid null defaultColour
+		if (typesAttributes.defaultColour.allowNull) {
+			await this._db.types.TypeModel.update({ defaultColour: "ff0000" }, {
+				where: {
+					defaultColour: null as any,
+					type: "marker"
+				}
+			});
+			await this._db.types.TypeModel.update({ defaultColour: "0000ff" }, {
+				where: {
+					defaultColour: null as any,
+					type: "line"
+				}
+			});
+			await queryInterface.changeColumn("Types", "defaultColour", this._db.types.TypeModel.getAttributes().defaultColour);
+		}
+
+		// Forbid null colourFixed
+		if (typesAttributes.colourFixed.allowNull) {
+			await this._db.types.TypeModel.update({ colourFixed: false }, { where: { colourFixed: null as any } });
+			await queryInterface.changeColumn("Types", "colourFixed", this._db.types.TypeModel.getAttributes().colourFixed);
+		}
+
+		// Forbid null defaultSize
+		if (typesAttributes.defaultSize.allowNull) {
+			// 35 is the old default size, now it is 40
+			await this._db.types.TypeModel.update({ defaultSize: 35 }, { where: { defaultSize: null as any } });
+			await queryInterface.changeColumn("Types", "defaultSize", this._db.types.TypeModel.getAttributes().defaultSize);
+		}
+
+		// Forbid null sizeFixed
+		if (typesAttributes.sizeFixed.allowNull) {
+			await this._db.types.TypeModel.update({ sizeFixed: false }, { where: { sizeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "sizeFixed", this._db.types.TypeModel.getAttributes().sizeFixed);
+		}
+
+		// Forbid null defaultSymbol
+		if (typesAttributes.defaultSymbol.allowNull) {
+			await this._db.types.TypeModel.update({ defaultSymbol: "" }, { where: { defaultSymbol: null as any } });
+			await queryInterface.changeColumn("Types", "defaultSymbol", this._db.types.TypeModel.getAttributes().defaultSymbol);
+		}
+
+		// Forbid null symbolFixed
+		if (typesAttributes.symbolFixed.allowNull) {
+			await this._db.types.TypeModel.update({ symbolFixed: false }, { where: { symbolFixed: null as any } });
+			await queryInterface.changeColumn("Types", "symbolFixed", this._db.types.TypeModel.getAttributes().symbolFixed);
+		}
+
+		// Forbid null defaultShape
+		if (typesAttributes.defaultShape.allowNull) {
+			await this._db.types.TypeModel.update({ defaultShape: "" }, { where: { defaultShape: null as any } });
+			await queryInterface.changeColumn("Types", "defaultShape", this._db.types.TypeModel.getAttributes().defaultShape);
+		}
+
+		// Forbid null shapeFixed
+		if (typesAttributes.shapeFixed.allowNull) {
+			await this._db.types.TypeModel.update({ shapeFixed: false }, { where: { shapeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "shapeFixed", this._db.types.TypeModel.getAttributes().shapeFixed);
+		}
+
+		// Forbid null defaultWidth
+		if (typesAttributes.defaultWidth.allowNull) {
+			await this._db.types.TypeModel.update({ defaultWidth: 4 }, { where: { defaultWidth: null as any } });
+			await queryInterface.changeColumn("Types", "defaultWidth", this._db.types.TypeModel.getAttributes().defaultWidth);
+		}
+
+		// Forbid null widthFixed
+		if (typesAttributes.widthFixed.allowNull) {
+			await this._db.types.TypeModel.update({ widthFixed: false }, { where: { widthFixed: null as any } });
+			await queryInterface.changeColumn("Types", "widthFixed", this._db.types.TypeModel.getAttributes().widthFixed);
+		}
+
+		// Change defaultMode from ENUM to TEXT
+		// Forbid null defaultMode
+		if (typesAttributes.defaultMode.type != "TEXT" || typesAttributes.defaultMode.allowNull) {
+			if (typesAttributes.defaultMode.allowNull) {
+				await this._db.types.TypeModel.update({ defaultMode: "" }, { where: { defaultMode: null as any } });
+			}
+			await queryInterface.changeColumn("Types", "defaultMode", this._db.types.TypeModel.getAttributes().defaultMode);
+		}
+
+		// Forbid null modeFixed
+		if (typesAttributes.modeFixed.allowNull) {
+			await this._db.types.TypeModel.update({ modeFixed: false }, { where: { modeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "modeFixed", this._db.types.TypeModel.getAttributes().modeFixed);
+		}
+
+		// Forbid null showInLegend
+		if (typesAttributes.showInLegend.allowNull) {
+			await this._db.types.TypeModel.update({ showInLegend: false }, { where: { showInLegend: null as any } });
+			await queryInterface.changeColumn("Types", "showInLegend", this._db.types.TypeModel.getAttributes().showInLegend);
 		}
 	}
 
@@ -94,9 +256,10 @@ export default class DatabaseMigrations {
 		for (const table of [ 'Pad', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
 			const model = this._db._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
-			for(const attribute in model.rawAttributes) {
-				if((model.rawAttributes[attribute].type as any).key !== DataTypes.VIRTUAL.key && !attributes[attribute] && !exempt.some((e) => e[0] == table && e[1] == attribute))
-					await queryInterface.addColumn(model.getTableName(), attribute, model.rawAttributes[attribute]);
+			const rawAttributes = model.getAttributes();
+			for(const attribute in rawAttributes) {
+				if((rawAttributes[attribute].type as any).key !== DataTypes.VIRTUAL.key && !attributes[attribute] && !exempt.some((e) => e[0] == table && e[1] == attribute))
+					await queryInterface.addColumn(model.getTableName(), attribute, rawAttributes[attribute]);
 			}
 		}
 	}

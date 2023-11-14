@@ -1,7 +1,7 @@
 import { viewValidator } from "./view.js";
 import { idValidator, padIdValidator } from "./base.js";
 import * as z from "zod";
-import { CRU, type CRUType, cruValidator } from "./cru";
+import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead } from "./cru";
 
 export enum Writable {
 	READ = 0,
@@ -11,28 +11,30 @@ export enum Writable {
 export const writableValidator = z.nativeEnum(Writable);
 
 export const padDataValidator = cruValidator({
-	allPartialUpdate: {
-		id: padIdValidator,
-		name: z.string(),
-		searchEngines: z.boolean(),
-		description: z.string(),
-		clusterMarkers: z.boolean(),
-		legend1: z.string(),
-		legend2: z.string(),
-		defaultViewId: idValidator.or(z.null())
+	id: optionalUpdate(padIdValidator),
+	writeId: {
+		read: padIdValidator.optional(), // Unavailable if pad is opened in read-only mode
+		create: padIdValidator,
+		update: padIdValidator.optional()
 	},
-	onlyRead: {
-		writable: writableValidator,
-		defaultView: viewValidator.read.or(z.null())
+	adminId: {
+		read: padIdValidator.optional(), // Unavailable if pad is opened in read-only/writeable mode
+		create: padIdValidator,
+		update: padIdValidator.optional()
 	},
-	exceptCreate: {
-		writeId: padIdValidator.optional(),
-		adminId: padIdValidator.optional()
-	},
-	onlyCreate: {
-		writeId: padIdValidator,
-		adminId: padIdValidator
-	}
+
+	test: optionalCreate(z.string()),
+
+	name: optionalCreate(z.string(), ""),
+	searchEngines: optionalCreate(z.boolean(), false),
+	description: optionalCreate(z.string(), ""),
+	clusterMarkers: optionalCreate(z.boolean(), false),
+	legend1: optionalCreate(z.string(), ""),
+	legend2: optionalCreate(z.string(), ""),
+	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
+
+	writable: onlyRead(writableValidator),
+	defaultView: onlyRead(viewValidator.read.or(z.null()))
 });
 
 export type PadData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof padDataValidator>;

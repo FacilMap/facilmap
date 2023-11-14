@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { Field, ID, Type } from "facilmap-types";
+	import { typeValidator, type Field, type ID, type Type, CRU } from "facilmap-types";
 	import { canControl, getUniqueId, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
@@ -26,7 +26,7 @@
 	const toasts = useToasts();
 
 	const props = defineProps<{
-		typeId?: ID;
+		typeId: ID | "createMarkerType" | "createLineType";
 	}>();
 
 	const emit = defineEmits<{
@@ -35,17 +35,30 @@
 
 	const id = getUniqueId("fm-edit-type-dialog");
 
-	const isCreate = computed(() => props.typeId == null);
+	const isCreate = computed(() => props.typeId === "createMarkerType" || props.typeId === "createLineType");
 
 	const originalType = computed(() => {
-		return props.typeId != null ? client.value.types[props.typeId] : undefined;
+		return typeof props.typeId === "number" ? client.value.types[props.typeId] : undefined;
 	});
 
-	const initialType = computed<Type>(() => {
-		const type = isCreate.value ? { fields: [] } as any : cloneDeep(originalType.value)!;
+	const initialType = computed<Type<CRU.CREATE_VALIDATED | CRU.READ>>(() => {
+		let type: Type<CRU.CREATE_VALIDATED | CRU.READ>;
+		if (props.typeId === "createMarkerType") {
+			type = {
+				...typeValidator.create.parse({ name: "-", type: "marker" } satisfies Type<CRU.CREATE>),
+				name: ""
+			};
+		} else if (props.typeId === "createLineType") {
+			type = {
+				...typeValidator.create.parse({ name: "-", type: "line" } satisfies Type<CRU.CREATE>),
+				name: ""
+			};
+		} else {
+			type = cloneDeep(originalType.value)!;
+		}
 
 		for(const field of type.fields) {
-			field.oldName = field.name;
+			(field as any).oldName = field.name;
 		}
 
 		return type;
@@ -93,16 +106,11 @@
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-edit-type-error`);
 
-		for (const prop of [ "defaultWidth", "defaultSize", "defaultColour" ] as const) {
-			if(type.value[prop] == "")
-				type.value[prop] = null;
-		}
-
 		try {
 			if (isCreate.value)
 				await client.value.addType(type.value);
 			else
-				await client.value.editType(type.value);
+				await client.value.editType(type.value as Type);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
@@ -156,27 +164,17 @@
 
 		<div class="row mb-3">
 			<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">Type</label>
-			<ValidatedField
-				:value="type.type"
-				:validators="[validateRequired]"
-				class="col-sm-9 position-relative"
-			>
-				<template #default="slotProps">
-					<select
-						:id="`${id}-type-input`"
-						v-model="type.type"
-						class="form-select"
-						:disabled="!isCreate"
-						:ref="slotProps.inputRef"
-					>
-						<option value="marker">Marker</option>
-						<option value="line">Line</option>
-					</select>
-					<div class="invalid-tooltip">
-						{{slotProps.validationError}}
-					</div>
-				</template>
-			</ValidatedField>
+			<div class="col-sm-9">
+				<select
+					:id="`${id}-type-input`"
+					v-model="type.type"
+					class="form-select"
+					disabled
+				>
+					<option value="marker">Marker</option>
+					<option value="line">Line</option>
+				</select>
+			</div>
 		</div>
 
 		<template v-if="resolvedCanControl.length > 0">

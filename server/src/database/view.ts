@@ -61,7 +61,7 @@ export default class DatabaseViews {
 		return this._db.helpers._getPadObjects<View>("View", padId);
 	}
 
-	async createView(padId: PadId, data: View<CRU.CREATE>): Promise<View> {
+	async createView(padId: PadId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -78,7 +78,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: Omit<View<CRU.UPDATE>, "id">): Promise<View> {
+	async updateView(padId: PadId, viewId: ID, data: Omit<View<CRU.UPDATE_VALIDATED>, "id">): Promise<View> {
 		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
 
 		this._db.emit("view", padId, newData);

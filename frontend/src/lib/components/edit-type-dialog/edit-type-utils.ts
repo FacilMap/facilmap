@@ -40,7 +40,7 @@ function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customF
 	return mergedFields;
 }
 
-export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type & Type<CRU.UPDATE>): void {
+export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type<CRU.CREATE_VALIDATED | CRU.READ>): void {
 	let customFields = cloneDeep(targetObject.fields);
 
 	mergeObject(oldObject, newObject, targetObject);

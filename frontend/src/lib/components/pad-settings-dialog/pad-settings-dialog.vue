@@ -31,7 +31,7 @@
 	const deleteConfirmation = ref("");
 
 	const initialPadData: PadData<CRU.CREATE> | undefined = props.isCreate ? {
-		name: "New FacilMap",
+		name: "",
 		searchEngines: false,
 		description: "",
 		clusterMarkers: false,

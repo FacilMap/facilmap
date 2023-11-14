@@ -16,10 +16,10 @@ export type Colour = z.infer<typeof colourValidator>;
 export const sizeValidator = z.number().min(15);
 export type Size = z.infer<typeof sizeValidator>;
 
-export const symbolValidator = z.string();
+export const symbolValidator = z.string().trim();
 export type Symbol = z.infer<typeof symbolValidator>;
 
-export const shapeValidator = z.string();
+export const shapeValidator = z.string().trim();
 export type Shape = z.infer<typeof shapeValidator>;
 
 export const widthValidator = z.number().min(1);

@@ -27,7 +27,7 @@ export default class DatabasePads {
 
 		this.PadModel.init({
 			id : { type: DataTypes.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
-			name: { type: DataTypes.TEXT, allowNull: true, get: function(this: PadModel) { return this.getDataValue("name") || "New FacilMap"; } },
+			name: { type: DataTypes.TEXT, allowNull: false },
 			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
@@ -72,7 +72,7 @@ export default class DatabasePads {
 		return obj?.toJSON();
 	}
 
-	async createPad(data: PadData<CRU.CREATE>): Promise<PadData> {
+	async createPad(data: PadData<CRU.CREATE_VALIDATED>): Promise<PadData> {
 		if(!data.id || data.id.length == 0)
 			throw new Error("Invalid read-only ID");
 		if(!data.writeId || data.writeId.length == 0)
@@ -94,7 +94,7 @@ export default class DatabasePads {
 		return createdObj.toJSON() as PadData;
 	}
 
-	async updatePadData(padId: PadId, data: PadData<CRU.UPDATE>): Promise<PadData> {
+	async updatePadData(padId: PadId, data: PadData<CRU.UPDATE_VALIDATED>): Promise<PadData> {
 		const oldData = await this.getPadData(padId);
 
 		if(!oldData)

@@ -28,14 +28,14 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 	}
 }
 
-export function canControl<T extends Marker | Line = Marker | Line>(type: Type, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
+export function canControl<T extends Marker | Line = Marker | Line>(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
 	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)
 			return false;
 
 		const idx = "control"+prop.charAt(0).toUpperCase() + prop.slice(1);
-		for (const field of type.fields) {
+		for (const field of type.fields ?? []) {
 			if ((field as any)[idx] && (!ignoreField || field !== ignoreField))
 				return false;
 		}

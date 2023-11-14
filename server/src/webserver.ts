@@ -9,6 +9,7 @@ import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { Readable, Writable } from "stream";
 import { getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
+import { normalizePadName } from "facilmap-utils";
 
 type PathParams = {
 	padId: PadId
@@ -22,7 +23,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 				const padData = await database.pads.getPadDataByAnyId(req.params.padId);
 				if (padData) {
 					params = {
-						padData,
+						padData: {
+							searchEngines: padData.searchEngines,
+							name: normalizePadName(padData.name),
+							description: padData.description
+						},
 						isReadOnly: padData.id === req.params.padId
 					};
 				} else {

@@ -6,6 +6,7 @@
 	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { normalizePadName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -63,7 +64,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="addBookmark()"
-			>Bookmark {{client.padData.name}}</a>
+			>Bookmark {{normalizePadName(client.padData.name)}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">

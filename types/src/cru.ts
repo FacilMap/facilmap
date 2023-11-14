@@ -1,133 +1,163 @@
 import * as z from "zod";
 
+/**
+ * Represents a "create", "read" or "update" object mode (CRUD without "delete"). Used as a generic, enables to make certain
+ * properties optional or unavailable in certain object modes.
+ */
 export enum CRU {
 	READ = "read",
 	CREATE = "create",
-	UPDATE = "update"
+	CREATE_VALIDATED = "createValidated",
+	UPDATE = "update",
+	UPDATE_VALIDATED = "updateValidated"
 }
 
+type CRUInput = CRU.READ | CRU.CREATE | CRU.UPDATE;
+
+/**
+ * A zod validator for each object mode. Easiest to create through the {@link cruValidator()} function.
+ */
 export type CRUValidator<
-	ReadValidator extends z.ZodType,
-	CreateValidator extends z.ZodType,
-	UpdateValidator extends z.ZodType
+	ReadValidator extends z.ZodTypeAny,
+	CreateValidator extends z.ZodTypeAny,
+	UpdateValidator extends z.ZodTypeAny
 > = {
 	read: ReadValidator;
 	create: CreateValidator;
 	update: UpdateValidator
 };
 
-export type CRUValidatorDeclaration<
-	AllShape extends z.ZodRawShape = {},
-	AllPartialCreateShape extends z.ZodRawShape = {},
-	AllPartialUpdateShape extends z.ZodRawShape = {},
-	OnlyReadShape extends z.ZodRawShape = {},
-	ExceptReadShape extends z.ZodRawShape = {},
-	OnlyCreateShape extends z.ZodRawShape = {},
-	ExceptCreateShape extends z.ZodRawShape = {},
-	OnlyUpdateShape extends z.ZodRawShape = {},
-	ExceptUpdateShape extends z.ZodRawShape = {},
-> = {
-	all?: AllShape;
-	/** All properties required for read, all properties optional for create/update */
-	allPartialCreate?: AllPartialCreateShape;
-	/** All properties required for read/create, all properties optional for update */
-	allPartialUpdate?: AllPartialUpdateShape;
-	onlyRead?: OnlyReadShape;
-	exceptRead?: ExceptReadShape;
-	onlyCreate?: OnlyCreateShape;
-	exceptCreate?: ExceptCreateShape;
-	onlyUpdate?: OnlyUpdateShape;
-	exceptUpdate?: ExceptUpdateShape;
+/**
+ * A validator for each object mode. If a validator is not defined, it means that the property is not present in that object mode.
+ * Easiest to be created using one of the helper functions below.
+ */
+type CRUSingleGranularDeclaration = {
+	read?: z.ZodTypeAny;
+	create?: z.ZodTypeAny;
+	update?: z.ZodTypeAny;
 };
 
-type PartialZodShape<T extends z.ZodRawShape> = {
-	[k in keyof T]: z.ZodOptional<T[k]>;
+type CRUSingleDeclaration = z.ZodTypeAny | CRUSingleGranularDeclaration;
+
+type CRUSingleModeValidatorForDeclaration<T extends CRUSingleDeclaration, Mode extends CRUInput> = (
+	T extends CRUSingleGranularDeclaration ? (T[Mode] extends z.ZodTypeAny ? T[Mode] : never) : T
+);
+
+type OmitNever<T extends Record<any, any>> = {
+	[K in keyof T as T[K] extends never ? never : K]: T[K];
 };
 
-// https://fettblog.eu/typescript-union-to-intersection/
-type ZodRawShapeUnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R extends z.ZodRawShape) => any ? R : never;
-type ZodExtendedObjects<Obj extends Array<z.ZodRawShape>> = Obj extends Array<infer T> ? z.ZodObject<ZodRawShapeUnionToIntersection<T>> : never;
+type CRUModeValidatorForDeclaration<T extends Record<any, CRUSingleDeclaration>, Mode extends CRUInput> = (
+	z.ZodObject<OmitNever<{
+		[K in keyof T]: CRUSingleModeValidatorForDeclaration<T[K], Mode>;
+	}>>
+);
 
-export type CRUValidatorForDeclaration<
-	AllShape extends z.ZodRawShape = {},
-	AllPartialCreateShape extends z.ZodRawShape = {},
-	AllPartialUpdateShape extends z.ZodRawShape = {},
-	OnlyReadShape extends z.ZodRawShape = {},
-	ExceptReadShape extends z.ZodRawShape = {},
-	OnlyCreateShape extends z.ZodRawShape = {},
-	ExceptCreateShape extends z.ZodRawShape = {},
-	OnlyUpdateShape extends z.ZodRawShape = {},
-	ExceptUpdateShape extends z.ZodRawShape = {},
-> = CRUValidator<
-	ZodExtendedObjects<[
-		AllShape,
-		AllPartialCreateShape,
-		AllPartialUpdateShape,
-		OnlyReadShape,
-		ExceptCreateShape,
-		ExceptUpdateShape
-	]>,
-	ZodExtendedObjects<[
-		AllShape,
-		PartialZodShape<AllPartialCreateShape>,
-		AllPartialUpdateShape,
-		OnlyCreateShape,
-		ExceptReadShape,
-		ExceptUpdateShape
-	]>,
-	ZodExtendedObjects<[
-		AllShape,
-		PartialZodShape<AllPartialCreateShape>,
-		PartialZodShape<AllPartialUpdateShape>,
-		OnlyUpdateShape,
-		ExceptReadShape,
-		ExceptCreateShape
-	]>
->;
+export type CRUValidatorForDeclaration<T extends Record<any, CRUSingleDeclaration>> = {
+	read: CRUModeValidatorForDeclaration<T, CRU.READ>;
+	create: CRUModeValidatorForDeclaration<T, CRU.CREATE>;
+	update: CRUModeValidatorForDeclaration<T, CRU.UPDATE>;
+};
 
-export function cruValidator<
-	AllShape extends z.ZodRawShape = {},
-	AllPartialCreateShape extends z.ZodRawShape = {},
-	AllPartialUpdateShape extends z.ZodRawShape = {},
-	OnlyReadShape extends z.ZodRawShape = {},
-	ExceptReadShape extends z.ZodRawShape = {},
-	OnlyCreateShape extends z.ZodRawShape = {},
-	ExceptCreateShape extends z.ZodRawShape = {},
-	OnlyUpdateShape extends z.ZodRawShape = {},
-	ExceptUpdateShape extends z.ZodRawShape = {},
->(
-	declaration: CRUValidatorDeclaration<AllShape, AllPartialCreateShape, AllPartialUpdateShape, OnlyReadShape, ExceptReadShape, OnlyCreateShape, ExceptCreateShape, OnlyUpdateShape, ExceptUpdateShape>
-): CRUValidatorForDeclaration<AllShape, AllPartialCreateShape, AllPartialUpdateShape, OnlyReadShape, ExceptReadShape, OnlyCreateShape, ExceptCreateShape, OnlyUpdateShape, ExceptUpdateShape> {
+function cruModeValidator<T extends Record<any, CRUSingleDeclaration>, Mode extends CRUInput>(declaration: T, mode: Mode): CRUModeValidatorForDeclaration<T, Mode> {
+	return z.object(Object.fromEntries(Object.entries(declaration).flatMap(([k, v]) => {
+		if (v instanceof z.ZodType) {
+			return [[k, v] as const];
+		} else if (v[mode]) {
+			return [[k, v[mode]!] as const];
+		} else {
+			return [];
+		}
+	}))) as any;
+}
+
+/**
+ * Converts a zod shape to a {@link CRUValidator}. Each property of the zod shape may be a zod validator (to apply the same
+ * validator to all object modes) or a {@link CRUSingleGranularDeclaration} (to provide a different validator to each object
+ * mode).
+ */
+export function cruValidator<T extends Record<any, CRUSingleDeclaration>>(declaration: T): CRUValidatorForDeclaration<T> {
 	return {
-		read: z.object({
-			...declaration.all,
-			...declaration.allPartialCreate,
-			...declaration.allPartialUpdate,
-			...declaration.onlyRead,
-			...declaration.exceptCreate,
-			...declaration.exceptUpdate
-		}),
-		create: z.object({
-			...declaration.all,
-			...Object.fromEntries(Object.entries(declaration.allPartialCreate ?? {}).map(([k, v]) => [k, v.optional()])),
-			...declaration.allPartialUpdate,
-			...declaration.onlyCreate,
-			...declaration.exceptRead,
-			...declaration.exceptUpdate
-		}),
-		update: z.object({
-			...declaration.all,
-			...Object.fromEntries(Object.entries(declaration.allPartialCreate ?? {}).map(([k, v]) => [k, v.optional()])),
-			...Object.fromEntries(Object.entries(declaration.allPartialUpdate ?? {}).map(([k, v]) => [k, v.optional()])),
-			...declaration.onlyUpdate,
-			...declaration.exceptRead,
-			...declaration.exceptCreate
-		})
-	} as any;
+		read: cruModeValidator(declaration, CRU.READ),
+		create: cruModeValidator(declaration, CRU.CREATE),
+		update: cruModeValidator(declaration, CRU.UPDATE)
+	};
 }
 
 export type CRUType<Mode extends CRU, Validator extends CRUValidator<any, any, any>> = (
 	Mode extends CRU.READ ? z.infer<Validator["read"]> :
-	Mode extends CRU.CREATE ? z.infer<Validator["create"]> :
-	Mode extends CRU.UPDATE ? z.infer<Validator["update"]> : never
+	Mode extends CRU.CREATE ? z.input<Validator["create"]> :
+	Mode extends CRU.CREATE_VALIDATED ? z.output<Validator["create"]> :
+	Mode extends CRU.UPDATE ? z.input<Validator["update"]> :
+	Mode extends CRU.UPDATE_VALIDATED ? z.output<Validator["update"]> :
+	never
 );
+
+/**
+ * Creates a CRU validator where the property is only available in read mode.
+ */
+export function onlyRead<T extends z.ZodTypeAny>(validator: T): { read: T } {
+	return { read: validator };
+}
+
+/**
+ * Creates a CRU validator where the property is only available in create mode.
+ */
+export function onlyCreate<T extends z.ZodTypeAny>(validator: T): { create: T } {
+	return { create: validator };
+}
+
+/**
+ * Creates a CRU validator where the property is only available in update mode.
+ */
+export function onlyUpdate<T extends z.ZodTypeAny>(validator: T): { update: T } {
+	return { update: validator };
+}
+
+/**
+ * Creates a CRU validator where the property is only available in create and update mode.
+ */
+export function exceptRead<T extends z.ZodTypeAny>(validator: T): { create: T; update: T } {
+	return { create: validator, update: validator };
+}
+
+/**
+ * Creates a CRU validator where the property is only available in read and update mode.
+ */
+export function exceptCreate<T extends z.ZodTypeAny>(validator: T): { read: T; update: T } {
+	return { read: validator, update: validator };
+}
+
+/**
+ * Creates a CRU validator where the property is only available in read and create mode.
+ */
+export function exceptUpdate<T extends z.ZodTypeAny>(validator: T): { read: T; create: T } {
+	return { read: validator, create: validator };
+}
+
+/**
+ * Create a CRU validator where the property is required in read mode but optional in create and update mode.
+ * @param defaultValue If specified, this default value is applied in create mode (not in update mode!)
+ */
+export function optionalCreate<T extends z.ZodTypeAny, D extends z.infer<T> | undefined = undefined>(validator: T, defaultValue?: D): { read: T; create: D extends undefined ? z.ZodOptional<T> : z.ZodDefault<T>; update: z.ZodOptional<T>; } {
+	return {
+		read: validator,
+		create: defaultValue !== undefined ? validator.default(defaultValue) : validator.optional() as any,
+		update: validator.optional()
+	};
+}
+
+/**
+ * Creates a CRU validator where the property is required in read and create mode but optional in update mode.
+ */
+export function optionalUpdate<T extends z.ZodTypeAny>(validator: T): { read: T; create: T; update: z.ZodOptional<T>; } {
+	return {
+		read: validator,
+		create: validator,
+		update: validator.optional()
+	};
+}
+
+export function mapValues<T extends Record<string, any>, R>(obj: T, mapper: (val: T[keyof T], key: keyof T) => R): Record<keyof T, R> {
+	return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, mapper(v, k)])) as any;
+}

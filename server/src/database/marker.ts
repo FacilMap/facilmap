@@ -1,6 +1,6 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
 import type { BboxWithZoom, CRU, ID, Latitude, Longitude, Marker, PadId } from "facilmap-types";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint } from "../elevation.js";
 import type { PadModel } from "./pad.js";
@@ -13,12 +13,12 @@ export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCr
 	pos: GeoJsonPoint;
 	lat: Latitude;
 	lon: Longitude;
-	name: string | null;
+	name: string;
 	typeId: ForeignKey<TypeModel["id"]>;
 	colour: string;
 	size: number;
-	symbol: string | null;
-	shape: string | null;
+	symbol: string;
+	shape: string;
 	ele: number | null;
 	toJSON: () => Marker;
 }
@@ -38,11 +38,11 @@ export default class DatabaseMarkers {
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),
-			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: MarkerModel) { return this.getDataValue("name") || ""; } },
-			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
-			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
-			symbol : { type: DataTypes.TEXT, allowNull: true },
-			shape : { type: DataTypes.TEXT, allowNull: true },
+			name : { type: DataTypes.TEXT, allowNull: false },
+			colour : { type: DataTypes.STRING(6), allowNull: false },
+			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			symbol : { type: DataTypes.TEXT, allowNull: false },
+			shape : { type: DataTypes.TEXT, allowNull: false },
 			ele: { type: DataTypes.INTEGER, allowNull: true }
 		}, {
 			sequelize: this._db._conn,
@@ -80,7 +80,7 @@ export default class DatabaseMarkers {
 		return this._db.helpers._getPadObject("Marker", padId, markerId);
 	}
 
-	async createMarker(padId: PadId, data: Marker<CRU.CREATE>): Promise<Marker> {
+	async createMarker(padId: PadId, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
 		const elevation = await getElevationForPoint(data);
 
@@ -93,7 +93,7 @@ export default class DatabaseMarkers {
 		if(type.defaultShape)
 			data.shape = type.defaultShape;
 
-		data.ele = elevation;
+		data.ele = elevation ?? null;
 
 		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, data);
 
@@ -103,7 +103,7 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE>, "id">, doNotUpdateStyles = false): Promise<Marker> {
+	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, doNotUpdateStyles = false): Promise<Marker> {
 		const update = { ...data };
 
 		if (update.lat != null && update.lon != null)

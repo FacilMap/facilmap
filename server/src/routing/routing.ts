@@ -43,7 +43,7 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	} as RouteInfo;
 }
 
-export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
+export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
 	const result: Partial<RouteInfo> = {};
 
 	if(trackPointsFromRoute) {
@@ -84,7 +84,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE>, 'mode' 
 
 		result.trackPoints = [ ];
 		for(let i=0; i<line.routePoints.length; i++) {
-			result.trackPoints.push({ ...line.routePoints[i], zoom: 1, idx: i });
+			result.trackPoints.push({ ...line.routePoints[i], ele: null, zoom: 1, idx: i });
 		}
 	}
 

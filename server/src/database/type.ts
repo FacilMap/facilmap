@@ -1,7 +1,7 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { CRU, Field, ID, PadId, Type } from "facilmap-types";
+import { typeValidator, type CRU, type Field, type ID, type PadId, type Type } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { PadModel } from "./pad.js";
 
 export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreationAttributes<TypeModel>> {
@@ -9,26 +9,26 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	name: string;
 	type: "marker" | "line";
 	padId: ForeignKey<PadModel["id"]>;
-	defaultColour: string | null;
-	colourFixed: boolean | null;
-	defaultSize: string | null;
-	sizeFixed: boolean | null;
-	defaultSymbol: string | null;
-	symbolFixed: boolean | null;
-	defaultShape: string | null;
-	shapeFixed: boolean | null;
-	defaultWidth: string | null;
-	widthFixed: boolean | null;
-	defaultMode: string | null;
-	modeFixed: boolean | null;
-	showInLegend: boolean | null;
+	defaultColour: string;
+	colourFixed: boolean;
+	defaultSize: number;
+	sizeFixed: boolean;
+	defaultSymbol: string;
+	symbolFixed: boolean;
+	defaultShape: string;
+	shapeFixed: boolean;
+	defaultWidth: number;
+	widthFixed: boolean;
+	defaultMode: string;
+	modeFixed: boolean;
+	showInLegend: boolean;
 	fields: Field[];
 	toJSON: () => Type;
 };
 
-const DEFAULT_TYPES: Type<CRU.CREATE>[] = [
-	{ name: "Marker", type: "marker", fields: [ { name: "Description", type: "textarea" } ] },
-	{ name: "Line", type: "line", fields: [ { name: "Description", type: "textarea" } ] }
+const DEFAULT_TYPES: Type<CRU.CREATE_VALIDATED>[] = [
+	typeValidator.create.parse({ name: "Marker", type: "marker" } satisfies Type<CRU.CREATE>),
+	typeValidator.create.parse({ name: "Line", type: "line" } satisfies Type<CRU.CREATE>)
 ];
 
 export default class DatabaseTypes {
@@ -44,19 +44,19 @@ export default class DatabaseTypes {
 			id: getDefaultIdType(),
 			name: { type: DataTypes.TEXT, allowNull: false },
 			type: { type: DataTypes.ENUM("marker", "line"), allowNull: false },
-			defaultColour: { type: DataTypes.STRING(6), allowNull: true, validate: validateColour },
-			colourFixed: { type: DataTypes.BOOLEAN, allowNull: true },
-			defaultSize: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, validate: { min: 15 } },
-			sizeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
-			defaultSymbol: { type: DataTypes.TEXT, allowNull: true},
-			symbolFixed: { type: DataTypes.BOOLEAN, allowNull: true},
-			defaultShape: { type: DataTypes.TEXT, allowNull: true },
-			shapeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
-			defaultWidth: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true, validate: { min: 1 } },
-			widthFixed: { type: DataTypes.BOOLEAN, allowNull: true },
-			defaultMode: { type: DataTypes.TEXT, allowNull: true },
-			modeFixed: { type: DataTypes.BOOLEAN, allowNull: true },
-			showInLegend: { type: DataTypes.BOOLEAN, allowNull: true },
+			defaultColour: { type: DataTypes.STRING(6), allowNull: false },
+			colourFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultSize: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			sizeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultSymbol: { type: DataTypes.TEXT, allowNull: false },
+			symbolFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultShape: { type: DataTypes.TEXT, allowNull: false },
+			shapeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultWidth: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			widthFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultMode: { type: DataTypes.TEXT, allowNull: false },
+			modeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			showInLegend: { type: DataTypes.BOOLEAN, allowNull: false },
 
 			fields: {
 				type: DataTypes.TEXT,
@@ -66,95 +66,11 @@ export default class DatabaseTypes {
 					return fields == null ? [] : JSON.parse(fields);
 				},
 				set: function(this: TypeModel, v: Field[]) {
-					for(const field of v) {
-						if(field.controlSymbol) {
-							for(const option of field.options ?? []) {
-								if(!option.symbol)
-									option.symbol = ""; // Avoid "undefined" ending up there, which messes everything up
-							}
-						}
-						if(field.controlShape) {
-							for(const option of field.options ?? []) {
-								if(!option.shape)
-									option.shape = ""; // Avoid "undefined" ending up there, which messes everything up
-							}
-						}
-					}
-
 					return this.setDataValue("fields", JSON.stringify(v) as any);
-				},
-				validate: {
-					checkUniqueFieldName: (value: string) => {
-						const fields = JSON.parse(value) as Field[];
-						const fieldNames = new Set<string>();
-						for (const field of fields) {
-							if(field.name.trim().length == 0)
-								throw new Error("Empty field name.");
-							if(fieldNames.has(field.name))
-								throw new Error("field name "+field.name+" is not unique.");
-
-							fieldNames.add(field.name);
-
-							if([ "textarea", "dropdown", "checkbox", "input" ].indexOf(field.type) == -1)
-								throw new Error("Invalid field type "+field.type+" for field "+field.name+".");
-
-							if(field.controlColour) {
-								if(!field.options || field.options.length < 1)
-									throw new Error("No options specified for colour-controlling field "+field.name+".");
-								for (const option of field.options) {
-									if(!option.colour || !option.colour.match(validateColour.is))
-										throw new Error("Invalid colour "+option.colour+" in field "+field.name+".");
-								}
-							}
-
-							if(field.controlSize) {
-								if(!field.options || field.options.length < 1)
-									throw new Error("No options specified for size-controlling field "+field.name+".");
-								for(const option of field.options) {
-									if(!option.size || !isFinite(option.size) || option.size < 15)
-										throw new Error("Invalid size "+option.size+" in field "+field.name+".");
-								}
-							}
-
-							if(field.controlSymbol) {
-								if(!field.options || field.options.length < 1)
-									throw new Error("No options specified for icon-controlling field "+field.name+".");
-							}
-
-							if(field.controlWidth) {
-								if(!field.options || field.options.length < 1)
-									throw new Error("No options specified for width-controlling field "+field.name+".");
-								for(const option of field.options) {
-									if(!option.width || !(1*option.width >= 1))
-										throw new Error("Invalid width "+option.width+" in field "+field.name+".");
-								}
-							}
-
-							// Validate unique dropdown entries
-							if(field.type == "dropdown") {
-								const existingValues = new Set<string>();
-								for(const option of (field.options || [])) {
-									if(existingValues.has(option.value))
-										throw new Error(`Duplicate option "${option.value}" for field "${field.name}".`);
-									existingValues.add(option.value);
-								}
-							}
-						}
-					}
 				}
 			}
 		}, {
 			sequelize: this._db._conn,
-			validate: {
-				defaultValsNotNull: function() {
-					if(this.colourFixed && this.defaultColour == null)
-						throw new Error("Fixed colour cannot be undefined.");
-					if(this.sizeFixed && this.defaultSize == null)
-						throw new Error("Fixed size cannot be undefined.");
-					if(this.widthFixed && this.defaultWidth == null)
-						throw new Error("Fixed width cannot be undefined.");
-				}
-			},
 			modelName: "Type"
 		});
 	}
@@ -173,7 +89,7 @@ export default class DatabaseTypes {
 		return this._db.helpers._getPadObject<Type>("Type", padId, typeId);
 	}
 
-	async createType(padId: PadId, data: Type<CRU.CREATE>): Promise<Type> {
+	async createType(padId: PadId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 
@@ -182,7 +98,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE>, "id">, _doNotUpdateStyles?: boolean): Promise<Type> {
+	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE_VALIDATED>, "id">, _doNotUpdateStyles?: boolean): Promise<Type> {
 		if(data.name == null || data.name.trim().length == 0)
 			throw new Error("No name provided.");
 

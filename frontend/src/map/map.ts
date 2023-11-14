@@ -1,7 +1,7 @@
 import $ from "jquery";
 import { createApp, defineComponent, h, ref, watch } from "vue";
 import { FacilMap } from "../lib";
-import { decodeQueryString, encodeQueryString } from "facilmap-utils";
+import { decodeQueryString, encodeQueryString, normalizePadName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
 
@@ -53,7 +53,7 @@ const Root = defineComponent({
 		});
 
 		watch(padName, () => {
-			const title = padName.value ? padName.value + ' – FacilMap' : 'FacilMap';
+			const title = padName.value != null ? `${normalizePadName(padName.value)} – FacilMap` : 'FacilMap';
 
 			// We have to call history.replaceState() in order for the new title to end up in the browser history
 			window.history && history.replaceState({ }, title);

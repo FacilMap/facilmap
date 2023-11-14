@@ -1,7 +1,7 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
 import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU } from "facilmap-types";
 import Database from "./database.js";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey, validateColour } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
@@ -17,10 +17,10 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	padId: ForeignKey<PadModel["id"]>;
 	routePoints: string;
 	typeId: ForeignKey<TypeModel["id"]>;
-	mode: CreationOptional<string>;
-	colour: CreationOptional<string>;
-	width: CreationOptional<number>;
-	name: CreationOptional<string | null>;
+	mode: string;
+	colour: string;
+	width: number;
+	name: string;
 	distance: CreationOptional<number | null>;
 	time: CreationOptional<number | null>;
 	ascent: CreationOptional<number | null>;
@@ -84,10 +84,10 @@ export default class DatabaseLines {
 					}
 				}
 			},
-			mode : { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "0000ff", validate: validateColour },
-			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
-			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: LineModel) { return this.getDataValue("name") || ""; } },
+			mode : { type: DataTypes.TEXT, allowNull: false },
+			colour : { type: DataTypes.STRING(6), allowNull: false },
+			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			name : { type: DataTypes.TEXT, allowNull: false },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
 			time : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
 			ascent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
@@ -189,7 +189,7 @@ export default class DatabaseLines {
 		return this._db.helpers._getPadObject<Line>("Line", padId, lineId);
 	}
 
-	async createLine(padId: PadId, data: Line<CRU.CREATE>, trackPointsFromRoute?: Route): Promise<Line> {
+	async createLine(padId: PadId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
 		const type = await this._db.types.getType(padId, data.typeId);
 
 		if(type.defaultColour && !data.colour)
@@ -215,7 +215,7 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE>, "id">, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
 		const update = {
 			...data,

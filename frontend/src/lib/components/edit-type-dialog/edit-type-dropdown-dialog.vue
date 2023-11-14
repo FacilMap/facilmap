@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
+	import type { CRU, Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
 	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourPicker from "../ui/colour-picker.vue";
@@ -16,7 +16,7 @@
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 
-	function getControlNumber(type: Type, field: FieldUpdate): number {
+	function getControlNumber(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: FieldUpdate): number {
 		return [
 			field.controlColour,
 			...(type.type == "marker" ? [
@@ -34,7 +34,7 @@
 	const toasts = useToasts();
 
 	const props = defineProps<{
-		type: Type;
+		type: Type<CRU.READ | CRU.CREATE_VALIDATED>;
 		field: Field;
 	}>();
 
