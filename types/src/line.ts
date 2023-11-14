@@ -18,9 +18,9 @@ export const lineValidator = cruValidator({
 	routePoints: optionalUpdate(z.array(pointValidator).min(2)),
 	typeId: optionalUpdate(idValidator),
 	name: optionalCreate(z.string().trim(), ""),
-	mode: optionalCreate(routeModeValidator, ""),
-	colour: optionalCreate(colourValidator, "0000ff"),
-	width: optionalCreate(z.number(), 4),
+	mode: optionalCreate(routeModeValidator), // defaults to type.defaultMode
+	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
+	width: optionalCreate(z.number()), // defaults to type.defaultWidth
 	data: optionalCreate(z.record(z.string())),
 	extraInfo: optionalCreate(extraInfoValidator.or(z.null()), null),
 

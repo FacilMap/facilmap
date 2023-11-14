@@ -192,19 +192,16 @@ export default class DatabaseLines {
 	async createLine(padId: PadId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
 		const type = await this._db.types.getType(padId, data.typeId);
 
-		if(type.defaultColour && !data.colour)
-			data.colour = type.defaultColour;
-		if(type.defaultWidth && !data.width)
-			data.width = type.defaultWidth;
-		if(type.defaultMode && !data.mode)
-			data.mode = type.defaultMode;
+		const resolvedData = {
+			...data,
+			colour: data.colour ?? type.defaultColour,
+			width: data.width ?? type.defaultWidth,
+			mode: data.mode ?? type.defaultMode
+		};
 
-		const { trackPoints, ...routeInfo } = await calculateRouteForLine(data, trackPointsFromRoute);
+		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, trackPointsFromRoute);
 
-		const dataCopy = { ...data, ...routeInfo };
-		delete dataCopy.trackPoints; // They came if mode is track
-
-		const createdLine = await this._db.helpers._createPadObject<Line>("Line", padId, dataCopy);
+		const createdLine = await this._db.helpers._createPadObject<Line>("Line", padId, omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */));
 		await this._db.helpers._updateObjectStyles(createdLine);
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first

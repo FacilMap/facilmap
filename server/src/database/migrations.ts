@@ -175,8 +175,8 @@ export default class DatabaseMigrations {
 
 		// Forbid null defaultSize
 		if (typesAttributes.defaultSize.allowNull) {
-			// 35 is the old default size, now it is 40
-			await this._db.types.TypeModel.update({ defaultSize: 35 }, { where: { defaultSize: null as any } });
+			// 25 is the old default size, now it is 30
+			await this._db.types.TypeModel.update({ defaultSize: 25 }, { where: { defaultSize: null as any } });
 			await queryInterface.changeColumn("Types", "defaultSize", this._db.types.TypeModel.getAttributes().defaultSize);
 		}
 

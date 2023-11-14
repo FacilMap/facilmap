@@ -8,10 +8,10 @@ export const markerValidator = cruValidator({
 	...mapValues(pointValidator.shape, optionalUpdate),
 	typeId: optionalUpdate(idValidator),
 	name: optionalCreate(z.string().trim(), ""),
-	symbol: optionalCreate(symbolValidator, ""),
-	shape: optionalCreate(shapeValidator, ""),
-	colour: optionalCreate(colourValidator, "ff0000"),
-	size: optionalCreate(sizeValidator, 30),
+	symbol: optionalCreate(symbolValidator), // defaults to type.defaultSymbol
+	shape: optionalCreate(shapeValidator), // defaults to type.defaultShape
+	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
+	size: optionalCreate(sizeValidator), // defaults to type.defaultSize
 	data: optionalCreate(z.record(z.string())),
 	ele: optionalCreate(z.number().or(z.null()), null)
 });

@@ -82,20 +82,15 @@ export default class DatabaseMarkers {
 
 	async createMarker(padId: PadId, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
-		const elevation = await getElevationForPoint(data);
 
-		if(type.defaultColour)
-			data.colour = type.defaultColour;
-		if(type.defaultSize)
-			data.size = type.defaultSize;
-		if(type.defaultSymbol)
-			data.symbol = type.defaultSymbol;
-		if(type.defaultShape)
-			data.shape = type.defaultShape;
-
-		data.ele = elevation ?? null;
-
-		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, data);
+		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, {
+			...data,
+			colour: data.colour ?? type.defaultColour,
+			size: data.size ?? type.defaultSize,
+			symbol: data.symbol ?? type.defaultSymbol,
+			shape: data.shape ?? type.defaultShape,
+			ele: data.ele ?? await getElevationForPoint(data)
+		});
 
 		await this._db.helpers._updateObjectStyles(result);
 

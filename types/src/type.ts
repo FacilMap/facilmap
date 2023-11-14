@@ -52,7 +52,7 @@ const rawTypeValidator = cruValidator({
 
 	defaultColour: optionalCreate(colourValidator), // Default value is applied below
 	colourFixed: optionalCreate(z.boolean(), false),
-	defaultSize: optionalCreate(sizeValidator, 40),
+	defaultSize: optionalCreate(sizeValidator, 30),
 	sizeFixed: optionalCreate(z.boolean(), false),
 	defaultSymbol: optionalCreate(symbolValidator, ""),
 	symbolFixed: optionalCreate(z.boolean(), false),
