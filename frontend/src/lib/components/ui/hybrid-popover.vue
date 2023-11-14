@@ -6,11 +6,12 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { ref, toRef, watch } from "vue";
 	import { useModal } from "../../utils/modal";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
 	import Popover from "./popover.vue";
 	import { useRefWithOverride } from "../../utils/vue";
+	import AttributePreservingElement from "./attribute-preserving-element.vue";
 
 	const props = withDefaults(defineProps<{
 		show?: boolean;
@@ -54,7 +55,8 @@
 
 	const trigger = ref<HTMLElement>();
 
-	const modalRef = ref<HTMLElement>();
+	const modalElementRef = ref<InstanceType<typeof AttributePreservingElement>>();
+	const modalRef = toRef(() => modalElementRef.value?.elementRef);
 	const modal = useModal(modalRef, {
 		onShown: () => {
 			emit("shown");
@@ -109,7 +111,15 @@
 		</Popover>
 
 		<Teleport to="body">
-			<div v-if="showModal" class="modal fade" :class="props.customClass" tabindex="-1" aria-hidden="true" ref="modalRef">
+			<AttributePreservingElement
+				v-if="showModal"
+				tag="div"
+				class="modal fade"
+				:class="props.customClass"
+				tabindex="-1"
+				aria-hidden="true"
+				ref="modalElementRef"
+			>
 				<div class="modal-dialog modal-dialog-scrollable">
 					<div class="modal-content">
 						<div v-if="props.title" class="modal-header">
@@ -124,7 +134,7 @@
 						</div>
 					</div>
 				</div>
-			</div>
+			</AttributePreservingElement>
 		</Teleport>
 	</div>
 </template>

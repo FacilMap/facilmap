@@ -4,6 +4,7 @@
 	import ValidatedForm, { type CustomSubmitEvent } from "./validated-form/validated-form.vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import { useUnloadHandler } from "../../utils/utils";
+	import AttributePreservingElement from "./attribute-preserving-element.vue";
 
 	const props = withDefaults(defineProps<{
 		title?: string;
@@ -35,7 +36,8 @@
 	const isSubmitting = computed(() => validatedFormRef.value?.formData.isSubmitting);
 	const submitRef = ref<HTMLElement>();
 
-	const modalRef = ref<HTMLElement>();
+	const modalElementRef = ref<InstanceType<typeof AttributePreservingElement>>();
+	const modalRef = toRef(() => modalElementRef.value?.elementRef);
 	const modal = useModal(modalRef, {
 		onShown: () => {
 			const focusEl = (
@@ -78,7 +80,8 @@
 
 <template>
 	<Teleport to="body">
-		<div
+		<AttributePreservingElement
+			tag="div"
 			class="modal fade fm-modal"
 			:class="[
 				props.size !== 'default' ? `modal-${props.size}` : undefined,
@@ -86,7 +89,7 @@
 			]"
 			tabindex="-1"
 			aria-hidden="true"
-			ref="modalRef"
+			ref="modalElementRef"
 		>
 			<div class="modal-dialog modal-dialog-scrollable">
 				<ValidatedForm
@@ -133,7 +136,7 @@
 					</div>
 				</ValidatedForm>
 			</div>
-		</div>
+		</AttributePreservingElement>
 	</Teleport>
 </template>
 
