@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
 	import type { CRU, PadData } from "facilmap-types";
-	import { generateRandomPadId } from "facilmap-utils";
-	import { getUniqueId, mergeObject } from "../../utils/utils";
+	import { generateRandomPadId, mergeObject } from "facilmap-utils";
+	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";

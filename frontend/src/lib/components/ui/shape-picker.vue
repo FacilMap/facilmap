@@ -16,9 +16,9 @@
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		modelValue: Shape | undefined | null;
+		modelValue: Shape;
 		id?: string;
-		validators?: Array<Validator<string | undefined | null>>;
+		validators?: Array<Validator<string>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -28,13 +28,13 @@
 	const value = computed({
 		get: () => props.modelValue,
 		set: (value) => {
-			emit("update:modelValue", value!);
+			emit("update:modelValue", value);
 		}
 	});
 
-	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue ?? undefined));
+	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue));
 
-	function validateShape(shape: string | null | undefined) {
+	function validateShape(shape: string) {
 		if (shape && !shapeList.includes(shape)) {
 			return "Unknown shape";
 		}
@@ -73,7 +73,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="modelValue ?? undefined"
+				:value="modelValue"
 				@click="handleClick($event, close)"
 				ref="gridRef"
 				noFocus

@@ -8,8 +8,8 @@
 		id?: string;
 		customClass?: string;
 		disabled?: boolean;
-		validators?: Array<Validator<string | null | undefined>>;
-		modelValue?: string | null;
+		validators?: Array<Validator<string>>;
+		modelValue: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 		previewStyle?: StyleValue;

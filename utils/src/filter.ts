@@ -1,7 +1,8 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import type { ID, Marker, Line, Type, Field, CRU } from "facilmap-types";
+import type { ID, Marker, Line, Type, CRU } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
+import { normalizeFieldValue } from "./objects";
 
 export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;
 
@@ -114,9 +115,9 @@ export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: T
 
 	for (const field of type.fields) {
 		if (Object.getPrototypeOf(obj.data)?.set)
-			(obj.data as any).set(field.name, normalizeField(field, (obj.data as any).get(field.name)));
+			(obj.data as any).set(field.name, normalizeFieldValue(field, (obj.data as any).get(field.name)));
 		else
-			(obj.data as any)[field.name] = normalizeField(field, (obj.data as any)[field.name]);
+			(obj.data as any)[field.name] = normalizeFieldValue(field, (obj.data as any)[field.name]);
 	}
 
 	const ret = {
@@ -128,17 +129,4 @@ export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: T
 		ret.type = type.type;
 
 	return ret;
-}
-
-export function normalizeField(field: Field, value: string): string {
-	if(value == null)
-		value = field['default'] || "";
-
-	if(field.type == "checkbox")
-		value = value == "1" ? "1" : "0";
-
-	if(field.type == "dropdown" && !field.options?.some((option) => option.value == value) && field.options?.[0])
-		value = field.options[0].value;
-
-	return value;
 }

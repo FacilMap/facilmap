@@ -4,8 +4,8 @@
 	import ValidatedField, { type Validator } from "./validated-form/validated-field.vue";
 
 	const props = defineProps<{
-		modelValue: number | null | undefined;
-		validators?: Array<Validator<number | null | undefined>>;
+		modelValue: number;
+		validators?: Array<Validator<number>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -33,7 +33,7 @@
 				min="15"
 				v-model.number="value"
 				:ref="slotProps.inputRef"
-				v-tooltip="value != null ? `${value}` : undefined"
+				v-tooltip="`${value}`"
 			/>
 			<div class="invalid-tooltip">
 				{{slotProps.validationError}}

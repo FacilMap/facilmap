@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import type { ID } from "facilmap-types";
-	import { canControl, getUniqueId, mergeObject, validateRequired } from "../utils/utils";
+	import { canControl, mergeObject } from "facilmap-utils";
+	import { getUniqueId, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";

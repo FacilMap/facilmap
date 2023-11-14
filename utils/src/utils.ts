@@ -1,3 +1,5 @@
+import { cloneDeep, isEqual } from "lodash-es";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
@@ -134,4 +136,22 @@ export function normalizeMarkerName(name: string | undefined): string {
 
 export function normalizeLineName(name: string | undefined): string {
 	return name || "Untitled line";
+}
+
+/**
+ * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
+ * @param oldObject {Object}
+ * @param newObject {Object}
+ * @param targetObject {Object}
+ */
+export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | undefined, newObject: T, targetObject: T): void {
+	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
+		if(
+			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject[i] == "object" && newObject[i] != null
+			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
+		)
+			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
+		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
+			targetObject[i] = cloneDeep(newObject[i]);
+	}
 }

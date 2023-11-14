@@ -1,10 +1,11 @@
 import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
-import type { Line, Marker, PadId, ID, Type, Bbox, CRU } from "facilmap-types";
+import type { Line, Marker, PadId, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";
+import { applyLineStyles, applyMarkerStyles } from "facilmap-utils";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -84,8 +85,6 @@ export function getLonType(): ModelAttributeColumnOptions {
 	};
 }
 
-export const validateColour = { is: /^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/ };
-
 export interface DataModel extends Model<InferAttributes<DataModel>, InferCreationAttributes<DataModel>> {
 	id: ID;
 	name: string;
@@ -148,14 +147,8 @@ export default class DatabaseHelpers {
 	}
 
 	async _updateObjectStyles(objects: Marker | Line | AsyncGenerator<Marker | Line, void, void>): Promise<void> {
-		const iterator = Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects]);
-
-		type MarkerData = { object: Marker; type: Type; update: Marker<CRU.UPDATE_VALIDATED>; };
-		type LineData = { object: Line; type: Type; update: Line<CRU.UPDATE_VALIDATED>; };
-		const isLine = (data: MarkerData | LineData): data is LineData => (data.type.type == "line");
-
 		const types: Record<ID, Type> = { };
-		for await (const object of iterator) {
+		for await (const object of Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects])) {
 			const padId = object.padId;
 
 			if(!types[object.typeId]) {
@@ -164,74 +157,31 @@ export default class DatabaseHelpers {
 					throw new Error("Type "+object.typeId+" does not exist.");
 			}
 
-			const data = {
-				object,
-				type: types[object.typeId],
-				update: { } as Marker<CRU.UPDATE_VALIDATED> | Line<CRU.UPDATE_VALIDATED>
-			} as MarkerData | LineData;
+			const type = types[object.typeId];
+			const update = type.type === "marker" ? applyMarkerStyles(object as Marker, type) : applyLineStyles(object as Line, type);
 
-			if(data.type.colourFixed && data.type.defaultColour && object.colour != data.type.defaultColour)
-				data.update.colour = data.type.defaultColour;
+			const actions: Array<Promise<any>> = [ ];
 
-			if(!isLine(data)) {
-				if(data.type.sizeFixed && data.object.size != data.type.defaultSize)
-					data.update.size = data.type.defaultSize!;
-				if(data.type.symbolFixed && data.object.symbol != data.type.defaultSymbol)
-					data.update.symbol = data.type.defaultSymbol!;
-				if(data.type.shapeFixed && data.object.shape != data.type.defaultShape)
-					data.update.shape = data.type.defaultShape!;
-			} else {
-				if(data.type.widthFixed && data.object.width != data.type.defaultWidth)
-					data.update.width = data.type.defaultWidth!;
-				if(data.type.modeFixed && data.object.mode != "track" && data.object.mode != data.type.defaultMode)
-					data.update.mode = data.type.defaultMode!;
-			}
+			if(Object.keys(update).length > 0) {
+				Object.assign(object, update);
 
-			for(const field of data.type.fields) {
-				if(field.controlColour || (!isLine(data) ? (field.controlSize || field.controlSymbol || field.controlShape) : field.controlWidth)) {
-					const options = field.options ?? [];
-
-					const _find = (value: string | undefined) => ((field.type == "dropdown" ? options.filter((option) => option.value == value)[0] : options[Number(value)]) || null);
-
-					const option = _find(object.data[field.name]) || _find(field.default) || options[0];
-
-					if(option != null) {
-						if(field.controlColour && object.colour != option.colour)
-							data.update.colour = option.colour;
-						if(!isLine(data) && field.controlSize && data.object.size != option.size)
-							data.update.size = option.size;
-						if(!isLine(data) && field.controlSymbol && data.object.symbol != option.symbol)
-							data.update.symbol = option.symbol;
-						if(!isLine(data) && field.controlShape && data.object.shape != option.shape)
-							data.update.shape = option.shape;
-						if(isLine(data) && field.controlWidth && data.object.width != option.width)
-							data.update.width = option.width;
-					}
-				}
-			}
-
-			const ret: Array<Promise<any>> = [ ];
-
-			if(Object.keys(data.update).length > 0) {
-				Object.assign(object, data.update);
-
-				if(data.object.id) { // Objects from getLineTemplate() do not have an ID
-					if (isLine(data)) {
-						ret.push(this._db.lines.updateLine(padId, data.object.id, data.update, true));
+				if(object.id) { // Objects from getLineTemplate() do not have an ID
+					if (type.type === "line") {
+						actions.push(this._db.lines.updateLine(padId, object.id, update, true));
 					} else {
-						ret.push(this._db.markers.updateMarker(padId, data.object.id, data.update, true));
+						actions.push(this._db.markers.updateMarker(padId, object.id, update, true));
 					}
 				}
 
-				if(data.object.id && isLine(data) && "mode" in data.update) {
-					ret.push(calculateRouteForLine(data.object).then(async ({ trackPoints, ...routeInfo }) => {
+				if(object.id && type.type === "line" && "mode" in update) {
+					actions.push(calculateRouteForLine(object as Line).then(async ({ trackPoints, ...routeInfo }) => {
 						Object.assign(object, routeInfo);
-						await this._db.lines._setLinePoints(padId, data.object.id, trackPoints);
+						await this._db.lines._setLinePoints(padId, object.id, trackPoints);
 					}));
 				}
 			}
 
-			await Promise.all(ret);
+			await Promise.all(actions);
 		}
 	}
 

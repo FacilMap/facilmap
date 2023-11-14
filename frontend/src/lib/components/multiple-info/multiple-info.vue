@@ -2,7 +2,6 @@
 	import type { ID, Line, Marker } from "facilmap-types";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
-	import { isLine, isMarker } from "../../utils/utils";
 	import MarkerInfo from "../marker-info/marker-info.vue";
 	import LineInfo from "../line-info/line-info.vue";
 	import { computed, ref, watch } from "vue";
@@ -12,7 +11,7 @@
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);

@@ -11,12 +11,12 @@
 		return ColorMixin.data.apply({ modelValue: value }).val;
 	}
 
-	function isValidColour(colour?: string) {
+	function isValidColour(colour: string) {
 		return !!colour?.match(/^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/);
 	}
 
-	function validateColour(colour: string | undefined | null): string | undefined {
-		if (colour && !isValidColour(colour)) {
+	function validateColour(colour: string): string | undefined {
+		if (!isValidColour(colour)) {
 			return "Needs to be in 3-digit or 6-digit hex format, for example f00 or 0000ff.";
 		}
 	}
@@ -30,8 +30,8 @@
 
 <script setup lang="ts">
 	const props = defineProps<{
-		modelValue: string | undefined | null;
-		validators?: Array<Validator<string | undefined | null>>;
+		modelValue: string;
+		validators?: Array<Validator<string>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -50,7 +50,7 @@
 	const val = computed(() => normalizeData(value.value ?? ""));
 
 	const previewStyle = computed((): StyleValue => {
-		const bg = isValidColour(value.value ?? undefined) ? value.value : 'ffffff';
+		const bg = isValidColour(value.value) ? value.value : 'ffffff';
 		return {
 			backgroundColor: `#${bg}`,
 			color: makeTextColour(`#${bg}`)

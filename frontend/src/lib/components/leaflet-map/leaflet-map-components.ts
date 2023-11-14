@@ -11,12 +11,11 @@ import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import SelectionHandler from "../../utils/selection";
 import { getHashQuery, openSpecialQuery } from "../../utils/zoom";
 import mitt from "mitt";
-import type { Optional } from "../../utils/utils";
 import type { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "../facil-map-context-provider/map-context";
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { sleep } from "facilmap-utils";
+import { type Optional, sleep } from "facilmap-utils";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 type OnCleanup = (cleanupFn: () => void) => void;

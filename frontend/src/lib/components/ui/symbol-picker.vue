@@ -15,10 +15,10 @@
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
-		modelValue: string | undefined | null;
+		modelValue: string;
 		id?: string;
 		isRequired?: boolean;
-		validators?: Array<Validator<string | undefined | null>>;
+		validators?: Array<Validator<string>>;
 	}>();
 
 	const emit = defineEmits<{
@@ -50,7 +50,7 @@
 		return result;
 	});
 
-	function validateSymbol(symbol: string | null | undefined) {
+	function validateSymbol(symbol: string) {
 		if (symbol && symbol.length !== 1 && !symbolList.includes(symbol)) {
 			return "Unknown icon";
 		}
@@ -87,7 +87,7 @@
 		@focusPopover="handleFocusPopover()"
 	>
 		<template #preview>
-			<Icon :icon="modelValue ?? undefined"></Icon>
+			<Icon :icon="modelValue"></Icon>
 		</template>
 
 		<template #default="{ close }">
@@ -105,7 +105,7 @@
 
 			<PrerenderedList
 				:items="items"
-				:value="modelValue ?? undefined"
+				:value="modelValue"
 				noFocus
 				@click="handleClick($event, close)"
 				ref="gridRef"

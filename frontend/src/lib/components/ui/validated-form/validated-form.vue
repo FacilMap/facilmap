@@ -7,6 +7,7 @@
 		isTouched: boolean;
 		isSubmitting: boolean;
 		isValidating: boolean;
+		formValidationError: string | undefined;
 		submit: () => Promise<void>;
 		setValidationPromise: (element: Element, promise: Promise<any> | undefined) => void;
 	}
@@ -19,16 +20,21 @@
 	export function useValidatedForm(
 		formRef: Ref<HTMLFormElement | undefined>,
 		onSubmit: (event: CustomSubmitEvent) => void,
-		{ noValidate }: { noValidate?: Ref<boolean> } = {}
+		{ noValidate, formValidationError }: {
+			noValidate?: Ref<boolean>;
+			/** A form validation error that will prevent the form from submitting. */
+			formValidationError?: Ref<string | undefined>;
+		} = {}
 	): Readonly<ValidatedFormData> {
 		const toasts = useToasts();
 		const validationPromises = new Map<Element, Promise<any>>();
 		const isValidating = reactive(new Map<Element, boolean>());
 
-		const data: ValidatedFormData = reactive({
+		const data: ValidatedFormData = reactive<Omit<ValidatedFormData, "formValidationError"> & { formValidationError: Ref<string | undefined> }>({
 			isTouched: false,
 			isSubmitting: false,
 			isValidating: false,
+			formValidationError: toRef(formValidationError),
 			submit: toasts.toastErrors(async () => {
 				data.isTouched = true;
 				data.isSubmitting = true;
@@ -37,7 +43,7 @@
 					if (!noValidate?.value) {
 						await Promise.all(validationPromises.values());
 
-						if (!formRef.value!.checkValidity()) {
+						if (!formRef.value!.checkValidity() || formValidationError?.value) {
 							return;
 						}
 					}
@@ -94,6 +100,7 @@
 		action?: string;
 		target?: string;
 		noValidate?: boolean;
+		formValidationError?: string | undefined;
 	}>();
 
 	const emit = defineEmits<{
@@ -104,7 +111,8 @@
 	const formData = useValidatedForm(formRef, (event) => {
 		emit("submit", event);
 	}, {
-		noValidate: toRef(() => props.noValidate)
+		noValidate: toRef(() => props.noValidate),
+		formValidationError: toRef(() => props.formValidationError)
 	});
 
 	defineExpose({ formData });

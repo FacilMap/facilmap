@@ -1,11 +1,11 @@
 import { marked, type MarkedOptions } from "marked";
 import type { Field } from "facilmap-types";
-import { normalizeField } from "./filter.js";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
 import { obfuscate } from "./obfuscate.js";
 import cheerio from "cheerio";
+import { normalizeFieldValue } from "./objects.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
@@ -13,8 +13,8 @@ const markdownOptions: MarkedOptions = {
 	breaks: true
 };
 
-export function formatField(field: Field, value: string): string {
-	value = normalizeField(field, value);
+export function formatField(field: Field, value: string | undefined): string {
+	value = normalizeFieldValue(field, value);
 	switch(field.type) {
 		case "textarea":
 			return markdownBlock(value);

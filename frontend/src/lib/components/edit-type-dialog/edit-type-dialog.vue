@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import { typeValidator, type Field, type ID, type Type, CRU } from "facilmap-types";
-	import { canControl, getUniqueId, validateRequired } from "../../utils/utils";
+	import { canControl } from "facilmap-utils";
+	import { getUniqueId, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
@@ -195,7 +196,6 @@
 								<ColourPicker
 									:id="`${id}-default-colour-input`"
 									v-model="type.defaultColour"
-									:validators="type.colourFixed ? [validateRequired] : []"
 								></ColourPicker>
 							</div>
 							<div class="col-sm-3">
@@ -223,7 +223,6 @@
 								<SizePicker
 									:id="`${id}-default-size-input`"
 									v-model="type.defaultSize"
-									:validators="type.sizeFixed ? [validateRequired] : []"
 									class="fm-custom-range-with-label"
 								></SizePicker>
 							</div>
@@ -252,7 +251,6 @@
 								<SymbolPicker
 									:id="`${id}-default-symbol-input`"
 									v-model="type.defaultSymbol"
-									:validators="type.symbolFixed ? [validateRequired] : []"
 								></SymbolPicker>
 							</div>
 							<div class="col-sm-3">
@@ -280,7 +278,6 @@
 								<ShapePicker
 									:id="`${id}-default-shape-input`"
 									v-model="type.defaultShape"
-									:validators="type.shapeFixed ? [validateRequired] : []"
 								></ShapePicker>
 							</div>
 							<div class="col-sm-3">
@@ -308,7 +305,6 @@
 								<WidthPicker
 									:id="`${id}-default-width-input`"
 									v-model="type.defaultWidth"
-									:validators="type.widthFixed ? [validateRequired] : []"
 									class="fm-custom-range-with-label"
 								></WidthPicker>
 							</div>
@@ -337,7 +333,6 @@
 								<RouteMode
 									:id="`${id}-default-mode-input`"
 									v-model="type.defaultMode"
-									:validators="type.modeFixed ? [validateRequired] : []"
 								></RouteMode>
 							</div>
 							<div class="col-sm-3">

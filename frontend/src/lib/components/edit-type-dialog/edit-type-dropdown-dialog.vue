@@ -1,6 +1,7 @@
 <script setup lang="ts">
-	import type { CRU, Field, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
-	import { canControl, getUniqueId, mergeObject, validateRequired } from "../../utils/utils";
+	import type { CRU, Field, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
+	import { canControl, mergeObject } from "facilmap-utils";
+	import { getUniqueId, validateRequired } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourPicker from "../ui/colour-picker.vue";
 	import Draggable from "vuedraggable";
@@ -117,13 +118,15 @@
 
 	const controlNumber = computed(() => getControlNumber(props.type, fieldValue.value));
 
-	function validateOptionValue(option: FieldOption): string | undefined {
-		if (fieldValue.value.type !== "checkbox" && fieldValue.value.options!.filter((op) => op.value === option.value).length > 1) {
+	const columns = computed(() => controlNumber.value + (fieldValue.value.type === "checkbox" ? 2 : 3));
+
+	function validateOptionValue(value: string): string | undefined {
+		if (fieldValue.value.type !== "checkbox" && fieldValue.value.options!.filter((op) => op.value === value).length > 1) {
 			return "Multiple options cannot have the same label.";
 		}
 	}
 
-	const validationError = computed(() => {
+	const formValidationError = computed(() => {
 		if (controlNumber.value > 0 && (fieldValue.value.options?.length ?? 0) === 0) {
 			return "Controlling fields need to have at least one option.";
 		} else {
@@ -141,6 +144,7 @@
 		@hidden="emit('hidden')"
 		:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
 		:okLabel="isModified ? 'OK' : undefined"
+		:formValidationError="formValidationError"
 		ref="modalRef"
 	>
 		<div class="row mb-3">
@@ -255,8 +259,8 @@
 						<ValidatedField
 							tag="td"
 							class="field position-relative"
-							:value="option"
-							:validators="[validateOptionValue]"
+							:value="option.value"
+							:validators="[validateRequired, validateOptionValue]"
 						>
 							<template #default="slotProps">
 								<input
@@ -271,26 +275,34 @@
 						</ValidatedField>
 						<td v-if="fieldValue.controlColour" class="field">
 							<ColourPicker
-								v-model="option.colour"
-								:validators="[validateRequired]"
+								:modelValue="option.colour ?? type.defaultColour"
+								@update:modelValue="option.colour = $event"
 							></ColourPicker>
 						</td>
 						<td v-if="fieldValue.controlSize" class="field">
 							<SizePicker
-								v-model="option.size"
-								:validators="[validateRequired]"
+								:modelValue="option.size ?? type.defaultSize"
+								@update:modelValue="option.size = $event"
+								class="fm-custom-range-with-label"
 							></SizePicker>
 						</td>
 						<td v-if="fieldValue.controlSymbol" class="field">
-							<SymbolPicker v-model="option.symbol"></SymbolPicker>
+							<SymbolPicker
+								:modelValue="option.symbol ?? type.defaultSymbol"
+								@update:modelValue="option.symbol = $event"
+							></SymbolPicker>
 						</td>
 						<td v-if="fieldValue.controlShape" class="field">
-							<ShapePicker v-model="option.shape"></ShapePicker>
+							<ShapePicker
+								:modelValue="option.shape ?? type.defaultShape"
+								@update:modelValue="option.shape = $event"
+							></ShapePicker>
 						</td>
 						<td v-if="fieldValue.controlWidth" class="field">
 							<WidthPicker
-								v-model="option.width"
-								:validators="[validateRequired]"
+								:modelValue="option.width ?? type.defaultWidth"
+								@update:modelValue="option.width = $event"
+								class="fm-custom-range-with-label"
 							></WidthPicker>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
@@ -304,13 +316,15 @@
 			</Draggable>
 			<tfoot v-if="fieldValue.type != 'checkbox'">
 				<tr>
-					<td><button type="button" class="btn btn-secondary" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button></td>
+					<td :colspan="columns">
+						<button type="button" class="btn btn-secondary" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button>
+					</td>
 				</tr>
 			</tfoot>
 		</table>
 
-		<div class="fm-form-invalid-feedback" v-if="validationError">
-			{{validationError}}
+		<div class="fm-form-invalid-feedback" v-if="formValidationError">
+			{{formValidationError}}
 		</div>
 	</ModalDialog>
 </template>

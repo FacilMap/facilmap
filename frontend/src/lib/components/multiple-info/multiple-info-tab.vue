@@ -1,7 +1,8 @@
 <script setup lang="ts">
 	import MultipleInfo from "./multiple-info.vue";
 	import type { Line, Marker } from "facilmap-types";
-	import { isLine, isMarker, useEventListener } from "../../utils/utils";
+	import { useEventListener } from "../../utils/utils";
+	import { isLine, isMarker } from "facilmap-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { computed } from "vue";
 	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";

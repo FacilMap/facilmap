@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ref, watchEffect, computed, watchSyncEffect } from "vue";
-	import { isPromise, useDomEventListener } from "../../../utils/utils";
+	import { isPromise } from "facilmap-utils";
+	import { useDomEventListener } from "../../../utils/utils";
 	import { getValidatedForm } from "./validated-form.vue";
 	import { useToasts } from "../toasts/toasts.vue";
 	import pDebounce from "p-debounce";

@@ -1,8 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { createApp, h, ref } from "vue";
 import ValidatedForm, { getValidatedForm, type CustomSubmitEvent, type ValidatedFormData } from "../validated-form.vue";
-import { sleep } from "facilmap-utils";
-import { isPromise } from "../../../../utils/utils";
+import { isPromise, sleep } from "facilmap-utils";
 
 function mockForm({ onSubmit, validationError }: {
 	onSubmit?: (event: CustomSubmitEvent) => void;

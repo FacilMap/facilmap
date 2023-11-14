@@ -2,7 +2,7 @@ import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-type
 import { omit } from "lodash-es";
 import type { FileResult } from "./files";
 import type { LineString, MultiLineString, MultiPolygon, Point as GeoJSONPoint, Polygon, Position } from "geojson";
-import type { Optional } from "./utils";
+import type { Optional } from "facilmap-utils";
 import type { OverpassElement } from "facilmap-leaflet";
 import type { SelectedItem } from "./selection";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";

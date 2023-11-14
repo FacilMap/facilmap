@@ -1,5 +1,5 @@
 import type { CRU, FieldUpdate, Type } from "facilmap-types";
-import { mergeObject } from "../../utils/utils";
+import { mergeObject } from "facilmap-utils";
 import { cloneDeep } from "lodash-es";
 
 function getIdxForInsertingField(targetFields: FieldUpdate[], targetField: FieldUpdate, mergedFields: FieldUpdate[]): number {

@@ -1,65 +1,16 @@
-import { cloneDeep, isEqual } from "lodash-es";
-import type { CRU, Field, Line, Marker, Type } from "facilmap-types";
 import type { Emitter } from "mitt";
 import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vue";
-
-export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 // https://stackoverflow.com/a/62085569/242365
 export type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
 export type AnyRef<T> = T | Ref<T> | (() => T);
 
-/**
- * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
- * @param oldObject {Object}
- * @param newObject {Object}
- * @param targetObject {Object}
- */
-export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | undefined, newObject: T, targetObject: T): void {
-	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
-		if(
-			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject[i] == "object" && newObject[i] != null
-			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
-		)
-			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
-		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
-			targetObject[i] = cloneDeep(newObject[i]);
-	}
-}
-
-export function canControl<T extends Marker | Line = Marker | Line>(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
-	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "mode"] : [];
-	return props.filter((prop) => {
-		if((type as any)[prop+"Fixed"] && ignoreField !== null)
-			return false;
-
-		const idx = "control"+prop.charAt(0).toUpperCase() + prop.slice(1);
-		for (const field of type.fields ?? []) {
-			if ((field as any)[idx] && (!ignoreField || field !== ignoreField))
-				return false;
-		}
-		return true;
-	}) as Array<T extends any ? keyof T : never>;
-}
-
 
 let idCounter = 1;
 
 export function getUniqueId(scope = ""): string {
 	return `${scope ? `${scope}-` : ""}${idCounter++}`;
-}
-
-export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
-	return "lat" in object && object.lat != null;
-}
-
-export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Line<Mode> {
-	return "routePoints" in object && object.routePoints != null;
-}
-
-export function isPromise(object: any): object is Promise<unknown> {
-	return typeof object === 'object' && 'then' in object && typeof object.then === 'function';
 }
 
 export function useEventListener<EventMap extends Record<string, unknown>, EventType extends keyof EventMap>(emitter: AnyRef<Emitter<EventMap> | DeepReadonly<Emitter<EventMap>> | undefined>, type: EventType, listener: (data: EventMap[EventType]) => void): void {

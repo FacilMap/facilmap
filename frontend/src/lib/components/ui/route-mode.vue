@@ -107,11 +107,10 @@
 
 <script setup lang="ts">
 	const props = withDefaults(defineProps<{
-		modelValue?: RouteModeType | null;
+		modelValue: RouteModeType;
 		tabindex?: number;
 		disabled?: boolean;
 		tooltipPlacement?: TooltipPlacement;
-		validationError?: string | undefined;
 	}>(), {
 		tooltipPlacement: "top"
 	});
@@ -122,10 +121,10 @@
 
 	const id = getUniqueId("fm-route-mode");
 
-	const decodedMode = ref(decodeRouteMode(props.modelValue ?? ""));
+	const decodedMode = ref(decodeRouteMode(props.modelValue));
 
 	watch(() => props.modelValue, () => {
-		decodedMode.value = decodeRouteMode(props.modelValue ?? "");
+		decodedMode.value = decodeRouteMode(props.modelValue);
 	});
 
 	watch(() => decodedMode.value, () => {
@@ -256,10 +255,6 @@
 					</template>
 				</DropdownMenu>
 			</div>
-		</div>
-
-		<div class="invalid-tooltip fm-form-invalid-feedback" v-if="props.validationError">
-			{{props.validationError}}
 		</div>
 	</div>
 </template>

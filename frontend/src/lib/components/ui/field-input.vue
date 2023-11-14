@@ -1,6 +1,7 @@
 <script setup lang="ts">
 	import type { Field } from "facilmap-types";
 	import { computed } from "vue";
+	import { normalizeFieldValue } from "facilmap-utils";
 
 	const props = withDefaults(defineProps<{
 		field: Field;
@@ -16,7 +17,7 @@
 	}>();
 
 	const value = computed<string | undefined>({
-		get: () => (props.modelValue ?? (props.ignoreDefault ? undefined : props.field.default) ?? ''),
+		get: () => normalizeFieldValue(props.field, props.modelValue, props.ignoreDefault),
 		set: (value) => {
 			emit("update:modelValue", value);
 		}
