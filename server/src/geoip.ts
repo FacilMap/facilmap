@@ -3,7 +3,7 @@ import md5 from "md5-file";
 import { schedule } from "node-cron";
 import { open, type Reader, type Response } from "maxmind";
 import { createWriteStream } from "fs";
-import { rename } from "fs/promises";
+import { rename } from "node:fs/promises";
 import https from "https";
 import zlib from "zlib";
 import config from "./config.js";

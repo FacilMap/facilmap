@@ -1,6 +1,6 @@
 import type { Manifest } from "vite";
 import { paths, serve } from "facilmap-frontend/build.js";
-import { readFile } from "fs/promises";
+import { readFile } from "node:fs/promises";
 import type { ID, Line, Marker, PadData, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import * as utils from "facilmap-utils";
