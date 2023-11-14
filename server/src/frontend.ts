@@ -6,6 +6,7 @@ import * as ejs from "ejs";
 import * as utils from "facilmap-utils";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
+import { normalizeLineName, normalizeMarkerName, normalizePadName } from "facilmap-utils";
 
 export const isDevMode = !!process.env.FM_DEV;
 
@@ -92,6 +93,9 @@ export async function renderTable(params: {
 		...injections,
 		paths,
 		utils,
+		normalizeMarkerName,
+		normalizeLineName,
+		normalizePadName,
 		...params
 	});
 }

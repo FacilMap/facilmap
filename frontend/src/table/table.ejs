@@ -36,7 +36,7 @@
 	</head>
 	<body>
 		<div class="container-fluid">
-			<h1><%=padData.name%> – FacilMap</h1>
+			<h1><%=normalizePadName(padData.name)%> – FacilMap</h1>
 <%
 	for(let type of Object.values(types)) {
 -%>
@@ -89,7 +89,7 @@
 <%
 			if(!hide.includes("Name")) {
 -%>
-							<td><%=object.name%></td>
+							<td><%=type.type === "marker" ? normalizeMarkerName(object.name) : normalizeLineName(object.name)%></td>
 <%
 			}
 
