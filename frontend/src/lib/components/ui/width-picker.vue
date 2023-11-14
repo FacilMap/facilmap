@@ -25,7 +25,7 @@
 	<ValidatedField
 		:value="value"
 		:validators="props.validators"
-		class="position-relative"
+		class="fm-width-picker position-relative"
 	>
 		<template #default="slotProps">
 			<input
@@ -44,4 +44,7 @@
 </template>
 
 <style lang="scss">
+	.fm-width-picker input {
+		width: 100%;
+	}
 </style>
