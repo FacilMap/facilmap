@@ -9,7 +9,7 @@ export default defineUserConfig({
 	title: 'FacilMap',
 	description: description,
 	head: [
-		['meta', { name: 'theme-color', content: '#3eaf7c' }],
+		['meta', { name: 'theme-color', content: '#3eaf7c' }], // TODO: Update
 		['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
 		['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
 	],
