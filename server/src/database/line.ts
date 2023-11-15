@@ -90,9 +90,30 @@ export default class DatabaseLines {
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 4, validate: { min: 1 } },
 			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: LineModel) { return this.getDataValue("name") || "Untitled line"; } },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
-			time : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
-			ascent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
-			descent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+			time : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("time", v != null ? Math.round(v) : v);
+				}
+			},
+			ascent : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ascent", v != null ? Math.round(v) : v);
+				}
+			},
+			descent : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("descent", v != null ? Math.round(v) : v);
+				}
+			},
 			top: getLatType(),
 			bottom: getLatType(),
 			left: getLonType(),
@@ -120,7 +141,14 @@ export default class DatabaseLines {
 			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			ele: { type: DataTypes.INTEGER, allowNull: true }
+			ele: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				set: function(this: LinePointModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ele", v != null ? Math.round(v) : v);
+				}
+			}
 		}, {
 			sequelize: this._db._conn,
 			indexes: [

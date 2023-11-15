@@ -43,7 +43,14 @@ export default class DatabaseMarkers {
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
 			symbol : { type: DataTypes.TEXT, allowNull: true },
 			shape : { type: DataTypes.TEXT, allowNull: true },
-			ele: { type: DataTypes.INTEGER, allowNull: true }
+			ele: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				set: function(this: MarkerModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ele", v != null ? Math.round(v) : v);
+				}
+			}
 		}, {
 			sequelize: this._db._conn,
 			// pos index is created in migration
