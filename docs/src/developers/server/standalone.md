@@ -1,7 +1,7 @@
 # Standalone
 
-The FacilMap server is written in [node.js](https://nodejs.org/en/). To run the FacilMap server, the following dependencies are needed:
-* You need to have a recent version of node.js and npm installed.
+The FacilMap server runs on [Node.js](https://nodejs.org/en/). To run the FacilMap server, the following dependencies are needed:
+* You need to have a recent version of Node.js and npm installed.
 * You need to create a database on one of the systems supported by [Sequelize](https://sequelize.org/master/), it is recommended to use MySQL/MariaDB.
   * When creating a MySQL/MariaDB database for FacilMap, make sure to use the `utf8mb4` charset/collation to make sure that characters from all languages can be used on a map. By default, MySQL/MariaDB uses the `latin1` charset, which mostly supports only basic latin characters. When you start the FacilMap server for the first time, the necessary tables are created using the charset of the database.
   * When using PostgreSQL, the PostGIS extensions must be enabled.
@@ -16,7 +16,7 @@ A bundled version of the FacilMap server is published on NPM as [facilmap-server
 3. Create a `config.env` file based on [`config.env.example`](https://github.com/FacilMap/facilmap/blob/main/config.env.example) and to adjust the [configuration](./config.md).
 4. Start the FacilMap server by running `~/.local/bin/facilmap-server dotenv_config_path=config.env`.
 
-FacilMap will need write access to the directory `~/.local/lib/node_modules/facilmap-server/cache`. All other files and directories can be read-only. To harden the FacilMap installation, make the whole installation folder owned by root, but create the cache directory and make it owned by the facilmap user.
+FacilMap will need write access to the directory `~/.local/lib/node_modules/.cache/facilmap-server`. All other files and directories can be read-only. To harden the FacilMap installation, make the whole installation folder owned by root, but create the cache directory and make it owned by the facilmap user.
 
 
 ## Run the development version
