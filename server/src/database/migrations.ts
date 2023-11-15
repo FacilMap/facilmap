@@ -23,6 +23,7 @@ export default class DatabaseMigrations {
 		await this._legendMigration();
 		await this._bboxMigration();
 		await this._spatialMigration();
+		await this._untitledMigration();
 	}
 
 
@@ -418,6 +419,18 @@ export default class DatabaseMigrations {
 			if (!indexes.some((index: any) => index.name == (Utils as any).underscore(`${table}_pos`)))
 				await queryInterface.addIndex(table, { fields: ["pos"], type: "SPATIAL" });
 		}
+	}
+
+	/** Clear "Untitled marker", "Untitled line" and "New FacilMap" names. These are now rendered in the frontend instead. */
+	async _untitledMigration() {
+		if(await this._db.meta.getMeta("untitledMigrationCompleted") == "1")
+			return;
+
+		await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: "Untitled marker" } });
+		await this._db.lines.LineModel.update({ name: "" }, { where: { name: "Untitled line" } });
+		await this._db.pads.PadModel.update({ name: "" }, { where: { name: "New FacilMap" } });
+
+		await this._db.meta.setMeta("untitledMigrationCompleted", "1");
 	}
 
 }

@@ -7,6 +7,14 @@ interface MetaModel extends Model<InferAttributes<MetaModel>, InferCreationAttri
 	value: string;
 }
 
+export interface MetaProperties {
+	dropdownKeysMigrated: "1";
+	hasElevation: "1";
+	hasLegendOption: "1";
+	hasBboxes: "1";
+	untitledMigrationCompleted: "1";
+}
+
 export default class DatabaseMeta {
 
 	MetaModel = createModel<MetaModel>();
@@ -25,12 +33,12 @@ export default class DatabaseMeta {
 		});
 	}
 
-	async getMeta(key: string): Promise<string | undefined> {
+	async getMeta<K extends keyof MetaProperties>(key: K): Promise<MetaProperties[K] | undefined> {
 		const entry = await this.MetaModel.findOne({ where: { key } });
-		return entry?.value ?? undefined;
+		return entry?.value ?? undefined as any;
 	}
 
-	async setMeta(key: string, value: string): Promise<void> {
+	async setMeta<K extends keyof MetaProperties>(key: K, value: MetaProperties[K]): Promise<void> {
 		await this.MetaModel.upsert({key, value});
 	}
 
