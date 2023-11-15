@@ -113,34 +113,6 @@ export interface BboxWithExcept extends Bbox {
 	except?: Bbox;
 }
 
-export function makeBboxCondition(bbox: BboxWithExcept | null | undefined, posField = "pos"): WhereOptions {
-	if(!bbox)
-		return { };
-
-	const conditions = [ ];
-	conditions.push(
-		Sequelize.fn(
-			"MBRContains",
-			Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.left, bbox.bottom), Sequelize.fn("POINT", bbox.right, bbox.top)),
-			Sequelize.col(posField)
-		)
-	);
-
-	if(bbox.except) {
-		conditions.push({
-			[Op.not]: Sequelize.fn(
-				"MBRContains",
-				Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.except.left, bbox.except.bottom), Sequelize.fn("POINT", bbox.except.right, bbox.except.top)),
-				Sequelize.col(posField)
-			)
-		});
-	}
-
-	return {
-		[Op.and]: conditions
-	};
-}
-
 export default class DatabaseHelpers {
 
 	_db: Database;
@@ -280,6 +252,7 @@ export default class DatabaseHelpers {
 				condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
 			}
 
+
 			const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
 			const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
 
@@ -395,6 +368,54 @@ export default class DatabaseHelpers {
 
 		await model.destroy({ where: idObj});
 		await model.bulkCreate(this._dataToArr(data, idObj));
+	}
+
+	makeBboxCondition(bbox: BboxWithExcept | null | undefined, posField = "pos"): WhereOptions {
+		const dbType  = this._db._conn.getDialect()
+		if(!bbox)
+			return { };
+
+		const conditions = [ ];
+		if(dbType == 'postgres') {
+			conditions.push(
+				Sequelize.where(
+					Sequelize.fn("ST_MakeLine", Sequelize.fn("St_Point", bbox.left, bbox.bottom), Sequelize.fn("St_Point", bbox.right, bbox.top)), 
+					"~",
+					 Sequelize.col(posField))
+			);
+		} else {
+			conditions.push(
+				Sequelize.fn(
+					"MBRContains",
+					Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.left, bbox.bottom), Sequelize.fn("POINT", bbox.right, bbox.top)),
+					Sequelize.col(posField)
+				)
+			);
+		}
+
+		if(bbox.except) {
+			if(dbType == 'postgres') {
+				conditions.push({
+					[Op.not]: Sequelize.where(
+							Sequelize.fn("St_MakeLine", Sequelize.fn("St_Point", bbox.except.left, bbox.except.bottom), Sequelize.fn("St_Point", bbox.except.right, bbox.except.top)),
+							"~",
+							Sequelize.col(posField)
+					)
+				});
+			} else {
+				conditions.push({
+					[Op.not]: Sequelize.fn(
+							"MBRContains",
+							Sequelize.fn("LINESTRING", Sequelize.fn("POINT", bbox.except.left, bbox.except.bottom), Sequelize.fn("POINT", bbox.except.right, bbox.except.top)),
+							Sequelize.col(posField)
+					)
+				});
+			}
+		}
+
+		return {
+			[Op.and]: conditions
+		};
 	}
 
 	renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {

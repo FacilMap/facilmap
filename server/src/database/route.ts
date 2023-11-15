@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils";
 import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions } from "sequelize";
 import Database from "./database";
 import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers";
+import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers";
 import { calculateRouteForLine } from "../routing/routing";
 import { omit } from "lodash";
 import { Point as GeoJsonPoint } from "geojson";
@@ -56,7 +56,7 @@ export default class DatabaseRoutes {
 			routeId,
 			...(!bboxWithZoom ? {} : {
 				[Op.or]: [
-					{ [Op.and]: [ makeBboxCondition(bboxWithZoom), { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] },
+					{ [Op.and]: [ this._db.helpers.makeBboxCondition(bboxWithZoom), { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] },
 					...(!getCompleteBasicRoute ? [] : [
 						{ zoom: { [Op.lte]: 5 } }
 					])
