@@ -1,6 +1,6 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
 import type { BboxWithZoom, CRU, ID, Latitude, Longitude, Marker, PadId } from "facilmap-types";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint } from "../elevation.js";
 import type { PadModel } from "./pad.js";
@@ -43,7 +43,14 @@ export default class DatabaseMarkers {
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			symbol : { type: DataTypes.TEXT, allowNull: false },
 			shape : { type: DataTypes.TEXT, allowNull: false },
-			ele: { type: DataTypes.INTEGER, allowNull: true }
+			ele: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				set: function(this: MarkerModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ele", v != null ? Math.round(v) : v);
+				}
+			}
 		}, {
 			sequelize: this._db._conn,
 			// pos index is created in migration
@@ -69,7 +76,7 @@ export default class DatabaseMarkers {
 	}
 
 	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): AsyncGenerator<Marker, void, void> {
-		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: makeBboxCondition(bbox) });
+		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: this._db.helpers.makeBboxCondition(bbox) });
 	}
 
 	getPadMarkersByType(padId: PadId, typeId: ID): AsyncGenerator<Marker, void, void> {

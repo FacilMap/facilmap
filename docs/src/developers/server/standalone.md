@@ -2,7 +2,9 @@
 
 The FacilMap server is written in [node.js](https://nodejs.org/en/). To run the FacilMap server, the following dependencies are needed:
 * You need to have a recent version of node.js and npm installed.
-* You need to create a database on one of the systems supported by [Sequelize](https://sequelize.org/master/), it is recommended to use MySQL/MariaDB. When creating a database for FacilMap, make sure to use the `utf8mb4` charset/collation to make sure that characters from all languages can be used on a map. By default, MySQL/MariaDB uses the `latin1` charset, which mostly supports only basic latin characters. When you start the FacilMap server for the first time, the necessary tables are created using the charset of the database.
+* You need to create a database on one of the systems supported by [Sequelize](https://sequelize.org/master/), it is recommended to use MySQL/MariaDB.
+  * When creating a MySQL/MariaDB database for FacilMap, make sure to use the `utf8mb4` charset/collation to make sure that characters from all languages can be used on a map. By default, MySQL/MariaDB uses the `latin1` charset, which mostly supports only basic latin characters. When you start the FacilMap server for the first time, the necessary tables are created using the charset of the database.
+  * When using PostgreSQL, the PostGIS extensions must be enabled.
 * It is recommended to run FacilMap as an unprivileged user.
 
 ## Run the latest release

@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils.js";
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
 import type { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition } from "./helpers.js";
+import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
 import type { Point as GeoJsonPoint } from "geojson";
@@ -40,7 +40,14 @@ export default class DatabaseRoutes {
 			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			ele: { type: DataTypes.INTEGER, allowNull: true }
+			ele: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				set: function(this: RoutePointModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ele", v != null ? Math.round(v) : v);
+				}
+			}
 		}, {
 			sequelize: this._db._conn,
 			indexes: [
@@ -56,7 +63,7 @@ export default class DatabaseRoutes {
 			routeId,
 			...(!bboxWithZoom ? {} : {
 				[Op.or]: [
-					{ [Op.and]: [ makeBboxCondition(bboxWithZoom), { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] },
+					{ [Op.and]: [ this._db.helpers.makeBboxCondition(bboxWithZoom), { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] },
 					...(!getCompleteBasicRoute ? [] : [
 						{ zoom: { [Op.lte]: 5 } }
 					])

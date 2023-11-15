@@ -1,7 +1,7 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
 import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU } from "facilmap-types";
 import Database from "./database.js";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
@@ -89,9 +89,30 @@ export default class DatabaseLines {
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			name : { type: DataTypes.TEXT, allowNull: false },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
-			time : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
-			ascent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
-			descent : { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+			time : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("time", v != null ? Math.round(v) : v);
+				}
+			},
+			ascent : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ascent", v != null ? Math.round(v) : v);
+				}
+			},
+			descent : {
+				type: DataTypes.INTEGER.UNSIGNED,
+				allowNull: true,
+				set: function(this: LineModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("descent", v != null ? Math.round(v) : v);
+				}
+			},
 			top: getLatType(),
 			bottom: getLatType(),
 			left: getLonType(),
@@ -119,7 +140,14 @@ export default class DatabaseLines {
 			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			ele: { type: DataTypes.INTEGER, allowNull: true }
+			ele: {
+				type: DataTypes.INTEGER,
+				allowNull: true,
+				set: function(this: LinePointModel, v: number | null) {
+					// Round number to avoid integer column error in Postgres
+					this.setDataValue("ele", v != null ? Math.round(v) : v);
+				}
+			}
 		}, {
 			sequelize: this._db._conn,
 			indexes: [
@@ -273,7 +301,7 @@ export default class DatabaseLines {
 							zoom: { [Op.lte]: bboxWithZoom.zoom },
 							lineId: { [Op.in]: lineIds }
 						},
-						makeBboxCondition(bboxWithZoom)
+						this._db.helpers.makeBboxCondition(bboxWithZoom)
 					]
 				},
 				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
