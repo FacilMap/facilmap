@@ -6,14 +6,17 @@ services:
         ports:
             - "127.0.0.1:8080:8080"
         environment:
-            DB_TYPE: mariadb
-            DB_HOST: mariadb
+            DB_TYPE: mysql
+            DB_HOST: mysql
+            # DB_TYPE: postgres
+            # DB_HOST: postgres
             DB_NAME: facilmap
             DB_USER: facilmap
             DB_PASSWORD: facilmap
         links:
             - mysql
         restart: on-failure
+
     mysql:
         image: mysql:5.7
         environment:
@@ -23,9 +26,19 @@ services:
             MYSQL_RANDOM_ROOT_PASSWORD: "true"
         ports:
             - "127.0.0.1:40830:3306"
-    phpmyadmin:
-        image: phpmyadmin
-        links:
-            - mysql:db
-        ports:
-            - 127.0.0.1:8090:80
+
+    # postgres:
+    #     image: postgis/postgis:16-3.4
+    #     environment:
+    #         POSTGRES_USER: facilmap
+    #         POSTGRES_PASSWORD: facilmap
+    #         POSTGRES_DB: facilmap
+    #     ports:
+    #         - "127.0.0.1:40831:5432"
+
+    # phpmyadmin:
+    #     image: phpmyadmin
+    #     links:
+    #         - mysql:db
+    #     ports:
+    #         - 127.0.0.1:8090:80
