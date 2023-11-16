@@ -3,6 +3,7 @@ MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD yarn run server
 EXPOSE 8080
+ENV CACHE_DIR=/opt/facilmap/cache
 
 RUN apk add --no-cache yarn
 
@@ -21,6 +22,6 @@ RUN cd .. && yarn install
 RUN cd .. && yarn run build
 
 USER root
-RUN chown -R root:root /opt/facilmap && mkdir -p /opt/facilmap/server/node_modules/.cache && chown -R facilmap:facilmap /opt/facilmap/server/node_modules/.cache
+RUN chown -R root:root /opt/facilmap && mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"
 
 USER facilmap
