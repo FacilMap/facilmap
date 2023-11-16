@@ -254,7 +254,7 @@
 
 		<CustomImportDialog
 			v-if="customImport"
-			:customType="props.customTypes"
+			:customTypes="props.customTypes"
 			:results="activeFileResults"
 			@hidden="customImport = false"
 		></CustomImportDialog>

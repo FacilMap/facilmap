@@ -32,32 +32,43 @@
 		return mapValues(props.customTypes, (type, id) => props.results.filter((result) => result.fmTypeId != null && `${result.fmTypeId}` == `${id}`));
 	});
 
+	type Option = { key: string; value: string | false; text: string; disabled?: boolean };
+
 	const customMappingOptions = computed(() => {
-		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId) => {
-			const options: Array<{ key: string; value: string | false; text: string; disabled?: boolean }> = [];
+		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId): Option[] => {
+			const recommendedOptions: Option[] = [];
 
 			for (const type of Object.values(client.value.types)) {
 				if (type.name == customType.name && type.type == customType.type)
-					options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
 			if (client.value.writable == 2 && !typeExists(client.value, customType))
-				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
+				recommendedOptions.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 
-			options.push({ key: "false1", value: false, text: "Do not import" });
-			options.push({ key: "false2", value: false, text: "──────────", disabled: true });
+			recommendedOptions.push({ key: "false1", value: false, text: "Do not import" });
+
+
+			const otherOptions: Option[] = [];
 
 			for (const type of Object.values(client.value.types)) {
 				if (type.name != customType.name && type.type == customType.type)
-					options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+					otherOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
 				if (client.value.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client.value, customType2))
-					options.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: `Import type “${customType2.name}”` });
+					otherOptions.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: `Import type “${customType2.name}”` });
 			}
 
-			return options;
+
+			return [
+				...recommendedOptions,
+				...(recommendedOptions.length > 0 && otherOptions.length > 0 ? [
+					{ key: "false2", value: false, text: "──────────", disabled: true } satisfies Option
+				] : []),
+				...otherOptions
+			];
 		});
 	});
 
@@ -129,7 +140,7 @@
 				return id !== false && resolvedMapping[id] ? [{ result, type: resolvedMapping[id] }] : [];
 			});
 
-			await addToMap(client.value, add.flatMap(({ result, type }): Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }> => {
+			await addToMap(context, add.flatMap(({ result, type }): Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }> => {
 				if (type.type === 'marker') {
 					const marker = searchResultToMarkerWithTags(result);
 					return marker ? [{ marker, type }] : [];
@@ -168,23 +179,23 @@
 				<tr v-for="(options, importTypeId) in customMappingOptions">
 					<td><label :for="`${id}-map-type-${importTypeId}`">{{customTypes[importTypeId as number].type == 'marker' ? 'Markers' : 'Lines'}} of type “{{customTypes[importTypeId as number].name}}” ({{activeFileResultsByType[importTypeId as number].length}})</label></td>
 					<td>
-						<select :id="`${id}-map-type-${importTypeId}`" v-model="customMapping[importTypeId as number]" :options="options">
+						<select :id="`${id}-map-type-${importTypeId}`" v-model="customMapping[importTypeId as number]">
 							<option v-for="option in options" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>
 				</tr>
 				<tr v-if="untypedMarkers.length > 0">
-					<td><label :for="`${id}-map-untyped-markers`">Untyped markers ({{untypedMarkers}})</label></td>
+					<td><label :for="`${id}-map-untyped-markers`">Untyped markers ({{untypedMarkers.length}})</label></td>
 					<td>
-						<select :id="`${id}-map-untyped-markers`" v-model="untypedMarkerMapping" :options="untypedMarkerMappingOptions">
+						<select :id="`${id}-map-untyped-markers`" v-model="untypedMarkerMapping">
 							<option v-for="option in untypedMarkerMappingOptions" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>
 				</tr>
 				<tr v-if="untypedLines.length > 0">
-					<td><label :for="`${id}-map-untyped-lines`">Untyped lines/polygons ({{untypedLines}})</label></td>
+					<td><label :for="`${id}-map-untyped-lines`">Untyped lines/polygons ({{untypedLines.length}})</label></td>
 					<td>
-						<select :id="`${id}-map-untyped-lines`" v-model="untypedLineMapping" :options="untypedLineMappingOptions">
+						<select :id="`${id}-map-untyped-lines`" v-model="untypedLineMapping">
 							<option v-for="option in untypedLineMappingOptions" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>

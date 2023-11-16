@@ -3,30 +3,19 @@ import type { ID, Type } from "facilmap-types";
 import type { ToastContext } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import { addToMap } from "./add";
 
 export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
 	const clickListener = addClickListener(mapContext.value.components.map, async (point) => {
 		toasts.hideToast("fm-draw-add-marker");
 
 		try {
-			const marker = await client.value.addMarker({
-				lat: point.lat,
-				lon: point.lon,
-				typeId: type.id
-			});
+			const selection = await addToMap(context, [
+				{ marker: { lat: point.lat, lon: point.lon }, type }
+			]);
 
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
-
-			if (!mapContext.value.components.map.fmFilterFunc(marker, client.value.types[marker.typeId])) {
-				toasts.showToast(
-					undefined,
-					`${type.name} successfully added`,
-					"The marker was successfully added, but the active filter is preventing it from being shown.",
-					{ variant: "success", autoHide: true }
-				);
-			}
+			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 		} catch (err) {
 			toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
 		}
@@ -132,17 +121,10 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 		toasts.hideToast("fm-draw-add-line");
 
 		if (routePoints) {
-			const line = await client.value.addLine({ typeId: type.id, routePoints });
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
-
-			if (!mapContext.value.components.map.fmFilterFunc(line, client.value.types[line.typeId])) {
-				toasts.showToast(
-					undefined,
-					`${type.name} successfully added`,
-					"The line was successfully added, but the active filter is preventing it from being shown.",
-					{ variant: "success", autoHide: true }
-				);
-			}
+			const selection = await addToMap(context, [
+				{ line: { routePoints }, type }
+			]);
+			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 		}
 	} catch (err) {
 		toasts.showErrorToast("fm-draw-add-line", "Error adding line", err);

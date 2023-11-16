@@ -59,13 +59,13 @@
 
 	async function addMarkers(type: Type): Promise<void> {
 		await add(async () => {
-			return await addToMap(client.value, (props.markers ?? []).map((marker) => ({ marker, type })));
+			return await addToMap(context, (props.markers ?? []).map((marker) => ({ marker, type })));
 		});
 	}
 
 	async function addLines(type: Type): Promise<void> {
 		await add(async () => {
-			return await addToMap(client.value, (props.lines ?? []).map((line) => ({ line, type })));
+			return await addToMap(context, (props.lines ?? []).map((line) => ({ line, type })));
 		});
 	}
 </script>

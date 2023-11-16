@@ -7,6 +7,10 @@ import type { OverpassElement } from "facilmap-leaflet";
 import type { SelectedItem } from "./selection";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import { isLineResult, isMarkerResult } from "./search";
+import { useToasts } from "../components/ui/toasts/toasts.vue";
+import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
+import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import type { Ref } from "vue";
 
 export type MarkerWithTags = Omit<Marker<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
 export type LineWithTags = Omit<Line<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
@@ -118,8 +122,8 @@ function lineStringToTrackPoints(geometry: LineString | MultiLineString | Polygo
 	return coords.flat().map((latlng) => ({ lat: latlng[1], lon: latlng[0] }));
 }
 
-export async function addMarkerToMap(client: ClientContext, marker: MarkerWithTags, type: Type): Promise<SelectedItem> {
-	const newMarker = await client.addMarker({
+export async function addMarkerToMap(client: Ref<ClientContext>, marker: MarkerWithTags, type: Type): Promise<SelectedItem> {
+	const newMarker = await client.value.addMarker({
 		...marker,
 		data: {
 			...marker.tags && mapTagsToType(marker.tags, type),
@@ -131,8 +135,8 @@ export async function addMarkerToMap(client: ClientContext, marker: MarkerWithTa
 	return { type: "marker", id: newMarker.id };
 }
 
-export async function addLineToMap(client: ClientContext, line: LineWithTags, type: Type): Promise<SelectedItem> {
-	const newLine = await client.addLine({
+export async function addLineToMap(client: Ref<ClientContext>, line: LineWithTags, type: Type): Promise<SelectedItem> {
+	const newLine = await client.value.addLine({
 		...line,
 		typeId: type.id
 	});
@@ -140,8 +144,10 @@ export async function addLineToMap(client: ClientContext, line: LineWithTags, ty
 	return { type: "line", id: newLine.id };
 }
 
-export async function addToMap(client: ClientContext, objects: Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }>): Promise<SelectedItem[]> {
+export async function addToMap(context: FacilMapContext, objects: Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }>): Promise<SelectedItem[]> {
 	const selection: SelectedItem[] = [];
+
+	const client = requireClientContext(context);
 
 	for (const object of objects) {
 		if ("marker" in object) {
@@ -151,5 +157,47 @@ export async function addToMap(client: ClientContext, objects: Array<({ marker: 
 		}
 	}
 
+	showAddConfirmation(context, selection);
+
 	return selection;
+}
+
+function showAddConfirmation(context: FacilMapContext, selection: SelectedItem[]) {
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
+
+	const markers = selection.flatMap((item) => (item.type === "marker" ? [client.value.markers[item.id]] : []));
+	const lines = selection.flatMap((item) => (item.type === "line" ? [client.value.lines[item.id]] : []));
+
+	const objects = [...markers, ...lines].length;
+	const hiddenObjects = [...markers, ...lines].filter((obj) => !mapContext.value.components.map.fmFilterFunc(obj, client.value.types[obj.typeId])).length;
+
+	if (hiddenObjects > 0) {
+		const title = (
+			lines.length === 0 ? (markers.length === 1 ? "Marker added" : `${markers.length} markers added`) :
+			markers.length === 0 ? (lines.length === 1 ? "Line added" : `${lines.length} lines added`) :
+			`${objects} objects added`
+		);
+
+		const message = (
+			lines.length === 0 ? (markers.length === 1 ? "The marker has been added successfully, but the active filter is preventing it from being shown." : `${markers.length} markers have been added successfully, but the active filter is preventing them from being shown.`) :
+			markers.length === 0 ? (lines.length === 1 ? "The line has been added successfully, but the active filter is preventing it from being shown." : `${lines.length} lines have been added successfully, but the active filter is preventing them from being shown.`) :
+			objects === hiddenObjects ? `${objects} objects have been added successfully, but the active filter is preventing them from being shown.` :
+			`${objects} objects have been added successfully, but the active filter is preventing some of them from being shown.`
+		);
+
+		const toasts = useToasts(true);
+		toasts.showToast(
+			undefined,
+			title,
+			message,
+			{
+				variant: "success",
+				autoHide: true,
+				onHidden: () => {
+					toasts.dispose();
+				}
+			}
+		);
+	}
 }
