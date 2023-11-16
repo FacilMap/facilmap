@@ -157,13 +157,12 @@
 			margin: 10px -8px;
 		}
 
-		&#{&}#{&} dl {
+		dl {
 			// In narrow mode, SearchBox sets some styles for dl. We need to take care of overriding them here.
 
 			display: grid;
 			grid-template-columns: calc(11px + 1ex) calc(50px - 11px) 1fr;
 			margin: 0px;
-			gap: 0;
 			align-items: center;
 
 			> * {
@@ -198,10 +197,10 @@
 			.first {
 				margin-top: 6px;
 			}
+		}
 
-			.filtered {
-				opacity: 0.5;
-			}
+		.filtered {
+			opacity: 0.5;
 		}
 	}
 

@@ -274,6 +274,10 @@
 			> :first-child {
 				flex-grow: 1;
 			}
+
+			> a, > a > .fm-icon {
+				display: inline-flex;
+			}
 		}
 	}
 </style>

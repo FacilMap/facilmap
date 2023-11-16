@@ -668,7 +668,7 @@
 			<template v-if="routeObj">
 				<hr />
 
-				<dl>
+				<dl class="fm-search-box-dl">
 					<dt>Distance</dt>
 					<dd>{{round(routeObj.distance, 2)}}&#x202F;km <span v-if="routeObj.time != null">({{formatTime(routeObj.time)}}&#x202F;h {{formatRouteMode(routeObj.mode)}})</span></dd>
 
@@ -737,6 +737,10 @@
 			&:not(.active) {
 				border-color: transparent;
 			}
+		}
+
+		.fm-elevation-plot {
+			margin-bottom: 0.5rem;
 		}
 	}
 

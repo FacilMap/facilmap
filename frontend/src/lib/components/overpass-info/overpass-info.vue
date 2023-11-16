@@ -43,7 +43,7 @@
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{element.tags.name || 'Unnamed POI'}}
 		</h2>
-		<dl class="fm-search-box-collapse-point">
+		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt>Coordinates</dt>
 			<dd><Coordinates :point="element"></Coordinates></dd>
 

@@ -64,7 +64,6 @@
 				await client.value.createPad(padData.value as PadData<CRU.CREATE>);
 			else
 				await client.value.editPad(padData.value);
-			console.log('created');
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);

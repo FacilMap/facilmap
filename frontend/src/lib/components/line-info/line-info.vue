@@ -150,7 +150,7 @@
 		</div>
 
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
-			<dl>
+			<dl class="fm-search-box-dl">
 				<dt class="distance">Distance</dt>
 				<dd class="distance">{{round(line.distance, 2)}}&#x202F;km <span v-if="line.time != null">({{formatTime(line.time)}}&#x202F;h {{formatRouteMode(line.mode)}})</span></dd>
 
@@ -245,7 +245,7 @@
 		}
 
 		.fm-elevation-plot {
-			margin-bottom: 1rem;
+			margin-bottom: 0.5rem;
 		}
 	}
 </style>

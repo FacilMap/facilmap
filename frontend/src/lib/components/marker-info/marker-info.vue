@@ -79,7 +79,7 @@
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{normalizeMarkerName(marker.name)}}
 		</h2>
-		<dl class="fm-search-box-collapse-point">
+		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt class="pos">Coordinates</dt>
 			<dd class="pos"><Coordinates :point="marker"></Coordinates></dd>
 

@@ -379,10 +379,11 @@
 			margin-top: 15px;
 		}
 
-		dl {
+		dl.fm-search-box-dl {
 			display: grid;
 			grid-template-columns: 150px auto;
 			gap: 5px;
+			margin-bottom: 0.5rem;
 
 			* {
 				min-width: 0;

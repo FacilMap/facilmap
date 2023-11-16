@@ -240,11 +240,12 @@
 		}
 
 		.fm-search-results {
-			margin-top: 1rem;
+			margin-top: 0.5rem;
 		}
 
 		.fm-search-box-collapse-point {
-			min-height: 3em;
+			// Set min-height to one list group item
+			min-height: calc(/* line-height */ 1.5rem + /* list-group-item padding */ 2 * 7px + /* list-group-item border */ 2 * 1px);
 		}
 	}
 </style>

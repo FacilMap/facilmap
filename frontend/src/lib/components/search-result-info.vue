@@ -62,7 +62,7 @@
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{result.short_name}}
 		</h2>
-		<dl class="fm-search-box-collapse-point">
+		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="result.type">
 				<dt>Type</dt>
 				<dd>{{result.type}}</dd>

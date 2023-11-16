@@ -52,7 +52,7 @@
 				:class="{ active: bookmark.id == client.padId }"
 				:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
 				@click.exact.prevent="client.openPad(bookmark.id); emit('hide-sidebar')"
-			>{{bookmark.customName || bookmark.name}}</a>
+			>{{bookmark.customName || normalizePadName(bookmark.name)}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">

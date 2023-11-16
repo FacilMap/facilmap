@@ -132,7 +132,10 @@
 							:class="props.okVariant && `btn-${props.okVariant}`"
 							:disabled="isSubmitting || props.isBusy"
 							ref="submitRef"
-						>{{props.okLabel ?? (isCloseButton ? 'Close' : 'Save')}}</button>
+						>
+							<div v-if="isSubmitting" class="spinner-border spinner-border-sm"></div>
+							{{props.okLabel ?? (isCloseButton ? 'Close' : 'Save')}}
+						</button>
 					</div>
 				</ValidatedForm>
 			</div>
