@@ -12,7 +12,7 @@
 		route: LineWithTrackPoints | RouteWithTrackPoints;
 	}>();
 
-	const statsButtonRef = ref<HTMLElement>();
+	const statsButtonContainerRef = ref<HTMLElement>();
 	const showStatsPopover = ref(false);
 
 	const statsArr = computed(() => {
@@ -27,15 +27,19 @@
 			<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}}&#x202F;m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}}&#x202F;m
 		</span>
 
-		<button
-			class="btn btn-secondary"
-			ref="statsButtonRef"
-			v-tooltip="'Show elevation statistics'"
-		>
-			<Icon icon="circle-info" alt="Show stats"></Icon>
-		</button>
+		<span ref="statsButtonContainerRef">
+			<button
+				type="button"
+				class="btn btn-secondary"
+				v-tooltip="'Show elevation statistics'"
+				@click="showStatsPopover = !showStatsPopover"
+			>
+				<Icon icon="circle-info" alt="Show stats"></Icon>
+			</button>
+		</span>
+
 		<Popover
-			:element="statsButtonRef"
+			:element="statsButtonContainerRef"
 			v-model:show="showStatsPopover"
 			hideOnOutsideClick
 			class="fm-elevation-stats-popover"
@@ -58,13 +62,26 @@
 
 <style lang="scss">
 	.fm-elevation-stats {
-		display: inline-flex;
-		align-items: center;
+		&, & > span {
+			display: inline-flex;
+			align-items: center;
+		}
 
 		button {
 			margin-left: 0.5rem;
 			padding: 0 0.25rem;
 			line-height: 1;
+		}
+	}
+
+	.fm-elevation-stats-popover {
+		max-width: none;
+
+		dl {
+			margin: 0;
+			display: grid;
+			grid-template-columns: auto 1fr;
+			white-space: nowrap;
 		}
 	}
 </style>
