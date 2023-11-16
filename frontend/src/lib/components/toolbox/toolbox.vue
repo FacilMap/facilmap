@@ -2,12 +2,12 @@
 	import Sidebar from "../ui/sidebar.vue";
 	import Icon from "../ui/icon.vue";
 	import { ref } from "vue";
-	import AddDropdown from "./add-dropdown.vue";
-	import CollabMapsDropdown from "./collab-maps-dropdown.vue";
-	import HelpDropdown from "./help-dropdown.vue";
-	import MapStyleDropdown from "./map-style-dropdown.vue";
-	import ToolsDropdown from "./tools-dropdown.vue";
-	import ViewsDropdown from "./views-dropdown.vue";
+	import ToolboxAddDropdown from "./toolbox-add-dropdown.vue";
+	import ToolboxCollabMapsDropdown from "./toolbox-collab-maps-dropdown.vue";
+	import ToolboxHelpDropdown from "./toolbox-help-dropdown.vue";
+	import ToolboxMapStyleDropdown from "./toolbox-map-style-dropdown.vue";
+	import ToolboxToolsDropdown from "./toolbox-tools-dropdown.vue";
+	import ToolboxViewsDropdown from "./toolbox-views-dropdown.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
@@ -34,32 +34,32 @@
 
 		<Sidebar :id="`fm${context.id}-toolbox-sidebar`" v-model:visible="sidebarVisible">
 			<ul class="navbar-nav">
-				<CollabMapsDropdown
+				<ToolboxCollabMapsDropdown
 					v-if="props.interactive"
 					@hide-sidebar="sidebarVisible = false"
-				></CollabMapsDropdown>
+				></ToolboxCollabMapsDropdown>
 
-				<AddDropdown
+				<ToolboxAddDropdown
 					v-if="!client.readonly && client.padData"
 					@hide-sidebar="sidebarVisible = false"
-				></AddDropdown>
+				></ToolboxAddDropdown>
 
-				<ViewsDropdown
+				<ToolboxViewsDropdown
 					v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
-				></ViewsDropdown>
+				></ToolboxViewsDropdown>
 
-				<MapStyleDropdown></MapStyleDropdown>
+				<ToolboxMapStyleDropdown></ToolboxMapStyleDropdown>
 
-				<ToolsDropdown
+				<ToolboxToolsDropdown
 					v-if="props.interactive || client.padData"
 					:interactive="props.interactive"
 					@hide-sidebar="sidebarVisible = false"
-				></ToolsDropdown>
+				></ToolboxToolsDropdown>
 
-				<HelpDropdown
+				<ToolboxHelpDropdown
 					@hide-sidebar="sidebarVisible = false"
-				></HelpDropdown>
+				></ToolboxHelpDropdown>
 			</ul>
 		</Sidebar>
 	</div>
