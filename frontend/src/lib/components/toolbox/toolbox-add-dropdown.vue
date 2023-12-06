@@ -48,6 +48,7 @@
 				v-link-disabled="mapContext.interaction"
 				href="javascript:"
 				@click="addObject(type); emit('hide-sidebar')"
+				draggable="false"
 			>{{type.name}}</a>
 		</li>
 
@@ -61,6 +62,7 @@
 				v-link-disabled="!!mapContext.interaction"
 				href="javascript:"
 				@click="dialog = 'manage-types'; emit('hide-sidebar')"
+				draggable="false"
 			>Manage types</a>
 		</li>
 	</DropdownMenu>

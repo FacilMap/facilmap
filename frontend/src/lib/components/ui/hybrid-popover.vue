@@ -1,11 +1,4 @@
 <script lang="ts">
-	/**
-	 * Renders an element that opens a popover on large screens and a modal on small screens.
-	 */
-	export default {};
-</script>
-
-<script setup lang="ts">
 	import { ref, toRef, watch } from "vue";
 	import { useModal } from "../../utils/modal";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
@@ -13,6 +6,15 @@
 	import { useRefWithOverride } from "../../utils/vue";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
 
+	export const hybridPopoverShouldUseModal = useMaxBreakpoint("xs");
+
+	/**
+	 * Renders an element that opens a popover on large screens and a modal on small screens.
+	 */
+	export default {};
+</script>
+
+<script setup lang="ts">
 	const props = withDefaults(defineProps<{
 		show?: boolean;
 		title?: string;
@@ -38,15 +40,15 @@
 	const showModal = ref(false);
 	const showPopover = ref(false);
 
-	const shouldUseModal = useMaxBreakpoint("xs");
-
 	watch(show, () => {
 		if (!show.value) {
-			showModal.value = false;
+			if (showModal.value) {
+				modal.hide();
+			}
 			showPopover.value = false;
 		} else if (!showModal.value && !showPopover.value) {
-			if (shouldUseModal.value) {
-				modal.hide();
+			if (hybridPopoverShouldUseModal.value) {
+				showModal.value = true;
 			} else {
 				showPopover.value = true;
 			}

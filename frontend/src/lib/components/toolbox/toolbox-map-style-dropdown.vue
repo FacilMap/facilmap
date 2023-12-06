@@ -59,6 +59,7 @@
 				:class="{ active: layerInfo.active }"
 				href="javascript:"
 				@click.capture.stop="doSetBaseLayer(layerInfo.key)"
+				draggable="false"
 			>{{layerInfo.name}}</a>
 		</li>
 
@@ -72,6 +73,7 @@
 				:class="{ active: layerInfo.active }"
 				href="javascript:"
 				@click.capture.stop="doToggleOverlay(layerInfo.key)"
+				draggable="false"
 			>{{layerInfo.name}}</a>
 		</li>
 
@@ -84,6 +86,7 @@
 				class="dropdown-item"
 				:href="links.osm"
 				target="_blank"
+				draggable="false"
 			>Open this on OpenStreetMap</a>
 		</li>
 
@@ -92,6 +95,7 @@
 				class="dropdown-item"
 				:href="links.google"
 				target="_blank"
+				draggable="false"
 			>Open this on Google Maps</a>
 		</li>
 
@@ -100,6 +104,7 @@
 				class="dropdown-item"
 				:href="links.googleSatellite"
 				target="_blank"
+				draggable="false"
 			>Open this on Google Maps (Satellite)</a>
 		</li>
 
@@ -108,6 +113,7 @@
 				class="dropdown-item"
 				:href="links.bing"
 				target="_blank"
+				draggable="false"
 			>Open this on Bing Maps</a>
 		</li>
 	</DropdownMenu>

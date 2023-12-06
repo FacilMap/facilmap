@@ -216,5 +216,9 @@
 			gap: 5px;
 			align-items: center;
 		}
+
+		.fm-search-box-collapse-point {
+			min-height: 1.5em;
+		}
 	}
 </style>

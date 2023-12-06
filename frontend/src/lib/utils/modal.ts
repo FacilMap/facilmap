@@ -23,8 +23,16 @@ export interface ModalActions {
  */
 export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic, noEscape }: ModalConfig): Readonly<ModalActions> {
 	const modal = shallowRef<Modal>();
+	let lastFocusedEl: Element | undefined;
 
 	const handleShown = (e: Event) => {
+		const focusEl = (
+			modalRef.value?.querySelector<HTMLElement>("[autofocus],.fm-autofocus")
+			?? modalRef.value?.querySelector<HTMLElement>("input:not([type=button]):not([type=hidden]):not([type=image]):not([type=reset]):not([type=submit]),textarea,select")
+			?? modalRef.value?.querySelector<HTMLElement>(".modal-footer input[type=submit],.modal-footer button[type=submit]")
+		);
+		focusEl?.focus();
+
 		onShown?.(e as Modal.Event);
 	};
 
@@ -33,6 +41,9 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 	};
 
 	const handleHidden = (e: Event) => {
+		if (lastFocusedEl instanceof HTMLElement) {
+			lastFocusedEl.focus();
+		}
 		onHidden?.(e as Modal.Event);
 	};
 
@@ -49,6 +60,10 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
 
 		if (newRef) {
+			if (!lastFocusedEl) {
+				lastFocusedEl = document.activeElement ?? undefined;
+			}
+
 			modal.value = new Modal(newRef);
 			modal.value.show();
 

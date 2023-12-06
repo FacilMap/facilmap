@@ -40,13 +40,6 @@
 	const modalRef = toRef(() => modalElementRef.value?.elementRef);
 	const modal = useModal(modalRef, {
 		onShown: () => {
-			const focusEl = (
-				modalRef.value?.querySelector<HTMLElement>("[autofocus],.fm-autofocus")
-				?? modalRef.value?.querySelector<HTMLElement>("input:not([type=button]):not([type=hidden]):not([type=image]):not([type=reset]):not([type=submit]),textarea,select")
-				?? submitRef.value
-			);
-			focusEl?.focus();
-
 			emit("shown");
 		},
 		onHide: () => {

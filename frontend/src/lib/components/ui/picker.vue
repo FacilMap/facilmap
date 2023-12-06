@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { type StyleValue, computed, ref } from "vue";
-	import HybridPopover from "./hybrid-popover.vue";
+	import HybridPopover, { hybridPopoverShouldUseModal } from "./hybrid-popover.vue";
 	import { useDomEventListener, useNonClickFocusHandler, useNonDragClickHandler } from "../../utils/utils";
 	import ValidatedField, { type Validator } from "./validated-form/validated-field.vue";
 
@@ -76,7 +76,11 @@
 		}
 	}
 
-	useNonClickFocusHandler(() => inputRef.value, open);
+	useNonClickFocusHandler(() => inputRef.value, () => {
+		if (!hybridPopoverShouldUseModal.value) {
+			open();
+		}
+	});
 	useNonDragClickHandler(() => inputRef.value, open);
 
 	function open() {

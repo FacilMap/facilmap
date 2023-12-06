@@ -52,7 +52,7 @@
 </template>
 
 <style lang="scss">
-	.fm-route-form-tab {
+	.fm-route-form-tab.fm-route-form-tab.fm-route-form-tab {
 		padding: 0.5rem;
 		display: flex;
 		flex-direction: column;

@@ -10,7 +10,6 @@
 		message: string;
 		type?: "alert" | "confirm";
 		variant?: ThemeColour;
-		show?: boolean;
 		okLabel?: string;
 	};
 
@@ -47,16 +46,16 @@
 		});
 	}
 
-	export async function showAlert(props: Omit<AlertProps, 'type' | 'show'>): Promise<void> {
+	export async function showAlert(props: Omit<AlertProps, 'type'>): Promise<void> {
 		await renderAlert({ ...props, type: 'alert' });
 	}
 
-	export async function showConfirm(props: Omit<AlertProps, 'type' | 'show'>): Promise<boolean> {
+	export async function showConfirm(props: Omit<AlertProps, 'type'>): Promise<boolean> {
 		const result = await renderAlert({ ...props, type: 'confirm' });
 		return result.ok;
 	}
 
-	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'show' | 'message'> & {
+	export async function showPrompt({ initialValue = "", validate, ...props }: Omit<AlertProps, 'type' | 'message'> & {
 		initialValue?: string;
 		/** Validate the value. Return an empty string or undefined to indicate validity. */
 		validate?: (value: string) => string | undefined;

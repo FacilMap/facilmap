@@ -39,6 +39,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="doDisplayView(view); emit('hide-sidebar')"
+				draggable="false"
 			>{{view.name}}</a>
 		</li>
 
@@ -51,6 +52,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'save-view'; emit('hide-sidebar')"
+				draggable="false"
 			>Save current view</a>
 		</li>
 
@@ -59,6 +61,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'manage-views'; emit('hide-sidebar')"
+				draggable="false"
 			>Manage views</a>
 		</li>
 	</DropdownMenu>

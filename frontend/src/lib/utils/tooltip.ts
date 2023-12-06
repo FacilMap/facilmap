@@ -35,7 +35,7 @@ const updateTooltip: Directive<Element, string | undefined> = (el, binding) => {
 					'top'
 				),
 				title: binding.value ?? '',
-				trigger: 'hover'
+				trigger: 'hover focus'
 			});
 			allTooltips.add(el._fmTooltip);
 		}

@@ -165,7 +165,7 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 		}
 
 		if (marker) {
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
 			if (zoom)
 				flyTo(mapContext.value.components.map, getZoomDestinationForMarker(marker), smooth);
@@ -182,7 +182,7 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	if (lineId && client.value.lines[lineId]) {
 		const line = client.value.lines[lineId];
 
-		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
+		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 
 		if (zoom)
 			flyTo(mapContext.value.components.map, getZoomDestinationForLine(line), smooth);

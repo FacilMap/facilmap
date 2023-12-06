@@ -52,6 +52,7 @@
 				:class="{ active: bookmark.id == client.padId }"
 				:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
 				@click.exact.prevent="client.openPad(bookmark.id); emit('hide-sidebar')"
+				draggable="false"
 			>{{bookmark.customName || normalizePadName(bookmark.name)}}</a>
 		</li>
 
@@ -64,6 +65,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="addBookmark()"
+				draggable="false"
 			>Bookmark {{normalizePadName(client.padData.name)}}</a>
 		</li>
 
@@ -72,6 +74,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'manage-bookmarks'; emit('hide-sidebar')"
+				draggable="false"
 			>Manage bookmarks</a>
 		</li>
 
@@ -84,6 +87,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'create-pad'; emit('hide-sidebar')"
+				draggable="false"
 			>Create a new map</a>
 		</li>
 
@@ -92,6 +96,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'open-map'; emit('hide-sidebar')"
+				draggable="false"
 			>Open {{client.padId ? "another" : "an existing"}} map</a>
 		</li>
 
@@ -100,6 +105,7 @@
 				class="dropdown-item"
 				:href="`${context.baseUrl}#${hash}`"
 				@click.exact.prevent="client.openPad(undefined)"
+				draggable="false"
 			>Close {{client.padData.name}}</a>
 		</li>
 	</DropdownMenu>

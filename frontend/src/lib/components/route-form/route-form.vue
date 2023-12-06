@@ -727,7 +727,7 @@
 			margin-top: calc(-0.5rem + 2px); // Offset space of first fm-route-form-hover-insert
 		}
 
-		hr.fm-route-form-hover-insert {
+		&#{&} hr.fm-route-form-hover-insert {
 			margin: 0.1rem -0.5rem;
 			width: auto;
 			border-width: 2px;

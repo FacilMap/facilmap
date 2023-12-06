@@ -16,6 +16,8 @@
 		"update:visible": [visible: boolean];
 	}>();
 
+	const isDragging = ref(false);
+
 	const innerSidebarRef = ref<HTMLElement>();
 
 	const sidebarVisible = useRefWithOverride(false, () => props.visible, (visible) => {
@@ -28,6 +30,7 @@
 		if (innerSidebarRef.value) {
 			const pan = new hammer.Manager(innerSidebarRef.value);
 			pan.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));
+			pan.on("panstart", handleDragStart);
 			pan.on("pan", handleDragMove);
 			pan.on("panend", handleDragEnd);
 
@@ -37,6 +40,10 @@
 		}
 	});
 
+	function handleDragStart(): void {
+		isDragging.value = true;
+	}
+
 	function handleDragMove(event: any): void {
 		Object.assign(innerSidebarRef.value!.style, {
 			transform: `translateX(${Math.max(0, event.deltaX)}px)`,
@@ -45,6 +52,8 @@
 	}
 
 	function handleDragEnd(event: any): void {
+		isDragging.value = false;
+
 		Object.assign(innerSidebarRef.value!.style, {
 			transform: "",
 			transition: ""
@@ -67,7 +76,7 @@
 </script>
 
 <template>
-	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow }">
+	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow, isDragging }">
 		<template v-if="context.isNarrow">
 			<div class="fm-sidebar-outer" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
 				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>
@@ -91,6 +100,15 @@
 
 <style lang="scss">
 	.fm-sidebar {
+
+		&.isDragging .fm-sidebar-inner {
+			cursor: grabbing;
+
+			> * {
+				// Prevent click event on drag end (see https://stackoverflow.com/a/59957886/242365)
+				pointer-events: none;
+			}
+		}
 
 		.navbar-toggler {
 			position: absolute;

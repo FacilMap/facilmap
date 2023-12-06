@@ -133,7 +133,9 @@
 			const currentHeight = parseInt(getComputedStyle(containerRef.value!).flexBasis);
 			if (currentHeight < 120) {
 				restoreHeight.value = currentHeight;
-				containerRef.value!.style.flexBasis = '170px';
+				const mapHeight = (containerRef.value!.offsetParent as HTMLElement).offsetHeight;
+				const defaultHeight = Math.min(Math.max(170, mapHeight / 2), 200);
+				containerRef.value!.style.flexBasis = `${defaultHeight}px`;
 			}
 		}
 	}
@@ -219,12 +221,14 @@
 						href="javascript:"
 						:class="{ active: tabId === searchBoxContext.activeTabId }"
 						@click="searchBoxContext.activateTab(tabId, { expand: true, autofocus: true })"
+						draggable="false"
 					>{{tab.title}}</a>
 
 					<a
 						v-if="tab.onClose"
 						href="javascript:"
 						@click="tab.onClose()"
+						draggable="false"
 					><Icon icon="remove" alt="Close"></Icon></a>
 				</li>
 			</ul>
@@ -294,8 +298,9 @@
 				padding-top: 11px;
 				position: relative;
 				-webkit-touch-callout: none;
+				cursor: row-resize;
 
-				::before {
+				&::before {
 					content: "";
 					position: absolute;
 					left: 0;
@@ -304,6 +309,19 @@
 					top: 4px;
 					border-top: 3px double #aaa;
 					width: 40px;
+				}
+
+				> .nav {
+					cursor: default;
+				}
+			}
+
+			&.isPanning > .card-header {
+				cursor: row-resize;
+
+				> * {
+					// Prevent click event on drag end (see https://stackoverflow.com/a/59957886/242365)
+					pointer-events: none;
 				}
 			}
 		}
@@ -345,7 +363,11 @@
 					}
 
 					> :nth-child(2) {
-						flex-shrink: 0;
+						&, > .fm-icon {
+							flex-shrink: 0;
+							display: inline-flex;
+							align-items: center;
+						}
 					}
 				}
 			}

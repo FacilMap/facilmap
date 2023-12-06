@@ -55,6 +55,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'share'; emit('hide-sidebar')"
+				draggable="false"
 			>Share</a>
 		</li>
 
@@ -63,6 +64,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="importTabContext.openFilePicker(); emit('hide-sidebar')"
+				draggable="false"
 			>Open file</a>
 		</li>
 
@@ -72,6 +74,7 @@
 				:href="`${client.padData.id}/geojson${filterQuery.q}`"
 				target="_blank"
 				v-tooltip.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'"
+				draggable="false"
 			>Export as GeoJSON</a>
 		</li>
 
@@ -81,6 +84,7 @@
 				:href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`"
 				target="_blank"
 				v-tooltip.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'"
+				draggable="false"
 			>Export as GPX (tracks)</a>
 		</li>
 
@@ -90,6 +94,7 @@
 				:href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`"
 				target="_blank"
 				v-tooltip.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'"
+				draggable="false"
 			>Export as GPX (routes)</a>
 		</li>
 
@@ -98,6 +103,7 @@
 				class="dropdown-item"
 				:href="`${client.padData.id}/table${filterQuery.q}`"
 				target="_blank"
+				draggable="false"
 			>Export as table</a>
 		</li>
 
@@ -110,6 +116,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'edit-filter'; emit('hide-sidebar')"
+				draggable="false"
 			>Filter</a>
 		</li>
 
@@ -118,6 +125,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'edit-pad'; emit('hide-sidebar')"
+				draggable="false"
 			>Settings</a>
 		</li>
 
@@ -126,6 +134,7 @@
 				class="dropdown-item"
 				href="javascript:"
 				@click="dialog = 'history'; emit('hide-sidebar')"
+				draggable="false"
 			>Show edit history</a>
 		</li>
 	</DropdownMenu>

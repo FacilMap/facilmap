@@ -26,6 +26,7 @@
 				class="dropdown-item"
 				href="https://docs.facilmap.org/users/"
 				target="_blank"
+				draggable="false"
 			>Documentation</a>
 		</li>
 
@@ -34,6 +35,7 @@
 				class="dropdown-item"
 				href="https://matrix.to/#/#facilmap:rankenste.in"
 				target="_blank"
+				draggable="false"
 			>Matrix chat room</a>
 		</li>
 
@@ -42,6 +44,7 @@
 				class="dropdown-item"
 				href="https://github.com/FacilMap/facilmap/issues"
 				target="_blank"
+				draggable="false"
 			>Report a problem</a>
 		</li>
 
@@ -50,6 +53,7 @@
 				class="dropdown-item"
 				href="https://github.com/FacilMap/facilmap/discussions"
 				target="_blank"
+				draggable="false"
 			>Ask a question</a>
 		</li>
 
@@ -58,6 +62,7 @@
 				class="dropdown-item"
 				@click="dialog = 'about'; emit('hide-sidebar')"
 				href="javascript:"
+				draggable="false"
 			>About FacilMap</a>
 		</li>
 	</DropdownMenu>

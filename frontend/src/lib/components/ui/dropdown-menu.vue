@@ -163,6 +163,7 @@
 				data-bs-toggle="dropdown"
 				v-link-disabled="props.isDisabled || props.isBusy"
 				:tabindex="props.tabindex"
+				draggable="false"
 			>
 				<slot name="label">
 					<div v-if="props.isBusy" class="spinner-border spinner-border-sm"></div>

@@ -55,6 +55,7 @@
 		hidden: [];
 	}>();
 
+	const popover = ref<CustomPopover>();
 	const popoverContent = ref<HTMLElement>();
 	const renderPopover = ref(false);
 
@@ -62,7 +63,7 @@
 		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
 
 		if (props.element && popoverContent.value) {
-			const popover = new CustomPopover(props.element, {
+			popover.value = new CustomPopover(props.element, {
 				placement: props.placement,
 				content: popoverContent.value,
 				trigger: 'manual',
@@ -71,10 +72,11 @@
 					strategy: "fixed"
 				})
 			});
-			popover.show();
+			popover.value.show();
 
 			onCleanup(() => {
-				popover.dispose();
+				popover.value!.dispose();
+				popover.value = undefined;
 			});
 		}
 	});
@@ -93,20 +95,24 @@
 	});
 
 	watch(() => props.show, (show) => {
-		renderPopover.value = show;
+		if (show) {
+			renderPopover.value = true;
+		} else {
+			popover.value?.hide();
+		}
 	});
 
 	useDomEventListener(() => props.element, "focusout", (e: Event) => {
 		const event = e as FocusEvent;
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+		if (props.show && event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
 			emit("update:show", false);
 		}
 	});
 
 	function handlePopoverFocusOut(event: FocusEvent) {
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+		if (props.show && event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
 			emit("update:show", false);
 		}
 	}

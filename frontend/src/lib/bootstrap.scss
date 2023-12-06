@@ -102,6 +102,11 @@ html,body {
 	}
 }
 
+// Reset btn-outline-secondary colour scheme to original, as #fff makes the text invisible
+.btn-outline-secondary {
+	@include button-outline-variant(#6c757d);
+}
+
 .list-group-item.active a {
 	color: inherit;
 }
