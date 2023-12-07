@@ -5,6 +5,9 @@ on:
     branches:
       - 'vue3'
 
+env:
+  TAG: facilmap/facilmap:vue3
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -13,6 +16,15 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v4
+
+      # Set up yarn cache
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+          cache: 'yarn'
+
+      # Build docker image
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -26,10 +38,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push (FacilMap)
-        id: docker_build_facilmap
+        name: Build docker image (FacilMap)
         uses: docker/build-push-action@v5
         with:
-          push: true
+          load: true # Needed to be accessible as $TAG below for yarn cache
+          #push: true # load and push cannot be both true, so we push in the next step instead
           context: .
-          tags: facilmap/facilmap:vue3
+          tags: ${{env.TAG}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      -
+        name: Push docker image (FacilMap)
+        run: docker push "$TAG"
+
+      -
+        name: Populate Yarn cache
+        run: rm -f .yarn/cache/* && docker cp "$(docker create "$TAG"):/opt/facilmap/.yarn/cache/." .yarn/cache/ && ls .yarn/cache
