@@ -1,14 +1,5 @@
-import { io, Socket as SocketIO } from "socket.io-client";
-import {
-	Bbox,
-	BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line,
-	LineExportRequest, LineTemplateRequest, LineToRouteCreate, MapEvents, Marker, MultipleEvents, ObjectWithId,
-	PadData, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest,
-	RouteInfo,
-	RouteRequest,
-	SearchResult,
-	TrackPoint, Type, View, Writable
-} from "facilmap-types";
+import { io, type Socket as SocketIO } from "socket.io-client";
+import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, MapEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, TrackPoint, Type, View, Writable } from "facilmap-types";
 
 export interface ClientEvents extends MapEvents {
 	connect: [];
