@@ -1,12 +1,20 @@
+/// <reference types="vitest" />
+
 import { defineConfig } from "vite";
 import { fileURLToPath } from "url";
-import { paths } from "./build.js";
+import { paths } from "./build";
 import vuePlugin from "@vitejs/plugin-vue";
+import tsconfigPaths from "vite-tsconfig-paths";
+import iconsPlugin from "facilmap-leaflet/rollup-icons";
+import definePlugin from "./vite-define";
 
 export default defineConfig({
 	base: paths.base,
 	plugins: [
-		vuePlugin()
+		vuePlugin(),
+		tsconfigPaths({ loose: true }),
+		iconsPlugin(),
+		definePlugin()
 	],
 	assetsInclude: [
 		"**/*.ejs"

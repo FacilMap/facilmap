@@ -1,13 +1,17 @@
 import { defineConfig } from "vite";
-//import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
 import vuePlugin from "@vitejs/plugin-vue";
+import tsconfigPaths from "vite-tsconfig-paths";
+import definePlugin from "./vite-define";
 
 export default defineConfig(({ mode }) => ({
 	plugins: [
-		//cssInjectedByJsPlugin(),
+		cssInjectedByJsPlugin(),
 		dtsPlugin({ rollupTypes: true }),
-		vuePlugin()
+		vuePlugin(),
+		tsconfigPaths(),
+		definePlugin()
 	],
 	build: {
 		outDir: "./dist/lib",

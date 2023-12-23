@@ -1,7 +1,7 @@
 FROM node:21-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
-CMD yarn run server
+CMD yarn run prod-server
 EXPOSE 8080
 ENV CACHE_DIR=/opt/facilmap/cache
 
@@ -19,7 +19,7 @@ USER facilmap
 
 RUN cd .. && yarn install
 
-RUN cd .. && yarn run build
+RUN cd .. && yarn run build:frontend:app && yarn run build:server
 
 USER root
 RUN chown -R root:root /opt/facilmap && mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"

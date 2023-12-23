@@ -13,6 +13,11 @@
     "lint": "eslint **/*.ts",
     "clean": "yarn workspaces foreach -v run clean",
     "build": "yarn workspaces foreach -vt run build",
+    "build:frontend:app": "yarn workspace facilmap-frontend run build:app",
+    "build:server": "yarn workspace facilmap-server run build",
+    "prod-server": "yarn workspace facilmap-server run prod-server",
+    "server": "yarn workspace facilmap-server run server",
+    "dev-server": "yarn workspace facilmap-server run dev-server",
     "check-types": "yarn workspaces foreach -vt run check-types"
   },
   "devDependencies": {

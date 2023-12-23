@@ -1,5 +1,5 @@
 import type { Manifest } from "vite";
-import { paths, serve } from "facilmap-frontend/build.js";
+import { paths, serve } from "facilmap-frontend/build";
 import { readFile } from "node:fs/promises";
 import type { ID, Line, Marker, PadData, Type } from "facilmap-types";
 import * as ejs from "ejs";
@@ -104,12 +104,7 @@ export async function getStaticFrontendMiddleware(): Promise<RequestHandler> {
 	if (isDevMode) {
 		const devServer = await serve({
 			server: {
-				middlewareMode: true,
-				/* hmr: {
-					protocol: 'ws',
-					host: '127.0.0.1'
-				} */
-				//origin: "http://localhost:40829"
+				middlewareMode: true
 			},
 			appType: "custom"
 		});

@@ -27,12 +27,12 @@
   "scripts": {
     "build": "vite build",
     "clean": "rimraf dist",
-    "server": "DOTENV_CONFIG_PATH=../config.env node ./bin/facilmap-server.js",
-    "ts-server": "DOTENV_CONFIG_PATH=../config.env node ./esrun.js",
-    "dev-server": "FM_DEV=true DOTENV_CONFIG_PATH=../config.env node ./esrun.js",
+    "prod-server": "DOTENV_CONFIG_PATH=../config.env node ./bin/facilmap-server.js",
+    "server": "DOTENV_CONFIG_PATH=../config.env NODE_OPTIONS='--import tsx' vite-node ./server.ts",
+    "dev-server": "FM_DEV=true DOTENV_CONFIG_PATH=../config.env NODE_OPTIONS='--import tsx' vite-node ./server.ts",
     "test": "vitest run",
     "test-watch": "vitest",
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc -b --emitDeclarationOnly",
     "lint": "eslint src/**/*.ts"
   },
   "main": "./dist/facilmap-server.mjs",
@@ -66,7 +66,6 @@
     "unzipper": "^0.10.14"
   },
   "devDependencies": {
-    "@digitak/esrun": "^3.2.25",
     "@types/cheerio": "^0.22.34",
     "@types/compression": "^1.7.5",
     "@types/debug": "^4.1.12",
@@ -82,10 +81,12 @@
     "debug": "^4.3.4",
     "pg": "^8.11.3",
     "rimraf": "^5.0.5",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.7.0",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
+    "vite-node": "^1.1.0",
     "vite-plugin-dts": "^3.6.3",
+    "vite-tsconfig-paths": "^4.2.2",
     "vitest": "^0.34.6"
   }
 }

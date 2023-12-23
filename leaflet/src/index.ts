@@ -22,10 +22,4 @@ export * from "./views/hash";
 export * from "./views/initialView";
 export * from "./views/views";
 
-declare module "leaflet" {
-	export interface Map {
-		fmFilter: string | undefined;
-
-		setFmFilter(filter?: string): void;
-	}
-}
+import "./type-extensions";

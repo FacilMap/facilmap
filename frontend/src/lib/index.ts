@@ -1,5 +1,5 @@
 import "./styles.scss";
-import "./bootstrap.ts";
+import "./bootstrap";
 
 import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 

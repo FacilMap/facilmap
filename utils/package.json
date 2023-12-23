@@ -22,7 +22,7 @@
     "build": "vite build",
     "watch": "vite build --watch",
     "clean": "rimraf dist",
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc -b --emitDeclarationOnly",
     "test": "vitest run",
     "test-watch": "vitest"
   },

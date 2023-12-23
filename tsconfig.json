@@ -1,11 +1,10 @@
 {
+	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"target": "esnext",
-		"module": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"moduleResolution": "node",
-		"skipLibCheck": true,
-		"verbatimModuleSyntax": true
-	}
+		"outDir": "./out",
+		"composite": true
+	},
+	"references": [
+	],
+	"include": ["package.json"]
 }

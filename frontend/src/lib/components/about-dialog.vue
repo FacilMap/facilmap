@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import packageJson from "../../../../package.json";
 	import { getLayers } from "facilmap-leaflet";
 	import { Layer, Util } from "leaflet";
 	import { computed } from "vue";
@@ -18,7 +17,7 @@
 		return [...Object.values(baseLayers), ...Object.values(overlays)];
 	});
 
-	const fmVersion = packageJson.version;
+	const fmVersion = __FM_VERSION__;
 
 </script>
 

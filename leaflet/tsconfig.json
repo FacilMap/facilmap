@@ -1,4 +1,19 @@
 {
-	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./out",
+		"composite": true,
+		"paths": {
+			"facilmap-client": ["../client/src/client.ts"],
+			"facilmap-types": ["../types/src/index.ts"],
+			"facilmap-utils": ["../utils/src/index.ts"]
+		}
+	},
+	"extends": "../tsconfig.base.json",
+	"references": [
+		{ "path": "./tsconfig.node.json" },
+		{ "path": "../client/tsconfig.json" },
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../utils/tsconfig.json" }
+	],
 	"include": ["src/**/*"]
 }

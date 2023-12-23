@@ -10,3 +10,5 @@ declare module "@tmcw/togeojson" {
 	export const kml: any;
 	export const tcx: any;
 }
+
+declare const __FM_VERSION__: string;

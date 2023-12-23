@@ -1,9 +1,11 @@
 import { defineConfig } from "vite";
 import dtsPlugin from "vite-plugin-dts";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	plugins: [
-		dtsPlugin({ rollupTypes: true })
+		dtsPlugin({ rollupTypes: true }),
+		tsconfigPaths({ loose: true })
 	],
 	build: {
 		sourcemap: false,
@@ -16,7 +18,12 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/")
+			external: (id) => (
+				!id.startsWith("./")
+				&& !id.startsWith("../")
+				&& /* resolved internal modules */ !id.startsWith("/")
+				&& !id.startsWith("facilmap-")
+			)
 		}
 	}
 });

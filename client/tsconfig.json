@@ -1,4 +1,15 @@
 {
-	"extends": "../tsconfig.json",
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "./out",
+		"composite": true,
+		"paths": {
+			"facilmap-types": ["../types/src/index.ts"]
+		}
+	},
+	"references": [
+		{ "path": "./tsconfig.node.json" },
+		{ "path": "../types/tsconfig.json" }
+	],
 	"include": ["src/**/*"]
 }

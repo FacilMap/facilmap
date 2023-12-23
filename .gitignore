@@ -12,3 +12,5 @@ config.env
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+out
+out.node
