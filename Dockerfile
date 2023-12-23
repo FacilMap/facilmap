@@ -7,21 +7,16 @@ ENV CACHE_DIR=/opt/facilmap/cache
 
 RUN apk add --no-cache yarn
 
-RUN adduser -D -h /opt/facilmap -s /bin/sh facilmap
+RUN mkdir /opt/facilmap && adduser -D -H -h /opt/facilmap -s /bin/sh facilmap
 
-WORKDIR /opt/facilmap/server
+WORKDIR /opt/facilmap
 
-COPY ./ ../
+COPY ./ ./
 
-RUN chown -R facilmap:facilmap /opt/facilmap
+RUN yarn install
 
-USER facilmap
+RUN yarn run build:frontend:app && yarn run build:server
 
-RUN cd .. && yarn install
-
-RUN cd .. && yarn run build:frontend:app && yarn run build:server
-
-USER root
-RUN chown -R root:root /opt/facilmap && mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"
+RUN mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"
 
 USER facilmap
