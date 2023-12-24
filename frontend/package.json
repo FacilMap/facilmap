@@ -18,7 +18,7 @@
   },
   "type": "module",
   "main": "./dist/lib/facilmap-frontend.mjs",
-  "typings": "./dist/lib/facilmap-frontend.d.ts",
+  "types": "./dist/lib/facilmap-frontend.d.ts",
   "files": [
     "dist",
     "src",

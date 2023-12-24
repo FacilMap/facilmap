@@ -22,7 +22,7 @@ export default defineConfig({
 				!id.startsWith("./")
 				&& !id.startsWith("../")
 				&& /* resolved internal modules */ !id.startsWith("/")
-				&& !id.startsWith("facilmap-")
+				&& !["facilmap-types", "facilmap-utils"].includes(id)
 			)
 		}
 	}
