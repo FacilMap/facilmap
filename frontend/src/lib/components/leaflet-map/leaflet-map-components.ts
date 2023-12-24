@@ -1,5 +1,5 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw } from "vue";
-import L, { latLng, latLngBounds, Map, map as leafletMap, DomUtil, control } from "leaflet";
+import { type Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
@@ -125,7 +125,7 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	);
 }
 
-function useLocateControl(map: Ref<Map>): Ref<Raw<L.Control.Locate>> {
+function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
 	return useMapComponent(
 		map,
 		() => markRaw(control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } })),
@@ -152,7 +152,7 @@ function useMarkersLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Mar
 	);
 }
 
-function useMousePosition(map: Ref<Map>): Ref<Raw<L.Control.MousePosition>> {
+function useMousePosition(map: Ref<Map>): Ref<Raw<Control.MousePosition>> {
 	return useMapComponent(
 		map,
 		() => markRaw(control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" })),

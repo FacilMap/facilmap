@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { getLayers } from "facilmap-leaflet";
-	import { Layer, Util } from "leaflet";
+	import { type Layer, Util } from "leaflet";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";

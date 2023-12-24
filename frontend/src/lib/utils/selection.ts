@@ -1,5 +1,5 @@
 import type { ID, SearchResult } from "facilmap-types";
-import { DomEvent, Evented, Handler, LatLngBounds, type LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
+import { DomEvent, Evented, Handler, type LatLngBounds, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
 import { LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
 import type { DeepReadonly } from "vue";

@@ -6,7 +6,7 @@
 	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
-	import { latLng, LatLng } from "leaflet";
+	import { latLng, type LatLng } from "leaflet";
 	import Draggable from "vuedraggable";
 	import RouteMode from "../ui/route-mode.vue";
 	import DraggableLines from "leaflet-draggable-lines";

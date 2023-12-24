@@ -1,5 +1,5 @@
 import "leaflet.heightgraph";
-import { Control, Map, Polyline } from "leaflet";
+import { Control, type Map, Polyline } from "leaflet";
 import "leaflet.heightgraph/src/L.Control.Heightgraph.css";
 import "./heightgraph.scss";
 import type { TrackPoints } from "facilmap-client";
