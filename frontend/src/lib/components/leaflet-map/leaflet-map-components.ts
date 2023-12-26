@@ -67,8 +67,7 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 function useMapComponent<T>(
 	map: Ref<Map>,
 	construct: () => T,
-	activate: (component: T, onCleanup: OnCleanup) => void,
-	debug = false
+	activate: (component: T, onCleanup: OnCleanup) => void
 ): Ref<T> {
 	const componentRef = shallowRef(undefined as any as T);
 	watchEffect(() => {
@@ -79,7 +78,7 @@ function useMapComponent<T>(
 		componentRef,
 		map
 	], ([component], prev, onCleanup) => {
-		activate(component, onCleanup);
+		activate(component as T, onCleanup);
 	}, { immediate: true });
 
 	return componentRef;
@@ -120,8 +119,7 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 			onCleanup(() => {
 				linesLayer.remove();
 			});
-		},
-		true
+		}
 	);
 }
 

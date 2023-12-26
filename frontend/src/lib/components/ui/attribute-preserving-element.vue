@@ -21,7 +21,7 @@
 <script setup lang="ts">
 	const props = defineProps<{
 		tag: string;
-		class?: string;
+		class?: string | Record<string, boolean> | Array<string | Record<string, boolean>>;
 	}>();
 
 	const elementRef = ref<HTMLElement>();
@@ -33,11 +33,20 @@
 		for (const attrName of Object.keys(props)) {
 			ownAttributeNames.add(attrName);
 		}
+	}, { immediate: true });
 
-		for (const className of (props.class ? props.class.split(" ") : [])) {
+	watch(() => props.class, () => {
+		const classNames = (
+			typeof props.class === 'string' ? props.class.split(" ") :
+			Array.isArray(props.class) ? props.class.flatMap((className) => typeof className === 'string' ? [className] : Object.keys(className)) :
+			props.class ? Object.keys(props.class) :
+			[]
+		);
+		for (const className of classNames) {
 			ownClassNames.add(className);
 		}
-	}, { immediate: true });
+	}, { immediate: true, deep: true });
+
 
 	const manualAttributes = ref<Record<string, string>>({});
 	const manualClassNames = ref<string[]>([]);

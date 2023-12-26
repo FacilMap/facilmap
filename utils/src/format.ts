@@ -31,7 +31,7 @@ export function formatField(field: Field, value: string | undefined): string {
 export function markdownBlock(string: string): string {
 	const $ = cheerio.load("<div/>");
 	const el = $.root();
-	el.html(purify.sanitize(marked(string, markdownOptions)));
+	el.html(purify.sanitize(marked(string, markdownOptions) as string));
 	applyMarkdownModifications(el, $);
 	return el.html()!;
 }
@@ -39,7 +39,7 @@ export function markdownBlock(string: string): string {
 export function markdownInline(string: string): string {
 	const $ = cheerio.load("<div/>");
 	const el = $.root();
-	el.html(purify.sanitize(marked(string, markdownOptions)));
+	el.html(purify.sanitize(marked(string, markdownOptions) as string));
 	$("p", el).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
 	applyMarkdownModifications(el, $);
 	return el.html()!;
