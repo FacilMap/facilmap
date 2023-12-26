@@ -1,5 +1,7 @@
 import Modal from "bootstrap/js/dist/modal";
-import { type Ref, shallowRef, watch, watchEffect, reactive, readonly } from "vue";
+import { type Ref, shallowRef, watch, watchEffect, reactive, readonly, effectScope } from "vue";
+import { useMaxBreakpoint } from "./bootstrap";
+import { fixOnCleanup } from "./vue";
 
 export interface ModalConfig {
 	/** Will be called when the fade-in animation has finished. */
@@ -56,8 +58,8 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 		}
 	});
 
-	watch(modalRef, (newRef, oldRef, onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
+	watch(modalRef, (newRef, oldRef, onCleanup_) => {
+		const onCleanup = fixOnCleanup(onCleanup_);
 
 		if (newRef) {
 			if (!lastFocusedEl) {
@@ -75,7 +77,20 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 			const stackLevel = existingModals.length;
 			const content = newRef.querySelector<HTMLElement>(".modal-dialog");
 			if (content) {
-				content.style.padding = `${20*stackLevel}px ${40*stackLevel}px`;
+				const scope = effectScope();
+				scope.run(() => {
+					const isTight = useMaxBreakpoint("md");
+					watchEffect(() => {
+						if (isTight.value) {
+							content.style.padding = `calc(var(--bs-modal-margin) * ${stackLevel})`;
+						} else {
+							content.style.padding = `${20*stackLevel}px ${40*stackLevel}px`;
+						}
+					});
+				});
+				onCleanup(() => {
+					scope.stop();
+				});
 			}
 
 			newRef.addEventListener('shown.bs.modal', handleShown);

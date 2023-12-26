@@ -71,3 +71,21 @@ export function useResizeObserver(
 
 	return readonly(entry);
 }
+
+/**
+ * Allows to run multiple cleanup functions in watchers. Due to https://github.com/vuejs/core/issues/3341, only the last
+ * onCleanup function specified is called. Call this with the onCleanup function given by the watcher and register
+ * multiple cleanup callbacks by calling the onCleanup method returned by this function.
+ */
+export function fixOnCleanup(onCleanup: (cleanupFn: () => void) => void): (cleanupFn: () => void) => void {
+	const cleanupFns: Array<() => void> = [];
+	onCleanup(() => {
+		for (const cleanupFn of cleanupFns) {
+			cleanupFn();
+		}
+	});
+
+	return (cleanupFn: () => void) => {
+		cleanupFns.push(cleanupFn);
+	};
+}

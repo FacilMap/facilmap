@@ -31,11 +31,15 @@ export const reactiveBreakpoint = computed(() => {
 	return [...breakpoints].reverse().find((breakpoint) => mediaQueries[breakpoint].matches) ?? 'xs';
 });
 
+export function isMaxBreakpoint(breakpoint: Breakpoint): boolean {
+	return breakpoints.indexOf(reactiveBreakpoint.value) <= breakpoints.indexOf(breakpoint);
+}
+
 /**
  * Returns a reactive boolean that is true if the current breakpoint is the specified one or smaller.
  */
 export function useMaxBreakpoint(breakpoint: Breakpoint): Ref<boolean> {
-	return computed(() => breakpoints.indexOf(reactiveBreakpoint.value) <= breakpoints.indexOf(breakpoint));
+	return computed(() => isMaxBreakpoint(breakpoint));
 }
 
 /**
