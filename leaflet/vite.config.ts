@@ -5,6 +5,7 @@ import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
 import iconsPlugin from "./rollup-icons";
 import { appendFile, readFile } from "fs/promises";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	plugins: [
@@ -19,7 +20,8 @@ export default defineConfig({
 				await appendFile("./dist/facilmap-leaflet.d.ts", filterFile);
 			},
 		}),
-		iconsPlugin()
+		iconsPlugin(),
+		tsconfigPaths({ loose: true })
 	],
 	build: {
 		sourcemap: true,

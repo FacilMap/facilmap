@@ -3665,6 +3665,7 @@ __metadata:
     vite: ^5.0.10
     vite-plugin-css-injected-by-js: ^3.3.1
     vite-plugin-dts: ^3.7.0
+    vite-tsconfig-paths: ^4.2.2
     vitest: ^1.1.0
     yauzl-promise: ^4.0.0
   peerDependencies:
