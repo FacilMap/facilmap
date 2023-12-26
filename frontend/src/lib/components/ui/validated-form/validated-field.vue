@@ -70,8 +70,6 @@
 	const formRef = ref<HTMLFormElement>();
 
 	watchEffect((onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		if (inputRef.value) {
 			formRef.value = inputRef.value.form ?? undefined;
 

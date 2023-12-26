@@ -61,8 +61,6 @@
 	}
 
 	watch(() => buttonRef.value?.elementRef, (newRef, oldRef, onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		if (newRef) {
 			dropdownRef.value = new CustomDropdown(newRef, {
 				popperConfig: (defaultConfig) => ({

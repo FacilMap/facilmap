@@ -60,8 +60,6 @@
 	const renderPopover = ref(false);
 
 	watchEffect((onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		if (props.element && popoverContent.value) {
 			popover.value = new CustomPopover(props.element, {
 				placement: props.placement,

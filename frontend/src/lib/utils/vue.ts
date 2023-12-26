@@ -59,8 +59,6 @@ export function useResizeObserver(
 	});
 
 	watch(element, (value, oldValue, onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		if (value) {
 			observer.observe(value);
 			onCleanup(() => {

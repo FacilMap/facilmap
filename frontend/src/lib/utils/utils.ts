@@ -17,8 +17,6 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 	const emitterRef = toRef(emitter);
 
 	watchEffect((onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		if (emitterRef.value) {
 			const val = emitterRef.value;
 			val.on(type, listener);
@@ -31,8 +29,6 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 
 export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: AnyRef<EventTarget | undefined>, ...args: Args): void {
 	watchEffect((onCleanup) => {
-		onCleanup(() => {}); // TODO: Delete me https://github.com/vuejs/core/issues/5151#issuecomment-1515613484
-
 		const elementRef = toRef(element);
 		if (elementRef.value) {
 			const el = elementRef.value as any;
