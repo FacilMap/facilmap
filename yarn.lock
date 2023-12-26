@@ -44,6 +44,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.16.7":
+  version: 7.23.6
+  resolution: "@babel/runtime@npm:7.23.6"
+  dependencies:
+    regenerator-runtime: ^0.14.0
+  checksum: 1a8eaf3d3a103ef5227b60ca7ab5c589118c36ca65ef2d64e65380b32a98a3f3b5b3ef96660fa0471b079a18b619a8317f3e7f03ab2b930c45282a8b69ed9a16
+  languageName: node
+  linkType: hard
+
 "@babel/types@npm:^7.8.3":
   version: 7.23.3
   resolution: "@babel/types@npm:7.23.3"
@@ -557,6 +566,145 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@node-rs/crc32-android-arm-eabi@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-android-arm-eabi@npm:1.7.2"
+  conditions: os=android & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-android-arm64@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-android-arm64@npm:1.7.2"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-darwin-arm64@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-darwin-arm64@npm:1.7.2"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-darwin-x64@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-darwin-x64@npm:1.7.2"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-freebsd-x64@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-freebsd-x64@npm:1.7.2"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-linux-arm-gnueabihf@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-linux-arm-gnueabihf@npm:1.7.2"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-linux-arm64-gnu@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-linux-arm64-gnu@npm:1.7.2"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-linux-arm64-musl@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-linux-arm64-musl@npm:1.7.2"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-linux-x64-gnu@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-linux-x64-gnu@npm:1.7.2"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-linux-x64-musl@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-linux-x64-musl@npm:1.7.2"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-win32-arm64-msvc@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-win32-arm64-msvc@npm:1.7.2"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-win32-ia32-msvc@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-win32-ia32-msvc@npm:1.7.2"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32-win32-x64-msvc@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@node-rs/crc32-win32-x64-msvc@npm:1.7.2"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@node-rs/crc32@npm:^1.7.0":
+  version: 1.7.2
+  resolution: "@node-rs/crc32@npm:1.7.2"
+  dependencies:
+    "@node-rs/crc32-android-arm-eabi": 1.7.2
+    "@node-rs/crc32-android-arm64": 1.7.2
+    "@node-rs/crc32-darwin-arm64": 1.7.2
+    "@node-rs/crc32-darwin-x64": 1.7.2
+    "@node-rs/crc32-freebsd-x64": 1.7.2
+    "@node-rs/crc32-linux-arm-gnueabihf": 1.7.2
+    "@node-rs/crc32-linux-arm64-gnu": 1.7.2
+    "@node-rs/crc32-linux-arm64-musl": 1.7.2
+    "@node-rs/crc32-linux-x64-gnu": 1.7.2
+    "@node-rs/crc32-linux-x64-musl": 1.7.2
+    "@node-rs/crc32-win32-arm64-msvc": 1.7.2
+    "@node-rs/crc32-win32-ia32-msvc": 1.7.2
+    "@node-rs/crc32-win32-x64-msvc": 1.7.2
+  dependenciesMeta:
+    "@node-rs/crc32-android-arm-eabi":
+      optional: true
+    "@node-rs/crc32-android-arm64":
+      optional: true
+    "@node-rs/crc32-darwin-arm64":
+      optional: true
+    "@node-rs/crc32-darwin-x64":
+      optional: true
+    "@node-rs/crc32-freebsd-x64":
+      optional: true
+    "@node-rs/crc32-linux-arm-gnueabihf":
+      optional: true
+    "@node-rs/crc32-linux-arm64-gnu":
+      optional: true
+    "@node-rs/crc32-linux-arm64-musl":
+      optional: true
+    "@node-rs/crc32-linux-x64-gnu":
+      optional: true
+    "@node-rs/crc32-linux-x64-musl":
+      optional: true
+    "@node-rs/crc32-win32-arm64-msvc":
+      optional: true
+    "@node-rs/crc32-win32-ia32-msvc":
+      optional: true
+    "@node-rs/crc32-win32-x64-msvc":
+      optional: true
+  checksum: 0c0a02943e1b22a903f63922ec43e9d5fb2382be8c08cd6844820d8442d863c584783941f0fe8f162929b3b2b76aaf675698064d97a9189e512e3bf91462883d
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -870,15 +1018,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/highland@npm:^2.12.20":
-  version: 2.12.20
-  resolution: "@types/highland@npm:2.12.20"
-  dependencies:
-    "@types/node": "*"
-  checksum: 259be09dcdbae2dc94b57dcc5d63f3f650868054c673c8c5175ad6bc481d01e257fddb9a243008d92fb9e827d3b09ca90bab6ec286dc1398cca7c46e8e1cbed5
-  languageName: node
-  linkType: hard
-
 "@types/http-errors@npm:*":
   version: 2.0.4
   resolution: "@types/http-errors@npm:2.0.4"
@@ -1146,7 +1285,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/yauzl@npm:^2.10.3":
+"@types/yauzl-promise@npm:^2.1.4":
+  version: 2.1.4
+  resolution: "@types/yauzl-promise@npm:2.1.4"
+  dependencies:
+    "@types/node": "*"
+    "@types/yauzl": "*"
+  checksum: 6d06f85536c22b2a7d51fb80912fc9eb5e8c61c46da7b1ce1358a7184bfc7218c96657266775fa0dc1a7b446bce8f923f6457b1b500e74d27b83f499ac0600d5
+  languageName: node
+  linkType: hard
+
+"@types/yauzl@npm:*":
   version: 2.10.3
   resolution: "@types/yauzl@npm:2.10.3"
   dependencies:
@@ -1955,13 +2104,6 @@ __metadata:
   dependencies:
     fill-range: ^7.0.1
   checksum: e2a8e769a863f3d4ee887b5fe21f63193a891c68b612ddb4b68d82d1b5f3ff9073af066c343e9867a393fe4c2555dcb33e89b937195feb9c1613d259edfcd459
-  languageName: node
-  linkType: hard
-
-"buffer-crc32@npm:~0.2.3":
-  version: 0.2.13
-  resolution: "buffer-crc32@npm:0.2.13"
-  checksum: 06252347ae6daca3453b94e4b2f1d3754a3b146a111d81c68924c22d91889a40623264e95e67955b1cb4a68cbedf317abeabb5140a9766ed248973096db5ce1c
   languageName: node
   linkType: hard
 
@@ -3496,12 +3638,11 @@ __metadata:
     "@fortawesome/fontawesome-free": ^6.5.1
     "@types/cheerio": ^0.22.35
     "@types/geojson": ^7946.0.13
-    "@types/highland": ^2.12.20
     "@types/leaflet": ^1.9.8
     "@types/leaflet.markercluster": ^1.5.4
     "@types/lodash-es": ^4.17.12
     "@types/node-fetch": ^2.6.9
-    "@types/yauzl": ^2.10.3
+    "@types/yauzl-promise": ^2.1.4
     cheerio: ^1.0.0-rc.12
     facilmap-client: "workspace:^"
     facilmap-types: "workspace:^"
@@ -3509,7 +3650,6 @@ __metadata:
     fast-glob: ^3.3.2
     filtrex: ^2.2.3
     happy-dom: ^12.10.3
-    highland: ^2.13.5
     leaflet-auto-graticule: ^2.0.0
     leaflet-draggable-lines: ^2.0.0
     leaflet-freie-tonne: ^2.0.1
@@ -3526,7 +3666,7 @@ __metadata:
     vite-plugin-css-injected-by-js: ^3.3.1
     vite-plugin-dts: ^3.7.0
     vitest: ^1.1.0
-    yauzl: ^2.10.0
+    yauzl-promise: ^4.0.0
   peerDependencies:
     leaflet: x
   languageName: unknown
@@ -3677,15 +3817,6 @@ __metadata:
   dependencies:
     reusify: ^1.0.4
   checksum: 0170e6bfcd5d57a70412440b8ef600da6de3b2a6c5966aeaf0a852d542daff506a0ee92d6de7679d1de82e644bce69d7a574a6c93f0b03964b5337eed75ada1a
-  languageName: node
-  linkType: hard
-
-"fd-slicer@npm:~1.1.0":
-  version: 1.1.0
-  resolution: "fd-slicer@npm:1.1.0"
-  dependencies:
-    pend: ~1.2.0
-  checksum: c8585fd5713f4476eb8261150900d2cb7f6ff2d87f8feb306ccc8a1122efd152f1783bdb2b8dc891395744583436bfd8081d8e63ece0ec8687eeefea394d4ff2
   languageName: node
   linkType: hard
 
@@ -4078,7 +4209,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globalthis@npm:^1.0.3":
+"globalthis@npm:^1.0.2, globalthis@npm:^1.0.3":
   version: 1.0.3
   resolution: "globalthis@npm:1.0.3"
   dependencies:
@@ -4233,15 +4364,6 @@ __metadata:
   bin:
     he: bin/he
   checksum: 3d4d6babccccd79c5c5a3f929a68af33360d6445587d628087f39a965079d84f18ce9c3d3f917ee1e3978916fc833bb8b29377c3b403f919426f91bc6965e7a7
-  languageName: node
-  linkType: hard
-
-"highland@npm:^2.13.5":
-  version: 2.13.5
-  resolution: "highland@npm:2.13.5"
-  dependencies:
-    util-deprecate: ^1.0.2
-  checksum: 41012f477016f9cceca288b42801c02e2f8fc8b98c402d6345d46db4705394b53e55e474d1c064937fbc00638dfb1150b5dfa05245a0ff13748e15d4284d7c6e
   languageName: node
   linkType: hard
 
@@ -4535,6 +4657,16 @@ __metadata:
   dependencies:
     is-extglob: ^2.1.1
   checksum: d381c1319fcb69d341cc6e6c7cd588e17cd94722d9a32dbd60660b993c4fb7d0f19438674e68dfec686d09b7c73139c9166b47597f846af387450224a8101ab4
+  languageName: node
+  linkType: hard
+
+"is-it-type@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "is-it-type@npm:5.1.2"
+  dependencies:
+    "@babel/runtime": ^7.16.7
+    globalthis: ^1.0.2
+  checksum: ad5731737dc40a3888ecad1fe0fb86d191d2e2dce02a0aa978c6085a35969fadb1d938318bc0fe7cbd23b9aacfcc1c4d8222dc271d44c08b546a668170e57cae
   languageName: node
   linkType: hard
 
@@ -6037,13 +6169,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pend@npm:~1.2.0":
-  version: 1.2.0
-  resolution: "pend@npm:1.2.0"
-  checksum: 6c72f5243303d9c60bd98e6446ba7d30ae29e3d56fdb6fae8767e8ba6386f33ee284c97efe3230a0d0217e2b1723b8ab490b1bbf34fcbb2180dbc8a9de47850d
-  languageName: node
-  linkType: hard
-
 "pg-cloudflare@npm:^1.1.1":
   version: 1.1.1
   resolution: "pg-cloudflare@npm:1.1.1"
@@ -6405,6 +6530,13 @@ __metadata:
   dependencies:
     picomatch: ^2.2.1
   checksum: 1ced032e6e45670b6d7352d71d21ce7edf7b9b928494dcaba6f11fba63180d9da6cd7061ebc34175ffda6ff529f481818c962952004d273178acd70f7059b320
+  languageName: node
+  linkType: hard
+
+"regenerator-runtime@npm:^0.14.0":
+  version: 0.14.1
+  resolution: "regenerator-runtime@npm:0.14.1"
+  checksum: 9f57c93277b5585d3c83b0cf76be47b473ae8c6d9142a46ce8b0291a04bb2cf902059f0f8445dcabb3fb7378e5fe4bb4ea1e008876343d42e46d3b484534ce38
   languageName: node
   linkType: hard
 
@@ -6830,6 +6962,13 @@ __metadata:
   version: 4.1.0
   resolution: "signal-exit@npm:4.1.0"
   checksum: 64c757b498cb8629ffa5f75485340594d2f8189e9b08700e69199069c8e3070fb3e255f7ab873c05dc0b3cec412aea7402e10a5990cb6a050bd33ba062a6c549
+  languageName: node
+  linkType: hard
+
+"simple-invariant@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "simple-invariant@npm:2.0.1"
+  checksum: a480b2ca9e9ede4e437d9606b38c4ae2fcf3be836a682687bef05810890f73cdbbc3c451c66a1de21fc44644a816118818ed4065ff16b691c25b7a16cdea7478
   languageName: node
   linkType: hard
 
@@ -8107,13 +8246,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yauzl@npm:^2.10.0":
-  version: 2.10.0
-  resolution: "yauzl@npm:2.10.0"
+"yauzl-promise@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "yauzl-promise@npm:4.0.0"
   dependencies:
-    buffer-crc32: ~0.2.3
-    fd-slicer: ~1.1.0
-  checksum: 7f21fe0bbad6e2cb130044a5d1d0d5a0e5bf3d8d4f8c4e6ee12163ce798fee3de7388d22a7a0907f563ac5f9d40f8699a223d3d5c1718da90b0156da6904022b
+    "@node-rs/crc32": ^1.7.0
+    is-it-type: ^5.1.2
+    simple-invariant: ^2.0.1
+  checksum: 451b96063574f3cd5a952c9ea1a63e6b8d5c69b33c3d14480086d5e29fc369b8b69b017eabc8343962d5a33ed1172c44f8b02e3caf328eebf1c17d2618429a2c
   languageName: node
   linkType: hard
 

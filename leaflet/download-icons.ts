@@ -1,39 +1,30 @@
 import fetch from "node-fetch";
-import * as yauzl from "yauzl";
-import util from "util";
+import * as yauzl from "yauzl-promise";
 import * as svgo from "svgo";
 import cheerio from "cheerio";
-import highland from "highland";
 import { writeFile } from "fs/promises";
 import { fileURLToPath } from "url";
+import { Readable } from "stream";
 
 const outDir = fileURLToPath(new URL('./assets/icons/osmi', import.meta.url));
 
-function streamEachPromise<T>(stream: Highland.Stream<T>, handle: (item: T) => Promise<void> | void): Promise<void> {
-	return new Promise((resolve, reject) => {
-		stream
-			.flatMap((item) => highland(Promise.resolve(handle(item as T))))
-			.stopOnError(reject)
-			.done(resolve);
-	});
-}
-
 async function updateIcons() {
-    const buffer = await fetch("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip").then((res) => res.buffer());
-    const zip = (await util.promisify(yauzl.fromBuffer)(buffer))!;
+    const buffer = await fetch("https://github.com/twain47/Open-SVG-Map-Icons/archive/master.zip").then((res) => res.arrayBuffer());
+    const zip = await yauzl.fromBuffer(Buffer.from(buffer)) as any; // yauzl-promise types are outdated, see https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67963
 
-    const entryStream = highland<yauzl.Entry>((push) => {
-        zip.on("entry", (entry) => { push(null, entry); });
-        zip.on("error", (err) => { push(err); });
-    }).filter((entry) => entry.fileName.endsWith(".svg"));
-
-    await streamEachPromise(entryStream, async (entry) => {
-        const readStream = (await util.promisify(zip.openReadStream.bind(zip))(entry))!;
-        const content = await highland<Buffer>(readStream).collect().map((buffers) => Buffer.concat(buffers)).toPromise(Promise);
-        const cleanedContent = cleanIcon(content.toString());
-        const outFile = `${outDir}/${entry.fileName.split('/').slice(-2).join('_')}`;
-        await writeFile(outFile, Buffer.from(cleanedContent));
-    });
+    for await (const entry of zip) {
+        if (entry.filename.endsWith(".svg")) {
+            const readStream = Readable.toWeb(await zip.openReadStream(entry));
+            const buffers: Buffer[] = [];
+            for await (const buffer of readStream) {
+                buffers.push(buffer);
+            }
+            const content = Buffer.concat(buffers);
+            const cleanedContent = cleanIcon(content.toString());
+            const outFile = `${outDir}/${entry.filename.split('/').slice(-2).join('_')}`;
+            await writeFile(outFile, Buffer.from(cleanedContent));
+        }
+    }
 }
 
 function cleanIcon(icon: string): string {
