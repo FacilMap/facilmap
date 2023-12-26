@@ -23,7 +23,7 @@
 	function updateMaxScale(): void {
 		if (absoluteContainerRef.value) {
 			const mapContainer = mapContext.value.components.map.getContainer();
-			const maxHeight = mapContainer.offsetHeight - 100;
+			const maxHeight = mapContainer.offsetHeight - 94;
 			const maxWidth = mapContainer.offsetWidth - 20;
 
 			const currentHeight = absoluteContainerRef.value.offsetHeight;
@@ -54,7 +54,7 @@
 			<div
 				class="fm-legend-absolute card"
 				:style="{ transform: `scale(${scale})` }"
-				ref="absoluteContainer"
+				ref="absoluteContainerRef"
 			>
 				<div class="card-body">
 					<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2"></LegendContent>
