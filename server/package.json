@@ -86,7 +86,7 @@
     "vite": "^5.0.10",
     "vite-node": "^1.1.0",
     "vite-plugin-dts": "^3.7.0",
-    "vite-tsconfig-paths": "^4.2.2",
+    "vite-tsconfig-paths": "^4.2.3",
     "vitest": "^1.1.0"
   }
 }
