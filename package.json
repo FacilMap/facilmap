@@ -19,7 +19,8 @@
     "prod-server": "yarn workspace facilmap-server run prod-server",
     "server": "yarn workspace facilmap-server run server",
     "dev-server": "yarn workspace facilmap-server run dev-server",
-    "check-types": "yarn workspaces foreach -vt run check-types"
+    "check-types": "yarn workspaces foreach -vt run check-types",
+    "test": "yarn workspaces foreach -v run test"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.0",

@@ -36,8 +36,8 @@
     "build:app": "NODE_OPTIONS='--import tsx' vite build",
     "clean": "rimraf dist",
     "dev-server": "NODE_OPTIONS='--import tsx' vite",
-    "test": "vitest run",
-    "test-watch": "vitest",
+    "test": "NODE_OPTIONS='--import tsx' vitest run",
+    "test-watch": "NODE_OPTIONS='--import tsx' vitest",
     "check-types": "vue-tsc -b --emitDeclarationOnly"
   },
   "dependencies": {
