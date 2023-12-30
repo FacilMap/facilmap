@@ -1,6 +1,7 @@
 {
   "name": "facilmap-root",
   "private": true,
+  "type": "module",
   "workspaces": [
     "types",
     "client",
@@ -10,7 +11,7 @@
     "server"
   ],
   "scripts": {
-    "lint": "eslint **/*.ts",
+    "lint": "eslint --ext .js,.mjs,.cjs,.ts,.mts,.cts,.vue ./",
     "clean": "yarn workspaces foreach -v run clean",
     "build": "yarn workspaces foreach -vt run build",
     "build:frontend:app": "yarn workspace facilmap-frontend run build:app",
@@ -21,6 +22,7 @@
     "check-types": "yarn workspaces foreach -vt run check-types"
   },
   "devDependencies": {
+    "@types/eslint": "^8.56.0",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
     "eslint": "^8.56.0",

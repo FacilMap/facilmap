@@ -422,7 +422,7 @@ export default class DatabaseMigrations {
 	}
 
 	/** Clear "Untitled marker", "Untitled line" and "New FacilMap" names. These are now rendered in the frontend instead. */
-	async _untitledMigration() {
+	async _untitledMigration(): Promise<void> {
 		if(await this._db.meta.getMeta("untitledMigrationCompleted") == "1")
 			return;
 

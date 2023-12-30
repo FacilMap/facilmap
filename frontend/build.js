@@ -16,6 +16,7 @@ export const paths = {
     manifest: `${dist}/manifest.json`,
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function serve(inlineConfig = {}) {
     return await createServer({
         root,

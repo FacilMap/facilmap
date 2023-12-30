@@ -1,5 +1,7 @@
+/** @type {import('eslint').Linter.Config} */
 module.exports = {
 	root: true,
+	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*"],
 	parserOptions: {
 		parser: "@typescript-eslint/parser"
 	},
@@ -26,6 +28,7 @@ module.exports = {
 		"@typescript-eslint/prefer-as-const": ["error"],
 		"no-restricted-globals": ["error", "$"],
 		"no-restricted-imports": ["error", "vue/types/umd"],
+		"vue/multi-word-component-names": ["off"],
 
 		"constructor-super": ["error"],
 		"for-direction": ["error"],
@@ -82,7 +85,9 @@ module.exports = {
 	},
 	"settings": {
 		"import/resolver": {
-			"typescript": {}
+			"typescript": {
+				"project": "*/tsconfig.json",
+			}
 		},
 	}
 };

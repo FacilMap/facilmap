@@ -322,7 +322,7 @@ export default class DatabaseHelpers {
 				Sequelize.where(
 					Sequelize.fn("ST_MakeLine", Sequelize.fn("St_Point", bbox.left, bbox.bottom), Sequelize.fn("St_Point", bbox.right, bbox.top)),
 					"~",
-					 Sequelize.col(posField))
+					Sequelize.col(posField))
 			);
 		} else {
 			conditions.push(
