@@ -38,7 +38,8 @@ export default defineUserConfig({
 						"/users/",
 						"/users/help/",
 						"/users/releases/",
-						"/users/contribute/"
+						"/users/contribute/",
+						"/users/privacy/"
 					]
 				},
 				{
@@ -53,8 +54,7 @@ export default defineUserConfig({
 						"/users/files/",
 						"/users/locate/",
 						"/users/share/",
-						"/users/app/",
-						"/users/privacy/"
+						"/users/app/"
 					]
 				},
 				{
