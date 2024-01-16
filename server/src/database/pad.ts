@@ -84,12 +84,6 @@ export default class DatabasePads {
 	}
 
 	async createPad(data: PadData<CRU.CREATE_VALIDATED>): Promise<PadData> {
-		if(!data.id || data.id.length == 0)
-			throw new Error("Invalid read-only ID");
-		if(!data.writeId || data.writeId.length == 0)
-			throw new Error("Invalid read-write ID");
-		if(!data.adminId || data.adminId.length == 0)
-			throw new Error("Invalid admin ID");
 		if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
 			throw new Error("Read-only, read-write and admin ID have to be different from each other.");
 
@@ -111,17 +105,12 @@ export default class DatabasePads {
 		if(!oldData)
 			throw new Error("Pad " + padId + " could not be found.");
 
-		if(data.id != null && data.id != padId && data.id.length == 0)
-			throw new Error("Invalid read-only ID");
-
 		if(data.id != null && data.id != padId) {
 			if (await this.padIdExists(data.id))
 				throw new Error("ID '" + data.id + "' is already taken.");
 		}
 
 		if(data.writeId != null && data.writeId != oldData.writeId) {
-			if(data.writeId.length == 0)
-				throw new Error("Invalid read-write ID");
 			if(data.writeId == (data.id != null ? data.id : padId))
 				throw new Error("Read-only and read-write ID cannot be the same.");
 
@@ -130,8 +119,6 @@ export default class DatabasePads {
 		}
 
 		if(data.adminId != null && data.adminId != oldData.adminId) {
-			if(data.adminId.length == 0)
-				throw new Error("Invalid admin ID");
 			if(data.adminId == (data.id != null ? data.id : padId))
 				throw new Error("Read-only and admin ID cannot be the same.");
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
