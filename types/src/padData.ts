@@ -23,8 +23,6 @@ export const padDataValidator = cruValidator({
 		update: padIdValidator.optional()
 	},
 
-	test: optionalCreate(z.string()),
-
 	name: optionalCreate(z.string(), ""),
 	searchEngines: optionalCreate(z.boolean(), false),
 	description: optionalCreate(z.string(), ""),
@@ -33,7 +31,6 @@ export const padDataValidator = cruValidator({
 	legend2: optionalCreate(z.string(), ""),
 	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
 
-	writable: onlyRead(writableValidator),
 	defaultView: onlyRead(viewValidator.read.or(z.null()))
 });
 

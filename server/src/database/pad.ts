@@ -1,7 +1,10 @@
-import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey } from "sequelize";
 import type { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults } from "facilmap-types";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
+import type { ViewModel } from "./view";
+
+type RawPadData = Omit<PadData, "defaultView"> & { defaultView?: NonNullable<PadData["defaultView"]> };
 
 export interface PadModel extends Model<InferAttributes<PadModel>, InferCreationAttributes<PadModel>> {
 	id: PadId;
@@ -13,8 +16,16 @@ export interface PadModel extends Model<InferAttributes<PadModel>, InferCreation
 	clusterMarkers: boolean;
 	legend1: string;
 	legend2: string;
-	toJSON: () => PadData;
+	defaultViewId: ForeignKey<ViewModel["id"]> | null
+	toJSON: () => RawPadData;
 };
+
+function fixPadData(rawPadData: RawPadData): PadData {
+	return {
+		...rawPadData,
+		defaultView: rawPadData.defaultView ?? null
+	};
+}
 
 export default class DatabasePads {
 
@@ -54,22 +65,22 @@ export default class DatabasePads {
 
 	async getPadData(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { id: padId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ]});
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByWriteId(writeId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { writeId: writeId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByAdminId(adminId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { adminId: adminId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByAnyId(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { [Op.or]: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async createPad(data: PadData<CRU.CREATE_VALIDATED>): Promise<PadData> {
@@ -91,7 +102,7 @@ export default class DatabasePads {
 
 		await this._db.types.createDefaultTypes(data.id);
 
-		return createdObj.toJSON() as PadData;
+		return fixPadData(createdObj.toJSON());
 	}
 
 	async updatePadData(padId: PadId, data: PadData<CRU.UPDATE_VALIDATED>): Promise<PadData> {

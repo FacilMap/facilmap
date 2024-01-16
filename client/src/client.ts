@@ -66,7 +66,7 @@ interface ClientData {
 }
 
 export default class Client {
-	private socket: SocketIO;
+	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V2>, SocketClientToServerEvents<SocketVersion.V2>>;
 	private state: ClientState;
 	private data: ClientData;
 
@@ -350,7 +350,7 @@ export default class Client {
 		this._receiveMultiple(obj);
 	}
 
-	async getPad(data: GetPadQuery): Promise<FindPadsResult | undefined> {
+	async getPad(data: GetPadQuery): Promise<FindPadsResult | null> {
 		return await this._emit("getPad", data);
 	}
 
@@ -470,11 +470,11 @@ export default class Client {
 		if (data?.routeId) {
 			this._delete(this.data.routes, data.routeId);
 			this._simulateEvent("clearRoute", { routeId: data.routeId });
-			return await this._emit("clearRoute", data);
+			await this._emit("clearRoute", data);
 		} else if (this.data.route) {
 			this._set(this.data, 'route', undefined);
 			this._simulateEvent("clearRoute", { routeId: undefined });
-			return await this._emit("clearRoute", data);
+			await this._emit("clearRoute", data);
 		}
 	}
 
