@@ -74,7 +74,7 @@ export default class Client {
 		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
 
-	constructor(server: string, padId?: string) {
+	constructor(server: string, padId?: string, socketOptions?: Partial<ManagerOptions & SocketOptions>) {
 		this.state = this._makeReactive({
 			disconnected: true,
 			server,
@@ -102,7 +102,8 @@ export default class Client {
 		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
 		const socket = io(`${serverUrl.origin}/v2`, {
 			forceNew: true,
-			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
+			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io",
+			...socketOptions
 		});
 		this.socket = socket;
 
