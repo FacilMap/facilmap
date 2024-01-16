@@ -7,7 +7,7 @@ export * from "./marker.js";
 export * from "./padData.js";
 export * from "./route.js";
 export * from "./searchResult.js";
-export * from "./socket.js";
+export * from "./socket/socket.js";
 export * from "./type.js";
 export * from "./view.js";
 export * from "./geoJson.js";

@@ -1,5 +1,5 @@
 import Database from "./database/database.js";
-import Socket from "./socket.js";
+import Socket from "./socket/socket.js";
 import config from "./config.js";
 import { initWebserver } from "./webserver.js";
 

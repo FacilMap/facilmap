@@ -1,7 +1,7 @@
-import { io, type Socket as SocketIO } from "socket.io-client";
-import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, MapEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, TrackPoint, Type, View, Writable } from "facilmap-types";
+import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
+import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents } from "facilmap-types";
 
-export interface ClientEvents extends MapEvents {
+export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
 	disconnect: [string];
 	connect_error: [Error];
@@ -20,9 +20,9 @@ export interface ClientEvents extends MapEvents {
 	route: [RouteWithTrackPoints];
 	clearRoute: [RouteClear];
 
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName>] }[RequestName];
-	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName>] }[RequestName];
-	emitReject: [RequestName, Error];
+	emit: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketRequest<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
+	emitResolve: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketResponse<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
+	emitReject: [SocketRequestName<SocketVersion.V2>, Error];
 }
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
@@ -55,7 +55,7 @@ interface ClientState {
 }
 
 interface ClientData {
-	padData: PadData | undefined;
+	padData: (PadData & { writable: Writable }) | undefined;
 	markers: Record<ID, Marker>;
 	lines: Record<ID, LineWithTrackPoints>;
 	views: Record<ID, View>;
@@ -100,7 +100,7 @@ export default class Client {
 		});
 
 		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
-		const socket = io(serverUrl.origin, {
+		const socket = io(`${serverUrl.origin}/v2`, {
 			forceNew: true,
 			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
 		});
@@ -137,7 +137,7 @@ export default class Client {
 		return result;
 	}
 
-	private _fixResponseObject<T>(requestName: RequestName, obj: T): T {
+	private _fixResponseObject<T>(requestName: SocketRequestName<SocketVersion.V2>, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
 
@@ -184,14 +184,14 @@ export default class Client {
 		}
 	}
 
-	private async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R> extends void ? [ ] : [ RequestData<R> ]): Promise<ResponseData<R>> {
+	private async _emit<R extends SocketRequestName<SocketVersion.V2>>(eventName: R, ...[data]: SocketRequest<SocketVersion.V2, R> extends undefined | null ? [ ] : [ SocketRequest<SocketVersion.V2, R> ]): Promise<SocketResponse<SocketVersion.V2, R>> {
 		try {
 			this._simulateEvent("loadStart");
 
 			this._simulateEvent("emit", eventName as any, data as any);
 
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName, data, (err: Error, data: ResponseData<R>) => {
+				this.socket.emit(eventName as any, data, (err: Error, data: SocketResponse<SocketVersion.V2, R>) => {
 					if(err) {
 						reject(err);
 						this._simulateEvent("emitReject", eventName as any, err);
@@ -438,7 +438,7 @@ export default class Client {
 		return await this._emit("find", data);
 	}
 
-	async findOnMap(data: FindOnMapQuery): Promise<ResponseData<'findOnMap'>> {
+	async findOnMap(data: FindOnMapQuery): Promise<SocketResponse<SocketVersion.V2, 'findOnMap'>> {
 		return await this._emit("findOnMap", data);
 	}
 

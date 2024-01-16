@@ -15,11 +15,7 @@ export function round(number: number, digits: number): number {
 	return Math.round(number*fac)/fac;
 }
 
-/* type PromisePropsResult<T extends Record<any, PromiseLike<any>>> = {
-	[P in keyof T]: Parameters<T[P].then>
-}; */
-
-type PromiseMap<T extends object> = {
+export type PromiseMap<T extends object> = {
 	[P in keyof T]: PromiseLike<T[P]> | T[P]
 }
 
