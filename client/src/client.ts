@@ -337,17 +337,18 @@ export default class Client {
 		}
 	};
 
-	setPadId(padId: PadId): Promise<void> {
+	async setPadId(padId: PadId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		if(this.state.padId != null)
 			throw new Error("Pad ID already set.");
 
-		return this._setPadId(padId);
+		return await this._setPadId(padId);
 	}
 
-	async updateBbox(bbox: BboxWithZoom): Promise<void> {
+	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		this._set(this.state, 'bbox', bbox);
 		const obj = await this._emit("updateBbox", bbox);
 		this._receiveMultiple(obj);
+		return obj;
 	}
 
 	async getPad(data: GetPadQuery): Promise<FindPadsResult | null> {
@@ -358,12 +359,13 @@ export default class Client {
 		return await this._emit("findPads", data);
 	}
 
-	async createPad(data: PadData<CRU.CREATE>): Promise<void> {
+	async createPad(data: PadData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		const obj = await this._emit("createPad", data);
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'readonly', false);
 		this._set(this.state, 'writable', 2);
 		this._receiveMultiple(obj);
+		return obj;
 	}
 
 	async editPad(data: PadData<CRU.UPDATE>): Promise<PadData> {
@@ -371,24 +373,26 @@ export default class Client {
 	}
 
 	async deletePad(): Promise<void> {
-		return await this._emit("deletePad");
+		await this._emit("deletePad");
 	}
 
-	async listenToHistory(): Promise<void> {
+	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		const obj = await this._emit("listenToHistory");
 		this._set(this.state, 'listeningToHistory', true);
 		this._receiveMultiple(obj);
+		return obj;
 	}
 
 	async stopListeningToHistory(): Promise<void> {
 		this._set(this.state, 'listeningToHistory', false);
-		return await this._emit("stopListeningToHistory");
+		await this._emit("stopListeningToHistory");
 	}
 
-	async revertHistoryEntry(data: ObjectWithId): Promise<void> {
+	async revertHistoryEntry(data: ObjectWithId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		const obj = await this._emit("revertHistoryEntry", data);
 		this._set(this.data, 'history', {});
 		this._receiveMultiple(obj);
+		return obj;
 	}
 
 	async getMarker(data: ObjectWithId): Promise<Marker> {
@@ -535,12 +539,13 @@ export default class Client {
 		this.socket.disconnect();
 	}
 
-	private async _setPadId(padId: string): Promise<void> {
+	private async _setPadId(padId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'padId', padId);
 		try {
 			const obj = await this._emit("setPadId", padId);
 			this._receiveMultiple(obj);
+			return obj;
 		} catch(err: any) {
 			this._set(this.state, 'serverError', err);
 			this._simulateEvent("serverError", err);
