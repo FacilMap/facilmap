@@ -324,6 +324,13 @@ export default class Client {
 				this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
 		},
 
+		connect_error: (err) => {
+			if (!this.socket.active) { // Fatal error, client will not try to reconnect anymore
+				this._set(this.state, 'serverError', err);
+				this._simulateEvent("serverError", err);
+			}
+		},
+
 		history: (data) => {
 			this._set(this.data.history, data.id, data);
 			// TODO: Limit to 50 entries

@@ -126,21 +126,27 @@
 		});
 
 		if (newClient.serverError && !newClient.isCreatePad) {
-			toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
-				noCloseButton: true,
-				actions: context.settings.interactive ? [
-					{
-						label: "Close map",
-						href: context.baseUrl,
-						onClick: (e) => {
-							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
-								e.preventDefault();
-								newClient.openPad(undefined);
+			if (newClient.disconnected || !props.padId) {
+				toasts.showErrorToast(`fm${context.id}-client-error`, "Error connecting to server", newClient.serverError, {
+					noCloseButton: !!props.padId
+				});
+			} else {
+				toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
+					noCloseButton: true,
+					actions: context.settings.interactive ? [
+						{
+							label: "Close map",
+							href: context.baseUrl,
+							onClick: (e) => {
+								if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
+									e.preventDefault();
+									newClient.openPad(undefined);
+								}
 							}
 						}
-					}
-				] : []
-			});
+					] : []
+				});
+			}
 		}
 
 		connectingClient.value = undefined;
@@ -163,7 +169,7 @@
 
 <template>
 	<Toast
-		v-if="client && client.disconnected"
+		v-if="client && client.disconnected && !client.serverError"
 		:id="`fm${context.id}-client-disconnected`"
 		variant="danger"
 		title="Disconnected"
