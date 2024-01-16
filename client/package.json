@@ -29,7 +29,8 @@
   "scripts": {
     "build": "vite build",
     "clean": "rimraf dist",
-    "dev-server": "vite"
+    "dev-server": "vite",
+    "check-types": "tsc -b --emitDeclarationOnly"
   },
   "dependencies": {
     "facilmap-types": "workspace:^",
