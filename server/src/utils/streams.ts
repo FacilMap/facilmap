@@ -31,7 +31,7 @@ export function streamPromiseToStream<T>(streamPromise: Promise<ReadableStream<T
 	const transform = new TransformStream({
 		async start() {
 			const stream = await streamPromise;
-			stream.pipeTo(transform.writable);
+			stream.pipeTo(transform.writable).catch(() => {}); // Catch error to avoid unhandled rejection, see https://github.com/nodejs/node/issues/50707
 		}
 	});
 	return transform.readable;

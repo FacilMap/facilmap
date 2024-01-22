@@ -13,7 +13,13 @@ WORKDIR /opt/facilmap
 
 COPY ./ ./
 
-RUN yarn install && yarn run build:frontend:app && yarn run build:server && yarn workspaces focus -A --production
+RUN yarn install && \
+	yarn check-types && \
+	yarn lint && \
+	yarn test && \
+	yarn run build:frontend:app && \
+	yarn run build:server && \
+	yarn workspaces focus -A --production
 
 RUN mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"
 
