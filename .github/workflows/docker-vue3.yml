@@ -33,6 +33,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       -
+        name: Start integration test components in background
+        run: docker compose -f ./integration-tests/docker-compose.yml up -d --quiet-pull mysql postgres &
+
+      -
         name: Build docker image
         uses: docker/build-push-action@v5
         with:
@@ -44,9 +48,12 @@ jobs:
 
       -
         name: Start integration test components
-        uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: ./integration-tests/docker-compose.yml
+        run: |
+          if ! docker compose -f ./integration-tests/docker-compose.yml up --wait; then
+            status="$?"
+            docker compose -f ./integration-tests/docker-compose.yml logs
+            exit "$status"
+          fi
 
       -
         name: Run integration tests

@@ -4,6 +4,8 @@ MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 CMD yarn run prod-server
 EXPOSE 8080
 ENV CACHE_DIR=/opt/facilmap/cache
+HEALTHCHECK --start-period=60s --start-interval=3s --timeout=5s --retries=1 \
+	CMD wget -O/dev/null 'http://127.0.0.1:8080/socket.io/?EIO=4&transport=polling' || exit 1
 
 RUN apk add --no-cache yarn
 
