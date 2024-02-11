@@ -13,7 +13,7 @@ export const paths = {
     mapEjs: `${root}/src/map/map.ejs`,
     tableEntry: "src/table/table.ts",
     tableEjs: `${root}/src/table/table.ejs`,
-    manifest: `${dist}/manifest.json`,
+    manifest: `${dist}/.vite/manifest.json`,
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
