@@ -49,7 +49,8 @@ export default class DatabaseMarkers {
 				set: function(this: MarkerModel, v: number | null) {
 					// Round number to avoid integer column error in Postgres
 					this.setDataValue("ele", v != null ? Math.round(v) : v);
-				}
+				},
+				defaultValue: null
 			}
 		}, {
 			sequelize: this._db._conn,
@@ -89,6 +90,9 @@ export default class DatabaseMarkers {
 
 	async createMarker(padId: PadId, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
+		if (type.type !== "marker") {
+			throw new Error(`Cannot use ${type.type} type for marker.`);
+		}
 
 		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, {
 			...data,
@@ -96,7 +100,7 @@ export default class DatabaseMarkers {
 			size: data.size ?? type.defaultSize,
 			symbol: data.symbol ?? type.defaultSymbol,
 			shape: data.shape ?? type.defaultShape,
-			ele: data.ele ?? await getElevationForPoint(data)
+			ele: data.ele === undefined ? await getElevationForPoint(data) : data.ele
 		});
 
 		await this._db.helpers._updateObjectStyles(result);
@@ -108,8 +112,20 @@ export default class DatabaseMarkers {
 	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, doNotUpdateStyles = false): Promise<Marker> {
 		const update = { ...data };
 
-		if (update.lat != null && update.lon != null)
-			update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
+		await Promise.all([
+			(async () => {
+				if (update.lat != null && update.lon != null && update.ele === undefined)
+					update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
+			})(),
+			(async () => {
+				if (update.typeId != null) {
+					const type = await this._db.types.getType(padId, update.typeId);
+					if (type.type !== "marker") {
+						throw new Error(`Cannot use ${type.type} type for marker.`);
+					}
+				}
+			})()
+		]);
 
 		const result = await this._db.helpers._updatePadObject<Marker>("Marker", padId, markerId, update, doNotUpdateStyles);
 

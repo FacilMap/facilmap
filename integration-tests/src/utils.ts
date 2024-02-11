@@ -1,7 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import Client from "facilmap-client";
-import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, Writable } from "facilmap-types";
-import { generateRandomPadId } from "facilmap-utils";
+import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, Writable, type MultipleEvents, type SocketEvents } from "facilmap-types";
+import { generateRandomPadId, sleep } from "facilmap-utils";
 
 export function getFacilMapUrl(): string {
 	if (!process.env.FACILMAP_URL) {
@@ -52,11 +52,15 @@ export function getTemporaryPadData<D extends Partial<PadData<CRU.CREATE>>>(data
 	};
 }
 
-export async function createTemporaryPad<D extends Partial<PadData<CRU.CREATE>>>(client: Client, data: D, callback?: (createPadData: ReturnType<typeof getTemporaryPadData<D>>, padData: PadData & { writable: Writable }) => Promise<void>): Promise<void> {
+export async function createTemporaryPad<D extends Partial<PadData<CRU.CREATE>>>(
+	client: Client,
+	data: D,
+	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<D>>, padData: PadData & { writable: Writable }, result: MultipleEvents<SocketEvents<SocketVersion.V2>>) => Promise<void>
+): Promise<void> {
 	const createPadData = getTemporaryPadData(data);
 	const result = await client.createPad(createPadData);
 	try {
-		await callback?.(createPadData, result.padData![0]);
+		await callback?.(createPadData, result.padData![0], result);
 	} finally {
 		await client.deletePad();
 	}
@@ -81,4 +85,20 @@ export async function emit<EmitEvents extends Record<string, any>, Ev extends ke
 		// @ts-ignore
 		socket.emit(ev, ...args, callback);
 	});
+}
+
+export async function retry<R>(callback: () => R | Promise<R>): Promise<R> {
+	// eslint-disable-next-line no-constant-condition
+	for (let i = 0; true; i++) {
+		try {
+			return await callback();
+		} catch (err: any) {
+			if (i >= 10) {
+				console.log('throw', i);
+				throw err;
+			} else {
+				await sleep(10);
+			}
+		}
+	}
 }

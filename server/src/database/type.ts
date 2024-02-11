@@ -136,6 +136,10 @@ export default class DatabaseTypes {
 	}
 
 	async createDefaultTypes(padId: PadId): Promise<Type[]> {
-		return await Promise.all(DEFAULT_TYPES.map((it) => this.createType(padId, it)));
+		const result: Type[] = [];
+		for (const type of DEFAULT_TYPES) {
+			result.push(await this.createType(padId, type));
+		}
+		return result;
 	}
 }
