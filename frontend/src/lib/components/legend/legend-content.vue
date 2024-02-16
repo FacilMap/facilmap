@@ -98,32 +98,34 @@
 					>{{item.label}}</dd>
 				</template>
 			</dl>
-			<template v-for="item in type.items" :key="item.key">
-				<Popover
-					:element="itemIconRefs.get(item.key)"
-					placement="left"
-					class="fm-legend-popover"
-					:show="activePopoverKey === item.key"
-					@update:show="togglePopover(item.key, $event)"
-				>
-					<div
-						:class="[
-							'fm-legend-symbol',
-							`fm-${type.type}`,
-							{
-								filtered: item.filtered,
-								bright: item.bright
-							}
-						]"
-						v-html="makeSymbol(type, item, 40)"
-					></div>
-					<p>
-						<span :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
-						<br>
-						<small><em>Click to show/hide objects of this type.</em></small>
-					</p>
-				</Popover>
-			</template>
+			<div v-if="!props.noPopover" class="fm-legend-popover-wrapper">
+				<template v-for="item in type.items" :key="item.key">
+					<Popover
+						:element="itemIconRefs.get(item.key)"
+						placement="left"
+						class="fm-legend-popover"
+						:show="activePopoverKey === item.key"
+						@update:show="togglePopover(item.key, $event)"
+					>
+						<div
+							:class="[
+								'fm-legend-symbol',
+								`fm-${type.type}`,
+								{
+									filtered: item.filtered,
+									bright: item.bright
+								}
+							]"
+							v-html="makeSymbol(type, item, 40)"
+						></div>
+						<p>
+							<span :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
+							<br>
+							<small><em>Click to show/hide objects of this type.</em></small>
+						</p>
+					</Popover>
+				</template>
+			</div>
 		</template>
 
 		<div v-if="legend2" class="fm-legend2">

@@ -53,7 +53,7 @@
 		<template v-if="!context.isNarrow">
 			<div
 				class="fm-legend-absolute card"
-				:style="{ transform: `scale(${scale})` }"
+				:style="{ '--fm-scale-factor': scale }"
 				ref="absoluteContainerRef"
 			>
 				<div class="card-body">
@@ -78,9 +78,15 @@
 		transform-origin: bottom right;
 		opacity: .7;
 		transition: opacity .7s;
+		transform: scale(var(--fm-scale-factor));
 
 		&:hover {
 			opacity: 1;
+		}
+
+		.fm-legend-popover-wrapper {
+			transform: scale(calc(1 / var(--fm-scale-factor)));
+			transform-origin: center right;
 		}
 	}
 </style>
