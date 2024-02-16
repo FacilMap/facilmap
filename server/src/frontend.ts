@@ -6,7 +6,8 @@ import * as ejs from "ejs";
 import * as utils from "facilmap-utils";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizeLineName, normalizeMarkerName, normalizePadName } from "facilmap-utils";
+import { normalizeLineName, normalizeMarkerName, normalizePadName, type InjectedConfig } from "facilmap-utils";
+import config from "./config";
 
 export const isDevMode = !!process.env.FM_DEV;
 
@@ -72,7 +73,9 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 	]);
 
 	return ejs.render(template, {
-		config: {},
+		config: {
+			limaLabsToken: config.limaLabsToken
+		} satisfies InjectedConfig,
 		...injections,
 		paths,
 		...params

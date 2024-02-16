@@ -3,7 +3,9 @@ import AutoGraticule from "leaflet-auto-graticule";
 import FreieTonne from "leaflet-freie-tonne";
 
 export const defaultVisibleLayers: VisibleLayers = {
-	baseLayer: 'Mpnk',
+	get baseLayer() {
+		return layerOptions.limaLabsToken ? 'Lima' : 'Mpnk';
+	},
 	overlays: []
 };
 
@@ -15,6 +17,14 @@ export interface Layers {
 export function createDefaultLayers(): Layers & { fallbackLayer: string | undefined } {
 	return {
 		baseLayers: {
+			...(layerOptions.limaLabsToken ? {
+				Lima: tileLayer(`https://cdn.lima-labs.com/{z}/{x}/{y}.png?api=${encodeURIComponent(layerOptions.limaLabsToken)}`, {
+					fmName: "Lima Labs",
+					attribution: '© <a href="https://maps.lima-labs.com/" target="_blank">Lima Labs</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+					noWrap: true
+				})
+			} : {}),
+
 			Mpnk: tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 				fmName: "Mapnik",
 				attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
@@ -118,6 +128,20 @@ let createLayers = createDefaultLayers;
 
 export function setLayers(create: typeof createDefaultLayers): void {
 	createLayers = create;
+}
+
+export interface LayerOptions {
+	limaLabsToken?: string;
+}
+
+let layerOptions: LayerOptions = {};
+
+export function getLayerOptions(): LayerOptions {
+	return layerOptions;
+}
+
+export function setLayerOptions(options: LayerOptions): void {
+	layerOptions = options;
 }
 
 export function getLayers(map: Map): Layers {

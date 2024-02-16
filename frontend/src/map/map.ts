@@ -4,6 +4,8 @@ import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString, normalizePadName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
+import { setLayerOptions } from "facilmap-leaflet";
+import config from "./config";
 
 // Dereferrer
 $(document).on("click", "a", function() {
@@ -20,6 +22,10 @@ $(document).on("click", "a", function() {
 
 if ('serviceWorker' in navigator)
 	navigator.serviceWorker.register('./sw.js');
+
+setLayerOptions({
+	limaLabsToken: config.limaLabsToken
+});
 
 const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");

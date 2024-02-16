@@ -20,6 +20,7 @@ export interface Config {
 	mapzenToken?: string;
 	maxmindUserId?: string;
 	maxmindLicenseKey?: string;
+	limaLabsToken?: string;
 }
 
 const config: Config = {
@@ -42,6 +43,8 @@ const config: Config = {
 	// Sign up here: https://www.maxmind.com/en/geolite2/signup
 	maxmindUserId: process.env.MAXMIND_USER_ID || "",
 	maxmindLicenseKey: process.env.MAXMIND_LICENSE_KEY || "",
+
+	limaLabsToken: process.env.LIMA_LABS_TOKEN || "" // Get a token on https://maps.lima-labs.com/
 };
 
 export default config;

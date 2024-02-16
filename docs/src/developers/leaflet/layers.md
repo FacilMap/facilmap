@@ -25,6 +25,22 @@ const byName = (layerMap) => Object.fromEntries(Object.entries(layerMap).map(([k
 L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
 ```
 
+## Set the layer options
+
+There are some global layer options that change the behaviour of the available layers:
+* `limaLabsToken`: A [Lima Labs](https://maps.lima-labs.com/) API token. If defined, the Lima Labs layer will be available and used as the default layer instead of Mapnik. Lima Labs layers are very similar to Mapnik in style, but they are double resolution (so they don’t look pixely on high-resolution screens) and have English place names in addition to the local language.
+
+To set the global layer options, use the `setLayerOptions()` function:
+```javascript
+import { setLayerOptions } from "facilmap-leaflet";
+
+setLayerOptions({
+	limaLabsToken: "..."
+});
+```
+
+Note that to avoid unexpected inconsistencies, this should be called before `getLayers()` or any other of functions documented on this page are called.
+
 ## Change the available layers
 
 To change the available layers for a particular Leaflet map, set the `_fmLayers` properties of that map.
