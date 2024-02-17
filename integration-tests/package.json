@@ -15,6 +15,7 @@
   },
   "scripts": {
     "integration-tests": "vitest run",
+    "integration-tests-watch": "vitest watch",
     "check-types": "tsc -b --emitDeclarationOnly",
     "lint": "eslint src/**/*.ts"
   },
