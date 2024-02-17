@@ -8,7 +8,9 @@ export const paths: {
     mapEjs: string;
     tableEntry: string;
     tableEjs: string;
-    manifest: string;
+    viteManifest: string;
+    pwaManifest: string;
+    opensearchXmlEjs: string;
 };
 
 export function serve(inlineConfig?: InlineConfig): Promise<ViteDevServer>;

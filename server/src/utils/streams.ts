@@ -1,6 +1,6 @@
 import { ReadableStream, TransformStream } from "stream/web";
 
-export async function asyncIteratorToArray<T>(iterator: AsyncGenerator<T, any, void>): Promise<Array<T>> {
+export async function asyncIteratorToArray<T>(iterator: AsyncIterable<T>): Promise<Array<T>> {
 	const result: T[] = [];
 	for await (const it of iterator) {
 		result.push(it);

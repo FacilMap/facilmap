@@ -76,7 +76,7 @@
 
 	function copyEmbedCode(): void {
 		copyToClipboard(embedCode.value);
-		toasts.showToast(undefined, "Embed code copied", "The code to embed FacilMap was copied to the clipboard.", { variant: "success", autoHide: true });
+		toasts.showToast(undefined, "Embed code copied", `The code to embed ${context.appName} was copied to the clipboard.`, { variant: "success", autoHide: true });
 	}
 </script>
 
@@ -185,7 +185,7 @@
 				<textarea class="form-control" :value="embedCode" readonly></textarea>
 				<button type="button" class="btn btn-secondary" @click="copyEmbedCode()">Copy</button>
 			</div>
-			<p class="mt-2">Add this HTML code to a web page to embed FacilMap. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
+			<p class="mt-2">Add this HTML code to a web page to embed {{context.appName}}. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
 		</template>
 	</ModalDialog>
 </template>

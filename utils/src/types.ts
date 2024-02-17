@@ -8,5 +8,6 @@ export function isPromise(object: any): object is Promise<unknown> {
  * The config that the backend injects into the EJS template to be read by the frontend.
  */
 export interface InjectedConfig {
+	appName: string;
 	limaLabsToken?: string;
 }

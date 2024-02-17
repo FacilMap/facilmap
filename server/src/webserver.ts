@@ -8,11 +8,17 @@ import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { Readable, Writable } from "stream";
-import { getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
+import { getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
 import { normalizePadName } from "facilmap-utils";
+import { paths } from "facilmap-frontend/build.js";
+import config from "./config";
 
 type PathParams = {
 	padId: PadId
+}
+
+function getBaseUrl(req: Request): string {
+	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
 }
 
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
@@ -52,10 +58,23 @@ export async function initWebserver(database: Database, port: number, host?: str
 	};
 
 	const app = express();
+
+	app.set("trust proxy", config.trustProxy ?? false);
+
 	app.use(domainMiddleware);
 	app.use(compression());
 
 	app.get("/", padMiddleware);
+
+	app.get(`${paths.base}manifest.json`, async (req, res) => {
+		res.set("Content-type", "application/manifest+json");
+		res.send(await getPwaManifest());
+	});
+
+	app.get(`${paths.base}opensearch.xml`, async (req, res) => {
+		res.set("Content-type", "application/opensearchdescription+xml");
+		res.send(await getOpensearchXml(getBaseUrl(req)));
+	});
 
 	app.use(await getStaticFrontendMiddleware());
 

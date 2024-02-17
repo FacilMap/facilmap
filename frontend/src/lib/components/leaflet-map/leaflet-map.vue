@@ -57,7 +57,7 @@
 					:href="selfUrl"
 					target="_blank"
 					class="fm-open-external"
-					v-tooltip.right="'Open FacilMap in full size'"
+					v-tooltip.right="`Open ${context.appName} in full size`"
 				></a>
 				<div class="fm-logo">
 					<img src="./logo.png"/>

@@ -21,6 +21,7 @@
 		baseUrl: string;
 		serverUrl: string;
 		padId: string | undefined;
+		appName?: string;
 		settings?: Partial<FacilMapSettings>;
 	}>();
 
@@ -61,6 +62,7 @@
 	<div class="fm-facilmap">
 		<FacilMapContextProvider
 			:baseUrl="props.baseUrl"
+			:appName="props.appName"
 			:settings="props.settings"
 			ref="contextRef"
 		>

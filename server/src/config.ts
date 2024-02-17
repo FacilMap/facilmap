@@ -11,7 +11,10 @@ export interface DbConfig {
 }
 
 export interface Config {
+	appName: string;
 	userAgent: string;
+	trustProxy?: boolean | string | string[] | number | ((ip: string) => boolean);
+	baseUrl?: string;
 	host?: string;
 	port: number;
 	db: DbConfig;
@@ -24,7 +27,15 @@ export interface Config {
 }
 
 const config: Config = {
+	appName: process.env.APP_NAME || "FacilMap",
 	userAgent: process.env.USER_AGENT || 'FacilMap',
+	trustProxy: (
+		!process.env.TRUST_PROXY ? undefined :
+		process.env.TRUST_PROXY === "true" ? true :
+		process.env.TRUST_PROXY.match(/^\d+$/) ? Number(process.env.TRUST_PROXY) :
+		process.env.TRUST_PROXY
+	),
+	baseUrl: process.env.BASE_URL ? (process.env.BASE_URL.endsWith("/") ? process.env.BASE_URL : `${process.env.BASE_URL}/`) : undefined,
 	host: process.env.HOST || undefined,
 	port: process.env.PORT ? Number(process.env.PORT) : 8080,
 	db : {

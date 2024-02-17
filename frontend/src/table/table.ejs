@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title><%=normalizePadName(padData.name)%> – FacilMap</title>
+		<title><%=normalizePadName(padData.name)%> – <%=appName%></title>
 		<base href="../" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 <%
@@ -36,7 +36,7 @@
 	</head>
 	<body>
 		<div class="container-fluid">
-			<h1><%=normalizePadName(padData.name)%> – FacilMap</h1>
+			<h1><%=normalizePadName(padData.name)%> – <%=appName%></h1>
 <%
 	for(let type of Object.values(types)) {
 -%>

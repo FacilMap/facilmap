@@ -8,11 +8,12 @@ import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
 import { normalizeLineName, normalizeMarkerName, normalizePadName, type InjectedConfig } from "facilmap-utils";
 import config from "./config";
+import { asyncIteratorToArray, jsonStream } from "./utils/streams";
 
 export const isDevMode = !!process.env.FM_DEV;
 
-async function getManifest(): Promise<Manifest> {
-	const manifest = await readFile(paths.manifest);
+async function getViteManifest(): Promise<Manifest> {
+	const manifest = await readFile(paths.viteManifest);
 	return JSON.parse(manifest.toString());
 }
 
@@ -35,7 +36,7 @@ async function getScripts(entry: "mapEntry" | "tableEntry"): Promise<Scripts> {
 			styles: []
 		};
 	} else {
-		const manifest = await getManifest();
+		const manifest = await getViteManifest();
 
 		let referencedChunks = [paths[entry]];
 		for (let i = 0; i < referencedChunks.length; i++) {
@@ -73,7 +74,9 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 	]);
 
 	return ejs.render(template, {
+		appName: config.appName,
 		config: {
+			appName: config.appName,
 			limaLabsToken: config.limaLabsToken
 		} satisfies InjectedConfig,
 		...injections,
@@ -94,6 +97,7 @@ export async function renderTable(params: {
 
 	return ejs.render(template, {
 		...injections,
+		appName: config.appName,
 		paths,
 		utils,
 		normalizeMarkerName,
@@ -122,4 +126,21 @@ export async function getStaticFrontendMiddleware(): Promise<RequestHandler> {
 		router.use(paths.base, expressStatic(paths.dist));
 		return router;
 	}
+}
+
+export async function getPwaManifest(): Promise<string> {
+	const template = await readFile(paths.pwaManifest).then((t) => t.toString());
+	const chunks = await asyncIteratorToArray(jsonStream(JSON.parse(template), {
+		APP_NAME: config.appName
+	}));
+	return chunks.join("");
+}
+
+export async function getOpensearchXml(baseUrl: string): Promise<string> {
+	const template = await readFile(paths.opensearchXmlEjs).then((t) => t.toString());
+
+	return ejs.render(template, {
+		appName: config.appName,
+		baseUrl
+	});
 }

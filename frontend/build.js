@@ -13,7 +13,9 @@ export const paths = {
     mapEjs: `${root}/src/map/map.ejs`,
     tableEntry: "src/table/table.ts",
     tableEjs: `${root}/src/table/table.ejs`,
-    manifest: `${dist}/.vite/manifest.json`,
+    viteManifest: `${dist}/.vite/manifest.json`,
+    pwaManifest: `${root}/src/manifest.json`,
+    opensearchXmlEjs: `${root}/src/opensearch.xml.ejs`,
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

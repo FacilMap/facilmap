@@ -2,6 +2,9 @@
 	import AboutDialog from "../about-dialog.vue";
 	import { ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+
+	const context = injectContextRequired();
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -63,7 +66,7 @@
 				@click="dialog = 'about'; emit('hide-sidebar')"
 				href="javascript:"
 				draggable="false"
-			>About FacilMap</a>
+			>About {{context.appName}}</a>
 		</li>
 	</DropdownMenu>
 

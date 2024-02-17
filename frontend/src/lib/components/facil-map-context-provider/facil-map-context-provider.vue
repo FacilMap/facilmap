@@ -36,10 +36,13 @@
 </script>
 
 <script setup lang="ts">
-	const props = defineProps<{
+	const props = withDefaults(defineProps<{
 		baseUrl: string;
-		settings?: Partial<FacilMapSettings>
-	}>();
+		appName?: string;
+		settings?: Partial<FacilMapSettings>;
+	}>(), {
+		appName: "FacilMap"
+	});
 
 	const isNarrow = useMaxBreakpoint("sm");
 
@@ -62,6 +65,7 @@
 	const context: FacilMapContext = shallowReadonly(reactive({
 		id: idCounter++,
 		baseUrl: toRef(() => props.baseUrl),
+		appName: toRef(() => props.appName),
 		isNarrow,
 		settings: readonly(toRef(() => ({
 			toolbox: true,

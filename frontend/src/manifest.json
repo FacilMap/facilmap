@@ -1,13 +1,13 @@
 {
-    "name": "FacilMap",
-    "short_name": "FacilMap",
+    "name": "%APP_NAME%",
+    "short_name": "%APP_NAME%",
     "icons": [{
-        "src": "./app-512.png",
+        "src": "./static/app-512.png",
         "sizes": "512x512",
         "type": "image/png"
     }],
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
     "display": "standalone",
-    "start_url": "../../"
+    "start_url": "../"
 }

@@ -30,6 +30,7 @@ export interface FacilMapComponents {
 export interface WritableFacilMapContext {
 	id: number;
 	baseUrl: string;
+	appName: string;
 	isNarrow: boolean;
 	settings: FacilMapSettings;
 	components: FacilMapComponents;

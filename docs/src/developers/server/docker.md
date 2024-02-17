@@ -23,6 +23,7 @@ services:
 			- db
 		environment:
 			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+			TRUST_PROXY: "true"
 			DB_TYPE: mysql
 			DB_HOST: db
 			DB_NAME: facilmap
@@ -59,6 +60,7 @@ services:
 			- db
 		environment:
 			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+			TRUST_PROXY: "true"
 			DB_TYPE: postgres
 			DB_HOST: db
 			DB_NAME: facilmap
@@ -88,5 +90,5 @@ To manually create the necessary docker containers, use these commands:
 
 ```bash
 docker create --name=facilmap_db -e MYSQL_DATABASE=facilmap -e MYSQL_USER=facilmap -e MYSQL_PASSWORD=password -e MYSQL_RANDOM_ROOT_PASSWORD=true --restart=unless-stopped mariadb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-docker create --link=facilmap_db -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e DB_TYPE=mysql -e DB_HOST=facilmap_db -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e ORS_TOKEN= -e MAPBOX_TOKEN= -e MAPZEN_TOKEN= -e MAXMIND_USER_ID= -e MAXMIND_LICENSE_KEY= -e LIMA_LABS_TOKEN= --restart=unless-stopped facilmap/facilmap
+docker create --link=facilmap_db -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e TRUST_PROXY=true -e DB_TYPE=mysql -e DB_HOST=facilmap_db -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e ORS_TOKEN= -e MAPBOX_TOKEN= -e MAPZEN_TOKEN= -e MAXMIND_USER_ID= -e MAXMIND_LICENSE_KEY= -e LIMA_LABS_TOKEN= --restart=unless-stopped facilmap/facilmap
 ```

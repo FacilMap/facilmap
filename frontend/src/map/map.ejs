@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title><%= padData && padData.name ? `${padData.name} – ` : ''%>FacilMap</title>
+		<title><%= padData && padData.name ? `${padData.name} – ` : ''%><%=appName%></title>
 		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
 <% if(!padData || (isReadOnly && padData.searchEngines)) { -%>
 		<meta name="robots" content="index,nofollow" />
@@ -14,8 +14,8 @@
 		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
 		<link rel="mask-icon" href="<%=paths.base%>static/favicon.svg" color="#00272a">
 		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
-		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
-		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="<%=paths.base%>static/opensearch.xml">
+		<link rel="manifest" href="<%=paths.base%>manifest.json">
+		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href="<%=paths.base%>opensearch.xml">
 		<style type="text/css">
 			html, body, #app {
 				margin: 0;
@@ -73,7 +73,7 @@
 <% } -%>
 	</head>
 	<body>
-		<noscript><p><strong>FacilMap requires JavaScript to work.</strong></p></noscript>
+		<noscript><p><strong><%=appName%> requires JavaScript to work.</strong></p></noscript>
 		<div id="loading">
 			Loading...
 			<div id="spinner"></div>
@@ -88,7 +88,7 @@
 					var loading = document.getElementById("loading");
 					if(loading) {
 						loading.className += " error";
-						loading.innerHTML = "Could not load FacilMap!";
+						loading.innerHTML = "Could not load <%=appName%>!";
 					}
 				};
 			})();

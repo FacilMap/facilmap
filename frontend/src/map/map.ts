@@ -59,7 +59,7 @@ const Root = defineComponent({
 		});
 
 		watch(padName, () => {
-			const title = padName.value != null ? `${normalizePadName(padName.value)} – FacilMap` : 'FacilMap';
+			const title = padName.value != null ? `${normalizePadName(padName.value)} – ${config.appName}` : config.appName;
 
 			// We have to call history.replaceState() in order for the new title to end up in the browser history
 			window.history && history.replaceState({ }, title);
@@ -70,6 +70,7 @@ const Root = defineComponent({
 			baseUrl,
 			serverUrl: baseUrl,
 			padId: padId.value,
+			appName: config.appName,
 			settings: {
 				toolbox: toBoolean(queryParams.toolbox, true),
 				search: toBoolean(queryParams.search, true),
