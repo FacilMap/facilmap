@@ -64,6 +64,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.use(domainMiddleware);
 	app.use(compression());
 
+	app.use((req, res, next) => {
+		res.setHeader('Referrer-Policy', 'origin');
+		next();
+	});
+
 	app.get("/", padMiddleware);
 
 	app.get(`${paths.base}manifest.json`, async (req, res) => {

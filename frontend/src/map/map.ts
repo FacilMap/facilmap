@@ -1,4 +1,3 @@
-import $ from "jquery";
 import { createApp, defineComponent, h, ref, watch } from "vue";
 import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString, normalizePadName } from "facilmap-utils";
@@ -6,19 +5,9 @@ import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
 import { setLayerOptions } from "facilmap-leaflet";
 import config from "./config";
+import { registerDereferrerHandler } from "../utils/dereferrer";
 
-// Dereferrer
-$(document).on("click", "a", function() {
-	const el = $(this);
-	const href = el.attr("href");
-	if(href && href.match(/^\s*(https?:)?\/\//i)) {
-		el.attr("href", "app/static/deref.html?"+encodeURIComponent(href));
-
-		setTimeout(function() {
-			el.attr("href", href);
-		}, 0);
-	}
-});
+registerDereferrerHandler();
 
 if ('serviceWorker' in navigator)
 	navigator.serviceWorker.register('./sw.js');

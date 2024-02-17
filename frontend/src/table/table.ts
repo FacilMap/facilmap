@@ -11,6 +11,7 @@ import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 // import 'bootstrap/js/dist/button';
 // import 'bootstrap/js/dist/carousel';
 import 'bootstrap/js/dist/collapse';
+import { registerDereferrerHandler } from "../utils/dereferrer";
 // import 'bootstrap/js/dist/dropdown';
 // import 'bootstrap/js/dist/modal';
 // import 'bootstrap/js/dist/offcanvas';
@@ -20,18 +21,7 @@ import 'bootstrap/js/dist/collapse';
 // import 'bootstrap/js/dist/toast';
 // import 'bootstrap/js/dist/tooltip';
 
-// Dereferrer
-$(document).on("click", "a", function() {
-	const el = $(this);
-	const href = el.attr("href");
-	if(href && href.match(/^\s*(https?:)?\/\//i)) {
-		el.attr("href", "app/static/deref.html?"+encodeURIComponent(href));
-
-		setTimeout(function() {
-			el.attr("href", href!);
-		}, 0);
-	}
-});
+registerDereferrerHandler();
 
 $(() => {
 	($("table.tablesorter") as any).tablesorter({
