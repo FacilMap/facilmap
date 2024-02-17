@@ -1,6 +1,3 @@
-import { gpx, kml, tcx } from "@tmcw/togeojson";
-import osmtogeojson from "osmtogeojson";
-import $ from "jquery";
 import type { Feature, Geometry } from "geojson";
 import type { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
@@ -25,30 +22,43 @@ export interface FileResultObject {
 	errors: boolean;
 }
 
-export function parseFiles(files: string[]): FileResultObject {
-	const ret: FileResultObject = { features: [ ], views: [ ], types: { }, errors: false };
-	let nextTypeIdx = 1;
-	for (const file of files) {
-		let geojson: any;
-
-		if(file.match(/^\s*</)) {
-			const doc = $.parseXML(file);
-			const xml = $(doc).find(":root");
-
-			if(xml.is("gpx"))
-				geojson = gpx(xml[0]);
-			else if(xml.is("kml"))
-				geojson = kml(xml[0]);
-			else if(xml.is("osm"))
-				geojson = osmtogeojson(doc);
-			else if (xml.is("TrainingCenterDatabase"))
-				geojson = tcx(xml[0]);
-		} else if(file.match(/^\s*\{/)) {
-			const content = JSON.parse(file);
-			if(content.type)
-				geojson = content;
+async function fileToGeoJSON(file: string): Promise<any> {
+	if(file.match(/^\s*</)) {
+		const doc = (new window.DOMParser()).parseFromString(file, "text/xml");
+		const parserErrorElem = doc.getElementsByTagName("parsererror")[0];
+		if (parserErrorElem) {
+			throw new Error(`Invalid XML: ${parserErrorElem.textContent}`);
 		}
 
+		const xml = doc.documentElement;
+
+		if (xml.matches("gpx")) {
+			const { gpx } = await import("@tmcw/togeojson");
+			return gpx(xml);
+		} else if (xml.matches("kml")) {
+			const { kml } = await import("@tmcw/togeojson");
+			return kml(xml);
+		} else if (xml.matches("osm")) {
+			const { default: osmtogeojson } = await import("osmtogeojson");
+			return osmtogeojson(xml);
+		} else if (xml.matches("TrainingCenterDatabase")) {
+			const { tcx } = await import("@tmcw/togeojson");
+			return tcx(xml);
+		}
+	} else if(file.match(/^\s*\{/)) {
+		const content = JSON.parse(file);
+		if(content.type)
+			return content;
+	}
+}
+
+export async function parseFiles(files: string[]): Promise<FileResultObject> {
+	const filesGeoJSON = await Promise.all(files.map(fileToGeoJSON));
+
+	const ret: FileResultObject = { features: [ ], views: [ ], types: { }, errors: false };
+	let nextTypeIdx = 1;
+
+	for (const geojson of filesGeoJSON) {
 		if(geojson == null) {
 			ret.errors = true;
 			continue;

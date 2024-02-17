@@ -79,7 +79,7 @@
 			})));
 
 			const result = {
-				...parseFiles(loadedFiles),
+				...await parseFiles(loadedFiles),
 				title: (fileList.length == 1 && fileList[0].name) || pluralize("file", fileList.length, true)
 			};
 			if (result.features.length == 0 && result.errors)

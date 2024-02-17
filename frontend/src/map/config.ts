@@ -1,5 +1,4 @@
 import type { InjectedConfig } from "facilmap-utils";
-import $ from "jquery";
 
-const config: InjectedConfig = JSON.parse($("meta[name=fmConfig]").attr("content")!);
+const config: InjectedConfig = JSON.parse(document.querySelector("meta[name=fmConfig]")!.getAttribute("content")!);
 export default config;

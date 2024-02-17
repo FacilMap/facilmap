@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import $ from "jquery";
 	import Icon from "../ui/icon.vue";
 	import hammer from "hammerjs";
 	import { type Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
@@ -110,12 +109,12 @@
 	function handlePanStart(): void {
 		isPanning.value = true;
 		restoreHeight.value = undefined;
-		panStartHeight.value = parseInt($(containerRef.value!).css("flex-basis"));
+		panStartHeight.value = parseInt(getComputedStyle(containerRef.value!).flexBasis);
 	}
 
 	function handlePanMove(event: any): void {
 		if (context.isNarrow && panStartHeight.value != null && event.srcEvent.type != "pointercancel")
-			$(containerRef.value!).stop().css("flexBasis", `${getSanitizedHeight(panStartHeight.value - event.deltaY)}px`);
+			containerRef.value!.style.flexBasis = `${getSanitizedHeight(panStartHeight.value - event.deltaY)}px`;
 	}
 
 	function handlePanEnd(): void {
