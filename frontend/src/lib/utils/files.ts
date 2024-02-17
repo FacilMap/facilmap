@@ -97,11 +97,13 @@ export function parseFiles(files: string[]): FileResultObject {
 			else
 				name = feature.geometry.type || "Object";
 
+			const extraTags = feature.properties.data || feature.properties.tags || flattenObject(Object.assign({}, feature.properties, {coordTimes: null}));
+
 			let f: FileResult = {
 				isFileResult: true,
 				short_name: name,
 				display_name: name,
-				extratags: feature.properties.data || feature.properties.tags || flattenObject(Object.assign({}, feature.properties, {coordTimes: null})),
+				extratags: Object.fromEntries(Object.entries(extraTags).map(([k, v]) => [k, `${v}`])),
 				geojson: feature.geometry,
 				type: feature.properties.type || feature.geometry.type
 			};
