@@ -4,7 +4,6 @@ import "tablesorter/dist/js/widgets/widget-uitheme.min.js";
 import "tablesorter/dist/js/widgets/widget-resizable.min.js";
 import "tablesorter/dist/css/theme.bootstrap_4.min.css";
 import "./table.scss";
-import { registerDeobfuscationHandlers } from "../utils/obfuscate";
 
 // Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/#lean-javascript
 // import 'bootstrap/js/dist/alert';
@@ -30,5 +29,3 @@ $(() => {
 		widgets: ["uitheme", "resizable"]
 	});
 });
-
-registerDeobfuscationHandlers();

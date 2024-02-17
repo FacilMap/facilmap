@@ -3,7 +3,6 @@ import type { Field } from "facilmap-types";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
-import { obfuscate } from "./obfuscate.js";
 import cheerio from "cheerio";
 import { normalizeFieldValue } from "./objects.js";
 
@@ -63,9 +62,6 @@ function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root): void
 		target: "_blank",
 		rel: "noopener noreferer"
 	});
-
-
-	obfuscate($el, $);
 }
 
 export function renderOsmTag(key: string, value: string): string {

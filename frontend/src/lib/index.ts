@@ -1,10 +1,6 @@
 import "./styles.scss";
 import "./bootstrap";
 
-import { registerDeobfuscationHandlers } from "../utils/obfuscate";
-
-registerDeobfuscationHandlers();
-
 export * from "./utils/add";
 export * from "./utils/bootstrap";
 export { default as BoxSelection } from "./utils/box-selection";
@@ -28,8 +24,6 @@ export * from "./utils/ui";
 export * from "./utils/utils";
 export * from "./utils/vue";
 export * from "./utils/zoom";
-
-export * from "../utils/obfuscate";
 
 export { default as EditTypeDialog } from "./components/edit-type-dialog/edit-type-dialog.vue";
 export { default as EditTypeDropdownDialog } from "./components/edit-type-dialog/edit-type-dropdown-dialog.vue";
