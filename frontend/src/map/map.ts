@@ -9,8 +9,8 @@ import { registerDereferrerHandler } from "../utils/dereferrer";
 
 registerDereferrerHandler();
 
-if ('serviceWorker' in navigator)
-	navigator.serviceWorker.register('./sw.js');
+if ('serviceWorker' in navigator && location.hostname !== "localhost")
+	navigator.serviceWorker.register('./_app/static/sw.js', { scope: "./" });
 
 setLayerOptions({
 	limaLabsToken: config.limaLabsToken

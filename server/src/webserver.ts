@@ -54,6 +54,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}
 
 		res.type("html");
+		res.setHeader("Referrer-Policy", "origin");
 		res.send(await renderMap(params));
 	};
 
@@ -63,11 +64,6 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.use(domainMiddleware);
 	app.use(compression());
-
-	app.use((req, res, next) => {
-		res.setHeader('Referrer-Policy', 'origin');
-		next();
-	});
 
 	app.get("/", padMiddleware);
 
@@ -81,6 +77,10 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.send(await getOpensearchXml(getBaseUrl(req)));
 	});
 
+	app.use("/_app/static/sw.js", (req, res, next) => {
+		res.setHeader("Service-Worker-Allowed", "/");
+		next();
+	});
 	app.use(await getStaticFrontendMiddleware());
 
 	// If no file with this name has been found, we render a pad
@@ -99,6 +99,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.get("/:padId/table", async (req: Request<PathParams>, res: Response<string>) => {
 		res.type("html");
+		res.setHeader("Referrer-Policy", "origin");
 		res.send(await createTable(
 			database,
 			req.params.padId,
