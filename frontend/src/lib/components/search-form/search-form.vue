@@ -106,7 +106,7 @@
 					if(typeof newSearchResults == "string") {
 						searchResults.value = undefined;
 						mapResults.value = undefined;
-						fileResult.value = parseFiles([ newSearchResults ]);
+						fileResult.value = await parseFiles([ newSearchResults ]);
 						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
 					} else {
 						searchResults.value = newSearchResults;
