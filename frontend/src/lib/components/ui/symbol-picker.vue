@@ -8,9 +8,15 @@
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import { computedAsync } from "../../utils/vue";
 
-	const allItemsP = Promise.all(symbolList.map(async (s) => (
-		[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
-	))).then((l) => Object.fromEntries(l));
+	let allItemsP: Promise<Record<string, string>>;
+	async function getAllItems(): Promise<Record<string, string>> {
+		if (!allItemsP) {
+			allItemsP = Promise.all(symbolList.map(async (s) => (
+				[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
+			))).then((l) => Object.fromEntries(l));
+		}
+		return await allItemsP;
+	}
 </script>
 
 <script setup lang="ts">
@@ -55,7 +61,7 @@
 			})(),
 			(async (): Promise<Array<[string, string]>> => {
 				const lowerFilter = filter.value.trim().toLowerCase();
-				return Object.entries(await allItemsP).flatMap(([k, v]) => {
+				return Object.entries(await getAllItems()).flatMap(([k, v]) => {
 					if (k.toLowerCase().includes(lowerFilter)) {
 						return [[k, v]];
 					} else {
@@ -119,7 +125,9 @@
 				tabindex="-1"
 			/>
 
-			<div v-if="!items" class="spinner-border"></div>
+			<div v-if="!items" class="d-flex align-items-center justify-content-center p-4">
+				<div class="spinner-border"></div>
+			</div>
 
 			<template v-else>
 				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>

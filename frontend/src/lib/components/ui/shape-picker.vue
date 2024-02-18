@@ -74,7 +74,9 @@
 		</template>
 
 		<template #default="{ close }">
-			<div v-if="!items" class="spinner-border"></div>
+			<div v-if="!items" class="d-flex align-items-center justify-content-center p-4">
+				<div class="spinner-border"></div>
+			</div>
 
 			<template v-else>
 				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No shapes could be found.</div>
