@@ -145,7 +145,7 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
 /**
  * Downloads the icons chunk to have them already downloaded the first time the icon code is needed.
  */
-export async function preloadExtraIcons(): Promise<void> {
+export async function preloadExtraSymbols(): Promise<void> {
 	await import("virtual:icons:extra");
 }
 

@@ -16,7 +16,7 @@
 	import FacilMapContextProvider from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { FacilMapSettings } from "./facil-map-context-provider/facil-map-context";
 	import ClientProvider from "./client-provider.vue";
-	import { preloadExtraIcons } from "facilmap-leaflet";
+	import { preloadExtraSymbols } from "facilmap-leaflet";
 
 	const props = defineProps<{
 		baseUrl: string;
@@ -58,7 +58,7 @@
 		context
 	});
 
-	preloadExtraIcons().catch((err) => {
+	preloadExtraSymbols().catch((err) => {
 		console.error("Error preloading extra icons", err);
 	});
 </script>
