@@ -1,14 +1,21 @@
 <script setup lang="ts">
-	import { getSymbolHtml } from "facilmap-leaflet";
+	import { coreSymbolList, getSymbolHtml } from "facilmap-leaflet";
 	import { vHtmlAsync } from "../../utils/vue";
-	import { computed } from "vue";
+	import { computed, watchEffect } from "vue";
 
 	const props = withDefaults(defineProps<{
 		icon: string | undefined;
 		alt?: string; // TODO
 		size?: string;
+		async?: boolean;
 	}>(), {
 		size: "1.35em"
+	});
+
+	watchEffect(() => {
+		if (props.icon && !props.async && !coreSymbolList.includes(props.icon)) {
+			console.warn(`Icon "${props.icon}" is not in core icons.`);
+		}
 	});
 
 	const iconCodeP = computed(() => getSymbolHtml("currentColor", props.size, props.icon));

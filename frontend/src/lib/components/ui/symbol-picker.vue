@@ -8,7 +8,7 @@
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import { computedAsync } from "../../utils/vue";
 
-	const allItemsP: Promise<Record<string, string>> = Promise.all(symbolList.map(async (s) => (
+	const allItemsP = Promise.all(symbolList.map(async (s) => (
 		[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
 	))).then((l) => Object.fromEntries(l));
 </script>
@@ -105,7 +105,7 @@
 		@focusPopover="handleFocusPopover()"
 	>
 		<template #preview>
-			<Icon :icon="modelValue"></Icon>
+			<Icon :icon="modelValue" async></Icon>
 		</template>
 
 		<template #default="{ close }">

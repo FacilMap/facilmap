@@ -1,7 +1,7 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw } from "vue";
 import { type Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView } from "facilmap-leaflet";
+import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreSymbolList } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -129,11 +129,17 @@ function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
 		() => markRaw(control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } })),
 		(locateControl, onCleanup) => {
 			locateControl.addTo(map.value);
+
+			if (!coreSymbolList.includes("screenshot")) {
+				console.warn(`Icon "screenshot" is not in core icons.`);
+			}
+
 			getSymbolHtml("currentColor", "1.5em", "screenshot").then((html) => {
 				locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
 			}).catch((err) => {
 				console.error("Error loading locate control icon", err);
 			});
+
 			onCleanup(() => {
 				locateControl.remove();
 			});

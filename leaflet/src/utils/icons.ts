@@ -2,9 +2,12 @@ import type { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
 import { Icon, type IconOptions } from "leaflet";
 import { memoize } from "lodash-es";
-import rawIconKeys from "virtual:icons:keys";
+import iconKeys, { coreIconKeys } from "virtual:icons:keys";
+import rawIconsCore from "virtual:icons:core";
 
-export const symbolList = Object.values(rawIconKeys).flat();
+export { coreIconKeys as coreSymbolList };
+
+export const symbolList: string[] = Object.values(iconKeys).flat();
 
 export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
 
@@ -142,29 +145,41 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
 /**
  * Downloads the icons chunk to have them already downloaded the first time the icon code is needed.
  */
-export async function preloadIcons(): Promise<void> {
-	await import("virtual:icons");
+export async function preloadExtraIcons(): Promise<void> {
+	await import("virtual:icons:extra");
+}
+
+async function getRawSymbolCode(symbol: Symbol): Promise<[set: string, code: string]> {
+	if (coreIconKeys.includes(symbol)) {
+		const set = Object.keys(rawIconsCore).filter((i) => (rawIconsCore[i][symbol] != null))[0];
+		return [set, rawIconsCore[set][symbol]];
+	} else if (symbolList.includes(symbol)) {
+		const { default: rawIconsExtra } = await import("virtual:icons:extra");
+		const set = Object.keys(rawIconsExtra).filter((i) => (rawIconsExtra[i][symbol] != null))[0];
+		return [set, rawIconsExtra[set][symbol]];
+	} else {
+		throw new Error(`Unknown icon ${symbol}.`);
+	}
 }
 
 export async function getSymbolCode(colour: string, size: number, symbol?: Symbol): Promise<string> {
 	if(symbol && symbolList.includes(symbol)) {
-		const { default: rawIcons } = await import("virtual:icons");
-		const set = Object.keys(rawIcons).filter((i) => (rawIcons[i][symbol] != null))[0];
+		const [set, code] = await getRawSymbolCode(symbol);
 
 		if(set == "osmi") {
-			return `<g transform="scale(${size / sizes.osmi})">${rawIcons[set][symbol].replace(/#000/g, colour)}</g>`;
+			return `<g transform="scale(${size / sizes.osmi})">${code.replace(/#000/g, colour)}</g>`;
 		}
 
-		const widthMatch = rawIcons[set][symbol].match(/^<svg [^>]* width="([0-9.]+)"/);
-		const heightMatch = rawIcons[set][symbol].match(/^<svg [^>]* height="([0-9.]+)"/);
-		const viewBoxMatch = rawIcons[set][symbol].match(/^<svg [^>]* viewBox="([ 0-9.]+)"/);
+		const widthMatch = code.match(/^<svg [^>]* width="([0-9.]+)"/);
+		const heightMatch = code.match(/^<svg [^>]* height="([0-9.]+)"/);
+		const viewBoxMatch = code.match(/^<svg [^>]* viewBox="([ 0-9.]+)"/);
 
 		const width = Number(widthMatch ? widthMatch[1] : viewBoxMatch![1].split(" ")[2]);
 		const height = Number(heightMatch ? heightMatch[1] : viewBoxMatch![1].split(" ")[3]);
 		const scale = size / sizes[set];
 		const moveX = (sizes[set] - width) / 2;
 		const moveY = (sizes[set] - height) / 2;
-		const content = rawIcons[set][symbol].replace(/^<svg [^>]*>/, "").replace(/<\/svg>$/, "");
+		const content = code.replace(/^<svg [^>]*>/, "").replace(/<\/svg>$/, "");
 
 		return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${content}</g>`;
 	} else if (symbol && symbol.length == 1) {
@@ -294,7 +309,7 @@ export function getSymbolForTags(tags: Record<string, string>): Symbol {
 	const tagWords = Object.entries(tags).flatMap(([k, v]) => (RELEVANT_TAGS.includes(k) ? v.split(/_:/) : []));
 	let result: Symbol = "";
 	let resultMatch: number = 0;
-	for (const icon of rawIconKeys.osmi) {
+	for (const icon of iconKeys.osmi) {
 		const iconWords = icon.split("_");
 		const match = tagWords.filter((word) => iconWords.includes(word)).length;
 		if (match > resultMatch) {
