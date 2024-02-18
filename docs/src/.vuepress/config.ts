@@ -100,7 +100,8 @@ export default defineUserConfig({
 						"/developers/client/events",
 						"/developers/client/methods",
 						"/developers/client/types",
-						"/developers/client/advanced"
+						"/developers/client/advanced",
+						"/developers/client/changelog"
 					]
 				},
 				{

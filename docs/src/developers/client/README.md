@@ -8,6 +8,8 @@ The FacilMap client makes a connection to the FacilMap server using [socket.io](
 
 Note that in the context of the client, a collaborative map will be referred to as __pad__. This is because the collaborative part of FacilMap used to be a separate software called FacilPad.
 
+The socket on the server side maintains different API versions in an attempt to stay backwards compatible with older versions of the client. Have a look at the [./changelog.md](changelog) to find out what has changed when upgrading to a new version of the client.
+
 
 ## Setting it up
 
