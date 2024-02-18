@@ -11,8 +11,9 @@ export interface LegendType {
 	name: string;
 	items: LegendItem[];
 	filtered: boolean;
-	defaultColour?: string;
-	defaultShape?: Shape;
+	fixedColour?: string;
+	fixedShape?: Shape;
+	fixedSymbol?: Symbol;
 }
 
 export interface LegendItem {
@@ -131,8 +132,9 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 			name: type.name,
 			items,
 			filtered: true,
-			defaultColour: type.defaultColour ?? undefined,
-			defaultShape: type.defaultShape ?? undefined
+			fixedColour: type.colourFixed && type.defaultColour ? `#${type.defaultColour}` : undefined,
+			fixedShape: type.shapeFixed && type.defaultShape || undefined,
+			fixedSymbol: type.symbolFixed && type.defaultSymbol || undefined
 		};
 
 		// Check which fields are filtered

@@ -56,7 +56,7 @@
 		if(typeInfo.type == "line")
 			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50);
 		else if (item.colour || item.shape != null)
-			return getMarkerHtml(item.colour || typeInfo.defaultColour || "rainbow", height, item.symbol, item.shape ?? typeInfo.defaultShape);
+			return getMarkerHtml(item.colour || typeInfo.fixedColour || "rainbow", height, item.symbol ?? typeInfo.fixedSymbol, item.shape ?? typeInfo.fixedShape);
 		else
 			return getSymbolHtml("#000000", height, item.symbol);
 	}
