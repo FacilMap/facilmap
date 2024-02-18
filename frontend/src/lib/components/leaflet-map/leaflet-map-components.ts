@@ -129,7 +129,11 @@ function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
 		() => markRaw(control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } })),
 		(locateControl, onCleanup) => {
 			locateControl.addTo(map.value);
-			locateControl._container.querySelector("a")!.insertAdjacentHTML("beforeend", getSymbolHtml("currentColor", "1.5em", "screenshot"));
+			getSymbolHtml("currentColor", "1.5em", "screenshot").then((html) => {
+				locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
+			}).catch((err) => {
+				console.error("Error loading locate control icon", err);
+			});
 			onCleanup(() => {
 				locateControl.remove();
 			});

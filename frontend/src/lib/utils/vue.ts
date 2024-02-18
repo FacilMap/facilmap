@@ -1,4 +1,4 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter } from "vue";
 
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)
@@ -87,3 +87,25 @@ export function fixOnCleanup(onCleanup: (cleanupFn: () => void) => void): (clean
 		cleanupFns.push(cleanupFn);
 	};
 }
+
+export function computedAsync<T>(getter: ComputedGetter<Promise<T>>, onError = (err: any) => { console.error(err); }): Ref<T | undefined> {
+	const promise = computed(getter);
+	const val = ref<T>();
+	watch(promise, (p) => {
+		val.value = undefined;
+		p.then((v) => {
+			if (promise.value === p) {
+				val.value = v;
+			}
+		}).catch(onError);
+	}, { immediate: true });
+	return val;
+}
+
+export const vHtmlAsync: Directive<Element, Promise<string>> = (el, binding) => {
+	const html = computedAsync(() => binding.value);
+
+	watch(() => html.value, (val) => {
+		el.innerHTML = val ?? "";
+	});
+};

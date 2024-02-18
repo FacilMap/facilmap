@@ -15,7 +15,7 @@ module.exports = {
 	},
 	rules: {
 		"@typescript-eslint/explicit-module-boundary-types": ["warn", { "allowArgumentsExplicitlyTypedAsAny": true }],
-		"import/no-unresolved": ["error", { "ignore": [ "geojson", "virtual:icons" ], "caseSensitive": true }],
+		"import/no-unresolved": ["error", { "ignore": [ "geojson", "virtual:icons", "virtual:icons:keys" ], "caseSensitive": true }],
 		"import/no-extraneous-dependencies": ["error"],
 		"@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
 		"import/no-named-as-default": ["warn"],

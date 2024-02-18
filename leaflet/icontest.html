@@ -28,7 +28,9 @@
 				for (const icon of ["", "O", "g", "j", "a", "*", ...FacilMap.symbolList]) {
 					const span = document.createElement('span');
 					span.title = icon;
-					span.innerHTML = createIcon(icon);
+					createIcon(icon).then((html) => {
+						span.innerHTML = html;
+					});
 					el.appendChild(span);
 				}
 			}

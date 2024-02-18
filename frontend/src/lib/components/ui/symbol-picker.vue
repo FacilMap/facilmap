@@ -3,12 +3,14 @@
 	import Icon from "./icon.vue";
 	import Picker from "./picker.vue";
 	import { arrowNavigation } from "../../utils/ui";
-	import { keyBy, mapValues, pickBy } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";
 	import { computed, nextTick, ref } from "vue";
 	import type { Validator } from "./validated-form/validated-field.vue";
+	import { computedAsync } from "../../utils/vue";
 
-	const allItems = mapValues(keyBy(symbolList, (s) => s), (s) => getSymbolHtml("currentColor", "1.5em", s));
+	const allItemsP: Promise<Record<string, string>> = Promise.all(symbolList.map(async (s) => (
+		[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
+	))).then((l) => Object.fromEntries(l));
 </script>
 
 <script setup lang="ts">
@@ -35,19 +37,33 @@
 	const filter = ref("");
 	const filterRef = ref<HTMLElement>();
 
-	const items = computed(() => {
-		const result: Record<string, string> = {};
-
-		if (filter.value.length == 1)
-			result[filter.value] = getSymbolHtml("currentColor", "1.5em", filter.value);
-
-		if (props.modelValue?.length == 1 && props.modelValue != filter.value)
-			result[props.modelValue] = getSymbolHtml("currentColor", "1.5em", filter.value);
-
-		const lowerFilter = filter.value.trim().toLowerCase();
-		Object.assign(result, pickBy(allItems, (val, key) => key.toLowerCase().includes(lowerFilter)));
-
-		return result;
+	const items = computedAsync(async () => {
+		return Object.fromEntries<string>((await Promise.all([
+			(async (): Promise<Array<[string, string]>> => {
+				if (filter.value.length == 1) {
+					return [[filter.value, await getSymbolHtml("currentColor", "1.5em", filter.value)]];
+				} else {
+					return [];
+				}
+			})(),
+			(async (): Promise<Array<[string, string]>> => {
+				if (props.modelValue?.length == 1 && props.modelValue != filter.value) {
+					return [[props.modelValue, await getSymbolHtml("currentColor", "1.5em", props.modelValue)]];
+				} else {
+					return [];
+				}
+			})(),
+			(async (): Promise<Array<[string, string]>> => {
+				const lowerFilter = filter.value.trim().toLowerCase();
+				return Object.entries(await allItemsP).flatMap(([k, v]) => {
+					if (k.toLowerCase().includes(lowerFilter)) {
+						return [[k, v]];
+					} else {
+						return [];
+					}
+				});
+			})()
+		])).flat());
 	});
 
 	function validateSymbol(symbol: string) {
@@ -62,12 +78,14 @@
 	}
 
 	async function handleKeyDown(event: KeyboardEvent): Promise<void> {
-		const newVal = arrowNavigation(Object.keys(items.value), props.modelValue, gridRef.value!.containerRef!, event);
-		if (newVal) {
-			filterRef.value?.focus();
-			emit("update:modelValue", newVal);
-			await nextTick();
-			gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
+		if (items.value) {
+			const newVal = arrowNavigation(Object.keys(items.value), props.modelValue, gridRef.value!.containerRef!, event);
+			if (newVal) {
+				filterRef.value?.focus();
+				emit("update:modelValue", newVal);
+				await nextTick();
+				gridRef.value?.containerRef?.querySelector<HTMLElement>(".active")?.focus();
+			}
 		}
 	}
 
@@ -101,15 +119,19 @@
 				tabindex="-1"
 			/>
 
-			<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>
+			<div v-if="!items" class="spinner-border"></div>
 
-			<PrerenderedList
-				:items="items"
-				:value="modelValue"
-				noFocus
-				@click="handleClick($event, close)"
-				ref="gridRef"
-			></PrerenderedList>
+			<template v-else>
+				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>
+
+				<PrerenderedList
+					:items="items"
+					:value="modelValue"
+					noFocus
+					@click="handleClick($event, close)"
+					ref="gridRef"
+				></PrerenderedList>
+			</template>
 		</template>
 	</Picker>
 </template>

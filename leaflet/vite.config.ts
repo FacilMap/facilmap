@@ -33,7 +33,7 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && id !== "virtual:icons" && /* resolved internal modules */ !id.startsWith("/")
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !["virtual:icons", "virtual:icons:keys"].includes(id) && /* resolved internal modules */ !id.startsWith("/")
 		}
 	},
 	resolve: {

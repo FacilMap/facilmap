@@ -4,12 +4,17 @@
 	import Picker from "./picker.vue";
 	import type { Shape } from "facilmap-types";
 	import { arrowNavigation } from "../../utils/ui";
-	import { keyBy, mapValues } from "lodash-es";
 	import PrerenderedList from "./prerendered-list.vue";
 	import { computed, nextTick, ref } from "vue";
 	import type { Validator } from "./validated-form/validated-field.vue";
+	import { computedAsync } from "../../utils/vue";
 
-	const items = mapValues(keyBy(shapeList, (s) => s), (s) => `<img src="${quoteHtml(getMarkerUrl("#000000", 25, undefined, s))}">`);
+	const items = computedAsync(async () => {
+		const list = await Promise.all(shapeList.map(async (s) => (
+			[s, `<img src="${quoteHtml(await getMarkerUrl("#000000", 25, undefined, s))}">`] as const
+		)));
+		return Object.fromEntries(list);
+	});
 </script>
 
 <script setup lang="ts">
@@ -32,7 +37,7 @@
 		}
 	});
 
-	const valueSrc = computed(() => getMarkerUrl("#000000", 21, undefined, props.modelValue));
+	const valueSrc = computedAsync(async () => await getMarkerUrl("#000000", 21, undefined, props.modelValue));
 
 	function validateShape(shape: string) {
 		if (shape && !shapeList.includes(shape)) {
@@ -69,15 +74,19 @@
 		</template>
 
 		<template #default="{ close }">
-			<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No shapes could be found.</div>
+			<div v-if="!items" class="spinner-border"></div>
 
-			<PrerenderedList
-				:items="items"
-				:value="modelValue"
-				@click="handleClick($event, close)"
-				ref="gridRef"
-				noFocus
-			></PrerenderedList>
+			<template v-else>
+				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No shapes could be found.</div>
+
+				<PrerenderedList
+					:items="items"
+					:value="modelValue"
+					@click="handleClick($event, close)"
+					ref="gridRef"
+					noFocus
+				></PrerenderedList>
+			</template>
 		</template>
 	</Picker>
 </template>

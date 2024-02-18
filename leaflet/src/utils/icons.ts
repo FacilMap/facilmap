@@ -1,10 +1,10 @@
 import type { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
-import { icon, type Icon } from "leaflet";
+import { Icon, type IconOptions } from "leaflet";
 import { memoize } from "lodash-es";
-import rawIcons from "virtual:icons";
+import rawIconKeys from "virtual:icons:keys";
 
-export const symbolList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
+export const symbolList = Object.values(rawIconKeys).flat();
 
 export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
 
@@ -139,8 +139,16 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
 	};
 });
 
-export function getSymbolCode(colour: string, size: number, symbol?: Symbol): string {
+/**
+ * Downloads the icons chunk to have them already downloaded the first time the icon code is needed.
+ */
+export async function preloadIcons(): Promise<void> {
+	await import("virtual:icons");
+}
+
+export async function getSymbolCode(colour: string, size: number, symbol?: Symbol): Promise<string> {
 	if(symbol && symbolList.includes(symbol)) {
+		const { default: rawIcons } = await import("virtual:icons");
 		const set = Object.keys(rawIcons).filter((i) => (rawIcons[i][symbol] != null))[0];
 
 		if(set == "osmi") {
@@ -175,29 +183,29 @@ export function getSymbolCode(colour: string, size: number, symbol?: Symbol): st
 	return `<circle style="fill:${colour}" cx="${Math.floor(size / 2)}" cy="${Math.floor(size / 2)}" r="${Math.floor(size / 6)}" />`;
 }
 
-export function getSymbolUrl(colour: string, height: number, symbol?: Symbol): string {
+export async function getSymbolUrl(colour: string, height: number, symbol?: Symbol): Promise<string> {
 	const svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 	`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" viewbox="0 0 24 24" version="1.1">` +
-		getSymbolCode(colour, 24, symbol) +
+		(await getSymbolCode(colour, 24, symbol)) +
 	`</svg>`;
 
 	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): string {
+export async function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): Promise<string> {
 	return `<svg width="${height}" height="${height}" viewbox="0 0 24 24">` +
-		getSymbolCode(colour, 24, symbol) +
+		(await getSymbolCode(colour, 24, symbol)) +
 	`</svg>`;
 }
 
 let idCounter = 0;
 
-export function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export async function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
 	const borderColour = makeTextColour(colour, 0.3);
 	const id = `${idCounter++}`;
 	const colourCode = colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour;
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const symbolCode = getSymbolCode(borderColour, shapeObj.symbolSize, symbol);
+	const symbolCode = await getSymbolCode(borderColour, shapeObj.symbolSize, symbol);
 	const translateX = `${Math.floor(shapeObj.center[0] - shapeObj.symbolSize / 2)}`;
 	const translateY = `${Math.floor(shapeObj.center[1] - shapeObj.symbolSize / 2)}`;
 
@@ -211,36 +219,66 @@ export function getMarkerCode(colour: string, height: number, symbol?: Symbol, s
 	);
 }
 
-export function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export async function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
 	return "data:image/svg+xml,"+encodeURIComponent(
 		`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}" version="1.1">` +
-			getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
+			(await getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight)) +
 		`</svg>`
 	);
 }
 
-export function getMarkerHtml(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export async function getMarkerHtml(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
 	return (
 		`<svg width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}">` +
-			getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
+			(await getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight)) +
 		`</svg>`
 	);
+}
+
+export const TRANSPARENT_IMAGE_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+
+/**
+ * A Leaflet icon that accepts a promise for its URL and will update the image src when the promise is resolved.
+ */
+export class AsyncIcon extends Icon {
+	private _asyncIconUrl: Promise<string>;
+
+	constructor(options: Omit<IconOptions, "iconUrl"> & { iconUrl: string | Promise<string> }) {
+		super({ ...options, iconUrl: TRANSPARENT_IMAGE_URL });
+		this._asyncIconUrl = Promise.resolve(options.iconUrl);
+		this._asyncIconUrl.catch((err) => {
+			console.error("Error loading async icon", err);
+		});
+	}
+
+	override createIcon(oldIcon?: HTMLElement): HTMLElement {
+		const icon = super.createIcon(oldIcon);
+		const prevSrc = icon.getAttribute("src");
+		this._asyncIconUrl.then((url) => {
+			if (icon.getAttribute("src") === prevSrc) {
+				icon.setAttribute("src", url);
+			}
+		});
+		return icon;
+	}
 }
 
 export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
-	return icon({
+	const result = new AsyncIcon({
 		iconUrl: getMarkerUrl(colour, height, symbol, shape, highlight),
 		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
 		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],
 		popupAnchor: [0, -height]
 	});
+
+	return result;
 }
 
 
@@ -256,7 +294,7 @@ export function getSymbolForTags(tags: Record<string, string>): Symbol {
 	const tagWords = Object.entries(tags).flatMap(([k, v]) => (RELEVANT_TAGS.includes(k) ? v.split(/_:/) : []));
 	let result: Symbol = "";
 	let resultMatch: number = 0;
-	for (const icon of Object.keys(rawIcons.osmi)) {
+	for (const icon of rawIconKeys.osmi) {
 		const iconWords = icon.split("_");
 		const match = tagWords.filter((word) => iconWords.includes(word)).length;
 		if (match > resultMatch) {

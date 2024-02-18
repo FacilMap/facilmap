@@ -1,5 +1,6 @@
 <script setup lang="ts">
 	import { getSymbolHtml } from "facilmap-leaflet";
+	import { vHtmlAsync } from "../../utils/vue";
 	import { computed } from "vue";
 
 	const props = withDefaults(defineProps<{
@@ -10,11 +11,11 @@
 		size: "1.35em"
 	});
 
-	const iconCode = computed(() => getSymbolHtml("currentColor", props.size, props.icon));
+	const iconCodeP = computed(() => getSymbolHtml("currentColor", props.size, props.icon));
 </script>
 
 <template>
-	<span class="fm-icon" v-html="iconCode"></span>
+	<span class="fm-icon" v-html-async="iconCodeP"></span>
 </template>
 
 <style lang="scss">

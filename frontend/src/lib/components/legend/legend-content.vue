@@ -5,7 +5,7 @@
 	import { createLinePlaceholderHtml } from "../../utils/ui";
 	import Popover from "../ui/popover.vue";
 	import { computed, reactive, ref } from "vue";
-	import { mapRef } from "../../utils/vue";
+	import { mapRef, vHtmlAsync } from "../../utils/vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
@@ -52,13 +52,13 @@
 		mapContext.value.components.map.setFmFilter(makeTypeFilter(mapContext.value.components.map.fmFilter, typeInfo.typeId, filters));
 	}
 
-	function makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): string {
+	async function makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): Promise<string> {
 		if(typeInfo.type == "line")
 			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50);
 		else if (item.colour || item.shape != null)
-			return getMarkerHtml(item.colour || typeInfo.fixedColour || "rainbow", height, item.symbol ?? typeInfo.fixedSymbol, item.shape ?? typeInfo.fixedShape);
+			return await getMarkerHtml(item.colour || typeInfo.fixedColour || "rainbow", height, item.symbol ?? typeInfo.fixedSymbol, item.shape ?? typeInfo.fixedShape);
 		else
-			return getSymbolHtml("#000000", height, item.symbol);
+			return await getSymbolHtml("#000000", height, item.symbol);
 	}
 
 	function togglePopover(itemKey: string, show: boolean) {
@@ -84,7 +84,7 @@
 					<dt
 						:class="[ 'fm-legend-symbol', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
 						@click="toggleFilter(type, item)"
-						v-html="makeSymbol(type, item)"
+						v-html-async="makeSymbol(type, item)"
 						@mouseenter="togglePopover(item.key, true)"
 						@mouseleave="togglePopover(item.key, false)"
 						:ref="mapRef(itemIconRefs, item.key)"
@@ -116,7 +116,7 @@
 									bright: item.bright
 								}
 							]"
-							v-html="makeSymbol(type, item, 40)"
+							v-html-async="makeSymbol(type, item, 40)"
 						></div>
 						<p>
 							<span :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
