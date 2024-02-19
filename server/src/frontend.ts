@@ -84,6 +84,7 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 	return ejs.render(template, {
 		appName: config.appName,
 		config: getInjectedConfig(),
+		hasCustomCssFile: !!config.customCssFile,
 		...injections,
 		paths,
 		...params
@@ -103,6 +104,7 @@ export async function renderTable(params: {
 	return ejs.render(template, {
 		...injections,
 		appName: config.appName,
+		hasCustomCssFile: !!config.customCssFile,
 		paths,
 		utils,
 		normalizeMarkerName,

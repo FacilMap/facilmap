@@ -77,6 +77,14 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.send(await getOpensearchXml(getBaseUrl(req)));
 	});
 
+	app.get(`${paths.base}custom.css`, async (req, res, next) => {
+		if (config.customCssFile) {
+			res.sendFile(config.customCssFile);
+		} else {
+			next();
+		}
+	});
+
 	app.use("/_app/static/sw.js", (req, res, next) => {
 		res.setHeader("Service-Worker-Allowed", "/");
 		next();

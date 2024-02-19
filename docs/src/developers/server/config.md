@@ -23,9 +23,24 @@ The config of the FacilMap server can be set either by using environment variabl
 | `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key.                                                                                                             |
 | `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key |
 | `HIDE_COMMERCIAL_MAP_LINKS` |    |             | Set to `1` to hide the links to Google/Bing Maps in the “Map style” menu. |
+| `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)).
 
 FacilMap makes use of several third-party services that require you to register (for free) and generate an API key:
 * Mapbox and OpenRouteService are used for calculating routes. Mapbox is used for basic routes, OpenRouteService is used when custom route mode settings are made. If these API keys are not defined, calculating routes will fail.
 * Maxmind provides a free database that maps IP addresses to approximate locations. FacilMap downloads this database to decide the initial map view for users (IP addresses are looked up in FacilMap’s copy of the database, on IP addresses are sent to Maxmind). This API key is optional, if it is not set, the default view will be the whole world.
 * Mapzen is used to look up the elevation info for search results. The API key is optional, if it is not set, no elevation info will be available for search results.
 * Lima Labs is used for nicer and higher resolution map tiles than Mapnik. The API key is optional, if it is not set, Mapnik will be the default map style instead.
+
+## Custom CSS file
+
+To include a custom CSS file in the UI, set the `CUSTOM_CSS_FILE` environment variable to the file path.
+
+When running FacilMap with docker, you can mount your CSS file as a volume into the container, for example with the following docker-compose configuration:
+```yaml
+		environment:
+			CUSTOM_CSS_FILE: /opt/facilmap/custom.css
+		volumes:
+			- ./custom.css:/opt/facilmap/custom.css
+```
+
+Your custom CSS file will be included in the map UI and in the table export. You can distinguish between the two by using the `html.fm-facilmap-map` and `html.fm-facilmap-table` selectors.

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="fm-facilmap-table">
 	<head>
 		<meta charset="utf-8">
 		<title><%=normalizePadName(padData.name)%> – <%=appName%></title>
@@ -25,6 +25,9 @@
 		<style type="text/css">
 <% for (const path of styles) { -%>
 			@import url("<%=paths.base%><%=path%>");
+<% } -%>
+<% if (hasCustomCssFile) { -%>
+			@import url("<%=paths.base%>custom.css");
 <% } -%>
 		</style>
 <% for (const path of scripts) { -%>

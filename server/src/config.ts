@@ -26,6 +26,7 @@ export interface Config {
 	limaLabsToken?: string;
 	/** Hide the "Open this on Google/Bing Maps" links in the map style menu */
 	hideCommercialMapLinks?: boolean;
+	customCssFile?: string;
 }
 
 const config: Config = {
@@ -60,6 +61,8 @@ const config: Config = {
 	limaLabsToken: process.env.LIMA_LABS_TOKEN || "", // Get a token on https://maps.lima-labs.com/,
 
 	hideCommercialMapLinks: process.env.HIDE_COMMERCIAL_MAP_LINKS === "1",
+
+	customCssFile: process.env.CUSTOM_CSS_FILE || undefined,
 };
 
 export default config;
