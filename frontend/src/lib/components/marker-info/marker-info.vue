@@ -35,6 +35,9 @@
 
 	const marker = computed(() => client.value.markers[props.markerId]);
 
+	const typeName = computed(() => client.value.types[marker.value.typeId].name);
+	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'marker').length > 1);
+
 	function move(): void {
 		moveMarker(props.markerId, context, toasts);
 	}
@@ -78,6 +81,10 @@
 		<h2>
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{normalizeMarkerName(marker.name)}}
+			<template v-if="showTypeName">
+				<span style="white-space: pre-wrap">{{" "}}</span>
+				<span class="type-name">({{typeName}})</span>
+			</template>
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt class="pos">Coordinates</dt>
@@ -149,6 +156,16 @@
 
 		.fm-search-box-collapse-point {
 			min-height: 1.5em;
+		}
+
+		&#{&}#{&} h2 {
+			align-items: baseline;
+
+			.type-name {
+				color: #888;
+				font-size: 0.7em;
+				vertical-align: bottom;
+			}
 		}
 	}
 </style>

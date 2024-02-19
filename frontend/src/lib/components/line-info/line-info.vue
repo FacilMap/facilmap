@@ -41,6 +41,9 @@
 
 	const line = computed(() => client.value.lines[props.lineId]);
 
+	const typeName = computed(() => client.value.types[line.value.typeId].name);
+	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'line').length > 1);
+
 	async function deleteLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
 
@@ -134,6 +137,10 @@
 			<h2 class="flex-grow-1">
 				<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 				{{normalizeLineName(line.name)}}
+				<template v-if="showTypeName">
+					<span style="white-space: pre-wrap">{{" "}}</span>
+					<span class="type-name">({{typeName}})</span>
+				</template>
 			</h2>
 			<div v-if="!isMoving" class="btn-toolbar">
 				<button
@@ -242,6 +249,16 @@
 			flex-direction: column;
 			min-height: 1.5em;
 			flex-grow: 1;
+		}
+
+		&#{&}#{&} h2 {
+			align-items: baseline;
+
+			.type-name {
+				color: #888;
+				font-size: 0.7em;
+				vertical-align: bottom;
+			}
 		}
 
 		.fm-elevation-plot {
