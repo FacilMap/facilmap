@@ -21,7 +21,8 @@ The config of the FacilMap server can be set either by using environment variabl
 | `MAPZEN_TOKEN`        |          |             | [Mapzen API key](https://mapzen.com/developers/sign_up).                                                                         |
 | `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup).                                                                   |
 | `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key.                                                                                                             |
-| `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key
+| `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key |
+| `HIDE_COMMERCIAL_MAP_LINKS` |    |             | Set to `1` to hide the links to Google/Bing Maps in the “Map style” menu. |
 
 FacilMap makes use of several third-party services that require you to register (for free) and generate an API key:
 * Mapbox and OpenRouteService are used for calculating routes. Mapbox is used for basic routes, OpenRouteService is used when custom route mode settings are made. If these API keys are not defined, calculating routes will fail.

@@ -90,7 +90,7 @@
 			>Open this on OpenStreetMap</a>
 		</li>
 
-		<li>
+		<li v-if="!context.hideCommercialMapLinks">
 			<a
 				class="dropdown-item"
 				:href="links.google"
@@ -99,7 +99,7 @@
 			>Open this on Google Maps</a>
 		</li>
 
-		<li>
+		<li v-if="!context.hideCommercialMapLinks">
 			<a
 				class="dropdown-item"
 				:href="links.googleSatellite"
@@ -108,7 +108,7 @@
 			>Open this on Google Maps (Satellite)</a>
 		</li>
 
-		<li>
+		<li v-if="!context.hideCommercialMapLinks">
 			<a
 				class="dropdown-item"
 				:href="links.bing"

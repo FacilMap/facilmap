@@ -10,4 +10,5 @@ export function isPromise(object: any): object is Promise<unknown> {
 export interface InjectedConfig {
 	appName: string;
 	limaLabsToken?: string;
+	hideCommercialMapLinks?: boolean;
 }

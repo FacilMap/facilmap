@@ -31,6 +31,7 @@ export interface WritableFacilMapContext {
 	id: number;
 	baseUrl: string;
 	appName: string;
+	hideCommercialMapLinks: boolean;
 	isNarrow: boolean;
 	settings: FacilMapSettings;
 	components: FacilMapComponents;

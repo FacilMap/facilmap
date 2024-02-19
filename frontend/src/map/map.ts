@@ -60,6 +60,7 @@ const Root = defineComponent({
 			serverUrl: baseUrl,
 			padId: padId.value,
 			appName: config.appName,
+			hideCommercialMapLinks: config.hideCommercialMapLinks,
 			settings: {
 				toolbox: toBoolean(queryParams.toolbox, true),
 				search: toBoolean(queryParams.search, true),

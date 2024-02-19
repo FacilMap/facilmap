@@ -62,6 +62,14 @@ async function getScripts(entry: "mapEntry" | "tableEntry"): Promise<Scripts> {
 	}
 }
 
+function getInjectedConfig(): InjectedConfig {
+	return {
+		appName: config.appName,
+		limaLabsToken: config.limaLabsToken,
+		hideCommercialMapLinks: config.hideCommercialMapLinks,
+	};
+}
+
 export interface RenderMapParams {
 	padData: Pick<PadData, "name" | "description" | "searchEngines"> | undefined;
 	isReadOnly: boolean;
@@ -75,10 +83,7 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 
 	return ejs.render(template, {
 		appName: config.appName,
-		config: {
-			appName: config.appName,
-			limaLabsToken: config.limaLabsToken
-		} satisfies InjectedConfig,
+		config: getInjectedConfig(),
 		...injections,
 		paths,
 		...params

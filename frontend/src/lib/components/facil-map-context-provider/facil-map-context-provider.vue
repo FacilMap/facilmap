@@ -39,6 +39,7 @@
 	const props = withDefaults(defineProps<{
 		baseUrl: string;
 		appName?: string;
+		hideCommercialMapLinks?: boolean;
 		settings?: Partial<FacilMapSettings>;
 	}>(), {
 		appName: "FacilMap"
@@ -66,6 +67,7 @@
 		id: idCounter++,
 		baseUrl: toRef(() => props.baseUrl),
 		appName: toRef(() => props.appName),
+		hideCommercialMapLinks: toRef(() => props.hideCommercialMapLinks),
 		isNarrow,
 		settings: readonly(toRef(() => ({
 			toolbox: true,

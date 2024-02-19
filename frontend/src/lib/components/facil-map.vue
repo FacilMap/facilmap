@@ -23,6 +23,7 @@
 		serverUrl: string;
 		padId: string | undefined;
 		appName?: string;
+		hideCommercialMapLinks?: boolean;
 		settings?: Partial<FacilMapSettings>;
 	}>();
 
@@ -68,6 +69,7 @@
 		<FacilMapContextProvider
 			:baseUrl="props.baseUrl"
 			:appName="props.appName"
+			:hideCommercialMapLinks="props.hideCommercialMapLinks"
 			:settings="props.settings"
 			ref="contextRef"
 		>
