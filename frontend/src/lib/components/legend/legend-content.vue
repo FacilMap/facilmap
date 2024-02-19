@@ -139,11 +139,12 @@
 	.fm-legend-content {
 		font-size: 12px;
 
-		.fm-legend1 > div > *:first-child {
+		:is(.fm-legend1,.fm-legend2) > div > *:first-child {
 			margin-top: 0;
+
 		}
 
-		.fm-legend2 > div > *:last-child {
+		:is(.fm-legend1,.fm-legend2) > div > *:last-child {
 			margin-bottom: 0;
 		}
 
