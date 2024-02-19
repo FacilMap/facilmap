@@ -102,7 +102,10 @@
 
 					<tr>
 						<td><code>data.&lt;field&gt;</code> / <code>prop(data, &lt;field&gt;)</code></td>
-						<td>Field values (example: <code>data.Description</code> or <code>prop(data, &quot;Description&quot;)</code></td>
+						<td>
+							Field values (example: <code>data.Description</code> or <code>prop(data, &quot;Description&quot;)</code>).<br />
+							For checkbox fields, the value is <code>0</code> (unchecked) or <code>1</code> (checked).
+						</td>
 						<td><code>lower(data.Description) ~= &quot;camp&quot;</code></td>
 					</tr>
 
