@@ -57,13 +57,15 @@ export default class LinesLayer extends FeatureGroup {
 
 	handleLine = (line: Line): void => {
 		if(this.shouldShowLine(line))
-			this._addLine(this.client.lines[line.id]);
+			this._addLine(line);
+		else
+			this._deleteLine(line);
 	};
 
 	handleLinePoints = (event: LinePointsEvent): void => {
 		const line = this.client.lines[event.id];
 		if(line && this.shouldShowLine(line))
-			this._addLine(this.client.lines[line.id]);
+			this._addLine(line);
 	};
 
 	handleDeleteLine = (data: ObjectWithId): void => {

@@ -49,6 +49,8 @@ export default class MarkersLayer extends MarkerCluster {
 	handleMarker = (marker: Marker): void => {
 		if(this._map.fmFilterFunc(marker, this.client.types[marker.typeId]))
 			this._addMarker(marker);
+		else
+			this._deleteMarker(marker);
 	};
 
 	handleDeleteMarker = (data: ObjectWithId): void => {
