@@ -20,7 +20,10 @@ services:
 		ports:
 			- 8080
 		links:
-			- db
+			- mysql
+		depends_on:
+			mysql:
+				condition: service_healthy
 		environment:
 			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
 			TRUST_PROXY: "true"
@@ -36,14 +39,16 @@ services:
 			MAXMIND_LICENSE_KEY:
 			LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
 		restart: unless-stopped
-	db:
+	mysql:
 		image: mariadb
 		environment:
 			MYSQL_DATABASE: facilmap
 			MYSQL_USER: facilmap
 			MYSQL_PASSWORD: password
 			MYSQL_RANDOM_ROOT_PASSWORD: "true"
-		cmd: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+		command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+		healthcheck:
+			test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
 		restart: unless-stopped
 ```
 
@@ -57,7 +62,10 @@ services:
 		ports:
 			- 8080
 		links:
-			- db
+			- postgres
+		depends_on:
+			postgres:
+				condition: service_healthy
 		environment:
 			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
 			TRUST_PROXY: "true"
@@ -73,12 +81,14 @@ services:
 			MAXMIND_LICENSE_KEY:
 			LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
 		restart: unless-stopped
-	db:
+	postgres:
 		image: postgis/postgis
 		environment:
 			POSTGRES_USER: facilmap
 			POSTGRES_PASSWORD: password
 			POSTGRES_DB: facilmap
+		healthcheck:
+			test: pg_isready -d $$POSTGRES_DB
 		restart: unless-stopped
 ```
 
