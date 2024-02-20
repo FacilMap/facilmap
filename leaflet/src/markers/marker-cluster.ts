@@ -29,14 +29,18 @@ export default class MarkerCluster extends MarkerClusterGroup {
 	handlePadData = (padData: PadData): void => {
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
-		if (padData.clusterMarkers && !isClusterEnabled) {
-			this.options.maxClusterRadius = this._maxClusterRadiusBkp;
-			this._maxClusterRadiusBkp = undefined;
-			(this as any)._generateInitialClusters();
-		} else if (!padData.clusterMarkers && isClusterEnabled) {
-			this._maxClusterRadiusBkp = this.options.maxClusterRadius;
-			this.options.maxClusterRadius = 0;
-			(this as any)._generateInitialClusters();
+		if (!!padData.clusterMarkers !== isClusterEnabled) {
+			if (padData.clusterMarkers) {
+				this.options.maxClusterRadius = this._maxClusterRadiusBkp;
+				this._maxClusterRadiusBkp = undefined;
+			} else {
+				this._maxClusterRadiusBkp = this.options.maxClusterRadius;
+				this.options.maxClusterRadius = 0;
+			}
+
+			const layers = this.getLayers();
+			this.clearLayers();
+			this.addLayers(layers);
 		}
 	}
 
