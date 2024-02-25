@@ -58,6 +58,11 @@ export default class DatabaseRoutes {
 		});
 	}
 
+	async afterConnect(): Promise<void> {
+		// Delete all route points, clients will have to reconnect and recalculate their routes anyways
+		this.RoutePointModel.truncate();
+	}
+
 	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false): Promise<TrackPoint[]> {
 		const cond: WhereOptions = {
 			routeId,
