@@ -99,7 +99,7 @@
 			if(type.type == "marker") {
 				if(!hide.includes("Position")) {
 -%>
-							<td><%=object.lat%>,<%=object.lon%></td>
+							<td><%=utils.round(object.lat, 5)%>,<%=utils.round(object.lon, 5)%></td>
 <%
 				}
 			} else {
