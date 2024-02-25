@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { padIdValidator, type CRU, type PadData } from "facilmap-types";
 	import { computed, ref } from "vue";
-	import { getUniqueId, validateRequired } from "../../utils/utils";
+	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import copyToClipboard from "copy-to-clipboard";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -37,14 +37,7 @@
 
 	const touched = ref(false);
 
-	function validatePadId(id: string) {
-		if (id) {
-			const result = padIdValidator.safeParse(id);
-			if (!result.success) {
-				return result.error.format()._errors.join("\n");
-			}
-		}
-
+	function validateDistinctPadId(id: string) {
 		if (idProps.some((p) => p !== props.idProp && props.padData[p] === id)) {
 			return "The same link cannot be used for different access levels.";
 		}
@@ -60,7 +53,7 @@
 	<ValidatedField
 		class="row mb-3"
 		:value="value"
-		:validators="[validateRequired, validatePadId]"
+		:validators="[validateRequired, getZodValidator(padIdValidator), validateDistinctPadId]"
 	>
 		<template #default="slotProps">
 			<label :for="`${id}-input`" class="col-sm-3 col-form-label">{{props.label}}</label>

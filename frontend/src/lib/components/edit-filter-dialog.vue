@@ -94,7 +94,7 @@
 						<td><code>typeId</code></td>
 						<td>
 							<span v-for="(type, idx) in types" :key="type.id">
-								<span v-if="idx != 0"> / </span> <code>{{type.id}}</code> ({{type.name}})
+								<span v-if="idx != 0"> / </span> <code>{{type.id}}</code> <span class="text-break">({{type.name}})</span>
 							</span>
 						</td>
 						<td><code>typeId == {{types[0]?.id || 1}}</code></td>

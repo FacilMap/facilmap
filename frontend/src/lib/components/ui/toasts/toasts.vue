@@ -172,14 +172,14 @@
 			:ref="mapRef(toastRefs, toast)"
 		>
 			<div
-				class="toast-header bg-opacity-25"
+				class="toast-header bg-opacity-25 text-break"
 				:class="toast.variant && `bg-${toast.variant} bg-opacity-25`"
 			>
 				<strong class="me-auto">{{toast.title}}</strong>
 				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" aria-label="Close"></button>
 			</div>
 			<div
-				class="toast-body bg-opacity-10"
+				class="toast-body bg-opacity-10 text-break"
 				:class="toast.variant && `bg-${toast.variant} bg-opacity-10`"
 			>
 				<div>

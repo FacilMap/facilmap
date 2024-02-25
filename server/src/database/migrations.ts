@@ -80,6 +80,21 @@ export default class DatabaseMigrations {
 			await queryInterface.changeColumn("Pads", "name", this._db.pads.PadModel.getAttributes().name);
 		}
 
+		// Change description type from STRING to TEXT
+		if (padsAttributes.description.type !== "TEXT") {
+			await queryInterface.changeColumn("Pads", "description", this._db.pads.PadModel.getAttributes().description);
+		}
+
+		// Change legend1 type from STRING to TEXT
+		if (padsAttributes.legend1.type !== "TEXT") {
+			await queryInterface.changeColumn("Pads", "legend1", this._db.pads.PadModel.getAttributes().legend1);
+		}
+
+		// Change legend2 type from STRING to TEXT
+		if (padsAttributes.legend2.type !== "TEXT") {
+			await queryInterface.changeColumn("Pads", "legend2", this._db.pads.PadModel.getAttributes().legend2);
+		}
+
 
 		/////////////
 		// Markers //

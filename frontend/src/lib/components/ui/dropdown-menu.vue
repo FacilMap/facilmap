@@ -122,6 +122,7 @@
 	const menuClass = computed((): string[] => [
 		"fm-dropdown-menu-menu",
 		"dropdown-menu",
+		"text-break",
 		...(props.menuClass != null ? [props.menuClass] : []),
 		...(props.isLoading ? ["isLoading"] : [])
 	]);
@@ -211,6 +212,11 @@
 
 	.fm-dropdown-menu-menu {
 		overflow: auto;
+
+		.dropdown-item {
+			// Wrap in connection with the text-break class on the menu
+			white-space: normal;
+		}
 	}
 
 	.fm-dropdown-menu-menu.isLoading.show {

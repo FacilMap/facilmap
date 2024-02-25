@@ -91,6 +91,12 @@
 			}
 		}
 
+		.fm-sidebar.isNarrow {
+			.navbar-nav {
+				max-width: 100%;
+			}
+		}
+
 		.fm-sidebar:not(.isNarrow) {
 			opacity: .5;
 			transition: opacity .7s;

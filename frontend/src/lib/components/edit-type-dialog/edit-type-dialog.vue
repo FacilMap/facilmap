@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { typeValidator, type Field, type ID, type Type, type CRU } from "facilmap-types";
 	import { canControl } from "facilmap-utils";
-	import { getUniqueId, validateRequired } from "../../utils/utils";
+	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
@@ -151,7 +151,7 @@
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
 			<ValidatedField
 				:value="type.name"
-				:validators="[validateRequired]"
+				:validators="[validateRequired, getZodValidator(typeValidator.update.shape.name)]"
 				class="col-sm-9 position-relative"
 			>
 				<template #default="slotProps">

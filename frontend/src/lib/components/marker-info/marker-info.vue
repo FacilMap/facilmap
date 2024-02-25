@@ -78,13 +78,14 @@
 
 <template>
 	<div class="fm-marker-info" v-if="marker">
-		<h2>
+		<h2 class="text-break">
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
-			{{normalizeMarkerName(marker.name)}}
-			<template v-if="showTypeName">
-				<span style="white-space: pre-wrap">{{" "}}</span>
-				<span class="type-name">({{typeName}})</span>
-			</template>
+			<span>
+				{{normalizeMarkerName(marker.name)}}
+				<template v-if="showTypeName">
+					<span class="type-name">({{typeName}})</span>
+				</template>
+			</span>
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt class="pos">Coordinates</dt>
@@ -158,14 +159,9 @@
 			min-height: 1.5em;
 		}
 
-		&#{&}#{&} h2 {
-			align-items: baseline;
-
-			.type-name {
-				color: #888;
-				font-size: 0.7em;
-				vertical-align: bottom;
-			}
+		.type-name {
+			color: #888;
+			font-size: 0.7em;
 		}
 	}
 </style>

@@ -33,6 +33,7 @@ export const forbiddenPadIds = [
 ];
 export const padIdValidator = z.string()
 	.min(1)
+	.max(100)
 	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
 	.refine((val) => !forbiddenPadIds.includes(val), { message: `The following IDs are not allowed: ${forbiddenPadIds.join(", ")}.` });
 export type PadId = z.infer<typeof padIdValidator>;

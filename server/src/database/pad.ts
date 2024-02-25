@@ -42,10 +42,10 @@ export default class DatabasePads {
 			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			description: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+			description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			legend1: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
-			legend2: { type: DataTypes.STRING, allowNull: false, defaultValue: "" }
+			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
+			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" }
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Pad"

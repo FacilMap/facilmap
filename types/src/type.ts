@@ -48,7 +48,7 @@ const rawTypeValidator = cruValidator({
 	type: exceptUpdate(objectTypeValidator),
 	padId: onlyRead(padIdValidator),
 
-	name: optionalUpdate(z.string().trim().min(1)),
+	name: optionalUpdate(z.string().trim().min(1).max(100)),
 
 	defaultColour: optionalCreate(colourValidator), // Default value is applied below
 	colourFixed: optionalCreate(z.boolean(), false),

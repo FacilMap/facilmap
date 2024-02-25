@@ -90,7 +90,7 @@
 					<ul class="list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="view in file.views" class="list-group-item">
-							<span>
+							<span class="text-break">
 								<a href="javascript:" @click="showView(view)">{{view.name}}</a>
 								{{" "}}
 								<span class="result-type">(View)</span>
@@ -119,7 +119,7 @@
 					<ul class="list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="type in file.types" class="list-group-item">
-							<span>
+							<span class="text-break">
 								{{type.name}}
 								{{" "}}
 								<span class="result-type">(Type)</span>

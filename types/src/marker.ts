@@ -7,7 +7,7 @@ export const markerValidator = cruValidator({
 	padId: onlyRead(padIdValidator),
 	...mapValues(pointValidator.shape, optionalUpdate),
 	typeId: optionalUpdate(idValidator),
-	name: optionalCreate(z.string().trim(), ""),
+	name: optionalCreate(z.string().trim().max(100), ""),
 	symbol: optionalCreate(symbolValidator), // defaults to type.defaultSymbol
 	shape: optionalCreate(shapeValidator), // defaults to type.defaultShape
 	colour: optionalCreate(colourValidator), // defaults to type.defaultColour

@@ -3,10 +3,11 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { computed, ref } from "vue";
-	import { getUniqueId, validateRequired } from "../utils/utils";
+	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { round } from "facilmap-utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
+	import { viewValidator } from "facilmap-types";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -73,7 +74,8 @@
 			<ValidatedField
 				:value="name"
 				:validators="[
-					validateRequired
+					validateRequired,
+					getZodValidator(viewValidator.update.shape.name)
 				]"
 				class="col-sm-9 position-relative"
 			>

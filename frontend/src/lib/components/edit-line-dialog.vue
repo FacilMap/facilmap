@@ -1,7 +1,7 @@
 <script setup lang="ts">
-	import type { ID } from "facilmap-types";
+	import { lineValidator, type ID } from "facilmap-types";
 	import { canControl, mergeObject } from "facilmap-utils";
-	import { getUniqueId, validateRequired } from "../utils/utils";
+	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";
@@ -12,6 +12,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import ValidatedField from "./ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -72,9 +73,18 @@
 		<template #default>
 			<div class="row mb-3">
 				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
-				<div class="col-sm-9">
-					<input class="form-control" :id="`${id}-name-input`" v-model="line.name" />
-				</div>
+				<ValidatedField
+					:value="line.name"
+					:validators="[getZodValidator(lineValidator.update.shape.name)]"
+					class="col-sm-9 position-relative"
+				>
+					<template #default="slotProps">
+						<input class="form-control" :id="`${id}-name-input`" v-model="line.name" :ref="slotProps.inputRef" />
+						<div class="invalid-tooltip">
+							{{slotProps.validationError}}
+						</div>
+					</template>
+				</ValidatedField>
 			</div>
 
 			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track'" class="row mb-3">
@@ -112,7 +122,7 @@
 
 			<template v-for="(field, idx) in client.types[line.typeId].fields" :key="field.name">
 				<div class="row mb-3">
-					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label">{{field.name}}</label>
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{field.name}}</label>
 					<div class="col-sm-9">
 						<FieldInput
 							:id="`${id}-${idx}-input`"

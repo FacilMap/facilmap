@@ -23,7 +23,7 @@ export const padDataValidator = cruValidator({
 		update: padIdValidator.optional()
 	},
 
-	name: optionalCreate(z.string(), ""),
+	name: optionalCreate(z.string().max(100), ""),
 	searchEngines: optionalCreate(z.boolean(), false),
 	description: optionalCreate(z.string(), ""),
 	clusterMarkers: optionalCreate(z.boolean(), false),

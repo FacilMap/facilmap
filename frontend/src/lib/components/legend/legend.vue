@@ -74,6 +74,7 @@
 		position: absolute;
 		right: 10px;
 		bottom: 25px;
+		max-width: 20rem;
 		z-index: 800;
 		transform-origin: bottom right;
 		opacity: .7;

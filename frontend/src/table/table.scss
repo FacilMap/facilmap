@@ -50,11 +50,17 @@ h2[aria-expanded=true] svg {
 table {
 	table-layout: fixed;
 	width: auto !important;
+	max-width: 100%;
 }
 
 th,td {
 	box-sizing: content-box !important;
 	overflow: hidden;
+}
+
+h1,h2,th,td {
+	word-wrap: break-word;
+	word-break: break-word;
 }
 
 .glyphicon:before {

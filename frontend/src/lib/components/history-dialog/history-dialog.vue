@@ -118,7 +118,7 @@
 			<tbody>
 				<tr v-for="entry in history" :key="entry.id">
 					<td class="align-middle">{{entry.time}}</td>
-					<td class="align-middle">
+					<td class="align-middle text-break">
 						{{entry.labels.description}}
 					</td>
 					<td class="td-buttons">
@@ -148,9 +148,9 @@
 								</thead>
 								<tbody>
 									<tr v-for="diffItem in entry.labels.diff" :key="diffItem.index">
-										<td><code>{{diffItem.index}}</code></td>
-										<td>{{diffItem.before}}</td>
-										<td>{{diffItem.after}}</td>
+										<td class="text-break"><code>{{diffItem.index}}</code></td>
+										<td class="text-break">{{diffItem.before}}</td>
+										<td class="text-break">{{diffItem.after}}</td>
 									</tr>
 								</tbody>
 							</table>

@@ -179,7 +179,7 @@
 							:class="{ active: activeResults.includes(result) }"
 							v-scroll-into-view="activeResults.includes(result)"
 						>
-							<span>
+							<span class="text-break">
 								<a href="javascript:" @click="handleClick(result, $event)">{{isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name)}}</a>
 								{{" "}}
 								<span class="result-type">({{client.types[result.typeId].name}})</span>
@@ -199,7 +199,7 @@
 							:class="{ active: activeResults.includes(result) }"
 							v-scroll-into-view="activeResults.includes(result)"
 						>
-							<span>
+							<span class="text-break">
 								<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
 								{{" "}}
 								<span class="result-type" v-if="result.type">({{result.type}})</span>

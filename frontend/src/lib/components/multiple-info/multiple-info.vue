@@ -107,7 +107,7 @@
 			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
 				<ul class="list-group fm-search-box-collapse-point">
 					<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
-						<span>
+						<span class="text-break">
 							<a href="javascript:" @click="emit('click-object', object, $event)">{{isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name)}}</a>
 							{{" "}}
 							<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>

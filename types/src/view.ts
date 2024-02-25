@@ -6,7 +6,7 @@ export const viewValidator = cruValidator({
 	id: exceptCreate(idValidator),
 	padId: onlyRead(padIdValidator),
 
-	name: optionalUpdate(z.string().trim()),
+	name: optionalUpdate(z.string().trim().min(1).max(100)),
 	...mapValues(bboxValidator.shape, optionalUpdate),
 	baseLayer: optionalUpdate(layerValidator),
 	layers: optionalUpdate(z.array(layerValidator)),

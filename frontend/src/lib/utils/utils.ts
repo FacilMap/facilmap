@@ -1,5 +1,6 @@
 import type { Emitter } from "mitt";
 import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vue";
+import type * as z from "zod";
 
 // https://stackoverflow.com/a/62085569/242365
 export type DistributedKeyOf<T> = T extends any ? keyof T : never;
@@ -88,6 +89,17 @@ export function validateRequired(val: any): string | undefined {
 	if (val == null || val === "") {
 		return "Must not be empty.";
 	}
+}
+
+export function getZodValidator(validator: z.ZodType): (val: any) => string | undefined {
+	return (val) => {
+		if (val) {
+			const result = validator.safeParse(val);
+			if (!result.success) {
+				return result.error.format()._errors.join("\n");
+			}
+		}
+	};
 }
 
 /**

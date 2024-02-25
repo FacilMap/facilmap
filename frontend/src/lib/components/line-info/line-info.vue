@@ -134,13 +134,14 @@
 <template>
 	<div class="fm-line-info" v-if="line">
 		<div class="d-flex align-items-center">
-			<h2 class="flex-grow-1">
+			<h2 class="flex-grow-1 text-break">
 				<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
-				{{normalizeLineName(line.name)}}
-				<template v-if="showTypeName">
-					<span style="white-space: pre-wrap">{{" "}}</span>
-					<span class="type-name">({{typeName}})</span>
-				</template>
+				<span>
+					{{normalizeLineName(line.name)}}
+					<template v-if="showTypeName">
+						<span class="type-name">({{typeName}})</span>
+					</template>
+				</span>
 			</h2>
 			<div v-if="!isMoving" class="btn-toolbar">
 				<button
@@ -251,14 +252,9 @@
 			flex-grow: 1;
 		}
 
-		&#{&}#{&} h2 {
-			align-items: baseline;
-
-			.type-name {
-				color: #888;
-				font-size: 0.7em;
-				vertical-align: bottom;
-			}
+		.type-name {
+			color: #888;
+			font-size: 0.7em;
 		}
 
 		.fm-elevation-plot {

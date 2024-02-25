@@ -58,19 +58,19 @@
 
 <template>
 	<div class="fm-search-result-info" v-if="result">
-		<h2>
+		<h2 class="text-break">
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
 			{{result.short_name}}
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="result.type">
 				<dt>Type</dt>
-				<dd>{{result.type}}</dd>
+				<dd class="text-break">{{result.type}}</dd>
 			</template>
 
 			<template v-if="result.address">
 				<dt>Address</dt>
-				<dd>{{result.address}}</dd>
+				<dd class="text-break">{{result.address}}</dd>
 			</template>
 
 			<template v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">
@@ -85,7 +85,7 @@
 
 			<template v-for="(value, key) in result.extratags" :key="key">
 				<dt>{{key}}</dt>
-				<dd v-html="renderOsmTag(key, value)"></dd>
+				<dd class="text-break" v-html="renderOsmTag(key, value)"></dd>
 			</template>
 		</dl>
 

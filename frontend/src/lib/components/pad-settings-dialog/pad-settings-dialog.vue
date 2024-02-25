@@ -1,14 +1,15 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import type { CRU, PadData } from "facilmap-types";
+	import { padDataValidator, type CRU, type PadData } from "facilmap-types";
 	import { generateRandomPadId, mergeObject } from "facilmap-utils";
-	import { getUniqueId } from "../../utils/utils";
+	import { getUniqueId, getZodValidator } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import PadIdEdit from "./pad-id-edit.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import ValidatedField from "../ui/validated-form/validated-field.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -134,17 +135,27 @@
 				description="When opening the map through this link, markers, lines and views can be seen, but nothing can be changed."
 			></PadIdEdit>
 
-			<div class="row mb-3">
-				<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">Map name</label>
-				<div class="col-sm-9">
-					<input
-						:id="`${id}-pad-name-input`"
-						class="form-control"
-						type="text"
-						v-model="padData.name"
-					/>
-				</div>
-			</div>
+			<ValidatedField
+				class="row mb-3"
+				:value="padData.name"
+				:validators="[getZodValidator(padDataValidator.update.shape.name)]"
+			>
+				<template #default="slotProps">
+					<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">Map name</label>
+					<div class="col-sm-9 position-relative">
+						<input
+							:id="`${id}-pad-name-input`"
+							class="form-control"
+							type="text"
+							v-model="padData.name"
+							:ref="slotProps.inputRef"
+						/>
+						<div class="invalid-tooltip">
+							{{slotProps.validationError}}
+						</div>
+					</div>
+				</template>
+			</ValidatedField>
 
 			<div class="row mb-3">
 				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">Search engines</label>

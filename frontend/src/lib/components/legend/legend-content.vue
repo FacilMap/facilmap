@@ -90,6 +90,7 @@
 						:ref="mapRef(itemIconRefs, item.key)"
 					></dt>
 					<dd
+						class="text-break"
 						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
 						@click="toggleFilter(type, item)"
 						:style="item.strikethrough ? {'text-decoration': 'line-through'} : {}"
@@ -119,7 +120,7 @@
 							v-html-async="makeSymbol(type, item, 40)"
 						></div>
 						<p>
-							<span :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
+							<span class="text-break" :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
 							<br>
 							<small><em>Click to show/hide objects of this type.</em></small>
 						</p>
@@ -173,10 +174,6 @@
 				cursor: pointer;
 			}
 
-			dd {
-				height: 18px;
-			}
-
 			dt.fm-marker {
 				grid-column: 1 / 2;
 			}
@@ -214,6 +211,7 @@
 			display: flex;
 			align-items: center;
 			width: max-content;
+			max-width: 100%;
 
 			p {
 				margin: 0 0 0 0.5em;

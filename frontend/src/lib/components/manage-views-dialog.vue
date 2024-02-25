@@ -75,6 +75,7 @@
 			<tbody>
 				<tr v-for="view in client.views" :key="view.id">
 					<td
+						class="text-break"
 						:class="{
 							'font-weight-bold': client.padData?.defaultView && view.id == client.padData.defaultView.id
 						}"

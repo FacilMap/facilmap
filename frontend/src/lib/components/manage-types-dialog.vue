@@ -62,7 +62,7 @@
 			</thead>
 			<tbody>
 				<tr v-for="type in client.types" :key="type.id">
-					<td>{{type.name}}</td>
+					<td class="text-break">{{type.name}}</td>
 					<td>{{type.type}}</td>
 					<td class="td-buttons">
 						<button
