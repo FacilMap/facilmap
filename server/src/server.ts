@@ -16,10 +16,6 @@ Object.defineProperty(Error.prototype, "toJSON", {
 	configurable: true
 });
 
-process.on('unhandledRejection', (reason) => {
-	console.trace("Unhandled rejection", reason);
-});
-
 export async function startServer(conf = config): Promise<void> {
 	const database = new Database(conf.db);
 
