@@ -13,6 +13,7 @@ export interface MetaProperties {
 	hasLegendOption: "1";
 	hasBboxes: "1";
 	untitledMigrationCompleted: "1";
+	fieldsNullMigrationCompleted: "1";
 }
 
 export default class DatabaseMeta {

@@ -260,7 +260,7 @@
 							tag="td"
 							class="field position-relative"
 							:value="option.value"
-							:validators="[validateRequired, validateOptionValue]"
+							:validators="[validateOptionValue]"
 						>
 							<template #default="slotProps">
 								<input

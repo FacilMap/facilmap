@@ -94,7 +94,6 @@ export async function retry<R>(callback: () => R | Promise<R>): Promise<R> {
 			return await callback();
 		} catch (err: any) {
 			if (i >= 10) {
-				console.log('throw', i);
 				throw err;
 			} else {
 				await sleep(10);

@@ -24,6 +24,7 @@ export default class DatabaseMigrations {
 		await this._bboxMigration();
 		await this._spatialMigration();
 		await this._untitledMigration();
+		await this._fieldsNullMigration();
 	}
 
 
@@ -446,6 +447,46 @@ export default class DatabaseMigrations {
 		await this._db.pads.PadModel.update({ name: "" }, { where: { name: "New FacilMap" } });
 
 		await this._db.meta.setMeta("untitledMigrationCompleted", "1");
+	}
+
+	/** Remove various null values from type fields. */
+	async _fieldsNullMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("fieldsNullMigrationCompleted") == "1")
+			return;
+
+		const allTypes = await this._db.types.TypeModel.findAll({
+			attributes: ["id", "fields"]
+		});
+
+		for (const type of allTypes) {
+			let fields = type.fields;
+			let fieldsChanged = false;
+			for (const field of fields) {
+				if (field.default === null) {
+					delete field.default;
+					fieldsChanged = true;
+				}
+
+				for (const option of field.options ?? []) {
+					if (option.size === null) {
+						option.size = undefined;
+						fieldsChanged = true;
+					}
+
+					if (option.size != null && option.size < 15) {
+						option.size = 15;
+						fieldsChanged = true;
+					}
+				}
+			}
+			if (fieldsChanged) {
+				await type.update({
+					fields
+				});
+			}
+		}
+
+		await this._db.meta.setMeta("fieldsNullMigrationCompleted", "1");
 	}
 
 }

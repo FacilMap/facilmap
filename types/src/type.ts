@@ -9,7 +9,7 @@ export const fieldTypeValidator = z.enum(["textarea", "dropdown", "checkbox", "i
 export type FieldType = z.infer<typeof fieldTypeValidator>;
 
 export const fieldOptionValidator = cruValidator({
-	value: z.string().trim().min(1),
+	value: z.string().trim(),
 	colour: colourValidator.optional(),
 	size: sizeValidator.optional(),
 	symbol: symbolValidator.optional(),
