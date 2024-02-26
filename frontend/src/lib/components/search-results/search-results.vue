@@ -162,14 +162,14 @@
 		<div class="carousel slide fm-flex-carousel" ref="carouselRef">
 			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
 				<div class="fm-search-box-collapse-point">
+					<slot name="before"></slot>
+
 					<div
 						v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)"
 						class="alert alert-danger"
 					>
 						No results have been found.
 					</div>
-
-					<slot name="before"></slot>
 
 					<ul v-if="mapResults && mapResults.length > 0" class="list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->

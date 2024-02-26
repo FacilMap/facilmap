@@ -82,16 +82,20 @@
 				...await parseFiles(loadedFiles),
 				title: (fileList.length == 1 && fileList[0].name) || pluralize("file", fileList.length, true)
 			};
-			if (result.features.length == 0 && result.errors)
+			const hasAnyItems = result.features.length > 0 || Object.keys(result.types).length > 0 || Object.keys(result.views).length > 0;
+			if (!hasAnyItems && result.errors)
 				toasts.showErrorToast(`fm${context.id}-import-error`, "Parsing error", `The selected ${pluralize("file", fileList.length)} could not be parsed.`);
-			else if (result.features.length == 0)
+			else if (!hasAnyItems)
 				toasts.showErrorToast(`fm${context.id}-import-error`, "No geometries", `The selected ${pluralize("file", fileList.length)} did not contain any geometries.`);
 			else {
 				if (result.errors)
 					toasts.showErrorToast(`fm${context.id}-import-error`, "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
 
 				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.value.components.map));
-				mapContext.value.components.map.flyToBounds(layer.getBounds());
+				if (result.features.length > 0) {
+					mapContext.value.components.map.flyToBounds(layer.getBounds());
+				}
+
 				mapContext.value.components.selectionHandler.addSearchResultLayer(layer);
 
 				files.value.push(result);
