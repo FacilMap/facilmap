@@ -1,4 +1,4 @@
-import { bboxValidator, colourValidator, idValidator, padIdValidator, pointValidator, routeModeValidator, zoomLevelValidator } from "./base.js";
+import { bboxValidator, colourValidator, idValidator, padIdValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator } from "./base.js";
 import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, exceptCreate, optionalUpdate, mapValues, exceptRead } from "./cru";
 import * as z from "zod";
 
@@ -21,6 +21,7 @@ export const lineValidator = cruValidator({
 	mode: optionalCreate(routeModeValidator), // defaults to type.defaultMode
 	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
 	width: optionalCreate(z.number()), // defaults to type.defaultWidth
+	stroke: optionalCreate(strokeValidator), // defaults to type.defaultStroke
 	data: optionalCreate(z.record(z.string())),
 	extraInfo: optionalCreate(extraInfoValidator.or(z.null()), null),
 

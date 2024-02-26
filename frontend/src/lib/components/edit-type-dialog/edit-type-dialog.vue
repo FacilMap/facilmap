@@ -20,6 +20,7 @@
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
+	import StrokePicker from "../ui/stroke-picker.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -317,6 +318,33 @@
 										v-model="type.widthFixed"
 									/>
 									<label :for="`${id}-default-width-fixed`" class="form-check-label">Fixed</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</template>
+
+			<template v-if="resolvedCanControl.includes('stroke')">
+				<div class="row mb-3">
+					<label :for="`${id}-default-stroke-input`" class="col-sm-3 col-form-label">Default stroke</label>
+					<div class="col-sm-9">
+						<div class="row align-items-center">
+							<div class="col-sm-9">
+								<StrokePicker
+									:id="`${id}-default-stroke-input`"
+									v-model="type.defaultStroke"
+								></StrokePicker>
+							</div>
+							<div class="col-sm-3">
+								<div class="form-check fm-form-check-with-label">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										:id="`${id}-default-stroke-fixed`"
+										v-model="type.strokeFixed"
+									/>
+									<label :for="`${id}-default-stroke-fixed`" class="form-check-label">Fixed</label>
 								</div>
 							</div>
 						</div>

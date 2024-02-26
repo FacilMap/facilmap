@@ -1,5 +1,5 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -15,11 +15,12 @@ export type LineWithTrackPoints = Line & {
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
 	padId: ForeignKey<PadModel["id"]>;
-	routePoints: string;
+	routePoints: Point[];
 	typeId: ForeignKey<TypeModel["id"]>;
-	mode: string;
-	colour: string;
-	width: number;
+	mode: RouteMode;
+	colour: Colour;
+	width: Width;
+	stroke: Stroke;
 	name: string;
 	distance: CreationOptional<number | null>;
 	time: CreationOptional<number | null>;
@@ -29,7 +30,7 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	bottom: Latitude;
 	left: Longitude;
 	right: Longitude;
-	extraInfo: CreationOptional<string | null>;
+	extraInfo: CreationOptional<ExtraInfo | null>;
 
 	getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
 	toJSON: () => Line;
@@ -64,7 +65,7 @@ export default class DatabaseLines {
 				type: DataTypes.TEXT,
 				allowNull: false,
 				get: function(this: LineModel) {
-					const routePoints = this.getDataValue("routePoints");
+					const routePoints = this.getDataValue("routePoints") as any as string; // https://github.com/sequelize/sequelize/issues/11558
 					return routePoints != null ? JSON.parse(routePoints) : routePoints;
 				},
 				set: function(this: LineModel, v: Point[]) {
@@ -72,7 +73,7 @@ export default class DatabaseLines {
 						v[i].lat = Number(v[i].lat.toFixed(6));
 						v[i].lon = Number(v[i].lon.toFixed(6));
 					}
-					this.setDataValue("routePoints", JSON.stringify(v));
+					this.setDataValue("routePoints", JSON.stringify(v) as any);
 				},
 				validate: {
 					minTwo: function(val: string) {
@@ -87,6 +88,7 @@ export default class DatabaseLines {
 			mode : { type: DataTypes.TEXT, allowNull: false },
 			colour : { type: DataTypes.STRING(6), allowNull: false },
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			stroke: { type: DataTypes.TEXT, allowNull: false },
 			name : { type: DataTypes.TEXT, allowNull: false },
 			distance : { type: DataTypes.FLOAT(24, 2).UNSIGNED, allowNull: true },
 			time : {
@@ -121,11 +123,11 @@ export default class DatabaseLines {
 				type: DataTypes.TEXT,
 				allowNull: true,
 				get: function(this: LineModel) {
-					const extraInfo = this.getDataValue("extraInfo");
+					const extraInfo = this.getDataValue("extraInfo") as any as string; // https://github.com/sequelize/sequelize/issues/11558
 					return extraInfo != null ? JSON.parse(extraInfo) : extraInfo;
 				},
 				set: function(this: LineModel, v: ExtraInfo) {
-					this.setDataValue("extraInfo", JSON.stringify(v));
+					this.setDataValue("extraInfo", JSON.stringify(v) as any);
 				}
 			}
 		}, {
@@ -205,6 +207,8 @@ export default class DatabaseLines {
 			lineTemplate.colour = type.defaultColour;
 		if(type.defaultWidth)
 			lineTemplate.width = type.defaultWidth;
+		if(type.defaultStroke != null)
+			lineTemplate.stroke = type.defaultStroke;
 		if(type.defaultMode)
 			lineTemplate.mode = type.defaultMode;
 
@@ -227,6 +231,7 @@ export default class DatabaseLines {
 			...data,
 			colour: data.colour ?? type.defaultColour,
 			width: data.width ?? type.defaultWidth,
+			stroke: data.stroke ?? type.defaultStroke,
 			mode: data.mode ?? type.defaultMode
 		};
 

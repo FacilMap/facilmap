@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import type { CRU, Field, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
 	import { canControl, mergeObject } from "facilmap-utils";
-	import { getUniqueId, validateRequired } from "../../utils/utils";
+	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourPicker from "../ui/colour-picker.vue";
 	import Draggable from "vuedraggable";
@@ -16,6 +16,7 @@
 	import { showConfirm } from "../ui/alert.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
+	import StrokePicker from "../ui/stroke-picker.vue";
 
 	function getControlNumber(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: FieldUpdate): number {
 		return [
@@ -26,7 +27,8 @@
 				field.controlShape
 			] : []),
 			...(type.type == "line" ? [
-				field.controlWidth
+				field.controlWidth,
+				field.controlStroke
 			] : [])
 		].filter((v) => v).length;
 	}
@@ -229,6 +231,22 @@
 						Control {{type.type}} width
 					</label>
 				</div>
+
+				<div v-if="type.type == 'line'" class="form-check">
+					<input
+						:id="`${id}-control-stroke`"
+						class="form-check-input"
+						type="checkbox"
+						v-model="fieldValue.controlStroke"
+						:disabled="!resolvedCanControl.includes('stroke')"
+					/>
+					<label
+						class="form-check-label"
+						:for="`${id}-control-stroke`"
+					>
+						Control {{type.type}} stroke
+					</label>
+				</div>
 			</div>
 		</div>
 		<table v-if="fieldValue.type != 'checkbox' || controlNumber > 0" class="table table-striped table-hover">
@@ -241,6 +259,7 @@
 					<th v-if="fieldValue.controlSymbol">Icon</th>
 					<th v-if="fieldValue.controlShape">Shape</th>
 					<th v-if="fieldValue.controlWidth">Width</th>
+					<th v-if="fieldValue.controlStroke">Stroke</th>
 					<th v-if="fieldValue.type != 'checkbox'"></th>
 					<th v-if="fieldValue.type != 'checkbox'" class="move"></th>
 				</tr>
@@ -304,6 +323,12 @@
 								@update:modelValue="option.width = $event"
 								class="fm-custom-range-with-label"
 							></WidthPicker>
+						</td>
+						<td v-if="fieldValue.controlStroke" class="field">
+							<StrokePicker
+								:modelValue="option.stroke ?? type.defaultStroke"
+								@update:modelValue="option.stroke = $event"
+							></StrokePicker>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
 							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>

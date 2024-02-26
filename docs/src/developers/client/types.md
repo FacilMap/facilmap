@@ -45,6 +45,7 @@ separately through `linePoints` events.
 * `mode` (string): The routing mode, an empty string for no routing, or `car`, `bicycle`, `pedestrian`, or `track`
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
+* `stroke` (string): The stroke style of the line, an empty string for solid or `dashed` or `dotted`.
 * `name` (string): The name of the line
 * `distance` (number): The distance of the line in kilometers (set by the server)
 * `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
@@ -107,20 +108,20 @@ their `idx` property.
 * `id` (number): The ID of this type
 * `name` (string): The name of this type
 * `type` (string): `marker` or `line`
-* `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultMode` (string/number): Default values for the
+* `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
   different object properties
-* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `modeFixed` (boolean): Whether those values are fixed and
+* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
 	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
 	* `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
-	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
+	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
 	* `default` (string/boolean): The default value of this field
 	* `options` ([object]): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
 		* `value` (string): The value of this option.
 		* `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods.md#edittype-data)), specify the former value here
-		* `colour`, `size`, `shape`, `symbol`, `width` (string/number): The property value if this field controls that property
+		* `colour`, `size`, `shape`, `symbol`, `width`, `stroke` (string/number): The property value if this field controls that property
 
 ## SearchResult
 

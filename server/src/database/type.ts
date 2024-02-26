@@ -1,5 +1,5 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import { typeValidator, type CRU, type Field, type ID, type PadId, type Type } from "facilmap-types";
+import { typeValidator, type CRU, type Field, type ID, type PadId, type Type, type Colour, type Size, type Symbol, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { PadModel } from "./pad.js";
@@ -9,17 +9,19 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	name: string;
 	type: "marker" | "line";
 	padId: ForeignKey<PadModel["id"]>;
-	defaultColour: string;
+	defaultColour: Colour;
 	colourFixed: boolean;
-	defaultSize: number;
+	defaultSize: Size;
 	sizeFixed: boolean;
-	defaultSymbol: string;
+	defaultSymbol: Symbol;
 	symbolFixed: boolean;
-	defaultShape: string;
+	defaultShape: Shape;
 	shapeFixed: boolean;
-	defaultWidth: number;
+	defaultWidth: Width;
 	widthFixed: boolean;
-	defaultMode: string;
+	defaultStroke: Stroke;
+	strokeFixed: boolean;
+	defaultMode: RouteMode;
 	modeFixed: boolean;
 	showInLegend: boolean;
 	fields: Field[];
@@ -54,6 +56,8 @@ export default class DatabaseTypes {
 			shapeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultWidth: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			widthFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultStroke: { type: DataTypes.TEXT, allowNull: false },
+			strokeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultMode: { type: DataTypes.TEXT, allowNull: false },
 			modeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			showInLegend: { type: DataTypes.BOOLEAN, allowNull: false },
@@ -62,7 +66,7 @@ export default class DatabaseTypes {
 				type: DataTypes.TEXT,
 				allowNull: false,
 				get: function(this: TypeModel) {
-					const fields = this.getDataValue("fields") as any as string;
+					const fields = this.getDataValue("fields") as any as string; // https://github.com/sequelize/sequelize/issues/11558
 					return fields == null ? [] : JSON.parse(fields);
 				},
 				set: function(this: TypeModel, v: Field[]) {

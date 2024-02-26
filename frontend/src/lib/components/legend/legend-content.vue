@@ -54,9 +54,9 @@
 
 	async function makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): Promise<string> {
 		if(typeInfo.type == "line")
-			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50);
+			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50, item.stroke ?? "");
 		else if (item.colour || item.shape != null)
-			return await getMarkerHtml(item.colour || typeInfo.fixedColour || "rainbow", height, item.symbol ?? typeInfo.fixedSymbol, item.shape ?? typeInfo.fixedShape);
+			return await getMarkerHtml(item.colour || "rainbow", height, item.symbol, item.shape);
 		else
 			return await getSymbolHtml("#000000", height, item.symbol);
 	}
@@ -216,16 +216,6 @@
 			p {
 				margin: 0 0 0 0.5em;
 			}
-		}
-	}
-
-	.fm-legend-symbol {
-		&.fm-line > svg {
-			border-radius: 1000px;
-		}
-
-		&.fm-line.bright > svg {
-			box-shadow: 0 0 2px #000;
 		}
 	}
 </style>

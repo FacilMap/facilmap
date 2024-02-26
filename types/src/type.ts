@@ -1,4 +1,4 @@
-import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, symbolValidator, widthValidator } from "./base.js";
+import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, symbolValidator, widthValidator } from "./base.js";
 import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptCreate, exceptUpdate, optionalUpdate, onlyRead } from "./cru";
 import * as z from "zod";
 
@@ -15,6 +15,7 @@ export const fieldOptionValidator = cruValidator({
 	symbol: symbolValidator.optional(),
 	shape: shapeValidator.optional(),
 	width: widthValidator.optional(),
+	stroke: strokeValidator.optional(),
 
 	oldValue: onlyUpdate(z.string().optional())
 });
@@ -24,12 +25,13 @@ export type FieldOptionUpdate = FieldOption<CRU.UPDATE>;
 export const fieldValidator = cruValidator({
 	name: z.string().trim().min(1),
 	type: fieldTypeValidator,
-	controlColour: z.boolean().optional(),
 	default: z.string().optional(),
+	controlColour: z.boolean().optional(),
 	controlSize: z.boolean().optional(),
 	controlSymbol: z.boolean().optional(),
 	controlShape: z.boolean().optional(),
 	controlWidth: z.boolean().optional(),
+	controlStroke: z.boolean().optional(),
 
 	options: {
 		read: z.array(fieldOptionValidator.read).optional(),
@@ -60,6 +62,8 @@ const rawTypeValidator = cruValidator({
 	shapeFixed: optionalCreate(z.boolean(), false),
 	defaultWidth: optionalCreate(widthValidator, 4),
 	widthFixed: optionalCreate(z.boolean(), false),
+	defaultStroke: optionalCreate(strokeValidator, ""),
+	strokeFixed: optionalCreate(z.boolean(), false),
 	defaultMode: optionalCreate(routeModeValidator, ""),
 	modeFixed: optionalCreate(z.boolean(), false),
 	showInLegend: optionalCreate(z.boolean(), false),

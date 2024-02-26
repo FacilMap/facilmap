@@ -89,6 +89,7 @@ function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 			mode: line.mode,
 			colour: line.colour,
 			width: line.width,
+			stroke: line.stroke,
 			distance: line.distance,
 			time: line.time,
 			data: line.data,

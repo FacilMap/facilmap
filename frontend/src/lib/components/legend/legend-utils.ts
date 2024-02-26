@@ -1,6 +1,6 @@
-import type { ID, Shape, Symbol, Type } from "facilmap-types";
+import type { ID, Shape, Stroke, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
-import { getBrightness } from "facilmap-utils";
+import { isBright } from "facilmap-utils";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -11,9 +11,6 @@ export interface LegendType {
 	name: string;
 	items: LegendItem[];
 	filtered: boolean;
-	fixedColour?: string;
-	fixedShape?: Shape;
-	fixedSymbol?: Symbol;
 }
 
 export interface LegendItem {
@@ -28,6 +25,7 @@ export interface LegendItem {
 	symbol?: Symbol;
 	shape?: Shape;
 	width?: number;
+	stroke?: Stroke;
 	bright?: boolean;
 }
 
@@ -45,7 +43,13 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 		const items: LegendItem[] = [ ];
 		const fields: Record<string, string[]> = Object.create(null);
 
-		if (type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed)) {
+		if (
+			type.colourFixed ||
+			(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) ||
+			(type.type == "marker" && type.shapeFixed) ||
+			(type.type == "line" && type.widthFixed) ||
+			(type.type === "line" && type.strokeFixed)
+		) {
 			const item: LegendItem = {
 				key: `legend-item-${type.id}`,
 				value: type.name,
@@ -53,23 +57,39 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 				filtered: true
 			};
 
-			if(type.colourFixed)
+			if (type.colourFixed) {
 				item.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
-			if(type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1))
+			}
+			if (type.type == "marker" && type.symbolFixed && type.defaultSymbol && (symbolList.includes(type.defaultSymbol) || type.defaultSymbol.length == 1)) {
 				item.symbol = type.defaultSymbol;
-			if(type.type == "marker" && type.shapeFixed)
+			}
+			if (type.type == "marker" && type.shapeFixed) {
 				item.shape = type.defaultShape ?? "";
-			if(type.type == "line" && type.widthFixed)
+			}
+			if (type.type == "line" && type.widthFixed) {
 				item.width = type.defaultWidth ?? undefined;
+			}
+			if (type.type === "line" && type.strokeFixed) {
+				item.stroke = type.defaultStroke;
+			}
 
 			if (item.colour)
-				item.bright = getBrightness(item.colour) > 0.7;
+				item.bright = isBright(item.colour);
 
 			items.push(item);
 		}
 
 		for (const field of type.fields) {
-			if ((field.type != "dropdown" && field.type != "checkbox") || (!field.controlColour && (type.type != "marker" || !field.controlSymbol) && (type.type != "marker" || !field.controlShape) && (type.type != "line" || !field.controlWidth)))
+			if (
+				(field.type != "dropdown" && field.type != "checkbox") ||
+				(
+					!field.controlColour &&
+					!(type.type === "marker" && field.controlSymbol) &&
+					!(type.type === "marker" && field.controlShape) &&
+					!(type.type === "line" && field.controlWidth) &&
+					!(type.type === "line" && field.controlStroke)
+				)
+			)
 				continue;
 
 			fields[field.name] = [ ];
@@ -94,17 +114,41 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 					}
 				}
 
-				if(field.controlColour)
+				if (field.controlColour) {
 					item.colour = `#${option.colour}`;
-				if(type.type == "marker" && field.controlSymbol)
-					item.symbol = option.symbol;
-				if(type.type == "marker" && field.controlShape)
-					item.shape = option.shape;
-				if(type.type == "line" && field.controlWidth)
-					item.width = option.width;
+				} else if (type.colourFixed) {
+					item.colour = `#${type.defaultColour}`;
+				}
 
-				if (item.colour)
-					item.bright = getBrightness(item.colour) > 0.7;
+				if (type.type == "marker") {
+					if (field.controlSymbol) {
+						item.symbol = option.symbol;
+					} else if (type.symbolFixed) {
+						item.symbol = type.defaultSymbol;
+					}
+
+					if (field.controlShape) {
+						item.shape = option.shape;
+					} else if (type.shapeFixed) {
+						item.shape = type.defaultShape;
+					}
+				} else if (type.type == "line") {
+					if (field.controlWidth) {
+						item.width = option.width;
+					} else if (type.widthFixed) {
+						item.width = type.defaultWidth;
+					}
+
+					if (field.controlStroke) {
+						item.stroke = option.stroke;
+					} else if (type.strokeFixed) {
+						item.stroke = type.defaultStroke;
+					}
+				}
+
+				if (item.colour) {
+					item.bright = isBright(item.colour);
+				}
 
 				items.push(item);
 				fields[field.name].push(item.value);
@@ -132,9 +176,6 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 			name: type.name,
 			items,
 			filtered: true,
-			fixedColour: type.colourFixed && type.defaultColour ? `#${type.defaultColour}` : undefined,
-			fixedShape: type.shapeFixed && type.defaultShape || undefined,
-			fixedSymbol: type.symbolFixed && type.defaultSymbol || undefined
 		};
 
 		// Check which fields are filtered

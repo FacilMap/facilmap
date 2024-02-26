@@ -13,6 +13,7 @@
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
+	import StrokePicker from "./ui/stroke-picker.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -116,6 +117,18 @@
 							v-model="line.width"
 							class="fm-custom-range-with-label"
 						></WidthPicker>
+					</div>
+				</div>
+			</template>
+
+			<template v-if="resolvedCanControl.includes('stroke')">
+				<div class="row mb-3">
+					<label :for="`${id}-stroke-input`" class="col-sm-3 col-form-label">Stroke</label>
+					<div class="col-sm-9">
+						<StrokePicker
+							:id="`${id}-stroke-input`"
+							v-model="line.stroke"
+						></StrokePicker>
 					</div>
 				</div>
 			</template>

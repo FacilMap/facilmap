@@ -5,7 +5,7 @@ import type { FileResult, FileResultObject } from "./files";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 
 const VIEW_KEYS: Array<keyof FileResultObject["views"][0]> = ["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"];
-const TYPE_KEYS: Array<keyof FileResultObject["types"][0]> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultMode", "modeFixed", "fields"];
+const TYPE_KEYS: Array<keyof FileResultObject["types"][0]> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultSymbol", "symbolFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultStroke", "strokeFixed", "defaultMode", "modeFixed", "fields"];
 
 export function isSearchResult(result: SearchResult | FindOnMapResult | FileResult): result is SearchResult {
 	return !isMapResult(result) && !isFileResult(result);

@@ -64,7 +64,7 @@ document.getElementById("draw-line-button").addEventListener("click", async () =
 
 	let routePoints;
 	try {
-		routePoints = await linesLayer.drawLine({ colour: "0000ff", width: 7 });
+		routePoints = await linesLayer.drawLine({ colour: "0000ff", width: 7, stroke: "" });
 	} catch (error) {
 		alert(error);
 	} finally {

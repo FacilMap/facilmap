@@ -9,7 +9,7 @@ export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> 
 }
 
 export function canControl<T extends Marker | Line = Marker | Line>(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
-	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "mode"] : [];
+	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "stroke", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)
 			return false;
@@ -26,9 +26,9 @@ export function canControl<T extends Marker | Line = Marker | Line>(type: Type<C
 export function getSelectedOption(field: Field, value: string | undefined, ignoreDefault = false): FieldOption | undefined {
 	const get = (val: string) => {
 		if (field.type === "dropdown") {
-			return field.options?.find((option) => option.value == value);
+			return field.options?.find((option) => option.value == val);
 		} else if (field.type === "checkbox") {
-			return field.options?.[Number(value)];
+			return field.options?.[Number(val)];
 		}
 	};
 
@@ -86,12 +86,15 @@ export function applyLineStyles(line: Line, type: Type): Omit<Marker<CRU.UPDATE_
 	if(type.widthFixed && line.width != type.defaultWidth) {
 		update.width = type.defaultWidth;
 	}
+	if (type.strokeFixed && line.stroke !== type.defaultStroke) {
+		update.stroke = type.defaultStroke;
+	}
 	if(type.modeFixed && line.mode != type.defaultMode) {
 		update.mode = type.defaultMode;
 	}
 
 	for(const field of type.fields) {
-		if(field.controlColour || field.controlSize || field.controlSymbol || field.controlShape) {
+		if(field.controlColour || field.controlWidth || field.controlStroke) {
 			const option = getSelectedOption(field, line.data[field.name]);
 
 			if(option) {
@@ -100,6 +103,9 @@ export function applyLineStyles(line: Line, type: Type): Omit<Marker<CRU.UPDATE_
 				}
 				if(field.controlWidth && line.width != (option.width ?? type.defaultWidth)) {
 					update.width = option.width ?? type.defaultWidth;
+				}
+				if (field.controlStroke && line.stroke !== (option.stroke ?? type.defaultStroke)) {
+					update.stroke = option.stroke ?? type.defaultStroke;
 				}
 			}
 		}

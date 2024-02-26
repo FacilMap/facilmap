@@ -17,7 +17,7 @@
 
 # Lines
 
-A line is a connection of two or more points on the map and has a name, a certain style (width, colour) and some data (such as a description). It can be a straight line or a calculated route, depending on its route mode. When you add a line to a map, it is permanently saved there and visible for anyone who is viewing the map.
+A line is a connection of two or more points on the map and has a name, a certain style (width, colour, stroke) and some data (such as a description). It can be a straight line or a calculated route, depending on its route mode. When you add a line to a map, it is permanently saved there and visible for anyone who is viewing the map.
 
 By default, a collaborative map has one type of line called “Line” that has a description field and whose style can be configured freely. Other types of lines with fixed styles and additional fields can be defined using [custom types](../types/). For simplicity, the descriptions on this page are assuming that you are working with the default “Line” type.
 
@@ -62,6 +62,7 @@ To edit the details of a line, select the line and then click “Edit data” in
 * **Routing mode:** The route mode of the line. By default, “straight line” is selected, but you can select something else to make the line points into route destinations. More information about route modes can be found under [routes](../route/#route-modes).
 * **Colour:** The colour of the line.
 * **Width:** The width of the line (in pixels). Use the + and &minus; buttons to change the value.
+* **Stroke:** The stroke style of the line (solid, dashed or dotted).
 * **Description:** The description of the line. Will be shown in the line details. You can format the text using [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet).
 
 Click “Save” to save your changes.

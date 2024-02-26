@@ -147,7 +147,7 @@
 
 					<tr>
 						<td><code>mode</code></td>
-						<td>Line routing mode (<code>""</code> / <code>"car"</code> / <code>"bicycle"</code> / <code>"pedestrian"</code> / <code>"track"</code>)</td>
+						<td>Line routing mode (<code>&quot;&quot;</code> / <code>&quot;car&quot;</code> / <code>&quot;bicycle&quot;</code> / <code>&quot;pedestrian&quot;</code> / <code>&quot;track&quot;</code>)</td>
 						<td><code>mode in (&quot;bicycle&quot;, &quot;pedestrian&quot;)</code></td>
 					</tr>
 
@@ -155,6 +155,12 @@
 						<td><code>width</code></td>
 						<td>Line width</td>
 						<td><code>width &gt; 10</code></td>
+					</tr>
+
+					<tr>
+						<td><code>stroke</code></td>
+						<td>Line stroke (<code>`&quot;&quot;`</code> (solid) / <code>`&quot;dashed&quot;`</code> / <code>&quot;dotted&quot;</code>)</td>
+						<td><code>shape == &quot;dotted&quot;</code></td>
 					</tr>
 
 					<tr>

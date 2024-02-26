@@ -36,6 +36,10 @@ export function getBrightness(colour: string): number {
 	return Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b);
 }
 
+export function isBright(colour: string): boolean {
+	return getBrightness(colour) > 0.7;
+}
+
 export function overwriteObject(from: Record<keyof any, any>, to: Record<keyof any, any>): void {
 	for(const i in to)
 		delete to[i];

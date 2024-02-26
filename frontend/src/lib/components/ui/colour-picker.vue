@@ -12,12 +12,12 @@
 	}
 
 	function isValidColour(colour: string) {
-		return !!colour?.match(/^[a-fA-F0-9]{3}([a-fA-F0-9]{3})?$/);
+		return !!colour?.match(/^[0-9a-f]{6}$/i);
 	}
 
 	function validateColour(colour: string): string | undefined {
 		if (!isValidColour(colour)) {
-			return "Needs to be in 3-digit or 6-digit hex format, for example f00 or 0000ff.";
+			return "Needs to be in 6-digit hex format, for example 0000ff.";
 		}
 	}
 

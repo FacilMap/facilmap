@@ -1,10 +1,18 @@
-import type { ID, Line, LinePointsEvent, ObjectWithId, Point } from "facilmap-types";
+import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Width } from "facilmap-types";
 import { FeatureGroup, latLng, type LayerOptions, Map, type PolylineOptions } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
 import type Client from "facilmap-client";
+
+export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
+	if (stroke === "dashed") {
+		return `${Math.max(5, width)} ${width * 2}`;
+	} else if (stroke === "dotted") {
+		return `0 ${Math.round(width * 1.6)}`;
+	}
+}
 
 interface LinesLayerOptions extends LayerOptions {
 }
@@ -221,8 +229,9 @@ export default class LinesLayer extends FeatureGroup {
 			color: '#'+line.colour,
 			weight: line.width,
 			raised: false,
-			opacity: 0.35
-		} as any;
+			opacity: 0.35,
+			dashArray: getDashArrayForStroke(line.stroke, line.width)
+		};
 
 		if(line.id == null || this.highlightedLinesIds.has(line.id)) {
 			Object.assign(style, {

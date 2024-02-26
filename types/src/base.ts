@@ -25,6 +25,9 @@ export type Shape = z.infer<typeof shapeValidator>;
 export const widthValidator = z.number().min(1);
 export type Width = z.infer<typeof widthValidator>;
 
+export const strokeValidator = z.enum(["", "dashed", "dotted"]);
+export type Stroke = z.infer<typeof strokeValidator>;
+
 export const idValidator = z.number();
 export type ID = z.infer<typeof idValidator>;
 
