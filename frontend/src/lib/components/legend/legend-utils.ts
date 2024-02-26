@@ -115,32 +115,32 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 				}
 
 				if (field.controlColour) {
-					item.colour = `#${option.colour}`;
+					item.colour = `#${option.colour ?? type.defaultColour}`;
 				} else if (type.colourFixed) {
 					item.colour = `#${type.defaultColour}`;
 				}
 
 				if (type.type == "marker") {
 					if (field.controlSymbol) {
-						item.symbol = option.symbol;
+						item.symbol = option.symbol ?? type.defaultSymbol;
 					} else if (type.symbolFixed) {
 						item.symbol = type.defaultSymbol;
 					}
 
 					if (field.controlShape) {
-						item.shape = option.shape;
+						item.shape = option.shape ?? type.defaultShape;
 					} else if (type.shapeFixed) {
 						item.shape = type.defaultShape;
 					}
 				} else if (type.type == "line") {
 					if (field.controlWidth) {
-						item.width = option.width;
+						item.width = option.width ?? type.defaultWidth;
 					} else if (type.widthFixed) {
 						item.width = type.defaultWidth;
 					}
 
 					if (field.controlStroke) {
-						item.stroke = option.stroke;
+						item.stroke = option.stroke ?? type.defaultStroke;
 					} else if (type.strokeFixed) {
 						item.stroke = type.defaultStroke;
 					}
