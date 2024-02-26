@@ -78,8 +78,8 @@ export const typeValidator = {
 	...rawTypeValidator,
 	create: rawTypeValidator.create.transform((type) => {
 		return {
-			...type,
-			defaultColour: type.type === "marker" ? "ff0000" : "0000ff"
+			defaultColour: type.type === "marker" ? "ff0000" : "0000ff",
+			...type
 		};
 	})
 };
