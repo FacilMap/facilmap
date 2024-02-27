@@ -257,6 +257,12 @@ export async function getMarkerHtml(colour: string, height: number, symbol?: Sym
 
 export const TRANSPARENT_IMAGE_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 
+declare global {
+	interface HTMLElement {
+		_fmIconAbortController?: AbortController;
+	}
+}
+
 /**
  * A Leaflet icon that accepts a promise for its URL and will update the image src when the promise is resolved.
  */
@@ -273,9 +279,11 @@ export class AsyncIcon extends Icon {
 
 	override createIcon(oldIcon?: HTMLElement): HTMLElement {
 		const icon = super.createIcon(oldIcon);
-		const prevSrc = icon.getAttribute("src");
+		icon._fmIconAbortController?.abort();
+		const abortController = new AbortController();
+		icon._fmIconAbortController = abortController;
 		this._asyncIconUrl.then((url) => {
-			if (icon.getAttribute("src") === prevSrc) {
+			if (!icon._fmIconAbortController!.signal.aborted) {
 				icon.setAttribute("src", url);
 			}
 		});
