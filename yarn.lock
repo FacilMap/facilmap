@@ -3478,6 +3478,7 @@ __metadata:
     p-debounce: ^4.0.0
     pluralize: ^8.0.0
     popper-max-size-modifier: ^0.2.0
+    qrcode.vue: ^3.4.1
     rimraf: ^5.0.5
     sass: ^1.69.6
     svgo: ^3.1.0
@@ -6296,6 +6297,15 @@ __metadata:
   version: 2.3.1
   resolution: "punycode@npm:2.3.1"
   checksum: bb0a0ceedca4c3c57a9b981b90601579058903c62be23c5e8e843d2c2d4148a3ecf029d5133486fb0e1822b098ba8bba09e89d6b21742d02fa26bda6441a6fb2
+  languageName: node
+  linkType: hard
+
+"qrcode.vue@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "qrcode.vue@npm:3.4.1"
+  peerDependencies:
+    vue: ^3.0.0
+  checksum: 666dff14de29d00cb110faa6d9699e2bbad0fca329299493ee7938b1bce3bd03bb1ef15d7b742192e6aaef8ca88b01528e6fd639136c4e34a64601d7274cf7ea
   languageName: node
   linkType: hard
 

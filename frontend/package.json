@@ -68,6 +68,7 @@
     "p-debounce": "^4.0.0",
     "pluralize": "^8.0.0",
     "popper-max-size-modifier": "^0.2.0",
+    "qrcode.vue": "^3.4.1",
     "tablesorter": "^2.31.3",
     "vite": "^5.0.12",
     "vite-plugin-css-injected-by-js": "^3.3.1",

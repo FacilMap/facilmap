@@ -9,6 +9,8 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import QrcodeVue from "qrcode.vue";
+	import Popover from "./ui/popover.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -28,6 +30,9 @@
 	const showLegend = ref(true);
 	const padIdType = ref<Writable>(2);
 	const activeShareTab = ref(0);
+
+	const qrButtonRef = ref<HTMLButtonElement>();
+	const showQr = ref(false);
 
 	const layers = computed(() => {
 		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
@@ -176,8 +181,17 @@
 			<div class="input-group mt-2">
 				<input class="form-control" :value="url" readonly />
 				<button type="button" class="btn btn-secondary" @click="copyUrl()">Copy</button>
+				<button
+					type="button"
+					class="btn btn-secondary"
+					:class="{ active: showQr }"
+					ref="qrButtonRef"
+					@click="showQr = !showQr"
+				>QR code</button>
 			</div>
-			<p class="mt-2">Share this link with others to allow them to open your map. <a href="https://docs.facilmap.org/users/share/" target="_blank">Learn more</a></p>
+			<Popover :element="qrButtonRef" v-model:show="showQr" placement="left">
+				<QrcodeVue :value="url" :size="150" level="L" render-as="svg"></QrcodeVue>
+			</Popover>
 		</template>
 
 		<template v-else-if="activeShareTab === 1">
