@@ -10,6 +10,19 @@ import type { ReadableStream } from "stream/web";
 
 const lineTemplate = compile(gpxLineEjs);
 
+const markerShapeToOsmand: Record<string, string> = {
+	"drop": "circle",
+	"rectangle-marker": "square",
+	"circle": "circle",
+	"rectangle": "square",
+	"diamond": "octagon",
+	"pentagon": "octagon",
+	"hexagon": "octagon",
+	"triangle": "circle",
+	"triangle-down": "circle",
+	"star": "octagon"
+};
+
 function dataToText(fields: Field[], data: Record<string, string>) {
 	if(fields.length == 1 && fields[0].name == "Description")
 		return data["Description"] || "";
@@ -35,7 +48,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 
 		yield (
 			`<?xml version="1.0" encoding="UTF-8"?>\n` +
-			`<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n` +
+			`<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:osmand="https://osmand.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n` +
 			`\t<metadata>\n` +
 			`\t\t<name>${quoteHtml(normalizePadName(padData.name))}</name>\n` +
 			`\t\t<time>${quoteHtml(new Date().toISOString())}</time>\n` +
@@ -44,10 +57,15 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 
 		for await (const marker of database.markers.getPadMarkers(padId)) {
 			if (filterFunc(marker, types[marker.typeId])) {
+				const osmandBackground = markerShapeToOsmand[marker.shape || "drop"];
 				yield (
 					`\t<wpt lat="${quoteHtml(marker.lat)}" lon="${quoteHtml(marker.lon)}"${marker.ele != null ? ` ele="${quoteHtml(marker.ele)}"` : ""}>\n` +
 					`\t\t<name>${quoteHtml(normalizeMarkerName(marker.name))}</name>\n` +
 					`\t\t<desc>${quoteHtml(dataToText(types[marker.typeId].fields, marker.data))}</desc>\n` +
+					`\t\t<extensions>\n` +
+					(osmandBackground ? `\t\t\t<osmand:background>${osmandBackground}</osmand:background>\n` : "") +
+					`\t\t\t<osmand:color>#${marker.colour}</osmand:color>\n` +
+					`\t\t</extensions>\n` +
 					`\t</wpt>\n`
 				);
 			}
