@@ -465,14 +465,20 @@ function _formatAddress(result: NominatimResult) {
 }
 
 async function _loadUrl(url: string, completeOsmObjects = false): Promise<string> {
-	let bodyBuf = new Uint8Array(await fetch(
+	const res = await fetch(
 		url,
 		{
 			headers: {
 				"User-Agent": config.userAgent
 			}
 		}
-	).then<ArrayBuffer>(async (res) => await res.arrayBuffer()));
+	);
+
+	if (!res.ok) {
+		throw new Error(`Request to "${url}" failed with status ${res.status}.`);
+	}
+
+	let bodyBuf = new Uint8Array(await res.arrayBuffer());
 
 	if(!bodyBuf)
 		throw new Error("Invalid response from server.");
