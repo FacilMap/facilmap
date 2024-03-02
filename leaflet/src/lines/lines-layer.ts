@@ -245,10 +245,10 @@ export default class LinesLayer extends FeatureGroup {
 
 		if (line.name && line.id != null) { // We don't want a popup for lines that we are drawing right now
 			const quoted = quoteHtml(line.name);
-			if (this.linesById[line.id]._tooltip) {
-				this.linesById[line.id].setTooltipContent(quoted);
-			} else {
+			if (!this.linesById[line.id]._tooltip) {
 				this.linesById[line.id].bindTooltip(quoted, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] });
+			} else if (this.linesById[line.id]._tooltip!.getContent() !== quoted) {
+				this.linesById[line.id].setTooltipContent(quoted);
 			}
 		} else if (this.linesById[line.id]._tooltip) {
 			this.linesById[line.id].unbindTooltip();
