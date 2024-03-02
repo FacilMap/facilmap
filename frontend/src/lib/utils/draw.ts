@@ -39,7 +39,7 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 	const mapContext = requireMapContext(context);
 	const client = requireClientContext(context);
 
-	const markerLayer = mapContext.value.components.markersLayer.markersById[markerId];
+	const markerLayer = mapContext.value.components.markersLayer.getLayerByMarkerId(markerId);
 	if(!markerLayer)
 		return;
 
@@ -48,7 +48,7 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 	mapContext.value.components.map.fire('fmInteractionStart');
 	mapContext.value.components.markersLayer.lockMarker(markerId);
 
-	async function finish(save: boolean) {
+	const finish = async (save: boolean) => {
 		toasts.hideToast("fm-draw-drag-marker");
 
 		markerLayer.dragging!.disable();
@@ -64,7 +64,7 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 
 		mapContext.value.components.markersLayer.unlockMarker(markerId);
 		mapContext.value.components.map.fire('fmInteractionEnd');
-	}
+	};
 
 	toasts.showToast("fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
 		noCloseButton: true,

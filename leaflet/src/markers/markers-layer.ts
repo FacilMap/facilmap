@@ -142,6 +142,10 @@ export default class MarkersLayer extends MarkerCluster {
 			this._deleteMarker(this.client.markers[id]);
 	}
 
+	getLayerByMarkerId(markerId: ID): MarkerLayer | undefined {
+		return this.markersById[markerId];
+	}
+
 	protected _addMarker(marker: Marker): void {
 		const updatePos = !this.markersById[marker.id] || !this.lockedMarkerIds.has(marker.id);
 
