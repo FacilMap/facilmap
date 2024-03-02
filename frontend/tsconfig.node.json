@@ -6,6 +6,7 @@
 	},
 	"include": [
 		"vite.config.ts",
+		"vite-lib.config.ts",
 		"vite-define.ts",
 		"build.ts"
 	]

@@ -12,7 +12,7 @@ export function getFacilMapUrl(): string {
 
 export async function openSocket<V extends SocketVersion>(version: V): Promise<Socket<SocketServerToClientEvents<V>, SocketClientToServerEvents<V>>> {
 	const serverUrl = new URL(getFacilMapUrl());
-	const socket = io(`${serverUrl.origin}${version !== SocketVersion.V1 ? `/${SocketVersion}` : ""}`, {
+	const socket = io(`${serverUrl.origin}${version !== SocketVersion.V1 ? `/${version}` : ""}`, {
 		forceNew: true,
 		path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
 	});

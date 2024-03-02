@@ -10,7 +10,7 @@
 
 	let allItemsP: Promise<Record<string, string>>;
 	async function getAllItems(): Promise<Record<string, string>> {
-		if (!allItemsP) {
+		if (!allItemsP) { // eslint-disable-line @typescript-eslint/no-misused-promises
 			allItemsP = Promise.all(symbolList.map(async (s) => (
 				[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
 			))).then((l) => Object.fromEntries(l));

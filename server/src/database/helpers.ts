@@ -196,6 +196,7 @@ export default class DatabaseHelpers {
 		}
 
 		const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
 
 		for (const obj of objs) {

@@ -3,12 +3,20 @@ module.exports = {
 	root: true,
 	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*"],
 	parserOptions: {
-		parser: "@typescript-eslint/parser"
+		parser: "@typescript-eslint/parser",
+		project: ["./*/tsconfig.json", "./*/tsconfig.node.json"],
+		extraFileExtensions: [".vue"]
 	},
 	plugins: ["@typescript-eslint", "import"],
 	extends: [
 		"plugin:import/typescript",
 		"plugin:vue/vue3-essential"
+	],
+	overrides: [
+		{
+			extends: ["plugin:@typescript-eslint/disable-type-checked"],
+			files: ["**/*.js", "**/*.cjs"]
+		}
 	],
 	env: {
 		node: true
@@ -29,6 +37,8 @@ module.exports = {
 		"no-restricted-globals": ["error", "$"],
 		"no-restricted-imports": ["error", "vue/types/umd"],
 		"vue/multi-word-component-names": ["off"],
+		"@typescript-eslint/no-base-to-string": ["error"],
+		"@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: false }],
 
 		"constructor-super": ["error"],
 		"for-direction": ["error"],
