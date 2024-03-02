@@ -353,8 +353,32 @@ export default class Client {
 	}
 
 	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const isZoomChange = this.bbox && bbox.zoom !== this.bbox.zoom;
+
 		this._set(this.state, 'bbox', bbox);
 		const obj = await this._emit("updateBbox", bbox);
+
+		if (isZoomChange) {
+			// Reset line points on zoom change to prevent us from accumulating too many unneeded line points.
+			// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
+			// so we can be sure that we will receive all line points that are relevant for the new bbox.
+			obj.linePoints = obj.linePoints || [];
+			const linePointEventsById = new Map(obj.linePoints.map((e) => [e.id, e] as const));
+			for (const lineIdStr of Object.keys(this.data.lines)) {
+				const lineId = Number(lineIdStr);
+				const e = linePointEventsById.get(lineId);
+				if (e) {
+					e.reset = true;
+				} else {
+					obj.linePoints.push({
+						id: lineId,
+						trackPoints: [],
+						reset: true
+					});
+				}
+			}
+		}
+
 		this._receiveMultiple(obj);
 		return obj;
 	}
