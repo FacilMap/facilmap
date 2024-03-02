@@ -1,5 +1,5 @@
 import type Client from "facilmap-client";
-import type { ID, Marker, ObjectWithId } from "facilmap-types";
+import type { ID, Marker, ObjectWithId, Type } from "facilmap-types";
 import { Map as LeafletMap } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
@@ -28,6 +28,7 @@ export default class MarkersLayer extends MarkerCluster {
 
 		this.client.on("marker", this.handleMarker);
 		this.client.on("deleteMarker", this.handleDeleteMarker);
+		this.client.on("type", this.handleType);
 
 		for (const markerId of numberKeys(this.client.markers)) {
 			this.handleMarker(this.client.markers[markerId]);
@@ -43,6 +44,7 @@ export default class MarkersLayer extends MarkerCluster {
 
 		this.client.removeListener("marker", this.handleMarker);
 		this.client.removeListener("deleteMarker", this.handleDeleteMarker);
+		this.client.removeListener("type", this.handleType);
 
 		map.off("fmFilter", this.handleFilter);
 
@@ -70,10 +72,18 @@ export default class MarkersLayer extends MarkerCluster {
 		this.filterResults.delete(data.id);
 	};
 
+	protected handleType = (type: Type): void => {
+		for (const markerId of numberKeys(this.client.markers)) {
+			if (this.client.markers[markerId].typeId === type.id) {
+				this.recalculateFilter(this.client.markers[markerId]);
+			}
+		}
+	};
+
 	protected handleFilter = (): void => {
 		for(const markerId of numberKeys(this.client.markers)) {
+			this.recalculateFilter(this.client.markers[markerId]);
 			if (!this.lockedMarkerIds.has(markerId)) {
-				this.recalculateFilter(this.client.markers[markerId]);
 				const show = this.shouldShowMarker(this.client.markers[markerId]);
 				if(this.markersById[markerId] && !show)
 					this._deleteMarker(this.client.markers[markerId]);

@@ -1,4 +1,4 @@
-import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Width } from "facilmap-types";
+import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
 import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type PolylineOptions, type LatLngBounds } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
@@ -38,6 +38,7 @@ export default class LinesLayer extends FeatureGroup {
 		this.client.on("line", this.handleLine);
 		this.client.on("linePoints", this.handleLinePoints);
 		this.client.on("deleteLine", this.handleDeleteLine);
+		this.client.on("type", this.handleType);
 
 		map.on("moveend", this.handleMoveEnd);
 		map.on("fmFilter", this.handleFilter);
@@ -59,6 +60,7 @@ export default class LinesLayer extends FeatureGroup {
 		this.client.removeListener("line", this.handleLine);
 		this.client.removeListener("linePoints", this.handleLinePoints);
 		this.client.removeListener("deleteLine", this.handleDeleteLine);
+		this.client.removeListener("type", this.handleType);
 
 		map.off("moveend", this.handleMoveEnd);
 		map.off("fmFilter", this.handleFilter);
@@ -92,6 +94,14 @@ export default class LinesLayer extends FeatureGroup {
 	protected handleDeleteLine = (data: ObjectWithId): void => {
 		this._deleteLine(data);
 		this.filterResults.delete(data.id);
+	};
+
+	protected handleType = (type: Type): void => {
+		for (const lineId of numberKeys(this.client.lines)) {
+			if (this.client.lines[lineId].typeId === type.id) {
+				this.recalculateFilter(this.client.lines[lineId]);
+			}
+		}
 	};
 
 	protected handleMoveEnd = (): void => {
