@@ -149,6 +149,11 @@
 				justify-content: center;
 			}
 
+			path.leaflet-interactive {
+				// Do not show focus ring
+				outline: none;
+			}
+
 		}
 
 		&.isNarrow {
