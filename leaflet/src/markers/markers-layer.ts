@@ -12,16 +12,14 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 export default class MarkersLayer extends MarkerCluster {
 
 	declare options: MarkersLayerOptions;
-	client: Client;
-	markersById: Record<string, MarkerLayer> = {};
-	highlightedMarkerIds = new Set<ID>();
+	protected markersById: Record<string, MarkerLayer> = {};
+	protected highlightedMarkerIds = new Set<ID>();
 
 	/** The position of these markers will not be touched until they are unlocked again. */
-	lockedMarkerIds = new Set<ID>();
+	protected lockedMarkerIds = new Set<ID>();
 
 	constructor(client: Client, options?: MarkersLayerOptions) {
 		super(client, options);
-		this.client = client;
 	}
 
 	onAdd(map: Map): this {
@@ -46,18 +44,18 @@ export default class MarkersLayer extends MarkerCluster {
 		return this;
 	}
 
-	handleMarker = (marker: Marker): void => {
+	protected handleMarker = (marker: Marker): void => {
 		if(this._map.fmFilterFunc(marker, this.client.types[marker.typeId]))
 			this._addMarker(marker);
 		else
 			this._deleteMarker(marker);
 	};
 
-	handleDeleteMarker = (data: ObjectWithId): void => {
+	protected handleDeleteMarker = (data: ObjectWithId): void => {
 		this._deleteMarker(data);
 	};
 
-	handleFilter = (): void => {
+	protected handleFilter = (): void => {
 		for(const i of numberKeys(this.client.markers)) {
 			if (!this.lockedMarkerIds.has(i)) {
 				const show = this._map.fmFilterFunc(this.client.markers[i], this.client.types[this.client.markers[i].typeId]);
@@ -128,7 +126,7 @@ export default class MarkersLayer extends MarkerCluster {
 			this._deleteMarker(this.client.markers[id]);
 	}
 
-	_addMarker(marker: Marker): void {
+	protected _addMarker(marker: Marker): void {
 		const updatePos = !this.markersById[marker.id] || !this.lockedMarkerIds.has(marker.id);
 
 		if(!this.markersById[marker.id]) {
@@ -159,7 +157,7 @@ export default class MarkersLayer extends MarkerCluster {
 		}
 	}
 
-	_deleteMarker(marker: ObjectWithId): void {
+	protected _deleteMarker(marker: ObjectWithId): void {
 		if(!this.markersById[marker.id])
 			return;
 

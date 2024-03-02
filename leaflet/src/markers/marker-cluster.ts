@@ -10,8 +10,8 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 
 export default class MarkerCluster extends MarkerClusterGroup {
 
-	client: Client;
-	_maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
+	protected client: Client;
+	protected _maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
 
 	constructor(client: Client, options?: MarkerClusterOptions) {
 		super({
@@ -26,7 +26,7 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this.client = client;
 	}
 
-	handlePadData = (padData: PadData): void => {
+	protected handlePadData = (padData: PadData): void => {
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
 		if (!!padData.clusterMarkers !== isClusterEnabled) {

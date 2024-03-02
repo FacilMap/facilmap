@@ -20,10 +20,10 @@ interface LinesLayerOptions extends LayerOptions {
 export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
-	client: Client;
-	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
-	highlightedLinesIds = new Set<ID>();
-	hiddenLinesIds = new Set<ID>();
+	protected client: Client;
+	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
+	protected highlightedLinesIds = new Set<ID>();
+	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
 
 	constructor(client: Client, options?: LinesLayerOptions) {
@@ -60,28 +60,28 @@ export default class LinesLayer extends FeatureGroup {
 		return this;
 	}
 
-	shouldShowLine(line: Line): boolean {
+	protected shouldShowLine(line: Line): boolean {
 		return !this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line, this.client.types[line.typeId]);
 	}
 
-	handleLine = (line: Line): void => {
+	protected handleLine = (line: Line): void => {
 		if(this.shouldShowLine(line))
 			this._addLine(line);
 		else
 			this._deleteLine(line);
 	};
 
-	handleLinePoints = (event: LinePointsEvent): void => {
+	protected handleLinePoints = (event: LinePointsEvent): void => {
 		const line = this.client.lines[event.id];
 		if(line && this.shouldShowLine(line))
 			this._addLine(line);
 	};
 
-	handleDeleteLine = (data: ObjectWithId): void => {
+	protected handleDeleteLine = (data: ObjectWithId): void => {
 		this._deleteLine(data);
 	};
 
-	handleMoveEnd = (): void => {
+	protected handleMoveEnd = (): void => {
 		// Rerender all lines to recall disconnectSegmentsOutsideViewport()
 		// Run it on next tick because the renderers need to run first
 		Promise.resolve().then(() => {
@@ -106,7 +106,7 @@ export default class LinesLayer extends FeatureGroup {
 		});
 	};
 
-	handleFilter = (): void => {
+	protected handleFilter = (): void => {
 		for(const i of numberKeys(this.client.lines)) {
 			const show = this.shouldShowLine(this.client.lines[i]);
 			if(this.linesById[i] && !show)
@@ -159,7 +159,7 @@ export default class LinesLayer extends FeatureGroup {
 			this._endDrawLine(save);
 	}
 
-	_endDrawLine?: (save: boolean) => void;
+	protected _endDrawLine?: (save: boolean) => void;
 
 	drawLine(lineTemplate: Line): Promise<Point[] | undefined> {
 		return new Promise<Point[] | undefined>((resolve) => {
@@ -216,7 +216,7 @@ export default class LinesLayer extends FeatureGroup {
 		});
 	}
 
-	_addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
+	protected _addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
 		const trackPoints = line.mode ? trackPointsToLatLngArray(line.trackPoints) : line.routePoints.map((p) => latLng(p.lat, p.lon));
 
 		// Two points that are both outside of the viewport should not be connected, as the piece in between
@@ -273,7 +273,7 @@ export default class LinesLayer extends FeatureGroup {
 			this.addLayer(this.linesById[line.id]);
 	}
 
-	_deleteLine(line: ObjectWithId): void {
+	protected _deleteLine(line: ObjectWithId): void {
 		if(!this.linesById[line.id])
 			return;
 
