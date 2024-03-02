@@ -1,7 +1,7 @@
 import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Width } from "facilmap-types";
-import { FeatureGroup, latLng, type LayerOptions, Map, type PolylineOptions } from "leaflet";
+import { FeatureGroup, latLng, type LayerOptions, Map, type PolylineOptions, type LatLngBounds } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
-import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray } from "../utils/leaflet";
+import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
 import type Client from "facilmap-client";
@@ -24,6 +24,7 @@ export default class LinesLayer extends FeatureGroup {
 	linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	highlightedLinesIds = new Set<ID>();
 	hiddenLinesIds = new Set<ID>();
+	protected lastMapBounds?: LatLngBounds;
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
@@ -84,9 +85,23 @@ export default class LinesLayer extends FeatureGroup {
 		// Rerender all lines to recall disconnectSegmentsOutsideViewport()
 		// Run it on next tick because the renderers need to run first
 		Promise.resolve().then(() => {
+			const lastMapBounds = this.lastMapBounds;
+			const mapBounds = this.lastMapBounds = this._map.getBounds();
 			for(const i of numberKeys(this.client.lines)) {
-				if (this.shouldShowLine(this.client.lines[i]))
+				const lineBounds = fmToLeafletBbox(this.client.lines[i]);
+				if (
+					(
+						// We do not have to do this for lines that are either completely outside or completely within the
+						// previous and current map bbox.
+						!lastMapBounds ||
+						!(
+							(lastMapBounds.contains(lineBounds) && mapBounds.contains(lineBounds)) ||
+							(!lastMapBounds.intersects(lineBounds) && !mapBounds.intersects(lineBounds))
+						)
+					) && this.shouldShowLine(this.client.lines[i])
+				) {
 					this._addLine(this.client.lines[i]);
+				}
 			}
 		});
 	};
