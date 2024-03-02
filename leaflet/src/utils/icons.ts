@@ -142,19 +142,36 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
 	};
 });
 
+let rawIconsExtra: (typeof import("virtual:icons:extra"))["default"];
+
 /**
  * Downloads the icons chunk to have them already downloaded the first time the icon code is needed.
  */
 export async function preloadExtraSymbols(): Promise<void> {
-	await import("virtual:icons:extra");
+	if (!rawIconsExtra) {
+		rawIconsExtra = (await import("virtual:icons:extra")).default;
+	}
 }
 
-async function getRawSymbolCode(symbol: Symbol): Promise<[set: string, code: string]> {
+function symbolNeedsPreload(symbol: Symbol | undefined): boolean {
+	return !!symbol && symbolList.includes(symbol) && !coreIconKeys.includes(symbol);
+}
+
+export async function preloadSymbol(symbol: Symbol | undefined): Promise<void> {
+	if (symbolNeedsPreload(symbol)) {
+		await preloadExtraSymbols();
+	}
+}
+
+export function isSymbolPreloaded(symbol: Symbol | undefined): boolean {
+	return !symbolNeedsPreload(symbol) || !!rawIconsExtra;
+}
+
+function getRawSymbolCodeSync(symbol: Symbol): [set: string, code: string] {
 	if (coreIconKeys.includes(symbol)) {
 		const set = Object.keys(rawIconsCore).filter((i) => (rawIconsCore[i][symbol] != null))[0];
 		return [set, rawIconsCore[set][symbol]];
 	} else if (symbolList.includes(symbol)) {
-		const { default: rawIconsExtra } = await import("virtual:icons:extra");
 		const set = Object.keys(rawIconsExtra).filter((i) => (rawIconsExtra[i][symbol] != null))[0];
 		return [set, rawIconsExtra[set][symbol]];
 	} else {
@@ -162,9 +179,9 @@ async function getRawSymbolCode(symbol: Symbol): Promise<[set: string, code: str
 	}
 }
 
-export async function getSymbolCode(colour: string, size: number, symbol?: Symbol): Promise<string> {
+export function getSymbolCodeSync(colour: string, size: number, symbol?: Symbol): string {
 	if(symbol && symbolList.includes(symbol)) {
-		const [set, code] = await getRawSymbolCode(symbol);
+		const [set, code] = getRawSymbolCodeSync(symbol);
 
 		if(set == "osmi") {
 			return `<g transform="scale(${size / sizes.osmi})">${code.replace(/#000/g, colour)}</g>`;
@@ -198,29 +215,44 @@ export async function getSymbolCode(colour: string, size: number, symbol?: Symbo
 	return `<circle style="fill:${colour}" cx="${Math.floor(size / 2)}" cy="${Math.floor(size / 2)}" r="${Math.floor(size / 6)}" />`;
 }
 
-export async function getSymbolUrl(colour: string, height: number, symbol?: Symbol): Promise<string> {
+export async function getSymbolCode(colour: string, size: number, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolCodeSync(colour, size, symbol);
+}
+
+export function getSymbolUrlSync(colour: string, height: number, symbol?: Symbol): string {
 	const svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 	`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" viewbox="0 0 24 24" version="1.1">` +
-		(await getSymbolCode(colour, 24, symbol)) +
+		getSymbolCodeSync(colour, 24, symbol) +
 	`</svg>`;
 
 	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export async function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): Promise<string> {
+export async function getSymbolUrl(colour: string, height: number, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolUrlSync(colour, height, symbol);
+}
+
+export function getSymbolHtmlSync(colour: string, height: number | string, symbol?: Symbol): string {
 	return `<svg width="${height}" height="${height}" viewbox="0 0 24 24">` +
-		(await getSymbolCode(colour, 24, symbol)) +
+		getSymbolCodeSync(colour, 24, symbol) +
 	`</svg>`;
+}
+
+export async function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolHtmlSync(colour, height, symbol);
 }
 
 let idCounter = 0;
 
-export async function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+export function getMarkerCodeSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
 	const borderColour = makeTextColour(colour, 0.3);
 	const id = `${idCounter++}`;
 	const colourCode = colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour;
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const symbolCode = await getSymbolCode(borderColour, shapeObj.symbolSize, symbol);
+	const symbolCode = getSymbolCodeSync(borderColour, shapeObj.symbolSize, symbol);
 	const translateX = `${Math.floor(shapeObj.center[0] - shapeObj.symbolSize / 2)}`;
 	const translateY = `${Math.floor(shapeObj.center[1] - shapeObj.symbolSize / 2)}`;
 
@@ -234,25 +266,40 @@ export async function getMarkerCode(colour: string, height: number, symbol?: Sym
 	);
 }
 
-export async function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+export async function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+	await preloadSymbol(symbol);
+	return getMarkerCodeSync(colour, height, symbol, shape, highlight);
+}
+
+export function getMarkerUrlSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
 	return "data:image/svg+xml,"+encodeURIComponent(
 		`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}" version="1.1">` +
-			(await getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight)) +
+			getMarkerCodeSync(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
+		`</svg>`
+	);
+}
+
+export async function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+	await preloadSymbol(symbol);
+	return getMarkerUrlSync(colour, height, symbol, shape, highlight);
+}
+
+export function getMarkerHtmlSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
+	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
+	return (
+		`<svg width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}">` +
+			getMarkerCodeSync(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
 		`</svg>`
 	);
 }
 
 export async function getMarkerHtml(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
-	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
-	return (
-		`<svg width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}">` +
-			(await getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight)) +
-		`</svg>`
-	);
+	await preloadSymbol(symbol);
+	return getMarkerHtmlSync(colour, height, symbol, shape, highlight);
 }
 
 export const TRANSPARENT_IMAGE_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
@@ -267,26 +314,40 @@ declare global {
  * A Leaflet icon that accepts a promise for its URL and will update the image src when the promise is resolved.
  */
 export class AsyncIcon extends Icon {
-	private _asyncIconUrl: Promise<string>;
+	private _asyncIconUrl?: Promise<string>;
 
 	constructor(options: Omit<IconOptions, "iconUrl"> & { iconUrl: string | Promise<string> }) {
-		super({ ...options, iconUrl: TRANSPARENT_IMAGE_URL });
-		this._asyncIconUrl = Promise.resolve(options.iconUrl);
-		this._asyncIconUrl.catch((err) => {
-			console.error("Error loading async icon", err);
+		super({
+			...options,
+			iconUrl: typeof options.iconUrl === "string" ? options.iconUrl : TRANSPARENT_IMAGE_URL
 		});
+
+		if (typeof options.iconUrl !== "string") {
+			this._asyncIconUrl = Promise.resolve(options.iconUrl);
+			this._asyncIconUrl.then((url) => {
+				this.options.iconUrl = url;
+				delete this._asyncIconUrl;
+			});
+			this._asyncIconUrl.catch((err) => {
+				console.error("Error loading async icon", err);
+			});
+		}
 	}
 
 	override createIcon(oldIcon?: HTMLElement): HTMLElement {
 		const icon = super.createIcon(oldIcon);
-		icon._fmIconAbortController?.abort();
-		const abortController = new AbortController();
-		icon._fmIconAbortController = abortController;
-		this._asyncIconUrl.then((url) => {
-			if (!icon._fmIconAbortController!.signal.aborted) {
-				icon.setAttribute("src", url);
-			}
-		});
+
+		if (this._asyncIconUrl) {
+			icon._fmIconAbortController?.abort();
+			const abortController = new AbortController();
+			icon._fmIconAbortController = abortController;
+			this._asyncIconUrl.then((url) => {
+				if (!icon._fmIconAbortController!.signal.aborted) {
+					icon.setAttribute("src", url);
+				}
+			});
+		}
+
 		return icon;
 	}
 }
@@ -295,7 +356,10 @@ export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, s
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
 	const result = new AsyncIcon({
-		iconUrl: getMarkerUrl(colour, height, symbol, shape, highlight),
+		iconUrl: (
+			isSymbolPreloaded(symbol) ? getMarkerUrlSync(colour, height, symbol, shape, highlight)
+			: getMarkerUrlSync(colour, height, symbol, shape, highlight)
+		),
 		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
 		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],
 		popupAnchor: [0, -height]

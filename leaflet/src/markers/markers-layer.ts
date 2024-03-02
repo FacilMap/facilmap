@@ -141,17 +141,18 @@ export default class MarkersLayer extends MarkerCluster {
 
 		const highlight = this.highlightedMarkerIds.has(marker.id);
 
-		if (updatePos)
+		if (updatePos && !this.markersById[marker.id].getLatLng().equals([ marker.lat, marker.lon ])) {
 			this.markersById[marker.id].setLatLng([ marker.lat, marker.lon ]);
+		}
 
 		this.markersById[marker.id].setStyle({ marker, highlight, raised: highlight });
 
 		if (marker.name) {
 			const quoted = quoteHtml(marker.name);
-			if (this.markersById[marker.id]._tooltip) {
-				this.markersById[marker.id].setTooltipContent(quoted);
-			} else {
+			if (!this.markersById[marker.id]._tooltip) {
 				this.markersById[marker.id].bindTooltip(quoted, { ...tooltipOptions, offset: [ 20, -15 ] });
+			} else if (this.markersById[marker.id]._tooltip!.getContent() !== quoted) {
+				this.markersById[marker.id].setTooltipContent(quoted);
 			}
 		} else if (this.markersById[marker.id]._tooltip) {
 			this.markersById[marker.id].unbindTooltip();
