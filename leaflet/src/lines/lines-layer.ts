@@ -1,5 +1,5 @@
 import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Width } from "facilmap-types";
-import { FeatureGroup, latLng, type LayerOptions, Map, type PolylineOptions, type LatLngBounds } from "leaflet";
+import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type PolylineOptions, type LatLngBounds } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
@@ -25,13 +25,14 @@ export default class LinesLayer extends FeatureGroup {
 	protected highlightedLinesIds = new Set<ID>();
 	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
+	protected filterResults = new Map<ID, boolean>();
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
 		this.client = client;
 	}
 
-	onAdd(map: Map): this {
+	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
 
 		this.client.on("line", this.handleLine);
@@ -41,13 +42,18 @@ export default class LinesLayer extends FeatureGroup {
 		map.on("moveend", this.handleMoveEnd);
 		map.on("fmFilter", this.handleFilter);
 
-		if (map._loaded)
-			this.handleMoveEnd();
+		if (map._loaded) {
+			this.lastMapBounds = this._map.getBounds();
+		}
+
+		for (const lineId of numberKeys(this.client.lines)) {
+			this.handleLine(this.client.lines[lineId]);
+		}
 
 		return this;
 	}
 
-	onRemove(map: Map): this {
+	onRemove(map: LeafletMap): this {
 		super.onRemove(map);
 
 		this.client.removeListener("line", this.handleLine);
@@ -60,11 +66,17 @@ export default class LinesLayer extends FeatureGroup {
 		return this;
 	}
 
+	protected recalculateFilter(line: Line): void {
+		this.filterResults.set(line.id, this._map.fmFilterFunc(line, this.client.types[line.typeId]));
+	}
+
 	protected shouldShowLine(line: Line): boolean {
-		return !this.hiddenLinesIds.has(line.id) && this._map.fmFilterFunc(line, this.client.types[line.typeId]);
+		return !this.hiddenLinesIds.has(line.id) && !!this.filterResults.get(line.id);
 	}
 
 	protected handleLine = (line: Line): void => {
+		this.recalculateFilter(line);
+
 		if(this.shouldShowLine(line))
 			this._addLine(line);
 		else
@@ -79,6 +91,7 @@ export default class LinesLayer extends FeatureGroup {
 
 	protected handleDeleteLine = (data: ObjectWithId): void => {
 		this._deleteLine(data);
+		this.filterResults.delete(data.id);
 	};
 
 	protected handleMoveEnd = (): void => {
@@ -87,8 +100,8 @@ export default class LinesLayer extends FeatureGroup {
 		Promise.resolve().then(() => {
 			const lastMapBounds = this.lastMapBounds;
 			const mapBounds = this.lastMapBounds = this._map.getBounds();
-			for(const i of numberKeys(this.client.lines)) {
-				const lineBounds = fmToLeafletBbox(this.client.lines[i]);
+			for(const lineId of numberKeys(this.client.lines)) {
+				const lineBounds = fmToLeafletBbox(this.client.lines[lineId]);
 				if (
 					(
 						// We do not have to do this for lines that are either completely outside or completely within the
@@ -98,21 +111,22 @@ export default class LinesLayer extends FeatureGroup {
 							(lastMapBounds.contains(lineBounds) && mapBounds.contains(lineBounds)) ||
 							(!lastMapBounds.intersects(lineBounds) && !mapBounds.intersects(lineBounds))
 						)
-					) && this.shouldShowLine(this.client.lines[i])
+					) && this.shouldShowLine(this.client.lines[lineId])
 				) {
-					this._addLine(this.client.lines[i]);
+					this._addLine(this.client.lines[lineId]);
 				}
 			}
 		});
 	};
 
 	protected handleFilter = (): void => {
-		for(const i of numberKeys(this.client.lines)) {
-			const show = this.shouldShowLine(this.client.lines[i]);
-			if(this.linesById[i] && !show)
-				this._deleteLine(this.client.lines[i]);
-			else if(!this.linesById[i] && show)
-				this._addLine(this.client.lines[i]);
+		for(const lineId of numberKeys(this.client.lines)) {
+			this.recalculateFilter(this.client.lines[lineId]);
+			const show = this.shouldShowLine(this.client.lines[lineId]);
+			if(this.linesById[lineId] && !show)
+				this._deleteLine(this.client.lines[lineId]);
+			else if(!this.linesById[lineId] && show)
+				this._addLine(this.client.lines[lineId]);
 		}
 	};
 

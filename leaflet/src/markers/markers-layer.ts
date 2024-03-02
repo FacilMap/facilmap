@@ -1,6 +1,6 @@
 import type Client from "facilmap-client";
 import type { ID, Marker, ObjectWithId } from "facilmap-types";
-import { Map } from "leaflet";
+import { Map as LeafletMap } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
 import MarkerCluster, { type MarkerClusterOptions } from "./marker-cluster";
@@ -14,6 +14,7 @@ export default class MarkersLayer extends MarkerCluster {
 	declare options: MarkersLayerOptions;
 	protected markersById: Record<string, MarkerLayer> = {};
 	protected highlightedMarkerIds = new Set<ID>();
+	protected filterResults = new Map<ID, boolean>();
 
 	/** The position of these markers will not be touched until they are unlocked again. */
 	protected lockedMarkerIds = new Set<ID>();
@@ -22,18 +23,22 @@ export default class MarkersLayer extends MarkerCluster {
 		super(client, options);
 	}
 
-	onAdd(map: Map): this {
+	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
 
 		this.client.on("marker", this.handleMarker);
 		this.client.on("deleteMarker", this.handleDeleteMarker);
+
+		for (const markerId of numberKeys(this.client.markers)) {
+			this.handleMarker(this.client.markers[markerId]);
+		}
 
 		map.on("fmFilter", this.handleFilter);
 
 		return this;
 	}
 
-	onRemove(map: Map): this {
+	onRemove(map: LeafletMap): this {
 		super.onRemove(map);
 
 		this.client.removeListener("marker", this.handleMarker);
@@ -44,8 +49,17 @@ export default class MarkersLayer extends MarkerCluster {
 		return this;
 	}
 
+	protected recalculateFilter(marker: Marker): void {
+		this.filterResults.set(marker.id, this._map.fmFilterFunc(marker, this.client.types[marker.typeId]));
+	}
+
+	protected shouldShowMarker(marker: Marker): boolean {
+		return !!this.filterResults.get(marker.id);
+	}
+
 	protected handleMarker = (marker: Marker): void => {
-		if(this._map.fmFilterFunc(marker, this.client.types[marker.typeId]))
+		this.recalculateFilter(marker);
+		if(this.shouldShowMarker(marker))
 			this._addMarker(marker);
 		else
 			this._deleteMarker(marker);
@@ -53,16 +67,18 @@ export default class MarkersLayer extends MarkerCluster {
 
 	protected handleDeleteMarker = (data: ObjectWithId): void => {
 		this._deleteMarker(data);
+		this.filterResults.delete(data.id);
 	};
 
 	protected handleFilter = (): void => {
-		for(const i of numberKeys(this.client.markers)) {
-			if (!this.lockedMarkerIds.has(i)) {
-				const show = this._map.fmFilterFunc(this.client.markers[i], this.client.types[this.client.markers[i].typeId]);
-				if(this.markersById[i] && !show)
-					this._deleteMarker(this.client.markers[i]);
-				else if(!this.markersById[i] && show)
-					this._addMarker(this.client.markers[i]);
+		for(const markerId of numberKeys(this.client.markers)) {
+			if (!this.lockedMarkerIds.has(markerId)) {
+				this.recalculateFilter(this.client.markers[markerId]);
+				const show = this.shouldShowMarker(this.client.markers[markerId]);
+				if(this.markersById[markerId] && !show)
+					this._deleteMarker(this.client.markers[markerId]);
+				else if(!this.markersById[markerId] && show)
+					this._addMarker(this.client.markers[markerId]);
 			}
 		}
 	};
@@ -120,7 +136,7 @@ export default class MarkersLayer extends MarkerCluster {
 	unlockMarker(id: ID): void {
 		this.lockedMarkerIds.delete(id);
 
-		if (this._map.fmFilterFunc(this.client.markers[id], this.client.types[this.client.markers[id].typeId]))
+		if (this.shouldShowMarker(this.client.markers[id]))
 			this._addMarker(this.client.markers[id]);
 		else
 			this._deleteMarker(this.client.markers[id]);
