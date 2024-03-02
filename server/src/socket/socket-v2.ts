@@ -117,23 +117,28 @@ export class SocketConnectionV2 extends SocketConnection {
 			updateBbox: async (bbox) => {
 				this.validatePermissions(Writable.READ);
 
-				const bboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
-				if(this.bbox && bbox.zoom == this.bbox.zoom)
-					bboxWithExcept.except = this.bbox;
+				const markerBboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
+				const lineBboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
+				if(this.bbox) {
+					markerBboxWithExcept.except = this.bbox;
+					if (bbox.zoom == this.bbox.zoom) {
+						lineBboxWithExcept.except = this.bbox;
+					}
+				}
 
 				this.bbox = bbox;
 
 				const ret: MultipleEventPromises = {};
 
 				if(this.padId && this.padId !== true) {
-					ret.marker = asyncIteratorToArray(this.database.markers.getPadMarkers(this.padId, bboxWithExcept));
-					ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForPad(this.padId, bboxWithExcept));
+					ret.marker = asyncIteratorToArray(this.database.markers.getPadMarkers(this.padId, markerBboxWithExcept));
+					ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForPad(this.padId, lineBboxWithExcept));
 				}
 				if(this.route)
-					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, bboxWithExcept, !bboxWithExcept.except).then((points) => ([points]));
+					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, lineBboxWithExcept, !lineBboxWithExcept.except).then((points) => ([points]));
 				if(Object.keys(this.routes).length > 0) {
 					ret.routePointsWithId = Promise.all(Object.keys(this.routes).map(
-						(routeId) => this.database.routes.getRoutePoints(this.routes[routeId].id, bboxWithExcept, !bboxWithExcept.except).then((trackPoints) => ({ routeId, trackPoints }))
+						(routeId) => this.database.routes.getRoutePoints(this.routes[routeId].id, lineBboxWithExcept, !lineBboxWithExcept.except).then((trackPoints) => ({ routeId, trackPoints }))
 					));
 				}
 
