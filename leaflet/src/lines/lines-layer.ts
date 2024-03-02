@@ -270,7 +270,13 @@ export default class LinesLayer extends FeatureGroup {
 		}
 
 		(this.linesById[line.id] as any).line = line;
-		this.linesById[line.id].setLatLngs(splitLatLngs).setStyle(style);
+
+		// Set style before setting coordinates, so a new line doesn't have to be rendered twice
+		if (Object.entries(style).some(([k, v]) => (this.linesById[line.id].realOptions as any)[k] !== v)) {
+			this.linesById[line.id].setStyle(style);
+		}
+
+		this.linesById[line.id].setLatLngs(splitLatLngs);
 
 		if (line.name && line.id != null) { // We don't want a popup for lines that we are drawing right now
 			const quoted = quoteHtml(line.name);
