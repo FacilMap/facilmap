@@ -7,6 +7,13 @@ import { setLayerOptions } from "facilmap-leaflet";
 import config from "./config";
 import { registerDereferrerHandler } from "../utils/dereferrer";
 
+if (import.meta.hot) {
+	// Prevent full reload, see https://github.com/vitejs/vite/issues/5763#issuecomment-1974235806
+	import.meta.hot.on('vite:beforeFullReload', (payload) => {
+		payload.path = "(WORKAROUND).html";
+	});
+}
+
 registerDereferrerHandler();
 
 if ('serviceWorker' in navigator && location.hostname !== "localhost")
