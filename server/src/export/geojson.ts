@@ -31,7 +31,7 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 			features: "%features%"
 		}, {
 			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
-			name: normalizePadName(padData.name),
+			name: padData.name,
 			searchEngines: padData.searchEngines,
 			description: padData.description,
 			clusterMarkers: padData.clusterMarkers,
@@ -66,7 +66,7 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			coordinates: [marker.lon, marker.lat]
 		},
 		properties: {
-			name: normalizeMarkerName(marker.name),
+			name: marker.name,
 			colour: marker.colour,
 			size: marker.size,
 			symbol: marker.symbol,
@@ -85,7 +85,7 @@ function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 			coordinates: line.trackPoints.map((trackPoint) => [trackPoint.lon, trackPoint.lat])
 		},
 		properties: {
-			name: normalizeLineName(line.name),
+			name: line.name,
 			mode: line.mode,
 			colour: line.colour,
 			width: line.width,
