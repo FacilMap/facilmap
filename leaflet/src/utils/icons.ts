@@ -358,7 +358,7 @@ export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, s
 	const result = new AsyncIcon({
 		iconUrl: (
 			isSymbolPreloaded(symbol) ? getMarkerUrlSync(colour, height, symbol, shape, highlight)
-			: getMarkerUrlSync(colour, height, symbol, shape, highlight)
+			: getMarkerUrl(colour, height, symbol, shape, highlight)
 		),
 		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
 		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],
