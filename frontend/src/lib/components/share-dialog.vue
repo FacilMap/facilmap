@@ -9,8 +9,7 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
-	import QrcodeVue from "qrcode.vue";
-	import Popover from "./ui/popover.vue";
+	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -30,9 +29,6 @@
 	const showLegend = ref(true);
 	const padIdType = ref<Writable>(2);
 	const activeShareTab = ref(0);
-
-	const qrButtonRef = ref<HTMLButtonElement>();
-	const showQr = ref(false);
 
 	const layers = computed(() => {
 		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
@@ -73,11 +69,6 @@
 	const embedCode = computed(() => {
 		return `<iframe style="height:500px; width:100%; border:none;" src="${quoteHtml(url.value)}"></iframe>`;
 	});
-
-	function copyUrl(): void {
-		copyToClipboard(url.value);
-		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success", autoHide: true });
-	}
 
 	function copyEmbedCode(): void {
 		copyToClipboard(embedCode.value);
@@ -178,27 +169,26 @@
 		</ul>
 
 		<template v-if="activeShareTab === 0">
-			<div class="input-group mt-2">
-				<input class="form-control" :value="url" readonly />
-				<button type="button" class="btn btn-secondary" @click="copyUrl()">Copy</button>
-				<button
-					type="button"
-					class="btn btn-secondary"
-					:class="{ active: showQr }"
-					ref="qrButtonRef"
-					@click="showQr = !showQr"
-				>QR code</button>
-			</div>
-			<Popover :element="qrButtonRef" v-model:show="showQr" placement="left">
-				<QrcodeVue :value="url" :size="150" level="L" render-as="svg"></QrcodeVue>
-			</Popover>
+			<CopyToClipboardInput
+				class="mt-2"
+				:modelValue="url"
+				readonly
+				shortDescription="Map link"
+				longDescription="The map link"
+			></CopyToClipboardInput>
 		</template>
 
 		<template v-else-if="activeShareTab === 1">
-			<div class="input-group mt-2">
-				<textarea class="form-control" :value="embedCode" readonly></textarea>
-				<button type="button" class="btn btn-secondary" @click="copyEmbedCode()">Copy</button>
-			</div>
+			<CopyToClipboardInput
+				class="mt-2"
+				:modelValue="embedCode"
+				readonly
+				shortDescription="Embed code"
+				:longDescription="`The code to embed ${context.appName}`"
+				:rows="2"
+				noQr
+			></CopyToClipboardInput>
+
 			<p class="mt-2">Add this HTML code to a web page to embed {{context.appName}}. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
 		</template>
 	</ModalDialog>

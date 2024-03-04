@@ -25,7 +25,6 @@
 	const props = defineProps<{
 		modelValue: string;
 		id?: string;
-		isRequired?: boolean;
 		validators?: Array<Validator<string>>;
 	}>();
 

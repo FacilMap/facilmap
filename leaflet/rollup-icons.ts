@@ -11,9 +11,9 @@ const require = createRequire(import.meta.url);
 
 const coreIcons = [
 	"arrow-left", "arrow-right", "car", "check", "circle-info", "cog", "copy", "info-sign",
-	"menu-hamburger", "minus", "person-biking", "person-walking", "plus", "remove",
-	"resize-horizontal", "resize-vertical", "screenshot", "search", "slash", "triangle-bottom",
-	"triangle-top", "unchecked", "zoom-in"
+	"menu-hamburger", "minus", "person-biking", "person-walking", "plus", "question-sign", "qrcode",
+	"remove", "resize-horizontal", "resize-vertical", "screenshot", "search", "slash",
+	"triangle-bottom", "triangle-top", "unchecked", "zoom-in"
 ];
 
 async function getIconFilenames(): Promise<Record<string, Record<string, string>>> {

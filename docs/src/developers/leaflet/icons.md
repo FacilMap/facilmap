@@ -2,7 +2,7 @@
 
 FacilMap comes with a large selection of icons (called “symbols” in the code) and marker shapes. The icons come from the following sources:
 * All the [Open SVG Map Icons](https://github.com/twain47/Open-SVG-Map-Icons/) (these are the ones used by Nominatim for search results)
-* All the [Glyphicons](https://getbootstrap.com/docs/3.4/components/#glyphicons-glyphs) of Bootstrap 3.
+* A selection of [Glyphicons](https://getbootstrap.com/docs/3.4/components/#glyphicons-glyphs) from Bootstrap 3.
 * A few icons from [Material Design Iconic Font](https://zavoloklom.github.io/material-design-iconic-font/).
 * A selection of icons from [Font Awesome](https://fontawesome.com/).
 
