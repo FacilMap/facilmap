@@ -75,7 +75,7 @@ export const maxSizeModifiers: Array<Partial<Modifier<any, any>>> = [
 
 			state.styles.popper = {
 				...state.styles.popper,
-				maxWidth: `${width}px`,
+				maxWidth: `min(30rem, ${width}px)`,
 				maxHeight: `${height}px`
 			}
 		}
