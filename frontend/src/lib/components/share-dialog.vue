@@ -1,11 +1,9 @@
 <script setup lang="ts">
 	import { getLayers } from "facilmap-leaflet";
-	import copyToClipboard from "copy-to-clipboard";
 	import { getLegendItems } from "./legend/legend-utils";
 	import type { Writable } from "facilmap-types";
 	import { quoteHtml, round } from "facilmap-utils";
 	import { computed, ref } from "vue";
-	import { useToasts } from "./ui/toasts/toasts.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -14,8 +12,6 @@
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
-
-	const toasts = useToasts();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -69,11 +65,6 @@
 	const embedCode = computed(() => {
 		return `<iframe style="height:500px; width:100%; border:none;" src="${quoteHtml(url.value)}"></iframe>`;
 	});
-
-	function copyEmbedCode(): void {
-		copyToClipboard(embedCode.value);
-		toasts.showToast(undefined, "Embed code copied", `The code to embed ${context.appName} was copied to the clipboard.`, { variant: "success", autoHide: true });
-	}
 </script>
 
 <template>

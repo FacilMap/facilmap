@@ -1,9 +1,7 @@
 <script setup lang="ts">
 	import { padIdValidator, type CRU, type PadData } from "facilmap-types";
-	import { computed, ref } from "vue";
+	import { computed } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
-	import copyToClipboard from "copy-to-clipboard";
-	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
 
@@ -11,8 +9,6 @@
 	type IdProp = typeof idProps[number];
 
 	const context = injectContextRequired();
-
-	const toasts = useToasts();
 
 	const props = defineProps<{
 		padData: PadData<CRU.CREATE>;
@@ -40,11 +36,6 @@
 			return "The same link cannot be used for different access levels.";
 		}
 	}
-
-	function copy(text: string): void {
-		copyToClipboard(text);
-		toasts.showToast(undefined, "Map link copied", "The map link was copied to the clipboard.", { variant: "success", autoHide: true });
-	}
 </script>
 
 <template>
@@ -52,11 +43,11 @@
 		<label :for="`${id}-input`" class="col-sm-3 col-form-label">{{props.label}}</label>
 		<div class="col-sm-9 position-relative">
 			<CopyToClipboardInput
-				v-model="padData[idProp]"
+				v-model="value"
 				:prefix="context.baseUrl"
 				shortDescription="Map link"
 				longDescription="The map link"
-				:fullUrl="`${context.baseUrl}${encodeURIComponent(padData[idProp])}`"
+				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
 				:validators="[validateRequired, getZodValidator(padIdValidator), validateDistinctPadId]"
 			></CopyToClipboardInput>
 

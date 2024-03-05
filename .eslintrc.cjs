@@ -4,7 +4,7 @@ module.exports = {
 	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*"],
 	parserOptions: {
 		parser: "@typescript-eslint/parser",
-		project: ["./*/tsconfig.json", "./*/tsconfig.node.json"],
+		project: ["*/tsconfig.json", "*/tsconfig.node.json"],
 		extraFileExtensions: [".vue"]
 	},
 	plugins: ["@typescript-eslint", "import"],

@@ -1,5 +1,5 @@
 import { jsonStream, asyncIteratorToArray, streamPromiseToStream } from "../utils/streams.js";
-import { compileExpression, normalizeLineName, normalizeMarkerName, normalizePadName } from "facilmap-utils";
+import { compileExpression } from "facilmap-utils";
 import type { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
 import Database from "../database/database.js";
 import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";

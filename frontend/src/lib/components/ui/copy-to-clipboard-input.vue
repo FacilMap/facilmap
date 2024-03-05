@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import copyToClipboard from "copy-to-clipboard";
-	import { computed, ref, type VNodeRef } from "vue";
+	import { computed, ref } from "vue";
 	import { useToasts } from "./toasts/toasts.vue";
 	import QrcodeVue from "qrcode.vue";
 	import Popover from "./popover.vue";
@@ -27,10 +27,6 @@
 	});
 
 	const modelValue = defineModel<string>({ required: true });
-
-	const emit = defineEmits<{
-		hidden: [];
-	}>();
 
 	const qrButtonRef = ref<HTMLButtonElement>();
 	const showQr = ref(false);
