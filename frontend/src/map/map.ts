@@ -14,8 +14,6 @@ if (import.meta.hot) {
 	});
 }
 
-registerDereferrerHandler();
-
 if ('serviceWorker' in navigator && location.hostname !== "localhost")
 	navigator.serviceWorker.register('./_app/static/sw.js', { scope: "./" });
 
@@ -28,6 +26,8 @@ const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0"
 
 const baseUrl = location.protocol + "//" + location.host + location.pathname.replace(/[^/]*$/, "");
 const initialPadId = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
+
+registerDereferrerHandler(baseUrl);
 
 if(!location.hash || location.hash == "#") {
 	const moveKeys = Object.keys(queryParams).filter((key) => ([ "zoom", "lat", "lon", "layer", "l", "q", "s", "c" ].includes(key)));

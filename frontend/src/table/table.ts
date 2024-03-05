@@ -20,7 +20,8 @@ import { registerDereferrerHandler } from "../utils/dereferrer";
 // import 'bootstrap/js/dist/toast';
 // import 'bootstrap/js/dist/tooltip';
 
-registerDereferrerHandler();
+const baseUrl = location.protocol + "//" + location.host + location.pathname.replace(/[^/]*\/table$/, "");
+registerDereferrerHandler(baseUrl);
 
 $(() => {
 	($("table.tablesorter") as any).tablesorter({
