@@ -20,6 +20,8 @@
 		okLabel?: string;
 		okVariant?: ThemeColour;
 		formValidationError?: string | undefined;
+		action?: string;
+		target?: string;
 	}>(), {
 		isModified: false,
 		size: "lg"
@@ -34,7 +36,6 @@
 
 	const validatedFormRef = ref<InstanceType<typeof ValidatedForm>>();
 	const isSubmitting = computed(() => validatedFormRef.value?.formData.isSubmitting);
-	const submitRef = ref<HTMLElement>();
 
 	const modalElementRef = ref<InstanceType<typeof AttributePreservingElement>>();
 	const modalRef = toRef(() => modalElementRef.value?.elementRef);
@@ -58,8 +59,13 @@
 
 	function handleSubmit(event: CustomSubmitEvent) {
 		if (isCloseButton.value) {
+			event.preventDefault();
 			modal.hide();
 		} else {
+			if (!props.action) {
+				event.preventDefault();
+			}
+
 			emit("submit", event);
 		}
 	}
@@ -87,6 +93,8 @@
 			<div class="modal-dialog modal-dialog-scrollable">
 				<ValidatedForm
 					class="modal-content"
+					:action="props.action"
+					:target="props.target"
 					@submit="handleSubmit"
 					ref="validatedFormRef"
 					:noValidate="isCloseButton"
@@ -124,7 +132,6 @@
 							class="btn btn-primary"
 							:class="props.okVariant && `btn-${props.okVariant}`"
 							:disabled="isSubmitting || props.isBusy"
-							ref="submitRef"
 						>
 							<div v-if="isSubmitting" class="spinner-border spinner-border-sm"></div>
 							{{props.okLabel ?? (isCloseButton ? 'Close' : 'Save')}}

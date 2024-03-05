@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect, toRef } from "vue";
-	import { type ExtendableEventMixin, extendableEventMixin } from "../../../utils/utils";
+	import { type ExtendableEventMixin, extendableEventMixin, useDomEventListener } from "../../../utils/utils";
 	import { useToasts } from "../toasts/toasts.vue";
 
 	export interface ValidatedFormData {
@@ -13,6 +13,7 @@
 	}
 
 	export interface CustomSubmitEvent extends ExtendableEventMixin {
+		preventDefault(): void;
 	}
 
 	const allForms = reactive(new Map<Ref<HTMLFormElement | undefined>, ValidatedFormData>());
@@ -48,9 +49,19 @@
 						}
 					}
 
-					const event = { ...extendableEventMixin };
+					let prevented = false;
+					const event = {
+						...extendableEventMixin,
+						preventDefault() {
+							prevented = true;
+						}
+					};
 					onSubmit(event);
 					await event._awaitPromises();
+
+					if (!prevented) {
+						formRef.value?.submit();
+					}
 				} finally {
 					data.isSubmitting = false;
 				}
@@ -75,6 +86,11 @@
 
 		watchEffect(() => {
 			data.isValidating = [...isValidating.values()].some((v) => v);
+		});
+
+		useDomEventListener(formRef, "submit", (e) => {
+			e.preventDefault();
+			data.submit();
 		});
 
 		allForms.set(formRef, data);
@@ -120,11 +136,10 @@
 
 <template>
 	<form
-		@submit.prevent="formData.submit()"
 		novalidate
 		ref="formRef"
-		:action="props.action"
-		:target="props.target ?? 'javascript:'"
+		:action="props.action ?? 'javascript:'"
+		:target="props.target"
 		:class="{ 'fm-was-validated': formData.isTouched }"
 	>
 		<slot :formData="formData"/>

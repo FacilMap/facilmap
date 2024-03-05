@@ -226,13 +226,13 @@
 		:id="`${id}-open-form`"
 		method="get"
 		:action="url"
-		@submit="handleSubmit"
+		@submit.prevent="handleSubmit"
 		ref="openFormRef"
 	></ValidatedForm>
 
 	<ValidatedForm
 		:id="`${id}-search-form`"
-		@submit="$event.waitUntil(search(searchQuery, 0))"
+		@submit.prevent="$event.waitUntil(search(searchQuery, 0))"
 		class="results"
 	></ValidatedForm>
 </template>
