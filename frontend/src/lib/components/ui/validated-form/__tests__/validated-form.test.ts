@@ -49,6 +49,7 @@ test("<ValidatedForm> waits for onSubmit promise", async () => {
 	});
 
 	const { formData } = mockForm({ onSubmit });
+	await sleep(0);
 
 	const form = document.querySelector('form')!;
 
@@ -74,6 +75,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 			onSubmit,
 			validationError: undefined
 		});
+		await sleep(0);
 
 		expect(onSubmit).toBeCalledTimes(0);
 		await formData!.submit();
@@ -86,6 +88,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 			onSubmit,
 			validationError: Promise.resolve(undefined)
 		});
+		await sleep(0);
 
 		expect(onSubmit).toBeCalledTimes(0);
 		await formData!.submit();
@@ -98,6 +101,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 			onSubmit,
 			validationError: "Error"
 		});
+		await sleep(0);
 
 		expect(onSubmit).toBeCalledTimes(0);
 		await formData!.submit();
@@ -110,6 +114,7 @@ describe("<ValidatedForm> handles validation errors", () => {
 			onSubmit,
 			validationError: Promise.resolve("Error")
 		});
+		await sleep(0);
 
 		expect(onSubmit).toBeCalledTimes(0);
 		await formData!.submit();
