@@ -3,6 +3,7 @@
 	import { computed } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import Icon from "../ui/icon.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -47,7 +48,7 @@
 <template>
 	<DropdownMenu
 		tag="li"
-		class="nav-item"
+		class="nav-item fm-toolbox-map-style-dropdown"
 		isLink
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
@@ -83,38 +84,50 @@
 
 		<li>
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				:href="links.osm"
 				target="_blank"
 				draggable="false"
-			>Open this on OpenStreetMap</a>
+			>
+				<span>OpenStreetMap</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li v-if="!context.hideCommercialMapLinks">
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				:href="links.google"
 				target="_blank"
 				draggable="false"
-			>Open this on Google Maps</a>
+			>
+				<span>Google Maps</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li v-if="!context.hideCommercialMapLinks">
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				:href="links.googleSatellite"
 				target="_blank"
 				draggable="false"
-			>Open this on Google Maps (Satellite)</a>
+			>
+				<span>Google Maps (Satellite)</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li v-if="!context.hideCommercialMapLinks">
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				:href="links.bing"
 				target="_blank"
 				draggable="false"
-			>Open this on Bing Maps</a>
+			>
+				<span>Bing Maps</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 	</DropdownMenu>
 </template>

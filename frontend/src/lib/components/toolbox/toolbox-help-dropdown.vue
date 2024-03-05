@@ -3,6 +3,7 @@
 	import { ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import Icon from "../ui/icon.vue";
 
 	const context = injectContextRequired();
 
@@ -26,38 +27,50 @@
 	>
 		<li>
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				href="https://docs.facilmap.org/users/"
 				target="_blank"
 				draggable="false"
-			>Documentation</a>
+			>
+				<span>Documentation</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li>
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				href="https://matrix.to/#/#facilmap:rankenste.in"
 				target="_blank"
 				draggable="false"
-			>Matrix chat room</a>
+			>
+				<span>Matrix chat room</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li>
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				href="https://github.com/FacilMap/facilmap/issues"
 				target="_blank"
 				draggable="false"
-			>Report a problem</a>
+			>
+				<span>Report a problem</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li>
 			<a
-				class="dropdown-item"
+				class="dropdown-item fm-toolbox-new-window-item"
 				href="https://github.com/FacilMap/facilmap/discussions"
 				target="_blank"
 				draggable="false"
-			>Ask a question</a>
+			>
+				<span>Ask a question</span>
+				<Icon icon="new-window"></Icon>
+			</a>
 		</li>
 
 		<li>

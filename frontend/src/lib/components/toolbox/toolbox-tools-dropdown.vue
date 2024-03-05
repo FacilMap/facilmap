@@ -93,7 +93,7 @@
 				href="javascript:"
 				@click="dialog = 'history'; emit('hide-sidebar')"
 				draggable="false"
-			>Show edit history</a>
+			>History</a>
 		</li>
 	</DropdownMenu>
 

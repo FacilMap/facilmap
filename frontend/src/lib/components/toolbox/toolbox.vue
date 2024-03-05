@@ -106,6 +106,20 @@
 			}
 		}
 
+		.fm-toolbox-new-window-item {
+			display: flex;
+			align-items: center;
+
+			> span:nth-child(1) {
+				flex-grow: 1;
+			}
+
+			> span:nth-child(2) {
+				display: inline-flex;
+				margin-left: 0.5rem;
+			}
+		}
+
 		@media print {
 			display: none;
 		}
