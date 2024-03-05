@@ -3,14 +3,13 @@
 	import EditFilterDialog from "../edit-filter-dialog.vue";
 	import HistoryDialog from "../history-dialog/history-dialog.vue";
 	import ShareDialog from "../share-dialog.vue";
-	import { computed, ref, toRef } from "vue";
-	import vTooltip from "../../utils/tooltip";
+	import { ref, toRef } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import ExportDialog from "../export-dialog.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
-	const mapContext = requireMapContext(context);
 	const importTabContext = toRef(() => context.components.importTab);
 
 	const props = defineProps<{
@@ -24,21 +23,10 @@
 	const dialog = ref<
 		| "edit-pad"
 		| "share"
+		| "export"
 		| "edit-filter"
 		| "history"
 	>();
-
-	const filterQuery = computed(() => {
-		const v = mapContext.value;
-		if (v.filter) {
-			return {
-				q: `?filter=${encodeURIComponent(v.filter)}`,
-				a: `&filter=${encodeURIComponent(v.filter)}`
-			};
-		} else {
-			return { q: "", a: "" };
-		}
-	});
 </script>
 
 <template>
@@ -71,40 +59,10 @@
 		<li v-if="client.padData">
 			<a
 				class="dropdown-item"
-				:href="`${client.padData.id}/geojson${filterQuery.q}`"
-				target="_blank"
-				v-tooltip.left="'GeoJSON files store all map information and can thus be used for map backups and be re-imported without any loss.'"
+				href="javascript:"
+				@click="dialog = 'export'; emit('hide-sidebar')"
 				draggable="false"
-			>Export as GeoJSON</a>
-		</li>
-
-		<li v-if="client.padData">
-			<a
-				class="dropdown-item"
-				:href="`${client.padData.id}/gpx?useTracks=1${filterQuery.a}`"
-				target="_blank"
-				v-tooltip.left="'GPX files can be opened with most navigation software. In track mode, any calculated routes are saved in the file.'"
-				draggable="false"
-			>Export as GPX (tracks)</a>
-		</li>
-
-		<li v-if="client.padData">
-			<a
-				class="dropdown-item"
-				:href="`${client.padData.id}/gpx?useTracks=0${filterQuery.a}`"
-				target="_blank"
-				v-tooltip.left="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to recalculate the routes.'"
-				draggable="false"
-			>Export as GPX (routes)</a>
-		</li>
-
-		<li v-if="client.padData">
-			<a
-				class="dropdown-item"
-				:href="`${client.padData.id}/table${filterQuery.q}`"
-				target="_blank"
-				draggable="false"
-			>Export as table</a>
+			>Export</a>
 		</li>
 
 		<li v-if="client.padData">
@@ -148,6 +106,11 @@
 		v-if="dialog === 'share'"
 		@hidden="dialog = undefined"
 	></ShareDialog>
+
+	<ExportDialog
+		v-if="dialog === 'export'"
+		@hidden="dialog = undefined"
+	></ExportDialog>
 
 	<EditFilterDialog
 		v-if="dialog === 'edit-filter' && client.padData"

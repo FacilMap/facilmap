@@ -8,6 +8,7 @@
 	import vTooltip from "../../utils/tooltip";
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import ValidatedField from "./validated-form/validated-field.vue";
+	import type { ThemeColour } from "../../utils/bootstrap";
 
 	const toasts = useToasts();
 
@@ -21,6 +22,7 @@
 		/** If specified, will be used for the clipboard/QR code instead of `${prefix}${modelValue}` */
 		fullUrl?: string;
 		validators?: Array<Validator<string>>;
+		variant?: ThemeColour;
 	}>(), {
 		shortDescription: "Link",
 		longDescription: "The link"
@@ -66,7 +68,7 @@
 						:ref="slotProps.inputRef"
 					/>
 				</template>
-				<button type="button" class="btn btn-secondary" @click="copy()">Copy</button>
+				<button type="button" :class="`btn btn-${props.variant ?? 'secondary'}`" @click="copy()">Copy</button>
 				<button
 					v-if="!props.noQr"
 					type="button"

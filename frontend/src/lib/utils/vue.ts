@@ -1,4 +1,9 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps } from "vue";
+
+// https://stackoverflow.com/a/73784241/242365
+export type ComponentProps<C extends Component> = C extends new (...args: any) => any
+  ? Omit<InstanceType<C>['$props'], keyof VNodeProps | keyof AllowedComponentProps>
+  : never;
 
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)
