@@ -28,7 +28,8 @@ export type Width = z.infer<typeof widthValidator>;
 export const strokeValidator = z.enum(["", "dashed", "dotted"]);
 export type Stroke = z.infer<typeof strokeValidator>;
 
-export const idValidator = z.number();
+export const stringifiedIdValidator = z.string().regex(/^\d+$/).transform(Number);
+export const idValidator = z.number().int();
 export type ID = z.infer<typeof idValidator>;
 
 export const forbiddenPadIds = [

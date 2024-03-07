@@ -34,13 +34,13 @@
   },
   "dependencies": {
     "facilmap-types": "workspace:^",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.13",
+    "@types/geojson": "^7946.0.14",
     "rimraf": "^5.0.5",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.12",
-    "vite-plugin-dts": "^3.7.0"
+    "typescript": "^5.4.2",
+    "vite": "^5.1.5",
+    "vite-plugin-dts": "^3.7.3"
   }
 }

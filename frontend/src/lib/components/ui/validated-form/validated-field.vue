@@ -147,7 +147,9 @@
 	const touched = ref(false);
 
 	function handleTouched() {
-		touched.value = true;
+		setTimeout(() => { // Give validators a chance to run on the updated value first
+			touched.value = true;
+		}, 0);
 	}
 
 	useDomEventListener(inputRef, "input", handleTouched);

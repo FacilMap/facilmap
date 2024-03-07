@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect, toRef } from "vue";
+	import { type Ref, onScopeDispose, reactive, readonly, ref, watchEffect, toRef, computed } from "vue";
 	import { type ExtendableEventMixin, extendableEventMixin, useDomEventListener } from "../../../utils/utils";
 	import { useToasts } from "../toasts/toasts.vue";
 
@@ -131,6 +131,20 @@
 		formValidationError: toRef(() => props.formValidationError)
 	});
 
+	const actionWithoutQuery = computed(() => {
+		if (props.action != null) {
+			const url = new URL(props.action);
+			url.search = "";
+			return url.toString();
+		}
+	});
+	const actionParams = computed(() => {
+		if (props.action != null) {
+			const url = new URL(props.action);
+			return url.searchParams;
+		}
+	});
+
 	defineExpose({ formData });
 </script>
 
@@ -138,10 +152,14 @@
 	<form
 		novalidate
 		ref="formRef"
-		:action="props.action ?? 'javascript:'"
+		:action="actionWithoutQuery ?? 'javascript:'"
 		:target="props.target"
 		:class="{ 'fm-was-validated': formData.isTouched }"
 	>
+		<template v-for="[key, value] in actionParams?.entries()" :key="key">
+			<input type="hidden" :name="key" :value="value" />
+		</template>
+
 		<slot :formData="formData"/>
 	</form>
 </template>

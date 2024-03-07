@@ -6,7 +6,8 @@
 	import HelpPopover from "./ui/help-popover.vue";
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 	import type { ComponentProps } from "../utils/vue";
-
+	import type { ID } from "facilmap-types";
+	import validatedField from "./ui/validated-form/validated-field.vue";
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -25,7 +26,8 @@
 	const formatOptions = {
 		gpx: "GPX",
 		geojson: "GeoJSON",
-		table: "HTML"
+		table: "HTML",
+		csv: "CSV"
 	};
 
 	const hideOptions = computed(() => new Set([
@@ -41,6 +43,7 @@
 	const useTracks = ref<"1" | "0">("1");
 	const filter = ref(true);
 	const hide = ref(new Set<string>());
+	const typeId = ref<ID>();
 
 	const methodOptions = computed(() => ({
 		download: format.value === "table" ? "Open file" : "Download file",
@@ -49,12 +52,32 @@
 
 	const method = ref<keyof typeof methodOptions["value"]>((Object.keys(methodOptions.value) as Array<keyof typeof methodOptions["value"]>)[0]);
 
+	const resolvedTypeId = computed(() => typeId.value != null && client.value.types[typeId.value] ? typeId.value : undefined);
+
+	const canSelectUseTracks = computed(() => format.value === "gpx");
+	const canSelectType = computed(() => format.value === "csv");
+	const mustSelectType = computed(() => format.value === "csv");
+	const canSelectHide = computed(() => ["table", "csv"].includes(format.value));
+	const validateImmediate = computed(() => method.value === "link"); // No submit button
+
+	function validateTypeId(typeId: ID | undefined) {
+		if (mustSelectType.value && resolvedTypeId.value == null) {
+			return "Please select a type.";
+		}
+	}
+
 	const url = computed(() => {
 		const params = new URLSearchParams();
-		if (format.value === "gpx") {
+		if (canSelectUseTracks.value) {
 			params.set("useTracks", useTracks.value);
 		}
-		if (format.value === "table" && hide.value.size > 0) {
+		if (canSelectType.value) {
+			if (resolvedTypeId.value == null) {
+				return undefined;
+			}
+			params.set("typeId", `${resolvedTypeId.value}`);
+		}
+		if (canSelectHide.value && hide.value.size > 0) {
 			params.set("hide", [...hide.value].join(","));
 		}
 		if (mapContext.value.filter) {
@@ -117,6 +140,10 @@
 						attributes of all markers and lines. This table can also be copy&pasted into a spreadsheet application for
 						further processing.
 					</p>
+					<p>
+						<strong>CSV</strong> files can be imported into most spreadsheet applications and only contain the data attributes of the objects
+						one type of marker or line.
+					</p>
 				</HelpPopover>
 			</label>
 			<div class="col-sm-9">
@@ -126,7 +153,7 @@
 			</div>
 		</div>
 
-		<div v-if="format === 'gpx'" class="row mb-3">
+		<div v-if="canSelectUseTracks" class="row mb-3">
 			<label class="col-sm-3 col-form-label" :for="`${id}-route-type-select`">
 				Route type
 				<HelpPopover>
@@ -163,7 +190,30 @@
 			</div>
 		</div>
 
-		<div v-if="format === 'table'" class="row mb-3">
+		<div v-if="canSelectType" class="row mb-3">
+			<label class="col-sm-3 col-form-label" :for="`${id}-type-select`">
+				Type
+			</label>
+			<validatedField
+				:value="typeId"
+				:validators="[
+					validateTypeId
+				]"
+				class="col-sm-9 position-relative"
+				:immediate="validateImmediate"
+			>
+				<template #default="slotProps">
+					<select class="form-select" v-model="typeId" :id="`${id}-type-select`" :ref="slotProps.inputRef">
+						<option v-for="(type, typeId) of client.types" :key="typeId" :value="typeId">{{type.name}}</option>
+					</select>
+					<div class="invalid-tooltip">
+						{{slotProps.validationError}}
+					</div>
+				</template>
+			</ValidatedField>
+		</div>
+
+		<div v-if="canSelectHide" class="row mb-3">
 			<label class="col-sm-3 col-form-label">Include columns</label>
 			<div class="col-sm-9 fm-export-dialog-hide-options">
 				<template v-for="key in hideOptions" :key="key">
@@ -190,7 +240,7 @@
 			</div>
 		</div>
 
-		<template v-if="method === 'link'">
+		<template v-if="method === 'link' && url != null">
 			<hr />
 
 			<CopyToClipboardInput

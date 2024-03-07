@@ -1,7 +1,7 @@
 import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import type { PadId } from "facilmap-types";
+import { stringifiedIdValidator, type PadId } from "facilmap-types";
 import { createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
@@ -12,6 +12,8 @@ import { getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMa
 import { normalizePadName } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
+import { exportCsv } from "./export/csv.js";
+import * as z from "zod";
 
 type PathParams = {
 	padId: PadId
@@ -95,6 +97,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.get("/:padId", padMiddleware);
 
 	app.get("/:padId/gpx", async (req: Request<PathParams>, res: Response<string>) => {
+		const query = z.object({
+			useTracks: z.enum(["0", "1"]).default("0"),
+			filter: z.string().optional()
+		}).parse(req.query);
+
 		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
 
 		if(!padData)
@@ -102,21 +109,30 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
-		exportGpx(database, padData ? padData.id : req.params.padId, req.query.useTracks == "1", req.query.filter as string | undefined).pipeTo(Writable.toWeb(res));
+		exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
 	app.get("/:padId/table", async (req: Request<PathParams>, res: Response<string>) => {
+		const query = z.object({
+			filter: z.string().optional(),
+			hide: z.string().optional()
+		}).parse(req.query);
+
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
 		res.send(await createTable(
 			database,
 			req.params.padId,
-			req.query.filter as string | undefined,
-			req.query.hide ? (req.query.hide as string).split(',') : []
+			query.filter,
+			query.hide ? query.hide.split(',') : []
 		));
 	});
 
 	app.get("/:padId/geojson", async (req: Request<PathParams>, res: Response<string>) => {
+		const query = z.object({
+			filter: z.string().optional()
+		}).parse(req.query);
+
 		const padData = await database.pads.getPadData(req.params.padId);
 
 		if(!padData)
@@ -125,7 +141,32 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.set("Content-type", "application/geo+json");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
 
-		const result = exportGeoJson(database, req.params.padId, req.query.filter as string | undefined);
+		const result = exportGeoJson(database, req.params.padId, query.filter);
+		Readable.fromWeb(result).pipe(res);
+	});
+
+	app.get("/:padId/csv", async (req: Request<PathParams>, res: Response<string>) => {
+		const query = z.object({
+			typeId: stringifiedIdValidator,
+			filter: z.string().optional(),
+			hide: z.string().optional()
+		}).parse(req.query);
+
+		const padData = await database.pads.getPadData(req.params.padId);
+
+		if(!padData)
+			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+
+		res.set("Content-type", "text/csv");
+		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");
+
+		const result = exportCsv(
+			database,
+			req.params.padId,
+			query.typeId,
+			query.filter,
+			query.hide ? query.hide.split(',') : []
+		);
 		Readable.fromWeb(result).pipe(res);
 	});
 

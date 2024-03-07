@@ -39,6 +39,7 @@ module.exports = {
 		"vue/multi-word-component-names": ["off"],
 		"@typescript-eslint/no-base-to-string": ["error"],
 		"@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: false }],
+		"vue/return-in-computed-property": ["off"],
 
 		"constructor-super": ["error"],
 		"for-direction": ["error"],

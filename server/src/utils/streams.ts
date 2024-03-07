@@ -37,6 +37,26 @@ export function streamPromiseToStream<T>(streamPromise: Promise<ReadableStream<T
 	return transform.readable;
 }
 
+export function mapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) => O): ReadableStream<O> {
+	return flatMapStream(stream, (it) => [mapper(it)]);
+}
+
+export function filterStream<T>(stream: ReadableStream<T>, filter: (it: T) => boolean): ReadableStream<T> {
+	return flatMapStream(stream, (it) => filter(it) ? [it] : []);
+}
+
+export function flatMapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) => O[]): ReadableStream<O> {
+	const transform = new TransformStream<T>({
+		async transform(chunk, controller) {
+			for (const result of mapper(chunk)) {
+				controller.enqueue(result);
+			}
+		}
+	});
+	stream.pipeTo(transform.writable);
+	return transform.readable;
+}
+
 export function jsonStream(template: any, data: Record<string, AsyncGenerator<any, any, void> | Promise<any> | any | (() => AsyncGenerator<any, any, void> | Promise<any> | any)>): ReadableStream<string> {
 	return asyncIteratorToStream((async function*() {
 		let lastIndent = '';

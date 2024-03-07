@@ -118,7 +118,7 @@
 			for(let field of type.fields) {
 				if(!hide.includes(field.name)) {
 -%>
-							<td><%-utils.formatField(field, object.data[field.name]).trim()%></td>
+							<td><%-utils.formatField(field, object.data[field.name], true).trim()%></td>
 <%
 				}
 			}
