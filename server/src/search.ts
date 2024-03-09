@@ -490,7 +490,7 @@ async function _loadUrl(url: string, completeOsmObjects = false): Promise<string
 	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
 		return body;
 	else if(body.match(/^\s*</)) {
-		const $ = cheerio.load(body, { xmlMode: true });
+		const $ = load(body, { xmlMode: true });
 		const rootEl = $.root().children();
 
 		if(rootEl.is("osm") && completeOsmObjects) {
@@ -511,14 +511,14 @@ async function _loadUrl(url: string, completeOsmObjects = false): Promise<string
 	}
 }
 
-async function _loadSubRelations($: cheerio.Root) {
+async function _loadSubRelations($: CheerioAPI) {
 	const loadedIds = new Set<string>();
 
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const promises: Array<Promise<string>> = [ ];
 
-		$("member[type='relation']").each(function(this: cheerio.Element) {
+		$("member[type='relation']").each(function() {
 			const relId = $(this).attr("ref")!;
 			if(!loadedIds.has(relId)) {
 				$(this).remove(); // Remove relation from result, as it will be returned again as part of the sub request
@@ -541,7 +541,7 @@ async function _loadSubRelations($: cheerio.Root) {
 			const relations = await Promise.all(promises);
 
 			for (const relation of relations) {
-				$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
+				$.root().children().append(load(relation, { xmlMode: true }).root().children().children());
 			}
 		}
 	}
