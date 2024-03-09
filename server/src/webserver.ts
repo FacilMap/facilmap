@@ -120,12 +120,12 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
-		res.send(await createTable(
+		createTable(
 			database,
 			req.params.padId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []
-		));
+		).pipeTo(Writable.toWeb(res));
 	});
 
 	app.get("/:padId/geojson", async (req: Request<PathParams>, res: Response<string>) => {

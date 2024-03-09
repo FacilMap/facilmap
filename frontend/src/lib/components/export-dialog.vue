@@ -80,7 +80,7 @@
 		if (canSelectHide.value && hide.value.size > 0) {
 			params.set("hide", [...hide.value].join(","));
 		}
-		if (mapContext.value.filter) {
+		if (filter.value && mapContext.value.filter) {
 			params.set("filter", mapContext.value.filter);
 		}
 		const paramsStr = params.toString();

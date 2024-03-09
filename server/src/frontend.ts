@@ -1,14 +1,16 @@
 import type { Manifest } from "vite";
 import { paths, serve } from "facilmap-frontend/build.js";
 import { readFile } from "node:fs/promises";
-import type { ID, Line, Marker, PadData, Type } from "facilmap-types";
+import type { ID, PadData, Type } from "facilmap-types";
 import * as ejs from "ejs";
-import * as utils from "facilmap-utils";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizeLineName, normalizeMarkerName, normalizePadName, type InjectedConfig } from "facilmap-utils";
+import { normalizePadName, type InjectedConfig, quoteHtml } from "facilmap-utils";
 import config from "./config";
-import { asyncIteratorToArray, jsonStream } from "./utils/streams";
+import { asyncIteratorToArray, jsonStream, streamPromiseToStream, streamReplace } from "./utils/streams";
+import { ReadableStream } from "stream/web";
+import { generateRandomId } from "./utils/utils";
+import type { TableParams } from "./export/table";
 
 export const isDevMode = !!process.env.FM_DEV;
 
@@ -21,11 +23,6 @@ interface Scripts {
 	scripts: string[];
 	preloadScripts: string[];
 	styles: string[];
-}
-
-export type TypeWithObjects = Type & {
-	markers: Marker[];
-	lines: Line[];
 }
 
 async function getScripts(entry: "mapEntry" | "tableEntry"): Promise<Scripts> {
@@ -91,27 +88,36 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 	});
 }
 
-export async function renderTable(params: {
+export function renderTable({ padData, types, renderSingleTable }: {
 	padData: PadData | undefined;
-	types: Record<ID, TypeWithObjects>;
-	hide: string[];
-}): Promise<string> {
-	const [template, injections] = await Promise.all([
-		readFile(paths.tableEjs).then((t) => t.toString()),
-		getScripts("tableEntry")
-	]);
+	types: Type[];
+	renderSingleTable: (typeId: ID, params: TableParams) => ReadableStream<string>;
+}): ReadableStream<string> {
+	return streamPromiseToStream((async () => {
+		const [template, injections] = await Promise.all([
+			readFile(paths.tableEjs).then((t) => t.toString()),
+			getScripts("tableEntry")
+		]);
 
-	return ejs.render(template, {
-		...injections,
-		appName: config.appName,
-		hasCustomCssFile: !!config.customCssFile,
-		paths,
-		utils,
-		normalizeMarkerName,
-		normalizeLineName,
-		normalizePadName,
-		...params
-	});
+		const replace: Record<string, ReadableStream<string>> = {};
+		const rendered = ejs.render(template, {
+			...injections,
+			appName: config.appName,
+			hasCustomCssFile: !!config.customCssFile,
+			paths,
+			normalizePadName,
+			quoteHtml,
+			renderSingleTable: (typeId: ID, params: TableParams) => {
+				const placeholder = `%${generateRandomId(32)}%`;
+				replace[placeholder] = renderSingleTable(typeId, params);
+				return placeholder;
+			},
+			padData,
+			types,
+		});
+
+		return streamReplace(rendered, replace);
+	})());
 }
 
 export async function getStaticFrontendMiddleware(): Promise<RequestHandler> {

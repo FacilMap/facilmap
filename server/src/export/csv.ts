@@ -1,4 +1,4 @@
-import { streamPromiseToStream, mapStream } from "../utils/streams.js";
+import { streamPromiseToStream } from "../utils/streams.js";
 import type { PadId, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import type { ReadableStream } from "stream/web";
@@ -18,7 +18,7 @@ export function exportCsv(
 
 		const stringifier = stringify();
 		stringifier.write(tabular.fields);
-		mapStream(tabular.objects, (obj) => Object.values(obj)).pipeTo(Writable.toWeb(stringifier));
+		tabular.objects.pipeTo(Writable.toWeb(stringifier));
 
 		return Readable.toWeb(stringifier);
 	})());

@@ -1,5 +1,5 @@
 import { round } from "./utils/utils.js";
-import cheerio from "cheerio";
+import { load, type CheerioAPI } from "cheerio";
 import compressjs from "compressjs";
 import zlib from "zlib";
 import util from "util";

@@ -1,8 +1,13 @@
 import { flatMapStream, asyncIteratorToStream, mapStream } from "../utils/streams.js";
-import { compileExpression, formatField, formatRouteMode, formatTime, normalizeLineName, normalizeMarkerName, round } from "facilmap-utils";
+import { compileExpression, formatField, formatRouteMode, formatTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { PadId, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { ReadableStream } from "stream/web";
+
+export type TabularData = {
+	fields: string[];
+	objects: ReadableStream<string[]>;
+};
 
 export async function getTabularData(
 	database: Database,
@@ -11,10 +16,7 @@ export async function getTabularData(
 	html: boolean,
 	filter?: string,
 	hide: string[] = []
-): Promise<{
-	fields: string[];
-	objects: ReadableStream<Record<string, string>>;
-}> {
+): Promise<TabularData> {
 	const padData = await database.pads.getPadData(padId);
 	if (!padData)
 		throw new Error(`Pad ${padId} could not be found.`);
@@ -22,6 +24,8 @@ export async function getTabularData(
 	const type = await database.types.getType(padData.id, typeId);
 
 	const filterFunc = compileExpression(filter);
+
+	const handlePlainText = (str: string) => html ? quoteHtml(str) : str;
 
 	const fields = [
 		"Name",
@@ -32,33 +36,33 @@ export async function getTabularData(
 			"Time"
 		] : []),
 		...type.fields.map((f) => f.name)
-	].filter((f) => !hide.includes(f));
+	];
 
-	const objects = type.type === "marker" ? flatMapStream(asyncIteratorToStream(database.markers.getPadMarkersByType(padId, typeId)), (marker): Array<Record<string, () => string>> => {
+	const objects = type.type === "marker" ? flatMapStream(asyncIteratorToStream(database.markers.getPadMarkersByType(padId, typeId)), (marker): Array<Array<() => string>> => {
 		if (!filterFunc(marker, type)) {
 			return [];
 		}
 
-		return [{
-			"Name": () => normalizeMarkerName(marker.name),
-			"Position": () => `${round(marker.lat, 5)},${round(marker.lon, 5)}`,
-			...Object.fromEntries(type.fields.map((f) => [f.name, () => formatField(f, marker.data[f.name], html).trim()]))
-		}];
-	}) : flatMapStream(asyncIteratorToStream(database.lines.getPadLinesByType(padId, typeId)), (line): Array<Record<string, () => string>> => {
+		return [[
+			() => handlePlainText(normalizeMarkerName(marker.name)),
+			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
+			...type.fields.map((f) => () => formatField(f, marker.data[f.name], html).trim())
+		]];
+	}) : flatMapStream(asyncIteratorToStream(database.lines.getPadLinesByType(padId, typeId)), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
 			return [];
 		}
 
-		return [{
-			"Name": () => normalizeLineName(line.name),
-			"Distance": () => `${round(line.distance, 2)}\u202Fkm`,
-			"Time": () => line.time != null ? `${formatTime(line.time)}\u202Fh ${formatRouteMode(line.mode)}` : "",
-			...Object.fromEntries(type.fields.map((f) => [f.name, () => formatField(f, line.data[f.name], html).trim()]))
-		}];
+		return [[
+			() => handlePlainText(normalizeLineName(line.name)),
+			() => handlePlainText(`${round(line.distance, 2)}\u202Fkm`),
+			() => handlePlainText(line.time != null ? `${formatTime(line.time)}\u202Fh ${formatRouteMode(line.mode)}` : ""),
+			...type.fields.map((f) => () => formatField(f, line.data[f.name], html).trim())
+		]];
 	});
 
 	return {
-		fields,
-		objects: mapStream(objects, (obj) => Object.fromEntries(Object.entries(obj).flatMap(([k, v]) => fields.includes(k) ? [[k, v()]] : [])))
+		fields: fields.filter((f) => !hide.includes(f)),
+		objects: mapStream(objects, (obj) => obj.flatMap((v, idx) => hide.includes(fields[idx]) ? [] : [v()]))
 	};
 }

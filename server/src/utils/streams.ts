@@ -92,3 +92,70 @@ export function jsonStream(template: any, data: Record<string, AsyncGenerator<an
 		}
 	})());
 }
+
+export function stringToStream(string: string): ReadableStream<string> {
+	return asyncIteratorToStream((async function*() {
+		yield string;
+	})());
+}
+
+export function streamReplace(stream: ReadableStream<string> | string, replace: Record<string, ReadableStream<string> | string>): ReadableStream<string> {
+	const normalizedStream = typeof stream === "string" ? stringToStream(stream) : stream;
+
+	const longestPlaceholder = Math.max(...Object.keys(replace).map((k) => k.length));
+	if (longestPlaceholder <= 0) {
+		return normalizedStream;
+	}
+
+	const replaceCopy = { ...replace };
+
+	return asyncIteratorToStream((async function*() {
+		let buffer = "";
+
+		const reader = normalizedStream.getReader();
+		while (true) {
+			const { value: chunk, done } = await reader.read();
+			buffer += chunk ?? "";
+
+			let firstOccurrence;
+			while (firstOccurrence = (() => {
+				let result: { key: string; idx: number } | undefined;
+				for (const key of Object.keys(replace)) {
+					const idx = buffer.indexOf(key);
+					if (idx !== -1 && (!result || idx < result.idx)) {
+						result = { key, idx };
+					}
+				}
+				return result;
+			})()) {
+				if (firstOccurrence.idx > 0) {
+					yield buffer.slice(0, firstOccurrence.idx);
+				}
+				buffer = buffer.slice(firstOccurrence.idx + firstOccurrence.key.length);
+
+				const replaceValue = replaceCopy[firstOccurrence.key];
+				if (typeof replaceValue === "string") {
+					yield replaceValue;
+				} else {
+					const tee = replaceValue.tee();
+					replaceCopy[firstOccurrence.key] = tee[0];
+					for await (const replaceChunk of tee[1]) {
+						yield replaceChunk;
+					}
+				}
+			}
+
+			const minBufferRemain = done ? 0 : 2 * longestPlaceholder - 1;
+			if (buffer.length > 0 && buffer.length >= minBufferRemain) {
+				if (buffer.length > minBufferRemain) {
+					yield buffer.slice(0, buffer.length - minBufferRemain);
+				}
+				buffer = buffer.slice(buffer.length - minBufferRemain);
+			}
+
+			if (done) {
+				break;
+			}
+		}
+	})());
+}

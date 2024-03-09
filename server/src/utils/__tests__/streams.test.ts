@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { arrayToAsyncIterator, asyncIteratorToArray, jsonStream, streamPromiseToStream } from "../streams.js";
+import { arrayToAsyncIterator, asyncIteratorToArray, asyncIteratorToStream, jsonStream, streamPromiseToStream, streamReplace } from "../streams.js";
 import { ReadableStream } from "stream/web";
 
 describe("streamPromiseToStream", () => {
@@ -106,4 +106,33 @@ test('jsonStream', async () => {
 	"test8": "bla"
 }`
 	);
+});
+
+test("streamReplace", async () => {
+	const replaceMap = {
+		"%VAR1%": "var1 replacement",
+		"%VAR2%": "var2 replacement",
+		"%VAR3%": asyncIteratorToStream((async function* () {
+			yield "var2 ";
+			yield "replacement";
+		})())
+	};
+
+	const stream = asyncIteratorToStream((async function* () {
+		yield "Before %VA";
+		yield "R1% between %V";
+		yield "AR2% and %VAR3% after";
+	})());
+
+	const result = await asyncIteratorToArray(streamReplace(stream, replaceMap));
+	expect(result).toEqual([
+		"Before ",
+		"var1 replacement",
+		" between ",
+		"var2 replacement",
+		" and ",
+		"var2 ",
+		"replacement",
+		" after"
+	]);
 });
