@@ -100,13 +100,9 @@ export async function find(query: string, loadUrls = false, loadElevation = fals
 			return await _loadUrl(query);
 	}
 
-	const lonlat_match = query.match(/^(geo\s*:\s*)?(-?\s*\d+([.,]\d+)?)\s*[,;]\s*(-?\s*\d+([.,]\d+)?)(\s*\?z\s*=\s*(\d+))?$/);
+	const lonlat_match = matchLonLat(query);
 	if(lonlat_match) {
-		const result = await _findLonLat({
-			lat: Number(lonlat_match[2].replace(",", ".").replace(/\s+/, "")),
-			lon : Number(lonlat_match[4].replace(",", ".").replace(/\s+/, "")),
-			zoom : lonlat_match[7] != null ? Number(lonlat_match[7]) : undefined
-		}, loadElevation);
+		const result = await _findLonLat(lonlat_match, loadElevation);
 		return result.map((res) => ({ ...res, id: query }));
 	}
 
@@ -547,6 +543,60 @@ async function _loadSubRelations($: cheerio.Root) {
 			for (const relation of relations) {
 				$.root().children().append(cheerio.load(relation, { xmlMode: true }).root().children().children());
 			}
+		}
+	}
+}
+
+const lonLatRegexp = (() => {
+	const number = `[-\u2212]?\\s*\\d+([.,]\\d+)?`;
+
+	const getCoordinate = (n: number) => (
+		`(` +
+			`(?<degrees${n}>${number})` +
+			`(\\s*[°]\\s*|\\s*deg\\s*|\\s+|$|(?!\\d))` +
+		`)(` +
+			`(?<minutes${n}>${number})` +
+			`(\\s*['\u2032]\\s*)` +
+		`)?(` +
+			`(?<seconds${n}>${number})` +
+			`(\\s*["\u2033]\\s*)` +
+		`)?(` +
+			`(?<hemisphere${n}>[NWSE])` +
+		`)?`
+	);
+
+	const coords = (
+		`(geo\\s*:\\s*)?` +
+		`\\s*` +
+		getCoordinate(1) +
+		`(\\s*[,;]\\s*|\\s+)` +
+		getCoordinate(2) +
+		`(\\?z=(?<zoom>\\d+))?`
+	);
+
+	return new RegExp(`^\\s*${coords}\\s*$`, "i");
+})();
+
+export function matchLonLat(query: string): (Point & { zoom?: number }) | undefined {
+	const m = lonLatRegexp.exec(query);
+
+	const prepareNumber = (str: string) => Number(str.replace(",", ".").replace("\u2212", "-").replace(/\s+/, ""));
+	const prepareCoords = (deg: string, min: string | undefined, sec: string | undefined, hem: string | undefined) => {
+		const degrees = prepareNumber(deg);
+		const result = Math.abs(degrees) + (min ? prepareNumber(min) / 60 : 0) + (sec ? prepareNumber(sec) / 3600 : 0);
+		return result * (degrees < 0 ? -1 : 1) * (hem && ["s", "S", "w", "W"].includes(hem) ? -1 : 1);
+	};
+
+	if (m) {
+		const number1 = prepareCoords(m.groups!.degrees1, m.groups!.minutes1, m.groups!.seconds1, m.groups!.hemisphere1);
+		const number2 = prepareCoords(m.groups!.degrees2, m.groups!.minutes2, m.groups!.seconds2, m.groups!.hemisphere2);
+		const zoom = m.groups!.zoom ? Number(m.groups!.zoom) : undefined;
+		const zoomObj = zoom != null && isFinite(zoom) ? { zoom } : {};
+
+		if ([undefined, "n", "N", "s", "S"].includes(m.groups!.hemisphere1) && [undefined, "w", "W", "e", "E"].includes(m.groups!.hemisphere2)) {
+			return { lat: number1, lon: number2, ...zoomObj };
+		} else if (["w", "W", "e", "E"].includes(m.groups!.hemisphere1) && [undefined, "n", "N", "s", "S"].includes(m.groups!.hemisphere2)) {
+			return { lat: number2, lon: number1, ...zoomObj };
 		}
 	}
 }
