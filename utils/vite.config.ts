@@ -16,7 +16,7 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/")
+			external: (id) => id.includes("/node_modules/") || (!id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/"))
 		}
 	}
 });

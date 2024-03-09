@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as yauzl from "yauzl-promise";
 import * as svgo from "svgo";
-import cheerio from "cheerio";
+import { load, type Element } from "cheerio";
 import { writeFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { Readable } from "stream";
@@ -30,11 +30,11 @@ async function updateIcons() {
 function cleanIcon(icon: string): string {
     const optimized = svgo.optimize(icon);
 
-    const $ = cheerio.load(optimized.data, {
+    const $ = load(optimized.data, {
         xmlMode: true
     });
 
-    for (const el of $("*").toArray() as cheerio.TagElement[]) {
+    for (const el of $("*").toArray() as Element[]) {
         el.name = el.name.replace(/^svg:/, "");
     }
 

@@ -24,11 +24,11 @@
 	const itemIconRefs = reactive(new Map<string, HTMLElement>());
 
 	const legend1Html = computed(() => {
-		return props.legend1 ? markdownBlock(props.legend1) : "";
+		return props.legend1 ? markdownBlock(props.legend1, true) : "";
 	});
 
 	const legend2Html = computed(() => {
-		return props.legend2 ? markdownBlock(props.legend2) : "";
+		return props.legend2 ? markdownBlock(props.legend2, true) : "";
 	});
 
 	function toggleFilter(typeInfo: LegendType, item?: LegendItem): void {
