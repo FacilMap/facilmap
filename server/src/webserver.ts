@@ -2,7 +2,7 @@ import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
 import { stringifiedIdValidator, type PadId } from "facilmap-types";
-import { createTable } from "./export/table.js";
+import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx } from "./export/gpx.js";
@@ -15,16 +15,12 @@ import config from "./config";
 import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 
-type PathParams = {
-	padId: PadId
-}
-
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
 }
 
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
-	const padMiddleware = async (req: Request<PathParams>, res: Response<string>) => {
+	const padMiddleware = async (req: Request<{ padId: string }>, res: Response<string>) => {
 		let params: RenderMapParams;
 		if(req.params?.padId) {
 			const padData = await database.pads.getPadDataByAnyId(req.params.padId);
@@ -96,7 +92,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 	// If no file with this name has been found, we render a pad
 	app.get("/:padId", padMiddleware);
 
-	app.get("/:padId/gpx", async (req: Request<PathParams>, res: Response<string>) => {
+	app.get("/:padId/gpx", async (req: Request<{ padId: string }>, res: Response<string>) => {
 		const query = z.object({
 			useTracks: z.enum(["0", "1"]).default("0"),
 			filter: z.string().optional()
@@ -112,7 +108,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/table", async (req: Request<PathParams>, res: Response<string>) => {
+	app.get("/:padId/table", async (req: Request<{ padId: string }>, res: Response<string>) => {
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
@@ -128,7 +124,25 @@ export async function initWebserver(database: Database, port: number, host?: str
 		).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/geojson", async (req: Request<PathParams>, res: Response<string>) => {
+	app.get("/:padId/rawTable/:typeId", async (req: Request<{ padId: PadId; typeId: string }>, res: Response<string>) => {
+		const typeId = stringifiedIdValidator.parse(req.params.typeId);
+		const query = z.object({
+			filter: z.string().optional(),
+			hide: z.string().optional()
+		}).parse(req.query);
+
+		res.type("html");
+		res.setHeader("Referrer-Policy", "origin");
+		createSingleTable(
+			database,
+			req.params.padId,
+			typeId,
+			query.filter,
+			query.hide ? query.hide.split(',') : []
+		).pipeTo(Writable.toWeb(res));
+	});
+
+	app.get("/:padId/geojson", async (req: Request<{ padId: string }>, res: Response<string>) => {
 		const query = z.object({
 			filter: z.string().optional()
 		}).parse(req.query);
@@ -145,9 +159,9 @@ export async function initWebserver(database: Database, port: number, host?: str
 		Readable.fromWeb(result).pipe(res);
 	});
 
-	app.get("/:padId/csv", async (req: Request<PathParams>, res: Response<string>) => {
+	app.get("/:padId/csv/:typeId", async (req: Request<{ padId: string; typeId: string }>, res: Response<string>) => {
+		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
-			typeId: stringifiedIdValidator,
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
@@ -163,7 +177,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		const result = exportCsv(
 			database,
 			req.params.padId,
-			query.typeId,
+			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []
 		);

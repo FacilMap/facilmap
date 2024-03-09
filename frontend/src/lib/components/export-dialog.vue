@@ -8,6 +8,11 @@
 	import type { ComponentProps } from "../utils/vue";
 	import type { ID } from "facilmap-types";
 	import validatedField from "./ui/validated-form/validated-field.vue";
+	import { useToasts } from "./ui/toasts/toasts.vue";
+	import copyToClipboard from "copy-to-clipboard";
+	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
+
+	const toasts = useToasts();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -47,21 +52,31 @@
 
 	const methodOptions = computed(() => ({
 		download: format.value === "table" ? "Open file" : "Download file",
-		link: "Generate link"
+		link: "Generate link",
+		...(format.value === "table" ? {
+			copy: "Copy to clipboard"
+		} : {})
 	}));
 
-	const method = ref<keyof typeof methodOptions["value"]>((Object.keys(methodOptions.value) as Array<keyof typeof methodOptions["value"]>)[0]);
+	const rawMethod = ref<keyof typeof methodOptions["value"]>();
+	const method = computed({
+		get: () => (rawMethod.value && Object.keys(methodOptions.value).includes(rawMethod.value)) ? rawMethod.value : (Object.keys(methodOptions.value) as Array<keyof typeof methodOptions["value"]>)[0],
+		set: (method) => {
+			rawMethod.value = method;
+		}
+	});
 
-	const resolvedTypeId = computed(() => typeId.value != null && client.value.types[typeId.value] ? typeId.value : undefined);
+	const resolveTypeId = (typeId: ID | undefined) => typeId != null && client.value.types[typeId] ? typeId : undefined;
+	const resolvedTypeId = computed(() => resolveTypeId(typeId.value));
 
 	const canSelectUseTracks = computed(() => format.value === "gpx");
-	const canSelectType = computed(() => format.value === "csv");
-	const mustSelectType = computed(() => format.value === "csv");
+	const canSelectType = computed(() => format.value === "csv" || (format.value === "table" && method.value === "copy"));
+	const mustSelectType = computed(() => canSelectType.value);
 	const canSelectHide = computed(() => ["table", "csv"].includes(format.value));
 	const validateImmediate = computed(() => method.value === "link"); // No submit button
 
 	function validateTypeId(typeId: ID | undefined) {
-		if (mustSelectType.value && resolvedTypeId.value == null) {
+		if (mustSelectType.value && resolveTypeId(typeId) == null) {
 			return "Please select a type.";
 		}
 	}
@@ -71,12 +86,6 @@
 		if (canSelectUseTracks.value) {
 			params.set("useTracks", useTracks.value);
 		}
-		if (canSelectType.value) {
-			if (resolvedTypeId.value == null) {
-				return undefined;
-			}
-			params.set("typeId", `${resolvedTypeId.value}`);
-		}
 		if (canSelectHide.value && hide.value.size > 0) {
 			params.set("hide", [...hide.value].join(","));
 		}
@@ -85,12 +94,51 @@
 		}
 		const paramsStr = params.toString();
 
-		return (
-			context.baseUrl
-				+ client.value.padData!.id
-				+ `/${format.value}`
-				+ (paramsStr ? `?${paramsStr}` : '')
-		);
+		switch (format.value) {
+			case "table": {
+				if (method.value === "copy") {
+					if (resolvedTypeId.value == null) {
+						return undefined;
+					}
+					return (
+						context.baseUrl
+							+ client.value.padData!.id
+							+ `/rawTable`
+							+ `/${resolvedTypeId.value}`
+							+ (paramsStr ? `?${paramsStr}` : '')
+					);
+				} else {
+					return (
+						context.baseUrl
+							+ client.value.padData!.id
+							+ `/table`
+							+ (paramsStr ? `?${paramsStr}` : '')
+					);
+				}
+			}
+
+			case "csv": {
+				if (resolvedTypeId.value == null) {
+					return undefined;
+				}
+				return (
+					context.baseUrl
+						+ client.value.padData!.id
+						+ `/csv`
+						+ `/${resolvedTypeId.value}`
+						+ (paramsStr ? `?${paramsStr}` : '')
+				);
+			}
+
+			default: {
+				return (
+					context.baseUrl
+						+ client.value.padData!.id
+						+ `/${format.value}`
+						+ (paramsStr ? `?${paramsStr}` : '')
+				);
+			}
+		}
 	});
 
 	const modalProps = computed((): Partial<ComponentProps<typeof ModalDialog>> => {
@@ -101,6 +149,11 @@
 				isCreate: true,
 				okLabel: "Export"
 			};
+		} else if (method.value === "copy") {
+			return {
+				isCreate: true,
+				okLabel: "Copy"
+			};
 		} else {
 			return {
 				isCreate: false,
@@ -108,6 +161,22 @@
 			};
 		}
 	});
+
+	function handleSubmit(e: CustomSubmitEvent): void {
+		if (method.value === "copy") {
+			e.preventDefault();
+
+			const fetchUrl = url.value;
+			if (fetchUrl) {
+				e.waitUntil((async () => {
+					const res = await fetch(fetchUrl);
+					const html = await res.text();
+					copyToClipboard(html, { format: "text/html" });
+					toasts.showToast(undefined, `${formatOptions[format.value]} export copied`, `The ${formatOptions[format.value]} export was copied to the clipboard.`, { variant: "success", autoHide: true });
+				})());
+			}
+		}
+	}
 </script>
 
 <template>
@@ -117,6 +186,7 @@
 		class="fm-export-dialog"
 		ref="modalRef"
 		v-bind="modalProps"
+		@submit="handleSubmit"
 		@hidden="emit('hidden')"
 	>
 		<p>Export your map here to transfer it to another application, another device or another collaborative map.</p>
@@ -153,6 +223,15 @@
 			</div>
 		</div>
 
+		<div class="row mb-3">
+			<label class="col-sm-3 col-form-label" :for="`${id}-method`">Export method</label>
+			<div class="col-sm-9">
+				<select class="form-select" v-model="method" :id="`${id}-method`">
+					<option v-for="(label, value) in methodOptions" :value="value" :key="value">{{label}}</option>
+				</select>
+			</div>
+		</div>
+
 		<div v-if="canSelectUseTracks" class="row mb-3">
 			<label class="col-sm-3 col-form-label" :for="`${id}-route-type-select`">
 				Route type
@@ -172,21 +251,6 @@
 					<option value="1">Track points</option>
 					<option value="0">Route points</option>
 				</select>
-			</div>
-		</div>
-
-		<div v-if="mapContext.filter" class="row mb-3">
-			<label class="col-sm-3 col-form-label" :for="`${id}-filter-checkbox`">Apply filter</label>
-			<div class="col-sm-9">
-				<div class="form-check fm-form-check-with-label">
-					<input
-						class="form-check-input"
-						type="checkbox"
-						:id="`${id}-filter-checkbox`"
-						v-model="filter"
-					>
-					<label class="form-check-label" :for="`${id}-filter-checkbox`">Only include objects visible under current filter</label>
-				</div>
 			</div>
 		</div>
 
@@ -231,12 +295,18 @@
 			</div>
 		</div>
 
-		<div class="row mb-3">
-			<label class="col-sm-3 col-form-label" :for="`${id}-method`">Export method</label>
+		<div v-if="mapContext.filter" class="row mb-3">
+			<label class="col-sm-3 col-form-label" :for="`${id}-filter-checkbox`">Apply filter</label>
 			<div class="col-sm-9">
-				<select class="form-select" v-model="method" :id="`${id}-method`">
-					<option v-for="(label, value) in methodOptions" :value="value" :key="value">{{label}}</option>
-				</select>
+				<div class="form-check fm-form-check-with-label">
+					<input
+						class="form-check-input"
+						type="checkbox"
+						:id="`${id}-filter-checkbox`"
+						v-model="filter"
+					>
+					<label class="form-check-label" :for="`${id}-filter-checkbox`">Only include objects visible under current filter</label>
+				</div>
 			</div>
 		</div>
 
