@@ -107,10 +107,12 @@
 		@hidden="dialog = undefined"
 	></ShareDialog>
 
-	<ExportDialog
-		v-if="dialog === 'export'"
-		@hidden="dialog = undefined"
-	></ExportDialog>
+	<KeepAlive>
+		<ExportDialog
+			v-if="dialog === 'export'"
+			@hidden="dialog = undefined"
+		></ExportDialog>
+	</KeepAlive>
 
 	<EditFilterDialog
 		v-if="dialog === 'edit-filter' && client.padData"

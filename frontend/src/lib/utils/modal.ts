@@ -1,5 +1,5 @@
 import Modal from "bootstrap/js/dist/modal";
-import { type Ref, shallowRef, watch, watchEffect, reactive, readonly, effectScope } from "vue";
+import { type Ref, shallowRef, watchEffect, reactive, readonly, effectScope, onActivated, ref, onDeactivated } from "vue";
 import { useMaxBreakpoint } from "./bootstrap";
 import { fixOnCleanup } from "./vue";
 
@@ -58,10 +58,20 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 		}
 	});
 
-	watch(modalRef, (newRef, oldRef, onCleanup_) => {
+	const isActivated = ref(true);
+	onActivated(() => {
+		isActivated.value = true;
+	});
+	onDeactivated(() => {
+		isActivated.value = false;
+	});
+
+	watchEffect((onCleanup_) => {
 		const onCleanup = fixOnCleanup(onCleanup_);
 
-		if (newRef) {
+		if (modalRef.value && isActivated.value) {
+			const newRef = modalRef.value;
+
 			if (!lastFocusedEl) {
 				lastFocusedEl = document.activeElement ?? undefined;
 			}
