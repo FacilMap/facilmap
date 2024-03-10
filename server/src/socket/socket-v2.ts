@@ -1,8 +1,8 @@
 import { promiseProps, type PromiseMap } from "../utils/utils.js";
-import { asyncIteratorToArray } from "../utils/streams.js";
+import { asyncIteratorToArray, streamToString } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { Socket, type Socket as SocketIO } from "socket.io";
-import { exportLineToGpx } from "../export/gpx.js";
+import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { find } from "../search.js";
 import { geoipLookup } from "../geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
@@ -254,7 +254,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				if (data.mode != "track") {
 					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await this.database.routes.getAllRoutePoints(route.id) };
+							fromRoute = { ...route, trackPoints: await asyncIteratorToArray(this.database.routes.getAllRoutePoints(route.id)) };
 							break;
 						}
 					}
@@ -273,7 +273,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				if (data.mode != "track") {
 					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await this.database.routes.getAllRoutePoints(route.id) };
+							fromRoute = { ...route, trackPoints: await asyncIteratorToArray(this.database.routes.getAllRoutePoints(route.id)) };
 							break;
 						}
 					}
@@ -300,19 +300,16 @@ export class SocketConnectionV2 extends SocketConnection {
 				const lineP = this.database.lines.getLine(this.padId, data.id);
 				lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
-				const [line, trackPoints, type] = await Promise.all([
+				const [line, type] = await Promise.all([
 					lineP,
-					this.database.lines.getAllLinePoints(data.id),
 					lineP.then((line) => this.database.types.getType(this.padId as string, line.typeId))
 				]);
 
-				const lineWithTrackPoints = { ...line, trackPoints };
-
 				switch(data.format) {
 					case "gpx-trk":
-						return exportLineToGpx(lineWithTrackPoints, type, true);
+						return await streamToString(exportLineToTrackGpx(line, type, this.database.lines.getAllLinePoints(line.id)));
 					case "gpx-rte":
-						return exportLineToGpx(lineWithTrackPoints, type, false);
+						return await streamToString(exportLineToRouteGpx(line, type));
 					default:
 						throw new Error("Unknown format.");
 				}
@@ -536,15 +533,13 @@ export class SocketConnectionV2 extends SocketConnection {
 					throw new Error("Route not available.");
 				}
 
-				const trackPoints = await this.database.routes.getAllRoutePoints(route.id);
-
-				const routeInfo = { ...this.route, trackPoints };
+				const routeInfo = { ...route, name: "FacilMap route", data: {} };
 
 				switch(data.format) {
 					case "gpx-trk":
-						return await exportLineToGpx(routeInfo, undefined, true);
+						return await streamToString(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.id)));
 					case "gpx-rte":
-						return await exportLineToGpx(routeInfo, undefined, false);
+						return await streamToString(exportLineToRouteGpx(routeInfo, undefined));
 					default:
 						throw new Error("Unknown format.");
 				}

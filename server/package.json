@@ -66,6 +66,7 @@
     "string-similarity": "^4.0.4",
     "strip-bom-buf": "^4.0.0",
     "unzipper": "^0.10.14",
+    "zip-stream": "^6.0.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

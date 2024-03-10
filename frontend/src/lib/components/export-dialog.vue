@@ -44,8 +44,14 @@
 		...Object.values(client.value.types).flatMap((type) => type.fields.map((field) => field.name))
 	]));
 
+	const routeTypeOptions = {
+		"tracks": "Track points",
+		"zip": "Track points, one file per line (ZIP file)",
+		"routes": "Route points"
+	};
+
 	const format = ref<keyof typeof formatOptions>("gpx");
-	const useTracks = ref<"1" | "0">("1");
+	const routeType = ref<keyof typeof routeTypeOptions>("tracks");
 	const filter = ref(true);
 	const hide = ref(new Set<string>());
 	const typeId = ref<ID>();
@@ -69,7 +75,7 @@
 	const resolveTypeId = (typeId: ID | undefined) => typeId != null && client.value.types[typeId] ? typeId : undefined;
 	const resolvedTypeId = computed(() => resolveTypeId(typeId.value));
 
-	const canSelectUseTracks = computed(() => format.value === "gpx");
+	const canSelectRouteType = computed(() => format.value === "gpx");
 	const canSelectType = computed(() => format.value === "csv" || (format.value === "table" && method.value === "copy"));
 	const mustSelectType = computed(() => canSelectType.value);
 	const canSelectHide = computed(() => ["table", "csv"].includes(format.value));
@@ -83,8 +89,8 @@
 
 	const url = computed(() => {
 		const params = new URLSearchParams();
-		if (canSelectUseTracks.value) {
-			params.set("useTracks", useTracks.value);
+		if (canSelectRouteType.value) {
+			params.set("useTracks", routeType.value === "routes" ? "0" : "1");
 		}
 		if (canSelectHide.value && hide.value.size > 0) {
 			params.set("hide", [...hide.value].join(","));
@@ -126,6 +132,16 @@
 						+ client.value.padData!.id
 						+ `/csv`
 						+ `/${resolvedTypeId.value}`
+						+ (paramsStr ? `?${paramsStr}` : '')
+				);
+			}
+
+			case "gpx": {
+				return (
+					context.baseUrl
+						+ client.value.padData!.id
+						+ `/${format.value}`
+						+ (routeType.value === "zip" ? `/zip` : "")
 						+ (paramsStr ? `?${paramsStr}` : '')
 				);
 			}
@@ -232,14 +248,18 @@
 			</div>
 		</div>
 
-		<div v-if="canSelectUseTracks" class="row mb-3">
+		<div v-if="canSelectRouteType" class="row mb-3">
 			<label class="col-sm-3 col-form-label" :for="`${id}-route-type-select`">
 				Route type
 				<HelpPopover>
 					<p>
 						<strong>Track points</strong> will export your lines exactly as they are on your map.
 					</p>
-
+					<p>
+						<strong>Track points, one file per line (ZIP file)</strong> will create a ZIP file with one GPX file
+						for all markers and one GPX file for each line. This works better with apps such as Osmand that only
+						support one line style per file.
+					</p>
 					<p>
 						<strong>Route points</strong> will export only the from/via/to route points of your lines, and your
 						navigation software/device will have to calculate the route using its own map data and algorithm.
@@ -247,9 +267,8 @@
 				</HelpPopover>
 			</label>
 			<div class="col-sm-9">
-				<select class="form-select" v-model="useTracks" :id="`${id}-route-type-select`">
-					<option value="1">Track points</option>
-					<option value="0">Route points</option>
+				<select class="form-select" v-model="routeType" :id="`${id}-route-type-select`">
+					<option v-for="(label, value) in routeTypeOptions" :value="value" :key="value">{{label}}</option>
 				</select>
 			</div>
 		</div>

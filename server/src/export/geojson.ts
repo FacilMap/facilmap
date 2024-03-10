@@ -1,9 +1,8 @@
-import { jsonStream, asyncIteratorToArray, streamPromiseToStream } from "../utils/streams.js";
+import { asyncIteratorToArray, streamPromiseToStream, jsonStreamArray, mapAsyncIterator, jsonStreamRecord, type JsonStream, concatAsyncIterators, flatMapAsyncIterator } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
-import type { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
+import type { Marker, MarkerFeature, PadId, TrackPoint, Line } from "facilmap-types";
 import Database from "../database/database.js";
 import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
-import type { LineWithTrackPoints } from "../database/line.js";
 import type { ReadableStream } from "stream/web";
 
 export function exportGeoJson(database: Database, padId: PadId, filter?: string): ReadableStream<string> {
@@ -17,49 +16,41 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 
 		const types = keyBy(await asyncIteratorToArray(database.types.getTypes(padId)), "id");
 
-		return jsonStream({
+		return jsonStreamRecord({
 			type: "FeatureCollection",
-			...(padData.defaultView ? { bbox: "%bbox%" } : { }),
-			facilmap: {
-				name: "%name%",
-				searchEngines: "%searchEngines%",
-				description: "%description%",
-				clusterMarkers: "%clusterMarkers",
-				views: "%views%",
-				types: "%types%"
-			},
-			features: "%features%"
-		}, {
-			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
-			name: padData.name,
-			searchEngines: padData.searchEngines,
-			description: padData.description,
-			clusterMarkers: padData.clusterMarkers,
-			views: async function*() {
-				for await (const view of database.views.getViews(padId)) {
-					yield omit(view, ["id", "padId"]);
-				}
-			},
+			...(padData.defaultView ? {
+				bbox: [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top]
+			} : { }),
+			facilmap: jsonStreamRecord({
+				name: padData.name,
+				searchEngines: padData.searchEngines,
+				description: padData.description,
+				clusterMarkers: padData.clusterMarkers,
+				views: jsonStreamArray(mapAsyncIterator(database.views.getViews(padId), (view) => omit(view, ["id", "padId"])))
+			}),
 			types: mapValues(types, (type) => omit(type, ["id", "padId"])),
-			features: async function*() {
-				for await (const marker of database.markers.getPadMarkers(padId)) {
+			features: jsonStreamArray(concatAsyncIterators(
+				flatMapAsyncIterator(database.markers.getPadMarkers(padId), (marker) => {
 					if (filterFunc(marker, types[marker.typeId])) {
-						yield markerToGeoJson(marker);
+						return [markerToGeoJson(marker)];
+					} else {
+						return [];
 					}
-				}
-
-				for await (const line of database.lines.getPadLinesWithPoints(padId)) {
+				}),
+				flatMapAsyncIterator(database.lines.getPadLines(padId), (line) => {
 					if (filterFunc(line, types[line.typeId])) {
-						yield lineToGeoJson(line);
+						return [lineToGeoJson(line, database.lines.getAllLinePoints(line.id))];
+					} else {
+						return [];
 					}
-				}
-			}
+				})
+			))
 		});
 	})());
 }
 
-function markerToGeoJson(marker: Marker): MarkerFeature {
-	return {
+function markerToGeoJson(marker: Marker): JsonStream {
+	return jsonStreamRecord({
 		type: "Feature",
 		geometry: {
 			type: "Point",
@@ -74,16 +65,16 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			data: cloneDeep(marker.data),
 			typeId: marker.typeId
 		}
-	};
+	} satisfies MarkerFeature);
 }
 
-function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
-	return {
+function lineToGeoJson(line: Line, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+	return jsonStreamRecord({
 		type: "Feature",
-		geometry: {
+		geometry: jsonStreamRecord({
 			type: "LineString",
-			coordinates: line.trackPoints.map((trackPoint) => [trackPoint.lon, trackPoint.lat])
-		},
+			coordinates: jsonStreamArray(mapAsyncIterator(trackPoints, (trackPoint) => [trackPoint.lon, trackPoint.lat]))
+		}),
 		properties: {
 			name: line.name,
 			mode: line.mode,
@@ -96,5 +87,5 @@ function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
 			routePoints: line.routePoints,
 			typeId: line.typeId
 		}
-	};
+	});
 }

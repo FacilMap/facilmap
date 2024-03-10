@@ -5,11 +5,11 @@ import { stringifiedIdValidator, type PadId } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
-import { exportGpx } from "./export/gpx.js";
+import { exportGpx, exportGpxZip } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { Readable, Writable } from "stream";
 import { getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
-import { normalizePadName } from "facilmap-utils";
+import { getSafeFilename, normalizePadName } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
 import { exportCsv } from "./export/csv.js";
@@ -104,8 +104,24 @@ export async function initWebserver(database: Database, port: number, host?: str
 			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
 
 		res.set("Content-type", "application/gpx+xml");
-		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".gpx");
+		res.attachment(`${getSafeFilename(normalizePadName(padData.name))}.gpx`);
 		exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+	});
+
+	app.get("/:padId/gpx/zip", async (req: Request<{ padId: string }>, res: Response<string>) => {
+		const query = z.object({
+			useTracks: z.enum(["0", "1"]).default("0"),
+			filter: z.string().optional()
+		}).parse(req.query);
+
+		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
+
+		if(!padData)
+			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+
+		res.set("Content-type", "application/zip");
+		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
+		exportGpxZip(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
 	app.get("/:padId/table", async (req: Request<{ padId: string }>, res: Response<string>) => {

@@ -179,20 +179,13 @@ export default class DatabaseLines {
 		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
 	}
 
-	getPadLines(padId: PadId, fields?: Array<keyof Line>): AsyncGenerator<Line, void, void> {
+	getPadLines(padId: PadId, fields?: Array<keyof Line>): AsyncIterable<Line> {
 		const cond = fields ? { attributes: fields } : { };
 		return this._db.helpers._getPadObjects<Line>("Line", padId, cond);
 	}
 
-	getPadLinesByType(padId: PadId, typeId: ID): AsyncGenerator<Line, void, void> {
+	getPadLinesByType(padId: PadId, typeId: ID): AsyncIterable<Line> {
 		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
-	}
-
-	async* getPadLinesWithPoints(padId: PadId): AsyncGenerator<LineWithTrackPoints, void, void> {
-		for await (const line of this.getPadLines(padId)) {
-			const trackPoints = await this.getAllLinePoints(line.id);
-			yield { ...line, trackPoints };
-		}
 	}
 
 	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
@@ -310,7 +303,7 @@ export default class DatabaseLines {
 		return oldLine;
 	}
 
-	async* getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncGenerator<{ id: ID; trackPoints: TrackPoint[] }, void, void> {
+	async* getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
 		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { padId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
 		for (const lineIds of chunks) {
@@ -336,12 +329,14 @@ export default class DatabaseLines {
 		}
 	}
 
-	async getAllLinePoints(lineId: ID): Promise<TrackPoint[]> {
+	async* getAllLinePoints(lineId: ID): AsyncIterable<TrackPoint> {
 		const points = await this.LineModel.build({ id: lineId } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints({
 			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]]
 		});
-		return points.map((point) => omit(point.toJSON(), ["pos"]) as TrackPoint);
+		for (const point of points) {
+			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
+		}
 	}
 
 }

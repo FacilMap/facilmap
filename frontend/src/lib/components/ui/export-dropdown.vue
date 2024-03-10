@@ -7,6 +7,7 @@
 	import { useToasts } from "./toasts/toasts.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
+	import { getSafeFilename } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
@@ -26,7 +27,7 @@
 
 		try {
 			const exported = await props.getExport(format);
-			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${props.filename}.gpx`);
+			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${getSafeFilename(props.filename)}.gpx`);
 		} catch(err: any) {
 			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, "Error exporting route", err);
 		} finally {

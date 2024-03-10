@@ -7,7 +7,7 @@ import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
 import { normalizePadName, type InjectedConfig, quoteHtml } from "facilmap-utils";
 import config from "./config";
-import { asyncIteratorToArray, jsonStream, streamPromiseToStream, streamReplace } from "./utils/streams";
+import { streamPromiseToStream, streamReplace } from "./utils/streams";
 import { ReadableStream } from "stream/web";
 import { generateRandomId } from "./utils/utils";
 import type { TableParams } from "./export/table";
@@ -143,10 +143,7 @@ export async function getStaticFrontendMiddleware(): Promise<RequestHandler> {
 
 export async function getPwaManifest(): Promise<string> {
 	const template = await readFile(paths.pwaManifest).then((t) => t.toString());
-	const chunks = await asyncIteratorToArray(jsonStream(JSON.parse(template), {
-		APP_NAME: config.appName
-	}));
-	return chunks.join("");
+	return template.replaceAll("%APP_NAME%", config.appName);
 }
 
 export async function getOpensearchXml(baseUrl: string): Promise<string> {

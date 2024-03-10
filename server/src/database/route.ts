@@ -6,6 +6,7 @@ import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVir
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
 import type { Point as GeoJsonPoint } from "geojson";
+import { asyncIteratorToArray } from "../utils/streams.js";
 
 const updateTimes: Record<string, number> = {};
 
@@ -155,24 +156,24 @@ export default class DatabaseRoutes {
 			return;
 
 		const line = await this._db.lines.getLine(padId, lineId);
-		const linePoints = await this._db.lines.getAllLinePoints(lineId);
+		const linePointsIt = this._db.lines.getAllLinePoints(lineId);
+		const linePoints = await asyncIteratorToArray((async function*() {
+			for await (const linePoint of linePointsIt) {
+				yield {
+					routeId,
+					lat: linePoint.lat,
+					lon: linePoint.lon,
+					ele: linePoint.ele,
+					zoom: linePoint.zoom,
+					idx: linePoint.idx
+				};
+			}
+		})());
 
 		if(thisTime != updateTimes[routeId])
 			return;
 
-		const create = [];
-		for(const linePoint of linePoints) {
-			create.push({
-				routeId,
-				lat: linePoint.lat,
-				lon: linePoint.lon,
-				ele: linePoint.ele,
-				zoom: linePoint.zoom,
-				idx: linePoint.idx
-			});
-		}
-
-		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, create);
+		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, linePoints);
 
 		if(thisTime != updateTimes[routeId])
 			return;
@@ -214,12 +215,14 @@ export default class DatabaseRoutes {
 		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
-	async getAllRoutePoints(routeId: string): Promise<TrackPoint[]> {
-		const data = await this.RoutePointModel.findAll({
-			where: {routeId},
+	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
+		const points = await this.RoutePointModel.findAll({
+			where: { routeId },
 			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
 		});
-		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
+		for (const point of points) {
+			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
+		}
 	}
 
 }

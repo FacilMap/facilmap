@@ -149,12 +149,20 @@
 </template>
 
 <style lang="scss">
-	.fm-popover {
+	.fm-popover.fm-popover {
 		display: flex;
 		flex-direction: column;
 
 		> .popover-body {
 			overflow: auto;
+
+			> *:first-child {
+				margin-top: 0;
+			}
+
+			> *:last-child {
+				margin-bottom: 0;
+			}
 		}
 	}
 </style>

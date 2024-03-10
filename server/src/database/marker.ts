@@ -76,11 +76,11 @@ export default class DatabaseMarkers {
 		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
-	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): AsyncGenerator<Marker, void, void> {
+	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): AsyncIterable<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: this._db.helpers.makeBboxCondition(bbox) });
 	}
 
-	getPadMarkersByType(padId: PadId, typeId: ID): AsyncGenerator<Marker, void, void> {
+	getPadMarkersByType(padId: PadId, typeId: ID): AsyncIterable<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: { padId: padId, typeId: typeId } });
 	}
 

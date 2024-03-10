@@ -57,7 +57,7 @@ export default class DatabaseViews {
 		this._db.pads.PadModel.hasMany(this.ViewModel, { foreignKey: "padId" });
 	}
 
-	getViews(padId: PadId): AsyncGenerator<View, void, void> {
+	getViews(padId: PadId): AsyncIterable<View> {
 		return this._db.helpers._getPadObjects<View>("View", padId);
 	}
 

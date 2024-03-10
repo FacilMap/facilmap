@@ -85,7 +85,7 @@ export default class DatabaseTypes {
 		PadModel.hasMany(this.TypeModel, { foreignKey: "padId" });
 	}
 
-	getTypes(padId: PadId): AsyncGenerator<Type, void, void> {
+	getTypes(padId: PadId): AsyncIterable<Type> {
 		return this._db.helpers._getPadObjects<Type>("Type", padId);
 	}
 

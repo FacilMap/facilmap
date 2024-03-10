@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { arrayToAsyncIterator, asyncIteratorToArray, asyncIteratorToStream, jsonStream, streamPromiseToStream, streamReplace } from "../streams.js";
+import { arrayToAsyncIterator, asyncIteratorToArray, asyncIteratorToStream, jsonStreamArray, jsonStreamRecord, streamPromiseToStream, streamReplace } from "../streams.js";
 import { ReadableStream } from "stream/web";
 
 describe("streamPromiseToStream", () => {
@@ -48,64 +48,60 @@ describe("streamPromiseToStream", () => {
 });
 
 test('jsonStream', async () => {
-	const template = {
-		test1: "%var1%",
-		test2: {
+	const stream = jsonStreamRecord({
+		test1: { test: 'object' },
+		test2: jsonStreamRecord({
 			one: "one",
-			two: "%var2%",
+			two: jsonStreamArray([ { object: 'one' }, { object: 'two' } ]),
 			three: "three"
-		},
-		test3: "%var3%",
-		test4: "%var4%",
-		test5: "%var5%",
-		test6: "%var6%",
-		test7: "%var7%",
-		test8: "bla"
-	};
-
-	const stream = jsonStream(template, {
-		var1: { test: 'object' },
-		var2: arrayToAsyncIterator([ { object: 'one' }, { object: 'two' } ]),
-		var3: () => arrayToAsyncIterator([ { object: 'one' }, { object: 'two' } ]),
-		var4: 'asdf',
-		var5: () => 'bla',
-		var6: Promise.resolve('promise'),
-		var7: () => Promise.resolve('async')
+		}),
+		test3: jsonStreamRecord(arrayToAsyncIterator(Object.entries({
+			one: "one",
+			two: jsonStreamArray(arrayToAsyncIterator([ { object: 'one' }, { object: 'two' } ])),
+			three: "three"
+		}))),
+		test4: jsonStreamArray([
+			"one",
+			jsonStreamRecord({ object1: "one", object2: "two" }),
+			"three"
+		]),
+		test5: jsonStreamArray(arrayToAsyncIterator([
+			"one",
+			jsonStreamRecord(arrayToAsyncIterator(Object.entries({ object1: "one", object2: "two" }))),
+			"three"
+		])),
+		test6: Promise.resolve("promise"),
+		test7: "string"
 	});
 
 	const result = (await asyncIteratorToArray(stream as any)).join("");
-	expect(result).toBe(
-`{
-	"test1": {
-		"test": "object"
-	},
-	"test2": {
-		"one": "one",
-		"two": [
-			{
-				"object": "one"
-			},
-			{
-				"object": "two"
-			}
-		],
-		"three": "three"
-	},
-	"test3": [
-		{
-			"object": "one"
+	expect(result).toBe(JSON.stringify({
+		test1: {
+			test: "object"
 		},
-		{
-			"object": "two"
-		}
-	],
-	"test4": "asdf",
-	"test5": "bla",
-	"test6": "promise",
-	"test7": "async",
-	"test8": "bla"
-}`
-	);
+		test2: {
+			one: "one",
+			two: [{ object: "one" }, { object: "two" }],
+			three: "three"
+		},
+		test3: {
+			one: "one",
+			two: [{ object: "one" }, { object: "two" }],
+			three: "three"
+		},
+		test4: [
+			"one",
+			{ object1: "one", object2: "two" },
+			"three"
+		],
+		test5: [
+			"one",
+			{ object1: "one", object2: "two" },
+			"three"
+		],
+		test6: "promise",
+		test7: "string"
+	}, undefined, "\t"));
 });
 
 test("streamReplace", async () => {

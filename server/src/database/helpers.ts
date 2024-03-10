@@ -118,7 +118,7 @@ export default class DatabaseHelpers {
 		this._db = db;
 	}
 
-	async _updateObjectStyles(objects: Marker | Line | AsyncGenerator<Marker | Line, void, void>): Promise<void> {
+	async _updateObjectStyles(objects: Marker | Line | AsyncIterable<Marker | Line>): Promise<void> {
 		const types: Record<ID, Type> = { };
 		for await (const object of Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects])) {
 			const padId = object.padId;
@@ -187,7 +187,7 @@ export default class DatabaseHelpers {
 		return data;
 	}
 
-	async* _getPadObjects<T>(type: string, padId: PadId, condition?: FindOptions): AsyncGenerator<T, void, void> {
+	async* _getPadObjects<T>(type: string, padId: PadId, condition?: FindOptions): AsyncIterable<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		if(includeData) {
@@ -390,10 +390,23 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Array<Record<string, unknown>>): Promise<Array<T>> {
+	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Iterable<Record<string, unknown>> | AsyncIterable<Record<string, unknown>>): Promise<Array<T>> {
 		const result: Array<any> = [];
-		for(let i=0; i<data.length; i+=ITEMS_PER_BATCH)
-			result.push(...(await model.bulkCreate(data.slice(i, i+ITEMS_PER_BATCH))).map((it) => it.toJSON()));
+		let slice: Array<Record<string, unknown>> = [];
+		const createSlice = async () => {
+			result.push(...(await model.bulkCreate(slice)).map((it) => it.toJSON()));
+			slice = [];
+		};
+
+		for await (const item of data) {
+			slice.push(item);
+			if (slice.length >= ITEMS_PER_BATCH) {
+				createSlice();
+			}
+		}
+		if (slice.length > 0) {
+			createSlice();
+		}
 		return result;
 	}
 

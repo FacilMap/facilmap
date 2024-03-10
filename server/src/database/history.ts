@@ -100,7 +100,7 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(padId: PadId, types?: HistoryEntryType[]): AsyncGenerator<HistoryEntry, void, never> {
+	getHistory(padId: PadId, types?: HistoryEntryType[]): AsyncIterable<HistoryEntry> {
 		const query: FindOptions = { order: [[ "time", "DESC" ]] };
 		if(types)
 			query.where = {type: types};

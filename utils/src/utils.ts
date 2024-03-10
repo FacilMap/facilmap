@@ -3,12 +3,16 @@ import { cloneDeep, isEqual } from "lodash-es";
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
-export function quoteJavaScript(str: any): string {
-	return "'" + `${str}`.replace(/['\\]/g, '\\$1').replace(/\n/g, "\\n") + "'";
-}
-
-export function quoteHtml(str: any): string {
-	return `${str}`.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+export function quoteHtml(str: string | number): string {
+	return `${str}`
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;")
+		.replace(/\n/g, "&#10;")
+		.replace(/\r/g, "&#13;")
+		.replace(/\t/g, "&#9;");
 }
 
 export function quoteRegExp(str: string): string {
@@ -158,4 +162,8 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
 			targetObject[i] = cloneDeep(newObject[i]);
 	}
+}
+
+export function getSafeFilename(fname: string): string {
+	return fname.replace(/[\\/:*?"<>|]+/g, '_');
 }
