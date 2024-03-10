@@ -8,25 +8,26 @@ You are welcome to contribute code, improve the documentation or raise ideas on 
 
 Financial contributions are very much appreciated and can be sent through the following channels:
 
-<div style="display: flex; flex-wrap: wrap">
-	<a href="https://liberapay.com/facilmap/" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="https://liberapay.com/facilmap/" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
-		Liberapay
-	</a>
-	<a href="https://ko-fi.com/facilmap" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="https://ko-fi.com/facilmap" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
-		Ko-fi
-	</a>
-	<a href="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
-		PayPal
-	</a>
-	<a href="https://www.patreon.com/facilmap" target="_blank" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="https://www.patreon.com/facilmap" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
-		Patreon
-	</a>
-	<a href="bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv" style="display: flex; flex-direction: column; align-items: center">
-		<qrcode value="bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv" :size="148" :margin="5" level="M" render-as="svg"></qrcode>
-		Bitcoin
-	</a>
-</div>
+<template v-for="{ width, gap, links } in [{
+	width: 740,
+	gap: 20,
+	links: {
+		'GitHub': 'https://github.com/sponsors/FacilMap',
+		'Liberapay': 'https://liberapay.com/facilmap/',
+		'Ko-fi': 'https://ko-fi.com/facilmap',
+		'PayPal': 'https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS',
+		'Patreon': 'https://www.patreon.com/facilmap',
+		'Bitcoin': 'bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv'
+	}
+}]">
+	<template v-for="size in [(width - gap * (Object.keys(links).length - 1)) / Object.keys(links).length]">
+		<div style="display: flex; flex-wrap: wrap" :style="{ gap: `${gap}px` }">
+			<template v-for="(url, label) in links">
+				<a :href="url" target="_blank" style="display: flex; flex-direction: column; align-items: center">
+					<qrcode :value="url" :size="size" level="M" render-as="svg" style="margin-bottom: 5px"></qrcode>
+					{{label}}
+				</a>
+			</template>
+		</div>
+	</template>
+</template>
