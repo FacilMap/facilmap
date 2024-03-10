@@ -213,8 +213,8 @@
 				<HelpPopover>
 					<p>
 						<strong>GPX</strong> files can be used to transfer your map data into navigation and route planning software and devices, such as
-						Osmand or Garmin. They contain your markers and lines with their names and descriptions, but not their style
-						attributes (with the exception of some basic attributes supported by Osmand).
+						OsmAnd or Garmin. They contain your markers and lines with their names and descriptions, but not their style
+						attributes (with the exception of some basic attributes supported by OsmAnd).
 					</p>
 					<p>
 						<strong>GeoJSON</strong> files can be used to create complete backups or copies of your map. They contain the complete data of your
@@ -257,7 +257,7 @@
 					</p>
 					<p>
 						<strong>Track points, one file per line (ZIP file)</strong> will create a ZIP file with one GPX file
-						for all markers and one GPX file for each line. This works better with apps such as Osmand that only
+						for all markers and one GPX file for each line. This works better with apps such as OsmAnd that only
 						support one line style per file.
 					</p>
 					<p>
