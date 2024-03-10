@@ -39,18 +39,24 @@ function dataToText(fields: Field[], data: Record<string, string>) {
 	return text.join('\n\n');
 }
 
-function getMetadataGpx(data: { name: string }, extensions: Record<string, string> = {}): string {
+function getMetadataGpx(data: { name: string; extensions?: Record<string, string> }, otherExtensions?: Record<string, string>): string {
+	const { extensions, ...otherData } = data;
 	return (
 		`<metadata>\n` +
 		Object.entries({
 			time: new Date().toISOString(),
-			...data
+			...otherData
 		}).map(([k, v]) => `\t<${quoteHtml(k)}>${quoteHtml(v)}</${quoteHtml(k)}>\n`).join("") +
+		(extensions && Object.keys(extensions).length > 0 ? (
+			`\t<extensions>\n` +
+			Object.entries(extensions).map(([k, v]) => `\t\t<${quoteHtml(k)}>${quoteHtml(v)}</${quoteHtml(k)}>\n`).join("") +
+			`\t</extensions>\n`
+		) : "") +
 		`</metadata>` +
-		(Object.keys(extensions).length > 0 ? (
+		(otherExtensions && Object.keys(otherExtensions).length > 0 ? (
 			`\n` +
 			`<extensions>\n` +
-			Object.entries(extensions).map(([k, v]) => `\t<${quoteHtml(k)}>${quoteHtml(v)}</${quoteHtml(k)}>\n`).join("") +
+			Object.entries(otherExtensions).map(([k, v]) => `\t<${quoteHtml(k)}>${quoteHtml(v)}</${quoteHtml(k)}>\n`).join("") +
 			`</extensions>`
 		) : "")
 	);
@@ -218,15 +224,20 @@ export function exportGpxZip(database: Database, padId: PadId, useTracks: boolea
 
 type LineForExport = Pick<LineWithTrackPoints, "name" | "data" | "mode" | "routePoints"> & Partial<Pick<Line, "colour" | "width">>;
 
-function getLineMetadataGpx(line: LineForExport): string {
+function getLineMetadataGpx(line: LineForExport, type: Type | undefined): string {
 	return getMetadataGpx({
-		name: normalizeLineName(line.name)
+		name: normalizeLineName(line.name),
+		extensions: {
+			...(type ? {
+				"osmand:desc": dataToText(type.fields, line.data)
+			} : {})
+		}
 	}, {
 		...(line.colour ? {
-			color: `#${line.colour}`
+			"osmand:color": `#${line.colour}`
 		} : {}),
 		...(line.width ? {
-			width: `${line.width}`
+			"osmand:width": `${line.width}`
 		} : {})
 	});
 }
@@ -235,7 +246,7 @@ export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined
 	return asyncIteratorToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +
-			`\t${getLineMetadataGpx(line).replaceAll("\n", "\n\t")}\n`
+			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
 		for await (const chunk of indentStream(getLineTrackGpx(line, type, trackPoints), { indent: "\t", indentFirst: true, addNewline: true })) {
@@ -250,7 +261,7 @@ export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined
 	return asyncIteratorToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +
-			`\t${getLineMetadataGpx(line).replaceAll("\n", "\n\t")}\n`
+			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
 		for await (const chunk of indentStream(getLineRouteGpx(line, type), { indent: "\t", indentFirst: true, addNewline: true })) {
