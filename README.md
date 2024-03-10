@@ -1,15 +1,20 @@
-[FacilMap](https://facilmap.org/) is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan routes and create custom maps full of markers, lines and routes. Features include:
+[FacilMap](https://facilmap.org/) is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan trips and add markers, lines and routes to custom maps with live collaboration. Features include:
 
-* Different map styles for roads, topography, cycling, hiking, public transportation, water navigation, ...
-* Search for places and show their information (website, opening hours, ...)
-* Calculate routes and adjust them by dragging. An elevation profile can be shown.
-* Smartphone-friendly interface.
-* Create and share custom maps with markers, lines and routes on them.
-* Open GPX/KML/OSM/GeoJSON files and save them on a custom map.
-* Define custom styles of markers, lines and routes and generate a legend automatically.
-* Define custom form fields for the details of markers, lines and routes.
-* API to embed custom maps into a website and to modify them programmatically.
-* Extensive [documentation](https://docs.facilmap.org/).
+* Choose between different map styles for roads, topography, cycling, hiking, public transportation, water navigation, …
+* Search for places and show their information (website, opening hours, …)
+* Calculate routes and adjust them by dragging, optionally with an elevation profile and details about road quality
+* Show POIs on the map (amenities, attractions, businesses, …)
+* Smartphone-friendly interface and Progressive Web App
+* Create collaborative maps, add markers, lines and routes and collaborate live through a share link
+* View GPX/KML/OSM/GeoJSON files or import them to a collaborative map
+* Export collaborative maps to GPX or GeoJSON to import them into Osmand or other apps
+* Link or embed a read-only or editable version of a collaborative map on your website
+* Define different types of markers/lines with custom form fields to be filled out
+* Create custom views where markers/lines are shown/hidden based on their form field values
+* Define custom styles of markers/lines and routes and generate a legend automatically
+* Export the field values of markers/lines as HTML or CSV to import them into a spreadsheet
+* Programmatically read and modify collaborative maps through a Socket.io API
+* Extensive [user and developer documentation](https://docs.facilmap.org/).
 
 Documentation
 =============
@@ -47,4 +52,4 @@ More details can be found in the [Administrator guide](https://docs.facilmap.org
 Support FacilMap
 ================
 
-[Financial support](https://docs.facilmap.org/users/contribute/) is always welcome!
+I have been working on FacilMap as a hobby since 2009. While I have plenty of ideas and motivation to develop the app further, I have only limited time and resources to do so. By [financially supporting](https://docs.facilmap.org/users/contribute/) FacilMap, you allow me to spend more time implementing new features and to afford the infrastructure that is necessary to keep the app running for a growing number of users. Also, feel free to request the features that you would like to see!
