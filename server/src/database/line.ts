@@ -1,5 +1,5 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -7,6 +7,7 @@ import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
+import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -220,18 +221,11 @@ export default class DatabaseLines {
 			throw new Error(`Cannot use ${type.type} type for line.`);
 		}
 
-		const resolvedData = {
-			...data,
-			colour: data.colour ?? type.defaultColour,
-			width: data.width ?? type.defaultWidth,
-			stroke: data.stroke ?? type.defaultStroke,
-			mode: data.mode ?? type.defaultMode
-		};
+		const resolvedData = resolveCreateLine(data, type);
 
 		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, trackPointsFromRoute);
 
 		const createdLine = await this._db.helpers._createPadObject<Line>("Line", padId, omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */));
-		await this._db.helpers._updateObjectStyles(createdLine);
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
 		this._db.emit("line", padId, createdLine);
@@ -241,42 +235,36 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, doNotUpdateStyles?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
+		const newType = await this._db.types.getType(padId, data.typeId ?? originalLine.typeId);
+		return await this._updateLine(originalLine, data, newType, noHistory, trackPointsFromRoute);
+	}
+
+	async _updateLine(originalLine: Line, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, newType: Type, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+		if (newType.type !== "line") {
+			throw new Error(`Cannot use ${newType.type} type for line.`);
+		}
+
 		const update = {
-			...data,
+			...resolveUpdateLine(originalLine, data, newType),
 			routePoints: data.routePoints || originalLine.routePoints,
 			mode: (data.mode ?? originalLine.mode) || ""
 		};
 
 		let routeInfo: RouteInfo | undefined;
-		await Promise.all([
-			(async () => {
-				if((update.mode == "track" && update.trackPoints) || !isEqual(update.routePoints, originalLine.routePoints) || update.mode != originalLine.mode)
-					routeInfo = await calculateRouteForLine(update, trackPointsFromRoute);
+		if((update.mode == "track" && update.trackPoints) || !isEqual(update.routePoints, originalLine.routePoints) || update.mode != originalLine.mode)
+			routeInfo = await calculateRouteForLine(update, trackPointsFromRoute);
 
-				Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
-				delete update.trackPoints; // They came if mode is track
-			})(),
-			(async () => {
-				if (update.typeId != null) {
-					const type = await this._db.types.getType(padId, update.typeId);
-					if (type.type !== "line") {
-						throw new Error(`Cannot use ${type.type} type for line.`);
-					}
-				}
-			})()
-		]);
+		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
+		delete update.trackPoints; // They came if mode is track
 
-		const newLine = await this._db.helpers._updatePadObject<Line>("Line", padId, lineId, update, doNotUpdateStyles);
+		const newLine = await this._db.helpers._updatePadObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
 
-		if(!doNotUpdateStyles)
-			await this._db.helpers._updateObjectStyles(newLine); // Modifies newLine
-
-		this._db.emit("line", padId, newLine);
+		this._db.emit("line", originalLine.padId, newLine);
 
 		if(routeInfo)
-			await this._setLinePoints(padId, lineId, routeInfo.trackPoints);
+			await this._setLinePoints(originalLine.padId, originalLine.id, routeInfo.trackPoints);
 
 		return newLine;
 	}
@@ -293,7 +281,7 @@ export default class DatabaseLines {
 		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
 
 		if(!_noEvent)
-			this._db.emit("linePoints", padId, lineId, points.map((point) => omit(point, ["lineId", "pos"]) as TrackPoint));
+			this._db.emit("linePoints", padId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
 	}
 
 	async deleteLine(padId: PadId, lineId: ID): Promise<Line> {

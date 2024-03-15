@@ -1,11 +1,12 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Symbol } from "facilmap-types";
+import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Symbol, Type } from "facilmap-types";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint } from "../elevation.js";
 import type { PadModel } from "./pad.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
+import { resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -94,45 +95,35 @@ export default class DatabaseMarkers {
 			throw new Error(`Cannot use ${type.type} type for marker.`);
 		}
 
+		const resolvedData = resolveCreateMarker(data, type);
+
 		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, {
-			...data,
-			colour: data.colour ?? type.defaultColour,
-			size: data.size ?? type.defaultSize,
-			symbol: data.symbol ?? type.defaultSymbol,
-			shape: data.shape ?? type.defaultShape,
+			...resolvedData,
 			ele: data.ele === undefined ? await getElevationForPoint(data) : data.ele
 		});
-
-		await this._db.helpers._updateObjectStyles(result);
-
 		this._db.emit("marker", padId, result);
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, doNotUpdateStyles = false): Promise<Marker> {
-		const update = { ...data };
+	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, noHistory = false): Promise<Marker> {
+		const originalMarker = await this.getMarker(padId, markerId);
+		const newType = await this._db.types.getType(padId, data.typeId ?? originalMarker.typeId);
+		return await this._updateMarker(originalMarker, data, newType, noHistory);
+	}
 
-		await Promise.all([
-			(async () => {
-				if (update.lat != null && update.lon != null && update.ele === undefined)
-					update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
-			})(),
-			(async () => {
-				if (update.typeId != null) {
-					const type = await this._db.types.getType(padId, update.typeId);
-					if (type.type !== "marker") {
-						throw new Error(`Cannot use ${type.type} type for marker.`);
-					}
-				}
-			})()
-		]);
+	async _updateMarker(originalMarker: Marker, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, newType: Type, noHistory = false): Promise<Marker> {
+		if (newType.type !== "marker") {
+			throw new Error(`Cannot use ${newType.type} type for marker.`);
+		}
 
-		const result = await this._db.helpers._updatePadObject<Marker>("Marker", padId, markerId, update, doNotUpdateStyles);
+		const update = resolveUpdateMarker(originalMarker, data, newType);
 
-		if(!doNotUpdateStyles)
-			await this._db.helpers._updateObjectStyles(result);
+		if (update.lat != null && update.lon != null && update.ele === undefined)
+			update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
 
-		this._db.emit("marker", padId, result);
+		const result = await this._db.helpers._updatePadObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
+
+		this._db.emit("marker", originalMarker.padId, result);
 
 		return result;
 	}

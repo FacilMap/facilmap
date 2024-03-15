@@ -1,4 +1,4 @@
-import type { CRU, Field, FieldOption, Line, Marker, Type } from "facilmap-types";
+import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type Marker, type Type } from "facilmap-types";
 
 export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
 	return "lat" in object && object.lat != null;
@@ -45,7 +45,7 @@ export function normalizeFieldValue(field: Field, value: string | undefined, ign
 	}
 }
 
-export function applyMarkerStyles(marker: Marker, type: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
+export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
 	const update: Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> = {};
 
 	if(type.colourFixed && marker.colour != type.defaultColour)
@@ -59,7 +59,7 @@ export function applyMarkerStyles(marker: Marker, type: Type): Omit<Marker<CRU.U
 
 	for(const field of type.fields) {
 		if(field.controlColour || field.controlSize || field.controlSymbol || field.controlShape) {
-			const option = getSelectedOption(field, marker.data[field.name]);
+			const option = getSelectedOption(field, marker.data?.[field.name]);
 
 			if(option) {
 				if(field.controlColour && marker.colour != (option.colour ?? type.defaultColour))
@@ -77,7 +77,28 @@ export function applyMarkerStyles(marker: Marker, type: Type): Omit<Marker<CRU.U
 	return update;
 }
 
-export function applyLineStyles(line: Line, type: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
+export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Marker<CRU.CREATE_VALIDATED> {
+	const parsed = markerValidator.create.parse(marker);
+	const result: Marker<CRU.CREATE_VALIDATED> = {
+		...parsed,
+		colour: parsed.colour ?? type.defaultColour,
+		size: parsed.size ?? type.defaultSize,
+		symbol: parsed.symbol ?? type.defaultSymbol,
+		shape: parsed.shape ?? type.defaultShape
+	};
+	Object.assign(result, applyMarkerStyles(result, type));
+	return result;
+}
+
+export function resolveUpdateMarker(marker: Marker, update: Omit<Marker<CRU.UPDATE>, "id">, newType: Type): Marker<CRU.UPDATE_VALIDATED> {
+	const resolvedUpdate = markerValidator.update.parse(update);
+	return {
+		...resolvedUpdate,
+		...applyMarkerStyles({ ...marker, ...resolvedUpdate }, newType)
+	};
+}
+
+export function applyLineStyles(line: Line<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Omit<Line<CRU.UPDATE_VALIDATED>, "id"> {
 	const update: Omit<Line<CRU.UPDATE_VALIDATED>, "id"> = {};
 
 	if(type.colourFixed && line.colour != type.defaultColour) {
@@ -95,7 +116,7 @@ export function applyLineStyles(line: Line, type: Type): Omit<Marker<CRU.UPDATE_
 
 	for(const field of type.fields) {
 		if(field.controlColour || field.controlWidth || field.controlStroke) {
-			const option = getSelectedOption(field, line.data[field.name]);
+			const option = getSelectedOption(field, line.data?.[field.name]);
 
 			if(option) {
 				if(field.controlColour && line.colour != (option.colour ?? type.defaultColour)) {
@@ -112,4 +133,25 @@ export function applyLineStyles(line: Line, type: Type): Omit<Marker<CRU.UPDATE_
 	}
 
 	return update;
+}
+
+export function resolveCreateLine(line: Line<CRU.CREATE>, type: Type): Line<CRU.CREATE_VALIDATED> {
+	const parsed = lineValidator.create.parse(line);
+	const result: Line<CRU.CREATE_VALIDATED> = {
+		...parsed,
+		colour: line.colour ?? type.defaultColour,
+		width: line.width ?? type.defaultWidth,
+		stroke: line.stroke ?? type.defaultStroke,
+		mode: line.mode ?? type.defaultMode
+	};
+	Object.assign(result, applyLineStyles(result, type));
+	return result;
+}
+
+export function resolveUpdateLine(line: Line, update: Omit<Line<CRU.UPDATE>, "id">, newType: Type): Line<CRU.UPDATE_VALIDATED> {
+	const resolvedUpdate = lineValidator.update.parse(update);
+	return {
+		...resolvedUpdate,
+		...applyLineStyles({ ...line, ...resolvedUpdate }, newType)
+	};
 }

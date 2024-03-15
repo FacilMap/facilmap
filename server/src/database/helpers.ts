@@ -2,10 +2,8 @@ import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type 
 import type { Line, Marker, PadId, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
-import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";
-import { applyLineStyles, applyMarkerStyles } from "facilmap-utils";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -130,30 +128,12 @@ export default class DatabaseHelpers {
 			}
 
 			const type = types[object.typeId];
-			const update = type.type === "marker" ? applyMarkerStyles(object as Marker, type) : applyLineStyles(object as Line, type);
 
-			const actions: Array<Promise<any>> = [ ];
-
-			if(Object.keys(update).length > 0) {
-				Object.assign(object, update);
-
-				if(object.id) { // Objects from getLineTemplate() do not have an ID
-					if (type.type === "line") {
-						actions.push(this._db.lines.updateLine(padId, object.id, update, true));
-					} else {
-						actions.push(this._db.markers.updateMarker(padId, object.id, update, true));
-					}
-				}
-
-				if(object.id && type.type === "line" && "mode" in update) {
-					actions.push(calculateRouteForLine(object as Line).then(async ({ trackPoints, ...routeInfo }) => {
-						Object.assign(object, routeInfo);
-						await this._db.lines._setLinePoints(padId, object.id, trackPoints);
-					}));
-				}
+			if (type.type === "line") {
+				await this._db.lines._updateLine(object as Line, {}, type, true);
+			} else {
+				await this._db.markers._updateMarker(object as Marker, {}, type, true);
 			}
-
-			await Promise.all(actions);
 		}
 	}
 
