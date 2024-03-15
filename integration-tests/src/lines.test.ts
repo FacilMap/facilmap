@@ -1,8 +1,8 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Line, type LinePointsEvent } from "facilmap-types";
+import { SocketVersion, CRU, type Line, type LinePointsEvent, type FindOnMapLine } from "facilmap-types";
 import type { LineWithTrackPoints } from "facilmap-client";
-import { cloneDeep, isEqual, omit } from "lodash-es";
+import { cloneDeep, omit } from "lodash-es";
 
 test("Create line (using default values)", async () => {
 	// client1: Creates the line and has it in its bbox
@@ -360,6 +360,42 @@ test("Delete line", async () => {
 	});
 });
 
+test("Find line", async () => {
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+
+		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
+
+		const marker = await client1.addLine({
+			name: "Line test",
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		const expectedResult: FindOnMapLine = {
+			id: marker.id,
+			kind: "line",
+			similarity: 1,
+			typeId: lineType.id,
+			name: "Line test",
+			top: 14,
+			right: 14,
+			bottom: 6,
+			left: 6
+		};
+
+		expect(await client2.findOnMap({ query: "Test" })).toEqual([{ ...expectedResult, similarity: 0.4 }]);
+		expect(await client2.findOnMap({ query: "T_st" })).toEqual([{ ...expectedResult, similarity: 0.2 }]);
+		expect(await client2.findOnMap({ query: "L%e" })).toEqual([{ ...expectedResult, similarity: 0 }]);
+		expect(await client2.findOnMap({ query: "Bla" })).toEqual([]);
+	});
+});
+
 test("Try to create line with marker type", async () => {
 	const client = await openClient();
 
@@ -552,8 +588,6 @@ test("Socket v1 line name", async () => {
 		await emit(socket1, "deletePad", undefined);
 	}
 });
-
-// TODO: findOnMap
 
 // getLineTemplate
 // exportLine

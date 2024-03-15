@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Marker } from "facilmap-types";
+import { SocketVersion, CRU, type Marker, type FindOnMapMarker } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create marker (using default values)", async () => {
@@ -222,6 +222,73 @@ test("Delete marker", async () => {
 		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
 		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
 		expect(cloneDeep(client3.markers)).toEqual({});
+	});
+});
+
+test("Get marker", async () => {
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+
+		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+
+		const marker = await client1.addMarker({
+			lat: 10,
+			lon: 10,
+			typeId: markerType.id
+		});
+
+		const expectedMarker = {
+			id: marker.id,
+			lat: 10,
+			lon: 10,
+			typeId: markerType.id,
+			padId: padData.id,
+			name: "",
+			colour: "ff0000",
+			size: 30,
+			symbol: "",
+			shape: "",
+			data: {},
+			ele: null
+		} satisfies Marker;
+
+		expect(await client2.getMarker({ id: marker.id })).toEqual(expectedMarker);
+	});
+});
+
+test("Find marker", async () => {
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+
+		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+
+		const marker = await client1.addMarker({
+			name: "Marker test",
+			lat: 10,
+			lon: 10,
+			typeId: markerType.id,
+			symbol: "a"
+		});
+
+		const expectedResult: FindOnMapMarker = {
+			id: marker.id,
+			kind: "marker",
+			similarity: 1,
+			lat: 10,
+			lon: 10,
+			typeId: markerType.id,
+			name: "Marker test",
+			symbol: "a"
+		};
+
+		expect(await client2.findOnMap({ query: "Test" })).toEqual([{ ...expectedResult, similarity: 0.3333333333333333 }]);
+		expect(await client2.findOnMap({ query: "T_st" })).toEqual([{ ...expectedResult, similarity: 0.16666666666666666 }]);
+		expect(await client2.findOnMap({ query: "M%r" })).toEqual([{ ...expectedResult, similarity: 0 }]);
+		expect(await client2.findOnMap({ query: "Bla" })).toEqual([]);
 	});
 });
 
