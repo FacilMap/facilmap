@@ -401,11 +401,11 @@ export default class DatabaseHelpers {
 		for await (const item of data) {
 			slice.push(item);
 			if (slice.length >= ITEMS_PER_BATCH) {
-				createSlice();
+				await createSlice();
 			}
 		}
 		if (slice.length > 0) {
-			createSlice();
+			await createSlice();
 		}
 		return result;
 	}
