@@ -3736,7 +3736,7 @@ __metadata:
     leaflet-auto-graticule: ^2.0.0
     leaflet-draggable-lines: ^2.0.0
     leaflet-freie-tonne: ^2.0.1
-    leaflet-highlightable-layers: ^2.1.0
+    leaflet-highlightable-layers: ^3.0.0
     leaflet.markercluster: ^1.5.3
     lodash-es: ^4.17.21
     node-fetch: ^3.3.2
@@ -5157,12 +5157,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-highlightable-layers@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "leaflet-highlightable-layers@npm:2.1.0"
+"leaflet-highlightable-layers@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "leaflet-highlightable-layers@npm:3.0.0"
   peerDependencies:
     leaflet: x
-  checksum: d96d3d927423990354717028f6f56c4de3d145e9d02b316ee7c9832ac2843967c16b884464ccd18f0e14e295b65f298e79dbce6cad616c248e55a9111120510e
+  checksum: b0ffe1210f5f5cde618866980589f41b4083e6361624bece3bd8f1cce9e0498ad8554bea5791d73ab95fe36aeb23094f4aa372773c0c96036dcedc94ff865703
   languageName: node
   linkType: hard
 
