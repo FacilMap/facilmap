@@ -98,7 +98,8 @@ export default class DatabaseLines {
 				set: function(this: LineModel, v: number | null) {
 					// Round number to avoid integer column error in Postgres
 					this.setDataValue("time", v != null ? Math.round(v) : v);
-				}
+				},
+				defaultValue: null
 			},
 			ascent : {
 				type: DataTypes.INTEGER.UNSIGNED,
@@ -106,7 +107,8 @@ export default class DatabaseLines {
 				set: function(this: LineModel, v: number | null) {
 					// Round number to avoid integer column error in Postgres
 					this.setDataValue("ascent", v != null ? Math.round(v) : v);
-				}
+				},
+				defaultValue: null
 			},
 			descent : {
 				type: DataTypes.INTEGER.UNSIGNED,
@@ -114,7 +116,8 @@ export default class DatabaseLines {
 				set: function(this: LineModel, v: number | null) {
 					// Round number to avoid integer column error in Postgres
 					this.setDataValue("descent", v != null ? Math.round(v) : v);
-				}
+				},
+				defaultValue: null
 			},
 			top: getLatType(),
 			bottom: getLatType(),
@@ -129,7 +132,8 @@ export default class DatabaseLines {
 				},
 				set: function(this: LineModel, v: ExtraInfo) {
 					this.setDataValue("extraInfo", v != null ? JSON.stringify(v) as any : v);
-				}
+				},
+				defaultValue: null
 			}
 		}, {
 			sequelize: this._db._conn,

@@ -1,0 +1,560 @@
+import { expect, test, vi } from "vitest";
+import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
+import { SocketVersion, CRU, type Line, type LinePointsEvent } from "facilmap-types";
+import type { LineWithTrackPoints } from "facilmap-client";
+import { cloneDeep, isEqual, omit } from "lodash-es";
+
+test("Create line (using default values)", async () => {
+	// client1: Creates the line and has it in its bbox
+	// client2: Has the line in its bbox
+	// client3: Does not have the line in its bbox
+
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+		const client3 = await openClient(padData.id);
+
+		const onLine1 = vi.fn();
+		client1.on("line", onLine1);
+		const onLinePoints1 = vi.fn();
+		client1.on("linePoints", onLinePoints1);
+		const onLine2 = vi.fn();
+		client2.on("line", onLine2);
+		const onLinePoints2 = vi.fn();
+		client2.on("linePoints", onLinePoints2);
+		const onLine3 = vi.fn();
+		client3.on("line", onLine3);
+		const onLinePoints3 = vi.fn();
+		client3.on("linePoints", onLinePoints3);
+
+		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
+
+		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+
+		const line = await client1.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		const expectedLine = {
+			id: line.id,
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id,
+			padId: padData.id,
+			name: "",
+			mode: "",
+			colour: "0000ff",
+			width: 4,
+			stroke: "",
+			data: {},
+			top: 14,
+			right: 14,
+			bottom: 6,
+			left: 6,
+			distance: 1247.95,
+			ascent: null,
+			descent: null,
+			time: null,
+			extraInfo: null
+		} satisfies Line;
+
+		const expectedLinePointsEvent = {
+			id: line.id,
+			trackPoints: [
+				{ lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+				{ lat: 14, lon: 14, idx: 1, zoom: 1, ele: null }
+			],
+			reset: true
+		} satisfies LinePointsEvent;
+
+		const expectedLineWithEmptyTrackPoints = {
+			...expectedLine,
+			trackPoints: {
+				length: 0
+			}
+		} satisfies LineWithTrackPoints;
+
+		const expectedLineWithTrackPoints = {
+			...expectedLine,
+			trackPoints: {
+				0: { lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+				1: { lat: 14, lon: 14, idx: 1, zoom: 1, ele: null },
+				length: 2
+			}
+		} satisfies LineWithTrackPoints;
+
+		expect(line).toEqual(expectedLine);
+
+		await retry(() => {
+			expect(onLine1).toHaveBeenCalledTimes(1);
+			expect(onLinePoints1).toHaveBeenCalledTimes(1);
+			expect(onLine2).toHaveBeenCalledTimes(1);
+			expect(onLinePoints2).toHaveBeenCalledTimes(1);
+			expect(onLine3).toHaveBeenCalledTimes(1);
+			expect(onLinePoints3).toHaveBeenCalledTimes(1);
+		});
+
+		expect(onLine1).toHaveBeenCalledWith(expectedLine);
+		expect(onLinePoints1).toHaveBeenCalledWith(expectedLinePointsEvent);
+		expect(onLine2).toHaveBeenCalledWith(expectedLine);
+		expect(onLine3).toHaveBeenCalledWith(expectedLine);
+
+		expect(cloneDeep(client1.lines)).toEqual({ [expectedLine.id]: expectedLineWithTrackPoints });
+		expect(cloneDeep(client2.lines)).toEqual({ [expectedLine.id]: expectedLineWithTrackPoints });
+		expect(cloneDeep(client3.lines)).toEqual({ [expectedLine.id]: expectedLineWithEmptyTrackPoints });
+	});
+});
+
+test("Create line (using custom values)", async () => {
+	const client = await openClient();
+	await client.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+
+	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+
+		const data: Line<CRU.CREATE> = {
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 12, lon: 12 }
+			],
+			typeId: lineType.id,
+			name: "Test line",
+			mode: "track",
+			colour: "0000ff",
+			width: 10,
+			stroke: "dotted",
+			data: {
+				test: "value"
+			},
+			trackPoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 },
+				{ lat: 12, lon: 12 }
+			]
+		};
+
+		const line = await client.addLine(data);
+
+		const expectedLine = {
+			id: line.id,
+			padId: padData.id,
+			...omit(data, ["trackPoints"]),
+			top: 14,
+			right: 14,
+			bottom: 6,
+			left: 6,
+			distance: 1558.44,
+			time: null,
+			ascent: null,
+			descent: null,
+			extraInfo: null
+		};
+
+		const expectedLineWithTrackPoints = {
+			...expectedLine,
+			trackPoints: {
+				0: { lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+				1: { lat: 14, lon: 14, idx: 1, zoom: 1, ele: null },
+				2: { lat: 12, lon: 12, idx: 2, zoom: 1, ele: null },
+				length: 3
+			}
+		};
+
+		expect(line).toEqual(expectedLine);
+		await retry(() => {
+			expect(cloneDeep(client.lines)).toEqual({
+				[expectedLine.id]: expectedLineWithTrackPoints
+			});
+		});
+	});
+});
+
+test("Edit line", async () => {
+	// client1: Creates the line and has it in its bbox
+	// client2: Has the line in its bbox
+	// client3: Does not have the line in its bbox
+
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+		const client3 = await openClient(padData.id);
+
+		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
+
+		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+
+		const createdLine = await client1.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		const secondType = await client1.addType({
+			type: "line",
+			name: "Second type"
+		});
+
+		const onLine1 = vi.fn();
+		client1.on("line", onLine1);
+		const onLinePoints1 = vi.fn();
+		client1.on("linePoints", onLinePoints1);
+		const onLine2 = vi.fn();
+		client2.on("line", onLine2);
+		const onLinePoints2 = vi.fn();
+		client2.on("linePoints", onLinePoints2);
+		const onLine3 = vi.fn();
+		client3.on("line", onLine3);
+		const onLinePoints3 = vi.fn();
+		client3.on("linePoints", onLinePoints3);
+
+		const newData = {
+			id: createdLine.id,
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 12, lon: 12 }
+			],
+			typeId: secondType.id,
+			name: "Test line",
+			mode: "track",
+			colour: "0000ff",
+			width: 10,
+			stroke: "dotted" as const,
+			data: {
+				test: "value"
+			},
+			trackPoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 },
+				{ lat: 12, lon: 12 }
+			]
+		} satisfies Line<CRU.UPDATE>;
+		const line = await client1.editLine(newData);
+
+		const expectedLine = {
+			padId: padData.id,
+			...omit(newData, ["trackPoints"]),
+			top: 14,
+			right: 14,
+			bottom: 6,
+			left: 6,
+			distance: 1558.44,
+			time: null,
+			ascent: null,
+			descent: null,
+			extraInfo: null
+		} satisfies Line;
+
+		const expectedLinePointsEvent = {
+			id: line.id,
+			trackPoints: [
+				{ lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+				{ lat: 14, lon: 14, idx: 1, zoom: 1, ele: null },
+				{ lat: 12, lon: 12, idx: 2, zoom: 1, ele: null }
+			],
+			reset: true
+		} satisfies LinePointsEvent;
+
+		const expectedLineWithEmptyTrackPoints = {
+			...expectedLine,
+			trackPoints: {
+				length: 0
+			}
+		} satisfies LineWithTrackPoints;
+
+		const expectedLineWithTrackPoints = {
+			...expectedLine,
+			trackPoints: {
+				0: { lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+				1: { lat: 14, lon: 14, idx: 1, zoom: 1, ele: null },
+				2: { lat: 12, lon: 12, idx: 2, zoom: 1, ele: null },
+				length: 3
+			}
+		};
+
+		expect(line).toEqual(expectedLine);
+
+		await retry(() => {
+			expect(onLine1).toHaveBeenCalledTimes(1);
+			expect(onLinePoints1).toHaveBeenCalledTimes(1);
+			expect(onLine2).toHaveBeenCalledTimes(1);
+			expect(onLinePoints2).toHaveBeenCalledTimes(1);
+			expect(onLine3).toHaveBeenCalledTimes(1);
+			expect(onLinePoints3).toHaveBeenCalledTimes(1);
+		});
+
+		expect(onLine1).toHaveBeenCalledWith(expectedLine);
+		expect(onLinePoints1).toHaveBeenCalledWith(expectedLinePointsEvent);
+		expect(onLine2).toHaveBeenCalledWith(expectedLine);
+		expect(onLine3).toHaveBeenCalledWith(expectedLine);
+
+		expect(cloneDeep(client1.lines)).toEqual({ [expectedLine.id]: expectedLineWithTrackPoints });
+		expect(cloneDeep(client2.lines)).toEqual({ [expectedLine.id]: expectedLineWithTrackPoints });
+		expect(cloneDeep(client3.lines)).toEqual({ [expectedLine.id]: expectedLineWithEmptyTrackPoints });
+	});
+});
+
+test("Delete line", async () => {
+	// client1: Creates the line and has it in its bbox
+	// client2: Has the line in its bbox
+	// client3: Does not have the line in its bbox
+
+	const client1 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+		const client2 = await openClient(padData.id);
+		const client3 = await openClient(padData.id);
+
+		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
+
+		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+
+		const createdLine = await client1.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		const onDeleteLine1 = vi.fn();
+		client1.on("deleteLine", onDeleteLine1);
+		const onDeleteLine2 = vi.fn();
+		client2.on("deleteLine", onDeleteLine2);
+		const onDeleteLine3 = vi.fn();
+		client3.on("deleteLine", onDeleteLine3);
+
+		const deletedLine = await client1.deleteLine({ id: createdLine.id });
+
+		expect(deletedLine).toEqual(createdLine);
+
+		await retry(() => {
+			expect(onDeleteLine1).toHaveBeenCalledTimes(1);
+			expect(onDeleteLine2).toHaveBeenCalledTimes(1);
+			expect(onDeleteLine3).toHaveBeenCalledTimes(1);
+		});
+
+		expect(onDeleteLine1).toHaveBeenCalledWith({ id: deletedLine.id });
+		expect(onDeleteLine2).toHaveBeenCalledWith({ id: deletedLine.id });
+		expect(onDeleteLine3).toHaveBeenCalledWith({ id: deletedLine.id });
+
+		const expectedLineRecord = { };
+		expect(cloneDeep(client1.lines)).toEqual(expectedLineRecord);
+		expect(cloneDeep(client2.lines)).toEqual(expectedLineRecord);
+		expect(cloneDeep(client3.lines)).toEqual(expectedLineRecord);
+	});
+});
+
+test("Try to create line with marker type", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, {}, async (createPadData) => {
+		const lineType = Object.values(client.types).find((t) => t.type === "marker")!;
+
+		await expect(async () => {
+			await client.addLine({
+				routePoints: [
+					{ lat: 6, lon: 6 },
+					{ lat: 14, lon: 14 }
+				],
+				typeId: lineType.id
+			});
+		}).rejects.toThrowError("Cannot use marker type for line");
+
+		const client3 = await openClient(createPadData.adminId);
+		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		expect(cloneDeep(client3.lines)).toEqual({});
+	});
+});
+
+test("Try to update line with line type", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, {}, async (createPadData) => {
+		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
+		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+
+		const line = await client.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		await expect(async () => {
+			await client.editLine({
+				id: line.id,
+				typeId: markerType.id
+			});
+		}).rejects.toThrowError("Cannot use marker type for line");
+
+		const client3 = await openClient(createPadData.adminId);
+		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		expect(cloneDeep(client3.lines)).toEqual({
+			[line.id]: line
+		});
+	});
+});
+
+test("Try to create line with line type from other pad", async () => {
+	const client1 = await openClient();
+	const client2 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData) => {
+		await createTemporaryPad(client2, {}, async () => {
+			const lineType2 = Object.values(client2.types).find((t) => t.type === "line")!;
+
+			await expect(async () => {
+				await client1.addLine({
+					routePoints: [
+						{ lat: 6, lon: 6 },
+						{ lat: 14, lon: 14 }
+					],
+					typeId: lineType2.id
+				});
+			}).rejects.toThrowError("could not be found");
+
+			const client3 = await openClient(createPadData.adminId);
+			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+			expect(cloneDeep(client3.lines)).toEqual({});
+		});
+	});
+});
+
+test("Try to update line with line type from other pad", async () => {
+	const client1 = await openClient();
+	const client2 = await openClient();
+
+	await createTemporaryPad(client1, {}, async (createPadData) => {
+		await createTemporaryPad(client2, {}, async () => {
+			const lineType1 = Object.values(client1.types).find((t) => t.type === "line")!;
+			const lineType2 = Object.values(client2.types).find((t) => t.type === "line")!;
+
+			const line = await client1.addLine({
+				routePoints: [
+					{ lat: 6, lon: 6 },
+					{ lat: 14, lon: 14 }
+				],
+				typeId: lineType1.id
+			});
+
+			await expect(async () => {
+				await client1.editLine({
+					id: line.id,
+					typeId: lineType2.id
+				});
+			}).rejects.toThrowError("could not be found");
+
+			const client3 = await openClient(createPadData.adminId);
+			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+			expect(cloneDeep(client3.lines)).toEqual({
+				[line.id]: {
+					...line,
+					trackPoints: {
+						0: { lat: 6, lon: 6, idx: 0, zoom: 1, ele: null },
+						1: { lat: 14, lon: 14, idx: 1, zoom: 1, ele: null },
+						length: 2
+					}
+				}
+			});
+		});
+	});
+});
+
+test("Socket v1 line name", async () => {
+	// socket1: Creates the line and has it in its bbox
+	// socket2: Has the line in its bbox
+	// socket3: Does not have the line in its bbox
+	const socket1 = await openSocket(SocketVersion.V1);
+	const socket2 = await openSocket(SocketVersion.V1);
+	const socket3 = await openSocket(SocketVersion.V1);
+
+	const onLine1 = vi.fn();
+	socket1.on("line", onLine1);
+	const onLine2 = vi.fn();
+	socket2.on("line", onLine2);
+	const onLine3 = vi.fn();
+	socket3.on("line", onLine3);
+
+	try {
+		const padData = getTemporaryPadData({});
+		const padResult = await emit(socket1, "createPad", padData);
+		await emit(socket2, "setPadId", padData.adminId);
+		await emit(socket3, "setPadId", padData.adminId);
+
+		const lineType = padResult.type!.find((t) => t.type === "line")!;
+
+		await emit(socket1, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await emit(socket2, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await emit(socket3, "updateBbox", { top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+
+		const line = await emit(socket1, "addLine", {
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		const expectedLine = {
+			id: line.id,
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id,
+			padId: padData.id,
+			name: "Untitled line",
+			mode: "",
+			colour: "0000ff",
+			width: 4,
+			stroke: "",
+			distance: 1247.95,
+			time: null,
+			ascent: null,
+			descent: null,
+			extraInfo: null,
+			top: 14,
+			right: 14,
+			bottom: 6,
+			left: 6,
+			data: {}
+		} satisfies Line;
+
+		expect(line).toEqual(expectedLine);
+
+		await retry(() => {
+			expect(onLine1).toHaveBeenCalledTimes(1);
+			expect(onLine2).toHaveBeenCalledTimes(1);
+			expect(onLine3).toHaveBeenCalledTimes(1);
+		});
+
+		expect(onLine1).toHaveBeenCalledWith(expectedLine);
+		expect(onLine2).toHaveBeenCalledWith(expectedLine);
+		expect(onLine3).toHaveBeenCalledWith(expectedLine);
+	} finally {
+		await emit(socket1, "deletePad", undefined);
+	}
+});
+
+// TODO: findOnMap
+
+// getLineTemplate
+// exportLine
+// findOnMap
