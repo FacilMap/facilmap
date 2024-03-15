@@ -33,7 +33,7 @@
 	function resolveValidationResult(results: ValidationResult[], signal: AbortSignal): AsyncValidationResult {
 		return new Promise<SyncValidationResult>((resolve, reject) => {
 			for (const result of results) {
-				Promise.resolve(result).then((res) => {
+				void Promise.resolve(result).then((res) => {
 					if (res) {
 						resolve(res);
 					}

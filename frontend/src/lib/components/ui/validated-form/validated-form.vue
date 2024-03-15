@@ -71,7 +71,7 @@
 					if (validationPromises.get(element) !== promise) {
 						validationPromises.set(element, promise);
 						isValidating.set(element, true);
-						promise.finally(() => {
+						void promise.finally(() => {
 							if (validationPromises.get(element) === promise) {
 								isValidating.set(element, false);
 							}
@@ -90,7 +90,7 @@
 
 		useDomEventListener(formRef, "submit", (e) => {
 			e.preventDefault();
-			data.submit();
+			void data.submit();
 		});
 
 		allForms.set(formRef, data);

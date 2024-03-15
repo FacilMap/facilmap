@@ -48,13 +48,13 @@
 		restoreHeight.value = undefined;
 
 		if (expand) {
-			nextTick(() => {
+			void nextTick(() => {
 				doExpand();
 			});
 		}
 
 		if (autofocus && !context.isNarrow) {
-			nextTick(() => {
+			void nextTick(() => {
 				containerRef.value?.querySelector<HTMLElement>(":scope > .card-body.active [autofocus],:scope > .card-body.active .fm-autofocus")?.focus();
 			});
 		}

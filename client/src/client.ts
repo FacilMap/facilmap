@@ -111,7 +111,7 @@ export default class Client {
 			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
 		}
 
-		Promise.resolve().then(() => {
+		void Promise.resolve().then(() => {
 			this._simulateEvent("loadStart");
 		});
 

@@ -41,17 +41,15 @@ function load(): void {
 	}
 }
 
-function save() {
+async function save() {
 	try {
 		const currentItem = JSON.parse(localStorage.getItem("facilmap") || "null");
 		if (!currentItem || !isEqual(currentItem, storage)) {
 			localStorage.setItem("facilmap", JSON.stringify(storage));
 
 			if (storage.bookmarks.length > 0 && !isEqual(currentItem?.bookmarks, storage.bookmarks) && navigator.storage?.persist)
-				navigator.storage.persist();
+				await navigator.storage.persist();
 		}
-
-
 	} catch (err) {
 		console.error("Error saving to local storage", err);
 	}

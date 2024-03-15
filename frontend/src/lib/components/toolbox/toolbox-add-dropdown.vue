@@ -27,7 +27,7 @@
 			await sleep(0); // For some reason this is necessary for the dropdown to close itself
 			drawMarker(type, context, toasts);
 		} else if(type.type == "line") {
-			drawLine(type, context, toasts);
+			await drawLine(type, context, toasts);
 		}
 	}
 </script>

@@ -107,7 +107,7 @@ export default class LinesLayer extends FeatureGroup {
 	protected handleMoveEnd = (): void => {
 		// Rerender all lines to recall disconnectSegmentsOutsideViewport()
 		// Run it on next tick because the renderers need to run first
-		Promise.resolve().then(() => {
+		void Promise.resolve().then(() => {
 			const lastMapBounds = this.lastMapBounds;
 			const mapBounds = this.lastMapBounds = this._map.getBounds();
 			for(const lineId of numberKeys(this.client.lines)) {
@@ -209,7 +209,7 @@ export default class LinesLayer extends FeatureGroup {
 			const handleClick = (pos: Point) => {
 				handler = undefined;
 				if(routePoints.length > 0 && pos.lon == routePoints[routePoints.length-1].lon && pos.lat == routePoints[routePoints.length-1].lat)
-					finishLine(true);
+					void finishLine(true);
 				else
 					addPoint(pos);
 			}

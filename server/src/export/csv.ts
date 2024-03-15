@@ -18,7 +18,7 @@ export function exportCsv(
 
 		const stringifier = stringify();
 		stringifier.write(tabular.fields);
-		tabular.objects.pipeTo(Writable.toWeb(stringifier));
+		void tabular.objects.pipeTo(Writable.toWeb(stringifier));
 
 		return Readable.toWeb(stringifier);
 	})());

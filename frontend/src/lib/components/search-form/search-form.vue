@@ -68,7 +68,7 @@
 	function handleSubmit(): void {
 		searchInput.value?.blur();
 
-		search(storage.autoZoom, storage.zoomToAll);
+		void search(storage.autoZoom, storage.zoomToAll);
 	}
 
 	async function search(zoom: boolean, zoomToAll?: boolean, smooth = true): Promise<void> {

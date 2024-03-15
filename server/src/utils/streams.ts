@@ -80,7 +80,7 @@ export function flatMapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) =
 			}
 		}
 	});
-	stream.pipeTo(transform.writable);
+	void stream.pipeTo(transform.writable);
 	return transform.readable;
 }
 

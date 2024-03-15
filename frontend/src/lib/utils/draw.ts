@@ -73,13 +73,13 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 				label: "Save",
 				variant: "primary",
 				onClick: () => {
-					finish(true);
+					void finish(true);
 				}
 			},
 			{
 				label: "Cancel",
 				onClick: () => {
-					finish(false);
+					void finish(false);
 				}
 			}
 		]

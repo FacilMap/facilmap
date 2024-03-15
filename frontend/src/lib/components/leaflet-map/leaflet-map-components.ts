@@ -242,7 +242,7 @@ function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext
 			});
 
 			selectionHandler.on("fmLongClick", (event: any) => {
-				context.components.clickMarkerTab?.openClickMarker({ lat: event.latlng.lat, lon: event.latlng.lng });
+				void context.components.clickMarkerTab?.openClickMarker({ lat: event.latlng.lat, lon: event.latlng.lng });
 			});
 
 			return selectionHandler;

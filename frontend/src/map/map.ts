@@ -14,8 +14,11 @@ if (import.meta.hot) {
 	});
 }
 
-if ('serviceWorker' in navigator && location.hostname !== "localhost")
-	navigator.serviceWorker.register('./_app/static/sw.js', { scope: "./" });
+if ('serviceWorker' in navigator && location.hostname !== "localhost") {
+	navigator.serviceWorker.register('./_app/static/sw.js', { scope: "./" }).catch((err) => {
+		console.error("Error registering service worker", err);
+	});
+}
 
 setLayerOptions({
 	limaLabsToken: config.limaLabsToken

@@ -140,7 +140,7 @@
 	draggable.on({
 		insert: (e: any) => {
 			destinations.value.splice(e.idx, 0, makeCoordDestination(e.latlng));
-			reroute(false);
+			void reroute(false);
 		},
 		dragstart: (e: any) => {
 			hoverDestinationIdx.value = e.idx;
@@ -153,12 +153,12 @@
 		}, 300),
 		dragend: (e: any) => {
 			destinations.value[e.idx] = makeCoordDestination(e.to);
-			reroute(false);
+			void reroute(false);
 		},
 		remove: (e: any) => {
 			hoverDestinationIdx.value = undefined;
 			destinations.value.splice(e.idx, 1);
-			reroute(false);
+			void reroute(false);
 		},
 		dragmouseover: (e: any) => {
 			destinationMouseOver(e.idx);
@@ -227,7 +227,7 @@
 	});
 
 	watch(routeMode, () => {
-		reroute(false);
+		void reroute(false);
 	});
 
 	function addDestination(): void {
@@ -388,7 +388,7 @@
 
 		const marker = routeLayer._draggableLines?.dragMarkers[idx];
 		if (marker) {
-			Promise.resolve().then(() => {
+			void Promise.resolve().then(() => {
 				// If mouseout event is directly followed by a dragend event, the marker will be removed. Only update the icon if the marker is not removed.
 				if (marker["_map"])
 					marker.setIcon(getIcon(idx, routeLayer._draggableLines!.dragMarkers.length));
@@ -456,7 +456,7 @@
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
 			if(!points.some((point) => point == null))
-				route(zoom, smooth);
+				await route(zoom, smooth);
 		}
 	}
 
@@ -485,7 +485,7 @@
 
 	function handleSubmit(event: Event): void {
 		submitButton.value?.focus();
-		route(true);
+		void route(true);
 	}
 
 	const linesWithTags = computed((): LineWithTags[] | undefined => routeObj.value && [{
@@ -504,22 +504,22 @@
 		while (destinations.value.length < 2)
 			destinations.value.push({ query: "" });
 		routeMode.value = split.mode ?? "car";
-		route(zoom, smooth);
+		void route(zoom, smooth);
 	}
 
 	function setFrom(data: Parameters<typeof makeDestination>[0]): void {
 		destinations.value[0] = makeDestination(data);
-		reroute(true);
+		void reroute(true);
 	}
 
 	function addVia(data: Parameters<typeof makeDestination>[0]): void {
 		destinations.value.splice(destinations.value.length - 1, 0, makeDestination(data));
-		reroute(true);
+		void reroute(true);
 	}
 
 	function setTo(data: Parameters<typeof makeDestination>[0]): void {
 		destinations.value[destinations.value.length - 1] = makeDestination(data);
-		reroute(true);
+		void reroute(true);
 	}
 
 	defineExpose({ setQuery, setFrom, addVia, setTo });

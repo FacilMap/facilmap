@@ -61,6 +61,7 @@ export const extendableEventMixin: ExtendableEventMixin = {
 		} else if (this._promises) {
 			this._promises.push(promise);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			this._promises = [promise];
 		}
 	},

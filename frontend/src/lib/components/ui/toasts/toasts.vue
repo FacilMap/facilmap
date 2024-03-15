@@ -79,12 +79,12 @@
 					try {
 						const res = callback(...args);
 						Promise.resolve(res).catch((err) => {
-							result.showErrorToast(undefined, 'Unexpected error', err);
+							void result.showErrorToast(undefined, 'Unexpected error', err);
 							throw err;
 						});
 						return res;
 					} catch (err: any) {
-						result.showErrorToast(undefined, 'Unexpected error', err);
+						void result.showErrorToast(undefined, 'Unexpected error', err);
 					}
 				}) as C;
 			},
@@ -92,7 +92,7 @@
 			showToast: async (id, title, message, options = {}) => {
 				await appMountP;
 				if (id != null) {
-					result.hideToast(id);
+					void result.hideToast(id);
 				}
 
 				const toast: ToastInstance = { ...options, key: getUniqueId("fm-toast"), id, title, message, contextId };

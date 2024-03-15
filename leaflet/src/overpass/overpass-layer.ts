@@ -59,7 +59,7 @@ export default class OverpassLayer extends FeatureGroup {
     }
 
     onAdd(): this {
-        this.redraw();
+        void this.redraw();
         return this;
     }
 
@@ -73,7 +73,7 @@ export default class OverpassLayer extends FeatureGroup {
 
 	setQuery(query?: string | ReadonlyArray<Readonly<OverpassPreset>>): void {
 		this._query = query;
-		this.redraw();
+		void this.redraw();
 		this.fire("setQuery", { query });
 
 		if (this.isEmpty())

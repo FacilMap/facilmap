@@ -327,8 +327,7 @@ export class AsyncIcon extends Icon {
 			this._asyncIconUrl.then((url) => {
 				this.options.iconUrl = url;
 				delete this._asyncIconUrl;
-			});
-			this._asyncIconUrl.catch((err) => {
+			}).catch((err) => {
 				console.error("Error loading async icon", err);
 			});
 		}
@@ -341,7 +340,7 @@ export class AsyncIcon extends Icon {
 			icon._fmIconAbortController?.abort();
 			const abortController = new AbortController();
 			icon._fmIconAbortController = abortController;
-			this._asyncIconUrl.then((url) => {
+			void this._asyncIconUrl.then((url) => {
 				if (!icon._fmIconAbortController!.signal.aborted) {
 					icon.setAttribute("src", url);
 				}

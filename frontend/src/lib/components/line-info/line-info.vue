@@ -109,8 +109,8 @@
 			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
 				noCloseButton: true,
 				actions: [
-					{ label: "Finish", variant: "primary", onClick: () => { done(true); }},
-					{ label: "Cancel", onClick: () => { done(false); } }
+					{ label: "Finish", variant: "primary", onClick: () => { void done(true); }},
+					{ label: "Cancel", onClick: () => { void done(false); } }
 				]
 			});
 

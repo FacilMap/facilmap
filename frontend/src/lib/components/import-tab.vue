@@ -57,7 +57,7 @@
 	function handleMapDrop(event: Event): void {
 		event.preventDefault();
 
-		importFiles((event as DragEvent).dataTransfer?.files);
+		void importFiles((event as DragEvent).dataTransfer?.files);
 	}
 
 	async function importFiles(fileList: FileList | undefined): Promise<void> {

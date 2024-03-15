@@ -105,7 +105,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(`${getSafeFilename(normalizePadName(padData.name))}.gpx`);
-		exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		void exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
 	app.get("/:padId/gpx/zip", async (req: Request<{ padId: string }>, res: Response<string>) => {
@@ -121,7 +121,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.set("Content-type", "application/zip");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
-		exportGpxZip(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		void exportGpxZip(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
 	app.get("/:padId/table", async (req: Request<{ padId: string }>, res: Response<string>) => {
@@ -132,7 +132,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
-		createTable(
+		void createTable(
 			database,
 			req.params.padId,
 			query.filter,
@@ -149,7 +149,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
-		createSingleTable(
+		void createSingleTable(
 			database,
 			req.params.padId,
 			typeId,

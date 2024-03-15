@@ -40,6 +40,7 @@ module.exports = {
 		"@typescript-eslint/no-base-to-string": ["error"],
 		"@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: false }],
 		"vue/return-in-computed-property": ["off"],
+		"@typescript-eslint/no-floating-promises": ["error"],
 
 		"constructor-super": ["error"],
 		"for-direction": ["error"],

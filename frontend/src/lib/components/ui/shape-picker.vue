@@ -54,7 +54,7 @@
 		const newVal = arrowNavigation(Object.keys(items), props.modelValue, gridRef.value!.containerRef!, event);
 		if (newVal) {
 			emit("update:modelValue", newVal);
-			nextTick(() => {
+			void nextTick(() => {
 				gridRef.value?.containerRef?.querySelector<HTMLElement>(".active > a")?.focus();
 			});
 		}

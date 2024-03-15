@@ -36,7 +36,7 @@ export default class BboxHandler extends Handler {
 			this._map.unproject(pixelBounds.getBottomLeft(), zoom),
 			this._map.unproject(pixelBounds.getTopRight(), zoom)
 		);
-		this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
+		void this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
 	}
 
 	handleMoveEnd = (): void => {

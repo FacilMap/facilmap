@@ -66,7 +66,7 @@
 			const newVal = arrowNavigation(colours, value.value, gridRef.value, event);
 			if (newVal) {
 				emit('update:modelValue', newVal);
-				nextTick(() => {
+				void nextTick(() => {
 					(gridRef.value?.querySelector(".active a") as HTMLAnchorElement | undefined)?.focus();
 				});
 			}

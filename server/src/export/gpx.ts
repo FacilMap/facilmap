@@ -153,7 +153,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 export function exportGpxZip(database: Database, padId: PadId, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
-	asyncIteratorToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
+	void asyncIteratorToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
 		const filterFunc = compileExpression(filter);
 
 		const [padData, types] = await Promise.all([
