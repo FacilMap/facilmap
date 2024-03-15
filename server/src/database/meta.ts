@@ -14,6 +14,7 @@ export interface MetaProperties {
 	hasBboxes: "1";
 	untitledMigrationCompleted: "1";
 	fieldsNullMigrationCompleted: "1";
+	extraInfoNullMigrationCompleted: "1";
 }
 
 export default class DatabaseMeta {

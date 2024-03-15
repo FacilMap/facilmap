@@ -25,6 +25,7 @@ export default class DatabaseMigrations {
 		await this._spatialMigration();
 		await this._untitledMigration();
 		await this._fieldsNullMigration();
+		await this._extraInfoNullMigration();
 	}
 
 
@@ -487,6 +488,25 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("fieldsNullMigrationCompleted", "1");
+	}
+
+
+	/** Convert "null" to null for extraInfo */
+	async _extraInfoNullMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("extraInfoNullMigrationCompleted") == "1")
+			return;
+
+		await this._db.lines.LineModel.update({
+			extraInfo: null
+		}, {
+			where: {
+				extraInfo: {
+					[Op.in]: ["null", "{}"]
+				}
+			}
+		});
+
+		await this._db.meta.setMeta("extraInfoNullMigrationCompleted", "1");
 	}
 
 }

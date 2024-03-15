@@ -56,7 +56,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 	} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
 		result.distance = calculateDistance(line.trackPoints);
 		result.time = undefined;
-		result.extraInfo = {};
+		result.extraInfo = undefined;
 
 		// TODO: ascent/descent?
 
@@ -80,7 +80,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 	} else {
 		result.distance = calculateDistance(line.routePoints);
 		result.time = undefined;
-		result.extraInfo = {};
+		result.extraInfo = undefined;
 
 		result.trackPoints = [ ];
 		for(let i=0; i<line.routePoints.length; i++) {

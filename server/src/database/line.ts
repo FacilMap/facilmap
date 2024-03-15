@@ -127,7 +127,7 @@ export default class DatabaseLines {
 					return extraInfo != null ? JSON.parse(extraInfo) : extraInfo;
 				},
 				set: function(this: LineModel, v: ExtraInfo) {
-					this.setDataValue("extraInfo", JSON.stringify(v) as any);
+					this.setDataValue("extraInfo", v != null ? JSON.stringify(v) as any : v);
 				}
 			}
 		}, {
