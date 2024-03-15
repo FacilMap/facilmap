@@ -1,6 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
 import { SocketVersion, CRU, type Marker } from "facilmap-types";
+import { cloneDeep } from "lodash-es";
 
 test("Create marker (using default values)", async () => {
 	// client1: Creates the marker and has it in its bbox
@@ -59,9 +60,9 @@ test("Create marker (using default values)", async () => {
 		expect(onMarker2).toHaveBeenCalledWith(expectedMarker);
 
 		const expectedMarkerRecord = { [expectedMarker.id]: expectedMarker };
-		expect(client1.markers).toEqual(expectedMarkerRecord);
-		expect(client2.markers).toEqual(expectedMarkerRecord);
-		expect(client3.markers).toEqual({});
+		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client3.markers)).toEqual({});
 	});
 });
 
@@ -167,9 +168,9 @@ test("Edit marker", async () => {
 		expect(onMarker2).toHaveBeenCalledWith(expectedMarker);
 
 		const expectedMarkerRecord = { [expectedMarker.id]: expectedMarker };
-		expect(client1.markers).toEqual(expectedMarkerRecord);
-		expect(client2.markers).toEqual(expectedMarkerRecord);
-		expect(client3.markers).toEqual({});
+		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client3.markers)).toEqual({});
 	});
 });
 
@@ -218,9 +219,9 @@ test("Delete marker", async () => {
 		expect(onDeleteMarker3).toHaveBeenCalledWith({ id: deletedMarker.id });
 
 		const expectedMarkerRecord = { };
-		expect(client1.markers).toEqual(expectedMarkerRecord);
-		expect(client2.markers).toEqual(expectedMarkerRecord);
-		expect(client3.markers).toEqual({});
+		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(client3.markers)).toEqual({});
 	});
 });
 
@@ -240,7 +241,7 @@ test("Try to create marker with line type", async () => {
 
 		const client3 = await openClient(createPadData.adminId);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		expect(client3.markers).toEqual({});
+		expect(cloneDeep(client3.markers)).toEqual({});
 	});
 });
 
@@ -266,7 +267,7 @@ test("Try to update marker with line type", async () => {
 
 		const client3 = await openClient(createPadData.adminId);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		expect(client3.markers).toEqual({
+		expect(cloneDeep(client3.markers)).toEqual({
 			[marker.id]: marker
 		});
 	});
@@ -290,7 +291,7 @@ test("Try to create marker with marker type from other pad", async () => {
 
 			const client3 = await openClient(createPadData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-			expect(client3.markers).toEqual({});
+			expect(cloneDeep(client3.markers)).toEqual({});
 		});
 	});
 });
@@ -319,7 +320,7 @@ test("Try to update marker with marker type from other pad", async () => {
 
 			const client3 = await openClient(createPadData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-			expect(client3.markers).toEqual({
+			expect(cloneDeep(client3.markers)).toEqual({
 				[marker.id]: marker
 			});
 		});
