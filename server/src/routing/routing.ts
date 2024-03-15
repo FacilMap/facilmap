@@ -1,6 +1,6 @@
 import { calculateBbox, isInBbox } from "../utils/geo.js";
 import type { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
-import { decodeRouteMode, type DecodedRouteMode, calculateDistance } from "facilmap-utils";
+import { decodeRouteMode, type DecodedRouteMode, calculateDistance, round } from "facilmap-utils";
 import { calculateOSRMRoute } from "./osrm.js";
 import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
 
@@ -35,6 +35,11 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 		route = await calculateORSRoute(routePoints, decodedMode);
 	}
 
+	route!.distance = round(route!.distance, 2);
+	route!.time = route!.time != null ? Math.round(route!.time) : route!.time;
+	route!.ascent = route!.ascent != null ? Math.round(route!.ascent) : route!.ascent;
+	route!.descent = route!.descent != null ? Math.round(route!.descent) : route!.descent;
+
 	calculateZoomLevels(route!.trackPoints);
 
 	return {
@@ -54,7 +59,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 		result.extraInfo = trackPointsFromRoute.extraInfo;
 		result.trackPoints = trackPointsFromRoute.trackPoints;
 	} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
-		result.distance = calculateDistance(line.trackPoints);
+		result.distance = round(calculateDistance(line.trackPoints), 2);
 		result.time = undefined;
 		result.extraInfo = undefined;
 
@@ -78,7 +83,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 
 		result.trackPoints = routeData.trackPoints;
 	} else {
-		result.distance = calculateDistance(line.routePoints);
+		result.distance = round(calculateDistance(line.routePoints), 2);
 		result.time = undefined;
 		result.extraInfo = undefined;
 
