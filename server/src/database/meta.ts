@@ -9,7 +9,7 @@ interface MetaModel extends Model<InferAttributes<MetaModel>, InferCreationAttri
 
 export interface MetaProperties {
 	dropdownKeysMigrated: "1";
-	hasElevation: "1";
+	hasElevation: "1" | "2";
 	hasLegendOption: "1";
 	hasBboxes: "1";
 	untitledMigrationCompleted: "1";

@@ -1,48 +1,44 @@
 import type { Point } from "facilmap-types";
+import config from "./config";
 
-// const API_URL = "https://elevation.mapzen.com/height";
-// const LIMIT = 500;
-// const MIN_TIME_BETWEEN_REQUESTS = 600;
-
-// const throttle = highland<() => void>();
-// throttle.ratelimit(1, MIN_TIME_BETWEEN_REQUESTS).each((func) => {
-// 	func();
-// });
-
-export async function _getThrottledSlot(): Promise<void> {
-	// return new Promise<void>((resolve) => {
-	// 	throttle.write(resolve);
-	// });
-}
-
-export async function getElevationForPoint(point: Point): Promise<number | undefined> {
-	const points = await getElevationForPoints([point]);
+export async function getElevationForPoint(point: Point, failOnError = false): Promise<number | undefined> {
+	const points = await getElevationForPoints([point], failOnError);
 	return points[0];
 }
 
-export async function getElevationForPoints(points: Array<{ lat: string | number; lon: string | number }>): Promise<Array<number | undefined>> {
-	return points.map(() => undefined);
-
-	/*if(points.length == 0)
-		return Promise.resolve([ ]);
-
-	let ret = Promise.resolve([ ]);
-	for(let i=0; i<points.length; i+=LIMIT) {
-		ret = ret.then((heights) => {
-			return elevation._getThrottledSlot().then(() => (heights));
-		}).then((heights) => {
-			let json = {
-				encoded_polyline: polyline.encode(points.slice(i, i+LIMIT).map((point) => ([point.lat, point.lon])), 6),
-				range: false
-			};
-
-			return request.get({
-				url: `${API_URL}?json=${encodeURI(JSON.stringify(json))}&api_key=${config.mapzenToken}`,
-				json: true
-			}).then((res) => (heights.concat(res.height)));
-		});
+export async function getElevationForPoints(points: Point[], failOnError = false): Promise<Array<number | undefined>> {
+	if(points.length == 0) {
+		return [];
 	}
-	return ret;*/
+
+	try {
+		const res = await fetch(`${config.openElevationApiUrl}/api/v1/lookup`, {
+			method: "post",
+			headers: {
+				"Content-type": "application/json"
+			},
+			body: JSON.stringify({
+				locations: points.map((point) => ({ latitude: point.lat, longitude: point.lon }))
+			})
+		});
+		if (!res.ok) {
+			throw new Error(`Looking up elevations failed with status ${res.status}.`);
+		}
+		const json: { results: Array<{ latitude: number; longitude: number; elevation: number }> } = await res.json();
+
+		return json.results.map((result: any) => {
+			if (result.elevation !== 0) {
+				return result.elevation;
+			}
+		});
+	} catch (err: any) {
+		if (failOnError) {
+			throw err;
+		} else {
+			console.warn("Error lookup up elevation", err);
+			return points.map(() => undefined);
+		}
+	}
 }
 
 interface AscentDescent {

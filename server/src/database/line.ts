@@ -274,7 +274,6 @@ export default class DatabaseLines {
 	}
 
 	async _setLinePoints(padId: PadId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
-		// First get elevation, so that if that fails, we don't update anything
 		await this.LinePointModel.destroy({ where: { lineId: lineId } });
 
 		const create = [ ];

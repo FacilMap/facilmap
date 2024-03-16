@@ -18,17 +18,17 @@ The config of the FacilMap server can be set either by using environment variabl
 | `DB_PASSWORD`         |          | `facilmap`  | The password to connect to the database with.                                                                                    |
 | `ORS_TOKEN`           | *        |             | [OpenRouteService API key](https://openrouteservice.org/).                                                                     |
 | `MAPBOX_TOKEN`        | *        |             | [Mapbox API key](https://www.mapbox.com/signup/).                                                                                |
-| `MAPZEN_TOKEN`        |          |             | [Mapzen API key](https://mapzen.com/developers/sign_up).                                                                         |
 | `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup).                                                                   |
 | `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key.                                                                                                             |
 | `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key |
 | `HIDE_COMMERCIAL_MAP_LINKS` |    |             | Set to `1` to hide the links to Google/Bing Maps in the “Map style” menu. |
-| `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)).
+| `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)). |
+| `NOMINATIM_URL`       |          | `https://nominatim.openstreetmap.org` | The URL to the Nominatim server (used to search for places). |
+| `OPEN_ELEVATION_URL`  |          | `https://api.open-elevation.com` | The URL to the Open Elevation server (used to look up the elevation for markers). |
 
 FacilMap makes use of several third-party services that require you to register (for free) and generate an API key:
 * Mapbox and OpenRouteService are used for calculating routes. Mapbox is used for basic routes, OpenRouteService is used when custom route mode settings are made. If these API keys are not defined, calculating routes will fail.
 * Maxmind provides a free database that maps IP addresses to approximate locations. FacilMap downloads this database to decide the initial map view for users (IP addresses are looked up in FacilMap’s copy of the database, on IP addresses are sent to Maxmind). This API key is optional, if it is not set, the default view will be the whole world.
-* Mapzen is used to look up the elevation info for search results. The API key is optional, if it is not set, no elevation info will be available for search results.
 * Lima Labs is used for nicer and higher resolution map tiles than Mapnik. The API key is optional, if it is not set, Mapnik will be the default map style instead.
 
 ## Custom CSS file

@@ -37,7 +37,6 @@ interface NominatimError {
 	error: { code?: number; message: string } | string;
 }
 
-const nameFinderUrl = "https://nominatim.openstreetmap.org";
 const limit = 25;
 const stateAbbr: Record<string, Record<string, string>> = {
 	"us" : {
@@ -115,7 +114,7 @@ export async function find(query: string, loadUrls = false, loadElevation = fals
 
 async function _findQuery(query: string, loadElevation = false): Promise<Array<SearchResult>> {
 	const body: Array<NominatimResult> | NominatimError = await throttledFetch(
-		nameFinderUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
+		config.nominatimUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
 		{
 			headers: {
 				"User-Agent": config.userAgent
@@ -131,7 +130,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 
 	const points = body.filter((res) => (res.lon && res.lat));
 	if(loadElevation && points.length > 0) {
-		const elevations = await getElevationForPoints(points);
+		const elevations = await getElevationForPoints(points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })));
 		elevations.forEach((elevation, i) => {
 			points[i].elevation = elevation;
 		});
@@ -142,7 +141,7 @@ async function _findQuery(query: string, loadElevation = false): Promise<Array<S
 
 async function _findOsmObject(type: string, id: string, loadElevation = false): Promise<Array<SearchResult>> {
 	const body: Array<NominatimResult> | NominatimError = await throttledFetch(
-		`${nameFinderUrl}/lookup?format=jsonv2&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_ids=${encodeURI(type.toUpperCase())}${encodeURI(id)}`,
+		`${config.nominatimUrl}/lookup?format=jsonv2&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_ids=${encodeURI(type.toUpperCase())}${encodeURI(id)}`,
 		{
 			headers: {
 				"User-Agent": config.userAgent
@@ -158,7 +157,7 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 
 	const points = body.filter((res) => (res.lon && res.lat));
 	if(loadElevation && points.length > 0) {
-		const elevations = await getElevationForPoints(points);
+		const elevations = await getElevationForPoints(points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })));
 		elevations.forEach((elevation, i) => {
 			points[i].elevation = elevation;
 		});
@@ -170,7 +169,7 @@ async function _findOsmObject(type: string, id: string, loadElevation = false): 
 async function _findLonLat(lonlatWithZoom: PointWithZoom, loadElevation = false): Promise<Array<SearchResult>> {
 	const [body, elevation] = await Promise.all([
 		throttledFetch(
-			`${nameFinderUrl}/reverse?format=jsonv2&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
+			`${config.nominatimUrl}/reverse?format=jsonv2&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`,
 			{
 				headers: {
 					"User-Agent": config.userAgent

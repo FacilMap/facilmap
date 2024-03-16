@@ -93,7 +93,7 @@
 
 			<template v-if="marker.ele != null">
 				<dt class="elevation">Elevation</dt>
-				<dd class="elevation">{{marker.ele}}^m</dd>
+				<dd class="elevation">{{marker.ele}}&#x202F;m</dd>
 			</template>
 
 			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">

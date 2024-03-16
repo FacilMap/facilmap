@@ -13,6 +13,6 @@ export const markerValidator = cruValidator({
 	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
 	size: optionalCreate(sizeValidator), // defaults to type.defaultSize
 	data: optionalCreate(z.record(z.string())),
-	ele: optionalCreate(z.number().or(z.null()), null)
+	ele: optionalCreate(z.number().or(z.null()))
 });
 export type Marker<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof markerValidator>;
