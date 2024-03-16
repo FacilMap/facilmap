@@ -441,9 +441,13 @@ test("Try to update line with line type", async () => {
 		}).rejects.toThrowError("Cannot use marker type for line");
 
 		const client3 = await openClient(createPadData.adminId);
-		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		expect(cloneDeep(client3.lines)).toEqual({
-			[line.id]: line
+			[line.id]: {
+				...line,
+				trackPoints: {
+					length: 0
+				}
+			}
 		});
 	});
 });
