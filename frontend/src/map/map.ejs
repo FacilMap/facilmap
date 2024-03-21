@@ -2,8 +2,8 @@
 <html class="fm-facilmap-map">
 	<head>
 		<meta charset="utf-8">
-		<title><%= padData && padData.name ? `${padData.name} – ` : ''%><%=appName%></title>
-		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
+		<title><%=normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, appName)%></title>
+		<meta name="description" content="<%=normalizePageDescription(padData?.description)%>" />
 <% if(!padData || (isReadOnly && padData.searchEngines)) { -%>
 		<meta name="robots" content="index,nofollow" />
 <% } else { -%>
@@ -16,6 +16,7 @@
 		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
 		<link rel="manifest" href="<%=paths.base%>manifest.json">
 		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href="<%=paths.base%>opensearch.xml">
+		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, appName)%>" />
 		<style type="text/css">
 			html, body, #app {
 				margin: 0;

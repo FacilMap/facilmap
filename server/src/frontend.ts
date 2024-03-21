@@ -5,7 +5,7 @@ import type { ID, PadData, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizePadName, type InjectedConfig, quoteHtml } from "facilmap-utils";
+import { normalizePadName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription } from "facilmap-utils";
 import config from "./config";
 import { streamPromiseToStream, streamReplace } from "./utils/streams";
 import { ReadableStream } from "stream/web";
@@ -70,6 +70,7 @@ function getInjectedConfig(): InjectedConfig {
 export interface RenderMapParams {
 	padData: Pick<PadData, "name" | "description" | "searchEngines"> | undefined;
 	isReadOnly: boolean;
+	url: string;
 }
 
 export async function renderMap(params: RenderMapParams): Promise<string> {
@@ -82,16 +83,20 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 		appName: config.appName,
 		config: getInjectedConfig(),
 		hasCustomCssFile: !!config.customCssFile,
+		normalizePageTitle,
+		normalizePageDescription,
+		normalizePadName,
 		...injections,
 		paths,
 		...params
 	});
 }
 
-export function renderTable({ padData, types, renderSingleTable }: {
-	padData: PadData | undefined;
+export function renderTable({ padData, types, renderSingleTable, url }: {
+	padData: PadData;
 	types: Type[];
 	renderSingleTable: (typeId: ID, params: TableParams) => ReadableStream<string>;
+	url: string;
 }): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const [template, injections] = await Promise.all([
@@ -106,6 +111,8 @@ export function renderTable({ padData, types, renderSingleTable }: {
 			hasCustomCssFile: !!config.customCssFile,
 			paths,
 			normalizePadName,
+			normalizePageTitle,
+			normalizePageDescription,
 			quoteHtml,
 			renderSingleTable: (typeId: ID, params: TableParams) => {
 				const placeholder = `%${generateRandomId(32)}%`;
@@ -114,6 +121,7 @@ export function renderTable({ padData, types, renderSingleTable }: {
 			},
 			padData,
 			types,
+			url
 		});
 
 		return streamReplace(rendered, replace);
@@ -152,5 +160,21 @@ export async function getOpensearchXml(baseUrl: string): Promise<string> {
 	return ejs.render(template, {
 		appName: config.appName,
 		baseUrl
+	});
+}
+
+export function getOembedJson(baseUrl: string, padData: PadData | undefined, params: { url: string; maxwidth?: number; maxheight?: number }): string {
+	const width = params.maxwidth ?? 800;
+	const height = params.maxheight ?? 500;
+
+	return JSON.stringify({
+		"title": normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, config.appName),
+		"type": "rich",
+		"height": height,
+		"width": width,
+		"version": "1.0",
+		"provider_name": config.appName,
+		"provider_url": baseUrl,
+		"html": `<iframe style="height:${height}px; width:${width}px; border:none;" src="${quoteHtml(params.url)}"></iframe>`
 	});
 }

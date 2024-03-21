@@ -1,7 +1,6 @@
 <script setup lang="ts">
 	import Icon from "./ui/icon.vue";
 	import type { FindPadsResult } from "facilmap-types";
-	import decodeURIComponent from "decode-uri-component";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import Pagination from "./ui/pagination.vue";
@@ -11,6 +10,7 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { FacilMapContext } from "./facil-map-context-provider/facil-map-context";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
+	import { parsePadUrl } from "facilmap-utils";
 
 	const toasts = useToasts();
 
@@ -20,15 +20,9 @@
 
 	const ITEMS_PER_PAGE = 20;
 
-	function parsePadId(val: string, context: FacilMapContext): { padId: string; hash: string } {
-		if (val.startsWith(context.baseUrl))
-			val = decodeURIComponent(val.substr(context.baseUrl.length));
-
-		const hashIdx = val.indexOf("#");
-		if (hashIdx == -1)
-			return { padId: val, hash: "" };
-		else
-			return { padId: val.substr(0, hashIdx), hash: val.substr(hashIdx) };
+	function parsePadId(val: string, context: FacilMapContext): { padId: string; hash: string } | undefined {
+		const url = val.startsWith(context.baseUrl) ? val : `${context.baseUrl}${val}`;
+		return parsePadUrl(url, context.baseUrl);
 	}
 
 	const context = injectContextRequired();
@@ -50,18 +44,22 @@
 
 	const url = computed(() => {
 		const parsed = parsePadId(padId.value, context);
-		return context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
+		if (parsed) {
+			return context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
+		}
 	});
 
 	function handleSubmit(): void {
 		const parsed = parsePadId(padId.value, context);
-		client.value.openPad(parsed.padId);
-		modalRef.value!.modal.hide();
+		if (parsed) {
+			client.value.openPad(parsed.padId);
+			modalRef.value!.modal.hide();
 
-		setTimeout(() => {
-			// TODO: This is called too early
-			mapContext.value.components.hashHandler.applyHash(parsed.hash);
-		}, 0);
+			setTimeout(() => {
+				// TODO: This is called too early
+				mapContext.value.components.hashHandler.applyHash(parsed.hash);
+			}, 0);
+		}
 	}
 
 	function openResult(result: FindPadsResult): void {
@@ -106,15 +104,19 @@
 	function validatePadIdFormat(padId: string) {
 		const parsed = parsePadId(padId, context);
 
-		if (parsed.padId.includes("/")) {
+		if (!parsed) {
 			return "Please enter a valid map ID or URL.";
 		}
 	}
 
 	async function validatePadExistence(padId: string) {
-		const padInfo = await client.value.getPad({ padId });
-		if (!padInfo) {
-			return "No map with this ID could be found.";
+		const parsed = parsePadId(padId, context);
+
+		if (parsed) {
+			const padInfo = await client.value.getPad({ padId: parsed.padId });
+			if (!padInfo) {
+				return "No map with this ID could be found.";
+			}
 		}
 	}
 </script>

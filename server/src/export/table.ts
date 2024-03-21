@@ -91,17 +91,22 @@ export function createSingleTable(
 	})());
 }
 
-export function createTable(database: Database, padId: PadId, filter: string | undefined, hide: string[]): ReadableStream<string> {
+export function createTable(database: Database, padId: PadId, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const [padData, types] = await Promise.all([
 			database.pads.getPadData(padId),
 			asyncIteratorToArray(database.types.getTypes(padId))
 		]);
 
+		if (!padData) {
+			throw new Error(`Pad with read-only ID ${padId} could not be found.`);
+		}
+
 		return renderTable({
 			padData,
 			types,
-			renderSingleTable: (typeId, params) => createSingleTable(database, padId, typeId, filter, hide, params)
+			renderSingleTable: (typeId, params) => createSingleTable(database, padId, typeId, filter, hide, params),
+			url
 		});
 	})());
 }

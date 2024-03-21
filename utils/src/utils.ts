@@ -1,4 +1,5 @@
 import { cloneDeep, isEqual } from "lodash-es";
+import decodeURIComponent from "decode-uri-component";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
@@ -96,8 +97,10 @@ export function getObjectDiff(obj1: Record<keyof any, any>, obj2: Record<keyof a
 export function decodeQueryString(str: string): Record<string, string> {
 	const obj: Record<string, string> = { };
 	for(const segment of str.replace(/^\?/, "").split(/[;&]/)) {
-		const pair = segment.split("=");
-		obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+		if (segment !== "") {
+			const pair = segment.split("=");
+			obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] ?? "");
+		}
 	}
 	return obj;
 }
@@ -146,6 +149,14 @@ export function normalizeLineName(name: string | undefined): string {
 	return name || "Untitled line";
 }
 
+export function normalizePageTitle(padName: string | undefined, appName: string): string {
+	return `${padName ? `${padName} – ` : ''}${appName}`;
+}
+
+export function normalizePageDescription(padDescription: string | undefined): string {
+	return padDescription || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.";
+}
+
 /**
  * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
  * @param oldObject {Object}
@@ -166,4 +177,18 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | und
 
 export function getSafeFilename(fname: string): string {
 	return fname.replace(/[\\/:*?"<>|]+/g, '_');
+}
+
+export function parsePadUrl(url: string, baseUrl: string): { padId: string; hash: string } | undefined {
+	if (url.startsWith(baseUrl)) {
+		const m = url.slice(baseUrl.length).match(/^([^/]+)(\/table)?(\?|#|$)/);
+
+		if (m) {
+			const hashIdx = url.indexOf("#");
+			return {
+				padId: decodeURIComponent(m[1]),
+				hash: hashIdx === -1 ? "" : url.substr(hashIdx)
+			};
+		}
+	}
 }

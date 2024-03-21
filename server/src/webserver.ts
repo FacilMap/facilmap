@@ -1,15 +1,15 @@
 import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { stringifiedIdValidator, type PadId } from "facilmap-types";
+import { stringifiedIdValidator, type PadData, type PadId } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx, exportGpxZip } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { Readable, Writable } from "stream";
-import { getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
-import { getSafeFilename, normalizePadName } from "facilmap-utils";
+import { getOembedJson, getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
+import { getSafeFilename, normalizePadName, parsePadUrl } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
 import { exportCsv } from "./export/csv.js";
@@ -21,6 +21,8 @@ function getBaseUrl(req: Request): string {
 
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
 	const padMiddleware = async (req: Request<{ padId: string }>, res: Response<string>) => {
+		const baseUrl = getBaseUrl(req);
+
 		let params: RenderMapParams;
 		if(req.params?.padId) {
 			const padData = await database.pads.getPadDataByAnyId(req.params.padId);
@@ -31,7 +33,8 @@ export async function initWebserver(database: Database, port: number, host?: str
 						name: normalizePadName(padData.name),
 						description: padData.description
 					},
-					isReadOnly: padData.id === req.params.padId
+					isReadOnly: padData.id === req.params.padId,
+					url: `${baseUrl}${encodeURIComponent(req.params.padId)}`
 				};
 			} else {
 				res.status(404);
@@ -41,13 +44,15 @@ export async function initWebserver(database: Database, port: number, host?: str
 						name: "",
 						description: ""
 					},
-					isReadOnly: true
+					isReadOnly: true,
+					url: `${baseUrl}${encodeURIComponent(req.params.padId)}`
 				};
 			}
 		} else {
 			params = {
 				padData: undefined,
-				isReadOnly: true
+				isReadOnly: true,
+				url: baseUrl
 			};
 		}
 
@@ -83,10 +88,43 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}
 	});
 
-	app.use("/_app/static/sw.js", (req, res, next) => {
+	app.use(`${paths.base}static/sw.js`, (req, res, next) => {
 		res.setHeader("Service-Worker-Allowed", "/");
 		next();
 	});
+
+	app.use(`${paths.base}oembed`, async (req, res, next) => {
+		const query = z.object({
+			url: z.string(),
+			maxwidth: z.number().optional(),
+			maxheight: z.number().optional(),
+			format: z.string().optional()
+		}).parse(req.query);
+
+		if (query.format != null && query.format !== "json") {
+			res.status(501).send();
+			return;
+		}
+
+		const baseUrl = getBaseUrl(req);
+		let padData: PadData | undefined;
+		if (query.url === baseUrl || `${query.url}/` === baseUrl) {
+			padData = undefined;
+		} else {
+			const parsed = parsePadUrl(query.url, baseUrl);
+			if (parsed) {
+				padData = await database.pads.getPadDataByAnyId(parsed.padId);
+			} else {
+				res.status(404).send();
+				return;
+			}
+		}
+
+		res.header("Content-type", "application/json");
+
+		res.send(getOembedJson(baseUrl, padData, query));
+	});
+
 	app.use(await getStaticFrontendMiddleware());
 
 	// If no file with this name has been found, we render a pad
@@ -129,6 +167,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
+		const baseUrl = getBaseUrl(req);
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
@@ -136,7 +175,8 @@ export async function initWebserver(database: Database, port: number, host?: str
 			database,
 			req.params.padId,
 			query.filter,
-			query.hide ? query.hide.split(',') : []
+			query.hide ? query.hide.split(',') : [],
+			`${baseUrl}${encodeURIComponent(req.params.padId)}/table`
 		).pipeTo(Writable.toWeb(res));
 	});
 
