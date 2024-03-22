@@ -166,3 +166,11 @@ export function getLineTemplate(type: Type): LineTemplate {
 		}, type), ["routePoints", "extraInfo", "trackPoints"]),
 	} as LineTemplate;
 }
+
+export function normalizeMarkerName(name: string | undefined): string {
+	return name || "Untitled marker";
+}
+
+export function normalizeLineName(name: string | undefined): string {
+	return name || "Untitled line";
+}
