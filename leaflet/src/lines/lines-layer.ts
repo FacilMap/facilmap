@@ -217,24 +217,45 @@ export default class LinesLayer extends FeatureGroup {
 				handler = addClickListener(this._map, handleClick, handleMouseMove);
 			};
 
-			const handleClick = (pos: Point) => {
+			const handleClick = (pos?: Point) => {
+				if (isFinishing) {
+					// Called by handler.cancel()
+					return;
+				}
+
 				handler = undefined;
-				if(routePoints.length > 0 && pos.lon == routePoints[routePoints.length-1].lon && pos.lat == routePoints[routePoints.length-1].lat)
-					void finishLine(true);
-				else
-					addPoint(pos);
-			}
+				if (pos) {
+					if(routePoints.length > 0 && pos.lon == routePoints[routePoints.length-1].lon && pos.lat == routePoints[routePoints.length-1].lat)
+						void finishLine(true);
+					else
+						addPoint(pos);
+				} else {
+					void finishLine(false);
+				}
+			};
 
 			const handleMouseMove = (pos: Point) => {
 				if(line.routePoints!.length > 0) {
 					line.routePoints![line.routePoints!.length-1] = pos;
 					this._addLine(line);
 				}
-			}
+			};
+
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (e.code === "Enter") {
+					e.preventDefault();
+					void finishLine(true);
+				}
+			};
+
+			let isFinishing = false;
 
 			const finishLine = async (save: boolean) => {
+				isFinishing = true;
 				if (handler)
 					handler.cancel();
+				document.removeEventListener("keydown", handleKeyDown);
+
 				this._deleteLine(line);
 
 				delete this._endDrawLine;
@@ -243,9 +264,10 @@ export default class LinesLayer extends FeatureGroup {
 					resolve(routePoints);
 				else
 					resolve(undefined);
-			}
+			};
 
-			handler = addClickListener(this._map, handleClick, handleMouseMove)
+			document.addEventListener("keydown", handleKeyDown);
+			handler = addClickListener(this._map, handleClick, handleMouseMove);
 
 			this._endDrawLine = finishLine;
 		});

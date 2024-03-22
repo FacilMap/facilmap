@@ -10,14 +10,16 @@ export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastCo
 	const clickListener = addClickListener(mapContext.value.components.map, async (point) => {
 		toasts.hideToast("fm-draw-add-marker");
 
-		try {
-			const selection = await addToMap(context, [
-				{ marker: { lat: point.lat, lon: point.lon }, type }
-			]);
+		if (point) {
+			try {
+				const selection = await addToMap(context, [
+					{ marker: { lat: point.lat, lon: point.lon }, type }
+				]);
 
-			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
-		} catch (err) {
-			toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
+				mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
+			} catch (err) {
+				toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
+			}
 		}
 	});
 
@@ -27,7 +29,6 @@ export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastCo
 			{
 				label: "Cancel",
 				onClick: () => {
-					toasts.hideToast("fm-draw-add-marker");
 					clickListener.cancel();
 				}
 			}

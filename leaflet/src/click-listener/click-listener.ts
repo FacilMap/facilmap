@@ -26,12 +26,13 @@ class TransparentLayer extends Layer {
 	}
 }
 
-export type ClickListener = (point: Point) => void;
+export type ClickListener = (point?: Point) => void;
+export type MoveListener = (point: Point) => void;
 export interface ClickListenerHandle {
 	cancel(): void;
 }
 
-export function addClickListener(map: Map, listener: ClickListener, moveListener?: ClickListener): ClickListenerHandle {
+export function addClickListener(map: Map, listener: ClickListener, moveListener?: MoveListener): ClickListenerHandle {
 	map.fire('fmInteractionStart');
 
 	const transparentLayer = new TransparentLayer().addTo(map);
@@ -41,26 +42,41 @@ export function addClickListener(map: Map, listener: ClickListener, moveListener
 	};
 
 	const handleClick = (e: LeafletMouseEvent) => {
-		cancel();
-
 		e.originalEvent.preventDefault();
 		DomEvent.stopPropagation(e);
-		listener({ lat: e.latlng.lat, lon: e.latlng.lng });
+		finish({ lat: e.latlng.lat, lon: e.latlng.lng });
 	};
 
-	const cancel = () => {
+	const handleKeyDown = (e: KeyboardEvent) => {
+		if (e.code === "Escape") {
+			e.preventDefault();
+			finish();
+		}
+	};
+
+	const finish = (point?: Point) => {
 		map.fire('fmInteractionEnd');
 
 		transparentLayer.removeFrom(map).off("click", handleClick);
 
 		if(moveListener)
 			transparentLayer.off("mousemove", handleMove);
+
+		document.removeEventListener("keydown", handleKeyDown);
+
+		listener(point);
 	};
+
+	document.addEventListener("keydown", handleKeyDown);
 
 	transparentLayer.addTo(map).on("click", handleClick);
 
 	if(moveListener)
 		transparentLayer.on("mousemove", handleMove);
 
-	return { cancel };
+	return {
+		cancel: () => {
+			finish();
+		}
+	};
 }
