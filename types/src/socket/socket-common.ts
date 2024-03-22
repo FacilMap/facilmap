@@ -1,4 +1,4 @@
-import { exportFormatValidator, idValidator, type ID } from "../base.js";
+import { exportFormatValidator, idValidator, type Bbox, type ID } from "../base.js";
 import { type PadData } from "../padData.js";
 import { type Marker } from "../marker.js";
 import { type Line, type TrackPoint } from "../line.js";
@@ -27,6 +27,8 @@ export const lineTemplateRequestValidator = z.object({
 	typeId: idValidator
 });
 export type LineTemplateRequest = z.infer<typeof lineTemplateRequestValidator>;
+
+export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "padId">;
 
 export const lineExportRequestValidator = z.object({
 	id: idValidator,

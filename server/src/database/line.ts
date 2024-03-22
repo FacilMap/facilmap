@@ -1,5 +1,5 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -7,7 +7,7 @@ import { calculateRouteForLine } from "../routing/routing.js";
 import type { PadModel } from "./pad";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
-import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
+import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -193,26 +193,10 @@ export default class DatabaseLines {
 		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
 	}
 
-	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<Line> {
-		const lineTemplate = {
-			...this.LineModel.build({ ...data, padId: padId } satisfies Partial<CreationAttributes<LineModel>> as any).toJSON(),
-			data: { }
-		} as Line;
-
+	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<LineTemplate> {
 		const type = await this._db.types.getType(padId, data.typeId);
 
-		if(type.defaultColour)
-			lineTemplate.colour = type.defaultColour;
-		if(type.defaultWidth)
-			lineTemplate.width = type.defaultWidth;
-		if(type.defaultStroke != null)
-			lineTemplate.stroke = type.defaultStroke;
-		if(type.defaultMode)
-			lineTemplate.mode = type.defaultMode;
-
-		await this._db.helpers._updateObjectStyles(lineTemplate);
-
-		return lineTemplate;
+		return getLineTemplate(type);
 	}
 
 	getLine(padId: PadId, lineId: ID): Promise<Line> {

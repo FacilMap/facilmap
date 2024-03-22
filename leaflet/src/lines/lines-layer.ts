@@ -1,4 +1,4 @@
-import type { ID, Line, LinePointsEvent, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
+import type { ID, Line, LinePointsEvent, LineTemplate, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
 import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type PolylineOptions, type LatLngBounds } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
@@ -185,12 +185,23 @@ export default class LinesLayer extends FeatureGroup {
 
 	protected _endDrawLine?: (save: boolean) => void;
 
-	drawLine(lineTemplate: Line): Promise<Point[] | undefined> {
+	drawLine(lineTemplate: LineTemplate): Promise<Point[] | undefined> {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
+				id: -1,
+				padId: "",
+				top: 0,
+				right: 0,
+				bottom: 0,
+				left: 0,
+				distance: 0,
+				time: null,
+				ascent: null,
+				descent: null,
 				...lineTemplate,
 				routePoints: [],
-				trackPoints: []
+				trackPoints: [],
+				extraInfo: {}
 			};
 			line.trackPoints = line.routePoints;
 

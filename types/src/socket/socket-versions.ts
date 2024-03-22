@@ -8,7 +8,7 @@ import { type View, viewValidator } from "../view.js";
 import type { MultipleEvents } from "../events.js";
 import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
-import { findPadsQueryValidator, getPadQueryValidator, type FindPadsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator } from "./socket-common";
+import { findPadsQueryValidator, getPadQueryValidator, type FindPadsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate } from "./socket-common";
 import type { HistoryEntry } from "../historyEntry";
 
 export const requestDataValidatorsV2 = {
@@ -61,7 +61,7 @@ export interface ResponseDataMapV2 {
 	addMarker: Marker;
 	editMarker: Marker;
 	deleteMarker: Marker;
-	getLineTemplate: Line;
+	getLineTemplate: LineTemplate;
 	addLine: Line;
 	editLine: Line;
 	deleteLine: Line;

@@ -33,7 +33,6 @@ export class SocketConnectionV1 extends SocketConnectionV2 {
 			addMarker: mapResult(socketHandlers.addMarker, (marker) => this.prepareMarker(marker)),
 			editMarker: mapResult(socketHandlers.editMarker, (marker) => this.prepareMarker(marker)),
 			deleteMarker: mapResult(socketHandlers.deleteMarker, (marker) => this.prepareMarker(marker)),
-			getLineTemplate: mapResult(socketHandlers.getLineTemplate, (line) => this.prepareLine(line)),
 			addLine: mapResult(socketHandlers.addLine, (line) => this.prepareLine(line)),
 			editLine: mapResult(socketHandlers.editLine, (line) => this.prepareLine(line)),
 			deleteLine: mapResult(socketHandlers.deleteLine, (line) => this.prepareLine(line)),

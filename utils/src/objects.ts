@@ -1,4 +1,5 @@
-import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type Marker, type Type } from "facilmap-types";
+import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
+import { omit } from "lodash-es";
 
 export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
 	return "lat" in object && object.lat != null;
@@ -154,4 +155,14 @@ export function resolveUpdateLine(line: Line, update: Omit<Line<CRU.UPDATE>, "id
 		...resolvedUpdate,
 		...applyLineStyles({ ...line, ...resolvedUpdate }, newType)
 	};
+}
+
+export function getLineTemplate(type: Type): LineTemplate {
+	return {
+		data: {},
+		...omit(resolveCreateLine({
+			typeId: type.id,
+			routePoints: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0 }]
+		}, type), ["routePoints", "extraInfo", "trackPoints"]),
+	} as LineTemplate;
 }

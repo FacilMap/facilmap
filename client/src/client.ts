@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents } from "facilmap-types";
+import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents, LineTemplate } from "facilmap-types";
 
 export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
@@ -448,7 +448,7 @@ export default class Client {
 		return await this._emit("deleteMarker", data);
 	}
 
-	async getLineTemplate(data: LineTemplateRequest): Promise<Line> {
+	async getLineTemplate(data: LineTemplateRequest): Promise<LineTemplate> {
 		return await this._emit("getLineTemplate", data);
 	}
 
