@@ -1,9 +1,8 @@
 import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo.js";
 import md5 from "md5-file";
-import { schedule } from "node-cron";
 import { open, type Reader, type Response } from "maxmind";
 import { createWriteStream } from "fs";
-import { rename } from "node:fs/promises";
+import { rename, stat } from "node:fs/promises";
 import https from "https";
 import zlib from "zlib";
 import config from "./config.js";
@@ -12,6 +11,7 @@ import type { Bbox } from "facilmap-types";
 import { fileURLToPath } from "url";
 import { fileExists } from "./utils/utils";
 import findCacheDir from "find-cache-dir";
+import { utimes } from "fs/promises";
 
 const geoliteUrl = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
 const cacheDir = findCacheDir({ name: "facilmap-server", create: true })
@@ -23,14 +23,17 @@ let currentMd5: string | null = null;
 let db: Reader<Response> | null = null;
 
 if(config.maxmindUserId && config.maxmindLicenseKey) {
-	schedule("0 3 * * *", download);
-
 	load().catch((err) => {
 		console.log("Error loading maxmind database", err);
 	});
-	download().catch((err) => {
+	checkDownload().catch((err) => {
 		console.log("Error downloading maxmind database", err);
 	});
+	setInterval(() => {
+		checkDownload().catch((err) => {
+			console.log("Error downloading maxmind database", err);
+		});
+	}, 3600_000);
 }
 
 async function load() {
@@ -38,8 +41,13 @@ async function load() {
 		db = await open(fname);
 	else
 		db = null;
+}
 
-
+async function checkDownload() {
+	const mtime = (await fileExists(fname)) ? (await stat(fname)).mtimeMs : -Infinity;
+	if (Date.now() - mtime >= 86400_000) {
+		await download();
+	}
 }
 
 async function download() {
@@ -60,6 +68,7 @@ async function download() {
 
 	if(res.statusCode == 304) {
 		console.log("Maxmind database is up to date, no update needed.");
+		await utimes(fname, Date.now(), Date.now());
 		return;
 	} else if(res.statusCode != 200)
 		throw new Error(`Unexpected status code ${res.statusCode} when downloading maxmind database.`);

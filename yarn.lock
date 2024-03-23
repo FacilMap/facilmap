@@ -1120,13 +1120,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-cron@npm:^3.0.11":
-  version: 3.0.11
-  resolution: "@types/node-cron@npm:3.0.11"
-  checksum: a73f69bcca52a5f3b1671cfb00a8e4a1d150d0aef36a611564a2f94e66b6981bade577e267ceeeca6fcee241768902d55eb8cf3a81f9ef4ed767a23112fdb16d
-  languageName: node
-  linkType: hard
-
 "@types/node-fetch@npm:^2.6.11":
   version: 2.6.11
   resolution: "@types/node-fetch@npm:2.6.11"
@@ -3782,7 +3775,6 @@ __metadata:
     "@types/geojson": ^7946.0.14
     "@types/lodash-es": ^4.17.12
     "@types/node": ^20.11.25
-    "@types/node-cron": ^3.0.11
     "@types/string-similarity": ^4.0.2
     cheerio: ^1.0.0-rc.12
     compression: ^1.7.4
@@ -3803,7 +3795,6 @@ __metadata:
     maxmind: ^4.3.18
     md5-file: ^5.0.0
     mysql2: ^3.9.2
-    node-cron: ^3.0.3
     p-throttle: ^6.1.0
     pg: ^8.11.3
     rimraf: ^5.0.5
@@ -5779,15 +5770,6 @@ __metadata:
   version: 2.1.1
   resolution: "nested-error-stacks@npm:2.1.1"
   checksum: 5f452fad75db8480b4db584e1602894ff5977f8bf3d2822f7ba5cb7be80e89adf1fffa34dada3347ef313a4288850b4486eb0635b315c32bdfb505577e8880e3
-  languageName: node
-  linkType: hard
-
-"node-cron@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "node-cron@npm:3.0.3"
-  dependencies:
-    uuid: 8.3.2
-  checksum: 351c37491ebf717d0ae69cc941465de118e5c2ef5d48bc3f87c98556241b060f100402c8a618c7b86f9f626b44756b20d8b5385b70e52f80716f21e55db0f1c5
   languageName: node
   linkType: hard
 
@@ -8010,7 +7992,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:8.3.2, uuid@npm:^8.3.2":
+"uuid@npm:^8.3.2":
   version: 8.3.2
   resolution: "uuid@npm:8.3.2"
   bin:
