@@ -129,7 +129,7 @@ test("Create line (using custom values)", async () => {
 			typeId: lineType.id,
 			name: "Test line",
 			mode: "track",
-			colour: "0000ff",
+			colour: "00ff00",
 			width: 10,
 			stroke: "dotted",
 			data: {
@@ -230,7 +230,7 @@ test("Edit line", async () => {
 			typeId: secondType.id,
 			name: "Test line",
 			mode: "track",
-			colour: "0000ff",
+			colour: "00ff00",
 			width: 10,
 			stroke: "dotted" as const,
 			data: {
@@ -593,6 +593,140 @@ test("Socket v1 line name", async () => {
 	}
 });
 
-// getLineTemplate
-// exportLine
-// findOnMap
+test("Export line", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+
+		const line = await client.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 }
+			],
+			typeId: lineType.id
+		});
+
+		expect((await client.exportLine({ id: line.id, format: "gpx-trk" })).replace(/<time>[^<]*<\/time>/, "<time></time>")).toEqual(
+`<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:osmand="https://osmand.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<metadata>
+		<time></time>
+		<name>Untitled line</name>
+		<extensions>
+			<osmand:desc></osmand:desc>
+		</extensions>
+	</metadata>
+	<extensions>
+		<osmand:color>#0000ff</osmand:color>
+		<osmand:width>4</osmand:width>
+	</extensions>
+	<trk>
+		<name>Untitled line</name>
+		<desc></desc>
+		<trkseg>
+			<trkpt lat="6" lon="6" />
+			<trkpt lat="14" lon="14" />
+		</trkseg>
+	</trk>
+</gpx>`);
+
+		expect((await client.exportLine({ id: line.id, format: "gpx-rte" })).replace(/<time>[^<]*<\/time>/, "<time></time>")).toEqual(
+`<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:osmand="https://osmand.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<metadata>
+		<time></time>
+		<name>Untitled line</name>
+		<extensions>
+			<osmand:desc></osmand:desc>
+		</extensions>
+	</metadata>
+	<extensions>
+		<osmand:color>#0000ff</osmand:color>
+		<osmand:width>4</osmand:width>
+	</extensions>
+	<rte>
+		<name>Untitled line</name>
+		<desc></desc>
+		<rtept lat="6" lon="6" />
+		<rtept lat="14" lon="14" />
+	</rte>
+</gpx>`);
+	});
+});
+
+test("Export line (track)", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+
+		const line = await client.addLine({
+			routePoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 12, lon: 12 }
+			],
+			typeId: lineType.id,
+			name: "Test line",
+			mode: "track",
+			colour: "00ff00",
+			width: 10,
+			stroke: "dotted",
+			data: {
+				test: "value"
+			},
+			trackPoints: [
+				{ lat: 6, lon: 6 },
+				{ lat: 14, lon: 14 },
+				{ lat: 12, lon: 12 }
+			]
+		});
+
+		expect((await client.exportLine({ id: line.id, format: "gpx-trk" })).replace(/<time>[^<]*<\/time>/, "<time></time>")).toEqual(
+`<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:osmand="https://osmand.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<metadata>
+		<time></time>
+		<name>Test line</name>
+		<extensions>
+			<osmand:desc></osmand:desc>
+		</extensions>
+	</metadata>
+	<extensions>
+		<osmand:color>#00ff00</osmand:color>
+		<osmand:width>10</osmand:width>
+	</extensions>
+	<trk>
+		<name>Test line</name>
+		<desc></desc>
+		<trkseg>
+			<trkpt lat="6" lon="6" />
+			<trkpt lat="14" lon="14" />
+			<trkpt lat="12" lon="12" />
+		</trkseg>
+	</trk>
+</gpx>`);
+
+		expect((await client.exportLine({ id: line.id, format: "gpx-rte" })).replace(/<time>[^<]*<\/time>/, "<time></time>")).toEqual(
+`<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="FacilMap" version="1.1" xmlns:osmand="https://osmand.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<metadata>
+		<time></time>
+		<name>Test line</name>
+		<extensions>
+			<osmand:desc></osmand:desc>
+		</extensions>
+	</metadata>
+	<extensions>
+		<osmand:color>#00ff00</osmand:color>
+		<osmand:width>10</osmand:width>
+	</extensions>
+	<rte>
+		<name>Test line</name>
+		<desc></desc>
+		<rtept lat="6" lon="6" />
+		<rtept lat="12" lon="12" />
+	</rte>
+</gpx>`);
+	});
+});
