@@ -1,10 +1,12 @@
 import { generateRandomId, promiseProps } from "../utils/utils.js";
-import { type CreationAttributes, DataTypes, Op, Utils, col, fn } from "sequelize";
+import { DataTypes, Op, Utils, col, fn } from "sequelize";
 import { cloneDeep, isEqual } from "lodash-es";
 import Database from "./database.js";
 import type { PadModel } from "./pad.js";
-import type { LineModel, LinePointModel } from "./line.js";
-import { getElevationForPoints } from "../elevation.js";
+import type { LinePointModel } from "./line.js";
+import { getElevationForPoint } from "facilmap-utils";
+import type { MarkerModel } from "./marker.js";
+import { ReadableStream } from "stream/web";
 
 export default class DatabaseMigrations {
 
@@ -335,23 +337,49 @@ export default class DatabaseMigrations {
 	/* Get elevation data for all lines/markers that don't have any yet */
 	async _elevationMigration(): Promise<void> {
 		const hasElevation = await this._db.meta.getMeta("hasElevation");
-		if(hasElevation == "1")
+		if(hasElevation == "2")
 			return;
 
-		const lines = await this._db.lines.LineModel.findAll();
-		for(const line of lines) {
-			const trackPoints = await this._db.lines.LineModel.build({ id: line.id } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints();
-			await this._db.lines._setLinePoints(line.padId, line.id, trackPoints, true);
-		}
+		console.log("Elevation migration started in background");
 
-		const markers = await this._db.markers.MarkerModel.findAll({where: {ele: null}});
-		const elevations = await getElevationForPoints(markers);
+		(async () => {
+			const markers = await this._db.markers.MarkerModel.findAll({ where: { ele: null } });
 
-		for (let i = 0; i < markers.length; i++) {
-			await this._db.helpers._updatePadObject("Marker", markers[i].padId, markers[i].id, {ele: elevations[i]}, true);
-		}
+			let anyError = false;
+			const stream = new ReadableStream<{ marker: MarkerModel; ele: number | undefined }>({
+				async start(controller) {
+					await Promise.allSettled(markers.map(async (marker) => {
+						try {
+							const ele = await getElevationForPoint(marker);
+							controller.enqueue({ marker, ele });
+						} catch (err: any) {
+							console.warn(`Error fetching elevaton for ${marker.lat},${marker.lon}.`, err);
+							anyError = true;
+						}
+					}));
 
-		await this._db.meta.setMeta("hasElevation", "1");
+					controller.close();
+				}
+			});
+
+			let i = 0;
+			for await (const { marker, ele } of stream) {
+				await this._db.helpers._updatePadObject("Marker", marker.padId, marker.id, { ele }, true);
+
+				if (++i % 1000 === 0) {
+					console.log(`Elevation migration ${i}/${markers.length}`);
+				}
+			}
+
+			if (anyError) {
+				console.warn("There were errors, not marking elevation migration as completed.");
+			} else {
+				console.log("Elevation migration completed");
+				await this._db.meta.setMeta("hasElevation", "2");
+			}
+		})().catch((err) => {
+			console.error("Elevation migration crashed", err);
+		});
 	}
 
 

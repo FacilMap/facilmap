@@ -161,3 +161,67 @@ export function parsePadUrl(url: string, baseUrl: string): { padId: string; hash
 		}
 	}
 }
+
+export class RetryError extends Error {
+	constructor(public cause: Error) {
+		super();
+	}
+}
+
+export function throttledBatch<Args extends any[], Result>(
+	getBatch: (batch: Args[]) => Promise<Result[]>,
+	{ delayMs, maxSize, maxRetries = 3, noParallel = false }: {
+		delayMs: number | (() => number);
+		maxSize: number | (() => number);
+		maxRetries?: number;
+		noParallel?: boolean;
+	}
+): ((...args: Args) => Promise<Result>) {
+	let lastTime = -Infinity;
+	let isScheduled = false;
+	let batch: Array<{ args: Args; resolve: (result: Result) => void; reject: (err: any) => void; retryAttempt: number }> = [];
+
+	const handleBatch = () => {
+		lastTime = Date.now();
+		isScheduled = false;
+
+		const thisBatch = batch.splice(0, typeof maxSize === "function" ? maxSize() : maxSize);
+		getBatch(thisBatch.map((it) => it.args)).then((results) => {
+			for (let i = 0; i < thisBatch.length; i++) {
+				thisBatch[i].resolve(results[i]);
+			}
+		}).catch((err) => {
+			if (err instanceof RetryError) {
+				for (const { reject } of thisBatch.filter((it) => it.retryAttempt >= maxRetries)) {
+					reject(err.cause);
+				}
+				batch.splice(0, 0, ...thisBatch.filter((it) => it.retryAttempt < maxRetries).map((it) => ({ ...it, retryAttempt: it.retryAttempt + 1 })));
+			} else {
+				for (const { reject } of thisBatch) {
+					reject(err);
+				}
+			}
+		}).finally(() => {
+			schedule();
+		});
+
+		if (!noParallel) {
+			schedule();
+		}
+	};
+
+	const schedule = () => {
+		if (!isScheduled && batch.length > 0) {
+			const delay = typeof delayMs === "function" ? delayMs() : delayMs;
+			setTimeout(handleBatch, Math.max(0, lastTime + delay - Date.now()));
+			isScheduled = true;
+		}
+	};
+
+	return async (...args) => {
+		return await new Promise<Result>((resolve, reject) => {
+			batch.push({ args, resolve, reject, retryAttempt: 0 });
+			schedule();
+		});
+	};
+}

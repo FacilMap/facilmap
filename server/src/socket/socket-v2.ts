@@ -404,7 +404,7 @@ export class SocketConnectionV2 extends SocketConnection {
 			find: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				return await find(data.query, data.loadUrls, data.elevation);
+				return await find(data.query, data.loadUrls);
 			},
 
 			findOnMap: async (data) => {

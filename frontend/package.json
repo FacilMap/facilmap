@@ -66,6 +66,7 @@
     "mitt": "^3.0.1",
     "osmtogeojson": "^3.0.0-beta.5",
     "p-debounce": "^4.0.0",
+    "p-throttle": "^6.1.0",
     "pluralize": "^8.0.0",
     "popper-max-size-modifier": "^0.2.0",
     "qrcode.vue": "^3.4.1",

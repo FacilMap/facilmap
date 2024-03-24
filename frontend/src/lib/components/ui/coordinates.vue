@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import type { Point } from "facilmap-types";
 	import copyToClipboard from "copy-to-clipboard";
-	import { round } from "facilmap-utils";
+	import { formatCoordinates } from "facilmap-utils";
 	import Icon from "./icon.vue";
 	import { computed } from "vue";
 	import { useToasts } from "./toasts/toasts.vue";
@@ -11,9 +11,10 @@
 
 	const props = defineProps<{
 		point: Point;
+		ele?: number | null;
 	}>();
 
-	const formattedCoordinates = computed(() => `${round(props.point.lat, 5)}, ${round(props.point.lon, 5)}`);
+	const formattedCoordinates = computed(() => formatCoordinates(props.point));
 
 	function copy(): void {
 		copyToClipboard(formattedCoordinates.value);
@@ -32,6 +33,9 @@
 		>
 			<Icon icon="copy" alt="Copy to clipboard"></Icon>
 		</button>
+		<span v-if="props.ele != null" v-tooltip="'Elevation'">
+			({{props.ele}}&#x202F;m)
+		</span>
 	</span>
 </template>
 
@@ -40,8 +44,11 @@
 		display: inline-flex;
 		align-items: center;
 
-		button {
+		button, button + * {
 			margin-left: 0.5rem;
+		}
+
+		button {
 			padding: 0 0.25rem;
 			line-height: 1;
 			font-size: 0.85em;

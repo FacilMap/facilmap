@@ -2,11 +2,10 @@ import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes
 import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Symbol, Type } from "facilmap-types";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import Database from "./database.js";
-import { getElevationForPoint } from "../elevation.js";
+import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
 import type { PadModel } from "./pad.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
-import { resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -95,13 +94,19 @@ export default class DatabaseMarkers {
 			throw new Error(`Cannot use ${type.type} type for marker.`);
 		}
 
-		const resolvedData = resolveCreateMarker(data, type);
-
-		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, {
-			...resolvedData,
-			ele: data.ele === undefined ? await getElevationForPoint(data) : data.ele
-		});
+		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, resolveCreateMarker(data, type));
 		this._db.emit("marker", padId, result);
+
+		if (data.ele === undefined) {
+			getElevationForPoint(data).then(async (ele) => {
+				if (ele != null) {
+					await this.updateMarker(padId, result.id, { ele }, true);
+				}
+			}).catch((err) => {
+				console.warn("Error updating marker elevation", err);
+			});
+		}
+
 		return result;
 	}
 
@@ -118,12 +123,19 @@ export default class DatabaseMarkers {
 
 		const update = resolveUpdateMarker(originalMarker, data, newType);
 
-		if (update.lat != null && update.lon != null && update.ele === undefined)
-			update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
-
 		const result = await this._db.helpers._updatePadObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
 
 		this._db.emit("marker", originalMarker.padId, result);
+
+		if (update.lat != null && update.lon != null && update.ele === undefined) {
+			getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
+				if (ele != null) {
+					await this.updateMarker(originalMarker.padId, originalMarker.id, { ele }, true);
+				}
+			}).catch((err) => {
+				console.warn("Error updating marker elevation", err);
+			});
+		}
 
 		return result;
 	}

@@ -62,6 +62,8 @@ async function getScripts(entry: "mapEntry" | "tableEntry"): Promise<Scripts> {
 function getInjectedConfig(): InjectedConfig {
 	return {
 		appName: config.appName,
+		openElevationApiUrl: config.openElevationApiUrl,
+		nominatimUrl: config.nominatimUrl,
 		limaLabsToken: config.limaLabsToken,
 		hideCommercialMapLinks: config.hideCommercialMapLinks,
 	};

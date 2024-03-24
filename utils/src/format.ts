@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import type { Field } from "facilmap-types";
+import type { Field, Point } from "facilmap-types";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -147,4 +147,8 @@ export function renderOsmTag(key: string, value: string): string {
 			target: (href: string, type: string) => type === "url" ? "_blank" : ""
 		});
 	}
+}
+
+export function formatCoordinates(point: Point): string {
+	return `${point.lat.toFixed(5)},${point.lon.toFixed(5)}`;
 }

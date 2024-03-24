@@ -93,6 +93,8 @@ export default class SelectionHandler extends Handler {
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
+
+		this._map.getContainer().addEventListener("click", this.handleMapClickCapture, { capture: true });
 		this._map.getContainer().addEventListener("mousedown", this.handleMapMouseDown);
 		this._map.getContainer().addEventListener("touchstart", this.handleMapMouseDown);
 	}
@@ -106,6 +108,7 @@ export default class SelectionHandler extends Handler {
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
+		this._map.getContainer().removeEventListener("click", this.handleMapClickCapture, { capture: true });
 		this._map.getContainer().removeEventListener("mousedown", this.handleMapMouseDown);
 		this._map.getContainer().removeEventListener("touchstart", this.handleMapMouseDown);
 	}
@@ -221,21 +224,38 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems([]);
 	}
 
+	handleMapClickCapture = (e: MouseEvent): void => {
+		if (this._isLongClick) {
+			// Prevent click on map object under mouse cursor
+			e.stopPropagation();
+		}
+	}
+
 	handleMapMouseDown = (e: MouseEvent | TouchEvent): void => {
 		if ("button" in e && e.button != null && e.button != 0) // Only react to left click
 			return;
 		if ("touches" in e && e.touches && e.touches.length != 1)
 			return;
+		if (this._mapInteraction) {
+			return;
+		}
 
 		const pos: Point = this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any);
-		const timeout = setTimeout(() => {
+		let fired = false;
+		let timeout = setTimeout(() => {
 			this._isLongClick = true;
 			this.fire("fmLongClick", { latlng: this._map.mouseEventToLatLng(("touches" in e ? e.touches[0] : e) as any) });
+			fired = true;
 		}, 500);
 
 		const handleMouseMove = (e: any) => {
-			if(pos.distanceTo(this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any)) > (this._map.dragging as any)._draggable.options.clickTolerance)
+			if(pos.distanceTo(this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any)) > (this._map.dragging as any)._draggable.options.clickTolerance) {
 				clear();
+
+				if (fired) {
+					this.fire("fmLongClickAbort");
+				}
+			}
 		};
 
 		const handleContextMenu = (e: any) => {

@@ -20,6 +20,7 @@
 		searchResults?: SearchResult[];
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		mapResults?: FindOnMapResult[];
+		isLoading?: boolean;
 	}>(), {
 		showBackButton: false
 	});
@@ -63,6 +64,11 @@
 			{{result.short_name}}
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
+			<template v-if="result.lat != null && result.lon != null">
+				<dt class="pos">Coordinates</dt>
+				<dd class="pos"><Coordinates :point="result as Point" :ele="result.elevation"></Coordinates></dd>
+			</template>
+
 			<template v-if="result.type">
 				<dt>Type</dt>
 				<dd class="text-break">{{result.type}}</dd>
@@ -73,21 +79,17 @@
 				<dd class="text-break">{{result.address}}</dd>
 			</template>
 
-			<template v-if="result.type != 'coordinates' && result.lat != null && result.lon != null">
-				<dt>Coordinates</dt>
-				<dd><Coordinates :point="result as Point"></Coordinates></dd>
-			</template>
-
-			<template v-if="result.elevation != null">
-				<dt>Elevation</dt>
-				<dd>{{result.elevation}}&#x202F;m</dd>
-			</template>
-
 			<template v-for="(value, key) in result.extratags" :key="key">
 				<dt>{{key}}</dt>
 				<dd class="text-break" v-html="renderOsmTag(key, value)"></dd>
 			</template>
 		</dl>
+
+		<template v-if="props.isLoading">
+			<div class="d-flex justify-content-center mb-3">
+				<div class="spinner-border"></div>
+			</div>
+		</template>
 
 		<div class="btn-toolbar">
 			<ZoomToObjectButton

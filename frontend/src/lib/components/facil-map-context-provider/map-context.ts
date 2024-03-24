@@ -47,6 +47,8 @@ export type MapContextData = {
 	components: MapComponents;
 	loaded: boolean;
 	fatalError: string | undefined;
+	/** Increase mapContext.loading while the given async function is running. */
+	runOperation: <R>(operation: () => Promise<R>) => Promise<R>;
 };
 
 export type WritableMapContext = MapContextData & Emitter<MapContextEvents>;

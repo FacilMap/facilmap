@@ -89,12 +89,7 @@
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt class="pos">Coordinates</dt>
-			<dd class="pos"><Coordinates :point="marker"></Coordinates></dd>
-
-			<template v-if="marker.ele != null">
-				<dt class="elevation">Elevation</dt>
-				<dd class="elevation">{{marker.ele}}&#x202F;m</dd>
-			</template>
+			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele"></Coordinates></dd>
 
 			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">
 				<dt>{{field.name}}</dt>

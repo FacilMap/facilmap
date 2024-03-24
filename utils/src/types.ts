@@ -9,6 +9,8 @@ export function isPromise(object: any): object is Promise<unknown> {
  */
 export interface InjectedConfig {
 	appName: string;
+	openElevationApiUrl: string;
+	nominatimUrl: string;
 	limaLabsToken?: string;
 	hideCommercialMapLinks?: boolean;
 }

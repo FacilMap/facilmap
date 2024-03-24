@@ -91,8 +91,8 @@ export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Mar
 	return result;
 }
 
-export function resolveUpdateMarker(marker: Marker, update: Omit<Marker<CRU.UPDATE>, "id">, newType: Type): Marker<CRU.UPDATE_VALIDATED> {
-	const resolvedUpdate = markerValidator.update.parse(update);
+export function resolveUpdateMarker(marker: Marker, update: Omit<Marker<CRU.UPDATE>, "id">, newType: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
+	const resolvedUpdate = markerValidator.update.omit({ id: true }).parse(update);
 	return {
 		...resolvedUpdate,
 		...applyMarkerStyles({ ...marker, ...resolvedUpdate }, newType)
@@ -149,8 +149,8 @@ export function resolveCreateLine(line: Line<CRU.CREATE>, type: Type): Line<CRU.
 	return result;
 }
 
-export function resolveUpdateLine(line: Line, update: Omit<Line<CRU.UPDATE>, "id">, newType: Type): Line<CRU.UPDATE_VALIDATED> {
-	const resolvedUpdate = lineValidator.update.parse(update);
+export function resolveUpdateLine(line: Line, update: Omit<Line<CRU.UPDATE>, "id">, newType: Type): Omit<Line<CRU.UPDATE_VALIDATED>, "id"> {
+	const resolvedUpdate = lineValidator.update.omit({ id: true }).parse(update);
 	return {
 		...resolvedUpdate,
 		...applyLineStyles({ ...line, ...resolvedUpdate }, newType)

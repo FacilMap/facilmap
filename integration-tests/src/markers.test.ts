@@ -45,7 +45,7 @@ test("Create marker (using default values)", async () => {
 			symbol: "",
 			shape: "",
 			data: {},
-			ele: expect.any(Number)
+			ele: null
 		} satisfies Marker;
 
 		expect(marker).toEqual(expectedMarker);
@@ -251,7 +251,7 @@ test("Get marker", async () => {
 			symbol: "",
 			shape: "",
 			data: {},
-			ele: expect.any(Number)
+			ele: null
 		} satisfies Marker;
 
 		expect(await client2.getMarker({ id: marker.id })).toEqual(expectedMarker);
@@ -439,7 +439,7 @@ test("Socket v1 marker name", async () => {
 			symbol: "",
 			shape: "",
 			data: {},
-			ele: expect.any(Number)
+			ele: null
 		} satisfies Marker;
 
 		expect(marker).toEqual(expectedMarker);

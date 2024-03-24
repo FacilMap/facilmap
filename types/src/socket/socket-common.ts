@@ -44,8 +44,7 @@ export type RouteExportRequest = z.infer<typeof routeExportRequestValidator>;
 
 export const findQueryValidator = z.object({
 	query: z.string(),
-	loadUrls: z.boolean().optional(),
-	elevation: z.boolean().optional()
+	loadUrls: z.boolean().optional()
 });
 export type FindQuery = z.infer<typeof findQueryValidator>;
 

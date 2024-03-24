@@ -245,6 +245,10 @@ function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext
 				void context.components.clickMarkerTab?.openClickMarker({ lat: event.latlng.lat, lon: event.latlng.lng });
 			});
 
+			selectionHandler.on("fmLongClickAbort", () => {
+				context.components.clickMarkerTab?.closeLastClickMarker();
+			});
+
 			return selectionHandler;
 		},
 		(selectionHandler, onCleanup) => {
@@ -343,7 +347,15 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		overpassCustom: "",
 		overpassMessage: undefined,
 		loaded: false,
-		fatalError: undefined
+		fatalError: undefined,
+		runOperation: async (operation) => {
+			try {
+				mapContextWithoutComponents.loading++;
+				return await operation();
+			} finally {
+				mapContextWithoutComponents.loading--;
+			}
+		}
 	} satisfies Omit<MapContextData, 'components'>));
 
 	const mapContext: WritableMapContext = Object.assign(mapContextWithoutComponents, {

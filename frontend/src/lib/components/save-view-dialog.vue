@@ -4,7 +4,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { computed, ref } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
-	import { round } from "facilmap-utils";
+	import { formatCoordinates } from "facilmap-utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { viewValidator } from "facilmap-types";
@@ -100,7 +100,7 @@
 					class="form-control-plaintext"
 					readonly
 					:id="`${id}-topleft-input`"
-					:value="`${round(mapContext.bounds.getNorth(), 5)}, ${round(mapContext.bounds.getWest(), 5)}`"
+					:value="formatCoordinates({ lat: mapContext.bounds.getNorth(), lon: mapContext.bounds.getWest() })"
 				/>
 			</div>
 		</div>
@@ -112,7 +112,7 @@
 					class="form-control-plaintext"
 					readonly
 					:id="`${id}-bottomright-input`"
-					:value="`${round(mapContext.bounds.getSouth(), 5)}, ${round(mapContext.bounds.getEast(), 5)}`"
+					:value="formatCoordinates({ lat: mapContext.bounds.getSouth(), lon: mapContext.bounds.getEast() })"
 				/>
 			</div>
 		</div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { isSearchId } from "facilmap-utils";
+	import { find, getElevationForPoint, isSearchId, parseUrlQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
@@ -11,7 +11,7 @@
 	import type { HashQuery } from "facilmap-leaflet";
 	import { type FileResultObject, parseFiles } from "../../utils/files";
 	import FileResults from "../file-results.vue";
-	import { computed, ref, watch } from "vue";
+	import { computed, reactive, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -87,8 +87,10 @@
 					const query = searchString.value;
 					loadingSearchString.value = searchString.value;
 
+					const url = parseUrlQuery(query);
+
 					const [newSearchResults, newMapResults] = await Promise.all([
-						client.value.find({ query, loadUrls: true, elevation: true }),
+						url ? client.value.find({ query, loadUrls: true }) : mapContext.value.runOperation(async () => await find(query)),
 						client.value.padData ? client.value.findOnMap({ query }) : undefined
 					]);
 
@@ -106,13 +108,28 @@
 					if(typeof newSearchResults == "string") {
 						searchResults.value = undefined;
 						mapResults.value = undefined;
-						fileResult.value = await parseFiles([ newSearchResults ]);
+						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([ newSearchResults ]));
 						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
 					} else {
-						searchResults.value = newSearchResults;
+						const reactiveResults = reactive(newSearchResults);
+						searchResults.value = reactiveResults;
 						mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
 						mapResults.value = newMapResults ?? undefined;
 						fileResult.value = undefined;
+
+						const points = newSearchResults.filter((res) => (res.lon && res.lat));
+						if(points.length > 0) {
+							(async () => {
+								const elevations = await Promise.all(points.map(async (point) => {
+									return await getElevationForPoint({ lat: Number(point.lat), lon: Number(point.lon) });
+								}));
+								elevations.forEach((elevation, i) => {
+									reactiveResults[i].elevation = elevation;
+								});
+							})().catch((err) => {
+								console.warn("Error fetching search result elevations", err);
+							});
+						}
 					}
 				} catch(err) {
 					toasts.showErrorToast(`fm${context.id}-search-form-error`, "Search error", err);

@@ -138,7 +138,6 @@ Search for places. Does not persist anything on the server, simply serves as a p
 * `data` (object): An object with the following properties:
 	* `query` (string): The query string
 	* `loadUrls` (boolean): Whether to return the file if `query` is a URL
-	* `elevation` (boolean): Whether to find out the elevation of the result(s). Will make the search significantly slower.
 * **Returns:** A promise that is resolved with the following value:
 	* If `data.query` is a URL to a GPX/KML/OSM/GeoJSON file and `loadUrls` is `true`, a string with the content of the file.
 	* Otherwise an array of [SearchResults](./types.md#searchresult).

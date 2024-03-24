@@ -1,5 +1,6 @@
 import type { Options as SequelizeOptions } from "sequelize";
 import "dotenv/config";
+import { setConfig, setFetchAdapter } from "facilmap-utils";
 
 export interface DbConfig {
 	type: SequelizeOptions['dialect'];
@@ -67,5 +68,16 @@ const config: Config = {
 	nominatimUrl: process.env.NOMINATIM_URL || "https://nominatim.openstreetmap.org",
 	openElevationApiUrl: process.env.OPEN_ELEVATION_URL || "https://api.open-elevation.com",
 };
+
+setConfig({
+	openElevationApiUrl: config.openElevationApiUrl,
+	nominatimUrl: config.nominatimUrl
+});
+
+setFetchAdapter(async (input, init) => {
+	const headers = new Headers(init?.headers);
+	headers.set("User-Agent", config.userAgent);
+	return await fetch(input, { ...init, headers });
+});
 
 export default config;
