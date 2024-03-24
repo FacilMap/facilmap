@@ -51,6 +51,7 @@ const rawTypeValidator = cruValidator({
 	padId: onlyRead(padIdValidator),
 
 	name: optionalUpdate(z.string().trim().min(1).max(100)),
+	idx: optionalCreate(z.number().int().min(0)),
 
 	defaultColour: optionalCreate(colourValidator), // Default value is applied below
 	colourFixed: optionalCreate(z.boolean(), false),
@@ -71,7 +72,7 @@ const rawTypeValidator = cruValidator({
 	fields: {
 		read: z.array(fieldValidator.read),
 		create: z.array(fieldValidator.create).default(() => [ { name: "Description", type: "textarea" as const } ]),
-		update: z.array(fieldValidator.update)
+		update: z.array(fieldValidator.update).optional()
 	}
 });
 export const typeValidator = {

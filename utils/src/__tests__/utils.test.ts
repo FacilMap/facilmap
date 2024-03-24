@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { mergeObject } from "../utils";
+import { insertIdx, mergeObject } from "../utils";
 
 test('mergeObject', () => {
 	interface TestObject {
@@ -107,4 +107,102 @@ test('mergeObject', () => {
 test('mergeObject prototype pollution', () => {
 	mergeObject({}, JSON.parse('{"__proto__":{"test": "test"}}'), {});
 	expect(({} as any).test).toBeUndefined();
+});
+
+test("insertAtIdx", () => {
+	const list = [
+		{ id: 0, idx: 0 },
+		{ id: 1, idx: 1 },
+		{ id: 2, idx: 3 }
+	];
+
+	// Create new item
+
+	expect(insertIdx(list, undefined, 0)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 1 },
+		{ id: 1, oldIdx: 1, newIdx: 2 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, undefined, 1)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 2 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, undefined, 2)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, undefined, 3)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 4 }
+	]);
+
+	expect(insertIdx(list, undefined, 4)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+
+	// Move existing item down
+	expect(insertIdx(list, 0, 0)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, 0, 1)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 1 },
+		{ id: 1, oldIdx: 1, newIdx: 2 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, 0, 2)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 2 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+	expect(insertIdx(list, 0, 3)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 3 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 4 }
+	]);
+
+	expect(insertIdx(list, 0, 4)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 4 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
+
+
+	// Move existing item down
+	expect(insertIdx(list, 2, 0)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 1 },
+		{ id: 1, oldIdx: 1, newIdx: 2 },
+		{ id: 2, oldIdx: 3, newIdx: 0 }
+	]);
+
+	expect(insertIdx(list, 2, 1)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 2 },
+		{ id: 2, oldIdx: 3, newIdx: 1 }
+	]);
+
+	expect(insertIdx(list, 2, 2)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 2 }
+	]);
+
+	expect(insertIdx(list, 2, 3)).toEqual([
+		{ id: 0, oldIdx: 0, newIdx: 0 },
+		{ id: 1, oldIdx: 1, newIdx: 1 },
+		{ id: 2, oldIdx: 3, newIdx: 3 }
+	]);
 });

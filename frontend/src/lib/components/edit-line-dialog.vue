@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { lineValidator, type ID } from "facilmap-types";
-	import { canControl, mergeObject } from "facilmap-utils";
+	import { canControl, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -37,7 +37,7 @@
 
 	const isModified = computed(() => !isEqual(line.value, originalLine.value));
 
-	const types = computed(() => Object.values(client.value.types).filter((type) => type.type === "line"));
+	const types = computed(() => getOrderedTypes(client.value.types).filter((type) => type.type === "line"));
 
 	const resolvedCanControl = computed(() => canControl(client.value.types[line.value.typeId]));
 

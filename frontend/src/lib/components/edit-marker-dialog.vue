@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { markerValidator, type ID } from "facilmap-types";
-	import { canControl, mergeObject } from "facilmap-utils";
+	import { canControl, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -36,7 +36,7 @@
 
 	const isModified = computed(() => !isEqual(marker.value, client.value.markers[props.markerId]));
 
-	const types = computed(() => Object.values(client.value.types).filter((type) => type.type === "marker"));
+	const types = computed(() => getOrderedTypes(client.value.types).filter((type) => type.type === "marker"));
 
 	const resolvedCanControl = computed(() => canControl(client.value.types[marker.value.typeId]));
 

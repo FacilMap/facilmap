@@ -11,6 +11,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import copyToClipboard from "copy-to-clipboard";
 	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
+	import { getOrderedTypes } from "facilmap-utils";
 
 	const toasts = useToasts();
 
@@ -23,6 +24,8 @@
 	const mapContext = requireMapContext(context);
 
 	const id = getUniqueId("fm-export-map");
+
+	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
@@ -41,7 +44,7 @@
 		"Distance",
 		"Line time",
 		// TODO: Include only types not currently filtered
-		...Object.values(client.value.types).flatMap((type) => type.fields.map((field) => field.name))
+		...orderedTypes.value.flatMap((type) => type.fields.map((field) => field.name))
 	]));
 
 	const routeTypeOptions = {
@@ -287,7 +290,7 @@
 			>
 				<template #default="slotProps">
 					<select class="form-select" v-model="typeId" :id="`${id}-type-select`" :ref="slotProps.inputRef">
-						<option v-for="(type, typeId) of client.types" :key="typeId" :value="typeId">{{type.name}}</option>
+						<option v-for="type of orderedTypes" :key="type.id" :value="type.id">{{type.name}}</option>
 					</select>
 					<div class="invalid-tooltip">
 						{{slotProps.validationError}}

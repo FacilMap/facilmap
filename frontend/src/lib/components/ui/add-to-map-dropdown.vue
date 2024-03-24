@@ -7,6 +7,7 @@
 	import { type LineWithTags, type MarkerWithTags, addToMap } from '../../utils/add';
 	import type { ButtonSize } from '../../utils/bootstrap';
 	import DropdownMenu from "./dropdown-menu.vue";
+	import { getOrderedTypes } from 'facilmap-utils';
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -35,11 +36,11 @@
 	});
 
 	const markerTypes = computed(() => {
-		return Object.values(client.value.types).filter((type) => type.type == "marker");
+		return getOrderedTypes(client.value.types).filter((type) => type.type == "marker");
 	});
 
 	const lineTypes = computed(() => {
-		return Object.values(client.value.types).filter((type) => type.type == "line");
+		return getOrderedTypes(client.value.types).filter((type) => type.type == "line");
 	});
 
 	async function add(callback: () => Promise<SelectedItem[]>): Promise<void> {

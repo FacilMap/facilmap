@@ -9,6 +9,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { type LineWithTags, type MarkerWithTags, addToMap, searchResultToLineWithTags, searchResultToMarkerWithTags } from "../../utils/add";
+	import { getOrderedTypes } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -34,11 +35,13 @@
 
 	type Option = { key: string; value: string | false; text: string; disabled?: boolean };
 
+	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
+
 	const customMappingOptions = computed(() => {
 		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId): Option[] => {
 			const recommendedOptions: Option[] = [];
 
-			for (const type of Object.values(client.value.types)) {
+			for (const type of orderedTypes.value) {
 				if (type.name == customType.name && type.type == customType.type)
 					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
@@ -51,7 +54,7 @@
 
 			const otherOptions: Option[] = [];
 
-			for (const type of Object.values(client.value.types)) {
+			for (const type of orderedTypes.value) {
 				if (type.name != customType.name && type.type == customType.type)
 					otherOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 			}
@@ -94,7 +97,7 @@
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 
-		for (const type of Object.values(client.value.types)) {
+		for (const type of orderedTypes.value) {
 			if (type.type == "marker")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 		}
@@ -112,7 +115,7 @@
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: `Import type “${customType.name}”` });
 		}
 
-		for (const type of Object.values(client.value.types)) {
+		for (const type of orderedTypes.value) {
 			if (type.type == "line")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
 		}

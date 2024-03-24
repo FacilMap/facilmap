@@ -108,6 +108,7 @@ their `idx` property.
 * `id` (number): The ID of this type
 * `name` (string): The name of this type
 * `type` (string): `marker` or `line`
+* `idx` (number): The sorting position of this type. When a list of types is shown to the user, it must be ordered by this value. If types were deleted or reordered, there may be gaps in the sequence of indexes, but no two types on the same map can ever have the same index. When setting this as part of a type creation/update, other types with a same/higher index will have their index increased to be moved down the list.
 * `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
   different object properties
 * `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and

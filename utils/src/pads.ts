@@ -1,3 +1,5 @@
+import type { ID, Type } from "facilmap-types";
+
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
@@ -19,4 +21,9 @@ export function normalizePageTitle(padName: string | undefined, appName: string)
 
 export function normalizePageDescription(padDescription: string | undefined): string {
 	return padDescription || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.";
+}
+
+export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {
+	const typeArr = Array.isArray(types) ? [...types] : Object.values(types);
+	return typeArr.sort((a, b) => a.idx - b.idx);
 }

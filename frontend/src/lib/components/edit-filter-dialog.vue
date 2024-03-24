@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { filterHasError } from "facilmap-utils";
+	import { filterHasError, getOrderedTypes } from "facilmap-utils";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, ref } from "vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -16,7 +16,7 @@
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 	const filter = ref(mapContext.value.filter ?? "");
 
-	const types = computed(() => Object.values(client.value.types));
+	const types = computed(() => getOrderedTypes(client.value.types));
 
 	function validateFilter(filter: string) {
 		return filterHasError(filter)?.message;

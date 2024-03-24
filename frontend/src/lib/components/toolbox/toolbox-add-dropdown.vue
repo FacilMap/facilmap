@@ -1,13 +1,13 @@
 <script setup lang="ts">
 	import type { Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
-	import { ref } from "vue";
+	import { computed, ref } from "vue";
 	import ManageTypesDialog from "../manage-types-dialog.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { sleep } from "facilmap-utils";
+	import { getOrderedTypes, sleep } from "facilmap-utils";
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -30,6 +30,8 @@
 			await drawLine(type, context, toasts);
 		}
 	}
+
+	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
 </script>
 
 <template>
@@ -42,7 +44,7 @@
 		menuClass="dropdown-menu-end"
 		label="Add"
 	>
-		<li v-for="type in client.types" :key="type.id">
+		<li v-for="type in orderedTypes" :key="type.id">
 			<a
 				class="dropdown-item"
 				v-link-disabled="mapContext.interaction"

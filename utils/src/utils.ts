@@ -225,3 +225,31 @@ export function throttledBatch<Args extends any[], Result>(
 		});
 	};
 }
+
+/**
+ * Given a list of objects whose order is defined by an index field, returns how the index field of each object needs to be updated
+ * in order to create a new item at the given index (id === undefined) or move an existing item to the new index (id !== undefined).
+ */
+export function insertIdx<IDType>(objects: Array<{ id: IDType; idx: number }>, id: IDType | undefined, insertAtIdx: number): Array<{ id: IDType; oldIdx: number; newIdx: number }> {
+	const result = objects.map((obj) => ({ id: obj.id, oldIdx: obj.idx, newIdx: obj.idx }));
+
+	const insert = (thisId: IDType | undefined, thisIdx: number) => {
+		for (const obj of result) {
+			if ((thisId == null || obj.id !== thisId) && obj.newIdx === thisIdx) {
+				insert(obj.id, obj.newIdx + 1);
+				obj.newIdx++;
+			}
+		}
+	};
+	insert(id, insertAtIdx);
+
+	if (id != null) {
+		for (const obj of result) {
+			if (obj.id === id) {
+				obj.newIdx = insertAtIdx;
+			}
+		}
+	}
+
+	return result;
+}

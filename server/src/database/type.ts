@@ -3,11 +3,14 @@ import { typeValidator, type CRU, type Field, type ID, type PadId, type Type, ty
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { PadModel } from "./pad.js";
+import { asyncIteratorToArray } from "../utils/streams.js";
+import { insertIdx } from "facilmap-utils";
 
 export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreationAttributes<TypeModel>> {
 	id: CreationOptional<ID>;
 	name: string;
 	type: "marker" | "line";
+	idx: number;
 	padId: ForeignKey<PadModel["id"]>;
 	defaultColour: Colour;
 	colourFixed: boolean;
@@ -46,6 +49,7 @@ export default class DatabaseTypes {
 			id: getDefaultIdType(),
 			name: { type: DataTypes.TEXT, allowNull: false },
 			type: { type: DataTypes.ENUM("marker", "line"), allowNull: false },
+			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			defaultColour: { type: DataTypes.STRING(6), allowNull: false },
 			colourFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultSize: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
@@ -93,18 +97,37 @@ export default class DatabaseTypes {
 		return this._db.helpers._getPadObject<Type>("Type", padId, typeId);
 	}
 
-	async createType(padId: PadId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
-		if(data.name == null || data.name.trim().length == 0)
-			throw new Error("No name provided.");
+	async _freeTypeIdx(padId: PadId, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
+		const existingTypes = await asyncIteratorToArray(this.getTypes(padId));
 
-		const createdType = await this._db.helpers._createPadObject<Type>("Type", padId, data);
+		const resolvedNewIdx = newIdx ?? (existingTypes.length > 0 ? existingTypes[existingTypes.length - 1].idx + 1 : 0);
+
+		const newIndexes = insertIdx(existingTypes, typeId, resolvedNewIdx).reverse();
+
+		for (const obj of newIndexes) {
+			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
+				await this.updateType(padId, obj.id, { idx: obj.newIdx });
+			}
+		}
+
+		return resolvedNewIdx;
+	}
+
+	async createType(padId: PadId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
+		const idx = await this._freeTypeIdx(padId, undefined, data.idx);
+
+		const createdType = await this._db.helpers._createPadObject<Type>("Type", padId, {
+			...data,
+			idx
+		});
 		this._db.emit("type", createdType.padId, createdType);
 		return createdType;
 	}
 
 	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE_VALIDATED>, "id">, _doNotUpdateStyles?: boolean): Promise<Type> {
-		if(data.name == null || data.name.trim().length == 0)
-			throw new Error("No name provided.");
+		if (data.idx != null) {
+			await this._freeTypeIdx(padId, typeId, data.idx);
+		}
 
 		const result = await this._db.helpers._updatePadObject<Type>("Type", padId, typeId, data);
 		this._db.emit("type", result.padId, result);

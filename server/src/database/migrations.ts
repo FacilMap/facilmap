@@ -7,6 +7,7 @@ import type { LinePointModel } from "./line.js";
 import { getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
 import { ReadableStream } from "stream/web";
+import type { PadId } from "facilmap-types";
 
 export default class DatabaseMigrations {
 
@@ -28,6 +29,9 @@ export default class DatabaseMigrations {
 		await this._untitledMigration();
 		await this._fieldsNullMigration();
 		await this._extraInfoNullMigration();
+		await this._typesIdxMigration();
+
+		console.log("DB migration: All migrations finished");
 	}
 
 
@@ -583,6 +587,30 @@ export default class DatabaseMigrations {
 		});
 
 		await this._db.meta.setMeta("extraInfoNullMigrationCompleted", "1");
+	}
+
+	/** Add Types.idx */
+	async _typesIdxMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("typesIdxMigrationCompleted") == "1")
+			return;
+
+		console.log("DB migration: Set initial values for Types.idx");
+
+		const allTypes = await this._db.types.TypeModel.findAll({
+			attributes: ["id", "padId"]
+		});
+
+		let lastIndex: Record<PadId, number> = Object.create(null);
+
+		for (const type of allTypes) {
+			if (!Object.prototype.hasOwnProperty.call(lastIndex, type.padId)) {
+				lastIndex[type.padId] = -1;
+			}
+
+			await type.update({ idx: ++lastIndex[type.padId] });
+		}
+
+		await this._db.meta.setMeta("typesIdxMigrationCompleted", "1");
 	}
 
 }

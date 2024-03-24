@@ -1,6 +1,6 @@
 import type { ID, Shape, Stroke, Symbol, Type } from "facilmap-types";
 import { symbolList } from "facilmap-leaflet";
-import { isBright } from "facilmap-utils";
+import { getOrderedTypes, isBright } from "facilmap-utils";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -34,9 +34,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 	const mapContext = requireMapContext(context).value;
 
 	const legendItems: LegendType[] = [ ];
-	for (const i in client.types) {
-		const type = client.types[i];
-
+	for (const type of getOrderedTypes(client.types)) {
 		if(!type.showInLegend)
 			continue;
 

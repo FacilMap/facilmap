@@ -416,7 +416,7 @@
 					v-model="type.fields"
 					tag="tbody"
 					handle=".fm-drag-handle"
-					itemKey="(field: any) => type.fields.indexOf(field)"
+					:itemKey="(field: any) => type.fields.indexOf(field)"
 				>
 					<template #item="{ element: field }">
 						<tr>
