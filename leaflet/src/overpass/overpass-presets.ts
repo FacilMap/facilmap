@@ -144,6 +144,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 				{ key: "cosmeticsshop", query: "(node[shop=cosmetics];way[shop=cosmetics];rel[shop=cosmetics];)", label: "Cosmetics" },
 				{ key: "departmentstore", query: "(node[shop=department_store];way[shop=department_store];rel[shop=department_store];)", label: "Department store" },
 				{ key: "diyshop", query: "(node[shop~'doityourself|hardware'];way[shop~'doityourself|hardware'];rel[shop~'doityourself|hardware'];)", label: "DIY/hardware" },
+				{ key: "florist", query: "(nwr[shop=florist];nwr[shop=garden_centre];)", label: "Florist" },
 				{ key: "gardencentre", query: "(node[shop=garden_centre];way[shop=garden_centre];rel[shop=garden_centre];)", label: "Garden centre" },
 				{ key: "generalshop", query: "(node[shop=general];way[shop=general];rel[shop=general];)", label: "General" },
 				{ key: "giftshop", query: "(node[shop=gift];way[shop=gift];rel[shop=gift];)", label: "Gift" },
