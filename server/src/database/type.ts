@@ -106,7 +106,8 @@ export default class DatabaseTypes {
 
 		for (const obj of newIndexes) {
 			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
-				await this.updateType(padId, obj.id, { idx: obj.newIdx });
+				const result = await this._db.helpers._updatePadObject<Type>("Type", padId, obj.id, { idx: obj.newIdx }, true);
+				this._db.emit("type", result.padId, result);
 			}
 		}
 

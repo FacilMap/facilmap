@@ -3,9 +3,10 @@
 	import type { View } from "facilmap-types";
 	import SaveViewDialog from "../save-view-dialog.vue";
 	import ManageViewsDialog from "../manage-views-dialog.vue";
-	import { ref } from "vue";
+	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getOrderedViews } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -19,6 +20,8 @@
 		| "save-view"
 		| "manage-views"
 	>();
+
+	const orderedViews = computed(() => getOrderedViews(client.value.views));
 
 	function doDisplayView(view: View): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
@@ -34,7 +37,7 @@
 		menuClass="dropdown-menu-end"
 		label="Views"
 	>
-		<li v-for="view in client.views" :key="view.id">
+		<li v-for="view in orderedViews" :key="view.id">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -43,7 +46,7 @@
 			>{{view.name}}</a>
 		</li>
 
-		<li v-if="client.writable == 2 && Object.keys(client.views).length > 0">
+		<li v-if="client.writable == 2 && orderedViews.length > 0">
 			<hr class="dropdown-divider">
 		</li>
 
@@ -56,7 +59,7 @@
 			>Save current view</a>
 		</li>
 
-		<li v-if="client.writable == 2 && Object.keys(client.views).length > 0">
+		<li v-if="client.writable == 2 && orderedViews.length > 0">
 			<a
 				class="dropdown-item"
 				href="javascript:"

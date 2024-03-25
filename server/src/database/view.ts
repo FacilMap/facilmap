@@ -3,13 +3,16 @@ import type { CRU, ID, Latitude, Longitude, PadId, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 import type { PadModel } from "./pad.js";
+import { asyncIteratorToArray } from "../utils/streams.js";
+import { insertIdx } from "facilmap-utils";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
 	id: CreationOptional<ID>;
 	padId: ForeignKey<PadModel["id"]>;
 	name: string;
+	idx: number;
 	baseLayer: string;
-	layers: string;
+	layers: string[];
 	top: Latitude;
 	bottom: Latitude;
 	left: Longitude;
@@ -30,15 +33,17 @@ export default class DatabaseViews {
 		this.ViewModel.init({
 			id: getDefaultIdType(),
 			name : { type: DataTypes.TEXT, allowNull: false },
+			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			baseLayer : { type: DataTypes.TEXT, allowNull: false },
 			layers : {
 				type: DataTypes.TEXT,
 				allowNull: false,
 				get: function(this: ViewModel) {
-					return JSON.parse(this.getDataValue("layers"));
+					const layers = this.getDataValue("layers") as any as string; // https://github.com/sequelize/sequelize/issues/11558
+					return layers == null ? [] : JSON.parse(layers);
 				},
 				set: function(this: ViewModel, v) {
-					this.setDataValue("layers", JSON.stringify(v));
+					this.setDataValue("layers", JSON.stringify(v) as any);
 				}
 			},
 			top : getLatType(),
@@ -61,11 +66,30 @@ export default class DatabaseViews {
 		return this._db.helpers._getPadObjects<View>("View", padId);
 	}
 
-	async createView(padId: PadId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
-		if(data.name == null || data.name.trim().length == 0)
-			throw new Error("No name provided.");
+	async _freeViewIdx(padId: PadId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
+		const existingViews = await asyncIteratorToArray(this.getViews(padId));
 
-		const newData = await this._db.helpers._createPadObject<View>("View", padId, data);
+		const resolvedNewIdx = newIdx ?? (existingViews.length > 0 ? existingViews[existingViews.length - 1].idx + 1 : 0);
+
+		const newIndexes = insertIdx(existingViews, viewId, resolvedNewIdx).reverse();
+
+		for (const obj of newIndexes) {
+			if ((viewId == null || obj.id !== viewId) && obj.oldIdx !== obj.newIdx) {
+				const newData = await this._db.helpers._updatePadObject<View>("View", padId, obj.id, { idx: obj.newIdx }, true);
+				this._db.emit("view", padId, newData);
+			}
+		}
+
+		return resolvedNewIdx;
+	}
+
+	async createView(padId: PadId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
+		const idx = await this._freeViewIdx(padId, undefined, data.idx);
+
+		const newData = await this._db.helpers._createPadObject<View>("View", padId, {
+			...data,
+			idx
+		});
 
 		await this._db.history.addHistoryEntry(padId, {
 			type: "View",
@@ -79,6 +103,10 @@ export default class DatabaseViews {
 	}
 
 	async updateView(padId: PadId, viewId: ID, data: Omit<View<CRU.UPDATE_VALIDATED>, "id">): Promise<View> {
+		if (data.idx != null) {
+			await this._freeViewIdx(padId, viewId, data.idx);
+		}
+
 		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
 
 		this._db.emit("view", padId, newData);

@@ -1,4 +1,4 @@
-import type { ID, Type } from "facilmap-types";
+import type { ID, Type, View } from "facilmap-types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
@@ -25,5 +25,10 @@ export function normalizePageDescription(padDescription: string | undefined): st
 
 export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {
 	const typeArr = Array.isArray(types) ? [...types] : Object.values(types);
+	return typeArr.sort((a, b) => a.idx - b.idx);
+}
+
+export function getOrderedViews(views: View[] | Record<ID, View>): View[] {
+	const typeArr = Array.isArray(views) ? [...views] : Object.values(views);
 	return typeArr.sort((a, b) => a.idx - b.idx);
 }

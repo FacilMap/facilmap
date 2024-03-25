@@ -30,6 +30,7 @@ export default class DatabaseMigrations {
 		await this._fieldsNullMigration();
 		await this._extraInfoNullMigration();
 		await this._typesIdxMigration();
+		await this._viewsIdxMigration();
 
 		console.log("DB migration: All migrations finished");
 	}
@@ -611,6 +612,30 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("typesIdxMigrationCompleted", "1");
+	}
+
+	/** Add Views.idx */
+	async _viewsIdxMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("viewsIdxMigrationCompleted") == "1")
+			return;
+
+		console.log("DB migration: Set initial values for Views.idx");
+
+		const allViews = await this._db.views.ViewModel.findAll({
+			attributes: ["id", "padId"]
+		});
+
+		let lastIndex: Record<PadId, number> = Object.create(null);
+
+		for (const view of allViews) {
+			if (!Object.prototype.hasOwnProperty.call(lastIndex, view.padId)) {
+				lastIndex[view.padId] = -1;
+			}
+
+			await view.update({ idx: ++lastIndex[view.padId] });
+		}
+
+		await this._db.meta.setMeta("viewsIdxMigrationCompleted", "1");
 	}
 
 }
