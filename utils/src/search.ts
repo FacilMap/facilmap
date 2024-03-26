@@ -240,32 +240,42 @@ export function getFallbackLonLatResult(pointWithZoom: PointWithZoom): SearchRes
 }
 
 async function _findLonLat(lonlatWithZoom: PointWithZoom): Promise<Array<SearchResult>> {
-	const body = await throttledFetch(
+	const res = await throttledFetch(
 		`${getConfig().nominatimUrl}/reverse?format=jsonv2&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`
-	)
-		.then((res) => res.json() as any);
+	);
 
-	if(!body || body.error) {
-		return [getFallbackLonLatResult(lonlatWithZoom)];
+	if (!res.ok) {
+		throw new Error(`Reverse geocoding failed with status ${res.status}`);
 	}
 
-	body.lat = lonlatWithZoom.lat;
-	body.lon = lonlatWithZoom.lon;
+	const body: NominatimResult | NominatimError = await res.json();
+
+	if("error" in body) {
+		throw new Error(typeof body.error === 'string' ? body.error : body.error.message);
+	}
+
+	body.lat = `${lonlatWithZoom.lat}`;
+	body.lon = `${lonlatWithZoom.lon}`;
 	body.zoom = lonlatWithZoom.zoom || 15;
 
 	return [ _prepareSearchResult(body) ];
 }
 
 async function _findQuery(query: string): Promise<Array<SearchResult>> {
-	const body: Array<NominatimResult> | NominatimError = await throttledFetch(
+	const res = await throttledFetch(
 		getConfig().nominatimUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
-	).then((res) => res.json() as any);
+	);
 
-	if(!body)
-		throw new Error("Invalid response from name finder.");
+	if (!res.ok) {
+		throw new Error(`Search failed with status ${res.status}.`);
+	}
 
-	if('error' in body)
+	const body: Array<NominatimResult> | NominatimError = await res.json();
+
+	if ('error' in body) {
 		throw new Error(typeof body.error === 'string' ? body.error : body.error.message);
+	}
+
 
 	return body.map(_prepareSearchResult);
 }
