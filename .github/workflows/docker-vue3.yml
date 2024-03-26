@@ -49,8 +49,9 @@ jobs:
       -
         name: Start integration test components
         run: |
-          if ! docker compose -f ./integration-tests/docker-compose.yml up --wait; then
-            status="$?"
+          docker compose -f ./integration-tests/docker-compose.yml up --wait
+          status="$?"
+          if (( status != 0 )); then
             docker compose -f ./integration-tests/docker-compose.yml logs
             exit "$status"
           fi
