@@ -545,16 +545,18 @@ const lonLatRegexp = (() => {
 
 	const getCoordinate = (n: number) => (
 		`(` +
+			`(?<hemispherePrefix${n}>[NWSE])` +
+		`)?(` +
 			`(?<degrees${n}>${number})` +
 			`(\\s*[°]\\s*|\\s*deg\\s*|\\s+|$|(?!\\d))` +
 		`)(` +
 			`(?<minutes${n}>${number})` +
-			`(\\s*['\u2032]\\s*)` +
+			`(\\s*['\u2032\u2019]\\s*)` +
 		`)?(` +
 			`(?<seconds${n}>${number})` +
-			`(\\s*["\u2033]\\s*)` +
+			`(\\s*["\u2033\u201d]\\s*)` +
 		`)?(` +
-			`(?<hemisphere${n}>[NWSE])` +
+			`(?<hemisphereSuffix${n}>[NWSE])` +
 		`)?`
 	);
 
@@ -562,7 +564,7 @@ const lonLatRegexp = (() => {
 		`(geo\\s*:\\s*)?` +
 		`\\s*` +
 		getCoordinate(1) +
-		`(\\s*[,;]\\s*|\\s+)` +
+		`(?<separator>\\s*[,;]\\s*|\\s+)` +
 		getCoordinate(2) +
 		`(\\?z=(?<zoom>\\d+))?`
 	);
@@ -581,15 +583,31 @@ export function matchLonLat(query: string): (Point & { zoom?: number }) | undefi
 	};
 
 	if (m) {
-		const number1 = prepareCoords(m.groups!.degrees1, m.groups!.minutes1, m.groups!.seconds1, m.groups!.hemisphere1);
-		const number2 = prepareCoords(m.groups!.degrees2, m.groups!.minutes2, m.groups!.seconds2, m.groups!.hemisphere2);
-		const zoom = m.groups!.zoom ? Number(m.groups!.zoom) : undefined;
-		const zoomObj = zoom != null && isFinite(zoom) ? { zoom } : {};
+		const { hemispherePrefix1, degrees1, minutes1, seconds1, hemisphereSuffix1, separator, hemispherePrefix2, degrees2, minutes2, seconds2, hemisphereSuffix2, zoom } = m.groups!;
 
-		if ([undefined, "n", "N", "s", "S"].includes(m.groups!.hemisphere1) && [undefined, "w", "W", "e", "E"].includes(m.groups!.hemisphere2)) {
-			return { lat: number1, lon: number2, ...zoomObj };
-		} else if (["w", "W", "e", "E"].includes(m.groups!.hemisphere1) && [undefined, "n", "N", "s", "S"].includes(m.groups!.hemisphere2)) {
-			return { lat: number2, lon: number1, ...zoomObj };
+		let hemisphere1: string | undefined = undefined, hemisphere2: string | undefined = undefined;
+		if (hemispherePrefix1 && !hemisphereSuffix1 && hemispherePrefix2 && !hemisphereSuffix2) {
+			[hemisphere1, hemisphere2] = [hemispherePrefix1, hemispherePrefix2];
+		} else if (!hemispherePrefix1 && hemisphereSuffix1 && !hemispherePrefix2 && hemisphereSuffix2) {
+			[hemisphere1, hemisphere2] = [hemisphereSuffix1, hemisphereSuffix2];
+		} else if (hemispherePrefix1 && hemisphereSuffix1 && !hemispherePrefix2 && !hemisphereSuffix2 && !separator.trim()) {
+			// Coordinate 2 has a hemisphere prefix, but because the two coordinates are separated by whitespace only, it was matched as a coordinate 1 suffix
+			[hemisphere1, hemisphere2] = [hemispherePrefix1, hemisphereSuffix1];
+		} else if (hemispherePrefix1 || hemisphereSuffix1 || hemispherePrefix2 || hemisphereSuffix2) {
+			// Unsupported combination of hemisphere prefixes/suffixes
+			return undefined;
+		} // else: no hemispheres specified
+
+		const coordinate1 = prepareCoords(degrees1, minutes1, seconds1, hemisphere1);
+		const coordinate2 = prepareCoords(degrees2, minutes2, seconds2, hemisphere2);
+		const zoomNumber = zoom ? Number(zoom) : undefined;
+		const zoomObj = zoomNumber != null && isFinite(zoomNumber) ? { zoom: zoomNumber } : {};
+
+		// Handle cases where lat/lon are switched
+		if ([undefined, "n", "N", "s", "S"].includes(hemisphere1) && [undefined, "w", "W", "e", "E"].includes(hemisphere2)) {
+			return { lat: coordinate1, lon: coordinate2, ...zoomObj };
+		} else if ((["w", "W", "e", "E"] as Array<string | undefined>).includes(hemisphere1) && [undefined, "n", "N", "s", "S"].includes(hemisphere2)) {
+			return { lat: coordinate2, lon: coordinate1, ...zoomObj };
 		}
 	}
 }
