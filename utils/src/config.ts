@@ -1,5 +1,7 @@
 export interface Config {
 	openElevationApiUrl: string;
+	openElevationThrottleMs: number;
+	openElevationMaxBatchSize: number;
 	nominatimUrl: string;
 }
 

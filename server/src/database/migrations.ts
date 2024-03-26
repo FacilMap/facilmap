@@ -22,7 +22,6 @@ export default class DatabaseMigrations {
 		await this._changeColMigrations();
 		await this._addColMigrations();
 		await this._dropdownKeyMigration();
-		await this._elevationMigration();
 		await this._legendMigration();
 		await this._bboxMigration();
 		await this._spatialMigration();
@@ -32,9 +31,14 @@ export default class DatabaseMigrations {
 		await this._typesIdxMigration();
 		await this._viewsIdxMigration();
 
-		console.log("DB migration: All migrations finished");
+		(async () => {
+			await this._elevationMigration();
+		})().catch((err) => {
+			console.error("DB migration: Unexpected error in background migration", err);
+		}).finally(() => {
+			console.log("DB migration: All migrations finished");
+		});
 	}
-
 
 	/** Run any migrations that rename columns */
 	async _renameColMigrations(): Promise<void> {
@@ -376,13 +380,13 @@ export default class DatabaseMigrations {
 
 	/* Get elevation data for all lines/markers that don't have any yet */
 	async _elevationMigration(): Promise<void> {
-		const hasElevation = await this._db.meta.getMeta("hasElevation");
-		if(hasElevation == "2")
-			return;
+		try {
+			const hasElevation = await this._db.meta.getMeta("hasElevation");
+			if(hasElevation == "2")
+				return;
 
-		console.log("DB migration: Get marker elevations in background");
+			console.log("DB migration: Get marker elevations in background");
 
-		(async () => {
 			const markers = await this._db.markers.MarkerModel.findAll({ where: { ele: null } });
 
 			let anyError = false;
@@ -417,9 +421,9 @@ export default class DatabaseMigrations {
 				console.log("DB migration: Elevation migration completed");
 				await this._db.meta.setMeta("hasElevation", "2");
 			}
-		})().catch((err) => {
+		} catch (err: any) {
 			console.error("DB migration: Elevation migration crashed", err);
-		});
+		}
 	}
 
 

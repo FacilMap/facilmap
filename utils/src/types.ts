@@ -10,6 +10,8 @@ export function isPromise(object: any): object is Promise<unknown> {
 export interface InjectedConfig {
 	appName: string;
 	openElevationApiUrl: string;
+	openElevationThrottleMs: number;
+	openElevationMaxBatchSize: number;
 	nominatimUrl: string;
 	limaLabsToken?: string;
 	hideCommercialMapLinks?: boolean;

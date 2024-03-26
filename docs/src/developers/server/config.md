@@ -25,6 +25,8 @@ The config of the FacilMap server can be set either by using environment variabl
 | `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)). |
 | `NOMINATIM_URL`       |          | `https://nominatim.openstreetmap.org` | The URL to the Nominatim server (used to search for places). |
 | `OPEN_ELEVATION_URL`  |          | `https://api.open-elevation.com` | The URL to the Open Elevation server (used to look up the elevation for markers). |
+| `OPEN_ELEVATION_THROTTLE_MS` |   | `1000` | The minimum time between two requests to the Open Elevation API. Set to `0` if you are using your own self-hosted instance of Open Elevation. |
+| `OPEN_ELEVATION_MAX_BATCH_SIZE` | | `200` | The maximum number of points to resolve in one request through the Open Elevation API. Set this to `1000` if you are using your own self-hosted Open Elevation instance. |
 
 FacilMap makes use of several third-party services that require you to register (for free) and generate an API key:
 * Mapbox and OpenRouteService are used for calculating routes. Mapbox is used for basic routes, OpenRouteService is used when custom route mode settings are made. If these API keys are not defined, calculating routes will fail.

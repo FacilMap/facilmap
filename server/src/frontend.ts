@@ -63,6 +63,8 @@ function getInjectedConfig(): InjectedConfig {
 	return {
 		appName: config.appName,
 		openElevationApiUrl: config.openElevationApiUrl,
+		openElevationThrottleMs: config.openElevationThrottleMs,
+		openElevationMaxBatchSize: config.openElevationMaxBatchSize,
 		nominatimUrl: config.nominatimUrl,
 		limaLabsToken: config.limaLabsToken,
 		hideCommercialMapLinks: config.hideCommercialMapLinks,

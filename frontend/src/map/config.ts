@@ -4,7 +4,9 @@ const config: InjectedConfig = JSON.parse(document.querySelector("meta[name=fmCo
 
 setConfig({
 	nominatimUrl: config.nominatimUrl,
-	openElevationApiUrl: config.openElevationApiUrl
+	openElevationApiUrl: config.openElevationApiUrl,
+	openElevationThrottleMs: config.openElevationThrottleMs,
+	openElevationMaxBatchSize: config.openElevationMaxBatchSize
 });
 
 export default config;

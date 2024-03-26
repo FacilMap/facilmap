@@ -29,6 +29,8 @@ export interface Config {
 	customCssFile?: string;
 	nominatimUrl: string;
 	openElevationApiUrl: string;
+	openElevationThrottleMs: number;
+	openElevationMaxBatchSize: number;
 }
 
 const config: Config = {
@@ -66,11 +68,16 @@ const config: Config = {
 	customCssFile: process.env.CUSTOM_CSS_FILE || undefined,
 
 	nominatimUrl: process.env.NOMINATIM_URL || "https://nominatim.openstreetmap.org",
+
 	openElevationApiUrl: process.env.OPEN_ELEVATION_URL || "https://api.open-elevation.com",
+	openElevationThrottleMs: process.env.OPEN_ELEVATION_THROTTLE_MS ? Number(process.env.OPEN_ELEVATION_THROTTLE_MS) : 1000, // Maximum one request per second, see https://github.com/Jorl17/open-elevation/issues/3
+	openElevationMaxBatchSize: process.env.OPEN_ELEVATION_MAX_BATCH_SIZE ? Number(process.env.OPEN_ELEVATION_MAX_BATCH_SIZE) : 200,
 };
 
 setConfig({
 	openElevationApiUrl: config.openElevationApiUrl,
+	openElevationThrottleMs: config.openElevationThrottleMs,
+	openElevationMaxBatchSize: config.openElevationMaxBatchSize,
 	nominatimUrl: config.nominatimUrl
 });
 
