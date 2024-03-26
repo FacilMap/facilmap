@@ -94,7 +94,9 @@ export default class DatabasePads {
 
 		const createdObj = await this.PadModel.create(data);
 
-		await this._db.types.createDefaultTypes(data.id);
+		if (data.createDefaultTypes) {
+			await this._db.types.createDefaultTypes(data.id);
+		}
 
 		return fixPadData(createdObj.toJSON());
 	}

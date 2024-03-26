@@ -83,6 +83,7 @@ their `idx` property.
 * `legend1`, `legend2` (string): Markdown free text to be shown above and below the legend
 * `defaultViewId` (number): The ID of the default view (if any)
 * `defaultView` ([view](#view)): A copy of the default view object (set by the server)
+* `createDefaultTypes` (boolean): On creation of a map, set this to false to not create one marker and one line type.
 
 ## View
 

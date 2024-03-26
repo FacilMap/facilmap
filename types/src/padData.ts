@@ -1,7 +1,7 @@
 import { viewValidator } from "./view.js";
 import { idValidator, padIdValidator } from "./base.js";
 import * as z from "zod";
-import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead } from "./cru";
+import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead, onlyCreate } from "./cru";
 
 export enum Writable {
 	READ = 0,
@@ -30,6 +30,8 @@ export const padDataValidator = cruValidator({
 	legend1: optionalCreate(z.string(), ""),
 	legend2: optionalCreate(z.string(), ""),
 	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
+
+	createDefaultTypes: onlyCreate(z.boolean().default(true)),
 
 	defaultView: onlyRead(viewValidator.read.or(z.null()))
 });
