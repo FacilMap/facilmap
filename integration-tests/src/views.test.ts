@@ -275,4 +275,3 @@ test("Reorder views", async () => {
 		expect(client.views[view3.id].idx).toEqual(1);
 	});
 });
-// Test indexes
