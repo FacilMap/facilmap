@@ -1,6 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, openClient, retry } from "./utils";
 import { type CRU, type View } from "facilmap-types";
+import { cloneDeep } from "lodash-es";
 
 test("Create view (default values)", async () => {
 	const client1 = await openClient();
@@ -89,17 +90,17 @@ test("Create view (custom values)", async () => {
 		expect(viewResult).toEqual(expectedView);
 		expect(onView).toBeCalledTimes(1);
 		expect(onView).toHaveBeenNthCalledWith(1, expectedView);
-		expect(client.views).toEqual({
+		expect(cloneDeep(client.views)).toEqual({
 			[expectedView.id]: expectedView
 		});
 	});
 });
 
 test("Update view", async () => {
-	const client = await openClient();
+	const client1 = await openClient();
 
-	await createTemporaryPad(client, {}, async (padData) => {
-		const createdView = await client.addView({
+	await createTemporaryPad(client1, {}, async (padData) => {
+		const createdView = await client1.addView({
 			name: "Test view 1",
 			left: -10,
 			right: 10,
@@ -109,8 +110,13 @@ test("Update view", async () => {
 			layers: []
 		});
 
-		const onView = vi.fn();
-		client.on("view", onView);
+		const client2 = await openClient(padData.id);
+
+		const onView1 = vi.fn();
+		client1.on("view", onView1);
+
+		const onView2 = vi.fn();
+		client2.on("view", onView2);
 
 		const update = {
 			id: createdView.id,
@@ -124,7 +130,7 @@ test("Update view", async () => {
 			idx: 2,
 			filter: "name == 'Test'"
 		} satisfies View<CRU.UPDATE>;
-		const view = await client.editView(update);
+		const view = await client1.editView(update);
 
 		const expectedView: View = {
 			...update,
@@ -134,16 +140,21 @@ test("Update view", async () => {
 		expect(view).toEqual(expectedView);
 
 		await retry(async () => {
-			expect(onView).toBeCalledTimes(1);
+			expect(onView1).toBeCalledTimes(1);
+			expect(onView2).toBeCalledTimes(1);
 		});
 
-		expect(onView).toHaveBeenNthCalledWith(1, expectedView);
-		expect(client.views).toEqual({
+		expect(onView1).toHaveBeenNthCalledWith(1, expectedView);
+		expect(onView2).toHaveBeenNthCalledWith(1, expectedView);
+		expect(cloneDeep(client1.views)).toEqual({
+			[expectedView.id]: expectedView
+		});
+		expect(cloneDeep(client2.views)).toEqual({
 			[expectedView.id]: expectedView
 		});
 
-		const client2 = await openClient(padData.id);
-		expect(client2.views).toEqual({
+		const client3 = await openClient(padData.id);
+		expect(client3.views).toEqual({
 			[expectedView.id]: expectedView
 		});
 	});
