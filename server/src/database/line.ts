@@ -234,27 +234,27 @@ export default class DatabaseLines {
 			throw new Error(`Cannot use ${newType.type} type for line.`);
 		}
 
-		const update = {
-			...resolveUpdateLine(originalLine, data, newType),
-			routePoints: data.routePoints || originalLine.routePoints,
-			mode: (data.mode ?? originalLine.mode) || ""
-		};
+		const update = resolveUpdateLine(originalLine, data, newType);
 
 		let routeInfo: RouteInfo | undefined;
-		if((update.mode == "track" && update.trackPoints) || !isEqual(update.routePoints, originalLine.routePoints) || update.mode != originalLine.mode)
-			routeInfo = await calculateRouteForLine(update, trackPointsFromRoute);
+		if((update.mode == "track" && update.trackPoints) || (update.routePoints && !isEqual(update.routePoints, originalLine.routePoints)) || (update.mode != null && update.mode != originalLine.mode))
+			routeInfo = await calculateRouteForLine({ ...originalLine, ...update }, trackPointsFromRoute);
 
 		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
 		delete update.trackPoints; // They came if mode is track
 
-		const newLine = await this._db.helpers._updatePadObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
+		if (Object.keys(update).length > 0) {
+			const newLine = await this._db.helpers._updatePadObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
 
-		this._db.emit("line", originalLine.padId, newLine);
+			this._db.emit("line", originalLine.padId, newLine);
 
-		if(routeInfo)
-			await this._setLinePoints(originalLine.padId, originalLine.id, routeInfo.trackPoints);
+			if(routeInfo)
+				await this._setLinePoints(originalLine.padId, originalLine.id, routeInfo.trackPoints);
 
-		return newLine;
+			return newLine;
+		} else {
+			return originalLine;
+		}
 	}
 
 	async _setLinePoints(padId: PadId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {

@@ -125,7 +125,30 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE_VALIDATED>, "id">, _doNotUpdateStyles?: boolean): Promise<Type> {
+	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE_VALIDATED>, "id">): Promise<Type> {
+		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
+		for(const field of (data.fields || [])) {
+			if(field.oldName && field.oldName != field.name)
+				rename[field.oldName] = { name: field.name };
+
+			if(field.options) {
+				for(const option of field.options) {
+					if(option.oldValue && option.oldValue != option.value) {
+						if(!rename[field.oldName || field.name])
+							rename[field.oldName || field.name] = { };
+						if(!rename[field.oldName || field.name].values)
+							rename[field.oldName || field.name].values = { };
+
+						rename[field.oldName || field.name].values![option.oldValue] = option.value;
+					}
+
+					delete option.oldValue;
+				}
+			}
+
+			delete field.oldName;
+		}
+
 		if (data.idx != null) {
 			await this._freeTypeIdx(padId, typeId, data.idx);
 		}
@@ -133,8 +156,10 @@ export default class DatabaseTypes {
 		const result = await this._db.helpers._updatePadObject<Type>("Type", padId, typeId, data);
 		this._db.emit("type", result.padId, result);
 
-		if(!_doNotUpdateStyles)
-			await this.recalculateObjectStylesForType(result.padId, typeId, result.type == "line");
+		if(Object.keys(rename).length > 0)
+			await this._db.helpers.renameObjectDataField(padId, result.id, rename, result.type == "line");
+
+		await this.recalculateObjectStylesForType(result.padId, typeId, result.type == "line");
 
 		return result;
 	}

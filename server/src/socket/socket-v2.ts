@@ -357,39 +357,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				if (!isPadId(this.padId))
 					throw new Error("No map opened.");
 
-				const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
-				for(const field of (data.fields || [])) {
-					if(field.oldName && field.oldName != field.name)
-						rename[field.oldName] = { name: field.name };
-
-					if(field.options) {
-						for(const option of field.options) {
-							if(option.oldValue && option.oldValue != option.value) {
-								if(!rename[field.oldName || field.name])
-									rename[field.oldName || field.name] = { };
-								if(!rename[field.oldName || field.name].values)
-									rename[field.oldName || field.name].values = { };
-
-								rename[field.oldName || field.name].values![option.oldValue] = option.value;
-							}
-
-							delete option.oldValue;
-						}
-					}
-
-					delete field.oldName;
-				}
-
-				// We first update the type (without updating the styles). If that succeeds, we rename the data fields.
-				// Only then we update the object styles (as they often depend on the field values).
-				const newType = await this.database.types.updateType(this.padId, data.id, data, false)
-
-				if(Object.keys(rename).length > 0)
-					await this.database.helpers.renameObjectDataField(this.padId, data.id, rename, newType.type == "line");
-
-				await this.database.types.recalculateObjectStylesForType(newType.padId, newType.id, newType.type == "line")
-
-				return newType;
+				return await this.database.types.updateType(this.padId, data.id, data);
 			},
 
 			deleteType: async (data) => {

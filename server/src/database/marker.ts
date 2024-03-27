@@ -123,21 +123,25 @@ export default class DatabaseMarkers {
 
 		const update = resolveUpdateMarker(originalMarker, data, newType);
 
-		const result = await this._db.helpers._updatePadObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
+		if (Object.keys(update).length > 0) {
+			const result = await this._db.helpers._updatePadObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
 
-		this._db.emit("marker", originalMarker.padId, result);
+			this._db.emit("marker", originalMarker.padId, result);
 
-		if (update.lat != null && update.lon != null && update.ele === undefined) {
-			getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
-				if (ele != null) {
-					await this.updateMarker(originalMarker.padId, originalMarker.id, { ele }, true);
-				}
-			}).catch((err) => {
-				console.warn("Error updating marker elevation", err);
-			});
+			if (update.lat != null && update.lon != null && update.ele === undefined) {
+				getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
+					if (ele != null) {
+						await this.updateMarker(originalMarker.padId, originalMarker.id, { ele }, true);
+					}
+				}).catch((err) => {
+					console.warn("Error updating marker elevation", err);
+				});
+			}
+
+			return result;
+		} else {
+			return originalMarker;
 		}
-
-		return result;
 	}
 
 	async deleteMarker(padId: PadId, markerId: ID): Promise<Marker> {
