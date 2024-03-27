@@ -92,7 +92,8 @@ test("matchLonLat", () => {
 
 	// Practical examples
 	expect(matchLonLat("N 53°53’42.8928” E 10°44’13.4844”")).toEqual({ lat: 53.895248, lon: 10.737079 }); // Park4night
-	expect(matchLonLat("53°53'42.8928\"N 10°44'13.4844\"E")).toEqual({ lat: 53.895248, lon: 10.737079 }); // Google Maps
+	expect(matchLonLat("53°53'42.9\"N 10°44'13.5\"E")).toEqual({ lat: 53.895250, lon: expect.closeTo(10.737083, 6) }); // Google Maps
+	expect(matchLonLat("55°41′34.3″N 12°35′57.4″E")).toEqual({ lat: expect.closeTo(55.692861, 6), lon: expect.closeTo(12.599278, 6) }); // Wikipedia
 
 	// Invalid lon/lat combination
 	expect(matchLonLat("1° 24' N 2° 36' N")).toEqual(undefined);
