@@ -45,6 +45,28 @@ export const fieldValidator = cruValidator({
 export type Field<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof fieldValidator>;
 export type FieldUpdate = Field<CRU.UPDATE>;
 
+const noDuplicateFieldNames = (fields: Array<Field<CRU>>, ctx: z.RefinementCtx) => {
+	const fieldNames: Record<string, number> = {};
+	for (const field of fields) {
+		fieldNames[field.name] = (fieldNames[field.name] ?? 0) + 1;
+	}
+
+	for (let i = 0; i < fields.length; i++) {
+		if (fieldNames[fields[i].name] > 1) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Field names must be unique.",
+				path: [i, "name"]
+			});
+		}
+	}
+};
+export const fieldsValidator = {
+	read: z.array(fieldValidator.read).superRefine(noDuplicateFieldNames),
+	create: z.array(fieldValidator.create).superRefine(noDuplicateFieldNames),
+	update: z.array(fieldValidator.update).superRefine(noDuplicateFieldNames)
+};
+
 const rawTypeValidator = cruValidator({
 	id: exceptCreate(idValidator),
 	type: exceptUpdate(objectTypeValidator),
@@ -70,9 +92,9 @@ const rawTypeValidator = cruValidator({
 	showInLegend: optionalCreate(z.boolean(), false),
 
 	fields: {
-		read: z.array(fieldValidator.read),
-		create: z.array(fieldValidator.create).default(() => [ { name: "Description", type: "textarea" as const } ]),
-		update: z.array(fieldValidator.update).optional()
+		read: fieldsValidator.read,
+		create: fieldsValidator.create.default(() => [ { name: "Description", type: "textarea" as const } ]),
+		update: fieldsValidator.update.optional()
 	}
 });
 export const typeValidator = {

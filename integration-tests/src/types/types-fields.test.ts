@@ -206,3 +206,45 @@ test("Rename dropdown option (line type)", async () => {
 		});
 	});
 });
+
+test("Create type with duplicate fields", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+		await expect(async () => {
+			await client.addType({
+				name: "Test type",
+				type: "marker",
+				fields: [
+					{ name: "Field 1", type: "input" },
+					{ name: "Field 1", type: "textarea" }
+				]
+			});
+		}).rejects.toThrowError("Field names must be unique.");
+	});
+});
+
+test("Update type with duplicate fields", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+		const type = await client.addType({
+			name: "Test type",
+			type: "marker",
+			fields: [
+				{ name: "Field 1", type: "input" },
+				{ name: "Field 2", type: "textarea" }
+			]
+		});
+
+		await expect(async () => {
+			await client.editType({
+				id: type.id,
+				fields: [
+					{ name: "Field 1", type: "input" },
+					{ name: "Field 1", type: "textarea" }
+				]
+			});
+		}).rejects.toThrowError("Field names must be unique.");
+	});
+});
