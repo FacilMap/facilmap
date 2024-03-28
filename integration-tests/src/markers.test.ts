@@ -30,7 +30,8 @@ test("Create marker (using default values)", async () => {
 		const marker = await client1.addMarker({
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		const expectedMarker = {
@@ -119,7 +120,8 @@ test("Edit marker", async () => {
 		const createdMarker = await client1.addMarker({
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		const secondType = await client1.addType({
@@ -194,7 +196,8 @@ test("Delete marker", async () => {
 		const createdMarker = await client1.addMarker({
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		const onDeleteMarker1 = vi.fn();
@@ -236,7 +239,8 @@ test("Get marker", async () => {
 		const marker = await client1.addMarker({
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		const expectedMarker = {
@@ -271,7 +275,8 @@ test("Find marker", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			symbol: "a"
+			symbol: "a",
+			ele: null
 		});
 
 		const expectedResult: FindOnMapMarker = {
@@ -322,7 +327,8 @@ test("Try to update marker with line type", async () => {
 		const marker = await client.addMarker({
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		await expect(async () => {
@@ -375,7 +381,8 @@ test("Try to update marker with marker type from other pad", async () => {
 			const marker = await client1.addMarker({
 				lat: 10,
 				lon: 10,
-				typeId: markerType1.id
+				typeId: markerType1.id,
+				ele: null
 			});
 
 			await expect(async () => {
@@ -424,7 +431,8 @@ test("Socket v1 marker name", async () => {
 		const marker = await emit(socket1, "addMarker", {
 			lat: 10,
 			lon: 10,
-			typeId: markerType.id
+			typeId: markerType.id,
+			ele: null
 		});
 
 		const expectedMarker = {
