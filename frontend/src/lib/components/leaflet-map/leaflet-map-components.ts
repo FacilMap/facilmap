@@ -126,7 +126,17 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
 	return useMapComponent(
 		map,
-		() => markRaw(control.locate({ flyTo: true, icon: "a", iconLoading: "a", markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 } })),
+		() => (
+			markRaw(control.locate({
+				flyTo: true,
+				icon: "a",
+				iconLoading: "a",
+				markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
+				locateOptions: {
+					enableHighAccuracy: true
+				}
+			}))
+		),
 		(locateControl, onCleanup) => {
 			locateControl.addTo(map.value);
 
