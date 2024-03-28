@@ -1,12 +1,5 @@
 <script setup lang="ts">
 	import { type Ref, computed, onMounted, ref } from "vue";
-	import "leaflet/dist/leaflet.css";
-	import "leaflet.locatecontrol";
-	import "leaflet.locatecontrol/dist/L.Control.Locate.css";
-	import "leaflet-graphicscale";
-	import "leaflet-graphicscale/src/Leaflet.GraphicScale.scss";
-	import "leaflet-mouse-position";
-	import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 	import { useMapContext } from "./leaflet-map-components";
 	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
@@ -142,11 +135,21 @@
 				}
 			}
 
-			.leaflet-control-locate.leaflet-control-locate a {
-				font-size: inherit;
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
+			.leaflet-control-locate.leaflet-control-locate {
+				a {
+					font-size: inherit;
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				&.active a {
+					color: rgb(32, 116, 182);
+				}
+
+				&.following a {
+					color: rgb(252, 132, 40);
+				}
 			}
 
 			path.leaflet-interactive {
