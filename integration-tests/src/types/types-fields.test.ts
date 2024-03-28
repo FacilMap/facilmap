@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryPad, openClient } from "../utils";
 
 test("Rename field (marker type)", async () => {
 	const client = await openClient();
@@ -37,9 +37,7 @@ test("Rename field (marker type)", async () => {
 			]
 		});
 
-		await retry(() => {
-			expect(onMarker).toBeCalledTimes(1);
-		});
+		expect(onMarker).toBeCalledTimes(1);
 
 		expect(client.markers[marker.id].data).toEqual({
 			"Field 1 new": "value 1",
@@ -84,9 +82,7 @@ test("Rename field (line type)", async () => {
 			]
 		});
 
-		await retry(() => {
-			expect(onLine).toBeCalledTimes(1);
-		});
+		expect(onLine).toBeCalledTimes(1);
 
 		expect(client.lines[line.id].data).toEqual({
 			"Field 1 new": "value 1",
@@ -137,9 +133,7 @@ test("Rename dropdown option (marker type)", async () => {
 			]
 		});
 
-		await retry(() => {
-			expect(onMarker).toBeCalledTimes(1);
-		});
+		expect(onMarker).toBeCalledTimes(1);
 
 		expect(client.markers[marker1.id].data).toEqual({
 			"Dropdown": "Option 1"
@@ -194,9 +188,7 @@ test("Rename dropdown option (line type)", async () => {
 			]
 		});
 
-		await retry(() => {
-			expect(onLine).toBeCalledTimes(1);
-		});
+		expect(onLine).toBeCalledTimes(1);
 
 		expect(client.lines[line1.id].data).toEqual({
 			"Dropdown": "Option 1"

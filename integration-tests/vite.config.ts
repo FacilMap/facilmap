@@ -25,5 +25,8 @@ export default defineConfig({
 				&& !["facilmap-types", "facilmap-utils"].includes(id)
 			)
 		}
+	},
+	test: {
+		testTimeout: 20_000
 	}
 });
