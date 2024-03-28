@@ -240,3 +240,53 @@ test("Update type with duplicate fields", async () => {
 		}).rejects.toThrowError("Field names must be unique.");
 	});
 });
+
+test("Create type with duplicate dropdown values", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+		await expect(async () => {
+			await client.addType({
+				name: "Test type",
+				type: "marker",
+				fields: [
+					{
+						name: "Dropdown",
+						type: "dropdown",
+						options: [
+							{ value: "Value 1" },
+							{ value: "Value 1" }
+						]
+					}
+				]
+			});
+		}).rejects.toThrowError("Dropdown option values must be unique.");
+	});
+});
+
+test("Update type with duplicate dropdown values", async () => {
+	const client = await openClient();
+
+	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+		const type = await client.addType({
+			name: "Test type",
+			type: "marker"
+		});
+
+		await expect(async () => {
+			await client.editType({
+				id: type.id,
+				fields: [
+					{
+						name: "Dropdown",
+						type: "dropdown",
+						options: [
+							{ value: "Value 1" },
+							{ value: "Value 1" }
+						]
+					}
+				]
+			});
+		}).rejects.toThrowError("Dropdown option values must be unique.");
+	});
+});

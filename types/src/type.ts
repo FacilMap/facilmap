@@ -22,6 +22,28 @@ export const fieldOptionValidator = cruValidator({
 export type FieldOption<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof fieldOptionValidator>;
 export type FieldOptionUpdate = FieldOption<CRU.UPDATE>;
 
+const noDuplicateOptionValues = (options: Array<FieldOption<CRU>>, ctx: z.RefinementCtx) => {
+	const values: Record<string, number> = {};
+	for (const option of options) {
+		values[option.value] = (values[option.value] ?? 0) + 1;
+	}
+
+	for (let i = 0; i < options.length; i++) {
+		if (values[options[i].value] > 1) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Dropdown option values must be unique.",
+				path: [i, "value"]
+			});
+		}
+	}
+};
+export const fieldOptionsValidator = {
+	read: z.array(fieldOptionValidator.read).superRefine(noDuplicateOptionValues),
+	create: z.array(fieldOptionValidator.create).superRefine(noDuplicateOptionValues),
+	update: z.array(fieldOptionValidator.update).superRefine(noDuplicateOptionValues)
+};
+
 export const fieldValidator = cruValidator({
 	name: z.string().trim().min(1),
 	type: fieldTypeValidator,
@@ -34,9 +56,9 @@ export const fieldValidator = cruValidator({
 	controlStroke: z.boolean().optional(),
 
 	options: {
-		read: z.array(fieldOptionValidator.read).optional(),
-		create: z.array(fieldOptionValidator.create).optional(),
-		update: z.array(fieldOptionValidator.update).optional()
+		read: fieldOptionsValidator.read.optional(),
+		create: fieldOptionsValidator.create.optional(),
+		update: fieldOptionsValidator.update.optional()
 	},
 
 	oldName: onlyUpdate(z.string().optional())
