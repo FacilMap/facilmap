@@ -1,4 +1,4 @@
-import { type Bbox, bboxWithZoomValidator, objectWithIdValidator, type ObjectWithId } from "../base.js";
+import { type Bbox, bboxWithZoomValidator, objectWithIdValidator, type ObjectWithId, idValidator } from "../base.js";
 import { type PadData, padDataValidator, Writable } from "../padData.js";
 import { type Marker, markerValidator } from "../marker.js";
 import { type Line, lineValidator, type TrackPoint } from "../line.js";
@@ -23,11 +23,11 @@ export const requestDataValidatorsV2 = {
 	revertHistoryEntry: objectWithIdValidator,
 	getMarker: objectWithIdValidator,
 	addMarker: markerValidator.create,
-	editMarker: markerValidator.update,
+	editMarker: markerValidator.update.extend({ id: idValidator }),
 	deleteMarker: objectWithIdValidator,
 	getLineTemplate: lineTemplateRequestValidator,
 	addLine: lineValidator.create,
-	editLine: lineValidator.update,
+	editLine: lineValidator.update.extend({ id: idValidator }),
 	deleteLine: objectWithIdValidator,
 	exportLine: lineExportRequestValidator,
 	find: findQueryValidator,
@@ -38,10 +38,10 @@ export const requestDataValidatorsV2 = {
 	lineToRoute: lineToRouteCreateValidator,
 	exportRoute: routeExportRequestValidator,
 	addType: typeValidator.create,
-	editType: typeValidator.update,
+	editType: typeValidator.update.extend({ id: idValidator }),
 	deleteType: objectWithIdValidator,
 	addView: viewValidator.create,
-	editView: viewValidator.update,
+	editView: viewValidator.update.extend({ id: idValidator }),
 	deleteView: objectWithIdValidator,
 	geoip: nullOrUndefinedValidator,
 	setPadId: z.string()

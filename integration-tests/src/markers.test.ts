@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Marker, type FindOnMapMarker } from "facilmap-types";
+import { SocketVersion, CRU, type Marker, type FindOnMapMarker, type ID } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create marker (using default values)", async () => {
@@ -136,7 +136,7 @@ test("Edit marker", async () => {
 		const onMarker3 = vi.fn();
 		client3.on("marker", onMarker3);
 
-		const newData: Marker<CRU.UPDATE> = {
+		const newData: Marker<CRU.UPDATE> & { id: ID } = {
 			id: createdMarker.id,
 			lat: 10,
 			lon: 10,

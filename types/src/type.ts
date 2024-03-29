@@ -1,5 +1,5 @@
 import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, symbolValidator, widthValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptCreate, exceptUpdate, optionalUpdate, onlyRead } from "./cru";
+import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead } from "./cru";
 import * as z from "zod";
 
 export const objectTypeValidator = z.enum(["marker", "line"]);
@@ -90,7 +90,7 @@ export const fieldsValidator = {
 };
 
 const rawTypeValidator = cruValidator({
-	id: exceptCreate(idValidator),
+	id: onlyRead(idValidator),
 	type: exceptUpdate(objectTypeValidator),
 	padId: onlyRead(padIdValidator),
 

@@ -125,7 +125,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: Omit<Type<CRU.UPDATE_VALIDATED>, "id">): Promise<Type> {
+	async updateType(padId: PadId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
 		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
 		for(const field of (data.fields || [])) {
 			if(field.oldName && field.oldName != field.name)

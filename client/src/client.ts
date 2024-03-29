@@ -440,7 +440,7 @@ export default class Client {
 		return marker;
 	}
 
-	async editMarker(data: Marker<CRU.UPDATE>): Promise<Marker> {
+	async editMarker(data: Marker<CRU.UPDATE> & { id: ID }): Promise<Marker> {
 		return await this._emit("editMarker", data);
 	}
 
@@ -456,7 +456,7 @@ export default class Client {
 		return await this._emit("addLine", data);
 	}
 
-	async editLine(data: Line<CRU.UPDATE>): Promise<Line> {
+	async editLine(data: Line<CRU.UPDATE> & { id: ID }): Promise<Line> {
 		return await this._emit("editLine", data);
 	}
 
@@ -542,7 +542,7 @@ export default class Client {
 		return await this._emit("addType", data);
 	}
 
-	async editType(data: Type<CRU.UPDATE>): Promise<Type> {
+	async editType(data: Type<CRU.UPDATE> & { id: ID }): Promise<Type> {
 		return await this._emit("editType", data);
 	}
 
@@ -554,7 +554,7 @@ export default class Client {
 		return await this._emit("addView", data);
 	}
 
-	async editView(data: View<CRU.UPDATE>): Promise<View> {
+	async editView(data: View<CRU.UPDATE> & { id: ID }): Promise<View> {
 		return await this._emit("editView", data);
 	}
 

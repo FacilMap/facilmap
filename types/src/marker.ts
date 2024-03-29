@@ -1,9 +1,9 @@
 import { colourValidator, idValidator, padIdValidator, pointValidator, shapeValidator, sizeValidator, symbolValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, exceptCreate, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru";
+import { CRU, type CRUType, cruValidator, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru";
 import * as z from "zod";
 
 export const markerValidator = cruValidator({
-	id: exceptCreate(idValidator),
+	id: onlyRead(idValidator),
 	padId: onlyRead(padIdValidator),
 	...mapValues(pointValidator.shape, optionalUpdate),
 	typeId: optionalUpdate(idValidator),

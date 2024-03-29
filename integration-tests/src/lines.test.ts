@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Line, type LinePointsEvent, type FindOnMapLine } from "facilmap-types";
+import { SocketVersion, CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID } from "facilmap-types";
 import type { LineWithTrackPoints } from "facilmap-client";
 import { cloneDeep, omit } from "lodash-es";
 
@@ -241,7 +241,7 @@ test("Edit line", async () => {
 				{ lat: 14, lon: 14 },
 				{ lat: 12, lon: 12 }
 			]
-		} satisfies Line<CRU.UPDATE>;
+		} satisfies Line<CRU.UPDATE> & { id: ID };
 		const line = await client1.editLine(newData);
 
 		const expectedLine = {

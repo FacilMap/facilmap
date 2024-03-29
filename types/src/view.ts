@@ -1,9 +1,9 @@
 import { bboxValidator, idValidator, layerValidator, padIdValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, exceptCreate, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru.js";
+import { CRU, type CRUType, cruValidator, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru.js";
 import * as z from "zod";
 
 export const viewValidator = cruValidator({
-	id: exceptCreate(idValidator),
+	id: onlyRead(idValidator),
 	padId: onlyRead(padIdValidator),
 
 	name: optionalUpdate(z.string().trim().min(1).max(100)),

@@ -46,8 +46,8 @@ export function normalizeFieldValue(field: Field, value: string | undefined, ign
 	}
 }
 
-export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
-	const update: Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> = {};
+export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Marker<CRU.UPDATE_VALIDATED> {
+	const update: Marker<CRU.UPDATE_VALIDATED> = {};
 
 	if(type.colourFixed && marker.colour != type.defaultColour)
 		update.colour = type.defaultColour;
@@ -91,16 +91,16 @@ export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Mar
 	return result;
 }
 
-export function resolveUpdateMarker(marker: Marker, update: Omit<Marker<CRU.UPDATE>, "id">, newType: Type): Omit<Marker<CRU.UPDATE_VALIDATED>, "id"> {
-	const resolvedUpdate = markerValidator.update.omit({ id: true }).parse(update);
+export function resolveUpdateMarker(marker: Marker, update: Marker<CRU.UPDATE>, newType: Type): Marker<CRU.UPDATE_VALIDATED> {
+	const resolvedUpdate = markerValidator.update.parse(update);
 	return {
 		...resolvedUpdate,
 		...applyMarkerStyles({ ...marker, ...resolvedUpdate }, newType)
 	};
 }
 
-export function applyLineStyles(line: Line<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Omit<Line<CRU.UPDATE_VALIDATED>, "id"> {
-	const update: Omit<Line<CRU.UPDATE_VALIDATED>, "id"> = {};
+export function applyLineStyles(line: Line<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Line<CRU.UPDATE_VALIDATED> {
+	const update: Line<CRU.UPDATE_VALIDATED> = {};
 
 	if(type.colourFixed && line.colour != type.defaultColour) {
 		update.colour = type.defaultColour;
@@ -149,8 +149,8 @@ export function resolveCreateLine(line: Line<CRU.CREATE>, type: Type): Line<CRU.
 	return result;
 }
 
-export function resolveUpdateLine(line: Line, update: Omit<Line<CRU.UPDATE>, "id">, newType: Type): Omit<Line<CRU.UPDATE_VALIDATED>, "id"> {
-	const resolvedUpdate = lineValidator.update.omit({ id: true }).parse(update);
+export function resolveUpdateLine(line: Line, update: Line<CRU.UPDATE>, newType: Type): Line<CRU.UPDATE_VALIDATED> {
+	const resolvedUpdate = lineValidator.update.parse(update);
 	return {
 		...resolvedUpdate,
 		...applyLineStyles({ ...line, ...resolvedUpdate }, newType)

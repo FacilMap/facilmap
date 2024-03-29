@@ -110,13 +110,13 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, noHistory = false): Promise<Marker> {
+	async updateMarker(padId: PadId, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, noHistory = false): Promise<Marker> {
 		const originalMarker = await this.getMarker(padId, markerId);
 		const newType = await this._db.types.getType(padId, data.typeId ?? originalMarker.typeId);
 		return await this._updateMarker(originalMarker, data, newType, noHistory);
 	}
 
-	async _updateMarker(originalMarker: Marker, data: Omit<Marker<CRU.UPDATE_VALIDATED>, "id">, newType: Type, noHistory = false): Promise<Marker> {
+	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, noHistory = false): Promise<Marker> {
 		if (newType.type !== "marker") {
 			throw new Error(`Cannot use ${newType.type} type for marker.`);
 		}

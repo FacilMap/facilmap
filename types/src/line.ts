@@ -1,5 +1,5 @@
 import { bboxValidator, colourValidator, idValidator, padIdValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, exceptCreate, optionalUpdate, mapValues, exceptRead } from "./cru";
+import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, optionalUpdate, mapValues, exceptRead } from "./cru";
 import * as z from "zod";
 
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));
@@ -14,7 +14,7 @@ export const trackPointValidator = cruValidator({
 export type TrackPoint<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof trackPointValidator>;
 
 export const lineValidator = cruValidator({
-	id: exceptCreate(idValidator),
+	id: onlyRead(idValidator),
 	routePoints: optionalUpdate(z.array(pointValidator).min(2)),
 	typeId: optionalUpdate(idValidator),
 	name: optionalCreate(z.string().trim().max(100), ""),

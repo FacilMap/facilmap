@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, openClient, retry } from "./utils";
-import { type CRU, type View } from "facilmap-types";
+import { type CRU, type ID, type View } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create view (default values)", async () => {
@@ -129,7 +129,7 @@ test("Update view", async () => {
 			layers: ["grid"],
 			idx: 2,
 			filter: "name == 'Test'"
-		} satisfies View<CRU.UPDATE>;
+		} satisfies View<CRU.UPDATE> & { id: ID };
 		const view = await client1.editView(update);
 
 		const expectedView: View = {

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, openClient, retry } from "../utils";
-import { CRU, type Type } from "facilmap-types";
+import { CRU, type ID, type Type } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Default types are added", async () => {
@@ -321,7 +321,7 @@ test("Update type", async () => {
 			fields: [
 				{ name: "Test field", type: "input" }
 			]
-		} satisfies Type<CRU.UPDATE>;
+		} satisfies Type<CRU.UPDATE> & { id: ID };
 
 		const typeResult = await client1.editType(update);
 

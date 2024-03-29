@@ -102,7 +102,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: Omit<View<CRU.UPDATE_VALIDATED>, "id">): Promise<View> {
+	async updateView(padId: PadId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
 		if (data.idx != null) {
 			await this._freeViewIdx(padId, viewId, data.idx);
 		}

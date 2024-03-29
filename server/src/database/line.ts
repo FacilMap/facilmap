@@ -223,13 +223,13 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async updateLine(padId: PadId, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		const originalLine = await this.getLine(padId, lineId);
 		const newType = await this._db.types.getType(padId, data.typeId ?? originalLine.typeId);
 		return await this._updateLine(originalLine, data, newType, noHistory, trackPointsFromRoute);
 	}
 
-	async _updateLine(originalLine: Line, data: Omit<Line<CRU.UPDATE_VALIDATED>, "id">, newType: Type, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		if (newType.type !== "line") {
 			throw new Error(`Cannot use ${newType.type} type for line.`);
 		}
