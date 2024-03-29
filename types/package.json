@@ -1,6 +1,6 @@
 {
   "name": "facilmap-types",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "Typescript typings for the FacilMap communication between client and server.",
   "homepage": "https://github.com/FacilMap/facilmap",
   "bugs": {

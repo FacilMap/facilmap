@@ -1,6 +1,6 @@
 {
   "name": "facilmap-client",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
   "keywords": [
     "maps",

@@ -1,6 +1,6 @@
 {
   "name": "facilmap-integration-tests",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "homepage": "https://github.com/FacilMap/facilmap",
