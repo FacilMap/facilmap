@@ -21,7 +21,6 @@
     "dist",
     "src",
     "README.md",
-    "tsconfig.json",
     "bin"
   ],
   "scripts": {

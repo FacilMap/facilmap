@@ -24,8 +24,7 @@
   "files": [
     "dist",
     "src",
-    "README.md",
-    "tsconfig.json"
+    "README.md"
   ],
   "dependencies": {
     "@types/geojson": "^7946.0.14",

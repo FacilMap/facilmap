@@ -25,11 +25,9 @@
     "assets",
     "dist",
     "src",
-    "download-icons.ts",
     "example.html",
     "icontest.html",
-    "README.md",
-    "tsconfig.json"
+    "README.md"
   ],
   "scripts": {
     "build": "vite build",

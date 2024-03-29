@@ -22,10 +22,8 @@
   "files": [
     "dist",
     "src",
-    "static",
     "iframe-test.html",
     "README.md",
-    "tsconfig.json",
     "build.js",
     "build.d.ts",
     "public"

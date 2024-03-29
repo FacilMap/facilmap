@@ -29,8 +29,7 @@
   "files": [
     "dist",
     "src",
-    "README.md",
-    "tsconfig.json"
+    "README.md"
   ],
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
