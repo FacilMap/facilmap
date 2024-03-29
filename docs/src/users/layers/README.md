@@ -20,6 +20,7 @@ Base layers set the main style of the map. Only one base layer can be shown at t
 
 | Base layer | Source | Purpose |
 |------------|--------|---------|
+| Lima Labs | [Lima Labs](https://maps.lima-labs.com/) | Good for a general geographic overview. Has a focus on car infrastructure and political borders. Supports high resolution displays. |
 | Mapnik | [OpenStreetMap](https://www.openstreetmap.org/) | Good for a general geographic overview. Has a focus on car infrastructure and political borders. |
 | TopPlus | [German state](https://gdz.bkg.bund.de/index.php/default/wms-topplusopen-wms-topplus-open.html) | Good for a general geographic overview, with more details than Mapnik. Has a focus on car infrastructure, political borders and topography. Unfortunately all labels are in German. |
 | Map1.eu | [Map1.eu](https://www.map1.eu/) | Has a focus on cities/towns, car infrastructure and political borders. Aims to have the same level of detail as a paper map. Only available for Europe. |

@@ -27,7 +27,7 @@ The zoom buttons allow you to zoom in and out of the map. Alternatively, you can
 
 The search box allows you to [search for places](../search/) and to [calculate a route](../route/). On small screens, it also contains the [legend](../legend/) if enabled.
 
-On top of the search box, you can click the different tabs to switch between different functions. By default, the search box contains two tabs, the search form and the route form. Different functions of the map may temporarily or permanently add additional tabs.
+On top of the search box, you can click the different tabs to switch between different functions. By default, the search box contains three tabs, the search form, the route form and the POI tab. Different functions of the map may temporarily or permanently add additional tabs.
 
 On big screens, you can drag the resize handle on the bottom right of the search box to resize it. Click the resize handle to bring it back to its original size.\
 On small screens, the search box appears at the bottom of the screen. You can drag it into and out of view as it fits by dragging the tab bar on top of the search box.
