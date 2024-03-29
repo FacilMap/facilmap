@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents, LineTemplate } from "facilmap-types";
+import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents, LineTemplate, LinePointsEvent } from "facilmap-types";
 
 export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
@@ -363,7 +363,7 @@ export default class Client {
 			// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
 			// so we can be sure that we will receive all line points that are relevant for the new bbox.
 			obj.linePoints = obj.linePoints || [];
-			const linePointEventsById = new Map(obj.linePoints.map((e) => [e.id, e] as const));
+			const linePointEventsById = new Map(obj.linePoints.map((e): [number, LinePointsEvent] => [e.id, e])); // Cannot use "as const" due to https://github.com/microsoft/rushstack/issues/3875
 			for (const lineIdStr of Object.keys(this.data.lines)) {
 				const lineId = Number(lineIdStr);
 				const e = linePointEventsById.get(lineId);
