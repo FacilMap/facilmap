@@ -1,9 +1,7 @@
-#!/usr/bin/env node
-
-import Database from "./database/database";
-import Socket from "./socket";
-import config from "./config";
-import { initWebserver } from "./webserver";
+import Database from "./database/database.js";
+import Socket from "./socket/socket.js";
+import config from "./config.js";
+import { initWebserver } from "./webserver.js";
 
 Object.defineProperty(Error.prototype, "toJSON", {
 	value: function() {
@@ -18,23 +16,14 @@ Object.defineProperty(Error.prototype, "toJSON", {
 	configurable: true
 });
 
-process.on('unhandledRejection', (reason) => {
-	console.trace("Unhandled rejection", reason);
-});
-
-async function start() {
-	const database = new Database(config.db);
+export async function startServer(conf = config): Promise<void> {
+	const database = new Database(conf.db);
 
 	await database.connect();
 
-	const server = await initWebserver(database, config.port, config.host);
+	const server = await initWebserver(database, conf.port, conf.host);
 
 	new Socket(server, database);
 
-	console.log("Server started on " + (config.host || "*" ) + ":" + config.port);
+	console.log("Server started on " + (conf.host || "*" ) + ":" + conf.port);
 }
-
-start().catch(err => {
-	console.error(err);
-	process.exit(1);
-});

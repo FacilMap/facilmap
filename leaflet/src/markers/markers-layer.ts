@@ -1,10 +1,10 @@
-import Client from 'facilmap-client';
-import { ID, Marker, ObjectWithId } from 'facilmap-types';
-import { Map } from 'leaflet';
-import { tooltipOptions } from '../utils/leaflet';
-import { numberKeys, quoteHtml } from 'facilmap-utils';
-import MarkerCluster, { MarkerClusterOptions } from './marker-cluster';
-import MarkerLayer from './marker-layer';
+import type Client from "facilmap-client";
+import type { ID, Marker, ObjectWithId, Type } from "facilmap-types";
+import { Map as LeafletMap } from "leaflet";
+import { tooltipOptions } from "../utils/leaflet";
+import { numberKeys, quoteHtml } from "facilmap-utils";
+import MarkerCluster, { type MarkerClusterOptions } from "./marker-cluster";
+import MarkerLayer from "./marker-layer";
 
 export interface MarkersLayerOptions extends MarkerClusterOptions {
 }
@@ -12,57 +12,83 @@ export interface MarkersLayerOptions extends MarkerClusterOptions {
 export default class MarkersLayer extends MarkerCluster {
 
 	declare options: MarkersLayerOptions;
-	client: Client<any>;
-	markersById: Record<string, MarkerLayer> = {};
-	highlightedMarkerIds = new Set<ID>();
+	protected markersById: Record<string, MarkerLayer> = {};
+	protected highlightedMarkerIds = new Set<ID>();
+	protected filterResults = new Map<ID, boolean>();
 
 	/** The position of these markers will not be touched until they are unlocked again. */
-	lockedMarkerIds = new Set<ID>();
+	protected lockedMarkerIds = new Set<ID>();
 
-	constructor(client: Client<any>, options?: MarkersLayerOptions) {
+	constructor(client: Client, options?: MarkersLayerOptions) {
 		super(client, options);
-		this.client = client;
 	}
 
-	onAdd(map: Map): this {
+	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
 
 		this.client.on("marker", this.handleMarker);
 		this.client.on("deleteMarker", this.handleDeleteMarker);
+		this.client.on("type", this.handleType);
+
+		for (const markerId of numberKeys(this.client.markers)) {
+			this.handleMarker(this.client.markers[markerId]);
+		}
 
 		map.on("fmFilter", this.handleFilter);
 
 		return this;
 	}
 
-	onRemove(map: Map): this {
+	onRemove(map: LeafletMap): this {
 		super.onRemove(map);
 
 		this.client.removeListener("marker", this.handleMarker);
 		this.client.removeListener("deleteMarker", this.handleDeleteMarker);
+		this.client.removeListener("type", this.handleType);
 
 		map.off("fmFilter", this.handleFilter);
 
 		return this;
 	}
 
-	handleMarker = (marker: Marker): void => {
-		if(this._map.fmFilterFunc(marker, this.client.types[marker.typeId]))
+	protected recalculateFilter(marker: Marker): void {
+		this.filterResults.set(marker.id, this._map.fmFilterFunc(marker, this.client.types[marker.typeId]));
+	}
+
+	protected shouldShowMarker(marker: Marker): boolean {
+		return !!this.filterResults.get(marker.id);
+	}
+
+	protected handleMarker = (marker: Marker): void => {
+		this.recalculateFilter(marker);
+		if(this.shouldShowMarker(marker))
 			this._addMarker(marker);
+		else
+			this._deleteMarker(marker);
 	};
 
-	handleDeleteMarker = (data: ObjectWithId): void => {
+	protected handleDeleteMarker = (data: ObjectWithId): void => {
 		this._deleteMarker(data);
+		this.filterResults.delete(data.id);
 	};
 
-	handleFilter = (): void => {
-		for(const i of numberKeys(this.client.markers)) {
-			if (!this.lockedMarkerIds.has(i)) {
-				const show = this._map.fmFilterFunc(this.client.markers[i], this.client.types[this.client.markers[i].typeId]);
-				if(this.markersById[i] && !show)
-					this._deleteMarker(this.client.markers[i]);
-				else if(!this.markersById[i] && show)
-					this._addMarker(this.client.markers[i]);
+	protected handleType = (type: Type): void => {
+		for (const markerId of numberKeys(this.client.markers)) {
+			if (this.client.markers[markerId].typeId === type.id) {
+				this.recalculateFilter(this.client.markers[markerId]);
+			}
+		}
+	};
+
+	protected handleFilter = (): void => {
+		for(const markerId of numberKeys(this.client.markers)) {
+			this.recalculateFilter(this.client.markers[markerId]);
+			if (!this.lockedMarkerIds.has(markerId)) {
+				const show = this.shouldShowMarker(this.client.markers[markerId]);
+				if(this.markersById[markerId] && !show)
+					this._deleteMarker(this.client.markers[markerId]);
+				else if(!this.markersById[markerId] && show)
+					this._addMarker(this.client.markers[markerId]);
 			}
 		}
 	};
@@ -120,37 +146,48 @@ export default class MarkersLayer extends MarkerCluster {
 	unlockMarker(id: ID): void {
 		this.lockedMarkerIds.delete(id);
 
-		if (this._map.fmFilterFunc(this.client.markers[id], this.client.types[this.client.markers[id].typeId]))
+		if (this.shouldShowMarker(this.client.markers[id]))
 			this._addMarker(this.client.markers[id]);
 		else
 			this._deleteMarker(this.client.markers[id]);
 	}
 
-	_addMarker(marker: Marker): void {
+	getLayerByMarkerId(markerId: ID): MarkerLayer | undefined {
+		return this.markersById[markerId];
+	}
+
+	protected _addMarker(marker: Marker): void {
 		const updatePos = !this.markersById[marker.id] || !this.lockedMarkerIds.has(marker.id);
 
 		if(!this.markersById[marker.id]) {
 			const layer = new MarkerLayer([ 0, 0 ]);
 			this.markersById[marker.id] = layer;
 			this.addLayer(layer);
-
-			layer.bindTooltip("", { ...tooltipOptions, offset: [ 20, -15 ] });
-			layer.on("tooltipopen", () => {
-				this.markersById[marker.id].setTooltipContent(quoteHtml(this.client.markers[marker.id].name));
-			});
 		}
 
 		(this.markersById[marker.id] as any).marker = marker;
 
 		const highlight = this.highlightedMarkerIds.has(marker.id);
 
-		if (updatePos)
+		if (updatePos && !this.markersById[marker.id].getLatLng().equals([ marker.lat, marker.lon ])) {
 			this.markersById[marker.id].setLatLng([ marker.lat, marker.lon ]);
+		}
 
 		this.markersById[marker.id].setStyle({ marker, highlight, raised: highlight });
+
+		if (marker.name) {
+			const quoted = quoteHtml(marker.name);
+			if (!this.markersById[marker.id]._tooltip) {
+				this.markersById[marker.id].bindTooltip(quoted, { ...tooltipOptions, offset: [ 20, -15 ] });
+			} else if (this.markersById[marker.id]._tooltip!.getContent() !== quoted) {
+				this.markersById[marker.id].setTooltipContent(quoted);
+			}
+		} else if (this.markersById[marker.id]._tooltip) {
+			this.markersById[marker.id].unbindTooltip();
+		}
 	}
 
-	_deleteMarker(marker: ObjectWithId): void {
+	protected _deleteMarker(marker: ObjectWithId): void {
 		if(!this.markersById[marker.id])
 			return;
 

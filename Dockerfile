@@ -1,26 +1,28 @@
-FROM node:15.12-alpine
+FROM node:21-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
-CMD yarn run server
+CMD yarn run prod-server
 EXPOSE 8080
+ENV CACHE_DIR=/opt/facilmap/cache
+HEALTHCHECK --start-period=60s --start-interval=3s --timeout=5s --retries=1 \
+	CMD wget -O/dev/null 'http://127.0.0.1:8080/socket.io/?EIO=4&transport=polling' || exit 1
 
 RUN apk add --no-cache yarn
 
-RUN adduser -D -h /opt/facilmap -s /bin/sh facilmap
+RUN mkdir /opt/facilmap && adduser -D -H -h /opt/facilmap -s /bin/sh facilmap
 
-WORKDIR /opt/facilmap/server
+WORKDIR /opt/facilmap
 
-COPY ./ ../
+COPY ./ ./
 
-RUN chown -R facilmap:facilmap /opt/facilmap
+RUN yarn install && \
+	yarn check-types && \
+	yarn lint && \
+	yarn test && \
+	yarn run build:frontend:app && \
+	yarn run build:server && \
+	yarn workspaces focus -A --production
 
-USER facilmap
-
-RUN cd .. && yarn install
-
-RUN cd .. && yarn run build
-
-USER root
-RUN chown -R root:root /opt/facilmap && chown -R facilmap:facilmap /opt/facilmap/server/cache
+RUN mkdir -p "$CACHE_DIR" && chown -R facilmap:facilmap "$CACHE_DIR"
 
 USER facilmap

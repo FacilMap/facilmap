@@ -1,0 +1,22 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "./out",
+		"composite": true,
+		"paths": {
+			"facilmap-types": ["../types/src/index.ts"],
+			"facilmap-utils": ["../utils/src/index.ts"],
+			"facilmap-client": ["../client/src/client.ts"],
+		}
+	},
+	"references": [
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../utils/tsconfig.json" },
+		{ "path": "../client/tsconfig.json" }
+	],
+	"include": [
+		"src/**/*",
+		"vite.config.ts",
+		"server.ts"
+	]
+}

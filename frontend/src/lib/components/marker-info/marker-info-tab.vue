@@ -1,10 +1,51 @@
-<b-tab v-if="markerId" :id="`fm${context.id}-marker-info-tab`">
-	<template #title>
-		<span class="closeable-tab-title">
-			<span>{{title}}</span>
-			<object><a href="javascript:" @click="close()"><Icon icon="remove" alt="Close"></Icon></a></object>
-		</span>
-	</template>
+<script setup lang="ts">
+	import { computed, watch } from "vue";
+	import MarkerInfo from "./marker-info.vue";
+	import SearchBoxTab from "../search-box/search-box-tab.vue"
+	import { useEventListener } from "../../utils/utils";
+	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { normalizeMarkerName } from "facilmap-utils";
 
-	<MarkerInfo :markerId="markerId"></MarkerInfo>
-</b-tab>
+	const context = injectContextRequired();
+	const client = requireClientContext(context);
+	const mapContext = requireMapContext(context);
+	const searchBoxContext = requireSearchBoxContext(context);
+
+	useEventListener(mapContext, "open-selection", handleOpenSelection);
+
+	const markerId = computed(() => {
+		if (mapContext.value.selection.length == 1 && mapContext.value.selection[0].type == "marker")
+			return mapContext.value.selection[0].id;
+		else
+			return undefined;
+	});
+
+	const marker = computed(() => markerId.value != null ? client.value.markers[markerId.value] : undefined);
+
+	watch(marker, () => {
+		if (!marker.value && markerId.value != null)
+			close();
+	});
+
+	function handleOpenSelection(): void {
+		if (marker.value)
+			searchBoxContext.value.activateTab(`fm${context.id}-marker-info-tab`, { expand: true });
+	}
+
+	function close(): void {
+		mapContext.value.components.selectionHandler.setSelectedItems([]);
+	}
+</script>
+
+<template>
+	<template v-if="markerId">
+		<SearchBoxTab
+			:id="`fm${context.id}-marker-info-tab`"
+			:title="marker ? normalizeMarkerName(marker.name) : ''"
+			isCloseable
+			@close="close()"
+		>
+			<MarkerInfo :markerId="markerId"></MarkerInfo>
+		</SearchBoxTab>
+	</template>
+</template>

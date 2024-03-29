@@ -3,7 +3,6 @@
   "version": "3.4.0",
   "description": "A library that acts as a client to FacilMap and makes it possible to retrieve and modify objects on a collaborative map.",
   "keywords": [
-    "webpack",
     "maps",
     "osm",
     "facilmap"
@@ -14,7 +13,9 @@
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "main": "./dist/client.js",
+  "main": "./dist/facilmap-client.mjs",
+  "type": "module",
+  "types": "./dist/facilmap-client.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
@@ -26,23 +27,20 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
+    "build": "vite build",
     "clean": "rimraf dist",
-    "dev-server": "webpack-dev-server  --mode development"
+    "dev-server": "vite",
+    "check-types": "tsc -b --emitDeclarationOnly"
   },
   "dependencies": {
-    "facilmap-types": "3.4.0",
-    "socket.io-client": "^4.1.2"
+    "facilmap-types": "workspace:^",
+    "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.7",
-    "rimraf": "^3.0.2",
-    "source-map-loader": "^4.0.1",
-    "ts-loader": "^9.4.4",
-    "typescript": "^5.2.2",
-    "webpack": "^5.88.2",
-    "webpack-bundle-analyzer": "^4.9.1",
-    "webpack-cli": "^5.1.4"
+    "@types/geojson": "^7946.0.14",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.5",
+    "vite-plugin-dts": "^3.7.3"
   }
 }

@@ -1,18 +1,18 @@
-import { Colour, ID, Point, Shape, Symbol } from "./base";
-import { PadId } from "./padData";
+import { colourValidator, idValidator, padIdValidator, pointValidator, shapeValidator, sizeValidator, symbolValidator } from "./base.js";
+import { CRU, type CRUType, cruValidator, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru";
+import * as z from "zod";
 
-export interface Marker<DataType = Record<string, string>> extends Point {
-	id: ID;
-	name: string;
-	colour: Colour;
-	size: number;
-	symbol: Symbol;
-	shape: Shape;
-	ele?: number;
-	typeId: ID;
-	data: DataType;
-	padId: PadId;
-}
-
-export type MarkerCreate<DataType = Record<string, string>> = Partial<Omit<Marker<DataType>, "id" | "padId">> & Pick<Marker<DataType>, keyof Point | 'typeId'>;
-export type MarkerUpdate<DataType = Record<string, string>> = Partial<MarkerCreate<DataType>>;
+export const markerValidator = cruValidator({
+	id: onlyRead(idValidator),
+	padId: onlyRead(padIdValidator),
+	...mapValues(pointValidator.shape, optionalUpdate),
+	typeId: optionalUpdate(idValidator),
+	name: optionalCreate(z.string().trim().max(100), ""),
+	symbol: optionalCreate(symbolValidator), // defaults to type.defaultSymbol
+	shape: optionalCreate(shapeValidator), // defaults to type.defaultShape
+	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
+	size: optionalCreate(sizeValidator), // defaults to type.defaultSize
+	data: optionalCreate(z.record(z.string())),
+	ele: optionalCreate(z.number().or(z.null()))
+});
+export type Marker<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof markerValidator>;

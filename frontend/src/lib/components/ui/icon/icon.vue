@@ -1,1 +1,0 @@
-<span class="fm-icon" v-html="iconCode"></span>

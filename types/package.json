@@ -8,15 +8,18 @@
   },
   "license": "AGPL-3.0",
   "author": "Candid Dauth <cdauth@cdauth.eu>",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/facilmap-types.mjs",
+  "type": "module",
+  "types": "./dist/facilmap-types.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/FacilMap/facilmap.git"
   },
   "scripts": {
-    "build": "tsc",
-    "clean": "rimraf dist"
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "clean": "rimraf dist",
+    "check-types": "tsc -b --emitDeclarationOnly"
   },
   "files": [
     "dist",
@@ -25,10 +28,13 @@
     "tsconfig.json"
   ],
   "dependencies": {
-    "@types/geojson": "^7946.0.7"
+    "@types/geojson": "^7946.0.14",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "rimraf": "^3.0.2",
-    "typescript": "^5.2.2"
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.5",
+    "vite-plugin-dts": "^3.7.3"
   }
 }

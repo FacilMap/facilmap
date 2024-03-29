@@ -1,5 +1,5 @@
-import { Colour, SearchResult, Shape } from "facilmap-types";
-import { FeatureGroup, Layer, LayerOptions, PathOptions } from "leaflet";
+import type { Colour, SearchResult, Shape } from "facilmap-types";
+import { FeatureGroup, Layer, type LayerOptions, type PathOptions } from "leaflet";
 import MarkerLayer from "../markers/marker-layer";
 import { tooltipOptions } from "../utils/leaflet";
 import SearchResultGeoJSON from "./search-result-geojson";

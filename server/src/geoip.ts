@@ -1,51 +1,65 @@
-import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo";
+import { distanceToDegreesLat, distanceToDegreesLon } from "./utils/geo.js";
 import md5 from "md5-file";
-import cron from "node-cron";
-import maxmind, { Reader, Response } from "maxmind";
-import fs from "fs";
+import { open, type Reader, type Response } from "maxmind";
+import { createWriteStream } from "fs";
+import { rename, stat } from "node:fs/promises";
 import https from "https";
 import zlib from "zlib";
-import config from "./config";
-import { IncomingMessage } from "http";
-import { Bbox } from "facilmap-types";
+import config from "./config.js";
+import type { IncomingMessage } from "http";
+import type { Bbox } from "facilmap-types";
+import { fileURLToPath } from "url";
+import { fileExists } from "./utils/utils";
+import findCacheDir from "find-cache-dir";
+import { utimes } from "fs/promises";
 
-const url = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
-const fname = `${__dirname}/../cache/GeoLite2-City.mmdb`;
-const tmpfname = fname + ".tmp";
+const geoliteUrl = "https://updates.maxmind.com/geoip/databases/GeoLite2-City/update?db_md5=";
+const cacheDir = findCacheDir({ name: "facilmap-server", create: true })
+	|| findCacheDir({ name: "facilmap-server", create: true, cwd: fileURLToPath(new URL('./', import.meta['url'])) })!;
+const fname = `${cacheDir}/GeoLite2-City.mmdb`;
+const tmpfname = `${fname}.tmp`;
 
 let currentMd5: string | null = null;
 let db: Reader<Response> | null = null;
 
 if(config.maxmindUserId && config.maxmindLicenseKey) {
-	cron.schedule("0 3 * * *", download);
-
 	load().catch((err) => {
-		console.trace("Error loading maxmind database", err.stack || err);
+		console.log("Error loading maxmind database", err);
 	});
-	download().catch((err) => {
-		console.trace("Error downloading maxmind database", err.stack || err);
+	checkDownload().catch((err) => {
+		console.log("Error downloading maxmind database", err);
 	});
+	setInterval(() => {
+		checkDownload().catch((err) => {
+			console.log("Error downloading maxmind database", err);
+		});
+	}, 3600_000);
 }
 
 async function load() {
-	if(await fs.promises.access(fname).then(() => true).catch(() => false))
-		db = await maxmind.open(fname);
+	if(await fileExists(fname))
+		db = await open(fname);
 	else
 		db = null;
+}
 
-
+async function checkDownload() {
+	const mtime = (await fileExists(fname)) ? (await stat(fname)).mtimeMs : -Infinity;
+	if (Date.now() - mtime >= 86400_000) {
+		await download();
+	}
 }
 
 async function download() {
 	console.log("Downloading maxmind database");
 
 	if(!currentMd5) {
-		if(await fs.promises.access(fname).then(() => true).catch(() => false))
+		if(await fileExists(fname))
 			currentMd5 = await md5(fname);
 	}
 
 	const res = await new Promise<IncomingMessage>((resolve, reject) => {
-		https.get(url + (currentMd5 || ""), {
+		https.get(geoliteUrl + (currentMd5 || ""), {
 			headers: {
 				Authorization: `Basic ${Buffer.from(config.maxmindUserId + ':' + config.maxmindLicenseKey).toString('base64')}`
 			}
@@ -54,6 +68,7 @@ async function download() {
 
 	if(res.statusCode == 304) {
 		console.log("Maxmind database is up to date, no update needed.");
+		await utimes(fname, Date.now(), Date.now());
 		return;
 	} else if(res.statusCode != 200)
 		throw new Error(`Unexpected status code ${res.statusCode} when downloading maxmind database.`);
@@ -61,7 +76,7 @@ async function download() {
 	const gunzip = zlib.createGunzip();
 	res.pipe(gunzip);
 
-	const file = fs.createWriteStream(tmpfname);
+	const file = createWriteStream(tmpfname);
 	gunzip.pipe(file);
 
 	await new Promise((resolve, reject) => {
@@ -69,7 +84,7 @@ async function download() {
 		file.on("error", reject);
 	});
 
-	await fs.promises.rename(tmpfname, fname);
+	await rename(tmpfname, fname);
 	currentMd5 = await md5(fname);
 
 	await load();

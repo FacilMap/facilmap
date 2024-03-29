@@ -1,0 +1,45 @@
+/**
+ * Renders a form feedback error that is shown when the form has been validated, regardless of whether
+ * it is a sibling of a form element.
+*/
+.fm-form-invalid-feedback {
+	display: none;
+	color: var(--bs-form-invalid-color);
+}
+
+.was-validated .fm-form-invalid-feedback, form.fm-was-validated .fm-form-invalid-feedback {
+	display: block;
+}
+
+/**
+ * Should be applied to form-check elements that have a horizontal form label, in order to be correctly
+ * aligned with that label.
+*/
+.fm-form-check-with-label {
+	// Same padding-top as .col-form-label
+	padding-top: calc(0.375rem + var(--bs-border-width));
+}
+
+/**
+ * Should be applied to custom-range elements that have a horizontal form label, in order to be correctly
+ * aligned with that label.
+*/
+.fm-custom-range-with-label {
+	// Same padding-top as .col-form-label plus half line-height (1.5) minus half range input height (16px)
+	padding-top: calc(0.375rem + var(--bs-border-width) + 0.75rem - 8px);
+}
+
+
+/**
+ * Make a carousel use flex containers rather than floating block containers.
+*/
+.fm-flex-carousel {
+	display: flex;
+	min-height: 0;
+
+	> .carousel-item.active, > .carousel-item-next, > .carousel-item-prev {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+}

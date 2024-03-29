@@ -1,9 +1,10 @@
-import Client, { RouteWithTrackPoints } from "facilmap-client";
-import { Map, PolylineOptions } from "leaflet";
-import { HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
+import type Client from "facilmap-client";
+import type { RouteWithTrackPoints } from "facilmap-client";
+import { Map, type PolylineOptions } from "leaflet";
+import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
-import { RouteClear, RoutePointsEvent } from "facilmap-types";
+import type { RouteClear, RoutePointsEvent } from "facilmap-types";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 }
@@ -11,10 +12,10 @@ interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 export default class RouteLayer extends HighlightablePolyline {
 
 	declare realOptions: RouteLayerOptions;
-	client: Client<any>;
+	client: Client;
 	routeId: string | undefined;
 
-	constructor(client: Client<any>, routeId?: string, options?: RouteLayerOptions) {
+	constructor(client: Client, routeId?: string, options?: RouteLayerOptions) {
 		super([], options);
 		this.client = client;
 		this.routeId = routeId;

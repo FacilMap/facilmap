@@ -1,5 +1,6 @@
-import { Bbox, ID, Point, RouteMode } from "./base";
-import { ExtraInfo, TrackPoint } from "./line";
+import { type Bbox, idValidator, pointValidator, routeModeValidator } from "./base.js";
+import type { ExtraInfo, TrackPoint } from "./line.js";
+import * as z from "zod";
 
 export interface RouteInfo extends Bbox {
 	trackPoints: TrackPoint[];
@@ -10,30 +11,35 @@ export interface RouteInfo extends Bbox {
 	extraInfo?: ExtraInfo;
 }
 
-interface RouteBase {
-	routePoints: Point[];
-	mode: RouteMode;
-}
+const routeBaseValidator = z.object({
+	routePoints: z.array(pointValidator),
+	mode: routeModeValidator
+});
+type RouteBase = z.infer<typeof routeBaseValidator>;
 
-export interface RouteCreate extends RouteBase {
-	routeId?: string;
-}
+export const routeCreateValidator = routeBaseValidator.extend({
+	routeId: z.string().optional()
+});
+export type RouteCreate = z.infer<typeof routeCreateValidator>;
 
-export type RouteClear = {
-	routeId?: string;
-};
+export const routeClearValidator = z.object({
+	routeId: z.string().optional()
+});
+export type RouteClear = z.infer<typeof routeClearValidator>;
 
-export interface LineToRouteCreate {
+export const lineToRouteCreateValidator = z.object({
 	/** The ID of the line. */
-	id: ID;
-	routeId?: string;
-}
+	id: idValidator,
+	routeId: z.string().optional()
+});
+export type LineToRouteCreate = z.infer<typeof lineToRouteCreateValidator>;
 
 export interface Route extends RouteBase, RouteInfo {
 	routeId?: string;
 }
 
-export interface RouteRequest {
-	destinations: Point[];
-	mode: RouteMode;
-}
+export const routeRequestValidator = z.object({
+	destinations: z.array(pointValidator),
+	mode: routeModeValidator
+});
+export type RouteRequest = z.infer<typeof routeRequestValidator>;

@@ -1,11 +1,9 @@
-import { FindOnMapResult, PadId } from "facilmap-types";
-import Sequelize, { ModelCtor } from "sequelize";
-import Database from "./database";
-import { LineModel } from "./line";
-import { MarkerModel } from "./marker";
-import similarity from "string-similarity";
-
-const Op = Sequelize.Op;
+import type { FindOnMapResult, PadId } from "facilmap-types";
+import { type ModelStatic, Op, and, col, fn, where } from "sequelize";
+import Database from "./database.js";
+import type { LineModel } from "./line.js";
+import type { MarkerModel } from "./marker.js";
+import { compareTwoStrings } from "string-similarity";
 
 export default class DatabaseSearch {
 
@@ -17,11 +15,11 @@ export default class DatabaseSearch {
 
 	async search(padId: PadId, searchText: string): Promise<Array<FindOnMapResult>> {
 		const objects = (await Promise.all([ "Marker", "Line" ].map(async (kind) => {
-			const model = this._db._conn.model(kind) as ModelCtor<MarkerModel | LineModel>;
+			const model = this._db._conn.model(kind) as ModelStatic<MarkerModel | LineModel>;
 			const objs = await model.findAll<MarkerModel | LineModel>({
-				where: Sequelize.and(
+				where: and(
 					{ padId },
-					Sequelize.where(Sequelize.fn("lower", Sequelize.col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
+					where(fn("lower", col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 				),
 				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "symbol" ] : [ "top", "left", "bottom", "right" ])
 			});
@@ -29,7 +27,7 @@ export default class DatabaseSearch {
 			return objs.map((obj) => ({
 				...obj.toJSON(),
 				kind: kind.toLowerCase() as any,
-				similarity: similarity.compareTwoStrings(searchText, obj.name ?? '')
+				similarity: compareTwoStrings(searchText, obj.name ?? '')
 			}));
 		}))).flat();
 

@@ -58,6 +58,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 		presets: [
 			[
 				// places to see
+				{ key: "abandoned", query: `(nwr[~"^abandoned(:|$)"~"."][!"abandoned:highway"];nwr[~"^ruins(:|$)"~"."];)`, label: "Abandoned" },
 				{ key: "artscentre", query: "(node[amenity=arts_centre];way[amenity=arts_centre];rel[amenity=arts_centre];)", label: "Arts centre" },
 				{ key: "artwork", query: "(node[tourism=artwork][artwork_type!~'statue'];way[tourism=artwork];rel[tourism=artwork];)", label: "Artwork" },
 				{ key: "attraction", query: "(node[tourism=attraction];way[tourism=attraction];rel[tourism=attraction];)", label: "Attraction" },
@@ -71,6 +72,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 				{ key: "monument", query: "(node[historic~'^monument$|^memorial$'];way[historic~'^monument$|^memorial$'];rel[historic~'^monument$|^memorial$'];)", label: "Monument/memorial" },
 				{ key: "monumentaltree", query: "(node[natural=tree][monument=yes];)", label: "Monumental Tree" },
 				{ key: "museum", query: "(node[tourism=museum];way[tourism=museum];rel[tourism=museum];)", label: "Museum" },
+				{ key: "nudism", query: "nwr[nudism][nudism!=no]", label: "Nudism" },
 				{ key: "picnic", query: "(node[tourism=picnic_site];way[tourism=picnic_site];rel[tourism=picnic_site];node[leisure=picnic_table];)", label: "Picnic" },
 				{ key: "statue", query: "(node[historic=statue];node[landmark=statue];node[tourism=artwork][artwork_type=statue];)", label: "Statue" },
 				{ key: "themepark", query: "(node[tourism=theme_park];way[tourism=theme_park];rel[tourism=theme_park];)", label: "Theme park" },
@@ -142,6 +144,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 				{ key: "cosmeticsshop", query: "(node[shop=cosmetics];way[shop=cosmetics];rel[shop=cosmetics];)", label: "Cosmetics" },
 				{ key: "departmentstore", query: "(node[shop=department_store];way[shop=department_store];rel[shop=department_store];)", label: "Department store" },
 				{ key: "diyshop", query: "(node[shop~'doityourself|hardware'];way[shop~'doityourself|hardware'];rel[shop~'doityourself|hardware'];)", label: "DIY/hardware" },
+				{ key: "florist", query: "(nwr[shop=florist];nwr[shop=garden_centre];)", label: "Florist" },
 				{ key: "gardencentre", query: "(node[shop=garden_centre];way[shop=garden_centre];rel[shop=garden_centre];)", label: "Garden centre" },
 				{ key: "generalshop", query: "(node[shop=general];way[shop=general];rel[shop=general];)", label: "General" },
 				{ key: "giftshop", query: "(node[shop=gift];way[shop=gift];rel[shop=gift];)", label: "Gift" },

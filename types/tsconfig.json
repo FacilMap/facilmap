@@ -1,14 +1,11 @@
 {
+	"extends": "../tsconfig.base.json",
 	"compilerOptions": {
-		"target": "esnext",
-		"module": "CommonJS",
-		"esModuleInterop": true,
-		"strict": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "dist",
-		"moduleResolution": "node",
-		"noErrorTruncation": true,
-		"skipLibCheck": true
-	}
+		"outDir": "./out",
+		"composite": true
+	},
+	"references": [
+		{ "path": "./tsconfig.node.json" }
+	],
+	"include": ["src/**/*"]
 }

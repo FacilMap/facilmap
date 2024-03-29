@@ -7,7 +7,7 @@
 * Smartphone-friendly interface and Progressive Web App
 * Create collaborative maps, add markers, lines and routes and collaborate live through a share link
 * View GPX/KML/OSM/GeoJSON files or import them to a collaborative map
-* Export collaborative maps to GPX or GeoJSON to import them into Osmand or other apps
+* Export collaborative maps to GPX or GeoJSON to import them into OsmAnd or other apps
 * Link or embed a read-only or editable version of a collaborative map on your website
 * Define different types of markers/lines with custom form fields to be filled out
 * Create custom views where markers/lines are shown/hidden based on their form field values

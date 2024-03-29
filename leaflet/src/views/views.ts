@@ -1,12 +1,12 @@
-import { View } from "facilmap-types";
+import type { CRU, View } from "facilmap-types";
 import { fmToLeafletBbox, leafletToFmBbox, pointsEqual } from "../utils/leaflet";
 import { Map } from "leaflet";
 import { getVisibleLayers, setVisibleLayers } from "../layers";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import OverpassLayer from "../overpass/overpass-layer";
 import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from "../overpass/overpass-utils";
 
-export type UnsavedView = Omit<View, 'id' | 'padId' | 'name'>;
+export type UnsavedView = Omit<View<CRU.CREATE>, 'name'>;
 
 export function getCurrentView(map: Map, { includeFilter = false, overpassLayer }: { includeFilter?: boolean; overpassLayer?: OverpassLayer } = {}): UnsavedView {
 	const visibleLayers = getVisibleLayers(map);
@@ -49,7 +49,7 @@ export function displayView(map: Map, view?: UnsavedView | null, { _zoomFactor =
 		map.setView(bounds.getCenter(), map.getBoundsZoom(bounds, view === DEFAULT_VIEW) + _zoomFactor);
 	}
 
-	map.setFmFilter(view.filter);
+	map.setFmFilter(view.filter ?? undefined);
 }
 
 export function isAtView(map: Map, view = DEFAULT_VIEW, { overpassLayer }: { overpassLayer?: OverpassLayer } = {}): boolean {

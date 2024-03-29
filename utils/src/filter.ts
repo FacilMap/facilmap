@@ -1,8 +1,10 @@
-import { compileExpression as filtrexCompileExpression } from 'filtrex';
-import { clone, flattenObject, getProperty, quoteRegExp } from "./utils";
-import { ID, Marker, Line, Type, Field } from "facilmap-types";
+import { compileExpression as filtrexCompileExpression } from "filtrex";
+import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
+import type { ID, Marker, Line, Type, CRU } from "facilmap-types";
+import { cloneDeep } from "lodash-es";
+import { normalizeFieldValue } from "./objects";
 
-export type FilterFunc = (obj: Marker<any> | Line<any>, type: Type) => boolean;
+export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
@@ -108,14 +110,14 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 	return ret;
 }
 
-export function prepareObject<T extends Marker | Marker<Map<string, string>> | Line | Line<Map<string, string>>>(obj: T, type: Type): T & { type?: Type["type"] } {
-	obj = clone(obj);
+export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: Type): T & { type?: Type["type"] } {
+	obj = cloneDeep(obj);
 
 	for (const field of type.fields) {
 		if (Object.getPrototypeOf(obj.data)?.set)
-			(obj.data as any).set(field.name, normalizeField(field, (obj.data as any).get(field.name)));
+			(obj.data as any).set(field.name, normalizeFieldValue(field, (obj.data as any).get(field.name)));
 		else
-			(obj.data as any)[field.name] = normalizeField(field, (obj.data as any)[field.name]);
+			(obj.data as any)[field.name] = normalizeFieldValue(field, (obj.data as any)[field.name]);
 	}
 
 	const ret = {
@@ -127,17 +129,4 @@ export function prepareObject<T extends Marker | Marker<Map<string, string>> | L
 		ret.type = type.type;
 
 	return ret;
-}
-
-export function normalizeField(field: Field, value: string): string {
-	if(value == null)
-		value = field['default'] || "";
-
-	if(field.type == "checkbox")
-		value = value == "1" ? "1" : "0";
-
-	if(field.type == "dropdown" && !field.options?.some((option) => option.value == value) && field.options?.[0])
-		value = field.options[0].value;
-
-	return value;
 }

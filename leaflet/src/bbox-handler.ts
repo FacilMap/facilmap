@@ -1,5 +1,6 @@
-import Client, { ClientEvents } from "facilmap-client";
-import { EventHandler } from "facilmap-types";
+import type Client from "facilmap-client";
+import type { ClientEvents } from "facilmap-client";
+import type { EventHandler } from "facilmap-types";
 import { Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
@@ -14,9 +15,9 @@ export default class BboxHandler extends Handler {
 
 	margin = 50;
 
-	client: Client<any>;
+	client: Client;
 
-	constructor(map: Map, client: Client<any>) {
+	constructor(map: Map, client: Client) {
 		super(map);
 		this.client = client;
 	}
@@ -35,7 +36,7 @@ export default class BboxHandler extends Handler {
 			this._map.unproject(pixelBounds.getBottomLeft(), zoom),
 			this._map.unproject(pixelBounds.getTopRight(), zoom)
 		);
-		this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
+		void this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
 	}
 
 	handleMoveEnd = (): void => {

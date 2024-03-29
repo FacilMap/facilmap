@@ -1,25 +1,13 @@
-import { Shape, Symbol } from "facilmap-types";
+import type { Shape, Symbol } from "facilmap-types";
 import { makeTextColour, quoteHtml } from "facilmap-utils";
-import L, { Icon } from "leaflet";
-import { memoize } from "lodash";
+import { Icon, type IconOptions } from "leaflet";
+import { memoize } from "lodash-es";
+import iconKeys, { coreIconKeys } from "virtual:icons:keys";
+import rawIconsCore from "virtual:icons:core";
 
-const rawIconsContext = require.context("../../assets/icons");
-const rawIcons: Record<string, Record<string, string>> = {};
-for (const key of rawIconsContext.keys() as string[]) {
-	const [set, fname] = key.split("/").slice(-2);
+export { coreIconKeys as coreSymbolList };
 
-	if (!rawIcons[set])
-		rawIcons[set] = {};
-
-	rawIcons[set][fname.replace(/\.svg$/, "")] = rawIconsContext(key);
-}
-
-rawIcons["fontawesome"] = {};
-for (const name of ["arrow-left", "arrow-right", "biking", "car-alt", "chart-line", "copy", "info-circle", "slash", "walking"]) {
-	rawIcons["fontawesome"][name] = require(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
-}
-
-export const symbolList = Object.keys(rawIcons).map((key) => Object.keys(rawIcons[key])).flat();
+export const symbolList: string[] = Object.values(iconKeys).flat();
 
 export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
 
@@ -154,24 +142,61 @@ export const getLetterOffset = memoize((letter: string): { x: number, y: number 
 	};
 });
 
-export function getSymbolCode(colour: string, size: number, symbol?: Symbol): string {
+let rawIconsExtra: (typeof import("virtual:icons:extra"))["default"];
+
+/**
+ * Downloads the icons chunk to have them already downloaded the first time the icon code is needed.
+ */
+export async function preloadExtraSymbols(): Promise<void> {
+	if (!rawIconsExtra) {
+		rawIconsExtra = (await import("virtual:icons:extra")).default;
+	}
+}
+
+function symbolNeedsPreload(symbol: Symbol | undefined): boolean {
+	return !!symbol && symbolList.includes(symbol) && !coreIconKeys.includes(symbol);
+}
+
+export async function preloadSymbol(symbol: Symbol | undefined): Promise<void> {
+	if (symbolNeedsPreload(symbol)) {
+		await preloadExtraSymbols();
+	}
+}
+
+export function isSymbolPreloaded(symbol: Symbol | undefined): boolean {
+	return !symbolNeedsPreload(symbol) || !!rawIconsExtra;
+}
+
+function getRawSymbolCodeSync(symbol: Symbol): [set: string, code: string] {
+	if (coreIconKeys.includes(symbol)) {
+		const set = Object.keys(rawIconsCore).filter((i) => (rawIconsCore[i][symbol] != null))[0];
+		return [set, rawIconsCore[set][symbol]];
+	} else if (symbolList.includes(symbol)) {
+		const set = Object.keys(rawIconsExtra).filter((i) => (rawIconsExtra[i][symbol] != null))[0];
+		return [set, rawIconsExtra[set][symbol]];
+	} else {
+		throw new Error(`Unknown icon ${symbol}.`);
+	}
+}
+
+export function getSymbolCodeSync(colour: string, size: number, symbol?: Symbol): string {
 	if(symbol && symbolList.includes(symbol)) {
-		const set = Object.keys(rawIcons).filter((i) => (rawIcons[i][symbol] != null))[0];
+		const [set, code] = getRawSymbolCodeSync(symbol);
 
 		if(set == "osmi") {
-			return `<g transform="scale(${size / sizes.osmi})">${rawIcons[set][symbol].replace(/#000/g, colour)}</g>`;
+			return `<g transform="scale(${size / sizes.osmi})">${code.replace(/#000/g, colour)}</g>`;
 		}
 
-		const widthMatch = rawIcons[set][symbol].match(/^<svg [^>]* width="([0-9.]+)"/);
-		const heightMatch = rawIcons[set][symbol].match(/^<svg [^>]* height="([0-9.]+)"/);
-		const viewBoxMatch = rawIcons[set][symbol].match(/^<svg [^>]* viewBox="([ 0-9.]+)"/);
+		const widthMatch = code.match(/^<svg [^>]* width="([0-9.]+)"/);
+		const heightMatch = code.match(/^<svg [^>]* height="([0-9.]+)"/);
+		const viewBoxMatch = code.match(/^<svg [^>]* viewBox="([ 0-9.]+)"/);
 
 		const width = Number(widthMatch ? widthMatch[1] : viewBoxMatch![1].split(" ")[2]);
 		const height = Number(heightMatch ? heightMatch[1] : viewBoxMatch![1].split(" ")[3]);
 		const scale = size / sizes[set];
 		const moveX = (sizes[set] - width) / 2;
 		const moveY = (sizes[set] - height) / 2;
-		const content = rawIcons[set][symbol].replace(/^<svg [^>]*>/, "").replace(/<\/svg>$/, "");
+		const content = code.replace(/^<svg [^>]*>/, "").replace(/<\/svg>$/, "");
 
 		return `<g transform="scale(${scale}) translate(${moveX}, ${moveY})" fill="${colour}">${content}</g>`;
 	} else if (symbol && symbol.length == 1) {
@@ -190,29 +215,44 @@ export function getSymbolCode(colour: string, size: number, symbol?: Symbol): st
 	return `<circle style="fill:${colour}" cx="${Math.floor(size / 2)}" cy="${Math.floor(size / 2)}" r="${Math.floor(size / 6)}" />`;
 }
 
-export function getSymbolUrl(colour: string, height: number, symbol?: Symbol): string {
+export async function getSymbolCode(colour: string, size: number, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolCodeSync(colour, size, symbol);
+}
+
+export function getSymbolUrlSync(colour: string, height: number, symbol?: Symbol): string {
 	const svg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 	`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${height}" height="${height}" viewbox="0 0 24 24" version="1.1">` +
-		getSymbolCode(colour, 24, symbol) +
+		getSymbolCodeSync(colour, 24, symbol) +
 	`</svg>`;
 
 	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): string {
+export async function getSymbolUrl(colour: string, height: number, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolUrlSync(colour, height, symbol);
+}
+
+export function getSymbolHtmlSync(colour: string, height: number | string, symbol?: Symbol): string {
 	return `<svg width="${height}" height="${height}" viewbox="0 0 24 24">` +
-		getSymbolCode(colour, 24, symbol) +
+		getSymbolCodeSync(colour, 24, symbol) +
 	`</svg>`;
+}
+
+export async function getSymbolHtml(colour: string, height: number | string, symbol?: Symbol): Promise<string> {
+	await preloadSymbol(symbol);
+	return getSymbolHtmlSync(colour, height, symbol);
 }
 
 let idCounter = 0;
 
-export function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export function getMarkerCodeSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
 	const borderColour = makeTextColour(colour, 0.3);
 	const id = `${idCounter++}`;
 	const colourCode = colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour;
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const symbolCode = getSymbolCode(borderColour, shapeObj.symbolSize, symbol);
+	const symbolCode = getSymbolCodeSync(borderColour, shapeObj.symbolSize, symbol);
 	const translateX = `${Math.floor(shapeObj.center[0] - shapeObj.symbolSize / 2)}`;
 	const translateY = `${Math.floor(shapeObj.center[1] - shapeObj.symbolSize / 2)}`;
 
@@ -226,36 +266,105 @@ export function getMarkerCode(colour: string, height: number, symbol?: Symbol, s
 	);
 }
 
-export function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export async function getMarkerCode(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+	await preloadSymbol(symbol);
+	return getMarkerCodeSync(colour, height, symbol, shape, highlight);
+}
+
+export function getMarkerUrlSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
 	return "data:image/svg+xml,"+encodeURIComponent(
 		`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}" version="1.1">` +
-			getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
+			getMarkerCodeSync(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
 		`</svg>`
 	);
 }
 
-export function getMarkerHtml(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
+export async function getMarkerUrl(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+	await preloadSymbol(symbol);
+	return getMarkerUrlSync(colour, height, symbol, shape, highlight);
+}
+
+export function getMarkerHtmlSync(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): string {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
 	return (
 		`<svg width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}">` +
-			getMarkerCode(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
+			getMarkerCodeSync(colour, SHAPE_HEIGHT, symbol, shape, highlight) +
 		`</svg>`
 	);
+}
+
+export async function getMarkerHtml(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Promise<string> {
+	await preloadSymbol(symbol);
+	return getMarkerHtmlSync(colour, height, symbol, shape, highlight);
+}
+
+export const TRANSPARENT_IMAGE_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+
+declare global {
+	interface HTMLElement {
+		_fmIconAbortController?: AbortController;
+	}
+}
+
+/**
+ * A Leaflet icon that accepts a promise for its URL and will update the image src when the promise is resolved.
+ */
+export class AsyncIcon extends Icon {
+	private _asyncIconUrl?: Promise<string>;
+
+	constructor(options: Omit<IconOptions, "iconUrl"> & { iconUrl: string | Promise<string> }) {
+		super({
+			...options,
+			iconUrl: typeof options.iconUrl === "string" ? options.iconUrl : TRANSPARENT_IMAGE_URL
+		});
+
+		if (typeof options.iconUrl !== "string") {
+			this._asyncIconUrl = Promise.resolve(options.iconUrl);
+			this._asyncIconUrl.then((url) => {
+				this.options.iconUrl = url;
+				delete this._asyncIconUrl;
+			}).catch((err) => {
+				console.error("Error loading async icon", err);
+			});
+		}
+	}
+
+	override createIcon(oldIcon?: HTMLElement): HTMLElement {
+		const icon = super.createIcon(oldIcon);
+
+		if (this._asyncIconUrl) {
+			icon._fmIconAbortController?.abort();
+			const abortController = new AbortController();
+			icon._fmIconAbortController = abortController;
+			void this._asyncIconUrl.then((url) => {
+				if (!icon._fmIconAbortController!.signal.aborted) {
+					icon.setAttribute("src", url);
+				}
+			});
+		}
+
+		return icon;
+	}
 }
 
 export function getMarkerIcon(colour: string, height: number, symbol?: Symbol, shape?: Shape, highlight = false): Icon {
 	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
 	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
-	return L.icon({
-		iconUrl: getMarkerUrl(colour, height, symbol, shape, highlight),
+	const result = new AsyncIcon({
+		iconUrl: (
+			isSymbolPreloaded(symbol) ? getMarkerUrlSync(colour, height, symbol, shape, highlight)
+			: getMarkerUrl(colour, height, symbol, shape, highlight)
+		),
 		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
 		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],
 		popupAnchor: [0, -height]
 	});
+
+	return result;
 }
 
 
@@ -271,7 +380,7 @@ export function getSymbolForTags(tags: Record<string, string>): Symbol {
 	const tagWords = Object.entries(tags).flatMap(([k, v]) => (RELEVANT_TAGS.includes(k) ? v.split(/_:/) : []));
 	let result: Symbol = "";
 	let resultMatch: number = 0;
-	for (const icon of Object.keys(rawIcons.osmi)) {
+	for (const icon of iconKeys.osmi) {
 		const iconWords = icon.split("_");
 		const match = tagWords.filter((word) => iconWords.includes(word)).length;
 		if (match > resultMatch) {

@@ -29,7 +29,7 @@ Give the type a name and select whether it is a marker or a line type. The meani
 
 ## Default style
 
-By default, markers are red, 25 pixels tall, have no icon and a drop shape. Lines by default are blue, 4 pixels wide and use the “straight line” route mode. These settings can be changed for each individual marker.
+By default, markers are red, 30 pixels tall, have no icon and a drop shape. Lines by default are blue, 4 pixels wide, solid and use the “straight line” route mode. These settings can be changed for each individual marker/line.
 
 Using custom types, you can change these defaults. You can also make some or all of the values fixed, which means that they cannot be changed for an individual marker/line but are the same for all markers/lines of this type.
 

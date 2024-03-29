@@ -1,4 +1,12 @@
-import $ from "jquery";
+import { setConfig, type InjectedConfig } from "facilmap-utils";
 
-const config = JSON.parse($("meta[name=fmConfig]").attr("content")!);
+const config: InjectedConfig = JSON.parse(document.querySelector("meta[name=fmConfig]")!.getAttribute("content")!);
+
+setConfig({
+	nominatimUrl: config.nominatimUrl,
+	openElevationApiUrl: config.openElevationApiUrl,
+	openElevationThrottleMs: config.openElevationThrottleMs,
+	openElevationMaxBatchSize: config.openElevationMaxBatchSize
+});
+
 export default config;

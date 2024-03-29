@@ -1,16 +1,15 @@
-import { LatLng, latLng, LatLngBounds, latLngBounds, Map } from "leaflet";
-import { fmToLeafletBbox, HashQuery, OverpassElement } from "facilmap-leaflet";
-import { RouteWithTrackPoints } from "facilmap-client";
-import { SelectedItem } from "./selection";
-import { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
-import { Geometry } from "geojson";
+import { type LatLng, latLng, type LatLngBounds, latLngBounds, type Map } from "leaflet";
+import { fmToLeafletBbox, type HashQuery, type OverpassElement } from "facilmap-leaflet";
+import type { RouteWithTrackPoints } from "facilmap-client";
+import type { SelectedItem } from "./selection";
+import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
+import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { MapComponents } from "../components/leaflet-map/leaflet-map";
-import { decodeLonLatUrl } from "facilmap-utils";
-import { EventBus } from "../components/leaflet-map/events";
-import { Client } from "./decorators";
-import StringMap from "./string-map";
-import { Context } from "../components/facilmap/facilmap";
+import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+import type { ClientContext } from "../components/facil-map-context-provider/client-context";
+import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
+import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import { toRef, type DeepReadonly } from "vue";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -18,7 +17,7 @@ export type ZoomDestination = {
 	bounds?: LatLngBounds;
 };
 
-export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination | undefined {
+export function getZoomDestinationForGeoJSON(geojson: DeepReadonly<Geometry>): ZoomDestination | undefined {
 	if (geojson.type == "GeometryCollection")
 		return combineZoomDestinations(geojson.geometries.map((geo) => getZoomDestinationForGeoJSON(geo)));
 	else if (geojson.type == "Point")
@@ -33,11 +32,11 @@ export function getZoomDestinationForGeoJSON(geojson: Geometry): ZoomDestination
 		return undefined;
 }
 
-export function getZoomDestinationForMarker(marker: Marker<StringMap> | FindOnMapMarker | OverpassElement): ZoomDestination {
+export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker | OverpassElement): ZoomDestination {
 	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
 }
 
-export function getZoomDestinationForLine(line: Line<StringMap> | FindOnMapLine): ZoomDestination {
+export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
 	return { bounds: fmToLeafletBbox(line) };
 }
 
@@ -45,7 +44,7 @@ export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDes
 	return { bounds: fmToLeafletBbox(route) };
 }
 
-export function getZoomDestinationForSearchResult(result: SearchResult): ZoomDestination | undefined {
+export function getZoomDestinationForSearchResult(result: DeepReadonly<SearchResult>): ZoomDestination | undefined {
 	const dest: ZoomDestination = {};
 
 	if (result.boundingbox)
@@ -109,7 +108,7 @@ export function flyTo(map: Map, destination: ZoomDestination, smooth = true): vo
 		map.setView(dest.center, dest.zoom, { animate: false });
 }
 
-export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): HashQuery | undefined {
+export function getHashQuery(map: Map, client: ClientContext, items: DeepReadonly<SelectedItem>[]): HashQuery | undefined {
 	if (items.length == 1) {
 		if (items[0].type == "searchResult") {
 			const destination = getZoomDestinationForSearchResult(items[0].result);
@@ -121,13 +120,13 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 			const marker = client.markers[items[0].id];
 			return {
 				query: `m${items[0].id}`,
-				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: marker.name } : {})
+				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: normalizeMarkerName(marker.name) } : {})
 			};
 		} else if (items[0].type == "line") {
 			const line = client.lines[items[0].id];
 			return {
 				query: `l${items[0].id}`,
-				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: line.name } : {})
+				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: normalizeLineName(line.name) } : {})
 			};
 		}
 	}
@@ -135,39 +134,44 @@ export function getHashQuery(map: Map, client: Client, items: SelectedItem[]): H
 	return undefined;
 }
 
-export async function openSpecialQuery(query: string, context: Context, client: Client, mapComponents: MapComponents, mapContext: EventBus, zoom: boolean, smooth = true): Promise<boolean> {
-	if(query.match(/ to /i)) {
-		mapContext.$emit("fm-route-set-query", query, zoom, smooth);
-		mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-route-form-tab`);
+export async function openSpecialQuery(query: string, context: FacilMapContext, zoom: boolean, smooth = true): Promise<boolean> {
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
+	const searchBoxContext = toRef(() => context.components.searchBox);
+	const routeFormTabContext = toRef(() => context.components.routeFormTab);
+
+	if(searchBoxContext.value && routeFormTabContext.value && query.match(/ to /i)) {
+		routeFormTabContext.value.setQuery(query, zoom, smooth);
+		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 		return true;
 	}
 
 	const lonlat = decodeLonLatUrl(query);
 	if(lonlat) {
 		if (zoom)
-			flyTo(mapComponents.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
+			flyTo(mapContext.value.components.map, { center: latLng(lonlat.lat, lonlat.lon), zoom: lonlat.zoom }, smooth);
 		return true;
 	}
 
 	const markerId = Number(query.match(/^m(\d+)$/)?.[1]);
 	if (markerId) {
-		let marker = client.markers[markerId];
+		let marker = client.value.markers[markerId];
 		if (!marker) {
 			try {
-				marker = await client.getMarker({ id: markerId });
+				marker = await client.value.getMarker({ id: markerId });
 			} catch (err) {
 				console.error("Could not find marker", err);
 			}
 		}
 
 		if (marker) {
-			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
 
 			if (zoom)
-				flyTo(mapComponents.map, getZoomDestinationForMarker(marker), smooth);
+				flyTo(mapContext.value.components.map, getZoomDestinationForMarker(marker), smooth);
 
 			setTimeout(() => {
-				mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-marker-info-tab`);
+				searchBoxContext.value?.activateTab(`fm${context.id}-marker-info-tab`);
 			}, 0);
 
 			return true;
@@ -175,16 +179,16 @@ export async function openSpecialQuery(query: string, context: Context, client: 
 	}
 
 	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
-	if (lineId && client.lines[lineId]) {
-		const line = client.lines[lineId];
+	if (lineId && client.value.lines[lineId]) {
+		const line = client.value.lines[lineId];
 
-		mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }]);
+		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
 
 		if (zoom)
-			flyTo(mapComponents.map, getZoomDestinationForLine(line), smooth);
+			flyTo(mapContext.value.components.map, getZoomDestinationForLine(line), smooth);
 
 		setTimeout(() => {
-			mapContext.$emit("fm-search-box-show-tab", `fm${context.id}-line-info-tab`);
+			searchBoxContext.value?.activateTab(`fm${context.id}-line-info-tab`);
 		}, 0);
 
 		return true;

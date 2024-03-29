@@ -1,6 +1,6 @@
-import { Map, MarkerClusterGroup, MarkerClusterGroupOptions } from "leaflet";
-import Client from "facilmap-client";
-import { PadData } from "facilmap-types";
+import { Map, MarkerClusterGroup, type MarkerClusterGroupOptions } from "leaflet";
+import type Client from "facilmap-client";
+import type { PadData } from "facilmap-types";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -10,10 +10,10 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 
 export default class MarkerCluster extends MarkerClusterGroup {
 
-	client: Client<any>;
-	_maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
+	protected client: Client;
+	protected _maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
 
-	constructor(client: Client<any>, options?: MarkerClusterOptions) {
+	constructor(client: Client, options?: MarkerClusterOptions) {
 		super({
 			showCoverageOnHover: false,
 			maxClusterRadius: 50,
@@ -26,17 +26,21 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this.client = client;
 	}
 
-	handlePadData = (padData: PadData): void => {
+	protected handlePadData = (padData: PadData): void => {
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
-		if (padData.clusterMarkers && !isClusterEnabled) {
-			this.options.maxClusterRadius = this._maxClusterRadiusBkp;
-			this._maxClusterRadiusBkp = undefined;
-			(this as any)._generateInitialClusters();
-		} else if (!padData.clusterMarkers && isClusterEnabled) {
-			this._maxClusterRadiusBkp = this.options.maxClusterRadius;
-			this.options.maxClusterRadius = 0;
-			(this as any)._generateInitialClusters();
+		if (!!padData.clusterMarkers !== isClusterEnabled) {
+			if (padData.clusterMarkers) {
+				this.options.maxClusterRadius = this._maxClusterRadiusBkp;
+				this._maxClusterRadiusBkp = undefined;
+			} else {
+				this._maxClusterRadiusBkp = this.options.maxClusterRadius;
+				this.options.maxClusterRadius = 0;
+			}
+
+			const layers = this.getLayers();
+			this.clearLayers();
+			this.addLayers(layers);
 		}
 	}
 

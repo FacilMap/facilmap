@@ -1,7 +1,8 @@
-import { ID, SearchResult } from "facilmap-types";
-import { DomEvent, Evented, Handler, LatLngBounds, LeafletEvent, Map, Point, Polyline, Util } from "leaflet";
-import { LinesLayer, MarkerLayer, MarkersLayer, OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
+import type { ID, SearchResult } from "facilmap-types";
+import { DomEvent, Evented, Handler, type LatLngBounds, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
+import { LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
+import type { DeepReadonly } from "vue";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -15,7 +16,7 @@ export type SelectedItem = {
 	element: OverpassElement;
 };
 
-function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
+function isAllowedSibling(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>) {
 	if (["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))
 		return true;
 	else if (a.type == "searchResult" && b.type == "searchResult")
@@ -26,11 +27,11 @@ function isAllowedSibling(a: SelectedItem, b: SelectedItem) {
 		return false;
 }
 
-function byType<T extends SelectedItem["type"]>(items: SelectedItem[], type: T): Array<SelectedItem & { type: T }> {
+function byType<T extends SelectedItem["type"]>(items: Array<DeepReadonly<SelectedItem>>, type: T): Array<SelectedItem & { type: T }> {
 	return items.filter((i) => i.type === type) as any;
 }
 
-function isSame(a: SelectedItem, b: SelectedItem): boolean {
+function isSame(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>): boolean {
 	if ((a.type == "marker" && b.type == "marker") || (a.type == "line" && b.type == "line"))
 		return a.id == b.id;
 	else if (a.type == "searchResult" && b.type == "searchResult")
@@ -43,7 +44,7 @@ function isSame(a: SelectedItem, b: SelectedItem): boolean {
 
 export default class SelectionHandler extends Handler {
 
-	_selection: SelectedItem[] = [];
+	_selection: Array<DeepReadonly<SelectedItem>> = [];
 
 	_markersLayer: MarkersLayer;
 	_linesLayer: LinesLayer;
@@ -51,7 +52,7 @@ export default class SelectionHandler extends Handler {
 	_overpassLayer: OverpassLayer;
 
 	_boxSelectionHandler: BoxSelection;
-	_selectionBeforeBox: SelectedItem[] = [];
+	_selectionBeforeBox: Array<DeepReadonly<SelectedItem>> = [];
 	_isBoxInteraction = false;
 
 	_mapInteraction: number = 0;
@@ -92,6 +93,8 @@ export default class SelectionHandler extends Handler {
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.on("fmInteractionEnd", this.handleMapInteractionEnd);
+
+		this._map.getContainer().addEventListener("click", this.handleMapClickCapture, { capture: true });
 		this._map.getContainer().addEventListener("mousedown", this.handleMapMouseDown);
 		this._map.getContainer().addEventListener("touchstart", this.handleMapMouseDown);
 	}
@@ -105,6 +108,7 @@ export default class SelectionHandler extends Handler {
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
 		this._map.off("fmInteractionEnd", this.handleMapInteractionEnd);
+		this._map.getContainer().removeEventListener("click", this.handleMapClickCapture, { capture: true });
 		this._map.getContainer().removeEventListener("mousedown", this.handleMapMouseDown);
 		this._map.getContainer().removeEventListener("touchstart", this.handleMapMouseDown);
 	}
@@ -133,11 +137,11 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems(without);
 	}
 
-	getSelection(): SelectedItem[] {
+	getSelection(): Array<DeepReadonly<SelectedItem>> {
 		return this._selection;
 	}
 
-	setSelectedItems(items: SelectedItem[], open = false): void {
+	setSelectedItems(items: Array<DeepReadonly<SelectedItem>>, open = false): void {
 		this._selection = items;
 
 		this._markersLayer.setHighlightedMarkers(new Set(
@@ -220,21 +224,38 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems([]);
 	}
 
+	handleMapClickCapture = (e: MouseEvent): void => {
+		if (this._isLongClick) {
+			// Prevent click on map object under mouse cursor
+			e.stopPropagation();
+		}
+	}
+
 	handleMapMouseDown = (e: MouseEvent | TouchEvent): void => {
 		if ("button" in e && e.button != null && e.button != 0) // Only react to left click
 			return;
 		if ("touches" in e && e.touches && e.touches.length != 1)
 			return;
+		if (this._mapInteraction) {
+			return;
+		}
 
 		const pos: Point = this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any);
-		const timeout = setTimeout(() => {
+		let fired = false;
+		let timeout = setTimeout(() => {
 			this._isLongClick = true;
 			this.fire("fmLongClick", { latlng: this._map.mouseEventToLatLng(("touches" in e ? e.touches[0] : e) as any) });
+			fired = true;
 		}, 500);
 
 		const handleMouseMove = (e: any) => {
-			if(pos.distanceTo(this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any)) > (this._map.dragging as any)._draggable.options.clickTolerance)
+			if(pos.distanceTo(this._map.mouseEventToContainerPoint(("touches" in e ? e.touches[0] : e) as any)) > (this._map.dragging as any)._draggable.options.clickTolerance) {
 				clear();
+
+				if (fired) {
+					this.fire("fmLongClickAbort");
+				}
+			}
 		};
 
 		const handleContextMenu = (e: any) => {

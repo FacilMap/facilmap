@@ -1,111 +1,133 @@
 import { addClickListener } from "facilmap-leaflet";
-import { ID, Type } from "facilmap-types";
-import { MapComponents } from "../components/leaflet-map/leaflet-map";
-import { Client } from "./decorators";
-import { showToast, showErrorToast } from "./toasts";
-import { getUniqueId } from "./utils";
+import type { ID, Type } from "facilmap-types";
+import type { ToastContext } from "../components/ui/toasts/toasts.vue";
+import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
+import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import { addToMap } from "./add";
 
-export function drawMarker(type: Type, component: Vue, client: Client, mapComponents: MapComponents): void {
-	const clickListener = addClickListener(mapComponents.map, async (point) => {
-		component.$bvToast.hide("fm-draw-add-marker");
+export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
+	const mapContext = requireMapContext(context);
+	const clickListener = addClickListener(mapContext.value.components.map, async (point) => {
+		toasts.hideToast("fm-draw-add-marker");
 
-		try {
-			const marker = await client.addMarker({
-				lat: point.lat,
-				lon: point.lon,
-				typeId: type.id
-			});
+		if (point) {
+			try {
+				const selection = await addToMap(context, [
+					{ marker: { lat: point.lat, lon: point.lon }, type }
+				]);
 
-			mapComponents.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
-
-			if (!mapComponents.map.fmFilterFunc(marker, client.types[marker.typeId]))
-				showToast(component, getUniqueId("fm-draw-add-marker"), `${type.name} successfully added`, "The marker was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
-		} catch (err) {
-			showErrorToast(component, "fm-draw-add-marker", "Error adding marker", err);
+				mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
+			} catch (err) {
+				toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
+			}
 		}
 	});
 
-	showToast(component, "fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+	toasts.showToast("fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+		noCloseButton: true,
 		actions: [
-			{ label: "Cancel", onClick: () => {
-				component.$bvToast.hide("fm-draw-add-marker");
-				clickListener.cancel();
-			} }
+			{
+				label: "Cancel",
+				onClick: () => {
+					clickListener.cancel();
+				}
+			}
 		]
 	});
 }
 
-export function moveMarker(markerId: ID, component: Vue, client: Client, mapComponents: MapComponents): void {
-	const markerLayer = mapComponents.markersLayer.markersById[markerId];
+export function moveMarker(markerId: ID, context: FacilMapContext, toasts: ToastContext): void {
+	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
+
+	const markerLayer = mapContext.value.components.markersLayer.getLayerByMarkerId(markerId);
 	if(!markerLayer)
 		return;
 
-	component.$bvToast.hide("fm-draw-drag-marker");
+	toasts.hideToast("fm-draw-drag-marker");
 
-	mapComponents.map.fire('fmInteractionStart');
-	mapComponents.markersLayer.lockMarker(markerId);
+	mapContext.value.components.map.fire('fmInteractionStart');
+	mapContext.value.components.markersLayer.lockMarker(markerId);
 
-	async function finish(save: boolean) {
-		component.$bvToast.hide("fm-draw-drag-marker");
+	const finish = async (save: boolean) => {
+		toasts.hideToast("fm-draw-drag-marker");
 
 		markerLayer.dragging!.disable();
 
 		if(save) {
 			try {
 				const pos = markerLayer.getLatLng();
-				await client.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
+				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
 			} catch (err) {
-				showErrorToast(component, "fm-draw-drag-marker", "Error moving marker", err);
+				toasts.showErrorToast("fm-draw-drag-marker", "Error moving marker", err);
 			}
 		}
 
-		mapComponents.markersLayer.unlockMarker(markerId);
-		mapComponents.map.fire('fmInteractionEnd');
-	}
+		mapContext.value.components.markersLayer.unlockMarker(markerId);
+		mapContext.value.components.map.fire('fmInteractionEnd');
+	};
 
-	showToast(component, "fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+	toasts.showToast("fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+		noCloseButton: true,
 		actions: [
-			{ label: "Save", onClick: () => {
-				finish(true);
-			}},
-			{ label: "Cancel", onClick: () => {
-				finish(false);
-			} }
+			{
+				label: "Save",
+				variant: "primary",
+				onClick: () => {
+					void finish(true);
+				}
+			},
+			{
+				label: "Cancel",
+				onClick: () => {
+					void finish(false);
+				}
+			}
 		]
 	});
 
 	markerLayer.dragging!.enable();
 }
 
-export async function drawLine(type: Type, component: Vue, client: Client, mapComponents: MapComponents): Promise<void> {
+export async function drawLine(type: Type, context: FacilMapContext, toasts: ToastContext): Promise<void> {
 	try {
-		component.$bvToast.hide("fm-draw-add-line");
+		toasts.hideToast("fm-draw-add-line");
 
-		const lineTemplate = await client.getLineTemplate({ typeId: type.id });
+		const mapContext = requireMapContext(context);
+		const client = requireClientContext(context);
 
-		showToast(component, "fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
+
+		toasts.showToast("fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+			noCloseButton: true,
 			actions: [
-				{ label: "Finish", onClick: () => {
-					mapComponents.linesLayer.endDrawLine(true);
-				}},
-				{ label: "Cancel", onClick: () => {
-					mapComponents.linesLayer.endDrawLine(false);
-				} }
+				{
+					label: "Finish",
+					variant: "primary",
+					onClick: () => {
+						mapContext.value.components.linesLayer.endDrawLine(true);
+					}
+				},
+				{
+					label: "Cancel",
+					onClick: () => {
+						mapContext.value.components.linesLayer.endDrawLine(false);
+					}
+				}
 			]
 		});
 
-		const routePoints = await mapComponents.linesLayer.drawLine(lineTemplate);
+		const routePoints = await mapContext.value.components.linesLayer.drawLine(lineTemplate);
 
-		component.$bvToast.hide("fm-draw-add-line");
+		toasts.hideToast("fm-draw-add-line");
 
 		if (routePoints) {
-			const line = await client.addLine({ typeId: type.id, routePoints });
-			mapComponents.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
-
-			if (!mapComponents.map.fmFilterFunc(line, client.types[line.typeId]))
-				showToast(component, getUniqueId("fm-draw-add-line"), `${type.name} successfully added`, "The line was successfully added, but the active filter is preventing it from being shown.", { variant: "success", noCloseButton: false });
+			const selection = await addToMap(context, [
+				{ line: { routePoints }, type }
+			]);
+			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 		}
 	} catch (err) {
-		showErrorToast(component, "fm-draw-add-line", "Error adding line", err);
+		toasts.showErrorToast("fm-draw-add-line", "Error adding line", err);
 	}
 }

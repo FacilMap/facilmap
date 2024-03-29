@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html class="fm-facilmap-table">
 	<head>
 		<meta charset="utf-8">
-		<title><%=padData.name%> – FacilMap</title>
+		<title><%=normalizePageTitle(normalizePadName(padData.name), appName)%></title>
 		<base href="../" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 <%
 	if(!padData || padData.searchEngines) {
 -%>
 		<meta name="robots" content="index,nofollow" />
-		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
+		<meta name="description" content="<%=normalizePageDescription(padData.description)%>" />
 <%
 	} else {
 -%>
@@ -17,104 +17,48 @@
 <%
 	}
 -%>
-		<link rel="icon" href="../../static/favicon.svg">
-		<link rel="mask-icon" href="../../static/favicon.svg" color="#00272a">
-		<link rel="apple-touch-icon" href="../../static/app-180.png">
-		<link rel="manifest" href="../../static/manifest.json">
+		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
+		<link rel="mask-icon" href="<%=paths.base%>favicon.svg" color="#00272a">
+		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
+		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
+		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(normalizePadName(padData.name), appName)%>" />
+		<link rel="iframely resizable" href="<%=url%>">
+
+		<style type="text/css">
+<% for (const path of styles) { -%>
+			@import url("<%=paths.base%><%=path%>");
+<% } -%>
+<% if (hasCustomCssFile) { -%>
+			@import url("<%=paths.base%>custom.css");
+<% } -%>
+		</style>
+<% for (const path of scripts) { -%>
+		<script type="module" src="<%=paths.base%><%=path%>"></script>
+<% } -%>
+<% for (const path of preloadScripts) { -%>
+		<link rel="modulepreload" href="<%=paths.base%><%=path%>"/>
+<% } -%>
 	</head>
 	<body>
 		<div class="container-fluid">
-			<h1><%=padData.name%> – FacilMap</h1>
+			<h1><%=normalizePadName(padData.name)%> – <%=appName%></h1>
 <%
-	for(let type of Object.values(types)) {
+	for (const type of types) {
 -%>
-			<h2 role="button" data-toggle="collapse" data-target="#type-<%=type.id%>" aria-expanded="true" aria-controls="type-<%=type.id%>"><svg class="hidden-print" viewbox="0 0 11 15" height="15"><path d="M10.195 7.5l-7.5 7.5L0 12.305 4.805 7.5 0 2.695 2.695 0z"/></svg> <%=type.name%></h2>
-			<div id="type-<%=type.id%>" class="collapse show">
-				<table class="table table-striped table-bordered table-condensed tablesorter" data-sortlist="[[0,0]]">
-					<thead>
-						<tr>
-<%
-		if(!hide.includes("Name")) {
--%>
-							<th>Name</th>
-<%
-		}
-
-		if(type.type == "marker") {
-			if(!hide.includes("Position")) {
--%>
-							<th data-sorter="false">Position</th>
-<%
-			}
-		} else {
-			if(!hide.includes("Distance")) {
--%>
-							<th>Distance</th>
-<%
-			}
-			if(!hide.includes("Time")) {
--%>
-							<th>Time</th>
-<%
-			}
-		}
-
-		for(let field of type.fields) {
-			if(!hide.includes(field.name)) {
--%>
-							<th><%=field.name%></th>
-<%
-			}
-		}
--%>
-						</tr>
-					</thead>
-					<tbody>
-<%
-		for(let object of type.type == "marker" ? type.markers : type.lines) {
--%>
-						<tr>
-<%
-			if(!hide.includes("Name")) {
--%>
-							<td><%=object.name%></td>
-<%
-			}
-
-			if(type.type == "marker") {
-				if(!hide.includes("Position")) {
--%>
-							<td><%=object.lat%>,<%=object.lon%></td>
-<%
-				}
-			} else {
-				if(!hide.includes("Distance")) {
--%>
-							<td><%=utils.round(object.distance, 2)%> km</td>
-<%
-				}
-				if(!hide.includes("Time")) {
--%>
-							<td><% if(object.time != null) { %><%=utils.formatTime(object.time)%> h <%=utils.formatRouteMode(object.mode)%><% } %></td>
-<%
-				}
-			}
-
-			for(let field of type.fields) {
-				if(!hide.includes(field.name)) {
--%>
-							<td><%-utils.formatField(field, object.data[field.name]).trim()%></td>
-<%
-				}
-			}
--%>
-						</tr>
-<%
-		}
--%>
-					</tbody>
-				</table>
-			</div>
+<%-renderSingleTable(type.id, {
+	before: (
+		`\t\t\t<h2 role="button" data-bs-toggle="collapse" data-bs-target="#type-${quoteHtml(type.id)}" aria-expanded="true" aria-controls="type-${quoteHtml(type.id)}"><svg class="d-print-none" viewbox="0 0 11 15" height="15"><path d="M10.195 7.5l-7.5 7.5L0 12.305 4.805 7.5 0 2.695 2.695 0z"/></svg> ${quoteHtml(type.name)}</h2>\n` +
+		`\t\t\t<div id="type-${quoteHtml(type.id)}" class="collapse show">\n`
+	),
+	after: (
+		`\n` +
+		`\t\t\t</div>\n`
+	),
+	leaveEmpty: true,
+	indent: "\t\t\t\t",
+	tableAttrs: { "class": "table table-striped table-bordered table-condensed tablesorter", "data-sortlist": "[[0,0]]" },
+	getThAttrs: (fieldName, isFirst) => (fieldName === "Position" && isFirst ? { "data-sorter": "false" } : { })
+})-%>
 <%
 	}
 -%>

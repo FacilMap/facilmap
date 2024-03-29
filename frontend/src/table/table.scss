@@ -1,0 +1,76 @@
+// Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+//@import "bootstrap/scss/type";
+//@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+//@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+//@import "bootstrap/scss/forms";
+//@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions"; // Needed for collapse
+//@import "bootstrap/scss/dropdown";
+//@import "bootstrap/scss/button-group";
+//@import "bootstrap/scss/nav";
+//@import "bootstrap/scss/navbar";
+//@import "bootstrap/scss/card";
+//@import "bootstrap/scss/accordion";
+//@import "bootstrap/scss/breadcrumb";
+//@import "bootstrap/scss/pagination";
+//@import "bootstrap/scss/badge";
+//@import "bootstrap/scss/alert";
+//@import "bootstrap/scss/progress";
+//@import "bootstrap/scss/list-group";
+//@import "bootstrap/scss/close";
+//@import "bootstrap/scss/toasts";
+//@import "bootstrap/scss/modal";
+//@import "bootstrap/scss/tooltip";
+//@import "bootstrap/scss/popover";
+//@import "bootstrap/scss/carousel";
+//@import "bootstrap/scss/spinners";
+//@import "bootstrap/scss/offcanvas";
+//@import "bootstrap/scss/placeholders";
+
+//@import "bootstrap/scss/helpers";
+
+@import "bootstrap/scss/utilities/api"; // Needed for .d-print-none
+
+h2[aria-expanded=true] svg {
+	transform: rotate(90deg);
+}
+
+table {
+	table-layout: fixed;
+	width: auto !important;
+	max-width: 100%;
+}
+
+th,td {
+	box-sizing: content-box !important;
+	overflow: hidden;
+}
+
+h1,h2,th,td {
+	word-wrap: break-word;
+	word-break: break-word;
+}
+
+.glyphicon:before {
+	content: none;
+}
+
+.glyphicon-chevron-down {
+	background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226.812%22%3E%3Cpath%20d%3D%22M10%201.807L5.005%206.812%200%201.807%201.798%200l3.207%203.206L8.21%200z%22%2F%3E%3C%2Fsvg%3E") no-repeat center;
+}
+
+.glyphicon-chevron-up {
+	background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%226.812%22%3E%3Cpath%20d%3D%22M10%205.005L5.005%200%200%205.005l1.798%201.807%203.207-3.206L8.21%206.812z%22%2F%3E%3C%2Fsvg%3E") no-repeat center;
+}

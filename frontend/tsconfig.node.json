@@ -1,0 +1,13 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"composite": true,
+		"outDir": "out.node"
+	},
+	"include": [
+		"vite.config.ts",
+		"vite-lib.config.ts",
+		"vite-define.ts",
+		"build.ts"
+	]
+}

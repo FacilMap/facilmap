@@ -1,8 +1,10 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, Sequelize } from "sequelize";
-import { FindPadsQuery, FindPadsResult, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults } from "facilmap-types";
-import Database from "./database";
-import { streamEachPromise } from "../utils/streams";
-import { createModel } from "./helpers";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey } from "sequelize";
+import type { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults } from "facilmap-types";
+import Database from "./database.js";
+import { createModel } from "./helpers.js";
+import type { ViewModel } from "./view";
+
+type RawPadData = Omit<PadData, "defaultView"> & { defaultView?: NonNullable<PadData["defaultView"]> };
 
 export interface PadModel extends Model<InferAttributes<PadModel>, InferCreationAttributes<PadModel>> {
 	id: PadId;
@@ -14,8 +16,16 @@ export interface PadModel extends Model<InferAttributes<PadModel>, InferCreation
 	clusterMarkers: boolean;
 	legend1: string;
 	legend2: string;
-	toJSON: () => PadData;
+	defaultViewId: ForeignKey<ViewModel["id"]> | null
+	toJSON: () => RawPadData;
 };
+
+function fixPadData(rawPadData: RawPadData): PadData {
+	return {
+		...rawPadData,
+		defaultView: rawPadData.defaultView ?? null
+	};
+}
 
 export default class DatabasePads {
 
@@ -28,14 +38,14 @@ export default class DatabasePads {
 
 		this.PadModel.init({
 			id : { type: DataTypes.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
-			name: { type: DataTypes.TEXT, allowNull: true, get: function(this: PadModel) { return this.getDataValue("name") || "New FacilMap"; } },
+			name: { type: DataTypes.TEXT, allowNull: false },
 			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			description: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+			description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			legend1: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
-			legend2: { type: DataTypes.STRING, allowNull: false, defaultValue: "" }
+			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
+			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" }
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Pad"
@@ -55,31 +65,25 @@ export default class DatabasePads {
 
 	async getPadData(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { id: padId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ]});
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByWriteId(writeId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { writeId: writeId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByAdminId(adminId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { adminId: adminId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
 	async getPadDataByAnyId(padId: PadId): Promise<PadData | undefined> {
 		const obj = await this.PadModel.findOne({ where: { [Op.or]: { id: padId, writeId: padId, adminId: padId } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj?.toJSON();
+		return obj ? fixPadData(obj.toJSON()) : undefined;
 	}
 
-	async createPad(data: PadDataCreate): Promise<PadData> {
-		if(!data.id || data.id.length == 0)
-			throw new Error("Invalid read-only ID");
-		if(!data.writeId || data.writeId.length == 0)
-			throw new Error("Invalid read-write ID");
-		if(!data.adminId || data.adminId.length == 0)
-			throw new Error("Invalid admin ID");
+	async createPad(data: PadData<CRU.CREATE_VALIDATED>): Promise<PadData> {
 		if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
 			throw new Error("Read-only, read-write and admin ID have to be different from each other.");
 
@@ -90,19 +94,18 @@ export default class DatabasePads {
 
 		const createdObj = await this.PadModel.create(data);
 
-		await this._db.types.createDefaultTypes(data.id);
+		if (data.createDefaultTypes) {
+			await this._db.types.createDefaultTypes(data.id);
+		}
 
-		return createdObj.toJSON() as PadData;
+		return fixPadData(createdObj.toJSON());
 	}
 
-	async updatePadData(padId: PadId, data: PadDataUpdate): Promise<PadData> {
+	async updatePadData(padId: PadId, data: PadData<CRU.UPDATE_VALIDATED>): Promise<PadData> {
 		const oldData = await this.getPadData(padId);
 
 		if(!oldData)
 			throw new Error("Pad " + padId + " could not be found.");
-
-		if(data.id != null && data.id != padId && data.id.length == 0)
-			throw new Error("Invalid read-only ID");
 
 		if(data.id != null && data.id != padId) {
 			if (await this.padIdExists(data.id))
@@ -110,8 +113,6 @@ export default class DatabasePads {
 		}
 
 		if(data.writeId != null && data.writeId != oldData.writeId) {
-			if(data.writeId.length == 0)
-				throw new Error("Invalid read-write ID");
 			if(data.writeId == (data.id != null ? data.id : padId))
 				throw new Error("Read-only and read-write ID cannot be the same.");
 
@@ -120,8 +121,6 @@ export default class DatabasePads {
 		}
 
 		if(data.adminId != null && data.adminId != oldData.adminId) {
-			if(data.adminId.length == 0)
-				throw new Error("Invalid admin ID");
 			if(data.adminId == (data.id != null ? data.id : padId))
 				throw new Error("Read-only and admin ID cannot be the same.");
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
@@ -159,21 +158,21 @@ export default class DatabasePads {
 			await this.updatePadData(padData.id, { defaultViewId: null });
 		}
 
-		await streamEachPromise(this._db.markers.getPadMarkers(padData.id), async (marker) => {
+		for await (const marker of this._db.markers.getPadMarkers(padData.id)) {
 			await this._db.markers.deleteMarker(padData.id, marker.id);
-		});
+		}
 
-		await streamEachPromise(this._db.lines.getPadLines(padData.id, ['id']), async (line) => {
+		for await (const line of this._db.lines.getPadLines(padData.id, ['id'])) {
 			await this._db.lines.deleteLine(padData.id, line.id);
-		});
+		}
 
-		await streamEachPromise(this._db.types.getTypes(padData.id), async (type) => {
+		for await (const type of this._db.types.getTypes(padData.id)) {
 			await this._db.types.deleteType(padData.id, type.id);
-		});
+		}
 
-		await streamEachPromise(this._db.views.getViews(padData.id), async (view) => {
+		for await (const view of this._db.views.getViews(padData.id)) {
 			await this._db.views.deleteView(padData.id, view.id);
-		});
+		}
 
 		await this._db.history.clearHistory(padData.id);
 

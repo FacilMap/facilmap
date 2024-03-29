@@ -3,53 +3,51 @@
 The `FacilMap` component renders a complete FacilMap UI. It can be used like this in a Vue.js app:
 
 ```vue
-<template>
-	<FacilMap base-url="/" server-url="https://facilmap.org/" pad-id="my-map"></FacilMap>
-</template>
-<script>
+<script setup>
 	import { FacilMap } from "facilmap-frontend";
-
-	export default {
-		components: { FacilMap }
-	};
 </script>
+
+<template>
+	<FacilMap
+		baseUrl="https://facilmap.org/"
+		serverUrl="https://facilmap.org/"
+		padId="my-map"
+	></FacilMap>
+</template>
 ```
 
 In a non-Vue.js app, it can be embedded like this:
 
 ```javascript
 import { FacilMap } from "facilmap-frontend";
-import Vue from "vue";
+import Vue, { createApp, defineComponent, h } from "vue";
 
-new Vue({
-	el: "#facilmap", // A selector whose DOM element will be replaced with the FacilMap component
-	components: { FacilMap },
-	render: (h) => (
-		h("FacilMap", {
-			props: {
-				baseUrl: "/",
-				serverUrl: "https://facilmap.org/",
-				padId: "my-map"
-			}
-		})
-	)
-});
+createApp(defineComponent({
+	setup() {
+		return () => h(FacilMap, {
+			baseUrl: "https://facilmap.org/",
+			serverUrl: "https://facilmap.org/",
+			padId: "my-map"
+		});
+	}
+})).mount(document.getElementById("facilmap")!); // A DOM element that be replaced with the FacilMap component
 ```
 
 ## Props
 
 Note that all of these props are reactive and can be changed while the map is open.
 
-* `baseUrl` (string, required): Collaborative maps should be reachable under `${baseUrl}${mapId}`, while the general map should be available under `${baseUrl}`. For the default FacilMap installation, `baseUrl` would be `https://facilmap.org/` (or simply `/`). It needs to end with a slash. It is used to create the map URL for example in the map settings or when switching between different maps (only in interactive mode).
+* `baseUrl` (string, required): Collaborative maps should be reachable under `${baseUrl}${mapId}`, while the general map should be available under `${baseUrl}`. For the default FacilMap installation, `baseUrl` would be `https://facilmap.org/`. It needs to end with a slash. It is used to create the map URL for example in the map settings or when switching between different maps (only in interactive mode).
 * `serverUrl` (string, required): The URL under which the FacilMap server is running, for example `https://facilmap.org/`. This is invisible to the user.
-* `padId` (string, optional): The ID of the collaborative map that should be opened. If this is undefined, no map is opened. This is reactive, when a new value is passed, a new map is opened. Note that the map ID may change as the map is open, either because the ID of the map is changed in the map settings, or because the user navigates to a different map (only in interactive mode). Use `:padId.sync` to get a [two-way binding](https://vuejs.org/v2/guide/components-custom-events.html#sync-Modifier) (or listen to the `update:padId` event).
-* `toolbox` (boolean, optional): Whether the toolbox should be shown. Default is `true`.
-* `search` (boolean, optional): Whether the search box should be shown. Default is `true`.
-* `autofocus` (boolean, optional): Whether the search field should be focused. Default is `false`.
-* `legend` (boolean, optional): Whether the legend should be shown (if it is available). Default is `true`.
-* `interactive` (boolean, optional): Whether [interactive mode](../embed.md#interactive-mode) should be enabled. Default is `true`.
-* `linkLogo` (boolean, optional): If `true`, the FacilMap logo will be a link that opens the map in a new window. Default is `false`.
-* `updateHash` (boolean, optional): Whether `location.hash` should be synchonised with the current map view. Default is `false`.
+* `padId` (string or undefined, required): The ID of the collaborative map that should be opened. If this is undefined, no map is opened. This is reactive, when a new value is passed, a new map is opened. Note that the map ID may change as the map is open, either because the ID of the map is changed in the map settings, or because the user navigates to a different map (only in interactive mode). Use `v-model:padId` to get a [two-way binding](https://vuejs.org/guide/essentials/forms.html) (or listen to the `update:padId` event).
+* `settings` (object, optional): An object with the following properties:
+	* `toolbox` (boolean, optional): Whether the toolbox should be shown. Default is `true`.
+	* `search` (boolean, optional): Whether the search box should be shown. Default is `true`.
+	* `autofocus` (boolean, optional): Whether the search field should be focused. Default is `false`.
+	* `legend` (boolean, optional): Whether the legend should be shown (if it is available). Default is `true`.
+	* `interactive` (boolean, optional): Whether [interactive mode](../embed.md#interactive-mode) should be enabled. Default is `true`.
+	* `linkLogo` (boolean, optional): If `true`, the FacilMap logo will be a link that opens the map in a new window. Default is `false`.
+	* `updateHash` (boolean, optional): Whether `location.hash` should be synchonised with the current map view. Default is `false`.
 
 ## Events
 

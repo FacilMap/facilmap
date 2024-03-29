@@ -1,16 +1,7 @@
-import { io, Socket as SocketIO } from "socket.io-client";
-import {
-	Bbox,
-	BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineCreate,
-	LineExportRequest, LineTemplateRequest, LineToRouteCreate, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId,
-	PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest,
-	RouteInfo,
-	RouteRequest,
-	SearchResult,
-	TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable
-} from "facilmap-types";
+import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
+import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents, LineTemplate } from "facilmap-types";
 
-export interface ClientEvents<DataType = Record<string, string>> extends MapEvents<DataType> {
+export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
 	disconnect: [string];
 	connect_error: [Error];
@@ -29,9 +20,9 @@ export interface ClientEvents<DataType = Record<string, string>> extends MapEven
 	route: [RouteWithTrackPoints];
 	clearRoute: [RouteClear];
 
-	emit: { [eventName in RequestName]: [eventName, RequestData<eventName, DataType>] }[RequestName];
-	emitResolve: { [eventName in RequestName]: [eventName, ResponseData<eventName, DataType>] }[RequestName];
-	emitReject: [RequestName, Error];
+	emit: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketRequest<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
+	emitResolve: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketResponse<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
+	emitReject: [SocketRequestName<SocketVersion.V2>, Error];
 }
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
@@ -41,7 +32,7 @@ export interface TrackPoints {
 	length: number;
 }
 
-export interface LineWithTrackPoints<DataType = Record<string, string>> extends Line<DataType> {
+export interface LineWithTrackPoints extends Line {
 	trackPoints: TrackPoints;
 }
 
@@ -50,64 +41,104 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 	trackPoints: TrackPoints;
 }
 
-export default class Client<DataType = Record<string, string>> {
-	disconnected: boolean = true;
-	server!: string;
-	padId: string | undefined = undefined;
-	bbox: BboxWithZoom | undefined = undefined;
-	socket!: SocketIO;
-	padData: PadData | undefined = undefined;
-	readonly: boolean | undefined = undefined;
-	writable: Writable | undefined = undefined;
-	deleted: boolean = false;
-	markers: Record<ID, Marker<DataType>> = { };
-	lines: Record<ID, LineWithTrackPoints<DataType>> = { };
-	views: Record<ID, View> = { };
-	types: Record<ID, Type> = { };
-	history: Record<ID, HistoryEntry> = { };
-	route: RouteWithTrackPoints | undefined = undefined;
-	routes: Record<string, RouteWithTrackPoints> = { };
-	serverError: Error | undefined = undefined;
-	loading: number = 0;
+interface ClientState {
+	disconnected: boolean;
+	server: string;
+	padId: string | undefined;
+	bbox: BboxWithZoom | undefined;
+	readonly: boolean | undefined;
+	writable: Writable | undefined;
+	deleted: boolean;
+	serverError: Error | undefined;
+	loading: number;
+	listeningToHistory: boolean;
+}
 
-	_listeners: {
+interface ClientData {
+	padData: (PadData & { writable: Writable }) | undefined;
+	markers: Record<ID, Marker>;
+	lines: Record<ID, LineWithTrackPoints>;
+	views: Record<ID, View>;
+	types: Record<ID, Type>;
+	history: Record<ID, HistoryEntry>;
+	route: RouteWithTrackPoints | undefined;
+	routes: Record<string, RouteWithTrackPoints>;
+}
+
+export default class Client {
+	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V2>, SocketClientToServerEvents<SocketVersion.V2>>;
+	private state: ClientState;
+	private data: ClientData;
+
+	private listeners: {
 		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
-	_listeningToHistory: boolean = false;
 
-	constructor(server: string, padId?: string) {
-		this._init(server, padId);
+	constructor(server: string, padId?: string, socketOptions?: Partial<ManagerOptions & SocketOptions>) {
+		this.state = this._makeReactive({
+			disconnected: true,
+			server,
+			padId,
+			bbox: undefined,
+			readonly: undefined,
+			writable: undefined,
+			deleted: false,
+			serverError: undefined,
+			loading: 0,
+			listeningToHistory: false
+		});
+
+		this.data = this._makeReactive({
+			padData: undefined,
+			markers: { },
+			lines: { },
+			views: { },
+			types: { },
+			history: { },
+			route: undefined,
+			routes: { }
+		});
+
+		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
+		const socket = io(`${serverUrl.origin}/v2`, {
+			forceNew: true,
+			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io",
+			...socketOptions
+		});
+		this.socket = socket;
+
+		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
+			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
+		}
+
+		void Promise.resolve().then(() => {
+			this._simulateEvent("loadStart");
+		});
+
+		this.once("connect", () => {
+			this._simulateEvent("loadEnd");
+		});
 	}
 
-	_set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
+	protected _makeReactive<O extends object>(object: O): O {
+		return object;
+	}
+
+	protected _set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
 		object[key] = value;
 	}
 
-	_delete<O>(object: O, key: keyof O): void {
+	protected _delete<O>(object: O, key: keyof O): void {
 		delete object[key];
 	}
 
-	_decodeData(data: Record<string, string>): DataType {
+	protected _decodeData(data: Record<string, string>): Record<string, string> {
 		const result = Object.create(null);
 		Object.assign(result, data);
 		return result;
 	}
 
-	_encodeData(data: DataType): Record<string, string> {
-		return data as any;
-	}
-
-	_fixRequestObject<T>(requestName: RequestName, obj: T): T {
-		if (typeof obj != "object" || !(obj as any)?.data || !["addMarker", "editMarker", "addLine", "editLine"].includes(requestName))
-			return obj;
-
-		return {
-			...obj,
-			data: this._encodeData((obj as any).data)
-		};
-	}
-
-	_fixResponseObject<T>(requestName: RequestName, obj: T): T {
+	private _fixResponseObject<T>(requestName: SocketRequestName<SocketVersion.V2>, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
 
@@ -117,7 +148,7 @@ export default class Client<DataType = Record<string, string>> {
 		};
 	}
 
-	_fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
+	private _fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
 		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
 			return obj;
 
@@ -130,63 +161,38 @@ export default class Client<DataType = Record<string, string>> {
 		] as T;
 	}
 
-	_init(server: string, padId: string | undefined): void {
-		// Needs to be in a separate method so that we can merge this class with a scope object in the frontend.
-
-		this._set(this, 'server', server);
-		this._set(this, 'padId', padId);
-
-		const serverUrl = typeof location != "undefined" ? new URL(server, location.href) : new URL(server);
-		const socket = io(serverUrl.origin, {
-			forceNew: true,
-			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io"
-		});
-		this._set(this, 'socket', socket);
-
-		for(const i of Object.keys(this._handlers) as EventName<ClientEvents<DataType>>[]) {
-			this.on(i, this._handlers[i] as EventHandler<ClientEvents<DataType>, typeof i>);
-		}
-
-		setTimeout(() => {
-			this._simulateEvent("loadStart");
-		}, 0);
-		this.once("connect", () => {
-			this._simulateEvent("loadEnd");
-		});
-	}
-
-	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
-		if(!this._listeners[eventName]) {
+	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+		if(!this.listeners[eventName]) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
-				.on(eventName, (...[data]: ClientEvents<DataType>[E]) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
 		}
 
-		this._set(this._listeners, eventName, [ ...(this._listeners[eventName] || [] as any), fn ]);
+		this.listeners[eventName] = [...(this.listeners[eventName] || [] as any), fn];
 	}
 
-	once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
+	once<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
 		const handler = ((data: any) => {
 			this.removeListener(eventName, handler);
 			(fn as any)(data);
-		}) as EventHandler<ClientEvents<DataType>, E>;
+		}) as EventHandler<ClientEvents, E>;
 		this.on(eventName, handler);
 	}
 
-	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents<DataType>, E>): void {
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents<DataType>, E>> | undefined;
+	removeListener<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
+		const listeners = this.listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
-			this._set(this._listeners, eventName, listeners.filter((listener) => (listener !== fn)) as any);
+			this.listeners[eventName] = listeners.filter((listener) => (listener !== fn)) as any;
 		}
 	}
 
-	async _emit<R extends RequestName>(eventName: R, ...[data]: RequestData<R, DataType> extends void ? [ ] : [ RequestData<R, DataType> ]): Promise<ResponseData<R, DataType>> {
+	private async _emit<R extends SocketRequestName<SocketVersion.V2>>(eventName: R, ...[data]: SocketRequest<SocketVersion.V2, R> extends undefined | null ? [ ] : [ SocketRequest<SocketVersion.V2, R> ]): Promise<SocketResponse<SocketVersion.V2, R>> {
 		try {
 			this._simulateEvent("loadStart");
 
 			this._simulateEvent("emit", eventName as any, data as any);
 
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName, this._fixRequestObject(eventName, data), (err: Error, data: ResponseData<R, DataType>) => {
+				this.socket.emit(eventName as any, data, (err: Error, data: SocketResponse<SocketVersion.V2, R>) => {
 					if(err) {
 						reject(err);
 						this._simulateEvent("emitReject", eventName as any, err);
@@ -202,49 +208,49 @@ export default class Client<DataType = Record<string, string>> {
 		}
 	}
 
-	_handlers: {
-		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents<DataType>, E>
+	private _handlers: {
+		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} = {
 		padData: (data) => {
-			this._set(this, 'padData', data);
+			this._set(this.data, 'padData', data);
 
 			if(data.writable != null) {
-				this._set(this, 'readonly', data.writable == 0);
-				this._set(this, 'writable', data.writable);
+				this._set(this.state, 'readonly', data.writable == 0);
+				this._set(this.state, 'writable', data.writable);
 			}
 
-			const id = this.writable == 2 ? data.adminId : this.writable == 1 ? data.writeId : data.id;
+			const id = this.state.writable == 2 ? data.adminId : this.state.writable == 1 ? data.writeId : data.id;
 			if(id != null)
-				this._set(this, 'padId', id);
+				this._set(this.state, 'padId', id);
 		},
 
 		deletePad: () => {
-			this._set(this, 'readonly', true);
-			this._set(this, 'writable', 0);
-			this._set(this, 'deleted', true);
+			this._set(this.state, 'readonly', true);
+			this._set(this.state, 'writable', 0);
+			this._set(this.state, 'deleted', true);
 		},
 
 		marker: (data) => {
-			this._set(this.markers, data.id, data);
+			this._set(this.data.markers, data.id, data);
 		},
 
 		deleteMarker: (data) => {
-			this._delete(this.markers, data.id);
+			this._delete(this.data.markers, data.id);
 		},
 
 		line: (data) => {
-			this._set(this.lines, data.id, {
+			this._set(this.data.lines, data.id, {
 				...data,
-				trackPoints: this.lines[data.id]?.trackPoints || { length: 0 }
+				trackPoints: this.data.lines[data.id]?.trackPoints || { length: 0 }
 			});
 		},
 
 		deleteLine: (data) => {
-			this._delete(this.lines, data.id);
+			this._delete(this.data.lines, data.id);
 		},
 
 		linePoints: (data) => {
-			const line = this.lines[data.id];
+			const line = this.data.lines[data.id];
 			if(line == null)
 				return console.error("Received line points for non-existing line "+data.id+".");
 
@@ -252,16 +258,16 @@ export default class Client<DataType = Record<string, string>> {
 		},
 
 		routePoints: (data) => {
-			if(!this.route) {
+			if(!this.data.route) {
 				console.error("Received route points for non-existing route.");
 				return;
 			}
 
-			this._set(this.route, 'trackPoints', this._mergeTrackPoints(this.route.trackPoints, data));
+			this._set(this.data.route, 'trackPoints', this._mergeTrackPoints(this.data.route.trackPoints, data));
 		},
 
 		routePointsWithId: (data) => {
-			const route = this.routes[data.routeId];
+			const route = this.data.routes[data.routeId];
 			if(!route) {
 				console.error("Received route points for non-existing route.");
 				return;
@@ -271,178 +277,209 @@ export default class Client<DataType = Record<string, string>> {
 		},
 
 		view: (data) => {
-			this._set(this.views, data.id, data);
+			this._set(this.data.views, data.id, data);
 		},
 
 		deleteView: (data) => {
-			this._delete(this.views, data.id);
-			if (this.padData) {
-				if(this.padData.defaultViewId == data.id)
-					this._set(this.padData, 'defaultViewId', null);
+			this._delete(this.data.views, data.id);
+			if (this.data.padData) {
+				if(this.data.padData.defaultViewId == data.id)
+					this._set(this.data.padData, 'defaultViewId', null);
 			}
 		},
 
 		type: (data) => {
-			this._set(this.types, data.id, data);
+			this._set(this.data.types, data.id, data);
 		},
 
 		deleteType: (data) => {
-			this._delete(this.types, data.id);
+			this._delete(this.data.types, data.id);
 		},
 
 		disconnect: () => {
-			this._set(this, 'disconnected', true);
-			this._set(this, 'markers', { });
-			this._set(this, 'lines', { });
-			this._set(this, 'views', { });
-			this._set(this, 'history', { });
+			this._set(this.state, 'disconnected', true);
+			this._set(this.data, 'markers', { });
+			this._set(this.data, 'lines', { });
+			this._set(this.data, 'views', { });
+			this._set(this.data, 'history', { });
 		},
 
 		connect: () => {
-			this._set(this, 'disconnected', false); // Otherwise it gets set when padData arrives
+			this._set(this.state, 'disconnected', false); // Otherwise it gets set when padData arrives
 
-			if(this.padId)
-				this._setPadId(this.padId).catch(() => undefined);
+			if(this.state.padId)
+				this._setPadId(this.state.padId).catch(() => undefined);
 
 			// TODO: Handle errors
 
-			if(this.bbox)
-				this.updateBbox(this.bbox).catch((err) => { console.error("Error updating bbox.", err); });
+			if(this.state.bbox)
+				this.updateBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
 
-			if(this._listeningToHistory) // TODO: Execute after setPadId() returns
+			if(this.state.listeningToHistory) // TODO: Execute after setPadId() returns
 				this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
 
-			if(this.route)
-				this.setRoute(this.route).catch((err) => { console.error("Error setting route.", err); });
-			for (const route of Object.values(this.routes))
+			if(this.data.route)
+				this.setRoute(this.data.route).catch((err) => { console.error("Error setting route.", err); });
+			for (const route of Object.values(this.data.routes))
 				this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
 		},
 
+		connect_error: (err) => {
+			if (!this.socket.active) { // Fatal error, client will not try to reconnect anymore
+				this._set(this.state, 'serverError', err);
+				this._simulateEvent("serverError", err);
+			}
+		},
+
 		history: (data) => {
-			this._set(this.history, data.id, data);
+			this._set(this.data.history, data.id, data);
 			// TODO: Limit to 50 entries
 		},
 
 		loadStart: () => {
-			this._set(this, 'loading', this.loading + 1);
+			this._set(this.state, 'loading', this.state.loading + 1);
 		},
 
 		loadEnd: () => {
-			this._set(this, 'loading', this.loading - 1);
+			this._set(this.state, 'loading', this.state.loading - 1);
 		}
 	};
 
-	setPadId(padId: PadId): Promise<void> {
-		if(this.padId != null)
+	async setPadId(padId: PadId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		if(this.state.padId != null)
 			throw new Error("Pad ID already set.");
 
-		return this._setPadId(padId);
+		return await this._setPadId(padId);
 	}
 
-	updateBbox(bbox: BboxWithZoom): Promise<void> {
-		this._set(this, 'bbox', bbox);
-		return this._emit("updateBbox", bbox).then((obj) => {
-			this._receiveMultiple(obj);
-		});
+	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const isZoomChange = this.bbox && bbox.zoom !== this.bbox.zoom;
+
+		this._set(this.state, 'bbox', bbox);
+		const obj = await this._emit("updateBbox", bbox);
+
+		if (isZoomChange) {
+			// Reset line points on zoom change to prevent us from accumulating too many unneeded line points.
+			// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
+			// so we can be sure that we will receive all line points that are relevant for the new bbox.
+			obj.linePoints = obj.linePoints || [];
+			const linePointEventsById = new Map(obj.linePoints.map((e) => [e.id, e] as const));
+			for (const lineIdStr of Object.keys(this.data.lines)) {
+				const lineId = Number(lineIdStr);
+				const e = linePointEventsById.get(lineId);
+				if (e) {
+					e.reset = true;
+				} else {
+					obj.linePoints.push({
+						id: lineId,
+						trackPoints: [],
+						reset: true
+					});
+				}
+			}
+		}
+
+		this._receiveMultiple(obj);
+		return obj;
 	}
 
-	getPad(data: GetPadQuery): Promise<FindPadsResult | undefined> {
-		return this._emit("getPad", data);
+	async getPad(data: GetPadQuery): Promise<FindPadsResult | null> {
+		return await this._emit("getPad", data);
 	}
 
-	findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
-		return this._emit("findPads", data);
+	async findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
+		return await this._emit("findPads", data);
 	}
 
-	createPad(data: PadDataCreate): Promise<void> {
-		return this._emit("createPad", data).then((obj) => {
-			this._set(this, 'readonly', false);
-			this._set(this, 'writable', 2);
-
-			this._receiveMultiple(obj);
-		});
+	async createPad(data: PadData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const obj = await this._emit("createPad", data);
+		this._set(this.state, 'serverError', undefined);
+		this._set(this.state, 'readonly', false);
+		this._set(this.state, 'writable', 2);
+		this._receiveMultiple(obj);
+		return obj;
 	}
 
-	editPad(data: PadDataUpdate): Promise<PadData> {
-		return this._emit("editPad", data);
+	async editPad(data: PadData<CRU.UPDATE>): Promise<PadData> {
+		return await this._emit("editPad", data);
 	}
 
-	deletePad(): Promise<void> {
-		return this._emit("deletePad");
+	async deletePad(): Promise<void> {
+		await this._emit("deletePad");
 	}
 
-	listenToHistory(): Promise<void> {
-		return this._emit("listenToHistory").then((obj) => {
-			this._set(this, '_listeningToHistory', true);
-			this._receiveMultiple(obj);
-		});
+	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const obj = await this._emit("listenToHistory");
+		this._set(this.state, 'listeningToHistory', true);
+		this._receiveMultiple(obj);
+		return obj;
 	}
 
-	stopListeningToHistory(): Promise<void> {
-		this._set(this, '_listeningToHistory', false);
-		return this._emit("stopListeningToHistory");
+	async stopListeningToHistory(): Promise<void> {
+		this._set(this.state, 'listeningToHistory', false);
+		await this._emit("stopListeningToHistory");
 	}
 
-	revertHistoryEntry(data: ObjectWithId): Promise<void> {
-		return this._emit("revertHistoryEntry", data).then((obj) => {
-			this._set(this, 'history', { });
-			this._receiveMultiple(obj);
-		});
+	async revertHistoryEntry(data: ObjectWithId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const obj = await this._emit("revertHistoryEntry", data);
+		this._set(this.data, 'history', {});
+		this._receiveMultiple(obj);
+		return obj;
 	}
 
-	async getMarker(data: ObjectWithId): Promise<Marker<DataType>> {
+	async getMarker(data: ObjectWithId): Promise<Marker> {
 		const marker = await this._emit("getMarker", data);
-		this._set(this.markers, marker.id, marker);
+		this._set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
-	async addMarker(data: MarkerCreate<DataType>): Promise<Marker<DataType>> {
+	async addMarker(data: Marker<CRU.CREATE>): Promise<Marker> {
 		const marker = await this._emit("addMarker", data);
 		// If the marker is out of view, we will not recieve it in an event. Add it here manually to make sure that we have it.
-		this._set(this.markers, marker.id, marker);
+		this._set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
-	editMarker(data: ObjectWithId & MarkerUpdate<DataType>): Promise<Marker<DataType>> {
-		return this._emit("editMarker", data);
+	async editMarker(data: Marker<CRU.UPDATE> & { id: ID }): Promise<Marker> {
+		return await this._emit("editMarker", data);
 	}
 
-	deleteMarker(data: ObjectWithId): Promise<Marker<DataType>> {
-		return this._emit("deleteMarker", data);
+	async deleteMarker(data: ObjectWithId): Promise<Marker> {
+		return await this._emit("deleteMarker", data);
 	}
 
-	getLineTemplate(data: LineTemplateRequest): Promise<Line<DataType>> {
-		return this._emit("getLineTemplate", data);
+	async getLineTemplate(data: LineTemplateRequest): Promise<LineTemplate> {
+		return await this._emit("getLineTemplate", data);
 	}
 
-	addLine(data: LineCreate<DataType>): Promise<Line<DataType>> {
-		return this._emit("addLine", data);
+	async addLine(data: Line<CRU.CREATE>): Promise<Line> {
+		return await this._emit("addLine", data);
 	}
 
-	editLine(data: ObjectWithId & LineUpdate<DataType>): Promise<Line<DataType>> {
-		return this._emit("editLine", data);
+	async editLine(data: Line<CRU.UPDATE> & { id: ID }): Promise<Line> {
+		return await this._emit("editLine", data);
 	}
 
-	deleteLine(data: ObjectWithId): Promise<Line<DataType>> {
-		return this._emit("deleteLine", data);
+	async deleteLine(data: ObjectWithId): Promise<Line> {
+		return await this._emit("deleteLine", data);
 	}
 
-	exportLine(data: LineExportRequest): Promise<string> {
-		return this._emit("exportLine", data);
+	async exportLine(data: LineExportRequest): Promise<string> {
+		return await this._emit("exportLine", data);
 	}
 
-	find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
-	find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
-	find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
-		return this._emit("find", data);
+	async find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
+	async find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
+	async find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
+		return await this._emit("find", data);
 	}
 
-	findOnMap(data: FindOnMapQuery): Promise<ResponseData<'findOnMap'>> {
-		return this._emit("findOnMap", data);
+	async findOnMap(data: FindOnMapQuery): Promise<SocketResponse<SocketVersion.V2, 'findOnMap'>> {
+		return await this._emit("findOnMap", data);
 	}
 
-	getRoute(data: RouteRequest): Promise<RouteInfo> {
-		return this._emit("getRoute", data);
+	async getRoute(data: RouteRequest): Promise<RouteInfo> {
+		return await this._emit("getRoute", data);
 	}
 
 	async setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
@@ -457,9 +494,9 @@ export default class Client<DataType = Record<string, string>> {
 		};
 
 		if (data.routeId)
-			this._set(this.routes, data.routeId, result);
+			this._set(this.data.routes, data.routeId, result);
 		else
-			this._set(this, "route", result);
+			this._set(this.data, "route", result);
 
 		this._simulateEvent("route", result);
 		return result;
@@ -467,13 +504,13 @@ export default class Client<DataType = Record<string, string>> {
 
 	async clearRoute(data?: RouteClear): Promise<void> {
 		if (data?.routeId) {
-			this._delete(this.routes, data.routeId);
+			this._delete(this.data.routes, data.routeId);
 			this._simulateEvent("clearRoute", { routeId: data.routeId });
-			return this._emit("clearRoute", data);
-		} else if (this.route) {
-			this._set(this, 'route', undefined);
+			await this._emit("clearRoute", data);
+		} else if (this.data.route) {
+			this._set(this.data, 'route', undefined);
 			this._simulateEvent("clearRoute", { routeId: undefined });
-			return this._emit("clearRoute", data);
+			await this._emit("clearRoute", data);
 		}
 	}
 
@@ -489,44 +526,44 @@ export default class Client<DataType = Record<string, string>> {
 		};
 
 		if (data.routeId)
-			this._set(this.routes, data.routeId, result);
+			this._set(this.data.routes, data.routeId, result);
 		else
-			this._set(this, "route", result);
+			this._set(this.data, "route", result);
 
 		this._simulateEvent("route", result);
 		return result;
 	}
 
-	exportRoute(data: RouteExportRequest): Promise<string> {
-		return this._emit("exportRoute", data);
+	async exportRoute(data: RouteExportRequest): Promise<string> {
+		return await this._emit("exportRoute", data);
 	}
 
-	addType(data: TypeCreate): Promise<Type> {
-		return this._emit("addType", data);
+	async addType(data: Type<CRU.CREATE>): Promise<Type> {
+		return await this._emit("addType", data);
 	}
 
-	editType(data: ObjectWithId & TypeUpdate): Promise<Type> {
-		return this._emit("editType", data);
+	async editType(data: Type<CRU.UPDATE> & { id: ID }): Promise<Type> {
+		return await this._emit("editType", data);
 	}
 
-	deleteType(data: ObjectWithId): Promise<Type> {
-		return this._emit("deleteType", data);
+	async deleteType(data: ObjectWithId): Promise<Type> {
+		return await this._emit("deleteType", data);
 	}
 
-	addView(data: ViewCreate): Promise<View> {
-		return this._emit("addView", data);
+	async addView(data: View<CRU.CREATE>): Promise<View> {
+		return await this._emit("addView", data);
 	}
 
-	editView(data: ObjectWithId & ViewUpdate): Promise<View> {
-		return this._emit("editView", data);
+	async editView(data: View<CRU.UPDATE> & { id: ID }): Promise<View> {
+		return await this._emit("editView", data);
 	}
 
-	deleteView(data: ObjectWithId): Promise<View> {
-		return this._emit("deleteView", data);
+	async deleteView(data: ObjectWithId): Promise<View> {
+		return await this._emit("deleteView", data);
 	}
 
-	geoip(): Promise<Bbox | null> {
-		return this._emit("geoip");
+	async geoip(): Promise<Bbox | null> {
+		return await this._emit("geoip");
 	}
 
 	disconnect(): void {
@@ -534,38 +571,39 @@ export default class Client<DataType = Record<string, string>> {
 		this.socket.disconnect();
 	}
 
-	async _setPadId(padId: string): Promise<void> {
-		this._set(this, 'serverError', undefined);
-		this._set(this, 'padId', padId);
+	private async _setPadId(padId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		this._set(this.state, 'serverError', undefined);
+		this._set(this.state, 'padId', padId);
 		try {
 			const obj = await this._emit("setPadId", padId);
 			this._receiveMultiple(obj);
+			return obj;
 		} catch(err: any) {
-			this._set(this, 'serverError', err);
+			this._set(this.state, 'serverError', err);
 			this._simulateEvent("serverError", err);
 			throw err;
 		}
 	}
 
-	_receiveMultiple(obj?: MultipleEvents<ClientEvents<DataType>>): void {
+	private _receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
 		if (obj) {
 			for(const i of Object.keys(obj) as EventName<ClientEvents>[])
-				(obj[i] as Array<ClientEvents<DataType>[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
+				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
 		}
 	}
 
-	_simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents<DataType>[E]): void {
+	private _simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
 		const fixedData = this._fixEventObject(eventName, data);
 
-		const listeners = this._listeners[eventName] as Array<EventHandler<ClientEvents<DataType>, E>> | undefined;
+		const listeners = this.listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
 		if(listeners) {
-			listeners.forEach(function(listener: EventHandler<ClientEvents<DataType>, E>) {
+			listeners.forEach(function(listener: EventHandler<ClientEvents, E>) {
 				listener(...fixedData);
 			});
 		}
 	}
 
-	_mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
+	private _mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
 		const ret = { ...(existingTrackPoints || { }) } as TrackPoints;
 
 		for(let i=0; i<newTrackPoints.length; i++) {
@@ -579,5 +617,77 @@ export default class Client<DataType = Record<string, string>> {
 		}
 
 		return ret;
+	}
+
+	get disconnected(): boolean {
+		return this.state.disconnected;
+	}
+
+	get server(): string {
+		return this.state.server;
+	}
+
+	get padId(): string | undefined {
+		return this.state.padId;
+	}
+
+	get bbox(): BboxWithZoom | undefined {
+		return this.state.bbox;
+	}
+
+	get readonly(): boolean | undefined {
+		return this.state.readonly;
+	}
+
+	get writable(): Writable | undefined {
+		return this.state.writable;
+	}
+
+	get deleted(): boolean {
+		return this.state.deleted;
+	}
+
+	get serverError(): Error | undefined {
+		return this.state.serverError;
+	}
+
+	get loading(): number {
+		return this.state.loading;
+	}
+
+	get listeningToHistory(): boolean {
+		return this.state.listeningToHistory;
+	}
+
+	get padData(): PadData | undefined {
+		return this.data.padData;
+	}
+
+	get markers(): Record<ID, Marker> {
+		return this.data.markers;
+	}
+
+	get lines(): Record<ID, LineWithTrackPoints> {
+		return this.data.lines;
+	}
+
+	get views(): Record<ID, View> {
+		return this.data.views;
+	}
+
+	get types(): Record<ID, Type> {
+		return this.data.types;
+	}
+
+	get history(): Record<ID, HistoryEntry> {
+		return this.data.history;
+	}
+
+	get route(): RouteWithTrackPoints | undefined {
+		return this.data.route;
+	}
+
+	get routes(): Record<string, RouteWithTrackPoints> {
+		return this.data.routes;
 	}
 }

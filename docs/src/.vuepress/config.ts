@@ -1,15 +1,15 @@
-import { description } from '../../package.json';
-import { defaultTheme, defineUserConfig } from 'vuepress';
-import backToTopPlugin from '@vuepress/plugin-back-to-top';
-import mediumZoomPlugin from '@vuepress/plugin-medium-zoom';
-//import checkMdPluin from 'vuepress-plugin-check-md';
-import { searchPlugin } from '@vuepress/plugin-search';
+import { description } from "../../package.json";
+import { defaultTheme, defineUserConfig } from "vuepress";
+import backToTopPlugin from "@vuepress/plugin-back-to-top";
+import mediumZoomPlugin from "@vuepress/plugin-medium-zoom";
+//import checkMdPluin from "vuepress-plugin-check-md";
+import { searchPlugin } from "@vuepress/plugin-search";
 
 export default defineUserConfig({
 	title: 'FacilMap',
 	description: description,
 	head: [
-		['meta', { name: 'theme-color', content: '#3eaf7c' }],
+		['meta', { name: 'theme-color', content: '#3eaf7c' }], // TODO: Update
 		['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
 		['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
 	],
@@ -38,7 +38,8 @@ export default defineUserConfig({
 						"/users/",
 						"/users/help/",
 						"/users/releases/",
-						"/users/contribute/"
+						"/users/contribute/",
+						"/users/privacy/"
 					]
 				},
 				{
@@ -53,8 +54,7 @@ export default defineUserConfig({
 						"/users/files/",
 						"/users/locate/",
 						"/users/share/",
-						"/users/app/",
-						"/users/privacy/"
+						"/users/app/"
 					]
 				},
 				{
@@ -100,7 +100,8 @@ export default defineUserConfig({
 						"/developers/client/events",
 						"/developers/client/methods",
 						"/developers/client/types",
-						"/developers/client/advanced"
+						"/developers/client/advanced",
+						"/developers/client/changelog"
 					]
 				},
 				{

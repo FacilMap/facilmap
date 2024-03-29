@@ -1,3 +1,0 @@
-<div>
-	#{{mapContext.hash}}
-</div>

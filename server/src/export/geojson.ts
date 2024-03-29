@@ -1,13 +1,12 @@
-import { jsonStream, streamToArrayPromise, toStream } from "../utils/streams";
-import { clone } from "../utils/utils";
+import { asyncIteratorToArray, streamPromiseToStream, jsonStreamArray, mapAsyncIterator, jsonStreamRecord, type JsonStream, concatAsyncIterators, flatMapAsyncIterator } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
-import { Marker, MarkerFeature, LineFeature, PadId } from "facilmap-types";
-import Database from "../database/database";
-import { keyBy, mapValues, omit } from "lodash";
-import { LineWithTrackPoints } from "../database/line";
+import type { Marker, MarkerFeature, PadId, TrackPoint, Line } from "facilmap-types";
+import Database from "../database/database.js";
+import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
+import type { ReadableStream } from "stream/web";
 
-export function exportGeoJson(database: Database, padId: PadId, filter?: string): Highland.Stream<string> {
-	return toStream(async () => {
+export function exportGeoJson(database: Database, padId: PadId, filter?: string): ReadableStream<string> {
+	return streamPromiseToStream((async () => {
 		const padData = await database.pads.getPadData(padId);
 
 		if (!padData)
@@ -15,46 +14,43 @@ export function exportGeoJson(database: Database, padId: PadId, filter?: string)
 
 		const filterFunc = compileExpression(filter);
 
-		const views = database.views.getViews(padId)
-			.map((view) => omit(view, ["id", "padId"]));
+		const types = keyBy(await asyncIteratorToArray(database.types.getTypes(padId)), "id");
 
-		const types = keyBy(await streamToArrayPromise(database.types.getTypes(padId)), "id");
-
-		const markers = database.markers.getPadMarkers(padId)
-			.filter((marker) => filterFunc(marker, types[marker.typeId]))
-			.map(markerToGeoJson);
-
-		const lines = database.lines.getPadLinesWithPoints(padId)
-			.filter((line) => filterFunc(line, types[line.typeId]))
-			.map(lineToGeoJson);
-
-		return jsonStream({
+		return jsonStreamRecord({
 			type: "FeatureCollection",
-			...(padData.defaultView ? { bbox: "%bbox%" } : { }),
-			facilmap: {
-				name: "%name%",
-				searchEngines: "%searchEngines%",
-				description: "%description%",
-				clusterMarkers: "%clusterMarkers",
-				views: "%views%",
-				types: "%types%"
-			},
-			features: "%features%"
-		}, {
-			bbox: padData.defaultView && [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top],
-			name: padData.name,
-			searchEngines: padData.searchEngines,
-			description: padData.description,
-			clusterMarkers: padData.clusterMarkers,
-			views,
+			...(padData.defaultView ? {
+				bbox: [padData.defaultView.left, padData.defaultView.bottom, padData.defaultView.right, padData.defaultView.top]
+			} : { }),
+			facilmap: jsonStreamRecord({
+				name: padData.name,
+				searchEngines: padData.searchEngines,
+				description: padData.description,
+				clusterMarkers: padData.clusterMarkers,
+				views: jsonStreamArray(mapAsyncIterator(database.views.getViews(padId), (view) => omit(view, ["id", "padId"])))
+			}),
 			types: mapValues(types, (type) => omit(type, ["id", "padId"])),
-			features: (markers as Highland.Stream<MarkerFeature | LineFeature>).concat(lines as Highland.Stream<MarkerFeature | LineFeature>)
+			features: jsonStreamArray(concatAsyncIterators(
+				flatMapAsyncIterator(database.markers.getPadMarkers(padId), (marker) => {
+					if (filterFunc(marker, types[marker.typeId])) {
+						return [markerToGeoJson(marker)];
+					} else {
+						return [];
+					}
+				}),
+				flatMapAsyncIterator(database.lines.getPadLines(padId), (line) => {
+					if (filterFunc(line, types[line.typeId])) {
+						return [lineToGeoJson(line, database.lines.getAllLinePoints(line.id))];
+					} else {
+						return [];
+					}
+				})
+			))
 		});
-	}).flatten();
+	})());
 }
 
-function markerToGeoJson(marker: Marker): MarkerFeature {
-	return {
+function markerToGeoJson(marker: Marker): JsonStream {
+	return jsonStreamRecord({
 		type: "Feature",
 		geometry: {
 			type: "Point",
@@ -66,29 +62,30 @@ function markerToGeoJson(marker: Marker): MarkerFeature {
 			size: marker.size,
 			symbol: marker.symbol,
 			shape: marker.shape,
-			data: clone(marker.data),
+			data: cloneDeep(marker.data),
 			typeId: marker.typeId
 		}
-	};
+	} satisfies MarkerFeature);
 }
 
-function lineToGeoJson(line: LineWithTrackPoints): LineFeature {
-	return {
+function lineToGeoJson(line: Line, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+	return jsonStreamRecord({
 		type: "Feature",
-		geometry: {
+		geometry: jsonStreamRecord({
 			type: "LineString",
-			coordinates: line.trackPoints.map((trackPoint) => [trackPoint.lon, trackPoint.lat])
-		},
+			coordinates: jsonStreamArray(mapAsyncIterator(trackPoints, (trackPoint) => [trackPoint.lon, trackPoint.lat]))
+		}),
 		properties: {
 			name: line.name,
 			mode: line.mode,
 			colour: line.colour,
 			width: line.width,
+			stroke: line.stroke,
 			distance: line.distance,
 			time: line.time,
 			data: line.data,
 			routePoints: line.routePoints,
 			typeId: line.typeId
 		}
-	};
+	});
 }

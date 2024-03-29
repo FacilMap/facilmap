@@ -1,24 +1,20 @@
-const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const LENGTH = 12;
+import { cloneDeep, isEqual } from "lodash-es";
+import decodeURIComponent from "decode-uri-component";
 
-export function quoteJavaScript(str: any): string {
-	return "'" + `${str}`.replace(/['\\]/g, '\\$1').replace(/\n/g, "\\n") + "'";
-}
-
-export function quoteHtml(str: any): string {
-	return `${str}`.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+export function quoteHtml(str: string | number): string {
+	return `${str}`
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;")
+		.replace(/\n/g, "&#10;")
+		.replace(/\r/g, "&#13;")
+		.replace(/\t/g, "&#9;");
 }
 
 export function quoteRegExp(str: string): string {
 	return `${str}`.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
-}
-
-export function generateRandomPadId(length: number = LENGTH): string {
-	let randomPadId = "";
-	for(let i=0; i<length; i++) {
-		randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
-	}
-	return randomPadId;
 }
 
 export function makeTextColour(backgroundColour: string, threshold = 0.5): string {
@@ -32,6 +28,10 @@ export function getBrightness(colour: string): number {
 	const b = parseInt(colour.substr(4, 2), 16)/255;
 	// See http://stackoverflow.com/a/596243/242365
 	return Math.sqrt(0.241*r*r + 0.691*g*g + 0.068*b*b);
+}
+
+export function isBright(colour: string): boolean {
+	return getBrightness(colour) > 0.7;
 }
 
 export function overwriteObject(from: Record<keyof any, any>, to: Record<keyof any, any>): void {
@@ -86,8 +86,10 @@ export function getObjectDiff(obj1: Record<keyof any, any>, obj2: Record<keyof a
 export function decodeQueryString(str: string): Record<string, string> {
 	const obj: Record<string, string> = { };
 	for(const segment of str.replace(/^\?/, "").split(/[;&]/)) {
-		const pair = segment.split("=");
-		obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+		if (segment !== "") {
+			const pair = segment.split("=");
+			obj[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] ?? "");
+		}
 	}
 	return obj;
 }
@@ -98,29 +100,6 @@ export function encodeQueryString(obj: Record<string, string>): string {
 		pairs.push(encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]));
 	}
 	return pairs.join("&");
-}
-
-function applyPrototypes(source: any, target: any): void {
-	if (typeof source === 'object' && source != null) {
-		if (Array.isArray(source)) {
-			for (let i = 0; i < source.length; i++)
-				applyPrototypes(source[i], target[i]);
-		} else {
-			Object.setPrototypeOf(target, Object.getPrototypeOf(source));
-
-			for (const key of Object.keys(source))
-				applyPrototypes(source[key], target[key]);
-		}
-	}
-}
-
-export function clone<T>(obj: T): T {
-	if (typeof obj !== "object" || !obj)
-		return obj;
-
-	const result = JSON.parse(JSON.stringify(obj));
-	applyPrototypes(obj, result);
-	return result;
 }
 
 export function* numberKeys(obj: Record<number, any>): Generator<number> {
@@ -139,4 +118,138 @@ export function getProperty(obj: any, key: any): any { // eslint-disable-line no
 		return obj.get(key);
 	else
 		return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : (undefined as any);
+}
+
+export async function sleep(ms: number): Promise<void> {
+	await new Promise<void>((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}
+
+/**
+ * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
+ * @param oldObject {Object}
+ * @param newObject {Object}
+ * @param targetObject {Object}
+ */
+export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | undefined, newObject: T, targetObject: T): void {
+	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
+		if(
+			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject[i] == "object" && newObject[i] != null
+			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
+		)
+			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
+		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
+			targetObject[i] = cloneDeep(newObject[i]);
+	}
+}
+
+export function getSafeFilename(fname: string): string {
+	return fname.replace(/[\\/:*?"<>|]+/g, '_');
+}
+
+export function parsePadUrl(url: string, baseUrl: string): { padId: string; hash: string } | undefined {
+	if (url.startsWith(baseUrl)) {
+		const m = url.slice(baseUrl.length).match(/^([^/]+)(\/table)?(\?|#|$)/);
+
+		if (m) {
+			const hashIdx = url.indexOf("#");
+			return {
+				padId: decodeURIComponent(m[1]),
+				hash: hashIdx === -1 ? "" : url.substr(hashIdx)
+			};
+		}
+	}
+}
+
+export class RetryError extends Error {
+	constructor(public cause: Error) {
+		super();
+	}
+}
+
+export function throttledBatch<Args extends any[], Result>(
+	getBatch: (batch: Args[]) => Promise<Result[]>,
+	{ delayMs, maxSize, maxRetries = 3, noParallel = false }: {
+		delayMs: number | (() => number);
+		maxSize: number | (() => number);
+		maxRetries?: number;
+		noParallel?: boolean;
+	}
+): ((...args: Args) => Promise<Result>) {
+	let lastTime = -Infinity;
+	let isScheduled = false;
+	let batch: Array<{ args: Args; resolve: (result: Result) => void; reject: (err: any) => void; retryAttempt: number }> = [];
+
+	const handleBatch = () => {
+		lastTime = Date.now();
+		isScheduled = false;
+
+		const thisBatch = batch.splice(0, typeof maxSize === "function" ? maxSize() : maxSize);
+		getBatch(thisBatch.map((it) => it.args)).then((results) => {
+			for (let i = 0; i < thisBatch.length; i++) {
+				thisBatch[i].resolve(results[i]);
+			}
+		}).catch((err) => {
+			if (err instanceof RetryError) {
+				for (const { reject } of thisBatch.filter((it) => it.retryAttempt >= maxRetries)) {
+					reject(err.cause);
+				}
+				batch.splice(0, 0, ...thisBatch.filter((it) => it.retryAttempt < maxRetries).map((it) => ({ ...it, retryAttempt: it.retryAttempt + 1 })));
+			} else {
+				for (const { reject } of thisBatch) {
+					reject(err);
+				}
+			}
+		}).finally(() => {
+			schedule();
+		});
+
+		if (!noParallel) {
+			schedule();
+		}
+	};
+
+	const schedule = () => {
+		if (!isScheduled && batch.length > 0) {
+			const delay = typeof delayMs === "function" ? delayMs() : delayMs;
+			setTimeout(handleBatch, Math.max(0, lastTime + delay - Date.now()));
+			isScheduled = true;
+		}
+	};
+
+	return async (...args) => {
+		return await new Promise<Result>((resolve, reject) => {
+			batch.push({ args, resolve, reject, retryAttempt: 0 });
+			schedule();
+		});
+	};
+}
+
+/**
+ * Given a list of objects whose order is defined by an index field, returns how the index field of each object needs to be updated
+ * in order to create a new item at the given index (id === undefined) or move an existing item to the new index (id !== undefined).
+ */
+export function insertIdx<IDType>(objects: Array<{ id: IDType; idx: number }>, id: IDType | undefined, insertAtIdx: number): Array<{ id: IDType; oldIdx: number; newIdx: number }> {
+	const result = objects.map((obj) => ({ id: obj.id, oldIdx: obj.idx, newIdx: obj.idx }));
+
+	const insert = (thisId: IDType | undefined, thisIdx: number) => {
+		for (const obj of result) {
+			if ((thisId == null || obj.id !== thisId) && obj.newIdx === thisIdx) {
+				insert(obj.id, obj.newIdx + 1);
+				obj.newIdx++;
+			}
+		}
+	};
+	insert(id, insertAtIdx);
+
+	if (id != null) {
+		for (const obj of result) {
+			if (obj.id === id) {
+				obj.newIdx = insertAtIdx;
+			}
+		}
+	}
+
+	return result;
 }

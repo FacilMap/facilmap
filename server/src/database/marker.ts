@@ -1,11 +1,11 @@
-import { CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import { BboxWithZoom, ID, Latitude, Longitude, Marker, MarkerCreate, MarkerUpdate, PadId } from "facilmap-types";
-import { BboxWithExcept, createModel, dataDefinition, DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey, validateColour } from "./helpers";
-import Database from "./database";
-import { getElevationForPoint } from "../elevation";
-import { PadModel } from "./pad";
-import { Point as GeoJsonPoint } from "geojson";
-import { TypeModel } from "./type";
+import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
+import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Symbol, Type } from "facilmap-types";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
+import Database from "./database.js";
+import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
+import type { PadModel } from "./pad.js";
+import type { Point as GeoJsonPoint } from "geojson";
+import type { TypeModel } from "./type.js";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -13,12 +13,12 @@ export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCr
 	pos: GeoJsonPoint;
 	lat: Latitude;
 	lon: Longitude;
-	name: string | null;
+	name: string;
 	typeId: ForeignKey<TypeModel["id"]>;
-	colour: string;
-	size: number;
-	symbol: string | null;
-	shape: string | null;
+	colour: Colour;
+	size: Size;
+	symbol: Symbol;
+	shape: Shape;
 	ele: number | null;
 	toJSON: () => Marker;
 }
@@ -38,18 +38,19 @@ export default class DatabaseMarkers {
 			lat: getVirtualLatType(),
 			lon: getVirtualLonType(),
 			pos: getPosType(),
-			name : { type: DataTypes.TEXT, allowNull: true, get: function(this: MarkerModel) { return this.getDataValue("name") || "Untitled marker"; } },
-			colour : { type: DataTypes.STRING(6), allowNull: false, defaultValue: "ff0000", validate: validateColour },
-			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 25, validate: { min: 15 } },
-			symbol : { type: DataTypes.TEXT, allowNull: true },
-			shape : { type: DataTypes.TEXT, allowNull: true },
+			name : { type: DataTypes.TEXT, allowNull: false },
+			colour : { type: DataTypes.STRING(6), allowNull: false },
+			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			symbol : { type: DataTypes.TEXT, allowNull: false },
+			shape : { type: DataTypes.TEXT, allowNull: false },
 			ele: {
 				type: DataTypes.INTEGER,
 				allowNull: true,
 				set: function(this: MarkerModel, v: number | null) {
 					// Round number to avoid integer column error in Postgres
 					this.setDataValue("ele", v != null ? Math.round(v) : v);
-				}
+				},
+				defaultValue: null
 			}
 		}, {
 			sequelize: this._db._conn,
@@ -75,11 +76,11 @@ export default class DatabaseMarkers {
 		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
-	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): Highland.Stream<Marker> {
+	getPadMarkers(padId: PadId, bbox?: BboxWithZoom & BboxWithExcept): AsyncIterable<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: this._db.helpers.makeBboxCondition(bbox) });
 	}
 
-	getPadMarkersByType(padId: PadId, typeId: ID): Highland.Stream<Marker> {
+	getPadMarkersByType(padId: PadId, typeId: ID): AsyncIterable<Marker> {
 		return this._db.helpers._getPadObjects<Marker>("Marker", padId, { where: { padId: padId, typeId: typeId } });
 	}
 
@@ -87,43 +88,60 @@ export default class DatabaseMarkers {
 		return this._db.helpers._getPadObject("Marker", padId, markerId);
 	}
 
-	async createMarker(padId: PadId, data: MarkerCreate): Promise<Marker> {
+	async createMarker(padId: PadId, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
-		const elevation = await getElevationForPoint(data);
+		if (type.type !== "marker") {
+			throw new Error(`Cannot use ${type.type} type for marker.`);
+		}
 
-		if(type.defaultColour)
-			data.colour = type.defaultColour;
-		if(type.defaultSize)
-			data.size = type.defaultSize;
-		if(type.defaultSymbol)
-			data.symbol = type.defaultSymbol;
-		if(type.defaultShape)
-			data.shape = type.defaultShape;
-
-		data.ele = elevation;
-
-		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, data);
-
-		await this._db.helpers._updateObjectStyles(result);
-
+		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, resolveCreateMarker(data, type));
 		this._db.emit("marker", padId, result);
+
+		if (data.ele === undefined) {
+			getElevationForPoint(data).then(async (ele) => {
+				if (ele != null) {
+					await this.updateMarker(padId, result.id, { ele }, true);
+				}
+			}).catch((err) => {
+				console.warn("Error updating marker elevation", err);
+			});
+		}
+
 		return result;
 	}
 
-	async updateMarker(padId: PadId, markerId: ID, data: MarkerUpdate, doNotUpdateStyles = false): Promise<Marker> {
-		const update = { ...data };
+	async updateMarker(padId: PadId, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, noHistory = false): Promise<Marker> {
+		const originalMarker = await this.getMarker(padId, markerId);
+		const newType = await this._db.types.getType(padId, data.typeId ?? originalMarker.typeId);
+		return await this._updateMarker(originalMarker, data, newType, noHistory);
+	}
 
-		if (update.lat != null && update.lon != null)
-			update.ele = await getElevationForPoint({ lat: update.lat, lon: update.lon });
+	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, noHistory = false): Promise<Marker> {
+		if (newType.type !== "marker") {
+			throw new Error(`Cannot use ${newType.type} type for marker.`);
+		}
 
-		const result = await this._db.helpers._updatePadObject<Marker>("Marker", padId, markerId, update, doNotUpdateStyles);
+		const update = resolveUpdateMarker(originalMarker, data, newType);
 
-		if(!doNotUpdateStyles)
-			await this._db.helpers._updateObjectStyles(result);
+		if (Object.keys(update).length > 0) {
+			const result = await this._db.helpers._updatePadObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
 
-		this._db.emit("marker", padId, result);
+			this._db.emit("marker", originalMarker.padId, result);
 
-		return result;
+			if (update.lat != null && update.lon != null && update.ele === undefined) {
+				getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
+					if (ele != null) {
+						await this.updateMarker(originalMarker.padId, originalMarker.id, { ele }, true);
+					}
+				}).catch((err) => {
+					console.warn("Error updating marker elevation", err);
+				});
+			}
+
+			return result;
+		} else {
+			return originalMarker;
+		}
 	}
 
 	async deleteMarker(padId: PadId, markerId: ID): Promise<Marker> {

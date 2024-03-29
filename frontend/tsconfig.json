@@ -1,16 +1,22 @@
 {
+	"extends": "../tsconfig.base.json",
 	"compilerOptions": {
-		"target": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "dist",
-		"moduleResolution": "node",
-		"noErrorTruncation": true,
-		"skipLibCheck": true,
-		"experimentalDecorators": true,
-		"resolveJsonModule": true
+		"outDir": "./out",
+		"composite": true,
+		"paths": {
+			"facilmap-client": ["../client/src/client.ts"],
+			"facilmap-leaflet": ["../leaflet/src/index.ts"],
+			"facilmap-types": ["../types/src/index.ts"],
+			"facilmap-utils": ["../utils/src/index.ts"]
+		}
 	},
+	"references": [
+		{ "path": "./tsconfig.node.json" },
+		{ "path": "../client/tsconfig.json" },
+		{ "path": "../leaflet/tsconfig.json" },
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../utils/tsconfig.json" },
+		{ "path": "../tsconfig.json" }
+	],
 	"include": ["src/**/*"]
 }

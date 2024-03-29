@@ -1,1 +1,0 @@
-<div class="fm-elevation-plot" ref="container"></div>

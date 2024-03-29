@@ -1,46 +1,108 @@
-import marked, { MarkedOptions } from 'marked';
-import { Field } from "facilmap-types";
-import { createDiv } from './dom';
-import { normalizeField } from './filter';
-import { quoteHtml } from './utils';
-import linkifyStr from 'linkifyjs/string';
-import createPurify from 'dompurify';
-import { obfuscate } from './obfuscate';
+import { marked, type MarkedOptions } from "marked";
+import type { Field, Point } from "facilmap-types";
+import { quoteHtml } from "./utils.js";
+import linkifyStr from "linkify-string";
+import createPurify from "dompurify";
+import { type Cheerio, load } from "cheerio";
+import { normalizeFieldValue } from "./objects.js";
+import { NodeWithChildren, Element, type Node, type ParentNode, Text, type AnyNode } from "domhandler";
 
-const purify = createPurify(typeof window !== "undefined" ? window : new (eval("require")("jsdom").JSDOM)("").window);
+const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
-marked.setOptions({
+const markdownOptions: MarkedOptions = {
 	breaks: true
-});
+};
 
-export function formatField(field: Field, value: string): string {
-	value = normalizeField(field, value);
+export function formatField(field: Field, value: string | undefined, html: boolean): string {
+	const normalizedValue = normalizeFieldValue(field, value);
 	switch(field.type) {
 		case "textarea":
-			return markdownBlock(value);
+			return markdownBlock(normalizedValue, html);
 		case "checkbox":
-			return value == "1" ? "✔" : "✘";
+			return normalizedValue == "1" ? "✔" : "✘";
 		case "dropdown":
-			return quoteHtml(value) || "";
+			return (html ? quoteHtml(normalizedValue) : normalizedValue) || "";
 		case "input":
 		default:
-			return markdownInline(value);
+			return markdownInline(normalizedValue, html);
 	}
 }
 
-export function markdownBlock(string: string, options?: MarkedOptions): string {
-	const [ret, $] = createDiv();
-	ret.html(purify.sanitize(marked(string, options)));
-	applyMarkdownModifications(ret, $);
-	return ret.html()!;
+export function markdownBlock(string: string, html: boolean): string {
+	const $ = load("<div/>");
+	const el = $.root();
+	el.html(purify.sanitize(marked(string, markdownOptions) as string));
+	applyMarkdownModifications(el);
+	return html ? el.html()! : getTextContent(el);
 }
 
-export function markdownInline(string: string, options?: MarkedOptions): string {
-	const [ret, $] = createDiv();
-	ret.html(purify.sanitize(marked(string, options)));
-	$("p", ret).replaceWith(function(this: cheerio.Element) { return $(this).contents(); });
-	applyMarkdownModifications(ret, $);
-	return ret.html()!;
+export function markdownInline(string: string, html: boolean): string {
+	const $ = load("<div/>");
+	const el = $.root();
+	el.html(purify.sanitize(marked(string, markdownOptions) as string));
+	$("p", el).replaceWith(function() { return $(this).contents(); });
+	applyMarkdownModifications(el);
+	return html ? el.html()! : getTextContent(el);
+}
+
+/**
+ * Iterates through the descendant nodes of the given cheerio element, yielding each node when it is opened and when it is
+ * closed. For childless nodes (such as text nodes), an open and close object are emitted right after each other.
+ */
+export function* domTreeIterator(el: Cheerio<ParentNode>): Generator<{ type: "open" | "close"; node: Node }, void, void> {
+	const stack: Node[] = [el[0]];
+	outer: while (stack.length > 0) {
+		const cur = stack[stack.length - 1];
+		yield { type: "open", node: cur };
+		if (cur instanceof NodeWithChildren && cur.firstChild) {
+			stack.push(cur.firstChild);
+		} else {
+			while (!stack[stack.length - 1].nextSibling || /* Cancel when reaching el */ stack.length === 1) {
+				yield { type: "close", node: stack.pop()! };
+				if (stack.length === 0) {
+					break outer;
+				}
+			}
+			yield { type: "close", node: stack[stack.length - 1] };
+			stack[stack.length - 1] = stack[stack.length - 1].nextSibling!;
+		}
+	}
+}
+
+/**
+ * Returns the text content of the given cheerio element, making a best attempt to represent line breaks caused by
+ * block elements and paragraphs in the given data.
+ */
+export function getTextContent(el: Cheerio<ParentNode>): string {
+    let result = "";
+    let currentPrefix = "";
+    for (const { type, node } of domTreeIterator(el)) {
+        if (node instanceof Element) {
+            if (node.tagName === "p") {
+                if (type === "open") {
+                    result += "\n";
+                }
+                currentPrefix = "\n";
+            } else if (node.tagName === "br" && type === "open") {
+                result += "\n";
+                currentPrefix = "";
+            } else if (!result.endsWith("\n") && ["address", "article", "aside", "blockquote", "details", "dialog", "dd", "dl", "div", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "ol", "pre", "section", "table", "ul"].includes(node.tagName)) {
+                currentPrefix = "\n";
+            } else if (!result.endsWith("\n") && !result.endsWith(" ") && ["td", "th"].includes(node.tagName) && currentPrefix === "") {
+                currentPrefix = " ";
+            }
+        }
+
+        if (type === "open") {
+            const text = node instanceof Text ? node.nodeValue.replace(/[\r\n\t ]+/g, " ").trim() : undefined;
+            if (text) {
+                result += currentPrefix;
+                currentPrefix = "";
+                result += text;
+            }
+        }
+    }
+    return result.trim();
 }
 
 export function round(number: number, digits: number): number {
@@ -56,14 +118,11 @@ export function formatTime(seconds: number): string {
 	return hours + ":" + minutes;
 }
 
-function applyMarkdownModifications($el: cheerio.Cheerio, $: cheerio.Root): void {
-	$("a[href]", $el).attr({
+function applyMarkdownModifications($el: Cheerio<AnyNode>): void {
+	$el.find("a[href]").attr({
 		target: "_blank",
 		rel: "noopener noreferer"
 	});
-
-
-	obfuscate($el, $);
 }
 
 export function renderOsmTag(key: string, value: string): string {
@@ -88,4 +147,8 @@ export function renderOsmTag(key: string, value: string): string {
 			target: (href: string, type: string) => type === "url" ? "_blank" : ""
 		});
 	}
+}
+
+export function formatCoordinates(point: Point): string {
+	return `${point.lat.toFixed(5)},${point.lon.toFixed(5)}`;
 }

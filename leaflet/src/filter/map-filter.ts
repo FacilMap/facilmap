@@ -1,14 +1,5 @@
 import { Map } from "leaflet";
-import { compileExpression, FilterFunc } from "facilmap-utils";
-
-declare module "leaflet" {
-	interface Map {
-		fmFilter: string | undefined;
-		fmFilterFunc: FilterFunc;
-
-		setFmFilter(filter?: string): void;
-	}
-}
+import { compileExpression } from "facilmap-utils";
 
 Object.assign(Map.prototype, {
 	fmFilter: undefined,

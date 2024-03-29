@@ -5,6 +5,9 @@ on:
     branches:
       - 'main'
 
+env:
+  TAG: facilmap/facilmap:latest
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -12,31 +15,64 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
+
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       -
-        name: Build and push (FacilMap)
-        id: docker_build_facilmap
-        uses: docker/build-push-action@v2
+        name: Start integration test components in background
+        run: docker compose -f ./integration-tests/docker-compose.yml up -d --quiet-pull mysql postgres &
+
+      -
+        name: Build docker image
+        uses: docker/build-push-action@v5
         with:
-          push: true
           context: .
-          tags: facilmap/facilmap:latest
+          load: true
+          tags: |
+            ${{env.TAG}}
+            facilmap-ci
+
+      -
+        name: Start integration test components
+        run: |
+          docker compose -f ./integration-tests/docker-compose.yml up --wait
+          status="$?"
+          if (( status != 0 )); then
+            docker compose -f ./integration-tests/docker-compose.yml logs
+            exit "$status"
+          fi
+
+      -
+        name: Run integration tests
+        run: >-
+          docker run --rm -u root --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
+          yarn workspaces focus facilmap-integration-tests &&
+          FACILMAP_URL=http://host.docker.internal:8080 yarn workspace facilmap-integration-tests run integration-tests &&
+          FACILMAP_URL=http://host.docker.internal:8081 yarn workspace facilmap-integration-tests run integration-tests
+          "
+
+      -
+        name: Push docker image
+        run: docker push "$TAG"
+
       -
         name: Build and push (Docs)
         id: docker_build_docs
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           push: true
           context: ./docs

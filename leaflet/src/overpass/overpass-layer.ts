@@ -1,10 +1,10 @@
-import { Colour, Shape } from "facilmap-types";
-import { FeatureGroup, latLng, Layer, LayerOptions } from "leaflet";
+import type { Colour, Shape } from "facilmap-types";
+import { FeatureGroup, latLng, Layer, type LayerOptions } from "leaflet";
 import MarkerLayer from "../markers/marker-layer";
 import { getSymbolForTags } from "../utils/icons";
 import { tooltipOptions } from "../utils/leaflet";
-import { OverpassPreset } from "./overpass-presets";
-import { getOverpassElements, isOverpassQueryEmpty, OverpassElement } from "./overpass-utils";
+import type { OverpassPreset } from "./overpass-presets";
+import { getOverpassElements, isOverpassQueryEmpty, type OverpassElement } from "./overpass-utils";
 
 declare module "leaflet" {
 	interface Layer {
@@ -36,10 +36,10 @@ export default class OverpassLayer extends FeatureGroup {
 
 	declare options: OverpassLayerOptions;
 	_highlightedElements = new Set<string>();
-	_query: string | OverpassPreset[] | undefined;
+	_query: string | ReadonlyArray<Readonly<OverpassPreset>> | undefined;
 	_lastRequestController?: AbortController;
 
-	constructor(query?: string | OverpassPreset[], options?: OverpassLayerOptions) {
+	constructor(query?: string | ReadonlyArray<Readonly<OverpassPreset>>, options?: OverpassLayerOptions) {
 		super([], {
 			markerColour: "000000",
 			markerSize: 35,
@@ -59,7 +59,7 @@ export default class OverpassLayer extends FeatureGroup {
     }
 
     onAdd(): this {
-        this.redraw();
+        void this.redraw();
         return this;
     }
 
@@ -67,13 +67,13 @@ export default class OverpassLayer extends FeatureGroup {
 		return isOverpassQueryEmpty(this._query);
 	}
 
-	getQuery(): string | OverpassPreset[] | undefined {
+	getQuery(): string | ReadonlyArray<Readonly<OverpassPreset>> | undefined {
 		return this._query;
 	}
 
-	setQuery(query?: string | OverpassPreset[]): void {
+	setQuery(query?: string | ReadonlyArray<Readonly<OverpassPreset>>): void {
 		this._query = query;
-		this.redraw();
+		void this.redraw();
 		this.fire("setQuery", { query });
 
 		if (this.isEmpty())

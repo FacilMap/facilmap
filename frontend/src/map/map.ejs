@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html class="fm-facilmap-map">
 	<head>
 		<meta charset="utf-8">
-		<title><%= padData && padData.name ? `${padData.name} – ` : ''%>FacilMap</title>
-		<meta name="description" content="<%= padData && padData.description || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration." %>" />
+		<title><%=normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, appName)%></title>
+		<meta name="description" content="<%=normalizePageDescription(padData?.description)%>" />
 <% if(!padData || (isReadOnly && padData.searchEngines)) { -%>
 		<meta name="robots" content="index,nofollow" />
 <% } else { -%>
@@ -11,13 +11,15 @@
 <% } -%>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
-		<link rel="icon" href="../../static/favicon.svg">
-		<link rel="mask-icon" href="./favicon.svg" color="#00272a">
-		<link rel="apple-touch-icon" href="./app-180.png">
-		<link rel="manifest" href="./manifest.json">
-		<link rel="search" type="application/opensearchdescription+xml" title="FacilMap" href="./opensearch.xml">
+		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
+		<link rel="mask-icon" href="<%=paths.base%>static/favicon.svg" color="#00272a">
+		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
+		<link rel="manifest" href="<%=paths.base%>manifest.json">
+		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href="<%=paths.base%>opensearch.xml">
+		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, appName)%>" />
+		<link rel="iframely geolocation web-share resizable" href="<%=url%>">
 		<style type="text/css">
-			html, body {
+			html, body, #app {
 				margin: 0;
 				padding: 0;
 				display: flex;
@@ -60,12 +62,29 @@
 				to { transform: rotate(360deg); }
 			}
 		</style>
+		<style type="text/css">
+<% for (const path of styles) { -%>
+			@import url("<%=paths.base%><%=path%>");
+<% } -%>
+<% if (hasCustomCssFile) { -%>
+			@import url("<%=paths.base%>custom.css");
+<% } -%>
+		</style>
+<% for (const path of scripts) { -%>
+		<script type="module" src="<%=paths.base%><%=path%>"></script>
+<% } -%>
+<% for (const path of preloadScripts) { -%>
+		<link rel="modulepreload" href="<%=paths.base%><%=path%>"/>
+<% } -%>
 	</head>
 	<body>
-		<noscript><p><strong>FacilMap requires JavaScript to work.</strong></p></noscript>
+		<noscript><p><strong><%=appName%> requires JavaScript to work.</strong></p></noscript>
 		<div id="loading">
 			Loading...
 			<div id="spinner"></div>
+		</div>
+
+		<div id="app">
 		</div>
 
 		<script>
@@ -74,7 +93,7 @@
 					var loading = document.getElementById("loading");
 					if(loading) {
 						loading.className += " error";
-						loading.innerHTML = "Could not load FacilMap!";
+						loading.innerHTML = "Could not load <%=appName%>!";
 					}
 				};
 			})();

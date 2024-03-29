@@ -1,33 +1,58 @@
 # Overview
 
-The FacilMap frontend is a [Vue.js](https://vuejs.org/) app that provides the main FacilMap UI.
+The FacilMap frontend is a [Vue.js](https://vuejs.org/) app that provides the main FacilMap UI. You can use it to integrate a modified or extended version of the FacilMap UI or its individual components into your app. If you just want to embed the whole FacilMap UI without any modifications, it is easier to [embed it as an iframe](../embed.md).
 
 The FacilMap frontend is available as the [facilmap-frontend](https://www.npmjs.com/package/facilmap-frontend) package on NPM.
 
+Right now there is no documentation of the individual UI components, nor are they designed to be reusable or have a stable interface. Use them at your own risk and have a look at the [source code](https://github.com/FacilMap/facilmap/tree/main/frontend/src/lib) to get an idea how to use them.
+
 ## Setup
 
-The FacilMap frontend uses [Bootstrap-Vue](https://bootstrap-vue.org/), but does not install it by default to provide bigger flexibility. When using the FacilMap frontend, make sure to have it [set up](https://bootstrap-vue.org/docs#using-module-bundlers):
+The FacilMap frontend is published as an ES module. It is meant to be used as part of an app that is built using a bundler, rather than importing it directly into a HTML file.
+
+The frontend heavily relies on Vue, Bootstrap and other large libraries. These are not part of the bundle, but are imported using `import` JavaScript statements. This avoids duplicating these dependencies if you also use them elsewhere in your app.
+
+To get FacilMap into your app, install the NPM package using `npm install -S facilmap-frontend` or `yarn add facilmap-frontend` and then import the components that you need.
 
 ```javascript
-import Vue from "vue";
-import { BootstrapVue } from "bootstrap-vue";
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
+import { FacilMap } from "facilmap-frontend";
+```
 
-Vue.use(BootstrapVue);
+The FacilMap UI uses a slightly adjusted version of [Bootstrap 5](https://getbootstrap.com/) for styling. To avoid duplication if you want to integrate FacilMap into an app that is already using Bootstrap, the Bootstrap CSS is not part of the main export. If you want to use FacilMap’s default Bootstrap styles, import them separately from `facilmap-frontend/bootstrap.css`:
+
+```javascript
+import "facilmap-frontend/bootstrap.css";
 ```
 
 ## Structure
 
-The FacilMap server renders a static HTML file, which already contains some metadata about the map (such as the map title and the search engines policy configured for the particular map). It then renders a Vue.js app that renders the FacilMap UI using the [`FacilMap`](./facilmap.md) component. It sets the props and listens to the events of the FacilMap app in a way that the URL and document title are updated as the user opens or closes collaborative maps or their metadata changes.
+The [`<FacilMap>`](./facilmap.md) component renders the whole frontend, including a component that provides a connection to the FacilMap server. If you want to render the whole FacilMap UI, simply render that component rather than rendering all the components of the UI individually.
 
-The FacilMap frontend makes heavy use of [provide/inject](https://vuejs.org/v2/api/#provide-inject) feature of Vue.js. Most FacilMap components require the presence of certain injected objects to work. When rendering the `FacilMap` component, the following component hierarchy is created: `FacilMap` (provides `Context`) → `ClientProvider` (provides `Client`) → `LeafletMap` (provides `MapComponents` and `MapContext`) → any UI components. The injected objects have the following purpose:
-* `Context`: A reactive object that contains general details about the context in which this FacilMap runs, such as the props that were passed to the `FacilMap` component and the currently opened map ID.
-* `Client`: A reactive instance of the FacilMap client.
-* `MapComponents`: A non-reactive object that contains all the Leaflet components of the map.
-* `MapContext`: A reactive object that contains information about the current state of some Leaflet components, for example the current position of the map. It also acts as an event emitter that is used for communication between different components of the UI.
+```vue
+<FacilMap
+	baseUrl="https://facilmap.org/"
+	serverUrl="https://facilmap.org/"
+	:padId="undefined"
+></FacilMap>
+```
 
-By passing child components to the `FacilMap` component, you can yourself make use of these injected objects when building extensions for FacilMap. When using class components with [vue-property-decorator](https://github.com/kaorun343/vue-property-decorator), you can inject these objects by using the `InjectContext()`, `InjectMapComponents()`, … decorators. Otherwise, you can inject them by using `inject: [CONTEXT_INJECT_KEY, MAP_COMPONENTS_INJECT_KEY, …]`.
+The `<FacilMapContextProvider>` component provides a reactive object that acts as the central hub for all components to provide their public state (for example the facilmap-client object, the current map ID, the current selection, the current map view) and their public API (for example to open a search box tab, to open a map, to set route destinations). All components that need to communicate with each other use this context for that. This means that if you want to render individual UI components, you need to make sure that they are rendered within a `<FacilMapContextProvider>` (or within a `<FacilMap>`, which renders the context provider for you). It also means that if you want to add your own custom UI components, they will benefit greatly from accessing the context.
+
+The context is both injected and exposed by both the `<FacilMap>` and the `<FacilMapContextProvider>` component. To access the injected context, import the `injectContextRequired` function from `facilmap-frontend` and call it in the setup function of your component. For this, the component must be a child of `<FacilMap>` or `<FacilMapContextProvider>`. To access the exposed context, use a ref:
+```vue
+<script setup lang="ts">
+	import { FacilMap } from "facilmap-frontend";
+
+	const facilMapRef = ref<InstanceType<typeof FacilMap>>();
+
+	// Access the context as facilMapRef.value.context
+</script>
+<template>
+	<FacilMap ref="facilMapRef"></FacilMap>
+</template>
+```
+
+For now there is no documentation of the context object. To get an idea of its API, have a look at its [source code](https://github.com/FacilMap/facilmap/blob/main/frontend/src/lib/components/facil-map-context-provider/facil-map-context.ts).
 
 ## Styling
 

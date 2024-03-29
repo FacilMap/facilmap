@@ -1,9 +1,9 @@
-import { ID } from "./base";
-import { Marker } from "./marker";
-import { Line } from "./line";
-import { View } from "./view";
-import { PadData, PadId } from "./padData";
-import { Type } from "./type";
+import type { ID, PadId } from "./base.js";
+import type { Marker } from "./marker.js";
+import type { Line } from "./line.js";
+import type { View } from "./view.js";
+import type { PadData } from "./padData.js";
+import type { Type } from "./type.js";
 
 export type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";
 export type HistoryEntryAction = "create" | "update" | "delete";

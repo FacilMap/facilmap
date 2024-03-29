@@ -12,8 +12,9 @@ Financial contributions are very much appreciated and can be sent through the fo
 	width: 740,
 	gap: 20,
 	links: {
-		'GitHub Sponsors': 'https://github.com/sponsors/FacilMap',
+		'GitHub': 'https://github.com/sponsors/FacilMap',
 		'Liberapay': 'https://liberapay.com/facilmap/',
+		'Ko-fi': 'https://ko-fi.com/facilmap',
 		'PayPal': 'https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS',
 		'Patreon': 'https://www.patreon.com/facilmap',
 		'Bitcoin': 'bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv'

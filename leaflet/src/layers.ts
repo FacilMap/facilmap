@@ -1,21 +1,11 @@
-import L, { Layer, Map, TileLayer } from "leaflet";
+import { Layer, Map, tileLayer, type TileLayer } from "leaflet";
 import AutoGraticule from "leaflet-auto-graticule";
 import FreieTonne from "leaflet-freie-tonne";
 
-declare module "leaflet" {
-	interface Map {
-		_fmLayers?: Layers;
-	}
-
-	interface FmLayerOptions {
-		fmName?: string;
-	}
-
-	interface LayerOptions extends FmLayerOptions {}
-}
-
 export const defaultVisibleLayers: VisibleLayers = {
-	baseLayer: 'Mpnk',
+	get baseLayer() {
+		return layerOptions.limaLabsToken ? 'Lima' : 'Mpnk';
+	},
 	overlays: []
 };
 
@@ -27,83 +17,91 @@ export interface Layers {
 export function createDefaultLayers(): Layers & { fallbackLayer: string | undefined } {
 	return {
 		baseLayers: {
-			Mpnk: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+			...(layerOptions.limaLabsToken ? {
+				Lima: tileLayer(`https://cdn.lima-labs.com/{z}/{x}/{y}.png?api=${encodeURIComponent(layerOptions.limaLabsToken)}`, {
+					fmName: "Lima Labs",
+					attribution: '© <a href="https://maps.lima-labs.com/" target="_blank">Lima Labs</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
+					noWrap: true
+				})
+			} : {}),
+
+			Mpnk: tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 				fmName: "Mapnik",
 				attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			/*MSfR: L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
+			/*MSfR: tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 				fmName: "MapSurfer Road",
 				attribution: '© <a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			})*/
 
-			ToPl: L.tileLayer("https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
+			ToPl: tileLayer("https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
 				fmName: "TopPlus",
 				attribution: '© <a href="https://www.bkg.bund.de/">Bundesamt für Kartographie und Geodäsie</a> ' + (new Date()).getFullYear(),
 				noWrap: true
 			}),
 
-			Map1: L.tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
+			Map1: tileLayer("http://beta.map1.eu/tiles/{z}/{x}/{y}.jpg", {
 				fmName: "Map1.eu",
 				attribution: '© <a href="http://map1.eu/" target="_blank">Map1.eu</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			Topo: L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+			Topo: tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
 				fmName: "OpenTopoMap",
 				attribution: '© <a href="https://opentopomap.org/" target="_blank">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">CC-BY-SA</a>) / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			CycO: L.tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
+			CycO: tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
 				fmName: "CyclOSM",
 				attribution: '© <a href="https://www.cyclosm.org/" target="_blank">CyclOSM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			OCyc: L.tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
+			OCyc: tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
 				fmName: "OpenCycleMap",
 				attribution: '© <a href="https://opencyclemap.org/" target="_blank">OpenCycleMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			HiBi: L.tileLayer("https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
+			HiBi: tileLayer("https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 				fmName: "Hike & Bike Map",
 				attribution: '© <a href="http://hikebikemap.org/" target="_blank">Hike &amp; Bike Map</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 
-			MpnW: L.tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
+			MpnW: tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
 				fmName: "Mapnik Water",
 				attribution: '© <a href="https://www.freietonne.de/" target="_blank">FreieTonne</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				noWrap: true
 			}),
 		},
 		overlays: {
-			OPTM: L.tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
+			OPTM: tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
 				fmName: "Public transportation",
 				attribution: '© <a href="http://openptmap.org/" target="_blank">OpenPTMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				zIndex: 300,
 				noWrap: true
 			}),
 
-			Hike: L.tileLayer("https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
+			Hike: tileLayer("https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
 				fmName: "Hiking paths",
 				attribution: '© <a href="https://hiking.waymarkedtrails.org/" target="_blank">Waymarked Trails</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				zIndex: 300,
 				noWrap: true
 			}),
 
-			Bike: L.tileLayer("https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png", {
+			Bike: tileLayer("https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png", {
 				fmName: "Bicycle routes",
 				attribution: '© <a href="https://cycling.waymarkedtrails.org/" target="_blank">Waymarked Trails</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM Contributors</a>',
 				zIndex: 300,
 				noWrap: true
 			}),
 
-			Rlie: L.tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
+			Rlie: tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
 				maxZoom: 16,
 				fmName: "Relief",
 				zIndex: 300,
@@ -130,6 +128,20 @@ let createLayers = createDefaultLayers;
 
 export function setLayers(create: typeof createDefaultLayers): void {
 	createLayers = create;
+}
+
+export interface LayerOptions {
+	limaLabsToken?: string;
+}
+
+let layerOptions: LayerOptions = {};
+
+export function getLayerOptions(): LayerOptions {
+	return layerOptions;
+}
+
+export function setLayerOptions(options: LayerOptions): void {
+	layerOptions = options;
 }
 
 export function getLayers(map: Map): Layers {

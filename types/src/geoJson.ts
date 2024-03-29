@@ -1,12 +1,12 @@
-import { Feature, FeatureCollection, LineString, Point } from "geojson";
-import { View } from "./view";
-import { Type } from "./type";
-import { ID } from "./base";
-import { Marker } from "./marker";
-import { Line } from "./line";
+import type { Feature, FeatureCollection, LineString, Point } from "geojson";
+import type { View } from "./view.js";
+import type { Type } from "./type.js";
+import type { ID } from "./base.js";
+import type { Marker } from "./marker.js";
+import type { Line } from "./line.js";
 
-export type MarkerFeature = Feature<Point, Omit<Marker, "id" | "padId" | "lat" | "lon">>;
-export type LineFeature = Feature<LineString, Omit<Line, "id" | "padId" | "top" | "left" | "right" | "bottom">>;
+export type MarkerFeature = Feature<Point, Omit<Marker, "id" | "padId" | "lat" | "lon" | "ele">>;
+export type LineFeature = Feature<LineString, Omit<Line, "id" | "padId" | "top" | "left" | "right" | "bottom" | "extraInfo" | "ascent" | "descent">>;
 
 export interface GeoJsonExtensions {
 	name: string;

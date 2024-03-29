@@ -1,0 +1,13 @@
+{
+    "name": "%APP_NAME%",
+    "short_name": "%APP_NAME%",
+    "icons": [{
+        "src": "./static/app-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+    }],
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "../"
+}

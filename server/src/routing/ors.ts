@@ -1,9 +1,7 @@
-import config from "../config";
-import { calculateDistance, DecodedRouteMode } from "facilmap-utils";
-import { ExtraInfo, Point } from "facilmap-types";
-import { throttle } from "../utils/utils";
-import { RawRouteInfo } from "./routing";
-import fetch from "node-fetch";
+import config from "../config.js";
+import { calculateDistance, type DecodedRouteMode } from "facilmap-utils";
+import type { ExtraInfo, Point } from "facilmap-types";
+import type { RawRouteInfo } from "./routing.js";
 
 if (!config.orsToken)
 	console.error("Warning: No ORS token configured, calculating routes will fail. Please set ORS_TOKEN in the environment or in config.env.");
@@ -34,9 +32,7 @@ export function getMaximumDistanceBetweenRoutePoints(decodedMode: DecodedRouteMo
 	return MAX_DISTANCE[decodedMode.mode];
 }
 
-export const calculateORSRoute = throttle(calculateRouteInternal, 4);
-
-async function calculateRouteInternal(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
+export async function calculateORSRoute(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
 	if (!config.orsToken)
 		throw new Error("Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.");
 
@@ -56,7 +52,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		currentGroup.push(point);
 	}
 
-	const results = await Promise.all(coordGroups.map((coords) => {
+	const results = await Promise.all(coordGroups.map(async (coords) => {
 		const req: any = {
 			coordinates: coords.map((point) => [point.lon, point.lat]),
 			radiuses: coords.map(() => -1),
@@ -78,7 +74,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 		if(decodedMode.preference)
 			req.preference = decodedMode.preference == "shortest" ? "shortest" : "recommended";
 
-		return fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
+		return await fetch(`${ROUTING_URL}/${ROUTING_MODES[`${decodedMode.mode}-${decodedMode.type || ""}`]}/geojson`, {
 			method: "POST",
 			headers: {
 				...(config.orsToken ? { "Authorization": config.orsToken } : {}),
@@ -87,7 +83,7 @@ async function calculateRouteInternal(points: Point[], decodedMode: DecodedRoute
 				"User-Agent": config.userAgent
 			},
 			body: JSON.stringify(req)
-		}).then((res) => res.json());
+		}).then((res) => res.json() as any);
 	}));
 
 	const ret = {

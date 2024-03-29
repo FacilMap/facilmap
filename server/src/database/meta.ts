@@ -1,10 +1,22 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import Database from "./database";
-import { createModel } from "./helpers";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
+import Database from "./database.js";
+import { createModel } from "./helpers.js";
 
 interface MetaModel extends Model<InferAttributes<MetaModel>, InferCreationAttributes<MetaModel>> {
 	key: string;
 	value: string;
+}
+
+export interface MetaProperties {
+	dropdownKeysMigrated: "1";
+	hasElevation: "1" | "2";
+	hasLegendOption: "1";
+	hasBboxes: "1";
+	untitledMigrationCompleted: "1";
+	fieldsNullMigrationCompleted: "1";
+	extraInfoNullMigrationCompleted: "1";
+	typesIdxMigrationCompleted: "1";
+	viewsIdxMigrationCompleted: "1";
 }
 
 export default class DatabaseMeta {
@@ -25,12 +37,12 @@ export default class DatabaseMeta {
 		});
 	}
 
-	async getMeta(key: string): Promise<string | undefined> {
+	async getMeta<K extends keyof MetaProperties>(key: K): Promise<MetaProperties[K] | undefined> {
 		const entry = await this.MetaModel.findOne({ where: { key } });
-		return entry?.value ?? undefined;
+		return entry?.value ?? undefined as any;
 	}
 
-	async setMeta(key: string, value: string): Promise<void> {
+	async setMeta<K extends keyof MetaProperties>(key: K, value: MetaProperties[K]): Promise<void> {
 		await this.MetaModel.upsert({key, value});
 	}
 

@@ -1,11 +1,12 @@
-import { generateRandomId } from "../utils/utils";
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, Op, WhereOptions } from "sequelize";
-import Database from "./database";
-import { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers";
-import { calculateRouteForLine } from "../routing/routing";
-import { omit } from "lodash";
-import { Point as GeoJsonPoint } from "geojson";
+import { generateRandomId } from "../utils/utils.js";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
+import Database from "./database.js";
+import type { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
+import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
+import { calculateRouteForLine } from "../routing/routing.js";
+import { omit } from "lodash-es";
+import type { Point as GeoJsonPoint } from "geojson";
+import { asyncIteratorToArray } from "../utils/streams.js";
 
 const updateTimes: Record<string, number> = {};
 
@@ -56,6 +57,11 @@ export default class DatabaseRoutes {
 			],
 			modelName: "RoutePoint"
 		});
+	}
+
+	async afterConnect(): Promise<void> {
+		// Delete all route points, clients will have to reconnect and recalculate their routes anyways
+		await this.RoutePointModel.truncate();
 	}
 
 	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false): Promise<TrackPoint[]> {
@@ -150,24 +156,24 @@ export default class DatabaseRoutes {
 			return;
 
 		const line = await this._db.lines.getLine(padId, lineId);
-		const linePoints = await this._db.lines.getAllLinePoints(lineId);
+		const linePointsIt = this._db.lines.getAllLinePoints(lineId);
+		const linePoints = await asyncIteratorToArray((async function*() {
+			for await (const linePoint of linePointsIt) {
+				yield {
+					routeId,
+					lat: linePoint.lat,
+					lon: linePoint.lon,
+					ele: linePoint.ele,
+					zoom: linePoint.zoom,
+					idx: linePoint.idx
+				};
+			}
+		})());
 
 		if(thisTime != updateTimes[routeId])
 			return;
 
-		const create = [];
-		for(const linePoint of linePoints) {
-			create.push({
-				routeId,
-				lat: linePoint.lat,
-				lon: linePoint.lon,
-				ele: linePoint.ele,
-				zoom: linePoint.zoom,
-				idx: linePoint.idx
-			});
-		}
-
-		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, create);
+		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, linePoints);
 
 		if(thisTime != updateTimes[routeId])
 			return;
@@ -178,10 +184,10 @@ export default class DatabaseRoutes {
 			routePoints: line.routePoints,
 			trackPoints: linePoints,
 			distance: line.distance,
-			time: line.time,
-			ascent: line.ascent,
-			descent: line.descent,
-			extraInfo: line.extraInfo,
+			time: line.time ?? undefined,
+			ascent: line.ascent ?? undefined,
+			descent: line.descent ?? undefined,
+			extraInfo: line.extraInfo ?? undefined,
 			top: line.top,
 			left: line.left,
 			bottom: line.bottom,
@@ -209,12 +215,14 @@ export default class DatabaseRoutes {
 		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
-	async getAllRoutePoints(routeId: string): Promise<TrackPoint[]> {
-		const data = await this.RoutePointModel.findAll({
-			where: {routeId},
+	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
+		const points = await this.RoutePointModel.findAll({
+			where: { routeId },
 			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
 		});
-		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
+		for (const point of points) {
+			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
+		}
 	}
 
 }

@@ -1,6 +1,6 @@
-import Client from "facilmap-client";
-import { Map, Polyline } from "leaflet";
-import DraggableLines, { DraggableLinesHandlerOptions } from "leaflet-draggable-lines";
+import type Client from "facilmap-client";
+import { Map, type Polyline } from "leaflet";
+import DraggableLines, { type DraggableLinesHandlerOptions } from "leaflet-draggable-lines";
 
 interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 }
@@ -8,9 +8,9 @@ interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 export default class RouteDragHandler extends DraggableLines {
 
 	declare realOptions: RouteDragHandlerOptions;
-	client: Client<any>;
+	client: Client;
 
-	constructor(map: Map, client: Client<any>, options?: RouteDragHandlerOptions) {
+	constructor(map: Map, client: Client, options?: RouteDragHandlerOptions) {
 		super(map, {
 			enableForLayer: false,
 			dragMarkerOptions: () => ({ pane: "fm-raised-marker" }),
@@ -29,7 +29,7 @@ export default class RouteDragHandler extends DraggableLines {
 			const routePoints = (e.layer as Polyline).getDraggableLinesRoutePoints();
 
 			if (routePoints) {
-				this.client.setRoute({
+				void this.client.setRoute({
 					...route,
 					routePoints: routePoints.map((p) => ({ lat: p.lat, lon: p.lng }))
 				});

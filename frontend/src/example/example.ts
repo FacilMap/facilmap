@@ -1,21 +1,11 @@
-import Vue from "vue";
-import { BootstrapVue } from "bootstrap-vue";
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
-import withRender from "./example.vue";
-import { FacilMap } from "../lib";
-import MapControl from "./map-control";
+import { createApp, defineComponent, h } from "vue";
+import ExampleRoot from "./example-root.vue";
+import "../lib/bootstrap.scss";
 
-Vue.use(BootstrapVue);
+const Root = defineComponent({
+	setup() {
+		return () => h(ExampleRoot);
+	}
+});
 
-new Vue(withRender({
-	el: "#app",
-	data: {
-		serverUrl: "http://localhost:40829/",
-		padId1: "test",
-		padName1: undefined,
-		padId2: "test",
-		padName2: undefined
-	},
-	components: { FacilMap, MapControl }
-}));
+createApp(Root).mount(document.getElementById("app")!);

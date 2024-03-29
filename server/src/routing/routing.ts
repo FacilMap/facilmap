@@ -1,8 +1,8 @@
-import { calculateBbox, isInBbox } from "../utils/geo";
-import { Bbox, BboxWithZoom, LineCreate, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
-import { decodeRouteMode, DecodedRouteMode, calculateDistance } from "facilmap-utils";
-import { calculateOSRMRoute } from "./osrm";
-import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors";
+import { calculateBbox, isInBbox } from "../utils/geo.js";
+import type { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
+import { decodeRouteMode, type DecodedRouteMode, calculateDistance, round } from "facilmap-utils";
+import { calculateOSRMRoute } from "./osrm.js";
+import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -35,13 +35,20 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 		route = await calculateORSRoute(routePoints, decodedMode);
 	}
 
-	calculateZoomLevels(route!.trackPoints);
-	Object.assign(route!, calculateBbox(route!.trackPoints));
+	route!.distance = round(route!.distance, 2);
+	route!.time = route!.time != null ? Math.round(route!.time) : route!.time;
+	route!.ascent = route!.ascent != null ? Math.round(route!.ascent) : route!.ascent;
+	route!.descent = route!.descent != null ? Math.round(route!.descent) : route!.descent;
 
-	return route as RouteInfo;
+	calculateZoomLevels(route!.trackPoints);
+
+	return {
+		...route,
+		...calculateBbox(route!.trackPoints)
+	} as RouteInfo;
 }
 
-export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
+export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
 	const result: Partial<RouteInfo> = {};
 
 	if(trackPointsFromRoute) {
@@ -52,9 +59,9 @@ export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'rou
 		result.extraInfo = trackPointsFromRoute.extraInfo;
 		result.trackPoints = trackPointsFromRoute.trackPoints;
 	} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
-		result.distance = calculateDistance(line.trackPoints);
+		result.distance = round(calculateDistance(line.trackPoints), 2);
 		result.time = undefined;
-		result.extraInfo = {};
+		result.extraInfo = undefined;
 
 		// TODO: ascent/descent?
 
@@ -76,13 +83,13 @@ export async function calculateRouteForLine(line: Pick<LineCreate, 'mode' | 'rou
 
 		result.trackPoints = routeData.trackPoints;
 	} else {
-		result.distance = calculateDistance(line.routePoints);
+		result.distance = round(calculateDistance(line.routePoints), 2);
 		result.time = undefined;
-		result.extraInfo = {};
+		result.extraInfo = undefined;
 
 		result.trackPoints = [ ];
 		for(let i=0; i<line.routePoints.length; i++) {
-			result.trackPoints.push({ ...line.routePoints[i], zoom: 1, idx: i });
+			result.trackPoints.push({ ...line.routePoints[i], ele: null, zoom: 1, idx: i });
 		}
 	}
 

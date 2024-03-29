@@ -1,33 +1,88 @@
-<div class="fm-overpass-info">
-	<h2>
-		<a v-if="showBackButton" href="javascript:" @click="$emit('back')"><Icon icon="arrow-left"></Icon></a>
-		{{element.tags.name || 'Unnamed POI'}}
-	</h2>
-	<dl class="fm-search-box-collapse-point">
-		<dt>Coordinates</dt>
-		<dd><Coordinates :point="element"></Coordinates></dd>
+<script setup lang="ts">
+	import { renderOsmTag } from "facilmap-utils";
+	import Icon from "../ui/icon.vue";
+	import { getZoomDestinationForMarker } from "../../utils/zoom";
+	import type { OverpassElement } from "facilmap-leaflet";
+	import Coordinates from "../ui/coordinates.vue";
+	import { computed } from "vue";
+	import type { Type } from "facilmap-types";
+	import UseAsDropdown from "../ui/use-as-dropdown.vue";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { overpassElementsToMarkersWithTags } from "../../utils/add";
+	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 
-		<template v-for="(value, key) in element.tags">
-			<dt>{{key}}</dt>
-			<dd v-html="renderOsmTag(key, value)"></dd>
-		</template>
-	</dl>
+	const props = withDefaults(defineProps<{
+		element: OverpassElement;
+		showBackButton?: boolean;
+		isAdding?: boolean;
+	}>(), {
+		showBackButton: false,
+		isAdding: false
+	});
 
-	<b-button-toolbar>
-		<b-button v-b-tooltip.hover="'Zoom to POI'" @click="zoomToElement()" size="sm"><Icon icon="zoom-in" alt="Zoom to POI"></Icon></b-button>
+	const emit = defineEmits<{
+		back: [];
+		"add-to-map": [type: Type];
+	}>();
 
-		<b-dropdown v-if="!client.readonly && types.length > 0" :disabled="isAdding" size="sm">
-			<template #button-content>
-				<b-spinner small v-if="isAdding"></b-spinner>
-				Add to map
+	const zoomDestination = computed(() => getZoomDestinationForMarker(props.element));
+
+	const routeDestination = computed<RouteDestination>(() => {
+		return {
+			query: `${props.element.lat},${props.element.lon}`
+		};
+	});
+
+	const markersWithTags = computed(() => overpassElementsToMarkersWithTags([props.element]));
+</script>
+
+<template>
+	<div class="fm-overpass-info">
+		<h2>
+			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
+			{{element.tags.name || 'Unnamed POI'}}
+		</h2>
+		<dl class="fm-search-box-collapse-point fm-search-box-dl">
+			<dt>Coordinates</dt>
+			<dd><Coordinates :point="element"></Coordinates></dd>
+
+			<template v-for="(value, key) in element.tags" :key="key">
+				<dt>{{key}}</dt>
+				<dd v-html="renderOsmTag(key, value)"></dd>
 			</template>
-			<b-dropdown-item v-for="type in types" href="javascript:" @click="$emit('add-to-map', type)">{{type.name}}</b-dropdown-item>
-		</b-dropdown>
+		</dl>
 
-		<b-dropdown text="Use as" size="sm" v-if="context.search">
-			<b-dropdown-item href="javascript:" @click="useAsFrom()">Route start</b-dropdown-item>
-			<b-dropdown-item href="javascript:" @click="useAsVia()">Route via</b-dropdown-item>
-			<b-dropdown-item href="javascript:" @click="useAsTo()">Route destination</b-dropdown-item>
-		</b-dropdown>
-	</b-button-toolbar>
-</div>
+		<div class="btn-toolbar">
+			<ZoomToObjectButton
+				label="POI"
+				size="sm"
+				:destination="zoomDestination"
+			></ZoomToObjectButton>
+
+			<AddToMapDropdown
+				:markers="markersWithTags"
+				size="sm"
+				isSingle
+			></AddToMapDropdown>
+
+			<UseAsDropdown
+				size="sm"
+				:isDisabled="isAdding"
+				:destination="routeDestination"
+			></UseAsDropdown>
+		</div>
+	</div>
+</template>
+
+<style lang="scss">
+	.fm-overpass-info {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+
+		.fm-search-box-collapse-point {
+			min-height: 1.5em;
+		}
+	}
+</style>

@@ -1,8 +1,8 @@
-import { clone } from "../utils/utils";
-import { Model, DataTypes, FindOptions, InferAttributes, CreationOptional, ForeignKey, InferCreationAttributes } from "sequelize";
-import Database from "./database";
-import { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
-import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers";
+import { Model, DataTypes, type FindOptions, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
+import Database from "./database.js";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
+import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
+import { cloneDeep } from "lodash-es";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
@@ -77,7 +77,7 @@ export default class DatabaseHistory {
 			attributes: [ "id" ]
 		})).map(it => it.id);
 
-		const dataClone = clone(data);
+		const dataClone = cloneDeep(data);
 		if(data.type != "Pad") {
 			if(dataClone.objectBefore) {
 				delete (dataClone.objectBefore as any).id;
@@ -100,7 +100,7 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(padId: PadId, types?: HistoryEntryType[]): Highland.Stream<HistoryEntry> {
+	getHistory(padId: PadId, types?: HistoryEntryType[]): AsyncIterable<HistoryEntry> {
 		const query: FindOptions = { order: [[ "time", "DESC" ]] };
 		if(types)
 			query.where = {type: types};

@@ -22,9 +22,9 @@ A bounding box that describes which part of the map the user is currently viewin
 * `size` (number, min: 15): The height of the marker in pixels
 * `symbol` (string): The symbol name for the marker. Default is an empty string.
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
-* `elevation` (number): The elevation of this marker in metres (set by the server)
+* `ele` (number or null): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
-* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the marker. This is a null-prototype object to avoid prototype pollution.
 
 ## Line
 
@@ -45,14 +45,15 @@ separately through `linePoints` events.
 * `mode` (string): The routing mode, an empty string for no routing, or `car`, `bicycle`, `pedestrian`, or `track`
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
+* `stroke` (string): The stroke style of the line, an empty string for solid or `dashed` or `dotted`.
 * `name` (string): The name of the line
 * `distance` (number): The distance of the line in kilometers (set by the server)
 * `ascent`, `descent` (number): The total ascent/descent of the line in metres (set by the server)
 * `time` (number): The time it takes to travel the route in seconds (only if routing mode is `car`, `bicycle` or `pedestrian`) (set by the server)
 * `left`, `top`, `right`, `bottom` (number): The bounding box of the line (set by the server)
-* `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code>): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
+* `extraInfo` (<code>{ &#91;type: string&#93;: Array<&#91;startIdx: number, endIdx: number, type: number&#93;>> }</code> or null): Extra details about the route (set by the server). `type` can be for example `steepness`, `surface` or `waytype`. `startIdx` and `endIdx` describe a segment on the trackpoints of the route, the meaning of `type` can be seen in the documentation of [Leaflet.Heightgraph](https://github.com/GIScience/Leaflet.Heightgraph/blob/master/example/mappings.js).
 * `typeId` (number): The ID of the type of this line
-* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. By default, this is a null-prototype object to avoid prototype pollution. Have a look at [marker/line data](./advanced.md#marker-line-data) for more details.
+* `data` (<code>{ &#91;fieldName: string&#93;: string }</code>): The filled out form fields of the line. This is a null-prototype object to avoid prototype pollution.
 * `trackPoints`:
   * In the `lines` property of the client, an object of the format [<code>{ &#91;idx: number&#93;: TrackPoint }</code>](#trackpoint)
   * When creating/updating a line with the routing mode `track`, an array of the format [`TrackPoint[]`](#trackpoint)
@@ -68,7 +69,7 @@ their `idx` property.
 * `lat` (number, min: -90, max: 90): The latitude of this point
 * `lon` (number, min: -180, max: 180): The longitude of this point
 * `zoom` (number, min: 1, max: 20): The miminum zoom level from which this track point makes sense to show
-* `ele` (number): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
+* `ele` (number or null): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
 
 ## PadData
 
@@ -82,6 +83,7 @@ their `idx` property.
 * `legend1`, `legend2` (string): Markdown free text to be shown above and below the legend
 * `defaultViewId` (number): The ID of the default view (if any)
 * `defaultView` ([view](#view)): A copy of the default view object (set by the server)
+* `createDefaultTypes` (boolean): On creation of a map, set this to false to not create one marker and one line type.
 
 ## View
 
@@ -107,20 +109,21 @@ their `idx` property.
 * `id` (number): The ID of this type
 * `name` (string): The name of this type
 * `type` (string): `marker` or `line`
-* `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultMode` (string/number): Default values for the
+* `idx` (number): The sorting position of this type. When a list of types is shown to the user, it must be ordered by this value. If types were deleted or reordered, there may be gaps in the sequence of indexes, but no two types on the same map can ever have the same index. When setting this as part of a type creation/update, other types with a same/higher index will have their index increased to be moved down the list.
+* `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
   different object properties
-* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `modeFixed` (boolean): Whether those values are fixed and
+* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
 	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
 	* `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
-	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
+	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
 	* `default` (string/boolean): The default value of this field
 	* `options` ([object]): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
 		* `value` (string): The value of this option.
 		* `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods.md#edittype-data)), specify the former value here
-		* `colour`, `size`, `shape`, `symbol`, `width` (string/number): The property value if this field controls that property
+		* `colour`, `size`, `shape`, `symbol`, `width`, `stroke` (string/number): The property value if this field controls that property
 
 ## SearchResult
 

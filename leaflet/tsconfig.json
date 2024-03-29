@@ -1,15 +1,19 @@
 {
 	"compilerOptions": {
-		"target": "esnext",
-		"esModuleInterop": true,
-		"strict": true,
-		"sourceMap": true,
-		"declaration": true,
-		"outDir": "dist",
-		"moduleResolution": "node",
-		"noErrorTruncation": true,
-		"skipLibCheck": true,
-		"experimentalDecorators": true
+		"outDir": "./out",
+		"composite": true,
+		"paths": {
+			"facilmap-client": ["../client/src/client.ts"],
+			"facilmap-types": ["../types/src/index.ts"],
+			"facilmap-utils": ["../utils/src/index.ts"]
+		}
 	},
-	"include": ["src/**/*"]
+	"extends": "../tsconfig.base.json",
+	"references": [
+		{ "path": "./tsconfig.node.json" },
+		{ "path": "../client/tsconfig.json" },
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../utils/tsconfig.json" }
+	],
+	"include": ["src/**/*", "example.html", "icontest.html"]
 }

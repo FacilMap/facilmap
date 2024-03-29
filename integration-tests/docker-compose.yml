@@ -1,0 +1,53 @@
+services:
+    facilmap-mysql:
+        image: facilmap-ci
+        links:
+            - mysql
+        depends_on:
+            mysql:
+                condition: service_healthy
+        ports:
+            - "8080:8080"
+        environment:
+            DB_TYPE: mysql
+            DB_HOST: mysql
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: facilmap
+
+    mysql:
+        image: mysql:5.7
+        environment:
+            MYSQL_DATABASE: facilmap
+            MYSQL_USER: facilmap
+            MYSQL_PASSWORD: facilmap
+            MYSQL_RANDOM_ROOT_PASSWORD: "true"
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        healthcheck:
+            test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+
+
+    facilmap-postgres:
+        image: facilmap-ci
+        links:
+            - postgres
+        depends_on:
+            postgres:
+                condition: service_healthy
+        ports:
+            - "8081:8080"
+        environment:
+            DB_TYPE: postgres
+            DB_HOST: postgres
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: facilmap
+
+    postgres:
+        image: postgis/postgis:16-3.4
+        environment:
+            POSTGRES_USER: facilmap
+            POSTGRES_PASSWORD: facilmap
+            POSTGRES_DB: facilmap
+        healthcheck:
+            test: pg_isready -d $$POSTGRES_DB
