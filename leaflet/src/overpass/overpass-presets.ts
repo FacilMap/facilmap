@@ -35,6 +35,7 @@ export const overpassPresets: OverpassPresetCategory[] = [
 				{ key: "postbox", query: "(node[amenity=post_box];node(w);)", label: "Letter box" },
 				{ key: "postoffice", query: "(node[amenity=post_office];way[amenity=post_office];rel[amenity=post_office];)", label: "Post office" },
 				{ key: "school", query: "(node[amenity~'^school$|^college$'];way[amenity~'^school$|^college$'];rel[amenity~'^school$|^college$'];)", label: "School/college" },
+				{ key: "shower", query: "(nwr[amenity=shower];nwr[shower=yes];)", label: "Shower" },
 				{ key: "taxi", query: "(node[amenity=taxi];way[amenity=taxi];rel[amenity=taxi];)", label: "Taxi" },
 				{ key: "theatre", query: "(node[amenity=theatre];way[amenity=theatre];rel[amenity=theatre];)", label: "Theatre" },
 				{ key: "toilets", query: "(node[amenity=toilets];way[amenity=toilets];rel[amenity=toilets];)", label: "Toilets" },
