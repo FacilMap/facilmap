@@ -5,7 +5,7 @@ import type { SelectedItem } from "./selection";
 import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+import { decodeLonLatUrl, normalizeLineName, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -140,10 +140,13 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	const searchBoxContext = toRef(() => context.components.searchBox);
 	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
-	if(searchBoxContext.value && routeFormTabContext.value && query.match(/ to /i)) {
-		routeFormTabContext.value.setQuery(query, zoom, smooth);
-		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
-		return true;
+	if(searchBoxContext.value && routeFormTabContext.value) {
+		const split = splitRouteQuery(query);
+		if (split.queries.length >= 2) {
+			routeFormTabContext.value.setQuery(query, zoom, smooth);
+			searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
+			return true;
+		}
 	}
 
 	const lonlat = decodeLonLatUrl(query);

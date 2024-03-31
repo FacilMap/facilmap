@@ -1,8 +1,10 @@
 import type { Point, SearchResult, ZoomLevel } from "facilmap-types";
 import throttle from "p-throttle";
 import type { Geometry } from "geojson";
-import { formatCoordinates } from "./format";
-import { fetchAdapter, getConfig } from "./config";
+import { formatCoordinates } from "./format.js";
+import { fetchAdapter, getConfig } from "./config.js";
+import { getI18n } from "./i18n.js";
+import { quoteRegExp } from "./utils.js";
 
 interface NominatimResult {
 	place_id: number;
@@ -77,22 +79,56 @@ interface PointWithZoom extends Point {
 const throttledFetch = throttle({ limit: 1, interval: 1000 })((...args: Parameters<typeof fetchAdapter>) => fetchAdapter(...args));
 
 export function splitRouteQuery(query: string): { queries: string[], mode: string | null } {
-	const splitQuery = query.split(/(^|\s+)(from|to|via|by)(\s+|$)/).filter((item, i) => (i%2 == 0)); // Filter out every second item (whitespace parantheses)
+	const i18n = getI18n();
+
+	const routeModesByTranslation = Object.fromEntries(Object.entries({
+		[i18n.t("search.hgv")]:  "hgv",
+		[i18n.t("search.car")]:  "car",
+		[i18n.t("search.road-bike")]:  "road bike",
+		[i18n.t("search.mountain-bike")]:  "mountain bike",
+		[i18n.t("search.electric-bike")]:  "electric bike",
+		[i18n.t("search.bicycle")]:  "bicycle",
+		[i18n.t("search.wheelchair")]:  "wheelchair",
+		[i18n.t("search.foot")]:  "foot",
+		[i18n.t("search.straight")]:  "straight"
+	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
+
+	let queryWithoutMode = query;
+	let mode = null;
+	for (const [translation, thisMode] of Object.entries(routeModesByTranslation)) {
+		const m = query.match(new RegExp(`(?<= |^)${quoteRegExp(translation)}(?= |$)`, "di"));
+		if (m) {
+			queryWithoutMode = `${query.slice(0, m.indices![0][0])}${query.slice(m.indices![0][1])}`.trim();
+			mode = thisMode;
+			break;
+		}
+	}
+
+	const keywordsByTranslation = Object.fromEntries(Object.entries({
+		[i18n.t("search.from")]: "from",
+		[i18n.t("search.to")]: "to",
+		[i18n.t("search.via")]: "via"
+	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
+
+	const splitQuery = queryWithoutMode
+		.split(new RegExp(`(?:^|\\s+)(from|to|via|${Object.keys(keywordsByTranslation).map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`));
+
 	const queryParts = {
 		from: [] as string[],
 		via: [] as string[],
-		to: [] as string[],
-		by: [] as string[]
+		to: [] as string[]
 	};
 
 	for(let i=0; i<splitQuery.length; i+=2) {
-		if(splitQuery[i])
-			queryParts[splitQuery[i-1] as keyof typeof queryParts || "from"].push(splitQuery[i]);
+		if(splitQuery[i]) {
+			const thisKeyword = splitQuery[i - 1] ? (keywordsByTranslation[splitQuery[i - 1]] ?? splitQuery[i - 1]) : "from";
+			queryParts[thisKeyword as keyof typeof queryParts].push(splitQuery[i]);
+		}
 	}
 
 	return {
 		queries: queryParts.from.concat(queryParts.via, queryParts.to),
-		mode: queryParts.by[0] || null
+		mode
 	};
 }
 
@@ -245,7 +281,7 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom): Promise<Array<SearchR
 	);
 
 	if (!res.ok) {
-		throw new Error(`Reverse geocoding failed with status ${res.status}`);
+		throw new Error(getI18n().t("search.http-error", { status: res.status }));
 	}
 
 	const body: NominatimResult | NominatimError = await res.json();
@@ -267,7 +303,7 @@ async function _findQuery(query: string): Promise<Array<SearchResult>> {
 	);
 
 	if (!res.ok) {
-		throw new Error(`Search failed with status ${res.status}.`);
+		throw new Error(getI18n().t("search.http-error", { status: res.status }));
 	}
 
 	const body: Array<NominatimResult> | NominatimError = await res.json();
@@ -281,12 +317,15 @@ async function _findQuery(query: string): Promise<Array<SearchResult>> {
 }
 
 async function _findOsmObject(type: string, id: string): Promise<Array<SearchResult>> {
-	const body: Array<NominatimResult> | NominatimError = await throttledFetch(
+	const res = await throttledFetch(
 		`${getConfig().nominatimUrl}/lookup?format=jsonv2&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_ids=${encodeURI(type.toUpperCase())}${encodeURI(id)}`
-	).then((res) => res.json() as any);
+	);
 
-	if(!body)
-		throw new Error("Invalid response from name finder.");
+	if (!res.ok) {
+		throw new Error(getI18n().t("search.http-error", { status: res.status }));
+	}
+
+	const body: Array<NominatimResult> | NominatimError = await res.json();
 
 	if('error' in body)
 		throw new Error(typeof body.error === 'string' ? body.error : body.error.message);

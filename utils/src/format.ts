@@ -6,6 +6,7 @@ import createPurify from "dompurify";
 import { type Cheerio, load } from "cheerio";
 import { normalizeFieldValue } from "./objects.js";
 import { NodeWithChildren, Element, type Node, type ParentNode, Text, type AnyNode } from "domhandler";
+import { getI18n } from "./i18n.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
@@ -115,7 +116,7 @@ export function formatTime(seconds: number): string {
 	let minutes: string | number = Math.floor((seconds%3600)/60);
 	if(minutes < 10)
 		minutes = "0" + minutes;
-	return hours + ":" + minutes;
+	return getI18n().t("format.time", { hours, minutes });
 }
 
 function applyMarkdownModifications($el: Cheerio<AnyNode>): void {

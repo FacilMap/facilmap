@@ -1,4 +1,5 @@
 import type { ID, Type, View } from "facilmap-types";
+import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
@@ -12,15 +13,15 @@ export function generateRandomPadId(length: number = LENGTH): string {
 }
 
 export function normalizePadName(name: string | undefined): string {
-	return name || "Unnamed map";
+	return name || getI18n().t("pads.unnamed-map");
 }
 
 export function normalizePageTitle(padName: string | undefined, appName: string): string {
-	return `${padName ? `${padName} – ` : ''}${appName}`;
+	return padName ? getI18n().t("pads.page-title", { padName, appName }) : appName;
 }
 
 export function normalizePageDescription(padDescription: string | undefined): string {
-	return padDescription || "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.";
+	return padDescription || getI18n().t("pads.fallback-page-description");
 }
 
 export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {

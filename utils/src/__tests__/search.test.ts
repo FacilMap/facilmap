@@ -1,5 +1,52 @@
 import { expect, test } from "vitest";
-import { matchLonLat } from "../search";
+import { matchLonLat, splitRouteQuery } from "../search";
+
+test("splitRouteQuery", () => {
+	expect(splitRouteQuery("Hamburg to Berlin")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: null
+	});
+
+	expect(splitRouteQuery("from Hamburg to Berlin")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: null
+	});
+
+	expect(splitRouteQuery("to Berlin from Hamburg")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: null
+	});
+
+	expect(splitRouteQuery("Hamburg to Berlin via Hannover")).toEqual({
+		queries: ["Hamburg", "Hannover", "Berlin"],
+		mode: null
+	});
+
+	expect(splitRouteQuery("via Hannover to Berlin from Hamburg")).toEqual({
+		queries: ["Hamburg", "Hannover", "Berlin"],
+		mode: null
+	});
+
+	expect(splitRouteQuery("by walk to Berlin from Hamburg")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: "foot"
+	});
+
+	expect(splitRouteQuery("from Hamburg by walk to Berlin")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: "foot"
+	});
+
+	expect(splitRouteQuery("Hamburg to Berlin walking")).toEqual({
+		queries: ["Hamburg", "Berlin"],
+		mode: "foot"
+	});
+
+	expect(splitRouteQuery("Hamburg")).toEqual({
+		queries: ["Hamburg"],
+		mode: null
+	});
+});
 
 test("matchLonLat", () => {
 	// Simple coordinates

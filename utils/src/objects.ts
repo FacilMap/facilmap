@@ -1,5 +1,6 @@
 import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
 import { omit } from "lodash-es";
+import { getI18n } from "./i18n.js";
 
 export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
 	return "lat" in object && object.lat != null;
@@ -168,9 +169,9 @@ export function getLineTemplate(type: Type): LineTemplate {
 }
 
 export function normalizeMarkerName(name: string | undefined): string {
-	return name || "Untitled marker";
+	return name || getI18n().t("objects.untitled-marker");
 }
 
 export function normalizeLineName(name: string | undefined): string {
-	return name || "Untitled line";
+	return name || getI18n().t("objects.untitled-line");
 }

@@ -27,7 +27,6 @@ module.exports = {
 		"import/no-extraneous-dependencies": ["error"],
 		"@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
 		"import/no-named-as-default": ["warn"],
-		"import/no-named-as-default-member": ["warn"],
 		"import/no-duplicates": ["warn"],
 		"import/namespace": ["error"],
 		"import/default": ["error"],

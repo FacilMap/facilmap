@@ -38,6 +38,8 @@
     "dompurify": "^3.0.9",
     "facilmap-types": "workspace:^",
     "filtrex": "^2.2.3",
+    "i18next": "^23.10.1",
+    "i18next-browser-languagedetector": "^7.2.1",
     "jquery": "^3.7.1",
     "jsdom": "^24.0.0",
     "linkify-string": "^4.1.3",

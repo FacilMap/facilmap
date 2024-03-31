@@ -14,6 +14,8 @@ import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
 import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
+import cookieParser from "cookie-parser";
+import { i18nMiddleware } from "./i18n.js";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -67,6 +69,9 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.use(domainMiddleware);
 	app.use(compression());
+	app.use(cookieParser());
+
+	app.use(i18nMiddleware);
 
 	app.get("/", padMiddleware);
 

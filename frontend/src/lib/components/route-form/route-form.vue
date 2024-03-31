@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { formatRouteMode, formatTime, isSearchId, normalizeMarkerName, round, splitRouteQuery } from "facilmap-utils";
+	import { formatRouteTime, isSearchId, normalizeMarkerName, round, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -670,7 +670,7 @@
 
 				<dl class="fm-search-box-dl">
 					<dt>Distance</dt>
-					<dd>{{round(routeObj.distance, 2)}}&#x202F;km <span v-if="routeObj.time != null">({{formatTime(routeObj.time)}}&#x202F;h {{formatRouteMode(routeObj.mode)}})</span></dd>
+					<dd>{{round(routeObj.distance, 2)}}&#x202F;km <span v-if="routeObj.time != null">({{formatRouteTime(routeObj.time, routeObj.mode)}})</span></dd>
 
 					<template v-if="routeObj.ascent != null">
 						<dt>Climb/drop</dt>

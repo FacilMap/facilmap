@@ -1,4 +1,6 @@
 import type { RouteMode } from "facilmap-types";
+import { getI18n } from "./i18n.js";
+import { formatTime } from "./format.js";
 
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";
@@ -92,29 +94,36 @@ export function formatRouteMode(encodedMode: RouteMode): string {
 		case "car":
 			switch(decodedMode.type) {
 				case "hgv":
-					return "by HGV";
+					return getI18n().t("routing.route-mode-hgv");
 				default:
-					return "by car";
+					return getI18n().t("routing.route-mode-car");
 			}
 		case "bicycle":
 			switch(decodedMode.type) {
 				case "road":
-					return "by road bike";
+					return getI18n().t("routing.route-mode-road-bike");
 				case "mountain":
-					return "by mountain bike";
+					return getI18n().t("routing.route-mode-mountain-bike");
 				case "electric":
-					return "by electric bike";
+					return getI18n().t("routing.route-mode-electric-bike");
 				default:
-					return "by bicycle";
+					return getI18n().t("routing.route-mode-bicycle");
 			}
 		case "pedestrian":
 			switch(decodedMode.type) {
 				case "wheelchair":
-					return "by wheelchair";
+					return getI18n().t("routing.route-mode-wheelchair");
 				default:
-					return "on foot";
+					return getI18n().t("routing.route-mode-foot");
 			}
 		default:
 			return "";
 	}
+}
+
+export function formatRouteTime(time: number, encodedMode: RouteMode): string {
+	return getI18n().t("routing.route-time", {
+		time: formatTime(time),
+		mode: formatRouteMode(encodedMode)
+	});
 }

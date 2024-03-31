@@ -1,6 +1,7 @@
 import type { Point } from "facilmap-types";
-import { RetryError, throttledBatch } from "./utils";
-import { fetchAdapter, getConfig } from "./config";
+import { RetryError, throttledBatch } from "./utils.js";
+import { fetchAdapter, getConfig } from "./config.js";
+import { getI18n } from "./i18n.js";
 
 const MAX_DELAY_MS = 60_000;
 
@@ -18,7 +19,7 @@ export const getElevationForPoint = throttledBatch<[Point], number | undefined>(
 		})
 	});
 	if (!res.ok) {
-		let error = new Error(`Looking up elevations failed with status ${res.status}.`);
+		let error = new Error(getI18n().t("elevation.http-error", { status: res.status }));
 		if (res.status === 504) {
 			// Probably caused by an overload on the server. Usually it goes away after a while. Let's exponentially increase delays
 			// between requests until it succeeds again.

@@ -52,6 +52,7 @@
     "facilmap-utils": "workspace:^",
     "file-saver": "^2.0.5",
     "hammerjs": "^2.0.8",
+    "i18next": "^23.10.1",
     "jquery": "^3.7.1",
     "leaflet": "^1.9.4",
     "leaflet-draggable-lines": "^2.0.0",

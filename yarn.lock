@@ -44,6 +44,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.23.2":
+  version: 7.24.1
+  resolution: "@babel/runtime@npm:7.24.1"
+  dependencies:
+    regenerator-runtime: ^0.14.0
+  checksum: 5c8f3b912ba949865f03b3cf8395c60e1f4ebd1033fbd835bdfe81b6cac8a87d85bc3c7aded5fcdf07be044c9ab8c818f467abe0deca50020c72496782639572
+  languageName: node
+  linkType: hard
+
 "@babel/types@npm:^7.8.3":
   version: 7.24.0
   resolution: "@babel/types@npm:7.24.0"
@@ -875,6 +884,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 7eb1bc5342a9604facd57598a6c62621e244822442976c443efb84ff745246b10d06e8b309b6e80130026a396f19bf6793b7cecd7380169f369dac3bfc46fb99
+  languageName: node
+  linkType: hard
+
+"@types/cookie-parser@npm:^1.4.7":
+  version: 1.4.7
+  resolution: "@types/cookie-parser@npm:1.4.7"
+  dependencies:
+    "@types/express": "*"
+  checksum: 7b87c59420598e686a57e240be6e0db53967c3c8814be9326bf86609ee2fc39c4b3b9f2263e1deba43526090121d1df88684b64c19f7b494a80a4437caf3d40b
   languageName: node
   linkType: hard
 
@@ -2476,6 +2494,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie-parser@npm:^1.4.6":
+  version: 1.4.6
+  resolution: "cookie-parser@npm:1.4.6"
+  dependencies:
+    cookie: 0.4.1
+    cookie-signature: 1.0.6
+  checksum: 1e5a63aa82e8eb4e02d2977c6902983dee87b02e87ec5ec43ac3cb1e72da354003716570cd5190c0ad9e8a454c9d3237f4ad6e2f16d0902205a96a1c72b77ba5
+  languageName: node
+  linkType: hard
+
 "cookie-signature@npm:1.0.6":
   version: 1.0.6
   resolution: "cookie-signature@npm:1.0.6"
@@ -3658,6 +3686,7 @@ __metadata:
     file-saver: ^2.0.5
     hammerjs: ^2.0.8
     happy-dom: ^13.6.2
+    i18next: ^23.10.1
     jquery: ^3.7.1
     leaflet: ^1.9.4
     leaflet-draggable-lines: ^2.0.0
@@ -3769,6 +3798,7 @@ __metadata:
   resolution: "facilmap-server@workspace:server"
   dependencies:
     "@types/compression": ^1.7.5
+    "@types/cookie-parser": ^1.4.7
     "@types/debug": ^4.1.12
     "@types/ejs": ^3.1.5
     "@types/express": ^4.17.21
@@ -3780,6 +3810,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     compression: ^1.7.4
     compressjs: ^1.0.3
+    cookie-parser: ^1.4.6
     cpy-cli: ^5.0.0
     csv-stringify: ^6.4.6
     debug: ^4.3.4
@@ -3792,6 +3823,8 @@ __metadata:
     facilmap-types: "workspace:^"
     facilmap-utils: "workspace:^"
     find-cache-dir: ^5.0.0
+    i18next: ^23.10.1
+    i18next-http-middleware: ^3.5.0
     lodash-es: ^4.17.21
     maxmind: ^4.3.18
     md5-file: ^5.0.0
@@ -3843,6 +3876,8 @@ __metadata:
     dompurify: ^3.0.9
     facilmap-types: "workspace:^"
     filtrex: ^2.2.3
+    i18next: ^23.10.1
+    i18next-browser-languagedetector: ^7.2.1
     jquery: ^3.7.1
     jsdom: ^24.0.0
     linkify-string: ^4.1.3
@@ -4525,6 +4560,31 @@ __metadata:
   version: 5.0.0
   resolution: "human-signals@npm:5.0.0"
   checksum: 6504560d5ed91444f16bea3bd9dfc66110a339442084e56c3e7fa7bbdf3f406426d6563d662bdce67064b165eac31eeabfc0857ed170aaa612cf14ec9f9a464c
+  languageName: node
+  linkType: hard
+
+"i18next-browser-languagedetector@npm:^7.2.1":
+  version: 7.2.1
+  resolution: "i18next-browser-languagedetector@npm:7.2.1"
+  dependencies:
+    "@babel/runtime": ^7.23.2
+  checksum: 159958be2d8f19444e9378512c36c2bf13a8ab85eddac2fc0000198a03dbc28c73a6f44594ab040b242bdc82dfeabb7c1ab805884b5438ee0a48a8e2b52ca062
+  languageName: node
+  linkType: hard
+
+"i18next-http-middleware@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "i18next-http-middleware@npm:3.5.0"
+  checksum: c3669f04efd8967729a50fa06be1c7449612e3f2555815a3399d35dcf9404e35182a12cc68c1ed3bbe5da73d868dbd2ac62553be8c1a7ce0d551018dc1e223fa
+  languageName: node
+  linkType: hard
+
+"i18next@npm:^23.10.1":
+  version: 23.10.1
+  resolution: "i18next@npm:23.10.1"
+  dependencies:
+    "@babel/runtime": ^7.23.2
+  checksum: 4aec10ddb0bb841f15b9b023daa59977052bc706ca4e94643b12b17640731862bde596c9797491638f6d9e7f125722ea9b1e87394c7aebbb72f45c20396f79d9
   languageName: node
   linkType: hard
 
