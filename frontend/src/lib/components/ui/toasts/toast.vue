@@ -3,12 +3,14 @@
 	import { useToasts } from "./toasts.vue";
 	import type { ToastOptions } from "./toasts.vue";
 
+	/* eslint-disable vue/valid-template-root */
+
 	const toasts = useToasts();
 
 	const props = defineProps<Omit<ToastOptions, "onHidden"> & {
 		id: string;
 		title: string;
-		message: string;
+		message: string | Error;
 	}>();
 
 	const emit = defineEmits<{
@@ -17,15 +19,23 @@
 
 	onMounted(() => {
 		const { id, title, message, ...options } = props;
-		toasts.showToast(id, title, message, {
+		const resolvedOptions: ToastOptions = {
 			...options,
 			onHidden: () => {
 				emit("hidden");
 			}
-		});
+		};
+		if (message instanceof Error) {
+			toasts.showErrorToast(id, title, message, resolvedOptions);
+		} else {
+			toasts.showToast(id, title, message, resolvedOptions);
+		}
 	});
 
 	onBeforeUnmount(() => {
 		toasts.hideToast(props.id);
 	});
 </script>
+
+<template>
+</template>
