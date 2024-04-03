@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "facilmap-types": "workspace:^",
+    "serialize-error": "^11.0.3",
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {

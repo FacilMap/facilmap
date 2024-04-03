@@ -2,6 +2,7 @@ import config from "../config.js";
 import { calculateDistance, type DecodedRouteMode } from "facilmap-utils";
 import type { ExtraInfo, Point } from "facilmap-types";
 import type { RawRouteInfo } from "./routing.js";
+import { getI18n } from "../i18n.js";
 
 if (!config.orsToken)
 	console.error("Warning: No ORS token configured, calculating routes will fail. Please set ORS_TOKEN in the environment or in config.env.");
@@ -34,19 +35,19 @@ export function getMaximumDistanceBetweenRoutePoints(decodedMode: DecodedRouteMo
 
 export async function calculateORSRoute(points: Point[], decodedMode: DecodedRouteMode): Promise<RawRouteInfo> {
 	if (!config.orsToken)
-		throw new Error("Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.");
+		throw new Error(getI18n().t("routing.ors-token-warning"));
 
 	let currentGroup: Point[] = [];
 	const coordGroups: Point[][] = [currentGroup];
 	for(const point of points) {
 		if(calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode]) {
 			if(currentGroup.length == 1)
-				throw new Error("Too much distance between route points. Consider adding some via points.");
+				throw new Error(getI18n().t("routing.too-much-distance-error"));
 
 			coordGroups.push(currentGroup = [currentGroup[currentGroup.length-1]]);
 
 			if(calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode])
-				throw new Error("Too much distance between route points. Consider adding some via points.");
+				throw new Error(getI18n().t("routing.too-much-distance-error"));
 		}
 
 		currentGroup.push(point);
@@ -104,7 +105,7 @@ export async function calculateORSRoute(points: Point[], decodedMode: DecodedRou
 			console.log("OpenRouteService:", body?.metadata?.system_message);
 
 		if(!body?.features?.[0])
-			throw new Error("Invalid response from routing server.");
+			throw new Error(getI18n().t("routing.invalid-response-error"));
 
 		let idxAdd = ret.trackPoints.length;
 

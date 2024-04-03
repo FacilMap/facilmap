@@ -1,5 +1,6 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import type { Bbox, BboxWithZoom, CRU, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineExportRequest, LineTemplateRequest, LineToRouteCreate, SocketEvents, Marker, MultipleEvents, ObjectWithId, PadData, PadId, PagedResults, SocketRequest, SocketRequestName, SocketResponse, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, SocketVersion, TrackPoint, Type, View, Writable, SocketClientToServerEvents, SocketServerToClientEvents, LineTemplate, LinePointsEvent } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError } from "facilmap-types";
+import { deserializeError, errorConstructors } from "serialize-error";
 
 export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
@@ -64,6 +65,8 @@ interface ClientData {
 	route: RouteWithTrackPoints | undefined;
 	routes: Record<string, RouteWithTrackPoints>;
 }
+
+errorConstructors.set("PadNotFoundError", PadNotFoundError as any);
 
 export default class Client {
 	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V2>, SocketClientToServerEvents<SocketVersion.V2>>;
@@ -192,9 +195,9 @@ export default class Client {
 			this._simulateEvent("emit", eventName as any, data as any);
 
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName as any, data, (err: Error, data: SocketResponse<SocketVersion.V2, R>) => {
+				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V2, R>) => {
 					if(err) {
-						reject(err);
+						reject(deserializeError(err));
 						this._simulateEvent("emitReject", eventName as any, err);
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);

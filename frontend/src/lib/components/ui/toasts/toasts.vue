@@ -216,9 +216,6 @@
 <style lang="scss">
 	.fm-toast-container {
 		position: absolute;
-	}
-
-	.fm-toasts {
-		z-index: 10002;
+		z-index: 10002; /* Above .fm-leaflet-map-disabled-cover */
 	}
 </style>

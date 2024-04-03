@@ -4,12 +4,15 @@ const messagesEn = {
 	},
 
 	"format": {
-		"time": `{{hours}}:{{minutes}}`
+		"time": `{{hours}}:{{minutes}}\u202Fh`,
+		"route-time": `{{time}} {{mode}}`,
+		"distance-km": `{{distance}}\u202fkm`,
+		"elevation-m": `{{elevation}}\u202fm`
 	},
 
 	"objects": {
 		"untitled-marker": `Untitled marker`,
-		"untitled-lined": `Untitled line`
+		"untitled-line": `Untitled line`
 	},
 
 	"pads": {
@@ -26,8 +29,7 @@ const messagesEn = {
 		"route-mode-electric-bike": `by electric bike`,
 		"route-mode-bicycle": `by bicycle`,
 		"route-mode-wheelchair": `by wheelchair`,
-		"route-mode-foot": `on foot`,
-		"route-time": `{{time}}\u202Fh {{mode}}`
+		"route-mode-foot": `on foot`
 	},
 
 	"search": {

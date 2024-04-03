@@ -16,7 +16,7 @@ const messagesDe = {
 		"map-data-pois": `POIs`,
 		"map-data-directions": `Routenberechnung`,
 		"map-data-geoip": `GeoIP`,
-		"map-data-geoip-description": `Dieses Produkt enthält GeoLine2-Daten von Maxmind, verfügbar unter {{maxmind}}.`,
+		"map-data-geoip-description": `Dieses Produkt enthält GeoLite2-Daten von Maxmind, verfügbar unter {{maxmind}}.`,
 		"attribution-osm-contributors": `OSM-Mitwirkende`,
 		"programs-libraries": `Programme/Bibliotheken`,
 		"icons": `Symbole`

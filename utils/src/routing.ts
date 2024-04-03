@@ -1,6 +1,5 @@
 import type { RouteMode } from "facilmap-types";
 import { getI18n } from "./i18n.js";
-import { formatTime } from "./format.js";
 
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";
@@ -119,11 +118,4 @@ export function formatRouteMode(encodedMode: RouteMode): string {
 		default:
 			return "";
 	}
-}
-
-export function formatRouteTime(time: number, encodedMode: RouteMode): string {
-	return getI18n().t("routing.route-time", {
-		time: formatTime(time),
-		mode: formatRouteMode(encodedMode)
-	});
 }

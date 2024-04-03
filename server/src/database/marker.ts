@@ -6,6 +6,7 @@ import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "
 import type { PadModel } from "./pad.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
+import { getI18n } from "../i18n.js";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -91,7 +92,7 @@ export default class DatabaseMarkers {
 	async createMarker(padId: PadId, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const type = await this._db.types.getType(padId, data.typeId);
 		if (type.type !== "marker") {
-			throw new Error(`Cannot use ${type.type} type for marker.`);
+			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: type.type }));
 		}
 
 		const result = await this._db.helpers._createPadObject<Marker>("Marker", padId, resolveCreateMarker(data, type));
@@ -118,7 +119,7 @@ export default class DatabaseMarkers {
 
 	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, noHistory = false): Promise<Marker> {
 		if (newType.type !== "marker") {
-			throw new Error(`Cannot use ${newType.type} type for marker.`);
+			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: newType.type }));
 		}
 
 		const update = resolveUpdateMarker(originalMarker, data, newType);

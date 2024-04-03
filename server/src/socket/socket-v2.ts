@@ -7,10 +7,11 @@ import { find } from "../search.js";
 import { geoipLookup } from "../geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database from "../database/database.js";
-import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type PadData, type PadId, SocketVersion, Writable, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type PadData, type PadId, SocketVersion, Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, PadNotFoundError } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common";
+import { getI18n } from "../i18n.js";
 
 export type MultipleEventPromises = {
 	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V2>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V2>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V2>>[eventName];
@@ -59,9 +60,9 @@ export class SocketConnectionV2 extends SocketConnection {
 
 	validatePermissions(minimumPermissions: Writable): void {
 		if (minimumPermissions == Writable.ADMIN && ![Writable.ADMIN].includes(this.writable!))
-			throw new Error('Only available in admin mode.');
+			throw new Error(getI18n().t("socket.only-in-admin-error"));
 		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(this.writable!))
-			throw new Error('Only available in write mode.');
+			throw new Error(getI18n().t("socket.only-in-write-error"));
 	}
 
 	override handleDisconnect(): void {
@@ -81,10 +82,8 @@ export class SocketConnectionV2 extends SocketConnection {
 	override getSocketHandlers(): SocketHandlers<SocketVersion.V2> {
 		return {
 			setPadId: async (padId) => {
-				if(typeof padId != "string")
-					throw new Error("Invalid pad id");
 				if(this.padId != null)
-					throw new Error("Pad id already set");
+					throw new Error(getI18n().t("socket.pad-id-set-error"));
 
 				this.padId = true;
 
@@ -103,7 +102,7 @@ export class SocketConnectionV2 extends SocketConnection {
 					pad = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
 				else {
 					this.padId = undefined;
-					throw new Error("This pad does not exist");
+					throw new PadNotFoundError(getI18n().t("socket.pad-not-exist-error"));
 				}
 
 				this.padId = pad.id;
@@ -166,7 +165,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.READ);
 
 				if(this.padId)
-					throw new Error("Pad already loaded.");
+					throw new Error(getI18n().t("socket.pad-already-loaded-error"));
 
 				const padData = await this.database.pads.createPad(data);
 
@@ -182,7 +181,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return {
 					...await this.database.pads.updatePadData(this.padId, data),
@@ -194,7 +193,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				await this.database.pads.deletePad(this.padId);
 			},
@@ -203,7 +202,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.READ);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.markers.getMarker(this.padId, data.id);
 			},
@@ -212,7 +211,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.markers.createMarker(this.padId, data);
 			},
@@ -221,7 +220,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return this.database.markers.updateMarker(this.padId, data.id, data);
 			},
@@ -230,7 +229,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return this.database.markers.deleteMarker(this.padId, data.id);
 			},
@@ -239,7 +238,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.lines.getLineTemplate(this.padId, data);
 			},
@@ -248,7 +247,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
 				if (data.mode != "track") {
@@ -267,7 +266,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
 				if (data.mode != "track") {
@@ -286,7 +285,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return this.database.lines.deleteLine(this.padId, data.id);
 			},
@@ -295,7 +294,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.READ);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const lineP = this.database.lines.getLine(this.padId, data.id);
 				lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
@@ -311,7 +310,7 @@ export class SocketConnectionV2 extends SocketConnection {
 					case "gpx-rte":
 						return await streamToString(exportLineToRouteGpx(line, type));
 					default:
-						throw new Error("Unknown format.");
+						throw new Error(getI18n().t("socket.unknown-format"));
 				}
 			},
 
@@ -319,7 +318,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.views.createView(this.padId, data);
 			},
@@ -328,7 +327,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.views.updateView(this.padId, data.id, data);
 			},
@@ -337,7 +336,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.views.deleteView(this.padId, data.id);
 			},
@@ -346,7 +345,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.types.createType(this.padId, data);
 			},
@@ -355,7 +354,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.types.updateType(this.padId, data.id, data);
 			},
@@ -364,7 +363,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.types.deleteType(this.padId, data.id);
 			},
@@ -379,7 +378,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.READ);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.search.search(this.padId, data.query);
 			},
@@ -456,7 +455,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.READ);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
 				const routeInfo = await this.database.routes.lineToRoute(existingRoute?.id, this.padId, data.id);
@@ -498,10 +497,10 @@ export class SocketConnectionV2 extends SocketConnection {
 
 				const route = data.routeId ? this.routes[data.routeId] : this.route;
 				if (!route) {
-					throw new Error("Route not available.");
+					throw new Error(getI18n().t("route-not-available-error"));
 				}
 
-				const routeInfo = { ...route, name: "FacilMap route", data: {} };
+				const routeInfo = { ...route, name: getI18n().t("socket.route-name"), data: {} };
 
 				switch(data.format) {
 					case "gpx-trk":
@@ -509,7 +508,7 @@ export class SocketConnectionV2 extends SocketConnection {
 					case "gpx-rte":
 						return await streamToString(exportLineToRouteGpx(routeInfo, undefined));
 					default:
-						throw new Error("Unknown format.");
+						throw new Error(getI18n().t("socket.unknown-format"));
 				}
 			},
 
@@ -517,10 +516,10 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				if(this.listeningToHistory)
-					throw new Error("Already listening to history.");
+					throw new Error(getI18n().t("socket.already-listening-to-history-error"));
 
 				this.listeningToHistory = true;
 				this.registerDatabaseHandlers();
@@ -534,7 +533,7 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if(!this.listeningToHistory)
-					throw new Error("Not listening to history.");
+					throw new Error(getI18n().t("socket.not-listening-to-history-error"));
 
 				this.listeningToHistory = false;
 				this.registerDatabaseHandlers();
@@ -544,12 +543,12 @@ export class SocketConnectionV2 extends SocketConnection {
 				this.validatePermissions(Writable.WRITE);
 
 				if (!isPadId(this.padId))
-					throw new Error("No map opened.");
+					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const historyEntry = await this.database.history.getHistoryEntry(this.padId, data.id);
 
 				if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != Writable.ADMIN)
-					throw new Error("This kind of change can only be reverted in admin mode.");
+					throw new Error(getI18n().t("socket.admin-revert-error"));
 
 				this.pauseHistoryListener++;
 

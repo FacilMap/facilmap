@@ -3,7 +3,7 @@
 	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
 	import { createElevationStats } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
-	import { numberKeys, round } from "facilmap-utils";
+	import { formatAscentDescent, formatDistance, numberKeys } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";
@@ -22,9 +22,9 @@
 </script>
 
 <template>
-	<span class="fm-elevation-stats">
+	<span class="fm-elevation-stats" v-if="route.ascent != null && route.descent != null">
 		<span>
-			<Icon icon="triangle-top" alt="Ascent"></Icon> {{route.ascent}}&#x202F;m / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{route.descent}}&#x202F;m
+			<Icon icon="triangle-top" alt="Ascent"></Icon> {{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{formatAscentDescent(route.descent)}}
 		</span>
 
 		<span ref="statsButtonContainerRef">
@@ -46,14 +46,14 @@
 		>
 			<dl class="row">
 				<dt class="col-6">Total ascent</dt>
-				<dd class="col-6">{{route.ascent}}&#x202F;m</dd>
+				<dd class="col-6">{{formatAscentDescent(route.ascent)}}</dd>
 
 				<dt class="col-6">Total descent</dt>
-				<dd class="col-6">{{route.descent}}&#x202F;m</dd>
+				<dd class="col-6">{{formatAscentDescent(route.descent)}}</dd>
 
 				<template v-for="stat in statsArr" :key="stat.i">
 					<dt class="col-6">{{stat.i == 0 ? '0%' : stat.i < 0 ? "≤ "+stat.i+"%" : "≥ "+stat.i+"%"}}</dt>
-					<dd class="col-6">{{round(stat.distance, 2)}}&#x202F;km</dd>
+					<dd class="col-6">{{formatDistance(stat.distance)}}</dd>
 				</template>
 			</dl>
 		</Popover>

@@ -6,6 +6,7 @@ import type { SearchResult } from "facilmap-types";
 import stripBomBuf from "strip-bom-buf";
 import config from "./config.js";
 import { find as findSearch, parseUrlQuery } from "facilmap-utils";
+import { getI18n } from "./i18n.js";
 
 export async function find(query: string, loadUrls = false): Promise<Array<SearchResult> | string> {
 	if (loadUrls) {
@@ -29,13 +30,13 @@ async function _loadUrl(url: string): Promise<string> {
 	);
 
 	if (!res.ok) {
-		throw new Error(`Request to "${url}" failed with status ${res.status}.`);
+		throw new Error(getI18n().t("search.url-request-error", { url, status: res.status }));
 	}
 
 	let bodyBuf = new Uint8Array(await res.arrayBuffer());
 
 	if(!bodyBuf)
-		throw new Error("Invalid response from server.");
+		throw new Error(getI18n().t("search.url-response-error"));
 
 	if(bodyBuf[0] == 0x42 && bodyBuf[1] == 0x5a && bodyBuf[2] == 0x68) {// bzip2
 		bodyBuf = Buffer.from(compressjs.Bzip2.decompressFile(Buffer.from(bodyBuf)));
@@ -57,15 +58,15 @@ async function _loadUrl(url: string): Promise<string> {
 		} else if(rootEl.is("gpx,kml,osm"))
 			return body;
 		else
-			throw new Error("Unknown file format.");
+			throw new Error(getI18n().t("search.url-unknown-format-error"));
 	} else if(body.match(/^\s*\{/)) {
 		const content = JSON.parse(body);
 		if(content.type)
 			return body;
 		else
-			throw new Error("Unknown file format.");
+		throw new Error(getI18n().t("search.url-unknown-format-error"));
 	} else {
-		throw new Error("Unknown file format.");
+		throw new Error(getI18n().t("search.url-unknown-format-error"));
 	}
 }
 

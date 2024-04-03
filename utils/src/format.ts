@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import type { Field, Point } from "facilmap-types";
+import type { Field, Point, RouteMode } from "facilmap-types";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -7,6 +7,7 @@ import { type Cheerio, load } from "cheerio";
 import { normalizeFieldValue } from "./objects.js";
 import { NodeWithChildren, Element, type Node, type ParentNode, Text, type AnyNode } from "domhandler";
 import { getI18n } from "./i18n.js";
+import { formatRouteMode } from "./routing.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
@@ -117,6 +118,25 @@ export function formatTime(seconds: number): string {
 	if(minutes < 10)
 		minutes = "0" + minutes;
 	return getI18n().t("format.time", { hours, minutes });
+}
+
+export function formatRouteTime(time: number, encodedMode: RouteMode): string {
+	return getI18n().t("format.route-time", {
+		time: formatTime(time),
+		mode: formatRouteMode(encodedMode)
+	});
+}
+
+export function formatDistance(distance: number): string {
+	return getI18n().t("format.distance-km", { distance: round(distance, 2) });
+}
+
+export function formatElevation(elevation: number): string {
+	return getI18n().t("format.elevation-m", { elevation });
+}
+
+export function formatAscentDescent(ascentDescent: number): string {
+	return formatElevation(ascentDescent);
 }
 
 function applyMarkdownModifications($el: Cheerio<AnyNode>): void {

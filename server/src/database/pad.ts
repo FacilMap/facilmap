@@ -3,6 +3,7 @@ import type { CRU, FindPadsQuery, FindPadsResult, PadData, PadId, PagedResults }
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 import type { ViewModel } from "./view";
+import { getI18n } from "../i18n.js";
 
 type RawPadData = Omit<PadData, "defaultView"> & { defaultView?: NonNullable<PadData["defaultView"]> };
 
@@ -85,11 +86,11 @@ export default class DatabasePads {
 
 	async createPad(data: PadData<CRU.CREATE_VALIDATED>): Promise<PadData> {
 		if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
-			throw new Error("Read-only, read-write and admin ID have to be different from each other.");
+			throw new Error(getI18n().t("database.unique-pad-ids-error"));
 
 		await Promise.all([data.id, data.writeId, data.adminId].map(async (id) => {
 			if (await this.padIdExists(id))
-				throw new Error("ID '" + id + "' is already taken.");
+				throw new Error(getI18n().t("database.pad-id-taken-error", { id }));
 		}));
 
 		const createdObj = await this.PadModel.create(data);
@@ -105,29 +106,29 @@ export default class DatabasePads {
 		const oldData = await this.getPadData(padId);
 
 		if(!oldData)
-			throw new Error("Pad " + padId + " could not be found.");
+			throw new Error(getI18n().t("pad-not-found-error", { padId }));
 
 		if(data.id != null && data.id != padId) {
 			if (await this.padIdExists(data.id))
-				throw new Error("ID '" + data.id + "' is already taken.");
+				throw new Error(getI18n().t("database.pad-id-taken-error", { id: data.id }));
 		}
 
 		if(data.writeId != null && data.writeId != oldData.writeId) {
 			if(data.writeId == (data.id != null ? data.id : padId))
-				throw new Error("Read-only and read-write ID cannot be the same.");
+				throw new Error(getI18n().t("database.unique-pad-ids-read-write-error"));
 
 			if (await this.padIdExists(data.writeId))
-				throw new Error("ID '" + data.writeId + "' is already taken.");
+				throw new Error(getI18n().t("database.pad-id-taken-error", { id: data.writeId }));
 		}
 
 		if(data.adminId != null && data.adminId != oldData.adminId) {
 			if(data.adminId == (data.id != null ? data.id : padId))
-				throw new Error("Read-only and admin ID cannot be the same.");
+				throw new Error(getI18n().t("database.unique-pad-ids-read-admin-error"));
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
-				throw new Error("Read-write and admin ID cannot be the same.");
+				throw new Error(getI18n().t("database.unique-pad-ids-write-admin-error"));
 
 			if (await this.padIdExists(data.adminId))
-				throw new Error("ID '" + data.adminId + "' is already taken.");
+				throw new Error(getI18n().t("database.pad-id-taken-error", { id: data.adminId }));
 		}
 
 		await this.PadModel.update(data, { where: { id: padId } });
@@ -135,7 +136,7 @@ export default class DatabasePads {
 		const newData = await this.getPadData(data.id || padId);
 
 		if (!newData)
-			throw new Error("Pad has disappeared after updating.");
+			throw new Error(getI18n().t("database.pad-disappeared-error"));
 
 		await this._db.history.addHistoryEntry(data.id || padId, {
 			type: "Pad",
@@ -152,7 +153,7 @@ export default class DatabasePads {
 		const padData = await this.getPadDataByAnyId(padId);
 
 		if (!padData)
-			throw new Error(`Pad "${padId}" does not exist.`);
+			throw new Error(getI18n().t("pad-not-found-error", { padId }));
 
 		if (padData.defaultViewId) {
 			await this.updatePadData(padData.id, { defaultViewId: null });

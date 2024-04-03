@@ -63,6 +63,7 @@
     "p-throttle": "^6.1.0",
     "pg": "^8.11.3",
     "sequelize": "^6.37.1",
+    "serialize-error": "^11.0.3",
     "socket.io": "^4.7.4",
     "string-similarity": "^4.0.4",
     "strip-bom-buf": "^4.0.0",

@@ -1,6 +1,7 @@
 import config from "../config.js";
 import type { Point, RouteMode } from "facilmap-types";
 import type { RawRouteInfo } from "./routing.js";
+import { getI18n } from "../i18n.js";
 
 if (!config.mapboxToken)
 	console.error("Warning: No Mapbox token configured, calculating routes will fail. Please set MAPBOX_TOKEN in the environment or in config.env.");
@@ -17,7 +18,7 @@ const MAX_POINTS_PER_REQUEST = 25;
 
 export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simple = false): Promise<RawRouteInfo> {
 	if (!config.mapboxToken)
-		throw new Error("No Mapbox token configured. Please ask the administrator to set MAPBOX_TOKEN in the environment or in config.env.")
+		throw new Error(getI18n().t("routing.mapbox-token-warning"));
 
 	const coordGroups: string[][] = [[]];
 	for(const point of points) {
@@ -56,7 +57,7 @@ export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simpl
 			throw new Error("Invalid response from routing server.");
 
 		if(body.code != 'Ok')
-			throw new Error("Route could not be calculated (" + body.code + ").");
+			throw new Error(getI18n().t("routing.mapbox-error", { code: body.code }));
 
 		const trackPoints = body.routes[0].geometry.coordinates.map((it: any) => ({ lat: it[1], lon: it[0] }));
 		if(trackPoints.length > 0 && ret.trackPoints.length > 0 && trackPoints[0].lat == ret.trackPoints[ret.trackPoints.length-1].lat && trackPoints[0].lon == ret.trackPoints[ret.trackPoints.length-1].lon)

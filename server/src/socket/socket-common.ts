@@ -1,6 +1,7 @@
 import { type Socket as SocketIO } from "socket.io";
 import Database, { type DatabaseEvents } from "../database/database.js";
 import { type EventHandler, type EventName, type SocketRequestName, type SocketResponse, SocketVersion, type ValidatedSocketRequest, socketRequestValidators } from "facilmap-types";
+import { serializeError } from "serialize-error";
 
 // Socket.io converts undefined to null. In socket handlers that allow a null response, let's also allow undefined.
 type FixedNullResponse<T> = null extends T ? T | undefined | void : T;
@@ -59,9 +60,9 @@ export abstract class SocketConnection {
 
 					validatedCallback?.(null, res);
 				} catch (err: any) {
-					console.log(err.stack);
+					console.log(err);
 
-					validatedCallback?.({ message: err.message, stack: err.stack });
+					validatedCallback?.(serializeError(err));
 				}
 			});
 		}

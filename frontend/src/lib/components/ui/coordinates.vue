@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import type { Point } from "facilmap-types";
 	import copyToClipboard from "copy-to-clipboard";
-	import { formatCoordinates } from "facilmap-utils";
+	import { formatCoordinates, formatElevation } from "facilmap-utils";
 	import Icon from "./icon.vue";
 	import { computed } from "vue";
 	import { useToasts } from "./toasts/toasts.vue";
@@ -34,7 +34,7 @@
 			<Icon icon="copy" alt="Copy to clipboard"></Icon>
 		</button>
 		<span v-if="props.ele != null" v-tooltip="'Elevation'">
-			({{props.ele}}&#x202F;m)
+			({{formatElevation(props.ele)}})
 		</span>
 	</span>
 </template>

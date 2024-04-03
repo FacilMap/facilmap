@@ -4,13 +4,14 @@ import type { Marker, MarkerFeature, PadId, TrackPoint, Line } from "facilmap-ty
 import Database from "../database/database.js";
 import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
 import type { ReadableStream } from "stream/web";
+import { getI18n } from "../i18n.js";
 
 export function exportGeoJson(database: Database, padId: PadId, filter?: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const padData = await database.pads.getPadData(padId);
 
 		if (!padData)
-			throw new Error(`Pad ${padId} could not be found.`);
+			throw new Error(getI18n().t("pad-not-found-error", { padId }));
 
 		const filterFunc = compileExpression(filter);
 

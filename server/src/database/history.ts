@@ -3,6 +3,7 @@ import Database from "./database.js";
 import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, PadData, PadId } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
+import { getI18n } from "../i18n.js";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
@@ -118,12 +119,12 @@ export default class DatabaseHistory {
 
 		if(entry.type == "Pad") {
 			if (!entry.objectBefore) {
-				throw new Error("Old pad data not available.");
+				throw new Error(getI18n().t("database.old-pad-data-not-available-error"));
 			}
 			await this._db.pads.updatePadData(padId, entry.objectBefore);
 			return;
 		} else if (!["Marker", "Line", "View", "Type"].includes(entry.type)) {
-			throw new Error(`Unknown type "${entry.type}.`);
+			throw new Error(getI18n().t("database.unknown-type-error", { type: entry.type }));
 		}
 
 		const existsNow = await this._db.helpers._padObjectExists(entry.type, padId, entry.objectId);

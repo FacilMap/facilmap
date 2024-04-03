@@ -5,6 +5,7 @@ import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerN
 import type { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import type { ReadableStream } from "stream/web";
+import { getI18n } from "../i18n.js";
 
 const gpxHeader = (
 	`<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -116,7 +117,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 		]);
 
 		if (!padData)
-			throw new Error(`Pad ${padId} could not be found.`);
+			throw new Error(getI18n().t("pad-not-found-error", { padId }));
 
 		yield (
 			`${gpxHeader}\n` +
@@ -162,7 +163,7 @@ export function exportGpxZip(database: Database, padId: PadId, useTracks: boolea
 		]);
 
 		if (!padData) {
-			throw new Error(`Pad ${padId} could not be found.`);
+			throw new Error(getI18n().t("pad-not-found-error", { padId }));
 		}
 
 		yield {

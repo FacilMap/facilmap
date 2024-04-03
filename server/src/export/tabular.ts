@@ -1,8 +1,9 @@
 import { flatMapStream, asyncIteratorToStream, mapStream } from "../utils/streams.js";
-import { compileExpression, formatField, formatRouteMode, formatTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
+import { compileExpression, formatDistance, formatField, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { PadId, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { ReadableStream } from "stream/web";
+import { getI18n } from "../i18n.js";
 
 export type TabularData = {
 	fields: string[];
@@ -19,7 +20,7 @@ export async function getTabularData(
 ): Promise<TabularData> {
 	const padData = await database.pads.getPadData(padId);
 	if (!padData)
-		throw new Error(`Pad ${padId} could not be found.`);
+		throw new Error(getI18n().t("pad-not-found-error", { padId }));
 
 	const type = await database.types.getType(padData.id, typeId);
 
@@ -55,8 +56,8 @@ export async function getTabularData(
 
 		return [[
 			() => handlePlainText(normalizeLineName(line.name)),
-			() => handlePlainText(`${round(line.distance, 2)}\u202Fkm`),
-			() => handlePlainText(line.time != null ? `${formatTime(line.time)}\u202Fh ${formatRouteMode(line.mode)}` : ""),
+			() => handlePlainText(formatDistance(line.distance)),
+			() => handlePlainText(line.time != null ? formatRouteTime(line.time, line.mode) : ""),
 			...type.fields.map((f) => () => formatField(f, line.data[f.name], html).trim())
 		]];
 	});

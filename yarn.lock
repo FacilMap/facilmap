@@ -3651,6 +3651,7 @@ __metadata:
     "@types/geojson": ^7946.0.14
     facilmap-types: "workspace:^"
     rimraf: ^5.0.5
+    serialize-error: ^11.0.3
     socket.io-client: ^4.7.4
     typescript: ^5.4.2
     vite: ^5.1.5
@@ -3833,6 +3834,7 @@ __metadata:
     pg: ^8.11.3
     rimraf: ^5.0.5
     sequelize: ^6.37.1
+    serialize-error: ^11.0.3
     socket.io: ^4.7.4
     string-similarity: ^4.0.4
     strip-bom-buf: ^4.0.0
@@ -7126,6 +7128,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"serialize-error@npm:^11.0.3":
+  version: 11.0.3
+  resolution: "serialize-error@npm:11.0.3"
+  dependencies:
+    type-fest: ^2.12.2
+  checksum: 09d1aee6186fd5ff8acc074ee8641116cdd07b12df1e95682c43d8b5d1ef657deecc2efede7f1a08f5ff3ef3d65fb60ab9c8b4b2fdde65867ad3e6d4feed34a9
+  languageName: node
+  linkType: hard
+
 "serve-static@npm:2.0.0-beta.1":
   version: 2.0.0-beta.1
   resolution: "serve-static@npm:2.0.0-beta.1"
@@ -7819,6 +7830,13 @@ __metadata:
   version: 0.20.2
   resolution: "type-fest@npm:0.20.2"
   checksum: 4fb3272df21ad1c552486f8a2f8e115c09a521ad7a8db3d56d53718d0c907b62c6e9141ba5f584af3f6830d0872c521357e512381f24f7c44acae583ad517d73
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^2.12.2":
+  version: 2.19.0
+  resolution: "type-fest@npm:2.19.0"
+  checksum: a4ef07ece297c9fba78fc1bd6d85dff4472fe043ede98bd4710d2615d15776902b595abf62bd78339ed6278f021235fb28a96361f8be86ed754f778973a0d278
   languageName: node
   linkType: hard
 

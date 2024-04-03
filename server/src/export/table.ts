@@ -5,6 +5,7 @@ import { renderTable } from "../frontend.js";
 import { ReadableStream } from "stream/web";
 import { asyncIteratorToArray, asyncIteratorToStream, streamPromiseToStream } from "../utils/streams.js";
 import { getTabularData } from "./tabular.js";
+import { getI18n } from "../i18n.js";
 
 export type TableParams = {
 	indent?: string;
@@ -99,7 +100,7 @@ export function createTable(database: Database, padId: PadId, filter: string | u
 		]);
 
 		if (!padData) {
-			throw new Error(`Pad with read-only ID ${padId} could not be found.`);
+			throw new Error(getI18n().t("pad-read-not-found-error", { padId }));
 		}
 
 		return renderTable({

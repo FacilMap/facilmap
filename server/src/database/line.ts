@@ -8,6 +8,7 @@ import type { PadModel } from "./pad";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
 import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
+import { getI18n } from "../i18n.js";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -80,9 +81,9 @@ export default class DatabaseLines {
 					minTwo: function(val: string) {
 						const routePoints = JSON.parse(val);
 						if(!Array.isArray(routePoints))
-							throw new Error("routePoints is not an array");
+							throw new Error(getI18n().t("database.route-points-not-an-array-error"));
 						if(routePoints.length < 2)
-							throw new Error("A line cannot have less than two route points.");
+							throw new Error(getI18n().t("database.route-points-less-than-two-points-error"));
 					}
 				}
 			},
@@ -206,7 +207,7 @@ export default class DatabaseLines {
 	async createLine(padId: PadId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
 		const type = await this._db.types.getType(padId, data.typeId);
 		if (type.type !== "line") {
-			throw new Error(`Cannot use ${type.type} type for line.`);
+			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
 		}
 
 		const resolvedData = resolveCreateLine(data, type);
@@ -231,7 +232,7 @@ export default class DatabaseLines {
 
 	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
 		if (newType.type !== "line") {
-			throw new Error(`Cannot use ${newType.type} type for line.`);
+			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: newType.type }));
 		}
 
 		const update = resolveUpdateLine(originalLine, data, newType);

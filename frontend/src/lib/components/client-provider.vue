@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
 	import Client from "facilmap-client";
-	import type { PadData, PadId } from "facilmap-types";
+	import { PadNotFoundError, type PadData, type PadId } from "facilmap-types";
 	import PadSettingsDialog from "./pad-settings-dialog/pad-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { useToasts } from "./ui/toasts/toasts.vue";
@@ -10,7 +10,7 @@
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 
 	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
-		return !!serverError?.message?.includes("does not exist");
+		return !!serverError && serverError instanceof PadNotFoundError;
 	}
 </script>
 

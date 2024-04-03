@@ -15,7 +15,7 @@ import config from "./config";
 import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
-import { i18nMiddleware } from "./i18n.js";
+import { getI18n, i18nMiddleware } from "./i18n.js";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -144,7 +144,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
 
 		if(!padData)
-			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(`${getSafeFilename(normalizePadName(padData.name))}.gpx`);
@@ -160,7 +160,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
 
 		if(!padData)
-			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
 
 		res.set("Content-type", "application/zip");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
@@ -211,7 +211,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		const padData = await database.pads.getPadData(req.params.padId);
 
 		if(!padData)
-			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
 
 		res.set("Content-type", "application/geo+json");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
@@ -230,7 +230,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		const padData = await database.pads.getPadData(req.params.padId);
 
 		if(!padData)
-			throw new Error(`Map with ID ${req.params.padId} could not be found.`);
+			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
 
 		res.set("Content-type", "text/csv");
 		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");

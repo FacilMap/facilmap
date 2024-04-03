@@ -7,7 +7,7 @@
 	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { formatField, formatRouteTime, normalizeLineName, round } from "facilmap-utils";
+	import { formatDistance, formatField, formatRouteTime, normalizeLineName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -160,7 +160,7 @@
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
 			<dl class="fm-search-box-dl">
 				<dt class="distance">Distance</dt>
-				<dd class="distance">{{round(line.distance, 2)}}&#x202F;km <span v-if="line.time != null">({{formatRouteTime(line.time, line.mode)}})</span></dd>
+				<dd class="distance">{{formatDistance(line.distance)}} <span v-if="line.time != null">({{formatRouteTime(line.time, line.mode)}})</span></dd>
 
 				<template v-if="line.ascent != null">
 					<dt class="elevation">Climb/drop</dt>

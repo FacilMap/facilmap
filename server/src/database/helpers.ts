@@ -4,6 +4,7 @@ import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import type { PadModel } from "./pad";
 import { arrayToAsyncIterator } from "../utils/streams";
+import { getI18n } from "../i18n.js";
 
 const ITEMS_PER_BATCH = 5000;
 
@@ -124,7 +125,7 @@ export default class DatabaseHelpers {
 			if(!types[object.typeId]) {
 				types[object.typeId] = await this._db.types.getType(padId, object.typeId);
 				if(types[object.typeId] == null)
-					throw new Error("Type "+object.typeId+" does not exist.");
+					throw new Error(getI18n().t("database.type-not-found-error", { typeId: object.typeId }));
 			}
 
 			const type = types[object.typeId];
@@ -145,7 +146,7 @@ export default class DatabaseHelpers {
 		return entry != null;
 	}
 
-	async _getPadObject<T>(type: string, padId: PadId, id: ID): Promise<T> {
+	async _getPadObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", padId: PadId, id: ID): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		const entry = await this._db._conn.model(type).findOne({
@@ -154,8 +155,9 @@ export default class DatabaseHelpers {
 			nest: true
 		});
 
-		if(entry == null)
-			throw new Error(type + " " + id + " of pad " + padId + " could not be found.");
+		if(entry == null) {
+			throw new Error(getI18n().t("database.object-not-found-in-pad-error", { type, id, padId }));
+		}
 
 		const data: any = entry.toJSON();
 
@@ -213,7 +215,7 @@ export default class DatabaseHelpers {
 		return result;
 	}
 
-	async _updatePadObject<T>(type: string, padId: PadId, objId: ID, data: any, _noHistory?: boolean): Promise<T> {
+	async _updatePadObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", padId: PadId, objId: ID, data: any, _noHistory?: boolean): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = !_noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
 
@@ -241,7 +243,7 @@ export default class DatabaseHelpers {
 		return newObject;
 	}
 
-	async _deletePadObject<T>(type: string, padId: PadId, objId: ID): Promise<T> {
+	async _deletePadObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", padId: PadId, objId: ID): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
