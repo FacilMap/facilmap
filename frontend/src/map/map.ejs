@@ -2,7 +2,7 @@
 <html class="fm-facilmap-map">
 	<head>
 		<meta charset="utf-8">
-		<title><%=normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, appName)%></title>
+		<title><%=normalizePageTitle(padData?.name != null ? normalizePadName(padData.name) : undefined, appName)%></title>
 		<meta name="description" content="<%=normalizePageDescription(padData?.description)%>" />
 <% if(!padData || (isReadOnly && padData.searchEngines)) { -%>
 		<meta name="robots" content="index,nofollow" />

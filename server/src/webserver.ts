@@ -43,8 +43,8 @@ export async function initWebserver(database: Database, port: number, host?: str
 				params = {
 					padData: {
 						searchEngines: false,
-						name: "",
-						description: ""
+						name: undefined,
+						description: undefined
 					},
 					isReadOnly: true,
 					url: `${baseUrl}${encodeURIComponent(req.params.padId)}`

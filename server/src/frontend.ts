@@ -72,7 +72,7 @@ function getInjectedConfig(): InjectedConfig {
 }
 
 export interface RenderMapParams {
-	padData: Pick<PadData, "name" | "description" | "searchEngines"> | undefined;
+	padData: { name: string | undefined; description: string | undefined; searchEngines: boolean } | undefined;
 	isReadOnly: boolean;
 	url: string;
 }
