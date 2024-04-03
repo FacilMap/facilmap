@@ -1,4 +1,4 @@
-import { defaultRawI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setRawI18nGetter } from "facilmap-utils";
+import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18nGetter, isCustomLanguageDetector, isCustomI18nGetter } from "facilmap-utils";
 import messagesEn from "./i18n/en";
 import messagesDe from "./i18n/de";
 import type { i18n } from "i18next";
@@ -29,8 +29,6 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("de", namespace, messagesDe);
 });
 
-setLanguageDetector(i18nextHttpMiddleware.LanguageDetector);
-
 export const i18nMiddleware: RequestHandler[] = [
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	(req, res, next) => {
@@ -51,13 +49,19 @@ export const i18nMiddleware: RequestHandler[] = [
 	}
 ];
 
-setRawI18nGetter(() => {
-	if (process.domain?.facilmap?.i18n) {
-		return process.domain?.facilmap?.i18n;
-	} else {
-		return defaultRawI18nGetter();
-	}
-});
+if (!isCustomLanguageDetector) {
+	setLanguageDetector(i18nextHttpMiddleware.LanguageDetector);
+}
+
+if (!isCustomI18nGetter) {
+	setI18nGetter(() => {
+		if (process.domain?.facilmap?.i18n) {
+			return process.domain?.facilmap?.i18n;
+		} else {
+			return defaultI18nGetter();
+		}
+	});
+}
 
 export function getI18n(): Pick<i18n, "t"> {
 	return {

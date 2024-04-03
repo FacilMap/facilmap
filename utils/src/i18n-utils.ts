@@ -5,12 +5,14 @@ let hasBeenUsed = false;
 const onFirstUse: Array<(i18n: i18n) => void> = [];
 
 let languageDetector: Module | Newable<Module> | undefined = typeof window !== "undefined" ? LanguageDetector : undefined;
+export let isCustomLanguageDetector = false;
 
 export function setLanguageDetector(detector: Module | Newable<Module> | undefined): void {
 	languageDetector = detector;
+	isCustomLanguageDetector = true;
 }
 
-export const defaultRawI18nGetter = (): i18n => {
+export const defaultI18nGetter = (): i18n => {
 	// Initialize i18next on first usage if it is not initialized yet.
 	// In apps that use i18next, this leaves enough time for them to initialize it with their own custom settings.
 	// In apps that don't use i18next, this allows them to use our functions without having to care about initializing it.
@@ -29,15 +31,17 @@ export const defaultRawI18nGetter = (): i18n => {
 	return i18next;
 };
 
-let rawI18nGetter = defaultRawI18nGetter;
+let i18nGetter = defaultI18nGetter;
+export let isCustomI18nGetter = false;
 
-export function setRawI18nGetter(getter: () => i18n): void {
-	rawI18nGetter = getter;
+export function setI18nGetter(getter: () => i18n): void {
+	i18nGetter = getter;
+	isCustomI18nGetter = true;
 }
 
 // Should be called by an individual getI18n() function in each package that makes sure that its translations are loaded
 export function getRawI18n(): i18n {
-	const i18n = rawI18nGetter();
+	const i18n = i18nGetter();
 
 	if (!hasBeenUsed) {
 		for (const callback of onFirstUse) {
