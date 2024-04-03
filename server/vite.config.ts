@@ -12,7 +12,7 @@ export default defineConfig({
 		minify: false,
 		target: "esnext",
 		lib: {
-			entry: './src/server.ts',
+			entry: './src/index.ts',
 			name: 'facilmap-server',
 			fileName: () => 'facilmap-server.mjs',
 			formats: ['es']

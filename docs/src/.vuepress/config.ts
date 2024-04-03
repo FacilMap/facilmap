@@ -80,7 +80,8 @@ export default defineUserConfig({
 					text: "Developer guide",
 					children: [
 						"/developers/",
-						"/developers/embed"
+						"/developers/embed",
+						"/developers/i18n"
 					]
 				},
 				{

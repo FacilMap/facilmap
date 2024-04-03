@@ -108,6 +108,7 @@
 			<li><a href="https://github.com/cure53/DOMPurify" target="_blank">DOMPurify</a></li>
 			<li><a href="https://expressjs.com/" target="_blank">Express</a></li>
 			<li><a href="https://vuepress.vuejs.org/" target="_blank">Vuepress</a></li>
+			<li><a href="https://www.i18next.com/" target="_blank">I18next</a></li>
 		</ul>
 		<h4>{{t('about-dialog.icons')}}</h4>
 		<ul>
