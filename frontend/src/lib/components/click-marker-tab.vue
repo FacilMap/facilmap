@@ -10,8 +10,10 @@
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { WritableClickMarkerTabContext } from "./facil-map-context-provider/click-marker-tab-context";
 	import { useToasts } from "./ui/toasts/toasts.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -69,7 +71,7 @@
 
 				tab.isLoading = false;
 			})().catch((err) => {
-				toasts.showErrorToast(`find-error-${tab.id}`, "Error looking up point", err);
+				toasts.showErrorToast(`find-error-${tab.id}`, i18n.t("click-marker-tab.look-up-error"), err);
 			});
 
 			(async () => {

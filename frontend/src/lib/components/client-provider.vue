@@ -8,6 +8,7 @@
 	import Toast from "./ui/toasts/toast.vue";
 	import type { ClientContext } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../utils/i18n";
 
 	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
 		return !!serverError && serverError instanceof PadNotFoundError;
@@ -17,6 +18,7 @@
 <script setup lang="ts">
 	const context = injectContextRequired();
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const client = ref<ClientContext>();
 	const connectingClient = ref<ClientContext>();
@@ -46,9 +48,9 @@
 		toasts.hideToast(`fm${context.id}-client-error`);
 		toasts.hideToast(`fm${context.id}-client-deleted`);
 		if (props.padId)
-			toasts.showToast(`fm${context.id}-client-connecting`, "Loading", "Loading map…", { spinner: true, noCloseButton: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, i18n.t("client-provider.loading-map-header"), i18n.t("client-provider.loading-map"), { spinner: true, noCloseButton: true });
 		else
-			toasts.showToast(`fm${context.id}-client-connecting`, "Connecting", "Connecting to server…", { spinner: true, noCloseButton: true });
+			toasts.showToast(`fm${context.id}-client-connecting`, i18n.t("client-provider.connecting-header"), i18n.t("client-provider.connecting"), { spinner: true, noCloseButton: true });
 
 		class CustomClient extends Client implements ClientContext {
 			_makeReactive<O extends object>(obj: O) {
@@ -87,12 +89,12 @@
 		});
 
 		newClient.on("deletePad", () => {
-			toasts.showToast(`fm${context.id}-client-deleted`, "Map deleted", "This map has been deleted.", {
+			toasts.showToast(`fm${context.id}-client-deleted`, i18n.t("client-provider.map-deleted-header"), i18n.t("client-provider.map-deleted"), {
 				noCloseButton: true,
 				variant: "danger",
 				actions: context.settings.interactive ? [
 					{
-						label: "Close map",
+						label: i18n.t("client-provider.close-map"),
 						href: context.baseUrl,
 						onClick: (e) => {
 							if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
@@ -127,15 +129,15 @@
 
 		if (newClient.serverError && !newClient.isCreatePad) {
 			if (newClient.disconnected || !props.padId) {
-				toasts.showErrorToast(`fm${context.id}-client-error`, "Error connecting to server", newClient.serverError, {
+				toasts.showErrorToast(`fm${context.id}-client-error`, i18n.t("client-provider.connection-error"), newClient.serverError, {
 					noCloseButton: !!props.padId
 				});
 			} else {
-				toasts.showErrorToast(`fm${context.id}-client-error`, "Error opening map", newClient.serverError, {
+				toasts.showErrorToast(`fm${context.id}-client-error`, i18n.t("client-provider.open-map-error"), newClient.serverError, {
 					noCloseButton: true,
 					actions: context.settings.interactive ? [
 						{
-							label: "Close map",
+							label: i18n.t("client-provider.close-map"),
 							href: context.baseUrl,
 							onClick: (e) => {
 								if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
@@ -172,8 +174,8 @@
 		v-if="client && client.disconnected && !client.serverError"
 		:id="`fm${context.id}-client-disconnected`"
 		variant="danger"
-		title="Disconnected"
-		message="The connection to the server was lost. Trying to reconnect…"
+		:title="i18n.t('client-provider.disconnected-header')"
+		:message="i18n.t('client-provider.disconnected')"
 		auto-hide
 		no-close-button visible
 		spinner
