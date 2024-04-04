@@ -58,7 +58,11 @@ export function setI18nGetter(getter: () => i18n): void {
 	isCustomI18nGetter = true;
 }
 
-// Should be called by an individual getI18n() function in each package that makes sure that its translations are loaded
+/**
+ * Returns the i18n object returned by the i18nGetter, with any onI18nReady() callbacks applied.
+ * This should not be called by translated components directly. Instead, each package should provide its own wrapper for this function
+ * in a module that loads the necessary i18n resources as a side effect.
+ */
 export function getRawI18n(): i18n {
 	const i18n = i18nGetter();
 

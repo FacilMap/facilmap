@@ -26,16 +26,24 @@ if (import.meta.hot) {
 	});
 }
 
-const rerenderCounter = ref(0);
-const rerender = () => {
-	rerenderCounter.value++;
+const i18nResourceChangeCounter = ref(0);
+const onI18nResourceChange = () => {
+	i18nResourceChangeCounter.value++;
 };
 
 onI18nReady((i18n) => {
-	i18n.store.on("added", rerender);
-	i18n.store.on("removed", rerender);
-	i18n.on("languageChanged", rerender);
-	i18n.on("loaded", rerender);
+	i18n.store.on("added", onI18nResourceChange);
+	i18n.store.on("removed", onI18nResourceChange);
+	i18n.on("languageChanged", onI18nResourceChange);
+	i18n.on("loaded", onI18nResourceChange);
+
+	let tBkp = i18n.t;
+	i18n.t = function(this: any, ...args: any) {
+		// Consume resource change counter to make calls to t() reactive to i18n resource changes
+		i18nResourceChangeCounter.value;
+
+		return tBkp.apply(this, args);
+	} as any;
 });
 
 export function useI18n(): {
@@ -43,12 +51,7 @@ export function useI18n(): {
 	changeLanguage: (lang: string) => Promise<void>;
 } {
 	return {
-		t: new Proxy(getRawI18n().getFixedT(null, namespace), {
-			apply: (target, thisArg, argumentsList) => {
-				rerenderCounter.value;
-				return target.apply(thisArg, argumentsList as any);
-			}
-		}),
+		t: getRawI18n().getFixedT(null, namespace),
 
 		changeLanguage: async (lang) => {
 			await getRawI18n().changeLanguage(lang);
@@ -56,6 +59,10 @@ export function useI18n(): {
 	};
 }
 
+/**
+ * Renders a translated message. Each interpolation variable needs to be specified as a slot, making it possible to interpolate
+ * components and rich text.
+ */
 export const T = defineComponent({
 	props: {
 		k: { type: String, required: true }

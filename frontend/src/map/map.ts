@@ -1,4 +1,4 @@
-import { createApp, defineComponent, h, ref, watch } from "vue";
+import { computed, createApp, defineComponent, h, ref, watch } from "vue";
 import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString, normalizePadName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
@@ -57,12 +57,12 @@ const Root = defineComponent({
 			history.replaceState(null, "", baseUrl + (padId.value ? encodeURIComponent(padId.value) : "") + location.search + location.hash);
 		});
 
-		watch(padName, () => {
-			const title = padName.value != null ? `${normalizePadName(padName.value)} – ${config.appName}` : config.appName;
+		const pageTitle = computed(() => padName.value != null ? `${normalizePadName(padName.value)} – ${config.appName}` : config.appName);
 
+		watch(pageTitle, () => {
 			// We have to call history.replaceState() in order for the new title to end up in the browser history
-			window.history && history.replaceState({ }, title);
-			document.title = title;
+			window.history && history.replaceState({ }, pageTitle.value);
+			document.title = pageTitle.value;
 		});
 
 		return () => h(FacilMap, {
