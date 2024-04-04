@@ -18,7 +18,8 @@ You can control the display of different components by using the following query
 * `autofocus`: Autofocus the search field (default: `false`)
 * `legend`: Show the legend if available (default: `true`)
 * `interactive`: Enable [interactive mode](#interactive-mode) (default: `false`)
-* `lang`: Fix the user interface to one particular language, for example `en`. If not specified, the user language is auto-detected.
+* `lang`: Use this display language (for example `en`) by default, instead of the language set by the user in the user preferences dialog or in their browser.
+* `units`: Use this type of units (either `metric` or `us_customary`) by default, instead of what the user has configured in the user preferences dialog.
 
 Example:
 
