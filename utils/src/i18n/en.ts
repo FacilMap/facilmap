@@ -7,7 +7,9 @@ const messagesEn = {
 		"time": `{{hours}}:{{minutes}}\u202Fh`,
 		"route-time": `{{time}} {{mode}}`,
 		"distance-km": `{{distance}}\u202fkm`,
-		"elevation-m": `{{elevation}}\u202fm`
+		"distance-mi": `{{distance}}\u202fmi`,
+		"elevation-m": `{{elevation}}\u202fm`,
+		"elevation-ft": `{{elevation}}\u202fft`
 	},
 
 	"objects": {

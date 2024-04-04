@@ -75,7 +75,8 @@
     "vite-plugin-css-injected-by-js": "^3.4.0",
     "vite-plugin-dts": "^3.7.3",
     "vue": "^3.4.21",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",

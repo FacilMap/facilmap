@@ -1,4 +1,4 @@
-import { exportFormatValidator, idValidator, type Bbox, type ID } from "../base.js";
+import { exportFormatValidator, idValidator, unitsValidator, type Bbox, type ID } from "../base.js";
 import { type PadData } from "../padData.js";
 import { type Marker } from "../marker.js";
 import { type Line, type TrackPoint } from "../line.js";
@@ -72,6 +72,7 @@ export interface RoutePointsEvent {
 export const nullOrUndefinedValidator = z.null().or(z.undefined()).transform((val) => val ?? null);
 
 export const setLanguageRequestValidator = z.object({
-	lang: z.string()
+	lang: z.string().optional(),
+	units: unitsValidator.optional()
 });
 export type SetLanguageRequest = z.infer<typeof setLanguageRequestValidator>;

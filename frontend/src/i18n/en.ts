@@ -92,7 +92,10 @@ const messagesEn = {
 	"user-preferences-dialog": {
 		"title": `User preferences`,
 		"introduction": `These settings are stored on your computer as a cookie and are applied independently of the opened map.`,
-		"language": `Language`
+		"language": `Language`,
+		"units": `Units`,
+		"units-metric": `Metric`,
+		"units-us": `US customary (miles, feet)`
 	}
 };
 

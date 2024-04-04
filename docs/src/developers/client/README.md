@@ -86,6 +86,26 @@ When creating/updating/deleting an object, the data is propagated in multiple wa
 
 Note that creating/updating/deleting an object will fail if the operation is not permitted. The above example will fail if the map was opened using its read-only ID.
 
+### Internationalization
+
+Most of the data returned by the client is user-generated and thus not internationalized. There are a few exceptions though, in particular error messages in case someting unexpected happens.
+
+By default, the FacilMap backend detects the user language based on the `Accept-Language` HTTP header. The detected language can be overridden by setting a `lang` cookie or query parameter. In addition, a `units` cookie or query parameter can be set to `metric` or `us_customary`.
+
+For the websocket, the `Accept-Language` header, cookies and query parameters are sent during the socket.io handshake. If you want to force the socket to use a sepcific language, you can pass query parameters through the third parameter of the client constructor:
+```js
+import Client from "facilmap-client";
+
+const client = new Client("https://facilmap.org/", undefined, {
+	query: {
+		lang: "en",
+		units: "us_customary"
+	}
+});
+```
+
+You can also update the internationalization settings for an existing socket connection at any point using [`setLanguage()`](./methods#setlanguage-settings).
+
 ### Deal with connection problems
 
 ```js

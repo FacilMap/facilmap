@@ -903,6 +903,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cookie@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@types/cookie@npm:0.6.0"
+  checksum: 5edce7995775b0b196b142883e4d4f71fd93c294eaec973670f1fa2540b70ea7390408ed513ddefef5fcb12a578100c76596e8f2a714b0c2ae9f70ee773f4510
+  languageName: node
+  linkType: hard
+
 "@types/cors@npm:^2.8.12":
   version: 2.8.17
   resolution: "@types/cors@npm:2.8.17"
@@ -2525,6 +2532,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "cookie@npm:0.6.0"
+  checksum: f56a7d32a07db5458e79c726b77e3c2eff655c36792f2b6c58d351fb5f61531e5b1ab7f46987150136e366c65213cbe31729e02a3eaed630c3bf7334635fb410
+  languageName: node
+  linkType: hard
+
 "cookie@npm:~0.4.1":
   version: 0.4.2
   resolution: "cookie@npm:0.4.2"
@@ -3727,6 +3741,7 @@ __metadata:
     vue: ^3.4.21
     vue-tsc: ^2.0.5
     vuedraggable: ^4.1.0
+    zod: ^3.22.4
   languageName: unknown
   linkType: soft
 
@@ -3808,6 +3823,7 @@ __metadata:
   resolution: "facilmap-server@workspace:server"
   dependencies:
     "@types/compression": ^1.7.5
+    "@types/cookie": ^0.6.0
     "@types/cookie-parser": ^1.4.7
     "@types/debug": ^4.1.12
     "@types/ejs": ^3.1.5
@@ -3820,6 +3836,7 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     compression: ^1.7.4
     compressjs: ^1.0.3
+    cookie: ^0.6.0
     cookie-parser: ^1.4.6
     cpy-cli: ^5.0.0
     csv-stringify: ^6.4.6

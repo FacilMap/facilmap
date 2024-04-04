@@ -1,6 +1,6 @@
 # Methods
 
-## `constructor(server, padId)`
+## `constructor(server, padId, socketOptions)`
 
 Connects to the FacilMap server `server` and optionally opens the collaborative map with the ID `padId`. If the pad ID
 is not set, it can be set later using [`setPadId(padId)`](#setpadid-padid) or using [`createPad(data)`](#createpad-data).
@@ -11,6 +11,7 @@ If the connection to the server breaks down, a `disconnect` event will be emitte
 
 * `server` (string): The URL of the FacilMap server, for example `https://facilmap.org/`.
 * `padId` (string, optional): The ID of the collaborative map to open.
+* `socketOptions` (object, optional): Any additional [Socket.io client options](https://socket.io/docs/v4/client-options/).
 * **Events:** Causes a `connect` event to be fired when the connection is established. If `padId` is defined, causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map with `padId` could not be opened, causes a [`serverError`](./events.md#servererror) event.
 
 ## `on(eventName, function)`
@@ -40,11 +41,22 @@ Setting the padId causes the server to send several objects, such as the map set
 * **Events:** Causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map could not be opened, causes a [`serverError`](./events.md#servererror) event.
 * **Availability:** Only available if no map is opened yet on this client instance.
 
+## `setLanguage(settings)`
+
+Updates the language settings for the current socket connection. Usually this only needs to be called if the user changes their internationalization settings and you want to apply the new settings live in the UI. See [Internationalization](./#internationalization) for the details and how to set the language settings when opening a client.
+
+* `settings`: An object with the following properties:
+	* `lang` (optional): The language, for example `en` or `de`.
+	* `units` (optional): The units to use, either `metric` or `us_costomary`.
+* **Returns:** A promise tat is resolved empty when the settings have been applied.
+* **Events:** None.
+* **Availability:** Always.
+
 ## `updateBbox(bbox)`
 
 Updates the bbox. This will cause all markers, line points and route points within the bbox (except the ones that were already in the previous bbox, if there was one) to be received as individual events.
 
-* __bbox__ ([Bbox](./types.md#bbox) with zoom): The bbox that objects should be received for.
+* `bbox` ([Bbox](./types.md#bbox) with zoom): The bbox that objects should be received for.
 * **Returns:** A promise that is resolved empty when all objects have been received.
 * **Events:** Causes events to be fired with the markers, line points and route points within the bbox.
 * **Availability:** Always.

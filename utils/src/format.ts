@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import type { Field, Point, RouteMode } from "facilmap-types";
+import { Units, type Field, type Point, type RouteMode } from "facilmap-types";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -8,6 +8,7 @@ import { normalizeFieldValue } from "./objects.js";
 import { NodeWithChildren, Element, type Node, type ParentNode, Text, type AnyNode } from "domhandler";
 import { getI18n } from "./i18n.js";
 import { formatRouteMode } from "./routing.js";
+import { getCurrentUnits } from "./i18n-utils.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
@@ -128,11 +129,21 @@ export function formatRouteTime(time: number, encodedMode: RouteMode): string {
 }
 
 export function formatDistance(distance: number): string {
-	return getI18n().t("format.distance-km", { distance: round(distance, 2) });
+	const units = getCurrentUnits();
+	if (units === Units.US_CUSTOMARY) {
+		return getI18n().t("format.distance-mi", { distance: round(distance / 1.609344, 2) });
+	} else {
+		return getI18n().t("format.distance-km", { distance: round(distance, 2) });
+	}
 }
 
 export function formatElevation(elevation: number): string {
-	return getI18n().t("format.elevation-m", { elevation });
+	const units = getCurrentUnits();
+	if (units === Units.US_CUSTOMARY) {
+		return getI18n().t("format.elevation-ft", { elevation: round(elevation / 0.3048, 0) });
+	} else {
+		return getI18n().t("format.elevation-m", { elevation });
+	}
 }
 
 export function formatAscentDescent(ascentDescent: number): string {

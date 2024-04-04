@@ -3,7 +3,9 @@ import { type i18n } from "i18next";
 import { defineComponent, ref } from "vue";
 import messagesEn from "../../i18n/en";
 import messagesDe from "../../i18n/de";
-import { getRawI18n, onI18nReady } from "facilmap-utils";
+import { decodeQueryString, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
+import { cookies } from "./cookies";
+import { unitsValidator } from "facilmap-types";
 
 const namespace = "facilmap-frontend";
 
@@ -44,6 +46,12 @@ onI18nReady((i18n) => {
 
 		return tBkp.apply(this, args);
 	} as any;
+});
+
+setCurrentUnitsGetter(() => {
+	const queryParams = decodeQueryString(location.search);
+	const query = queryParams.format ? unitsValidator.safeParse(queryParams.format) : undefined;
+	return query?.success ? query.data : cookies.units;
 });
 
 export function useI18n(): {

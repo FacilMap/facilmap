@@ -4,7 +4,12 @@ const messagesDe = {
 	},
 
 	"format": {
-		"time": `{{hours}}:{{minutes}}`
+		"time": `{{hours}}:{{minutes}}`,
+		"route-time": `{{time}} {{mode}}`,
+		"distance-km": `{{distance}}\u202fkm`,
+		"distance-mi": `{{distance}}\u202fmi`,
+		"elevation-m": `{{elevation}}\u202fm`,
+		"elevation-ft": `{{elevation}}\u202fft`
 	},
 
 	"objects": {

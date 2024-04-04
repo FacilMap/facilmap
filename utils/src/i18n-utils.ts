@@ -1,3 +1,4 @@
+import { Units } from "facilmap-types";
 import i18next, { type CustomPluginOptions, type Module, type Newable, type i18n } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
@@ -89,4 +90,15 @@ export function onI18nReady(callback: (i18n: i18n) => void): void {
 
 export function getCurrentLanguage(): string {
 	return getRawI18n().language;
+}
+
+
+let currentUnitsGetter: (() => Units | undefined) | undefined;
+
+export function setCurrentUnitsGetter(getter: typeof currentUnitsGetter): void {
+	currentUnitsGetter = getter;
+}
+
+export function getCurrentUnits(): Units {
+	return currentUnitsGetter?.() ?? Units.METRIC;
 }

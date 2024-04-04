@@ -74,3 +74,9 @@ export const objectWithIdValidator = z.object({
 	id: idValidator
 });
 export type ObjectWithId = z.infer<typeof objectWithIdValidator>;
+
+export enum Units {
+	METRIC = "metric",
+	US_CUSTOMARY = "us_customary"
+}
+export const unitsValidator = z.nativeEnum(Units);

@@ -92,7 +92,10 @@ const messagesDe = {
 	"user-preferences-dialog": {
 		"title": `Benutzereinstellungen`,
 		"introduction": `Diese Einstellungen werden als Cookies auf Ihrem Computer gespeichert und werden unabhängig von der geöffneten Karte angewendet.`,
-		"language": `Sprache`
+		"language": `Sprache`,
+		"units": `Einheiten`,
+		"units-metric": `Metrisch`,
+		"units-us": `US customary (Meilen und Füße)`
 	}
 };
 

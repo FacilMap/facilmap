@@ -11,7 +11,7 @@ import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, t
 import { calculateRoute, prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common";
-import { getI18n } from "../i18n.js";
+import { getI18n, setDomainUnits } from "../i18n.js";
 
 export type MultipleEventPromises = {
 	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V2>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V2>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V2>>[eventName];
@@ -114,7 +114,12 @@ export class SocketConnectionV2 extends SocketConnection {
 			},
 
 			setLanguage: async (settings) => {
-				await getI18n().changeLanguage(settings.lang);
+				if (settings.lang) {
+					await getI18n().changeLanguage(settings.lang);
+				}
+				if (settings.units) {
+					setDomainUnits(settings.units);
+				}
 			},
 
 			updateBbox: async (bbox) => {
