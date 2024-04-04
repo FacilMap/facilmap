@@ -87,6 +87,12 @@ const messagesDe = {
 		"close": "Schließen",
 		"cancel": "Abbrechen",
 		"save": "Speichern"
+	},
+
+	"user-preferences-dialog": {
+		"title": `Benutzereinstellungen`,
+		"introduction": `Diese Einstellungen werden als Cookies auf Ihrem Computer gespeichert und werden unabhängig von der geöffneten Karte angewendet.`,
+		"language": `Sprache`
 	}
 };
 

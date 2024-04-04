@@ -6,6 +6,7 @@ import { SocketVersion } from "facilmap-types";
 import type { SocketConnection } from "./socket-common";
 import { SocketConnectionV1 } from "./socket-v1";
 import { SocketConnectionV2 } from "./socket-v2";
+import { handleSocketConnection } from "../i18n.js";
 
 const constructors: Record<SocketVersion, new (socket: SocketIO, database: Database) => SocketConnection> = {
 	[SocketVersion.V1]: SocketConnectionV1,
@@ -44,6 +45,12 @@ export default class Socket {
 			socket.disconnect();
 		});
 
-		new constructors[version](socket, this.database);
+		d.run(async () => {
+			await handleSocketConnection(socket);
+		}).then(() => {
+			new constructors[version](socket, this.database);
+		}).catch((err) => {
+			d.emit("error", err);
+		});
 	}
 }

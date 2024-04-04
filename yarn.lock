@@ -1031,6 +1031,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-cookie@npm:^3.0.6":
+  version: 3.0.6
+  resolution: "@types/js-cookie@npm:3.0.6"
+  checksum: 272d551687547445cb210213c73e72e0e5d58ad73e2e444a65d688b8ff9425529779ee0cd6492aaa1f070161916d4254ef2b1a76d64179100437f60749d094ef
+  languageName: node
+  linkType: hard
+
 "@types/jsdom@npm:^21.1.6":
   version: 21.1.6
   resolution: "@types/jsdom@npm:21.1.6"
@@ -3670,6 +3677,7 @@ __metadata:
     "@types/file-saver": ^2.0.7
     "@types/hammerjs": ^2.0.45
     "@types/jquery": ^3.5.29
+    "@types/js-cookie": ^3.0.6
     "@types/leaflet": ^1.9.8
     "@types/leaflet-mouse-position": ^1.2.4
     "@types/leaflet.locatecontrol": ^0.74.4
@@ -3689,6 +3697,7 @@ __metadata:
     happy-dom: ^13.6.2
     i18next: ^23.10.1
     jquery: ^3.7.1
+    js-cookie: ^3.0.5
     leaflet: ^1.9.4
     leaflet-draggable-lines: ^2.0.0
     leaflet-graphicscale: ^0.0.4
@@ -5017,6 +5026,13 @@ __metadata:
   version: 3.7.1
   resolution: "jquery@npm:3.7.1"
   checksum: 4370b8139d6ae82867eb6f7f21d1edccf1d1bdf41c0840920ea80d366c2cd5dbe1ceebb110ee9772aa839b04400faa1572c5c560b507c688ed7b61cea26c0e27
+  languageName: node
+  linkType: hard
+
+"js-cookie@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "js-cookie@npm:3.0.5"
+  checksum: 2dbd2809c6180fbcf060c6957cb82dbb47edae0ead6bd71cbeedf448aa6b6923115003b995f7d3e3077bfe2cb76295ea6b584eb7196cca8ba0a09f389f64967a
   languageName: node
   linkType: hard
 

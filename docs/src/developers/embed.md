@@ -18,6 +18,7 @@ You can control the display of different components by using the following query
 * `autofocus`: Autofocus the search field (default: `false`)
 * `legend`: Show the legend if available (default: `true`)
 * `interactive`: Enable [interactive mode](#interactive-mode) (default: `false`)
+* `lang`: Fix the user interface to one particular language, for example `en`. If not specified, the user language is auto-detected.
 
 Example:
 

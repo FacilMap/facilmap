@@ -7,6 +7,7 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDialog from "../export-dialog.vue";
+	import UserPreferencesDialog from "../user-preferences-dialog.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -26,6 +27,7 @@
 		| "export"
 		| "edit-filter"
 		| "history"
+		| "user-preferences"
 	>();
 </script>
 
@@ -95,6 +97,19 @@
 				draggable="false"
 			>History</a>
 		</li>
+
+		<li>
+			<hr class="dropdown-divider">
+		</li>
+
+		<li>
+			<a
+				class="dropdown-item"
+				href="javascript:"
+				@click="dialog = 'user-preferences'; emit('hide-sidebar')"
+				draggable="false"
+			>User preferences</a>
+		</li>
 	</DropdownMenu>
 
 	<PadSettingsDialog
@@ -123,4 +138,9 @@
 		v-if="dialog === 'history' && client.padData"
 		@hidden="dialog = undefined"
 	></HistoryDialog>
+
+	<UserPreferencesDialog
+		v-if="dialog === 'user-preferences'"
+		@hidden="dialog = undefined"
+	></UserPreferencesDialog>
 </template>

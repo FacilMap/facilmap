@@ -70,3 +70,8 @@ export interface RoutePointsEvent {
 
 // socket.io converts undefined to null, so if we send an event as undefined, it will arrive as null
 export const nullOrUndefinedValidator = z.null().or(z.undefined()).transform((val) => val ?? null);
+
+export const setLanguageRequestValidator = z.object({
+	lang: z.string()
+});
+export type SetLanguageRequest = z.infer<typeof setLanguageRequestValidator>;

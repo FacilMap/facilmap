@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError, type SetLanguageRequest } from "facilmap-types";
 import { deserializeError, errorConstructors } from "serialize-error";
 
 export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
@@ -353,6 +353,10 @@ export default class Client {
 			throw new Error("Pad ID already set.");
 
 		return await this._setPadId(padId);
+	}
+
+	async setLanguage(language: SetLanguageRequest): Promise<void> {
+		await this._emit("setLanguage", language);
 	}
 
 	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {

@@ -87,6 +87,12 @@ const messagesEn = {
 		"close": "Close",
 		"cancel": "Cancel",
 		"save": "Save"
+	},
+
+	"user-preferences-dialog": {
+		"title": `User preferences`,
+		"introduction": `These settings are stored on your computer as a cookie and are applied independently of the opened map.`,
+		"language": `Language`
 	}
 };
 

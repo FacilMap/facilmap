@@ -38,14 +38,21 @@ onI18nReady((i18n) => {
 	i18n.on("loaded", rerender);
 });
 
-export function useI18n(): Pick<i18n, "t"> {
+export function useI18n(): {
+	t: i18n["t"];
+	changeLanguage: (lang: string) => Promise<void>;
+} {
 	return {
 		t: new Proxy(getRawI18n().getFixedT(null, namespace), {
 			apply: (target, thisArg, argumentsList) => {
 				rerenderCounter.value;
 				return target.apply(thisArg, argumentsList as any);
 			}
-		})
+		}),
+
+		changeLanguage: async (lang) => {
+			await getRawI18n().changeLanguage(lang);
+		}
 	};
 }
 

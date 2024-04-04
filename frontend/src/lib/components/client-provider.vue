@@ -9,6 +9,7 @@
 	import type { ClientContext } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
+	import { getCurrentLanguage } from "facilmap-utils";
 
 	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
 		return !!serverError && serverError instanceof PadNotFoundError;
@@ -57,7 +58,11 @@
 			}
 		}
 
-		const newClient = new CustomClient(props.serverUrl, props.padId);
+		const newClient = new CustomClient(props.serverUrl, props.padId, {
+			query: {
+				lang: getCurrentLanguage()
+			}
+		});
 		connectingClient.value = newClient;
 
 		let lastPadId: PadId | undefined = undefined;

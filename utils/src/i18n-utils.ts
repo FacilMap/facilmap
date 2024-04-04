@@ -1,14 +1,31 @@
-import i18next, { type Module, type Newable, type i18n } from "i18next";
+import i18next, { type CustomPluginOptions, type Module, type Newable, type i18n } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+
+export const LANGUAGES = {
+	en: "English",
+	de: "Deutsch"
+};
+
+export const DEFAULT_LANGUAGE = "en";
+
+export const LANG_COOKIE = "lang";
+export const LANG_QUERY = "lang";
 
 let hasBeenUsed = false;
 const onFirstUse: Array<(i18n: i18n) => void> = [];
 
 let languageDetector: Module | Newable<Module> | undefined = typeof window !== "undefined" ? LanguageDetector : undefined;
+let languageDetectorOptions: CustomPluginOptions["detection"] = typeof window !== "undefined" ? {
+	order: ['querystring', 'cookie', 'navigator'],
+	lookupQuerystring: LANG_QUERY,
+	lookupCookie: LANG_COOKIE,
+	caches: []
+} : undefined;
 export let isCustomLanguageDetector = false;
 
-export function setLanguageDetector(detector: Module | Newable<Module> | undefined): void {
+export function setLanguageDetector(detector: Module | Newable<Module> | undefined, options?: CustomPluginOptions["detection"]): void {
 	languageDetector = detector;
+	languageDetectorOptions = options;
 	isCustomLanguageDetector = true;
 }
 
@@ -23,8 +40,10 @@ export const defaultI18nGetter = (): i18n => {
 
 		void i18next.init({
 			initImmediate: false,
-			...(languageDetector ? {} : { lng: "en" }),
-			fallbackLng: "en"
+			supportedLngs: Object.keys(LANGUAGES),
+			...(languageDetector ? {} : { lng: DEFAULT_LANGUAGE }),
+			fallbackLng: DEFAULT_LANGUAGE,
+			detection: languageDetectorOptions
 		});
 	}
 
@@ -62,4 +81,8 @@ export function onI18nReady(callback: (i18n: i18n) => void): void {
 	} else {
 		onFirstUse.push(callback);
 	}
+}
+
+export function getCurrentLanguage(): string {
+	return getRawI18n().language;
 }

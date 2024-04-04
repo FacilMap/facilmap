@@ -113,6 +113,10 @@ export class SocketConnectionV2 extends SocketConnection {
 				return await this.getPadObjects(pad);
 			},
 
+			setLanguage: async (settings) => {
+				await getI18n().changeLanguage(settings.lang);
+			},
+
 			updateBbox: async (bbox) => {
 				this.validatePermissions(Writable.READ);
 
