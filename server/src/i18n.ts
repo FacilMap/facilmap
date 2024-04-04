@@ -1,6 +1,6 @@
 import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18nGetter, isCustomLanguageDetector, isCustomI18nGetter, LANG_QUERY, LANG_COOKIE, setCurrentUnitsGetter } from "facilmap-utils";
-import messagesEn from "./i18n/en";
-import messagesDe from "./i18n/de";
+import messagesEn from "./i18n/en.json";
+import messagesDe from "./i18n/de.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
 import { Router } from "express";

@@ -18,5 +18,5 @@
 		{ "path": "../utils/tsconfig.json" },
 		{ "path": "../tsconfig.json" }
 	],
-	"include": ["src/**/*"]
+	"include": ["src/**/*", "src/**/*.json"]
 }

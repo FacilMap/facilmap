@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 import { type i18n } from "i18next";
 import { defineComponent, ref } from "vue";
-import messagesEn from "../../i18n/en";
-import messagesDe from "../../i18n/de";
+import messagesEn from "../../i18n/en.json";
+import messagesDe from "../../i18n/de.json";
 import { decodeQueryString, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
@@ -15,13 +15,13 @@ onI18nReady((i18n) => {
 });
 
 if (import.meta.hot) {
-	import.meta.hot.accept("../../i18n/en", (m) => {
+	import.meta.hot.accept("../../i18n/en.json", (m) => {
 		onI18nReady((i18n) => {
 			i18n.addResourceBundle("en", namespace, m!.default);
 		});
 	});
 
-	import.meta.hot.accept("../../i18n/de", (m) => {
+	import.meta.hot.accept("../../i18n/de.json", (m) => {
 		onI18nReady((i18n) => {
 			i18n.addResourceBundle("de", namespace, m!.default);
 		});
