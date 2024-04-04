@@ -3,7 +3,7 @@
         "http-error": "Unerwarteter Fehler beim Laden der Höhe über NN (Status {{status}})."
     },
     "format": {
-        "time": "{{hours}}:{{minutes}}",
+        "time": "{{hours}}:{{minutes}} h",
         "route-time": "{{time}} {{mode}}",
         "distance-km": "{{distance}} km",
         "distance-mi": "{{distance}} mi",
@@ -12,7 +12,6 @@
     },
     "objects": {
         "untitled-marker": "Unbenannter Marker",
-        "untitled-lined": "Unbenannte Linie",
         "untitled-line": "Unbenannte Linie"
     },
     "pads": {
@@ -28,8 +27,7 @@
         "route-mode-electric-bike": "mit dem E-Bike",
         "route-mode-bicycle": "mit dem Fahrrad",
         "route-mode-wheelchair": "mit dem Rollstuhl",
-        "route-mode-foot": "zu Fuß",
-        "route-time": "{{time}} h {{mode}}"
+        "route-mode-foot": "zu Fuß"
     },
     "search": {
         "http-error": "Unerwarteter Fehler bei der Suche (Status {{status}}).",

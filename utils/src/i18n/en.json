@@ -2,27 +2,23 @@
 	"elevation": {
 		"http-error": "Looking up elevations failed with status {{status}}."
 	},
-
 	"format": {
-		"time": "{{hours}}:{{minutes}}\u202Fh",
+		"time": "{{hours}}:{{minutes}} h",
 		"route-time": "{{time}} {{mode}}",
-		"distance-km": "{{distance}}\u202fkm",
-		"distance-mi": "{{distance}}\u202fmi",
-		"elevation-m": "{{elevation}}\u202fm",
-		"elevation-ft": "{{elevation}}\u202fft"
+		"distance-km": "{{distance}} km",
+		"distance-mi": "{{distance}} mi",
+		"elevation-m": "{{elevation}} m",
+		"elevation-ft": "{{elevation}} ft"
 	},
-
 	"objects": {
 		"untitled-marker": "Untitled marker",
 		"untitled-line": "Untitled line"
 	},
-
 	"pads": {
 		"unnamed-map": "Unnamed map",
 		"page-title": "{{padName}} – {{appName}}",
 		"fallback-page-description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration."
 	},
-
 	"routing": {
 		"route-mode-hgv": "by HGV",
 		"route-mode-car": "by car",
@@ -33,7 +29,6 @@
 		"route-mode-wheelchair": "by wheelchair",
 		"route-mode-foot": "on foot"
 	},
-
 	"search": {
 		"http-error": "Search failed with status {{status}}.",
 		"from": "from",
