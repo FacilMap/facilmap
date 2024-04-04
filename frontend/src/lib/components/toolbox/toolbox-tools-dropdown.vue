@@ -8,9 +8,11 @@
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDialog from "../export-dialog.vue";
 	import UserPreferencesDialog from "../user-preferences-dialog.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
+	const i18n = useI18n();
 	const importTabContext = toRef(() => context.components.importTab);
 
 	const props = defineProps<{
@@ -38,7 +40,7 @@
 		isLink
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Tools"
+		:label="i18n.t('toolbox-tools-dropdown.label')"
 	>
 		<li v-if="props.interactive">
 			<a
@@ -46,7 +48,7 @@
 				href="javascript:"
 				@click="dialog = 'share'; emit('hide-sidebar')"
 				draggable="false"
-			>Share</a>
+			>{{i18n.t("toolbox-tools-dropdown.share")}}</a>
 		</li>
 
 		<li v-if="props.interactive && importTabContext">
@@ -55,7 +57,7 @@
 				href="javascript:"
 				@click="importTabContext.openFilePicker(); emit('hide-sidebar')"
 				draggable="false"
-			>Open file</a>
+			>{{i18n.t("toolbox-tools-dropdown.open-file")}}</a>
 		</li>
 
 		<li v-if="client.padData">
@@ -64,7 +66,7 @@
 				href="javascript:"
 				@click="dialog = 'export'; emit('hide-sidebar')"
 				draggable="false"
-			>Export</a>
+			>{{i18n.t("toolbox-tools-dropdown.export")}}</a>
 		</li>
 
 		<li v-if="client.padData">
@@ -77,7 +79,7 @@
 				href="javascript:"
 				@click="dialog = 'edit-filter'; emit('hide-sidebar')"
 				draggable="false"
-			>Filter</a>
+			>{{i18n.t("toolbox-tools-dropdown.filter")}}</a>
 		</li>
 
 		<li v-if="client.writable == 2 && client.padData">
@@ -86,7 +88,7 @@
 				href="javascript:"
 				@click="dialog = 'edit-pad'; emit('hide-sidebar')"
 				draggable="false"
-			>Settings</a>
+			>{{i18n.t("toolbox-tools-dropdown.settings")}}</a>
 		</li>
 
 		<li v-if="!client.readonly && client.padData">
@@ -95,7 +97,7 @@
 				href="javascript:"
 				@click="dialog = 'history'; emit('hide-sidebar')"
 				draggable="false"
-			>History</a>
+			>{{i18n.t("toolbox-tools-dropdown.history")}}</a>
 		</li>
 
 		<li>
@@ -108,7 +110,7 @@
 				href="javascript:"
 				@click="dialog = 'user-preferences'; emit('hide-sidebar')"
 				draggable="false"
-			>User preferences</a>
+			>{{i18n.t("toolbox-tools-dropdown.user-preferences")}}</a>
 		</li>
 	</DropdownMenu>
 

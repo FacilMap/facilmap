@@ -96,6 +96,55 @@ const messagesEn = {
 		"units": `Units`,
 		"units-metric": `Metric`,
 		"units-us": `US customary (miles, feet)`
+	},
+
+	"toolbox-add-dropdown": {
+		"label": `Add`,
+		"manage-types": `Manage types`
+	},
+
+	"toolbox-collab-maps-dropdown": {
+		"label": `Collaborative maps`,
+		"bookmark": `Bookmark map “{{padName}}”`,
+		"manage-bookmarks": `Manage bookmarks`,
+		"create-map": `Create a new map`,
+		"open-map": `Open an existing map`,
+		"open-other-map": `Open another map`,
+		"close-map": `Close map “{{padName}}”`
+	},
+
+	"toolbox-help-dropdown": {
+		"label": `Help`,
+		"documentation": `Documentation`,
+		"matrix-chat": `Matrix chat room`,
+		"bugtracker": `Report a problem`,
+		"forum": `Ask a question`,
+		"about": `About {{appName}}`
+	},
+
+	"toolbox-map-style-dropdown": {
+		"label": `Map style`,
+		"openstreetmap": `OpenStreetMap`,
+		"google-maps": `Google Maps`,
+		"google-maps-satellite": `Google Maps (Satellite)`,
+		"bing-maps": `Bing Maps`
+	},
+
+	"toolbox-tools-dropdown": {
+		"label": `Tools`,
+		"share": `Share`,
+		"open-file": `Open file`,
+		"export": `Export`,
+		"filter": `Filter`,
+		"settings": `Settings`,
+		"history": `History`,
+		"user-preferences": `User preferences`
+	},
+
+	"toolbox-views-dropdown": {
+		"label": `Views`,
+		"save-current-view": `Save current view`,
+		"manage-views": `Manage views`
 	}
 };
 

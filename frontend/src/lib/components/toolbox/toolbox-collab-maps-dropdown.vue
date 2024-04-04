@@ -7,10 +7,12 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { normalizePadName } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -44,7 +46,7 @@
 		:isDisabled="mapContext.interaction"
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Collaborative maps"
+		:label="i18n.t('toolbox-collab-maps-dropdown.label')"
 	>
 		<li v-for="bookmark in storage.bookmarks" :key="bookmark.id">
 			<a
@@ -66,7 +68,7 @@
 				href="javascript:"
 				@click="addBookmark()"
 				draggable="false"
-			>Bookmark {{normalizePadName(client.padData.name)}}</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { padName: normalizePadName(client.padData.name) })}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">
@@ -75,7 +77,7 @@
 				href="javascript:"
 				@click="dialog = 'manage-bookmarks'; emit('hide-sidebar')"
 				draggable="false"
-			>Manage bookmarks</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.manage-bookmarks')}}</a>
 		</li>
 
 		<li v-if="(client.padData && !isBookmarked) || storage.bookmarks.length > 0">
@@ -88,7 +90,7 @@
 				href="javascript:"
 				@click="dialog = 'create-pad'; emit('hide-sidebar')"
 				draggable="false"
-			>Create a new map</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.create-map')}}</a>
 		</li>
 
 		<li>
@@ -97,7 +99,7 @@
 				href="javascript:"
 				@click="dialog = 'open-map'; emit('hide-sidebar')"
 				draggable="false"
-			>Open {{client.padId ? "another" : "an existing"}} map</a>
+			>{{client.padId ? i18n.t("toolbox-collab-maps-dropdown.open-other-map") : i18n.t("toolbox-collab-maps-dropdown.open-map")}}</a>
 		</li>
 
 		<li v-if="client.padData">
@@ -106,7 +108,7 @@
 				:href="`${context.baseUrl}#${hash}`"
 				@click.exact.prevent="client.openPad(undefined)"
 				draggable="false"
-			>Close {{client.padData.name}}</a>
+			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { padName: client.padData.name })}}</a>
 		</li>
 	</DropdownMenu>
 

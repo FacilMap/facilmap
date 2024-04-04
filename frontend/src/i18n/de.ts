@@ -96,6 +96,55 @@ const messagesDe = {
 		"units": `Einheiten`,
 		"units-metric": `Metrisch`,
 		"units-us": `US customary (Meilen und Füße)`
+	},
+
+	"toolbox-add-dropdown": {
+		"label": `Erstellen`,
+		"manage-types": `Objekttypen verwalten`
+	},
+
+	"toolbox-collab-maps-dropdown": {
+		"label": `Kollaborative Karten`,
+		"bookmark": `Karte „{{padName}}“ als Favoriten hinzufügen`,
+		"manage-bookmarks": `Favoriten verwalten`,
+		"create-map": `Neue Karte erstellen`,
+		"open-map": `Existierende Karte öffnen`,
+		"open-other-map": `Andere Karte öffnen`,
+		"close-map": `Karte „{{padName}}“ schließen`
+	},
+
+	"toolbox-help-dropdown": {
+		"label": `Hilfe`,
+		"documentation": `Benutzerhandbuch`,
+		"matrix-chat": `Matrix-Chat`,
+		"bugtracker": `Fehler melden`,
+		"forum": `Frage stellen`,
+		"about": `Über {{appName}}`
+	},
+
+	"toolbox-map-style-dropdown": {
+		"label": `Kartenstil`,
+		"openstreetmap": `OpenStreetMap`,
+		"google-maps": `Google Maps`,
+		"google-maps-satellite": `Google Maps (Satellit)`,
+		"bing-maps": `Bing Maps`
+	},
+
+	"toolbox-tools-dropdown": {
+		"label": `Werkzeuge`,
+		"share": `Teilen`,
+		"open-file": `Datei öffnen`,
+		"export": `Exportieren`,
+		"filter": `Filter`,
+		"settings": `Eigenschaften`,
+		"history": `Versionsgeschichte`,
+		"user-preferences": `Benutzereinstellungen`
+	},
+
+	"toolbox-views-dropdown": {
+		"label": `Ansichten`,
+		"save-current-view": `Ansicht speichern`,
+		"manage-views": `Ansichten verwalten`
 	}
 };
 

@@ -8,6 +8,7 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getOrderedTypes, sleep } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -17,6 +18,7 @@
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const dialog = ref<
 		| "manage-types"
@@ -42,7 +44,7 @@
 		:isDisabled="mapContext.interaction"
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Add"
+		:label="i18n.t('toolbox-add-dropdown.label')"
 	>
 		<li v-for="type in orderedTypes" :key="type.id">
 			<a
@@ -65,7 +67,7 @@
 				href="javascript:"
 				@click="dialog = 'manage-types'; emit('hide-sidebar')"
 				draggable="false"
-			>Manage types</a>
+			>{{i18n.t("toolbox-add-dropdown.manage-types")}}</a>
 		</li>
 	</DropdownMenu>
 

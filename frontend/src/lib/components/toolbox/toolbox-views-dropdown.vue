@@ -7,10 +7,12 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getOrderedViews } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -35,7 +37,7 @@
 		isLink
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Views"
+		:label="i18n.t('toolbox-views-dropdown.label')"
 	>
 		<li v-for="view in orderedViews" :key="view.id">
 			<a
@@ -56,7 +58,7 @@
 				href="javascript:"
 				@click="dialog = 'save-view'; emit('hide-sidebar')"
 				draggable="false"
-			>Save current view</a>
+			>{{i18n.t("toolbox-views-dropdown.save-current-view")}}</a>
 		</li>
 
 		<li v-if="client.writable == 2 && orderedViews.length > 0">
@@ -65,7 +67,7 @@
 				href="javascript:"
 				@click="dialog = 'manage-views'; emit('hide-sidebar')"
 				draggable="false"
-			>Manage views</a>
+			>{{i18n.t("toolbox-views-dropdown.manage-views")}}</a>
 		</li>
 	</DropdownMenu>
 

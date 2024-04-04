@@ -4,9 +4,11 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "../ui/icon.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const links = computed(() => {
 		const v = mapContext.value;
@@ -52,7 +54,7 @@
 		isLink
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Map style"
+		:label="i18n.t('toolbox-map-style-dropdown.label')"
 	>
 		<li v-for="layerInfo in baseLayers" :key="layerInfo.key">
 			<a
@@ -89,7 +91,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>OpenStreetMap</span>
+				<span>{{i18n.t("toolbox-map-style-dropdown.openstreetmap")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -101,7 +103,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Google Maps</span>
+				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -113,7 +115,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Google Maps (Satellite)</span>
+				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps-satellite")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -125,7 +127,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Bing Maps</span>
+				<span>{{i18n.t("toolbox-map-style-dropdown.bing-maps")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>

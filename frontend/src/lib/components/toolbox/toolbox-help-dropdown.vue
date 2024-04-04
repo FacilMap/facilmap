@@ -4,8 +4,10 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "../ui/icon.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		"hide-sidebar": [];
@@ -23,7 +25,7 @@
 		isLink
 		buttonClass="nav-link"
 		menuClass="dropdown-menu-end"
-		label="Help"
+		:label="i18n.t('toolbox-help-dropdown.label')"
 	>
 		<li>
 			<a
@@ -32,7 +34,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Documentation</span>
+				<span>{{i18n.t("toolbox-help-dropdown.documentation")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -44,7 +46,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Matrix chat room</span>
+				<span>{{i18n.t("toolbox-help-dropdown.matrix-chat")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -56,7 +58,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Report a problem</span>
+				<span>{{i18n.t("toolbox-help-dropdown.bugtracker")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -68,7 +70,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>Ask a question</span>
+				<span>{{i18n.t("toolbox-help-dropdown.forum")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -79,7 +81,7 @@
 				@click="dialog = 'about'; emit('hide-sidebar')"
 				href="javascript:"
 				draggable="false"
-			>About {{context.appName}}</a>
+			>{{i18n.t("toolbox-help-dropdown.about", { appName: context.appName })}}</a>
 		</li>
 	</DropdownMenu>
 
