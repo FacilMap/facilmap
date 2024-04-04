@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { CRU, Field, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
-	import { canControl, mergeObject } from "facilmap-utils";
+	import { canControl, formatCheckboxValue, mergeObject } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourPicker from "../ui/colour-picker.vue";
@@ -17,6 +17,7 @@
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import StrokePicker from "../ui/stroke-picker.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	function getControlNumber(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: FieldUpdate): number {
 		return [
@@ -35,6 +36,7 @@
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		type: Type<CRU.READ | CRU.CREATE_VALIDATED>;
@@ -100,10 +102,10 @@
 
 	async function deleteOption(option: FieldOptionUpdate): Promise<void> {
 		if (!await showConfirm({
-			title: "Delete option",
-			message: `Do you really want to delete the option “${option.value}”?`,
+			title: i18n.t("edit-type-dropdown-dialog.delete-option-title"),
+			message: i18n.t("edit-type-dropdown-dialog.delete-option-message", { value: option.value }),
 			variant: "danger",
-			okLabel: "Delete"
+			okLabel: i18n.t("edit-type-dropdown-dialog.delete-option-button")
 		}))
 			return;
 
@@ -124,33 +126,41 @@
 
 	function validateOptionValue(value: string): string | undefined {
 		if (fieldValue.value.type !== "checkbox" && fieldValue.value.options!.filter((op) => op.value === value).length > 1) {
-			return "Multiple options cannot have the same label.";
+			return i18n.t("edit-type-dropdown-dialog.unique-value-error");
 		}
 	}
 
 	const formValidationError = computed(() => {
 		if (controlNumber.value > 0 && (fieldValue.value.options?.length ?? 0) === 0) {
-			return "Controlling fields need to have at least one option.";
+			return i18n.t("edit-type-dropdown-dialog.no-options-error");
 		} else {
 			return undefined;
+		}
+	});
+
+	const typeInterpolation = computed(() => {
+		if (props.type.type === "marker") {
+			return i18n.t("edit-type-dropdown-dialog.control-interpolation-marker");
+		} else {
+			return i18n.t("edit-type-dropdown-dialog.control-interpolation-line");
 		}
 	});
 </script>
 
 <template>
 	<ModalDialog
-		:title="`Edit ${fieldValue.type == 'checkbox' ? 'Checkbox' : 'Dropdown'}`"
+		:title="fieldValue.type === 'checkbox' ? i18n.t('edit-type-dropdown-dialog.title-checkbox') : i18n.t('edit-type-dropdown-dialog.title-dropdown')"
 		class="fm-edit-type-dropdown"
 		:isModified="isModified"
 		@submit="save()"
 		@hidden="emit('hidden')"
 		:size="fieldValue && controlNumber > 2 ? 'xl' : 'lg'"
-		:okLabel="isModified ? 'OK' : undefined"
+		:okLabel="isModified ? i18n.t('edit-type-dropdown-dialog.ok-button') : undefined"
 		:formValidationError="formValidationError"
 		ref="modalRef"
 	>
 		<div class="row mb-3">
-			<label class="col-sm-3 col-form-label">Control</label>
+			<label class="col-sm-3 col-form-label">{{i18n.t("edit-type-dropdown-dialog.control")}}</label>
 			<div class="col-sm-9">
 				<div class="form-check fm-form-check-with-label">
 					<input
@@ -164,7 +174,7 @@
 						class="form-check-label"
 						:for="`${id}-control-colour`"
 					>
-						Control {{type.type}} colour
+						{{i18n.t("edit-type-dropdown-dialog.control-colour", { type: typeInterpolation })}}
 					</label>
 				</div>
 
@@ -180,7 +190,7 @@
 						class="form-check-label"
 						:for="`${id}-control-size`"
 					>
-						Control {{type.type}} size
+						{{i18n.t("edit-type-dropdown-dialog.control-size", { type: typeInterpolation })}}
 					</label>
 				</div>
 
@@ -196,7 +206,7 @@
 						class="form-check-label"
 						:for="`${id}-control-symbol`"
 					>
-						Control {{type.type}} icon
+						{{i18n.t("edit-type-dropdown-dialog.control-icon", { type: typeInterpolation })}}
 					</label>
 				</div>
 
@@ -212,7 +222,7 @@
 						class="form-check-label"
 						:for="`${id}-control-shape`"
 					>
-						Control {{type.type}} shape
+						{{i18n.t("edit-type-dropdown-dialog.control-shape", { type: typeInterpolation })}}
 					</label>
 				</div>
 
@@ -228,7 +238,7 @@
 						class="form-check-label"
 						:for="`${id}-control-width`"
 					>
-						Control {{type.type}} width
+						{{i18n.t("edit-type-dropdown-dialog.control-width", { type: typeInterpolation })}}
 					</label>
 				</div>
 
@@ -244,7 +254,7 @@
 						class="form-check-label"
 						:for="`${id}-control-stroke`"
 					>
-						Control {{type.type}} stroke
+						{{i18n.t("edit-type-dropdown-dialog.control-stroke", { type: typeInterpolation })}}
 					</label>
 				</div>
 			</div>
@@ -252,14 +262,14 @@
 		<table v-if="fieldValue.type != 'checkbox' || controlNumber > 0" class="table table-striped table-hover">
 			<thead>
 				<tr>
-					<th>Option</th>
-					<th v-if="fieldValue.type == 'checkbox'">Label (for legend)</th>
-					<th v-if="fieldValue.controlColour">Colour</th>
-					<th v-if="fieldValue.controlSize">Size</th>
-					<th v-if="fieldValue.controlSymbol">Icon</th>
-					<th v-if="fieldValue.controlShape">Shape</th>
-					<th v-if="fieldValue.controlWidth">Width</th>
-					<th v-if="fieldValue.controlStroke">Stroke</th>
+					<th>{{i18n.t("edit-type-dropdown-dialog.option")}}</th>
+					<th v-if="fieldValue.type == 'checkbox'">{{i18n.t("edit-type-dropdown-dialog.label")}}</th>
+					<th v-if="fieldValue.controlColour">{{i18n.t("edit-type-dropdown-dialog.colour")}}</th>
+					<th v-if="fieldValue.controlSize">{{i18n.t("edit-type-dropdown-dialog.size")}}</th>
+					<th v-if="fieldValue.controlSymbol">{{i18n.t("edit-type-dropdown-dialog.icon")}}</th>
+					<th v-if="fieldValue.controlShape">{{i18n.t("edit-type-dropdown-dialog.shape")}}</th>
+					<th v-if="fieldValue.controlWidth">{{i18n.t("edit-type-dropdown-dialog.width")}}</th>
+					<th v-if="fieldValue.controlStroke">{{i18n.t("edit-type-dropdown-dialog.stroke")}}</th>
 					<th v-if="fieldValue.type != 'checkbox'"></th>
 					<th v-if="fieldValue.type != 'checkbox'" class="move"></th>
 				</tr>
@@ -273,7 +283,7 @@
 				<template #item="{ element: option, index: idx }">
 					<tr>
 						<td v-if="fieldValue.type == 'checkbox'">
-							<strong>{{idx === 0 ? '✘' : '✔'}}</strong>
+							<strong>{{formatCheckboxValue(idx === 0 ? "0" : "1")}}</strong>
 						</td>
 						<ValidatedField
 							tag="td"
@@ -331,10 +341,10 @@
 							></StrokePicker>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" alt="Remove"></Icon></button>
+							<button type="button" class="btn btn-secondary" @click="deleteOption(option)"><Icon icon="minus" :alt="i18n.t('edit-type-dropdown-dialog.option-remove')"></Icon></button>
 						</td>
 						<td v-if="fieldValue.type != 'checkbox'" class="td-buttons">
-							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" :alt="i18n.t('edit-type-dropdown-dialog.option-reorder')"></Icon></button>
 						</td>
 					</tr>
 				</template>
@@ -342,7 +352,7 @@
 			<tfoot v-if="fieldValue.type != 'checkbox'">
 				<tr>
 					<td :colspan="columns">
-						<button type="button" class="btn btn-secondary" @click="addOption()"><Icon icon="plus" alt="Add"></Icon></button>
+						<button type="button" class="btn btn-secondary" @click="addOption()"><Icon icon="plus" :alt="i18n.t('edit-type-dropdown-dialog.option-add')"></Icon></button>
 					</td>
 				</tr>
 			</tfoot>

@@ -16,13 +16,17 @@ const markdownOptions: MarkedOptions = {
 	breaks: true
 };
 
+export function formatCheckboxValue(value: string): string {
+	return value == "1" ? "✔" : "✘";
+}
+
 export function formatField(field: Field, value: string | undefined, html: boolean): string {
 	const normalizedValue = normalizeFieldValue(field, value);
 	switch(field.type) {
 		case "textarea":
 			return markdownBlock(normalizedValue, html);
 		case "checkbox":
-			return normalizedValue == "1" ? "✔" : "✘";
+			return formatCheckboxValue(normalizedValue);
 		case "dropdown":
 			return (html ? quoteHtml(normalizedValue) : normalizedValue) || "";
 		case "input":

@@ -21,11 +21,13 @@
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import StrokePicker from "../ui/stroke-picker.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		typeId: ID | "createMarkerType" | "createLineType";
@@ -93,10 +95,10 @@
 
 	async function deleteField(field: Field): Promise<void> {
 		if (!await showConfirm({
-			title: "Delete field",
-			message: `Do you really want to delete the field “${field.name}”?`,
+			title: i18n.t("edit-type-dialog.delete-field-title"),
+			message: i18n.t("edit-type-dialog.delete-field-message", { fieldName: field.name }),
 			variant: "danger",
-			okLabel: "Delete"
+			okLabel: i18n.t("edit-type-dialog.delete-field-button")
 		}))
 			return;
 
@@ -116,7 +118,11 @@
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-edit-type-error`, isCreate.value ? "Error creating type" : "Error saving type", err);
+			toasts.showErrorToast(
+				`fm${context.id}-edit-type-error`,
+				isCreate.value ? i18n.t("edit-type-dialog.create-type-error") : i18n.t("edit-type-dialog.save-type-error"),
+				err
+			);
 		}
 	}
 
@@ -126,21 +132,26 @@
 
 	function handleUpdateField(field: Field) {
 		const idx = type.value.fields.indexOf(editField.value!);
-		if (idx === -1)
-			toasts.showErrorToast(`fm${context.id}-edit-type-dropdown-error`, "Error updating field", new Error("The field cannot be found on the type anymore."));
+		if (idx === -1) {
+			toasts.showErrorToast(
+				`fm${context.id}-edit-type-dropdown-error`,
+				i18n.t("edit-type-dialog.field-update-error"),
+				new Error(i18n.t("edit-type-dialog.field-disappeared-error"))
+			);
+		}
 		type.value.fields[idx] = field;
 	}
 
 	function validateFieldName(name: string) {
 		if (type.value.fields.filter((field) => field.name == name).length > 1) {
-			return "Multiple fields cannot have the same name.";
+			return i18n.t("edit-type-dialog.unique-field-name-error");
 		}
 	}
 </script>
 
 <template>
 	<ModalDialog
-		title="Edit Type"
+		:title="i18n.t('edit-type-dialog.title')"
 		class="fm-edit-type"
 		:isModified="isModified"
 		:isCreate="isCreate"
@@ -149,7 +160,7 @@
 		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
-			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.name")}}</label>
 			<ValidatedField
 				:value="type.name"
 				:validators="[validateRequired, getZodValidator(typeValidator.update.shape.name)]"
@@ -165,7 +176,7 @@
 		</div>
 
 		<div class="row mb-3">
-			<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">Type</label>
+			<label :for="`${id}-type-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.type")}}</label>
 			<div class="col-sm-9">
 				<select
 					:id="`${id}-type-input`"
@@ -173,8 +184,8 @@
 					class="form-select"
 					disabled
 				>
-					<option value="marker">Marker</option>
-					<option value="line">Line</option>
+					<option value="marker">{{i18n.t("edit-type-dialog.type-marker")}}</option>
+					<option value="line">{{i18n.t("edit-type-dialog.type-line")}}</option>
 				</select>
 			</div>
 		</div>
@@ -183,14 +194,12 @@
 			<hr/>
 
 			<p class="text-muted">
-				These styles are applied when a new object of this type is created. If “Fixed” is enabled, the style is applied to all objects
-				of this type and cannot be changed for an individual object anymore. For more complex style control, dropdown or checkbox fields
-				can be configured below to change the style based on their selected value.
+				{{i18n.t("edit-type-dialog.styles-introduction")}}
 			</p>
 
 			<template v-if="resolvedCanControl.includes('colour')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-colour-input`" class="col-sm-3 col-form-label">Default colour</label>
+					<label :for="`${id}-default-colour-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-colour")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -207,7 +216,7 @@
 										:id="`${id}-default-colour-fixed`"
 										v-model="type.colourFixed"
 									/>
-									<label :for="`${id}-default-colour-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-colour-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -217,7 +226,7 @@
 
 			<template v-if="resolvedCanControl.includes('size')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-size-input`" class="col-sm-3 col-form-label">Default size</label>
+					<label :for="`${id}-default-size-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-size")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -235,7 +244,7 @@
 										:id="`${id}-default-size-fixed`"
 										v-model="type.sizeFixed"
 									/>
-									<label :for="`${id}-default-size-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-size-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -245,7 +254,7 @@
 
 			<template v-if="resolvedCanControl.includes('symbol')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-symbol-input`" class="col-sm-3 col-form-label">Default icon</label>
+					<label :for="`${id}-default-symbol-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-icon")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -262,7 +271,7 @@
 										:id="`${id}-default-symbol-fixed`"
 										v-model="type.symbolFixed"
 									/>
-									<label :for="`${id}-default-symbol-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-symbol-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -272,7 +281,7 @@
 
 			<template v-if="resolvedCanControl.includes('shape')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-shape-input`" class="col-sm-3 col-form-label">Default shape</label>
+					<label :for="`${id}-default-shape-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-shape")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -289,7 +298,7 @@
 										:id="`${id}-default-shape-fixed`"
 										v-model="type.shapeFixed"
 									/>
-									<label :for="`${id}-default-shape-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-shape-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -299,7 +308,7 @@
 
 			<template v-if="resolvedCanControl.includes('width')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-width-input`" class="col-sm-3 col-form-label">Default width</label>
+					<label :for="`${id}-default-width-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-width")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -317,7 +326,7 @@
 										:id="`${id}-default-width-fixed`"
 										v-model="type.widthFixed"
 									/>
-									<label :for="`${id}-default-width-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-width-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -327,7 +336,7 @@
 
 			<template v-if="resolvedCanControl.includes('stroke')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-stroke-input`" class="col-sm-3 col-form-label">Default stroke</label>
+					<label :for="`${id}-default-stroke-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-stroke")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -344,7 +353,7 @@
 										:id="`${id}-default-stroke-fixed`"
 										v-model="type.strokeFixed"
 									/>
-									<label :for="`${id}-default-stroke-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-stroke-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -354,7 +363,7 @@
 
 			<template v-if="resolvedCanControl.includes('mode')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-mode-input`" class="col-sm-3 col-form-label">Default routing mode</label>
+					<label :for="`${id}-default-mode-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-route-mode")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
@@ -371,7 +380,7 @@
 										:id="`${id}-default-mode-fixed`"
 										v-model="type.modeFixed"
 									/>
-									<label :for="`${id}-default-mode-fixed`" class="form-check-label">Fixed</label>
+									<label :for="`${id}-default-mode-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>
@@ -383,7 +392,7 @@
 		</template>
 
 		<div class="row mb-3">
-			<label :for="`${id}-show-in-legend-input`" class="col-sm-3 col-form-label">Legend</label>
+			<label :for="`${id}-show-in-legend-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.legend")}}</label>
 			<div class="col-sm-9">
 				<div class="form-check fm-form-check-with-label">
 					<input
@@ -392,23 +401,23 @@
 						:id="`${id}-show-in-legend-input`"
 						v-model="type.showInLegend"
 					/>
-					<label :for="`${id}-show-in-legend-input`" class="form-check-label">Show in legend</label>
+					<label :for="`${id}-show-in-legend-input`" class="form-check-label">{{i18n.t("edit-type-dialog.show-in-legend")}}</label>
 				</div>
 				<div class="form-text">
-					An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.
+					{{i18n.t("edit-type-dialog.show-in-legend-description")}}
 				</div>
 			</div>
 		</div>
 
 		<h2>Fields</h2>
-		<div class="table-responseive">
+		<div class="table-responsive">
 			<table class="table table-hover table-striped">
 				<thead>
 					<tr>
-						<th style="width: 35%; min-width: 150px">Name</th>
-						<th style="width: 35%; min-width: 120px">Type</th>
-						<th style="width: 35%; min-width: 150px">Default value</th>
-						<th>Delete</th>
+						<th style="width: 35%; min-width: 150px">{{i18n.t("edit-type-dialog.field-name")}}</th>
+						<th style="width: 35%; min-width: 120px">{{i18n.t("edit-type-dialog.field-type")}}</th>
+						<th style="width: 35%; min-width: 150px">{{i18n.t("edit-type-dialog.field-default-value")}}</th>
+						<th>{{i18n.t("edit-type-dialog.field-delete")}}</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -440,13 +449,13 @@
 							<td>
 								<div class="input-group">
 									<select class="form-select" v-model="field.type">
-										<option value="input">Text field</option>
-										<option value="textarea">Text area</option>
-										<option value="dropdown">Dropdown</option>
-										<option value="checkbox">Checkbox</option>
+										<option value="input">{{i18n.t("edit-type-dialog.field-type-input")}}</option>
+										<option value="textarea">{{i18n.t("edit-type-dialog.field-type-textarea")}}</option>
+										<option value="dropdown">{{i18n.t("edit-type-dialog.field-type-dropdown")}}</option>
+										<option value="checkbox">{{i18n.t("edit-type-dialog.field-type-checkbox")}}</option>
 									</select>
 									<template v-if="['dropdown', 'checkbox'].includes(field.type)">
-										<button type="button" class="btn btn-secondary" @click="editDropdown(field)">Edit</button>
+										<button type="button" class="btn btn-secondary" @click="editDropdown(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
 									</template>
 								</div>
 							</td>
@@ -454,10 +463,10 @@
 								<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
 							</td>
 							<td class="td-buttons">
-								<button type="button" class="btn btn-secondary" @click="deleteField(field)">Delete</button>
+								<button type="button" class="btn btn-secondary" @click="deleteField(field)">{{i18n.t("edit-type-dialog.field-delete")}}</button>
 							</td>
 							<td class="td-buttons">
-								<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+								<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" :alt="i18n.t('edit-type-dialog.field-reorder')"></Icon></button>
 							</td>
 						</tr>
 					</template>
@@ -465,7 +474,7 @@
 				<tfoot>
 					<tr>
 						<td colspan="4">
-							<button type="button" class="btn btn-secondary" @click="createField()"><Icon icon="plus" alt="Add"></Icon></button>
+							<button type="button" class="btn btn-secondary" @click="createField()"><Icon icon="plus" :alt="i18n.t('edit-type-dialog.field-add')"></Icon></button>
 						</td>
 						<td class="move"></td>
 					</tr>
