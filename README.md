@@ -49,6 +49,16 @@ Quick start
 More details can be found in the [Administrator guide](https://docs.facilmap.org/administrators/server.html#standalone) and the [Developer guide](https://docs.facilmap.org/developers/development/dev-setup.html).
 
 
+Contribute
+==========
+
+* Raise bugs, feature requests and ideas [as issues](https://github.com/FacilMap/facilmap/issues)
+* Help translate FacilMap into different languages on [Weblate](https://hosted.weblate.org/projects/facilmap/)
+* Create a local [dev setup](https://docs.facilmap.org/developers/development/dev-setup.html) and open pull requests
+* [Donate](https://docs.facilmap.org/users/contribute/)
+* Spread the word!
+
+
 Support FacilMap
 ================
 

@@ -54,7 +54,8 @@ export default defineUserConfig({
 						"/users/files/",
 						"/users/locate/",
 						"/users/share/",
-						"/users/app/"
+						"/users/app/",
+						"/users/user-preferences/"
 					]
 				},
 				{

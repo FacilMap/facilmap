@@ -12,6 +12,7 @@ FacilMap is a privacy-friendly, open-source versatile online map that combines d
 * [Show your location on the map](./locate/)
 * [Share a link](./share/) to a particular view of the map.
 * Add FacilMap as an [app](./app/) to your device.
+* Change the language settings in the [user preferences](./user-preferences/).
 * FacilMap is [privacy-friendly](./privacy/) and does not track you.
 
 In addition, FacilMap allows you to create collaborative maps, where you and others can add markers, draw lines, save routes and import GPX/KML/GeoJSON files, which will be saved under a custom URL.
