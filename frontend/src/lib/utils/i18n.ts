@@ -16,15 +16,19 @@ onI18nReady((i18n) => {
 
 if (import.meta.hot) {
 	import.meta.hot.accept("../../i18n/en.json", (m) => {
-		onI18nReady((i18n) => {
-			i18n.addResourceBundle("en", namespace, m!.default);
-		});
+		if (m) {
+			onI18nReady((i18n) => {
+				i18n.addResourceBundle("en", namespace, m!.default);
+			});
+		}
 	});
 
 	import.meta.hot.accept("../../i18n/de.json", (m) => {
-		onI18nReady((i18n) => {
-			i18n.addResourceBundle("de", namespace, m!.default);
-		});
+		if (m) {
+			onI18nReady((i18n) => {
+				i18n.addResourceBundle("de", namespace, m!.default);
+			});
+		}
 	});
 }
 
