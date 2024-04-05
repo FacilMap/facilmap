@@ -221,6 +221,21 @@
         "revert-delete-type-message-unnamed": "Wollen Sie die alte Version dieses Objekttyps wirklich wiederherstellen?",
         "revert-delete-button": "Wiederherstellen"
     },
+    "leaflet-map": {
+        "open-full-size": "{{appName}} als ganze Seite öffnen",
+        "loading": "Wird geladen…"
+    },
+    "leaflet-map-components": {
+        "pois-too-many-results": "Nicht alle POIs konnten geladen werden, weil zu viele gefunden wurden. Zoom Sie weiter hinein, um alle POIs anzuzeigen.",
+        "pois-zoom-in": "Zoomen Sie hinein, um die POIs zu laden.",
+        "pois-error": "Fehler beim Laden der POIs: {{message}}"
+    },
+    "legend": {
+        "tab-label": "Legende"
+    },
+    "legend-content": {
+        "click-explanation": "Klicken Sie, um Objekte dieses Typs zu verstecken/anzuzeigen."
+    },
     "modal-dialog": {
         "close": "Schließen",
         "cancel": "Abbrechen",

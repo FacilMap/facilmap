@@ -107,7 +107,7 @@ their `idx` property.
 ## Type
 
 * `id` (number): The ID of this type
-* `name` (string): The name of this type
+* `name` (string): The name of this type. Note that the if the name is "Marker" or "Line", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 * `type` (string): `marker` or `line`
 * `idx` (number): The sorting position of this type. When a list of types is shown to the user, it must be ordered by this value. If types were deleted or reordered, there may be gaps in the sequence of indexes, but no two types on the same map can ever have the same index. When setting this as part of a type creation/update, other types with a same/higher index will have their index increased to be moved down the list.
 * `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
@@ -115,7 +115,7 @@ their `idx` property.
 * `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
-	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines
+	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 	* `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
 	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object

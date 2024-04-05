@@ -17,6 +17,11 @@
         "pad-id-taken-error": "ID '{{id}}' is already taken.",
         "pad-disappeared-error": "Map has disappeared after updating."
     },
+    "frontend": {
+        "requires-javascript": "{{appName}} requires JavaScript to work.",
+        "loading": "Loading…",
+        "load-error": "Could not load {{appName}}!"
+    },
     "routing": {
         "ors-token-warning": "Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.",
         "too-much-distance-error": "Too much distance between route points. Consider adding some via points.",

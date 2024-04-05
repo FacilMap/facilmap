@@ -5,12 +5,13 @@ import type { ID, PadData, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizePadName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription } from "facilmap-utils";
+import { normalizePadName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
 import config from "./config";
 import { streamPromiseToStream, streamReplace } from "./utils/streams";
 import { ReadableStream } from "stream/web";
 import { generateRandomId } from "./utils/utils";
 import type { TableParams } from "./export/table";
+import { getI18n } from "./i18n";
 
 export const isDevMode = !!process.env.FM_DEV;
 
@@ -90,6 +91,7 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 		normalizePageTitle,
 		normalizePageDescription,
 		normalizePadName,
+		i18n: getI18n(),
 		...injections,
 		paths,
 		...params
@@ -117,6 +119,7 @@ export function renderTable({ padData, types, renderSingleTable, url }: {
 			normalizePadName,
 			normalizePageTitle,
 			normalizePageDescription,
+			formatTypeName,
 			quoteHtml,
 			renderSingleTable: (typeId: ID, params: TableParams) => {
 				const placeholder = `%${generateRandomId(32)}%`;

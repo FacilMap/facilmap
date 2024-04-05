@@ -7,9 +7,11 @@
 	import { computed, reactive, ref } from "vue";
 	import { mapRef, vHtmlAsync } from "../../utils/vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		legend1?: string;
@@ -122,7 +124,7 @@
 						<p>
 							<span class="text-break" :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
 							<br>
-							<small><em>Click to show/hide objects of this type.</em></small>
+							<small><em>{{i18n.t("legend-content.click-explanation")}}</em></small>
 						</p>
 					</Popover>
 				</template>

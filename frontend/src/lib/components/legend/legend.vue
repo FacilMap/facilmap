@@ -7,10 +7,12 @@
 	import { useDomEventListener } from "../../utils/utils";
 	import { useResizeObserver } from "../../utils/vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const absoluteContainerRef = ref<HTMLElement>();
 
@@ -62,7 +64,7 @@
 			</div>
 		</template>
 		<template v-else>
-			<SearchBoxTab :id="`fm${context.id}-legend-tab`" title="Legend">
+			<SearchBoxTab :id="`fm${context.id}-legend-tab`" :title="i18n.t('legend.tab-label')">
 				<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2" no-popover></LegendContent>
 			</SearchBoxTab>
 		</template>

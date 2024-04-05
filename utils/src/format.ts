@@ -20,7 +20,7 @@ export function formatCheckboxValue(value: string): string {
 	return value == "1" ? "✔" : "✘";
 }
 
-export function formatField(field: Field, value: string | undefined, html: boolean): string {
+export function formatFieldValue(field: Field, value: string | undefined, html: boolean): string {
 	const normalizedValue = normalizeFieldValue(field, value);
 	switch(field.type) {
 		case "textarea":
@@ -32,6 +32,28 @@ export function formatField(field: Field, value: string | undefined, html: boole
 		case "input":
 		default:
 			return markdownInline(normalizedValue, html);
+	}
+}
+
+export function formatTypeName(name: string): string {
+	// By default we create a type "Marker" and a type "Line" for each new map. Since these type names are hard-coded,
+	// we need to translate them based on their hard-coded name.
+	if (name === "Marker") {
+		return getI18n().t("format.marker-type-name");
+	} else if (name === "Line") {
+		return getI18n().t("format.line-type-name");
+	} else {
+		return name;
+	}
+}
+
+export function formatFieldName(name: string): string {
+	// By default we create a "Description" field for each type. Since the field name is hard-coded,  we need to translate
+	// it based on its hard-coded name.
+	if (name === "Description") {
+		return getI18n().t("format.description-field-name");
+	} else {
+		return name;
 	}
 }
 

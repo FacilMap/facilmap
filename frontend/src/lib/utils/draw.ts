@@ -4,6 +4,7 @@ import type { ToastContext } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { addToMap } from "./add";
+import { formatTypeName } from "facilmap-utils";
 
 export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
@@ -23,7 +24,7 @@ export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastCo
 		}
 	});
 
-	toasts.showToast("fm-draw-add-marker", `Add ${type.name}`, "Please click on the map to add a marker.", {
+	toasts.showToast("fm-draw-add-marker", `Add ${formatTypeName(type.name)}`, "Please click on the map to add a marker.", {
 		noCloseButton: true,
 		actions: [
 			{
@@ -98,7 +99,7 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 
 		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
 
-		toasts.showToast("fm-draw-add-line", `Add ${type.name}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+		toasts.showToast("fm-draw-add-line", `Add ${formatTypeName(type.name)}`, "Click on the map to draw a line. Click “Finish” to save it.", {
 			noCloseButton: true,
 			actions: [
 				{

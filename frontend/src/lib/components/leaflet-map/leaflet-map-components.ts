@@ -16,6 +16,7 @@ import type { ClientContext } from "../facil-map-context-provider/client-context
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 import { type Optional, sleep } from "facilmap-utils";
+import { getI18n } from "../../utils/i18n";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 type OnCleanup = (cleanupFn: () => void) => void;
@@ -203,11 +204,11 @@ function useOverpassLayer(map: Ref<Map>, mapContext: MapContextWithoutComponents
 				if (status == OverpassLoadStatus.COMPLETE)
 					mapContext.overpassMessage = undefined;
 				else if (status == OverpassLoadStatus.INCOMPLETE)
-					mapContext.overpassMessage = "Not all POIs are shown because there are too many results. Zoom in to show all results.";
+					mapContext.overpassMessage = getI18n().t("leaflet-map-components.pois-too-many-results");
 				else if (status == OverpassLoadStatus.TIMEOUT)
-					mapContext.overpassMessage = "Zoom in to show POIs.";
+					mapContext.overpassMessage = getI18n().t("leaflet-map-components.pois-zoom-in");
 				else if (status == OverpassLoadStatus.ERROR)
-					mapContext.overpassMessage = "Error loading POIs: " + error.message;
+					mapContext.overpassMessage = getI18n().t("leaflet-map-components.pois-error", { message: error.message });
 			})
 			.on("clear", () => {
 				mapContext.overpassMessage = undefined;

@@ -3,6 +3,9 @@
 		"http-error": "Looking up elevations failed with status {{status}}."
 	},
 	"format": {
+		"marker-type-name": "Marker",
+		"line-type-name": "Line",
+		"description-field-name": "Description",
 		"time": "{{hours}}:{{minutes}} h",
 		"route-time": "{{time}} {{mode}}",
 		"distance-km": "{{distance}} km",

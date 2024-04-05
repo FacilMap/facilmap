@@ -5,7 +5,7 @@
 	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import Coordinates from "../ui/coordinates.vue";
-	import { formatField, normalizeMarkerName } from "facilmap-utils";
+	import { formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -35,7 +35,7 @@
 
 	const marker = computed(() => client.value.markers[props.markerId]);
 
-	const typeName = computed(() => client.value.types[marker.value.typeId].name);
+	const typeName = computed(() => formatTypeName(client.value.types[marker.value.typeId].name));
 	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'marker').length > 1);
 
 	function move(): void {
@@ -92,8 +92,8 @@
 			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele"></Coordinates></dd>
 
 			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">
-				<dt>{{field.name}}</dt>
-				<dd v-html="formatField(field, marker.data[field.name], true)"></dd>
+				<dt>{{formatFieldName(field.name)}}</dt>
+				<dd v-html="formatFieldValue(field, marker.data[field.name], true)"></dd>
 			</template>
 		</dl>
 

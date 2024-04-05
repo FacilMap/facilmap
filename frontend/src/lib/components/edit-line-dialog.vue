@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { lineValidator, type ID } from "facilmap-types";
-	import { canControl, getOrderedTypes, mergeObject } from "facilmap-utils";
+	import { canControl, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -135,7 +135,7 @@
 
 			<template v-for="(field, idx) in client.types[line.typeId].fields" :key="field.name">
 				<div class="row mb-3">
-					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{field.name}}</label>
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
 					<div class="col-sm-9">
 						<FieldInput
 							:id="`${id}-${idx}-input`"
@@ -156,7 +156,7 @@
 							class="dropdown-item"
 							:class="{ active: type.id == line.typeId }"
 							@click="line.typeId = type.id"
-						>{{type.name}}</a>
+						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>
 			</DropdownMenu>

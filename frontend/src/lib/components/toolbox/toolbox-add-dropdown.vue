@@ -7,7 +7,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { getOrderedTypes, sleep } from "facilmap-utils";
+	import { formatTypeName, getOrderedTypes, sleep } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const emit = defineEmits<{
@@ -53,7 +53,7 @@
 				href="javascript:"
 				@click="addObject(type); emit('hide-sidebar')"
 				draggable="false"
-			>{{type.name}}</a>
+			>{{formatTypeName(type.name)}}</a>
 		</li>
 
 		<li v-if="client.writable == 2">

@@ -47,7 +47,7 @@
 -%>
 <%-renderSingleTable(type.id, {
 	before: (
-		`\t\t\t<h2 role="button" data-bs-toggle="collapse" data-bs-target="#type-${quoteHtml(type.id)}" aria-expanded="true" aria-controls="type-${quoteHtml(type.id)}"><svg class="d-print-none" viewbox="0 0 11 15" height="15"><path d="M10.195 7.5l-7.5 7.5L0 12.305 4.805 7.5 0 2.695 2.695 0z"/></svg> ${quoteHtml(type.name)}</h2>\n` +
+		`\t\t\t<h2 role="button" data-bs-toggle="collapse" data-bs-target="#type-${quoteHtml(type.id)}" aria-expanded="true" aria-controls="type-${quoteHtml(type.id)}"><svg class="d-print-none" viewbox="0 0 11 15" height="15"><path d="M10.195 7.5l-7.5 7.5L0 12.305 4.805 7.5 0 2.695 2.695 0z"/></svg> ${quoteHtml(formatTypeName(type.name))}</h2>\n` +
 		`\t\t\t<div id="type-${quoteHtml(type.id)}" class="collapse show">\n`
 	),
 	after: (

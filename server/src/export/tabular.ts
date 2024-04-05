@@ -1,5 +1,5 @@
 import { flatMapStream, asyncIteratorToStream, mapStream } from "../utils/streams.js";
-import { compileExpression, formatDistance, formatField, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
+import { compileExpression, formatDistance, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { PadId, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { ReadableStream } from "stream/web";
@@ -47,7 +47,7 @@ export async function getTabularData(
 		return [[
 			() => handlePlainText(normalizeMarkerName(marker.name)),
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
-			...type.fields.map((f) => () => formatField(f, marker.data[f.name], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.name], html).trim())
 		]];
 	}) : flatMapStream(asyncIteratorToStream(database.lines.getPadLinesByType(padId, typeId)), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
@@ -58,7 +58,7 @@ export async function getTabularData(
 			() => handlePlainText(normalizeLineName(line.name)),
 			() => handlePlainText(formatDistance(line.distance)),
 			() => handlePlainText(line.time != null ? formatRouteTime(line.time, line.mode) : ""),
-			...type.fields.map((f) => () => formatField(f, line.data[f.name], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(f, line.data[f.name], html).trim())
 		]];
 	});
 

@@ -4,7 +4,7 @@
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { useEventListener } from "../../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { normalizeLineName } from "facilmap-utils";
+	import { normalizeLineName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);

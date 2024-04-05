@@ -7,7 +7,7 @@
 	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { formatDistance, formatField, formatRouteTime, normalizeLineName } from "facilmap-utils";
+	import { formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -41,7 +41,7 @@
 
 	const line = computed(() => client.value.lines[props.lineId]);
 
-	const typeName = computed(() => client.value.types[line.value.typeId].name);
+	const typeName = computed(() => formatTypeName(client.value.types[line.value.typeId].name));
 	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'line').length > 1);
 
 	async function deleteLine(): Promise<void> {
@@ -169,8 +169,8 @@
 
 				<template v-if="line.ascent == null || !showElevationPlot">
 					<template v-for="field in client.types[line.typeId].fields" :key="field.name">
-						<dt>{{field.name}}</dt>
-						<dd v-html="formatField(field, line.data[field.name], true)"></dd>
+						<dt>{{formatFieldName(field.name)}}</dt>
+						<dd v-html="formatFieldValue(field, line.data[field.name], true)"></dd>
 					</template>
 				</template>
 			</dl>

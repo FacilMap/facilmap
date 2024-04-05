@@ -1,5 +1,5 @@
 import type { ID, PadId } from "facilmap-types";
-import { quoteHtml } from "facilmap-utils";
+import { formatFieldName, quoteHtml } from "facilmap-utils";
 import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
 import { ReadableStream } from "stream/web";
@@ -48,7 +48,7 @@ export function createSingleTable(
 				const thAttrs = getThAttrs?.(field, !handledFieldNames.has(field));
 				handledFieldNames.add(field);
 
-				yield `${indent}\t\t\t<th${attrs(thAttrs)}>${quoteHtml(field)}</th>\n`;
+				yield `${indent}\t\t\t<th${attrs(thAttrs)}>${quoteHtml(formatFieldName(field))}</th>\n`;
 			}
 
 			yield `${indent}\t\t</tr>\n`;

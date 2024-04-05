@@ -11,7 +11,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import copyToClipboard from "copy-to-clipboard";
 	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
-	import { getOrderedTypes } from "facilmap-utils";
+	import { formatFieldName, formatTypeName, getOrderedTypes } from "facilmap-utils";
 
 	const toasts = useToasts();
 
@@ -290,7 +290,7 @@
 			>
 				<template #default="slotProps">
 					<select class="form-select" v-model="typeId" :id="`${id}-type-select`" :ref="slotProps.inputRef">
-						<option v-for="type of orderedTypes" :key="type.id" :value="type.id">{{type.name}}</option>
+						<option v-for="type of orderedTypes" :key="type.id" :value="type.id">{{formatTypeName(type.name)}}</option>
 					</select>
 					<div class="invalid-tooltip">
 						{{slotProps.validationError}}
@@ -311,7 +311,7 @@
 							:checked="!hide.has(key)"
 							@change="hide.has(key) ? hide.delete(key) : hide.add(key)"
 						>
-						<label class="form-check-label" :for="`${id}-show-${key}-checkbox`">{{key}}</label>
+						<label class="form-check-label" :for="`${id}-show-${key}-checkbox`">{{formatFieldName(key)}}</label>
 					</div>
 				</template>
 			</div>

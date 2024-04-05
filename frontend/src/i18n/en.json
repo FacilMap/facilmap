@@ -221,6 +221,21 @@
         "revert-delete-type-message-unnamed": "Do you really want to restore this type?",
         "revert-delete-button": "Restore"
     },
+    "leaflet-map": {
+        "open-full-size": "Open {{appName}} in full size",
+        "loading": "Loading…"
+    },
+    "leaflet-map-components": {
+        "pois-too-many-results": "Not all POIs are shown because there are too many results. Zoom in to show all results.",
+        "pois-zoom-in": "Zoom in to show POIs.",
+        "pois-error": "Error loading POIs: {{message}}"
+    },
+    "legend": {
+        "tab-label": "Legend"
+    },
+    "legend-content": {
+        "click-explanation": "Click to show/hide objects of this type."
+    },
     "modal-dialog": {
         "close": "Close",
         "cancel": "Cancel",

@@ -3,6 +3,9 @@
         "http-error": "Unerwarteter Fehler beim Laden der Höhe über NN (Status {{status}})."
     },
     "format": {
+        "marker-type-name": "Marker",
+        "line-type-name": "Linie",
+        "description-field-name": "Beschreibung",
         "time": "{{hours}}:{{minutes}} h",
         "route-time": "{{time}} {{mode}}",
         "distance-km": "{{distance}} km",

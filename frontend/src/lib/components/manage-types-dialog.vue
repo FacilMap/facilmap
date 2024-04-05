@@ -7,7 +7,7 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
-	import { getOrderedTypes } from "facilmap-utils";
+	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
 	import Draggable from "vuedraggable";
 	import Icon from "./ui/icon.vue";
 
@@ -32,7 +32,7 @@
 		try {
 			if (!await showConfirm({
 				title: "Delete type",
-				message: `Do you really want to delete the type “${type.name}”?`,
+				message: `Do you really want to delete the type “${formatTypeName(type.name)}”?`,
 				variant: "danger",
 				okLabel: "Delete"
 			})) {
@@ -41,7 +41,7 @@
 
 			await client.value.deleteType({ id: type.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${type.name}”`, err);
+			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${formatTypeName(type.name)}”`, err);
 		} finally {
 			delete isDeleting.value[type.id];
 		}
@@ -97,7 +97,7 @@
 			>
 				<template #item="{ element: type }">
 					<tr>
-						<td class="text-break">{{type.name}}</td>
+						<td class="text-break">{{formatTypeName(type.name)}}</td>
 						<td>{{type.type}}</td>
 						<td class="td-buttons">
 							<button

@@ -17,6 +17,11 @@
         "pad-id-taken-error": "ID „{{id}}“ ist bereits vergeben.",
         "pad-disappeared-error": "Karte wurde während des Abspeicherns gelöscht."
     },
+    "frontend": {
+        "requires-javascript": "{{appName}} benötigt JavaScript.",
+        "loading": "Wird geladen…",
+        "load-error": "{{appName}} konnte nicht geladen werden!"
+    },
     "routing": {
         "ors-token-warning": "Warnung: Kein ORS-Token konfiguriert. Bitten Sie den Administrator, die Umgebungsvariable ORS_TOKEN zu setzen.",
         "too-much-distance-error": "Die Distanz zwischen den Routenpunkten ist zu groß. Versuchen Sie, einige Zwischenpunkte hinzuzufügen.",

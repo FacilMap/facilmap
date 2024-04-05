@@ -78,9 +78,9 @@
 <% } -%>
 	</head>
 	<body>
-		<noscript><p><strong><%=appName%> requires JavaScript to work.</strong></p></noscript>
+		<noscript><p><strong><%=i18n.t("frontend.requires-javascript", { appName })%></strong></p></noscript>
 		<div id="loading">
-			Loading...
+			<%=i18n.t("frontend.loading")%>
 			<div id="spinner"></div>
 		</div>
 
@@ -93,7 +93,7 @@
 					var loading = document.getElementById("loading");
 					if(loading) {
 						loading.className += " error";
-						loading.innerHTML = "Could not load <%=appName%>!";
+						loading.innerHTML = <%-JSON.stringify(i18n.t("frontend.load-error", { appName }))%>;
 					}
 				};
 			})();

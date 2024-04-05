@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { typeValidator, type Field, type ID, type Type, type CRU } from "facilmap-types";
-	import { canControl } from "facilmap-utils";
+	import { canControl, formatFieldName } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { cloneDeep, isEqual } from "lodash-es";
@@ -96,7 +96,7 @@
 	async function deleteField(field: Field): Promise<void> {
 		if (!await showConfirm({
 			title: i18n.t("edit-type-dialog.delete-field-title"),
-			message: i18n.t("edit-type-dialog.delete-field-message", { fieldName: field.name }),
+			message: i18n.t("edit-type-dialog.delete-field-message", { fieldName: formatFieldName(field.name) }),
 			variant: "danger",
 			okLabel: i18n.t("edit-type-dialog.delete-field-button")
 		}))

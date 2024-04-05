@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { markerValidator, type ID } from "facilmap-types";
-	import { canControl, getOrderedTypes, mergeObject } from "facilmap-utils";
+	import { canControl, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -133,7 +133,7 @@
 
 			<template v-for="(field, idx) in client.types[marker.typeId].fields" :key="field.name">
 				<div class="row mb-3">
-					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{field.name}}</label>
+					<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
 					<div class="col-sm-9">
 						<FieldInput
 							:id="`fm-edit-marker-${idx}-input`"
@@ -154,7 +154,7 @@
 							class="dropdown-item"
 							:class="{ active: type.id == marker.typeId }"
 							@click="marker.typeId = type.id"
-						>{{type.name}}</a>
+						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>
 			</DropdownMenu>

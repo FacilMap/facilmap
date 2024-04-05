@@ -4,9 +4,11 @@
 	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
+	const i18n = useI18n();
 
 	const innerContainerRef = ref<HTMLElement>();
 	const mapRef = ref<HTMLElement>();
@@ -50,7 +52,7 @@
 					:href="selfUrl"
 					target="_blank"
 					class="fm-open-external"
-					v-tooltip.right="`Open ${context.appName} in full size`"
+					v-tooltip.right="i18n.t('leaflet-map.open-full-size', { appName: context.appName })"
 				></a>
 				<div class="fm-logo">
 					<img src="./logo.png"/>
@@ -65,7 +67,7 @@
 
 		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || (client.serverError && !client.isCreatePad) || client.deleted)"></div>
 		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError && !client.isCreatePad" :class="{ 'fatal-error': !!fatalError }">
-			{{fatalError || 'Loading...'}}
+			{{fatalError || i18n.t("leaflet-map.loading")}}
 		</div>
 	</div>
 </template>

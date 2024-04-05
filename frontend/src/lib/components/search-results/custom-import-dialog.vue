@@ -9,7 +9,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { type LineWithTags, type MarkerWithTags, addToMap, searchResultToLineWithTags, searchResultToMarkerWithTags } from "../../utils/add";
-	import { getOrderedTypes } from "facilmap-utils";
+	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -43,7 +43,7 @@
 
 			for (const type of orderedTypes.value) {
 				if (type.name == customType.name && type.type == customType.type)
-					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${formatTypeName(type.name)}”` });
 			}
 
 			if (client.value.writable == 2 && !typeExists(client.value, customType))
@@ -56,7 +56,7 @@
 
 			for (const type of orderedTypes.value) {
 				if (type.name != customType.name && type.type == customType.type)
-					otherOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+					otherOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${formatTypeName(type.name)}”` });
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
@@ -99,7 +99,7 @@
 
 		for (const type of orderedTypes.value) {
 			if (type.type == "marker")
-				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${formatTypeName(type.name)}”` });
 		}
 
 		return options;
@@ -117,7 +117,7 @@
 
 		for (const type of orderedTypes.value) {
 			if (type.type == "line")
-				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${type.name}”` });
+				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: `Existing type “${formatTypeName(type.name)}”` });
 		}
 
 		return options;

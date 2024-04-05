@@ -7,7 +7,7 @@
 	import { type LineWithTags, type MarkerWithTags, addToMap } from '../../utils/add';
 	import type { ButtonSize } from '../../utils/bootstrap';
 	import DropdownMenu from "./dropdown-menu.vue";
-	import { getOrderedTypes } from 'facilmap-utils';
+	import { formatTypeName, getOrderedTypes } from 'facilmap-utils';
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -86,7 +86,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addMarkers(type)"
-					>{{!props.isSingle && props.lines ? 'Marker items as ' : ''}}{{type.name}}</a>
+					>{{!props.isSingle && props.lines ? 'Marker items as ' : ''}}{{formatTypeName(type.name)}}</a>
 				</li>
 			</template>
 		</template>
@@ -97,7 +97,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addLines(type)"
-					>{{!props.isSingle && props.markers ? 'Line/polygon items as ' : ''}}{{type.name}}</a>
+					>{{!props.isSingle && props.markers ? 'Line/polygon items as ' : ''}}{{formatTypeName(type.name)}}</a>
 				</li>
 			</template>
 		</template>
