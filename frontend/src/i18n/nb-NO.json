@@ -1,1 +1,62 @@
-{}
+{
+    "about-dialog": {
+        "header": "Om FaciiMap {{version}}",
+        "license-text-facilmap": "FaciiMap",
+        "help-text-documentation": "dokumentasjon",
+        "help-text-discussions": "diskusjonsforum",
+        "help-text-chat": "Matrix-sludring",
+        "privacy-information": "Personvernsinfo",
+        "map-data": "Kartdata",
+        "map-data-search": "Søk",
+        "map-data-pois": "Interessepunkter",
+        "map-data-geoip": "GeoIP",
+        "attribution-osm-contributors": "OSM-bidragsytere",
+        "programs-libraries": "Programmer/bibliotek",
+        "icons": "Ikoner"
+    },
+    "client-provider": {
+        "close-map": "Lukk kart",
+        "disconnected-header": "Frakoblet",
+        "map-deleted-header": "Kart slettet"
+    },
+    "edit-filter-dialog": {
+        "description": "Beskrivelse",
+        "example": "Eksempel",
+        "typeId-description": "{{items}}",
+        "apply": "Bruk",
+        "typeId-description-separator": " / ",
+        "size-description": "Pekerstørrelse",
+        "symbol-description": "Pekerikon",
+        "shape-description": "Pekerform",
+        "width-description": "Linjebredde"
+    },
+    "edit-type-dialog": {
+        "default-size": "Forvalgt størrelse",
+        "default-icon": "Forvalkt ikon",
+        "default-shape": "Forvalgt form",
+        "default-width": "Forvalgt bredde",
+        "field-name": "Navn",
+        "field-default-value": "Forvalgt verdi",
+        "field-delete": "Slett",
+        "field-type-input": "Tekstfelt",
+        "field-type-textarea": "Tekstområde",
+        "field-type-checkbox": "Avkryssningsboks",
+        "field-edit": "Rediger",
+        "field-reorder": "Endre rekkefølge",
+        "field-add": "Legg til"
+    },
+    "edit-type-dropdown-dialog": {
+        "delete-option-title": "Slett alternativ",
+        "delete-option-message": "Slett alternativet «{{value}}»?",
+        "delete-option-button": "Slett"
+    },
+    "history-dialog": {
+        "title": "Historikk",
+        "date": "Dato",
+        "action": "Handling",
+        "restore": "Gjenopprett",
+        "diff-field": "Felt",
+        "diff-before": "Før",
+        "diff-after": "Etter"
+    }
+}
