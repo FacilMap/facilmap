@@ -409,7 +409,7 @@
 			</div>
 		</div>
 
-		<h2>Fields</h2>
+		<h2>{{i18n.t("edit-type-dialog.fields")}}</h2>
 		<div class="table-responsive">
 			<table class="table table-hover table-striped">
 				<thead>

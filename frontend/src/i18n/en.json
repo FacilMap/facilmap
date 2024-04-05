@@ -105,6 +105,7 @@
         "legend": "Legend",
         "show-in-legend": "Show in legend",
         "show-in-legend-description": "An item for this type will be shown in the legend. Any fixed style attributes are applied to it. Dropdown or checkbox fields that control the style generate additional legend items.",
+        "fields": "Fields",
         "field-name": "Name",
         "field-type": "Type",
         "field-default-value": "Default value",
@@ -119,7 +120,7 @@
     },
     "edit-type-dropdown-dialog": {
         "delete-option-title": "Delete option",
-        "delete-option-message": "Do you really want to delete the option “{{option.value}}”?",
+        "delete-option-message": "Do you really want to delete the option “{{value}}”?",
         "delete-option-button": "Delete",
         "unique-value-error": "Multiple options cannot have the same label.",
         "no-options-error": "Controlling fields need to have at least one option.",
