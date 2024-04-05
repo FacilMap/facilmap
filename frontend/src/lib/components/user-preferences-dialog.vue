@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { LANGUAGES, getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
+	import { getCurrentLanguage, getCurrentUnits, getLocalizedLanguageList } from "facilmap-utils";
 	import { Units } from "facilmap-types";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, reactive, ref, toRef } from "vue";
@@ -30,6 +30,8 @@
 	const isModified = computed(() => {
 		return !isEqual(values, reactive(initialValues));
 	});
+
+	const languageList = computed(() => getLocalizedLanguageList());
 
 	async function save() {
 		await setLangCookie(values.lang);
@@ -63,7 +65,7 @@
 			<label :for="`${id}-language-input`" class="col-sm-3 col-form-label">{{i18n.t("user-preferences-dialog.language")}}</label>
 			<div class="col-sm-9">
 				<select :id="`${id}-language-input`" class="form-select" v-model="values.lang">
-					<option v-for="(label, key) in LANGUAGES" :key="key" :value="key">{{label}}</option>
+					<option v-for="(label, key) in languageList" :key="key" :value="key">{{label}}</option>
 				</select>
 				<div class="form-text">
 					<T k="user-preferences-dialog.language-description">

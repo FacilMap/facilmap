@@ -10,6 +10,11 @@
         "elevation-m": "{{elevation}} m",
         "elevation-ft": "{{elevation}} ft"
     },
+    "i18n": {
+		"language-en": "Englisch",
+		"language-de": "Deutsch",
+		"language-nb-no": "Norwegisch Bokmål (Norwegen)"
+	},
     "objects": {
         "untitled-marker": "Unbenannter Marker",
         "untitled-line": "Unbenannte Linie"

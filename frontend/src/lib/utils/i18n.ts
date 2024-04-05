@@ -3,6 +3,7 @@ import { type i18n } from "i18next";
 import { defineComponent, ref } from "vue";
 import messagesEn from "../../i18n/en.json";
 import messagesDe from "../../i18n/de.json";
+import messagesNbNo from "../../i18n/nb-NO.json";
 import { decodeQueryString, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
@@ -12,24 +13,20 @@ const namespace = "facilmap-frontend";
 onI18nReady((i18n) => {
 	i18n.addResourceBundle("en", namespace, messagesEn);
 	i18n.addResourceBundle("de", namespace, messagesDe);
+	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 });
 
 if (import.meta.hot) {
-	import.meta.hot.accept("../../i18n/en.json", (m) => {
-		if (m) {
+	const acceptHot = (lang: string) => (mod: any) => {
+		if (mod) {
 			onI18nReady((i18n) => {
-				i18n.addResourceBundle("en", namespace, m!.default);
+				i18n.addResourceBundle(lang, namespace, mod!.default);
 			});
 		}
-	});
-
-	import.meta.hot.accept("../../i18n/de.json", (m) => {
-		if (m) {
-			onI18nReady((i18n) => {
-				i18n.addResourceBundle("de", namespace, m!.default);
-			});
-		}
-	});
+	};
+	import.meta.hot!.accept(`../../i18n/en.json`, acceptHot("en"));
+	import.meta.hot!.accept(`../../i18n/de.json`, acceptHot("de"));
+	import.meta.hot!.accept(`../../i18n/nb-NO.json`, acceptHot("nb-NO"));
 }
 
 const i18nResourceChangeCounter = ref(0);

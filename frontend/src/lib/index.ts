@@ -10,6 +10,7 @@ export * from "./utils/draw";
 export * from "./utils/files";
 export { default as FmHeightgraph } from "./utils/heightgraph";
 export * from "./utils/heightgraph";
+export * from "./utils/i18n";
 export { default as vLinkDisabled } from "./utils/link-disabled";
 export * from "./utils/link-disabled";
 export * from "./utils/modal";
