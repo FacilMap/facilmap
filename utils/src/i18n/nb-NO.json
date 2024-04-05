@@ -1,0 +1,10 @@
+{
+    "search": {
+        "from": "fra",
+        "to": "til",
+        "via": "via"
+    },
+    "format": {
+        "distance-km": "{{distance}} km"
+    }
+}
