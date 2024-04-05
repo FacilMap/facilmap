@@ -230,6 +230,8 @@
         "title": "User preferences",
         "introduction": "These settings are stored on your computer as a cookie and are applied independently of the opened map.",
         "language": "Language",
+        "language-description": "Some translations may not be complete yet. Translations are created by the community, feel free to contribute on {{weblate}}.",
+        "language-description-interpolation-weblate": "Weblate",
         "units": "Units",
         "units-metric": "Metric",
         "units-us": "US customary (miles, feet)"

@@ -3,7 +3,7 @@
 	import { Units } from "facilmap-types";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, reactive, ref, toRef } from "vue";
-	import {  useI18n } from "../utils/i18n";
+	import {  T, useI18n } from "../utils/i18n";
 	import { getUniqueId } from "../utils/utils";
 	import { setLangCookie, setUnitsCookie } from "../utils/cookies";
 	import { isEqual } from "lodash-es";
@@ -65,6 +65,15 @@
 				<select :id="`${id}-language-input`" class="form-select" v-model="values.lang">
 					<option v-for="(label, key) in LANGUAGES" :key="key" :value="key">{{label}}</option>
 				</select>
+				<div class="form-text">
+					<T k="user-preferences-dialog.language-description">
+						<template #weblate>
+							<a href="https://hosted.weblate.org/projects/facilmap/" target="_blank" rel="noopener">
+								{{i18n.t("user-preferences-dialog.language-description-interpolation-weblate")}}
+							</a>
+						</template>
+					</T>
+				</div>
 			</div>
 		</div>
 
