@@ -120,7 +120,7 @@
     },
     "edit-type-dropdown-dialog": {
         "delete-option-title": "Delete option",
-        "delete-option-message": "Do you really want to delete the option “{{value}}”?",
+        "delete-option-message": "Delete the option “{{value}}”?",
         "delete-option-button": "Delete",
         "unique-value-error": "Multiple options cannot have the same label.",
         "no-options-error": "Controlling fields need to have at least one option.",
