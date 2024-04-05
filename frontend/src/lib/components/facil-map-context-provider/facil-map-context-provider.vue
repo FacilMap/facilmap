@@ -51,7 +51,7 @@
 
 	function provideComponent<K extends keyof FacilMapComponents>(key: K, componentRef: Readonly<Ref<FacilMapComponents[K]>>) {
 		if (key in components) {
-			throw new Error(`Component "${key}"" is already provided.`);
+			throw new Error(`Component "${key}" is already provided.`);
 		}
 
 		watch(componentRef, (component) => {

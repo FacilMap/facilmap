@@ -11,6 +11,7 @@
 	import Popover from "../ui/popover.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	type HistoryEntryWithLabels = HistoryEntry & {
 		labels: HistoryEntryLabels;
@@ -20,6 +21,7 @@
 	const client = requireClientContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -37,7 +39,7 @@
 		try {
 			await client.value.listenToHistory();
 		} catch (err) {
-			toasts.showErrorToast(`${id}-listen-error`, "Error loading history", err);
+			toasts.showErrorToast(`${id}-listen-error`, i18n.t("history-dialog.loading-error"), err);
 		} finally {
 			isLoading.value = false;
 		}
@@ -55,7 +57,7 @@
 		toasts.hideToast(`${id}-revert-error`);
 
 		if (!await showConfirm({
-			title: entry.labels.revert!.button,
+			title: entry.labels.revert!.title,
 			message: entry.labels.revert!.message,
 			variant: "warning",
 			okLabel: entry.labels.revert!.okLabel
@@ -67,7 +69,7 @@
 		try {
 			await client.value.revertHistoryEntry({ id: entry.id });
 		} catch (err) {
-			toasts.showErrorToast(`${id}-revert-error`, "Error loading history", err);
+			toasts.showErrorToast(`${id}-revert-error`, i18n.t("history-dialog.revert-error"), err);
 		} finally {
 			isReverting.value = undefined;
 		}
@@ -96,23 +98,23 @@
 
 <template>
 	<ModalDialog
-		title="History"
+		:title="i18n.t('history-dialog.title')"
 		size="xl"
 		class="fm-history"
 		@hidden="emit('hidden')"
 		:isBusy="!!isReverting"
 	>
-		<p><em>Here you can inspect and revert the last 50 changes to the map.</em></p>
+		<p><em>{{i18n.t("history-dialog.introduction")}}</em></p>
 		<div v-if="isLoading" class="d-flex justify-content-center">
 			<div class="spinner-border"></div>
 		</div>
 		<table v-else class="table table-striped table-hover history-entries">
 			<thead>
 				<tr>
-					<th style="min-width: 12rem">Date</th>
-					<th style="min-width: 15rem">Action</th>
+					<th style="min-width: 12rem">{{i18n.t("history-dialog.date")}}</th>
+					<th style="min-width: 15rem">{{i18n.t("history-dialog.action")}}</th>
 					<th></th>
-					<th>Restore</th>
+					<th>{{i18n.t("history-dialog.restore")}}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -141,9 +143,9 @@
 							<table class="table table-hover table-sm">
 								<thead>
 									<tr>
-										<th>Field</th>
-										<th>Before</th>
-										<th>After</th>
+										<th>{{i18n.t("history-dialog.diff-field")}}</th>
+										<th>{{i18n.t("history-dialog.diff-before")}}</th>
+										<th>{{i18n.t("history-dialog.diff-after")}}</th>
 									</tr>
 								</thead>
 								<tbody>

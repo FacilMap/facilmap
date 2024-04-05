@@ -58,7 +58,7 @@ setCurrentUnitsGetter(() => {
 	return query?.success ? query.data : cookies.units;
 });
 
-export function useI18n(): {
+export function getI18n(): {
 	t: i18n["t"];
 	changeLanguage: (lang: string) => Promise<void>;
 } {
@@ -69,6 +69,10 @@ export function useI18n(): {
 			await getRawI18n().changeLanguage(lang);
 		}
 	};
+}
+
+export function useI18n(): ReturnType<typeof getI18n> {
+	return getI18n();
 }
 
 /**
