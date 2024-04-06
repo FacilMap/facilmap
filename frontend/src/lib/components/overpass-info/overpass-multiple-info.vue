@@ -10,10 +10,13 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
+	import { formatPOIName } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		elements: OverpassElement[];
@@ -55,17 +58,17 @@
 					<ul class="list-group">
 						<li v-for="element in elements" :key="element.id" class="list-group-item active">
 							<span>
-								<a href="javascript:" @click="emit('click-element', element, $event)">{{element.tags.name || 'Unnamed POI'}}</a>
+								<a href="javascript:" @click="emit('click-element', element, $event)">{{formatPOIName(element.tags.name)}}</a>
 							</span>
-							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="openElement(element)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="i18n.t('overpass-multiple-info.zoom-to-object')"><Icon icon="zoom-in" :alt="i18n.t('overpass-multiple-info.zoom')"></Icon></a>
+							<a href="javascript:" @click="openElement(element)" v-tooltip.right="i18n.t('overpass-multiple-info.show-details')"><Icon icon="arrow-right" :alt="i18n.t('overpass-multiple-info.details')"></Icon></a>
 						</li>
 					</ul>
 
-					<div v-if="client.padData && !client.readonly" class="btn-toolbar">
+					<div v-if="client.padData && !client.readonly" class="btn-toolbar mt-2">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
-							label="selection"
+							:label="i18n.t('overpass-multiple-info.zoom-to-object-label')"
 							size="sm"
 							:destination="zoomDestination"
 						></ZoomToObjectButton>

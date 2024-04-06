@@ -5,9 +5,11 @@
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "./icon.vue";
 	import vTooltip from "../../utils/tooltip";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		destination: ZoomDestination;
@@ -17,7 +19,7 @@
 		label: "object"
 	});
 
-	const tooltip = computed(() => `Zoom to ${props.label}`);
+	const tooltip = computed(() => props.label ?? i18n.t("zoom-to-object-button.fallback-label"));
 
 	function zoom(): void {
 		flyTo(mapContext.value.components.map, props.destination);

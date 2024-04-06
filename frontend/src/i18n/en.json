@@ -250,6 +250,7 @@
         "show-elevation-plot": "Show elevation plot",
         "distance": "Distance",
         "ascent-descent": "Climb/drop",
+        "zoom-to-object-label": "Zoom to line",
         "edit-data": "Edit data",
         "edit-waypoints": "Edit waypoints",
         "delete": "Delete"
@@ -260,6 +261,7 @@
         "delete-marker-ok": "Delete",
         "delete-marker-error": "Error deleting marker",
         "coordinates": "Coordinates",
+        "zoom-to-object-label": "Zoom to marker",
         "edit-data": "Edit data",
         "move": "Move",
         "delete": "Delete"
@@ -275,6 +277,7 @@
         "zoom": "Zoom",
         "show-details": "Show details",
         "details": "Details",
+        "zoom-to-object-label": "Zoom to selection",
         "delete": "Delete"
     },
     "modal-dialog": {
@@ -292,6 +295,57 @@
     },
     "overpass-form-tab": {
         "pois": "POIs"
+    },
+    "overpass-info-tab": {
+        "tab-label_one": "{{count}} POI",
+        "tab-label_other": "{{count}} POIs"
+    },
+    "overpass-info": {
+        "coordinates": "Coordinates",
+        "zoom-to-object-label": "Zoom to POI"
+    },
+    "overpass-multiple-info": {
+        "zoom-to-object": "Zoom to object",
+        "zoom": "Zoom",
+        "show-details": "Show details",
+        "details": "Details",
+        "zoom-to-object-label": "Zoom to selection"
+    },
+    "pad-id-edit": {
+        "unique-id-error": "The same link cannot be used for different access levels."
+    },
+    "pad-settings-dialog": {
+        "create-map-error": "Error creating map",
+        "save-map-error": "Error saving map settings",
+        "delete-map-title": "Delete map",
+        "delete-map-message": "Are you sure you want to delete the map “{{name}}”? Deleted maps cannot be restored!",
+        "delete-map-ok": "Delete map",
+        "delete-map-error": "Error deleting map",
+        "title-create": "Create collaborative map",
+        "title-edit": "Map settings",
+        "create-button": "Create",
+        "admin-link-label": "Admin link",
+        "admin-link-description": "When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views.",
+        "write-link-label": "Editable link",
+        "write-link-description": "When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified.",
+        "read-link-label": "Read-only link",
+        "read-link-description": "When opening the map through this link, markers, lines and views can be seen, but nothing can be changed.",
+        "map-name": "Map name",
+        "search-engines": "Search engines",
+        "search-engines-label": "Accessible for search engines",
+        "search-engines-description": "If this is enabled, search engines like Google will be allowed to add the read-only version of this map.",
+        "map-description": "Short description",
+        "map-description-description": "This description will be shown under the result in search engines.",
+        "cluster-markers": "Cluster markers",
+        "cluster-markers-label": "Cluster markers",
+        "cluster-markers-description": "If enabled, when there are many markers in one area, they will be replaced by a placeholder at low zoom levels. This improves performance on maps with many markers.",
+        "legend-text": "Legend text",
+        "legend-text-description": "Text that will be shown above and below the legend. Can be formatted with {{markdown}}.",
+        "legend-text-description-interpolation-markdown": "Markdown",
+        "delete-map": "Delete map",
+        "delete-map-button": "Delete map",
+        "delete-description": "To delete this map, type {{code}} into the field and click the “Delete map” button.",
+        "delete-code": "DELETE"
     },
     "user-preferences-dialog": {
         "title": "User preferences",
@@ -345,5 +399,8 @@
         "label": "Views",
         "save-current-view": "Save current view",
         "manage-views": "Manage views"
+    },
+    "zoom-to-object-button": {
+        "fallback-label": "Zoom to object"
     }
 }

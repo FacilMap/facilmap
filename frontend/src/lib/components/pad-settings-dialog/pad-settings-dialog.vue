@@ -10,11 +10,13 @@
 	import PadIdEdit from "./pad-id-edit.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
+	import { T, useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		proposedAdminId?: string;
@@ -30,6 +32,7 @@
 	const id = getUniqueId("fm-pad-settings");
 	const isDeleting = ref(false);
 	const deleteConfirmation = ref("");
+	const expectedDeleteConfirmation = computed(() => i18n.t('pad-settings-dialog.delete-code'));
 
 	const initialPadData: PadData<CRU.CREATE> | undefined = props.isCreate ? {
 		name: "",
@@ -67,7 +70,7 @@
 				await client.value.editPad(padData.value);
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? "Error creating map" : "Error saving map settings", err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? i18n.t("pad-settings-dialog.create-map-error") : i18n.t("pad-settings-dialog.save-map-error"), err);
 		}
 	};
 
@@ -75,10 +78,10 @@
 		toasts.hideToast(`fm${context.id}-pad-settings-error`);
 
 		if (!await showConfirm({
-			title: "Delete map",
-			message: `Are you sure you want to delete the map “${padData.value.name}”? Deleted maps cannot be restored!`,
+			title: i18n.t("pad-settings-dialog.delete-map-title"),
+			message: i18n.t("pad-settings-dialog.delete-map-message", { name: padData.value.name }),
 			variant: "danger",
-			okLabel: "Delete map"
+			okLabel: i18n.t("pad-settings-dialog.delete-map-ok")
 		})) {
 			return;
 		}
@@ -89,7 +92,7 @@
 			await client.value.deletePad();
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, "Error deleting map", err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, i18n.t("pad-settings-dialog.delete-map-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -98,13 +101,13 @@
 
 <template>
 	<ModalDialog
-		:title="props.isCreate ? 'Create collaborative map' : 'Map settings'"
+		:title="props.isCreate ? i18n.t('pad-settings-dialog.title-create') : i18n.t('pad-settings-dialog.title-edit')"
 		class="fm-pad-settings"
 		:noCancel="props.noCancel"
 		:isBusy="isDeleting"
 		:isCreate="props.isCreate"
 		:isModified="isModified"
-		:okLabel="props.isCreate ? 'Create' : undefined"
+		:okLabel="props.isCreate ? i18n.t('pad-settings-dialog.create-button') : undefined"
 		ref="modalRef"
 		@submit="$event.waitUntil(save())"
 		@hide="emit('hide')"
@@ -115,24 +118,24 @@
 				:padData="padData"
 				idProp="adminId"
 				v-model="padData.adminId"
-				label="Admin link"
-				description="When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views."
+				:label="i18n.t('pad-settings-dialog.admin-link-label')"
+				:description="i18n.t('pad-settings-dialog.admin-link-description')"
 			></PadIdEdit>
 
 			<PadIdEdit
 				:padData="padData"
 				idProp="writeId"
 				v-model="padData.writeId"
-				label="Editable link"
-				description="When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified."
+				:label="i18n.t('pad-settings-dialog.write-link-label')"
+				:description="i18n.t('pad-settings-dialog.write-link-description')"
 			></PadIdEdit>
 
 			<PadIdEdit
 				:padData="padData"
 				idProp="id"
 				v-model="padData.id"
-				label="Read-only link"
-				description="When opening the map through this link, markers, lines and views can be seen, but nothing can be changed."
+				:label="i18n.t('pad-settings-dialog.read-link-label')"
+				:description="i18n.t('pad-settings-dialog.read-link-description')"
 			></PadIdEdit>
 
 			<ValidatedField
@@ -141,7 +144,7 @@
 				:validators="[getZodValidator(padDataValidator.update.shape.name)]"
 			>
 				<template #default="slotProps">
-					<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">Map name</label>
+					<label :for="`${id}-pad-name-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.map-name")}}</label>
 					<div class="col-sm-9 position-relative">
 						<input
 							:id="`${id}-pad-name-input`"
@@ -158,7 +161,7 @@
 			</ValidatedField>
 
 			<div class="row mb-3">
-				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">Search engines</label>
+				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.search-engines")}}</label>
 				<div class="col-sm-9">
 					<div class="form-check fm-form-check-with-label">
 						<input
@@ -168,17 +171,17 @@
 							v-model="padData.searchEngines"
 						/>
 						<label :for="`${id}-search-engines-input`" class="form-check-label">
-							Accessible for search engines
+							{{i18n.t("pad-settings-dialog.search-engines-label")}}
 						</label>
 					</div>
 					<div class="form-text">
-						If this is enabled, search engines like Google will be allowed to add the read-only version of this map.
+						{{i18n.t("pad-settings-dialog.search-engines-description")}}
 					</div>
 				</div>
 			</div>
 
 			<div class="row mb-3">
-				<label :for="`${id}-description-input`" class="col-sm-3 col-form-label">Short description</label>
+				<label :for="`${id}-description-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.map-description")}}</label>
 				<div class="col-sm-9">
 					<input
 						:id="`${id}-description-input`"
@@ -187,13 +190,13 @@
 						v-model="padData.description"
 					/>
 					<div class="form-text">
-						This description will be shown under the result in search engines.
+						{{i18n.t("pad-settings-dialog.map-description-description")}}
 					</div>
 				</div>
 			</div>
 
 			<div class="row mb-3">
-				<label :for="`${id}-cluster-markers-input`" class="col-sm-3 col-form-label">Search engines</label>
+				<label :for="`${id}-cluster-markers-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.cluster-markers")}}</label>
 				<div class="col-sm-9">
 					<div class="form-check fm-form-check-with-label">
 						<input
@@ -203,17 +206,17 @@
 							v-model="padData.clusterMarkers"
 						/>
 						<label :for="`${id}-cluster-markers-input`" class="form-check-label">
-							Cluster markers
+							{{i18n.t("pad-settings-dialog.cluster-markers-label")}}
 						</label>
 					</div>
 					<div class="form-text">
-						If enabled, when there are many markers in one area, they will be replaced by a placeholder at low zoom levels. This improves performance on maps with many markers.
+						{{i18n.t("pad-settings-dialog.cluster-markers-description")}}
 					</div>
 				</div>
 			</div>
 
 			<div class="row mb-3">
-				<label :for="`${id}-legend1-input`" class="col-sm-3 col-form-label">Legend text</label>
+				<label :for="`${id}-legend1-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.legend-text")}}</label>
 				<div class="col-sm-9">
 					<textarea
 						:id="`${id}-legend1-input`"
@@ -228,7 +231,11 @@
 						v-model="padData.legend2"
 					></textarea>
 					<div class="form-text">
-						Text that will be shown above and below the legend. Can be formatted with <a href="http://commonmark.org/help/" target="_blank">Markdown</a>.
+						<T k="pad-settings-dialog.legend-text-description">
+							<template #markdown>
+								<a href="http://commonmark.org/help/" target="_blank">{{i18n.t("pad-settings-dialog.legend-text-description-interpolation-markdown")}}</a>
+							</template>
+						</T>
 					</div>
 				</div>
 			</div>
@@ -238,7 +245,7 @@
 			<hr/>
 
 			<div class="row mb-3">
-				<label :for="`${id}-delete-input`" class="col-sm-3 col-form-label">Delete map</label>
+				<label :for="`${id}-delete-input`" class="col-sm-3 col-form-label">{{i18n.t("pad-settings-dialog.delete-map")}}</label>
 				<div class="col-sm-9">
 					<div class="input-group">
 						<input
@@ -252,20 +259,24 @@
 							:form="`${id}-delete-form`"
 							class="btn btn-danger"
 							type="submit"
-							:disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != 'DELETE'"
+							:disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != expectedDeleteConfirmation"
 						>
 							<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-							Delete map
+							{{i18n.t("pad-settings-dialog.delete-map-button")}}
 						</button>
 					</div>
 					<div class="form-text">
-						To delete this map, type <code>DELETE</code> into the field and click the “Delete map” button.
+						<T k="pad-settings-dialog.delete-description">
+							<template #code>
+								<code>{{expectedDeleteConfirmation}}</code>
+							</template>
+						</T>
 					</div>
 				</div>
 			</div>
 		</template>
 	</ModalDialog>
 
-	<form :id="`${id}-delete-form`" @submit.prevent="deleteConfirmation == 'DELETE' && deletePad()">
+	<form :id="`${id}-delete-form`" @submit.prevent="deleteConfirmation == expectedDeleteConfirmation && deletePad()">
 	</form>
 </template>

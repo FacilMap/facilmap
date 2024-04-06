@@ -122,7 +122,7 @@
 				<div class="btn-toolbar mt-2">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
-						label="selection"
+						:label="i18n.t('multiple-info.zoom-to-object-label')"
 						size="sm"
 						:destination="zoomDestination"
 					></ZoomToObjectButton>

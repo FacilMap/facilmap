@@ -57,6 +57,10 @@ export function formatFieldName(name: string): string {
 	}
 }
 
+export function formatPOIName(name: string): string {
+	return name || getI18n().t("format.unnamed-poi");
+}
+
 export function markdownBlock(string: string, html: boolean): string {
 	const $ = load("<div/>");
 	const el = $.root();

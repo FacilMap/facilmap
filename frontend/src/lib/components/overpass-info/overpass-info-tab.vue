@@ -5,10 +5,13 @@
 	import { useEventListener } from "../../utils/utils";
 	import { computed } from "vue";
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { formatPOIName } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
+	const i18n = useI18n();
 
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
@@ -37,7 +40,7 @@
 	<template v-if="elements.length > 0">
 		<SearchBoxTab
 			:id="`fm${context.id}-overpass-info-tab`"
-			:title="elements.length == 1 ? (elements[0].tags.name || 'Unnamed POI') : `${elements.length} POIs`"
+			:title="elements.length == 1 ? (formatPOIName(elements[0].tags.name)) : i18n.t('overpass-info-tab.tab-label', { count: elements.length })"
 			isCloseable
 			@close="close()"
 		>

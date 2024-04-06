@@ -183,7 +183,7 @@
 		<div v-if="!isMoving" class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
-				label="line"
+				:label="i18n.t('line-info.zoom-to-object-label')"
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { renderOsmTag } from "facilmap-utils";
+	import { formatCoordinates, formatPOIName, renderOsmTag } from "facilmap-utils";
 	import Icon from "../ui/icon.vue";
 	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import type { OverpassElement } from "facilmap-leaflet";
@@ -11,6 +11,9 @@
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
+	import { useI18n } from "../../utils/i18n";
+
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		element: OverpassElement;
@@ -30,7 +33,7 @@
 
 	const routeDestination = computed<RouteDestination>(() => {
 		return {
-			query: `${props.element.lat},${props.element.lon}`
+			query: formatCoordinates(props.element)
 		};
 	});
 
@@ -41,10 +44,10 @@
 	<div class="fm-overpass-info">
 		<h2>
 			<a v-if="showBackButton" href="javascript:" @click="emit('back')"><Icon icon="arrow-left"></Icon></a>
-			{{element.tags.name || 'Unnamed POI'}}
+			{{formatPOIName(element.tags.name)}}
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
-			<dt>Coordinates</dt>
+			<dt>{{i18n.t("overpass-info.coordinates")}}</dt>
 			<dd><Coordinates :point="element"></Coordinates></dd>
 
 			<template v-for="(value, key) in element.tags" :key="key">
@@ -55,7 +58,7 @@
 
 		<div class="btn-toolbar">
 			<ZoomToObjectButton
-				label="POI"
+				:label="i18n.t('overpass-info.zoom-to-object-label')"
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>

@@ -102,7 +102,7 @@
 		<div class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
-				label="marker"
+				:label="i18n.t('marker-info.zoom-to-object-label')"
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>

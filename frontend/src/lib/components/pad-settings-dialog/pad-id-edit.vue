@@ -4,11 +4,13 @@
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const idProps = ["id", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];
 
 	const context = injectContextRequired();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		padData: PadData<CRU.CREATE>;
@@ -33,7 +35,7 @@
 
 	function validateDistinctPadId(id: string) {
 		if (idProps.some((p) => p !== props.idProp && props.padData[p] === id)) {
-			return "The same link cannot be used for different access levels.";
+			return i18n.t("pad-id-edit.unique-id-error");
 		}
 	}
 </script>

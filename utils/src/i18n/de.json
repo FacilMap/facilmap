@@ -6,6 +6,7 @@
         "marker-type-name": "Marker",
         "line-type-name": "Linie",
         "description-field-name": "Beschreibung",
+        "unnamed-poi": "Unbenannter POI",
         "time": "{{hours}}:{{minutes}} h",
         "route-time": "{{time}} {{mode}}",
         "distance-km": "{{distance}} km",

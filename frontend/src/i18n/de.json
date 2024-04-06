@@ -250,6 +250,7 @@
         "show-elevation-plot": "Höhenprofil anzeigen",
         "distance": "Länge",
         "ascent-descent": "Aufstieg/-abstieg",
+        "zoom-to-object-label": "Zur Linie zoomen",
         "edit-data": "Bearbeiten",
         "edit-waypoints": "Bewegen",
         "delete": "Löschen"
@@ -260,6 +261,7 @@
         "delete-marker-ok": "Löschen",
         "delete-marker-error": "Fehler beim Löschen des Markers",
         "coordinates": "Koordinaten",
+        "zoom-to-object-label": "Zum Marker zoomen",
         "edit-data": "Bearbeiten",
         "move": "Bewegen",
         "delete": "Löschen"
@@ -275,6 +277,7 @@
         "zoom": "Zoomen",
         "show-details": "Details anzeigen",
         "details": "Details",
+        "zoom-to-object-label": "Zur Auswahl zoomen",
         "delete": "Löschen"
     },
     "modal-dialog": {
@@ -292,6 +295,57 @@
     },
     "overpass-form-tab": {
         "pois": "POIs"
+    },
+    "overpass-info-tab": {
+        "tab-label_one": "{{count}} POI",
+        "tab-label_other": "{{count}} POIs"
+    },
+    "overpass-info": {
+        "coordinates": "Koordinaten",
+        "zoom-to-object-label": "Zum POI zoomen"
+    },
+    "overpass-multiple-info": {
+        "zoom-to-object": "Zum POI zoomen",
+        "zoom": "Zoomen",
+        "show-details": "Details anzeigen",
+        "details": "Details",
+        "zoom-to-object-label": "Zur Auswahl zoomen"
+    },
+    "pad-id-edit": {
+        "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden."
+    },
+    "pad-settings-dialog": {
+        "create-map-error": "Fehler beim Erstellen der Karte",
+        "save-map-error": "Fehler beim Speichern der Karte",
+        "delete-map-title": "Karte löschen",
+        "delete-map-message": "Wollen Sie die Karte „{{name}}“ wirklich löschen? Gelöschte Karten können nicht wiederhergestellt werden!",
+        "delete-map-ok": "Löschen",
+        "delete-map-error": "Fehler beim Löschen der Karte",
+        "title-create": "Neue Karte erstellen",
+        "title-edit": "Karteneigenschaften",
+        "create-button": "Erstellen",
+        "admin-link-label": "Admin-Link",
+        "admin-link-description": "Wenn die Karte über diesen Link geöffnet wird, können alle Aspekte der Karte bearbeitet werden, inklusive der Einstellungen, Objekttypen und Ansichten.",
+        "write-link-label": "Schreib-Link",
+        "write-link-description": "Wenn die Karte über diesen Link geöffnet wird, können Marker und Linien erstellt, bearbeitet und gelöscht werden, die Karteneinstellungen, Objekttypen und Ansichten können jedoch nicht verändert werden.",
+        "read-link-label": "Lese-Link",
+        "read-link-description": "Wenn die Karte über diesen Link geöffnet wird, können Marker, Linien und Ansichten gesehen aber nichts verändert werden.",
+        "map-name": "Name der Karte",
+        "search-engines": "Suchmaschinen",
+        "search-engines-label": "Suchmaschinenzugriff erlauben",
+        "search-engines-description": "Wenn dies aktiviert ist, dürfen Suchmaschinen wie Google den Lese-Link der Karte in ihren Suchergebnissen auffindbar machen.",
+        "map-description": "Beschreibung der Karte",
+        "map-description-description": "Diese Beschreibung wird in Suchmaschinen für diese Karte angezeigt.",
+        "cluster-markers": "Marker bündeln",
+        "cluster-markers-label": "Marker bündeln",
+        "cluster-markers-description": "Wenn dies aktiviert ist, werden Marker, die nah beieinander sind, in niedrigen Zoomstufen durch einen Gruppenplatzhalter ersetzt. Das verbessert die Performance auf Karten mit vielen Markern.",
+        "legend-text": "Text in der Legende",
+        "legend-text-description": "Dieser Text wird über und unter der Legende angezeigt. Der Text kann mit {{markdown}} formatiert werden.",
+        "legend-text-description-interpolation-markdown": "Markdown",
+        "delete-map": "Karte löschen",
+        "delete-map-button": "Karte löschen",
+        "delete-description": "Um die Karte zu löschen, tippen Sie {{code}} in das Feld und klicken Sie „Karte löschen“.",
+        "delete-code": "LÖSCHEN"
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",
@@ -345,5 +399,9 @@
         "label": "Ansichten",
         "save-current-view": "Ansicht speichern",
         "manage-views": "Ansichten verwalten"
+    },
+    "zoom-to-object-button": {
+        "zoom-to-object": "{{object}} zoomen",
+        "fallback-interpolation": "Objekt"
     }
 }
