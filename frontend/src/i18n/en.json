@@ -357,6 +357,30 @@
         "units-metric": "Metric",
         "units-us": "US customary (miles, feet)"
     },
+    "route-form": {
+        "find-destination-error": "Error finding destination “{{query}}”",
+        "some-destinations-not-found": "Some destinations could not be found.",
+        "route-calculation-error": "Error calculating route",
+        "reorder-alt": "Reorder",
+        "from-placeholder": "From",
+        "to-placeholder": "To",
+        "via-placeholder": "Via",
+        "zoom-alt": "Zoom",
+        "remove-destination-tooltip": "Remove this destination",
+        "remove-destination-alt": "Remove",
+        "add-destination-tooltip": "Add another destination",
+        "add-destination-alt": "Add",
+        "submit": "Go!",
+        "clear-route-tooltip": "Clear route",
+        "clear-route-alt": "Clear",
+        "distance": "Distance",
+        "ascent-descent": "Climb/drop",
+        "zoom-to-object-label": "Zoom to route",
+        "export-filename": "FacilMap route"
+    },
+    "route-form-tab": {
+        "tab-label": "Route"
+    },
     "toolbox-add-dropdown": {
         "label": "Add",
         "manage-types": "Manage types"

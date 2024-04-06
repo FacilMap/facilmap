@@ -64,7 +64,7 @@
         "stroke-description": "Kontur der Linie ({{solid}} (durchgezogen) / {{dashed}} (gestrichelt) / {{dotted}} (gepunktet))",
         "distance-description": "Länge der Linie in Kilometern",
         "time-description": "Reisedauer der Linie in Sekunden",
-        "ascent-descent-description": "Aufstieg/-abstieg der Linie",
+        "ascent-descent-description": "Aufstieg/Abstieg der Linie",
         "routePoints-description": "Koordinaten der Wegpunkte der Linie",
         "number-description": "Zahl",
         "text-description": "Zeichenkette",
@@ -249,7 +249,7 @@
         "hide-elevation-plot": "Höhenprofil verstecken",
         "show-elevation-plot": "Höhenprofil anzeigen",
         "distance": "Länge",
-        "ascent-descent": "Aufstieg/-abstieg",
+        "ascent-descent": "Aufstieg/Abstieg",
         "zoom-to-object-label": "Zur Linie zoomen",
         "edit-data": "Bearbeiten",
         "edit-waypoints": "Bewegen",
@@ -357,6 +357,30 @@
         "units-metric": "Metrisch",
         "units-us": "US customary (Meilen und Füße)"
     },
+    "route-form": {
+        "find-destination-error": "Fehler bei der Suche nach dem Wegpunkt „{{query}}“",
+        "some-destinations-not-found": "Manche Wegpunkte konnten nicht gefunden werden.",
+        "route-calculation-error": "Error calculating route",
+        "reorder-alt": "Umordnen",
+        "from-placeholder": "Von",
+        "to-placeholder": "Nach",
+        "via-placeholder": "Über",
+        "zoom-alt": "Zoomen",
+        "remove-destination-tooltip": "Diesen Wegpunkt entfernen",
+        "remove-destination-alt": "Entfernen",
+        "add-destination-tooltip": "Weiteren Wegpunkt hinzufügen",
+        "add-destination-alt": "Hinzufügen",
+        "submit": "Los!",
+        "clear-route-tooltip": "Route ausblenden",
+        "clear-route-alt": "Ausblenden",
+        "distance": "Länge",
+        "ascent-descent": "Aufstieg/Abstieg",
+        "zoom-to-object-label": "Zur Route zoomen",
+        "export-filename": "FacilMap-Route"
+    },
+    "route-form-tab": {
+        "tab-label": "Route"
+    },
     "toolbox-add-dropdown": {
         "label": "Erstellen",
         "manage-types": "Objekttypen verwalten"
@@ -401,7 +425,6 @@
         "manage-views": "Ansichten verwalten"
     },
     "zoom-to-object-button": {
-        "zoom-to-object": "{{object}} zoomen",
-        "fallback-interpolation": "Objekt"
+        "fallback-label": "Zum Objekt zoomen"
     }
 }

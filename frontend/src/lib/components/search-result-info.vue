@@ -94,7 +94,7 @@
 		<div class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
-				label="search result"
+				label="Zoom to search result"
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>

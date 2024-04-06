@@ -5,9 +5,11 @@
 	import { readonly, ref, toRef } from "vue";
 	import { injectContextRequired, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { WritableRouteFormTabContext } from "../facil-map-context-provider/route-form-tab-context";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const searchBoxContext = requireSearchBoxContext(context);
+	const i18n = useI18n();
 
 	const routeForm = ref<InstanceType<typeof RouteForm>>();
 
@@ -40,7 +42,7 @@
 
 <template>
 	<SearchBoxTab
-		title="Route"
+		:title="i18n.t('route-form-tab.tab-label')"
 		:id="`fm${context.id}-route-form-tab`"
 		:hashQuery="hashQuery"
 		class="fm-route-form-tab"

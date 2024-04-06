@@ -22,6 +22,7 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -79,6 +80,7 @@
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const submitButton = ref<HTMLButtonElement>();
 
@@ -344,7 +346,7 @@
 					return; // The destination has changed in the meantime
 
 				console.warn(err.stack || err);
-				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, `Error finding destination “${query}”`, err);
+				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, i18n.t("route-form.find-destination-error", { query }), err);
 			} finally {
 				resolveLoadingPromise();
 			}
@@ -433,7 +435,7 @@
 			].join(" by ");
 
 			if(points.some((point) => point == null)) {
-				routeError.value = "Some destinations could not be found.";
+				routeError.value = i18n.t("route-form.some-destinations-not-found");
 				return;
 			}
 
@@ -446,7 +448,7 @@
 			if (route && zoom)
 				flyTo(mapContext.value.components.map, getZoomDestinationForRoute(route), smooth);
 		} catch (err: any) {
-			toasts.showErrorToast(`fm${context.id}-route-form-error`, "Error calculating route", err);
+			toasts.showErrorToast(`fm${context.id}-route-form-error`, i18n.t("route-form.route-calculation-error"), err);
 		}
 	}
 
@@ -544,13 +546,13 @@
 						>
 							<span class="input-group-text px-2">
 								<a href="javascript:" class="fm-drag-handle" @contextmenu.prevent>
-									<Icon icon="resize-vertical" alt="Reorder"></Icon>
+									<Icon icon="resize-vertical" :alt="i18n.t('route-form.reorder-alt')"></Icon>
 								</a>
 							</span>
 							<input
 								class="form-control"
 								v-model="destination.query"
-								:placeholder="idx == 0 ? 'From' : idx == destinations.length-1 ? 'To' : 'Via'"
+								:placeholder="idx == 0 ? i18n.t('route-form.from-placeholder') : idx == destinations.length-1 ? i18n.t('route-form.to-placeholder') : i18n.t('route-form.via-placeholder')"
 								:tabindex="idx+1"
 								:class="{
 									'is-invalid': destinationsMeta[idx].isInvalid,
@@ -575,7 +577,7 @@
 												class="dropdown-item fm-route-form-suggestions-zoom"
 												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
 												@click.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+											><Icon icon="zoom-in" :alt="i18n.t('route-form.zoom-alt')"></Icon></a>
 
 											<a
 												href="javascript:"
@@ -600,7 +602,7 @@
 												class="dropdown-item fm-route-form-suggestions-zoom"
 												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
 												@click.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" alt="Zoom"></Icon></a>
+											><Icon icon="zoom-in" :alt="i18n.t('route-form.zoom-alt')"></Icon></a>
 											<a
 												href="javascript:"
 												class="dropdown-item"
@@ -616,9 +618,9 @@
 								type="button"
 								class="btn btn-secondary"
 								@click="removeDestination(idx); reroute(false)"
-								v-tooltip.right="'Remove this destination'"
+								v-tooltip.right="i18n.t('route-form.remove-destination-tooltip')"
 							>
-								<Icon icon="minus" alt="Remove" size="1.0em"></Icon>
+								<Icon icon="minus" :alt="i18n.t('route-form.remove-destination-alt')" size="1.0em"></Icon>
 							</button>
 						</div>
 					</div>
@@ -633,10 +635,10 @@
 					type="button"
 					class="btn btn-secondary"
 					@click="addDestination()"
-					v-tooltip.bottom="'Add another destination'"
+					v-tooltip.bottom="i18n.t('route-form.add-destination-tooltip')"
 					:tabindex="destinations.length+1"
 				>
-					<Icon icon="plus" alt="Add"></Icon>
+					<Icon icon="plus" :alt="i18n.t('route-form.add-destination-alt')"></Icon>
 				</button>
 
 				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" tooltip-placement="bottom"></RouteMode>
@@ -646,16 +648,16 @@
 					class="btn btn-primary flex-grow-1"
 					:tabindex="destinations.length+7"
 					ref="submitButton"
-				>Go!</button>
+				>{{i18n.t("route-form.submit")}}</button>
 				<button
 					v-if="hasRoute && !props.noClear"
 					type="button"
 					class="btn btn-secondary"
 					:tabindex="destinations.length+8"
 					@click="reset()"
-					v-tooltip.right="'Clear route'"
+					v-tooltip.right="i18n.t('route-form.clear-route-tooltip')"
 				>
-					<Icon icon="remove" alt="Clear"></Icon>
+					<Icon icon="remove" :alt="i18n.t('route-form.clear-route-alt')"></Icon>
 				</button>
 			</div>
 
@@ -669,11 +671,11 @@
 				<hr />
 
 				<dl class="fm-search-box-dl">
-					<dt>Distance</dt>
+					<dt>{{i18n.t("route-form.distance")}}</dt>
 					<dd>{{formatDistance(routeObj.distance)}} <span v-if="routeObj.time != null">({{formatRouteTime(routeObj.time, routeObj.mode)}})</span></dd>
 
 					<template v-if="routeObj.ascent != null">
-						<dt>Climb/drop</dt>
+						<dt>{{i18n.t("route-form.ascent-descent")}}</dt>
 						<dd><ElevationStats :route="routeObj"></ElevationStats></dd>
 					</template>
 				</dl>
@@ -683,7 +685,7 @@
 				<div v-if="showToolbar && !client.readonly" class="btn-toolbar" role="group">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
-						label="route"
+						:label="i18n.t('route-form.zoom-to-object-label')"
 						size="sm"
 						:destination="zoomDestination"
 					></ZoomToObjectButton>
@@ -695,7 +697,7 @@
 					></AddToMapDropdown>
 
 					<ExportDropdown
-						filename="FacilMap route"
+						:filename="i18n.t('route-form.export-filename')"
 						:getExport="getExport"
 						size="sm"
 					></ExportDropdown>
