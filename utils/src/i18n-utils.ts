@@ -85,6 +85,16 @@ export function onI18nReady(callback: (i18n: i18n) => void): void {
 	}
 }
 
+export function getAcceptHotI18n(lang: string, namespace: string): (mod: any) => void {
+	return (mod: any) => {
+		if (mod) {
+			onI18nReady((i18n) => {
+				i18n.addResourceBundle(lang, namespace, mod!.default);
+			});
+		}
+	};
+}
+
 export function getCurrentLanguage(): string {
 	return getRawI18n().language;
 }

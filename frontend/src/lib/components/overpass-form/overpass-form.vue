@@ -1,22 +1,25 @@
 <script setup lang="ts">
-	import { getOverpassPreset, overpassPresets, validateOverpassQuery } from "facilmap-leaflet";
+	import { getAllOverpassPresets, getOverpassPreset, validateOverpassQuery } from "facilmap-leaflet";
 	import { computed, ref, watch } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
+	import { T, useI18n } from "../../utils/i18n";
+import { sortBy } from "lodash-es";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const activeTab = ref(0);
 	const searchTerm = ref("");
 	const customQuery = ref("");
 
 	const categories = computed(() => {
-		return overpassPresets.map((cat) => {
-			const presets = cat.presets.map((presets) => presets.map((preset) => ({
+		return getAllOverpassPresets().map((cat) => {
+			const presets = cat.presets.map((presets) => sortBy(presets.map((preset) => ({
 				...preset,
 				isChecked: mapContext.value.overpassPresets.some((p) => p.key === preset.key)
-			})));
+			})), (preset) => preset.label.toLowerCase()));
 			return {
 				...cat,
 				presets,
@@ -73,7 +76,7 @@
 				class="form-control fm-autofocus"
 				type="search"
 				v-model="searchTerm"
-				placeholder="Filter…"
+				:placeholder="i18n.t('overpass-form.filter')"
 			/>
 			<hr />
 
@@ -168,13 +171,26 @@
 			<hr />
 
 			<p>
-				Enter an <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#The_Query_Statement" target="_blank">Overpass query statement</a>
-				here. Settings and an <code>out</code> statement are added automatically in the background. For ways and relations, a marker will be shown at
-				the geometric centre, no lines or polygons are drawn.
+				<T k="overpass-form.custom-explanation-1">
+					<template #statement>
+						<a :href="i18n.t('overpass-form.custom-explanation-1-interpolation-statement-url')" target="_blank" rel="noopener">
+							{{i18n.t("overpass-form.custom-explanation-1-interpolation-statement")}}
+						</a>
+					</template>
+					<template #out>
+						<code>out</code>
+					</template>
+				</T>
 			</p>
 			<p>
-				Example queries are <code>nwr[amenity=parking]</code> to get parking places or
-				<code>(nwr[amenity=atm];nwr[amenity=bank][atm][atm!=no];)</code> for ATMs.
+				<T k="overpass-form.custom-explanation-2">
+					<template #parking>
+						<code>nwr[amenity=parking]</code>
+					</template>
+					<template #atm>
+						<code>(nwr[amenity=atm];nwr[amenity=bank][atm][atm!=no];)</code>
+					</template>
+				</T>
 			</p>
 		</template>
 
@@ -186,7 +202,7 @@
 				class="btn btn-secondary"
 				:class="{ active: mapContext.overpassIsCustom }"
 				@click="toggleIsCustom()"
-			>Custom query</button>
+			>{{i18n.t("overpass-form.custom-query")}}</button>
 		</div>
 	</div>
 </template>

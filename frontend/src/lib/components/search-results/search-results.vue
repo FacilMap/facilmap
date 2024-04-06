@@ -14,7 +14,7 @@
 	import { useCarousel } from "../../utils/carousel";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
-	import { normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { formatTypeName, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -182,7 +182,7 @@
 							<span class="text-break">
 								<a href="javascript:" @click="handleClick(result, $event)">{{isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name)}}</a>
 								{{" "}}
-								<span class="result-type">({{client.types[result.typeId].name}})</span>
+								<span class="result-type">({{formatTypeName(client.types[result.typeId].name)}})</span>
 							</span>
 							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
 							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>

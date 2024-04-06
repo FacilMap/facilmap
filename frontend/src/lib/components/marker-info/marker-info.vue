@@ -13,11 +13,13 @@
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		markerId: ID;
@@ -46,10 +48,10 @@
 		toasts.hideToast(`fm${context.id}-marker-info-delete`);
 
 		if (!await showConfirm({
-			title: "Delete marker",
-			message: `Do you really want to delete the marker “${normalizeMarkerName(marker.value.name)}”?`,
+			title: i18n.t("marker-info.delete-marker-title"),
+			message: i18n.t("marker-info.delete-marker-message", { name: normalizeMarkerName(marker.value.name) }),
 			variant: "danger",
-			okLabel: "Delete"
+			okLabel: i18n.t("marker-info.delete-marker-ok")
 		}))
 			return;
 
@@ -58,7 +60,7 @@
 		try {
 			await client.value.deleteMarker({ id: props.markerId });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, "Error deleting marker", err);
+			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, i18n.t("marker-info.delete-marker-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -88,7 +90,7 @@
 			</span>
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
-			<dt class="pos">Coordinates</dt>
+			<dt class="pos">{{i18n.t("marker-info.coordinates")}}</dt>
 			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele"></Coordinates></dd>
 
 			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">
@@ -116,14 +118,14 @@
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
-			>Edit data</button>
+			>{{i18n.t("marker-info.edit-data")}}</button>
 			<button
 				v-if="!client.readonly"
 				type="button"
 				class="btn btn-secondary btn-sm"
 				@click="move()"
 				:disabled="isDeleting || mapContext.interaction"
-			>Move</button>
+			>{{i18n.t("marker-info.move")}}</button>
 			<button
 				v-if="!client.readonly"
 				type="button"
@@ -132,7 +134,7 @@
 				:disabled="isDeleting || mapContext.interaction"
 			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				Delete
+				{{i18n.t("marker-info.delete")}}
 			</button>
 		</div>
 

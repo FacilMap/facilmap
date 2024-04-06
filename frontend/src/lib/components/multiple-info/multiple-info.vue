@@ -11,12 +11,14 @@
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		objects: Array<Marker | Line>;
@@ -66,10 +68,10 @@
 		toasts.hideToast(`fm${context.id}-multiple-info-delete`);
 
 		if (!props.objects || !await showConfirm({
-			title: "Delete objects",
-			message: `Do you really want to remove ${props.objects.length} objects?`,
+			title: i18n.t("multiple-info.delete-objects-title", { count: props.objects.length }),
+			message: i18n.t("multiple-info.delete-objects-message", { count: props.objects.length }),
 			variant: "danger",
-			okLabel: "Delete"
+			okLabel: i18n.t("multiple-info.delete-objects-ok")
 		}))
 			return;
 
@@ -83,7 +85,7 @@
 					await client.value.deleteLine({ id: object.id });
 			}
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, "Error deleting objects", err);
+			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, i18n.t("multiple-info.delete-objects-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -110,10 +112,10 @@
 						<span class="text-break">
 							<a href="javascript:" @click="emit('click-object', object, $event)">{{isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name)}}</a>
 							{{" "}}
-							<span class="result-type" v-if="client.types[object.typeId]">({{client.types[object.typeId].name}})</span>
+							<span class="result-type" v-if="client.types[object.typeId]">({{formatTypeName(client.types[object.typeId].name)}})</span>
 						</span>
-						<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="'Zoom to object'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-						<a href="javascript:" @click="openObject(object)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+						<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="i18n.t('multiple-info.zoom-to-object')"><Icon icon="zoom-in" :alt="i18n.t('multiple-info.zoom')"></Icon></a>
+						<a href="javascript:" @click="openObject(object)" v-tooltip.right="i18n.t('multiple-info.show-details')"><Icon icon="arrow-right" :alt="i18n.t('multiple-info.details')"></Icon></a>
 					</li>
 				</ul>
 
@@ -133,7 +135,7 @@
 						:disabled="isDeleting || mapContext.interaction"
 					>
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-						Delete
+						{{i18n.t("multiple-info.delete")}}
 					</button>
 				</div>
 			</div>

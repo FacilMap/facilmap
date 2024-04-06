@@ -64,7 +64,7 @@
         "stroke-description": "Line stroke ({{solid}} (solid) / {{dashed}} / {{dotted}})",
         "distance-description": "Line distance in kilometers",
         "time-description": "Line routing time in seconds",
-        "ascent-descent-description": "Total ascent/descent of line",
+        "ascent-descent-description": "Total climb/drop of line",
         "routePoints-description": "Line point coordinates",
         "number-description": "Numerical value",
         "text-description": "Text value",
@@ -236,10 +236,62 @@
     "legend-content": {
         "click-explanation": "Click to show/hide objects of this type."
     },
+    "line-info": {
+        "delete-line-title": "Delete line",
+        "delete-line-message": "Do you really want to delete the line “{{name}}”?",
+        "delete-line-ok": "Delete",
+        "delete-line-error": "Error deleting line",
+        "save-line-error": "Error saving line",
+        "move-line-title": "Edit waypoints",
+        "move-line-message": "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.",
+        "move-line-finish": "Finish",
+        "move-line-cancel": "Cancel",
+        "hide-elevation-plot": "Hide elevation plot",
+        "show-elevation-plot": "Show elevation plot",
+        "distance": "Distance",
+        "ascent-descent": "Climb/drop",
+        "edit-data": "Edit data",
+        "edit-waypoints": "Edit waypoints",
+        "delete": "Delete"
+    },
+    "marker-info": {
+        "delete-marker-title": "Delete marker",
+        "delete-marker-message": "Do you really want to delete the marker “{{name}}”?",
+        "delete-marker-ok": "Delete",
+        "delete-marker-error": "Error deleting marker",
+        "coordinates": "Coordinates",
+        "edit-data": "Edit data",
+        "move": "Move",
+        "delete": "Delete"
+    },
+    "multiple-info": {
+        "delete-objects-title_one": "Delete {{count}} object",
+        "delete-objects-title_other": "Delete {{count}} objects",
+        "delete-objects-message_one": "Do you really want to remove {{count}} object?",
+        "delete-objects-message_other": "Do you really want to remove {{count}} objects?",
+        "delete-objects-ok": "Delete",
+        "delete-objects-error": "Error deleting objects",
+        "zoom-to-object": "Zoom to object",
+        "zoom": "Zoom",
+        "show-details": "Show details",
+        "details": "Details",
+        "delete": "Delete"
+    },
     "modal-dialog": {
         "close": "Close",
         "cancel": "Cancel",
         "save": "Save"
+    },
+    "overpass-form": {
+        "filter": "Filter…",
+        "custom-explanation-1": "Enter an {{statement}} here. Settings and an {{out}} statement are added automatically in the background. For ways and relations, a marker will be shown at the geometric centre, no lines or polygons are drawn.",
+        "custom-explanation-1-interpolation-statement": "Overpass query statement",
+        "custom-explanation-1-interpolation-statement-url": "https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#The_Query_Statement",
+        "custom-explanation-2": "Example queries are {{parking}} to get parking places or {{atm}} for ATMs.",
+        "custom-query": "Custom query"
+    },
+    "overpass-form-tab": {
+        "pois": "POIs"
     },
     "user-preferences-dialog": {
         "title": "User preferences",

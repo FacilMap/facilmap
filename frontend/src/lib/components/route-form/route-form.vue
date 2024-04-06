@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { formatCoordinates, formatDistance, formatRouteTime, isSearchId, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
+	import { formatCoordinates, formatDistance, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -582,7 +582,7 @@
 												class="dropdown-item"
 												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
 												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.name}} ({{client.types[suggestion.typeId].name}})</a>
+											>{{suggestion.name}} ({{formatTypeName(client.types[suggestion.typeId].name)}})</a>
 										</li>
 									</template>
 

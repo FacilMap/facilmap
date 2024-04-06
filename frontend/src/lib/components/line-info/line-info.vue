@@ -14,12 +14,14 @@
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		lineId: ID;
@@ -48,10 +50,10 @@
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
 
 		if (!await showConfirm({
-			title: "Delete line",
-			message: `Do you really want to delete the line “${normalizeLineName(line.value.name)}”?`,
+			title: i18n.t("line-info.delete-line-title"),
+			message: i18n.t("line-info.delete-line-message", { name: normalizeLineName(line.value.name) }),
 			variant: "danger",
-			okLabel: "Delete"
+			okLabel: i18n.t("line-info.delete-line-ok")
 		}))
 			return;
 
@@ -60,7 +62,7 @@
 		try {
 			await client.value.deleteLine({ id: props.lineId });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-delete`, "Error deleting line", err);
+			toasts.showErrorToast(`fm${context.id}-line-info-delete`, i18n.t("line-info.delete-line-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -92,7 +94,7 @@
 					if(save)
 						await client.value.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
 				} catch (err) {
-					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
+					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, i18n.t("line-info.save-line-error"), err);
 				} finally {
 					mapContext.value.components.map.fire('fmInteractionEnd');
 					isMoving.value = false;
@@ -106,17 +108,17 @@
 				}
 			};
 
-			toasts.showToast(`fm${context.id}-line-info-move`, `Edit waypoints`, "Use the routing form or drag the line around to change it. Click “Finish” to save the changes.", {
+			toasts.showToast(`fm${context.id}-line-info-move`, i18n.t("line-info.move-line-title"), i18n.t("line-info.move-line-message"), {
 				noCloseButton: true,
 				actions: [
-					{ label: "Finish", variant: "primary", onClick: () => { void done(true); }},
-					{ label: "Cancel", onClick: () => { void done(false); } }
+					{ label: i18n.t("line-info.move-line-finish"), variant: "primary", onClick: () => { void done(true); }},
+					{ label: i18n.t("line-info.move-line-cancel"), onClick: () => { void done(false); } }
 				]
 			});
 
 			isMoving.value = true;
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, "Error saving line", err);
+			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, i18n.t("line-info.save-line-error"), err);
 
 			toasts.hideToast(`fm${context.id}-line-info-move`);
 			mapContext.value.components.map.fire('fmInteractionEnd');
@@ -150,20 +152,20 @@
 					class="btn btn-secondary"
 					:class="{ active: showElevationPlot }"
 					@click="showElevationPlot = !showElevationPlot"
-					v-tooltip.right="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"
+					v-tooltip.right="showElevationPlot ? i18n.t('line-info.hide-elevation-plot') : i18n.t('line-info.show-elevation-plot')"
 				>
-					<Icon icon="chart-line" :alt="`${showElevationPlot ? 'Hide' : 'Show'} elevation plot`"></Icon>
+					<Icon icon="chart-line" :alt="showElevationPlot ? i18n.t('line-info.hide-elevation-plot') : i18n.t('line-info.show-elevation-plot')"></Icon>
 				</button>
 			</div>
 		</div>
 
 		<div class="fm-search-box-collapse-point" v-if="!isMoving">
 			<dl class="fm-search-box-dl">
-				<dt class="distance">Distance</dt>
+				<dt class="distance">{{i18n.t("line-info.distance")}}</dt>
 				<dd class="distance">{{formatDistance(line.distance)}} <span v-if="line.time != null">({{formatRouteTime(line.time, line.mode)}})</span></dd>
 
 				<template v-if="line.ascent != null">
-					<dt class="elevation">Climb/drop</dt>
+					<dt class="elevation">{{i18n.t("line-info.ascent-descent")}}</dt>
 					<dd class="elevation"><ElevationStats :route="line"></ElevationStats></dd>
 				</template>
 
@@ -199,7 +201,7 @@
 				size="sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
-			>Edit data</button>
+			>{{i18n.t("line-info.edit-data")}}</button>
 
 			<button
 				v-if="!client.readonly && line.mode != 'track'"
@@ -207,7 +209,7 @@
 				class="btn btn-secondary btn-sm"
 				@click="moveLine()"
 				:disabled="isDeleting || mapContext.interaction"
-			>Edit waypoints</button>
+			>{{i18n.t("line-info.edit-waypoints")}}</button>
 
 			<button
 				v-if="!client.readonly"
@@ -217,7 +219,7 @@
 				:disabled="isDeleting || mapContext.interaction"
 			>
 				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				Delete
+				{{i18n.t("line-info.delete")}}
 			</button>
 		</div>
 

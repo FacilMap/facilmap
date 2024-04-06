@@ -64,7 +64,7 @@
         "stroke-description": "Kontur der Linie ({{solid}} (durchgezogen) / {{dashed}} (gestrichelt) / {{dotted}} (gepunktet))",
         "distance-description": "Länge der Linie in Kilometern",
         "time-description": "Reisedauer der Linie in Sekunden",
-        "ascent-descent-description": "Gesamteranstieg/-abstieg der Linie",
+        "ascent-descent-description": "Aufstieg/-abstieg der Linie",
         "routePoints-description": "Koordinaten der Wegpunkte der Linie",
         "number-description": "Zahl",
         "text-description": "Zeichenkette",
@@ -236,10 +236,62 @@
     "legend-content": {
         "click-explanation": "Klicken Sie, um Objekte dieses Typs zu verstecken/anzuzeigen."
     },
+    "line-info": {
+        "delete-line-title": "Linie löschen",
+        "delete-line-message": "Wollen Sie die Linie „{{name}}“ wirklich löschen?",
+        "delete-line-ok": "Löschen",
+        "delete-line-error": "Fehler beim Löschen der Linie",
+        "save-line-error": "Fehler beim Speichern der Linie",
+        "move-line-title": "Linie bewegen",
+        "move-line-message": "Benutzen Sie das Routenformular oder ziehen Sie die Linie, um den Routenverlauf zu ändern. Klicken Sie auf „Speichern“, um den neuen Verlauf abzuspeichern.",
+        "move-line-finish": "Speichern",
+        "move-line-cancel": "Abbrechen",
+        "hide-elevation-plot": "Höhenprofil verstecken",
+        "show-elevation-plot": "Höhenprofil anzeigen",
+        "distance": "Länge",
+        "ascent-descent": "Aufstieg/-abstieg",
+        "edit-data": "Bearbeiten",
+        "edit-waypoints": "Bewegen",
+        "delete": "Löschen"
+    },
+    "marker-info": {
+        "delete-marker-title": "Marker löschen",
+        "delete-marker-message": "Wollen Sie den Marker „{{name}}“ wirklich löschen?",
+        "delete-marker-ok": "Löschen",
+        "delete-marker-error": "Fehler beim Löschen des Markers",
+        "coordinates": "Koordinaten",
+        "edit-data": "Bearbeiten",
+        "move": "Bewegen",
+        "delete": "Löschen"
+    },
+    "multiple-info": {
+        "delete-objects-title_one": "{{count}} Objekt löschen",
+        "delete-objects-title_other": "{{count}} Objekte löschen",
+        "delete-objects-message_one": "Wollen Sie wirklich {{count}} Objekt löschen?",
+        "delete-objects-message_other": "Wollen Sie wirklich {{count}} Objekte löschen?",
+        "delete-objects-ok": "Löschen",
+        "delete-objects-error": "Fehler beim Löschen der Objekte",
+        "zoom-to-object": "Zum Objekt zoomen",
+        "zoom": "Zoomen",
+        "show-details": "Details anzeigen",
+        "details": "Details",
+        "delete": "Löschen"
+    },
     "modal-dialog": {
         "close": "Schließen",
         "cancel": "Abbrechen",
         "save": "Speichern"
+    },
+    "overpass-form": {
+        "filter": "Filtern…",
+        "custom-explanation-1": "Geben Sie hier eine {{statement}} ein. Die Einstellungen und das {{out}}-Ausgabeformat werden im Hintergrund automatisch gesetzt. Für Wege und Relationen werden statt Linien oder Polygonen Marker in der geometrischen Mitte angezeigt.",
+        "custom-explanation-1-interpolation-statement": "Overpass-Query-Anweisung",
+        "custom-explanation-1-interpolation-statement-url": "https://wiki.openstreetmap.org/wiki/DE:Overpass_API/Overpass_QL#Query-Anweisung",
+        "custom-explanation-2": "Beispielanweisungen sind {{parking}}, um Kfz-Parkplätze anzuzeigen und {{atm}} für Geldautomaten.",
+        "custom-query": "Benutzerdefinierte Anweisung"
+    },
+    "overpass-form-tab": {
+        "pois": "POIs"
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",
