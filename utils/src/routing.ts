@@ -1,5 +1,6 @@
 import type { RouteMode } from "facilmap-types";
 import { getI18n } from "./i18n.js";
+import { quoteRegExp } from "./utils.js";
 
 export interface DecodedRouteMode {
 	mode: "" | "car" | "bicycle" | "pedestrian" | "track";
@@ -64,12 +65,6 @@ export function decodeRouteMode(encodedMode: RouteMode | undefined): DecodedRout
 		for(const part of encodedMode.split(/\s+/)) {
 			if(["car", "bicycle", "pedestrian", "track"].includes(part))
 				decodedMode.mode = part as any;
-			else if(part == "bike")
-				decodedMode.mode = "bicycle";
-			else if(["foot", "walk", "walking"].includes(part))
-				decodedMode.mode = "pedestrian";
-			else if(["helicopter", "straight"].includes(part))
-				decodedMode.mode = "";
 			else if(["hgv", "road", "mountain", "electric", "hiking", "wheelchair"].includes(part))
 				decodedMode.type = part as any;
 			else if (part == "recommended")
@@ -93,29 +88,108 @@ export function formatRouteMode(encodedMode: RouteMode): string {
 		case "car":
 			switch(decodedMode.type) {
 				case "hgv":
-					return getI18n().t("routing.route-mode-hgv");
+					return getI18n().t("routing.format-by-hgv");
 				default:
-					return getI18n().t("routing.route-mode-car");
+					return getI18n().t("routing.format-by-car");
 			}
 		case "bicycle":
 			switch(decodedMode.type) {
 				case "road":
-					return getI18n().t("routing.route-mode-road-bike");
+					return getI18n().t("routing.format-by-road-bike");
 				case "mountain":
-					return getI18n().t("routing.route-mode-mountain-bike");
+					return getI18n().t("routing.format-by-mountain-bike");
 				case "electric":
-					return getI18n().t("routing.route-mode-electric-bike");
+					return getI18n().t("routing.format-by-electric-bike");
 				default:
-					return getI18n().t("routing.route-mode-bicycle");
+					return getI18n().t("routing.format-by-bicycle");
 			}
 		case "pedestrian":
 			switch(decodedMode.type) {
 				case "wheelchair":
-					return getI18n().t("routing.route-mode-wheelchair");
+					return getI18n().t("routing.format-by-wheelchair");
 				default:
-					return getI18n().t("routing.route-mode-foot");
+					return getI18n().t("routing.format-by-foot");
 			}
 		default:
 			return "";
 	}
+}
+
+export type RouteQuery = {
+	queries: string[];
+	mode: string | null;
+}
+
+export function encodeRouteQuery(query: RouteQuery): string {
+	const queries = query.queries.join(" to ");
+	return query.mode != null ? `${queries} by ${query.mode}` : queries;
+}
+
+/**
+ * Decodes a route query as encoded into English by encodeRouteQuery().
+ */
+export function decodeRouteQuery(query: string): RouteQuery {
+	const splitBy = query.split(" by ");
+	const splitTo = splitBy[0].split(" to ");
+	return {
+		queries: splitTo,
+		mode: splitBy[1] ?? null
+	};
+}
+
+/**
+ * Attempts to interpret a route query as specified by the user in the current language.
+ */
+export function parseRouteQuery(query: string): RouteQuery {
+	const i18n = getI18n();
+
+	const routeModesByTranslation = Object.fromEntries(Object.entries({
+		[i18n.t("routing.query-by-hgv")]: "car hgv",
+		[i18n.t("routing.query-by-car")]: "car",
+		[i18n.t("routing.query-by-road-bike")]: "bicycle road",
+		[i18n.t("routing.query-by-mountain-bike")]: "bicycle mountain",
+		[i18n.t("routing.query-by-electric-bike")]: "bicycle electric",
+		[i18n.t("routing.query-by-bicycle")]: "bicycle",
+		[i18n.t("routing.query-by-wheelchair")]: "pedestrian wheelchair",
+		[i18n.t("routing.query-by-foot")]: "pedestrian",
+		[i18n.t("routing.query-by-straight")]: ""
+	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
+
+	let queryWithoutMode = query;
+	let mode = null;
+	for (const [translation, thisMode] of Object.entries(routeModesByTranslation)) {
+		const m = query.match(new RegExp(`(?<= |^)${quoteRegExp(translation)}(?= |$)`, "di"));
+		if (m) {
+			queryWithoutMode = `${query.slice(0, m.indices![0][0])}${query.slice(m.indices![0][1])}`.trim();
+			mode = thisMode;
+			break;
+		}
+	}
+
+	const keywordsByTranslation = Object.fromEntries(Object.entries({
+		[i18n.t("routing.query-from")]: "from",
+		[i18n.t("routing.query-to")]: "to",
+		[i18n.t("routing.query-via")]: "via"
+	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2.toLowerCase(), v])));
+
+	const splitQuery = queryWithoutMode
+		.split(new RegExp(`(?:^|\\s+)(${Object.keys(keywordsByTranslation).map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`, "i"));
+
+	const queryParts = {
+		from: [] as string[],
+		via: [] as string[],
+		to: [] as string[]
+	};
+
+	for(let i=0; i<splitQuery.length; i+=2) {
+		if(splitQuery[i]) {
+			const thisKeyword = splitQuery[i - 1] ? keywordsByTranslation[splitQuery[i - 1].toLowerCase()] : "from";
+			queryParts[thisKeyword as keyof typeof queryParts].push(splitQuery[i]);
+		}
+	}
+
+	return {
+		queries: queryParts.from.concat(queryParts.via, queryParts.to),
+		mode
+	};
 }

@@ -4,7 +4,6 @@ import type { Geometry } from "geojson";
 import { formatCoordinates } from "./format.js";
 import { fetchAdapter, getConfig } from "./config.js";
 import { getI18n } from "./i18n.js";
-import { quoteRegExp } from "./utils.js";
 
 interface NominatimResult {
 	place_id: number;
@@ -77,60 +76,6 @@ interface PointWithZoom extends Point {
 
 // Respect Nominatim rate limit (https://operations.osmfoundation.org/policies/nominatim/)
 const throttledFetch = throttle({ limit: 1, interval: 1000 })((...args: Parameters<typeof fetchAdapter>) => fetchAdapter(...args));
-
-export function splitRouteQuery(query: string): { queries: string[], mode: string | null } {
-	const i18n = getI18n();
-
-	const routeModesByTranslation = Object.fromEntries(Object.entries({
-		[i18n.t("search.by-hgv")]: "hgv",
-		[i18n.t("search.by-car")]: "car",
-		[i18n.t("search.by-road-bike")]: "road bike",
-		[i18n.t("search.by-mountain-bike")]: "mountain bike",
-		[i18n.t("search.by-electric-bike")]: "electric bike",
-		[i18n.t("search.by-bicycle")]: "bicycle",
-		[i18n.t("search.by-wheelchair")]: "wheelchair",
-		[i18n.t("search.by-foot")]: "foot",
-		[i18n.t("search.by-straight")]: "straight"
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
-
-	let queryWithoutMode = query;
-	let mode = null;
-	for (const [translation, thisMode] of [...Object.entries(routeModesByTranslation), ...Object.values(routeModesByTranslation).map((v) => [`by ${v}`, v])]) {
-		const m = query.match(new RegExp(`(?<= |^)${quoteRegExp(translation)}(?= |$)`, "di"));
-		if (m) {
-			queryWithoutMode = `${query.slice(0, m.indices![0][0])}${query.slice(m.indices![0][1])}`.trim();
-			mode = thisMode;
-			break;
-		}
-	}
-
-	const keywordsByTranslation = Object.fromEntries(Object.entries({
-		[i18n.t("search.from")]: "from",
-		[i18n.t("search.to")]: "to",
-		[i18n.t("search.via")]: "via"
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
-
-	const splitQuery = queryWithoutMode
-		.split(new RegExp(`(?:^|\\s+)(${[...Object.values(keywordsByTranslation), ...Object.keys(keywordsByTranslation)].map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`));
-
-	const queryParts = {
-		from: [] as string[],
-		via: [] as string[],
-		to: [] as string[]
-	};
-
-	for(let i=0; i<splitQuery.length; i+=2) {
-		if(splitQuery[i]) {
-			const thisKeyword = splitQuery[i - 1] ? (keywordsByTranslation[splitQuery[i - 1]] ?? splitQuery[i - 1]) : "from";
-			queryParts[thisKeyword as keyof typeof queryParts].push(splitQuery[i]);
-		}
-	}
-
-	return {
-		queries: queryParts.from.concat(queryParts.via, queryParts.to),
-		mode
-	};
-}
 
 type DecodedGeoQuery = Point & { zoom: number };
 

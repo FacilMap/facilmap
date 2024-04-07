@@ -29,28 +29,29 @@
         "fallback-page-description": "Eine vielseitige Karte auf OpenStreetMap-Basis, auf der Marker und Linien mit Live-Kollaboration gesetzt werden können."
     },
     "routing": {
-        "route-mode-hgv": "mit dem LKW",
-        "route-mode-car": "mit dem Auto",
-        "route-mode-road-bike": "mit dem Rennrad",
-        "route-mode-mountain-bike": "mit dem Mountain Bike",
-        "route-mode-electric-bike": "mit dem E-Bike",
-        "route-mode-bicycle": "mit dem Fahrrad",
-        "route-mode-wheelchair": "mit dem Rollstuhl",
-        "route-mode-foot": "zu Fuß"
+        "format-by-hgv": "mit dem LKW",
+        "format-by-car": "mit dem Auto",
+        "format-by-road-bike": "mit dem Rennrad",
+        "format-by-mountain-bike": "mit dem Mountain Bike",
+        "format-by-electric-bike": "mit dem E-Bike",
+        "format-by-bicycle": "mit dem Fahrrad",
+        "format-by-wheelchair": "mit dem Rollstuhl",
+        "format-by-foot": "zu Fuß",
+        "query-from": "von",
+        "query-to": "nach",
+        "query-via": "über",
+        "query-by-hgv": "mit dem LKW",
+        "query-by-car": "mit dem Auto",
+        "query-by-road-bike": "mit dem Rennrad",
+        "query-by-mountain-bike": "mit dem Mountain Bike",
+        "query-by-electric-bike": "mit dem E-Bike|mit dem Pedelec",
+        "query-by-bicycle": "mit dem Rad|mit dem Fahrrad",
+        "query-by-wheelchair": "mit dem Rollstuhl",
+        "query-by-foot": "zu Fuß",
+        "query-by-straight": "Luftlinie",
+        "query-details": "Details"
     },
     "search": {
-        "http-error": "Unerwarteter Fehler bei der Suche (Status {{status}}).",
-        "from": "von",
-        "to": "nach",
-        "via": "über",
-        "by-hgv": "mit dem LKW",
-        "by-car": "mit dem Auto",
-        "by-road-bike": "mit dem Rennrad",
-        "by-mountain-bike": "mit dem Mountain Bike",
-        "by-electric-bike": "mit dem E-Bike|mit dem Pedelec",
-        "by-bicycle": "mit dem Rad|mit dem Fahrrad",
-        "by-wheelchair": "mit dem Rollstuhl",
-        "by-foot": "zu Fuß",
-        "by-straight": "Luftlinie"
+        "http-error": "Unerwarteter Fehler bei der Suche (Status {{status}})."
     }
 }

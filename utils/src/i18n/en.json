@@ -29,28 +29,28 @@
         "fallback-page-description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration."
     },
     "routing": {
-        "route-mode-hgv": "by HGV",
-        "route-mode-car": "by car",
-        "route-mode-road-bike": "by road bike",
-        "route-mode-mountain-bike": "by mountain bike",
-        "route-mode-electric-bike": "by electric bike",
-        "route-mode-bicycle": "by bicycle",
-        "route-mode-wheelchair": "by wheelchair",
-        "route-mode-foot": "on foot"
+        "format-by-hgv": "by HGV",
+        "format-by-car": "by car",
+        "format-by-road-bike": "by road bike",
+        "format-by-mountain-bike": "by mountain bike",
+        "format-by-electric-bike": "by electric bike",
+        "format-by-bicycle": "by bicycle",
+        "format-by-wheelchair": "by wheelchair",
+        "format-by-foot": "on foot",
+        "query-from": "from",
+        "query-to": "to",
+        "query-via": "via",
+        "query-by-hgv": "by HGV",
+        "query-by-car": "by car",
+        "query-by-road-bike": "by road bike",
+        "query-by-mountain-bike": "by mountain bike",
+        "query-by-electric-bike": "by electric bike",
+        "query-by-bicycle": "by bicycle|by bike",
+        "query-by-wheelchair": "by wheelchair",
+        "query-by-foot": "on foot|by walk|by walking|walking",
+        "query-by-straight": "straight|by helicopter"
     },
     "search": {
-        "http-error": "Search failed with status {{status}}.",
-        "from": "from",
-        "to": "to",
-        "via": "via",
-        "by-hgv": "by HGV",
-        "by-car": "by car",
-        "by-road-bike": "by road bike",
-        "by-mountain-bike": "by mountain bike",
-        "by-electric-bike": "by electric bike",
-        "by-bicycle": "by bicycle|by bike",
-        "by-wheelchair": "by wheelchair",
-        "by-foot": "on foot|by walk|by walking|walking",
-        "by-straight": "straight|by helicopter"
+        "http-error": "Search failed with status {{status}}."
     }
 }

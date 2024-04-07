@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, markRaw, onBeforeUnmount, onMounted, ref, toRaw, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
+	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -200,10 +200,10 @@
 	const hashQuery = computed(() => {
 		if (submittedQuery.value) {
 			return {
-				query: [
-					submittedQuery.value.destinations.map((dest) => (getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
-					submittedQuery.value.mode
-				].join(" by "),
+				query: encodeRouteQuery({
+					queries: submittedQuery.value.destinations.map((dest) => (getSelectedSuggestionId(dest) ?? dest.query)),
+					mode: submittedQuery.value.mode
+				}),
 				...(zoomDestination.value ? normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value) : {}),
 				description: i18n.t("route-form.route-description-outer", {
 					inner: i18n.t("route-form.route-description-inner", {
@@ -493,7 +493,7 @@
 
 	function setQuery(query: string, zoom = true, smooth = true): void {
 		clear();
-		const split = splitRouteQuery(query);
+		const split = decodeRouteQuery(query);
 		destinations.value = split.queries.map((query) => ({ query }));
 		while (destinations.value.length < 2)
 			destinations.value.push({ query: "" });
