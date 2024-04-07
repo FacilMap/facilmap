@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
 import { matchLonLat, splitRouteQuery } from "../search";
+import { getRawI18n } from "../i18n-utils";
 
-test("splitRouteQuery", () => {
+test("splitRouteQuery", async () => {
 	expect(splitRouteQuery("Hamburg to Berlin")).toEqual({
 		queries: ["Hamburg", "Berlin"],
 		mode: null
@@ -46,6 +47,22 @@ test("splitRouteQuery", () => {
 		queries: ["Hamburg"],
 		mode: null
 	});
+
+	await getRawI18n().changeLanguage("de");
+
+	try {
+		expect(splitRouteQuery("Hamburg to Berlin by car")).toEqual({
+			queries: ["Hamburg", "Berlin"],
+			mode: "car"
+		});
+
+		expect(splitRouteQuery("von Hamburg nach Berlin mit dem Auto")).toEqual({
+			queries: ["Hamburg", "Berlin"],
+			mode: "car"
+		});
+	} finally {
+		await getRawI18n().changeLanguage("en");
+	}
 });
 
 test("matchLonLat", () => {

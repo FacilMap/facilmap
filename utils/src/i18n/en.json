@@ -43,14 +43,14 @@
         "from": "from",
         "to": "to",
         "via": "via",
-        "hgv": "by HGV",
-        "car": "by car",
-        "road-bike": "by road bike",
-        "mountain-bike": "by mountain bike",
-        "electric-bike": "by electric bike",
-        "bicycle": "by bicycle|by bike",
-        "wheelchair": "by wheelchair",
-        "foot": "on foot|by walk|by walking|walking",
-        "straight": "straight|by helicopter"
+        "by-hgv": "by HGV",
+        "by-car": "by car",
+        "by-road-bike": "by road bike",
+        "by-mountain-bike": "by mountain bike",
+        "by-electric-bike": "by electric bike",
+        "by-bicycle": "by bicycle|by bike",
+        "by-wheelchair": "by wheelchair",
+        "by-foot": "on foot|by walk|by walking|walking",
+        "by-straight": "straight|by helicopter"
     }
 }

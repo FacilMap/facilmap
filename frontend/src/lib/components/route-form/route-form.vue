@@ -1,7 +1,7 @@
 <script setup lang="ts">
-	import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
+	import { computed, markRaw, onBeforeUnmount, onMounted, ref, toRaw, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { formatCoordinates, formatDistance, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
+	import { formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName, splitRouteQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -10,7 +10,7 @@
 	import Draggable from "vuedraggable";
 	import RouteMode from "../ui/route-mode.vue";
 	import DraggableLines from "leaflet-draggable-lines";
-	import { throttle } from "lodash-es";
+	import { cloneDeep, throttle } from "lodash-es";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
 	import { isMapResult } from "../../utils/search";
@@ -109,8 +109,7 @@
 	) : (
 		[{ query: "" }, { query: "" }]
 	));
-	const submittedQuery = ref<string>();
-	const submittedQueryDescription = ref<string>();
+	const submittedQuery = ref<{ destinations: Destination[]; mode: string }>();
 	const routeError = ref<string>();
 	const hoverDestinationIdx = ref<number>();
 	const hoverInsertIdx = ref<number>();
@@ -201,9 +200,17 @@
 	const hashQuery = computed(() => {
 		if (submittedQuery.value) {
 			return {
-				query: submittedQuery.value,
+				query: [
+					submittedQuery.value.destinations.map((dest) => (getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
+					submittedQuery.value.mode
+				].join(" by "),
 				...(zoomDestination.value ? normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value) : {}),
-				description: `Route from ${submittedQueryDescription.value}`
+				description: i18n.t("route-form.route-description-outer", {
+					inner: i18n.t("route-form.route-description-inner", {
+						destinations: submittedQuery.value.destinations.map((dest) => (getSelectedSuggestionName(dest) ?? dest.query)).join(i18n.t("route-form.route-description-inner-joiner")),
+						mode: formatRouteMode(submittedQuery.value.mode)
+					})
+				})
 			};
 		} else
 			return undefined;
@@ -413,26 +420,12 @@
 		try {
 			const mode = routeMode.value;
 
-			submittedQuery.value = [
-				destinations.value.map((dest) => (getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
-				mode
-			].join(" by ");
-			submittedQueryDescription.value = [
-				destinations.value.map((dest) => (getSelectedSuggestionName(dest) ?? dest.query)).join(" to "),
-				mode
-			].join(" by ");
+			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
 
 			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
-			submittedQuery.value = [
-				destinations.value.map((dest) => (getSelectedSuggestionId(dest) ?? dest.query)).join(" to "),
-				mode
-			].join(" by ");
-			submittedQueryDescription.value = [
-				destinations.value.map((dest) => (getSelectedSuggestionName(dest) ?? dest.query)).join(" to "),
-				mode
-			].join(" by ");
+			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
 
 			if(points.some((point) => point == null)) {
 				routeError.value = i18n.t("route-form.some-destinations-not-found");
@@ -465,7 +458,6 @@
 	function reset(): void {
 		toasts.hideToast(`fm${context.id}-route-form-error`);
 		submittedQuery.value = undefined;
-		submittedQueryDescription.value = undefined;
 		routeError.value = undefined;
 
 		if(suggestionMarker.value) {

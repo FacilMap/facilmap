@@ -82,20 +82,20 @@ export function splitRouteQuery(query: string): { queries: string[], mode: strin
 	const i18n = getI18n();
 
 	const routeModesByTranslation = Object.fromEntries(Object.entries({
-		[i18n.t("search.hgv")]:  "hgv",
-		[i18n.t("search.car")]:  "car",
-		[i18n.t("search.road-bike")]:  "road bike",
-		[i18n.t("search.mountain-bike")]:  "mountain bike",
-		[i18n.t("search.electric-bike")]:  "electric bike",
-		[i18n.t("search.bicycle")]:  "bicycle",
-		[i18n.t("search.wheelchair")]:  "wheelchair",
-		[i18n.t("search.foot")]:  "foot",
-		[i18n.t("search.straight")]:  "straight"
+		[i18n.t("search.by-hgv")]: "hgv",
+		[i18n.t("search.by-car")]: "car",
+		[i18n.t("search.by-road-bike")]: "road bike",
+		[i18n.t("search.by-mountain-bike")]: "mountain bike",
+		[i18n.t("search.by-electric-bike")]: "electric bike",
+		[i18n.t("search.by-bicycle")]: "bicycle",
+		[i18n.t("search.by-wheelchair")]: "wheelchair",
+		[i18n.t("search.by-foot")]: "foot",
+		[i18n.t("search.by-straight")]: "straight"
 	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
 
 	let queryWithoutMode = query;
 	let mode = null;
-	for (const [translation, thisMode] of Object.entries(routeModesByTranslation)) {
+	for (const [translation, thisMode] of [...Object.entries(routeModesByTranslation), ...Object.values(routeModesByTranslation).map((v) => [`by ${v}`, v])]) {
 		const m = query.match(new RegExp(`(?<= |^)${quoteRegExp(translation)}(?= |$)`, "di"));
 		if (m) {
 			queryWithoutMode = `${query.slice(0, m.indices![0][0])}${query.slice(m.indices![0][1])}`.trim();
@@ -111,7 +111,7 @@ export function splitRouteQuery(query: string): { queries: string[], mode: strin
 	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
 
 	const splitQuery = queryWithoutMode
-		.split(new RegExp(`(?:^|\\s+)(from|to|via|${Object.keys(keywordsByTranslation).map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`));
+		.split(new RegExp(`(?:^|\\s+)(${[...Object.values(keywordsByTranslation), ...Object.keys(keywordsByTranslation)].map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`));
 
 	const queryParts = {
 		from: [] as string[],

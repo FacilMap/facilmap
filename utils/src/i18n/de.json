@@ -43,14 +43,14 @@
         "from": "von",
         "to": "nach",
         "via": "über",
-        "hgv": "mit dem LKW",
-        "car": "mit dem Auto",
-        "road-bike": "mit dem Rennrad",
-        "mountain-bike": "mit dem Mountain Bike",
-        "electric-bike": "mit dem E-Bike|mit dem Pedelec",
-        "bicycle": "mit dem Rad|mit dem Fahrrad",
-        "wheelchair": "mit dem Rollstuhl",
-        "foot": "zu Fuß",
-        "straight": "Luftlinie"
+        "by-hgv": "mit dem LKW",
+        "by-car": "mit dem Auto",
+        "by-road-bike": "mit dem Rennrad",
+        "by-mountain-bike": "mit dem Mountain Bike",
+        "by-electric-bike": "mit dem E-Bike|mit dem Pedelec",
+        "by-bicycle": "mit dem Rad|mit dem Fahrrad",
+        "by-wheelchair": "mit dem Rollstuhl",
+        "by-foot": "zu Fuß",
+        "by-straight": "Luftlinie"
     }
 }
