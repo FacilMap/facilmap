@@ -46,17 +46,17 @@ test("parseRouteQuery", async () => {
 
 	expect(parseRouteQuery("by walk to Berlin from Hamburg")).toEqual({
 		queries: ["Hamburg", "Berlin"],
-		mode: "foot"
+		mode: "pedestrian"
 	});
 
 	expect(parseRouteQuery("from Hamburg by walk to Berlin")).toEqual({
 		queries: ["Hamburg", "Berlin"],
-		mode: "foot"
+		mode: "pedestrian"
 	});
 
 	expect(parseRouteQuery("Hamburg to Berlin walking")).toEqual({
 		queries: ["Hamburg", "Berlin"],
-		mode: "foot"
+		mode: "pedestrian"
 	});
 
 	expect(parseRouteQuery("Hamburg")).toEqual({
