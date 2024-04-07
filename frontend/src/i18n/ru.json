@@ -1,0 +1,36 @@
+{
+    "client-provider": {
+        "connection-error": "Ошибка при подключении к серверу",
+        "open-map-error": "Ошибка при открытии карты",
+        "connecting-header": "Подключение",
+        "map-deleted-header": "Карта удалена",
+        "close-map": "Закрыть карту",
+        "disconnected": "Соединение с сервером потеряно. Повторное подключение…",
+        "loading-map-header": "Загрузка",
+        "loading-map": "Загрузка карты…",
+        "connecting": "Подключение к серверу…"
+    },
+    "edit-filter-dialog": {
+        "description": "Описание",
+        "title": "Фильтр",
+        "syntax-header": "Синтаксис",
+        "example": "Пример"
+    },
+    "about-dialog": {
+        "header": "О FacilMap {{version}}",
+        "license-text": "{{facilmap}} доступен под лицензией {{license}}.",
+        "license-text-facilmap": "FacilMap",
+        "license-text-license": "GNU Affero General Public License, Version 3",
+        "map-data-search": "Поиск",
+        "attribution-osm-contributors": "Участники OSM",
+        "help-text-documentation": "документация",
+        "help-text-chat": "Matrix-чат",
+        "icons": "Иконки"
+    },
+    "route-form-tab": {
+        "tab-label": "Навигация"
+    },
+    "zoom-to-object-button": {
+        "fallback-label": "Приблизить объект"
+    }
+}
