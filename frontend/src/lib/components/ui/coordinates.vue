@@ -6,8 +6,10 @@
 	import { computed } from "vue";
 	import { useToasts } from "./toasts/toasts.vue";
 	import vTooltip from "../../utils/tooltip";
+	import { useI18n } from "../../utils/i18n";
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		point: Point;
@@ -18,7 +20,7 @@
 
 	function copy(): void {
 		copyToClipboard(formattedCoordinates.value);
-		toasts.showToast(undefined, "Coordinates copied", "The coordinates were copied to the clipboard.", { variant: "success", autoHide: true });
+		toasts.showToast(undefined, i18n.t("coordinates.copied-title"), i18n.t("coordinates.copied-message"), { variant: "success", autoHide: true });
 	}
 </script>
 
@@ -29,11 +31,11 @@
 			type="button"
 			class="btn btn-secondary"
 			@click="copy()"
-			v-tooltip="'Copy to clipboard'"
+			v-tooltip="i18n.t('coordinates.copy-to-clipboard')"
 		>
-			<Icon icon="copy" alt="Copy to clipboard"></Icon>
+			<Icon icon="copy" :alt="i18n.t('coordinates.copy-to-clipboard')"></Icon>
 		</button>
-		<span v-if="props.ele != null" v-tooltip="'Elevation'">
+		<span v-if="props.ele != null" v-tooltip="i18n.t('coordinates.elevation')">
 			({{formatElevation(props.ele)}})
 		</span>
 	</span>

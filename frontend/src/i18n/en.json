@@ -21,6 +21,15 @@
         "programs-libraries": "Programs/libraries",
         "icons": "Icons"
     },
+    "add-to-map-dropdown": {
+        "fallback-label": "Add to map",
+        "add-error": "Error adding to map",
+        "add-marker-items": "Marker items as {{typeName}}",
+        "add-line-items": "Line/polygon items as {{typeName}}"
+    },
+    "alert": {
+        "fallback-ok-label": "OK"
+    },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"
     },
@@ -36,6 +45,22 @@
         "open-map-error": "Error opening map",
         "disconnected-header": "Disconnected",
         "disconnected": "The connection to the server was lost. Trying to reconnect…"
+    },
+    "colour-picker": {
+        "format-error": "Needs to be in 6-digit hex format, for example 0000ff."
+    },
+    "coordinates": {
+        "copied-title": "Coordinates copied",
+        "copied-message": "The coordinates were copied to the clipboard.",
+        "copy-to-clipboard": "Copy to clipboard",
+        "elevation": "Elevation"
+    },
+    "copy-to-clipboard-input": {
+        "copied-fallback-title": "Link copied",
+        "copied-fallback-message": "The link was copied to the clipboard.",
+        "copy": "Copy",
+        "qr-code-alt": "QR code",
+        "qr-code-tooltip": "Show QR code"
     },
     "custom-import-dialog": {
         "existing-type": "Existing type “{{name}}”",
@@ -457,6 +482,11 @@
         "add-to-map-label_other": "Add selected items to map",
         "custom-type-mapping": "Custom type mapping…"
     },
+    "toasts": {
+        "unexpected-error": "Unexpected error",
+        "close-label": "Close",
+        "spinner-label": "Loading…"
+    },
     "toolbox-add-dropdown": {
         "label": "Add",
         "manage-types": "Manage types"
@@ -499,6 +529,9 @@
         "label": "Views",
         "save-current-view": "Save current view",
         "manage-views": "Manage views"
+    },
+    "validated-field": {
+        "validation-error": "Error while validating form field"
     },
     "zoom-to-object-button": {
         "fallback-label": "Zoom to object"

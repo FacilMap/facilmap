@@ -4,6 +4,7 @@
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import ModalDialog from "./modal-dialog.vue";
 	import ValidatedField from "./validated-form/validated-field.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	export type AlertProps = {
 		title: string;
@@ -108,9 +109,10 @@
 </script>
 
 <script setup lang="ts">
+	const i18n = useI18n();
+
 	const props = withDefaults(defineProps<AlertProps>(), {
-		type: "alert",
-		okLabel: "OK"
+		type: "alert"
 	});
 
 	const emit = defineEmits<{
@@ -135,7 +137,7 @@
 	<ModalDialog
 		:title="props.title"
 		:isCreate="props.type === 'confirm'"
-		:okLabel="props.okLabel"
+		:okLabel="props.okLabel ?? i18n.t('alert.fallback-ok-label')"
 		:okVariant="props.variant"
 		@shown="emit('shown')"
 		@hide="emit('hide', result)"

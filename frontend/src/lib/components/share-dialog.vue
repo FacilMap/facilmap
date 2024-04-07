@@ -164,8 +164,8 @@
 				class="mt-2"
 				:modelValue="url"
 				readonly
-				shortDescription="Map link"
-				longDescription="The map link"
+				successTitle="Map link copied"
+				successMessage="The map link was copied to the clipboard."
 			></CopyToClipboardInput>
 		</template>
 
@@ -174,8 +174,8 @@
 				class="mt-2"
 				:modelValue="embedCode"
 				readonly
-				shortDescription="Embed code"
-				:longDescription="`The code to embed ${context.appName}`"
+				successTitle="Embed code copied"
+				:successMessage="`The code to embed ${context.appName} was copied to the clipboard.`"
 				:rows="2"
 				noQr
 			></CopyToClipboardInput>

@@ -5,6 +5,7 @@
 	import { getValidatedForm } from "./validated-form.vue";
 	import { useToasts } from "../toasts/toasts.vue";
 	import pDebounce from "p-debounce";
+	import { useI18n } from "../../../utils/i18n";
 
 	type SyncValidationResult = string | undefined;
 	type AsyncValidationResult = Promise<SyncValidationResult>;
@@ -49,6 +50,7 @@
 
 <script setup lang="ts" generic="T">
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		value: T;
@@ -114,8 +116,8 @@
 					}
 				}).catch((err) => {
 					if (validationErrorPromise.value === promise) {
-						toasts.showErrorToast("fm-validity-error", "Error while validating form field", err);
-						resolvedValidationError.value = "Error while validating form field";
+						toasts.showErrorToast("fm-validity-error", i18n.t("validated-field.validation-error"), err);
+						resolvedValidationError.value = i18n.t("validated-field.validation-error");
 						isValidating.value = false;
 					}
 				});
@@ -125,9 +127,9 @@
 				isValidating.value = false;
 			}
 		} catch (err: any) {
-			toasts.showErrorToast("fm-validity-error", "Error while validating form field", err);
+			toasts.showErrorToast("fm-validity-error", i18n.t("validated-field.validation-error"), err);
 			validationErrorPromise.value = undefined;
-			resolvedValidationError.value = "Error while validating form field";
+			resolvedValidationError.value = i18n.t("validated-field.validation-error");
 			isValidating.value = false;
 		}
 	});

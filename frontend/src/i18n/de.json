@@ -21,6 +21,15 @@
         "programs-libraries": "Programme/Bibliotheken",
         "icons": "Symbole"
     },
+    "add-to-map-dropdown": {
+        "fallback-label": "Zur Karte hinzufügen",
+        "add-error": "Fehler beim Hinzufügen der Objekte",
+        "add-marker-items": "Marker als {{typeName}}",
+        "add-line-items": "Linien/Polygone als {{typeName}}"
+    },
+    "alert": {
+        "fallback-ok-label": "OK"
+    },
     "click-marker-tab": {
         "look-up-error": "Fehler beim Laden der Geoinformationen"
     },
@@ -36,6 +45,22 @@
         "open-map-error": "Beim Öffnen der Karte ist ein Fehler aufgetreten",
         "disconnected-header": "Verbindung unterbrochen",
         "disconnected": "Die Verbindung zum Server ist verloren gegangen. Verbindung wird wiederhergestellt…"
+    },
+    "colour-picker": {
+        "format-error": "Muss im hexadezimalen Format mit 6 Stellen definiert werden, zum Beispiel 0000ff."
+    },
+    "coordinates": {
+        "copied-title": "Koordinaten kopiert",
+        "copied-message": "Die Koordinaten wurden in die Zwischenablage kopiert.",
+        "copy-to-clipboard": "In die Zwischenablage kopieren",
+        "elevation": "Höhe über NN"
+    },
+    "copy-to-clipboard-input": {
+        "copied-fallback-title": "Link kopiert",
+        "copied-fallback-message": "Der Link wurde in die Zwischenablage kopiert.",
+        "copy": "Kopieren",
+        "qr-code-alt": "QR-Code",
+        "qr-code-tooltip": "QR-Code anzeigen"
     },
     "custom-import-dialog": {
         "existing-type": "Existierender Objekttyp „{{name}}“",
@@ -454,6 +479,11 @@
         "add-to-map-label": "Zur Karte hinzufügen",
         "custom-type-mapping": "Benutzerdefiniert…"
     },
+    "toasts": {
+        "unexpected-error": "Unerwarteter Fehler",
+        "close-label": "Schließen",
+        "spinner-label": "Lädt…"
+    },
     "toolbox-add-dropdown": {
         "label": "Erstellen",
         "manage-types": "Objekttypen verwalten"
@@ -496,6 +526,9 @@
         "label": "Ansichten",
         "save-current-view": "Ansicht speichern",
         "manage-views": "Ansichten verwalten"
+    },
+    "validated-field": {
+        "validation-error": "Fehler bei der Validierung des Formularfelds"
     },
     "zoom-to-object-button": {
         "fallback-label": "Zum Objekt zoomen"

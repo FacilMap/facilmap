@@ -8,22 +8,22 @@
 	import type { ButtonSize } from '../../utils/bootstrap';
 	import DropdownMenu from "./dropdown-menu.vue";
 	import { formatTypeName, getOrderedTypes } from 'facilmap-utils';
+	import { useI18n } from '../../utils/i18n';
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = toRef(() => context.components.map);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
-	const props = withDefaults(defineProps<{
+	const props = defineProps<{
 		markers?: MarkerWithTags[];
 		lines?: LineWithTags[];
 		label?: string;
 		size?: ButtonSize;
 		/** If true, the markers/lines entries are assumed to refer to a single object, omitting the prefix "Marker/line/polgon items as" */
 		isSingle?: boolean;
-	}>(), {
-		label: "Add to map"
-	})
+	}>();
 
 	const emit = defineEmits<{
 		"update:isAdding": [isAdding: boolean];
@@ -52,7 +52,7 @@
 
 			mapContext.value?.components.selectionHandler.setSelectedItems(selection, true);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-add-to-map-error`, "Error adding to map", err);
+			toasts.showErrorToast(`fm${context.id}-add-to-map-error`, i18n.t("add-to-map-dropdown.add-error"), err);
 		} finally {
 			isAdding.value = false;
 		}
@@ -74,7 +74,7 @@
 <template>
 	<DropdownMenu
 		v-if="client.padData && !client.readonly && ((props.markers && markerTypes.length > 0) || (props.lines && lineTypes.length > 0))"
-		:label="props.label"
+		:label="props.label ?? i18n.t('add-to-map-dropdown.fallback-label')"
 		:isDisabled="(props.markers ?? []).length === 0 && (props.lines ?? []).length === 0"
 		:isBusy="isAdding"
 		:size="props.size"
@@ -86,7 +86,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addMarkers(type)"
-					>{{!props.isSingle && props.lines ? 'Marker items as ' : ''}}{{formatTypeName(type.name)}}</a>
+					>{{!props.isSingle && props.lines ? i18n.t("add-to-map-dropdown.add-marker-items", { typeName: formatTypeName(type.name) }) : formatTypeName(type.name)}}</a>
 				</li>
 			</template>
 		</template>
@@ -97,7 +97,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="addLines(type)"
-					>{{!props.isSingle && props.markers ? 'Line/polygon items as ' : ''}}{{formatTypeName(type.name)}}</a>
+					>{{!props.isSingle && props.markers ? i18n.t("add-to-map-dropdown.add-line-items", { typeName: formatTypeName(type.name) }) : formatTypeName(type.name)}}</a>
 				</li>
 			</template>
 		</template>

@@ -47,8 +47,8 @@
 			<CopyToClipboardInput
 				v-model="value"
 				:prefix="context.baseUrl"
-				shortDescription="Map link"
-				longDescription="The map link"
+				successTitle="Map link copied"
+				successMessage="The map link was copied to the clipboard."
 				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
 				:validators="[validateRequired, getZodValidator(padIdValidator), validateDistinctPadId]"
 			></CopyToClipboardInput>

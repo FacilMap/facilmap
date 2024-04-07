@@ -7,6 +7,7 @@
 	import { mapRef } from "../../../utils/vue";
 	import { getUniqueId } from "../../../utils/utils";
 	import type { ThemeColour } from "../../../utils/bootstrap";
+	import { getI18n, useI18n } from "../../../utils/i18n";
 
 	export interface ToastContext {
 		showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void>;
@@ -79,12 +80,12 @@
 					try {
 						const res = callback(...args);
 						Promise.resolve(res).catch((err) => {
-							void result.showErrorToast(undefined, 'Unexpected error', err);
+							void result.showErrorToast(undefined, getI18n().t("toasts.unexpected-error"), err);
 							throw err;
 						});
 						return res;
 					} catch (err: any) {
-						void result.showErrorToast(undefined, 'Unexpected error', err);
+						void result.showErrorToast(undefined, getI18n().t("toasts.unexpected-error"), err);
 					}
 				}) as C;
 			},
@@ -157,6 +158,8 @@
 
 <script setup lang="ts">
 	// This script must not be empty, otherwise Vue assumes this component is using the Options API
+
+	const i18n = useI18n();
 </script>
 
 <template>
@@ -176,7 +179,7 @@
 				:class="toast.variant && `bg-${toast.variant} bg-opacity-25`"
 			>
 				<strong class="me-auto">{{toast.title}}</strong>
-				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" aria-label="Close"></button>
+				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" :aria-label="i18n.t('toasts.close-label')"></button>
 			</div>
 			<div
 				class="toast-body bg-opacity-10 text-break"
@@ -184,7 +187,7 @@
 			>
 				<div>
 					<div v-if="toast.spinner" class="spinner-border spinner-border-sm" role="status">
-						<span class="visually-hidden">Loading...</span>
+						<span class="visually-hidden">{{i18n.t("toasts.spinner-label")}}</span>
 					</div>
 					{{toast.message}}
 				</div>

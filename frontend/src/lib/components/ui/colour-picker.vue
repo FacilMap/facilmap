@@ -6,6 +6,7 @@
 	import { arrowNavigation } from "../../utils/ui";
 	import { type StyleValue, computed, nextTick, ref } from "vue";
 	import type { Validator } from "./validated-form/validated-field.vue";
+	import { getI18n } from "../../utils/i18n";
 
 	function normalizeData(value: string) {
 		return ColorMixin.data.apply({ modelValue: value }).val;
@@ -17,7 +18,7 @@
 
 	function validateColour(colour: string): string | undefined {
 		if (!isValidColour(colour)) {
-			return "Needs to be in 6-digit hex format, for example 0000ff.";
+			return getI18n().t("colour-picker.format-error");
 		}
 	}
 

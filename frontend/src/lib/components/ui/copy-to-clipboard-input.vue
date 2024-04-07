@@ -9,24 +9,23 @@
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import ValidatedField from "./validated-form/validated-field.vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
+	import { useI18n } from "../../utils/i18n";
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
-	const props = withDefaults(defineProps<{
+	const props = defineProps<{
 		prefix?: string;
 		noQr?: boolean;
-		shortDescription?: string;
-		longDescription?: string;
+		successTitle?: string;
+		successMessage?: string;
 		readonly?: boolean;
 		rows?: number;
 		/** If specified, will be used for the clipboard/QR code instead of `${prefix}${modelValue}` */
 		fullUrl?: string;
 		validators?: Array<Validator<string>>;
 		variant?: ThemeColour;
-	}>(), {
-		shortDescription: "Link",
-		longDescription: "The link"
-	});
+	}>();
 
 	const modelValue = defineModel<string>({ required: true });
 
@@ -37,7 +36,7 @@
 
 	function copy(): void {
 		copyToClipboard(fullUrl.value);
-		toasts.showToast(undefined, `${props.shortDescription} copied`, `${props.longDescription} was copied to the clipboard.`, { variant: "success", autoHide: true });
+		toasts.showToast(undefined, props.successTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title"), props.successMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message"), { variant: "success", autoHide: true });
 	}
 </script>
 
@@ -68,7 +67,7 @@
 						:ref="slotProps.inputRef"
 					/>
 				</template>
-				<button type="button" :class="`btn btn-${props.variant ?? 'secondary'}`" @click="copy()">Copy</button>
+				<button type="button" :class="`btn btn-${props.variant ?? 'secondary'}`" @click="copy()">{{i18n.t("copy-to-clipboard-input.copy")}}</button>
 				<button
 					v-if="!props.noQr"
 					type="button"
@@ -77,8 +76,8 @@
 					ref="qrButtonRef"
 					@click="showQr = !showQr"
 				>
-					<Icon icon="qrcode" alt="QR code"></Icon>
-					<span v-if="!showQr" class="fm-copy-to-clipboard-input-qr-tooltip" v-tooltip="'Show QR code'"></span>
+					<Icon icon="qrcode" :alt="i18n.t('copy-to-clipboard-input.qr-code-alt')"></Icon>
+					<span v-if="!showQr" class="fm-copy-to-clipboard-input-qr-tooltip" v-tooltip="i18n.t('copy-to-clipboard-input.qr-code-tooltip')"></span>
 				</button>
 				<div class="invalid-tooltip">
 					{{slotProps.validationError}}
