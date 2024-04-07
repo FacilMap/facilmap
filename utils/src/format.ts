@@ -158,19 +158,27 @@ export function formatRouteTime(time: number, encodedMode: RouteMode): string {
 	});
 }
 
-export function formatDistance(distance: number): string {
+export function kmToMi(km: number): number {
+	return km / 1.609344;
+}
+
+export function mToFt(m: number): number {
+	return m / 0.3048;
+}
+
+export function formatDistance(distance: number, decimals = 2): string {
 	const units = getCurrentUnits();
 	if (units === Units.US_CUSTOMARY) {
-		return getI18n().t("format.distance-mi", { distance: round(distance / 1.609344, 2) });
+		return getI18n().t("format.distance-mi", { distance: round(kmToMi(distance), decimals) });
 	} else {
-		return getI18n().t("format.distance-km", { distance: round(distance, 2) });
+		return getI18n().t("format.distance-km", { distance: round(distance, decimals) });
 	}
 }
 
 export function formatElevation(elevation: number): string {
 	const units = getCurrentUnits();
 	if (units === Units.US_CUSTOMARY) {
-		return getI18n().t("format.elevation-ft", { elevation: round(elevation / 0.3048, 0) });
+		return getI18n().t("format.elevation-ft", { elevation: round(mToFt(elevation), 0) });
 	} else {
 		return getI18n().t("format.elevation-m", { elevation });
 	}

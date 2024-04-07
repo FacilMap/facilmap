@@ -1,9 +1,10 @@
 <script setup lang="ts">
 	import FmHeightgraph from "../../utils/heightgraph";
 	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
-	import { onBeforeUnmount, onMounted, ref, toRef, watch } from "vue";
+	import { computed, markRaw, ref, toRef, watch } from "vue";
 	import { useDomEventListener, useEventListener } from "../../utils/utils";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { fixOnCleanup } from "../../utils/vue";
 
 	const props = defineProps<{
 		route: RouteWithTrackPoints | LineWithTrackPoints;
@@ -20,33 +21,40 @@
 
 	const containerRef = ref<HTMLElement>();
 
-	let elevationPlot: FmHeightgraph | undefined;
-
-	onMounted(() => {
-		elevationPlot = new FmHeightgraph();
-		elevationPlot._map = mapContext.value.components.map;
-
-		handleTrackPointsChange();
-
-		containerRef.value!.append(elevationPlot.onAdd(mapContext.value.components.map));
-		handleResize();
+	const elevationPlot = computed(() => {
+		if (containerRef.value) {
+			// Construct in computed value so that it is reconstructed on language change
+			return markRaw(new FmHeightgraph({ mapMarkerPane: "lhl-raised" }));
+		}
 	});
 
-	onBeforeUnmount(() => {
-		elevationPlot!.onRemove(mapContext.value.components.map);
+	watch(elevationPlot, (value, oldValue, onCleanup_) => {
+		const onCleanup = fixOnCleanup(onCleanup_);
+
+		if (elevationPlot.value) {
+			elevationPlot.value._map = mapContext.value.components.map;
+			handleTrackPointsChange();
+			containerRef.value!.append(elevationPlot.value.onAdd(mapContext.value.components.map));
+			handleResize();
+
+			onCleanup(() => {
+				value!.onRemove(mapContext.value.components.map);
+				containerRef.value!.replaceChildren();
+			});
+		}
 	});
 
 	function handleTrackPointsChange() {
-		if (elevationPlot && props.route.trackPoints) {
-			elevationPlot.addData(props.route.extraInfo ?? {}, props.route.trackPoints);
+		if (elevationPlot.value && props.route.trackPoints) {
+			elevationPlot.value.addData(props.route.extraInfo ?? {}, props.route.trackPoints);
 		}
 	}
 
 	watch(() => props.route.trackPoints, handleTrackPointsChange);
 
 	function handleResize(): void {
-		if (elevationPlot && containerRef.value) {
-			elevationPlot.resize({ width: containerRef.value.offsetWidth, height: containerRef.value.offsetHeight });
+		if (elevationPlot.value && containerRef.value) {
+			elevationPlot.value.resize({ width: containerRef.value.offsetWidth, height: containerRef.value.offsetHeight });
 		}
 	}
 </script>
