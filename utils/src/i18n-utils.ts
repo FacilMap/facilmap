@@ -2,7 +2,7 @@ import { Units } from "facilmap-types";
 import i18next, { type CustomPluginOptions, type Module, type Newable, type i18n } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-export const LANGUAGES = ["en", "de", "nb-NO"];
+export const LANGUAGES = ["en", "de", "nb-NO", "ru"];
 
 export const DEFAULT_LANGUAGE = "en";
 

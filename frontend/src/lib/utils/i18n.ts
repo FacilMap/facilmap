@@ -4,6 +4,7 @@ import { defineComponent, ref } from "vue";
 import messagesEn from "../../i18n/en.json";
 import messagesDe from "../../i18n/de.json";
 import messagesNbNo from "../../i18n/nb-NO.json";
+import messagesRu from "../../i18n/ru.json";
 import { decodeQueryString, getAcceptHotI18n, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
@@ -14,12 +15,14 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("en", namespace, messagesEn);
 	i18n.addResourceBundle("de", namespace, messagesDe);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
+	i18n.addResourceBundle("ru", namespace, messagesRu);
 });
 
 if (import.meta.hot) {
 	import.meta.hot!.accept(`../../i18n/en.json`, getAcceptHotI18n("en", namespace));
 	import.meta.hot!.accept(`../../i18n/de.json`, getAcceptHotI18n("de", namespace));
 	import.meta.hot!.accept(`../../i18n/nb-NO.json`, getAcceptHotI18n("nb-NO", namespace));
+	import.meta.hot!.accept(`../../i18n/ru.json`, getAcceptHotI18n("ru", namespace));
 }
 
 const i18nResourceChangeCounter = ref(0);
