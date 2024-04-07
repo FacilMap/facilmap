@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
-	import { maxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
+	import { getMaxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
 	import Dropdown from "bootstrap/js/dist/dropdown";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
@@ -26,6 +26,7 @@
 		tabindex?: number;
 		tooltip?: string; // TODO
 		tooltipPlacement?: TooltipPlacement;
+		maxWidth?: string;
 	}>(), {
 		isOpen: undefined,
 		noWrapper: false,
@@ -67,7 +68,7 @@
 					...defaultConfig,
 					modifiers: [
 						...(defaultConfig.modifiers ?? []),
-						...maxSizeModifiers
+						...getMaxSizeModifiers({ maxWidth: props.maxWidth })
 					],
 					strategy: "fixed"
 				})

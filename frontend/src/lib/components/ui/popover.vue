@@ -4,7 +4,7 @@
 	import Tooltip from "bootstrap/js/dist/tooltip";
 	import { useResizeObserver } from "../../utils/vue";
 	import { useDomEventListener } from "../../utils/utils";
-	import { maxSizeModifiers } from "../../utils/bootstrap";
+	import { getMaxSizeModifiers } from "../../utils/bootstrap";
 
 	/**
 	 * Like Bootstrap Popover, but uses an existing popover element rather than creating a new one. This way, the popover
@@ -70,7 +70,7 @@
 					...defaultConfig,
 					modifiers: [
 						...(defaultConfig.modifiers ?? []),
-						...maxSizeModifiers
+						...getMaxSizeModifiers()
 					],
 					strategy: "fixed"
 				})

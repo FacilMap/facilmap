@@ -15,11 +15,13 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatTypeName, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		searchResults?: Array<SearchResult | FileResult>;
@@ -168,7 +170,7 @@
 						v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)"
 						class="alert alert-danger"
 					>
-						No results have been found.
+						{{i18n.t("search-results.no-results")}}
 					</div>
 
 					<ul v-if="mapResults && mapResults.length > 0" class="list-group">
@@ -184,8 +186,8 @@
 								{{" "}}
 								<span class="result-type">({{formatTypeName(client.types[result.typeId].name)}})</span>
 							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="i18n.t('search-results.zoom-to-result-tooltip')"><Icon icon="zoom-in" :alt="i18n.t('search-results.zoom-to-result-alt')"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="i18n.t('search-results.show-details-tooltip')"><Icon icon="arrow-right" :alt="i18n.t('search-results.show-details-alt')"></Icon></a>
 						</li>
 					</ul>
 
@@ -204,8 +206,8 @@
 								{{" "}}
 								<span class="result-type" v-if="result.type">({{result.type}})</span>
 							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="'Zoom to result'"><Icon icon="zoom-in" alt="Zoom"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="'Show details'"><Icon icon="arrow-right" alt="Details"></Icon></a>
+							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="i18n.t('search-results.zoom-to-result-tooltip')"><Icon icon="zoom-in" :alt="i18n.t('search-results.zoom-to-result-alt')"></Icon></a>
+							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="i18n.t('search-results.show-details-tooltip')"><Icon icon="arrow-right" :alt="i18n.t('search-results.show-details-alt')"></Icon></a>
 						</li>
 					</ul>
 
@@ -218,10 +220,10 @@
 						class="btn btn-secondary btn-sm"
 						:class="{ active: isAllSelected }"
 						@click="toggleSelectAll"
-					>Select all</button>
+					>{{i18n.t("search-results.select-all")}}</button>
 
 					<AddToMapDropdown
-						:label="`Add selected item${activeSearchResults.length == 1 ? '' : 's'} to map`"
+						:label="i18n.t('search-results.add-to-map-label', { count: activeSearchResults.length })"
 						:markers="activeMarkersWithTags"
 						:lines="activeLinesWithTags"
 						size="sm"
@@ -233,7 +235,7 @@
 									href="javascript:"
 									class="dropdown-item"
 									@click="customImport = true"
-								>Custom type mapping…</a>
+								>{{i18n.t("search-results.custom-type-mapping")}}</a>
 							</li>
 						</template>
 					</AddToMapDropdown>

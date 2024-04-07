@@ -37,6 +37,24 @@
         "disconnected-header": "Disconnected",
         "disconnected": "The connection to the server was lost. Trying to reconnect…"
     },
+    "custom-import-dialog": {
+        "existing-type": "Existing type “{{name}}”",
+        "import-type": "Import type “{{name}}”",
+        "no-import": "Do not import",
+        "import-error": "Error importing to map",
+        "dialog-title": "Custom Import",
+        "ok-label": "Import",
+        "type": "Type",
+        "map-to": "Map to…",
+        "markers_one": "Marker of type {{typeName}} ({{count}})",
+        "markers_other": "Markers of type {{typeName}} ({{count}})",
+        "lines_one": "Line of type {{typeName}} ({{count}})",
+        "lines_other": "Lines of type {{typeName}} ({{count}})",
+        "untyped-markers_one": "Untyped marker ({{count}})",
+        "untyped-markers_other": "Untyped markers ({{count}})",
+        "untyped-lines_one": "Untyped line/polygon ({{count}})",
+        "untyped-lines_other": "Untyped lines/polygons ({{count}})"
+    },
     "edit-filter-dialog": {
         "title": "Filter",
         "apply": "Apply",
@@ -358,6 +376,9 @@
         "units-us": "US customary (miles, feet)"
     },
     "route-form": {
+        "route-description-outer": "Route from {{inner}}",
+        "route-description-inner": "{{destinations}} {{mode}}",
+        "route-description-inner-joiner": " to ",
         "find-destination-error": "Error finding destination “{{query}}”",
         "some-destinations-not-found": "Some destinations could not be found.",
         "route-calculation-error": "Error calculating route",
@@ -380,6 +401,61 @@
     },
     "route-form-tab": {
         "tab-label": "Route"
+    },
+    "route-mode": {
+        "car-alt": "Car",
+        "bicycle-alt": "Bicycle",
+        "pedestrian-alt": "Foot",
+        "straight-alt": "Straight",
+        "car-title": "Go by car",
+        "bicycle-title": "Go by bicycle",
+        "pedestrian-title": "Go on foot",
+        "straight-title": "Go in a straight line",
+        "car": "Car",
+        "hgv": "HGV",
+        "bicycle": "Bicycle",
+        "road-bike": "Road bike",
+        "mountain-bike": "Mountain bike",
+        "electric-bike": "Electric bike",
+        "walking": "Walking",
+        "hiking": "Hiking",
+        "wheelchair": "Wheelchair",
+        "straight": "Straight line",
+        "fastest": "Fastest",
+        "shortest": "Shortest",
+        "avoid-highways": "Avoid highways",
+        "avoid-toll-roads": "Avoid toll roads",
+        "avoid-ferries": "Avoid ferries",
+        "avoid-fords": "Avoid fords",
+        "avoid-steps": "Avoid steps",
+        "custom-alt": "Custom",
+        "load-details": "Load route details (elevation, road types, …)"
+    },
+    "search-box": {
+        "close-alt": "Close",
+        "resize-tooltip": "Drag to resize, click to reset"
+    },
+    "search-form": {
+        "search-description": "Search for {{query}}",
+        "search-error": "Search error",
+        "search-alt": "Search",
+        "clear-alt": "Clear",
+        "auto-zoom": "Auto-zoom to results",
+        "zoom-to-all": "Zoom to all results"
+    },
+    "search-form-tab": {
+        "tab-label": "Search"
+    },
+    "search-results": {
+        "no-results": "No results have been found.",
+        "zoom-to-result-tooltip": "Zoom to result",
+        "zoom-to-result-alt": "Zoom",
+        "show-details-tooltip": "Show details",
+        "show-details-alt": "Details",
+        "select-all": "Select all",
+        "add-to-map-label_one": "Add selected item to map",
+        "add-to-map-label_other": "Add selected items to map",
+        "custom-type-mapping": "Custom type mapping…"
     },
     "toolbox-add-dropdown": {
         "label": "Add",

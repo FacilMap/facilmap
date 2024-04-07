@@ -14,6 +14,7 @@
 	import { computed, reactive, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
@@ -24,6 +25,7 @@
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const layerId = Util.stamp(mapContext.value.components.searchResultsLayer);
 
@@ -49,10 +51,10 @@
 			return {
 				query: loadedSearchString.value,
 				...(zoomDestination.value && normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value)),
-				description: `Search for ${loadedSearchString.value}`
+				description: i18n.t("search-form.search-description", { query: loadedSearchString.value })
 			};
 		} else if (loadingSearchString.value)
-			return { query: loadingSearchString.value, description: `Search for ${loadedSearchString.value}` };
+			return { query: loadingSearchString.value, description: i18n.t("search-form.search-description", { query: loadedSearchString.value }) };
 		else
 			return undefined;
 	});
@@ -132,7 +134,7 @@
 						}
 					}
 				} catch(err) {
-					toasts.showErrorToast(`fm${context.id}-search-form-error`, "Search error", err);
+					toasts.showErrorToast(`fm${context.id}-search-form-error`, i18n.t("search-form.search-error"), err);
 					return;
 				}
 			}
@@ -194,7 +196,7 @@
 					type="submit"
 					class="btn btn-secondary"
 				>
-					<Icon icon="search" alt="Search"></Icon>
+					<Icon icon="search" :alt="i18n.t('search-form.search-alt')"></Icon>
 				</button>
 				<button
 					v-if="searchResults || mapResults || fileResult"
@@ -202,7 +204,7 @@
 					class="btn btn-secondary"
 					@click="reset()"
 				>
-					<Icon icon="remove" alt="Clear"></Icon>
+					<Icon icon="remove" :alt="i18n.t('search-form.clear-alt')"></Icon>
 				</button>
 				<DropdownMenu noWrapper>
 					<li>
@@ -211,7 +213,7 @@
 							class="dropdown-item"
 							@click.capture.stop.prevent="storage.autoZoom = !storage.autoZoom"
 						>
-							<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> Auto-zoom to results
+							<Icon :icon="storage.autoZoom ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.auto-zoom")}}
 						</a>
 					</li>
 
@@ -221,7 +223,7 @@
 							class="dropdown-item"
 							@click.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
 						>
-							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> Zoom to all results
+							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.zoom-to-all")}}
 						</a>
 					</li>
 				</DropdownMenu>

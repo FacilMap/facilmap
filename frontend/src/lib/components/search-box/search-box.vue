@@ -6,9 +6,11 @@
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
 	import mitt from "mitt";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const tabs = reactive(new Map<string, SearchBoxTab>());
 	const activeTabId = ref<string | undefined>();
@@ -228,7 +230,7 @@
 						href="javascript:"
 						@click="tab.onClose()"
 						draggable="false"
-					><Icon icon="remove" alt="Close"></Icon></a>
+					><Icon icon="remove" :alt="i18n.t('search-box.close-alt')"></Icon></a>
 				</li>
 			</ul>
 		</div>
@@ -243,7 +245,7 @@
 			v-show="!context.isNarrow"
 			href="javascript:"
 			class="fm-search-box-resize"
-			v-tooltip.right="'Drag to resize, click to reset'"
+			v-tooltip.right="i18n.t('search-box.resize-tooltip')"
 			ref="resizeHandleRef"
 		><Icon icon="resize-horizontal"></Icon></a>
 	</div>

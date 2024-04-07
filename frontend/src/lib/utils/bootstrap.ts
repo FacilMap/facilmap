@@ -57,7 +57,7 @@ export type ButtonSize = "lg" | "sm";
  * An array of popper modifiers that uses popper-max-size-modifier to shrink the popover to prevent overflow
  * rather than move it, as is the default in Bootstrap.
  */
-export const maxSizeModifiers: Array<Partial<Modifier<any, any>>> = [
+export const getMaxSizeModifiers = ({ maxWidth = "30rem" }: { maxWidth?: string } = {}): Array<Partial<Modifier<any, any>>> => [
 	{
 		...maxSize,
 		options: {
@@ -75,7 +75,7 @@ export const maxSizeModifiers: Array<Partial<Modifier<any, any>>> = [
 
 			state.styles.popper = {
 				...state.styles.popper,
-				maxWidth: `min(30rem, ${width}px)`,
+				maxWidth: `min(${maxWidth}, ${width}px)`,
 				maxHeight: `${height}px`
 			}
 		}

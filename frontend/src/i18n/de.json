@@ -37,6 +37,22 @@
         "disconnected-header": "Verbindung unterbrochen",
         "disconnected": "Die Verbindung zum Server ist verloren gegangen. Verbindung wird wiederhergestellt…"
     },
+    "custom-import-dialog": {
+        "existing-type": "Existierender Objekttyp „{{name}}“",
+        "import-type": "Objekttyp „{{name}}“ importieren",
+        "no-import": "Nicht importieren",
+        "import-error": "Fehler beim Importieren",
+        "dialog-title": "Benutzerdefinierter Import",
+        "ok-label": "Importieren",
+        "type": "Objekttyp",
+        "map-to": "Importieren als…",
+        "markers": "Marker des Typs {{typeName}} ({{count}})",
+        "lines_one": "Linie des Typs {{typeName}} ({{count}})",
+        "lines_other": "Linien des Typs {{typeName}} ({{count}})",
+        "untyped-markers": "Marker ohne Typ ({{count}})",
+        "untyped-lines_one": "Linie/Polygon ohne Typ ({{count}})",
+        "untyped-lines_other": "Linien/Polygone ohne Typ ({{count}})"
+    },
     "edit-filter-dialog": {
         "title": "Filter",
         "apply": "Anwenden",
@@ -358,6 +374,9 @@
         "units-us": "US customary (Meilen und Füße)"
     },
     "route-form": {
+        "route-description-outer": "Route von {{inner}}",
+        "route-description-inner": "{{destinations}} {{mode}}",
+        "route-description-inner-joiner": " nach ",
         "find-destination-error": "Fehler bei der Suche nach dem Wegpunkt „{{query}}“",
         "some-destinations-not-found": "Manche Wegpunkte konnten nicht gefunden werden.",
         "route-calculation-error": "Error calculating route",
@@ -380,6 +399,60 @@
     },
     "route-form-tab": {
         "tab-label": "Route"
+    },
+    "route-mode": {
+        "car-alt": "Auto",
+        "bicycle-alt": "Fahrrad",
+        "pedestrian-alt": "Zu Fuß",
+        "straight-alt": "Luftlinie",
+        "car-title": "Mit dem Auto",
+        "bicycle-title": "Mit dem Fahrrad",
+        "pedestrian-title": "Zu Fuß",
+        "straight-title": "Luftlinie",
+        "car": "Auto",
+        "hgv": "LKW",
+        "bicycle": "Fahrrad",
+        "road-bike": "Rennrad",
+        "mountain-bike": "Mountainbike",
+        "electric-bike": "Pedelec",
+        "walking": "Zu Fuß",
+        "hiking": "Wandern",
+        "wheelchair": "Rollstuhl",
+        "straight": "Luftlinie",
+        "fastest": "Schnellste Route",
+        "shortest": "Kürzteste Route",
+        "avoid-highways": "Autobahnen vermeiden",
+        "avoid-toll-roads": "Mautstraßen vermeiden",
+        "avoid-ferries": "Fähren vermeiden",
+        "avoid-fords": "Furten vermeiden",
+        "avoid-steps": "Treppen vermeiden",
+        "custom-alt": "Benutzerdefiniert",
+        "load-details": "Details laden (Höhenprofil, Straßenqualität, …)"
+    },
+    "search-box": {
+        "close-alt": "Schließen",
+        "resize-tooltip": "Größe durch Ziehen verändern, durch Klick zurücksetzen"
+    },
+    "search-form": {
+        "search-description": "Suche nach {{query}}",
+        "search-error": "Fehler bei der Suche",
+        "search-alt": "Suchen",
+        "clear-alt": "Verstecken",
+        "auto-zoom": "Automatisch zu den Ergebnissen zoomen",
+        "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen"
+    },
+    "search-form-tab": {
+        "tab-label": "Suche"
+    },
+    "search-results": {
+        "no-results": "Es wurden keine Ergebnisse gefunden.",
+        "zoom-to-result-tooltip": "Zum Suchergebnis zoomen",
+        "zoom-to-result-alt": "Zoomen",
+        "show-details-tooltip": "Details anzeigen",
+        "show-details-alt": "Details",
+        "select-all": "Alle auswählen",
+        "add-to-map-label": "Zur Karte hinzufügen",
+        "custom-type-mapping": "Benutzerdefiniert…"
     },
     "toolbox-add-dropdown": {
         "label": "Erstellen",

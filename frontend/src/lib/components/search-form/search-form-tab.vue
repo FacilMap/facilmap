@@ -7,10 +7,12 @@
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { WritableSearchFormTabContext } from "../facil-map-context-provider/search-form-tab-context";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
+	const i18n = useI18n();
 
 	const searchForm = ref<InstanceType<typeof SearchForm>>();
 
@@ -38,7 +40,7 @@
 <template>
 	<SearchBoxTab
 		:id="`fm${context.id}-search-form-tab`"
-		title="Search"
+		:title="i18n.t('search-form-tab.tab-label')"
 		:hashQuery="hashQuery"
 		class="fm-search-form-tab"
 	>

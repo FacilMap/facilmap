@@ -1,4 +1,4 @@
-<script lang="ts">
+<script setup lang="ts">
 	import type { RouteMode as RouteModeType } from "facilmap-types";
 	import { type DecodedRouteMode, decodeRouteMode, encodeRouteMode } from "facilmap-utils";
 	import Icon from "./icon.vue";
@@ -6,11 +6,29 @@
 	import { getUniqueId } from "../../utils/utils";
 	import vTooltip, { type TooltipPlacement } from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	type Mode = Exclude<DecodedRouteMode['mode'], 'track'>;
 	type Type = DecodedRouteMode['type'];
 
-	const constants: {
+	const i18n = useI18n();
+
+	const props = withDefaults(defineProps<{
+		modelValue: RouteModeType;
+		tabindex?: number;
+		disabled?: boolean;
+		tooltipPlacement?: TooltipPlacement;
+	}>(), {
+		tooltipPlacement: "top"
+	});
+
+	const emit = defineEmits<{
+		"update:modelValue": [value: RouteModeType];
+	}>();
+
+	const id = getUniqueId("fm-route-mode");
+
+	const constants = computed((): {
 		modes: Array<Mode>;
 		modeIcon: Record<Mode, string>;
 		modeAlt: Record<Mode, string>;
@@ -22,7 +40,7 @@
 		avoid: DecodedRouteMode['avoid'];
 		avoidAllowed: Record<DecodedRouteMode['avoid'][0], (mode: DecodedRouteMode['mode'], type: Type) => boolean>;
 		avoidText: Record<DecodedRouteMode['avoid'][0], string>;
-	} = {
+	} => ({
 		modes: ["car", "bicycle", "pedestrian", ""],
 
 		modeIcon: {
@@ -33,17 +51,17 @@
 		},
 
 		modeAlt: {
-			car: "Car",
-			bicycle: "Bicycle",
-			pedestrian: "Foot",
-			"": "Straight"
+			car: i18n.t("route-mode.car-alt"),
+			bicycle: i18n.t("route-mode.bicycle-alt"),
+			pedestrian: i18n.t("route-mode.pedestrian-alt"),
+			"": i18n.t("route-mode.straight-alt")
 		},
 
 		modeTitle: {
-			car: "by car",
-			bicycle: "by bicycle",
-			pedestrian: "on foot",
-			"": "in a straight line"
+			car: i18n.t("route-mode.car-title"),
+			bicycle: i18n.t("route-mode.bicycle-title"),
+			pedestrian: i18n.t("route-mode.pedestrian-title"),
+			"": i18n.t("route-mode.straight-title")
 		},
 
 		types: {
@@ -55,30 +73,30 @@
 
 		typeText: {
 			car: {
-				"": "Car",
-				"hgv": "HGV"
+				"": i18n.t("route-mode.car"),
+				"hgv": i18n.t("route-mode.hgv")
 			},
 			bicycle: {
-				"": "Bicycle",
-				road: "Road bike",
-				mountain: "Mountain bike",
-				electric: "Electric bike"
+				"": i18n.t("route-mode.bicycle"),
+				road: i18n.t("route-mode.road-bike"),
+				mountain: i18n.t("route-mode.mountain-bike"),
+				electric: i18n.t("route-mode.electric-bike")
 			},
 			pedestrian: {
-				"": "Walking",
-				hiking: "Hiking",
-				wheelchair: "Wheelchair"
+				"": i18n.t("route-mode.walking"),
+				hiking: i18n.t("route-mode.hiking"),
+				wheelchair: i18n.t("route-mode.wheelchair")
 			},
 			"": {
-				"": "Straight line"
+				"": i18n.t("route-mode.straight")
 			}
 		},
 
 		preferences: ["fastest", "shortest"],
 
 		preferenceText: {
-			fastest: "Fastest",
-			shortest: "Shortest"
+			fastest: i18n.t("route-mode.fastest"),
+			shortest: i18n.t("route-mode.shortest")
 		},
 
 		avoid: ["highways", "tollways", "ferries", "fords", "steps"],
@@ -96,30 +114,13 @@
 		},
 
 		avoidText: {
-			highways: "highways",
-			tollways: "toll roads",
-			ferries: "ferries",
-			fords: "fords",
-			steps: "steps"
+			highways: i18n.t("route-mode.avoid-highways"),
+			tollways: i18n.t("route-mode.avoid-toll-roads"),
+			ferries: i18n.t("route-mode.avoid-ferries"),
+			fords: i18n.t("route-mode.avoid-fords"),
+			steps: i18n.t("route-mode.avoid-steps")
 		}
-	}
-</script>
-
-<script setup lang="ts">
-	const props = withDefaults(defineProps<{
-		modelValue: RouteModeType;
-		tabindex?: number;
-		disabled?: boolean;
-		tooltipPlacement?: TooltipPlacement;
-	}>(), {
-		tooltipPlacement: "top"
-	});
-
-	const emit = defineEmits<{
-		"update:modelValue": [value: RouteModeType];
-	}>();
-
-	const id = getUniqueId("fm-route-mode");
+	}));
 
 	const decodedMode = ref(decodeRouteMode(props.modelValue));
 
@@ -134,7 +135,7 @@
 		}
 	}, { deep: true });
 
-	const types = computed(() => (Object.keys(constants.types) as Mode[]).map((mode) => constants.types[mode].map((type) => ([mode, type] as [Mode, Type]))).flat());
+	const types = computed(() => (Object.keys(constants.value.types) as Mode[]).map((mode) => constants.value.types[mode].map((type) => ([mode, type] as [Mode, Type]))).flat());
 
 	function isTypeActive(mode: DecodedRouteMode['mode'], type: DecodedRouteMode['type']): boolean {
 		return (!mode && !decodedMode.value.mode || mode == decodedMode.value.mode) && (!type && !decodedMode.value.type || type == decodedMode.value.type);
@@ -146,7 +147,7 @@
 
 		if(decodedMode.value.avoid) {
 			for(let i=0; i < decodedMode.value.avoid.length; i++) {
-				if(!constants.avoidAllowed[decodedMode.value.avoid[i]](decodedMode.value.mode, decodedMode.value.type))
+				if(!constants.value.avoidAllowed[decodedMode.value.avoid[i]](decodedMode.value.mode, decodedMode.value.type))
 					decodedMode.value.avoid.splice(i--, 1);
 			}
 		}
@@ -176,10 +177,9 @@
 					v-model="decodedMode.mode"
 					:value="mode"
 					:tabindex="tabindex != null ? tabindex + idx : undefined"
-					v-tooltip:[tooltipPlacement]="`Go ${constants.modeTitle[mode]}`"
 					:disabled="disabled"
 				/>
-				<label class="btn btn-secondary" :for="`${id}-mode-${mode}`">
+				<label class="btn btn-secondary" :for="`${id}-mode-${mode}`" v-tooltip:[tooltipPlacement]="constants.modeTitle[mode]">
 					<Icon :icon="constants.modeIcon[mode]" :alt="constants.modeAlt[mode]"></Icon>
 				</label>
 			</template>
@@ -192,9 +192,10 @@
 					:isDisabled="disabled"
 					noWrapper
 					menuClass="fm-route-mode-customize"
+					maxWidth="32rem"
 				>
 					<template #label>
-						<Icon icon="cog" alt="Custom"/>
+						<Icon icon="cog" :alt="i18n.t('route-mode.custom-alt')"/>
 					</template>
 
 					<template #default>
@@ -204,7 +205,7 @@
 								href="javascript:"
 								@click.capture.stop.prevent="decodedMode.details = !decodedMode.details"
 							>
-								<Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> Load route details (elevation, road types, …)
+								<Icon :icon="decodedMode.details ? 'check' : 'unchecked'"></Icon> {{i18n.t("route-mode.load-details")}}
 							</a>
 						</li>
 
@@ -248,7 +249,7 @@
 										href="javascript:"
 										@click.capture.stop.prevent="toggleAvoid(avoid)"
 									>
-										<Icon :icon="decodedMode.avoid.includes(avoid) ? 'check' : 'unchecked'"></Icon> Avoid {{constants.avoidText[avoid]}}
+										<Icon :icon="decodedMode.avoid.includes(avoid) ? 'check' : 'unchecked'"></Icon> {{constants.avoidText[avoid]}}
 									</a>
 								</li>
 							</template>
@@ -269,7 +270,6 @@
 	}
 
 	.fm-route-mode-customize {
-		width: 380px;
 		font-size: 0; /* https://stackoverflow.com/a/5647640/242365 */
 
 		li {
