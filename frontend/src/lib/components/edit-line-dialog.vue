@@ -14,10 +14,12 @@
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import StrokePicker from "./ui/stroke-picker.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		lineId: ID;
@@ -57,14 +59,14 @@
 			await client.value.editLine(omit(line.value, "trackPoints"));
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-edit-line-error`, "Error saving line", err);
+			toasts.showErrorToast(`fm${context.id}-edit-line-error`, i18n.t("edit-line-dialog.save-error"), err);
 		}
 	}
 </script>
 
 <template>
 	<ModalDialog
-		title="Edit Line"
+		:title="i18n.t('edit-line-dialog.title')"
 		class="fm-edit-line"
 		:isModified="isModified"
 		@submit="$event.waitUntil(save())"
@@ -73,7 +75,7 @@
 	>
 		<template #default>
 			<div class="row mb-3">
-				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.name")}}</label>
 				<ValidatedField
 					:value="line.name"
 					:validators="[getZodValidator(lineValidator.update.shape.name)]"
@@ -89,7 +91,7 @@
 			</div>
 
 			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track'" class="row mb-3">
-				<label class="col-sm-3 col-form-label">Routing mode</label>
+				<label class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.routing-mode")}}</label>
 				<div class="col-sm-9">
 					<RouteMode v-model="line.mode"></RouteMode>
 				</div>
@@ -97,7 +99,7 @@
 
 			<template v-if="resolvedCanControl.includes('colour')">
 				<div class="row mb-3">
-					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
+					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.colour")}}</label>
 					<div class="col-sm-9">
 						<ColourPicker
 							:id="`${id}-colour-input`"
@@ -110,7 +112,7 @@
 
 			<template v-if="resolvedCanControl.includes('width')">
 				<div class="row mb-3">
-					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">Width</label>
+					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.width")}}</label>
 					<div class="col-sm-9">
 						<WidthPicker
 							:id="`${id}-width-input`"
@@ -123,7 +125,7 @@
 
 			<template v-if="resolvedCanControl.includes('stroke')">
 				<div class="row mb-3">
-					<label :for="`${id}-stroke-input`" class="col-sm-3 col-form-label">Stroke</label>
+					<label :for="`${id}-stroke-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.stroke")}}</label>
 					<div class="col-sm-9">
 						<StrokePicker
 							:id="`${id}-stroke-input`"
@@ -148,7 +150,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1" class="dropup" label="Change type">
+			<DropdownMenu v-if="types.length > 1" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a

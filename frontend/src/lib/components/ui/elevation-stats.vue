@@ -7,6 +7,9 @@
 	import { computed, ref } from "vue";
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";
+	import { useI18n } from "../../utils/i18n";
+
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		route: LineWithTrackPoints | RouteWithTrackPoints;
@@ -24,17 +27,17 @@
 <template>
 	<span class="fm-elevation-stats" v-if="route.ascent != null && route.descent != null">
 		<span>
-			<Icon icon="triangle-top" alt="Ascent"></Icon> {{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" alt="Descent"></Icon> {{formatAscentDescent(route.descent)}}
+			<Icon icon="triangle-top" :alt="i18n.t('elevation-stats.ascent-alt')"></Icon> {{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" :alt="i18n.t('elevation-status.descent-alt')"></Icon> {{formatAscentDescent(route.descent)}}
 		</span>
 
 		<span ref="statsButtonContainerRef">
 			<button
 				type="button"
 				class="btn btn-secondary"
-				v-tooltip="'Show elevation statistics'"
+				v-tooltip="i18n.t('elevation-stats.show-tooltip')"
 				@click="showStatsPopover = !showStatsPopover"
 			>
-				<Icon icon="circle-info" alt="Show stats"></Icon>
+				<Icon icon="circle-info" :alt="i18n.t('elevation-stats.show-alt')"></Icon>
 			</button>
 		</span>
 
@@ -45,10 +48,10 @@
 			class="fm-elevation-stats-popover"
 		>
 			<dl class="row">
-				<dt class="col-6">Total ascent</dt>
+				<dt class="col-6">{{i18n.t("elevation-stats.total-ascent")}}</dt>
 				<dd class="col-6">{{formatAscentDescent(route.ascent)}}</dd>
 
-				<dt class="col-6">Total descent</dt>
+				<dt class="col-6">{{i18n.t("elevation-stats.total-descent")}}</dt>
 				<dd class="col-6">{{formatAscentDescent(route.descent)}}</dd>
 
 				<template v-for="stat in statsArr" :key="stat.i">

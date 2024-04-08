@@ -120,6 +120,26 @@
         "functions-description": "Mathematische Funktionen ({{abs}}: Betrag, {{log}}: Natürlicher Logarithmus, {{sqrt}}: Quadratwurzel)",
         "min-max-description": "Kleinster/größter Wert"
     },
+    "edit-line-dialog": {
+        "save-error": "Fehler beim Speichern der Linie",
+        "title": "Linie bearbeiten",
+        "name": "Name",
+        "routing-mode": "Routenmodus",
+        "colour": "Farbe",
+        "width": "Dicke",
+        "stroke": "Kontur",
+        "change-type": "Objekttyp wechseln"
+    },
+    "edit-marker-dialog": {
+        "save-error": "Fehler beim Speichern des Markers",
+        "title": "Marker bearbeiten",
+        "name": "Name",
+        "colour": "Farbe",
+        "size": "Größe",
+        "icon": "Symbol",
+        "shape": "Form",
+        "change-type": "Objekttyp wechseln"
+    },
     "edit-type-dialog": {
         "delete-field-title": "Feld löschen",
         "delete-field-message": "Wollen Sie das Feld „{{fieldName}}“ wirklich löschen?",
@@ -189,6 +209,80 @@
         "option-reorder": "Umordnen",
         "option-add": "Erstellen"
     },
+    "elevation-stats": {
+        "ascent-alt": "Aufstieg",
+        "descent-alt": "Abstieg",
+        "show-tooltip": "Höhenstatistik einblenden",
+        "show-alt": "Höhenstatistik",
+        "total-ascent": "Gesamtaufstieg",
+        "total-descent": "Gesamtabstieg"
+    },
+    "export-dialog": {
+        "format-option-gpx": "GPX",
+        "format-option-geojson": "GeoJSON",
+        "format-option-html": "HTML",
+        "format-option-csv": "CSV",
+        "column-name": "Name",
+        "column-position": "Position",
+        "column-distance": "Länge",
+        "column-time": "Reisedauer",
+        "route-type-track": "Track",
+        "route-type-track-zip": "Track, eine Datei pro Linie (ZIP-Datei)",
+        "route-type-route": "Route",
+        "open-file": "Datei öffnen",
+        "download-file": "Datei herunterladen",
+        "generate-link": "Link generieren",
+        "copy-to-clipboard": "In die Zwischenablage kopieren",
+        "select-type-error": "Bitte wählen Sie einen Objekttyp aus.",
+        "export-ok": "Exportieren",
+        "copy-ok": "Kopieren",
+        "export-copied-title": "{{format}}-Export kopiert",
+        "export-copied-message": "Der {{format}}-Export wurde in die Zwischenablage kopiert.",
+        "title": "Kollaborative Karte exportieren",
+        "introduction": "Exportieren Sie Ihre Karte hier, um sie in eine andere Anwendung, auf ein anderes Gerät oder in eine andere kollaborative Karte zu übertragen.",
+        "format": "Format",
+        "gpx-explanation": "{{gpx}}-Dateien können benutzt werden, um Ihre Karte in Navigations- und Routenplanungsprogramme und -Geräte zu übertragen, zum Beispiel OsmAnd oder Garmin. Sie enthalten alle Marker und Linien mit deren Namen und Beschreibung, aber nicht deren Stilattributen (mit Ausnahme einiger Basisattribute für OsmAnd).",
+        "gpx-explanation-interpolation-gpx": "GPX",
+        "geojson-explanation": "{{geojson}}-Dateien können benutzt werden, um vollständige Backups oder Kopien Ihrer Karte anzufertigen. Sie enthalten die vollständigen Daten der Karte, inklusive der Karteneinstellungen, Ansichten, Objekttypen, Marker und Linien mit all deren Attributen. Um ein GeoJSON-Backup wiederherzustellen oder um eine Kopie Ihrer Karte anzulegen, importieren Sie die Datei einfach wieder in FacilMap.",
+        "geojson-explanation-interpolation-geojson": "GeoJSON",
+        "html-explanation": "{{html}}-Dateien können in jedem Webbrowser geöffnet werden. Der HTML-Export enthält eine Tabelle mit den Datenattributen aller Marker und Linien. Die Tabelle kann über die Zwischenablage auch in eine Tabellenkalkulation kopiert werden.",
+        "html-explanation-interpolation-html": "HTML",
+        "csv-explanation": "{{csv}}-Dateien können in den meisten Tabellenkalkulationen geöffnet werden und enhalten die Datenattribute der Marker/Linien eines einzelnen Objekttyps.",
+        "csv-explanation-interpolation-csv": "CSV",
+        "export-method": "Export-Methode",
+        "route-type": "Routenformat",
+        "track-explanation": "{{track}} exportiert den Verlauf Ihrer Linien, wie diese auf der Karte gespeichert sind.",
+        "track-explanation-interpolation-track": "Track",
+        "track-zip-explanation": "{{trackZip}} generiert eine ZIP-Datei, die eine GPX-Datei für alle Marker und eine GPX-Datei pro Linie enthält. Das funktioniert besser mit Apps wie OsmAnd zusammen, die nur eine Linie pro Datei unterstützen.",
+        "track-zip-explanation-interpolation-trackZip": "Track, eine Datei pro Linie (ZIP-Datei)",
+        "route-explanation": "{{route}} exportiert nur die Wegpunkte Ihrer Linien. Das importierende Navigationsprogramm/-gerät muss die Route basierend auf seinem eigenen Kartenmaterial berechnen.",
+        "route-explanation-interpolation-route": "Route",
+        "type": "Objekttyp",
+        "include-columns": "Spalten importieren",
+        "apply-filter": "Filter anwenden",
+        "apply-filter-label": "Nur Objekte exportieren, die unter dem aktuellen Filter sichtbar sind"
+    },
+    "export-dropdown": {
+        "export-error": "Fehler beim Exportieren der Route",
+        "button-label": "Exportieren",
+        "gpx-track-tooltip": "GPX-Dateien können mit den meisten Navigationsprogrammen geöffnet werden. Im Track-Modus wird die berechnete Route in der exportierten Datei gespeichert.",
+        "gpx-track-label": "Als GPX-Track exportieren",
+        "gpx-route-tooltip": "GPX-Dateien können mit den meisten Navigationsprogrammen geöffnet werden. Im Route-Modus werden nur die Wegpunkte der Route in der exportierten Datei gespeichert; die importierende Software muss die Route selbst berechnen.",
+        "gpx-route-label": "Als GPX-Route exportieren"
+    },
+    "file-results": {
+        "import-view-error": "Fehler beim Importieren der Ansicht",
+        "import-type-error": "Fehler beim Importieren des Objekttyps",
+        "views": "Ansichten",
+        "view": "Ansicht",
+        "add-view-tooltip": "Diese Ansicht zur Karte hinzufügen",
+        "add-view-alt": "Hinzufügen",
+        "markers-lines": "Marker/Linien",
+        "types": "Objekttypen",
+        "type": "Objekttyp",
+        "add-type-tooltip": "Diesen Objekttyp zur Karte hinzufügen",
+        "add-type-alt": "Hinzufügen"
+    },
     "heightgraph": {
         "distance": "Länge",
         "elevation": "Höhe über NN",
@@ -247,6 +341,9 @@
         "access-delivery": "Lieferdienste",
         "access-private": "Privat",
         "access-permissive": "Gestattet"
+    },
+    "help-popover": {
+        "show-alt": "Erläuterung einblenden"
     },
     "history-dialog": {
         "loading-error": "Fehler beim Laden der Versionsgeschichte",
@@ -320,6 +417,21 @@
         "revert-delete-type-message-named": "Wollen Sie die alte Version des Objekttyps {{quotedName}} wirklich wiederherstellen?",
         "revert-delete-type-message-unnamed": "Wollen Sie die alte Version dieses Objekttyps wirklich wiederherstellen?",
         "revert-delete-button": "Wiederherstellen"
+    },
+    "hybrid-popover": {
+        "close-label": "Schließen",
+        "ok-label": "OK"
+    },
+    "import-tab": {
+        "parse-error-title": "Parsing-Fehler",
+        "parse-error-message_one": "The ausgewählte Datei konnte nicht dekodiert werden.",
+        "parse-error-message_other": "Die ausgewählten Dateien konnten nicht dekodiert werden.",
+        "no-geometries-error-title": "Keine Objekte",
+        "no-geometries-error-message_one": "Die ausgewählte Datei enthält keine geometrischen Objekte.",
+        "no-geometries-error-message_other": "Die ausgewählten Dateien enthalten keine geometrischen Objekte.",
+        "partial-parse-error-title": "Parsing-Fehler",
+        "partial-parse-error-message": "Manche der ausgewählten Dateien konnten nicht dekodiert werden.",
+        "read-error-title": "Lesefehler"
     },
     "leaflet-map": {
         "open-full-size": "{{appName}} als ganze Seite öffnen",
@@ -446,6 +558,32 @@
         "delete-map-button": "Karte löschen",
         "delete-description": "Um die Karte zu löschen, tippen Sie {{code}} in das Feld und klicken Sie „Karte löschen“.",
         "delete-code": "LÖSCHEN"
+    },
+    "pagination": {
+        "first-label": "Erste Seite",
+        "previous-label": "Vorige Seite",
+        "next-label": "Nächste Seite",
+        "last-label": "Letzte Seite"
+    },
+    "shape-picker": {
+        "unknown-shape-error": "Unbekannte Form",
+        "no-shapes-error": "Es konnten keine Formen gefunden werden."
+    },
+    "stroke-picker": {
+        "solid": "Durchgezogen",
+        "dashed": "Gestrichelt",
+        "dotted": "Gepunktet"
+    },
+    "symbol-picker": {
+        "unknown-icon-error": "Unbekanntes Symbol",
+        "filter-placeholder": "Filtern",
+        "no-icons-found-error": "Es konnten keine Symbole gefunden werden."
+    },
+    "use-as-dropdown": {
+        "label": "Route",
+        "from": "Als Start verwenden",
+        "via": "Zwischenstopp hinzufügen",
+        "to": "Als Ziel verwenden"
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",

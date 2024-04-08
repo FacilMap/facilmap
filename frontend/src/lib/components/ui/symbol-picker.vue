@@ -7,6 +7,7 @@
 	import { computed, nextTick, ref } from "vue";
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import { computedAsync } from "../../utils/vue";
+	import { useI18n } from "../../utils/i18n";
 
 	let allItemsP: Promise<Record<string, string>>;
 	async function getAllItems(): Promise<Record<string, string>> {
@@ -20,6 +21,8 @@
 </script>
 
 <script setup lang="ts">
+	const i18n = useI18n();
+
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
@@ -73,7 +76,7 @@
 
 	function validateSymbol(symbol: string) {
 		if (symbol && symbol.length !== 1 && !symbolList.includes(symbol)) {
-			return "Unknown icon";
+			return i18n.t("symbol-picker.unknown-icon-error");
 		}
 	}
 
@@ -118,7 +121,7 @@
 				type="search"
 				class="form-control fm-keyboard-navigation-exception"
 				v-model="filter"
-				placeholder="Filter"
+				:placeholder="i18n.t('symbol-picker.filter-placeholder')"
 				autocomplete="off"
 				ref="filterRef"
 				tabindex="-1"
@@ -129,7 +132,7 @@
 			</div>
 
 			<template v-else>
-				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No icons could be found.</div>
+				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">{{i18n.t("symbol-picker.no-icons-found-error")}}</div>
 
 				<PrerenderedList
 					:items="items"

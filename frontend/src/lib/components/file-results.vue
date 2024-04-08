@@ -8,6 +8,7 @@
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../utils/i18n";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -16,6 +17,7 @@
 	const mapContext = requireMapContext(context);
 	const client = requireClientContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		layerId: number;
@@ -51,7 +53,7 @@
 		try {
 			await client.value.addView(view);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing view", err);
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, i18n.t("file-results.import-view-error"), err);
 		} finally {
 			isAddingView.value.delete(view);
 		}
@@ -68,7 +70,7 @@
 		try {
 			await client.value.addType(type);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, "Error importing type", err);
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, i18n.t("file-results.import-type-error"), err);
 		} finally {
 			isAddingType.value.delete(type);
 		}
@@ -86,14 +88,14 @@
 		>
 			<template #before>
 				<template v-if="hasViews">
-					<h3>Views</h3>
+					<h3>{{i18n.t("file-results.views")}}</h3>
 					<ul class="list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="view in file.views" class="list-group-item">
 							<span class="text-break">
 								<a href="javascript:" @click="showView(view)">{{view.name}}</a>
 								{{" "}}
-								<span class="result-type">(View)</span>
+								<span class="result-type">({{i18n.t("file-results.view")}})</span>
 							</span>
 							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
@@ -102,27 +104,27 @@
 								<a
 									href="javascript:"
 									@click="addView(view)"
-									v-tooltip.right="'Add this view to the map'"
+									v-tooltip.right="i18n.t('file-results.add-view-tooltip')"
 								>
-									<Icon icon="plus" alt="Add"></Icon>
+									<Icon icon="plus" :alt="i18n.t('file-results.add-view-alt')"></Icon>
 								</a>
 							</template>
 						</li>
 					</ul>
 				</template>
-				<h3 v-if="hasViews || hasTypes">Markers/Lines</h3>
+				<h3 v-if="hasViews || hasTypes">{{i18n.t("file-results.markers-lines")}}</h3>
 			</template>
 
 			<template #after>
 				<template v-if="hasTypes">
-					<h3>Types</h3>
+					<h3>{{i18n.t("file-results.types")}}</h3>
 					<ul class="list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="type in file.types" class="list-group-item">
 							<span class="text-break">
 								{{type.name}}
 								{{" "}}
-								<span class="result-type">(Type)</span>
+								<span class="result-type">({{i18n.t("file-results.type")}})</span>
 							</span>
 							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
@@ -131,9 +133,9 @@
 								<a
 									href="javascript:"
 									@click="addType(type)"
-									v-tooltip.right="'Add this type to the map'"
+									v-tooltip.right="i18n.t('file-results.add-type-tooltip')"
 								>
-									<Icon icon="plus" alt="Add"></Icon>
+									<Icon icon="plus" :alt="i18n.t('file-results.add-type-alt')"></Icon>
 								</a>
 							</template>
 						</li>

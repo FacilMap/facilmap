@@ -1,6 +1,9 @@
 <script setup lang="ts">
 	import { range } from "lodash-es";
 	import { computed } from "vue";
+	import { useI18n } from "../../utils/i18n";
+
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		pages: number;
@@ -30,7 +33,7 @@
 			<a
 				:href="isPrevDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				aria-label="First"
+				:aria-label="i18n.t('pagination.first-label')"
 				@click="handleClick(0)"
 			>
 				<span aria-hidden="true">«</span>
@@ -41,7 +44,7 @@
 			<a
 				:href="isPrevDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				aria-label="Previous"
+				:aria-label="i18n.t('pagination.previous-label')"
 				@click="handleClick(props.modelValue - 1)"
 			>
 				<span aria-hidden="true">‹</span>
@@ -66,7 +69,7 @@
 			<a
 				:href="isNextDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				aria-label="Next"
+				:aria-label="i18n.t('pagination.next-label')"
 				@click="handleClick(props.modelValue + 1)"
 			>
 				<span aria-hidden="true">›</span>
@@ -77,7 +80,7 @@
 			<a
 				:href="isNextDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				aria-label="Last"
+				:aria-label="i18n.t('pagination.last-label')"
 				@click="handleClick(pages - 1)"
 			>
 				<span aria-hidden="true">»</span>

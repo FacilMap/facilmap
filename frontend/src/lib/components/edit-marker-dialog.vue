@@ -14,10 +14,12 @@
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		markerId: ID;
@@ -56,14 +58,14 @@
 			await client.value.editMarker(marker.value);
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-edit-marker-error`, "Error saving marker", err);
+			toasts.showErrorToast(`fm${context.id}-edit-marker-error`, i18n.t("edit-marker-dialog.save-error"), err);
 		}
 	}
 </script>
 
 <template>
 	<ModalDialog
-		title="Edit Marker"
+		:title="i18n.t('edit-marker-dialog.title')"
 		class="fm-edit-marker"
 		:isModified="isModified"
 		ref="modalRef"
@@ -72,7 +74,7 @@
 	>
 		<template #default>
 			<div class="row mb-3">
-				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+				<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.name")}}</label>
 				<ValidatedField
 					:value="marker.name"
 					:validators="[getZodValidator(markerValidator.update.shape.name)]"
@@ -89,7 +91,7 @@
 
 			<template v-if="resolvedCanControl.includes('colour')">
 				<div class="row mb-3">
-					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">Colour</label>
+					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.colour")}}</label>
 					<div class="col-sm-9">
 						<ColourPicker
 							:id="`${id}-colour-input`"
@@ -102,7 +104,7 @@
 
 			<template v-if="resolvedCanControl.includes('size')">
 				<div class="row mb-3">
-					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">Size</label>
+					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.size")}}</label>
 					<div class="col-sm-9">
 						<SizePicker
 							:id="`${id}-size-input`"
@@ -115,7 +117,7 @@
 
 			<template v-if="resolvedCanControl.includes('symbol')">
 				<div class="row mb-3">
-					<label :for="`${id}-symbol-input`" class="col-sm-3 col-form-label">Icon</label>
+					<label :for="`${id}-symbol-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.icon")}}</label>
 					<div class="col-sm-9">
 						<SymbolPicker :id="`${id}-symbol-input`" v-model="marker.symbol"></SymbolPicker>
 					</div>
@@ -124,7 +126,7 @@
 
 			<template v-if="resolvedCanControl.includes('shape')">
 				<div class="row mb-3">
-					<label :for="`${id}-shape-input`" class="col-sm-3 col-form-label">Shape</label>
+					<label :for="`${id}-shape-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.shape")}}</label>
 					<div class="col-sm-9">
 						<ShapePicker :id="`${id}-shape-input`" v-model="marker.shape"></ShapePicker>
 					</div>
@@ -146,7 +148,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1" class="dropup" label="Change type">
+			<DropdownMenu v-if="types.length > 1" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a

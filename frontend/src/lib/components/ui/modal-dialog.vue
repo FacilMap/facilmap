@@ -7,7 +7,7 @@
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
 	import { useI18n } from "../../utils/i18n";
 
-	const { t } = useI18n();
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		title?: string;
@@ -111,7 +111,7 @@
 							@click="modal.hide()"
 							type="button"
 							class="btn-close"
-							:aria-label="t('modal-dialog.close')"
+							:aria-label="i18n.t('modal-dialog.close')"
 						></button>
 					</div>
 					<div class="modal-body">
@@ -128,7 +128,7 @@
 							class="btn btn-secondary"
 							@click="modal.hide()"
 							:disabled="isSubmitting || props.isBusy"
-						>{{t('modal-dialog.cancel')}}</button>
+						>{{i18n.t('modal-dialog.cancel')}}</button>
 
 						<button
 							type="submit"
@@ -137,7 +137,7 @@
 							:disabled="isSubmitting || props.isBusy"
 						>
 							<div v-if="isSubmitting" class="spinner-border spinner-border-sm"></div>
-							{{props.okLabel ?? (isCloseButton ? t('modal-dialog.close') : t('modal-dialog.save'))}}
+							{{props.okLabel ?? (isCloseButton ? i18n.t('modal-dialog.close') : i18n.t('modal-dialog.save'))}}
 						</button>
 					</div>
 				</ValidatedForm>

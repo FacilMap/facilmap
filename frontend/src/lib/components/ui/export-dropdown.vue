@@ -8,9 +8,11 @@
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
 	import { getSafeFilename } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const props = defineProps<{
 		filename: string;
@@ -29,7 +31,7 @@
 			const exported = await props.getExport(format);
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${getSafeFilename(props.filename)}.gpx`);
 		} catch(err: any) {
-			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, "Error exporting route", err);
+			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, i18n.t("export-dropdown.export-error"), err);
 		} finally {
 			isExporting.value = false;
 		}
@@ -40,24 +42,24 @@
 	<DropdownMenu
 		:size="props.size"
 		:isDisabled="props.isDisabled"
-		label="Export"
+		:label="i18n.t('export-dropdown.button-label')"
 		:isBusy="isExporting"
 	>
-	<li>
-		<a
-			href="javascript:"
-			class="dropdown-item"
-			@click="exportRoute('gpx-trk')"
-			v-tooltip.right="'GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.'"
-		>Export as GPX track</a>
-	</li>
-	<li>
-		<a
-			href="javascript:"
-			class="dropdown-item"
-			@click="exportRoute('gpx-rte')"
-			v-tooltip.right="'GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.'"
-		>Export as GPX route</a>
-	</li>
+		<li>
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="exportRoute('gpx-trk')"
+				v-tooltip.right="i18n.t('export-dropdown.gpx-track-tooltip')"
+			>{{i18n.t("export-dropdown.gpx-track-label")}}</a>
+		</li>
+		<li>
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="exportRoute('gpx-rte')"
+				v-tooltip.right="i18n.t('export-dropdown.gpx-route-tooltip')"
+			>{{i18n.t("export-dropdown.gpx-route-label")}}</a>
+		</li>
 	</DropdownMenu>
 </template>

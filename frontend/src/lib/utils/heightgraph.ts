@@ -5,7 +5,7 @@ import "./heightgraph.scss";
 import type { TrackPoints } from "facilmap-client";
 import { type ExtraInfo, type TrackPoint } from "facilmap-types";
 import type { FeatureCollection } from "geojson";
-import { calculateDistance, formatDistance, formatElevation } from "facilmap-utils";
+import { calculateDistance, formatDistance, formatElevation, getCurrentUnits } from "facilmap-utils";
 import { getI18n } from "./i18n";
 
 function trackSegment(trackPoints: TrackPoints, fromIdx: number, toIdx: number): TrackPoint[] {
@@ -115,6 +115,9 @@ export default class FmHeightgraph extends Control.Heightgraph {
 	private translatedMapping: Record<"steepness" | "waytypes" | "surface" | "suitablity" | "green" | "noise" | "tollways" | "avgspeed" | "traildifficulty" | "roadaccessrestrictions", string>;
 
 	constructor(options?: any) {
+		// Consume current units in constructor to mark it as a reactive dependency
+		getCurrentUnits();
+
 		const i18n = getI18n();
 		const translatedMapping: typeof FmHeightgraph["translatedMapping"] = {
 			steepness: i18n.t("heightgraph.steepness"),
@@ -225,6 +228,7 @@ export default class FmHeightgraph extends Control.Heightgraph {
 					"1": { text: i18n.t("heightgraph.tollway-yes"), color: "#ffb347" }
 				},
 				[translatedMapping.avgspeed]: {
+					// TODO: Make these available in miles
 					"3": { text: "3 km/h", color: "#f2fdff" },
 					"4": { text: "4 km/h", color: "#D8FAFF" },
 					"5": { text: "5 km/h", color: "bff7ff" },

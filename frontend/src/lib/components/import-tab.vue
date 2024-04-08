@@ -10,11 +10,13 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { WritableImportTabContext } from "./facil-map-context-provider/import-tab-context";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const fileInputRef = ref<HTMLInputElement>();
 
@@ -84,12 +86,12 @@
 			};
 			const hasAnyItems = result.features.length > 0 || Object.keys(result.types).length > 0 || Object.keys(result.views).length > 0;
 			if (!hasAnyItems && result.errors)
-				toasts.showErrorToast(`fm${context.id}-import-error`, "Parsing error", `The selected ${pluralize("file", fileList.length)} could not be parsed.`);
+				toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.parse-error-title"), i18n.t("import-tab.parse-error-message", { count: fileList.length }));
 			else if (!hasAnyItems)
-				toasts.showErrorToast(`fm${context.id}-import-error`, "No geometries", `The selected ${pluralize("file", fileList.length)} did not contain any geometries.`);
+				toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.no-geometries-error-title"), i18n.t("import-tab.no-geometries-error-message", { count: fileList.length }));
 			else {
 				if (result.errors)
-					toasts.showErrorToast(`fm${context.id}-import-error`, "Parsing error", "Some of the selected files could not be parsed.", { variant: "warning" });
+					toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.partial-parse-error-title"), i18n.t("import-tab.partial-parse-error-message"), { variant: "warning" });
 
 				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.value.components.map));
 				if (result.features.length > 0) {
@@ -105,7 +107,7 @@
 				}, 0);
 			}
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-import-error`, "Error reading files", err);
+			toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.read-error-title"), err);
 		}
 	}
 

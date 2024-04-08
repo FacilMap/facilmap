@@ -122,6 +122,26 @@
         "functions-description": "Mathematical functions",
         "min-max-description": "Smallest/highest value"
     },
+    "edit-line-dialog": {
+        "save-error": "Error saving line",
+        "title": "Edit Line",
+        "name": "Name",
+        "routing-mode": "Routing mode",
+        "colour": "Colour",
+        "width": "Width",
+        "stroke": "Stroke",
+        "change-type": "Change type"
+    },
+    "edit-marker-dialog": {
+        "save-error": "Error saving marker",
+        "title": "Edit Marker",
+        "name": "Name",
+        "colour": "Colour",
+        "size": "Size",
+        "icon": "Icon",
+        "shape": "Shape",
+        "change-type": "Change type"
+    },
     "edit-type-dialog": {
         "delete-field-title": "Delete field",
         "delete-field-message": "Do you really want to delete the field “{{fieldName}}”?",
@@ -191,6 +211,80 @@
         "option-reorder": "Reorder",
         "option-add": "Add"
     },
+    "elevation-stats": {
+        "ascent-alt": "Ascent",
+        "descent-alt": "Descent",
+        "show-tooltip": "Show elevation statistics",
+        "show-alt": "Show stats",
+        "total-ascent": "Total ascent",
+        "total-descent": "Total descent"
+    },
+    "export-dialog": {
+        "format-option-gpx": "GPX",
+        "format-option-geojson": "GeoJSON",
+        "format-option-html": "HTML",
+        "format-option-csv": "CSV",
+        "column-name": "Name",
+        "column-position": "Position",
+        "column-distance": "Distance",
+        "column-time": "Line time",
+        "route-type-track": "Track points",
+        "route-type-track-zip": "Track points, one file per line (ZIP file)",
+        "route-type-route": "Route points",
+        "open-file": "Open file",
+        "download-file": "Download file",
+        "generate-link": "Generate link",
+        "copy-to-clipboard": "Copy to clipboard",
+        "select-type-error": "Please select a type.",
+        "export-ok": "Export",
+        "copy-ok": "Copy",
+        "export-copied-title": "{{format}} export copied",
+        "export-copied-message": "The {{format}} export was copied to the clipboard.",
+        "title": "Export collaborative map",
+        "introduction": "Export your map here to transfer it to another application, another device or another collaborative map.",
+        "format": "Format",
+        "gpx-explanation": "{{gpx}} files can be used to transfer your map data into navigation and route planning software and devices, such as OsmAnd or Garmin. They contain your markers and lines with their names and descriptions, but not their style attributes (with the exception of some basic attributes supported by OsmAnd).",
+        "gpx-explanation-interpolation-gpx": "GPX",
+        "geojson-explanation": "{{geojson}} files can be used to create complete backups or copies of your map. They contain the complete data of your map, including the map settings, views, types, markers and lines along with all their data attributes. To restore a GeoJSON backup or to create a copy of your map, simply import the file into FacilMap again.",
+        "geojson-explanation-interpolation-geojson": "GeoJSON",
+        "html-explanation": "{{html}} files can be opened by any web browser. Exporting a map to HTML will render a table with only the data attributes of all markers and lines. This table can also be copy&pasted into a spreadsheet application for further processing.",
+        "html-explanation-interpolation-html": "HTML",
+        "csv-explanation": "{{csv}} files can be imported into most spreadsheet applications and only contain the data attributes of the objects of one type of marker or line.",
+        "csv-explanation-interpolation-csv": "CSV",
+        "export-method": "Export method",
+        "route-type": "Route type",
+        "track-explanation": "{{track}} will export your lines exactly as they are on your map.",
+        "track-explanation-interpolation-track": "Track points",
+        "track-zip-explanation": "{{trackZip}} will create a ZIP file with one GPX file for all markers and one GPX file for each line. This works better with apps such as OsmAnd that only support one line style per file.",
+        "track-zip-explanation-interpolation-trackZip": "Track points, one file per line (ZIP file)",
+        "route-explanation": "{{route}} will export only the from/via/to route points of your lines, and your navigation software/device will have to calculate the route using its own map data and algorithm.",
+        "route-explanation-interpolation-route": "Route points",
+        "type": "Type",
+        "include-columns": "Include columns",
+        "apply-filter": "Apply filter",
+        "apply-filter-label": "Only include objects visible under current filter"
+    },
+    "export-dropdown": {
+        "export-error": "Error exporting route",
+        "button-label": "Export",
+        "gpx-track-tooltip": "GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.",
+        "gpx-track-label": "Export as GPX track",
+        "gpx-route-tooltip": "GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.",
+        "gpx-route-label": "Export as GPX route"
+    },
+    "file-results": {
+        "import-view-error": "Error importing view",
+        "import-type-error": "Error importing type",
+        "views": "Views",
+        "view": "View",
+        "add-view-tooltip": "Add this view to the map",
+        "add-view-alt": "Add",
+        "markers-lines": "Markers/Lines",
+        "types": "Types",
+        "type": "Type",
+        "add-type-tooltip": "Add this type to the map",
+        "add-type-alt": "Add"
+    },
     "heightgraph": {
         "distance": "Distance",
         "elevation": "Elevation",
@@ -249,6 +343,9 @@
         "access-delivery": "Delivery",
         "access-private": "Private",
         "access-permissive": "Permissive"
+    },
+    "help-popover": {
+        "show-alt": "Show explanation"
     },
     "history-dialog": {
         "loading-error": "Error loading history",
@@ -322,6 +419,21 @@
         "revert-delete-type-message-named": "Do you really want to restore the type {{quotedName}}?",
         "revert-delete-type-message-unnamed": "Do you really want to restore this type?",
         "revert-delete-button": "Restore"
+    },
+    "hybrid-popover": {
+        "close-label": "Close",
+        "ok-label": "OK"
+    },
+    "import-tab": {
+        "parse-error-title": "Parsing error",
+        "parse-error-message_one": "The selected file could not be parsed.",
+        "parse-error-message_other": "The selected files could not be parsed.",
+        "no-geometries-error-title": "No geometries",
+        "no-geometries-error-message_one": "The selected file did not contain any geometries.",
+        "no-geometries-error-message_other": "The selected files did not contain any geometries.",
+        "partial-parse-error-title": "Parsing error",
+        "partial-parse-error-message": "Some of the selected files could not be parsed.",
+        "read-error-title": "Error reading files"
     },
     "leaflet-map": {
         "open-full-size": "Open {{appName}} in full size",
@@ -448,6 +560,32 @@
         "delete-map-button": "Delete map",
         "delete-description": "To delete this map, type {{code}} into the field and click the “Delete map” button.",
         "delete-code": "DELETE"
+    },
+    "pagination": {
+        "first-label": "First",
+        "previous-label": "Previous",
+        "next-label": "Next",
+        "last-label": "Last"
+    },
+    "shape-picker": {
+        "unknown-shape-error": "Unknown shape",
+        "no-shapes-error": "No shapes could be found."
+    },
+    "stroke-picker": {
+        "solid": "Solid",
+        "dashed": "Dashed",
+        "dotted": "Dotted"
+    },
+    "symbol-picker": {
+        "unknown-icon-error": "Unknown icon",
+        "filter-placeholder": "Filter",
+        "no-icons-found-error": "No icons could be found."
+    },
+    "use-as-dropdown": {
+        "label": "Use as",
+        "from": "Route start",
+        "via": "Route via",
+        "to": "Route destination"
     },
     "user-preferences-dialog": {
         "title": "User preferences",

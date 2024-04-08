@@ -5,6 +5,7 @@
 	import Popover from "./popover.vue";
 	import { useRefWithOverride } from "../../utils/vue";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
+	import { useI18n } from "../../utils/i18n";
 
 	export const hybridPopoverShouldUseModal = useMaxBreakpoint("xs");
 
@@ -15,6 +16,8 @@
 </script>
 
 <script setup lang="ts">
+	const i18n = useI18n();
+
 	const props = withDefaults(defineProps<{
 		show?: boolean;
 		title?: string;
@@ -126,13 +129,13 @@
 					<div class="modal-content">
 						<div v-if="props.title" class="modal-header">
 							<h1 class="modal-title fs-5">{{props.title}}</h1>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" :aria-label="i18n.t('hybrid-popover.close-label')"></button>
 						</div>
 						<div class="modal-body">
 							<slot :is-modal="false" :close="close"></slot>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+							<button type="button" class="btn btn-primary" data-bs-dismiss="modal">{{i18n.t("hybrid-popover.ok-label")}}</button>
 						</div>
 					</div>
 				</div>

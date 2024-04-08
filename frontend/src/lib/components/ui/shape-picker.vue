@@ -8,6 +8,7 @@
 	import { computed, nextTick, ref } from "vue";
 	import type { Validator } from "./validated-form/validated-field.vue";
 	import { computedAsync } from "../../utils/vue";
+	import { useI18n } from "../../utils/i18n";
 
 	const items = computedAsync(async () => {
 		const list = await Promise.all(shapeList.map(async (s) => (
@@ -18,6 +19,8 @@
 </script>
 
 <script setup lang="ts">
+	const i18n = useI18n();
+
 	const gridRef = ref<InstanceType<typeof PrerenderedList>>();
 
 	const props = defineProps<{
@@ -41,7 +44,7 @@
 
 	function validateShape(shape: string) {
 		if (shape && !shapeList.includes(shape)) {
-			return "Unknown shape";
+			return i18n.t("shape-picker.unknown-shape-error");
 		}
 	}
 
@@ -79,7 +82,7 @@
 			</div>
 
 			<template v-else>
-				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">No shapes could be found.</div>
+				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">{{i18n.t("shape-picker.no-shapes-error")}}</div>
 
 				<PrerenderedList
 					:items="items"
