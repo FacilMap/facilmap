@@ -1,7 +1,7 @@
 /** @type {import('eslint').Linter.Config} */
 module.exports = {
 	root: true,
-	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*"],
+	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*", "**/vite.config.ts.timestamp-*.mjs"],
 	parserOptions: {
 		parser: "@typescript-eslint/parser",
 		project: ["*/tsconfig.json", "*/tsconfig.node.json"],
