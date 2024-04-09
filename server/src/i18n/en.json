@@ -48,6 +48,12 @@
         "url-response-error": "Invalid response from server.",
         "url-unknown-format-error": "Unknown file format."
     },
+    "tabular": {
+        "field-name": "Name",
+        "field-position": "Position",
+        "field-distance": "Distance",
+        "field-time": "Time"
+    },
     "webserver": {
         "map-not-found-error": "Map with ID {{padId}} could not be found."
     }

@@ -2,6 +2,7 @@ import type { GeoJSON, Geometry, Feature } from "geojson";
 import { FeatureGroup, GeoJSON as GeoJSONLayer, type GeoJSONOptions, Layer, type PathOptions } from "leaflet";
 import { HighlightablePolygon, HighlightablePolyline } from "leaflet-highlightable-layers";
 import MarkerLayer, { type MarkerLayerOptions } from "../markers/marker-layer";
+import { getI18n } from "../utils/i18n";
 
 interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 	marker?: MarkerLayerOptions['marker'];
@@ -98,7 +99,7 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 				)).filter((l) => l) as Layer[]);
 
 			default:
-				throw new Error('Invalid GeoJSON object.');
+				throw new Error(getI18n().t("search-result-geojson.invalid-geojson-error"));
 		}
 	}
 

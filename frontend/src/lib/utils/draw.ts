@@ -5,6 +5,8 @@ import type { FacilMapContext } from "../components/facil-map-context-provider/f
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { addToMap } from "./add";
 import { formatTypeName } from "facilmap-utils";
+import { getI18n } from "./i18n";
+import { reactive, toRef } from "vue";
 
 export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
@@ -19,22 +21,22 @@ export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastCo
 
 				mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 			} catch (err) {
-				toasts.showErrorToast("fm-draw-add-marker", "Error adding marker", err);
+				toasts.showErrorToast("fm-draw-add-marker", () => getI18n().t("draw.add-marker-error"), err);
 			}
 		}
 	});
 
-	toasts.showToast("fm-draw-add-marker", `Add ${formatTypeName(type.name)}`, "Please click on the map to add a marker.", {
+	toasts.showToast("fm-draw-add-marker", () => getI18n().t("draw.add-marker-title", { typeName: formatTypeName(type.name) }), () => getI18n().t("draw.add-marker-message"), reactive({
 		noCloseButton: true,
 		actions: [
 			{
-				label: "Cancel",
+				label: toRef(() => getI18n().t("draw.add-marker-cancel")),
 				onClick: () => {
 					clickListener.cancel();
 				}
 			}
 		]
-	});
+	}));
 }
 
 export function moveMarker(markerId: ID, context: FacilMapContext, toasts: ToastContext): void {
@@ -60,7 +62,7 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 				const pos = markerLayer.getLatLng();
 				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
 			} catch (err) {
-				toasts.showErrorToast("fm-draw-drag-marker", "Error moving marker", err);
+				toasts.showErrorToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-error"), err);
 			}
 		}
 
@@ -68,24 +70,24 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 		mapContext.value.components.map.fire('fmInteractionEnd');
 	};
 
-	toasts.showToast("fm-draw-drag-marker", "Drag marker", "Drag the marker to reposition it.", {
+	toasts.showToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-title"), getI18n().t("draw.move-marker-message"), reactive({
 		noCloseButton: true,
 		actions: [
 			{
-				label: "Save",
-				variant: "primary",
+				label: toRef(() => getI18n().t("draw.move-marker-save")),
+				variant: "primary" as const,
 				onClick: () => {
 					void finish(true);
 				}
 			},
 			{
-				label: "Cancel",
+				label: toRef(() => getI18n().t("draw.move-marker-cancel")),
 				onClick: () => {
 					void finish(false);
 				}
 			}
 		]
-	});
+	}));
 
 	markerLayer.dragging!.enable();
 }
@@ -99,24 +101,24 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 
 		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
 
-		toasts.showToast("fm-draw-add-line", `Add ${formatTypeName(type.name)}`, "Click on the map to draw a line. Click “Finish” to save it.", {
+		toasts.showToast("fm-draw-add-line", () => getI18n().t("draw.add-line-title", { typeName: formatTypeName(type.name) }), () => getI18n().t("draw.add-line-message"), reactive({
 			noCloseButton: true,
 			actions: [
 				{
-					label: "Finish",
-					variant: "primary",
+					label: toRef(() => getI18n().t("draw.add-line-finish")),
+					variant: "primary" as const,
 					onClick: () => {
 						mapContext.value.components.linesLayer.endDrawLine(true);
 					}
 				},
 				{
-					label: "Cancel",
+					label: toRef(() => getI18n().t("draw.add-line-cancel")),
 					onClick: () => {
 						mapContext.value.components.linesLayer.endDrawLine(false);
 					}
 				}
 			]
-		});
+		}));
 
 		const routePoints = await mapContext.value.components.linesLayer.drawLine(lineTemplate);
 
@@ -129,6 +131,6 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
 		}
 	} catch (err) {
-		toasts.showErrorToast("fm-draw-add-line", "Error adding line", err);
+		toasts.showErrorToast("fm-draw-add-line", getI18n().t("draw.add-line-error"), err);
 	}
 }

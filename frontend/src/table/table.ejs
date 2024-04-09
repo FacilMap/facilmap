@@ -41,7 +41,7 @@
 	</head>
 	<body>
 		<div class="container-fluid">
-			<h1><%=normalizePadName(padData.name)%> – <%=appName%></h1>
+			<h1><%=normalizePageTitle(normalizePadName(padData.name), appName)%></h1>
 <%
 	for (const type of types) {
 -%>

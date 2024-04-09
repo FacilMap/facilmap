@@ -1,6 +1,7 @@
 import type { Feature, Geometry } from "geojson";
 import type { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
+import { getI18n } from "./i18n";
 
 type FmFeatureProperties = Partial<MarkerFeature["properties"]> | Partial<LineFeature["properties"]>;
 type FeatureProperties = FmFeatureProperties & {
@@ -27,7 +28,7 @@ async function fileToGeoJSON(file: string): Promise<any> {
 		const doc = (new window.DOMParser()).parseFromString(file, "text/xml");
 		const parserErrorElem = doc.getElementsByTagName("parsererror")[0];
 		if (parserErrorElem) {
-			throw new Error(`Invalid XML: ${parserErrorElem.textContent}`);
+			throw new Error(getI18n().t("files.invalid-xml-error", { textContent: parserErrorElem.textContent }));
 		}
 
 		const xml = doc.documentElement;
@@ -127,9 +128,6 @@ export async function parseFiles(files: string[]): Promise<FileResultObject> {
 			ret.features.push(f);
 		}
 	}
-
-	// if(errors)
-	//	return map.messages.showMessage("danger", "Some files could not be parsed.");
 
 	return ret;
 }

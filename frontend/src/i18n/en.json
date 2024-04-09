@@ -93,6 +93,22 @@
         "untyped-lines_one": "Untyped line/polygon ({{count}})",
         "untyped-lines_other": "Untyped lines/polygons ({{count}})"
     },
+    "draw": {
+        "add-marker-error": "Error adding marker",
+        "add-marker-title": "Add {{typeName}}",
+        "add-marker-message": "Please click on the map to add a marker.",
+        "add-marker-cancel": "Cancel",
+        "move-marker-error": "Error moving marker",
+        "move-marker-title": "Drag marker",
+        "move-marker-message": "Drag the marker to reposition it.",
+        "move-marker-save": "Save",
+        "move-marker-cancel": "Cancel",
+        "add-line-title": "Add {{typeName}}",
+        "add-line-message": "Click on the map multiple times to draw a line. Then click “Finish” to save it.",
+        "add-line-finish": "Finish",
+        "add-line-cancel": "Cancel",
+        "add-line-error": "Error adding line"
+    },
     "edit-filter-dialog": {
         "title": "Filter",
         "apply": "Apply",
@@ -297,6 +313,9 @@
         "type": "Type",
         "add-type-tooltip": "Add this type to the map",
         "add-type-alt": "Add"
+    },
+    "files": {
+        "invalid-xml-error": "Invalid XML: {{textContent}}"
     },
     "heightgraph": {
         "distance": "Distance",
@@ -710,6 +729,9 @@
         "units": "Units",
         "units-metric": "Metric",
         "units-us": "US customary (miles, feet)"
+    },
+    "utils": {
+        "required-error": "Must not be empty."
     },
     "route-form": {
         "route-description-outer": "Route from {{inner}}",

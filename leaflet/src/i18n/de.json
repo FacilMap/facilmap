@@ -190,5 +190,8 @@
         "village": "Dorf",
         "hamlet": "Weiler",
         "suburb": "Stadtteil"
+    },
+    "search-result-geojson": {
+        "invalid-geojson-error": "Ungültiges GeoJSON-Objekt."
     }
 }

@@ -190,5 +190,8 @@
         "village": "Village",
         "hamlet": "Hamlet",
         "suburb": "Suburb"
+    },
+    "search-result-geojson": {
+        "invalid-geojson-error": "Invalid GeoJSON object."
     }
 }

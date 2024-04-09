@@ -1,6 +1,7 @@
 import type { Emitter } from "mitt";
 import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vue";
 import type * as z from "zod";
+import { getI18n } from "./i18n";
 
 // https://stackoverflow.com/a/62085569/242365
 export type DistributedKeyOf<T> = T extends any ? keyof T : never;
@@ -88,7 +89,7 @@ export function validations<V>(val: V, funcs: Array<(val: V) => string | undefin
 
 export function validateRequired(val: any): string | undefined {
 	if (val == null || val === "") {
-		return "Must not be empty.";
+		return getI18n().t("utils.required-error");
 	}
 }
 

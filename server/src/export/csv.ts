@@ -5,7 +5,6 @@ import type { ReadableStream } from "stream/web";
 import { stringify } from "csv-stringify";
 import { Readable, Writable } from "stream";
 import { getTabularData } from "./tabular.js";
-import { formatFieldName } from "facilmap-utils";
 
 export function exportCsv(
 	database: Database,
@@ -18,7 +17,7 @@ export function exportCsv(
 		const tabular = await getTabularData(database, padId, typeId, false, filter, hide);
 
 		const stringifier = stringify();
-		stringifier.write(tabular.fields.map((f) => formatFieldName(f)));
+		stringifier.write(tabular.fieldNames);
 		void tabular.objects.pipeTo(Writable.toWeb(stringifier));
 
 		return Readable.toWeb(stringifier);

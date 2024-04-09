@@ -91,6 +91,22 @@
         "untyped-lines_one": "Linie/Polygon ohne Typ ({{count}})",
         "untyped-lines_other": "Linien/Polygone ohne Typ ({{count}})"
     },
+    "draw": {
+        "add-marker-error": "Fehler beim Erstellen des Markers",
+        "add-marker-title": "{{typeName}} erstellen",
+        "add-marker-message": "Klicken Sie auf die Karte, um den Marker dort zu erstellen.",
+        "add-marker-cancel": "Abbrechen",
+        "move-marker-error": "Fehler beim Bewegen des Markers",
+        "move-marker-title": "Marker bewegen",
+        "move-marker-message": "Ziehen Sie den Marker herum, um seine Position zu ändern.",
+        "move-marker-save": "Speichern",
+        "move-marker-cancel": "Abbrechen",
+        "add-line-title": "{{typeName}} erstellen",
+        "add-line-message": "Klicken Sie mehrfach auf die Karte, um eine Linie zu malen. Klicken Sie dann auf „Speichern“, um die Linie zu erstellen.",
+        "add-line-finish": "Speichern",
+        "add-line-cancel": "Abbrechen",
+        "add-line-error": "Fehler beim Erstellen der Linie"
+    },
     "edit-filter-dialog": {
         "title": "Filter",
         "apply": "Anwenden",
@@ -295,6 +311,9 @@
         "type": "Objekttyp",
         "add-type-tooltip": "Diesen Objekttyp zur Karte hinzufügen",
         "add-type-alt": "Hinzufügen"
+    },
+    "files": {
+        "invalid-xml-error": "Ungültiges XML: {{textContent}}"
     },
     "heightgraph": {
         "distance": "Länge",
@@ -708,6 +727,9 @@
         "units": "Einheiten",
         "units-metric": "Metrisch",
         "units-us": "US customary (Meilen und Füße)"
+    },
+    "utils": {
+        "required-error": "Dieses Feld muss ausgefüllt werden."
     },
     "route-form": {
         "route-description-outer": "Route von {{inner}}",
