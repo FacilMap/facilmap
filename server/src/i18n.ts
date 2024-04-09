@@ -21,10 +21,16 @@ declare global {
 	}
 }
 
+type FacilMapProcessLang = {
+	i18n: i18n;
+	acceptLanguage: string | undefined;
+	isExplicit: boolean;
+};
+
 declare module 'domain' {
 	interface Domain {
 		facilmap?: {
-			i18n?: i18n;
+			lang?: FacilMapProcessLang;
 			units?: Units;
 		}
 	}
@@ -37,11 +43,11 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("ru", namespace, messagesRu);
 });
 
-export function getRawDomainI18n(): i18n | undefined {
-	return process.domain?.facilmap?.i18n;
+export function getDomainLang(): FacilMapProcessLang | undefined {
+	return process.domain?.facilmap?.lang;
 }
 
-export function setRawDomainI18n(i18n: i18n): void {
+export function setDomainLang(lang: FacilMapProcessLang): void {
 	if (!process.domain) {
 		throw new Error("Domain is not initialized");
 	}
@@ -50,14 +56,14 @@ export function setRawDomainI18n(i18n: i18n): void {
 		process.domain.facilmap = {};
 	}
 
-	process.domain.facilmap.i18n = i18n;
+	process.domain.facilmap.lang = lang;
 }
 
 export function getDomainUnits(): Units | undefined {
 	return process.domain?.facilmap?.units;
 }
 
-export function setDomainUnits(units: Units | undefined): void {
+export function setDomainUnits(units: Units): void {
 	if (!process.domain) {
 		throw new Error("Domain is not initialized");
 	}
@@ -75,7 +81,11 @@ i18nMiddleware.use((req, res, next) => {
 });
 i18nMiddleware.use((req, res, next) => {
 	if ((req as any).i18n) {
-		setRawDomainI18n(req.i18n);
+		setDomainLang({
+			i18n: req.i18n,
+			isExplicit: !!req.query[LANG_QUERY] || !!req.cookies[LANG_COOKIE],
+			acceptLanguage: req.headers["accept-language"]
+		});
 	}
 
 	const queryUnits = req.query.units ? unitsValidator.safeParse(req.query.units) : undefined;
@@ -125,7 +135,7 @@ if (!isCustomLanguageDetector) {
 
 if (!isCustomI18nGetter) {
 	setI18nGetter(() => {
-		return getRawDomainI18n() ?? defaultI18nGetter();
+		return getDomainLang()?.i18n ?? defaultI18nGetter();
 	});
 }
 
@@ -138,12 +148,13 @@ export function getI18n(): {
 	return {
 		t: getRawI18n().getFixedT(null, namespace),
 		changeLanguage: async (lang) => {
-			const i18n = getRawDomainI18n();
-			if (!i18n) {
+			const domainLang = getDomainLang();
+			if (!domainLang) {
 				throw new Error("Domain not initialized, refusing to change language for main instance.");
 			}
 
-			await i18n.changeLanguage(lang);
+			await domainLang.i18n.changeLanguage(lang);
+			domainLang.isExplicit = true;
 		}
 	};
 }

@@ -191,20 +191,22 @@ export function parseUrlQuery(query: string): string | undefined {
 		return query;
 }
 
-export async function find(query: string): Promise<Array<SearchResult>> {
+type FindOptions = { lang?: string };
+
+export async function find(query: string, options: FindOptions = {}): Promise<Array<SearchResult>> {
 	query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
 	const lonlat_match = matchLonLat(query);
 	if(lonlat_match) {
-		const result = await _findLonLat(lonlat_match);
+		const result = await _findLonLat(lonlat_match, options);
 		return result.map((res) => ({ ...res, id: query }));
 	}
 
 	const osm_match = query.match(/^([nwr])(\d+)$/i);
 	if(osm_match)
-		return await _findOsmObject(osm_match[1], osm_match[2]);
+		return await _findOsmObject(osm_match[1], osm_match[2], options);
 
-	return await _findQuery(query);
+	return await _findQuery(query, options);
 }
 
 export function getFallbackLonLatResult(pointWithZoom: PointWithZoom): SearchResult {
@@ -220,9 +222,19 @@ export function getFallbackLonLatResult(pointWithZoom: PointWithZoom): SearchRes
 	};
 }
 
-async function _findLonLat(lonlatWithZoom: PointWithZoom): Promise<Array<SearchResult>> {
+async function _findLonLat(lonlatWithZoom: PointWithZoom, options: FindOptions = {}): Promise<Array<SearchResult>> {
 	const res = await throttledFetch(
-		`${getConfig().nominatimUrl}/reverse?format=jsonv2&addressdetails=1&polygon_geojson=0&extratags=1&namedetails=1&lat=${encodeURIComponent(lonlatWithZoom.lat)}&lon=${encodeURIComponent(lonlatWithZoom.lon)}&zoom=${encodeURIComponent(lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17)}`
+		`${getConfig().nominatimUrl}/reverse?${new URLSearchParams({
+			format: "jsonv2",
+			addressdetails: "1",
+			polygon_geojson: "0",
+			extratags: "1",
+			namedetails: "1",
+			lat: `${lonlatWithZoom.lat}`,
+			lon: `${lonlatWithZoom.lon}`,
+			zoom: `${lonlatWithZoom.zoom != null ? (lonlatWithZoom.zoom >= 12 ? lonlatWithZoom.zoom+2 : lonlatWithZoom.zoom) : 17}`,
+			...options.lang ? { "accept-language": options.lang } : {}
+		})}`
 	);
 
 	if (!res.ok) {
@@ -242,9 +254,18 @@ async function _findLonLat(lonlatWithZoom: PointWithZoom): Promise<Array<SearchR
 	return [ _prepareSearchResult(body) ];
 }
 
-async function _findQuery(query: string): Promise<Array<SearchResult>> {
+async function _findQuery(query: string, options: FindOptions = {}): Promise<Array<SearchResult>> {
 	const res = await throttledFetch(
-		getConfig().nominatimUrl + "/search?format=jsonv2&polygon_geojson=1&addressdetails=1&namedetails=1&limit=" + encodeURIComponent(limit) + "&extratags=1&q=" + encodeURIComponent(query),
+		`${getConfig().nominatimUrl}/search?${new URLSearchParams({
+			format: "jsonv2",
+			polygon_geojson: "1",
+			addressdetails: "1",
+			namedetails: "1",
+			limit: `${limit}`,
+			extratags: "1",
+			q: query,
+			...options.lang ? { "accept-language": options.lang } : {}
+		})}`
 	);
 
 	if (!res.ok) {
@@ -261,9 +282,17 @@ async function _findQuery(query: string): Promise<Array<SearchResult>> {
 	return body.map(_prepareSearchResult);
 }
 
-async function _findOsmObject(type: string, id: string): Promise<Array<SearchResult>> {
+async function _findOsmObject(type: string, id: string, options: FindOptions = {}): Promise<Array<SearchResult>> {
 	const res = await throttledFetch(
-		`${getConfig().nominatimUrl}/lookup?format=jsonv2&addressdetails=1&polygon_geojson=1&extratags=1&namedetails=1&osm_ids=${encodeURI(type.toUpperCase())}${encodeURI(id)}`
+		`${getConfig().nominatimUrl}/lookup?${new URLSearchParams({
+			format: "jsonv2",
+			addressdetails: "1",
+			polygon_geojson: "1",
+			extratags: "1",
+			namedetails: "1",
+			osm_ids: `${type.toUpperCase()}${encodeURI(id)}`,
+			...options.lang ? { "accept-language": options.lang } : {}
+		})}`
 	);
 
 	if (!res.ok) {

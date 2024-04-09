@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getElevationForPoint, isSearchId, parseUrlQuery } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
@@ -14,7 +14,7 @@
 	import { computed, reactive, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { useI18n } from "../../utils/i18n";
+	import { isLanguageExplicit, useI18n } from "../../utils/i18n";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
@@ -92,7 +92,13 @@
 					const url = parseUrlQuery(query);
 
 					const [newSearchResults, newMapResults] = await Promise.all([
-						url ? client.value.find({ query, loadUrls: true }) : mapContext.value.runOperation(async () => await find(query)),
+						url ? (
+							client.value.find({ query, loadUrls: true })
+						) : (
+							mapContext.value.runOperation(async () => await find(query, {
+								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
+							}))
+						),
 						client.value.padData ? client.value.findOnMap({ query }) : undefined
 					]);
 

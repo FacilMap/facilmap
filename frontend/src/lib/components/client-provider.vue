@@ -8,7 +8,7 @@
 	import Toast from "./ui/toasts/toast.vue";
 	import type { ClientContext } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
-	import { useI18n } from "../utils/i18n";
+	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 
 	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
@@ -60,8 +60,8 @@
 
 		const newClient = new CustomClient(props.serverUrl, props.padId, {
 			query: {
-				lang: getCurrentLanguage(),
-				units: getCurrentUnits()
+				...isLanguageExplicit() ? { lang: getCurrentLanguage() } : {},
+				...isUnitsExplicit() ? { units: getCurrentUnits() } : {}
 			}
 		});
 		connectingClient.value = newClient;

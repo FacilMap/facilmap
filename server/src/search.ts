@@ -6,7 +6,7 @@ import type { SearchResult } from "facilmap-types";
 import stripBomBuf from "strip-bom-buf";
 import config from "./config.js";
 import { find as findSearch, parseUrlQuery } from "facilmap-utils";
-import { getI18n } from "./i18n.js";
+import { getDomainLang, getI18n } from "./i18n.js";
 
 export async function find(query: string, loadUrls = false): Promise<Array<SearchResult> | string> {
 	if (loadUrls) {
@@ -16,7 +16,11 @@ export async function find(query: string, loadUrls = false): Promise<Array<Searc
 		}
 	}
 
-	return await findSearch(query);
+	const lang = getDomainLang();
+
+	return await findSearch(query, {
+		lang: lang?.isExplicit ? lang.i18n.languages.join(",") : lang?.acceptLanguage
+	});
 }
 
 async function _loadUrl(url: string): Promise<string> {

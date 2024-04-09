@@ -5,7 +5,7 @@ import messagesEn from "../../i18n/en.json";
 import messagesDe from "../../i18n/de.json";
 import messagesNbNo from "../../i18n/nb-NO.json";
 import messagesRu from "../../i18n/ru.json";
-import { decodeQueryString, getAcceptHotI18n, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
+import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
 
@@ -45,10 +45,13 @@ onI18nReady((i18n) => {
 	} as any;
 });
 
+const UNITS_COOKIE = "units";
+const UNITS_QUERY = "units";
+
 setCurrentUnitsGetter(() => {
 	const queryParams = decodeQueryString(location.search);
-	const query = queryParams.format ? unitsValidator.safeParse(queryParams.format) : undefined;
-	return query?.success ? query.data : cookies.units;
+	const query = queryParams.format ? unitsValidator.safeParse(queryParams[UNITS_QUERY]) : undefined;
+	return query?.success ? query.data : cookies[UNITS_COOKIE];
 });
 
 export function getI18n(): {
@@ -94,3 +97,13 @@ export const T = defineComponent({
 		};
 	}
 });
+
+export function isLanguageExplicit(): boolean {
+	const queryParams = decodeQueryString(location.search);
+	return !!queryParams[LANG_QUERY] || !!queryParams[LANG_COOKIE];
+}
+
+export function isUnitsExplicit(): boolean {
+	const queryParams = decodeQueryString(location.search);
+	return !!queryParams[UNITS_QUERY] || !!queryParams[UNITS_COOKIE];
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { SearchResult } from "facilmap-types";
-	import { find, formatCoordinates, getElevationForPoint, getFallbackLonLatResult } from "facilmap-utils";
+	import { find, formatCoordinates, getCurrentLanguage, getElevationForPoint, getFallbackLonLatResult } from "facilmap-utils";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import SearchResultInfo from "./search-result-info.vue";
 	import { Util } from "leaflet";
@@ -10,7 +10,7 @@
 	import { injectContextRequired, requireMapContext, requireSearchBoxContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { WritableClickMarkerTabContext } from "./facil-map-context-provider/click-marker-tab-context";
 	import { useToasts } from "./ui/toasts/toasts.vue";
-	import { useI18n } from "../utils/i18n";
+	import { isLanguageExplicit, useI18n } from "../utils/i18n";
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -63,7 +63,11 @@
 			searchBoxContext.value.activateTab(`fm${context.id}-click-marker-tab-${tabs.value.length - 1}`, { expand: true });
 
 			(async () => {
-				const results = await mapContext.value.runOperation(async () => await find(`geo:${formatCoordinates(point)}?z=${mapContext.value.zoom}`));
+				const results = await mapContext.value.runOperation(async () => (
+					await find(`geo:${formatCoordinates(point)}?z=${mapContext.value.zoom}`, {
+						lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
+					})
+				));
 
 				if (results.length > 0) {
 					tab.result = { ...results[0], elevation: tab.result.elevation };
