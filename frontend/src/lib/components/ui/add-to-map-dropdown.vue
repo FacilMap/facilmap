@@ -52,7 +52,7 @@
 
 			mapContext.value?.components.selectionHandler.setSelectedItems(selection, true);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-add-to-map-error`, i18n.t("add-to-map-dropdown.add-error"), err);
+			toasts.showErrorToast(`fm${context.id}-add-to-map-error`, () => i18n.t("add-to-map-dropdown.add-error"), err);
 		} finally {
 			isAdding.value = false;
 		}

@@ -193,7 +193,7 @@
 					const res = await fetch(fetchUrl);
 					const html = await res.text();
 					copyToClipboard(html, { format: "text/html" });
-					toasts.showToast(undefined, i18n.t("export-dialog.export-copied-title", { format: formatOptions.value[format.value] }), i18n.t("export-dialog.export-copied-message", { format: formatOptions.value[format.value] }), { variant: "success", autoHide: true });
+					toasts.showToast(undefined, () => i18n.t("export-dialog.export-copied-title", { format: formatOptions.value[format.value] }), () => i18n.t("export-dialog.export-copied-message", { format: formatOptions.value[format.value] }), { variant: "success", autoHide: true });
 				})());
 			}
 		}

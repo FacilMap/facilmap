@@ -53,7 +53,7 @@
 		try {
 			await client.value.addView(view);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, i18n.t("file-results.import-view-error"), err);
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-view-error"), err);
 		} finally {
 			isAddingView.value.delete(view);
 		}
@@ -70,7 +70,7 @@
 		try {
 			await client.value.addType(type);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, i18n.t("file-results.import-type-error"), err);
+			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-type-error"), err);
 		} finally {
 			isAddingType.value.delete(type);
 		}

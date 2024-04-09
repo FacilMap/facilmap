@@ -8,7 +8,7 @@
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
-	import { computed, ref } from "vue";
+	import { computed, reactive, ref, toRef } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
@@ -62,7 +62,7 @@
 		try {
 			await client.value.deleteLine({ id: props.lineId });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-delete`, i18n.t("line-info.delete-line-error"), err);
+			toasts.showErrorToast(`fm${context.id}-line-info-delete`, () => i18n.t("line-info.delete-line-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}
@@ -94,7 +94,7 @@
 					if(save)
 						await client.value.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
 				} catch (err) {
-					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, i18n.t("line-info.save-line-error"), err);
+					toasts.showErrorToast(`fm${context.id}-line-info-move-error`, () => i18n.t("line-info.save-line-error"), err);
 				} finally {
 					mapContext.value.components.map.fire('fmInteractionEnd');
 					isMoving.value = false;
@@ -108,17 +108,17 @@
 				}
 			};
 
-			toasts.showToast(`fm${context.id}-line-info-move`, i18n.t("line-info.move-line-title"), i18n.t("line-info.move-line-message"), {
+			toasts.showToast(`fm${context.id}-line-info-move`, () => i18n.t("line-info.move-line-title"), () => i18n.t("line-info.move-line-message"), reactive({
 				noCloseButton: true,
 				actions: [
-					{ label: i18n.t("line-info.move-line-finish"), variant: "primary", onClick: () => { void done(true); }},
-					{ label: i18n.t("line-info.move-line-cancel"), onClick: () => { void done(false); } }
+					{ label: toRef(() => i18n.t("line-info.move-line-finish")), variant: "primary" as const, onClick: () => { void done(true); }},
+					{ label: toRef(() => i18n.t("line-info.move-line-cancel")), onClick: () => { void done(false); } }
 				]
-			});
+			}));
 
 			isMoving.value = true;
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, i18n.t("line-info.save-line-error"), err);
+			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, () => i18n.t("line-info.save-line-error"), err);
 
 			toasts.hideToast(`fm${context.id}-line-info-move`);
 			mapContext.value.components.map.fire('fmInteractionEnd');

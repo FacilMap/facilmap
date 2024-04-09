@@ -58,7 +58,7 @@
 			await client.value.editMarker(marker.value);
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-edit-marker-error`, i18n.t("edit-marker-dialog.save-error"), err);
+			toasts.showErrorToast(`fm${context.id}-edit-marker-error`, () => i18n.t("edit-marker-dialog.save-error"), err);
 		}
 	}
 </script>

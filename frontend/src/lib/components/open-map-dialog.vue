@@ -97,7 +97,7 @@
 			results.value = newResults.results;
 			pages.value = Math.ceil(newResults.totalLength / ITEMS_PER_PAGE);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, i18n.t("open-map-dialog.find-pads-error"), err);
+			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, () => i18n.t("open-map-dialog.find-pads-error"), err);
 		} finally {
 			isSearching.value = false;
 		}

@@ -20,7 +20,7 @@
 
 	function copy(): void {
 		copyToClipboard(formattedCoordinates.value);
-		toasts.showToast(undefined, i18n.t("coordinates.copied-title"), i18n.t("coordinates.copied-message"), { variant: "success", autoHide: true });
+		toasts.showToast(undefined, () => i18n.t("coordinates.copied-title"), () => i18n.t("coordinates.copied-message"), { variant: "success", autoHide: true });
 	}
 </script>
 

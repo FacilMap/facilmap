@@ -157,7 +157,7 @@
 
 			modalRef.value?.modal.hide();
 		} catch(err) {
-			toasts.showErrorToast(`fm${context.id}-search-result-info-add-error`, i18n.t("custom-import-dialog.import-error"), err);
+			toasts.showErrorToast(`fm${context.id}-search-result-info-add-error`, () => i18n.t("custom-import-dialog.import-error"), err);
 		}
 	}
 </script>

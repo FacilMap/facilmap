@@ -39,7 +39,7 @@
 		try {
 			await client.value.listenToHistory();
 		} catch (err) {
-			toasts.showErrorToast(`${id}-listen-error`, i18n.t("history-dialog.loading-error"), err);
+			toasts.showErrorToast(`${id}-listen-error`, () => i18n.t("history-dialog.loading-error"), err);
 		} finally {
 			isLoading.value = false;
 		}
@@ -69,7 +69,7 @@
 		try {
 			await client.value.revertHistoryEntry({ id: entry.id });
 		} catch (err) {
-			toasts.showErrorToast(`${id}-revert-error`, i18n.t("history-dialog.revert-error"), err);
+			toasts.showErrorToast(`${id}-revert-error`, () => i18n.t("history-dialog.revert-error"), err);
 		} finally {
 			isReverting.value = undefined;
 		}

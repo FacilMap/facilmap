@@ -353,7 +353,7 @@
 					return; // The destination has changed in the meantime
 
 				console.warn(err.stack || err);
-				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, i18n.t("route-form.find-destination-error", { query }), err);
+				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, () => i18n.t("route-form.find-destination-error", { query }), err);
 			} finally {
 				resolveLoadingPromise();
 			}
@@ -441,7 +441,7 @@
 			if (route && zoom)
 				flyTo(mapContext.value.components.map, getZoomDestinationForRoute(route), smooth);
 		} catch (err: any) {
-			toasts.showErrorToast(`fm${context.id}-route-form-error`, i18n.t("route-form.route-calculation-error"), err);
+			toasts.showErrorToast(`fm${context.id}-route-form-error`, () => i18n.t("route-form.route-calculation-error"), err);
 		}
 	}
 

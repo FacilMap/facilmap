@@ -175,13 +175,13 @@ function showAddConfirmation(context: FacilMapContext, selection: SelectedItem[]
 
 	if (hiddenObjects > 0) {
 		const i18n = getI18n();
-		const title = (
+		const title = () => (
 			lines.length === 0 ? i18n.t("add.hidden-markers-added-title", { count: markers.length }) :
 			markers.length === 0 ? i18n.t("add.hidden-lines-added-title", { count: lines.length }) :
 			i18n.t("add.hidden-objects-added-title", { count: objects })
 		);
 
-		const message = (
+		const message = () => (
 			lines.length === 0 ? i18n.t("add.hidden-markers-added-message", { count: markers.length }) :
 			markers.length === 0 ? i18n.t("add.hidden-lines-added-message", { count: lines.length }) :
 			objects === hiddenObjects ? i18n.t("add.hidden-objects-added-message", { count: objects }) :

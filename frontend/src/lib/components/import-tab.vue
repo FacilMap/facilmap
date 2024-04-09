@@ -86,12 +86,12 @@
 			};
 			const hasAnyItems = result.features.length > 0 || Object.keys(result.types).length > 0 || Object.keys(result.views).length > 0;
 			if (!hasAnyItems && result.errors)
-				toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.parse-error-title"), i18n.t("import-tab.parse-error-message", { count: fileList.length }));
+				toasts.showErrorToast(`fm${context.id}-import-error`, () => i18n.t("import-tab.parse-error-title"), () => i18n.t("import-tab.parse-error-message", { count: fileList.length }));
 			else if (!hasAnyItems)
-				toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.no-geometries-error-title"), i18n.t("import-tab.no-geometries-error-message", { count: fileList.length }));
+				toasts.showErrorToast(`fm${context.id}-import-error`, () => i18n.t("import-tab.no-geometries-error-title"), () => i18n.t("import-tab.no-geometries-error-message", { count: fileList.length }));
 			else {
 				if (result.errors)
-					toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.partial-parse-error-title"), i18n.t("import-tab.partial-parse-error-message"), { variant: "warning" });
+					toasts.showErrorToast(`fm${context.id}-import-error`, () => i18n.t("import-tab.partial-parse-error-title"), () => i18n.t("import-tab.partial-parse-error-message"), { variant: "warning" });
 
 				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.value.components.map));
 				if (result.features.length > 0) {
@@ -107,7 +107,7 @@
 				}, 0);
 			}
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-import-error`, i18n.t("import-tab.read-error-title"), err);
+			toasts.showErrorToast(`fm${context.id}-import-error`, () => i18n.t("import-tab.read-error-title"), err);
 		}
 	}
 

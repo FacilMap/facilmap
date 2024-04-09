@@ -1,7 +1,7 @@
 <script lang="ts">
 	/// <reference types="vite/client" />
 
-	import { createApp, nextTick, onScopeDispose, reactive, ref, type App } from "vue";
+	import { createApp, nextTick, onScopeDispose, reactive, ref, toRef, type App } from "vue";
 	import Toast from "bootstrap/js/dist/toast";
 	import Toasts from "./toasts.vue";
 	import { mapRef } from "../../../utils/vue";
@@ -10,9 +10,9 @@
 	import { getI18n, useI18n } from "../../../utils/i18n";
 
 	export interface ToastContext {
-		showErrorToast(id: string | undefined, title: string, err: any, options?: ToastOptions): Promise<void>;
+		showErrorToast(id: string | undefined, title: string | (() => string), err: any, options?: ToastOptions | (() => ToastOptions)): Promise<void>;
 		toastErrors<C extends (...args: any[]) => any>(callback: C): C;
-		showToast(id: string | undefined, title: string, message: string, options?: ToastOptions): Promise<void>;
+		showToast(id: string | undefined, title: string | (() => string), message: string | (() => string), options?: ToastOptions | (() => ToastOptions)): Promise<void>;
 		hideToast(id: string): Promise<void>;
 		dispose(): void;
 	}
@@ -34,12 +34,13 @@
 		variant?: ThemeColour;
 	}
 
-	interface ToastInstance extends ToastOptions {
+	interface ToastInstance {
 		key: string;
 		id: string | undefined;
 		title: string;
 		message: string;
 		contextId: string;
+		options: ToastOptions;
 	}
 
 	export const toastContainer = document.createElement("div");
@@ -96,7 +97,14 @@
 					void result.hideToast(id);
 				}
 
-				const toast: ToastInstance = { ...options, key: getUniqueId("fm-toast"), id, title, message, contextId };
+				const toast: ToastInstance = reactive({
+					key: getUniqueId("fm-toast"),
+					id,
+					title: toRef(title),
+					message: toRef(message),
+					contextId,
+					options: toRef(options)
+				});
 				toasts.value.push(toast);
 
 				await nextTick();
@@ -132,16 +140,16 @@
 		await new Promise<void>((resolve) => {
 			const toastRef = toastRefs.get(toast)!;
 			toastRef.addEventListener("shown.bs.toast", () => resolve());
-			Toast.getOrCreateInstance(toastRef, { autohide: !!toast.autoHide }).show();
+			Toast.getOrCreateInstance(toastRef, { autohide: !!toast.options.autoHide }).show();
 
 			toastRef.addEventListener("hide.bs.toast", () => {
-				toast.onHide?.();
+				toast.options.onHide?.();
 			});
 
 			toastRef.addEventListener("hidden.bs.toast", () => {
 				toasts.value = toasts.value.filter((t) => t !== toast);
 				toastRefs.delete(toast);
-				toast.onHidden?.();
+				toast.options.onHidden?.();
 			});
 		});
 	}
@@ -168,7 +176,7 @@
 			v-for="toast in toasts"
 			:key="toast.key"
 			class="toast"
-			:class="{ 'border-0': toast.variant }"
+			:class="{ 'border-0': toast.options.variant }"
 			role="alert"
 			aria-live="assertive"
 			aria-atomic="true"
@@ -176,24 +184,24 @@
 		>
 			<div
 				class="toast-header bg-opacity-25 text-break"
-				:class="toast.variant && `bg-${toast.variant} bg-opacity-25`"
+				:class="toast.options.variant && `bg-${toast.options.variant} bg-opacity-25`"
 			>
 				<strong class="me-auto">{{toast.title}}</strong>
-				<button v-if="!toast.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" :aria-label="i18n.t('toasts.close-label')"></button>
+				<button v-if="!toast.options.noCloseButton" type="button" class="btn-close" @click="hideToastInstance(toast)" :aria-label="i18n.t('toasts.close-label')"></button>
 			</div>
 			<div
 				class="toast-body bg-opacity-10 text-break"
-				:class="toast.variant && `bg-${toast.variant} bg-opacity-10`"
+				:class="toast.options.variant && `bg-${toast.options.variant} bg-opacity-10`"
 			>
 				<div>
-					<div v-if="toast.spinner" class="spinner-border spinner-border-sm" role="status">
+					<div v-if="toast.options.spinner" class="spinner-border spinner-border-sm" role="status">
 						<span class="visually-hidden">{{i18n.t("toasts.spinner-label")}}</span>
 					</div>
 					{{toast.message}}
 				</div>
 
-				<div v-if="(toast.actions?.length ?? 0) > 0" class="btn-toolbar mt-2 pt-2 border-top">
-					<template v-for="(action, idx) in toast.actions" :key="idx">
+				<div v-if="(toast.options.actions?.length ?? 0) > 0" class="btn-toolbar mt-2 pt-2 border-top">
+					<template v-for="(action, idx) in toast.options.actions" :key="idx">
 						<button
 							v-if="!action.href"
 							type="button"

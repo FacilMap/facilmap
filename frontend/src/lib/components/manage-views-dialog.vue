@@ -40,7 +40,7 @@
 		try {
 			await client.value.editPad({ defaultViewId: view.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, i18n.t("manage-views-dialog.default-view-error"), err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, () => i18n.t("manage-views-dialog.default-view-error"), err);
 		} finally {
 			isSavingDefaultView.value = undefined;
 		}
@@ -62,7 +62,7 @@
 
 			await client.value.deleteView({ id: view.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, i18n.t("manage-views-dialog.delete-view-error", { viewName: view.name }), err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, () => i18n.t("manage-views-dialog.delete-view-error", { viewName: view.name }), err);
 		} finally {
 			isDeleting.value.delete(view.id);
 		}

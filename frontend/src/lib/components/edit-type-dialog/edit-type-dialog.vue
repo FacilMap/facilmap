@@ -120,7 +120,7 @@
 		} catch (err) {
 			toasts.showErrorToast(
 				`fm${context.id}-edit-type-error`,
-				isCreate.value ? i18n.t("edit-type-dialog.create-type-error") : i18n.t("edit-type-dialog.save-type-error"),
+				() => (isCreate.value ? i18n.t("edit-type-dialog.create-type-error") : i18n.t("edit-type-dialog.save-type-error")),
 				err
 			);
 		}
@@ -135,8 +135,8 @@
 		if (idx === -1) {
 			toasts.showErrorToast(
 				`fm${context.id}-edit-type-dropdown-error`,
-				i18n.t("edit-type-dialog.field-update-error"),
-				new Error(i18n.t("edit-type-dialog.field-disappeared-error"))
+				() => i18n.t("edit-type-dialog.field-update-error"),
+				() => i18n.t("edit-type-dialog.field-disappeared-error")
 			);
 		}
 		type.value.fields[idx] = field;

@@ -57,7 +57,7 @@
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error`, i18n.t("save-view-dialog.save-view-error"), err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error`, () => i18n.t("save-view-dialog.save-view-error"), err);
 		}
 	};
 </script>

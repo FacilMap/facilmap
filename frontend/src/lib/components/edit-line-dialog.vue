@@ -59,7 +59,7 @@
 			await client.value.editLine(omit(line.value, "trackPoints"));
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-edit-line-error`, i18n.t("edit-line-dialog.save-error"), err);
+			toasts.showErrorToast(`fm${context.id}-edit-line-error`, () => i18n.t("edit-line-dialog.save-error"), err);
 		}
 	}
 </script>

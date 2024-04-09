@@ -71,7 +71,7 @@
 
 				tab.isLoading = false;
 			})().catch((err) => {
-				toasts.showErrorToast(`find-error-${tab.id}`, i18n.t("click-marker-tab.look-up-error"), err);
+				toasts.showErrorToast(`find-error-${tab.id}`, () => i18n.t("click-marker-tab.look-up-error"), err);
 			});
 
 			(async () => {

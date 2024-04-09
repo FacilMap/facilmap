@@ -43,7 +43,7 @@
 
 			await client.value.deleteType({ id: type.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, i18n.t("manage-types-dialog.delete-error", { typeName: formatTypeName(type.name) }), err);
+			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, () => i18n.t("manage-types-dialog.delete-error", { typeName: formatTypeName(type.name) }), err);
 		} finally {
 			delete isDeleting.value[type.id];
 		}

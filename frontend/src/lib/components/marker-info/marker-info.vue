@@ -60,7 +60,7 @@
 		try {
 			await client.value.deleteMarker({ id: props.markerId });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, i18n.t("marker-info.delete-marker-error"), err);
+			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, () => i18n.t("marker-info.delete-marker-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}

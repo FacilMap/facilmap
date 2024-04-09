@@ -85,7 +85,7 @@
 					await client.value.deleteLine({ id: object.id });
 			}
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, i18n.t("multiple-info.delete-objects-error"), err);
+			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, () => i18n.t("multiple-info.delete-objects-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}

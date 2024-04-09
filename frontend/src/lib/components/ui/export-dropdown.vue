@@ -31,7 +31,7 @@
 			const exported = await props.getExport(format);
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${getSafeFilename(props.filename)}.gpx`);
 		} catch(err: any) {
-			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, i18n.t("export-dropdown.export-error"), err);
+			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, () => i18n.t("export-dropdown.export-error"), err);
 		} finally {
 			isExporting.value = false;
 		}

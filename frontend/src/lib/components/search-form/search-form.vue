@@ -134,7 +134,7 @@
 						}
 					}
 				} catch(err) {
-					toasts.showErrorToast(`fm${context.id}-search-form-error`, i18n.t("search-form.search-error"), err);
+					toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);
 					return;
 				}
 			}

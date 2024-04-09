@@ -70,7 +70,7 @@
 				await client.value.editPad(padData.value);
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, props.isCreate ? i18n.t("pad-settings-dialog.create-map-error") : i18n.t("pad-settings-dialog.save-map-error"), err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, () => (props.isCreate ? i18n.t("pad-settings-dialog.create-map-error") : i18n.t("pad-settings-dialog.save-map-error")), err);
 		}
 	};
 
@@ -92,7 +92,7 @@
 			await client.value.deletePad();
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, i18n.t("pad-settings-dialog.delete-map-error"), err);
+			toasts.showErrorToast(`fm${context.id}-pad-settings-error`, () => i18n.t("pad-settings-dialog.delete-map-error"), err);
 		} finally {
 			isDeleting.value = false;
 		}

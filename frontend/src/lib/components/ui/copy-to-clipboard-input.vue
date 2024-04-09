@@ -36,7 +36,7 @@
 
 	function copy(): void {
 		copyToClipboard(fullUrl.value);
-		toasts.showToast(undefined, props.successTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title"), props.successMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message"), { variant: "success", autoHide: true });
+		toasts.showToast(undefined, () => (props.successTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title")), () => (props.successMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message")), { variant: "success", autoHide: true });
 	}
 </script>
 

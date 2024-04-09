@@ -124,7 +124,7 @@
 					}
 				}).catch((err) => {
 					if (validationErrorPromise.value === promise) {
-						toasts.showErrorToast("fm-validity-error", i18n.t("validated-field.validation-error"), err);
+						toasts.showErrorToast("fm-validity-error", () => i18n.t("validated-field.validation-error"), err);
 						resolvedValidationError.value = i18n.t("validated-field.validation-error");
 						isValidating.value = false;
 					}
@@ -135,7 +135,7 @@
 				isValidating.value = false;
 			}
 		} catch (err: any) {
-			toasts.showErrorToast("fm-validity-error", i18n.t("validated-field.validation-error"), err);
+			toasts.showErrorToast("fm-validity-error", () => i18n.t("validated-field.validation-error"), err);
 			validationErrorPromise.value = undefined;
 			resolvedValidationError.value = i18n.t("validated-field.validation-error");
 			isValidating.value = false;
