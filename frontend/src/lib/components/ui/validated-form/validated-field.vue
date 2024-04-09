@@ -97,6 +97,14 @@
 		debouncedValidate = pDebounce(validate, props.debounceMs ?? 0);
 	});
 
+	// Memoize validators prop with a shallow equality check, since mostly we specify them using an inline array
+	const memoizedValidators = ref<Array<Validator<T>>>([]);
+	watchEffect(() => {
+		if (props.validators.length !== memoizedValidators.value.length || props.validators.some((v, i) => memoizedValidators.value[i] !== v)) {
+			memoizedValidators.value = props.validators;
+		}
+	});
+
 	watchEffect((onCleanup) => {
 		const abortController = new AbortController();
 		onCleanup(() => {
@@ -106,7 +114,7 @@
 		try {
 			toasts.hideToast("fm-validity-error");
 
-			const result = (props.debounceMs ? debouncedValidate : validate)(props.value, props.validators, abortController.signal);
+			const result = (props.debounceMs ? debouncedValidate : validate)(props.value, memoizedValidators.value, abortController.signal);
 			if (isPromise(result)) {
 				isValidating.value = true;
 				const promise = validationErrorPromise.value = result.then((res) => {
