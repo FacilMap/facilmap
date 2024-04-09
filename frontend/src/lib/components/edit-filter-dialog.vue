@@ -131,7 +131,7 @@
 									<code>data.Description</code>
 								</template>
 								<template #example2>
-									<code>prop(data, &quot;Description&quot;)</code>)
+									<code>prop(data, &quot;Description&quot;)</code>
 								</template>
 							</T>
 							<br />

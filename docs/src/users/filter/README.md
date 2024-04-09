@@ -16,7 +16,7 @@ Field values are available as `data`. By default, markers and objects have only 
 
 Be aware that in filter expression, comparison is case sensitive. So the above expression would not match an object whose status is “done”. For case-insensitive comparison, compare the lower-case values: `lower(data.Status) == "done"`.
 
-Checkbox field values are internally represented by the values `0` (unchecked) and `1` (checked). For example, to how only values where the checkbox field “Confirmed” is checked, use `data.Confirmed == 1`.
+Checkbox field values are internally represented by the values `0` (unchecked) and `1` (checked). For example, to show only values where the checkbox field “Confirmed” is checked, use `data.Confirmed == 1`.
 
 The regular expression operator `~=` allows for more advanced text matching. For example, to show all objects whose name contains “Untitled”, use `lower(name) ~= "untitled"`. Regular expressions allow to define very complex criteria what the text should look like. There are plenty of tutorials online how to use regular expressions, for example [RegexOne](https://regexone.com/).
 
