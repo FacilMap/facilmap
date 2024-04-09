@@ -55,6 +55,8 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "synagogue", query: "nwr[amenity=place_of_worship][religion=jewish]", label: i18n.t("overpass-presets.synagogue") },
 					// Check only for cemetery for human beings
 					{ key: "cemetery", query: "nwr[landuse=cemetery][animal!~'.']", label: i18n.t("overpass-presets.cemetery") }
+				], [
+					{ key: "amenities", query: "nwr[amenity]", label: i18n.t("overpass-presets.amenities") }
 				]
 			]
 		},
@@ -79,21 +81,16 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "museum", query: "(node[tourism=museum];way[tourism=museum];rel[tourism=museum];)", label: i18n.t("overpass-presets.museum") },
 					{ key: "nudism", query: "nwr[nudism][nudism!=no]", label: i18n.t("overpass-presets.nudism") },
 					{ key: "picnic", query: "(node[tourism=picnic_site];way[tourism=picnic_site];rel[tourism=picnic_site];node[leisure=picnic_table];)", label: i18n.t("overpass-presets.picnic") },
+					{ key: "sauna", query: "(node[leisure=sauna];way[leisure=sauna];rel[leisure=sauna];)", label: i18n.t("overpass-presets.sauna") },
+					{ key: "spa", query: "(node[leisure=spa];way[leisure=spa];rel[leisure=spa];)", label: i18n.t("overpass-presets.spa") },
 					{ key: "statue", query: "(node[historic=statue];node[landmark=statue];node[tourism=artwork][artwork_type=statue];)", label: i18n.t("overpass-presets.statue") },
 					{ key: "themepark", query: "(node[tourism=theme_park];way[tourism=theme_park];rel[tourism=theme_park];)", label: i18n.t("overpass-presets.themepark") },
 					{ key: "viewpoint", query: "(node[tourism=viewpoint];way[tourism=viewpoint];rel[tourism=viewpoint];)", label: i18n.t("overpass-presets.viewpoint") },
 					{ key: "vineyard", query: "(node[landuse=vineyard];way[landuse=vineyard];rel[landuse=vineyard];)", label: i18n.t("overpass-presets.vineyard") },
 					{ key: "windmill", query: "(node[man_made=windmill];way[man_made=windmill];rel[man_made=windmill];)", label: i18n.t("overpass-presets.windmill") },
 					{ key: "watermill", query: "(node[man_made=watermill];way[man_made=watermill];rel[man_made=watermill];)", label: i18n.t("overpass-presets.watermill") },
-					{ key: "zoo", query: "(node[tourism=zoo];way[tourism=zoo];rel[tourism=zoo];)", label: i18n.t("overpass-presets.zoo") }
-				], [
-					{ key: "tourism", query: "(node[tourism=yes];way[tourism=yes];rel[tourism=yes];)", label: i18n.t("overpass-presets.tourism") }
-				]
-			]
-		},
-		{
-			label: i18n.t("overpass-presets.category-hotels"),
-			presets: [
+					{ key: "zoo", query: "(node[tourism=zoo];way[tourism=zoo];rel[tourism=zoo];)", label: i18n.t("overpass-presets.zoo") },
+				],
 				[
 					// Places to stay
 					{ key: "alpinehut", query: "(node[tourism=alpine_hut];way[tourism=alpine_hut];rel[tourism=alpine_hut];)", label: i18n.t("overpass-presets.alpinehut") },
@@ -104,10 +101,9 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "hostel", query: "(node[tourism=hostel];way[tourism=hostel];rel[tourism=hostel];)", label: i18n.t("overpass-presets.hostel") },
 					{ key: "hotel", query: "(node[tourism=hotel];way[tourism=hotel];rel[tourism=hotel];)", label: i18n.t("overpass-presets.hotel") },
 					{ key: "motel", query: "(node[tourism=motel];way[tourism=motel];rel[tourism=motel];)", label: i18n.t("overpass-presets.motel") }
-				], [
-					{ key: "casino", query: "(node[amenity=casino];way[amenity=casino];rel[amenity=casino];)", label: i18n.t("overpass-presets.casino") },
-					{ key: "spa", query: "(node[leisure=spa];way[leisure=spa];rel[leisure=spa];)", label: i18n.t("overpass-presets.spa") },
-					{ key: "sauna", query: "(node[leisure=sauna];way[leisure=sauna];rel[leisure=sauna];)", label: i18n.t("overpass-presets.sauna") }
+				],
+				[
+					{ key: "tourism", query: "nwr[tourism]", label: i18n.t("overpass-presets.tourism") }
 				]
 			]
 		},
@@ -131,12 +127,32 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "tabletennis", query: "(way[sport=table_tennis];node[sport=table_tennis];)", label: i18n.t("overpass-presets.tabletennis") },
 					{ key: "tennis", query: "(way[sport=tennis];node[sport=tennis];)", label: i18n.t("overpass-presets.tennis") },
 					{ key: "volleyball", query: "(way[sport=volleyball];node[sport=volleyball];)", label: i18n.t("overpass-presets.volleyball") }
+				],
+				[
+					{ key: "sports", query: "nwr[sport]", label: i18n.t("overpass-presets.sports") }
 				]
 			]
 		},
 		{
 			label: i18n.t("overpass-presets.category-shops"),
 			presets: [
+				[
+					// food shops
+					{ key: "alcoholshop", query: "(node[shop=alcohol];way[shop=alcohol];rel[shop=alcohol];)", label: i18n.t("overpass-presets.alcoholshop") },
+					{ key: "bakery", query: "(node[shop=bakery];way[shop=bakery];)", label: i18n.t("overpass-presets.bakery") },
+					{ key: "beverageshop", query: "(node[shop=beverages];way[shop=beverages];rel[shop=beverages];)", label: i18n.t("overpass-presets.beverageshop") },
+					{ key: "butcher", query: "(node[shop=butcher];way[shop=butcher];rel[shop=butcher];)", label: i18n.t("overpass-presets.butcher") },
+					{ key: "cheeseshop", query: "(node[shop=cheese];way[shop=cheese];rel[shop=cheese];)", label: i18n.t("overpass-presets.cheeseshop") },
+					{ key: "confectionery", query: "(node[shop~'chocolate|confectionery'];way[shop~'chocolate|confectionery'];rel[shop~'chocolate|confectionery'];)", label: i18n.t("overpass-presets.confectionery") },
+					{ key: "coffeeshop", query: "(node[shop=coffee];way[shop=coffee];rel[shop=coffee];)", label: i18n.t("overpass-presets.coffeeshop") },
+					{ key: "dairyshop", query: "(node[shop=dairy];way[shop=dairy];)", label: i18n.t("overpass-presets.dairyshop") },
+					{ key: "delishop", query: "(node[shop=deli];way[shop=deli];node[shop=delicatessen];way[shop=delicatessen];)", label: i18n.t("overpass-presets.delishop") },
+					{ key: "groceryshop", query: "(node[shop=grocery];way[shop=grocery];)", label: i18n.t("overpass-presets.groceryshop") },
+					{ key: "organicshop", query: "(node[shop=organic];way[shop=organic];rel[shop=organic];)", label: i18n.t("overpass-presets.organicshop") },
+					{ key: "seafoodshop", query: "(node[shop=seafood];way[shop=seafood];rel[shop=seafood];)", label: i18n.t("overpass-presets.seafoodshop") },
+					{ key: "supermarket", query: "(node[shop=supermarket];way[shop=supermarket];)", label: i18n.t("overpass-presets.supermarket") },
+					{ key: "wineshop", query: "(node[shop=wine];way[shop=wine];rel[shop=wine];)", label: i18n.t("overpass-presets.wineshop") }
+				],
 				[
 					//Various shops (excluding food)
 					{ key: "beautyshop", query: "(node[shop=beauty];way[shop=beauty];rel[shop=beauty];)", label: i18n.t("overpass-presets.beautyshop") },
@@ -168,28 +184,9 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "mall", query: "(node[shop=mall];way[shop=mall];rel[shop=mall];)", label: i18n.t("overpass-presets.mall") },
 					{ key: "textileshop", query: "(node[shop=textiles];way[shop=textiles];rel[shop=textiles];)", label: i18n.t("overpass-presets.textileshop") },
 					{ key: "toyshop", query: "(node[shop=toys];way[shop=toys];rel[shop=toys];)", label: i18n.t("overpass-presets.toyshop") }
-				]
-			]
-		},
-		{
-			label: i18n.t("overpass-presets.category-food-shops"),
-			presets: [
+				],
 				[
-					// food shops
-					{ key: "alcoholshop", query: "(node[shop=alcohol];way[shop=alcohol];rel[shop=alcohol];)", label: i18n.t("overpass-presets.alcoholshop") },
-					{ key: "bakery", query: "(node[shop=bakery];way[shop=bakery];)", label: i18n.t("overpass-presets.bakery") },
-					{ key: "beverageshop", query: "(node[shop=beverages];way[shop=beverages];rel[shop=beverages];)", label: i18n.t("overpass-presets.beverageshop") },
-					{ key: "butcher", query: "(node[shop=butcher];way[shop=butcher];rel[shop=butcher];)", label: i18n.t("overpass-presets.butcher") },
-					{ key: "cheeseshop", query: "(node[shop=cheese];way[shop=cheese];rel[shop=cheese];)", label: i18n.t("overpass-presets.cheeseshop") },
-					{ key: "confectionery", query: "(node[shop~'chocolate|confectionery'];way[shop~'chocolate|confectionery'];rel[shop~'chocolate|confectionery'];)", label: i18n.t("overpass-presets.confectionery") },
-					{ key: "coffeeshop", query: "(node[shop=coffee];way[shop=coffee];rel[shop=coffee];)", label: i18n.t("overpass-presets.coffeeshop") },
-					{ key: "dairyshop", query: "(node[shop=dairy];way[shop=dairy];)", label: i18n.t("overpass-presets.dairyshop") },
-					{ key: "delishop", query: "(node[shop=deli];way[shop=deli];node[shop=delicatessen];way[shop=delicatessen];)", label: i18n.t("overpass-presets.delishop") },
-					{ key: "groceryshop", query: "(node[shop=grocery];way[shop=grocery];)", label: i18n.t("overpass-presets.groceryshop") },
-					{ key: "organicshop", query: "(node[shop=organic];way[shop=organic];rel[shop=organic];)", label: i18n.t("overpass-presets.organicshop") },
-					{ key: "seafoodshop", query: "(node[shop=seafood];way[shop=seafood];rel[shop=seafood];)", label: i18n.t("overpass-presets.seafoodshop") },
-					{ key: "supermarket", query: "(node[shop=supermarket];way[shop=supermarket];)", label: i18n.t("overpass-presets.supermarket") },
-					{ key: "wineshop", query: "(node[shop=wine];way[shop=wine];rel[shop=wine];)", label: i18n.t("overpass-presets.wineshop") }
+					{ key: "shops", query: "nwr[shop]", label: i18n.t("overpass-presets.shops") }
 				]
 			]
 		},
