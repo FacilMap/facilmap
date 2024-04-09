@@ -25,7 +25,7 @@
   ],
   "scripts": {
     "build": "vite build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist out",
     "prod-server": "DOTENV_CONFIG_PATH=../config.env node ./bin/facilmap-server.js",
     "server": "DOTENV_CONFIG_PATH=../config.env NODE_OPTIONS='--import tsx' vite-node ./server.ts",
     "dev-server": "FM_DEV=true DOTENV_CONFIG_PATH=../config.env NODE_OPTIONS='--import tsx' vite-node ./server.ts",

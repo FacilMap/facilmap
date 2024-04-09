@@ -31,7 +31,7 @@
   ],
   "scripts": {
     "build": "vite build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist out out.node",
     "dev-server": "vite",
     "download-icons": "tsx ./download-icons.ts",
     "check-types": "tsc -b --emitDeclarationOnly",

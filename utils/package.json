@@ -21,7 +21,7 @@
   "scripts": {
     "build": "vite build",
     "watch": "vite build --watch",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist out out.node",
     "check-types": "tsc -b --emitDeclarationOnly",
     "test": "vitest run",
     "test-watch": "vitest"

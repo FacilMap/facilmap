@@ -32,7 +32,7 @@
     "build": "yarn build:lib && yarn build:app",
     "build:lib": "vite --config vite-lib.config.ts build",
     "build:app": "NODE_OPTIONS='--import tsx' vite build",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist out out.node",
     "dev-server": "NODE_OPTIONS='--import tsx' vite",
     "test": "NODE_OPTIONS='--import tsx' vitest run",
     "test-watch": "NODE_OPTIONS='--import tsx' vitest",
