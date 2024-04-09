@@ -368,7 +368,7 @@
         "tollway-no": "No tollway",
         "tollway-yes": "Tollway",
         "traildifficulty-unknown": "Missing SAC tag",
-        "access-unknown": "Unknown",
+        "access-yes": "Yes",
         "access-no": "No",
         "access-customers": "Customers",
         "access-destination": "Destination",
@@ -537,7 +537,7 @@
         "title": "Manage Views",
         "make-default": "Make default",
         "delete": "Delete",
-        "reorder": "Reorder"
+        "reorder-alt": "Reorder"
     },
     "marker-info": {
         "delete-marker-title": "Delete marker",
