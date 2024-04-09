@@ -21,6 +21,19 @@
         "programs-libraries": "Programme/Bibliotheken",
         "icons": "Symbole"
     },
+    "add": {
+        "hidden-markers-added-title_one": "Marker erstellt",
+        "hidden-markers-added-title_other": "{{count}} Marker erstellt",
+        "hidden-markers-added-message_one": "Der Marker wurde erstellt, aber der aktive Filter verhindert, dass er angezeigt wird.",
+        "hidden-markers-added-message_other": "{{count}} Marker wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden.",
+        "hidden-lines-added-title_one": "Linie erstellt",
+        "hidden-lines-added-title_other": "{{count}} Linien erstellt",
+        "hidden-lines-added-message_one": "Die Linie wurde erstellt, aber der aktive Filter verhindert, dass sie angezeigt wird.",
+        "hidden-lines-added-message_other": "{{count}} Linien wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden.",
+        "hidden-objects-added-title": "{{count}} Objekte erstellt",
+        "hidden-objects-added-message": "{{count}} Objekte wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden",
+        "hidden-objects-added-message-some": "{{count}} Objekte wurden erstellt, aber der aktive Filter verhindert, dass manche von ihnen angezeigt werden."
+    },
     "add-to-map-dropdown": {
         "fallback-label": "Zur Karte hinzufügen",
         "add-error": "Fehler beim Hinzufügen der Objekte",
@@ -635,9 +648,40 @@
         "default-view": "Standardansicht",
         "make-default": "Zur Standardansicht machen"
     },
+    "search-result-info": {
+        "coordinates": "Koordinaten",
+        "type": "Art",
+        "address": "Addresse",
+        "zoom-to-result-label": "Zum Ergebnis zoomen"
+    },
     "shape-picker": {
         "unknown-shape-error": "Unbekannte Form",
         "no-shapes-error": "Es konnten keine Formen gefunden werden."
+    },
+    "share-dialog": {
+        "type-admin": "Admin-Link",
+        "type-write": "Schreib-Link",
+        "type-read": "Lese-Link",
+        "title": "Teilen",
+        "settings": "Einstellungen",
+        "include-view": "Aktuelle Ansicht einschließen (Mittelpunkt: {{centre}}; Zoomstufe: {{zoom}}; Kartenstil: {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
+        "include-view-interpolation-layers-joiner": ", ",
+        "include-view-interpolation-conditionalPois": ", POIs: {{pois}}",
+        "include-view-interpolation-conditionalPois-interpolation-pois-joiner": ", ",
+        "include-view-interpolation-conditionalSelection": "; aktive(s) Objekt(e): {{description}}",
+        "include-view-interpolation-conditionalFilter": "; Filter: {{filter}}",
+        "show-toolbox": "Menü anzeigen",
+        "show-search-box": "Suchbereich anzeigen",
+        "show-legend": "Legende anzeigen",
+        "link-type": "Berechtigungen",
+        "share-link": "Link teilen",
+        "embed": "Karte einbetten",
+        "link-copied-title": "Link kopiert",
+        "link-copied-message": "Der Link zur Karte wurde in die Zwischenablage kopiert.",
+        "embed-copied-title": "Code kopiert",
+        "embed-copied-message": "Der Code zum Einbetten von {{appName}} wurde in die Zwischenablage kopiert.",
+        "embed-explanation": "Fügen Sie diesen HTML-Code auf einer Webseite ein, um {{appName}} einzubetten. {{learnMore}}",
+        "embed-explanation-interpolation-learnMore": "Mehr erfahren"
     },
     "stroke-picker": {
         "solid": "Durchgezogen",

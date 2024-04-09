@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { renderOsmTag } from "facilmap-utils";
+	import { formatCoordinates, renderOsmTag } from "facilmap-utils";
 	import type { FindOnMapResult, Point, SearchResult, Type } from "facilmap-types";
 	import Icon from "./ui/icon.vue";
 	import type { FileResult } from "../utils/files";
@@ -12,6 +12,9 @@
 	import ZoomToObjectButton from "./ui/zoom-to-object-button.vue";
 	import type { RouteDestination } from "./facil-map-context-provider/route-form-tab-context";
 	import AddToMapDropdown from "./ui/add-to-map-dropdown.vue";
+	import { useI18n } from "../utils/i18n";
+
+	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		result: SearchResult | FileResult;
@@ -37,9 +40,9 @@
 	const routeDestination = computed<RouteDestination | undefined>(() => {
 		if (isFileResult(props.result)) {
 			if (props.result.lat != null && props.result.lon != null) {
-				return { query: `${props.result.lat},${props.result.lon}` };
+				return { query: formatCoordinates({ lat: props.result.lat, lon: props.result.lon }) };
 			} else if (props.result.geojson?.type === "Point") {
-				return { query: `${props.result.geojson.coordinates[1]},${props.result.geojson.coordinates[0]}` };
+				return { query: formatCoordinates({ lat: props.result.geojson.coordinates[1], lon: props.result.geojson.coordinates[0] }) };
 			} else {
 				return undefined;
 			}
@@ -65,17 +68,17 @@
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="result.lat != null && result.lon != null">
-				<dt class="pos">Coordinates</dt>
+				<dt class="pos">{{i18n.t("search-result-info.coordinates")}}</dt>
 				<dd class="pos"><Coordinates :point="result as Point" :ele="result.elevation"></Coordinates></dd>
 			</template>
 
 			<template v-if="result.type">
-				<dt>Type</dt>
+				<dt>{{i18n.t("search-result-info.type")}}</dt>
 				<dd class="text-break">{{result.type}}</dd>
 			</template>
 
 			<template v-if="result.address">
-				<dt>Address</dt>
+				<dt>{{i18n.t("search-result-info.address")}}</dt>
 				<dd class="text-break">{{result.address}}</dd>
 			</template>
 
@@ -94,7 +97,7 @@
 		<div class="btn-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
-				label="Zoom to search result"
+				:label="i18n.t('search-result-info.zoom-to-result-label')"
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>

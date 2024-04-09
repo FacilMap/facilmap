@@ -11,6 +11,7 @@ import { useToasts } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import type { Ref } from "vue";
+import { getI18n } from "./i18n";
 
 export type MarkerWithTags = Omit<Marker<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
 export type LineWithTags = Omit<Line<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
@@ -173,17 +174,18 @@ function showAddConfirmation(context: FacilMapContext, selection: SelectedItem[]
 	const hiddenObjects = [...markers, ...lines].filter((obj) => !mapContext.value.components.map.fmFilterFunc(obj, client.value.types[obj.typeId])).length;
 
 	if (hiddenObjects > 0) {
+		const i18n = getI18n();
 		const title = (
-			lines.length === 0 ? (markers.length === 1 ? "Marker added" : `${markers.length} markers added`) :
-			markers.length === 0 ? (lines.length === 1 ? "Line added" : `${lines.length} lines added`) :
-			`${objects} objects added`
+			lines.length === 0 ? i18n.t("add.hidden-markers-added-title", { count: markers.length }) :
+			markers.length === 0 ? i18n.t("add.hidden-lines-added-title", { count: lines.length }) :
+			i18n.t("add.hidden-objects-added-title", { count: objects })
 		);
 
 		const message = (
-			lines.length === 0 ? (markers.length === 1 ? "The marker has been added successfully, but the active filter is preventing it from being shown." : `${markers.length} markers have been added successfully, but the active filter is preventing them from being shown.`) :
-			markers.length === 0 ? (lines.length === 1 ? "The line has been added successfully, but the active filter is preventing it from being shown." : `${lines.length} lines have been added successfully, but the active filter is preventing them from being shown.`) :
-			objects === hiddenObjects ? `${objects} objects have been added successfully, but the active filter is preventing them from being shown.` :
-			`${objects} objects have been added successfully, but the active filter is preventing some of them from being shown.`
+			lines.length === 0 ? i18n.t("add.hidden-markers-added-message", { count: markers.length }) :
+			markers.length === 0 ? i18n.t("add.hidden-lines-added-message", { count: lines.length }) :
+			objects === hiddenObjects ? i18n.t("add.hidden-objects-added-message", { count: objects }) :
+			i18n.t("add.hidden-objects-added-message-some", { count: objects })
 		);
 
 		const toasts = useToasts(true);

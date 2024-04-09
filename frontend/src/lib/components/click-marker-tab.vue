@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { SearchResult } from "facilmap-types";
-	import { find, getElevationForPoint, getFallbackLonLatResult, round } from "facilmap-utils";
+	import { find, formatCoordinates, getElevationForPoint, getFallbackLonLatResult } from "facilmap-utils";
 	import { SearchResultsLayer } from "facilmap-leaflet";
 	import SearchResultInfo from "./search-result-info.vue";
 	import { Util } from "leaflet";
@@ -63,7 +63,7 @@
 			searchBoxContext.value.activateTab(`fm${context.id}-click-marker-tab-${tabs.value.length - 1}`, { expand: true });
 
 			(async () => {
-				const results = await mapContext.value.runOperation(async () => await find(`geo:${round(point.lat, 5)},${round(point.lon, 5)}?z=${mapContext.value.zoom}`));
+				const results = await mapContext.value.runOperation(async () => await find(`geo:${formatCoordinates(point)}?z=${mapContext.value.zoom}`));
 
 				if (results.length > 0) {
 					tab.result = { ...results[0], elevation: tab.result.elevation };

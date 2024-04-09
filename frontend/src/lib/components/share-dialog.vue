@@ -2,16 +2,18 @@
 	import { getLayers } from "facilmap-leaflet";
 	import { getLegendItems } from "./legend/legend-utils";
 	import type { Writable } from "facilmap-types";
-	import { quoteHtml, round } from "facilmap-utils";
+	import { formatCoordinates, quoteHtml } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
+	import { T, useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -31,7 +33,7 @@
 		return [
 			baseLayers[mapContext.value.layers.baseLayer]?.options.fmName || mapContext.value.layers.baseLayer,
 			...mapContext.value.layers.overlays.map((key) => overlays[key].options.fmName || key)
-		].join(", ");
+		].join(i18n.t("share-dialog.include-view-interpolation-layers-joiner"));
 	});
 
 	const hasLegend = computed(() => {
@@ -40,9 +42,9 @@
 
 	const padIdTypes = computed(() => {
 		return [
-			{ value: 2, text: 'Admin' },
-			{ value: 1, text: 'Writable' },
-			{ value: 0, text: 'Read-only' }
+			{ value: 2, text: i18n.t("share-dialog.type-admin") },
+			{ value: 1, text: i18n.t("share-dialog.type-write") },
+			{ value: 0, text: i18n.t("share-dialog.type-read") }
 		].filter((option) => client.value.writable != null && option.value <= client.value.writable);
 	});
 
@@ -69,13 +71,13 @@
 
 <template>
 	<ModalDialog
-		title="Share"
+		:title="i18n.t('share-dialog.title')"
 		size="lg"
 		class="fm-share-dialog"
 		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
-			<label class="col-sm-3 col-form-label">Settings</label>
+			<label class="col-sm-3 col-form-label">{{i18n.t("share-dialog.settings")}}</label>
 			<div class="col-sm-9">
 				<div class="form-check fm-form-check-with-label">
 					<input
@@ -86,7 +88,46 @@
 						:disabled="!client.padData"
 					/>
 					<label :for="`${id}-include-map-view-input`" class="form-check-label">
-						Include current map view (centre: <code>{{round(mapContext.center.lat, 5)}},{{round(mapContext.center.lng, 5)}}</code>; zoom level: <code>{{mapContext.zoom}}</code>; layer(s): {{layers}}<template v-if="mapContext.overpassIsCustom ? !!mapContext.overpassCustom : mapContext.overpassPresets.length > 0">; POIs: <code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template></template><template v-if="mapContext.activeQuery">; active object(s): <template v-if="mapContext.activeQuery.description">{{mapContext.activeQuery.description}}</template><code v-else>{{mapContext.activeQuery.query}}</code></template><template v-if="mapContext.filter">; filter: <code>{{mapContext.filter}}</code></template>)
+						<T k="share-dialog.include-view">
+							<template #centre>
+								<code>{{formatCoordinates({ lat: mapContext.center.lat, lon: mapContext.center.lng })}}</code>
+							</template>
+							<template #zoom>
+								<code>{{mapContext.zoom}}</code>
+							</template>
+							<template #layers>
+								{{layers}}
+							</template>
+							<template #conditionalPois>
+								<template v-if="mapContext.overpassIsCustom ? !!mapContext.overpassCustom : mapContext.overpassPresets.length > 0">
+									<T k="share-dialog.include-view-interpolation-conditionalPois">
+										<template #pois>
+											<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code>
+											<template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(i18n.t("share-dialog.include-view-interpolation-conditionalPois-interpolation-pois-joiner"))}}</template>
+										</template>
+									</T>
+								</template>
+							</template>
+							<template #conditionalSelection>
+								<template v-if="mapContext.activeQuery">
+									<T k="share-dialog.include-view-interpolation-conditionalSelection">
+										<template #description>
+											<template v-if="mapContext.activeQuery.description">{{mapContext.activeQuery.description}}</template>
+											<code v-else>{{mapContext.activeQuery.query}}</code>
+										</template>
+									</T>
+								</template>
+							</template>
+							<template #conditionalFilter>
+								<template v-if="mapContext.filter">
+									<T k="share-dialog.include-view-interpolation-conditionalFilter">
+										<template #filter>
+											<code>{{mapContext.filter}}</code>
+										</template>
+									</T>
+								</template>
+							</template>
+						</T>
 					</label>
 				</div>
 
@@ -98,7 +139,7 @@
 						v-model="showToolbox"
 					/>
 					<label :for="`${id}-show-toolbox-input`" class="form-check-label">
-						Show toolbox
+						{{i18n.t("share-dialog.show-toolbox")}}
 					</label>
 				</div>
 
@@ -110,7 +151,7 @@
 						v-model="showSearch"
 					/>
 					<label :for="`${id}-show-search-input`" class="form-check-label">
-						Show search box
+						{{i18n.t("share-dialog.show-search-box")}}
 					</label>
 				</div>
 
@@ -122,7 +163,7 @@
 						v-model="showLegend"
 					/>
 					<label :for="`${id}-show-legend-input`" class="form-check-label">
-						Show legend
+						{{i18n.t("share-dialog.show-legend")}}
 					</label>
 				</div>
 			</div>
@@ -130,7 +171,7 @@
 
 		<template v-if="client.padData">
 			<div class="row mb-3">
-				<label :for="`${id}-padIdType-input`" class="col-sm-3 col-form-label">Link type</label>
+				<label :for="`${id}-padIdType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
 				<div class="col-sm-9">
 					<select :id="`${id}-padIdType-input`" class="form-select" v-model="padIdType">
 						<option v-for="type in padIdTypes" :key="type.value" :value="type.value">{{type.text}}</option>
@@ -146,7 +187,7 @@
 					href="javascript:"
 					:class="{ active: activeShareTab === 0 }"
 					@click="activeShareTab = 0"
-				>Share link</a>
+				>{{i18n.t("share-dialog.share-link")}}</a>
 			</li>
 
 			<li class="nav-item">
@@ -155,7 +196,7 @@
 					href="javascript:"
 					:class="{ active: activeShareTab === 1 }"
 					@click="activeShareTab = 1"
-				>Embed</a>
+				>{{i18n.t("share-dialog.embed")}}</a>
 			</li>
 		</ul>
 
@@ -164,8 +205,8 @@
 				class="mt-2"
 				:modelValue="url"
 				readonly
-				successTitle="Map link copied"
-				successMessage="The map link was copied to the clipboard."
+				:successTitle="i18n.t('share-dialog.link-copied-title')"
+				:successMessage="i18n.t('share-dialog.link-copied-message')"
 			></CopyToClipboardInput>
 		</template>
 
@@ -174,13 +215,22 @@
 				class="mt-2"
 				:modelValue="embedCode"
 				readonly
-				successTitle="Embed code copied"
-				:successMessage="`The code to embed ${context.appName} was copied to the clipboard.`"
+				:successTitle="i18n.t('share-dialog.embed-copied-title')"
+				:successMessage="i18n.t('share-dialog.embed-copied-message', { appName: context.appName })"
 				:rows="2"
 				noQr
 			></CopyToClipboardInput>
 
-			<p class="mt-2">Add this HTML code to a web page to embed {{context.appName}}. <a href="https://docs.facilmap.org/developers/embed.html" target="_blank">Learn more</a></p>
+			<p class="mt-2">
+				<T k="share-dialog.embed-explanation">
+					<template #appName>
+						{{context.appName}}
+					</template>
+					<template #learnMore>
+						<a href="https://docs.facilmap.org/developers/embed.html" target="_blank">{{i18n.t("share-dialog.embed-explanation-interpolation-learnMore")}}</a>
+					</template>
+				</T>
+			</p>
 		</template>
 	</ModalDialog>
 </template>
