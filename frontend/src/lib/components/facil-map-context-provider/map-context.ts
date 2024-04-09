@@ -5,12 +5,14 @@ import type { Emitter } from "mitt";
 import type { DeepReadonly } from "vue";
 import type { SelectedItem } from "../../utils/selection";
 import type SelectionHandler from "../../utils/selection";
+import type { AttributionControl } from "../leaflet-map/attribution";
 
 export type MapContextEvents = {
 	"open-selection": { selection: DeepReadonly<SelectedItem[]> };
 };
 
 export interface MapComponents {
+	attribution: AttributionControl;
 	bboxHandler: BboxHandler;
 	container: HTMLElement;
 	graphicScale: any;

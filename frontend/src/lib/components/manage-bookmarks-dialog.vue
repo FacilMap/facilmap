@@ -5,9 +5,11 @@
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -30,17 +32,17 @@
 
 <template>
 	<ModalDialog
-		title="Manage Bookmarks"
+		:title="i18n.t('manage-bookmarks-dialog.title')"
 		size="lg"
 		class="fm-manage-bookmarks"
 		@hidden="emit('hidden')"
 	>
-		<p>Bookmarks are a quick way to remember and access collaborative maps. They are saved in your browser, other users will not be able to see them.</p>
+		<p>{{i18n.t("manage-bookmarks-dialog.introduction")}}</p>
 		<table class="table table-striped table-hover">
 			<thead>
 				<tr>
-					<th>Map ID</th>
-					<th>Name</th>
+					<th>{{i18n.t("manage-bookmarks-dialog.map-id")}}</th>
+					<th>{{i18n.t("manage-bookmarks-dialog.name")}}</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -52,15 +54,15 @@
 			>
 				<template #item="{ element: bookmark }">
 					<tr>
-						<td class="align-middle" :class="{ 'font-weight-bold': bookmark.id == client.padId }">
+						<td class="align-middle text-break" :class="{ 'font-weight-bold': bookmark.id == client.padId }">
 							{{bookmark.id}}
 						</td>
-						<td>
+						<td class="align-middle">
 							<input class="form-control" v-model="bookmark.customName" :placeholder="bookmark.name" />
 						</td>
-						<td class="td-buttons text-right">
-							<button type="button" class="btn btn-secondary" @click="deleteBookmark(bookmark)">Delete</button>
-							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" alt="Reorder"></Icon></button>
+						<td class="align-middle td-buttons text-right">
+							<button type="button" class="btn btn-secondary" @click="deleteBookmark(bookmark)">{{i18n.t("manage-bookmarks-dialog.delete")}}</button>
+							<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" :alt="i18n.t('manage-bookmarks-dialog.reorder-alt')"></Icon></button>
 						</td>
 					</tr>
 				</template>
@@ -68,7 +70,7 @@
 			<tfoot v-if="client.padData && !isBookmarked">
 				<tr>
 					<td colspan="3">
-						<button type="button" class="btn btn-secondary" @click="addBookmark()">Bookmark current map</button>
+						<button type="button" class="btn btn-secondary" @click="addBookmark()">{{i18n.t("manage-bookmarks-dialog.bookmark-current")}}</button>
 					</td>
 				</tr>
 			</tfoot>

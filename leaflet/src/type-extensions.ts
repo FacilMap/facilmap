@@ -18,6 +18,8 @@ declare module "leaflet" {
 
 	interface FmLayerOptions {
 		fmName?: string;
+		fmGetName?: () => string;
+		fmGetAttribution?: () => string;
 	}
 
 	interface LayerOptions extends FmLayerOptions {}

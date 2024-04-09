@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { getLayers } from "facilmap-leaflet";
-	import { type Layer, Util } from "leaflet";
+	import { Util } from "leaflet";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -15,9 +15,20 @@
 		hidden: [];
 	}>();
 
-	const layers = computed((): Layer[] => {
+	const layers = computed(() => {
 		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
-		return [...Object.values(baseLayers), ...Object.values(overlays)];
+		return [...Object.values(baseLayers), ...Object.values(overlays)].flatMap((layer) => {
+			const attributionHtml = layer.getAttribution?.();
+			if (attributionHtml) {
+				return [{
+					id: Util.stamp(layer),
+					name: layer.options.fmGetName?.() ?? layer.options.fmName,
+					attributionHtml
+				}];
+			} else {
+				return [];
+			}
+		});
 	});
 
 	const fmVersion = __FM_VERSION__;
@@ -65,11 +76,9 @@
 		<p><a href="https://docs.facilmap.org/users/privacy/" target="_blank">{{i18n.t('about-dialog.privacy-information')}}</a></p>
 		<h4>{{i18n.t('about-dialog.map-data')}}</h4>
 		<dl class="row">
-			<template v-for="layer in layers">
-				<template v-if="layer.options.attribution">
-					<dt :key="`name-${Util.stamp(layer)}`" class="col-sm-3">{{layer.options.fmName}}</dt>
-					<dd :key="`attribution-${Util.stamp(layer)}`" class="col-sm-9" v-html="layer.options.attribution"></dd>
-				</template>
+			<template v-for="{ id, name, attributionHtml } in layers" :key="id">
+				<dt class="col-sm-3">{{name}}</dt>
+				<dd class="col-sm-9" v-html="attributionHtml"></dd>
 			</template>
 
 			<dt class="col-sm-3">{{i18n.t('about-dialog.map-data-search')}}</dt>

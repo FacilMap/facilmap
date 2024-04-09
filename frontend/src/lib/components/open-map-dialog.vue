@@ -11,8 +11,10 @@
 	import type { FacilMapContext } from "./facil-map-context-provider/facil-map-context";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { parsePadUrl } from "facilmap-utils";
+	import { useI18n } from "../utils/i18n";
 
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -95,7 +97,7 @@
 			results.value = newResults.results;
 			pages.value = Math.ceil(newResults.totalLength / ITEMS_PER_PAGE);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, "Error searching for public maps", err);
+			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, i18n.t("open-map-dialog.find-pads-error"), err);
 		} finally {
 			isSearching.value = false;
 		}
@@ -105,7 +107,7 @@
 		const parsed = parsePadId(padId, context);
 
 		if (!parsed) {
-			return "Please enter a valid map ID or URL.";
+			return i18n.t("open-map-dialog.map-id-format-error");
 		}
 	}
 
@@ -115,7 +117,7 @@
 		if (parsed) {
 			const padInfo = await client.value.getPad({ padId: parsed.padId });
 			if (!padInfo) {
-				return "No map with this ID could be found.";
+				return i18n.t("open-map-dialog.map-not-found-error");
 			}
 		}
 	}
@@ -123,13 +125,13 @@
 
 <template>
 	<ModalDialog
-		title="Open collaborative map"
+		:title="i18n.t('open-map-dialog.title')"
 		size="lg"
 		class="fm-open-map"
 		ref="modalRef"
 		@hidden="emit('hidden')"
 	>
-		<p>Enter the link or ID of an existing collaborative map here to open that map.</p>
+		<p>{{i18n.t("open-map-dialog.introduction")}}</p>
 		<ValidatedField
 			:value="padId"
 			:validators="padId ? [
@@ -138,7 +140,7 @@
 			] : []"
 			:reportValid="!!padId"
 			:debounceMs="300"
-			class="input-group has-validation"
+			class="input-group has-validation position-relative"
 		>
 			<template #default="slotProps">
 				<input
@@ -154,9 +156,9 @@
 					:form="`${id}-open-form`"
 				>
 					<div v-if="openFormRef?.formData.isValidating" class="spinner-border spinner-border-sm"></div>
-					Open
+					{{i18n.t("open-map-dialog.open-map-by-id-button")}}
 				</button>
-				<div class="invalid-feedback">
+				<div class="invalid-tooltip">
 					{{slotProps.validationError}}
 				</div>
 			</template>
@@ -164,7 +166,7 @@
 
 		<hr/>
 
-		<h4>Search public maps</h4>
+		<h4>{{i18n.t("open-map-dialog.search-public-maps")}}</h4>
 
 		<div class="input-group">
 			<input
@@ -181,12 +183,12 @@
 				:form="`${id}-search-form`"
 			>
 				<div v-if="isSearching" class="spinner-border spinner-border-sm"></div>
-				<Icon v-else icon="search" alt="Search"></Icon>
+				<Icon v-else icon="search" :alt="i18n.t('open-map-dialog.search-alt')"></Icon>
 			</button>
 		</div>
 
-		<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger">
-			No maps could be found.
+		<div v-if="submittedSearchQuery && results.length == 0" class="alert alert-danger mt-2">
+			{{i18n.t("open-map-dialog.no-maps-found")}}
 		</div>
 
 		<template v-if="submittedSearchQuery && results.length > 0">
@@ -194,8 +196,8 @@
 				<table class="table table-hover table-striped">
 					<thead>
 						<tr>
-							<th>Name</th>
-							<th>Description</th>
+							<th>{{i18n.t("open-map-dialog.name")}}</th>
+							<th>{{i18n.t("open-map-dialog.description")}}</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -208,7 +210,7 @@
 									class="btn btn-secondary"
 									:href="context.baseUrl + encodeURIComponent(result.id)"
 									@click.exact.prevent="openResult(result)"
-								>Open</a>
+								>{{i18n.t("open-map-dialog.open-map-by-search-button")}}</a>
 							</td>
 						</tr>
 					</tbody>

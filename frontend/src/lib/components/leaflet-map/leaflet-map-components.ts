@@ -16,7 +16,8 @@ import type { ClientContext } from "../facil-map-context-provider/client-context
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 import { type Optional, sleep } from "facilmap-utils";
-import { getI18n } from "../../utils/i18n";
+import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
+import { AttributionControl } from "./attribution";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 type OnCleanup = (cleanupFn: () => void) => void;
@@ -26,7 +27,7 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 	const interaction = ref(0);
 
 	watchEffect((onCleanup) => {
-		const map = mapRef.value = markRaw(leafletMap(element.value, { boxZoom: false }));
+		const map = mapRef.value = markRaw(leafletMap(element.value, { boxZoom: false, attributionControl: false }));
 
 		map._controlCorners.bottomcenter = DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
@@ -83,6 +84,23 @@ function useMapComponent<T>(
 	}, { immediate: true });
 
 	return componentRef;
+}
+
+function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
+	return useMapComponent(
+		map,
+		() => markRaw(new AttributionControl()),
+		(attribution, onCleanup) => {
+			map.value.addControl(attribution);
+
+			const i18nWatcher = watch(i18nResourceChangeCounter, () => {
+				attribution.update();
+			});
+			onCleanup(() => {
+				i18nWatcher();
+			});
+		}
+	);
 }
 
 function useBboxHandler(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<BboxHandler>> {
@@ -306,6 +324,7 @@ function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: Faci
 function useMapComponents(context: FacilMapContext, mapContext: MapContextWithoutComponents, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): MapComponents {
 	const client = requireClientContext(context);
 	const map = useMap(mapRef, mapContext);
+	const attribution = useAttribution(map);
 	const bboxHandler = useBboxHandler(map, client);
 	const graphicScale = useGraphicScale(map);
 	const linesLayer = useLinesLayer(map, client);
@@ -318,17 +337,18 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const hashHandler = useHashHandler(map, client, context, mapContext, overpassLayer);
 
 	const components: MapComponents = reactive({
-		map: map,
-		bboxHandler: bboxHandler,
-		graphicScale: graphicScale,
-		linesLayer: linesLayer,
-		locateControl: locateControl,
-		markersLayer: markersLayer,
-		mousePosition: mousePosition,
-		overpassLayer: overpassLayer,
-		searchResultsLayer: searchResultsLayer,
-		selectionHandler: selectionHandler,
-		hashHandler: hashHandler,
+		map,
+		attribution,
+		bboxHandler,
+		graphicScale,
+		linesLayer,
+		locateControl,
+		markersLayer,
+		mousePosition,
+		overpassLayer,
+		searchResultsLayer,
+		selectionHandler,
+		hashHandler,
 		container: innerContainerRef
 	});
 

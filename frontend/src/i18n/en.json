@@ -469,6 +469,44 @@
         "edit-waypoints": "Edit waypoints",
         "delete": "Delete"
     },
+    "manage-bookmarks-dialog": {
+        "title": "Manage Bookmarks",
+        "introduction": "Bookmarks are a quick way to remember and access collaborative maps. They are saved in your browser, other users will not be able to see them.",
+        "map-id": "Map ID",
+        "name": "Name",
+        "delete": "Delete",
+        "reorder-alt": "Reorder",
+        "bookmark-current": "Bookmark current map"
+    },
+    "manage-types-dialog": {
+        "delete-title": "Delete type",
+        "delete-message": "Do you really want to delete the type “{{typeName}}”?",
+        "delete-ok": "Delete",
+        "delete-error": "Error deleting type “{{typeName}}”",
+        "title": "Manage Types",
+        "name": "Name",
+        "type": "Type",
+        "edit": "Edit",
+        "type-marker": "Markers",
+        "type-line": "Lines",
+        "edit-button": "Edit",
+        "delete-button": "Delete",
+        "reorder-alt": "Reorder",
+        "create": "Create",
+        "marker-type": "Marker type",
+        "line-type": "Line type"
+    },
+    "manage-views-dialog": {
+        "default-view-error": "Error setting default view",
+        "delete-view-title": "Delete view",
+        "delete-view-message": "Do you really want to delete the view “{{viewName}}”?",
+        "delete-view-ok": "Delete",
+        "delete-view-error": "Error deleting view “{{viewName}}”",
+        "title": "Manage Views",
+        "make-default": "Make default",
+        "delete": "Delete",
+        "reorder": "Reorder"
+    },
     "marker-info": {
         "delete-marker-title": "Delete marker",
         "delete-marker-message": "Do you really want to delete the marker “{{name}}”?",
@@ -498,6 +536,20 @@
         "close": "Close",
         "cancel": "Cancel",
         "save": "Save"
+    },
+    "open-map-dialog": {
+        "find-pads-error": "Error searching for public maps",
+        "map-id-format-error": "Please enter a valid map ID or URL.",
+        "map-not-found-error": "No map with this ID could be found.",
+        "title": "Open collaborative map",
+        "introduction": "Enter the link or ID of an existing collaborative map here to open that map.",
+        "open-map-by-id-button": "Open",
+        "search-public-maps": "Search public maps",
+        "search-alt": "Search",
+        "no-maps-found": "No maps could be found.",
+        "name": "Name",
+        "description": "Description",
+        "open-map-by-search-button": "Open"
     },
     "overpass-form": {
         "filter": "Filter…",

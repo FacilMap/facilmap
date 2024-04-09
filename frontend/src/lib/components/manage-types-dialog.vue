@@ -10,10 +10,12 @@
 	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
 	import Draggable from "vuedraggable";
 	import Icon from "./ui/icon.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -31,17 +33,17 @@
 
 		try {
 			if (!await showConfirm({
-				title: "Delete type",
-				message: `Do you really want to delete the type “${formatTypeName(type.name)}”?`,
+				title: i18n.t("manage-types-dialog.delete-title"),
+				message: i18n.t("manage-types-dialog.delete-message", { typeName: formatTypeName(type.name) }),
 				variant: "danger",
-				okLabel: "Delete"
+				okLabel: i18n.t("manage-types-dialog.delete-ok")
 			})) {
 				return;
 			}
 
 			await client.value.deleteType({ id: type.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, `Error deleting type “${formatTypeName(type.name)}”`, err);
+			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, i18n.t("manage-types-dialog.delete-error", { typeName: formatTypeName(type.name) }), err);
 		} finally {
 			delete isDeleting.value[type.id];
 		}
@@ -74,7 +76,7 @@
 
 <template>
 	<ModalDialog
-		title="Manage Types"
+		:title="i18n.t('manage-types-dialog.title')"
 		:isBusy="isBusy"
 		size="lg"
 		class="fm-manage-types"
@@ -83,9 +85,9 @@
 		<table class="table table-striped table-hover">
 			<thead>
 				<tr>
-					<th>Name</th>
-					<th>Type</th>
-					<th>Edit</th>
+					<th>{{i18n.t("manage-types-dialog.name")}}</th>
+					<th>{{i18n.t("manage-types-dialog.type")}}</th>
+					<th>{{i18n.t("manage-types-dialog.edit")}}</th>
 				</tr>
 			</thead>
 			<Draggable
@@ -98,14 +100,16 @@
 				<template #item="{ element: type }">
 					<tr>
 						<td class="text-break">{{formatTypeName(type.name)}}</td>
-						<td>{{type.type}}</td>
+						<td>
+							{{type.type === "marker" ? i18n.t("manage-types-dialog.type-marker") : i18n.t("manage-types-dialog.type-line")}}
+						</td>
 						<td class="td-buttons">
 							<button
 								type="button"
 								class="btn btn-secondary"
 								:disabled="isDeleting[type.id]"
 								@click="editDialogTypeId = type.id"
-							>Edit</button>
+							>{{i18n.t("manage-types-dialog.edit-button")}}</button>
 							<button
 								type="button"
 								@click="deleteType(type)"
@@ -113,7 +117,7 @@
 								:disabled="isDeleting[type.id] || isMoving != null"
 							>
 								<div v-if="isDeleting[type.id]" class="spinner-border spinner-border-sm"></div>
-								Delete
+								{{i18n.t("manage-types-dialog.delete-button")}}
 							</button>
 							<button
 								type="button"
@@ -121,7 +125,7 @@
 								:disabled="isDeleting[type.id] || isMoving != null"
 							>
 								<div v-if="isMoving === type.id" class="spinner-border spinner-border-sm"></div>
-								<Icon v-else icon="resize-vertical" alt="Reorder"></Icon>
+								<Icon v-else icon="resize-vertical" :alt="i18n.t('manage-types-dialog.reorder-alt')"></Icon>
 							</button>
 						</td>
 					</tr>
@@ -130,13 +134,13 @@
 			<tfoot>
 				<tr>
 					<td colspan="3">
-						<DropdownMenu label="Create">
+						<DropdownMenu :label="i18n.t('manage-types-dialog.create')">
 							<li>
 								<a
 									href="javascript:"
 									class="dropdown-item"
 									@click="editDialogTypeId = 'createMarkerType'"
-								>Marker type</a>
+								>{{i18n.t("manage-types-dialog.marker-type")}}</a>
 							</li>
 
 							<li>
@@ -144,7 +148,7 @@
 									href="javascript:"
 									class="dropdown-item"
 									@click="editDialogTypeId = 'createLineType'"
-								>Line type</a>
+								>{{i18n.t("manage-types-dialog.line-type")}}</a>
 							</li>
 						</DropdownMenu>
 					</td>

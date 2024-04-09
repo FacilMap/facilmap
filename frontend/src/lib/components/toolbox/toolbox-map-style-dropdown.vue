@@ -24,7 +24,7 @@
 		const { baseLayers } = getLayers(mapContext.value.components.map);
 		return Object.keys(baseLayers).map((key) => ({
 			key,
-			name: baseLayers[key].options.fmName!,
+			name: baseLayers[key].options.fmGetName!(),
 			active: mapContext.value.layers.baseLayer === key
 		}));
 	});
@@ -33,7 +33,7 @@
 		const { overlays } = getLayers(mapContext.value.components.map);
 		return Object.keys(overlays).map((key) => ({
 			key,
-			name: overlays[key].options.fmName!,
+			name: overlays[key].options.fmGetName?.() ?? overlays[key].options.fmName!,
 			active: mapContext.value.layers.overlays.includes(key)
 		}));
 	});

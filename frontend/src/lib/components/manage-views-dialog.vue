@@ -9,11 +9,13 @@
 	import { getOrderedViews } from "facilmap-utils";
 	import Draggable from "vuedraggable";
 	import Icon from "./ui/icon.vue";
+	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -38,7 +40,7 @@
 		try {
 			await client.value.editPad({ defaultViewId: view.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, "Error setting default view", err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, i18n.t("manage-views-dialog.default-view-error"), err);
 		} finally {
 			isSavingDefaultView.value = undefined;
 		}
@@ -49,10 +51,10 @@
 
 		try {
 			if (!await showConfirm({
-				title: "Delete view",
-				message: `Do you really want to delete the view “${view.name}”?`,
+				title: i18n.t("manage-views-dialog.delete-view-title"),
+				message: i18n.t("manage-views-dialog.delete-view-message", { viewName: view.name }),
 				variant: "danger",
-				okLabel: "Delete"
+				okLabel: i18n.t("manage-views-dialog.delete-view-ok")
 			}))
 				return;
 
@@ -60,7 +62,7 @@
 
 			await client.value.deleteView({ id: view.id });
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, `Error deleting view “${view.name}”`, err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, i18n.t("manage-views-dialog.delete-view-error", { viewName: view.name }), err);
 		} finally {
 			isDeleting.value.delete(view.id);
 		}
@@ -93,7 +95,7 @@
 
 <template>
 	<ModalDialog
-		title="Manage Views"
+		:title="i18n.t('manage-views-dialog.title')"
 		:isBusy="isBusy"
 		size="lg"
 		class="fm-manage-views"
@@ -110,14 +112,14 @@
 				<template #item="{ element: view }">
 					<tr>
 						<td
-							class="text-break"
+							class="text-break align-middle"
 							:class="{
 								'font-weight-bold': client.padData?.defaultView && view.id == client.padData.defaultView.id
 							}"
 						>
 							<a href="javascript:" @click="display(view)">{{view.name}}</a>
 						</td>
-						<td class="td-buttons text-right">
+						<td class="td-buttons text-right align-middle">
 							<button
 								type="button"
 								class="btn btn-secondary"
@@ -126,7 +128,7 @@
 								:disabled="!!isSavingDefaultView || isDeleting.has(view.id)"
 							>
 								<div v-if="isSavingDefaultView == view.id" class="spinner-border spinner-border-sm"></div>
-								Make default
+								{{i18n.t("manage-views-dialog.make-default")}}
 							</button>
 							<button
 								type="button"
@@ -135,7 +137,7 @@
 								:disabled="isDeleting.has(view.id) || isSavingDefaultView == view.id || isMoving != null"
 							>
 								<div v-if="isDeleting.has(view.id)" class="spinner-border spinner-border-sm"></div>
-								Delete
+								{{i18n.t("manage-views-dialog.delete")}}
 							</button>
 							<button
 								type="button"
@@ -143,7 +145,7 @@
 								:disabled="isDeleting.has(view.id) || isMoving != null"
 							>
 								<div v-if="isMoving === view.id" class="spinner-border spinner-border-sm"></div>
-								<Icon v-else icon="resize-vertical" alt="Reorder"></Icon>
+								<Icon v-else icon="resize-vertical" :alt="i18n.t('manage-views-dialog.reorder-alt')"></Icon>
 							</button>
 						</td>
 					</tr>

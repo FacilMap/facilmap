@@ -25,7 +25,7 @@ if (import.meta.hot) {
 	import.meta.hot!.accept(`../../i18n/ru.json`, getAcceptHotI18n("ru", namespace));
 }
 
-const i18nResourceChangeCounter = ref(0);
+export const i18nResourceChangeCounter = ref(0);
 const onI18nResourceChange = () => {
 	i18nResourceChangeCounter.value++;
 };

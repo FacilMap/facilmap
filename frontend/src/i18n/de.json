@@ -467,6 +467,44 @@
         "edit-waypoints": "Bewegen",
         "delete": "Löschen"
     },
+    "manage-bookmarks-dialog": {
+        "title": "Favoriten verwalten",
+        "introduction": "Kollaborative Karten können als Favoriten abgespeichert werden, um sie schnell öffnen zu können, ohne den Link eingeben zu müssen. Ihre Favoriten werden in Ihrem Browser abgespeichert, andere Benutzer können darauf nicht zugreifen.",
+        "map-id": "Karten-ID",
+        "name": "Name",
+        "delete": "Entfernen",
+        "reorder-alt": "Umordnen",
+        "bookmark-current": "Aktuelle Karte hinzufügen"
+    },
+    "manage-types-dialog": {
+        "delete-title": "Objekttyp löschen",
+        "delete-message": "Wollen Sie den Objekttyp „{{typeName}}“ wirklich löschen?",
+        "delete-ok": "Löschen",
+        "delete-error": "Fehler beim Löschen des Objekttyps „{{typeName}}“",
+        "title": "Objekttypen verwalten",
+        "name": "Name",
+        "type": "Art",
+        "edit": "Bearbeiten",
+        "type-marker": "Marker",
+        "type-line": "Linien",
+        "edit-button": "Bearbeiten",
+        "delete-button": "Löschen",
+        "reorder-alt": "Umordnen",
+        "create": "Erstellen",
+        "marker-type": "Marker-Typ",
+        "line-type": "Linien-Typ"
+    },
+    "manage-views-dialog": {
+        "default-view-error": "Fehler beim Setzen der Standardansicht",
+        "delete-view-title": "Ansicht löschen",
+        "delete-view-message": "Wollen Sie die Ansicht „{{viewName}}“ wirklich löschen?",
+        "delete-view-ok": "Löschen",
+        "delete-view-error": "Fehler beim Löschen der Ansicht „{{viewName}}“",
+        "title": "Ansichten verwalten",
+        "make-default": "Zur Standardansicht machen",
+        "delete": "Löschen",
+        "reorder-alt": "Umsortieren"
+    },
     "marker-info": {
         "delete-marker-title": "Marker löschen",
         "delete-marker-message": "Wollen Sie den Marker „{{name}}“ wirklich löschen?",
@@ -496,6 +534,20 @@
         "close": "Schließen",
         "cancel": "Abbrechen",
         "save": "Speichern"
+    },
+    "open-map-dialog": {
+        "find-pads-error": "Fehler bei der Suche nach öffentlichen Karten",
+        "map-id-format-error": "Bitte geben Sie eine gültige Karten-ID oder -URL ein.",
+        "map-not-found-error": "Es konnte keine Karte mit dieser ID gefunden werden.",
+        "title": "Kollaborative Karte öffnen",
+        "introduction": "Geben Sie hier den Link oder die ID einer existierenden kollaborativen Karte ein, um diese Karte zu öffnen.",
+        "open-map-by-id-button": "Öffnen",
+        "search-public-maps": "Öffentliche Karten suchen",
+        "search-alt": "Suchen",
+        "no-maps-found": "Es konnten keine Karten gefunden werden.",
+        "name": "Name",
+        "description": "Beschreibung",
+        "open-map-by-search-button": "Öffnen"
     },
     "overpass-form": {
         "filter": "Filtern…",
