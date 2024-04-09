@@ -619,6 +619,24 @@
         "next-label": "Next",
         "last-label": "Last"
     },
+    "save-view-dialog": {
+        "save-view-error": "Error saving view",
+        "empty": "—",
+        "title": "Save current view",
+        "name": "Name",
+        "top-left": "Top left",
+        "bottom-right": "Bottom right",
+        "base-layer": "Base layer",
+        "overlays": "Overlays",
+        "overlays-joiner": ", ",
+        "pois": "POIs",
+        "include-pois": "Include POIs ({{pois}})",
+        "include-pois-interpolation-pois-joiner": ", ",
+        "filter": "Filter",
+        "include-current-filter": "Include current filter ({{filter}})",
+        "default-view": "Default view",
+        "make-default": "Make default view"
+    },
     "shape-picker": {
         "unknown-shape-error": "Unknown shape",
         "no-shapes-error": "No shapes could be found."

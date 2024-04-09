@@ -8,11 +8,13 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { viewValidator } from "facilmap-types";
+	import { T, useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const client = requireClientContext(context);
 	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -34,7 +36,7 @@
 
 	const overlays = computed(() => {
 		const { overlays } = getLayers(mapContext.value.components.map);
-		return mapContext.value.layers.overlays.map((key) => overlays[key].options.fmName || key).join(", ") || "—";
+		return mapContext.value.layers.overlays.map((key) => overlays[key].options.fmName || key).join(i18n.t("save-view-dialog.overlays-joiner")) || i18n.t("save-view-dialog.empty");
 	});
 
 	async function save(): Promise<void> {
@@ -55,14 +57,14 @@
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-save-view-error`, "Error saving view", err);
+			toasts.showErrorToast(`fm${context.id}-save-view-error`, i18n.t("save-view-dialog.save-view-error"), err);
 		}
 	};
 </script>
 
 <template>
 	<ModalDialog
-		title="Save current view"
+		:title="i18n.t('save-view-dialog.title')"
 		class="fm-save-view"
 		:isCreate="true"
 		ref="modalRef"
@@ -70,7 +72,7 @@
 		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
-			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">Name</label>
+			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.name")}}</label>
 			<ValidatedField
 				:value="name"
 				:validators="[
@@ -94,7 +96,7 @@
 		</div>
 
 		<div class="row mb-3">
-			<label :for="`${id}-topleft-input`" class="col-sm-3 col-form-label">Top left</label>
+			<label :for="`${id}-topleft-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.top-left")}}</label>
 			<div class="col-sm-9">
 				<input
 					class="form-control-plaintext"
@@ -106,7 +108,7 @@
 		</div>
 
 		<div class="row mb-3">
-			<label :for="`${id}-bottomright-input`" class="col-sm-3 col-form-label">Bottom right</label>
+			<label :for="`${id}-bottomright-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.bottom-right")}}</label>
 			<div class="col-sm-9">
 				<input
 					class="form-control-plaintext"
@@ -118,7 +120,7 @@
 		</div>
 
 		<div class="row mb-3">
-			<label :for="`${id}-base-layer-input`" class="col-sm-3 col-form-label">Base layer</label>
+			<label :for="`${id}-base-layer-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.base-layer")}}</label>
 			<div class="col-sm-9">
 				<input
 					class="form-control-plaintext"
@@ -130,7 +132,7 @@
 		</div>
 
 		<div class="row mb-3">
-			<label :for="`${id}-overlays-input`" class="col-sm-3 col-form-label">Overlays</label>
+			<label :for="`${id}-overlays-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.overlays")}}</label>
 			<div class="col-sm-9">
 				<input
 					class="form-control-plaintext"
@@ -143,13 +145,13 @@
 
 		<template v-if="mapContext.overpassIsCustom ? !mapContext.overpassCustom : mapContext.overpassPresets.length == 0">
 			<div class="row mb-3">
-				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">POIs</label>
+				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.pois")}}</label>
 				<div class="col-sm-9">
 					<input
 						class="form-control-plaintext"
 						readonly
 						:id="`${id}-overpass-input`"
-						value="—"
+						:value="i18n.t('save-view-dialog.empty')"
 					/>
 				</div>
 			</div>
@@ -157,7 +159,7 @@
 
 		<template v-else>
 			<div class="row mb-3">
-				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">POIs</label>
+				<label :for="`${id}-overpass-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.pois")}}</label>
 				<div class="col-sm-9">
 					<div class="form-check fm-form-check-with-label">
 						<input
@@ -167,7 +169,11 @@
 							v-model="includeOverpass"
 						/>
 						<label class="form-check-label" :for="`${id}-overpass-input`">
-							Include POIs (<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(', ')}}</template>)
+							<T k="save-view-dialog.include-pois">
+								<template #pois>
+									<code v-if="mapContext.overpassIsCustom">{{mapContext.overpassCustom}}</code><template v-else>{{mapContext.overpassPresets.map((p) => p.label).join(i18n.t("save-view-dialog.include-pois-interpolation-pois-joiner"))}}</template>
+								</template>
+							</T>
 						</label>
 					</div>
 				</div>
@@ -176,16 +182,16 @@
 
 		<template v-if="!mapContext.filter">
 			<div class="row mb-3">
-				<label :for="`${id}-filter-input`" class="col-sm-3 col-form-label">Filter</label>
+				<label :for="`${id}-filter-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.filter")}}</label>
 				<div class="col-sm-9">
-					<input class="form-control-plaintext" :id="`${id}-filter-input`" value="—" />
+					<input class="form-control-plaintext" :id="`${id}-filter-input`" :value="i18n.t('save-view-dialog.empty')" />
 				</div>
 			</div>
 		</template>
 
 		<template v-else>
 			<div class="row mb-3">
-				<label :for="`${id}-filter-checkbox`" class="col-sm-3 col-form-label">Filter</label>
+				<label :for="`${id}-filter-checkbox`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.filter")}}</label>
 				<div class="col-sm-9">
 					<div class="form-check fm-form-check-with-label">
 						<input
@@ -195,7 +201,11 @@
 							v-model="includeFilter"
 						/>
 						<label :for="`${id}-filter-checkbox`" class="form-check-label">
-							Include current filter (<code>{{mapContext.filter}}</code>)
+							<T k="save-view-dialog.include-current-filter">
+								<template #filter>
+									<code>{{mapContext.filter}}</code>
+								</template>
+							</T>
 						</label>
 					</div>
 				</div>
@@ -203,7 +213,7 @@
 		</template>
 
 		<div class="row mb-3">
-			<label :for="`${id}-make-default-input`" class="col-sm-3 col-form-label">Default view</label>
+			<label :for="`${id}-make-default-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.default-view")}}</label>
 			<div class="col-sm-9">
 				<div class="form-check fm-form-check-with-label">
 					<input
@@ -212,7 +222,7 @@
 						:id="`${id}-make-default-input`"
 						v-model="makeDefault"
 					/>
-					<label :for="`${id}-make-default-input`" class="form-check-label">Make default view</label>
+					<label :for="`${id}-make-default-input`" class="form-check-label">{{i18n.t("save-view-dialog.make-default")}}</label>
 				</div>
 			</div>
 		</div>

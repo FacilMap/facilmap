@@ -617,6 +617,24 @@
         "next-label": "Nächste Seite",
         "last-label": "Letzte Seite"
     },
+    "save-view-dialog": {
+        "save-view-error": "Fehler beim Speichern der Ansicht",
+        "empty": "—",
+        "title": "Aktuelle Ansicht speichern",
+        "name": "Name",
+        "top-left": "Oben links",
+        "bottom-right": "Unten rechts",
+        "base-layer": "Kartenstil (Basis)",
+        "overlays": "Kartenstil (Überlagerungen)",
+        "overlays-joiner": ", ",
+        "pois": "POIs",
+        "include-pois": "Aktivierte POIs speichern ({{pois}})",
+        "include-pois-interpolation-pois-joiner": ", ",
+        "filter": "Filter",
+        "include-current-filter": "Aktuellen Filter speichern ({{filter}})",
+        "default-view": "Standardansicht",
+        "make-default": "Zur Standardansicht machen"
+    },
     "shape-picker": {
         "unknown-shape-error": "Unbekannte Form",
         "no-shapes-error": "Es konnten keine Formen gefunden werden."
