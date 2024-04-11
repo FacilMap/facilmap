@@ -138,6 +138,13 @@ export default class MarkersLayer extends MarkerCluster {
 	*/
 	lockMarker(id: ID): void {
 		this.lockedMarkerIds.add(id);
+
+		// Remove marker from cluster and add directly to map
+		const markerLayer = this.getLayerByMarkerId(id);
+		if (markerLayer) {
+			this.removeLayer(markerLayer);
+			this._map.addLayer(markerLayer);
+		}
 	}
 
 	/**
@@ -145,6 +152,13 @@ export default class MarkersLayer extends MarkerCluster {
 	 */
 	unlockMarker(id: ID): void {
 		this.lockedMarkerIds.delete(id);
+
+		// Move marker back into cluster
+		const markerLayer = this.getLayerByMarkerId(id);
+		if (markerLayer) {
+			this._map.removeLayer(markerLayer);
+			this.addLayer(markerLayer);
+		}
 
 		if (this.shouldShowMarker(this.client.markers[id]))
 			this._addMarker(this.client.markers[id]);
