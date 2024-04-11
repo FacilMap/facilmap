@@ -1,7 +1,8 @@
 <script setup lang="ts">
 	import { computed, onBeforeUnmount, onMounted } from "vue";
 	import { useToasts } from "./toasts.vue";
-	import type { ToastOptions } from "./toasts.vue";
+	import type { ToastAction } from "./toasts.vue";
+	import type { ThemeColour } from "../../../utils/bootstrap";
 
 	/* eslint-disable vue/valid-template-root */
 
@@ -11,7 +12,11 @@
 		id: string;
 		title: string;
 		message: string | Error;
-		options?: Omit<ToastOptions, "onHidden">;
+		actions?: ToastAction[];
+		spinner?: boolean;
+		variant?: ThemeColour;
+		noCloseButton?: boolean;
+		autoHide?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -19,7 +24,11 @@
 	}>();
 
 	const resolvedOptions = computed(() => ({
-		...props.options,
+		actions: props.actions,
+		spinner: props.spinner,
+		variant: props.variant,
+		noCloseButton: props.noCloseButton,
+		autoHide: props.autoHide,
 		onHidden: () => {
 			emit("hidden");
 		}
