@@ -33,7 +33,7 @@
 		back: [];
 	}>();
 
-	const isDeleting = ref(false);
+	const isBusy = ref(false);
 	const showEditDialog = ref(false);
 
 	const marker = computed(() => client.value.markers[props.markerId]);
@@ -56,14 +56,14 @@
 		}))
 			return;
 
-		isDeleting.value = true;
+		isBusy.value = true;
 
 		try {
 			await client.value.deleteMarker({ id: props.markerId });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, () => i18n.t("marker-info.delete-marker-error"), err);
 		} finally {
-			isDeleting.value = false;
+			isBusy.value = false;
 		}
 	}
 
@@ -118,14 +118,14 @@
 				type="button"
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
-				:disabled="isDeleting || mapContext.interaction"
+				:disabled="isBusy || mapContext.interaction"
 			>{{i18n.t("marker-info.edit-data")}}</button>
 
 			<DropdownMenu
 				v-if="!client.readonly"
 				size="sm"
 				:label="i18n.t('marker-info.actions')"
-				:isBusy="isDeleting"
+				:isBusy="isBusy"
 				:isDisabled="mapContext.interaction"
 			>
 				<li>

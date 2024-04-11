@@ -71,14 +71,13 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 
 	const isSaving = ref(false);
 
-	const finish = async (save: boolean) => {
+	const finish = async (pos: Point | undefined) => {
 		markerLayer.dragging!.disable();
 
 		try {
-			if(save) {
+			if(pos) {
 				isSaving.value = true;
-				const pos = markerLayer.getLatLng();
-				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
+				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lon });
 			}
 
 			toasts.hideToast("fm-draw-drag-marker");
@@ -97,15 +96,23 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 				label: getI18n().t("draw.move-marker-save"),
 				variant: "primary" as const,
 				onClick: () => {
-					void finish(true);
+					const pos = markerLayer.getLatLng()
+					void finish({ lat: pos.lat, lon: pos.lng });
 				},
 				isPending: isSaving.value,
 				isDisabled: isSaving.value
 			},
+			...mapContext.value.location ? [{
+				label: getI18n().t("draw.move-marker-current"),
+				onClick: () => {
+					void finish(mapContext.value.location);
+				},
+				isDisabled: isSaving.value
+			}] : [],
 			{
 				label: getI18n().t("draw.move-marker-cancel"),
 				onClick: () => {
-					void finish(false);
+					void finish(undefined);
 				},
 				isDisabled: isSaving.value
 			}

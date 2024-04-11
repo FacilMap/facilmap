@@ -103,6 +103,7 @@
         "move-marker-title": "Drag marker",
         "move-marker-message": "Drag the marker to reposition it.",
         "move-marker-save": "Save",
+        "move-marker-current": "Move to current location",
         "move-marker-cancel": "Cancel",
         "add-line-title": "Add {{typeName}}",
         "add-line-message": "Click on the map multiple times to draw a line. Then click “Finish” to save it.",
