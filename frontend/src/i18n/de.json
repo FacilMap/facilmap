@@ -497,6 +497,7 @@
         "ascent-descent": "Aufstieg/Abstieg",
         "zoom-to-object-label": "Zur Linie zoomen",
         "edit-data": "Bearbeiten",
+        "actions": "Aktionen",
         "edit-waypoints": "Bewegen",
         "delete": "Löschen"
     },
@@ -546,6 +547,7 @@
         "coordinates": "Koordinaten",
         "zoom-to-object-label": "Zum Marker zoomen",
         "edit-data": "Bearbeiten",
+        "actions": "Aktionen",
         "move": "Bewegen",
         "delete": "Löschen"
     },

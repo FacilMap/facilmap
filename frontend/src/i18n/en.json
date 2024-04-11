@@ -499,6 +499,7 @@
         "ascent-descent": "Climb/drop",
         "zoom-to-object-label": "Zoom to line",
         "edit-data": "Edit data",
+        "actions": "Actions",
         "edit-waypoints": "Edit waypoints",
         "delete": "Delete"
     },
@@ -548,6 +549,7 @@
         "coordinates": "Coordinates",
         "zoom-to-object-label": "Zoom to marker",
         "edit-data": "Edit data",
+        "actions": "Actions",
         "move": "Move",
         "delete": "Delete"
     },

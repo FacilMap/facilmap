@@ -14,6 +14,7 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -119,23 +120,30 @@
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
 			>{{i18n.t("marker-info.edit-data")}}</button>
-			<button
+
+			<DropdownMenu
 				v-if="!client.readonly"
-				type="button"
-				class="btn btn-secondary btn-sm"
-				@click="move()"
-				:disabled="isDeleting || mapContext.interaction"
-			>{{i18n.t("marker-info.move")}}</button>
-			<button
-				v-if="!client.readonly"
-				type="button"
-				class="btn btn-secondary btn-sm"
-				@click="deleteMarker()"
-				:disabled="isDeleting || mapContext.interaction"
+				size="sm"
+				:label="i18n.t('marker-info.actions')"
+				:isBusy="isDeleting"
+				:isDisabled="mapContext.interaction"
 			>
-				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				{{i18n.t("marker-info.delete")}}
-			</button>
+				<li>
+					<a
+						href="javascript:"
+						class="dropdown-item"
+						@click="move()"
+					>{{i18n.t("marker-info.move")}}</a>
+				</li>
+
+				<li>
+					<a
+						href="javascript:"
+						class="dropdown-item"
+						@click="deleteMarker()"
+					>{{i18n.t("marker-info.delete")}}</a>
+				</li>
+			</DropdownMenu>
 		</div>
 
 		<EditMarkerDialog

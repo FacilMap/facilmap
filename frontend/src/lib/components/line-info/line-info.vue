@@ -15,6 +15,7 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -217,24 +218,30 @@
 				:disabled="isDeleting || mapContext.interaction"
 			>{{i18n.t("line-info.edit-data")}}</button>
 
-			<button
-				v-if="!client.readonly && line.mode != 'track'"
-				type="button"
-				class="btn btn-secondary btn-sm"
-				@click="moveLine()"
-				:disabled="isDeleting || mapContext.interaction"
-			>{{i18n.t("line-info.edit-waypoints")}}</button>
-
-			<button
+			<DropdownMenu
 				v-if="!client.readonly"
-				type="button"
-				class="btn btn-secondary btn-sm"
-				@click="deleteLine()"
-				:disabled="isDeleting || mapContext.interaction"
+				size="sm"
+				:label="i18n.t('line-info.actions')"
+				:isBusy="isDeleting"
+				:isDisabled="mapContext.interaction"
 			>
-				<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-				{{i18n.t("line-info.delete")}}
-			</button>
+				<li>
+					<a
+						v-if="line.mode != 'track'"
+						href="javascript:"
+						class="dropdown-item"
+						@click="moveLine()"
+					>{{i18n.t("line-info.edit-waypoints")}}</a>
+				</li>
+
+				<li>
+					<a
+						href="javascript:"
+						class="dropdown-item"
+						@click="deleteLine()"
+					>{{i18n.t("line-info.delete")}}</a>
+				</li>
+			</DropdownMenu>
 		</div>
 
 		<RouteForm
