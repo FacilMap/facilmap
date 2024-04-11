@@ -18,7 +18,7 @@ services:
 	facilmap:
 		image: facilmap/facilmap
 		ports:
-			- 8080
+			- 8080:8080
 		links:
 			- mysql
 		depends_on:
@@ -59,7 +59,7 @@ services:
 	facilmap:
 		image: facilmap/facilmap
 		ports:
-			- 8080
+			- 8080:8080
 		links:
 			- postgres
 		depends_on:
@@ -92,11 +92,13 @@ services:
 
 To start FacilMap, run `docker-compose up -d` in the directory of the `docker-compose.yml` file. To upgrade FacilMap, run `docker-compose pull` and then restart it by running `docker-compose up -d`.
 
+Note that this exposes FacilMap through unencrypted HTTP on port 8080. In a production setup, FacilMap should be served by a reverse proxy that provides HTTPS. Usually, the `ports` directive can be removed then.
+
 ## docker create
 
 To manually create the necessary docker containers, use these commands:
 
 ```bash
 docker create --name=facilmap_db -e MYSQL_DATABASE=facilmap -e MYSQL_USER=facilmap -e MYSQL_PASSWORD=password -e MYSQL_RANDOM_ROOT_PASSWORD=true --restart=unless-stopped mariadb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-docker create --link=facilmap_db -p 8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e TRUST_PROXY=true -e DB_TYPE=mysql -e DB_HOST=facilmap_db -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e ORS_TOKEN= -e MAPBOX_TOKEN= -e MAXMIND_USER_ID= -e MAXMIND_LICENSE_KEY= -e LIMA_LABS_TOKEN= --restart=unless-stopped facilmap/facilmap
+docker create --link=facilmap_db -p 8080:8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e TRUST_PROXY=true -e DB_TYPE=mysql -e DB_HOST=facilmap_db -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e ORS_TOKEN= -e MAPBOX_TOKEN= -e MAXMIND_USER_ID= -e MAXMIND_LICENSE_KEY= -e LIMA_LABS_TOKEN= --restart=unless-stopped facilmap/facilmap
 ```
