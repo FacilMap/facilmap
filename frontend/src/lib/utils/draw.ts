@@ -1,5 +1,5 @@
 import { addClickListener } from "facilmap-leaflet";
-import type { ID, Type } from "facilmap-types";
+import type { ID, Point, Type } from "facilmap-types";
 import type { ToastContext } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -10,32 +10,49 @@ import { reactive, ref, toRef } from "vue";
 
 export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
-	const clickListener = addClickListener(mapContext.value.components.map, async (point) => {
-		toasts.hideToast("fm-draw-add-marker");
 
-		if (point) {
-			try {
+	const isSaving = ref(false);
+
+	const create = async (point: Point | undefined) => {
+		try {
+			if (point) {
+				isSaving.value = true;
 				const selection = await addToMap(context, [
 					{ marker: { lat: point.lat, lon: point.lon }, type }
 				]);
 
 				mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
-			} catch (err) {
-				toasts.showErrorToast("fm-draw-add-marker", () => getI18n().t("draw.add-marker-error"), err);
 			}
+			toasts.hideToast("fm-draw-add-marker");
+		} catch (err) {
+			toasts.showErrorToast("fm-draw-add-marker", () => getI18n().t("draw.add-marker-error"), err);
 		}
+	};
+
+	const clickListener = addClickListener(mapContext.value.components.map, async (point) => {
+		await create(point);
 	});
 
 	toasts.showToast("fm-draw-add-marker", () => getI18n().t("draw.add-marker-title", { typeName: formatTypeName(type.name) }), () => getI18n().t("draw.add-marker-message"), reactive({
 		noCloseButton: true,
-		actions: [
-			{
-				label: toRef(() => getI18n().t("draw.add-marker-cancel")),
+		actions: toRef(() => [
+			...mapContext.value.location ? [{
+				label: getI18n().t("draw.add-marker-current"),
 				onClick: () => {
 					clickListener.cancel();
-				}
+					void create(mapContext.value.location!);
+				},
+				isDisabled: isSaving.value
+			}] : [],
+			{
+				label: getI18n().t("draw.add-marker-cancel"),
+				onClick: () => {
+					clickListener.cancel();
+				},
+				isDisabled: isSaving.value
 			}
-		]
+		]),
+		spinner: isSaving
 	}));
 }
 
@@ -52,18 +69,21 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 	mapContext.value.components.map.fire('fmInteractionStart');
 	mapContext.value.components.markersLayer.lockMarker(markerId);
 
-	const finish = async (save: boolean) => {
-		toasts.hideToast("fm-draw-drag-marker");
+	const isSaving = ref(false);
 
+	const finish = async (save: boolean) => {
 		markerLayer.dragging!.disable();
 
-		if(save) {
-			try {
+		try {
+			if(save) {
+				isSaving.value = true;
 				const pos = markerLayer.getLatLng();
 				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lng });
-			} catch (err) {
-				toasts.showErrorToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-error"), err);
 			}
+
+			toasts.hideToast("fm-draw-drag-marker");
+		} catch (err) {
+			toasts.showErrorToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-error"), err);
 		}
 
 		mapContext.value.components.markersLayer.unlockMarker(markerId);
@@ -72,21 +92,24 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 
 	toasts.showToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-title"), getI18n().t("draw.move-marker-message"), reactive({
 		noCloseButton: true,
-		actions: [
+		actions: toRef(() => [
 			{
-				label: toRef(() => getI18n().t("draw.move-marker-save")),
+				label: getI18n().t("draw.move-marker-save"),
 				variant: "primary" as const,
 				onClick: () => {
 					void finish(true);
-				}
+				},
+				isPending: isSaving.value,
+				isDisabled: isSaving.value
 			},
 			{
-				label: toRef(() => getI18n().t("draw.move-marker-cancel")),
+				label: getI18n().t("draw.move-marker-cancel"),
 				onClick: () => {
 					void finish(false);
-				}
+				},
+				isDisabled: isSaving.value
 			}
-		]
+		])
 	}));
 
 	markerLayer.dragging!.enable();
@@ -101,38 +124,45 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 
 		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
 
-		const disabled = ref(true);
+		const isDisabled = ref(true);
+		const isSaving = ref(false);
 		toasts.showToast("fm-draw-add-line", () => getI18n().t("draw.add-line-title", { typeName: formatTypeName(type.name) }), () => getI18n().t("draw.add-line-message"), reactive({
 			noCloseButton: true,
-			actions: [
+			actions: toRef(() => [
 				{
-					label: toRef(() => getI18n().t("draw.add-line-finish")),
+					label: getI18n().t("draw.add-line-finish"),
 					variant: "primary" as const,
 					onClick: () => {
 						mapContext.value.components.linesLayer.endDrawLine(true);
 					},
-					disabled
+					isDisabled: isDisabled.value || isSaving.value,
+					isPending: isSaving.value
 				},
 				{
-					label: toRef(() => getI18n().t("draw.add-line-cancel")),
+					label: getI18n().t("draw.add-line-cancel"),
 					onClick: () => {
 						mapContext.value.components.linesLayer.endDrawLine(false);
-					}
+					},
+					isDisabled: isSaving.value
 				}
-			]
+			])
 		}));
 
 		const routePoints = await mapContext.value.components.linesLayer.drawLine(lineTemplate, (point, points) => {
-			disabled.value = points.length < 2;
+			isDisabled.value = points.length < 2;
 		});
 
-		toasts.hideToast("fm-draw-add-line");
+		try {
+			if (routePoints) {
+				isSaving.value = true;
 
-		if (routePoints) {
-			const selection = await addToMap(context, [
-				{ line: { routePoints }, type }
-			]);
-			mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
+				const selection = await addToMap(context, [
+					{ line: { routePoints }, type }
+				]);
+				mapContext.value.components.selectionHandler.setSelectedItems(selection, true);
+			}
+		} finally {
+			toasts.hideToast("fm-draw-add-line");
 		}
 	} catch (err) {
 		toasts.showErrorToast("fm-draw-add-line", getI18n().t("draw.add-line-error"), err);

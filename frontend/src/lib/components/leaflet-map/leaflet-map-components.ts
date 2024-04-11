@@ -54,6 +54,16 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 			interaction.value--;
 		});
 
+		map.on("locationfound", (data) => {
+			mapContext.location = { lat: data.latlng.lat, lon: data.latlng.lng };
+		});
+
+		const stopLocate = map.stopLocate;
+		map.stopLocate = function() {
+			mapContext.location = undefined;
+			return stopLocate.call(this);
+		};
+
 		onCleanup(() => {
 			map.remove();
 		});
@@ -382,6 +392,7 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		overpassPresets: [],
 		overpassCustom: "",
 		overpassMessage: undefined,
+		location: undefined,
 		loaded: false,
 		fatalError: undefined,
 		runOperation: async (operation) => {

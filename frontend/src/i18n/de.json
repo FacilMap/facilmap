@@ -95,6 +95,7 @@
         "add-marker-error": "Fehler beim Erstellen des Markers",
         "add-marker-title": "{{typeName}} erstellen",
         "add-marker-message": "Klicken Sie auf die Karte, um den Marker dort zu erstellen.",
+        "add-marker-current": "Am aktuellen Standort erstellen",
         "add-marker-cancel": "Abbrechen",
         "move-marker-error": "Fehler beim Bewegen des Markers",
         "move-marker-title": "Marker bewegen",

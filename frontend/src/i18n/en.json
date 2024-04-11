@@ -97,6 +97,7 @@
         "add-marker-error": "Error adding marker",
         "add-marker-title": "Add {{typeName}}",
         "add-marker-message": "Please click on the map to add a marker.",
+        "add-marker-current": "Add at current location",
         "add-marker-cancel": "Cancel",
         "move-marker-error": "Error moving marker",
         "move-marker-title": "Drag marker",

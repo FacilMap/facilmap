@@ -6,6 +6,7 @@ import type { DeepReadonly } from "vue";
 import type { SelectedItem } from "../../utils/selection";
 import type SelectionHandler from "../../utils/selection";
 import type { AttributionControl } from "../leaflet-map/attribution";
+import type { Point } from "facilmap-types";
 
 export type MapContextEvents = {
 	"open-selection": { selection: DeepReadonly<SelectedItem[]> };
@@ -46,6 +47,7 @@ export type MapContextData = {
 	overpassPresets: OverpassPreset[];
 	overpassCustom: string;
 	overpassMessage: string | undefined;
+	location: Point | undefined;
 	components: MapComponents;
 	loaded: boolean;
 	fatalError: string | undefined;

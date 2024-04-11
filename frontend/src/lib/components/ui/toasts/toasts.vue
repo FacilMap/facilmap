@@ -33,7 +33,8 @@
 		label: string;
 		href?: string;
 		variant?: ThemeColour;
-		disabled?: boolean;
+		isDisabled?: boolean;
+		isPending?: boolean;
 	}
 
 	interface ToastInstance {
@@ -210,8 +211,11 @@
 							class="btn btn-sm"
 							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
-							:disabled="action.disabled"
-						>{{action.label}}</button>
+							:disabled="action.isDisabled"
+						>
+							<div v-if="action.isPending" class="spinner-border spinner-border-sm"></div>
+							{{action.label}}
+						</button>
 
 						<a
 							v-if="action.href"
@@ -219,8 +223,11 @@
 							class="btn btn-sm"
 							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
-							v-link-disabled="action.disabled ?? false"
-						>{{action.label}}</a>
+							v-link-disabled="action.isDisabled ?? false"
+						>
+							<div v-if="action.isPending" class="spinner-border spinner-border-sm"></div>
+							{{action.label}}
+						</a>
 					</template>
 				</div>
 			</div>
