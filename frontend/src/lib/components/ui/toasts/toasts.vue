@@ -8,6 +8,7 @@
 	import { getUniqueId } from "../../../utils/utils";
 	import type { ThemeColour } from "../../../utils/bootstrap";
 	import { getI18n, useI18n } from "../../../utils/i18n";
+	import vLinkDisabled from "../../../utils/link-disabled";
 
 	export interface ToastContext {
 		showErrorToast(id: string | undefined, title: string | (() => string), err: any, options?: ToastOptions | (() => ToastOptions)): Promise<void>;
@@ -32,6 +33,7 @@
 		label: string;
 		href?: string;
 		variant?: ThemeColour;
+		disabled?: boolean;
 	}
 
 	interface ToastInstance {
@@ -208,6 +210,7 @@
 							class="btn btn-sm"
 							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
+							:disabled="action.disabled"
 						>{{action.label}}</button>
 
 						<a
@@ -216,6 +219,7 @@
 							class="btn btn-sm"
 							:class="`btn-${action.variant ?? 'secondary'}`"
 							@click="action.onClick"
+							v-link-disabled="action.disabled ?? false"
 						>{{action.label}}</a>
 					</template>
 				</div>

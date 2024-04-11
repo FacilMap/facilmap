@@ -185,7 +185,7 @@ export default class LinesLayer extends FeatureGroup {
 
 	protected _endDrawLine?: (save: boolean) => void;
 
-	drawLine(lineTemplate: LineTemplate): Promise<Point[] | undefined> {
+	drawLine(lineTemplate: LineTemplate, onAddPoint?: (point: Point, points: Point[]) => void): Promise<Point[] | undefined> {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
 				id: -1,
@@ -215,6 +215,8 @@ export default class LinesLayer extends FeatureGroup {
 					line.routePoints.push(pos); // Will be updated by handleMouseMove
 				this._addLine(line);
 				handler = addClickListener(this._map, handleClick, handleMouseMove);
+
+				onAddPoint?.(pos, routePoints);
 			};
 
 			const handleClick = (pos?: Point) => {

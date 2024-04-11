@@ -6,7 +6,7 @@ import { requireClientContext, requireMapContext } from "../components/facil-map
 import { addToMap } from "./add";
 import { formatTypeName } from "facilmap-utils";
 import { getI18n } from "./i18n";
-import { reactive, toRef } from "vue";
+import { reactive, ref, toRef } from "vue";
 
 export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
@@ -101,6 +101,7 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 
 		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
 
+		const disabled = ref(true);
 		toasts.showToast("fm-draw-add-line", () => getI18n().t("draw.add-line-title", { typeName: formatTypeName(type.name) }), () => getI18n().t("draw.add-line-message"), reactive({
 			noCloseButton: true,
 			actions: [
@@ -109,7 +110,8 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 					variant: "primary" as const,
 					onClick: () => {
 						mapContext.value.components.linesLayer.endDrawLine(true);
-					}
+					},
+					disabled
 				},
 				{
 					label: toRef(() => getI18n().t("draw.add-line-cancel")),
@@ -120,7 +122,9 @@ export async function drawLine(type: Type, context: FacilMapContext, toasts: Toa
 			]
 		}));
 
-		const routePoints = await mapContext.value.components.linesLayer.drawLine(lineTemplate);
+		const routePoints = await mapContext.value.components.linesLayer.drawLine(lineTemplate, (point, points) => {
+			disabled.value = points.length < 2;
+		});
 
 		toasts.hideToast("fm-draw-add-line");
 
