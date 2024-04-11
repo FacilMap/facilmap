@@ -108,7 +108,7 @@
 				:href="`${context.baseUrl}#${hash}`"
 				@click.exact.prevent="client.openPad(undefined)"
 				draggable="false"
-			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { padName: client.padData.name })}}</a>
+			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { padName: normalizePadName(client.padData.name) })}}</a>
 		</li>
 	</DropdownMenu>
 

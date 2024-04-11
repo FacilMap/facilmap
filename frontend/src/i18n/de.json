@@ -824,7 +824,7 @@
     },
     "toolbox-collab-maps-dropdown": {
         "label": "Kollaborative Karten",
-        "bookmark": "Karte „{{padName}}“ als Favoriten hinzufügen",
+        "bookmark": "Karte „{{padName}}“ zu Favoriten hinzufügen",
         "manage-bookmarks": "Favoriten verwalten",
         "create-map": "Neue Karte erstellen",
         "open-map": "Existierende Karte öffnen",
