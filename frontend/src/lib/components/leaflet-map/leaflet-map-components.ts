@@ -153,6 +153,11 @@ function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
 				markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
 				locateOptions: {
 					enableHighAccuracy: true
+				},
+				clickBehavior: {
+					inView: "stop",
+					outOfView: "setView",
+					inViewNotFollowing: "outOfView"
 				}
 			}))
 		),
