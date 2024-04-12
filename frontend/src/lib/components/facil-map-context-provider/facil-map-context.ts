@@ -15,6 +15,8 @@ export interface FacilMapSettings {
 	interactive: boolean;
 	linkLogo: boolean;
 	updateHash: boolean;
+	routing: boolean;
+	advancedRouting: boolean;
 }
 
 export interface FacilMapComponents {

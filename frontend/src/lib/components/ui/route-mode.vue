@@ -7,10 +7,12 @@
 	import vTooltip, { type TooltipPlacement } from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { useI18n } from "../../utils/i18n";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	type Mode = Exclude<DecodedRouteMode['mode'], 'track'>;
 	type Type = DecodedRouteMode['type'];
 
+	const context = injectContextRequired();
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
@@ -184,7 +186,7 @@
 				</label>
 			</template>
 
-			<div class="btn-group">
+			<div v-if="context.settings.advancedRouting" class="btn-group">
 				<DropdownMenu
 					:tabindex="tabindex != null ? tabindex + constants.modes.length : undefined"
 					tooltip="Customize"

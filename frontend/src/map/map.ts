@@ -78,7 +78,9 @@ const Root = defineComponent({
 				legend: toBoolean(queryParams.legend, true),
 				interactive: toBoolean(queryParams.interactive, parent === window),
 				linkLogo: parent !== window,
-				updateHash: true
+				updateHash: true,
+				routing: config.supportsRoutes,
+				advancedRouting: config.supportsAdvancedRoutes
 			},
 			"onUpdate:padId": (v) => padId.value = v,
 			"onUpdate:padName": (v) => padName.value = v

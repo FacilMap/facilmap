@@ -1,8 +1,9 @@
 import { calculateBbox, isInBbox } from "../utils/geo.js";
 import type { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
-import { decodeRouteMode, type DecodedRouteMode, calculateDistance, round } from "facilmap-utils";
+import { decodeRouteMode, calculateDistance, round, isSimpleRoute } from "facilmap-utils";
 import { calculateOSRMRoute } from "./osrm.js";
 import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
+import config from "../config.js";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
 // and for zoom level 20 0.0000013411044763239684
@@ -18,12 +19,13 @@ export type RawRouteInfo = Omit<RouteInfo, "trackPoints" | keyof Bbox> & {
 export async function calculateRoute(routePoints: Point[], encodedMode: RouteMode | undefined): Promise<RouteInfo> {
 	const decodedMode = decodeRouteMode(encodedMode);
 
-	const simple = isSimpleRoute(decodedMode);
+	const simple = (!config.mapboxToken && config.orsToken) ? false : isSimpleRoute(decodedMode);
 
 	let route: RawRouteInfo | undefined;
 
-	if(simple || _needsOSRM(routePoints, decodedMode))
+	if (simple) {
 		route = await calculateOSRMRoute(routePoints, decodedMode.mode);
+	}
 
 	if(!simple) {
 		if(route) {
@@ -96,23 +98,6 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 	Object.assign(result, calculateBbox(result.trackPoints!));
 
 	return result as RouteInfo;
-}
-
-
-export function isSimpleRoute(decodedMode: DecodedRouteMode): boolean {
-	return !decodedMode.type &&
-		(!decodedMode.preference || decodedMode.preference == "fastest") &&
-		(!decodedMode.avoid || decodedMode.avoid.length == 0) &&
-		!decodedMode.details;
-}
-
-function _needsOSRM(routePoints: Point[], decodedMode: DecodedRouteMode) {
-	const maxDist = getMaximumDistanceBetweenRoutePoints(decodedMode);
-	for(let i=1; i<routePoints.length; i++) {
-		if(calculateDistance([ routePoints[i-1], routePoints[i] ]) > maxDist)
-			return true;
-	}
-	return false;
 }
 
 function _getTrackPointsFromTrack(trackPoints: Point[], maxDistance: number) {

@@ -8,18 +8,18 @@ The config of the FacilMap server can be set either by using environment variabl
 | `APP_NAME`            |          |             | If specified, will replace “FacilMap” as the name of the app throughout the UI. |
 | `TRUST_PROXY`         |          |             | Whether to trust the X-Forwarded-* headers. Can be `true` or a comma-separated list of IP subnets (see the [express documentation](https://expressjs.com/en/guide/behind-proxies.html)). Currently only used to calculate the base URL for the `opensearch.xml` file. |
 | `BASE_URL`            |          |             | If `TRUST_PROXY` does not work for your particular setup, you can manually specify the base URL where FacilMap can be publicly reached here. |
-| `HOST`                |          |             | The ip address to listen on (leave empty to listen on all addresses)                                                             |
-| `PORT`                |          | `8080`      | The port to listen on.                                                                                                           |
-| `DB_TYPE`             |          | `mysql`     | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`.                                               |
-| `DB_HOST`             |          | `localhost` | The host name of the database server.                                                                                            |
-| `DB_PORT`             |          |             | The port of the database server (optional).                                                                                      |
-| `DB_NAME`             |          | `facilmap`  | The name of the database.                                                                                                        |
-| `DB_USER`             |          | `facilmap`  | The username to connect to the database with.                                                                                    |
-| `DB_PASSWORD`         |          | `facilmap`  | The password to connect to the database with.                                                                                    |
-| `ORS_TOKEN`           | *        |             | [OpenRouteService API key](https://openrouteservice.org/).                                                                     |
-| `MAPBOX_TOKEN`        | *        |             | [Mapbox API key](https://www.mapbox.com/signup/).                                                                                |
-| `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup).                                                                   |
-| `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key.                                                                                                             |
+| `HOST`                |          |             | The ip address to listen on (leave empty to listen on all addresses) |
+| `PORT`                |          | `8080`      | The port to listen on. |
+| `DB_TYPE`             |          | `mysql`     | The type of database. Either `mysql`, `postgres`, `mariadb`, `sqlite`, or `mssql`. |
+| `DB_HOST`             |          | `localhost` | The host name of the database server. |
+| `DB_PORT`             |          |             | The port of the database server (optional). |
+| `DB_NAME`             |          | `facilmap`  | The name of the database. |
+| `DB_USER`             |          | `facilmap`  | The username to connect to the database with. |
+| `DB_PASSWORD`         |          | `facilmap`  | The password to connect to the database with. |
+| `ORS_TOKEN`           |          |             | [OpenRouteService API key](https://openrouteservice.org/). If not specified, advanced routing settings will not be shown. |
+| `MAPBOX_TOKEN`        |          |             | [Mapbox API key](https://www.mapbox.com/signup/). If neither this nor `ORS_TOKEN` are specified, the routing tab and any routing options will be hidden. |
+| `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup). |
+| `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key. |
 | `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key |
 | `HIDE_COMMERCIAL_MAP_LINKS` |    |             | Set to `1` to hide the links to Google/Bing Maps in the “Map style” menu. |
 | `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)). |

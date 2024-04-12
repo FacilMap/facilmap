@@ -77,6 +77,8 @@
 			interactive: true,
 			linkLogo: false,
 			updateHash: false,
+			routing: true,
+			advancedRouting: true,
 			...props.settings
 		}))),
 		components: shallowReadonly(components),

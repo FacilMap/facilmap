@@ -4,7 +4,7 @@ import type { RawRouteInfo } from "./routing.js";
 import { getI18n } from "../i18n.js";
 
 if (!config.mapboxToken)
-	console.error("Warning: No Mapbox token configured, calculating routes will fail. Please set MAPBOX_TOKEN in the environment or in config.env.");
+	console.error("Warning: No Mapbox token configured, calculating simple routes will fall back to ORS. Please set MAPBOX_TOKEN in the environment or in config.env.");
 
 const ROUTING_URL = "https://api.mapbox.com/directions/v5/mapbox";
 

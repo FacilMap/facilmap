@@ -23,7 +23,7 @@
         "load-error": "{{appName}} konnte nicht geladen werden!"
     },
     "routing": {
-        "ors-token-warning": "Warnung: Kein ORS-Token konfiguriert. Bitten Sie den Administrator, die Umgebungsvariable ORS_TOKEN zu setzen.",
+        "ors-token-warning": "Kein ORS-Token konfiguriert. Bitten Sie den Administrator, die Umgebungsvariable ORS_TOKEN zu setzen.",
         "too-much-distance-error": "Die Distanz zwischen den Routenpunkten ist zu groß. Versuchen Sie, einige Zwischenpunkte hinzuzufügen.",
         "invalid-response-error": "Ungültige Antwort vom Routenserver.",
         "mapbox-token-warning": "Kein Mapbox-Token konfiguriert. Bitten Sie den Administrator, die Umgebungsvariable MAPBOX_TOKEN zu setzen.",

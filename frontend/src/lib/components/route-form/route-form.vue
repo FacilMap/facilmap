@@ -633,7 +633,7 @@
 					<Icon icon="plus" :alt="i18n.t('route-form.add-destination-alt')"></Icon>
 				</button>
 
-				<RouteMode v-model="routeMode" :tabindex="destinations.length+2" tooltip-placement="bottom"></RouteMode>
+				<RouteMode v-if="context.settings.routing" v-model="routeMode" :tabindex="destinations.length+2" tooltip-placement="bottom"></RouteMode>
 
 				<button
 					type="submit"

@@ -90,7 +90,7 @@
 				</ValidatedField>
 			</div>
 
-			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track'" class="row mb-3">
+			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track' && context.settings.routing" class="row mb-3">
 				<label class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.routing-mode")}}</label>
 				<div class="col-sm-9">
 					<RouteMode v-model="line.mode"></RouteMode>

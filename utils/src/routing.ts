@@ -193,3 +193,13 @@ export function parseRouteQuery(query: string): RouteQuery {
 		mode
 	};
 }
+
+/**
+ * If true, this route can be handled by OSRM, ORS is not needed.
+ */
+export function isSimpleRoute(decodedMode: DecodedRouteMode): boolean {
+	return !decodedMode.type &&
+		(!decodedMode.preference || decodedMode.preference == "fastest") &&
+		(!decodedMode.avoid || decodedMode.avoid.length == 0) &&
+		!decodedMode.details;
+}

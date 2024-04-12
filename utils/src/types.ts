@@ -15,4 +15,6 @@ export interface InjectedConfig {
 	nominatimUrl: string;
 	limaLabsToken?: string;
 	hideCommercialMapLinks?: boolean;
+	supportsRoutes: boolean;
+	supportsAdvancedRoutes: boolean;
 }

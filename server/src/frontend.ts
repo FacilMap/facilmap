@@ -69,6 +69,8 @@ function getInjectedConfig(): InjectedConfig {
 		nominatimUrl: config.nominatimUrl,
 		limaLabsToken: config.limaLabsToken,
 		hideCommercialMapLinks: config.hideCommercialMapLinks,
+		supportsRoutes: !!config.mapboxToken || !!config.orsToken,
+		supportsAdvancedRoutes: !!config.orsToken
 	};
 }
 

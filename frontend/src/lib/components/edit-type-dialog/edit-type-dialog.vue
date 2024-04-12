@@ -361,7 +361,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('mode')">
+			<template v-if="resolvedCanControl.includes('mode') && context.settings.routing">
 				<div class="row mb-3">
 					<label :for="`${id}-default-mode-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-route-mode")}}</label>
 					<div class="col-sm-9">

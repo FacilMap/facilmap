@@ -23,7 +23,7 @@
         "load-error": "Could not load {{appName}}!"
     },
     "routing": {
-        "ors-token-warning": "Warning: No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.",
+        "ors-token-warning": "No ORS token configured. Please ask the administrator to set ORS_TOKEN in the environment or in config.env.",
         "too-much-distance-error": "Too much distance between route points. Consider adding some via points.",
         "invalid-response-error": "Invalid response from routing server.",
         "mapbox-token-warning": "No Mapbox token configured. Please ask the administrator to set MAPBOX_TOKEN in the environment or in config.env.",
