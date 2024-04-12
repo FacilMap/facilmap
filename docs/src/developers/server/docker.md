@@ -10,95 +10,84 @@ FacilMap needs a database supported by [Sequelize](https://sequelize.org/master/
 
 ## docker-compose
 
-To run FacilMap with MySQL using [docker-compose](https://docs.docker.com/compose/), here is an example `docker-compose.yml`:
+To run FacilMap with MariaDB using [docker-compose](https://docs.docker.com/compose/), here is an example `docker-compose.yml`:
 
 ```yaml
-version: "2"
 services:
-	facilmap:
-		image: facilmap/facilmap
-		ports:
-			- 8080:8080
-		links:
-			- mysql
-		depends_on:
-			mysql:
-				condition: service_healthy
-		environment:
-			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
-			TRUST_PROXY: "true"
-			DB_TYPE: mysql
-			DB_HOST: db
-			DB_NAME: facilmap
-			DB_USER: facilmap
-			DB_PASSWORD: password
-			ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
-			MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
-			MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
-			MAXMIND_LICENSE_KEY:
-			LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
-		restart: unless-stopped
-	mysql:
-		image: mariadb
-		environment:
-			MYSQL_DATABASE: facilmap
-			MYSQL_USER: facilmap
-			MYSQL_PASSWORD: password
-			MYSQL_RANDOM_ROOT_PASSWORD: "true"
-		command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-		healthcheck:
-			test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
-		restart: unless-stopped
+    facilmap:
+        image: facilmap/facilmap
+        ports:
+            - 8080:8080
+        links:
+            - mariadb
+        depends_on:
+            mariadb:
+                condition: service_healthy
+        environment:
+            USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+            TRUST_PROXY: "true"
+            DB_TYPE: mysql
+            DB_HOST: mariadb
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: password
+            ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+            MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+            MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
+            MAXMIND_LICENSE_KEY:
+            LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
+        restart: unless-stopped
+    mariadb:
+        image: mariadb
+        environment:
+            MYSQL_DATABASE: facilmap
+            MYSQL_USER: facilmap
+            MYSQL_PASSWORD: password
+            MYSQL_RANDOM_ROOT_PASSWORD: "true"
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        healthcheck:
+            test: healthcheck.sh --su-mysql --connect --innodb_initialized
+        restart: unless-stopped
 ```
 
 Here is an example with Postgres:
 
 ```yaml
-version: "2"
 services:
-	facilmap:
-		image: facilmap/facilmap
-		ports:
-			- 8080:8080
-		links:
-			- postgres
-		depends_on:
-			postgres:
-				condition: service_healthy
-		environment:
-			USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
-			TRUST_PROXY: "true"
-			DB_TYPE: postgres
-			DB_HOST: db
-			DB_NAME: facilmap
-			DB_USER: facilmap
-			DB_PASSWORD: password
-			ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
-			MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
-			MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
-			MAXMIND_LICENSE_KEY:
-			LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
-		restart: unless-stopped
-	postgres:
-		image: postgis/postgis
-		environment:
-			POSTGRES_USER: facilmap
-			POSTGRES_PASSWORD: password
-			POSTGRES_DB: facilmap
-		healthcheck:
-			test: pg_isready -d $$POSTGRES_DB
-		restart: unless-stopped
+    facilmap:
+        image: facilmap/facilmap
+        ports:
+            - 8080:8080
+        links:
+            - postgres
+        depends_on:
+            postgres:
+                condition: service_healthy
+        environment:
+            USER_AGENT: My FacilMap (https://facilmap.example.org/, facilmap@example.org)
+            TRUST_PROXY: "true"
+            DB_TYPE: postgres
+            DB_HOST: db
+            DB_NAME: facilmap
+            DB_USER: facilmap
+            DB_PASSWORD: password
+            ORS_TOKEN: # Get an API key on https://go.openrouteservice.org/ (needed for routing)
+            MAPBOX_TOKEN: # Get an API key on https://www.mapbox.com/signup/ (needed for routing)
+            MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
+            MAXMIND_LICENSE_KEY:
+            LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
+        restart: unless-stopped
+    postgres:
+        image: postgis/postgis
+        environment:
+            POSTGRES_USER: facilmap
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: facilmap
+        healthcheck:
+            test: pg_isready -d $$POSTGRES_DB
+        restart: unless-stopped
 ```
 
 To start FacilMap, run `docker-compose up -d` in the directory of the `docker-compose.yml` file. To upgrade FacilMap, run `docker-compose pull` and then restart it by running `docker-compose up -d`.
 
 Note that this exposes FacilMap through unencrypted HTTP on port 8080. In a production setup, FacilMap should be served by a reverse proxy that provides HTTPS. Usually, the `ports` directive can be removed then.
-
-## docker create
-
-To manually create the necessary docker containers, use these commands:
-
-```bash
-docker create --name=facilmap_db -e MYSQL_DATABASE=facilmap -e MYSQL_USER=facilmap -e MYSQL_PASSWORD=password -e MYSQL_RANDOM_ROOT_PASSWORD=true --restart=unless-stopped mariadb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-docker create --link=facilmap_db -p 8080:8080 --name=facilmap -e "USER_AGENT=My FacilMap (https://facilmap.example.org/, facilmap@example.org)" -e TRUST_PROXY=true -e DB_TYPE=mysql -e DB_HOST=facilmap_db -e DB_NAME=facilmap -e DB_USER=facilmap -e DB_PASSWORD=facilmap -e ORS_TOKEN= -e MAPBOX_TOKEN= -e MAXMIND_USER_ID= -e MAXMIND_LICENSE_KEY= -e LIMA_LABS_TOKEN= --restart=unless-stopped facilmap/facilmap
-```
