@@ -459,7 +459,7 @@
 									</template>
 								</div>
 							</td>
-							<td class="text-center">
+							<td class="text-center align-middle">
 								<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
 							</td>
 							<td class="td-buttons">

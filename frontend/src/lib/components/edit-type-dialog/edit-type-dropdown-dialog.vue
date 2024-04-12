@@ -282,7 +282,7 @@
 			>
 				<template #item="{ element: option, index: idx }">
 					<tr>
-						<td v-if="fieldValue.type == 'checkbox'">
+						<td v-if="fieldValue.type == 'checkbox'" class="align-middle">
 							<strong>{{formatCheckboxValue(idx === 0 ? "0" : "1")}}</strong>
 						</td>
 						<ValidatedField
