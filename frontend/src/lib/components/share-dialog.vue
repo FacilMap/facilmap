@@ -24,7 +24,10 @@
 	const includeMapView = ref(true);
 	const showToolbox = ref(true);
 	const showSearch = ref(true);
+	const showRoute = ref(true);
+	const showPois = ref(true);
 	const showLegend = ref(true);
+	const showLocate = ref(true);
 	const padIdType = ref<Writable>(2);
 	const activeShareTab = ref(0);
 
@@ -50,12 +53,25 @@
 
 	const url = computed(() => {
 		const params = new URLSearchParams();
-		if (!showToolbox.value)
+		if (!showToolbox.value) {
 			params.set("toolbox", "false");
-		if (!showSearch.value)
+		}
+		if (!showSearch.value) {
 			params.set("search", "false");
-		if (!showLegend.value)
+		} else {
+			if (!showRoute.value) {
+				params.set("route", "false");
+			}
+			if (!showPois.value) {
+				params.set("pois", "false");
+			}
+		}
+		if (!showLegend.value) {
 			params.set("legend", "false");
+		}
+		if (!showLocate.value) {
+			params.set("locate", "false");
+		}
 		const paramsStr = params.toString();
 
 		return context.baseUrl
@@ -130,8 +146,13 @@
 						</T>
 					</label>
 				</div>
+			</div>
+		</div>
 
-				<div class="form-check">
+		<div class="row mb-3">
+			<label class="col-sm-3 col-form-label">{{i18n.t("share-dialog.show-controls")}}</label>
+			<div class="col-sm-9 checkbox-grid">
+				<div class="form-check fm-form-check-with-label">
 					<input
 						type="checkbox"
 						class="form-check-input"
@@ -155,6 +176,34 @@
 					</label>
 				</div>
 
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-route-input`"
+						:disabled="!showSearch"
+						:checked="showSearch && showRoute"
+						@change="showRoute = ($event.target as HTMLInputElement).checked"
+					/>
+					<label :for="`${id}-show-route-input`" class="form-check-label">
+						{{i18n.t("share-dialog.show-route")}}
+					</label>
+				</div>
+
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-pois-input`"
+						:disabled="!showSearch"
+						:checked="showSearch && showPois"
+						@change="showPois = ($event.target as HTMLInputElement).checked"
+					/>
+					<label :for="`${id}-show-pois-input`" class="form-check-label">
+						{{i18n.t("share-dialog.show-pois")}}
+					</label>
+				</div>
+
 				<div class="form-check" v-if="hasLegend">
 					<input
 						type="checkbox"
@@ -164,6 +213,18 @@
 					/>
 					<label :for="`${id}-show-legend-input`" class="form-check-label">
 						{{i18n.t("share-dialog.show-legend")}}
+					</label>
+				</div>
+
+				<div class="form-check">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						:id="`${id}-show-locate-input`"
+						v-model="showLocate"
+					/>
+					<label :for="`${id}-show-locate-input`" class="form-check-label">
+						{{i18n.t("share-dialog.show-locate")}}
 					</label>
 				</div>
 			</div>
@@ -234,3 +295,11 @@
 		</template>
 	</ModalDialog>
 </template>
+
+<style lang="scss">
+	.fm-share-dialog {
+		.checkbox-grid {
+			column-width: 160px;
+		}
+	}
+</style>

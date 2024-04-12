@@ -14,9 +14,12 @@ map (unless the `interactive` parameter is `false`).
 You can control the display of different components by using the following query parameters:
 
 * `toolbox`: Show the toolbox (default: `true`)
-* `search`: Show the search bar (default: `true`)
+* `search`: Show the search box (default: `true`)
+* `route`: Show the route tab in the search box (default: `true`)
+* `pois`: Show the POIs tab in the search box (default: `true`)
 * `autofocus`: Autofocus the search field (default: `false`)
 * `legend`: Show the legend if available (default: `true`)
+* `locate`: Show the locate control to zoom to the user’s location (default: `true`)
 * `interactive`: Enable [interactive mode](#interactive-mode) (default: `false`)
 * `lang`: Use this display language (for example `en`) by default, instead of the language set by the user in the user preferences dialog or in their browser.
 * `units`: Use this type of units (either `metric` or `us_customary`) by default, instead of what the user has configured in the user preferences dialog.

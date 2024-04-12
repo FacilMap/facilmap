@@ -10,6 +10,9 @@ import type { ImportTabContext } from "./import-tab-context";
 export interface FacilMapSettings {
 	toolbox: boolean;
 	search: boolean;
+	route: boolean;
+	pois: boolean;
+	locate: boolean;
 	autofocus: boolean;
 	legend: boolean;
 	interactive: boolean;

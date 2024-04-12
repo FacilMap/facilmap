@@ -23,9 +23,7 @@ To create a link pointing to a particular map view on FacilMap, click on “Tool
 
 The following options are available:
 * “Include current map view” defines whether the generated link should point to the current view (map position, active map object, ...) of the map. If this option is disabled, the link will point to the default view ([saved default view](../views/#default-view) for [collaborative maps](../collaborative/), otherwise the rough geographical location of the user).
-* “Show toolbox”: If this is disabled, the [toolbox](../ui/#toolbox) will be hidden when opening the link.
-* “Show search box”: If this is disabled, the [search box](../ui/#search-box) will be hidden when opening the link.
-* “Show legend” (only for [collaborative maps](../collaborative/) with a [legend](../legend/)): If this is disabled, the [legend](../legend/) will be hidden when opening the link.
+* “Show controls”: Uncheck different UI elements here to hide them when opening the link. This is particularly useful when embedding the map into a web page.
 * “Link type” (only for [collaborative maps](../collaborative/)): The [permissions](../collaborative/#urls) that users will have when opening the link.
 
 Click on “Copy” to copy the link to the clipboard.

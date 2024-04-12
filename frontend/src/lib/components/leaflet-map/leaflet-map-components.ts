@@ -18,6 +18,7 @@ import { requireClientContext } from "../facil-map-context-provider/facil-map-co
 import { type Optional, sleep } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
+import { fixOnCleanup } from "../../utils/vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 type OnCleanup = (cleanupFn: () => void) => void;
@@ -89,7 +90,8 @@ function useMapComponent<T>(
 	watch([
 		componentRef,
 		map
-	], ([component], prev, onCleanup) => {
+	], ([component], prev, onCleanup_) => {
+		const onCleanup = fixOnCleanup(onCleanup_);
 		activate(component as T, onCleanup);
 	}, { immediate: true });
 
@@ -152,41 +154,45 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	);
 }
 
-function useLocateControl(map: Ref<Map>): Ref<Raw<Control.Locate>> {
+function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Control.Locate> | undefined> {
 	return useMapComponent(
 		map,
-		() => (
-			markRaw(control.locate({
-				flyTo: true,
-				icon: "a",
-				iconLoading: "a",
-				markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
-				locateOptions: {
-					enableHighAccuracy: true
-				},
-				clickBehavior: {
-					inView: "stop",
-					outOfView: "setView",
-					inViewNotFollowing: "outOfView"
-				}
-			}))
-		),
-		(locateControl, onCleanup) => {
-			locateControl.addTo(map.value);
-
-			if (!coreSymbolList.includes("screenshot")) {
-				console.warn(`Icon "screenshot" is not in core icons.`);
+		() => {
+			if (context.settings.locate) {
+				return markRaw(control.locate({
+					flyTo: true,
+					icon: "a",
+					iconLoading: "a",
+					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
+					locateOptions: {
+						enableHighAccuracy: true
+					},
+					clickBehavior: {
+						inView: "stop",
+						outOfView: "setView",
+						inViewNotFollowing: "outOfView"
+					}
+				}));
 			}
+		},
+		(locateControl, onCleanup) => {
+			if (locateControl) {
+				locateControl.addTo(map.value);
 
-			getSymbolHtml("currentColor", "1.5em", "screenshot").then((html) => {
-				locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
-			}).catch((err) => {
-				console.error("Error loading locate control icon", err);
-			});
+				if (!coreSymbolList.includes("screenshot")) {
+					console.warn(`Icon "screenshot" is not in core icons.`);
+				}
 
-			onCleanup(() => {
-				locateControl.remove();
-			});
+				getSymbolHtml("currentColor", "1.5em", "screenshot").then((html) => {
+					locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
+				}).catch((err) => {
+					console.error("Error loading locate control icon", err);
+				});
+
+				onCleanup(() => {
+					locateControl.remove();
+				});
+			}
 		}
 	);
 }
@@ -343,7 +349,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const bboxHandler = useBboxHandler(map, client);
 	const graphicScale = useGraphicScale(map);
 	const linesLayer = useLinesLayer(map, client);
-	const locateControl = useLocateControl(map);
+	const locateControl = useLocateControl(map, context);
 	const markersLayer = useMarkersLayer(map, client);
 	const mousePosition = useMousePosition(map);
 	const overpassLayer = useOverpassLayer(map, mapContext);

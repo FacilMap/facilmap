@@ -74,6 +74,9 @@ const Root = defineComponent({
 			settings: {
 				toolbox: toBoolean(queryParams.toolbox, true),
 				search: toBoolean(queryParams.search, true),
+				route: toBoolean(queryParams.route, true),
+				pois: toBoolean(queryParams.pois, true),
+				locate: toBoolean(queryParams.locate, true),
 				autofocus: toBoolean(queryParams.autofocus, parent === window),
 				legend: toBoolean(queryParams.legend, true),
 				interactive: toBoolean(queryParams.interactive, parent === window),

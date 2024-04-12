@@ -19,7 +19,7 @@ export interface MapComponents {
 	graphicScale: any;
 	hashHandler: HashHandler;
 	linesLayer: LinesLayer;
-	locateControl: L.Control.Locate;
+	locateControl?: L.Control.Locate;
 	map: Map;
 	markersLayer: MarkersLayer;
 	mousePosition: L.Control.MousePosition;

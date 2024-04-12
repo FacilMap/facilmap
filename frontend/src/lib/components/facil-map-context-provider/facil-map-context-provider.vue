@@ -72,6 +72,9 @@
 		settings: readonly(toRef(() => ({
 			toolbox: true,
 			search: true,
+			route: true,
+			pois: true,
+			locate: true,
 			autofocus: false,
 			legend: true,
 			interactive: true,

@@ -80,8 +80,8 @@
 
 				<template v-if="context.components.searchBox">
 					<SearchFormTab v-if="context.settings.search"></SearchFormTab>
-					<RouteFormTab v-if="context.settings.search && context.settings.routing"></RouteFormTab>
-					<OverpassFormTab v-if="context.settings.search"></OverpassFormTab>
+					<RouteFormTab v-if="context.settings.search && context.settings.routing && context.settings.route"></RouteFormTab>
+					<OverpassFormTab v-if="context.settings.search && context.settings.pois"></OverpassFormTab>
 					<MarkerInfoTab></MarkerInfoTab>
 					<LineInfoTab></LineInfoTab>
 					<MultipleInfoTab></MultipleInfoTab>
