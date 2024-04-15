@@ -78,7 +78,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 				marker: {
 					colour: this.options.markerColour!,
 					size: this.options.markerSize!,
-					symbol: result.icon || '',
+					icon: result.icon || '',
 					shape: this.options.markerShape!
 				},
 				pathOptions: this.options.pathOptions
@@ -97,7 +97,7 @@ export default class SearchResultsLayer extends FeatureGroup {
 				marker: {
 					colour: this.options.markerColour!,
 					size: this.options.markerSize!,
-					symbol: result.icon || '',
+					icon: result.icon || '',
 					shape: this.options.markerShape!
 				}
 			}).bindTooltip(result.display_name, { ...tooltipOptions, offset: [ 20, 0 ] })

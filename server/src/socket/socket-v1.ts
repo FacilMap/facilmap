@@ -1,8 +1,53 @@
-import { SocketVersion, type Marker, type SocketEvents, type MultipleEvents, type PadData, type Line, type FindPadsResult, type FindOnMapResult, type FindOnMapMarker, type FindOnMapLine, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type PadData, type Line, type FindPadsResult, type FindOnMapLine, type SocketServerToClientEmitArgs, type LegacyV2FindOnMapMarker, type LegacyV2Marker, type LegacyV2FindOnMapResult } from "facilmap-types";
 import { SocketConnectionV2 } from "./socket-v2";
-import type { DatabaseHandlers, SocketHandlers } from "./socket-common";
+import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { normalizeLineName, normalizeMarkerName, normalizePadName } from "facilmap-utils";
-import { type Socket as SocketIO } from "socket.io";
+import type Database from "../database/database";
+
+function preparePadData<P extends PadData | FindPadsResult>(padData: P): P {
+	return {
+		...padData,
+		name: normalizePadName(padData.name)
+	};
+}
+
+function prepareMarker<M extends LegacyV2Marker | LegacyV2FindOnMapMarker>(marker: M): M {
+	return {
+		...marker,
+		name: normalizeMarkerName(marker.name)
+	};
+}
+
+function prepareLine<L extends Line | FindOnMapLine>(line: L): L {
+	return {
+		...line,
+		name: normalizeLineName(line.name)
+	};
+}
+
+function prepareMapResult(result: LegacyV2FindOnMapResult): LegacyV2FindOnMapResult {
+	if (result.kind === "marker") {
+		return prepareMarker(result);
+	} else {
+		return prepareLine(result);
+	}
+}
+
+function prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V2>): Array<SocketServerToClientEmitArgs<SocketVersion.V1>> {
+	if (args[0] === "line") {
+		return [["line", prepareLine(args[1])]];
+	} else if (args[0] === "marker") {
+		return [["marker", prepareMarker(args[1])]];
+	} else if (args[0] === "padData") {
+		return [["padData", preparePadData(args[1])]];
+	} else {
+		return [args];
+	}
+}
+
+function prepareMultiple(events: MultipleEvents<SocketEvents<SocketVersion.V2>>): MultipleEvents<SocketEvents<SocketVersion.V1>> {
+	return mapMultipleEvents(events, prepareEvent);
+}
 
 function mapResult<Input, Output, Args extends any[]>(func: (...args: Args) => Input | PromiseLike<Input>, mapper: (result: Input) => Output): (...args: Args) => Promise<Output> {
 	return async (...args) => {
@@ -11,82 +56,41 @@ function mapResult<Input, Output, Args extends any[]>(func: (...args: Args) => I
 	};
 }
 
-export class SocketConnectionV1 extends SocketConnectionV2 {
-	declare socket: SocketIO<SocketClientToServerEvents<SocketVersion.V2>, SocketServerToClientEvents<SocketVersion.V2>>;;
+export class SocketConnectionV1 implements SocketConnection<SocketVersion.V1> {
+	socketV2: SocketConnectionV2;
 
-	override getVersion(): SocketVersion {
-		return SocketVersion.V1;
+	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V1>) => void, database: Database, remoteAddr: string) {
+		this.socketV2 = new SocketConnectionV2((...args) => {
+			for (const ev of prepareEvent(...args)) {
+				emit(...ev);
+			}
+		}, database, remoteAddr);
 	}
 
-	override getSocketHandlers(): SocketHandlers<SocketVersion.V1> {
-		const socketHandlers = super.getSocketHandlers();
+	getSocketHandlers(): SocketHandlers<SocketVersion.V1> {
+		const socketHandlers = this.socketV2.getSocketHandlers();
 
 		return {
 			...socketHandlers,
-			setPadId: mapResult(socketHandlers.setPadId, (events) => this.prepareMultiple(events)),
-			updateBbox: mapResult(socketHandlers.updateBbox, (events) => this.prepareMultiple(events)),
-			getPad: mapResult(socketHandlers.getPad, (result) => result ? this.preparePadData(result) : result),
-			findPads: mapResult(socketHandlers.findPads, (result) => ({ ...result, results: result.results.map((r) => this.preparePadData(r)) })),
-			createPad: mapResult(socketHandlers.createPad, (events) => this.prepareMultiple(events)),
-			editPad: mapResult(socketHandlers.editPad, (padData) => this.preparePadData(padData)),
-			getMarker: mapResult(socketHandlers.getMarker, (marker) => this.prepareMarker(marker)),
-			addMarker: mapResult(socketHandlers.addMarker, (marker) => this.prepareMarker(marker)),
-			editMarker: mapResult(socketHandlers.editMarker, (marker) => this.prepareMarker(marker)),
-			deleteMarker: mapResult(socketHandlers.deleteMarker, (marker) => this.prepareMarker(marker)),
-			addLine: mapResult(socketHandlers.addLine, (line) => this.prepareLine(line)),
-			editLine: mapResult(socketHandlers.editLine, (line) => this.prepareLine(line)),
-			deleteLine: mapResult(socketHandlers.deleteLine, (line) => this.prepareLine(line)),
-			findOnMap: mapResult(socketHandlers.findOnMap, (results) => results.map((r) => this.prepareMapResult(r)))
+			setPadId: mapResult(socketHandlers.setPadId, (events) => prepareMultiple(events)),
+			updateBbox: mapResult(socketHandlers.updateBbox, (events) => prepareMultiple(events)),
+			getPad: mapResult(socketHandlers.getPad, (result) => result ? preparePadData(result) : result),
+			findPads: mapResult(socketHandlers.findPads, (result) => ({ ...result, results: result.results.map((r) => preparePadData(r)) })),
+			createPad: mapResult(socketHandlers.createPad, (events) => prepareMultiple(events)),
+			editPad: mapResult(socketHandlers.editPad, (padData) => preparePadData(padData)),
+			getMarker: mapResult(socketHandlers.getMarker, (marker) => prepareMarker(marker)),
+			addMarker: mapResult(socketHandlers.addMarker, (marker) => prepareMarker(marker)),
+			editMarker: mapResult(socketHandlers.editMarker, (marker) => prepareMarker(marker)),
+			deleteMarker: mapResult(socketHandlers.deleteMarker, (marker) => prepareMarker(marker)),
+			addLine: mapResult(socketHandlers.addLine, (line) => prepareLine(line)),
+			editLine: mapResult(socketHandlers.editLine, (line) => prepareLine(line)),
+			deleteLine: mapResult(socketHandlers.deleteLine, (line) => prepareLine(line)),
+			findOnMap: mapResult(socketHandlers.findOnMap, (results) => results.map((r) => prepareMapResult(r)))
 		};
 	}
 
-	override getDatabaseHandlers(): DatabaseHandlers {
-		const databaseHandlers = super.getDatabaseHandlers();
-		return {
-			...databaseHandlers,
-			...databaseHandlers.line ? { line: (padId, data) => { databaseHandlers.line!(padId, this.prepareLine(data)); } } : {},
-			...databaseHandlers.marker ? { marker: (padId, data) => { databaseHandlers.marker!(padId, this.prepareMarker(data)); } } : {},
-			...databaseHandlers.padData ? { padData: (padId, data) => { databaseHandlers.padData!(padId, this.preparePadData(data)); } } : {}
-		};
-	}
-
-	prepareMultiple(events: MultipleEvents<SocketEvents<SocketVersion.V1>>): MultipleEvents<SocketEvents<SocketVersion.V1>> {
-		return {
-			...events,
-			...(events.padData ? { padData: events.padData.map((p) => this.preparePadData(p)) } : {}),
-			...(events.marker ? { marker: events.marker.map((m) => this.prepareMarker(m)) } : {}),
-			...(events.line ? { line: events.line.map((l) => this.prepareLine(l)) } : {})
-		};
-
-	}
-
-	preparePadData<P extends PadData | FindPadsResult>(padData: P): P {
-		return {
-			...padData,
-			name: normalizePadName(padData.name)
-		};
-	}
-
-	prepareMarker<M extends Marker | FindOnMapMarker>(marker: M): M {
-		return {
-			...marker,
-			name: normalizeMarkerName(marker.name)
-		};
-	}
-
-	prepareLine<L extends Line | FindOnMapLine>(line: L): L {
-		return {
-			...line,
-			name: normalizeLineName(line.name)
-		};
-	}
-
-	prepareMapResult(result: FindOnMapResult): FindOnMapResult {
-		if (result.kind === "marker") {
-			return this.prepareMarker(result);
-		} else {
-			return this.prepareLine(result);
-		}
+	handleDisconnect(): void {
+		this.socketV2.handleDisconnect();
 	}
 
 }

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../utils";
+import { createTemporaryPad, openClient } from "../../utils";
 
 test("New marker is created with default settings", async () => {
 	const client = await openClient();
@@ -10,7 +10,7 @@ test("New marker is created with default settings", async () => {
 			type: "marker",
 			defaultColour: "00ff00",
 			defaultSize: 50,
-			defaultSymbol: "a",
+			defaultIcon: "a",
 			defaultShape: "circle"
 		});
 
@@ -23,7 +23,7 @@ test("New marker is created with default settings", async () => {
 		expect(marker).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});
@@ -99,8 +99,8 @@ test("New marker is created with fixed settings", async () => {
 			colourFixed: true,
 			defaultSize: 50,
 			sizeFixed: true,
-			defaultSymbol: "a",
-			symbolFixed: true,
+			defaultIcon: "a",
+			iconFixed: true,
 			defaultShape: "circle",
 			shapeFixed: true
 		});
@@ -111,14 +111,14 @@ test("New marker is created with fixed settings", async () => {
 			typeId: type.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
 		expect(marker).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});
@@ -173,8 +173,8 @@ test("Marker update is overridden by fixed settings", async () => {
 			colourFixed: true,
 			defaultSize: 50,
 			sizeFixed: true,
-			defaultSymbol: "a",
-			symbolFixed: true,
+			defaultIcon: "a",
+			iconFixed: true,
 			defaultShape: "circle",
 			shapeFixed: true
 		});
@@ -189,14 +189,14 @@ test("Marker update is overridden by fixed settings", async () => {
 			id: marker.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
 		expect(markerUpdate).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});
@@ -261,7 +261,7 @@ test("New fixed marker styles are applied to existing markers", async () => {
 			typeId: type.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
@@ -274,8 +274,8 @@ test("New fixed marker styles are applied to existing markers", async () => {
 			colourFixed: true,
 			defaultSize: 50,
 			sizeFixed: true,
-			defaultSymbol: "a",
-			symbolFixed: true,
+			defaultIcon: "a",
+			iconFixed: true,
 			defaultShape: "circle",
 			shapeFixed: true
 		});
@@ -285,7 +285,7 @@ test("New fixed marker styles are applied to existing markers", async () => {
 		expect(client.markers[marker.id]).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});

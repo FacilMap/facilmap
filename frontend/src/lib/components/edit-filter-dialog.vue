@@ -166,9 +166,9 @@
 					</tr>
 
 					<tr>
-						<td><code>symbol</code></td>
-						<td>{{i18n.t("edit-filter-dialog.symbol-description")}}</td>
-						<td><code>symbol == &quot;accommodation_camping&quot;</code></td>
+						<td><code>icon</code></td>
+						<td>{{i18n.t("edit-filter-dialog.icon-description")}}</td>
+						<td><code>icon == &quot;accommodation_camping&quot;</code></td>
 					</tr>
 
 					<tr>

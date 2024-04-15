@@ -61,7 +61,7 @@ function markerToGeoJson(marker: Marker): JsonStream {
 			name: marker.name,
 			colour: marker.colour,
 			size: marker.size,
-			symbol: marker.symbol,
+			icon: marker.icon,
 			shape: marker.shape,
 			data: cloneDeep(marker.data),
 			typeId: marker.typeId

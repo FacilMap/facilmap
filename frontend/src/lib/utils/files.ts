@@ -1,5 +1,5 @@
 import type { Feature, Geometry } from "geojson";
-import type { GeoJsonExport, LineFeature, MarkerFeature, SearchResult } from "facilmap-types";
+import { legacyV2MarkerToCurrent, legacyV2TypeToCurrent, type GeoJsonExport, type LineFeature, type MarkerFeature, type SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 import { getI18n } from "./i18n";
 
@@ -71,7 +71,7 @@ export async function parseFiles(files: string[]): Promise<FileResultObject> {
 			if (geojson.facilmap.types) {
 				for (const i of Object.keys(geojson.facilmap.types)) {
 					typeMapping[i] = nextTypeIdx++;
-					ret.types[typeMapping[i]] = geojson.facilmap.types[i];
+					ret.types[typeMapping[i]] = legacyV2TypeToCurrent(geojson.facilmap.types[i]);
 				}
 			}
 
@@ -122,7 +122,7 @@ export async function parseFiles(files: string[]): Promise<FileResultObject> {
 			if(geojson.facilmap) {
 				if(feature.properties.typeId && typeMapping[feature.properties.typeId])
 					f.fmTypeId = typeMapping[feature.properties.typeId];
-				f.fmProperties = feature.properties;
+				f.fmProperties = legacyV2MarkerToCurrent(feature.properties);
 			}
 
 			ret.features.push(f);

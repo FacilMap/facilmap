@@ -1,6 +1,6 @@
 {
   "name": "facilmap-integration-tests",
-  "version": "4.1.1",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "homepage": "https://github.com/FacilMap/facilmap",
@@ -21,7 +21,11 @@
   },
   "dependencies": {
     "facilmap-client": "workspace:^",
+    "facilmap-client-v3": "patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch",
+    "facilmap-client-v4": "npm:facilmap-client@4",
     "facilmap-types": "workspace:^",
+    "facilmap-types-v3": "npm:facilmap-types@3",
+    "facilmap-types-v4": "npm:facilmap-types@4",
     "facilmap-utils": "workspace:^",
     "lodash-es": "^4.17.21",
     "socket.io-client": "^4.7.5",

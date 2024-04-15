@@ -1,5 +1,5 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import { typeValidator, type CRU, type Field, type ID, type PadId, type Type, type Colour, type Size, type Symbol, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
+import { typeValidator, type CRU, type Field, type ID, type PadId, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { PadModel } from "./pad.js";
@@ -16,8 +16,8 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	colourFixed: boolean;
 	defaultSize: Size;
 	sizeFixed: boolean;
-	defaultSymbol: Symbol;
-	symbolFixed: boolean;
+	defaultIcon: Icon;
+	iconFixed: boolean;
 	defaultShape: Shape;
 	shapeFixed: boolean;
 	defaultWidth: Width;
@@ -54,8 +54,8 @@ export default class DatabaseTypes {
 			colourFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultSize: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			sizeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
-			defaultSymbol: { type: DataTypes.TEXT, allowNull: false },
-			symbolFixed: { type: DataTypes.BOOLEAN, allowNull: false },
+			defaultIcon: { type: DataTypes.TEXT, allowNull: false },
+			iconFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultShape: { type: DataTypes.TEXT, allowNull: false },
 			shapeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			defaultWidth: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },

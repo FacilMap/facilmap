@@ -366,7 +366,7 @@
 			marker: {
 				colour: dragMarkerColour,
 				size: 35,
-				symbol: "",
+				icon: "",
 				shape: "drop"
 			}
 		})).addTo(mapContext.value.components.map));

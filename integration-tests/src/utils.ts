@@ -1,7 +1,12 @@
 import { io, Socket } from "socket.io-client";
 import Client from "facilmap-client";
-import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, Writable, type MultipleEvents, type SocketEvents } from "facilmap-types";
+import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, Writable } from "facilmap-types";
 import { generateRandomPadId, sleep } from "facilmap-utils";
+
+// Workaround for https://stackoverflow.com/q/64639839/242365
+global.self = this as any;
+const { default: ClientV3 } = await import("facilmap-client-v3");
+
 
 export function getFacilMapUrl(): string {
 	if (!process.env.FACILMAP_URL) {
@@ -23,8 +28,14 @@ export async function openSocket<V extends SocketVersion>(version: V): Promise<S
 	return socket;
 }
 
-export async function openClient(id?: string): Promise<Client> {
-	const client = new Client(getFacilMapUrl(), id, { reconnection: false });
+const clientConstructors = {
+	[SocketVersion.V1]: ClientV3,
+	[SocketVersion.V2]: Client,
+	[SocketVersion.V3]: Client
+};
+
+export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?: string, version: V = SocketVersion.V3 as any): Promise<InstanceType<typeof clientConstructors[V]>> {
+	const client = new clientConstructors[version](getFacilMapUrl(), id, { reconnection: false }) as any;
 	await new Promise<void>((resolve, reject) => {
 		if (id != null) {
 			client.on("padData", () => {
@@ -52,15 +63,15 @@ export function getTemporaryPadData<D extends Partial<PadData<CRU.CREATE>>>(data
 	};
 }
 
-export async function createTemporaryPad<D extends Partial<PadData<CRU.CREATE>>>(
-	client: Client,
+export async function createTemporaryPad<D extends Partial<PadData<CRU.CREATE>>, C extends InstanceType<typeof clientConstructors[keyof typeof clientConstructors]>>(
+	client: C,
 	data: D,
-	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<D>>, padData: PadData & { writable: Writable }, result: MultipleEvents<SocketEvents<SocketVersion.V2>>) => Promise<void>
+	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<D>>, padData: PadData & { writable: Writable }, result: Awaited<ReturnType<C["createPad"]>>) => Promise<void>
 ): Promise<void> {
 	const createPadData = getTemporaryPadData(data);
 	const result = await client.createPad(createPadData);
 	try {
-		await callback?.(createPadData, result.padData![0], result);
+		await callback?.(createPadData, client.padData!, result as any);
 	} finally {
 		await client.deletePad();
 	}

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "./utils";
+import { createTemporaryPad, openClient, retry } from "../utils";
 import { type CRU, type ID, type View } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 

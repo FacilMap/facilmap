@@ -2,16 +2,33 @@ import { Server, type Socket as SocketIO } from "socket.io";
 import domain from "domain";
 import Database from "../database/database.js";
 import type { Server as HttpServer } from "http";
-import { SocketVersion } from "facilmap-types";
-import type { SocketConnection } from "./socket-common";
+import { SocketVersion, socketRequestValidators, type SocketServerToClientEmitArgs } from "facilmap-types";
+import type { SocketConnection, SocketHandlers } from "./socket-common";
 import { SocketConnectionV1 } from "./socket-v1";
-import { SocketConnectionV2 } from "./socket-v2";
+import { SocketConnectionV2 } from "./socket-v2.js";
 import { handleSocketConnection } from "../i18n.js";
+import { serializeError } from "serialize-error";
+import { SocketConnectionV3 } from "./socket-v3.js";
+import proxyAddr from "proxy-addr";
+import config from "../config.js";
 
-const constructors: Record<SocketVersion, new (socket: SocketIO, database: Database) => SocketConnection> = {
+const constructors: {
+	[V in SocketVersion]: new (emit: (...args: SocketServerToClientEmitArgs<V>) => void, database: Database, remoteAttr: string) => SocketConnection<V>;
+} = {
 	[SocketVersion.V1]: SocketConnectionV1,
-	[SocketVersion.V2]: SocketConnectionV2
+	[SocketVersion.V2]: SocketConnectionV2,
+	[SocketVersion.V3]: SocketConnectionV3
 };
+
+const trustProxy = config.trustProxy;
+const compiledTrust: (addr: string, i: number) => boolean = (
+	// Imitate compileTrust from express (https://github.com/expressjs/express/blob/815f799310a5627c000d4a5156c1c958e4947b4c/lib/utils.js#L215)
+	trustProxy == null ? () => false :
+	typeof trustProxy === "function" ? trustProxy :
+	typeof trustProxy === "boolean" ? () => trustProxy :
+	typeof trustProxy === "number" ? (a, i) => i < trustProxy :
+	proxyAddr.compile(trustProxy)
+);
 
 export default class Socket {
 	database: Database;
@@ -48,7 +65,41 @@ export default class Socket {
 		d.run(async () => {
 			await handleSocketConnection(socket);
 		}).then(() => {
-			new constructors[version](socket, this.database);
+			const remoteAttr = proxyAddr(socket.request, compiledTrust);
+
+			const handler = new constructors[version]((...args) => {
+				socket.emit.apply(socket, args);
+			}, this.database, remoteAttr);
+
+			socket.on("error", (err) => {
+				console.error("Error! Disconnecting client.");
+				console.error(err);
+				socket.disconnect();
+			});
+			socket.on("disconnect", () => {
+				handler.handleDisconnect();
+			});
+
+			const socketHandlers = handler.getSocketHandlers();
+			for (const i of Object.keys(socketHandlers) as Array<keyof SocketHandlers<SocketVersion>>) {
+				socket.on(i, async (data: unknown, callback: unknown): Promise<void> => {
+					const validatedCallback = typeof callback === 'function' ? callback : undefined;
+
+					try {
+						const validatedData = socketRequestValidators[version][i].parse(data);
+						const res = await (socketHandlers[i] as any)(validatedData);
+
+						if(!validatedCallback && res)
+							console.trace("No callback available to send result of socket handler " + i);
+
+						validatedCallback?.(null, res);
+					} catch (err: any) {
+						console.log(err);
+
+						validatedCallback?.(serializeError(err));
+					}
+				});
+			}
 		}).catch((err) => {
 			d.emit("error", err);
 		});

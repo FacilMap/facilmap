@@ -7,7 +7,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import ColourPicker from "../ui/colour-picker.vue";
 	import ShapePicker from "../ui/shape-picker.vue";
-	import SymbolPicker from "../ui/symbol-picker.vue";
+	import IconPicker from "../ui/icon-picker.vue";
 	import RouteMode from "../ui/route-mode.vue";
 	import Draggable from "vuedraggable";
 	import FieldInput from "../ui/field-input.vue";
@@ -252,26 +252,26 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('symbol')">
+			<template v-if="resolvedCanControl.includes('icon')">
 				<div class="row mb-3">
-					<label :for="`${id}-default-symbol-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-icon")}}</label>
+					<label :for="`${id}-default-icon-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-type-dialog.default-icon")}}</label>
 					<div class="col-sm-9">
 						<div class="row align-items-center">
 							<div class="col-sm-9">
-								<SymbolPicker
-									:id="`${id}-default-symbol-input`"
-									v-model="type.defaultSymbol"
-								></SymbolPicker>
+								<IconPicker
+									:id="`${id}-default-icon-input`"
+									v-model="type.defaultIcon"
+								></IconPicker>
 							</div>
 							<div class="col-sm-3">
 								<div class="form-check">
 									<input
 										type="checkbox"
 										class="form-check-input"
-										:id="`${id}-default-symbol-fixed`"
-										v-model="type.symbolFixed"
+										:id="`${id}-default-icon-fixed`"
+										v-model="type.iconFixed"
 									/>
-									<label :for="`${id}-default-symbol-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
+									<label :for="`${id}-default-icon-fixed`" class="form-check-label">{{i18n.t("edit-type-dialog.fixed")}}</label>
 								</div>
 							</div>
 						</div>

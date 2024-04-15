@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../utils";
+import { createTemporaryPad, openClient } from "../../utils";
 
 test("New marker is created with dropdown styles", async () => {
 	const client = await openClient();
@@ -14,11 +14,11 @@ test("New marker is created with dropdown styles", async () => {
 					type: "dropdown",
 					controlColour: true,
 					controlSize: true,
-					controlSymbol: true,
+					controlIcon: true,
 					controlShape: true,
 					options: [
-						{ value: "Value 1", colour: "00ffff", size: 60, symbol: "z", shape: "rectangle" },
-						{ value: "Value 2", colour: "00ff00", size: 50, symbol: "a", shape: "circle" }
+						{ value: "Value 1", colour: "00ffff", size: 60, icon: "z", shape: "rectangle" },
+						{ value: "Value 2", colour: "00ff00", size: 50, icon: "a", shape: "circle" }
 					],
 					default: "Value 2"
 				}
@@ -31,14 +31,14 @@ test("New marker is created with dropdown styles", async () => {
 			typeId: type.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
 		expect(marker).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});
@@ -138,11 +138,11 @@ test("Marker update is overridden by dropdown styles", async () => {
 					type: "dropdown",
 					controlColour: true,
 					controlSize: true,
-					controlSymbol: true,
+					controlIcon: true,
 					controlShape: true,
 					options: [
-						{ value: "Value 1", colour: "00ffff", size: 60, symbol: "z", shape: "rectangle" },
-						{ value: "Value 2", colour: "00ff00", size: 50, symbol: "a", shape: "circle" }
+						{ value: "Value 1", colour: "00ffff", size: 60, icon: "z", shape: "rectangle" },
+						{ value: "Value 2", colour: "00ff00", size: 50, icon: "a", shape: "circle" }
 					],
 					default: "Value 2"
 				}
@@ -162,14 +162,14 @@ test("Marker update is overridden by dropdown styles", async () => {
 			id: marker.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
 		expect(markerUpdate).toMatchObject({
 			colour: "00ffff",
 			size: 60,
-			symbol: "z",
+			icon: "z",
 			shape: "rectangle",
 		});
 	});
@@ -241,7 +241,7 @@ test("New dropdown styles are applied to existing markers", async () => {
 			typeId: type.id,
 			colour: "ffffff",
 			size: 20,
-			symbol: "b",
+			icon: "b",
 			shape: "drop"
 		});
 
@@ -256,11 +256,11 @@ test("New dropdown styles are applied to existing markers", async () => {
 					type: "dropdown",
 					controlColour: true,
 					controlSize: true,
-					controlSymbol: true,
+					controlIcon: true,
 					controlShape: true,
 					options: [
-						{ value: "Value 1", colour: "00ffff", size: 60, symbol: "z", shape: "rectangle" },
-						{ value: "Value 2", colour: "00ff00", size: 50, symbol: "a", shape: "circle" }
+						{ value: "Value 1", colour: "00ffff", size: 60, icon: "z", shape: "rectangle" },
+						{ value: "Value 2", colour: "00ff00", size: 50, icon: "a", shape: "circle" }
 					],
 					default: "Value 2"
 				}
@@ -272,7 +272,7 @@ test("New dropdown styles are applied to existing markers", async () => {
 		expect(client.markers[marker.id]).toMatchObject({
 			colour: "00ff00",
 			size: 50,
-			symbol: "a",
+			icon: "a",
 			shape: "circle",
 		});
 	});

@@ -53,7 +53,7 @@ export const findOnMapQueryValidator = z.object({
 });
 export type FindOnMapQuery = z.infer<typeof findOnMapQueryValidator>;
 
-export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "symbol"> & { kind: "marker"; similarity: number };
+export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon"> & { kind: "marker"; similarity: number };
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
@@ -76,3 +76,20 @@ export const setLanguageRequestValidator = z.object({
 	units: unitsValidator.optional()
 });
 export type SetLanguageRequest = z.infer<typeof setLanguageRequestValidator>;
+
+export type ReplaceProperty<T extends Record<keyof any, any>, Key extends keyof T, Value> = Omit<T, Key> & Record<Key, Value>;
+
+export type RenameProperty<T, From extends keyof any, To extends keyof any, KeepOld extends boolean = false> = T extends Record<From, any> ? (KeepOld extends true ? From : Omit<T, From>) & Record<To, T[From]> : T;
+
+export function renameProperty<T, From extends keyof any, To extends keyof any, KeepOld extends boolean = false>(obj: T, from: From, to: To, keepOld?: KeepOld): RenameProperty<T, From, To, KeepOld> {
+	if (from as any !== to as any && obj && typeof obj === "object" && from in obj && !(to in obj)) {
+		const result = { ...obj } as any;
+		result[to] = result[from];
+		if (!keepOld) {
+			delete result[from];
+		}
+		return result;
+	} else {
+		return obj as any;
+	}
+}

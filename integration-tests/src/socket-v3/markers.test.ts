@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Marker, type FindOnMapMarker, type ID } from "facilmap-types";
+import { createTemporaryPad, openClient, retry } from "../utils";
+import { CRU, type Marker, type FindOnMapMarker, type ID } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create marker (using default values)", async () => {
@@ -43,7 +43,7 @@ test("Create marker (using default values)", async () => {
 			name: "",
 			colour: "ff0000",
 			size: 30,
-			symbol: "",
+			icon: "",
 			shape: "",
 			data: {},
 			ele: null
@@ -80,7 +80,7 @@ test("Create marker (using custom values)", async () => {
 			name: "Test marker",
 			colour: "0000ff",
 			size: 40,
-			symbol: "symbol",
+			icon: "icon",
 			shape: "shape",
 			data: {
 				test: "value"
@@ -144,7 +144,7 @@ test("Edit marker", async () => {
 			name: "Test marker",
 			colour: "0000ff",
 			size: 40,
-			symbol: "symbol",
+			icon: "icon",
 			shape: "shape",
 			data: {
 				test: "value"
@@ -252,7 +252,7 @@ test("Get marker", async () => {
 			name: "",
 			colour: "ff0000",
 			size: 30,
-			symbol: "",
+			icon: "",
 			shape: "",
 			data: {},
 			ele: null
@@ -275,7 +275,7 @@ test("Find marker", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			symbol: "a",
+			icon: "a",
 			ele: null
 		});
 
@@ -287,7 +287,7 @@ test("Find marker", async () => {
 			lon: 10,
 			typeId: markerType.id,
 			name: "Marker test",
-			symbol: "a"
+			icon: "a"
 		};
 
 		expect(await client2.findOnMap({ query: "Test" })).toEqual([{ ...expectedResult, similarity: 0.3333333333333333 }]);
@@ -399,68 +399,4 @@ test("Try to update marker with marker type from other pad", async () => {
 			});
 		});
 	});
-});
-
-test("Socket v1 marker name", async () => {
-	// socket1: Creates the marker and has it in its bbox
-	// socket2: Has the marker in its bbox
-	// socket3: Does not have the marker in its bbox
-	const socket1 = await openSocket(SocketVersion.V1);
-	const socket2 = await openSocket(SocketVersion.V1);
-	const socket3 = await openSocket(SocketVersion.V1);
-
-	const onMarker1 = vi.fn();
-	socket1.on("marker", onMarker1);
-	const onMarker2 = vi.fn();
-	socket2.on("marker", onMarker2);
-	const onMarker3 = vi.fn();
-	socket3.on("marker", onMarker3);
-
-	try {
-		const padData = getTemporaryPadData({});
-		const padResult = await emit(socket1, "createPad", padData);
-		await emit(socket2, "setPadId", padData.adminId);
-		await emit(socket3, "setPadId", padData.adminId);
-
-		const markerType = padResult.type!.find((t) => t.type === "marker")!;
-
-		await emit(socket1, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await emit(socket2, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await emit(socket3, "updateBbox", { top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
-
-		const marker = await emit(socket1, "addMarker", {
-			lat: 10,
-			lon: 10,
-			typeId: markerType.id,
-			ele: null
-		});
-
-		const expectedMarker = {
-			id: marker.id,
-			lat: 10,
-			lon: 10,
-			typeId: markerType.id,
-			padId: padData.id,
-			name: "Untitled marker",
-			colour: "ff0000",
-			size: 30,
-			symbol: "",
-			shape: "",
-			data: {},
-			ele: null
-		} satisfies Marker;
-
-		expect(marker).toEqual(expectedMarker);
-
-		await retry(() => {
-			expect(onMarker1).toHaveBeenCalledTimes(1);
-			expect(onMarker2).toHaveBeenCalledTimes(1);
-			expect(onMarker3).toHaveBeenCalledTimes(0);
-		});
-
-		expect(onMarker1).toHaveBeenCalledWith(expectedMarker);
-		expect(onMarker2).toHaveBeenCalledWith(expectedMarker);
-	} finally {
-		await emit(socket1, "deletePad", undefined);
-	}
 });

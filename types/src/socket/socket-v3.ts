@@ -8,10 +8,10 @@ import { type View, viewValidator } from "../view.js";
 import type { MultipleEvents } from "../events.js";
 import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
-import { findPadsQueryValidator, getPadQueryValidator, type FindPadsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common";
-import type { HistoryEntry } from "../historyEntry";
+import { findPadsQueryValidator, getPadQueryValidator, type FindPadsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
+import type { HistoryEntry } from "../historyEntry.js";
 
-export const requestDataValidatorsV2 = {
+export const requestDataValidatorsV3 = {
 	updateBbox: bboxWithZoomValidator,
 	getPad: getPadQueryValidator,
 	findPads: findPadsQueryValidator,
@@ -48,16 +48,16 @@ export const requestDataValidatorsV2 = {
 	setLanguage: setLanguageRequestValidator
 };
 
-export interface ResponseDataMapV2 {
-	updateBbox: MultipleEvents<MapEventsV2>;
+export interface ResponseDataMapV3 {
+	updateBbox: MultipleEvents<MapEventsV3>;
 	getPad: FindPadsResult | null;
 	findPads: PagedResults<FindPadsResult>;
-	createPad: MultipleEvents<MapEventsV2>;
+	createPad: MultipleEvents<MapEventsV3>;
 	editPad: PadData & { writable: Writable };
 	deletePad: null;
-	listenToHistory: MultipleEvents<MapEventsV2>;
+	listenToHistory: MultipleEvents<MapEventsV3>;
 	stopListeningToHistory: null;
-	revertHistoryEntry: MultipleEvents<MapEventsV2>;
+	revertHistoryEntry: MultipleEvents<MapEventsV3>;
 	getMarker: Marker;
 	addMarker: Marker;
 	editMarker: Marker;
@@ -81,11 +81,11 @@ export interface ResponseDataMapV2 {
 	editView: View;
 	deleteView: View;
 	geoip: Bbox | null;
-	setPadId: MultipleEvents<MapEventsV2>;
+	setPadId: MultipleEvents<MapEventsV3>;
 	setLanguage: void;
 }
 
-export interface MapEventsV2 {
+export interface MapEventsV3Interface {
 	padData: [PadData & { writable: Writable }];
 	deletePad: [];
 	marker: [Marker];
@@ -102,10 +102,4 @@ export interface MapEventsV2 {
 	history: [HistoryEntry];
 }
 
-
-// Socket v1:
-// - Marker name, line name and pad name is never an empty string but defaults to "Untitled marker", "Untitled line" and "Unnamed map"
-
-export const requestDataValidatorsV1 = requestDataValidatorsV2;
-export type ResponseDataMapV1 = ResponseDataMapV2;
-export type MapEventsV1 = MapEventsV2;
+export type MapEventsV3 = Pick<MapEventsV3Interface, keyof MapEventsV3Interface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300

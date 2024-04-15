@@ -1189,7 +1189,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/geojson@npm:*, @types/geojson@npm:^7946.0, @types/geojson@npm:^7946.0.14":
+"@types/geojson@npm:*, @types/geojson@npm:^7946.0, @types/geojson@npm:^7946.0.14, @types/geojson@npm:^7946.0.7":
   version: 7946.0.14
   resolution: "@types/geojson@npm:7946.0.14"
   checksum: ae511bee6488ae3bd5a3a3347aedb0371e997b14225b8983679284e22fa4ebd88627c6e3ff8b08bf4cc35068cb29310c89427311ffc9322c255615821a922e71
@@ -1356,6 +1356,15 @@ __metadata:
   version: 15.7.12
   resolution: "@types/prop-types@npm:15.7.12"
   checksum: ac16cc3d0a84431ffa5cfdf89579ad1e2269549f32ce0c769321fdd078f84db4fbe1b461ed5a1a496caf09e637c0e367d600c541435716a55b1d9713f5035dfe
+  languageName: node
+  linkType: hard
+
+"@types/proxy-addr@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@types/proxy-addr@npm:2.0.3"
+  dependencies:
+    "@types/node": "*"
+  checksum: eb5e917b216befc5ebadcdd613eac09ee4d6af46200a3d064396dc20c04e2ad63b71480dd8e363ed09686970754a1b4f3a947cecd2ca3475a799612a97543d0e
   languageName: node
   linkType: hard
 
@@ -3894,6 +3903,37 @@ __metadata:
   languageName: node
   linkType: hard
 
+"facilmap-client-v3@patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch::locator=facilmap-integration-tests%40workspace%3Aintegration-tests":
+  version: 3.4.0
+  resolution: "facilmap-client-v3@patch:facilmap-client@npm%3A3.4.0#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch::version=3.4.0&hash=799670&locator=facilmap-integration-tests%40workspace%3Aintegration-tests"
+  dependencies:
+    facilmap-types: 3.4.0
+    socket.io-client: ^4.1.2
+  checksum: 8130988a9e6f258c76ea1ecf73f6c387709cf38949088e1555525d9efaf898170ae7a46b677215f1b9be7b4437b0810b248af7c56062e49c614e6a35a6664286
+  languageName: node
+  linkType: hard
+
+"facilmap-client-v4@npm:facilmap-client@4":
+  version: 4.1.0
+  resolution: "facilmap-client@npm:4.1.0"
+  dependencies:
+    facilmap-types: ^4.1.0
+    serialize-error: ^11.0.3
+    socket.io-client: ^4.7.5
+  checksum: dded594b13c9f4ada8619bb15182984b8a9bb1b08cdc2a29027a775a7835fdfdf33db50fe4465cc9ba8e00d86a09227b1508a270045871869556ffc20b8c6e41
+  languageName: node
+  linkType: hard
+
+"facilmap-client@npm:3":
+  version: 3.4.0
+  resolution: "facilmap-client@npm:3.4.0"
+  dependencies:
+    facilmap-types: 3.4.0
+    socket.io-client: ^4.1.2
+  checksum: 7f037cb33b8d0a1b14d29edb40ab9f6ab542593ec8a1ccaddd83adc17ea3dec24a6334c7fffebd53b2f7e73d3abc89c1141d261ef8cecf99a8fb8242610c4f13
+  languageName: node
+  linkType: hard
+
 "facilmap-client@workspace:^, facilmap-client@workspace:client":
   version: 0.0.0-use.local
   resolution: "facilmap-client@workspace:client"
@@ -3980,7 +4020,11 @@ __metadata:
   dependencies:
     "@types/lodash-es": ^4.17.12
     facilmap-client: "workspace:^"
+    facilmap-client-v3: "patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch"
+    facilmap-client-v4: "npm:facilmap-client@4"
     facilmap-types: "workspace:^"
+    facilmap-types-v3: "npm:facilmap-types@3"
+    facilmap-types-v4: "npm:facilmap-types@4"
     facilmap-utils: "workspace:^"
     lodash-es: ^4.17.21
     socket.io-client: ^4.7.5
@@ -4061,6 +4105,7 @@ __metadata:
     "@types/geojson": ^7946.0.14
     "@types/lodash-es": ^4.17.12
     "@types/node": ^20.12.6
+    "@types/proxy-addr": ^2.0.3
     "@types/string-similarity": ^4.0.2
     cheerio: ^1.0.0-rc.12
     compression: ^1.7.4
@@ -4087,6 +4132,7 @@ __metadata:
     mysql2: ^3.9.4
     p-throttle: ^6.1.0
     pg: ^8.11.5
+    proxy-addr: ^2.0.7
     rimraf: ^5.0.5
     sequelize: ^6.37.2
     serialize-error: ^11.0.3
@@ -4105,6 +4151,25 @@ __metadata:
     zod: ^3.22.4
   languageName: unknown
   linkType: soft
+
+"facilmap-types-v3@npm:facilmap-types@3, facilmap-types@npm:3.4.0":
+  version: 3.4.0
+  resolution: "facilmap-types@npm:3.4.0"
+  dependencies:
+    "@types/geojson": ^7946.0.7
+  checksum: 21b45f1e8e9b9c2e4d4e41b297412649f1fe8ca6e82ed6703f4e2cc3e42941fd37439c959177f60344039e7793ca39af4cfb072b50337cd058dc38812168150a
+  languageName: node
+  linkType: hard
+
+"facilmap-types-v4@npm:facilmap-types@4, facilmap-types@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "facilmap-types@npm:4.1.0"
+  dependencies:
+    "@types/geojson": ^7946.0.14
+    zod: ^3.22.4
+  checksum: 7d5afea1b80ba99994d9c648fe33c908bf816a9f96be9ae2d011d4691dd4842ecc1df30f6e6a74eb99d5836df7e49112189294ff7cc42d79ab90897ba35b683f
+  languageName: node
+  linkType: hard
 
 "facilmap-types@workspace:^, facilmap-types@workspace:types":
   version: 0.0.0-use.local
@@ -6856,7 +6921,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-addr@npm:~2.0.7":
+"proxy-addr@npm:^2.0.7, proxy-addr@npm:~2.0.7":
   version: 2.0.7
   resolution: "proxy-addr@npm:2.0.7"
   dependencies:
@@ -7553,7 +7618,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socket.io-client@npm:^4.7.5":
+"socket.io-client@npm:^4.1.2, socket.io-client@npm:^4.7.5":
   version: 4.7.5
   resolution: "socket.io-client@npm:4.7.5"
   dependencies:

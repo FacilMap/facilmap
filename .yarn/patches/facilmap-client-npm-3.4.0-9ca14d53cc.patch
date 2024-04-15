@@ -1,0 +1,11 @@
+diff --git a/dist/client.d.ts b/dist/client.d.ts
+index f441770687db57140a4c50b4a78a15b696f44177..3dbea34c932e79d6e3dbbf49b5dcafe2fb54cccd 100644
+--- a/dist/client.d.ts
++++ b/dist/client.d.ts
+@@ -1,5 +1,5 @@
+ import { Socket as SocketIO } from "socket.io-client";
+-import { Bbox, BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineCreate, LineExportRequest, LineTemplateRequest, LineToRouteCreate, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable } from "facilmap-types";
++import { Bbox, BboxWithZoom, EventHandler, EventName, FindOnMapQuery, FindPadsQuery, FindPadsResult, FindQuery, GetPadQuery, HistoryEntry, ID, Line, LineCreate, LineExportRequest, LineTemplateRequest, LineToRouteCreate, LineUpdate, MapEvents, Marker, MarkerCreate, MarkerUpdate, MultipleEvents, ObjectWithId, PadData, PadDataCreate, PadDataUpdate, PadId, PagedResults, RequestData, RequestName, ResponseData, Route, RouteClear, RouteCreate, RouteExportRequest, RouteInfo, RouteRequest, SearchResult, TrackPoint, Type, TypeCreate, TypeUpdate, View, ViewCreate, ViewUpdate, Writable } from "facilmap-types-v3";
+ export interface ClientEvents<DataType = Record<string, string>> extends MapEvents<DataType> {
+     connect: [];
+     disconnect: [string];

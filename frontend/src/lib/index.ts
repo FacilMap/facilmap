@@ -100,7 +100,7 @@ export { default as ShapePicker } from "./components/ui/shape-picker.vue";
 export { default as Sidebar } from "./components/ui/sidebar.vue";
 export { default as SizePicker } from "./components/ui/size-picker.vue";
 export { default as StrokePicker } from "./components/ui/stroke-picker.vue";
-export { default as SymbolPicker } from "./components/ui/symbol-picker.vue";
+export { default as IconPicker } from "./components/ui/icon-picker.vue";
 export { default as UseAsDropdown } from "./components/ui/use-as-dropdown.vue";
 export { default as WidthPicker } from "./components/ui/width-picker.vue";
 export { default as ZoomToObjectButton } from "./components/ui/zoom-to-object-button.vue";

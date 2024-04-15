@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, emit, getTemporaryPadData, openClient, openSocket, retry } from "./utils";
-import { SocketVersion, CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID } from "facilmap-types";
+import { createTemporaryPad, openClient, retry } from "../utils";
+import { CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID } from "facilmap-types";
 import type { LineWithTrackPoints } from "facilmap-client";
 import { cloneDeep, omit } from "lodash-es";
 
@@ -515,82 +515,6 @@ test("Try to update line with line type from other pad", async () => {
 			});
 		});
 	});
-});
-
-test("Socket v1 line name", async () => {
-	// socket1: Creates the line and has it in its bbox
-	// socket2: Has the line in its bbox
-	// socket3: Does not have the line in its bbox
-	const socket1 = await openSocket(SocketVersion.V1);
-	const socket2 = await openSocket(SocketVersion.V1);
-	const socket3 = await openSocket(SocketVersion.V1);
-
-	const onLine1 = vi.fn();
-	socket1.on("line", onLine1);
-	const onLine2 = vi.fn();
-	socket2.on("line", onLine2);
-	const onLine3 = vi.fn();
-	socket3.on("line", onLine3);
-
-	try {
-		const padData = getTemporaryPadData({});
-		const padResult = await emit(socket1, "createPad", padData);
-		await emit(socket2, "setPadId", padData.adminId);
-		await emit(socket3, "setPadId", padData.adminId);
-
-		const lineType = padResult.type!.find((t) => t.type === "line")!;
-
-		await emit(socket1, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await emit(socket2, "updateBbox", { top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await emit(socket3, "updateBbox", { top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
-
-		const line = await emit(socket1, "addLine", {
-			routePoints: [
-				{ lat: 6, lon: 6 },
-				{ lat: 14, lon: 14 }
-			],
-			typeId: lineType.id
-		});
-
-		const expectedLine = {
-			id: line.id,
-			routePoints: [
-				{ lat: 6, lon: 6 },
-				{ lat: 14, lon: 14 }
-			],
-			typeId: lineType.id,
-			padId: padData.id,
-			name: "Untitled line",
-			mode: "",
-			colour: "0000ff",
-			width: 4,
-			stroke: "",
-			distance: 1247.95,
-			time: null,
-			ascent: null,
-			descent: null,
-			extraInfo: null,
-			top: 14,
-			right: 14,
-			bottom: 6,
-			left: 6,
-			data: {}
-		} satisfies Line;
-
-		expect(line).toEqual(expectedLine);
-
-		await retry(() => {
-			expect(onLine1).toHaveBeenCalledTimes(1);
-			expect(onLine2).toHaveBeenCalledTimes(1);
-			expect(onLine3).toHaveBeenCalledTimes(1);
-		});
-
-		expect(onLine1).toHaveBeenCalledWith(expectedLine);
-		expect(onLine2).toHaveBeenCalledWith(expectedLine);
-		expect(onLine3).toHaveBeenCalledWith(expectedLine);
-	} finally {
-		await emit(socket1, "deletePad", undefined);
-	}
 });
 
 test("Export line", async () => {

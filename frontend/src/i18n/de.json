@@ -128,7 +128,7 @@
         "lon-lat-description": "Koordinaten des Markers",
         "colour-description": "Farbe des Markers oder der Linie",
         "size-description": "Größe des Markers",
-        "symbol-description": "Symbol des Markers",
+        "icon-description": "Symbol des Markers",
         "shape-description": "Form des Markers",
         "ele-description": "Höhe über NN des Markers",
         "mode-description": "Routenmodus der Linie (z. B. {{straight}} (Luftlinie) / {{car}} (Auto) / {{bicycle}} (Fahrrad) / {{pedestrian}} (zu Fuß) / {{track}} (importierter GPX-Track))",
@@ -715,7 +715,7 @@
         "dashed": "Gestrichelt",
         "dotted": "Gepunktet"
     },
-    "symbol-picker": {
+    "icon-picker": {
         "unknown-icon-error": "Unbekanntes Symbol",
         "filter-placeholder": "Filtern",
         "no-icons-found-error": "Es konnten keine Symbole gefunden werden."

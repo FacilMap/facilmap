@@ -1,5 +1,5 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Symbol, Type } from "facilmap-types";
+import type { BboxWithZoom, CRU, Colour, ID, Latitude, Longitude, Marker, PadId, Shape, Size, Icon, Type } from "facilmap-types";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import Database from "./database.js";
 import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
@@ -18,7 +18,7 @@ export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCr
 	typeId: ForeignKey<TypeModel["id"]>;
 	colour: Colour;
 	size: Size;
-	symbol: Symbol;
+	icon: Icon;
 	shape: Shape;
 	ele: number | null;
 	toJSON: () => Marker;
@@ -42,7 +42,7 @@ export default class DatabaseMarkers {
 			name : { type: DataTypes.TEXT, allowNull: false },
 			colour : { type: DataTypes.STRING(6), allowNull: false },
 			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			symbol : { type: DataTypes.TEXT, allowNull: false },
+			icon : { type: DataTypes.TEXT, allowNull: false },
 			shape : { type: DataTypes.TEXT, allowNull: false },
 			ele: {
 				type: DataTypes.INTEGER,

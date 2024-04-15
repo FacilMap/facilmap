@@ -21,7 +21,7 @@ export default class DatabaseSearch {
 					{ padId },
 					where(fn("lower", col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 				),
-				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "symbol" ] : [ "top", "left", "bottom", "right" ])
+				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "icon" ] : [ "top", "left", "bottom", "right" ])
 			});
 
 			return objs.map((obj) => ({

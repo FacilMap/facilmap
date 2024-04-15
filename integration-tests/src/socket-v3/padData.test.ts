@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, emit, generateTestPadId, getFacilMapUrl, getTemporaryPadData, openClient, openSocket } from "./utils";
-import { Writable, type PadData, SocketVersion, CRU, type FindPadsResult, type PagedResults } from "facilmap-types";
+import { createTemporaryPad, generateTestPadId, getFacilMapUrl, getTemporaryPadData, openClient } from "../utils";
+import { Writable, type PadData, CRU, type FindPadsResult, type PagedResults } from "facilmap-types";
 import { pick } from "lodash-es";
 import Client from "facilmap-client";
 
@@ -355,30 +355,4 @@ test("Find pads", async () => {
 
 		expect(await client.findPads({ query: `Test ${uniqueId} pad` })).toEqual(expectedNotFound);
 	});
-});
-
-test("Socket v1 pad name", async () => {
-	const socket = await openSocket(SocketVersion.V1);
-
-	const onPadData = vi.fn();
-	socket.on("padData", onPadData);
-
-	try {
-		const padData = getTemporaryPadData({});
-		const result = await emit(socket, "createPad", padData);
-
-		expect(result.padData![0].name).toBe("Unnamed map");
-
-		const result2 = await emit(socket, "editPad", { name: "New name" });
-		expect(result2.name).toBe("New name");
-		expect(onPadData).toBeCalledTimes(1);
-		expect(onPadData.mock.calls[0][0].name).toBe("New name");
-
-		const result3 = await emit(socket, "editPad", { name: "" });
-		expect(result3.name).toBe("Unnamed map");
-		expect(onPadData).toBeCalledTimes(2);
-		expect(onPadData.mock.calls[1][0].name).toBe("Unnamed map");
-	} finally {
-		await emit(socket, "deletePad", undefined);
-	}
 });

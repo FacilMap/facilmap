@@ -2,7 +2,7 @@ import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } 
 import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError, type SetLanguageRequest } from "facilmap-types";
 import { deserializeError, errorConstructors, serializeError } from "serialize-error";
 
-export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
+export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	connect: [];
 	disconnect: [string];
 	connect_error: [Error];
@@ -21,10 +21,12 @@ export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	route: [RouteWithTrackPoints];
 	clearRoute: [RouteClear];
 
-	emit: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketRequest<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
-	emitResolve: { [eventName in SocketRequestName<SocketVersion.V2>]: [eventName, SocketResponse<SocketVersion.V2, eventName>] }[SocketRequestName<SocketVersion.V2>];
-	emitReject: [SocketRequestName<SocketVersion.V2>, Error];
+	emit: { [eventName in SocketRequestName<SocketVersion.V3>]: [eventName, SocketRequest<SocketVersion.V3, eventName>] }[SocketRequestName<SocketVersion.V3>];
+	emitResolve: { [eventName in SocketRequestName<SocketVersion.V3>]: [eventName, SocketResponse<SocketVersion.V3, eventName>] }[SocketRequestName<SocketVersion.V3>];
+	emitReject: [SocketRequestName<SocketVersion.V3>, Error];
 }
+
+export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
@@ -69,7 +71,7 @@ interface ClientData {
 errorConstructors.set("PadNotFoundError", PadNotFoundError as any);
 
 class Client {
-	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V2>, SocketClientToServerEvents<SocketVersion.V2>>;
+	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3>>;
 	private state: ClientState;
 	private data: ClientData;
 
@@ -103,7 +105,7 @@ class Client {
 		});
 
 		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
-		const socket = io(`${serverUrl.origin}/v2`, {
+		const socket = io(`${serverUrl.origin}/v3`, {
 			forceNew: true,
 			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io",
 			...socketOptions
@@ -141,7 +143,7 @@ class Client {
 		return result;
 	}
 
-	private _fixResponseObject<T>(requestName: SocketRequestName<SocketVersion.V2>, obj: T): T {
+	private _fixResponseObject<T>(requestName: SocketRequestName<SocketVersion.V3>, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
 
@@ -188,7 +190,7 @@ class Client {
 		}
 	}
 
-	private async _emit<R extends SocketRequestName<SocketVersion.V2>>(eventName: R, ...[data]: SocketRequest<SocketVersion.V2, R> extends undefined | null ? [ ] : [ SocketRequest<SocketVersion.V2, R> ]): Promise<SocketResponse<SocketVersion.V2, R>> {
+	private async _emit<R extends SocketRequestName<SocketVersion.V3>>(eventName: R, ...[data]: SocketRequest<SocketVersion.V3, R> extends undefined | null ? [ ] : [ SocketRequest<SocketVersion.V3, R> ]): Promise<SocketResponse<SocketVersion.V3, R>> {
 		try {
 			this._simulateEvent("loadStart");
 
@@ -196,7 +198,7 @@ class Client {
 
 			const outerError = new Error();
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V2, R>) => {
+				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V3, R>) => {
 					if(err) {
 						const cause = deserializeError(err);
 						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
@@ -350,7 +352,7 @@ class Client {
 		}
 	};
 
-	async setPadId(padId: PadId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	async setPadId(padId: PadId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		if(this.state.padId != null)
 			throw new Error("Pad ID already set.");
 
@@ -361,7 +363,7 @@ class Client {
 		await this._emit("setLanguage", language);
 	}
 
-	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const isZoomChange = this.bbox && bbox.zoom !== this.bbox.zoom;
 
 		this._set(this.state, 'bbox', bbox);
@@ -400,7 +402,7 @@ class Client {
 		return await this._emit("findPads", data);
 	}
 
-	async createPad(data: PadData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	async createPad(data: PadData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const obj = await this._emit("createPad", data);
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'readonly', false);
@@ -417,7 +419,7 @@ class Client {
 		await this._emit("deletePad");
 	}
 
-	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const obj = await this._emit("listenToHistory");
 		this._set(this.state, 'listeningToHistory', true);
 		this._receiveMultiple(obj);
@@ -429,7 +431,7 @@ class Client {
 		await this._emit("stopListeningToHistory");
 	}
 
-	async revertHistoryEntry(data: ObjectWithId): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	async revertHistoryEntry(data: ObjectWithId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const obj = await this._emit("revertHistoryEntry", data);
 		this._set(this.data, 'history', {});
 		this._receiveMultiple(obj);
@@ -483,7 +485,7 @@ class Client {
 		return await this._emit("find", data);
 	}
 
-	async findOnMap(data: FindOnMapQuery): Promise<SocketResponse<SocketVersion.V2, 'findOnMap'>> {
+	async findOnMap(data: FindOnMapQuery): Promise<SocketResponse<SocketVersion.V3, 'findOnMap'>> {
 		return await this._emit("findOnMap", data);
 	}
 
@@ -580,7 +582,7 @@ class Client {
 		this.socket.disconnect();
 	}
 
-	private async _setPadId(padId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+	private async _setPadId(padId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'padId', padId);
 		try {

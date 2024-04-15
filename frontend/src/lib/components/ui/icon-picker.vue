@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getSymbolHtml, symbolList } from "facilmap-leaflet";
+	import { getIconHtml, iconList } from "facilmap-leaflet";
 	import Icon from "./icon.vue";
 	import Picker from "./picker.vue";
 	import { arrowNavigation } from "../../utils/ui";
@@ -12,8 +12,8 @@
 	let allItemsP: Promise<Record<string, string>>;
 	async function getAllItems(): Promise<Record<string, string>> {
 		if (!allItemsP) { // eslint-disable-line @typescript-eslint/no-misused-promises
-			allItemsP = Promise.all(symbolList.map(async (s) => (
-				[s, await getSymbolHtml("currentColor", "1.5em", s)] as const
+			allItemsP = Promise.all(iconList.map(async (s) => (
+				[s, await getIconHtml("currentColor", "1.5em", s)] as const
 			))).then((l) => Object.fromEntries(l));
 		}
 		return await allItemsP;
@@ -49,14 +49,14 @@
 		return Object.fromEntries<string>((await Promise.all([
 			(async (): Promise<Array<[string, string]>> => {
 				if (filter.value.length == 1) {
-					return [[filter.value, await getSymbolHtml("currentColor", "1.5em", filter.value)]];
+					return [[filter.value, await getIconHtml("currentColor", "1.5em", filter.value)]];
 				} else {
 					return [];
 				}
 			})(),
 			(async (): Promise<Array<[string, string]>> => {
 				if (props.modelValue?.length == 1 && props.modelValue != filter.value) {
-					return [[props.modelValue, await getSymbolHtml("currentColor", "1.5em", props.modelValue)]];
+					return [[props.modelValue, await getIconHtml("currentColor", "1.5em", props.modelValue)]];
 				} else {
 					return [];
 				}
@@ -75,7 +75,7 @@
 	});
 
 	function validateSymbol(symbol: string) {
-		if (symbol && symbol.length !== 1 && !symbolList.includes(symbol)) {
+		if (symbol && symbol.length !== 1 && !iconList.includes(symbol)) {
 			return i18n.t("symbol-picker.unknown-icon-error");
 		}
 	}

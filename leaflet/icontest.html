@@ -25,7 +25,7 @@
 				const el = document.createElement("div");
 				el.id = id;
 				document.body.appendChild(el);
-				for (const icon of ["", "O", "g", "j", "a", "*", ...FacilMap.symbolList]) {
+				for (const icon of ["", "O", "g", "j", "a", "*", ...FacilMap.iconList]) {
 					const span = document.createElement('span');
 					span.title = icon;
 					createIcon(icon).then((html) => {
@@ -35,7 +35,7 @@
 				}
 			}
 
-			createIcons("icons", (icon) => FacilMap.getSymbolHtml("#000000", 50, icon));
+			createIcons("icons", (icon) => FacilMap.getIconHtml("#000000", 50, icon));
 			for (const shape of ["drop", "rectangle-marker", "circle", "rectangle", "diamond", "pentagon", "hexagon", "triangle", "triangle-down", "star"]) {
 				createIcons(`icons-${shape}`, (icon) => FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape));
 				createIcons(`icons-${shape}-highlight`, (icon) => FacilMap.getMarkerHtml("#ccffcc", 50, icon, shape, true));

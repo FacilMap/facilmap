@@ -130,7 +130,7 @@
         "lon-lat-description": "Marker coordinates",
         "colour-description": "Marker/line colour",
         "size-description": "Marker size",
-        "symbol-description": "Marker icon",
+        "icon-description": "Marker icon",
         "shape-description": "Marker shape",
         "ele-description": "Marker elevation",
         "mode-description": "Line routing mode ({{straight}} / {{car}} / {{bicycle}} / {{pedestrian}} / {{track}})",
@@ -717,7 +717,7 @@
         "dashed": "Dashed",
         "dotted": "Dotted"
     },
-    "symbol-picker": {
+    "icon-picker": {
         "unknown-icon-error": "Unknown icon",
         "filter-placeholder": "Filter",
         "no-icons-found-error": "No icons could be found."

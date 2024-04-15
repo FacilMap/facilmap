@@ -11,7 +11,7 @@ export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> 
 }
 
 export function canControl<T extends Marker | Line = Marker | Line>(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
-	const props: string[] = type.type == "marker" ? ["colour", "size", "symbol", "shape"] : type.type == "line" ? ["colour", "width", "stroke", "mode"] : [];
+	const props: string[] = type.type == "marker" ? ["colour", "size", "icon", "shape"] : type.type == "line" ? ["colour", "width", "stroke", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)
 			return false;
@@ -54,13 +54,13 @@ export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED
 		update.colour = type.defaultColour;
 	if(type.sizeFixed && marker.size != type.defaultSize)
 		update.size = type.defaultSize;
-	if(type.symbolFixed && marker.symbol != type.defaultSymbol)
-		update.symbol = type.defaultSymbol;
+	if(type.iconFixed && marker.icon != type.defaultIcon)
+		update.icon = type.defaultIcon;
 	if(type.shapeFixed && marker.shape != type.defaultShape)
 		update.shape = type.defaultShape;
 
 	for(const field of type.fields) {
-		if(field.controlColour || field.controlSize || field.controlSymbol || field.controlShape) {
+		if(field.controlColour || field.controlSize || field.controlIcon || field.controlShape) {
 			const option = getSelectedOption(field, marker.data?.[field.name]);
 
 			if(option) {
@@ -68,8 +68,8 @@ export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED
 					update.colour = option.colour ?? type.defaultColour;
 				if(field.controlSize && marker.size != (option.size ?? type.defaultSize))
 					update.size = option.size ?? type.defaultSize;
-				if(field.controlSymbol && marker.symbol != (option.symbol ?? type.defaultSymbol))
-					update.symbol = option.symbol ?? type.defaultSymbol;
+				if(field.controlIcon && marker.icon != (option.icon ?? type.defaultIcon))
+					update.icon = option.icon ?? type.defaultIcon;
 				if(field.controlShape && marker.shape != (option.shape ?? type.defaultShape))
 					update.shape = option.shape ?? type.defaultShape;
 			}
@@ -85,7 +85,7 @@ export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Mar
 		...parsed,
 		colour: parsed.colour ?? type.defaultColour,
 		size: parsed.size ?? type.defaultSize,
-		symbol: parsed.symbol ?? type.defaultSymbol,
+		icon: parsed.icon ?? type.defaultIcon,
 		shape: parsed.shape ?? type.defaultShape
 	};
 	Object.assign(result, applyMarkerStyles(result, type));

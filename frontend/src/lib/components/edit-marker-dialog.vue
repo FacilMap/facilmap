@@ -5,7 +5,7 @@
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";
-	import SymbolPicker from "./ui/symbol-picker.vue";
+	import IconPicker from "./ui/icon-picker.vue";
 	import ShapePicker from "./ui/shape-picker.vue";
 	import FieldInput from "./ui/field-input.vue";
 	import SizePicker from "./ui/size-picker.vue";
@@ -118,11 +118,11 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('symbol')">
+			<template v-if="resolvedCanControl.includes('icon')">
 				<div class="row mb-3">
-					<label :for="`${id}-symbol-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.icon")}}</label>
+					<label :for="`${id}-icon-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.icon")}}</label>
 					<div class="col-sm-9">
-						<SymbolPicker :id="`${id}-symbol-input`" v-model="marker.symbol"></SymbolPicker>
+						<IconPicker :id="`${id}-icon-input`" v-model="marker.icon"></IconPicker>
 					</div>
 				</div>
 			</template>

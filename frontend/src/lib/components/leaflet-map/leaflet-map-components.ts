@@ -1,7 +1,7 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick } from "vue";
 import { type Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreSymbolList } from "facilmap-leaflet";
+import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -179,11 +179,11 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 			if (locateControl) {
 				locateControl.addTo(map.value);
 
-				if (!coreSymbolList.includes("screenshot")) {
+				if (!coreIconList.includes("screenshot")) {
 					console.warn(`Icon "screenshot" is not in core icons.`);
 				}
 
-				getSymbolHtml("currentColor", "1.5em", "screenshot").then((html) => {
+				getIconHtml("currentColor", "1.5em", "screenshot").then((html) => {
 					locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
 				}).catch((err) => {
 					console.error("Error loading locate control icon", err);
@@ -454,14 +454,14 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 	return mapContext;
 }
 
-/* function createButton(symbol: string, onClick: () => void): Control {
+/* function createButton(icon: Icon, onClick: () => void): Control {
 	return Object.assign(new Control(), {
 		onAdd() {
 			const div = document.createElement('div');
 			div.className = "leaflet-bar";
 			const a = document.createElement('a');
 			a.href = "javascript:";
-			a.innerHTML = createSymbolHtml("currentColor", "1.5em", symbol);
+			a.innerHTML = createIconHtml("currentColor", "1.5em", icon);
 			a.addEventListener("click", (e) => {
 				e.preventDefault();
 				onClick();

@@ -26,7 +26,7 @@
         "apply": "Bruk",
         "typeId-description-separator": " / ",
         "size-description": "Pekerstørrelse",
-        "symbol-description": "Pekerikon",
+        "icon-description": "Pekerikon",
         "shape-description": "Pekerform",
         "width-description": "Linjebredde"
     },

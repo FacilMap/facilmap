@@ -10,7 +10,7 @@
 	* `markerShape`: The shape of search result markers, defaults to `drop`
 	* `pathOptions`: [Path options](https://leafletjs.com/reference.html#path-option) for lines and polygons.
 
-Note that the marker symbol is determined by the type of result.
+Note that the marker icon is determined by the type of result.
 
 Example usage:
 ```javascript

@@ -9,7 +9,7 @@
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import ShapePicker from "../ui/shape-picker.vue";
 	import SizePicker from "../ui/size-picker.vue";
-	import SymbolPicker from "../ui/symbol-picker.vue";
+	import IconPicker from "../ui/icon-picker.vue";
 	import WidthPicker from "../ui/width-picker.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { computed, ref, watch } from "vue";
@@ -24,7 +24,7 @@
 			field.controlColour,
 			...(type.type == "marker" ? [
 				field.controlSize,
-				field.controlSymbol,
+				field.controlIcon,
 				field.controlShape
 			] : []),
 			...(type.type == "line" ? [
@@ -196,15 +196,15 @@
 
 				<div v-if="type.type == 'marker'" class="form-check">
 					<input
-						:id="`${id}-control-symbol`"
+						:id="`${id}-control-icon`"
 						class="form-check-input"
 						type="checkbox"
-						v-model="fieldValue.controlSymbol"
-						:disabled="!resolvedCanControl.includes('symbol')"
+						v-model="fieldValue.controlIcon"
+						:disabled="!resolvedCanControl.includes('icon')"
 					/>
 					<label
 						class="form-check-label"
-						:for="`${id}-control-symbol`"
+						:for="`${id}-control-icon`"
 					>
 						{{i18n.t("edit-type-dropdown-dialog.control-icon", { type: typeInterpolation })}}
 					</label>
@@ -266,7 +266,7 @@
 					<th v-if="fieldValue.type == 'checkbox'">{{i18n.t("edit-type-dropdown-dialog.label")}}</th>
 					<th v-if="fieldValue.controlColour">{{i18n.t("edit-type-dropdown-dialog.colour")}}</th>
 					<th v-if="fieldValue.controlSize">{{i18n.t("edit-type-dropdown-dialog.size")}}</th>
-					<th v-if="fieldValue.controlSymbol">{{i18n.t("edit-type-dropdown-dialog.icon")}}</th>
+					<th v-if="fieldValue.controlIcon">{{i18n.t("edit-type-dropdown-dialog.icon")}}</th>
 					<th v-if="fieldValue.controlShape">{{i18n.t("edit-type-dropdown-dialog.shape")}}</th>
 					<th v-if="fieldValue.controlWidth">{{i18n.t("edit-type-dropdown-dialog.width")}}</th>
 					<th v-if="fieldValue.controlStroke">{{i18n.t("edit-type-dropdown-dialog.stroke")}}</th>
@@ -315,11 +315,11 @@
 								class="fm-custom-range-with-label"
 							></SizePicker>
 						</td>
-						<td v-if="fieldValue.controlSymbol" class="field">
-							<SymbolPicker
-								:modelValue="option.symbol ?? type.defaultSymbol"
-								@update:modelValue="option.symbol = $event"
-							></SymbolPicker>
+						<td v-if="fieldValue.controlIcon" class="field">
+							<IconPicker
+								:modelValue="option.icon ?? type.defaultIcon"
+								@update:modelValue="option.icon = $event"
+							></IconPicker>
 						</td>
 						<td v-if="fieldValue.controlShape" class="field">
 							<ShapePicker

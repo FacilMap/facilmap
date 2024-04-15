@@ -1,16 +1,20 @@
 import * as z from "zod";
-import { requestDataValidatorsV1, requestDataValidatorsV2, type MapEventsV1, type ResponseDataMapV1, type ResponseDataMapV2, type MapEventsV2 } from "./socket-versions";
+import { requestDataValidatorsV3, type ResponseDataMapV3, type MapEventsV3 } from "./socket-v3";
+import { requestDataValidatorsV1, type MapEventsV1, type ResponseDataMapV1 } from "./socket-v1";
+import { requestDataValidatorsV2, type MapEventsV2, type ResponseDataMapV2 } from "./socket-v2";
 
 export * from "./socket-common";
 
 export enum SocketVersion {
 	V1 = "v1",
-	V2 = "v2"
+	V2 = "v2",
+	V3 = "v3"
 };
 
 export const socketRequestValidators = {
 	[SocketVersion.V1]: requestDataValidatorsV1,
-	[SocketVersion.V2]: requestDataValidatorsV2
+	[SocketVersion.V2]: requestDataValidatorsV2,
+	[SocketVersion.V3]: requestDataValidatorsV3
 } satisfies Record<SocketVersion, Record<string, z.ZodType>>;
 
 type SocketRequestMap<V extends SocketVersion> = {
@@ -24,11 +28,13 @@ type ValidatedSocketRequestMap<V extends SocketVersion> = {
 type SocketResponseMap<V extends SocketVersion> = {
 	[SocketVersion.V1]: ResponseDataMapV1;
 	[SocketVersion.V2]: ResponseDataMapV2;
+	[SocketVersion.V3]: ResponseDataMapV3;
 }[V];
 
 export type SocketEvents<V extends SocketVersion> = {
-	[SocketVersion.V1]: MapEventsV1;
-	[SocketVersion.V2]: MapEventsV2;
+	[SocketVersion.V1]: Pick<MapEventsV1, keyof MapEventsV1>;
+	[SocketVersion.V2]: Pick<MapEventsV2, keyof MapEventsV2>;
+	[SocketVersion.V3]: Pick<MapEventsV3, keyof MapEventsV3>;
 }[V];
 
 export type SocketRequestName<V extends SocketVersion> = keyof typeof socketRequestValidators[V];
@@ -46,3 +52,6 @@ export type SocketClientToServerEvents<V extends SocketVersion> = {
 export type SocketServerToClientEvents<V extends SocketVersion> = {
 	[E in keyof SocketEvents<V>]: (...args: SocketEvents<V>[E] extends Array<any> ? SocketEvents<V>[E] : never) => void;
 };
+export type SocketServerToClientEmitArgs<V extends SocketVersion> = {
+	[E in keyof SocketEvents<V>]: [e: E, ...args: SocketEvents<V>[E] extends Array<any> ? SocketEvents<V>[E] : never];
+}[keyof SocketEvents<V>];

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { createTemporaryPad, openClient } from "../utils";
+import { createTemporaryPad, openClient } from "../../utils";
 
 test("Reorder types", async () => {
 	const client = await openClient();

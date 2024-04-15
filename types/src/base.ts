@@ -16,8 +16,8 @@ export type Colour = z.infer<typeof colourValidator>;
 export const sizeValidator = z.number().min(15);
 export type Size = z.infer<typeof sizeValidator>;
 
-export const symbolValidator = z.string().trim();
-export type Symbol = z.infer<typeof symbolValidator>;
+export const iconValidator = z.string().trim();
+export type Icon = z.infer<typeof iconValidator>;
 
 export const shapeValidator = z.string().trim();
 export type Shape = z.infer<typeof shapeValidator>;
@@ -80,3 +80,5 @@ export enum Units {
 	US_CUSTOMARY = "us_customary"
 }
 export const unitsValidator = z.nativeEnum(Units);
+
+export type ReplaceProperties<T1 extends Record<keyof any, any>, T2 extends Partial<Record<keyof T1, any>>> = Omit<T1, keyof T2> & T2;

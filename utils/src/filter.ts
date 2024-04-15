@@ -1,6 +1,6 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import type { ID, Marker, Line, Type, CRU } from "facilmap-types";
+import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2 } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 import { normalizeFieldValue } from "./objects";
 
@@ -110,20 +110,23 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 	return ret;
 }
 
-export function prepareObject<T extends Marker<CRU> | Line<CRU>>(obj: T, type: Type): T & { type?: Type["type"] } {
-	obj = cloneDeep(obj);
+export function prepareObject(obj: Marker<CRU> | Line<CRU>, type: Type): any {
+	const fixedObj: any = cloneDeep(obj);
 
+	if (!fixedObj.data) {
+		fixedObj.data = Object.create(null) as {};
+	}
 	for (const field of type.fields) {
-		if (Object.getPrototypeOf(obj.data)?.set)
-			(obj.data as any).set(field.name, normalizeFieldValue(field, (obj.data as any).get(field.name)));
-		else
-			(obj.data as any)[field.name] = normalizeFieldValue(field, (obj.data as any)[field.name]);
+		fixedObj.data[field.name] = normalizeFieldValue(field, fixedObj.data[field.name]);
 	}
 
-	const ret = {
-		...flattenObject(obj),
-		...obj
-	} as T & { type?: Type["type"] };
+	let ret = {
+		...flattenObject(fixedObj),
+		...fixedObj
+	};
+
+	// Backwards compatibility for filter expressions that were created before "symbol" was renamed to "icon" (keep old and new properties)
+	ret = currentMarkerToLegacyV2(ret, true);
 
 	if(type)
 		ret.type = type.type;

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../utils";
+import { createTemporaryPad, openClient } from "../../utils";
 
 test("Rename field (marker type)", async () => {
 	const client = await openClient();

@@ -9,7 +9,7 @@ Map.addInitHook(function (this: Map) {
 });
 
 export interface MarkerLayerOptions extends MarkerOptions {
-	marker?: Partial<Marker> & Pick<Marker, 'colour' | 'size' | 'symbol' | 'shape'>;
+	marker?: Partial<Marker> & Pick<Marker, 'colour' | 'size' | 'icon' | 'shape'>;
 	highlight?: boolean;
 	raised?: boolean;
 }
@@ -70,7 +70,7 @@ export default class MarkerLayer extends LeafletMarker {
 
 	_initIcon(): void {
 		if (this.options.marker)
-			this.options.icon = getMarkerIcon(`#${this.options.marker.colour}`, this.options.marker.size, this.options.marker.symbol ?? undefined, this.options.marker.shape ?? undefined, this.options.highlight);
+			this.options.icon = getMarkerIcon(`#${this.options.marker.colour}`, this.options.marker.size, this.options.marker.icon ?? undefined, this.options.marker.shape ?? undefined, this.options.highlight);
 
 		super._initIcon();
 

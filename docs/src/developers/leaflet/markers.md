@@ -55,7 +55,7 @@ If you want to make sure that a marker with a particular ID is shown (regardless
 `MarkerLayer` (in singular, as opposed to `MarkersLayer`) makes it possible to render an individual marker object with its appropriate style. It does not automatically update when the marker changes and can also be used for markers that are not saved on the map.
 
 `MarkerLayer` is based on regular [Leaflet markers](https://leafletjs.com/reference.html#marker), but accepts the following additional options:
-* `marker`: A marker object that the marker style will be based on. Only the properties relevant for the style (`colour`, `size`, `symbol` and `shape`) need to be set.
+* `marker`: A marker object that the marker style will be based on. Only the properties relevant for the style (`colour`, `size`, `icon` and `shape`) need to be set.
 * `highlight`: If this is `true`, the marker will be shown with a thicker border.
 * `raised`: If this is `true`, the marker will be rendered above other map objects.
 
@@ -65,7 +65,7 @@ import { MarkerLayer } from "facilmap-leaflet";
 
 const map = L.map('map');
 new MarkerLayer([52.5295, 13.3840], {
-	marker: { colour: "00ff00", size: 40, symbol: "alert", shape: "pentagon" }
+	marker: { colour: "00ff00", size: 40, icon: "alert", shape: "pentagon" }
 }).addTo(map);
 ```
 

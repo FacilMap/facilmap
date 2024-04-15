@@ -1,7 +1,5 @@
-import { type Socket as SocketIO } from "socket.io";
-import Database, { type DatabaseEvents } from "../database/database.js";
-import { type EventHandler, type EventName, type SocketRequestName, type SocketResponse, SocketVersion, type ValidatedSocketRequest, socketRequestValidators } from "facilmap-types";
-import { serializeError } from "serialize-error";
+import { type DatabaseEvents } from "../database/database.js";
+import { type EventHandler, type EventName, type SocketRequestName, type SocketResponse, SocketVersion, type ValidatedSocketRequest, type SocketServerToClientEmitArgs, type SocketEvents, type MultipleEvents } from "facilmap-types";
 
 // Socket.io converts undefined to null. In socket handlers that allow a null response, let's also allow undefined.
 type FixedNullResponse<T> = null extends T ? T | undefined | void : T;
@@ -11,86 +9,25 @@ export type SocketHandlers<V extends SocketVersion> = {
 };
 
 export type DatabaseHandlers = {
-	[eventName in EventName<DatabaseEvents>]?: EventHandler<DatabaseEvents, eventName>;
+	[eventName in EventName<Pick<DatabaseEvents, keyof DatabaseEvents>>]?: EventHandler<Pick<DatabaseEvents, keyof DatabaseEvents>, eventName>;
 }
 
-export abstract class SocketConnection {
-	socket: SocketIO;
-	database: Database;
-	clearDatabaseHandlers: () => void = () => undefined;
+export interface SocketConnection<V extends SocketVersion> {
+	getSocketHandlers(): SocketHandlers<V>;
+	handleDisconnect(): void;
+}
 
-	constructor(socket: SocketIO, database: Database) {
-		this.socket = socket;
-		this.database = database;
-
-		this.socket.on("error", (err) => {
-			this.handleError(err);
-		});
-		this.socket.on("disconnect", () => {
-			this.handleDisconnect();
-		});
-
-		this.registerSocketHandlers();
-		this.registerDatabaseHandlers();
-	}
-
-	abstract getSocketHandlers(): SocketHandlers<SocketVersion>;
-
-	abstract getVersion(): SocketVersion;
-
-	abstract getDatabaseHandlers(): DatabaseHandlers;
-
-	getSocketRequestValidators(): typeof socketRequestValidators[SocketVersion] {
-		return socketRequestValidators[this.getVersion()];
-	}
-
-	registerSocketHandlers(): void {
-		const socketHandlers = this.getSocketHandlers();
-		const validators = this.getSocketRequestValidators();
-		for (const i of Object.keys(socketHandlers) as Array<keyof SocketHandlers<SocketVersion>>) {
-			this.socket.on(i, async (data: unknown, callback: unknown): Promise<void> => {
-				const validatedCallback = typeof callback === 'function' ? callback : undefined;
-
-				try {
-					const validatedData = validators[i].parse(data);
-					const res = await (socketHandlers[i] as any)(validatedData);
-
-					if(!validatedCallback && res)
-						console.trace("No callback available to send result of socket handler " + i);
-
-					validatedCallback?.(null, res);
-				} catch (err: any) {
-					console.log(err);
-
-					validatedCallback?.(serializeError(err));
+export function mapMultipleEvents<VIn extends SocketVersion, VOut extends SocketVersion>(events: MultipleEvents<SocketEvents<VIn>>, mapper: (...args: SocketServerToClientEmitArgs<VIn>) => Array<SocketServerToClientEmitArgs<VOut>>): MultipleEvents<SocketEvents<VOut>> {
+	const result: any = {};
+	for (const [oldEventName, oldEvents] of Object.entries(events)) {
+		for (const oldEvent of oldEvents) {
+			for (const [newEventName, ...newEvent] of (mapper as any)(oldEventName, oldEvent)) {
+				if (!result[newEventName]) {
+					result[newEventName] = [];
 				}
-			});
-		}
-	}
-
-	registerDatabaseHandlers(): void {
-		this.clearDatabaseHandlers();
-
-		const handlers = this.getDatabaseHandlers();
-
-		for (const eventName of Object.keys(handlers) as Array<EventName<DatabaseEvents>>) {
-			this.database.on(eventName as any, handlers[eventName] as any);
-		}
-
-		this.clearDatabaseHandlers = () => {
-			for (const eventName of Object.keys(handlers) as Array<EventName<DatabaseEvents>>) {
-				this.database.removeListener(eventName as any, handlers[eventName] as any);
+				result[newEventName].push(newEvent[0]);
 			}
-		};
+		}
 	}
-
-	handleError(err: Error): void {
-		console.error("Error! Disconnecting client.");
-		console.error(err);
-		this.socket.disconnect();
-	}
-
-	handleDisconnect(): void {
-		this.clearDatabaseHandlers();
-	}
+	return result;
 }

@@ -1,5 +1,5 @@
-import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, symbolValidator, widthValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead } from "./cru";
+import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator } from "./base.js";
+import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead, type CRUValidator } from "./cru";
 import * as z from "zod";
 
 export const objectTypeValidator = z.enum(["marker", "line"]);
@@ -12,7 +12,7 @@ export const fieldOptionValidator = cruValidator({
 	value: z.string().trim(),
 	colour: colourValidator.optional(),
 	size: sizeValidator.optional(),
-	symbol: symbolValidator.optional(),
+	icon: iconValidator.optional(),
 	shape: shapeValidator.optional(),
 	width: widthValidator.optional(),
 	stroke: strokeValidator.optional(),
@@ -38,11 +38,27 @@ const noDuplicateOptionValues = (options: Array<FieldOption<CRU>>, ctx: z.Refine
 		}
 	}
 };
-export const fieldOptionsValidator = {
-	read: z.array(fieldOptionValidator.read).superRefine(noDuplicateOptionValues),
-	create: z.array(fieldOptionValidator.create).superRefine(noDuplicateOptionValues),
-	update: z.array(fieldOptionValidator.update).superRefine(noDuplicateOptionValues)
-};
+/** Applies the "no duplicate option values" refinement to the given fieldOptionsValidator */
+export function refineRawFieldOptionsValidator<
+	ReadValidator extends z.ZodTypeAny,
+	CreateValidator extends z.ZodTypeAny,
+	UpdateValidator extends z.ZodTypeAny
+>(rawFieldOptionsValidator: CRUValidator<ReadValidator, CreateValidator, UpdateValidator>): CRUValidator<
+	z.ZodEffects<ReadValidator, z.output<ReadValidator>, z.input<ReadValidator>>,
+	z.ZodEffects<CreateValidator, z.output<CreateValidator>, z.input<CreateValidator>>,
+	z.ZodEffects<UpdateValidator, z.output<UpdateValidator>, z.input<UpdateValidator>>
+> {
+	return {
+		read: rawFieldOptionsValidator.read.superRefine(noDuplicateOptionValues),
+		create: rawFieldOptionsValidator.create.superRefine(noDuplicateOptionValues),
+		update: rawFieldOptionsValidator.update.superRefine(noDuplicateOptionValues)
+	};
+}
+export const fieldOptionsValidator = refineRawFieldOptionsValidator({
+	read: z.array(fieldOptionValidator.read),
+	create: z.array(fieldOptionValidator.create),
+	update: z.array(fieldOptionValidator.update)
+});
 
 export const fieldValidator = cruValidator({
 	name: z.string().trim().min(1),
@@ -50,7 +66,7 @@ export const fieldValidator = cruValidator({
 	default: z.string().optional(),
 	controlColour: z.boolean().optional(),
 	controlSize: z.boolean().optional(),
-	controlSymbol: z.boolean().optional(),
+	controlIcon: z.boolean().optional(),
 	controlShape: z.boolean().optional(),
 	controlWidth: z.boolean().optional(),
 	controlStroke: z.boolean().optional(),
@@ -83,13 +99,30 @@ const noDuplicateFieldNames = (fields: Array<Field<CRU>>, ctx: z.RefinementCtx) 
 		}
 	}
 };
-export const fieldsValidator = {
-	read: z.array(fieldValidator.read).superRefine(noDuplicateFieldNames),
-	create: z.array(fieldValidator.create).superRefine(noDuplicateFieldNames),
-	update: z.array(fieldValidator.update).superRefine(noDuplicateFieldNames)
-};
+/** Applies the "no duplicate field names" refinement to the given fieldsValidator. */
+export function refineRawFieldsValidator<
+	ReadValidator extends z.ZodTypeAny,
+	CreateValidator extends z.ZodTypeAny,
+	UpdateValidator extends z.ZodTypeAny
+>(rawFieldsValidator: CRUValidator<ReadValidator, CreateValidator, UpdateValidator>): CRUValidator<
+	z.ZodEffects<ReadValidator, z.output<ReadValidator>, z.input<ReadValidator>>,
+	z.ZodEffects<CreateValidator, z.output<CreateValidator>, z.input<CreateValidator>>,
+	z.ZodEffects<UpdateValidator, z.output<UpdateValidator>, z.input<UpdateValidator>>
+> {
+	return {
+		read: rawFieldsValidator.read.superRefine(noDuplicateFieldNames),
+		create: rawFieldsValidator.create.superRefine(noDuplicateFieldNames),
+		update: rawFieldsValidator.update.superRefine(noDuplicateFieldNames)
+	};
+}
+export const fieldsValidator = refineRawFieldsValidator({
+	read: z.array(fieldValidator.read),
+	create: z.array(fieldValidator.create),
+	update: z.array(fieldValidator.update)
+});
 
-const rawTypeValidator = cruValidator({
+/** The type validator without the defaultColour default value applied. */
+export const rawTypeValidator = cruValidator({
 	id: onlyRead(idValidator),
 	type: exceptUpdate(objectTypeValidator),
 	padId: onlyRead(padIdValidator),
@@ -101,8 +134,8 @@ const rawTypeValidator = cruValidator({
 	colourFixed: optionalCreate(z.boolean(), false),
 	defaultSize: optionalCreate(sizeValidator, 30),
 	sizeFixed: optionalCreate(z.boolean(), false),
-	defaultSymbol: optionalCreate(symbolValidator, ""),
-	symbolFixed: optionalCreate(z.boolean(), false),
+	defaultIcon: optionalCreate(iconValidator, ""),
+	iconFixed: optionalCreate(z.boolean(), false),
 	defaultShape: optionalCreate(shapeValidator, ""),
 	shapeFixed: optionalCreate(z.boolean(), false),
 	defaultWidth: optionalCreate(widthValidator, 4),
@@ -119,13 +152,25 @@ const rawTypeValidator = cruValidator({
 		update: fieldsValidator.update.optional()
 	}
 });
-export const typeValidator = {
-	...rawTypeValidator,
-	create: rawTypeValidator.create.transform((type) => {
-		return {
-			defaultColour: type.type === "marker" ? "ff0000" : "0000ff",
-			...type
-		};
-	})
-};
+/** Applies the defaultColour default value to the given typeValidator */
+export function refineRawTypeValidator<
+	ReadValidator extends z.ZodTypeAny,
+	CreateValidator extends z.ZodTypeAny,
+	UpdateValidator extends z.ZodTypeAny
+>(rawTypeValidator: CRUValidator<ReadValidator, CreateValidator, UpdateValidator>): CRUValidator<
+	ReadValidator,
+	z.ZodEffects<CreateValidator, Omit<z.output<CreateValidator>, "defaultColour"> & { defaultColour: string }, z.input<CreateValidator>>,
+	UpdateValidator
+> {
+	return {
+		...rawTypeValidator,
+		create: rawTypeValidator.create.transform((type) => {
+			return {
+				defaultColour: type.type === "marker" ? "ff0000" : "0000ff",
+				...type
+			};
+		})
+	};
+}
+export const typeValidator = refineRawTypeValidator(rawTypeValidator);
 export type Type<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof typeValidator>;

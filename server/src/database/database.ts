@@ -15,7 +15,7 @@ import DatabaseMigrations from "./migrations.js";
 import { TypedEventEmitter } from "../utils/events.js";
 import type { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
 
-export interface DatabaseEvents {
+export interface DatabaseEventsInterface {
 	addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];
 	historyChange: [padId: PadId];
 
@@ -35,6 +35,8 @@ export interface DatabaseEvents {
 	view: [padId: PadId, newView: View];
 	deleteView: [padId: PadId, data: ObjectWithId];
 }
+
+export type DatabaseEvents = Pick<DatabaseEventsInterface, keyof DatabaseEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
 
 export default class Database extends TypedEventEmitter<DatabaseEvents> {
 

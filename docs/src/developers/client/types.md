@@ -20,7 +20,7 @@ A bounding box that describes which part of the map the user is currently viewin
 * `name` (string): The name of this marker
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
-* `symbol` (string): The symbol name for the marker. Default is an empty string.
+* `icon` (string): The icon name for the marker. Default is an empty string.
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
 * `ele` (number or null): The elevation of this marker in metres (set by the server)
 * `typeId` (number): The ID of the type of this marker
@@ -110,20 +110,20 @@ their `idx` property.
 * `name` (string): The name of this type. Note that the if the name is "Marker" or "Line", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 * `type` (string): `marker` or `line`
 * `idx` (number): The sorting position of this type. When a list of types is shown to the user, it must be ordered by this value. If types were deleted or reordered, there may be gaps in the sequence of indexes, but no two types on the same map can ever have the same index. When setting this as part of a type creation/update, other types with a same/higher index will have their index increased to be moved down the list.
-* `defaultColour`, `defaultSize`, `defaultSymbol`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
+* `defaultColour`, `defaultSize`, `defaultIcon`, `defaultShape`, `defaultWidth`, `defaultStroke`, `defaultMode` (string/number): Default values for the
   different object properties
-* `colourFixed`, `sizeFixed`, `symbolFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
+* `colourFixed`, `sizeFixed`, `iconFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
 * `fields` ([object]): The form fields for this type. Each field has the following properties:
 	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 	* `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
-	* `controlColour`, `controlSize`, `controlSymbol`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
+	* `controlColour`, `controlSize`, `controlIcon`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
 	* `default` (string/boolean): The default value of this field
 	* `options` ([object]): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
 		* `value` (string): The value of this option.
 		* `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods.md#edittype-data)), specify the former value here
-		* `colour`, `size`, `shape`, `symbol`, `width`, `stroke` (string/number): The property value if this field controls that property
+		* `colour`, `size`, `shape`, `icon`, `width`, `stroke` (string/number): The property value if this field controls that property
 
 ## SearchResult
 
@@ -135,7 +135,7 @@ their `idx` property.
 * `zoom` (number): Zoom level at which there is a good view onto the result. Might be null if `boundingbox` is set.
 * `extratags` (object): Extra OSM tags that might be useful
 * `geojson` (object): GeoJSON if the result has a shape
-* `icon` (string): Symbol key of the result
+* `icon` (string): Icon key of the result
 * `type` (string): Type of the result
 * `id` (string): If the result is an OSM object, the ID of the OSM object, prefixed by `n` (node), `w` (way) or `r` (relation)
 * `ele` (number): Elevation in meters

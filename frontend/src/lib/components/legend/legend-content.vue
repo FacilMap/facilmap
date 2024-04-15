@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { getMarkerHtml, getSymbolHtml } from "facilmap-leaflet";
+	import { getMarkerHtml, getIconHtml } from "facilmap-leaflet";
 	import { makeTypeFilter, markdownBlock } from "facilmap-utils";
 	import type { LegendItem, LegendType } from "./legend-utils";
 	import { createLinePlaceholderHtml } from "../../utils/ui";
@@ -54,13 +54,13 @@
 		mapContext.value.components.map.setFmFilter(makeTypeFilter(mapContext.value.components.map.fmFilter, typeInfo.typeId, filters));
 	}
 
-	async function makeSymbol(typeInfo: LegendType, item: LegendItem, height = 15): Promise<string> {
+	async function makeIcon(typeInfo: LegendType, item: LegendItem, height = 15): Promise<string> {
 		if(typeInfo.type == "line")
 			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50, item.stroke ?? "");
 		else if (item.colour || item.shape != null)
-			return await getMarkerHtml(item.colour || "rainbow", height, item.symbol, item.shape);
+			return await getMarkerHtml(item.colour || "rainbow", height, item.icon, item.shape);
 		else
-			return await getSymbolHtml("#000000", height, item.symbol);
+			return await getIconHtml("#000000", height, item.icon);
 	}
 
 	function togglePopover(itemKey: string, show: boolean) {
@@ -84,9 +84,9 @@
 			<dl>
 				<template v-for="(item, idx) in type.items" :key="item.key">
 					<dt
-						:class="[ 'fm-legend-symbol', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
+						:class="[ 'fm-legend-icon', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
 						@click="toggleFilter(type, item)"
-						v-html-async="makeSymbol(type, item)"
+						v-html-async="makeIcon(type, item)"
 						@mouseenter="togglePopover(item.key, true)"
 						@mouseleave="togglePopover(item.key, false)"
 						:ref="mapRef(itemIconRefs, item.key)"
@@ -112,14 +112,14 @@
 					>
 						<div
 							:class="[
-								'fm-legend-symbol',
+								'fm-legend-icon',
 								`fm-${type.type}`,
 								{
 									filtered: item.filtered,
 									bright: item.bright
 								}
 							]"
-							v-html-async="makeSymbol(type, item, 40)"
+							v-html-async="makeIcon(type, item, 40)"
 						></div>
 						<p>
 							<span class="text-break" :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>

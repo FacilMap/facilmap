@@ -30,6 +30,7 @@ export default class DatabaseMigrations {
 		await this._extraInfoNullMigration();
 		await this._typesIdxMigration();
 		await this._viewsIdxMigration();
+		await this._fieldIconsMigration();
 
 		(async () => {
 			await this._elevationMigration();
@@ -44,6 +45,16 @@ export default class DatabaseMigrations {
 	async _renameColMigrations(): Promise<void> {
 		const queryInterface = this._db._conn.getQueryInterface();
 
+
+		const markerAttrs = await queryInterface.describeTable('Markers');
+
+		// Rename Marker.symbol to Marker.icon
+		if (markerAttrs.symbol) {
+			console.log("DB migration: Rename Markers.symbol to Markers.icons");
+			await queryInterface.renameColumn('Markers', 'symbol', 'icon');
+		}
+
+
 		const lineAttrs = await queryInterface.describeTable('Lines');
 
 		// Rename Line.points to Line.routePoints
@@ -56,6 +67,21 @@ export default class DatabaseMigrations {
 		if(lineAttrs.mode.type.indexOf("shortest") != -1) {
 			console.log("DB migration: Change \"shortest\"/\"fastest\" route mode to \"car\"");
 			await this._db.lines.LineModel.update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } });
+		}
+
+
+		const typeAttrs = await queryInterface.describeTable('Types');
+
+		// Rename Types.defaultSymbol to Types.defaultIcon
+		if (typeAttrs.defaultSymbol) {
+			console.log("DB migration: Rename Types.defaultSymbol to Types.defaultIcon");
+			await queryInterface.renameColumn('Types', 'defaultSymbol', 'defaultIcon');
+		}
+
+		// Rename Types.symbolFixed to Types.iconFixed
+		if (typeAttrs.symbolFixed) {
+			console.log("DB migration: Rename Types.symbolFixed to Types.iconFixed");
+			await queryInterface.renameColumn('Types', 'symbolFixed', 'iconFixed');
 		}
 
 
@@ -142,11 +168,11 @@ export default class DatabaseMigrations {
 			await queryInterface.changeColumn("Markers", "size", this._db.markers.MarkerModel.getAttributes().size);
 		}
 
-		// Forbid null marker symbol
-		if (markersAttributes.symbol.allowNull) {
-			console.log("DB migration: Remove defaultValue from Markers.symbol");
-			await this._db.markers.MarkerModel.update({ symbol: "" }, { where: { symbol: null as any } });
-			await queryInterface.changeColumn("Markers", "symbol", this._db.markers.MarkerModel.getAttributes().symbol);
+		// Forbid null marker icon
+		if (markersAttributes.icon.allowNull) {
+			console.log("DB migration: Remove defaultValue from Markers.icon");
+			await this._db.markers.MarkerModel.update({ icon: "" }, { where: { icon: null as any } });
+			await queryInterface.changeColumn("Markers", "icon", this._db.markers.MarkerModel.getAttributes().icon);
 		}
 
 		// Forbid null marker shape
@@ -236,18 +262,18 @@ export default class DatabaseMigrations {
 			await queryInterface.changeColumn("Types", "sizeFixed", this._db.types.TypeModel.getAttributes().sizeFixed);
 		}
 
-		// Forbid null defaultSymbol
-		if (typesAttributes.defaultSymbol.allowNull) {
-			console.log("DB migration: Disallow null for Types.defaultSymbol");
-			await this._db.types.TypeModel.update({ defaultSymbol: "" }, { where: { defaultSymbol: null as any } });
-			await queryInterface.changeColumn("Types", "defaultSymbol", this._db.types.TypeModel.getAttributes().defaultSymbol);
+		// Forbid null defaultIcon
+		if (typesAttributes.defaultIcon.allowNull) {
+			console.log("DB migration: Disallow null for Types.defaultIcon");
+			await this._db.types.TypeModel.update({ defaultIcon: "" }, { where: { defaultIcon: null as any } });
+			await queryInterface.changeColumn("Types", "defaultIcon", this._db.types.TypeModel.getAttributes().defaultIcon);
 		}
 
-		// Forbid null symbolFixed
-		if (typesAttributes.symbolFixed.allowNull) {
-			console.log("DB migration: Disallow null for Types.symbolFixed");
-			await this._db.types.TypeModel.update({ symbolFixed: false }, { where: { symbolFixed: null as any } });
-			await queryInterface.changeColumn("Types", "symbolFixed", this._db.types.TypeModel.getAttributes().symbolFixed);
+		// Forbid null iconFixed
+		if (typesAttributes.iconFixed.allowNull) {
+			console.log("DB migration: Disallow null for Types.iconFixed");
+			await this._db.types.TypeModel.update({ iconFixed: false }, { where: { iconFixed: null as any } });
+			await queryInterface.changeColumn("Types", "iconFixed", this._db.types.TypeModel.getAttributes().iconFixed);
 		}
 
 		// Forbid null defaultShape
@@ -439,12 +465,12 @@ export default class DatabaseMigrations {
 		for(const type of types) {
 			let showInLegend = false;
 
-			if(type.colourFixed || (type.type == "marker" && type.symbolFixed && type.defaultSymbol) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed))
+			if(type.colourFixed || (type.type == "marker" && type.iconFixed && type.defaultIcon) || (type.type == "marker" && type.shapeFixed) || (type.type == "line" && type.widthFixed))
 				showInLegend = true;
 
 			if(!showInLegend) {
 				for(const field of type.fields) {
-					if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (type.type == "marker" && field.controlSymbol) || (type.type == "marker" && field.controlShape) || (type.type == "line" && field.controlWidth))) {
+					if((field.type == "dropdown" || field.type == "checkbox") && (field.controlColour || (type.type == "marker" && field.controlIcon) || (type.type == "marker" && field.controlShape) || (type.type == "line" && field.controlWidth))) {
 						showInLegend = true;
 						break;
 					}
@@ -640,6 +666,45 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("viewsIdxMigrationCompleted", "1");
+	}
+
+	/** Rename Field.controlSymbol to Field.controlIcon and FieldOption.symbol to FieldOption.icon */
+	async _fieldIconsMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("fieldIconsMigrationCompleted") == "1")
+			return;
+
+		console.log("DB migration: Rename Field.controlSymbol to Field.controlIcon and FieldOption.symbol to FieldOption.icon");
+
+		const allTypes = await this._db.types.TypeModel.findAll({
+			attributes: ["id", "fields"]
+		});
+
+		for (const type of allTypes) {
+			let fields = type.fields;
+			let fieldsChanged = false;
+			for (const field of fields) {
+				if ("controlSymbol" in field) {
+					field.controlIcon = field.controlSymbol as any;
+					delete field.controlSymbol;
+					fieldsChanged = true;
+				}
+
+				for (const option of field.options ?? []) {
+					if ("symbol" in option) {
+						option.icon = option.symbol as any;
+						delete option.symbol;
+						fieldsChanged = true;
+					}
+				}
+			}
+			if (fieldsChanged) {
+				await type.update({
+					fields
+				});
+			}
+		}
+
+		await this._db.meta.setMeta("fieldIconsMigrationCompleted", "1");
 	}
 
 }
