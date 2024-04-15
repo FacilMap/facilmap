@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryPad, generateTestPadId, getFacilMapUrl, getTemporaryPadData, openClient } from "../utils";
-import { Writable, type PadData, CRU, type FindPadsResult, type PagedResults } from "facilmap-types";
+import { Writable, type PadData, CRU, type FindPadsResult, type PagedResults, SocketVersion } from "facilmap-types";
 import { pick } from "lodash-es";
 import Client from "facilmap-client";
 
@@ -249,7 +249,7 @@ test("Rename pad (duplicate IDs)", async () => {
 test("Delete pad", async () => {
 	const client = await openClient();
 
-	const padData = getTemporaryPadData({});
+	const padData = getTemporaryPadData(SocketVersion.V3, {});
 	await createTemporaryPad(client, padData, async () => {
 		expect(client.deleted).toBe(false);
 

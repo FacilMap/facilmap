@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import Client from "facilmap-client";
-import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, Writable } from "facilmap-types";
+import ClientV4 from "facilmap-client-v4";
+import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
 import { generateRandomPadId, sleep } from "facilmap-utils";
 
 // Workaround for https://stackoverflow.com/q/64639839/242365
@@ -30,12 +31,14 @@ export async function openSocket<V extends SocketVersion>(version: V): Promise<S
 
 const clientConstructors = {
 	[SocketVersion.V1]: ClientV3,
-	[SocketVersion.V2]: Client,
+	[SocketVersion.V2]: ClientV4,
 	[SocketVersion.V3]: Client
 };
 
-export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?: string, version: V = SocketVersion.V3 as any): Promise<InstanceType<typeof clientConstructors[V]>> {
-	const client = new clientConstructors[version](getFacilMapUrl(), id, { reconnection: false }) as any;
+type ClientInstance<V extends SocketVersion> = InstanceType<typeof clientConstructors[V]> & { _version: V };
+
+export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?: string, version: V = SocketVersion.V3 as any): Promise<ClientInstance<V>> {
+	const client = Object.assign(new clientConstructors[version](getFacilMapUrl(), id, { reconnection: false }) as any, { _version: version });
 	await new Promise<void>((resolve, reject) => {
 		if (id != null) {
 			client.on("padData", () => {
@@ -54,7 +57,7 @@ export function generateTestPadId(): string {
 	return `integration-test-${generateRandomPadId()}`;
 }
 
-export function getTemporaryPadData<D extends Partial<PadData<CRU.CREATE>>>(data: D): D & Pick<PadData<CRU.CREATE>, "id" | "writeId" | "adminId"> {
+export function getTemporaryPadData<V extends SocketVersion, D extends Partial<Parameters<ClientInstance<V>["createPad"]>[0]>>(version: V, data: D): D & Pick<Parameters<ClientInstance<V>["createPad"]>[0], "id" | "writeId" | "adminId"> {
 	return {
 		id: generateTestPadId(),
 		writeId: generateTestPadId(),
@@ -63,13 +66,13 @@ export function getTemporaryPadData<D extends Partial<PadData<CRU.CREATE>>>(data
 	};
 }
 
-export async function createTemporaryPad<D extends Partial<PadData<CRU.CREATE>>, C extends InstanceType<typeof clientConstructors[keyof typeof clientConstructors]>>(
-	client: C,
+export async function createTemporaryPad<V extends SocketVersion, D extends Partial<PadData<CRU.CREATE>>>(
+	client: ClientInstance<V>,
 	data: D,
-	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<D>>, padData: PadData & { writable: Writable }, result: Awaited<ReturnType<C["createPad"]>>) => Promise<void>
+	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<V, D>>, padData: NonNullable<ClientInstance<V>["padData"]>, result: Awaited<ReturnType<ClientInstance<V>["createPad"]>>) => Promise<void>
 ): Promise<void> {
-	const createPadData = getTemporaryPadData(data);
-	const result = await client.createPad(createPadData);
+	const createPadData = getTemporaryPadData(client._version, data);
+	const result = await client.createPad(createPadData as any);
 	try {
 		await callback?.(createPadData, client.padData!, result as any);
 	} finally {

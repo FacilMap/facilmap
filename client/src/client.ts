@@ -670,7 +670,7 @@ class Client {
 		return this.state.listeningToHistory;
 	}
 
-	get padData(): PadData | undefined {
+	get padData(): (PadData & { writable: Writable }) | undefined {
 		return this.data.padData;
 	}
 

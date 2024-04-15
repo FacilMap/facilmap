@@ -22,7 +22,7 @@
   "dependencies": {
     "facilmap-client": "workspace:^",
     "facilmap-client-v3": "patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch",
-    "facilmap-client-v4": "npm:facilmap-client@4",
+    "facilmap-client-v4": "patch:facilmap-client@npm%3A4#../.yarn/patches/facilmap-client-npm-4.1.1-841eedca5b.patch",
     "facilmap-types": "workspace:^",
     "facilmap-types-v3": "npm:facilmap-types@3",
     "facilmap-types-v4": "npm:facilmap-types@4",
