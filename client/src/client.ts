@@ -68,7 +68,7 @@ interface ClientData {
 
 errorConstructors.set("PadNotFoundError", PadNotFoundError as any);
 
-export default class Client {
+class Client {
 	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V2>, SocketClientToServerEvents<SocketVersion.V2>>;
 	private state: ClientState;
 	private data: ClientData;
@@ -698,3 +698,5 @@ export default class Client {
 		return this.data.routes;
 	}
 }
+
+export default Client;
