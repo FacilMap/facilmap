@@ -12,6 +12,7 @@ export default defineConfig({
 		cssInjectedByJsPlugin(),
 		dtsPlugin({
 			rollupTypes: true,
+			tsconfigPath: "./tsconfig.build.json",
 			clearPureImport: false,
 			async afterBuild() {
 				// Due to https://github.com/microsoft/rushstack/issues/1709, our module augmentations are lost during

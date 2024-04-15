@@ -4,7 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	plugins: [
-		dtsPlugin({ rollupTypes: true }),
+		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" }),
 		tsconfigPaths({ loose: true })
 	],
 	build: {

@@ -8,7 +8,7 @@ import definePlugin from "./vite-define";
 export default defineConfig(({ mode }) => ({
 	plugins: [
 		cssInjectedByJsPlugin(),
-		dtsPlugin({ rollupTypes: true }),
+		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" }),
 		vuePlugin(),
 		tsconfigPaths(),
 		definePlugin()

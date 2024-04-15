@@ -3,7 +3,7 @@ import dtsPlugin from "vite-plugin-dts";
 
 export default defineConfig({
 	plugins: [
-		dtsPlugin({ rollupTypes: true })
+		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" })
 	],
 	build: {
 		sourcemap: true,

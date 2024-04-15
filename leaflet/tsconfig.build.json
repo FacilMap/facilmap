@@ -1,0 +1,4 @@
+{
+	"extends": "../tsconfig.base.json",
+	"include": ["src/**/*", "src/**/*.json", "example.html", "icontest.html"]
+}
