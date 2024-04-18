@@ -71,7 +71,7 @@ function getMarkerGpx(marker: Marker, type: Type): ReadableStream<string> {
 		`\t<desc>${quoteHtml(dataToText(type.fields, marker.data))}</desc>\n` +
 		`\t<extensions>\n` +
 		(osmandBackground ? `\t\t<osmand:background>${osmandBackground}</osmand:background>\n` : "") +
-		`\t\t<osmand:color>#${marker.colour}</osmand:color>\n` +
+		`\t\t<osmand:color>#aa${marker.colour}</osmand:color>\n` +
 		`\t</extensions>\n` +
 		`</wpt>`
 	);
@@ -235,7 +235,7 @@ function getLineMetadataGpx(line: LineForExport, type: Type | undefined): string
 		}
 	}, {
 		...(line.colour ? {
-			"osmand:color": `#${line.colour}`
+			"osmand:color": `#aa${line.colour}`
 		} : {}),
 		...(line.width ? {
 			"osmand:width": `${line.width}`

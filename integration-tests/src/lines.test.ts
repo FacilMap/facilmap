@@ -618,7 +618,7 @@ test("Export line", async () => {
 		</extensions>
 	</metadata>
 	<extensions>
-		<osmand:color>#0000ff</osmand:color>
+		<osmand:color>#aa0000ff</osmand:color>
 		<osmand:width>4</osmand:width>
 	</extensions>
 	<trk>
@@ -642,7 +642,7 @@ test("Export line", async () => {
 		</extensions>
 	</metadata>
 	<extensions>
-		<osmand:color>#0000ff</osmand:color>
+		<osmand:color>#aa0000ff</osmand:color>
 		<osmand:width>4</osmand:width>
 	</extensions>
 	<rte>
@@ -693,7 +693,7 @@ test("Export line (track)", async () => {
 		</extensions>
 	</metadata>
 	<extensions>
-		<osmand:color>#00ff00</osmand:color>
+		<osmand:color>#aa00ff00</osmand:color>
 		<osmand:width>10</osmand:width>
 	</extensions>
 	<trk>
@@ -718,7 +718,7 @@ test("Export line (track)", async () => {
 		</extensions>
 	</metadata>
 	<extensions>
-		<osmand:color>#00ff00</osmand:color>
+		<osmand:color>#aa00ff00</osmand:color>
 		<osmand:width>10</osmand:width>
 	</extensions>
 	<rte>
