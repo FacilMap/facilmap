@@ -32,5 +32,11 @@
     },
     "zoom-to-object-button": {
         "fallback-label": "Приблизить объект"
+    },
+    "toolbox-collab-maps-dropdown": {
+        "label": "Совместные карты"
+    },
+    "open-map-dialog": {
+        "search-alt": "Поиск"
     }
 }
