@@ -10,7 +10,8 @@ module.exports = (env, argv) => {
 			path: __dirname + "/dist/",
 			library: ["FacilMap", "Client"],
 			libraryTarget: "umd",
-			libraryExport: "default"
+			libraryExport: "default",
+			globalObject: "this"
 		},
 		resolve: {
 			extensions: [ ".js", ".ts" ]
