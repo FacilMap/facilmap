@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, mapHistoryEntry } from "facilmap-types";
 import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
@@ -8,6 +8,20 @@ function prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): 
 		return [[args[0], currentMarkerToLegacyV2(args[1])]];
 	} else if (args[0] === "type") {
 		return [[args[0], currentTypeToLegacyV2(args[1])]];
+	} else if (args[0] === "history") {
+		if (args[1].type === "Marker") {
+			return [[
+				args[0],
+				mapHistoryEntry(args[1], (obj) => obj && currentMarkerToLegacyV2(obj))
+			]];
+		} else if (args[1].type === "Type") {
+			return [[
+				args[0],
+				mapHistoryEntry(args[1], (obj) => obj && currentTypeToLegacyV2(obj))
+			]];
+		} else {
+			return [[args[0], args[1]]];
+		}
 	} else {
 		return [args];
 	}

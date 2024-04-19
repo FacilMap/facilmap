@@ -8,6 +8,7 @@ export * from "./marker.js";
 export * from "./padData.js";
 export * from "./route.js";
 export * from "./searchResult.js";
+export * from "./socket/socket-common.js";
 export * from "./socket/socket-v1.js";
 export * from "./socket/socket-v2.js";
 export * from "./socket/socket-v3.js";

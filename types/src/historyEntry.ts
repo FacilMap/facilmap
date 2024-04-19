@@ -5,47 +5,43 @@ import type { View } from "./view.js";
 import type { PadData } from "./padData.js";
 import type { Type } from "./type.js";
 
-export type HistoryEntryType = "Marker" | "Line" | "View" | "Type" | "Pad";
 export type HistoryEntryAction = "create" | "update" | "delete";
 
-export type HistoryEntryObject<T extends HistoryEntryType> =
-	T extends "Marker" ? Omit<Marker, 'id'> :
-		T extends "Line" ? Omit<Line, 'id'> :
-			T extends "View" ? Omit<View, 'id'> :
-				T extends "Type" ? Omit<Type, 'id'> :
-					PadData;
+export type HistoryEntryObjectTypes = {
+	"Marker": Omit<Marker, "id">;
+	"Line": Omit<Line, "id">;
+	"View": Omit<View, "id">;
+	"Type": Omit<Type, "id">;
+	"Pad": PadData;
+};
 
-type HistoryEntryBase<T extends HistoryEntryType, A extends HistoryEntryAction> = {
-	id: ID;
-	time: string;
-	type: T;
-	action: A;
-	padId: PadId;
-} & (A extends "create" ? {
-	objectBefore?: undefined;
-} : {
-	objectBefore: HistoryEntryObject<T>;
-}) & (A extends "delete" ? {
-	objectAfter?: undefined;
-} : {
-	objectAfter: HistoryEntryObject<T>;
-}) & (T extends "Pad" ? {
-	objectId?: undefined;
-} : {
-	objectId: ID;
-});
+export type HistoryEntryType = keyof HistoryEntryObjectTypes;
+export type HistoryEntryObject<T extends HistoryEntryType> = HistoryEntryObjectTypes[T];
 
-type HistoryEntryBase2<T extends HistoryEntryType> =
-	HistoryEntryBase<T, "create">
-	| HistoryEntryBase<T, "update">
-	| HistoryEntryBase<T, "delete">
+export type GenericHistoryEntry<ObjectTypes extends Record<HistoryEntryType, any>> = {
+	[Type in HistoryEntryType]: {
+		[Action in HistoryEntryAction]: {
+			id: ID;
+			time: string;
+			type: Type;
+			action: Action;
+			padId: PadId;
+		} & (Action extends "create" ? {
+			objectBefore?: undefined;
+		} : {
+			objectBefore: ObjectTypes[Type];
+		}) & (Action extends "delete" ? {
+			objectAfter?: undefined;
+		} : {
+			objectAfter: ObjectTypes[Type];
+		}) & (Type extends "Pad" ? {
+			objectId?: undefined;
+		} : {
+			objectId: ID;
+		});
+	}[HistoryEntryAction]
+}[HistoryEntryType];
 
-
-export type HistoryEntry =
-	HistoryEntryBase2<"Marker">
-	| HistoryEntryBase2<"Line">
-	| HistoryEntryBase2<"View">
-	| HistoryEntryBase2<"Type">
-	| HistoryEntryBase2<"Pad">;
+export type HistoryEntry = GenericHistoryEntry<HistoryEntryObjectTypes>;
 
 export type HistoryEntryCreate = Omit<HistoryEntry, "id" | "time" | "padId">;

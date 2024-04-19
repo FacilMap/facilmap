@@ -121,6 +121,8 @@ export const fieldsValidator = refineRawFieldsValidator({
 	update: z.array(fieldValidator.update)
 });
 
+export const defaultFields = (): Field[] => [ { name: "Description", type: "textarea" as const } ];
+
 /** The type validator without the defaultColour default value applied. */
 export const rawTypeValidator = cruValidator({
 	id: onlyRead(idValidator),
@@ -148,7 +150,7 @@ export const rawTypeValidator = cruValidator({
 
 	fields: {
 		read: fieldsValidator.read,
-		create: fieldsValidator.create.default(() => [ { name: "Description", type: "textarea" as const } ]),
+		create: fieldsValidator.create.default(defaultFields),
 		update: fieldsValidator.update.optional()
 	}
 });

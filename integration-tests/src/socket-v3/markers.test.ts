@@ -113,10 +113,6 @@ test("Edit marker", async () => {
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
-		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
-
 		const createdMarker = await client1.addMarker({
 			lat: 10,
 			lon: 10,
@@ -128,6 +124,10 @@ test("Edit marker", async () => {
 			type: "marker",
 			name: "Second type"
 		});
+
+		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);

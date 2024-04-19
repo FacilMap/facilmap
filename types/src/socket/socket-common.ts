@@ -77,7 +77,7 @@ export const setLanguageRequestValidator = z.object({
 });
 export type SetLanguageRequest = z.infer<typeof setLanguageRequestValidator>;
 
-export type ReplaceProperty<T extends Record<keyof any, any>, Key extends keyof T, Value> = Omit<T, Key> & Record<Key, Value>;
+export type ReplaceProperty<T extends Record<keyof any, any>, Key extends keyof any, Value> = T extends Record<Key, any> ? (Omit<T, Key> & Record<Key, Value>) : T;
 
 export type RenameProperty<T, From extends keyof any, To extends keyof any, KeepOld extends boolean = false> = T extends Record<From, any> ? (KeepOld extends true ? From : Omit<T, From>) & Record<To, T[From]> : T;
 
@@ -92,4 +92,13 @@ export function renameProperty<T, From extends keyof any, To extends keyof any, 
 	} else {
 		return obj as any;
 	}
+}
+
+type ReplacePropertyIfNotUndefined<T extends Record<keyof any, any>, Key extends keyof any, Value> = T[Key] extends undefined ? T : ReplaceProperty<T, Key, Value>;
+export function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: any }, Out>(entry: Obj, mapper: (obj: (Obj extends { objectBefore: {} } ? Obj["objectBefore"] : never) | (Obj extends { objectAfter: {} } ? Obj["objectAfter"] : never)) => Out): ReplacePropertyIfNotUndefined<ReplacePropertyIfNotUndefined<Obj, "objectBefore", Out>, "objectAfter", Out> {
+	return {
+		...entry,
+		..."objectBefore" in entry && entry.objectBefore !== undefined ? { objectBefore: mapper(entry.objectBefore) } : {},
+		..."objectAfter" in entry && entry.objectAfter !== undefined ? { objectAfter: mapper(entry.objectAfter) } : {}
+	} as any;
 }

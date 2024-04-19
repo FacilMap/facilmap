@@ -1,11 +1,12 @@
 import { idValidator, type ReplaceProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
-import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator } from "../type.js";
+import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { MultipleEvents } from "../events.js";
 import { renameProperty, type FindOnMapMarker, type FindOnMapResult, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
 import { requestDataValidatorsV3, type MapEventsV3, type ResponseDataMapV3 } from "./socket-v3.js";
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
+import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and
@@ -48,7 +49,7 @@ export const legacyV2TypeValidator = refineRawTypeValidator({
 	create: rawTypeValidator.create.omit({ defaultIcon: true, iconFixed: true }).extend({
 		defaultSymbol: rawTypeValidator.create.shape.defaultIcon,
 		symbolFixed: rawTypeValidator.create.shape.iconFixed,
-		fields: legacyV2FieldsValidator.create
+		fields: legacyV2FieldsValidator.create.default(defaultFields)
 	}),
 	update: rawTypeValidator.update.omit({ defaultIcon: true, iconFixed: true }).extend({
 		defaultSymbol: rawTypeValidator.update.shape.defaultIcon,
@@ -60,6 +61,11 @@ export type LegacyV2Type<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof leg
 
 export type LegacyV2FindOnMapMarker = RenameProperty<FindOnMapMarker, "icon", "symbol", false>;
 export type LegacyV2FindOnMapResult = LegacyV2FindOnMapMarker | Exclude<FindOnMapResult, FindOnMapMarker>;
+
+export type LegacyV2HistoryEntry = GenericHistoryEntry<ReplaceProperties<HistoryEntryObjectTypes, {
+	Marker: Omit<LegacyV2Marker, "id">;
+	Type: Omit<LegacyV2Type, "id">;
+}>>;
 
 export const requestDataValidatorsV2 = {
 	...requestDataValidatorsV3,
@@ -88,6 +94,7 @@ export type ResponseDataMapV2 = ReplaceProperties<ResponseDataMapV3, {
 export type MapEventsV2 = ReplaceProperties<MapEventsV3, {
 	marker: [LegacyV2Marker];
 	type: [LegacyV2Type];
+	history: [LegacyV2HistoryEntry];
 }>;
 
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
