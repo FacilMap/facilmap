@@ -1,6 +1,6 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
 import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError, type SetLanguageRequest } from "facilmap-types";
-import { deserializeError, errorConstructors } from "serialize-error";
+import { deserializeError, errorConstructors, serializeError } from "serialize-error";
 
 export interface ClientEvents extends SocketEvents<SocketVersion.V2> {
 	connect: [];
@@ -194,10 +194,12 @@ class Client {
 
 			this._simulateEvent("emit", eventName as any, data as any);
 
+			const outerError = new Error();
 			return await new Promise((resolve, reject) => {
 				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V2, R>) => {
 					if(err) {
-						reject(deserializeError(err));
+						const cause = deserializeError(err);
+						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
 						this._simulateEvent("emitReject", eventName as any, err);
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);
