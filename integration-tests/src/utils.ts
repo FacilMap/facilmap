@@ -1,12 +1,9 @@
 import { io, Socket } from "socket.io-client";
 import Client from "facilmap-client";
+import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
 import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
 import { generateRandomPadId, sleep } from "facilmap-utils";
-
-// Workaround for https://stackoverflow.com/q/64639839/242365
-global.self = this as any;
-const { default: ClientV3 } = await import("facilmap-client-v3");
 
 
 export function getFacilMapUrl(): string {

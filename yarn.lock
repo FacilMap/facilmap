@@ -3903,13 +3903,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"facilmap-client-v3@patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch::locator=facilmap-integration-tests%40workspace%3Aintegration-tests":
-  version: 3.4.0
-  resolution: "facilmap-client-v3@patch:facilmap-client@npm%3A3.4.0#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch::version=3.4.0&hash=799670&locator=facilmap-integration-tests%40workspace%3Aintegration-tests"
+"facilmap-client-v3@patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.1-0b872958ee.patch::locator=facilmap-integration-tests%40workspace%3Aintegration-tests":
+  version: 3.4.1
+  resolution: "facilmap-client-v3@patch:facilmap-client@npm%3A3.4.1#../.yarn/patches/facilmap-client-npm-3.4.1-0b872958ee.patch::version=3.4.1&hash=799670&locator=facilmap-integration-tests%40workspace%3Aintegration-tests"
   dependencies:
-    facilmap-types: 3.4.0
+    facilmap-types: 3.4.1
     socket.io-client: ^4.1.2
-  checksum: 8130988a9e6f258c76ea1ecf73f6c387709cf38949088e1555525d9efaf898170ae7a46b677215f1b9be7b4437b0810b248af7c56062e49c614e6a35a6664286
+  checksum: db7f403f8046231b83ad1cf88d0afdd2c967dfa32324732c9c0d7d0164954a468dca80b0be4fe5356ee0b17bc86771197c8124afa9f7b83f2a8ed32917c04498
   languageName: node
   linkType: hard
 
@@ -3925,12 +3925,12 @@ __metadata:
   linkType: hard
 
 "facilmap-client@npm:3":
-  version: 3.4.0
-  resolution: "facilmap-client@npm:3.4.0"
+  version: 3.4.1
+  resolution: "facilmap-client@npm:3.4.1"
   dependencies:
-    facilmap-types: 3.4.0
+    facilmap-types: 3.4.1
     socket.io-client: ^4.1.2
-  checksum: 7f037cb33b8d0a1b14d29edb40ab9f6ab542593ec8a1ccaddd83adc17ea3dec24a6334c7fffebd53b2f7e73d3abc89c1141d261ef8cecf99a8fb8242610c4f13
+  checksum: eb80f14864becc5df5b21d6f7a45b0bd05aed3238ed61b8be6875fb6e07215da6e7af7ca85a805b3d2852feaf79bc2900cac550a1e3b3af230bca74bdbd8cff8
   languageName: node
   linkType: hard
 
@@ -4031,7 +4031,7 @@ __metadata:
   dependencies:
     "@types/lodash-es": ^4.17.12
     facilmap-client: "workspace:^"
-    facilmap-client-v3: "patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.0-9ca14d53cc.patch"
+    facilmap-client-v3: "patch:facilmap-client@npm%3A3#../.yarn/patches/facilmap-client-npm-3.4.1-0b872958ee.patch"
     facilmap-client-v4: "patch:facilmap-client@npm%3A4#../.yarn/patches/facilmap-client-npm-4.1.1-841eedca5b.patch"
     facilmap-types: "workspace:^"
     facilmap-types-v3: "npm:facilmap-types@3"
@@ -4163,7 +4163,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"facilmap-types-v3@npm:facilmap-types@3, facilmap-types@npm:3.4.0":
+"facilmap-types-v3@npm:facilmap-types@3":
   version: 3.4.0
   resolution: "facilmap-types@npm:3.4.0"
   dependencies:
@@ -4179,6 +4179,15 @@ __metadata:
     "@types/geojson": ^7946.0.14
     zod: ^3.22.4
   checksum: 70775a479dc0b0ccedf69b5f9fc7306b6d0fe7d50d836889b4ece1b409089620413ddc05c1996889901f9c3ae4e15235b3fc67280424383784fbc49dba4509dc
+  languageName: node
+  linkType: hard
+
+"facilmap-types@npm:3.4.1":
+  version: 3.4.1
+  resolution: "facilmap-types@npm:3.4.1"
+  dependencies:
+    "@types/geojson": ^7946.0.7
+  checksum: 15e1afb396f588b1dd0a1f59f481693250611eb8f1ef66cf11fc5c4c661760ddc40d4e8864d5631ead160dcf15f88d7cfeb39567fa58d579cc62974315cc0897
   languageName: node
   linkType: hard
 
