@@ -1,13 +1,13 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMap, openClient, retry } from "../utils";
 import { type CRU, type ID, type View } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create view (default values)", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (padData) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (mapData) => {
+		const client2 = await openClient(mapData.id);
 
 		const onView1 = vi.fn();
 		client1.on("view", onView1);
@@ -33,7 +33,7 @@ test("Create view (default values)", async () => {
 			idx: 0,
 			filter: null,
 			id: viewResult.id,
-			padId: padData.id
+			padId: mapData.id
 		};
 
 		expect(viewResult).toEqual(expectedView);
@@ -53,7 +53,7 @@ test("Create view (default values)", async () => {
 			[expectedView.id]: expectedView
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(client3.views).toEqual({
 			[expectedView.id]: expectedView
 		});
@@ -66,7 +66,7 @@ test("Create view (custom values)", async () => {
 	const onView = vi.fn();
 	client.on("view", onView);
 
-	await createTemporaryPad(client, {}, async (padData) => {
+	await createTemporaryMap(client, {}, async (mapData) => {
 		const view = {
 			name: "Test view 1",
 			left: -10,
@@ -84,7 +84,7 @@ test("Create view (custom values)", async () => {
 		const expectedView: View = {
 			...view,
 			id: viewResult.id,
-			padId: padData.id
+			padId: mapData.id
 		};
 
 		expect(viewResult).toEqual(expectedView);
@@ -99,7 +99,7 @@ test("Create view (custom values)", async () => {
 test("Update view", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (padData) => {
+	await createTemporaryMap(client1, {}, async (mapData) => {
 		const createdView = await client1.addView({
 			name: "Test view 1",
 			left: -10,
@@ -110,7 +110,7 @@ test("Update view", async () => {
 			layers: []
 		});
 
-		const client2 = await openClient(padData.id);
+		const client2 = await openClient(mapData.id);
 
 		const onView1 = vi.fn();
 		client1.on("view", onView1);
@@ -134,7 +134,7 @@ test("Update view", async () => {
 
 		const expectedView: View = {
 			...update,
-			padId: padData.id
+			padId: mapData.id
 		};
 
 		expect(view).toEqual(expectedView);
@@ -153,7 +153,7 @@ test("Update view", async () => {
 			[expectedView.id]: expectedView
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(client3.views).toEqual({
 			[expectedView.id]: expectedView
 		});
@@ -166,7 +166,7 @@ test("Set default view", async () => {
 	const onPadData = vi.fn();
 	client.on("padData", onPadData);
 
-	await createTemporaryPad(client, {}, async (padData) => {
+	await createTemporaryMap(client, {}, async (mapData) => {
 		await client.addView({
 			name: "Test view 1",
 			left: -10,
@@ -189,10 +189,10 @@ test("Set default view", async () => {
 			filter: "name == \"\""
 		});
 
-		const padResult = await client.editPad({
+		const mapResult = await client.editMap({
 			defaultViewId: view2.id
 		});
-		expect(padResult.defaultView).toEqual(view2);
+		expect(mapResult.defaultView).toEqual(view2);
 		expect(onPadData.mock.lastCall[0].defaultView).toEqual(view2);
 	});
 });
@@ -200,7 +200,7 @@ test("Set default view", async () => {
 test("Delete view", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (padData) => {
+	await createTemporaryMap(client, {}, async (mapData) => {
 		const view = await client.addView({
 			name: "Test view 1",
 			left: -10,
@@ -226,7 +226,7 @@ test("Delete view", async () => {
 test("Reorder views", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (padData) => {
+	await createTemporaryMap(client, {}, async (mapData) => {
 		const viewSettings = {
 			name: "Test view",
 			left: -10,

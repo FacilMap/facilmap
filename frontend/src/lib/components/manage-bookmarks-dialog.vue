@@ -16,7 +16,7 @@
 	}>();
 
 	const isBookmarked = computed(() => {
-		return !!client.value.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.padId);
+		return !!client.value.mapId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapId);
 	});
 
 	function deleteBookmark(bookmark: Bookmark): void {
@@ -26,7 +26,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.padId!, padId: client.value.padData!.id, name: client.value.padData!.name });
+		storage.bookmarks.push({ id: client.value.mapId!, padId: client.value.mapData!.id, name: client.value.mapData!.name });
 	}
 </script>
 
@@ -54,7 +54,7 @@
 			>
 				<template #item="{ element: bookmark }">
 					<tr>
-						<td class="align-middle text-break" :class="{ 'font-weight-bold': bookmark.id == client.padId }">
+						<td class="align-middle text-break" :class="{ 'font-weight-bold': bookmark.id == client.mapId }">
 							{{bookmark.id}}
 						</td>
 						<td class="align-middle">
@@ -67,7 +67,7 @@
 					</tr>
 				</template>
 			</Draggable>
-			<tfoot v-if="client.padData && !isBookmarked">
+			<tfoot v-if="client.mapData && !isBookmarked">
 				<tr>
 					<td colspan="3">
 						<button type="button" class="btn btn-secondary" @click="addBookmark()">{{i18n.t("manage-bookmarks-dialog.bookmark-current")}}</button>

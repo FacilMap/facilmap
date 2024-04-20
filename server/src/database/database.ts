@@ -3,7 +3,7 @@ import debug from "debug";
 import DatabaseHelpers from "./helpers.js";
 import DatabaseHistory from "./history.js";
 import type { DbConfig } from "../config.js";
-import DatabasePads from "./pad.js";
+import DatabaseMaps from "./map.js";
 import DatabaseViews from "./view.js";
 import DatabaseLines from "./line.js";
 import DatabaseTypes from "./type.js";
@@ -13,27 +13,27 @@ import DatabaseSearch from "./search.js";
 import DatabaseRoutes from "./route.js";
 import DatabaseMigrations from "./migrations.js";
 import { TypedEventEmitter } from "../utils/events.js";
-import type { HistoryEntry, ID, Line, Marker, ObjectWithId, PadData, PadId, TrackPoint, Type, View } from "facilmap-types";
+import type { HistoryEntry, ID, Line, Marker, ObjectWithId, MapData, MapId, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEventsInterface {
-	addHistoryEntry: [padId: PadId, newEntry: HistoryEntry];
-	historyChange: [padId: PadId];
+	addHistoryEntry: [mapId: MapId, newEntry: HistoryEntry];
+	historyChange: [mapId: MapId];
 
-	line: [padId: PadId, newLine: Line];
-	linePoints: [padId: PadId, lineId: ID, points: TrackPoint[]];
-	deleteLine: [padId: PadId, data: ObjectWithId];
+	line: [mapId: MapId, newLine: Line];
+	linePoints: [mapId: MapId, lineId: ID, points: TrackPoint[]];
+	deleteLine: [mapId: MapId, data: ObjectWithId];
 
-	marker: [padId: PadId, newMarker: Marker];
-	deleteMarker: [padId: PadId, data: ObjectWithId];
+	marker: [mapId: MapId, newMarker: Marker];
+	deleteMarker: [mapId: MapId, data: ObjectWithId];
 
-	padData: [padId: PadId, padData: PadData];
-	deletePad: [padId: PadId];
+	mapData: [mapId: MapId, mapData: MapData];
+	deleteMap: [mapId: MapId];
 
-	type: [padId: PadId, newType: Type];
-	deleteType: [padId: PadId, data: ObjectWithId];
+	type: [mapId: MapId, newType: Type];
+	deleteType: [mapId: MapId, data: ObjectWithId];
 
-	view: [padId: PadId, newView: View];
-	deleteView: [padId: PadId, data: ObjectWithId];
+	view: [mapId: MapId, newView: View];
+	deleteView: [mapId: MapId, data: ObjectWithId];
 }
 
 export type DatabaseEvents = Pick<DatabaseEventsInterface, keyof DatabaseEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
@@ -43,7 +43,7 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 	_conn: Sequelize;
 	helpers: DatabaseHelpers;
 	history: DatabaseHistory;
-	pads: DatabasePads;
+	maps: DatabaseMaps;
 	views: DatabaseViews;
 	markers: DatabaseMarkers;
 	lines: DatabaseLines;
@@ -70,7 +70,7 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 
 		this.helpers = new DatabaseHelpers(this);
 		this.history = new DatabaseHistory(this);
-		this.pads = new DatabasePads(this);
+		this.maps = new DatabaseMaps(this);
 		this.views = new DatabaseViews(this);
 		this.markers = new DatabaseMarkers(this);
 		this.lines = new DatabaseLines(this);
@@ -81,7 +81,7 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 		this.migrations = new DatabaseMigrations(this);
 
 		this.history.afterInit();
-		this.pads.afterInit();
+		this.maps.afterInit();
 		this.markers.afterInit();
 		this.views.afterInit();
 		this.lines.afterInit();

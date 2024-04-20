@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { padIdValidator, type CRU, type PadData } from "facilmap-types";
+	import { mapIdValidator, type CRU, type MapData } from "facilmap-types";
 	import { computed } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -13,7 +13,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		padData: PadData<CRU.CREATE>;
+		mapData: MapData<CRU.CREATE>;
 		idProp: IdProp;
 		modelValue: string;
 		label: string;
@@ -24,7 +24,7 @@
 		"update:modelValue": [string];
 	}>();
 
-	const id = getUniqueId("fm-pad-settings-pad-id-edit");
+	const id = getUniqueId("fm-map-settings-map-id-edit");
 
 	const value = computed({
 		get: () => props.modelValue,
@@ -33,9 +33,9 @@
 		}
 	});
 
-	function validateDistinctPadId(id: string) {
-		if (idProps.some((p) => p !== props.idProp && props.padData[p] === id)) {
-			return i18n.t("pad-id-edit.unique-id-error");
+	function validateDistinctMapId(id: string) {
+		if (idProps.some((p) => p !== props.idProp && props.mapData[p] === id)) {
+			return i18n.t("map-id-edit.unique-id-error");
 		}
 	}
 </script>
@@ -50,7 +50,7 @@
 				successTitle="Map link copied"
 				successMessage="The map link was copied to the clipboard."
 				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
-				:validators="[validateRequired, getZodValidator(padIdValidator), validateDistinctPadId]"
+				:validators="[validateRequired, getZodValidator(mapIdValidator), validateDistinctMapId]"
 			></CopyToClipboardInput>
 
 			<div class="form-text">
@@ -59,11 +59,3 @@
 		</div>
 	</div>
 </template>
-
-<style lang="scss">
-	.fm-pad-settings-pad-id-edit {
-		input {
-			min-width: 11rem;
-		}
-	}
-</style>

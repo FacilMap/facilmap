@@ -1,5 +1,5 @@
 import { type Bbox, bboxWithZoomValidator, objectWithIdValidator, type ObjectWithId, idValidator } from "../base.js";
-import { type PadData, padDataValidator, Writable } from "../padData.js";
+import { type MapData, mapDataValidator, Writable } from "../mapData.js";
 import { type Marker, markerValidator } from "../marker.js";
 import { type Line, lineValidator, type TrackPoint } from "../line.js";
 import { type Route, type RouteInfo, lineToRouteCreateValidator, routeClearValidator, routeCreateValidator, routeRequestValidator } from "../route.js";
@@ -8,15 +8,15 @@ import { type View, viewValidator } from "../view.js";
 import type { MultipleEvents } from "../events.js";
 import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
-import { findPadsQueryValidator, getPadQueryValidator, type FindPadsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
+import { findMapsQueryValidator, getMapQueryValidator, type FindMapsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
 
 export const requestDataValidatorsV3 = {
 	updateBbox: bboxWithZoomValidator,
-	getPad: getPadQueryValidator,
-	findPads: findPadsQueryValidator,
-	createPad: padDataValidator.create,
-	editPad: padDataValidator.update,
+	getPad: getMapQueryValidator,
+	findPads: findMapsQueryValidator,
+	createPad: mapDataValidator.create,
+	editPad: mapDataValidator.update,
 	deletePad: nullOrUndefinedValidator,
 	listenToHistory: nullOrUndefinedValidator,
 	stopListeningToHistory: nullOrUndefinedValidator,
@@ -50,10 +50,10 @@ export const requestDataValidatorsV3 = {
 
 export interface ResponseDataMapV3 {
 	updateBbox: MultipleEvents<MapEventsV3>;
-	getPad: FindPadsResult | null;
-	findPads: PagedResults<FindPadsResult>;
+	getPad: FindMapsResult | null;
+	findPads: PagedResults<FindMapsResult>;
 	createPad: MultipleEvents<MapEventsV3>;
-	editPad: PadData & { writable: Writable };
+	editPad: MapData & { writable: Writable };
 	deletePad: null;
 	listenToHistory: MultipleEvents<MapEventsV3>;
 	stopListeningToHistory: null;
@@ -86,7 +86,7 @@ export interface ResponseDataMapV3 {
 }
 
 export interface MapEventsV3Interface {
-	padData: [PadData & { writable: Writable }];
+	padData: [MapData & { writable: Writable }];
 	deletePad: [];
 	marker: [Marker];
 	deleteMarker: [ObjectWithId];

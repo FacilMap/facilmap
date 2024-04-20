@@ -1,12 +1,12 @@
-import type { PadId } from "facilmap-types";
+import type { MapId } from "facilmap-types";
 import { isEqual } from "lodash-es";
 import { reactive, watch } from "vue";
 
 export interface Bookmark {
 	/** ID used to open the map */
-	id: PadId;
+	id: MapId;
 	/** Read-only ID of the map */
-	padId: PadId;
+	padId: MapId;
 	/** Last known name of the map */
 	name: string;
 	/** If this is defined, it is shown instead of the map name. */

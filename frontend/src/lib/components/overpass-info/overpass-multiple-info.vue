@@ -65,7 +65,7 @@
 						</li>
 					</ul>
 
-					<div v-if="client.padData && !client.readonly" class="btn-toolbar mt-2">
+					<div v-if="client.mapData && !client.readonly" class="btn-toolbar mt-2">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
 							:label="i18n.t('overpass-multiple-info.zoom-to-object-label')"

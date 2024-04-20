@@ -25,27 +25,27 @@ client.on("marker", (marker) => {
 });
 ```
 
-## `padId`
+## `mapId`
 
 The ID of the collaborative map that the client is connected to. Can be the read-only, writable or admin ID of an existing map.
 
-Note that the ID can be changed in the settings. If in case of a [`padData`](./events.md#paddata) event, the ID of the pad has changed, this property is updated automatically.
+Note that the ID can be changed in the settings. If in case of a [`padData`](./events.md#paddata) event, the ID of the map has changed, this property is updated automatically.
 
-_Set:_ when calling [`setPadId`](./methods.md#setpadid-padid) and in response to a [`padData`](./events.md#paddata) event.\
+_Set:_ when calling [`setMapId`](./methods.md#setmapid-mapid) and in response to a [`padData`](./events.md#paddata) event.\
 _Type:_ string
 
 ## `readonly`
 
 `true` if the map has been opened using its read-only ID. `false` if the map is writable.
 
-_Set:_ during [`setPadId`](./methods.md#setpadid-padid).\
+_Set:_ during [`setMapId`](./methods.md#setmapid-mapid).\
 _Type:_ boolean
 
 ## `writable`
 
 `2` if the map has been opened using its admin ID, `1` if if has been opened using the writable ID, `0` if the map is read-only.
 
-_Set:_ during [`setPadId`](./methods.md#setpadid-padid).\
+_Set:_ during [`setMapId`](./methods.md#setmapid-mapid).\
 _Type:_ number
 
 
@@ -56,12 +56,12 @@ _Type:_ number
 _Set:_ in response to a [`deletePad`](./events.md#deletepad) event.\
 _Type:_ boolean
 
-## `padData`
+## `mapData`
 
 The current settings of the map. `writeId` and/or `adminId` is null if if has been opened using another ID than the admin ID.
 
 _Set:_ in response to a [`padData`](./events.md#paddata) event.\
-_Type:_ [PadData](./types.md#paddata)
+_Type:_ [MapData](./types.md#mapdata)
 
 ## `markers`
 
@@ -114,9 +114,9 @@ _Type:_ [<code>{ &#91;routeId: string&#93;: Route }</code>](./types.md#route)
 
 ## `serverError`
 
-If the opening the map failed ([`setPadId(padId)`](./methods.md#setpadid-padid) promise got rejected), the error message is stored in this property.
+If the opening the map failed ([`setMapId(mapId)`](./methods.md#setmapid-mapid) promise got rejected), the error message is stored in this property.
 
-_Set:_ in response to a [`serverError`](./events.md#servererror) event (fired during [`setPadId`](./methods.md#setpadid-padid)).\
+_Set:_ in response to a [`serverError`](./events.md#servererror) event (fired during [`setMapId`](./methods.md#setmapid-mapid)).\
 _Type:_ Error
 
 ## `loading`

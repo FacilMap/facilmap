@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import PadSettingsDialog from "../pad-settings-dialog/pad-settings-dialog.vue";
+	import MapSettingsDialog from "../map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../../utils/storage";
 	import ManageBookmarksDialog from "../manage-bookmarks-dialog.vue";
 	import OpenMapDialog from "../open-map-dialog.vue";
 	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { normalizePadName } from "facilmap-utils";
+	import { normalizeMapName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
@@ -21,7 +21,7 @@
 	const dialog = ref<
 		| "open-map"
 		| "manage-bookmarks"
-		| "create-pad"
+		| "create-map"
 	>();
 
 	const hash = computed(() => {
@@ -30,11 +30,11 @@
 	});
 
 	const isBookmarked = computed(() => {
-		return !!client.value.padId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.padId);
+		return !!client.value.mapId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapId);
 	});
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.padId!, padId: client.value.padData!.id, name: client.value.padData!.name });
+		storage.bookmarks.push({ id: client.value.mapId!, padId: client.value.mapData!.id, name: client.value.mapData!.name });
 	}
 </script>
 
@@ -51,24 +51,24 @@
 		<li v-for="bookmark in storage.bookmarks" :key="bookmark.id">
 			<a
 				class="dropdown-item"
-				:class="{ active: bookmark.id == client.padId }"
+				:class="{ active: bookmark.id == client.mapId }"
 				:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
-				@click.exact.prevent="client.openPad(bookmark.id); emit('hide-sidebar')"
+				@click.exact.prevent="client.openMap(bookmark.id); emit('hide-sidebar')"
 				draggable="false"
-			>{{bookmark.customName || normalizePadName(bookmark.name)}}</a>
+			>{{bookmark.customName || normalizeMapName(bookmark.name)}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="client.padData && !isBookmarked">
+		<li v-if="client.mapData && !isBookmarked">
 			<a
 				class="dropdown-item"
 				href="javascript:"
 				@click="addBookmark()"
 				draggable="false"
-			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { padName: normalizePadName(client.padData.name) })}}</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { mapName: normalizeMapName(client.mapData.name) })}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">
@@ -80,15 +80,15 @@
 			>{{i18n.t('toolbox-collab-maps-dropdown.manage-bookmarks')}}</a>
 		</li>
 
-		<li v-if="(client.padData && !isBookmarked) || storage.bookmarks.length > 0">
+		<li v-if="(client.mapData && !isBookmarked) || storage.bookmarks.length > 0">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="!client.padId">
+		<li v-if="!client.mapId">
 			<a
 				class="dropdown-item"
 				href="javascript:"
-				@click="dialog = 'create-pad'; emit('hide-sidebar')"
+				@click="dialog = 'create-map'; emit('hide-sidebar')"
 				draggable="false"
 			>{{i18n.t('toolbox-collab-maps-dropdown.create-map')}}</a>
 		</li>
@@ -99,16 +99,16 @@
 				href="javascript:"
 				@click="dialog = 'open-map'; emit('hide-sidebar')"
 				draggable="false"
-			>{{client.padId ? i18n.t("toolbox-collab-maps-dropdown.open-other-map") : i18n.t("toolbox-collab-maps-dropdown.open-map")}}</a>
+			>{{client.mapId ? i18n.t("toolbox-collab-maps-dropdown.open-other-map") : i18n.t("toolbox-collab-maps-dropdown.open-map")}}</a>
 		</li>
 
-		<li v-if="client.padData">
+		<li v-if="client.mapData">
 			<a
 				class="dropdown-item"
 				:href="`${context.baseUrl}#${hash}`"
-				@click.exact.prevent="client.openPad(undefined)"
+				@click.exact.prevent="client.openMap(undefined)"
 				draggable="false"
-			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { padName: normalizePadName(client.padData.name) })}}</a>
+			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { mapName: normalizeMapName(client.mapData.name) })}}</a>
 		</li>
 	</DropdownMenu>
 
@@ -122,9 +122,9 @@
 		@hidden="dialog = undefined"
 	></ManageBookmarksDialog>
 
-	<PadSettingsDialog
-		v-if="dialog === 'create-pad'"
+	<MapSettingsDialog
+		v-if="dialog === 'create-map'"
 		@hidden="dialog = undefined"
 		:isCreate="true"
-	></PadSettingsDialog>
+	></MapSettingsDialog>
 </template>

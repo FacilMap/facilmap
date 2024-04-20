@@ -4,24 +4,24 @@ import { getI18n } from "./i18n.js";
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
-export function generateRandomPadId(length: number = LENGTH): string {
-	let randomPadId = "";
+export function generateRandomMapId(length: number = LENGTH): string {
+	let randomMapId = "";
 	for(let i=0; i<length; i++) {
-		randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+		randomMapId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
 	}
-	return randomPadId;
+	return randomMapId;
 }
 
-export function normalizePadName(name: string | undefined): string {
-	return name || getI18n().t("pads.unnamed-map");
+export function normalizeMapName(name: string | undefined): string {
+	return name || getI18n().t("maps.unnamed-map");
 }
 
-export function normalizePageTitle(padName: string | undefined, appName: string): string {
-	return padName ? getI18n().t("pads.page-title", { padName, appName }) : appName;
+export function normalizePageTitle(mapName: string | undefined, appName: string): string {
+	return mapName ? getI18n().t("maps.page-title", { mapName, appName }) : appName;
 }
 
-export function normalizePageDescription(padDescription: string | undefined): string {
-	return padDescription || getI18n().t("pads.fallback-page-description");
+export function normalizePageDescription(mapDescription: string | undefined): string {
+	return mapDescription || getI18n().t("maps.fallback-page-description");
 }
 
 export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {

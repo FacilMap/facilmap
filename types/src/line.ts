@@ -1,4 +1,4 @@
-import { bboxValidator, colourValidator, idValidator, padIdValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator } from "./base.js";
+import { bboxValidator, colourValidator, idValidator, mapIdValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator } from "./base.js";
 import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, optionalUpdate, mapValues, exceptRead } from "./cru";
 import * as z from "zod";
 
@@ -30,7 +30,7 @@ export const lineValidator = cruValidator({
 	ascent: onlyRead(z.number().or(z.null())),
 	descent: onlyRead(z.number().or(z.null())),
 	time: onlyRead(z.number().or(z.null())),
-	padId: onlyRead(padIdValidator),
+	padId: onlyRead(mapIdValidator),
 
 	trackPoints: exceptRead(z.array(trackPointValidator.create).optional())
 });

@@ -20,9 +20,9 @@ these two objects consistently in the following way:
 
 You can override the `_makeReactive`, `_set` and `_delete` methods to make the private properties (and as a consequence the public
 getters) of facilmap-client reactive. This way your UI framework will detect changes to any properties on the client, and you can
-reference values like `client.padData.name`, `client.disconnected` and `client.loading` in your UI components.
+reference values like `client.mapData.name`, `client.disconnected` and `client.loading` in your UI components.
 
-Note that client always replaces whole objects rather than updating individual properties. For example, when a new version of the map settings arrives, `client.padData` is replaced with a new object, or when a new marker arrives, `client.markers[markerId]` is replaced with a new object. This makes deep watches unnecessary in most cases.
+Note that client always replaces whole objects rather than updating individual properties. For example, when a new version of the map settings arrives, `client.mapData` is replaced with a new object, or when a new marker arrives, `client.markers[markerId]` is replaced with a new object. This makes deep watches unnecessary in most cases.
 
 ### Vue.js 3
 
@@ -117,5 +117,5 @@ Keep in mind that React’s `useSyncExternalStore` will rerender the component i
 This means one the one hand that you cannot use this example implementation on a higher up object of the client (such as
 `client` itself or `client.markers`), as their identity never changes, causing your component to never rerender. And on
 the other hand that you should avoid using it on objects created in the selector (such as returning
-`[client.padData.id, client.padData.name]` in order to get multiple values at once), as it will cause your component to
+`[client.mapData.id, client.mapData.name]` in order to get multiple values at once), as it will cause your component to
 rerender every time the selector is called.

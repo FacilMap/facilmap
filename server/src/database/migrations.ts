@@ -2,12 +2,12 @@ import { generateRandomId, promiseProps } from "../utils/utils.js";
 import { DataTypes, Op, Utils, col, fn } from "sequelize";
 import { cloneDeep, isEqual } from "lodash-es";
 import Database from "./database.js";
-import type { PadModel } from "./pad.js";
+import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
 import { getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
 import { ReadableStream } from "stream/web";
-import type { PadId } from "facilmap-types";
+import type { MapId } from "facilmap-types";
 
 export default class DatabaseMigrations {
 
@@ -90,16 +90,16 @@ export default class DatabaseMigrations {
 		// Rename writeId to adminId
 		if(!padAttrs.adminId) {
 			console.log("DB migration: Rename pad writeId to adminId");
-			const Pad = this._db.pads.PadModel;
+			const Pad = this._db.maps.MapModel;
 			await queryInterface.renameColumn('Pads', 'writeId', 'adminId');
 			await queryInterface.addColumn('Pads', 'writeId', Pad.rawAttributes.writeId);
 
-			const pads = await Pad.findAll<PadModel>();
+			const pads = await Pad.findAll<MapModel>();
 			for(const pad of pads) {
 				let writeId;
 				do {
 					writeId = generateRandomId(14);
-				} while (await this._db.pads.padIdExists(writeId));
+				} while (await this._db.maps.mapIdExists(writeId));
 
 				await Pad.update({writeId}, { where: { id: pad.id } });
 			}
@@ -120,26 +120,26 @@ export default class DatabaseMigrations {
 		// Forbid null pad name
 		if (padsAttributes.name.allowNull) {
 			console.log("DB migration: Change null pad names to \"\"");
-			await this._db.pads.PadModel.update({ name: "" }, { where: { name: null as any } });
-			await queryInterface.changeColumn("Pads", "name", this._db.pads.PadModel.getAttributes().name);
+			await this._db.maps.MapModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Pads", "name", this._db.maps.MapModel.getAttributes().name);
 		}
 
 		// Change description type from STRING to TEXT
 		if (padsAttributes.description.type !== "TEXT") {
 			console.log("DB migration: Change Pads.description from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "description", this._db.pads.PadModel.getAttributes().description);
+			await queryInterface.changeColumn("Pads", "description", this._db.maps.MapModel.getAttributes().description);
 		}
 
 		// Change legend1 type from STRING to TEXT
 		if (padsAttributes.legend1.type !== "TEXT") {
 			console.log("DB migration: Change Pads.legend1 from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "legend1", this._db.pads.PadModel.getAttributes().legend1);
+			await queryInterface.changeColumn("Pads", "legend1", this._db.maps.MapModel.getAttributes().legend1);
 		}
 
 		// Change legend2 type from STRING to TEXT
 		if (padsAttributes.legend2.type !== "TEXT") {
 			console.log("DB migration: Change Pads.legend2 from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "legend2", this._db.pads.PadModel.getAttributes().legend2);
+			await queryInterface.changeColumn("Pads", "legend2", this._db.maps.MapModel.getAttributes().legend2);
 		}
 
 
@@ -366,7 +366,7 @@ export default class DatabaseMigrations {
 			const newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
 			const dropdowns = newFields.filter((field) => field.type == "dropdown");
 			if(dropdowns.length > 0) {
-				const objectStream = (type.type == "line" ? this._db.lines.getPadLinesByType(type.padId, type.id) : this._db.markers.getPadMarkersByType(type.padId, type.id));
+				const objectStream = (type.type == "line" ? this._db.lines.getMapLinesByType(type.padId, type.id) : this._db.markers.getMapMarkersByType(type.padId, type.id));
 
 				for await (const object of objectStream) {
 					const newData = cloneDeep(object.data);
@@ -379,7 +379,7 @@ export default class DatabaseMigrations {
 					}
 
 					if(!isEqual(newData, object.data))
-						return this._db.helpers._updatePadObject(type.type == "line" ? "Line" : "Marker", object.padId, object.id, {data: newData}, true);
+						return this._db.helpers._updateMapObject(type.type == "line" ? "Line" : "Marker", object.padId, object.id, {data: newData}, true);
 				}
 
 				dropdowns.forEach((dropdown) => {
@@ -396,7 +396,7 @@ export default class DatabaseMigrations {
 					});
 				});
 
-				await this._db.helpers._updatePadObject("Type", type.padId, type.id, {fields: newFields}, true);
+				await this._db.helpers._updateMapObject("Type", type.padId, type.id, {fields: newFields}, true);
 			}
 		}
 
@@ -434,7 +434,7 @@ export default class DatabaseMigrations {
 
 			let i = 0;
 			for await (const { marker, ele } of stream) {
-				await this._db.helpers._updatePadObject("Marker", marker.padId, marker.id, { ele }, true);
+				await this._db.helpers._updateMapObject("Marker", marker.padId, marker.id, { ele }, true);
 
 				if (++i % 1000 === 0) {
 					console.log(`DB migration: Elevation migration ${i}/${markers.length}`);
@@ -477,7 +477,7 @@ export default class DatabaseMigrations {
 				}
 			}
 
-			await this._db.helpers._updatePadObject("Type", type.padId, type.id, { showInLegend }, true);
+			await this._db.helpers._updateMapObject("Type", type.padId, type.id, { showInLegend }, true);
 		}
 
 		await this._db.meta.setMeta("hasLegendOption", "1");
@@ -502,9 +502,9 @@ export default class DatabaseMigrations {
 			});
 
 			if(isNaN(bbox.top) || isNaN(bbox.left) || isNaN(bbox.bottom) || isNaN(bbox.right)) // This is a broken line without track points
-				await this._db.helpers._deletePadObject("Line", line.padId, line.id);
+				await this._db.helpers._deleteMapObject("Line", line.padId, line.id);
 			else
-				await this._db.helpers._updatePadObject("Line", line.padId, line.id, bbox, true);
+				await this._db.helpers._updateMapObject("Line", line.padId, line.id, bbox, true);
 		}
 
 		await this._db.meta.setMeta("hasBboxes", "1");
@@ -552,7 +552,7 @@ export default class DatabaseMigrations {
 
 		await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: "Untitled marker" } });
 		await this._db.lines.LineModel.update({ name: "" }, { where: { name: "Untitled line" } });
-		await this._db.pads.PadModel.update({ name: "" }, { where: { name: "New FacilMap" } });
+		await this._db.maps.MapModel.update({ name: "" }, { where: { name: "New FacilMap" } });
 
 		await this._db.meta.setMeta("untitledMigrationCompleted", "1");
 	}
@@ -631,7 +631,7 @@ export default class DatabaseMigrations {
 			attributes: ["id", "padId"]
 		});
 
-		let lastIndex: Record<PadId, number> = Object.create(null);
+		let lastIndex: Record<MapId, number> = Object.create(null);
 
 		for (const type of allTypes) {
 			if (!Object.prototype.hasOwnProperty.call(lastIndex, type.padId)) {
@@ -655,7 +655,7 @@ export default class DatabaseMigrations {
 			attributes: ["id", "padId"]
 		});
 
-		let lastIndex: Record<PadId, number> = Object.create(null);
+		let lastIndex: Record<MapId, number> = Object.create(null);
 
 		for (const view of allViews) {
 			if (!Object.prototype.hasOwnProperty.call(lastIndex, view.padId)) {

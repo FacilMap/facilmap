@@ -1,6 +1,6 @@
 import { Map, MarkerClusterGroup, type MarkerClusterGroupOptions } from "leaflet";
 import type Client from "facilmap-client";
-import type { PadData } from "facilmap-types";
+import type { MapData } from "facilmap-types";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -26,11 +26,11 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this.client = client;
 	}
 
-	protected handlePadData = (padData: PadData): void => {
+	protected handleMapData = (mapData: MapData): void => {
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
-		if (!!padData.clusterMarkers !== isClusterEnabled) {
-			if (padData.clusterMarkers) {
+		if (!!mapData.clusterMarkers !== isClusterEnabled) {
+			if (mapData.clusterMarkers) {
 				this.options.maxClusterRadius = this._maxClusterRadiusBkp;
 				this._maxClusterRadiusBkp = undefined;
 			} else {
@@ -47,9 +47,9 @@ export default class MarkerCluster extends MarkerClusterGroup {
 	onAdd(map: Map): this {
 		super.onAdd(map);
 
-		this.client.on("padData", this.handlePadData);
-		if (this.client.padData)
-			this.handlePadData(this.client.padData);
+		this.client.on("padData", this.handleMapData);
+		if (this.client.mapData)
+			this.handleMapData(this.client.mapData);
 
 		return this;
 	}
@@ -57,7 +57,7 @@ export default class MarkerCluster extends MarkerClusterGroup {
 	onRemove(map: Map): this {
 		super.onRemove(map);
 
-		this.client.removeListener("padData", this.handlePadData);
+		this.client.removeListener("padData", this.handleMapData);
 
 		return this;
 	}

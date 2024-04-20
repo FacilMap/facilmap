@@ -99,7 +99,7 @@
 								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
 							}))
 						),
-						client.value.padData ? client.value.findOnMap({ query }) : undefined
+						client.value.mapData ? client.value.findOnMap({ query }) : undefined
 					]);
 
 					if (counter != searchCounter.value)

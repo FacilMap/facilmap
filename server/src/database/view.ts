@@ -1,14 +1,14 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { CRU, ID, Latitude, Longitude, PadId, View } from "facilmap-types";
+import type { CRU, ID, Latitude, Longitude, MapId, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
-import type { PadModel } from "./pad.js";
+import type { MapModel } from "./map.js";
 import { asyncIteratorToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
 	id: CreationOptional<ID>;
-	padId: ForeignKey<PadModel["id"]>;
+	padId: ForeignKey<MapModel["id"]>;
 	name: string;
 	idx: number;
 	baseLayer: string;
@@ -58,16 +58,16 @@ export default class DatabaseViews {
 	}
 
 	afterInit(): void {
-		this.ViewModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
-		this._db.pads.PadModel.hasMany(this.ViewModel, { foreignKey: "padId" });
+		this.ViewModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("pad", "padId"));
+		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "padId" });
 	}
 
-	getViews(padId: PadId): AsyncIterable<View> {
-		return this._db.helpers._getPadObjects<View>("View", padId);
+	getViews(mapId: MapId): AsyncIterable<View> {
+		return this._db.helpers._getMapObjects<View>("View", mapId);
 	}
 
-	async _freeViewIdx(padId: PadId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
-		const existingViews = await asyncIteratorToArray(this.getViews(padId));
+	async _freeViewIdx(mapId: MapId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
+		const existingViews = await asyncIteratorToArray(this.getViews(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingViews.length > 0 ? existingViews[existingViews.length - 1].idx + 1 : 0);
 
@@ -75,48 +75,48 @@ export default class DatabaseViews {
 
 		for (const obj of newIndexes) {
 			if ((viewId == null || obj.id !== viewId) && obj.oldIdx !== obj.newIdx) {
-				const newData = await this._db.helpers._updatePadObject<View>("View", padId, obj.id, { idx: obj.newIdx }, true);
-				this._db.emit("view", padId, newData);
+				const newData = await this._db.helpers._updateMapObject<View>("View", mapId, obj.id, { idx: obj.newIdx }, true);
+				this._db.emit("view", mapId, newData);
 			}
 		}
 
 		return resolvedNewIdx;
 	}
 
-	async createView(padId: PadId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
-		const idx = await this._freeViewIdx(padId, undefined, data.idx);
+	async createView(mapId: MapId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
+		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
-		const newData = await this._db.helpers._createPadObject<View>("View", padId, {
+		const newData = await this._db.helpers._createMapObject<View>("View", mapId, {
 			...data,
 			idx
 		});
 
-		await this._db.history.addHistoryEntry(padId, {
+		await this._db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "create",
 			objectId: newData.id,
 			objectAfter: newData
 		});
 
-		this._db.emit("view", padId, newData);
+		this._db.emit("view", mapId, newData);
 		return newData;
 	}
 
-	async updateView(padId: PadId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
+	async updateView(mapId: MapId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
 		if (data.idx != null) {
-			await this._freeViewIdx(padId, viewId, data.idx);
+			await this._freeViewIdx(mapId, viewId, data.idx);
 		}
 
-		const newData = await this._db.helpers._updatePadObject<View>("View", padId, viewId, data);
+		const newData = await this._db.helpers._updateMapObject<View>("View", mapId, viewId, data);
 
-		this._db.emit("view", padId, newData);
+		this._db.emit("view", mapId, newData);
 		return newData;
 	}
 
-	async deleteView(padId: PadId, viewId: ID): Promise<View> {
-		const data = await this._db.helpers._deletePadObject<View>("View", padId, viewId);
+	async deleteView(mapId: MapId, viewId: ID): Promise<View> {
+		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId);
 
-		this._db.emit("deleteView", padId, { id: data.id });
+		this._db.emit("deleteView", mapId, { id: data.id });
 		return data;
 	}
 }

@@ -113,7 +113,7 @@
 					}
 					return (
 						context.baseUrl
-							+ client.value.padData!.id
+							+ client.value.mapData!.id
 							+ `/rawTable`
 							+ `/${resolvedTypeId.value}`
 							+ (paramsStr ? `?${paramsStr}` : '')
@@ -121,7 +121,7 @@
 				} else {
 					return (
 						context.baseUrl
-							+ client.value.padData!.id
+							+ client.value.mapData!.id
 							+ `/table`
 							+ (paramsStr ? `?${paramsStr}` : '')
 					);
@@ -134,7 +134,7 @@
 				}
 				return (
 					context.baseUrl
-						+ client.value.padData!.id
+						+ client.value.mapData!.id
 						+ `/csv`
 						+ `/${resolvedTypeId.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -144,7 +144,7 @@
 			case "gpx": {
 				return (
 					context.baseUrl
-						+ client.value.padData!.id
+						+ client.value.mapData!.id
 						+ `/${format.value}`
 						+ (routeType.value === "zip" ? `/zip` : "")
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -154,7 +154,7 @@
 			default: {
 				return (
 					context.baseUrl
-						+ client.value.padData!.id
+						+ client.value.mapData!.id
 						+ `/${format.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
 				);

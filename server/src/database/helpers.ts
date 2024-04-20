@@ -1,8 +1,8 @@
 import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
-import type { Line, Marker, PadId, ID, Type, Bbox } from "facilmap-types";
+import type { Line, Marker, MapId, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
-import type { PadModel } from "./pad";
+import type { MapModel } from "./map.js";
 import { arrayToAsyncIterator } from "../utils/streams";
 import { getI18n } from "../i18n.js";
 
@@ -120,10 +120,10 @@ export default class DatabaseHelpers {
 	async _updateObjectStyles(objects: Marker | Line | AsyncIterable<Marker | Line>): Promise<void> {
 		const types: Record<ID, Type> = { };
 		for await (const object of Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects])) {
-			const padId = object.padId;
+			const mapId = object.padId;
 
 			if(!types[object.typeId]) {
-				types[object.typeId] = await this._db.types.getType(padId, object.typeId);
+				types[object.typeId] = await this._db.types.getType(mapId, object.typeId);
 				if(types[object.typeId] == null)
 					throw new Error(getI18n().t("database.type-not-found-error", { typeId: object.typeId }));
 			}
@@ -138,25 +138,25 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _padObjectExists(type: string, padId: PadId, id: ID): Promise<boolean> {
+	async _mapObjectExists(type: string, mapId: MapId, id: ID): Promise<boolean> {
 		const entry = await this._db._conn.model(type).findOne({
-			where: { padId: padId, id: id },
+			where: { padId: mapId, id: id },
 			attributes: ['id']
 		});
 		return entry != null;
 	}
 
-	async _getPadObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", padId: PadId, id: ID): Promise<T> {
+	async _getMapObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", mapId: MapId, id: ID): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		const entry = await this._db._conn.model(type).findOne({
-			where: { id: id, padId: padId },
+			where: { id: id, padId: mapId },
 			include: includeData ? [ this._db._conn.model(type + "Data") ] : [ ],
 			nest: true
 		});
 
 		if(entry == null) {
-			throw new Error(getI18n().t("database.object-not-found-in-pad-error", { type, id, padId }));
+			throw new Error(getI18n().t("database.object-not-found-in-map-error", { type, id, mapId }));
 		}
 
 		const data: any = entry.toJSON();
@@ -169,7 +169,7 @@ export default class DatabaseHelpers {
 		return data;
 	}
 
-	async* _getPadObjects<T>(type: string, padId: PadId, condition?: FindOptions): AsyncIterable<T> {
+	async* _getMapObjects<T>(type: string, mapId: MapId, condition?: FindOptions): AsyncIterable<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		if(includeData) {
@@ -177,9 +177,9 @@ export default class DatabaseHelpers {
 			condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
 		}
 
-		const Pad = this._db.pads.PadModel.build({ id: padId } satisfies Partial<CreationAttributes<PadModel>> as any);
+		const Map = this._db.maps.MapModel.build({ id: mapId } satisfies Partial<CreationAttributes<MapModel>> as any);
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
-		const objs: Array<Model> = await (Pad as any)["get" + this._db._conn.model(type).getTableName()](condition);
+		const objs: Array<Model> = await (Map as any)["get" + this._db._conn.model(type).getTableName()](condition);
 
 		for (const obj of objs) {
 			const d: any = obj.toJSON();
@@ -193,12 +193,12 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _createPadObject<T>(type: string, padId: PadId, data: any): Promise<T> {
+	async _createMapObject<T>(type: string, mapId: MapId, data: any): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
 		const obj = this._db._conn.model(type).build(data);
-		(obj as any).padId = padId;
+		(obj as any).padId = mapId;
 
 		const result: any = (await obj.save()).toJSON();
 
@@ -210,24 +210,24 @@ export default class DatabaseHelpers {
 		}
 
 		if(makeHistory)
-			await this._db.history.addHistoryEntry(padId, { type: type as any, action: "create", objectId: result.id, objectAfter: result });
+			await this._db.history.addHistoryEntry(mapId, { type: type as any, action: "create", objectId: result.id, objectAfter: result });
 
 		return result;
 	}
 
-	async _updatePadObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", padId: PadId, objId: ID, data: any, _noHistory?: boolean): Promise<T> {
+	async _updateMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, data: any, _noHistory?: boolean): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = !_noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
 
 		// Fetch the old object for the history, but also to make sure that the object exists. Unfortunately,
 		// we cannot rely on the return value of the update() method, as on some platforms it returns 0 even
 		// if the object was found (but no fields were changed)
-		const oldObject = await this._getPadObject(type, padId, objId);
+		const oldObject = await this._getMapObject(type, mapId, objId);
 
 		if(Object.keys(data).length > 0 && (!includeData || !isEqual(Object.keys(data), ["data"])))
-			await this._db._conn.model(type).update(data, { where: { id: objId, padId: padId } });
+			await this._db._conn.model(type).update(data, { where: { id: objId, padId: mapId } });
 
-		const newObject: any = await this._getPadObject(type, padId, objId);
+		const newObject: any = await this._getMapObject(type, mapId, objId);
 
 		if(includeData) {
 			if (data.data != null) {
@@ -238,16 +238,16 @@ export default class DatabaseHelpers {
 		}
 
 		if(makeHistory)
-			await this._db.history.addHistoryEntry(padId, { type: type as any, action: "update", objectId: objId, objectBefore: oldObject as any, objectAfter: newObject });
+			await this._db.history.addHistoryEntry(mapId, { type: type as any, action: "update", objectId: objId, objectBefore: oldObject as any, objectAfter: newObject });
 
 		return newObject;
 	}
 
-	async _deletePadObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", padId: PadId, objId: ID): Promise<T> {
+	async _deleteMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
-		const oldObject = await this._getPadObject<T>(type, padId, objId);
+		const oldObject = await this._getMapObject<T>(type, mapId, objId);
 
 		if(includeData)
 			await this._setObjectData(type, objId, { });
@@ -255,7 +255,7 @@ export default class DatabaseHelpers {
 		await this._db._conn.model(type).build({ id: objId }).destroy();
 
 		if(makeHistory)
-			await this._db.history.addHistoryEntry(padId, { type: type as any, action: "delete", objectId: objId, objectBefore: oldObject as any });
+			await this._db.history.addHistoryEntry(mapId, { type: type as any, action: "delete", objectId: objId, objectBefore: oldObject as any });
 
 		return oldObject;
 	}
@@ -342,8 +342,8 @@ export default class DatabaseHelpers {
 		};
 	}
 
-	async renameObjectDataField(padId: PadId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
-		const objectStream = (isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId));
+	async renameObjectDataField(mapId: MapId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
+		const objectStream = (isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 
 		for await (const object of objectStream) {
 			const newData = cloneDeep(object.data);

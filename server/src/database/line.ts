@@ -1,10 +1,10 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, PadId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, MapId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
-import type { PadModel } from "./pad";
+import type { MapModel } from "./map.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
 import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
@@ -16,7 +16,7 @@ export type LineWithTrackPoints = Line & {
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
-	padId: ForeignKey<PadModel["id"]>;
+	padId: ForeignKey<MapModel["id"]>;
 	routePoints: Point[];
 	typeId: ForeignKey<TypeModel["id"]>;
 	mode: RouteMode;
@@ -172,8 +172,8 @@ export default class DatabaseLines {
 	}
 
 	afterInit(): void {
-		this.LineModel.belongsTo(this._db.pads.PadModel, makeNotNullForeignKey("pad", "padId"));
-		this._db.pads.PadModel.hasMany(this.LineModel, { foreignKey: "padId" });
+		this.LineModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("pad", "padId"));
+		this._db.maps.MapModel.hasMany(this.LineModel, { foreignKey: "padId" });
 
 		// TODO: Cascade
 		this.LineModel.belongsTo(this._db.types.TypeModel, makeNotNullForeignKey("type", "typeId", true));
@@ -185,27 +185,27 @@ export default class DatabaseLines {
 		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
 	}
 
-	getPadLines(padId: PadId, fields?: Array<keyof Line>): AsyncIterable<Line> {
+	getMapLines(mapId: MapId, fields?: Array<keyof Line>): AsyncIterable<Line> {
 		const cond = fields ? { attributes: fields } : { };
-		return this._db.helpers._getPadObjects<Line>("Line", padId, cond);
+		return this._db.helpers._getMapObjects<Line>("Line", mapId, cond);
 	}
 
-	getPadLinesByType(padId: PadId, typeId: ID): AsyncIterable<Line> {
-		return this._db.helpers._getPadObjects<Line>("Line", padId, { where: { typeId: typeId } });
+	getMapLinesByType(mapId: MapId, typeId: ID): AsyncIterable<Line> {
+		return this._db.helpers._getMapObjects<Line>("Line", mapId, { where: { typeId: typeId } });
 	}
 
-	async getLineTemplate(padId: PadId, data: { typeId: ID }): Promise<LineTemplate> {
-		const type = await this._db.types.getType(padId, data.typeId);
+	async getLineTemplate(mapId: MapId, data: { typeId: ID }): Promise<LineTemplate> {
+		const type = await this._db.types.getType(mapId, data.typeId);
 
 		return getLineTemplate(type);
 	}
 
-	getLine(padId: PadId, lineId: ID): Promise<Line> {
-		return this._db.helpers._getPadObject<Line>("Line", padId, lineId);
+	getLine(mapId: MapId, lineId: ID): Promise<Line> {
+		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId);
 	}
 
-	async createLine(padId: PadId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
-		const type = await this._db.types.getType(padId, data.typeId);
+	async createLine(mapId: MapId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
+		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
 		}
@@ -214,19 +214,19 @@ export default class DatabaseLines {
 
 		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, trackPointsFromRoute);
 
-		const createdLine = await this._db.helpers._createPadObject<Line>("Line", padId, omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */));
+		const createdLine = await this._db.helpers._createMapObject<Line>("Line", mapId, omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */));
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
-		this._db.emit("line", padId, createdLine);
+		this._db.emit("line", mapId, createdLine);
 
-		await this._setLinePoints(padId, createdLine.id, trackPoints);
+		await this._setLinePoints(mapId, createdLine.id, trackPoints);
 
 		return createdLine;
 	}
 
-	async updateLine(padId: PadId, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
-		const originalLine = await this.getLine(padId, lineId);
-		const newType = await this._db.types.getType(padId, data.typeId ?? originalLine.typeId);
+	async updateLine(mapId: MapId, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+		const originalLine = await this.getLine(mapId, lineId);
+		const newType = await this._db.types.getType(mapId, data.typeId ?? originalLine.typeId);
 		return await this._updateLine(originalLine, data, newType, noHistory, trackPointsFromRoute);
 	}
 
@@ -245,7 +245,7 @@ export default class DatabaseLines {
 		delete update.trackPoints; // They came if mode is track
 
 		if (Object.keys(update).length > 0) {
-			const newLine = await this._db.helpers._updatePadObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
+			const newLine = await this._db.helpers._updateMapObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
 
 			this._db.emit("line", originalLine.padId, newLine);
 
@@ -258,7 +258,7 @@ export default class DatabaseLines {
 		}
 	}
 
-	async _setLinePoints(padId: PadId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
+	async _setLinePoints(mapId: MapId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
 		await this.LinePointModel.destroy({ where: { lineId: lineId } });
 
 		const create = [ ];
@@ -269,18 +269,18 @@ export default class DatabaseLines {
 		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
 
 		if(!_noEvent)
-			this._db.emit("linePoints", padId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
+			this._db.emit("linePoints", mapId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
 	}
 
-	async deleteLine(padId: PadId, lineId: ID): Promise<Line> {
-		await this._setLinePoints(padId, lineId, [ ], true);
-		const oldLine = await this._db.helpers._deletePadObject<Line>("Line", padId, lineId);
-		this._db.emit("deleteLine", padId, { id: lineId });
+	async deleteLine(mapId: MapId, lineId: ID): Promise<Line> {
+		await this._setLinePoints(mapId, lineId, [ ], true);
+		const oldLine = await this._db.helpers._deleteMapObject<Line>("Line", mapId, lineId);
+		this._db.emit("deleteLine", mapId, { id: lineId });
 		return oldLine;
 	}
 
-	async* getLinePointsForPad(padId: PadId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
-		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { padId } });
+	async* getLinePointsForMap(mapId: MapId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
+		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { padId: mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
 		for (const lineIds of chunks) {
 			const linePoints = await this.LinePointModel.findAll({

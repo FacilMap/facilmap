@@ -62,14 +62,14 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			editType: async (type) => currentTypeToLegacyV2(await socketHandlers.editType(legacyV2TypeToCurrent(type))),
 
 			updateBbox: async (bbox) => prepareMultiple(await socketHandlers.updateBbox(bbox)),
-			createPad: async (padData) => prepareMultiple(await socketHandlers.createPad(padData)),
+			createPad: async (mapData) => prepareMultiple(await socketHandlers.createPad(mapData)),
 			listenToHistory: async (data) => prepareMultiple(await socketHandlers.listenToHistory(data)),
 			revertHistoryEntry: async (entry) => prepareMultiple(await socketHandlers.revertHistoryEntry(entry)),
 			getMarker: async (data) => currentMarkerToLegacyV2(await socketHandlers.getMarker(data)),
 			deleteMarker: async (data) => currentMarkerToLegacyV2(await socketHandlers.deleteMarker(data)),
 			findOnMap: async (data) => (await socketHandlers.findOnMap(data)).map((result) => prepareMapResultOutput(result)),
 			deleteType: async (data) => currentTypeToLegacyV2(await socketHandlers.deleteType(data)),
-			setPadId: async (padId) => prepareMultiple(await socketHandlers.setPadId(padId))
+			setPadId: async (mapId) => prepareMultiple(await socketHandlers.setPadId(mapId))
 		};
 	}
 

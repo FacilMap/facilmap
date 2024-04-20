@@ -24,9 +24,9 @@
         "untitled-marker": "Unbenannter Marker",
         "untitled-line": "Unbenannte Linie"
     },
-    "pads": {
+    "maps": {
         "unnamed-map": "Unbenannte Karte",
-        "page-title": "{{padName}} – {{appName}}",
+        "page-title": "{{mapName}} – {{appName}}",
         "fallback-page-description": "Eine vielseitige Karte auf OpenStreetMap-Basis, auf der Marker und Linien mit Live-Kollaboration gesetzt werden können."
     },
     "routing": {

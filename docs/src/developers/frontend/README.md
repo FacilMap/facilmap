@@ -32,7 +32,7 @@ The [`<FacilMap>`](./facilmap.md) component renders the whole frontend, includin
 <FacilMap
 	baseUrl="https://facilmap.org/"
 	serverUrl="https://facilmap.org/"
-	:padId="undefined"
+	:mapId="undefined"
 ></FacilMap>
 ```
 

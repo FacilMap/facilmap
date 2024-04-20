@@ -1,11 +1,11 @@
 import type { Manifest } from "vite";
 import { paths, serve } from "facilmap-frontend/build.js";
 import { readFile } from "node:fs/promises";
-import type { ID, PadData, Type } from "facilmap-types";
+import type { ID, MapData, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizePadName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
+import { normalizeMapName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
 import config from "./config";
 import { streamPromiseToStream, streamReplace } from "./utils/streams";
 import { ReadableStream } from "stream/web";
@@ -75,7 +75,7 @@ function getInjectedConfig(): InjectedConfig {
 }
 
 export interface RenderMapParams {
-	padData: { name: string | undefined; description: string | undefined; searchEngines: boolean } | undefined;
+	mapData: { name: string | undefined; description: string | undefined; searchEngines: boolean } | undefined;
 	isReadOnly: boolean;
 	url: string;
 }
@@ -92,7 +92,7 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 		hasCustomCssFile: !!config.customCssFile,
 		normalizePageTitle,
 		normalizePageDescription,
-		normalizePadName,
+		normalizeMapName,
 		i18n: getI18n(),
 		...injections,
 		paths,
@@ -100,8 +100,8 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 	});
 }
 
-export function renderTable({ padData, types, renderSingleTable, url }: {
-	padData: PadData;
+export function renderTable({ mapData, types, renderSingleTable, url }: {
+	mapData: MapData;
 	types: Type[];
 	renderSingleTable: (typeId: ID, params: TableParams) => ReadableStream<string>;
 	url: string;
@@ -118,7 +118,7 @@ export function renderTable({ padData, types, renderSingleTable, url }: {
 			appName: config.appName,
 			hasCustomCssFile: !!config.customCssFile,
 			paths,
-			normalizePadName,
+			normalizeMapName,
 			normalizePageTitle,
 			normalizePageDescription,
 			formatTypeName,
@@ -128,7 +128,7 @@ export function renderTable({ padData, types, renderSingleTable, url }: {
 				replace[placeholder] = renderSingleTable(typeId, params);
 				return placeholder;
 			},
-			padData,
+			mapData,
 			types,
 			url
 		});
@@ -172,12 +172,12 @@ export async function getOpensearchXml(baseUrl: string): Promise<string> {
 	});
 }
 
-export function getOembedJson(baseUrl: string, padData: PadData | undefined, params: { url: string; maxwidth?: number; maxheight?: number }): string {
+export function getOembedJson(baseUrl: string, mapData: MapData | undefined, params: { url: string; maxwidth?: number; maxheight?: number }): string {
 	const width = params.maxwidth ?? 800;
 	const height = params.maxheight ?? 500;
 
 	return JSON.stringify({
-		"title": normalizePageTitle(padData ? normalizePadName(padData.name) : undefined, config.appName),
+		"title": normalizePageTitle(mapData ? normalizeMapName(mapData.name) : undefined, config.appName),
 		"type": "rich",
 		"height": height,
 		"width": width,

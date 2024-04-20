@@ -1,7 +1,7 @@
 import { generateRandomId } from "../utils/utils.js";
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
-import type { BboxWithZoom, ID, Latitude, Longitude, PadId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Longitude, MapId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
@@ -137,7 +137,7 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async lineToRoute(routeId: string | undefined, padId: PadId, lineId: ID): Promise<RouteWithId | undefined> {
+	async lineToRoute(routeId: string | undefined, mapId: MapId, lineId: ID): Promise<RouteWithId | undefined> {
 		const clear = !!routeId;
 
 		if (!routeId)
@@ -155,7 +155,7 @@ export default class DatabaseRoutes {
 		if(thisTime != updateTimes[routeId])
 			return;
 
-		const line = await this._db.lines.getLine(padId, lineId);
+		const line = await this._db.lines.getLine(mapId, lineId);
 		const linePointsIt = this._db.lines.getAllLinePoints(lineId);
 		const linePoints = await asyncIteratorToArray((async function*() {
 			for await (const linePoint of linePointsIt) {

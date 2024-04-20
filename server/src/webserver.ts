@@ -1,7 +1,7 @@
 import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { stringifiedIdValidator, type PadData, type PadId } from "facilmap-types";
+import { stringifiedIdValidator, type MapData, type MapId } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
@@ -9,7 +9,7 @@ import { exportGpx, exportGpxZip } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { Readable, Writable } from "stream";
 import { getOembedJson, getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
-import { getSafeFilename, normalizePadName, parsePadUrl } from "facilmap-utils";
+import { getSafeFilename, normalizeMapName, parseMapUrl } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
 import { exportCsv } from "./export/csv.js";
@@ -22,37 +22,37 @@ function getBaseUrl(req: Request): string {
 }
 
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
-	const padMiddleware = async (req: Request<{ padId: string }>, res: Response<string>) => {
+	const mapMiddleware = async (req: Request<{ mapId: string }>, res: Response<string>) => {
 		const baseUrl = getBaseUrl(req);
 
 		let params: RenderMapParams;
-		if(req.params?.padId) {
-			const padData = await database.pads.getPadDataByAnyId(req.params.padId);
-			if (padData) {
+		if(req.params?.mapId) {
+			const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
+			if (mapData) {
 				params = {
-					padData: {
-						searchEngines: padData.searchEngines,
-						name: normalizePadName(padData.name),
-						description: padData.description
+					mapData: {
+						searchEngines: mapData.searchEngines,
+						name: normalizeMapName(mapData.name),
+						description: mapData.description
 					},
-					isReadOnly: padData.id === req.params.padId,
-					url: `${baseUrl}${encodeURIComponent(req.params.padId)}`
+					isReadOnly: mapData.id === req.params.mapId,
+					url: `${baseUrl}${encodeURIComponent(req.params.mapId)}`
 				};
 			} else {
 				res.status(404);
 				params = {
-					padData: {
+					mapData: {
 						searchEngines: false,
 						name: undefined,
 						description: undefined
 					},
 					isReadOnly: true,
-					url: `${baseUrl}${encodeURIComponent(req.params.padId)}`
+					url: `${baseUrl}${encodeURIComponent(req.params.mapId)}`
 				};
 			}
 		} else {
 			params = {
-				padData: undefined,
+				mapData: undefined,
 				isReadOnly: true,
 				url: baseUrl
 			};
@@ -73,7 +73,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.use(i18nMiddleware);
 
-	app.get("/", padMiddleware);
+	app.get("/", mapMiddleware);
 
 	app.get(`${paths.base}manifest.json`, async (req, res) => {
 		res.set("Content-type", "application/manifest+json");
@@ -112,13 +112,13 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}
 
 		const baseUrl = getBaseUrl(req);
-		let padData: PadData | undefined;
+		let mapData: MapData | undefined;
 		if (query.url === baseUrl || `${query.url}/` === baseUrl) {
-			padData = undefined;
+			mapData = undefined;
 		} else {
-			const parsed = parsePadUrl(query.url, baseUrl);
+			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				padData = await database.pads.getPadDataByAnyId(parsed.padId);
+				mapData = await database.maps.getMapDataByAnyId(parsed.mapId);
 			} else {
 				res.status(404).send();
 				return;
@@ -127,47 +127,47 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.header("Content-type", "application/json");
 
-		res.send(getOembedJson(baseUrl, padData, query));
+		res.send(getOembedJson(baseUrl, mapData, query));
 	});
 
 	app.use(await getStaticFrontendMiddleware());
 
-	// If no file with this name has been found, we render a pad
-	app.get("/:padId", padMiddleware);
+	// If no file with this name has been found, we render a map
+	app.get("/:mapId", mapMiddleware);
 
-	app.get("/:padId/gpx", async (req: Request<{ padId: string }>, res: Response<string>) => {
+	app.get("/:mapId/gpx", async (req: Request<{ mapId: string }>, res: Response<string>) => {
 		const query = z.object({
 			useTracks: z.enum(["0", "1"]).default("0"),
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
+		const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
 
-		if(!padData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
+		if(!mapData)
+			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
 
 		res.set("Content-type", "application/gpx+xml");
-		res.attachment(`${getSafeFilename(normalizePadName(padData.name))}.gpx`);
-		void exportGpx(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		res.attachment(`${getSafeFilename(normalizeMapName(mapData.name))}.gpx`);
+		void exportGpx(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/gpx/zip", async (req: Request<{ padId: string }>, res: Response<string>) => {
+	app.get("/:mapId/gpx/zip", async (req: Request<{ mapId: string }>, res: Response<string>) => {
 		const query = z.object({
 			useTracks: z.enum(["0", "1"]).default("0"),
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const padData = await database.pads.getPadDataByAnyId(req.params.padId);
+		const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
 
-		if(!padData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
+		if(!mapData)
+			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
 
 		res.set("Content-type", "application/zip");
-		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
-		void exportGpxZip(database, padData ? padData.id : req.params.padId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
+		void exportGpxZip(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/table", async (req: Request<{ padId: string }>, res: Response<string>) => {
+	app.get("/:mapId/table", async (req: Request<{ mapId: string }>, res: Response<string>) => {
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
@@ -178,14 +178,14 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.setHeader("Referrer-Policy", "origin");
 		void createTable(
 			database,
-			req.params.padId,
+			req.params.mapId,
 			query.filter,
 			query.hide ? query.hide.split(',') : [],
-			`${baseUrl}${encodeURIComponent(req.params.padId)}/table`
+			`${baseUrl}${encodeURIComponent(req.params.mapId)}/table`
 		).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/rawTable/:typeId", async (req: Request<{ padId: PadId; typeId: string }>, res: Response<string>) => {
+	app.get("/:mapId/rawTable/:typeId", async (req: Request<{ mapId: MapId; typeId: string }>, res: Response<string>) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
 			filter: z.string().optional(),
@@ -196,48 +196,48 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.setHeader("Referrer-Policy", "origin");
 		void createSingleTable(
 			database,
-			req.params.padId,
+			req.params.mapId,
 			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []
 		).pipeTo(Writable.toWeb(res));
 	});
 
-	app.get("/:padId/geojson", async (req: Request<{ padId: string }>, res: Response<string>) => {
+	app.get("/:mapId/geojson", async (req: Request<{ mapId: string }>, res: Response<string>) => {
 		const query = z.object({
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const padData = await database.pads.getPadData(req.params.padId);
+		const mapData = await database.maps.getMapData(req.params.mapId);
 
-		if(!padData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
+		if(!mapData)
+			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
 
 		res.set("Content-type", "application/geo+json");
-		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
+		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
 
-		const result = exportGeoJson(database, req.params.padId, query.filter);
+		const result = exportGeoJson(database, req.params.mapId, query.filter);
 		Readable.fromWeb(result).pipe(res);
 	});
 
-	app.get("/:padId/csv/:typeId", async (req: Request<{ padId: string; typeId: string }>, res: Response<string>) => {
+	app.get("/:mapId/csv/:typeId", async (req: Request<{ mapId: string; typeId: string }>, res: Response<string>) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
 
-		const padData = await database.pads.getPadData(req.params.padId);
+		const mapData = await database.maps.getMapData(req.params.mapId);
 
-		if(!padData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { padId: req.params.padId }));
+		if(!mapData)
+			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
 
 		res.set("Content-type", "text/csv");
-		res.attachment(padData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");
+		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");
 
 		const result = exportCsv(
 			database,
-			req.params.padId,
+			req.params.mapId,
 			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []

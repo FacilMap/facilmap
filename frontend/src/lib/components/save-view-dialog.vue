@@ -52,7 +52,7 @@
 			});
 
 			if (makeDefault.value) {
-				await client.value.editPad({ defaultViewId: view.id });
+				await client.value.editMap({ defaultViewId: view.id });
 			}
 
 			modalRef.value?.modal.hide();

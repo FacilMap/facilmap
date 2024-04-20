@@ -2,8 +2,8 @@ import { io, Socket } from "socket.io-client";
 import Client from "facilmap-client";
 import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
-import { type CRU, type PadData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
-import { generateRandomPadId, sleep } from "facilmap-utils";
+import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
+import { generateRandomMapId, sleep } from "facilmap-utils";
 
 
 export function getFacilMapUrl(): string {
@@ -50,28 +50,42 @@ export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?
 	return client;
 }
 
-export function generateTestPadId(): string {
-	return `integration-test-${generateRandomPadId()}`;
+export function generateTestMapId(): string {
+	return `integration-test-${generateRandomMapId()}`;
 }
 
-export function getTemporaryPadData<V extends SocketVersion, D extends Partial<Parameters<ClientInstance<V>["createPad"]>[0]>>(version: V, data: D): D & Pick<Parameters<ClientInstance<V>["createPad"]>[0], "id" | "writeId" | "adminId"> {
+export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & Pick<MapData<CRU.CREATE>, "id" | "writeId" | "adminId"> {
 	return {
-		id: generateTestPadId(),
-		writeId: generateTestPadId(),
-		adminId: generateTestPadId(),
+		id: generateTestMapId(),
+		writeId: generateTestMapId(),
+		adminId: generateTestMapId(),
 		...data
 	};
 }
 
-export async function createTemporaryPad<V extends SocketVersion, D extends Partial<PadData<CRU.CREATE>>>(
+export async function createTemporaryMap<V extends SocketVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
 	client: ClientInstance<V>,
 	data: D,
-	callback?: (createPadData: ReturnType<typeof getTemporaryPadData<V, D>>, padData: NonNullable<ClientInstance<V>["padData"]>, result: Awaited<ReturnType<ClientInstance<V>["createPad"]>>) => Promise<void>
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: NonNullable<ClientInstance<V>["mapData"]>, result: Awaited<ReturnType<ClientInstance<V>["createMap"]>>) => Promise<void>
 ): Promise<void> {
-	const createPadData = getTemporaryPadData(client._version, data);
-	const result = await client.createPad(createPadData as any);
+	const createMapData = getTemporaryMapData(client._version, data);
+	const result = await client.createMap(createMapData as any);
 	try {
-		await callback?.(createPadData, client.padData!, result as any);
+		await callback?.(createMapData, client.mapData!, result as any);
+	} finally {
+		await client.deleteMap();
+	}
+}
+
+export async function createTemporaryMapV2<V extends SocketVersion.V1 | SocketVersion.V2, D extends Partial<MapData<CRU.CREATE>>>(
+	client: ClientInstance<V>,
+	data: D,
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: NonNullable<ClientInstance<V>["padData"]>, result: Awaited<ReturnType<ClientInstance<V>["createPad"]>>) => Promise<void>
+): Promise<void> {
+	const createMapData = getTemporaryMapData(client._version, data);
+	const result = await client.createPad(createMapData as any);
+	try {
+		await callback?.(createMapData, client.padData!, result as any);
 	} finally {
 		await client.deletePad();
 	}

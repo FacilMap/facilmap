@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../../utils";
+import { createTemporaryMap, openClient } from "../../utils";
 
 test("New marker is created with dropdown styles", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -47,7 +47,7 @@ test("New marker is created with dropdown styles", async () => {
 test("New line is created with dropdown styles", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -89,7 +89,7 @@ test("New line is created with dropdown styles", async () => {
 test("Line template uses dropdown styles", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -128,7 +128,7 @@ test("Line template uses dropdown styles", async () => {
 test("Marker update is overridden by dropdown styles", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -178,7 +178,7 @@ test("Marker update is overridden by dropdown styles", async () => {
 test("Line update is overridden by dropdown styles", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -227,7 +227,7 @@ test("Line update is overridden by dropdown styles", async () => {
 test("New dropdown styles are applied to existing markers", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker"
@@ -281,7 +281,7 @@ test("New dropdown styles are applied to existing markers", async () => {
 test("New dropdown styles are applied to existing lines", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line"

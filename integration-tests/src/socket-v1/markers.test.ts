@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClient, retry } from "../utils";
 import { SocketVersion } from "facilmap-types";
 import type { LegacyV2Marker } from "facilmap-types";
 
@@ -9,9 +9,9 @@ test("Socket v1 marker name", async () => {
 	// client3: Does not have the marker in its bbox
 	const client1 = await openClient(undefined, SocketVersion.V1);
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.adminId, SocketVersion.V1);
-		const client3 = await openClient(padData.adminId, SocketVersion.V1);
+	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.adminId, SocketVersion.V1);
+		const client3 = await openClient(mapData.adminId, SocketVersion.V1);
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);
@@ -38,7 +38,7 @@ test("Socket v1 marker name", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			padId: padData.id,
+			padId: mapData.id,
 			name: "Untitled marker",
 			colour: "ff0000",
 			size: 30,

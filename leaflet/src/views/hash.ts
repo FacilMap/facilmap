@@ -172,7 +172,7 @@ export default class HashHandler extends Handler {
 			result = "q=" + encodeURIComponent(this.activeQuery.query);
 		} else if(!this.activeQuery) {
 			// Check if we have a saved view open
-			const defaultView = (this.client.padData && this.client.padData.defaultViewId && this.client.views[this.client.padData.defaultViewId]);
+			const defaultView = (this.client.mapData && this.client.mapData.defaultViewId && this.client.views[this.client.mapData.defaultViewId]);
 			if(isAtView(this._map, defaultView || undefined, { overpassLayer: this.options.overpassLayer }))
 				result = "";
 			else {

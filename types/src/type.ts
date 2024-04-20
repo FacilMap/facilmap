@@ -1,4 +1,4 @@
-import { colourValidator, idValidator, padIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator } from "./base.js";
+import { colourValidator, idValidator, mapIdValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator } from "./base.js";
 import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead, type CRUValidator } from "./cru";
 import * as z from "zod";
 
@@ -127,7 +127,7 @@ export const defaultFields = (): Field[] => [ { name: "Description", type: "text
 export const rawTypeValidator = cruValidator({
 	id: onlyRead(idValidator),
 	type: exceptUpdate(objectTypeValidator),
-	padId: onlyRead(padIdValidator),
+	mapId: onlyRead(mapIdValidator),
 
 	name: optionalUpdate(z.string().trim().min(1).max(100)),
 	idx: optionalCreate(z.number().int().min(0)),

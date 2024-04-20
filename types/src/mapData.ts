@@ -1,7 +1,7 @@
 import { viewValidator } from "./view.js";
-import { idValidator, padIdValidator } from "./base.js";
+import { idValidator, mapIdValidator } from "./base.js";
 import * as z from "zod";
-import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead, onlyCreate } from "./cru";
+import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead, onlyCreate } from "./cru.js";
 
 export enum Writable {
 	READ = 0,
@@ -10,17 +10,17 @@ export enum Writable {
 }
 export const writableValidator = z.nativeEnum(Writable);
 
-export const padDataValidator = cruValidator({
-	id: optionalUpdate(padIdValidator),
+export const mapDataValidator = cruValidator({
+	id: optionalUpdate(mapIdValidator),
 	writeId: {
-		read: padIdValidator.optional(), // Unavailable if pad is opened in read-only mode
-		create: padIdValidator,
-		update: padIdValidator.optional()
+		read: mapIdValidator.optional(), // Unavailable if map is opened in read-only mode
+		create: mapIdValidator,
+		update: mapIdValidator.optional()
 	},
 	adminId: {
-		read: padIdValidator.optional(), // Unavailable if pad is opened in read-only/writeable mode
-		create: padIdValidator,
-		update: padIdValidator.optional()
+		read: mapIdValidator.optional(), // Unavailable if map is opened in read-only/writeable mode
+		create: mapIdValidator,
+		update: mapIdValidator.optional()
 	},
 
 	name: optionalCreate(z.string().max(100), ""),
@@ -36,4 +36,4 @@ export const padDataValidator = cruValidator({
 	defaultView: onlyRead(viewValidator.read.or(z.null()))
 });
 
-export type PadData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof padDataValidator>;
+export type MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapDataValidator>;

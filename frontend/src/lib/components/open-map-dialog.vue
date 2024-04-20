@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "./ui/icon.vue";
-	import type { FindPadsResult } from "facilmap-types";
+	import type { FindMapsResult } from "facilmap-types";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import Pagination from "./ui/pagination.vue";
@@ -10,7 +10,7 @@
 	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import type { FacilMapContext } from "./facil-map-context-provider/facil-map-context";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
-	import { parsePadUrl } from "facilmap-utils";
+	import { parseMapUrl } from "facilmap-utils";
 	import { useI18n } from "../utils/i18n";
 
 	const toasts = useToasts();
@@ -22,9 +22,9 @@
 
 	const ITEMS_PER_PAGE = 20;
 
-	function parsePadId(val: string, context: FacilMapContext): { padId: string; hash: string } | undefined {
+	function parseMapId(val: string, context: FacilMapContext): { mapId: string; hash: string } | undefined {
 		const url = val.startsWith(context.baseUrl) ? val : `${context.baseUrl}${val}`;
-		return parsePadUrl(url, context.baseUrl);
+		return parseMapUrl(url, context.baseUrl);
 	}
 
 	const context = injectContextRequired();
@@ -33,11 +33,11 @@
 
 	const id = getUniqueId("fm-open-map");
 
-	const padId = ref("");
+	const mapId = ref("");
 	const searchQuery = ref("");
 	const submittedSearchQuery = ref<string>();
 	const isSearching = ref(false);
-	const results = ref<FindPadsResult[]>([]);
+	const results = ref<FindMapsResult[]>([]);
 	const pages = ref(0);
 	const activePage = ref(0);
 
@@ -45,16 +45,16 @@
 	const openFormRef = ref<InstanceType<typeof ValidatedForm>>();
 
 	const url = computed(() => {
-		const parsed = parsePadId(padId.value, context);
+		const parsed = parseMapId(mapId.value, context);
 		if (parsed) {
-			return context.baseUrl + encodeURIComponent(parsed.padId) + parsed.hash;
+			return context.baseUrl + encodeURIComponent(parsed.mapId) + parsed.hash;
 		}
 	});
 
 	function handleSubmit(): void {
-		const parsed = parsePadId(padId.value, context);
+		const parsed = parseMapId(mapId.value, context);
 		if (parsed) {
-			client.value.openPad(parsed.padId);
+			client.value.openMap(parsed.mapId);
 			modalRef.value!.modal.hide();
 
 			setTimeout(() => {
@@ -64,8 +64,8 @@
 		}
 	}
 
-	function openResult(result: FindPadsResult): void {
-		client.value.openPad(result.id);
+	function openResult(result: FindMapsResult): void {
+		client.value.openMap(result.id);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
@@ -87,7 +87,7 @@
 		toasts.hideToast(`fm${context.id}-open-map-search-error`);
 
 		try {
-			const newResults = await client.value.findPads({
+			const newResults = await client.value.findMaps({
 				query,
 				start: page * ITEMS_PER_PAGE,
 				limit: ITEMS_PER_PAGE
@@ -97,26 +97,26 @@
 			results.value = newResults.results;
 			pages.value = Math.ceil(newResults.totalLength / ITEMS_PER_PAGE);
 		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, () => i18n.t("open-map-dialog.find-pads-error"), err);
+			toasts.showErrorToast(`fm${context.id}-open-map-search-error`, () => i18n.t("open-map-dialog.find-maps-error"), err);
 		} finally {
 			isSearching.value = false;
 		}
 	}
 
-	function validatePadIdFormat(padId: string) {
-		const parsed = parsePadId(padId, context);
+	function validateMapIdFormat(mapId: string) {
+		const parsed = parseMapId(mapId, context);
 
 		if (!parsed) {
 			return i18n.t("open-map-dialog.map-id-format-error");
 		}
 	}
 
-	async function validatePadExistence(padId: string) {
-		const parsed = parsePadId(padId, context);
+	async function validateMapExistence(mapId: string) {
+		const parsed = parseMapId(mapId, context);
 
 		if (parsed) {
-			const padInfo = await client.value.getPad({ padId: parsed.padId });
-			if (!padInfo) {
+			const mapInfo = await client.value.getMap({ padId: parsed.mapId });
+			if (!mapInfo) {
 				return i18n.t("open-map-dialog.map-not-found-error");
 			}
 		}
@@ -133,26 +133,26 @@
 	>
 		<p>{{i18n.t("open-map-dialog.introduction")}}</p>
 		<ValidatedField
-			:value="padId"
-			:validators="padId ? [
-				validatePadIdFormat,
-				validatePadExistence
+			:value="mapId"
+			:validators="mapId ? [
+				validateMapIdFormat,
+				validateMapExistence
 			] : []"
-			:reportValid="!!padId"
+			:reportValid="!!mapId"
 			:debounceMs="300"
 			class="input-group has-validation position-relative"
 		>
 			<template #default="slotProps">
 				<input
 					class="form-control"
-					v-model="padId"
+					v-model="mapId"
 					:form="`${id}-open-form`"
 					:ref="slotProps.inputRef"
 				/>
 				<button
 					type="submit"
 					class="btn btn-primary"
-					:disabled="!padId"
+					:disabled="!mapId"
 					:form="`${id}-open-form`"
 				>
 					<div v-if="openFormRef?.formData.isValidating" class="spinner-border spinner-border-sm"></div>

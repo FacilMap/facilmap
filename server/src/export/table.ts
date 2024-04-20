@@ -1,4 +1,4 @@
-import type { ID, PadId } from "facilmap-types";
+import type { ID, MapId } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
 import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
@@ -21,7 +21,7 @@ export type TableParams = {
 
 export function createSingleTable(
 	database: Database,
-	padId: PadId,
+	mapId: MapId,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = [],
@@ -32,7 +32,7 @@ export function createSingleTable(
 			return Object.entries(a).map(([k, v]) => ` ${quoteHtml(k)}="${quoteHtml(v)}"`).join("");
 		}
 
-		const tabular = await getTabularData(database, padId, typeId, true, filter, hide);
+		const tabular = await getTabularData(database, mapId, typeId, true, filter, hide);
 
 		function* generateBefore() {
 			if (before) {
@@ -92,21 +92,21 @@ export function createSingleTable(
 	})());
 }
 
-export function createTable(database: Database, padId: PadId, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
+export function createTable(database: Database, mapId: MapId, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
-		const [padData, types] = await Promise.all([
-			database.pads.getPadData(padId),
-			asyncIteratorToArray(database.types.getTypes(padId))
+		const [mapData, types] = await Promise.all([
+			database.maps.getMapData(mapId),
+			asyncIteratorToArray(database.types.getTypes(mapId))
 		]);
 
-		if (!padData) {
-			throw new Error(getI18n().t("pad-read-not-found-error", { padId }));
+		if (!mapData) {
+			throw new Error(getI18n().t("map-read-not-found-error", { mapId }));
 		}
 
 		return renderTable({
-			padData,
+			mapData,
 			types,
-			renderSingleTable: (typeId, params) => createSingleTable(database, padId, typeId, filter, hide, params),
+			renderSingleTable: (typeId, params) => createSingleTable(database, mapId, typeId, filter, hide, params),
 			url
 		});
 	})());

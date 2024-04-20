@@ -1,18 +1,18 @@
 # Methods
 
-## `constructor(server, padId, socketOptions)`
+## `constructor(server, mapId, socketOptions)`
 
-Connects to the FacilMap server `server` and optionally opens the collaborative map with the ID `padId`. If the pad ID
-is not set, it can be set later using [`setPadId(padId)`](#setpadid-padid) or using [`createPad(data)`](#createpad-data).
+Connects to the FacilMap server `server` and optionally opens the collaborative map with the ID `mapId`. If the map ID
+is not set, it can be set later using [`setMapId(mapId)`](#setmapid-mapid) or using [`createMap(data)`](#createmap-data).
 
-The connection is established in the background, and a `connect` event is fired when it is successful. If a `padId` is specified, a [`padData`](./events.md#paddata) or [`serverError`](./events.md#servererror) event will indicate when the map has been opened successfully or unsuccessfully. Note that you can already call methods immediately after constructing the client, causing them to be delayed until the connection is established.
+The connection is established in the background, and a `connect` event is fired when it is successful. If a `mapId` is specified, a [`mapData`](./events.md#mapdata) or [`serverError`](./events.md#servererror) event will indicate when the map has been opened successfully or unsuccessfully. Note that you can already call methods immediately after constructing the client, causing them to be delayed until the connection is established.
 
 If the connection to the server breaks down, a `disconnect` event will be emitted and socket.io will attempt to reconnect. On successful reconnection, a `reconnect` and `connect` event will be fired. During the interruption, you can still call methods, causing them to be delayed until the connection is reestablished.
 
 * `server` (string): The URL of the FacilMap server, for example `https://facilmap.org/`.
-* `padId` (string, optional): The ID of the collaborative map to open.
+* `mapId` (string, optional): The ID of the collaborative map to open.
 * `socketOptions` (object, optional): Any additional [Socket.io client options](https://socket.io/docs/v4/client-options/).
-* **Events:** Causes a `connect` event to be fired when the connection is established. If `padId` is defined, causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map with `padId` could not be opened, causes a [`serverError`](./events.md#servererror) event.
+* **Events:** Causes a `connect` event to be fired when the connection is established. If `mapId` is defined, causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map with `mapId` could not be opened, causes a [`serverError`](./events.md#servererror) event.
 
 ## `on(eventName, function)`
 
@@ -28,15 +28,15 @@ Unregisters an event handler previously assigned using `on(eventName, function)`
 * `eventName` (string): The name of the event.
 * `function` (function): The function that was passed to `on(eventName, function)` when registering the handler.
 
-## `setPadId(padId)`
+## `setMapId(mapId)`
 
-Opens the collaborative map with the ID `padId`.
+Opens the collaborative map with the ID `mapId`.
 
-This method can only be called once, and only if no `padId` was passed to the constructor. If you want to open a different map, you need to create a new instance of the client.
+This method can only be called once, and only if no `mapId` was passed to the constructor. If you want to open a different map, you need to create a new instance of the client.
 
-Setting the padId causes the server to send several objects, such as the map settings, all views, and all lines (just metadata, without line points). Each of these objects is sent as an individual [`event`](./events.md).
+Setting the mapId causes the server to send several objects, such as the map settings, all views, and all lines (just metadata, without line points). Each of these objects is sent as an individual [`event`](./events.md).
 
-* `padId` (string): The ID of the collaborative map to open. Can be a read-only ID, writable ID or admin ID of a map.
+* `mapId` (string): The ID of the collaborative map to open. Can be a read-only ID, writable ID or admin ID of a map.
 * **Returns:** A promise that is resolved empty when all objects have been received.
 * **Events:** Causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map could not be opened, causes a [`serverError`](./events.md#servererror) event.
 * **Availability:** Only available if no map is opened yet on this client instance.
@@ -61,19 +61,19 @@ Updates the bbox. This will cause all markers, line points and route points with
 * **Events:** Causes events to be fired with the markers, line points and route points within the bbox.
 * **Availability:** Always.
 
-## `getPad(data)`
+## `getMap(data)`
 
 Finds a collaborative map by ID. This can be used to check if a map with a certain ID exists.
 
 * `data`: An object with the following properties:
-	* `padId`: The read-only, writable or admin ID of the map.
+	* `mapId`: The read-only, writable or admin ID of the map.
 * **Returns:** A promise that is resolved with undefined (if no map with that ID exists) or with an object with an `id` (read-only ID), `name` and `description` property.
 * **Events:** None.
 * **Availability:** Always.
 
-## `findPads(data)`
+## `findMaps(data)`
 
-Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#paddata) to `true`.
+Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#mapdata) to `true`.
 
 * `data`: An object with the following properties:
 	* `query` (string): A search term. `*` can be used as a wildcard and `?` as a single-character wildcard.
@@ -84,25 +84,25 @@ Finds collaborative maps by a search term. Only finds maps that have been made p
 * **Events:** None.
 * **Availability:** Always.
 
-## `createPad(data)`
+## `createMap(data)`
 
 Creates a new collaborative map and opens it.
 
-* `data` ([padData](./types.md#paddata)): The data of the new map, including the desired read-only, writable and admin ID.
-* **Returns:** A promise that is resolved with the new padData when the map has been created.
-* **Events:** Causes a [`padData`](./events.md#paddata) event and other events for objects that have been created on the map (such as the default Marker and Line types).
+* `data` ([mapData](./types.md#mapdata)): The data of the new map, including the desired read-only, writable and admin ID.
+* **Returns:** A promise that is resolved with the new mapData when the map has been created.
+* **Events:** Causes a [`mapData`](./events.md#mapdata) event and other events for objects that have been created on the map (such as the default Marker and Line types).
 * **Availability:** Only if no collaborative map is opened yet.
 
-## `editPad(data)`
+## `editMap(data)`
 
 Update the map settings of the current map.
 
-* `data` ([PadData](./types.md#paddata)): The data of the map that should be modified. Fields that are not defined will not be modified. To change the default view, set the `defaultViewId` property. The `defaultView` property is ignored.
-* **Returns:** A promise that is resolved with the new padData.
+* `data` ([MapData](./types.md#mapdata)): The data of the map that should be modified. Fields that are not defined will not be modified. To change the default view, set the `defaultViewId` property. The `defaultView` property is ignored.
+* **Returns:** A promise that is resolved with the new mapData.
 * **Events:** Causes a [`padData`](./events.md#paddata) event.
 * **Availability:** Only if a collaborative map is opened through its admin ID.
 
-## `deletePad()`
+## `deleteMap()`
 
 Delete the current map irrevocably.
 

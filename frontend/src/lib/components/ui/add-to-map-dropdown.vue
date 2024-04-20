@@ -73,7 +73,7 @@
 
 <template>
 	<DropdownMenu
-		v-if="client.padData && !client.readonly && ((props.markers && markerTypes.length > 0) || (props.lines && lineTypes.length > 0))"
+		v-if="client.mapData && !client.readonly && ((props.markers && markerTypes.length > 0) || (props.lines && lineTypes.length > 0))"
 		:label="props.label ?? i18n.t('add-to-map-dropdown.fallback-label')"
 		:isDisabled="(props.markers ?? []).length === 0 && (props.lines ?? []).length === 0"
 		:isBusy="isAdding"

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../utils";
+import { createTemporaryMapV2, openClient } from "../utils";
 import { SocketVersion } from "facilmap-types";
 
 test("Socket v1 pad name", async () => {
@@ -8,7 +8,7 @@ test("Socket v1 pad name", async () => {
 	const onPadData = vi.fn();
 	client.on("padData", onPadData);
 
-	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+	await createTemporaryMapV2(client, {}, async (createPadData, padData) => {
 		expect(onPadData).toBeCalledTimes(1);
 		expect(onPadData.mock.calls[0][0].name).toBe("Unnamed map");
 

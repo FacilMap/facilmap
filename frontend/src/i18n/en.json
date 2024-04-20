@@ -574,7 +574,7 @@
         "save": "Save"
     },
     "open-map-dialog": {
-        "find-pads-error": "Error searching for public maps",
+        "find-maps-error": "Error searching for public maps",
         "map-id-format-error": "Please enter a valid map ID or URL.",
         "map-not-found-error": "No map with this ID could be found.",
         "title": "Open collaborative map",
@@ -613,10 +613,10 @@
         "details": "Details",
         "zoom-to-object-label": "Zoom to selection"
     },
-    "pad-id-edit": {
+    "map-id-edit": {
         "unique-id-error": "The same link cannot be used for different access levels."
     },
-    "pad-settings-dialog": {
+    "map-settings-dialog": {
         "create-map-error": "Error creating map",
         "save-map-error": "Error saving map settings",
         "delete-map-title": "Delete map",
@@ -834,12 +834,12 @@
     },
     "toolbox-collab-maps-dropdown": {
         "label": "Collaborative maps",
-        "bookmark": "Bookmark map “{{padName}}”",
+        "bookmark": "Bookmark map “{{mapName}}”",
         "manage-bookmarks": "Manage bookmarks",
         "create-map": "Create a new map",
         "open-map": "Open an existing map",
         "open-other-map": "Open another map",
-        "close-map": "Close map “{{padName}}”"
+        "close-map": "Close map “{{mapName}}”"
     },
     "toolbox-help-dropdown": {
         "label": "Help",

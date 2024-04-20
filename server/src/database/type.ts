@@ -1,8 +1,8 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import { typeValidator, type CRU, type Field, type ID, type PadId, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
+import { typeValidator, type CRU, type Field, type ID, type MapId, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
-import type { PadModel } from "./pad.js";
+import type { MapModel } from "./map.js";
 import { asyncIteratorToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
 
@@ -11,7 +11,7 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	name: string;
 	type: "marker" | "line";
 	idx: number;
-	padId: ForeignKey<PadModel["id"]>;
+	padId: ForeignKey<MapModel["id"]>;
 	defaultColour: Colour;
 	colourFixed: boolean;
 	defaultSize: Size;
@@ -84,21 +84,21 @@ export default class DatabaseTypes {
 	}
 
 	afterInit(): void {
-		const PadModel = this._db.pads.PadModel;
-		this.TypeModel.belongsTo(PadModel, makeNotNullForeignKey("pad", "padId"));
-		PadModel.hasMany(this.TypeModel, { foreignKey: "padId" });
+		const MapModel = this._db.maps.MapModel;
+		this.TypeModel.belongsTo(MapModel, makeNotNullForeignKey("pad", "padId"));
+		MapModel.hasMany(this.TypeModel, { foreignKey: "padId" });
 	}
 
-	getTypes(padId: PadId): AsyncIterable<Type> {
-		return this._db.helpers._getPadObjects<Type>("Type", padId);
+	getTypes(mapId: MapId): AsyncIterable<Type> {
+		return this._db.helpers._getMapObjects<Type>("Type", mapId);
 	}
 
-	getType(padId: PadId, typeId: ID): Promise<Type> {
-		return this._db.helpers._getPadObject<Type>("Type", padId, typeId);
+	getType(mapId: MapId, typeId: ID): Promise<Type> {
+		return this._db.helpers._getMapObject<Type>("Type", mapId, typeId);
 	}
 
-	async _freeTypeIdx(padId: PadId, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
-		const existingTypes = await asyncIteratorToArray(this.getTypes(padId));
+	async _freeTypeIdx(mapId: MapId, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
+		const existingTypes = await asyncIteratorToArray(this.getTypes(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingTypes.length > 0 ? existingTypes[existingTypes.length - 1].idx + 1 : 0);
 
@@ -106,26 +106,26 @@ export default class DatabaseTypes {
 
 		for (const obj of newIndexes) {
 			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
-				const result = await this._db.helpers._updatePadObject<Type>("Type", padId, obj.id, { idx: obj.newIdx }, true);
-				this._db.emit("type", result.padId, result);
+				const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, obj.id, { idx: obj.newIdx }, true);
+				this._db.emit("type", result.mapId, result);
 			}
 		}
 
 		return resolvedNewIdx;
 	}
 
-	async createType(padId: PadId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
-		const idx = await this._freeTypeIdx(padId, undefined, data.idx);
+	async createType(mapId: MapId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
+		const idx = await this._freeTypeIdx(mapId, undefined, data.idx);
 
-		const createdType = await this._db.helpers._createPadObject<Type>("Type", padId, {
+		const createdType = await this._db.helpers._createMapObject<Type>("Type", mapId, {
 			...data,
 			idx
 		});
-		this._db.emit("type", createdType.padId, createdType);
+		this._db.emit("type", createdType.mapId, createdType);
 		return createdType;
 	}
 
-	async updateType(padId: PadId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
+	async updateType(mapId: MapId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
 		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
 		for(const field of (data.fields || [])) {
 			if(field.oldName && field.oldName != field.name)
@@ -150,48 +150,48 @@ export default class DatabaseTypes {
 		}
 
 		if (data.idx != null) {
-			await this._freeTypeIdx(padId, typeId, data.idx);
+			await this._freeTypeIdx(mapId, typeId, data.idx);
 		}
 
-		const result = await this._db.helpers._updatePadObject<Type>("Type", padId, typeId, data);
-		this._db.emit("type", result.padId, result);
+		const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, typeId, data);
+		this._db.emit("type", result.mapId, result);
 
 		if(Object.keys(rename).length > 0)
-			await this._db.helpers.renameObjectDataField(padId, result.id, rename, result.type == "line");
+			await this._db.helpers.renameObjectDataField(mapId, result.id, rename, result.type == "line");
 
-		await this.recalculateObjectStylesForType(result.padId, typeId, result.type == "line");
+		await this.recalculateObjectStylesForType(result.mapId, typeId, result.type == "line");
 
 		return result;
 	}
 
-	async recalculateObjectStylesForType(padId: PadId, typeId: ID, isLine: boolean): Promise<void> {
-		await this._db.helpers._updateObjectStyles(isLine ? this._db.lines.getPadLinesByType(padId, typeId) : this._db.markers.getPadMarkersByType(padId, typeId));
+	async recalculateObjectStylesForType(mapId: MapId, typeId: ID, isLine: boolean): Promise<void> {
+		await this._db.helpers._updateObjectStyles(isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 	}
 
-	async isTypeUsed(padId: PadId, typeId: ID): Promise<boolean> {
+	async isTypeUsed(mapId: MapId, typeId: ID): Promise<boolean> {
 		const [ marker, line ] = await Promise.all([
-			this._db.markers.MarkerModel.findOne({ where: { padId: padId, typeId: typeId } }),
-			this._db.lines.LineModel.findOne({ where: { padId: padId, typeId: typeId } })
+			this._db.markers.MarkerModel.findOne({ where: { padId: mapId, typeId: typeId } }),
+			this._db.lines.LineModel.findOne({ where: { padId: mapId, typeId: typeId } })
 		]);
 
 		return !!marker || !!line;
 	}
 
-	async deleteType(padId: PadId, typeId: ID): Promise<Type> {
-		if (await this.isTypeUsed(padId, typeId))
+	async deleteType(mapId: MapId, typeId: ID): Promise<Type> {
+		if (await this.isTypeUsed(mapId, typeId))
 			throw new Error("This type is in use.");
 
-		const type = await this._db.helpers._deletePadObject<Type>("Type", padId, typeId);
+		const type = await this._db.helpers._deleteMapObject<Type>("Type", mapId, typeId);
 
-		this._db.emit("deleteType", padId, { id: type.id });
+		this._db.emit("deleteType", mapId, { id: type.id });
 
 		return type;
 	}
 
-	async createDefaultTypes(padId: PadId): Promise<Type[]> {
+	async createDefaultTypes(mapId: MapId): Promise<Type[]> {
 		const result: Type[] = [];
 		for (const type of DEFAULT_TYPES) {
-			result.push(await this.createType(padId, type));
+			result.push(await this.createType(mapId, type));
 		}
 		return result;
 	}

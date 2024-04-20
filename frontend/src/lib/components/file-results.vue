@@ -100,7 +100,7 @@
 							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.padData && client.writable == 2 && !existingViews.get(view)">
+							<template v-else-if="client.mapData && client.writable == 2 && !existingViews.get(view)">
 								<a
 									href="javascript:"
 									@click="addView(view)"
@@ -129,7 +129,7 @@
 							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.padData && client.writable == 2 && !existingTypes.get(type)">
+							<template v-else-if="client.mapData && client.writable == 2 && !existingTypes.get(type)">
 								<a
 									href="javascript:"
 									@click="addType(type)"

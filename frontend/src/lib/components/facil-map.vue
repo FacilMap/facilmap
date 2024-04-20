@@ -21,21 +21,21 @@
 	const props = defineProps<{
 		baseUrl: string;
 		serverUrl: string;
-		padId: string | undefined;
+		mapId: string | undefined;
 		appName?: string;
 		hideCommercialMapLinks?: boolean;
 		settings?: Partial<FacilMapSettings>;
 	}>();
 
 	const emit = defineEmits<{
-		"update:padId": [padId: string | undefined];
-		"update:padName": [padName: string | undefined];
+		"update:mapId": [mapId: string | undefined];
+		"update:mapName": [mapName: string | undefined];
 	}>();
 
-	const padId = computed({
-		get: () => props.padId,
-		set: (padId) => {
-			emit("update:padId", padId);
+	const mapId = computed({
+		get: () => props.mapId,
+		set: (mapId) => {
+			emit("update:mapId", mapId);
 		}
 	});
 
@@ -43,15 +43,15 @@
 	const context = toRef(() => contextRef.value?.context);
 	const client = toRef(() => context.value?.components.client);
 
-	watch(() => client.value?.padId, () => {
-		if (client.value && client.value.padId !== props.padId) {
-			emit("update:padId", client.value.padId);
+	watch(() => client.value?.mapId, () => {
+		if (client.value && client.value.mapId !== props.mapId) {
+			emit("update:mapId", client.value.mapId);
 		}
 	});
 
-	watch(() => client.value?.padData?.name, () => {
+	watch(() => client.value?.mapData?.name, () => {
 		if (client.value) {
-			emit("update:padName", client.value.padData?.name);
+			emit("update:mapName", client.value.mapData?.name);
 		}
 	});
 
@@ -73,7 +73,7 @@
 			:settings="props.settings"
 			ref="contextRef"
 		>
-			<ClientProvider v-model:padId="padId" :serverUrl="serverUrl"></ClientProvider>
+			<ClientProvider v-model:mapId="mapId" :serverUrl="serverUrl"></ClientProvider>
 
 			<LeafletMap v-if="context?.components.client">
 				<Toolbox v-if="context.settings.toolbox" :interactive="context.settings.interactive"></Toolbox>

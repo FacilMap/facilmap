@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { computed, onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
 	import Client from "facilmap-client";
-	import { PadNotFoundError, type PadData, type PadId } from "facilmap-types";
-	import PadSettingsDialog from "./pad-settings-dialog/pad-settings-dialog.vue";
+	import { PadNotFoundError, type MapData, type MapId } from "facilmap-types";
+	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { type ToastAction } from "./ui/toasts/toasts.vue";
 	import Toast from "./ui/toasts/toast.vue";
@@ -11,7 +11,7 @@
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 
-	function isPadNotFoundError(serverError: Client["serverError"]): boolean {
+	function isMapNotFoundError(serverError: Client["serverError"]): boolean {
 		return !!serverError && serverError instanceof PadNotFoundError;
 	}
 </script>
@@ -24,24 +24,24 @@
 	const connectingClient = ref<ClientContext>();
 
 	const props = defineProps<{
-		padId: string | undefined;
+		mapId: string | undefined;
 		serverUrl: string;
 	}>();
 
 	const emit = defineEmits<{
-		"update:padId": [padId: string | undefined];
+		"update:mapId": [mapId: string | undefined];
 	}>();
 
-	function openPad(padId: string | undefined): void {
-		emit("update:padId", padId);
+	function openMap(mapId: string | undefined): void {
+		emit("update:mapId", mapId);
 	}
 
 	watch([
-		() => props.padId,
+		() => props.mapId,
 		() => props.serverUrl
 	], async () => {
 		const existingClient = connectingClient.value || client.value;
-		if (existingClient && existingClient.server == props.serverUrl && existingClient.padId == props.padId)
+		if (existingClient && existingClient.server == props.serverUrl && existingClient.mapId == props.mapId)
 			return;
 
 		class CustomClient extends Client implements ClientContext {
@@ -49,16 +49,16 @@
 				return reactive(obj) as O;
 			}
 
-			openPad(padId: string | undefined) {
-				openPad(padId);
+			openMap(mapId: string | undefined) {
+				openMap(mapId);
 			}
 
-			get isCreatePad() {
-				return context.settings.interactive && isPadNotFoundError(super.serverError);
+			get isCreateMap() {
+				return context.settings.interactive && isMapNotFoundError(super.serverError);
 			}
 		}
 
-		const newClient = new CustomClient(props.serverUrl, props.padId, {
+		const newClient = new CustomClient(props.serverUrl, props.mapId, {
 			query: {
 				...isLanguageExplicit() ? { lang: getCurrentLanguage() } : {},
 				...isUnitsExplicit() ? { units: getCurrentUnits() } : {}
@@ -66,27 +66,27 @@
 		});
 		connectingClient.value = newClient;
 
-		let lastPadId: PadId | undefined = undefined;
-		let lastPadData: PadData | undefined = undefined;
+		let lastMapId: MapId | undefined = undefined;
+		let lastMapData: MapData | undefined = undefined;
 
 		newClient.on("padData", () => {
 			for (const bookmark of storage.bookmarks) {
-				if (lastPadId && bookmark.id == lastPadId)
-					bookmark.id = newClient.padId!;
+				if (lastMapId && bookmark.id == lastMapId)
+					bookmark.id = newClient.mapId!;
 
-				if (lastPadData && lastPadData.id == bookmark.padId)
-					bookmark.padId = newClient.padData!.id;
+				if (lastMapData && lastMapData.id == bookmark.padId)
+					bookmark.padId = newClient.mapData!.id;
 
-				if (bookmark.padId == newClient.padData!.id)
-					bookmark.name = newClient.padData!.name;
+				if (bookmark.padId == newClient.mapData!.id)
+					bookmark.name = newClient.mapData!.name;
 			}
 
-			lastPadId = newClient.padId;
-			lastPadData = newClient.padData;
+			lastMapId = newClient.mapId;
+			lastMapData = newClient.mapData;
 		});
 
 		await new Promise<void>((resolve) => {
-			newClient.once(props.padId ? "padData" : "connect", () => { resolve(); });
+			newClient.once(props.mapId ? "padData" : "connect", () => { resolve(); });
 			newClient.on("serverError", () => { resolve(); });
 		});
 
@@ -108,8 +108,8 @@
 	context.provideComponent("client", client);
 
 	function handleCreateDialogHide() {
-		if (client.value?.isCreatePad) {
-			client.value.openPad(undefined);
+		if (client.value?.isCreateMap) {
+			client.value.openMap(undefined);
 		}
 	}
 
@@ -119,7 +119,7 @@
 		onClick: (e) => {
 			if (!e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
 				e.preventDefault();
-				openPad(undefined);
+				openMap(undefined);
 			}
 		}
 	}));
@@ -129,20 +129,20 @@
 	<template v-if="connectingClient">
 		<Toast
 			:id="`fm${context.id}-client-connecting`"
-			:title="props.padId ? i18n.t('client-provider.loading-map-header') : i18n.t('client-provider.connecting-header')"
-			:message="props.padId ? i18n.t('client-provider.loading-map') : i18n.t('client-provider.connecting')"
+			:title="props.mapId ? i18n.t('client-provider.loading-map-header') : i18n.t('client-provider.connecting-header')"
+			:message="props.mapId ? i18n.t('client-provider.loading-map') : i18n.t('client-provider.connecting')"
 			spinner
 			noCloseButton
 		/>
 	</template>
 	<template v-else-if="client">
-		<template v-if="client.serverError && !client.isCreatePad">
-			<template v-if="client.disconnected || !props.padId">
+		<template v-if="client.serverError && !client.isCreateMap">
+			<template v-if="client.disconnected || !props.mapId">
 				<Toast
 					:id="`fm${context.id}-client-error`"
 					:title="i18n.t('client-provider.connection-error')"
 					:message="client.serverError"
-					:noCloseButton="!!props.padId"
+					:noCloseButton="!!props.mapId"
 				/>
 			</template>
 			<template v-else>
@@ -177,10 +177,10 @@
 		</template>
 	</template>
 
-	<PadSettingsDialog
-		v-if="client?.isCreatePad"
+	<MapSettingsDialog
+		v-if="client?.isCreateMap"
 		isCreate
-		:proposedAdminId="client.padId"
+		:proposedAdminId="client.mapId"
 		@hide="handleCreateDialogHide"
-	></PadSettingsDialog>
+	></MapSettingsDialog>
 </template>

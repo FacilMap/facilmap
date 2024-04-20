@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../../utils";
+import { createTemporaryMap, openClient, retry } from "../../utils";
 import { CRU, type ID, type Type } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
@@ -9,7 +9,7 @@ test("Default types are added", async () => {
 	const onType = vi.fn();
 	client.on("type", onType);
 
-	await createTemporaryPad(client, {}, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, {}, async (createMapData, mapData, result) => {
 		expect(result.type?.length).toBe(2);
 
 		const expectedTypes = [
@@ -36,7 +36,7 @@ test("Default types are added", async () => {
 				defaultMode: '',
 				modeFixed: false,
 				showInLegend: false,
-				padId: padData.id
+				mapId: mapData.id
 			},
 			{
 				fields: [
@@ -61,7 +61,7 @@ test("Default types are added", async () => {
 				defaultMode: '',
 				modeFixed: false,
 				showInLegend: false,
-				padId: padData.id
+				mapId: mapData.id
 			}
 		] satisfies Array<Type>;
 
@@ -79,7 +79,7 @@ test("Default types are added", async () => {
 test("Default types are not added", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		expect(result.type).toEqual([]);
 		expect(client.types).toEqual({});
 	});
@@ -88,8 +88,8 @@ test("Default types are not added", async () => {
 test("Create type (marker, default settings)", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
+		const client2 = await openClient(mapData.id);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -107,7 +107,7 @@ test("Create type (marker, default settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			padId: padData.id,
+			mapId: mapData.id,
 			idx: 0,
 			defaultColour: "ff0000",
 			colourFixed: false,
@@ -146,7 +146,7 @@ test("Create type (marker, default settings)", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -159,8 +159,8 @@ test("Create type (line, default settings)", async () => {
 	const onType = vi.fn();
 	client1.on("type", onType);
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
+		const client2 = await openClient(mapData.id);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -178,7 +178,7 @@ test("Create type (line, default settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			padId: padData.id,
+			mapId: mapData.id,
 			idx: 0,
 			defaultColour: "0000ff",
 			colourFixed: false,
@@ -217,7 +217,7 @@ test("Create type (line, default settings)", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -230,7 +230,7 @@ test("Create type (custom settings)", async () => {
 	const onType = vi.fn();
 	client.on("type", onType);
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const onType = vi.fn();
 		client.on("type", onType);
 
@@ -263,7 +263,7 @@ test("Create type (custom settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			padId: padData.id
+			mapId: mapData.id
 		};
 
 		expect(typeResult).toEqual(expectedType);
@@ -285,13 +285,13 @@ test("Update type", async () => {
 	const onType = vi.fn();
 	client1.on("type", onType);
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const createdType = await client1.addType({
 			name: "Test type",
 			type: "marker"
 		});
 
-		const client2 = await openClient(padData.id);
+		const client2 = await openClient(mapData.id);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -327,7 +327,7 @@ test("Update type", async () => {
 
 		const expectedType: Type = {
 			...update,
-			padId: padData.id,
+			mapId: mapData.id,
 			type: "marker"
 		};
 
@@ -348,7 +348,7 @@ test("Update type", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -358,13 +358,13 @@ test("Update type", async () => {
 test("Delete type", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client1.addType({
 			name: "Test type",
 			type: "marker"
 		});
 
-		const client2 = await openClient(padData.id);
+		const client2 = await openClient(mapData.id);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -387,7 +387,7 @@ test("Delete type", async () => {
 		expect(onDeleteType2).toHaveBeenNthCalledWith(1, { id: type.id });
 		expect(cloneDeep(client2.types)).toEqual({});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({});
 	});
 });
@@ -395,7 +395,7 @@ test("Delete type", async () => {
 test("Delete type (existing markers)", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client1.addType({
 			name: "Test type",
 			type: "marker"
@@ -407,7 +407,7 @@ test("Delete type (existing markers)", async () => {
 			typeId: type.id
 		});
 
-		const client2 = await openClient(padData.id);
+		const client2 = await openClient(mapData.id);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -428,7 +428,7 @@ test("Delete type (existing markers)", async () => {
 			[type.id]: type
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[type.id]: type
 		});
@@ -438,7 +438,7 @@ test("Delete type (existing markers)", async () => {
 test("Delete type (existing lines)", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client1.addType({
 			name: "Test type",
 			type: "line"
@@ -452,7 +452,7 @@ test("Delete type (existing lines)", async () => {
 			typeId: type.id
 		});
 
-		const client2 = await openClient(padData.id);
+		const client2 = await openClient(mapData.id);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -473,7 +473,7 @@ test("Delete type (existing lines)", async () => {
 			[type.id]: type
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[type.id]: type
 		});

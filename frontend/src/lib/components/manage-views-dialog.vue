@@ -38,7 +38,7 @@
 		toasts.hideToast(`fm${context.id}-save-view-error-default`);
 
 		try {
-			await client.value.editPad({ defaultViewId: view.id });
+			await client.value.editMap({ defaultViewId: view.id });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, () => i18n.t("manage-views-dialog.default-view-error"), err);
 		} finally {
@@ -114,7 +114,7 @@
 						<td
 							class="text-break align-middle"
 							:class="{
-								'font-weight-bold': client.padData?.defaultView && view.id == client.padData.defaultView.id
+								'font-weight-bold': client.mapData?.defaultView && view.id == client.mapData.defaultView.id
 							}"
 						>
 							<a href="javascript:" @click="display(view)">{{view.name}}</a>
@@ -123,7 +123,7 @@
 							<button
 								type="button"
 								class="btn btn-secondary"
-								v-show="!client.padData?.defaultView || view.id !== client.padData.defaultView.id"
+								v-show="!client.mapData?.defaultView || view.id !== client.mapData.defaultView.id"
 								@click="makeDefault(view)"
 								:disabled="!!isSavingDefaultView || isDeleting.has(view.id)"
 							>

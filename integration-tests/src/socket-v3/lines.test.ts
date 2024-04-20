@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMap, openClient, retry } from "../utils";
 import { CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID } from "facilmap-types";
 import type { LineWithTrackPoints } from "facilmap-client";
 import { cloneDeep, omit } from "lodash-es";
@@ -11,9 +11,9 @@ test("Create line (using default values)", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const onLine1 = vi.fn();
 		client1.on("line", onLine1);
@@ -49,7 +49,7 @@ test("Create line (using default values)", async () => {
 				{ lat: 14, lon: 14 }
 			],
 			typeId: lineType.id,
-			padId: padData.id,
+			padId: mapData.id,
 			name: "",
 			mode: "",
 			colour: "0000ff",
@@ -118,7 +118,7 @@ test("Create line (using custom values)", async () => {
 	const client = await openClient();
 	await client.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 
-	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
 		const data: Line<CRU.CREATE> = {
@@ -146,7 +146,7 @@ test("Create line (using custom values)", async () => {
 
 		const expectedLine = {
 			id: line.id,
-			padId: padData.id,
+			padId: mapData.id,
 			...omit(data, ["trackPoints"]),
 			top: 14,
 			right: 14,
@@ -185,9 +185,9 @@ test("Edit line", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
@@ -245,7 +245,7 @@ test("Edit line", async () => {
 		const line = await client1.editLine(newData);
 
 		const expectedLine = {
-			padId: padData.id,
+			padId: mapData.id,
 			...omit(newData, ["trackPoints"]),
 			top: 14,
 			right: 14,
@@ -314,9 +314,9 @@ test("Delete line", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
@@ -363,8 +363,8 @@ test("Delete line", async () => {
 test("Find line", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
@@ -399,7 +399,7 @@ test("Find line", async () => {
 test("Try to create line with marker type", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData) => {
+	await createTemporaryMap(client, {}, async (createMapData) => {
 		const lineType = Object.values(client.types).find((t) => t.type === "marker")!;
 
 		await expect(async () => {
@@ -412,7 +412,7 @@ test("Try to create line with marker type", async () => {
 			});
 		}).rejects.toThrowError("Cannot use marker type for line");
 
-		const client3 = await openClient(createPadData.adminId);
+		const client3 = await openClient(createMapData.adminId);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		expect(cloneDeep(client3.lines)).toEqual({});
 	});
@@ -421,7 +421,7 @@ test("Try to create line with marker type", async () => {
 test("Try to update line with line type", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData) => {
+	await createTemporaryMap(client, {}, async (createMapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
@@ -440,7 +440,7 @@ test("Try to update line with line type", async () => {
 			});
 		}).rejects.toThrowError("Cannot use marker type for line");
 
-		const client3 = await openClient(createPadData.adminId);
+		const client3 = await openClient(createMapData.adminId);
 		expect(cloneDeep(client3.lines)).toEqual({
 			[line.id]: {
 				...line,
@@ -452,12 +452,12 @@ test("Try to update line with line type", async () => {
 	});
 });
 
-test("Try to create line with line type from other pad", async () => {
+test("Try to create line with line type from other map", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData) => {
-		await createTemporaryPad(client2, {}, async () => {
+	await createTemporaryMap(client1, {}, async (createMapData) => {
+		await createTemporaryMap(client2, {}, async () => {
 			const lineType2 = Object.values(client2.types).find((t) => t.type === "line")!;
 
 			await expect(async () => {
@@ -470,19 +470,19 @@ test("Try to create line with line type from other pad", async () => {
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createPadData.adminId);
+			const client3 = await openClient(createMapData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 			expect(cloneDeep(client3.lines)).toEqual({});
 		});
 	});
 });
 
-test("Try to update line with line type from other pad", async () => {
+test("Try to update line with line type from other map", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData) => {
-		await createTemporaryPad(client2, {}, async () => {
+	await createTemporaryMap(client1, {}, async (createMapData) => {
+		await createTemporaryMap(client2, {}, async () => {
 			const lineType1 = Object.values(client1.types).find((t) => t.type === "line")!;
 			const lineType2 = Object.values(client2.types).find((t) => t.type === "line")!;
 
@@ -501,7 +501,7 @@ test("Try to update line with line type from other pad", async () => {
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createPadData.adminId);
+			const client3 = await openClient(createMapData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 			expect(cloneDeep(client3.lines)).toEqual({
 				[line.id]: {
@@ -520,7 +520,7 @@ test("Try to update line with line type from other pad", async () => {
 test("Export line", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
 		const line = await client.addLine({
@@ -582,7 +582,7 @@ test("Export line", async () => {
 test("Export line (track)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
 		const line = await client.addLine({

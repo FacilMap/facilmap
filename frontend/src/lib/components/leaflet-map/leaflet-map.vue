@@ -65,8 +65,8 @@
 			<slot v-if="mapContext" name="after"></slot>
 		</div>
 
-		<div class="fm-leaflet-map-disabled-cover" v-show="client.padId && (client.disconnected || (client.serverError && !client.isCreatePad) || client.deleted)"></div>
-		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError && !client.isCreatePad" :class="{ 'fatal-error': !!fatalError }">
+		<div class="fm-leaflet-map-disabled-cover" v-show="client.mapId && (client.disconnected || (client.serverError && !client.isCreateMap) || client.deleted)"></div>
+		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError && !client.isCreateMap" :class="{ 'fatal-error': !!fatalError }">
 			{{fatalError || i18n.t("leaflet-map.loading")}}
 		</div>
 	</div>

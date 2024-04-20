@@ -6,7 +6,7 @@ import { find } from "../search.js";
 import { geoipLookup } from "../geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type PadData, type PadId, SocketVersion, Writable, PadNotFoundError, type SocketServerToClientEmitArgs, type EventName } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, PadNotFoundError, type SocketServerToClientEmitArgs, type EventName } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
@@ -16,8 +16,8 @@ export type MultipleEventPromises = {
 	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V3>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName];
 }
 
-function isPadId(padId: PadId | true | undefined): padId is PadId {
-	return !!(padId && padId !== true);
+function isMapId(mapId: MapId | true | undefined): mapId is MapId {
+	return !!(mapId && mapId !== true);
 }
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
@@ -26,7 +26,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	database: Database;
 	remoteAddr: string;
 
-	padId: PadId | true | undefined = undefined;
+	mapId: MapId | true | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
 	writable: Writable | undefined = undefined;
 	route: Omit<RouteWithId, "trackPoints"> | undefined = undefined;
@@ -44,18 +44,18 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.registerDatabaseHandlers();
 	}
 
-	getPadObjects(padData: PadData & { writable: Writable }): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+	getMapObjects(mapData: MapData & { writable: Writable }): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const promises: PromiseMap<MultipleEvents<SocketEvents<SocketVersion.V3>>> = {
-			padData: [ padData ],
-			view: asyncIteratorToArray(this.database.views.getViews(padData.id)),
-			type: asyncIteratorToArray(this.database.types.getTypes(padData.id)),
-			line: asyncIteratorToArray(this.database.lines.getPadLines(padData.id))
+			padData: [ mapData ],
+			view: asyncIteratorToArray(this.database.views.getViews(mapData.id)),
+			type: asyncIteratorToArray(this.database.types.getTypes(mapData.id)),
+			line: asyncIteratorToArray(this.database.lines.getMapLines(mapData.id))
 		};
 
-		if(this.bbox) { // In case bbox is set while fetching pad data
+		if(this.bbox) { // In case bbox is set while fetching map data
 			Object.assign(promises, {
-				marker: asyncIteratorToArray(this.database.markers.getPadMarkers(padData.id, this.bbox)),
-				linePoints: asyncIteratorToArray(this.database.lines.getLinePointsForPad(padData.id, this.bbox))
+				marker: asyncIteratorToArray(this.database.markers.getMapMarkers(mapData.id, this.bbox)),
+				linePoints: asyncIteratorToArray(this.database.lines.getLinePointsForMap(mapData.id, this.bbox))
 			});
 		}
 
@@ -87,36 +87,36 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
-			setPadId: async (padId) => {
-				if(this.padId != null)
-					throw new Error(getI18n().t("socket.pad-id-set-error"));
+			setPadId: async (mapId) => {
+				if(this.mapId != null)
+					throw new Error(getI18n().t("socket.map-id-set-error"));
 
-				this.padId = true;
+				this.mapId = true;
 
 				const [admin, write, read] = await Promise.all([
-					this.database.pads.getPadDataByAdminId(padId),
-					this.database.pads.getPadDataByWriteId(padId),
-					this.database.pads.getPadData(padId)
+					this.database.maps.getMapDataByAdminId(mapId),
+					this.database.maps.getMapDataByWriteId(mapId),
+					this.database.maps.getMapData(mapId)
 				]);
 
-				let pad;
+				let map;
 				if(admin)
-					pad = { ...admin, writable: Writable.ADMIN };
+					map = { ...admin, writable: Writable.ADMIN };
 				else if(write)
-					pad = omit({ ...write, writable: Writable.WRITE }, ["adminId"]);
+					map = omit({ ...write, writable: Writable.WRITE }, ["adminId"]);
 				else if(read)
-					pad = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
+					map = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
 				else {
-					this.padId = undefined;
-					throw new PadNotFoundError(getI18n().t("socket.pad-not-exist-error"));
+					this.mapId = undefined;
+					throw new PadNotFoundError(getI18n().t("socket.map-not-exist-error"));
 				}
 
-				this.padId = pad.id;
-				this.writable = pad.writable;
+				this.mapId = map.id;
+				this.writable = map.writable;
 
 				this.registerDatabaseHandlers();
 
-				return await this.getPadObjects(pad);
+				return await this.getMapObjects(map);
 			},
 
 			setLanguage: async (settings) => {
@@ -144,9 +144,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				const ret: MultipleEventPromises = {};
 
-				if(this.padId && this.padId !== true) {
-					ret.marker = asyncIteratorToArray(this.database.markers.getPadMarkers(this.padId, markerBboxWithExcept));
-					ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForPad(this.padId, lineBboxWithExcept));
+				if(this.mapId && this.mapId !== true) {
+					ret.marker = asyncIteratorToArray(this.database.markers.getMapMarkers(this.mapId, markerBboxWithExcept));
+					ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept));
 				}
 				if(this.route)
 					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, lineBboxWithExcept, !lineBboxWithExcept.except).then((points) => ([points]));
@@ -162,44 +162,44 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			getPad: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				const padData = await this.database.pads.getPadDataByAnyId(data.padId);
-				return padData && {
-					id: padData.id,
-					name: padData.name,
-					description: padData.description
+				const mapData = await this.database.maps.getMapDataByAnyId(data.padId);
+				return mapData && {
+					id: mapData.id,
+					name: mapData.name,
+					description: mapData.description
 				};
 			},
 
 			findPads: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				return this.database.pads.findPads(data);
+				return this.database.maps.findMaps(data);
 			},
 
 			createPad: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if(this.padId)
-					throw new Error(getI18n().t("socket.pad-already-loaded-error"));
+				if(this.mapId)
+					throw new Error(getI18n().t("socket.map-already-loaded-error"));
 
-				const padData = await this.database.pads.createPad(data);
+				const mapData = await this.database.maps.createMap(data);
 
-				this.padId = padData.id;
+				this.mapId = mapData.id;
 				this.writable = Writable.ADMIN;
 
 				this.registerDatabaseHandlers();
 
-				return await this.getPadObjects({ ...padData, writable: Writable.ADMIN });
+				return await this.getMapObjects({ ...mapData, writable: Writable.ADMIN });
 			},
 
 			editPad: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return {
-					...await this.database.pads.updatePadData(this.padId, data),
+					...await this.database.maps.updateMapData(this.mapId, data),
 					writable: this.writable!
 				};
 			},
@@ -207,61 +207,61 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			deletePad: async () => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				await this.database.pads.deletePad(this.padId);
+				await this.database.maps.deleteMap(this.mapId);
 			},
 
 			getMarker: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.markers.getMarker(this.padId, data.id);
+				return await this.database.markers.getMarker(this.mapId, data.id);
 			},
 
 			addMarker: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.markers.createMarker(this.padId, data);
+				return await this.database.markers.createMarker(this.mapId, data);
 			},
 
 			editMarker: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.markers.updateMarker(this.padId, data.id, data);
+				return this.database.markers.updateMarker(this.mapId, data.id, data);
 			},
 
 			deleteMarker: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.markers.deleteMarker(this.padId, data.id);
+				return this.database.markers.deleteMarker(this.mapId, data.id);
 			},
 
 			getLineTemplate: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.lines.getLineTemplate(this.padId, data);
+				return await this.database.lines.getLineTemplate(this.mapId, data);
 			},
 
 			addLine: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
@@ -274,13 +274,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.database.lines.createLine(this.padId, data, fromRoute);
+				return await this.database.lines.createLine(this.mapId, data, fromRoute);
 			},
 
 			editLine: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
@@ -293,30 +293,30 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.database.lines.updateLine(this.padId, data.id, data, undefined, fromRoute);
+				return await this.database.lines.updateLine(this.mapId, data.id, data, undefined, fromRoute);
 			},
 
 			deleteLine: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.lines.deleteLine(this.padId, data.id);
+				return this.database.lines.deleteLine(this.mapId, data.id);
 			},
 
 			exportLine: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				const lineP = this.database.lines.getLine(this.padId, data.id);
+				const lineP = this.database.lines.getLine(this.mapId, data.id);
 				lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
 				const [line, type] = await Promise.all([
 					lineP,
-					lineP.then((line) => this.database.types.getType(this.padId as string, line.typeId))
+					lineP.then((line) => this.database.types.getType(this.mapId as string, line.typeId))
 				]);
 
 				switch(data.format) {
@@ -332,55 +332,55 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			addView: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.createView(this.padId, data);
+				return await this.database.views.createView(this.mapId, data);
 			},
 
 			editView: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.updateView(this.padId, data.id, data);
+				return await this.database.views.updateView(this.mapId, data.id, data);
 			},
 
 			deleteView: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.deleteView(this.padId, data.id);
+				return await this.database.views.deleteView(this.mapId, data.id);
 			},
 
 			addType: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.createType(this.padId, data);
+				return await this.database.types.createType(this.mapId, data);
 			},
 
 			editType: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.updateType(this.padId, data.id, data);
+				return await this.database.types.updateType(this.mapId, data.id, data);
 			},
 
 			deleteType: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.deleteType(this.padId, data.id);
+				return await this.database.types.deleteType(this.mapId, data.id);
 			},
 
 			find: async (data) => {
@@ -392,10 +392,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			findOnMap: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.search.search(this.padId, data.query);
+				return await this.database.search.search(this.mapId, data.query);
 			},
 
 			getRoute: async (data) => {
@@ -469,11 +469,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			lineToRoute: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
-				const routeInfo = await this.database.routes.lineToRoute(existingRoute?.id, this.padId, data.id);
+				const routeInfo = await this.database.routes.lineToRoute(existingRoute?.id, this.mapId, data.id);
 
 				if (!routeInfo) {
 					// A newer submitted route has returned in the meantime
@@ -530,7 +530,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			listenToHistory: async () => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				if(this.listeningToHistory)
@@ -540,7 +540,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				this.registerDatabaseHandlers();
 
 				return promiseProps({
-					history: asyncIteratorToArray(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+					history: asyncIteratorToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 				});
 			},
 
@@ -557,10 +557,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			revertHistoryEntry: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isPadId(this.padId))
+				if (!isMapId(this.mapId))
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				const historyEntry = await this.database.history.getHistoryEntry(this.padId, data.id);
+				const historyEntry = await this.database.history.getHistoryEntry(this.mapId, data.id);
 
 				if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != Writable.ADMIN)
 					throw new Error(getI18n().t("socket.admin-revert-error"));
@@ -568,13 +568,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				this.pauseHistoryListener++;
 
 				try {
-					await this.database.history.revertHistoryEntry(this.padId, data.id);
+					await this.database.history.revertHistoryEntry(this.mapId, data.id);
 				} finally {
 					this.pauseHistoryListener--;
 				}
 
 				return promiseProps({
-					history: asyncIteratorToArray(this.database.history.getHistory(this.padId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+					history: asyncIteratorToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 				});
 			},
 
@@ -593,51 +593,51 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getDatabaseHandlers(): DatabaseHandlers {
 		return {
-			...(this.padId ? {
-				line: (padId, data) => {
-					if(padId == this.padId)
+			...(this.mapId ? {
+				line: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("line", data);
 				},
 
-				linePoints: (padId, lineId, trackPoints) => {
-					if(padId == this.padId)
+				linePoints: (mapId, lineId, trackPoints) => {
+					if(mapId == this.mapId)
 						this.emit("linePoints", { reset: true, id: lineId, trackPoints : (this.bbox ? prepareForBoundingBox(trackPoints, this.bbox) : [ ]) });
 				},
 
-				deleteLine: (padId, data) => {
-					if(padId == this.padId)
+				deleteLine: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("deleteLine", data);
 				},
 
-				marker: (padId, data) => {
-					if(padId == this.padId && this.bbox && isInBbox(data, this.bbox))
+				marker: (mapId, data) => {
+					if(mapId == this.mapId && this.bbox && isInBbox(data, this.bbox))
 						this.emit("marker", data);
 				},
 
-				deleteMarker: (padId, data) => {
-					if(padId == this.padId)
+				deleteMarker: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("deleteMarker", data);
 				},
 
-				type: (padId, data) => {
-					if(padId == this.padId)
+				type: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("type", data);
 				},
 
-				deleteType: (padId, data) => {
-					if(padId == this.padId)
+				deleteType: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("deleteType", data);
 				},
 
-				padData: (padId, data) => {
-					if(padId == this.padId) {
+				mapData: (mapId, data) => {
+					if(mapId == this.mapId) {
 						const dataClone = cloneDeep(data);
 						if(this.writable == Writable.READ)
 							delete dataClone.writeId;
 						if(this.writable != Writable.ADMIN)
 							delete dataClone.adminId;
 
-						this.padId = data.id;
+						this.mapId = data.id;
 
 						this.emit("padData", {
 							...dataClone,
@@ -646,26 +646,26 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				},
 
-				deletePad: (padId) => {
-					if (padId == this.padId) {
+				deleteMap: (mapId) => {
+					if (mapId == this.mapId) {
 						this.emit("deletePad");
 						this.writable = Writable.READ;
 					}
 				},
 
-				view: (padId, data) => {
-					if(padId == this.padId)
+				view: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("view", data);
 				},
 
-				deleteView: (padId, data) => {
-					if(padId == this.padId)
+				deleteView: (mapId, data) => {
+					if(mapId == this.mapId)
 						this.emit("deleteView", data);
 				},
 
 				...(this.listeningToHistory ? {
-					addHistoryEntry: (padId, data) => {
-						if(padId == this.padId && (this.writable == Writable.ADMIN || ["Marker", "Line"].includes(data.type)) && !this.pauseHistoryListener)
+					addHistoryEntry: (mapId, data) => {
+						if(mapId == this.mapId && (this.writable == Writable.ADMIN || ["Marker", "Line"].includes(data.type)) && !this.pauseHistoryListener)
 							this.emit("history", data);
 					}
 				} : {})

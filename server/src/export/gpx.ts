@@ -1,7 +1,7 @@
 import { asyncIteratorToArray, asyncIteratorToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem } from "../utils/streams.js";
 import Database from "../database/database.js";
-import type { Field, Line, Marker, PadId, TrackPoint, Type } from "facilmap-types";
-import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizePadName, quoteHtml } from "facilmap-utils";
+import type { Field, Line, Marker, MapId, TrackPoint, Type } from "facilmap-types";
+import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
 import type { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import type { ReadableStream } from "stream/web";
@@ -107,24 +107,24 @@ function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoint
 	})());
 }
 
-export function exportGpx(database: Database, padId: PadId, useTracks: boolean, filter?: string): ReadableStream<string> {
+export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<string> {
 	return asyncIteratorToStream((async function* () {
 		const filterFunc = compileExpression(filter);
 
-		const [padData, types] = await Promise.all([
-			database.pads.getPadData(padId),
-			asyncIteratorToArray(database.types.getTypes(padId)).then((types) => keyBy(types, 'id'))
+		const [mapData, types] = await Promise.all([
+			database.maps.getMapData(mapId),
+			asyncIteratorToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
 		]);
 
-		if (!padData)
-			throw new Error(getI18n().t("pad-not-found-error", { padId }));
+		if (!mapData)
+			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 
 		yield (
 			`${gpxHeader}\n` +
-			`\t${getMetadataGpx({ name: normalizePadName(padData.name) }).replaceAll("\n", "\n\t")}\n`
+			`\t${getMetadataGpx({ name: normalizeMapName(mapData.name) }).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const marker of database.markers.getPadMarkers(padId)) {
+		for await (const marker of database.markers.getMapMarkers(mapId)) {
 			if (filterFunc(marker, types[marker.typeId])) {
 				for await (const chunk of indentStream(getMarkerGpx(marker, types[marker.typeId]), { indent: "\t", indentFirst: true, addNewline: true })) {
 					yield chunk;
@@ -132,7 +132,7 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 			}
 		}
 
-		for await (const line of database.lines.getPadLines(padId)) {
+		for await (const line of database.lines.getMapLines(mapId)) {
 			if (filterFunc(line, types[line.typeId])) {
 				if (useTracks || line.mode == "track") {
 					const trackPoints = database.lines.getAllLinePoints(line.id);
@@ -151,19 +151,19 @@ export function exportGpx(database: Database, padId: PadId, useTracks: boolean, 
 	})());
 }
 
-export function exportGpxZip(database: Database, padId: PadId, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
+export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
 	void asyncIteratorToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
 		const filterFunc = compileExpression(filter);
 
-		const [padData, types] = await Promise.all([
-			database.pads.getPadData(padId),
-			asyncIteratorToArray(database.types.getTypes(padId)).then((types) => keyBy(types, 'id'))
+		const [mapData, types] = await Promise.all([
+			database.maps.getMapData(mapId),
+			asyncIteratorToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
 		]);
 
-		if (!padData) {
-			throw new Error(getI18n().t("pad-not-found-error", { padId }));
+		if (!mapData) {
+			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 		}
 
 		yield {
@@ -171,10 +171,10 @@ export function exportGpxZip(database: Database, padId: PadId, useTracks: boolea
 			data: asyncIteratorToStream((async function*() {
 				yield (
 					`${gpxHeader}\n` +
-					`\t${getMetadataGpx({ name: normalizePadName(padData.name) }).replaceAll("\n", "\n\t")}\n`
+					`\t${getMetadataGpx({ name: normalizeMapName(mapData.name) }).replaceAll("\n", "\n\t")}\n`
 				);
 
-				for await (const marker of database.markers.getPadMarkers(padId)) {
+				for await (const marker of database.markers.getMapMarkers(mapId)) {
 					if (filterFunc(marker, types[marker.typeId])) {
 						for await (const chunk of indentStream(getMarkerGpx(marker, types[marker.typeId]), { indent: "\t", indentFirst: true, addNewline: true })) {
 							yield chunk;
@@ -193,7 +193,7 @@ export function exportGpxZip(database: Database, padId: PadId, useTracks: boolea
 
 		const names = new Set<string>();
 
-		for await (const line of database.lines.getPadLines(padId)) {
+		for await (const line of database.lines.getMapLines(mapId)) {
 			if (filterFunc(line, types[line.typeId])) {
 				const lineName = normalizeLineName(line.name);
 				let name = lineName;

@@ -1,12 +1,12 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClient, retry } from "../utils";
 import { CRU, SocketVersion, type ID, type LegacyV2Type } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create type (socket v2)", async () => {
 	const client1 = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
 		const client2 = await openClient(padData.id, SocketVersion.V2);
 
 		const onType1 = vi.fn();
@@ -78,7 +78,7 @@ test("Update type (socket v2)", async () => {
 	const onType = vi.fn();
 	client1.on("type", onType);
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
 		const createdType = await client1.addType({
 			name: "Test type",
 			type: "marker"
@@ -145,7 +145,7 @@ test("Update type (socket v2)", async () => {
 test("Delete type (socket v2)", async () => {
 	const client = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",

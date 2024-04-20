@@ -24,9 +24,9 @@
         "untitled-marker": "Untitled marker",
         "untitled-line": "Untitled line"
     },
-    "pads": {
+    "maps": {
         "unnamed-map": "Unnamed map",
-        "page-title": "{{padName}} – {{appName}}",
+        "page-title": "{{mapName}} – {{appName}}",
         "fallback-page-description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration."
     },
     "routing": {

@@ -572,7 +572,7 @@
         "save": "Speichern"
     },
     "open-map-dialog": {
-        "find-pads-error": "Fehler bei der Suche nach öffentlichen Karten",
+        "find-maps-error": "Fehler bei der Suche nach öffentlichen Karten",
         "map-id-format-error": "Bitte geben Sie eine gültige Karten-ID oder -URL ein.",
         "map-not-found-error": "Es konnte keine Karte mit dieser ID gefunden werden.",
         "title": "Kollaborative Karte öffnen",
@@ -611,10 +611,10 @@
         "details": "Details",
         "zoom-to-object-label": "Zur Auswahl zoomen"
     },
-    "pad-id-edit": {
+    "map-id-edit": {
         "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden."
     },
-    "pad-settings-dialog": {
+    "map-settings-dialog": {
         "create-map-error": "Fehler beim Erstellen der Karte",
         "save-map-error": "Fehler beim Speichern der Karte",
         "delete-map-title": "Karte löschen",
@@ -831,12 +831,12 @@
     },
     "toolbox-collab-maps-dropdown": {
         "label": "Kollaborative Karten",
-        "bookmark": "Karte „{{padName}}“ zu Favoriten hinzufügen",
+        "bookmark": "Karte „{{mapName}}“ zu Favoriten hinzufügen",
         "manage-bookmarks": "Favoriten verwalten",
         "create-map": "Neue Karte erstellen",
         "open-map": "Existierende Karte öffnen",
         "open-other-map": "Andere Karte öffnen",
-        "close-map": "Karte „{{padName}}“ schließen"
+        "close-map": "Karte „{{mapName}}“ schließen"
     },
     "toolbox-help-dropdown": {
         "label": "Hilfe",

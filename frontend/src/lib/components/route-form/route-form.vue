@@ -310,7 +310,7 @@
 				const [searchResults, mapResults] = await Promise.all([
 					client.value.find({ query: query }),
 					(async () => {
-						if (client.value.padData) {
+						if (client.value.mapData) {
 							const m = query.match(/^m(\d+)$/);
 							if (m) {
 								const marker = await client.value.getMarker({ id: Number(m[1]) });

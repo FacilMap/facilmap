@@ -3,11 +3,11 @@ import { access } from "node:fs/promises";
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 export function generateRandomId(length: number): string {
-	let randomPadId = "";
+	let randomId = "";
 	for(let i=0; i<length; i++) {
-		randomPadId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+		randomId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
 	}
-	return randomPadId;
+	return randomId;
 }
 
 export function round(number: number, digits: number): number {

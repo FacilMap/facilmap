@@ -5,7 +5,7 @@ export * from "./events.js";
 export * from "./historyEntry.js";
 export * from "./line.js";
 export * from "./marker.js";
-export * from "./padData.js";
+export * from "./mapData.js";
 export * from "./route.js";
 export * from "./searchResult.js";
 export * from "./socket/socket-common.js";

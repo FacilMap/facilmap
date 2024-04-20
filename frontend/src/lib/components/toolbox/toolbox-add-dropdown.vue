@@ -72,7 +72,7 @@
 	</DropdownMenu>
 
 	<ManageTypesDialog
-		v-if="dialog === 'manage-types' && client.padData"
+		v-if="dialog === 'manage-types' && client.mapData"
 		@hidden="dialog = undefined"
 	></ManageTypesDialog>
 </template>

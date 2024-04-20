@@ -38,11 +38,11 @@
 	}
 
 	const legend1 = computed(() => {
-		return client.value.padData?.legend1?.trim() || "";
+		return client.value.mapData?.legend1?.trim() || "";
 	});
 
 	const legend2 = computed(() => {
-		return client.value.padData?.legend2?.trim() || "";
+		return client.value.mapData?.legend2?.trim() || "";
 	});
 
 	const legendItems = computed(() => {

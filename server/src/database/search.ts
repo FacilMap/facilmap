@@ -1,4 +1,4 @@
-import type { FindOnMapResult, PadId } from "facilmap-types";
+import type { FindOnMapResult, MapId } from "facilmap-types";
 import { type ModelStatic, Op, and, col, fn, where } from "sequelize";
 import Database from "./database.js";
 import type { LineModel } from "./line.js";
@@ -13,12 +13,12 @@ export default class DatabaseSearch {
 		this._db = database;
 	}
 
-	async search(padId: PadId, searchText: string): Promise<Array<FindOnMapResult>> {
+	async search(mapId: MapId, searchText: string): Promise<Array<FindOnMapResult>> {
 		const objects = (await Promise.all([ "Marker", "Line" ].map(async (kind) => {
 			const model = this._db._conn.model(kind) as ModelStatic<MarkerModel | LineModel>;
 			const objs = await model.findAll<MarkerModel | LineModel>({
 				where: and(
-					{ padId },
+					{ padId: mapId },
 					where(fn("lower", col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 				),
 				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "icon" ] : [ "top", "left", "bottom", "right" ])

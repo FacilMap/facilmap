@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClient, retry } from "../utils";
 import { SocketVersion, type Line } from "facilmap-types";
 
 test("Socket v1 line name", async () => {
@@ -8,9 +8,9 @@ test("Socket v1 line name", async () => {
 	// client3: Does not have the line in its bbox
 	const client1 = await openClient(undefined, SocketVersion.V1);
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.adminId, SocketVersion.V1);
-		const client3 = await openClient(padData.adminId, SocketVersion.V1);
+	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.adminId, SocketVersion.V1);
+		const client3 = await openClient(mapData.adminId, SocketVersion.V1);
 
 		const onLine1 = vi.fn();
 		client1.on("line", onLine1);
@@ -40,7 +40,7 @@ test("Socket v1 line name", async () => {
 				{ lat: 14, lon: 14 }
 			],
 			typeId: lineType.id,
-			padId: padData.id,
+			padId: mapData.id,
 			name: "Untitled line",
 			mode: "",
 			colour: "0000ff",

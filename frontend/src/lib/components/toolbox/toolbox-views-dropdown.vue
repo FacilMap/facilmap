@@ -72,12 +72,12 @@
 	</DropdownMenu>
 
 	<SaveViewDialog
-		v-if="dialog === 'save-view' && client.padData"
+		v-if="dialog === 'save-view' && client.mapData"
 		@hidden="dialog = undefined"
 	></SaveViewDialog>
 
 	<ManageViewsDialog
-		v-if="dialog === 'manage-views' && client.padData"
+		v-if="dialog === 'manage-views' && client.mapData"
 		@hidden="dialog = undefined"
 	></ManageViewsDialog>
 </template>

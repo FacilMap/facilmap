@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../../utils";
+import { createTemporaryMap, openClient } from "../../utils";
 
 test("New marker is created with default settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -32,7 +32,7 @@ test("New marker is created with default settings", async () => {
 test("New line is created with default settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -62,7 +62,7 @@ test("New line is created with default settings", async () => {
 test("Line template uses default settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -91,7 +91,7 @@ test("Line template uses default settings", async () => {
 test("New marker is created with fixed settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -127,7 +127,7 @@ test("New marker is created with fixed settings", async () => {
 test("New line is created with fixed settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -165,7 +165,7 @@ test("New line is created with fixed settings", async () => {
 test("Marker update is overridden by fixed settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -205,7 +205,7 @@ test("Marker update is overridden by fixed settings", async () => {
 test("Line is overridden by fixed settings", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -247,7 +247,7 @@ test("Line is overridden by fixed settings", async () => {
 test("New fixed marker styles are applied to existing markers", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker"
@@ -294,7 +294,7 @@ test("New fixed marker styles are applied to existing markers", async () => {
 test("New fixed line styles are applied to existing lines", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line"

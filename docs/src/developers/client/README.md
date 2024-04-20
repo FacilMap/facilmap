@@ -6,8 +6,6 @@ The FacilMap client makes a connection to the FacilMap server using [socket.io](
 * Modify the objects on a collaborative map (only if opened through its writable or admin ID)
 * Be notified live about changes that other people are making to the collaborative map.
 
-Note that in the context of the client, a collaborative map will be referred to as __pad__. This is because the collaborative part of FacilMap used to be a separate software called FacilPad.
-
 The socket on the server side maintains different API versions in an attempt to stay backwards compatible with older versions of the client. Have a look at the [./changelog.md](changelog) to find out what has changed when upgrading to a new version of the client.
 
 
@@ -42,7 +40,7 @@ One instance of the client class represents one connection to one specific colla
 * Map ID set: All methods are available. Events are received when the map settings, types, views and lines (only metadata, not track points) are created/updated/deleted.
 * Map ID and bbox set: All methods are available. In addition to the other events, events are received when markers and lines in the specified bounding box are created/updated/deleted.
 
-It is possible to initialize a client without a map ID and later open a map using [`setPadId`](./methods.md#setpadid-padid) or [`createPad`](./methods.md#createpad-data). Once a specific map is loaded, it is not possible to close it or switch to another map anymore. To do that, a new client instance has to be created.
+It is possible to initialize a client without a map ID and later open a map using [`setMapId`](./methods.md#setmapid-mapid) or [`createMap`](./methods.md#createmap-data). Once a specific map is loaded, it is not possible to close it or switch to another map anymore. To do that, a new client instance has to be created.
 
 The bbox can be updated continuously. In the official FacilMap UI, the bbox is updated every time the user pans the map, causing the server to send the markers within that bbox and a simplified version of the line track points and active routes fit to the bbox and zoom level.
 
@@ -52,15 +50,15 @@ The bbox can be updated continuously. In the official FacilMap UI, the bbox is u
 import Client from "facilmap-client";
 
 const client = new Client("https://facilmap.org/");
-await client.setPadId("myMapId");
-console.log(client.padData, client.types, client.lines);
+await client.setMapId("myMapId");
+console.log(client.mapData, client.types, client.lines);
 ```
 
-The client [constructor](./methods.md#constructor-server-padid) takes the URL where the FacilMap server is running and opens a socket.io connection to the server.
+The client [constructor](./methods.md#constructor-server-mapid) takes the URL where the FacilMap server is running and opens a socket.io connection to the server.
 
-When opening a collaborative map using [`setPadId`](./methods.md#setpadid-padid), the server sends [events](./events.md) for the map settings, types, views and lines (without track points). The same types of events will be received later if the respective objects are changed while the connection is open. The client has some default listeners registered that will store the data received as events in its [properties](./properties.md). For example, a `padData` event contains the map settings and is emitted the first time the map ID is set and every time the map settings are changed while the connection is open. The `client.padData` property always contains the latest state of the map settings.
+When opening a collaborative map using [`setMapId`](./methods.md#setmapid-mapid), the server sends [events](./events.md) for the map settings, types, views and lines (without track points). The same types of events will be received later if the respective objects are changed while the connection is open. The client has some default listeners registered that will store the data received as events in its [properties](./properties.md). For example, a `padData` event contains the map settings and is emitted the first time the map ID is set and every time the map settings are changed while the connection is open. The `client.mapData` property always contains the latest state of the map settings.
 
-Note that most methods of the client are asynchronous. Events that the server fires in response to a method call are always fired before the method returns. This is why in the above example, `client.padData` and the other properties are available right after the `setPadId` call.
+Note that most methods of the client are asynchronous. Events that the server fires in response to a method call are always fired before the method returns. This is why in the above example, `client.mapData` and the other properties are available right after the `setMapId` call.
 
 ### Set a bbox
 

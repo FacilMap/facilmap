@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindPadsQuery, type FindPadsResult, type FindQuery, type GetPadQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type PadData, type PadId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError, type SetLanguageRequest } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, PadNotFoundError, type SetLanguageRequest } from "facilmap-types";
 import { deserializeError, errorConstructors, serializeError } from "serialize-error";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
@@ -47,7 +47,7 @@ export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 interface ClientState {
 	disconnected: boolean;
 	server: string;
-	padId: string | undefined;
+	mapId: string | undefined;
 	bbox: BboxWithZoom | undefined;
 	readonly: boolean | undefined;
 	writable: Writable | undefined;
@@ -58,7 +58,7 @@ interface ClientState {
 }
 
 interface ClientData {
-	padData: (PadData & { writable: Writable }) | undefined;
+	mapData: (MapData & { writable: Writable }) | undefined;
 	markers: Record<ID, Marker>;
 	lines: Record<ID, LineWithTrackPoints>;
 	views: Record<ID, View>;
@@ -79,11 +79,11 @@ class Client {
 		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
 
-	constructor(server: string, padId?: string, socketOptions?: Partial<ManagerOptions & SocketOptions>) {
+	constructor(server: string, mapId?: string, socketOptions?: Partial<ManagerOptions & SocketOptions>) {
 		this.state = this._makeReactive({
 			disconnected: true,
 			server,
-			padId,
+			mapId,
 			bbox: undefined,
 			readonly: undefined,
 			writable: undefined,
@@ -94,7 +94,7 @@ class Client {
 		});
 
 		this.data = this._makeReactive({
-			padData: undefined,
+			mapData: undefined,
 			markers: { },
 			lines: { },
 			views: { },
@@ -219,7 +219,7 @@ class Client {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} = {
 		padData: (data) => {
-			this._set(this.data, 'padData', data);
+			this._set(this.data, 'mapData', data);
 
 			if(data.writable != null) {
 				this._set(this.state, 'readonly', data.writable == 0);
@@ -228,7 +228,7 @@ class Client {
 
 			const id = this.state.writable == 2 ? data.adminId : this.state.writable == 1 ? data.writeId : data.id;
 			if(id != null)
-				this._set(this.state, 'padId', id);
+				this._set(this.state, 'mapId', id);
 		},
 
 		deletePad: () => {
@@ -289,9 +289,9 @@ class Client {
 
 		deleteView: (data) => {
 			this._delete(this.data.views, data.id);
-			if (this.data.padData) {
-				if(this.data.padData.defaultViewId == data.id)
-					this._set(this.data.padData, 'defaultViewId', null);
+			if (this.data.mapData) {
+				if(this.data.mapData.defaultViewId == data.id)
+					this._set(this.data.mapData, 'defaultViewId', null);
 			}
 		},
 
@@ -312,17 +312,17 @@ class Client {
 		},
 
 		connect: () => {
-			this._set(this.state, 'disconnected', false); // Otherwise it gets set when padData arrives
+			this._set(this.state, 'disconnected', false); // Otherwise it gets set when mapData arrives
 
-			if(this.state.padId)
-				this._setPadId(this.state.padId).catch(() => undefined);
+			if(this.state.mapId)
+				this._setMapId(this.state.mapId).catch(() => undefined);
 
 			// TODO: Handle errors
 
 			if(this.state.bbox)
 				this.updateBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
 
-			if(this.state.listeningToHistory) // TODO: Execute after setPadId() returns
+			if(this.state.listeningToHistory) // TODO: Execute after setMapId() returns
 				this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
 
 			if(this.data.route)
@@ -352,11 +352,11 @@ class Client {
 		}
 	};
 
-	async setPadId(padId: PadId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		if(this.state.padId != null)
-			throw new Error("Pad ID already set.");
+	async setMapId(mapId: MapId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+		if(this.state.mapId != null)
+			throw new Error("Map ID already set.");
 
-		return await this._setPadId(padId);
+		return await this._setMapId(mapId);
 	}
 
 	async setLanguage(language: SetLanguageRequest): Promise<void> {
@@ -394,15 +394,15 @@ class Client {
 		return obj;
 	}
 
-	async getPad(data: GetPadQuery): Promise<FindPadsResult | null> {
+	async getMap(data: GetMapQuery): Promise<FindMapsResult | null> {
 		return await this._emit("getPad", data);
 	}
 
-	async findPads(data: FindPadsQuery): Promise<PagedResults<FindPadsResult>> {
+	async findMaps(data: FindMapsQuery): Promise<PagedResults<FindMapsResult>> {
 		return await this._emit("findPads", data);
 	}
 
-	async createPad(data: PadData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+	async createMap(data: MapData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const obj = await this._emit("createPad", data);
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'readonly', false);
@@ -411,11 +411,11 @@ class Client {
 		return obj;
 	}
 
-	async editPad(data: PadData<CRU.UPDATE>): Promise<PadData> {
+	async editMap(data: MapData<CRU.UPDATE>): Promise<MapData> {
 		return await this._emit("editPad", data);
 	}
 
-	async deletePad(): Promise<void> {
+	async deleteMap(): Promise<void> {
 		await this._emit("deletePad");
 	}
 
@@ -582,11 +582,11 @@ class Client {
 		this.socket.disconnect();
 	}
 
-	private async _setPadId(padId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+	private async _setMapId(mapId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		this._set(this.state, 'serverError', undefined);
-		this._set(this.state, 'padId', padId);
+		this._set(this.state, 'mapId', mapId);
 		try {
-			const obj = await this._emit("setPadId", padId);
+			const obj = await this._emit("setPadId", mapId);
 			this._receiveMultiple(obj);
 			return obj;
 		} catch(err: any) {
@@ -638,8 +638,8 @@ class Client {
 		return this.state.server;
 	}
 
-	get padId(): string | undefined {
-		return this.state.padId;
+	get mapId(): string | undefined {
+		return this.state.mapId;
 	}
 
 	get bbox(): BboxWithZoom | undefined {
@@ -670,8 +670,8 @@ class Client {
 		return this.state.listeningToHistory;
 	}
 
-	get padData(): (PadData & { writable: Writable }) | undefined {
-		return this.data.padData;
+	get mapData(): (MapData & { writable: Writable }) | undefined {
+		return this.data.mapData;
 	}
 
 	get markers(): Record<ID, Marker> {

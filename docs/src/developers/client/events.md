@@ -7,9 +7,9 @@ Note that events are always fired _before_ the method causing them returns. For 
 Subscribe to events using the [`on(eventName, function)`](./methods.md#on-eventname-function) method. Example:
 
 ```js
-const client = new FacilMap.Client("https://facilmap.org/", "testPad");
-client.on("padData", (padData) => {
-	document.title = padData.name;
+const client = new FacilMap.Client("https://facilmap.org/", "testMap");
+client.on("padData", (mapData) => {
+	document.title = mapData.name;
 });
 ```
 
@@ -21,14 +21,14 @@ These events come from socket.io and are [documented there](https://socket.io/do
 
 The settings of the map have changed or are retrieved for the first time.
 
-Note that when this event is fired, the read-only and/or the read-write ID of the map might have changed. The [`padId`](./properties.md#padid)
+Note that when this event is fired, the read-only and/or the read-write ID of the map might have changed. The [`mapId`](./properties.md#mapid)
 property is updated automatically.
 
-_Type:_ [PadData](./types.md#paddata)
+_Type:_ [MapData](./types.md#mapdata)
 
 ## `serverError`
 
-[`setPadId()`](./methods.md#setpadid-padid) failed and the map could not be opened.
+[`setMapId()`](./methods.md#setmapid-mapid) failed and the map could not be opened.
 
 _Type:_ Error
 

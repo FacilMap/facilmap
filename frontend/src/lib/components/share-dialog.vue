@@ -28,7 +28,7 @@
 	const showPois = ref(true);
 	const showLegend = ref(true);
 	const showLocate = ref(true);
-	const padIdType = ref<Writable>(2);
+	const mapIdType = ref<Writable>(2);
 	const activeShareTab = ref(0);
 
 	const layers = computed(() => {
@@ -40,10 +40,10 @@
 	});
 
 	const hasLegend = computed(() => {
-		return !!client.value.padData && getLegendItems(context).length > 0;
+		return !!client.value.mapData && getLegendItems(context).length > 0;
 	});
 
-	const padIdTypes = computed(() => {
+	const mapIdTypes = computed(() => {
 		return [
 			{ value: 2, text: i18n.t("share-dialog.type-admin") },
 			{ value: 1, text: i18n.t("share-dialog.type-write") },
@@ -75,7 +75,7 @@
 		const paramsStr = params.toString();
 
 		return context.baseUrl
-			+ (client.value.padData ? encodeURIComponent((padIdType.value == 2 && client.value.padData.adminId) || (padIdType.value == 1 && client.value.padData.writeId) || client.value.padData.id) : '')
+			+ (client.value.mapData ? encodeURIComponent((mapIdType.value == 2 && client.value.mapData.adminId) || (mapIdType.value == 1 && client.value.mapData.writeId) || client.value.mapData.id) : '')
 			+ (paramsStr ? `?${paramsStr}` : '')
 			+ (includeMapView.value && mapContext.value.hash ? `#${mapContext.value.hash}` : '');
 	});
@@ -101,7 +101,7 @@
 						class="form-check-input"
 						:id="`${id}-include-map-view-input`"
 						v-model="includeMapView"
-						:disabled="!client.padData"
+						:disabled="!client.mapData"
 					/>
 					<label :for="`${id}-include-map-view-input`" class="form-check-label">
 						<T k="share-dialog.include-view">
@@ -230,12 +230,12 @@
 			</div>
 		</div>
 
-		<template v-if="client.padData">
+		<template v-if="client.mapData">
 			<div class="row mb-3">
-				<label :for="`${id}-padIdType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
+				<label :for="`${id}-mapIdType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
 				<div class="col-sm-9">
-					<select :id="`${id}-padIdType-input`" class="form-select" v-model="padIdType">
-						<option v-for="type in padIdTypes" :key="type.value" :value="type.value">{{type.text}}</option>
+					<select :id="`${id}-mapIdType-input`" class="form-select" v-model="mapIdType">
+						<option v-for="type in mapIdTypes" :key="type.value" :value="type.value">{{type.text}}</option>
 					</select>
 				</div>
 			</div>

@@ -32,15 +32,15 @@ export const stringifiedIdValidator = z.string().regex(/^\d+$/).transform(Number
 export const idValidator = z.number().int();
 export type ID = z.infer<typeof idValidator>;
 
-export const forbiddenPadIds = [
-	"_app" // Static frontend resources are hosted under https://facilmap.org/_app/, so a pad with such an ID would not be accessible
+export const forbiddenMapIds = [
+	"_app" // Static frontend resources are hosted under https://facilmap.org/_app/, so a map with such an ID would not be accessible
 ];
-export const padIdValidator = z.string()
+export const mapIdValidator = z.string()
 	.min(1)
 	.max(100)
 	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
-	.refine((val) => !forbiddenPadIds.includes(val), { message: `The following IDs are not allowed: ${forbiddenPadIds.join(", ")}.` });
-export type PadId = z.infer<typeof padIdValidator>;
+	.refine((val) => !forbiddenMapIds.includes(val), { message: `The following IDs are not allowed: ${forbiddenMapIds.join(", ")}.` });
+export type MapId = z.infer<typeof mapIdValidator>;
 
 export const routeModeValidator = z.string();
 export type RouteMode = z.infer<typeof routeModeValidator>;

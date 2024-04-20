@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { createTemporaryPad, openClient } from "../../utils";
+import { createTemporaryMap, openClient } from "../../utils";
 
 test("Reorder types", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (padData) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (mapData) => {
 		const type1 = await client.addType({
 			name: "Test type 1",
 			type: "marker"

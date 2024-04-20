@@ -1,11 +1,11 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClient, retry } from "../utils";
 import { CRU, SocketVersion, type ID, type LegacyV2Type } from "facilmap-types";
 
 test("Marker update history (socket v2)", async () => {
 	const client1 = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
+	await createTemporaryMapV2(client1, {}, async (createPadData, padData) => {
 		const client2 = await openClient(padData.adminId);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
@@ -62,7 +62,7 @@ test("Marker update history (socket v2)", async () => {
 test("Type update history (socket v2)", async () => {
 	const client1 = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryPad(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
 		const client2 = await openClient(padData.adminId);
 
 		const createdType = await client1.addType({

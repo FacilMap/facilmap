@@ -2,14 +2,14 @@
 <html class="fm-facilmap-table">
 	<head>
 		<meta charset="utf-8">
-		<title><%=normalizePageTitle(normalizePadName(padData.name), appName)%></title>
+		<title><%=normalizePageTitle(normalizeMapName(mapData.name), appName)%></title>
 		<base href="../" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 <%
-	if(!padData || padData.searchEngines) {
+	if(!mapData || mapData.searchEngines) {
 -%>
 		<meta name="robots" content="index,nofollow" />
-		<meta name="description" content="<%=normalizePageDescription(padData.description)%>" />
+		<meta name="description" content="<%=normalizePageDescription(mapData.description)%>" />
 <%
 	} else {
 -%>
@@ -21,7 +21,7 @@
 		<link rel="mask-icon" href="<%=paths.base%>favicon.svg" color="#00272a">
 		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
 		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
-		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(normalizePadName(padData.name), appName)%>" />
+		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(normalizeMapName(mapData.name), appName)%>" />
 		<link rel="iframely resizable" href="<%=url%>">
 
 		<style type="text/css">
@@ -41,7 +41,7 @@
 	</head>
 	<body>
 		<div class="container-fluid">
-			<h1><%=normalizePageTitle(normalizePadName(padData.name), appName)%></h1>
+			<h1><%=normalizePageTitle(normalizeMapName(mapData.name), appName)%></h1>
 <%
 	for (const type of types) {
 -%>

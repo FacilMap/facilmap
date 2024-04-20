@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient, retry } from "../utils";
+import { createTemporaryMap, openClient, retry } from "../utils";
 import { CRU, type Marker, type FindOnMapMarker, type ID } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
@@ -10,9 +10,9 @@ test("Create marker (using default values)", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);
@@ -39,7 +39,7 @@ test("Create marker (using default values)", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			padId: padData.id,
+			padId: mapData.id,
 			name: "",
 			colour: "ff0000",
 			size: 30,
@@ -70,7 +70,7 @@ test("Create marker (using default values)", async () => {
 test("Create marker (using custom values)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData, padData) => {
+	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
 
 		const data: Marker<CRU.CREATE> = {
@@ -92,7 +92,7 @@ test("Create marker (using custom values)", async () => {
 
 		const expectedMarker = {
 			id: marker.id,
-			padId: padData.id,
+			padId: mapData.id,
 			...data
 		};
 
@@ -107,9 +107,9 @@ test("Edit marker", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -154,7 +154,7 @@ test("Edit marker", async () => {
 		const marker = await client1.editMarker(newData);
 
 		const expectedMarker = {
-			padId: padData.id,
+			padId: mapData.id,
 			...newData
 		};
 
@@ -183,9 +183,9 @@ test("Delete marker", async () => {
 
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
-		const client3 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.id);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -231,8 +231,8 @@ test("Delete marker", async () => {
 test("Get marker", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -248,7 +248,7 @@ test("Get marker", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			padId: padData.id,
+			padId: mapData.id,
 			name: "",
 			colour: "ff0000",
 			size: 30,
@@ -265,8 +265,8 @@ test("Get marker", async () => {
 test("Find marker", async () => {
 	const client1 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData, padData) => {
-		const client2 = await openClient(padData.id);
+	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
+		const client2 = await openClient(mapData.id);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -300,7 +300,7 @@ test("Find marker", async () => {
 test("Try to create marker with line type", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData) => {
+	await createTemporaryMap(client, {}, async (createMapData) => {
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
 		await expect(async () => {
@@ -311,7 +311,7 @@ test("Try to create marker with line type", async () => {
 			});
 		}).rejects.toThrowError("Cannot use line type for marker");
 
-		const client3 = await openClient(createPadData.adminId);
+		const client3 = await openClient(createMapData.adminId);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		expect(cloneDeep(client3.markers)).toEqual({});
 	});
@@ -320,7 +320,7 @@ test("Try to create marker with line type", async () => {
 test("Try to update marker with line type", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, {}, async (createPadData) => {
+	await createTemporaryMap(client, {}, async (createMapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
 		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
 
@@ -338,7 +338,7 @@ test("Try to update marker with line type", async () => {
 			});
 		}).rejects.toThrowError("Cannot use line type for marker");
 
-		const client3 = await openClient(createPadData.adminId);
+		const client3 = await openClient(createMapData.adminId);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		expect(cloneDeep(client3.markers)).toEqual({
 			[marker.id]: marker
@@ -346,12 +346,12 @@ test("Try to update marker with line type", async () => {
 	});
 });
 
-test("Try to create marker with marker type from other pad", async () => {
+test("Try to create marker with marker type from other map", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData) => {
-		await createTemporaryPad(client2, {}, async () => {
+	await createTemporaryMap(client1, {}, async (createMapData) => {
+		await createTemporaryMap(client2, {}, async () => {
 			const markerType2 = Object.values(client2.types).find((t) => t.type === "marker")!;
 
 			await expect(async () => {
@@ -362,19 +362,19 @@ test("Try to create marker with marker type from other pad", async () => {
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createPadData.adminId);
+			const client3 = await openClient(createMapData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 			expect(cloneDeep(client3.markers)).toEqual({});
 		});
 	});
 });
 
-test("Try to update marker with marker type from other pad", async () => {
+test("Try to update marker with marker type from other map", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
-	await createTemporaryPad(client1, {}, async (createPadData) => {
-		await createTemporaryPad(client2, {}, async () => {
+	await createTemporaryMap(client1, {}, async (createMapData) => {
+		await createTemporaryMap(client2, {}, async () => {
 			const markerType1 = Object.values(client1.types).find((t) => t.type === "marker")!;
 			const markerType2 = Object.values(client2.types).find((t) => t.type === "marker")!;
 
@@ -392,7 +392,7 @@ test("Try to update marker with marker type from other pad", async () => {
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createPadData.adminId);
+			const client3 = await openClient(createMapData.adminId);
 			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 			expect(cloneDeep(client3.markers)).toEqual({
 				[marker.id]: marker

@@ -1,22 +1,22 @@
 import { exportFormatValidator, idValidator, unitsValidator, type Bbox, type ID } from "../base.js";
-import { type PadData } from "../padData.js";
+import { type MapData } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line, type TrackPoint } from "../line.js";
 import * as z from "zod";
 
-export const getPadQueryValidator = z.object({
+export const getMapQueryValidator = z.object({
 	padId: z.string()
 });
-export type GetPadQuery = z.infer<typeof getPadQueryValidator>;
+export type GetMapQuery = z.infer<typeof getMapQueryValidator>;
 
-export const findPadsQueryValidator = z.object({
+export const findMapsQueryValidator = z.object({
 	query: z.string(),
 	start: z.number().optional(),
 	limit: z.number().optional()
 });
-export type FindPadsQuery = z.infer<typeof findPadsQueryValidator>;
+export type FindMapsQuery = z.infer<typeof findMapsQueryValidator>;
 
-export type FindPadsResult = Pick<PadData, "id" | "name" | "description">;
+export type FindMapsResult = Pick<MapData, "id" | "name" | "description">;
 
 export interface PagedResults<T> {
 	results: T[];

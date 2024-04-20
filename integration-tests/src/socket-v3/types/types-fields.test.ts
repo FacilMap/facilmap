@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryPad, openClient } from "../../utils";
+import { createTemporaryMap, openClient } from "../../utils";
 
 test("Rename field (marker type)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -49,7 +49,7 @@ test("Rename field (marker type)", async () => {
 test("Rename field (line type)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -94,7 +94,7 @@ test("Rename field (line type)", async () => {
 test("Rename dropdown option (marker type)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -147,7 +147,7 @@ test("Rename dropdown option (marker type)", async () => {
 test("Rename dropdown option (line type)", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "line",
@@ -202,7 +202,7 @@ test("Rename dropdown option (line type)", async () => {
 test("Create type with duplicate fields", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		await expect(async () => {
 			await client.addType({
 				name: "Test type",
@@ -219,7 +219,7 @@ test("Create type with duplicate fields", async () => {
 test("Update type with duplicate fields", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
@@ -244,7 +244,7 @@ test("Update type with duplicate fields", async () => {
 test("Create type with duplicate dropdown values", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		await expect(async () => {
 			await client.addType({
 				name: "Test type",
@@ -267,7 +267,7 @@ test("Create type with duplicate dropdown values", async () => {
 test("Update type with duplicate dropdown values", async () => {
 	const client = await openClient();
 
-	await createTemporaryPad(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker"

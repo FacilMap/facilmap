@@ -148,14 +148,14 @@ export function getSafeFilename(fname: string): string {
 	return fname.replace(/[\\/:*?"<>|]+/g, '_');
 }
 
-export function parsePadUrl(url: string, baseUrl: string): { padId: string; hash: string } | undefined {
+export function parseMapUrl(url: string, baseUrl: string): { mapId: string; hash: string } | undefined {
 	if (url.startsWith(baseUrl)) {
 		const m = url.slice(baseUrl.length).match(/^([^/]+)(\/table)?(\?|#|$)/);
 
 		if (m) {
 			const hashIdx = url.indexOf("#");
 			return {
-				padId: decodeURIComponent(m[1]),
+				mapId: decodeURIComponent(m[1]),
 				hash: hashIdx === -1 ? "" : url.substr(hashIdx)
 			};
 		}

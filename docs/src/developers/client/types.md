@@ -71,7 +71,7 @@ their `idx` property.
 * `zoom` (number, min: 1, max: 20): The miminum zoom level from which this track point makes sense to show
 * `ele` (number or null): The elevation of this track point in metres (set by the server). Not set for high zoom levels.
 
-## PadData
+## MapData
 
 * `id` (string): The read-only ID of this map
 * `writeId` (string): The read-write ID of this map (not set when opened through its read-only ID)

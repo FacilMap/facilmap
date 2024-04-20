@@ -6,7 +6,7 @@ export * from "./database/line.js";
 export * from "./database/marker.js";
 export * from "./database/meta.js";
 export * from "./database/migrations.js";
-export * from "./database/pad.js";
+export * from "./database/map.js";
 export * from "./database/route.js";
 export * from "./database/search.js";
 export * from "./database/type.js";

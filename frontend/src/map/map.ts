@@ -1,6 +1,6 @@
 import { computed, createApp, defineComponent, h, ref, watch } from "vue";
 import { FacilMap } from "../lib";
-import { decodeQueryString, encodeQueryString, normalizePadName } from "facilmap-utils";
+import { decodeQueryString, encodeQueryString, normalizeMapName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
 import { setLayerOptions } from "facilmap-leaflet";
@@ -28,7 +28,7 @@ const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
 
 const baseUrl = location.protocol + "//" + location.host + location.pathname.replace(/[^/]*$/, "");
-const initialPadId = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
+const initialMapId = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
 
 registerDereferrerHandler(baseUrl);
 
@@ -44,20 +44,20 @@ if(!location.hash || location.hash == "#") {
 		const query = encodeQueryString(queryParams);
 		const hash = encodeQueryString(hashParams);
 
-		history.replaceState(null, "", baseUrl + encodeURIComponent(initialPadId || "") + (query ? "?" + query : "") + "#" + hash);
+		history.replaceState(null, "", baseUrl + encodeURIComponent(initialMapId || "") + (query ? "?" + query : "") + "#" + hash);
 	}
 }
 
 const Root = defineComponent({
 	setup() {
-		const padId = ref(initialPadId);
-		const padName = ref<string | undefined>(undefined);
+		const mapId = ref(initialMapId);
+		const mapName = ref<string | undefined>(undefined);
 
-		watch(padId, () => {
-			history.replaceState(null, "", baseUrl + (padId.value ? encodeURIComponent(padId.value) : "") + location.search + location.hash);
+		watch(mapId, () => {
+			history.replaceState(null, "", baseUrl + (mapId.value ? encodeURIComponent(mapId.value) : "") + location.search + location.hash);
 		});
 
-		const pageTitle = computed(() => padName.value != null ? `${normalizePadName(padName.value)} – ${config.appName}` : config.appName);
+		const pageTitle = computed(() => mapName.value != null ? `${normalizeMapName(mapName.value)} – ${config.appName}` : config.appName);
 
 		watch(pageTitle, () => {
 			// We have to call history.replaceState() in order for the new title to end up in the browser history
@@ -68,7 +68,7 @@ const Root = defineComponent({
 		return () => h(FacilMap, {
 			baseUrl,
 			serverUrl: baseUrl,
-			padId: padId.value,
+			mapId: mapId.value,
 			appName: config.appName,
 			hideCommercialMapLinks: config.hideCommercialMapLinks,
 			settings: {
@@ -85,8 +85,8 @@ const Root = defineComponent({
 				routing: config.supportsRoutes,
 				advancedRouting: config.supportsAdvancedRoutes
 			},
-			"onUpdate:padId": (v) => padId.value = v,
-			"onUpdate:padName": (v) => padName.value = v
+			"onUpdate:mapId": (v) => mapId.value = v,
+			"onUpdate:mapName": (v) => mapName.value = v
 		});
 	}
 });

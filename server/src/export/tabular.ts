@@ -1,6 +1,6 @@
 import { flatMapStream, asyncIteratorToStream, mapStream } from "../utils/streams.js";
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
-import type { PadId, ID } from "facilmap-types";
+import type { MapId, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { ReadableStream } from "stream/web";
 import { getI18n } from "../i18n.js";
@@ -13,7 +13,7 @@ export type TabularData = {
 
 export async function getTabularData(
 	database: Database,
-	padId: PadId,
+	mapId: MapId,
 	typeId: ID,
 	html: boolean,
 	filter?: string,
@@ -21,11 +21,11 @@ export async function getTabularData(
 ): Promise<TabularData> {
 	const i18n = getI18n();
 
-	const padData = await database.pads.getPadData(padId);
-	if (!padData)
-		throw new Error(i18n.t("pad-not-found-error", { padId }));
+	const mapData = await database.maps.getMapData(mapId);
+	if (!mapData)
+		throw new Error(i18n.t("map-not-found-error", { mapId }));
 
-	const type = await database.types.getType(padData.id, typeId);
+	const type = await database.types.getType(mapData.id, typeId);
 
 	const filterFunc = compileExpression(filter);
 
@@ -42,7 +42,7 @@ export async function getTabularData(
 		...type.fields.map((f) => [f.name, formatFieldName(f.name)])
 	];
 
-	const objects = type.type === "marker" ? flatMapStream(asyncIteratorToStream(database.markers.getPadMarkersByType(padId, typeId)), (marker): Array<Array<() => string>> => {
+	const objects = type.type === "marker" ? flatMapStream(asyncIteratorToStream(database.markers.getMapMarkersByType(mapId, typeId)), (marker): Array<Array<() => string>> => {
 		if (!filterFunc(marker, type)) {
 			return [];
 		}
@@ -52,7 +52,7 @@ export async function getTabularData(
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
 			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.name], html).trim())
 		]];
-	}) : flatMapStream(asyncIteratorToStream(database.lines.getPadLinesByType(padId, typeId)), (line): Array<Array<() => string>> => {
+	}) : flatMapStream(asyncIteratorToStream(database.lines.getMapLinesByType(mapId, typeId)), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
 			return [];
 		}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import PadSettingsDialog from "../pad-settings-dialog/pad-settings-dialog.vue";
+	import MapSettingsDialog from "../map-settings-dialog/map-settings-dialog.vue";
 	import EditFilterDialog from "../edit-filter-dialog.vue";
 	import HistoryDialog from "../history-dialog/history-dialog.vue";
 	import ShareDialog from "../share-dialog.vue";
@@ -24,7 +24,7 @@
 	}>();
 
 	const dialog = ref<
-		| "edit-pad"
+		| "edit-map"
 		| "share"
 		| "export"
 		| "edit-filter"
@@ -60,7 +60,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.open-file")}}</a>
 		</li>
 
-		<li v-if="client.padData">
+		<li v-if="client.mapData">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -69,11 +69,11 @@
 			>{{i18n.t("toolbox-tools-dropdown.export")}}</a>
 		</li>
 
-		<li v-if="client.padData">
+		<li v-if="client.mapData">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="client.padData">
+		<li v-if="client.mapData">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -82,16 +82,16 @@
 			>{{i18n.t("toolbox-tools-dropdown.filter")}}</a>
 		</li>
 
-		<li v-if="client.writable == 2 && client.padData">
+		<li v-if="client.writable == 2 && client.mapData">
 			<a
 				class="dropdown-item"
 				href="javascript:"
-				@click="dialog = 'edit-pad'; emit('hide-sidebar')"
+				@click="dialog = 'edit-map'; emit('hide-sidebar')"
 				draggable="false"
 			>{{i18n.t("toolbox-tools-dropdown.settings")}}</a>
 		</li>
 
-		<li v-if="!client.readonly && client.padData">
+		<li v-if="!client.readonly && client.mapData">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -114,10 +114,10 @@
 		</li>
 	</DropdownMenu>
 
-	<PadSettingsDialog
-		v-if="dialog === 'edit-pad' && client.padData"
+	<MapSettingsDialog
+		v-if="dialog === 'edit-map' && client.mapData"
 		@hidden="dialog = undefined"
-	></PadSettingsDialog>
+	></MapSettingsDialog>
 
 	<ShareDialog
 		v-if="dialog === 'share'"
@@ -132,12 +132,12 @@
 	</KeepAlive>
 
 	<EditFilterDialog
-		v-if="dialog === 'edit-filter' && client.padData"
+		v-if="dialog === 'edit-filter' && client.mapData"
 		@hidden="dialog = undefined"
 	></EditFilterDialog>
 
 	<HistoryDialog
-		v-if="dialog === 'history' && client.padData"
+		v-if="dialog === 'history' && client.mapData"
 		@hidden="dialog = undefined"
 	></HistoryDialog>
 

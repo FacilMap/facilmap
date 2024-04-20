@@ -40,19 +40,19 @@
 				></ToolboxCollabMapsDropdown>
 
 				<ToolboxAddDropdown
-					v-if="!client.readonly && client.padData"
+					v-if="!client.readonly && client.mapData"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxAddDropdown>
 
 				<ToolboxViewsDropdown
-					v-if="client.padData && (!client.readonly || Object.keys(client.views).length > 0)"
+					v-if="client.mapData && (!client.readonly || Object.keys(client.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxViewsDropdown>
 
 				<ToolboxMapStyleDropdown></ToolboxMapStyleDropdown>
 
 				<ToolboxToolsDropdown
-					v-if="props.interactive || client.padData"
+					v-if="props.interactive || client.mapData"
 					:interactive="props.interactive"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxToolsDropdown>
