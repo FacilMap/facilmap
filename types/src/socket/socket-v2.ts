@@ -91,10 +91,12 @@ export type ResponseDataMapV2 = ReplaceProperties<ResponseDataMapV3, {
 	setPadId: MultipleEvents<MapEventsV2>;
 }>;
 
-export type MapEventsV2 = ReplaceProperties<MapEventsV3, {
+export type MapEventsV2 = ReplaceProperties<Omit<MapEventsV3, "mapData" | "deleteMap">, {
 	marker: [LegacyV2Marker];
 	type: [LegacyV2Type];
 	history: [LegacyV2HistoryEntry];
+	padData: MapEventsV3["mapData"];
+	deletePad: MapEventsV3["deleteMap"];
 }>;
 
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {

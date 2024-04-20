@@ -22,6 +22,10 @@ function prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): 
 		} else {
 			return [[args[0], args[1]]];
 		}
+	} else if (args[0] === "mapData") {
+		return [["padData", args[1]]];
+	} else if (args[0] === "deleteMap") {
+		return [["deletePad"]];
 	} else {
 		return [args];
 	}

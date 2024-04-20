@@ -7,8 +7,8 @@ import Client from "facilmap-client";
 test("Create map (using default values)", async () => {
 	const client = await openClient();
 
-	const onPadData = vi.fn();
-	client.on("padData", onPadData);
+	const onMapData = vi.fn();
+	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const expectedMapData: MapData & { writable: Writable } = {
@@ -31,8 +31,8 @@ test("Create map (using default values)", async () => {
 
 		expect(mapData).toEqual(expectedMapData);
 		expect(client.mapData).toEqual(expectedMapData);
-		expect(onPadData).toBeCalledTimes(1);
-		expect(onPadData).toHaveBeenCalledWith(expectedMapData);
+		expect(onMapData).toBeCalledTimes(1);
+		expect(onMapData).toHaveBeenCalledWith(expectedMapData);
 		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
@@ -40,8 +40,8 @@ test("Create map (using default values)", async () => {
 test("Create pad (using custom values)", async () => {
 	const client = await openClient();
 
-	const onPadData = vi.fn();
-	client.on("padData", onPadData);
+	const onMapData = vi.fn();
+	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {
 		name: "Test pad",
@@ -65,8 +65,8 @@ test("Create pad (using custom values)", async () => {
 
 		expect(mapData).toEqual(expectedMapData);
 		expect(client.mapData).toEqual(expectedMapData);
-		expect(onPadData).toBeCalledTimes(1);
-		expect(onPadData).toHaveBeenCalledWith(expectedMapData);
+		expect(onMapData).toBeCalledTimes(1);
+		expect(onMapData).toHaveBeenCalledWith(expectedMapData);
 		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
@@ -126,8 +126,8 @@ test("Create pad (duplicate IDs)", async () => {
 test("Edit pad", async () => {
 	const client = await openClient();
 
-	const onPadData = vi.fn();
-	client.on("padData", onPadData);
+	const onMapData = vi.fn();
+	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const update = {
@@ -151,7 +151,7 @@ test("Edit pad", async () => {
 
 		expect(updatedMapData).toEqual(expectedMapData);
 		expect(client.mapData).toEqual(expectedMapData);
-		expect(onPadData).toHaveBeenLastCalledWith(expectedMapData);
+		expect(onMapData).toHaveBeenLastCalledWith(expectedMapData);
 		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
@@ -159,8 +159,8 @@ test("Edit pad", async () => {
 test("Rename pad", async () => {
 	const client = await openClient();
 
-	const onPadData = vi.fn();
-	client.on("padData", onPadData);
+	const onMapData = vi.fn();
+	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const update = {
@@ -178,7 +178,7 @@ test("Rename pad", async () => {
 
 		expect(updatedMapData).toEqual(expectedMapData);
 		expect(client.mapData).toEqual(expectedMapData);
-		expect(onPadData).toHaveBeenLastCalledWith(expectedMapData);
+		expect(onMapData).toHaveBeenLastCalledWith(expectedMapData);
 
 		expect(await client.getMap({ padId: createMapData.id })).toBeNull();
 		expect(await client.getMap({ padId: createMapData.writeId })).toBeNull();
@@ -277,30 +277,30 @@ test("Open existing pad", async () => {
 		expect(client4.mapData).toEqual({ ...mapData, writable: Writable.ADMIN });
 
 		const client5 = await openClient();
-		const onPadData5 = vi.fn();
-		client5.on("padData", onPadData5);
+		const onMapData5 = vi.fn();
+		client5.on("mapData", onMapData5);
 		const result5 = await client5.setMapId(createMapData.id);
-		expect(result5.padData![0]).toEqual({ ...mapData, writeId: undefined, adminId: undefined, writable: Writable.READ });
-		expect(onPadData5).toBeCalledTimes(1);
-		expect(onPadData5).toBeCalledWith({ ...mapData, writeId: undefined, adminId: undefined, writable: Writable.READ });
+		expect(result5.mapData![0]).toEqual({ ...mapData, writeId: undefined, adminId: undefined, writable: Writable.READ });
+		expect(onMapData5).toBeCalledTimes(1);
+		expect(onMapData5).toBeCalledWith({ ...mapData, writeId: undefined, adminId: undefined, writable: Writable.READ });
 		expect(client5.mapData).toEqual({ ...mapData, writeId: undefined, adminId: undefined, writable: Writable.READ });
 
 		const client6 = await openClient();
-		const onPadData6 = vi.fn();
-		client6.on("padData", onPadData6);
+		const onMapData6 = vi.fn();
+		client6.on("mapData", onMapData6);
 		const result6 = await client6.setMapId(createMapData.writeId);
-		expect(result6.padData![0]).toEqual({ ...mapData, adminId: undefined, writable: Writable.WRITE });
-		expect(onPadData6).toBeCalledTimes(1);
-		expect(onPadData6).toBeCalledWith({ ...mapData, adminId: undefined, writable: Writable.WRITE });
+		expect(result6.mapData![0]).toEqual({ ...mapData, adminId: undefined, writable: Writable.WRITE });
+		expect(onMapData6).toBeCalledTimes(1);
+		expect(onMapData6).toBeCalledWith({ ...mapData, adminId: undefined, writable: Writable.WRITE });
 		expect(client6.mapData).toEqual({ ...mapData, adminId: undefined, writable: Writable.WRITE });
 
 		const client7 = await openClient();
-		const onPadData7 = vi.fn();
-		client7.on("padData", onPadData7);
+		const onMapData7 = vi.fn();
+		client7.on("mapData", onMapData7);
 		const result7 = await client7.setMapId(createMapData.adminId);
-		expect(result7.padData![0]).toEqual({ ...mapData, writable: Writable.ADMIN });
-		expect(onPadData7).toBeCalledTimes(1);
-		expect(onPadData7).toBeCalledWith({ ...mapData, writable: Writable.ADMIN });
+		expect(result7.mapData![0]).toEqual({ ...mapData, writable: Writable.ADMIN });
+		expect(onMapData7).toBeCalledTimes(1);
+		expect(onMapData7).toBeCalledWith({ ...mapData, writable: Writable.ADMIN });
 		expect(client7.mapData).toEqual({ ...mapData, writable: Writable.ADMIN });
 	});
 });
@@ -310,7 +310,7 @@ test("Open non-existing pad", async () => {
 
 	const client1 = new Client(getFacilMapUrl(), id, { reconnection: false });
 	await expect(new Promise<any>((resolve, reject) => {
-		client1.on("padData", resolve);
+		client1.on("mapData", resolve);
 		client1.on("serverError", reject);
 		client1.on("connect_error", reject);
 	})).rejects.toThrowError("does not exist");

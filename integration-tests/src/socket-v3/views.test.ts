@@ -163,8 +163,8 @@ test("Update view", async () => {
 test("Set default view", async () => {
 	const client = await openClient();
 
-	const onPadData = vi.fn();
-	client.on("padData", onPadData);
+	const onMapData = vi.fn();
+	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {}, async (mapData) => {
 		await client.addView({
@@ -193,7 +193,7 @@ test("Set default view", async () => {
 			defaultViewId: view2.id
 		});
 		expect(mapResult.defaultView).toEqual(view2);
-		expect(onPadData.mock.lastCall[0].defaultView).toEqual(view2);
+		expect(onMapData.mock.lastCall[0].defaultView).toEqual(view2);
 	});
 });
 

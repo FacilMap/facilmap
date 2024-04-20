@@ -46,7 +46,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getMapObjects(mapData: MapData & { writable: Writable }): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const promises: PromiseMap<MultipleEvents<SocketEvents<SocketVersion.V3>>> = {
-			padData: [ mapData ],
+			mapData: [ mapData ],
 			view: asyncIteratorToArray(this.database.views.getViews(mapData.id)),
 			type: asyncIteratorToArray(this.database.types.getTypes(mapData.id)),
 			line: asyncIteratorToArray(this.database.lines.getMapLines(mapData.id))
@@ -639,7 +639,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 						this.mapId = data.id;
 
-						this.emit("padData", {
+						this.emit("mapData", {
 							...dataClone,
 							writable: this.writable!
 						});
@@ -648,7 +648,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				deleteMap: (mapId) => {
 					if (mapId == this.mapId) {
-						this.emit("deletePad");
+						this.emit("deleteMap");
 						this.writable = Writable.READ;
 					}
 				},

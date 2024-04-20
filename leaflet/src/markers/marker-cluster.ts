@@ -47,7 +47,7 @@ export default class MarkerCluster extends MarkerClusterGroup {
 	onAdd(map: Map): this {
 		super.onAdd(map);
 
-		this.client.on("padData", this.handleMapData);
+		this.client.on("mapData", this.handleMapData);
 		if (this.client.mapData)
 			this.handleMapData(this.client.mapData);
 
@@ -57,7 +57,7 @@ export default class MarkerCluster extends MarkerClusterGroup {
 	onRemove(map: Map): this {
 		super.onRemove(map);
 
-		this.client.removeListener("padData", this.handleMapData);
+		this.client.removeListener("mapData", this.handleMapData);
 
 		return this;
 	}

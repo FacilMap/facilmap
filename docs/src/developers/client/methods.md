@@ -99,7 +99,7 @@ Update the map settings of the current map.
 
 * `data` ([MapData](./types.md#mapdata)): The data of the map that should be modified. Fields that are not defined will not be modified. To change the default view, set the `defaultViewId` property. The `defaultView` property is ignored.
 * **Returns:** A promise that is resolved with the new mapData.
-* **Events:** Causes a [`padData`](./events.md#paddata) event.
+* **Events:** Causes a [`mapData`](./events.md#mapdata) event.
 * **Availability:** Only if a collaborative map is opened through its admin ID.
 
 ## `deleteMap()`
@@ -107,7 +107,7 @@ Update the map settings of the current map.
 Delete the current map irrevocably.
 
 * **Returns:** A promise that is resolved empty when the map has been deleted.
-* **Events:** Causes a [`deletePad`](./events.md#deletepad) event.
+* **Events:** Causes a [`deleteMap`](./events.md#deletemap) event.
 * **Availability:** Only if a collaborative map is opened through its admin ID.
 
 ## `listenToHistory()`

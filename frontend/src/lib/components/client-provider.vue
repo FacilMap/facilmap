@@ -69,7 +69,7 @@
 		let lastMapId: MapId | undefined = undefined;
 		let lastMapData: MapData | undefined = undefined;
 
-		newClient.on("padData", () => {
+		newClient.on("mapData", () => {
 			for (const bookmark of storage.bookmarks) {
 				if (lastMapId && bookmark.id == lastMapId)
 					bookmark.id = newClient.mapId!;
@@ -86,7 +86,7 @@
 		});
 
 		await new Promise<void>((resolve) => {
-			newClient.once(props.mapId ? "padData" : "connect", () => { resolve(); });
+			newClient.once(props.mapId ? "mapData" : "connect", () => { resolve(); });
 			newClient.on("serverError", () => { resolve(); });
 		});
 

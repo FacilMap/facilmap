@@ -8,7 +8,7 @@ Subscribe to events using the [`on(eventName, function)`](./methods.md#on-eventn
 
 ```js
 const client = new FacilMap.Client("https://facilmap.org/", "testMap");
-client.on("padData", (mapData) => {
+client.on("mapData", (mapData) => {
 	document.title = mapData.name;
 });
 ```
@@ -17,7 +17,7 @@ client.on("padData", (mapData) => {
 
 These events come from socket.io and are [documented there](https://socket.io/docs/v4/client-api/#events).
 
-## `padData`
+## `mapData`
 
 The settings of the map have changed or are retrieved for the first time.
 

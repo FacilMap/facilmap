@@ -218,7 +218,7 @@ class Client {
 	private _handlers: {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} = {
-		padData: (data) => {
+		mapData: (data) => {
 			this._set(this.data, 'mapData', data);
 
 			if(data.writable != null) {
@@ -231,7 +231,7 @@ class Client {
 				this._set(this.state, 'mapId', id);
 		},
 
-		deletePad: () => {
+		deleteMap: () => {
 			this._set(this.state, 'readonly', true);
 			this._set(this.state, 'writable', 0);
 			this._set(this.state, 'deleted', true);

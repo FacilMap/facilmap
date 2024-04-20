@@ -67,7 +67,7 @@ export default class Socket {
 		}).then(() => {
 			const remoteAttr = proxyAddr(socket.request, compiledTrust);
 
-			const handler = new constructors[version]((...args) => {
+			const handler = new constructors[version]((...args: any) => {
 				socket.emit.apply(socket, args);
 			}, this.database, remoteAttr);
 

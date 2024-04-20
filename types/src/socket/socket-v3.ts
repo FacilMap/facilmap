@@ -86,8 +86,8 @@ export interface ResponseDataMapV3 {
 }
 
 export interface MapEventsV3Interface {
-	padData: [MapData & { writable: Writable }];
-	deletePad: [];
+	mapData: [MapData & { writable: Writable }];
+	deleteMap: [];
 	marker: [Marker];
 	deleteMarker: [ObjectWithId];
 	line: [Line];

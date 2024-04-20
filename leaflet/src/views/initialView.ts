@@ -5,7 +5,7 @@ import type { UnsavedView } from "./views";
 export async function getInitialView(client: Client): Promise<UnsavedView | undefined> {
 	if(client.mapId) {
 		const mapData = client.mapData || await new Promise<MapData>((resolve, reject) => {
-			client.on("padData", resolve);
+			client.on("mapData", resolve);
 			client.on("serverError", reject);
 
 			if (client.serverError)

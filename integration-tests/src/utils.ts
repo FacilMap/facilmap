@@ -38,6 +38,9 @@ export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?
 	const client = Object.assign(new clientConstructors[version](getFacilMapUrl(), id, { reconnection: false }) as any, { _version: version });
 	await new Promise<void>((resolve, reject) => {
 		if (id != null) {
+			client.on("mapData", () => {
+				resolve();
+			});
 			client.on("padData", () => {
 				resolve();
 			});

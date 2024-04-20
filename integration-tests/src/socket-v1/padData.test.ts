@@ -8,7 +8,7 @@ test("Socket v1 pad name", async () => {
 	const onPadData = vi.fn();
 	client.on("padData", onPadData);
 
-	await createTemporaryMapV2(client, {}, async (createPadData, padData) => {
+	await createTemporaryMapV2(client, {}, async (createMapData, mapData) => {
 		expect(onPadData).toBeCalledTimes(1);
 		expect(onPadData.mock.calls[0][0].name).toBe("Unnamed map");
 

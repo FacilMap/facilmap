@@ -29,9 +29,9 @@ client.on("marker", (marker) => {
 
 The ID of the collaborative map that the client is connected to. Can be the read-only, writable or admin ID of an existing map.
 
-Note that the ID can be changed in the settings. If in case of a [`padData`](./events.md#paddata) event, the ID of the map has changed, this property is updated automatically.
+Note that the ID can be changed in the settings. If in case of a [`mapData`](./events.md#mapdata) event, the ID of the map has changed, this property is updated automatically.
 
-_Set:_ when calling [`setMapId`](./methods.md#setmapid-mapid) and in response to a [`padData`](./events.md#paddata) event.\
+_Set:_ when calling [`setMapId`](./methods.md#setmapid-mapid) and in response to a [`mapData`](./events.md#mapdata) event.\
 _Type:_ string
 
 ## `readonly`
@@ -53,14 +53,14 @@ _Type:_ number
 
 `true` if the map was deleted while this client was connected to it.
 
-_Set:_ in response to a [`deletePad`](./events.md#deletepad) event.\
+_Set:_ in response to a [`deleteMap`](./events.md#deletemap) event.\
 _Type:_ boolean
 
 ## `mapData`
 
 The current settings of the map. `writeId` and/or `adminId` is null if if has been opened using another ID than the admin ID.
 
-_Set:_ in response to a [`padData`](./events.md#paddata) event.\
+_Set:_ in response to a [`mapData`](./events.md#mapdata) event.\
 _Type:_ [MapData](./types.md#mapdata)
 
 ## `markers`

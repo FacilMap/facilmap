@@ -6,8 +6,8 @@ import { cloneDeep } from "lodash-es";
 test("Create type (socket v2)", async () => {
 	const client1 = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
-		const client2 = await openClient(padData.id, SocketVersion.V2);
+	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
+		const client2 = await openClient(mapData.id, SocketVersion.V2);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -50,12 +50,12 @@ test("Create type (socket v2)", async () => {
 			[typeResult.id]: expect.objectContaining(type)
 		});
 
-		const client3 = await openClient(padData.id, SocketVersion.V2);
+		const client3 = await openClient(mapData.id, SocketVersion.V2);
 		expect(cloneDeep(client3.types)).toEqual({
 			[typeResult.id]: expect.objectContaining(type)
 		});
 
-		const client4 = await openClient(padData.id);
+		const client4 = await openClient(mapData.id);
 		expect(cloneDeep(client4.types)).toEqual({
 			[typeResult.id]: expect.objectContaining({
 				defaultIcon: "icon",
@@ -78,13 +78,13 @@ test("Update type (socket v2)", async () => {
 	const onType = vi.fn();
 	client1.on("type", onType);
 
-	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const createdType = await client1.addType({
 			name: "Test type",
 			type: "marker"
 		});
 
-		const client2 = await openClient(padData.id, SocketVersion.V2);
+		const client2 = await openClient(mapData.id, SocketVersion.V2);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -126,7 +126,7 @@ test("Update type (socket v2)", async () => {
 			[createdType.id]: expect.objectContaining(update)
 		});
 
-		const client3 = await openClient(padData.id);
+		const client3 = await openClient(mapData.id);
 		expect(cloneDeep(client3.types)).toEqual({
 			[createdType.id]: expect.objectContaining({
 				defaultIcon: "icon",
@@ -145,7 +145,7 @@ test("Update type (socket v2)", async () => {
 test("Delete type (socket v2)", async () => {
 	const client = await openClient(undefined, SocketVersion.V2);
 
-	await createTemporaryMapV2(client, { createDefaultTypes: false }, async (createPadData, padData, result) => {
+	await createTemporaryMapV2(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
 		const type = await client.addType({
 			name: "Test type",
 			type: "marker",
