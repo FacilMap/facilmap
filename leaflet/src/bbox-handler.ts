@@ -39,15 +39,28 @@ export default class BboxHandler extends Handler {
 		void this.client.updateBbox(leafletToFmBbox(bounds ?? this._map.getBounds(), zoom ?? this._map.getZoom()));
 	}
 
-	handleMoveEnd = (): void => {
-		if (this.client.mapData || this.client.route || Object.keys(this.client.routes).length > 0) {
-			this.updateBbox();
-		}
+	shouldUpdateBbox(): boolean {
+		console.log(!!this.client.mapData, !!this.client.route, Object.keys(this.client.routes).length > 0);
+		return !!this.client.mapData || !!this.client.route || Object.keys(this.client.routes).length > 0;
 	}
 
+	handleMoveEnd = (): void => {
+		if (this.shouldUpdateBbox()) {
+			this.updateBbox();
+		}
+	};
+
+	handleViewReset = (): void => {
+		if (this.shouldUpdateBbox()) {
+			this.updateBbox();
+		}
+	};
+
 	handleFlyTo = ({ latlng, zoom }: any): void => {
-		this.updateBbox(latlng, zoom);
-	}
+		if (this.shouldUpdateBbox()) {
+			this.updateBbox(latlng, zoom);
+		}
+	};
 
 	handleEmitResolve: EventHandler<ClientEvents, "emitResolve"> = (name, data) => {
 		if (["createPad", "setPadId", "setRoute"].includes(name)) {
@@ -57,12 +70,14 @@ export default class BboxHandler extends Handler {
 
 	addHooks(): void {
 		this._map.on("moveend", this.handleMoveEnd);
+		this._map.on("viewreset", this.handleViewReset);
 		this._map.on("fmFlyTo", this.handleFlyTo);
 		this.client.on("emitResolve", this.handleEmitResolve);
 	}
 
 	removeHooks(): void {
 		this._map.off("moveend", this.handleMoveEnd);
+		this._map.off("viewreset", this.handleViewReset);
 		this._map.off("fmFlyTo", this.handleFlyTo);
 		this.client.removeListener("emitResolve", this.handleEmitResolve);
 	}
