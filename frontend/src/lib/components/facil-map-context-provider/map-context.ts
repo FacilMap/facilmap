@@ -17,7 +17,7 @@ export interface MapComponents {
 	bboxHandler: BboxHandler;
 	container: HTMLElement;
 	graphicScale: any;
-	hashHandler: HashHandler;
+	hashHandler: HashHandler & { _fmActivate: () => Promise<void> };
 	linesLayer: LinesLayer;
 	locateControl?: L.Control.Locate;
 	map: Map;

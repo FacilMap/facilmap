@@ -1,4 +1,4 @@
-import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw } from "vue";
+import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick } from "vue";
 import { type Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getSymbolHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreSymbolList } from "facilmap-leaflet";
@@ -15,7 +15,7 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { type Optional, sleep } from "facilmap-utils";
+import { type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { fixOnCleanup } from "../../utils/vue";
@@ -310,31 +310,36 @@ function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext
 	);
 }
 
-function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: FacilMapContext, mapContext: MapContextWithoutComponents, overpassLayer: Ref<OverpassLayer>): Ref<Raw<HashHandler>> {
+function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: FacilMapContext, mapContext: MapContextWithoutComponents, overpassLayer: Ref<OverpassLayer>): Ref<Raw<HashHandler & { _fmActivate: () => Promise<void> }>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new HashHandler(map.value, client.value, { overpassLayer: overpassLayer.value, simulate: !context.settings.updateHash }))
-			.on("fmQueryChange", async (e: any) => {
-				let smooth = true;
-				let autofocus = false;
-				if (!mapContext.components) {
-					// This is called while the hash handler is being enabled, so it is the initial view
-					smooth = false;
-					autofocus = context.settings.autofocus;
-					await sleep(0); // Wait for components to be initialized (needed by openSpecialQuery())
-				}
+		() => {
+			let queryChangePromise: Promise<void> | undefined;
+			const hashHandler = markRaw(new HashHandler(map.value, client.value, { overpassLayer: overpassLayer.value, simulate: !context.settings.updateHash }))
+				.on("fmQueryChange", async (e: any) => {
+					let smooth = true;
+					let autofocus = false;
 
-				const searchFormTab = context.components.searchFormTab;
-				if (!e.query)
-					searchFormTab?.setQuery("", false, false);
-				else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
-					searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus);
-			})
-			.on("fmHash", (e: any) => {
-				mapContext.hash = e.hash;
-			}),
+					const searchFormTab = context.components.searchFormTab;
+					queryChangePromise = (async () => {
+						if (!e.query)
+							await searchFormTab?.setQuery("", false, false);
+						else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
+							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus);
+					})();
+					await queryChangePromise;
+				})
+				.on("fmHash", (e: any) => {
+					mapContext.hash = e.hash;
+				});
+			return Object.assign(hashHandler, {
+				_fmActivate: async () => {
+					hashHandler.enable();
+					await queryChangePromise;
+				}
+			});
+		},
 		(hashHandler, onCleanup) => {
-			hashHandler.enable();
 			onCleanup(() => {
 				hashHandler.disable();
 			});
@@ -420,20 +425,31 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 
 	const client = requireClientContext(context);
 
-	if (!map._loaded) {
-		try {
-			// Initial view was not set by hash handler
-			displayView(map, await getInitialView(client.value), { overpassLayer });
-		} catch (error) {
-			console.error(error);
-			displayView(map, undefined, { overpassLayer });
-		}
-	}
+	(async () => {
+		await nextTick(); // useMapContext() return promise is resolved, setting mapContext.value in <LeafletMap>
+		await nextTick(); // <LeafletMap> rerenders with its slot, search box tabs are now available and can receive the query from the hash handler
 
-	watchEffect(() => {
-		mapContext.activeQuery = getHashQuery(mapContext.components.map, client.value, mapContext.selection) || mapContext.fallbackQuery;
-		mapContext.components.hashHandler.setQuery(mapContext.activeQuery);
-	});
+		await mapContext.components.hashHandler._fmActivate();
+
+		if (!map._loaded) {
+			try {
+				// Initial view was not set by hash handler
+				displayView(map, await getInitialView(client.value), { overpassLayer });
+			} catch (error) {
+				console.error(error);
+				displayView(map, undefined, { overpassLayer });
+			}
+		}
+
+		watch(() => mapContext.components.hashHandler, async (hashHandler) => {
+			await hashHandler._fmActivate();
+		});
+
+		watchEffect(() => {
+			mapContext.activeQuery = getHashQuery(mapContext.components.map, client.value, mapContext.selection) || mapContext.fallbackQuery;
+			mapContext.components.hashHandler.setQuery(mapContext.activeQuery);
+		});
+	})().catch(console.error);
 
 	return mapContext;
 }

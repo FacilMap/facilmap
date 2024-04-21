@@ -142,13 +142,13 @@ export default class LinesLayer extends FeatureGroup {
 
 	highlightLine(id: ID): void {
 		this.highlightedLinesIds.add(id);
-		if (this.client.lines[id])
+		if (this._map && this.client.lines[id])
 			this.handleLine(this.client.lines[id]);
 	}
 
 	unhighlightLine(id: ID): void {
 		this.highlightedLinesIds.delete(id);
-		if (this.client.lines[id])
+		if (this._map && this.client.lines[id])
 			this.handleLine(this.client.lines[id]);
 	}
 

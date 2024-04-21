@@ -27,10 +27,10 @@
 	}
 
 	const searchFormTabContext: WritableSearchFormTabContext = {
-		setQuery(query, zoom = false, smooth = true, autofocus = false): void {
+		async setQuery(query, zoom = false, smooth = true, autofocus = false): Promise<void> {
 			searchForm.value!.setSearchString(query);
-			searchForm.value!.search(zoom, undefined, smooth);
 			searchBoxContext.value.activateTab(`fm${context.id}-search-form-tab`, { expand: !!query, autofocus });
+			await searchForm.value!.search(zoom, undefined, smooth);
 		}
 	};
 

@@ -104,13 +104,13 @@ export default class MarkersLayer extends MarkerCluster {
 
 	highlightMarker(id: ID): void {
 		this.highlightedMarkerIds.add(id);
-		if (this.client.markers[id])
+		if (this._map && this.client.markers[id])
 			this.handleMarker(this.client.markers[id]);
 	}
 
 	unhighlightMarker(id: ID): void {
 		this.highlightedMarkerIds.delete(id);
-		if (this.client.markers[id])
+		if (this._map && this.client.markers[id])
 			this.handleMarker(this.client.markers[id]);
 	}
 
