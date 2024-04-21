@@ -32,7 +32,6 @@ export class AttributionControl extends Control {
 	onRemove(map: Map): void {
 		map.off("layeradd", this.update, this);
 		map.off("layerremove", this.update, this);
-		delete this._map;
 	}
 
 	update(): void {
