@@ -6,7 +6,7 @@ import { find } from "../search.js";
 import { geoipLookup } from "../geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, PadNotFoundError, type SocketServerToClientEmitArgs, type EventName } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, MapNotFoundError, type SocketServerToClientEmitArgs, type EventName } from "facilmap-types";
 import { calculateRoute, prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
@@ -108,7 +108,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					map = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
 				else {
 					this.mapId = undefined;
-					throw new PadNotFoundError(getI18n().t("socket.map-not-exist-error"));
+					throw new MapNotFoundError(getI18n().t("socket.map-not-exist-error"));
 				}
 
 				this.mapId = map.id;

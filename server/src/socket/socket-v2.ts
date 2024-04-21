@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, mapHistoryEntry } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, mapHistoryEntry, MapNotFoundError } from "facilmap-types";
 import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
@@ -71,7 +71,16 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			createPad: async (mapData) => prepareMultiple(await socketHandlersV3.createMap(mapData)),
 			editPad: async (mapData) => await socketHandlersV3.editMap(mapData),
 			deletePad: async (data) => await socketHandlersV3.deleteMap(data),
-			setPadId: async (mapId) => prepareMultiple(await socketHandlersV3.setMapId(mapId)),
+			setPadId: async (mapId) => {
+				try {
+					return prepareMultiple(await socketHandlersV3.setMapId(mapId));
+				} catch (err: any) {
+					if (err instanceof MapNotFoundError) {
+						err.name = "PadNotFoundError";
+					}
+					throw err;
+				}
+			},
 
 			updateBbox: async (bbox) => prepareMultiple(await socketHandlersV3.updateBbox(bbox)),
 			listenToHistory: async (data) => prepareMultiple(await socketHandlersV3.listenToHistory(data)),

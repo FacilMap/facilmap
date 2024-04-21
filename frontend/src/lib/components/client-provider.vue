@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { computed, onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
 	import Client from "facilmap-client";
-	import { PadNotFoundError, type MapData, type MapId } from "facilmap-types";
+	import { MapNotFoundError, type MapData, type MapId } from "facilmap-types";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { type ToastAction } from "./ui/toasts/toasts.vue";
@@ -12,7 +12,7 @@
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 
 	function isMapNotFoundError(serverError: Client["serverError"]): boolean {
-		return !!serverError && serverError instanceof PadNotFoundError;
+		return !!serverError && serverError instanceof MapNotFoundError;
 	}
 </script>
 

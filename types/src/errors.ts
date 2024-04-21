@@ -1,3 +1,3 @@
-export class PadNotFoundError extends Error {
-	name = "PadNotFoundError";
+export class MapNotFoundError extends Error {
+	name = "MapNotFoundError";
 }

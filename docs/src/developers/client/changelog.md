@@ -5,7 +5,7 @@ The websocket on the FacilMap server provides different API versions (implemente
 ## v5.0.0 (API v3)
 
 * “symbol” was renamed to “icon” everywhere. This applies to `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and `Type.fields[].options[].symbol`.
-* “pad” was renamed “map” everywhere. This applies to the `padData` and `deletePad` socket events and `getPad` (including its `padId` request property), `findPads`, `createPad`, `editPad`, `deletePad`, `setPadId` client/socket methods.
+* “pad” was renamed “map” everywhere. This applies to the `padData` and `deletePad` socket events and `getPad` (including its `padId` request property), the `findPads`, `createPad`, `editPad`, `deletePad`, `setPadId` client/socket methods, the `PadNotFoundError`.
 
 ## v4.0.0 (API v2)
 
