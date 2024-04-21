@@ -115,7 +115,7 @@
 		const parsed = parseMapId(mapId, context);
 
 		if (parsed) {
-			const mapInfo = await client.value.getMap({ padId: parsed.mapId });
+			const mapInfo = await client.value.getMap({ mapId: parsed.mapId });
 			if (!mapInfo) {
 				return i18n.t("open-map-dialog.map-not-found-error");
 			}

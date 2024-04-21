@@ -2,6 +2,7 @@ import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapRe
 import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
+import { omit } from "lodash-es";
 
 function prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Array<SocketServerToClientEmitArgs<SocketVersion.V2>> {
 	if (args[0] === "marker") {
@@ -55,25 +56,30 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 	}
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V2> {
-		const socketHandlers = this.socketV3.getSocketHandlers();
+		const socketHandlersV3 = this.socketV3.getSocketHandlers();
 
 		return {
-			...socketHandlers,
+			...omit(socketHandlersV3, ["getMap", "findMaps", "createMap", "editMap", "deleteMap", "setMapId"]),
 
-			addMarker: async (marker) => currentMarkerToLegacyV2(await socketHandlers.addMarker(legacyV2MarkerToCurrent(marker))),
-			editMarker: async (marker) => currentMarkerToLegacyV2(await socketHandlers.editMarker(legacyV2MarkerToCurrent(marker))),
-			addType: async (type) => currentTypeToLegacyV2(await socketHandlers.addType(legacyV2TypeToCurrent(type))),
-			editType: async (type) => currentTypeToLegacyV2(await socketHandlers.editType(legacyV2TypeToCurrent(type))),
+			addMarker: async (marker) => currentMarkerToLegacyV2(await socketHandlersV3.addMarker(legacyV2MarkerToCurrent(marker))),
+			editMarker: async (marker) => currentMarkerToLegacyV2(await socketHandlersV3.editMarker(legacyV2MarkerToCurrent(marker))),
+			addType: async (type) => currentTypeToLegacyV2(await socketHandlersV3.addType(legacyV2TypeToCurrent(type))),
+			editType: async (type) => currentTypeToLegacyV2(await socketHandlersV3.editType(legacyV2TypeToCurrent(type))),
 
-			updateBbox: async (bbox) => prepareMultiple(await socketHandlers.updateBbox(bbox)),
-			createPad: async (mapData) => prepareMultiple(await socketHandlers.createPad(mapData)),
-			listenToHistory: async (data) => prepareMultiple(await socketHandlers.listenToHistory(data)),
-			revertHistoryEntry: async (entry) => prepareMultiple(await socketHandlers.revertHistoryEntry(entry)),
-			getMarker: async (data) => currentMarkerToLegacyV2(await socketHandlers.getMarker(data)),
-			deleteMarker: async (data) => currentMarkerToLegacyV2(await socketHandlers.deleteMarker(data)),
-			findOnMap: async (data) => (await socketHandlers.findOnMap(data)).map((result) => prepareMapResultOutput(result)),
-			deleteType: async (data) => currentTypeToLegacyV2(await socketHandlers.deleteType(data)),
-			setPadId: async (mapId) => prepareMultiple(await socketHandlers.setPadId(mapId))
+			getPad: async (data) => await socketHandlersV3.getMap({ mapId: data.padId }),
+			findPads: async (data) => await socketHandlersV3.findMaps(data),
+			createPad: async (mapData) => prepareMultiple(await socketHandlersV3.createMap(mapData)),
+			editPad: async (mapData) => await socketHandlersV3.editMap(mapData),
+			deletePad: async (data) => await socketHandlersV3.deleteMap(data),
+			setPadId: async (mapId) => prepareMultiple(await socketHandlersV3.setMapId(mapId)),
+
+			updateBbox: async (bbox) => prepareMultiple(await socketHandlersV3.updateBbox(bbox)),
+			listenToHistory: async (data) => prepareMultiple(await socketHandlersV3.listenToHistory(data)),
+			revertHistoryEntry: async (entry) => prepareMultiple(await socketHandlersV3.revertHistoryEntry(entry)),
+			getMarker: async (data) => currentMarkerToLegacyV2(await socketHandlersV3.getMarker(data)),
+			deleteMarker: async (data) => currentMarkerToLegacyV2(await socketHandlersV3.deleteMarker(data)),
+			findOnMap: async (data) => (await socketHandlersV3.findOnMap(data)).map((result) => prepareMapResultOutput(result)),
+			deleteType: async (data) => currentTypeToLegacyV2(await socketHandlersV3.deleteType(data))
 		};
 	}
 

@@ -107,7 +107,7 @@ export default class DatabaseTypes {
 		for (const obj of newIndexes) {
 			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
 				const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, obj.id, { idx: obj.newIdx }, true);
-				this._db.emit("type", result.mapId, result);
+				this._db.emit("type", result.padId, result);
 			}
 		}
 
@@ -121,7 +121,7 @@ export default class DatabaseTypes {
 			...data,
 			idx
 		});
-		this._db.emit("type", createdType.mapId, createdType);
+		this._db.emit("type", createdType.padId, createdType);
 		return createdType;
 	}
 
@@ -154,12 +154,12 @@ export default class DatabaseTypes {
 		}
 
 		const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, typeId, data);
-		this._db.emit("type", result.mapId, result);
+		this._db.emit("type", result.padId, result);
 
 		if(Object.keys(rename).length > 0)
 			await this._db.helpers.renameObjectDataField(mapId, result.id, rename, result.type == "line");
 
-		await this.recalculateObjectStylesForType(result.mapId, typeId, result.type == "line");
+		await this.recalculateObjectStylesForType(result.padId, typeId, result.type == "line");
 
 		return result;
 	}

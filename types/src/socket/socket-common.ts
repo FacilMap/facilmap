@@ -5,7 +5,7 @@ import { type Line, type TrackPoint } from "../line.js";
 import * as z from "zod";
 
 export const getMapQueryValidator = z.object({
-	padId: z.string()
+	mapId: z.string()
 });
 export type GetMapQuery = z.infer<typeof getMapQueryValidator>;
 

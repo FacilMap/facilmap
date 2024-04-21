@@ -13,11 +13,11 @@ import type { HistoryEntry } from "../historyEntry.js";
 
 export const requestDataValidatorsV3 = {
 	updateBbox: bboxWithZoomValidator,
-	getPad: getMapQueryValidator,
-	findPads: findMapsQueryValidator,
-	createPad: mapDataValidator.create,
-	editPad: mapDataValidator.update,
-	deletePad: nullOrUndefinedValidator,
+	getMap: getMapQueryValidator,
+	findMaps: findMapsQueryValidator,
+	createMap: mapDataValidator.create,
+	editMap: mapDataValidator.update,
+	deleteMap: nullOrUndefinedValidator,
 	listenToHistory: nullOrUndefinedValidator,
 	stopListeningToHistory: nullOrUndefinedValidator,
 	revertHistoryEntry: objectWithIdValidator,
@@ -44,17 +44,17 @@ export const requestDataValidatorsV3 = {
 	editView: viewValidator.update.extend({ id: idValidator }),
 	deleteView: objectWithIdValidator,
 	geoip: nullOrUndefinedValidator,
-	setPadId: z.string(),
+	setMapId: z.string(),
 	setLanguage: setLanguageRequestValidator
 };
 
 export interface ResponseDataMapV3 {
 	updateBbox: MultipleEvents<MapEventsV3>;
-	getPad: FindMapsResult | null;
-	findPads: PagedResults<FindMapsResult>;
-	createPad: MultipleEvents<MapEventsV3>;
-	editPad: MapData & { writable: Writable };
-	deletePad: null;
+	getMap: FindMapsResult | null;
+	findMaps: PagedResults<FindMapsResult>;
+	createMap: MultipleEvents<MapEventsV3>;
+	editMap: MapData & { writable: Writable };
+	deleteMap: null;
 	listenToHistory: MultipleEvents<MapEventsV3>;
 	stopListeningToHistory: null;
 	revertHistoryEntry: MultipleEvents<MapEventsV3>;
@@ -81,7 +81,7 @@ export interface ResponseDataMapV3 {
 	editView: View;
 	deleteView: View;
 	geoip: Bbox | null;
-	setPadId: MultipleEvents<MapEventsV3>;
+	setMapId: MultipleEvents<MapEventsV3>;
 	setLanguage: void;
 }
 

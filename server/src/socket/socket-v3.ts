@@ -87,7 +87,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
-			setPadId: async (mapId) => {
+			setMapId: async (mapId) => {
 				if(this.mapId != null)
 					throw new Error(getI18n().t("socket.map-id-set-error"));
 
@@ -159,10 +159,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await promiseProps(ret);
 			},
 
-			getPad: async (data) => {
+			getMap: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				const mapData = await this.database.maps.getMapDataByAnyId(data.padId);
+				const mapData = await this.database.maps.getMapDataByAnyId(data.mapId);
 				return mapData && {
 					id: mapData.id,
 					name: mapData.name,
@@ -170,13 +170,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				};
 			},
 
-			findPads: async (data) => {
+			findMaps: async (data) => {
 				this.validatePermissions(Writable.READ);
 
 				return this.database.maps.findMaps(data);
 			},
 
-			createPad: async (data) => {
+			createMap: async (data) => {
 				this.validatePermissions(Writable.READ);
 
 				if(this.mapId)
@@ -192,7 +192,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.getMapObjects({ ...mapData, writable: Writable.ADMIN });
 			},
 
-			editPad: async (data) => {
+			editMap: async (data) => {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isMapId(this.mapId))
@@ -204,7 +204,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				};
 			},
 
-			deletePad: async () => {
+			deleteMap: async () => {
 				this.validatePermissions(Writable.ADMIN);
 
 				if (!isMapId(this.mapId))

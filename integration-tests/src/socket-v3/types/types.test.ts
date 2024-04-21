@@ -36,7 +36,7 @@ test("Default types are added", async () => {
 				defaultMode: '',
 				modeFixed: false,
 				showInLegend: false,
-				mapId: mapData.id
+				padId: mapData.id
 			},
 			{
 				fields: [
@@ -61,7 +61,7 @@ test("Default types are added", async () => {
 				defaultMode: '',
 				modeFixed: false,
 				showInLegend: false,
-				mapId: mapData.id
+				padId: mapData.id
 			}
 		] satisfies Array<Type>;
 
@@ -107,7 +107,7 @@ test("Create type (marker, default settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			mapId: mapData.id,
+			padId: mapData.id,
 			idx: 0,
 			defaultColour: "ff0000",
 			colourFixed: false,
@@ -178,7 +178,7 @@ test("Create type (line, default settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			mapId: mapData.id,
+			padId: mapData.id,
 			idx: 0,
 			defaultColour: "0000ff",
 			colourFixed: false,
@@ -263,7 +263,7 @@ test("Create type (custom settings)", async () => {
 		const expectedType: Type = {
 			...type,
 			id: typeResult.id,
-			mapId: mapData.id
+			padId: mapData.id
 		};
 
 		expect(typeResult).toEqual(expectedType);
@@ -327,7 +327,7 @@ test("Update type", async () => {
 
 		const expectedType: Type = {
 			...update,
-			mapId: mapData.id,
+			padId: mapData.id,
 			type: "marker"
 		};
 

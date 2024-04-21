@@ -33,18 +33,18 @@ test("Create map (using default values)", async () => {
 		expect(client.mapData).toEqual(expectedMapData);
 		expect(onMapData).toBeCalledTimes(1);
 		expect(onMapData).toHaveBeenCalledWith(expectedMapData);
-		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
 
-test("Create pad (using custom values)", async () => {
+test("Create map (using custom values)", async () => {
 	const client = await openClient();
 
 	const onMapData = vi.fn();
 	client.on("mapData", onMapData);
 
 	await createTemporaryMap(client, {
-		name: "Test pad",
+		name: "Test map",
 		searchEngines: true,
 		description: "Test description",
 		clusterMarkers: true,
@@ -67,11 +67,11 @@ test("Create pad (using custom values)", async () => {
 		expect(client.mapData).toEqual(expectedMapData);
 		expect(onMapData).toBeCalledTimes(1);
 		expect(onMapData).toHaveBeenCalledWith(expectedMapData);
-		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
 
-test("Create pad (ID already taken)", async () => {
+test("Create map (ID already taken)", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
@@ -96,7 +96,7 @@ test("Create pad (ID already taken)", async () => {
 	});
 });
 
-test("Create pad (duplicate IDs)", async () => {
+test("Create map (duplicate IDs)", async () => {
 	const client = await openClient();
 
 	const newId = generateTestMapId();
@@ -123,7 +123,7 @@ test("Create pad (duplicate IDs)", async () => {
 	}).rejects.toThrowError("have to be different");
 });
 
-test("Edit pad", async () => {
+test("Edit map", async () => {
 	const client = await openClient();
 
 	const onMapData = vi.fn();
@@ -131,7 +131,7 @@ test("Edit pad", async () => {
 
 	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const update = {
-			name: "Test pad",
+			name: "Test map",
 			searchEngines: true,
 			description: "Test description",
 			clusterMarkers: true,
@@ -152,11 +152,11 @@ test("Edit pad", async () => {
 		expect(updatedMapData).toEqual(expectedMapData);
 		expect(client.mapData).toEqual(expectedMapData);
 		expect(onMapData).toHaveBeenLastCalledWith(expectedMapData);
-		expect(await client.getMap({ padId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: createMapData.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
 
-test("Rename pad", async () => {
+test("Rename map", async () => {
 	const client = await openClient();
 
 	const onMapData = vi.fn();
@@ -180,17 +180,17 @@ test("Rename pad", async () => {
 		expect(client.mapData).toEqual(expectedMapData);
 		expect(onMapData).toHaveBeenLastCalledWith(expectedMapData);
 
-		expect(await client.getMap({ padId: createMapData.id })).toBeNull();
-		expect(await client.getMap({ padId: createMapData.writeId })).toBeNull();
-		expect(await client.getMap({ padId: createMapData.adminId })).toBeNull();
+		expect(await client.getMap({ mapId: createMapData.id })).toBeNull();
+		expect(await client.getMap({ mapId: createMapData.writeId })).toBeNull();
+		expect(await client.getMap({ mapId: createMapData.adminId })).toBeNull();
 
-		expect(await client.getMap({ padId: update.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
-		expect(await client.getMap({ padId: update.writeId })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
-		expect(await client.getMap({ padId: update.adminId })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: update.id })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: update.writeId })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
+		expect(await client.getMap({ mapId: update.adminId })).toEqual(pick(expectedMapData, ["id", "name", "description"]));
 	});
 });
 
-test("Rename pad (ID already taken)", async () => {
+test("Rename map (ID already taken)", async () => {
 	const client1 = await openClient();
 	const client2 = await openClient();
 
@@ -217,7 +217,7 @@ test("Rename pad (ID already taken)", async () => {
 	});
 });
 
-test("Rename pad (duplicate IDs)", async () => {
+test("Rename map (duplicate IDs)", async () => {
 	const client = await openClient();
 
 	await createTemporaryMap(client, {}, async () => {
@@ -246,24 +246,24 @@ test("Rename pad (duplicate IDs)", async () => {
 	});
 });
 
-test("Delete pad", async () => {
+test("Delete map", async () => {
 	const client = await openClient();
 
 	const mapData = getTemporaryMapData(SocketVersion.V3, {});
 	await createTemporaryMap(client, mapData, async () => {
 		expect(client.deleted).toBe(false);
 
-		const result = await client.getMap({ padId: mapData.id });
+		const result = await client.getMap({ mapId: mapData.id });
 		expect(result).toBeTruthy();
 	});
 
 	expect(client.deleted).toBe(true);
 
-	const result = await client.getMap({ padId: mapData.id });
+	const result = await client.getMap({ mapId: mapData.id });
 	expect(result).toBeNull();
 });
 
-test("Open existing pad", async () => {
+test("Open existing map", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
@@ -305,7 +305,7 @@ test("Open existing pad", async () => {
 	});
 });
 
-test("Open non-existing pad", async () => {
+test("Open non-existing map", async () => {
 	const id = generateTestMapId();
 
 	const client1 = new Client(getFacilMapUrl(), id, { reconnection: false });
@@ -323,16 +323,16 @@ test("Open non-existing pad", async () => {
 	expect(client2.serverError?.message).toMatch("does not exist");
 });
 
-test("Find pads", async () => {
+test("Find maps", async () => {
 	const uniqueId = generateTestMapId();
 
 	const client = await openClient();
 	await createTemporaryMap(client, {
-		name: `Test ${uniqueId} pad`,
+		name: `Test ${uniqueId} map`,
 		searchEngines: true
 	}, async (createMapData) => {
 		const expectedFound: PagedResults<FindMapsResult> = {
-			results: [{ id: createMapData.id, name: `Test ${uniqueId} pad`, description: "" }],
+			results: [{ id: createMapData.id, name: `Test ${uniqueId} map`, description: "" }],
 			totalLength: 1
 		};
 
@@ -341,18 +341,18 @@ test("Find pads", async () => {
 			totalLength: 0
 		};
 
-		expect(await client.findMaps({ query: `Test ${uniqueId} pad` })).toEqual(expectedFound);
-		expect(await client.findMaps({ query: `test ${uniqueId} pad` })).toEqual(expectedFound);
-		expect(await client.findMaps({ query: `Te?t ${uniqueId} pad` })).toEqual(expectedFound);
-		expect(await client.findMaps({ query: `Te* ${uniqueId} pad` })).toEqual(expectedFound);
+		expect(await client.findMaps({ query: `Test ${uniqueId} map` })).toEqual(expectedFound);
+		expect(await client.findMaps({ query: `test ${uniqueId} map` })).toEqual(expectedFound);
+		expect(await client.findMaps({ query: `Te?t ${uniqueId} map` })).toEqual(expectedFound);
+		expect(await client.findMaps({ query: `Te* ${uniqueId} map` })).toEqual(expectedFound);
 		expect(await client.findMaps({ query: uniqueId })).toEqual(expectedFound);
 
-		expect(await client.findMaps({ query: `Te ${uniqueId} pad` })).toEqual(expectedNotFound);
-		expect(await client.findMaps({ query: `Te? ${uniqueId} pad` })).toEqual(expectedNotFound);
-		expect(await client.findMaps({ query: `Te% ${uniqueId} pad` })).toEqual(expectedNotFound);
+		expect(await client.findMaps({ query: `Te ${uniqueId} map` })).toEqual(expectedNotFound);
+		expect(await client.findMaps({ query: `Te? ${uniqueId} map` })).toEqual(expectedNotFound);
+		expect(await client.findMaps({ query: `Te% ${uniqueId} map` })).toEqual(expectedNotFound);
 
 		await client.editMap({ searchEngines: false });
 
-		expect(await client.findMaps({ query: `Test ${uniqueId} pad` })).toEqual(expectedNotFound);
+		expect(await client.findMaps({ query: `Test ${uniqueId} map` })).toEqual(expectedNotFound);
 	});
 });

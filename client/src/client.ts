@@ -395,15 +395,15 @@ class Client {
 	}
 
 	async getMap(data: GetMapQuery): Promise<FindMapsResult | null> {
-		return await this._emit("getPad", data);
+		return await this._emit("getMap", data);
 	}
 
 	async findMaps(data: FindMapsQuery): Promise<PagedResults<FindMapsResult>> {
-		return await this._emit("findPads", data);
+		return await this._emit("findMaps", data);
 	}
 
 	async createMap(data: MapData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const obj = await this._emit("createPad", data);
+		const obj = await this._emit("createMap", data);
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'readonly', false);
 		this._set(this.state, 'writable', 2);
@@ -412,11 +412,11 @@ class Client {
 	}
 
 	async editMap(data: MapData<CRU.UPDATE>): Promise<MapData> {
-		return await this._emit("editPad", data);
+		return await this._emit("editMap", data);
 	}
 
 	async deleteMap(): Promise<void> {
-		await this._emit("deletePad");
+		await this._emit("deleteMap");
 	}
 
 	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
@@ -586,7 +586,7 @@ class Client {
 		this._set(this.state, 'serverError', undefined);
 		this._set(this.state, 'mapId', mapId);
 		try {
-			const obj = await this._emit("setPadId", mapId);
+			const obj = await this._emit("setMapId", mapId);
 			this._receiveMultiple(obj);
 			return obj;
 		} catch(err: any) {

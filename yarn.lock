@@ -4196,6 +4196,7 @@ __metadata:
   resolution: "facilmap-types@workspace:types"
   dependencies:
     "@types/geojson": ^7946.0.14
+    lodash-es: ^4.17.21
     rimraf: ^5.0.5
     typescript: ^5.4.4
     vite: ^5.2.8

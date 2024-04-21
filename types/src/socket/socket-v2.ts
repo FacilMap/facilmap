@@ -7,10 +7,12 @@ import { requestDataValidatorsV3, type MapEventsV3, type ResponseDataMapV3 } fro
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
 import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
+import { omit } from "lodash-es";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and
 //   `Type.fields[].options[].symbol`.
+// - “map” is called “pad” in events, types, methods
 
 export const legacyV2MarkerValidator = {
 	read: markerValidator.read.omit({ icon: true }).extend({ symbol: markerValidator.read.shape.icon }),
@@ -67,15 +69,29 @@ export type LegacyV2HistoryEntry = GenericHistoryEntry<ReplaceProperties<History
 	Type: Omit<LegacyV2Type, "id">;
 }>>;
 
+export const legacyV2GetMapQueryValidator = z.object({
+	padId: z.string()
+});
+
 export const requestDataValidatorsV2 = {
-	...requestDataValidatorsV3,
+	...omit(requestDataValidatorsV3, ["getMap", "findMaps", "createMap", "editMap", "deleteMap", "setMapId"]),
+	getPad: legacyV2GetMapQueryValidator,
+	findPads: requestDataValidatorsV3.findMaps,
+	createPad: requestDataValidatorsV3.createMap,
+	editPad: requestDataValidatorsV3.editMap,
+	deletePad: requestDataValidatorsV3.deleteMap,
+	setPadId: requestDataValidatorsV3.setMapId,
 	addMarker: legacyV2MarkerValidator.create,
 	editMarker: legacyV2MarkerValidator.update.extend({ id: idValidator }),
 	addType: legacyV2TypeValidator.create,
 	editType: legacyV2TypeValidator.update.extend({ id: idValidator })
 };
 
-export type ResponseDataMapV2 = ReplaceProperties<ResponseDataMapV3, {
+export type ResponseDataMapV2 = ReplaceProperties<Omit<ResponseDataMapV3, "getMap" | "findMaps" | "createMap" | "editMap" | "deleteMap" | "setMapId">, {
+	getPad: ResponseDataMapV3["getMap"];
+	findPads: ResponseDataMapV3["findMaps"];
+	editPad: ResponseDataMapV3["editMap"];
+	deletePad: ResponseDataMapV3["deleteMap"];
 	updateBbox: MultipleEvents<MapEventsV2>;
 	createPad: MultipleEvents<MapEventsV2>;
 	listenToHistory: MultipleEvents<MapEventsV2>;
