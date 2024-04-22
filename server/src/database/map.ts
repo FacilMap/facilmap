@@ -49,7 +49,7 @@ export default class DatabaseMaps {
 			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" }
 		}, {
 			sequelize: this._db._conn,
-			modelName: "Pad"
+			modelName: "Map"
 		});
 	}
 
@@ -187,7 +187,7 @@ export default class DatabaseMaps {
 		const { count, rows } = await this.MapModel.findAndCountAll({
 			where: Sequelize.and(
 				{ searchEngines: true },
-				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Pad.name`)), {[Op.like]: `%${like}%`})
+				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Map.name`)), {[Op.like]: `%${like}%`})
 			),
 			offset: query.start ?? 0,
 			...(query.limit != null ? { limit: query.limit } : {}),

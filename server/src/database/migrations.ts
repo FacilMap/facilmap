@@ -17,7 +17,11 @@ export default class DatabaseMigrations {
 		this._db = database;
 	}
 
-	async _runMigrations(): Promise<void> {
+	async _runMigrationsBeforeSync(): Promise<void> {
+		await this._renamePadsTableMigration();
+	}
+
+	async _runMigrationsAfterSync(): Promise<void> {
 		await this._renameColMigrations();
 		await this._changeColMigrations();
 		await this._addColMigrations();
@@ -39,6 +43,17 @@ export default class DatabaseMigrations {
 		}).finally(() => {
 			console.log("DB migration: All migrations finished");
 		});
+	}
+
+	/** Rename Pads table to Maps */
+	async _renamePadsTableMigration(): Promise<void> {
+		const queryInterface = this._db._conn.getQueryInterface();
+
+		if (await queryInterface.tableExists("Pads")) {
+			console.log("DB migration: Rename Pads table to Maps");
+
+			await queryInterface.renameTable("Pads", "Maps");
+		}
 	}
 
 	/** Run any migrations that rename columns */
@@ -85,23 +100,23 @@ export default class DatabaseMigrations {
 		}
 
 
-		const padAttrs = await queryInterface.describeTable('Pads');
+		const mapAttrs = await queryInterface.describeTable('Maps');
 
 		// Rename writeId to adminId
-		if(!padAttrs.adminId) {
-			console.log("DB migration: Rename pad writeId to adminId");
-			const Pad = this._db.maps.MapModel;
-			await queryInterface.renameColumn('Pads', 'writeId', 'adminId');
-			await queryInterface.addColumn('Pads', 'writeId', Pad.rawAttributes.writeId);
+		if(!mapAttrs.adminId) {
+			console.log("DB migration: Rename map writeId to adminId");
+			const MapModel = this._db.maps.MapModel;
+			await queryInterface.renameColumn('Maps', 'writeId', 'adminId');
+			await queryInterface.addColumn('Maps', 'writeId', MapModel.rawAttributes.writeId);
 
-			const pads = await Pad.findAll<MapModel>();
-			for(const pad of pads) {
+			const maps = await MapModel.findAll<MapModel>();
+			for(const map of maps) {
 				let writeId;
 				do {
 					writeId = generateRandomId(14);
 				} while (await this._db.maps.mapIdExists(writeId));
 
-				await Pad.update({writeId}, { where: { id: pad.id } });
+				await MapModel.update({writeId}, { where: { id: map.id } });
 			}
 		}
 	}
@@ -112,34 +127,34 @@ export default class DatabaseMigrations {
 		const queryInterface = this._db._conn.getQueryInterface();
 
 		//////////
-		// Pads //
+		// Maps //
 		//////////
 
-		const padsAttributes = await queryInterface.describeTable("Pads");
+		const mapsAttributes = await queryInterface.describeTable("Maps");
 
-		// Forbid null pad name
-		if (padsAttributes.name.allowNull) {
-			console.log("DB migration: Change null pad names to \"\"");
+		// Forbid null map name
+		if (mapsAttributes.name.allowNull) {
+			console.log("DB migration: Change null map names to \"\"");
 			await this._db.maps.MapModel.update({ name: "" }, { where: { name: null as any } });
-			await queryInterface.changeColumn("Pads", "name", this._db.maps.MapModel.getAttributes().name);
+			await queryInterface.changeColumn("Maps", "name", this._db.maps.MapModel.getAttributes().name);
 		}
 
 		// Change description type from STRING to TEXT
-		if (padsAttributes.description.type !== "TEXT") {
-			console.log("DB migration: Change Pads.description from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "description", this._db.maps.MapModel.getAttributes().description);
+		if (mapsAttributes.description.type !== "TEXT") {
+			console.log("DB migration: Change Maps.description from STRING to TEXT");
+			await queryInterface.changeColumn("Maps", "description", this._db.maps.MapModel.getAttributes().description);
 		}
 
 		// Change legend1 type from STRING to TEXT
-		if (padsAttributes.legend1.type !== "TEXT") {
-			console.log("DB migration: Change Pads.legend1 from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "legend1", this._db.maps.MapModel.getAttributes().legend1);
+		if (mapsAttributes.legend1.type !== "TEXT") {
+			console.log("DB migration: Change Maps.legend1 from STRING to TEXT");
+			await queryInterface.changeColumn("Maps", "legend1", this._db.maps.MapModel.getAttributes().legend1);
 		}
 
 		// Change legend2 type from STRING to TEXT
-		if (padsAttributes.legend2.type !== "TEXT") {
-			console.log("DB migration: Change Pads.legend2 from STRING to TEXT");
-			await queryInterface.changeColumn("Pads", "legend2", this._db.maps.MapModel.getAttributes().legend2);
+		if (mapsAttributes.legend2.type !== "TEXT") {
+			console.log("DB migration: Change Maps.legend2 from STRING to TEXT");
+			await queryInterface.changeColumn("Maps", "legend2", this._db.maps.MapModel.getAttributes().legend2);
 		}
 
 
@@ -339,7 +354,7 @@ export default class DatabaseMigrations {
 			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
 		];
 
-		for (const table of [ 'Pad', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
+		for (const table of [ 'Map', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
 			const model = this._db._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			const rawAttributes = model.getAttributes();
@@ -375,7 +390,7 @@ export default class DatabaseMigrations {
 						if(newVal)
 							newData[dropdown.name] = newVal.value;
 						else if(newData[dropdown.name])
-							console.log(`DB migration: Warning: Dropdown key ${newData[dropdown.name]} for field ${dropdown.name} of type ${type.name} of pad ${type.padId} does not exist.`);
+							console.log(`DB migration: Warning: Dropdown key ${newData[dropdown.name]} for field ${dropdown.name} of type ${type.name} of map ${type.padId} does not exist.`);
 					}
 
 					if(!isEqual(newData, object.data))
@@ -388,7 +403,7 @@ export default class DatabaseMigrations {
 						if(newDefault)
 							dropdown.default = newDefault.value;
 						else
-							console.log(`DB migration: Warning: Default dropdown key ${dropdown.default} for field ${dropdown.name} of type ${type.name} of pad ${type.padId} does not exist.`);
+							console.log(`DB migration: Warning: Default dropdown key ${dropdown.default} for field ${dropdown.name} of type ${type.name} of map ${type.padId} does not exist.`);
 					}
 
 					dropdown.options?.forEach((option: any) => {
@@ -548,7 +563,7 @@ export default class DatabaseMigrations {
 		if(await this._db.meta.getMeta("untitledMigrationCompleted") == "1")
 			return;
 
-		console.log("DB migration: Empty name for unnamed markers/lines/pads");
+		console.log("DB migration: Empty name for unnamed markers/lines/maps");
 
 		await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: "Untitled marker" } });
 		await this._db.lines.LineModel.update({ name: "" }, { where: { name: "Untitled line" } });

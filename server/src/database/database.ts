@@ -90,8 +90,9 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 
 	async connect(force?: boolean): Promise<void> {
 		await this._conn.authenticate();
+		await this.migrations._runMigrationsBeforeSync();
 		await this._conn.sync({ force: !!force });
-		await this.migrations._runMigrations();
+		await this.migrations._runMigrationsAfterSync();
 
 		await this.routes.afterConnect();
 	}
