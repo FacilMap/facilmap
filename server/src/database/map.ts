@@ -139,7 +139,7 @@ export default class DatabaseMaps {
 			throw new Error(getI18n().t("database.map-disappeared-error"));
 
 		await this._db.history.addHistoryEntry(data.id || mapId, {
-			type: "Pad",
+			type: "Map",
 			action: "update",
 			objectBefore: oldData,
 			objectAfter: newData

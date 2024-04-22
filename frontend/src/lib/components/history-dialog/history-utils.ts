@@ -35,7 +35,7 @@ export interface HistoryEntryLabels {
 export function getLabelsForHistoryEntry(client: ClientContext, entry: HistoryEntry): HistoryEntryLabels {
 	const i18n = getI18n();
 
-	if(entry.type == "Pad") {
+	if(entry.type == "Map") {
 		return {
 			description: i18n.t("history-utils.description-update-map"),
 			revert: {

@@ -31,7 +31,7 @@ export default class DatabaseHistory {
 		this.HistoryModel.init({
 			id: getDefaultIdType(),
 			time: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Pad"), allowNull: false },
+			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Map"), allowNull: false },
 			action: { type: DataTypes.ENUM("create", "update", "delete"), allowNull: false },
 			objectId: { type: DataTypes.INTEGER(), allowNull: true }, // Is null when type is pad
 			objectBefore: {
@@ -79,7 +79,7 @@ export default class DatabaseHistory {
 		})).map(it => it.id);
 
 		const dataClone = cloneDeep(data);
-		if(data.type != "Pad") {
+		if(data.type != "Map") {
 			if(dataClone.objectBefore) {
 				delete (dataClone.objectBefore as any).id;
 				delete (dataClone.objectBefore as any).padId;
@@ -117,7 +117,7 @@ export default class DatabaseHistory {
 	async revertHistoryEntry(mapId: MapId, id: ID): Promise<void> {
 		const entry = await this.getHistoryEntry(mapId, id);
 
-		if(entry.type == "Pad") {
+		if(entry.type == "Map") {
 			if (!entry.objectBefore) {
 				throw new Error(getI18n().t("database.old-map-data-not-available-error"));
 			}

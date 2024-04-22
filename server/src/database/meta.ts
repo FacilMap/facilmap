@@ -18,6 +18,7 @@ export interface MetaProperties {
 	typesIdxMigrationCompleted: "1";
 	viewsIdxMigrationCompleted: "1";
 	fieldIconsMigrationCompleted: "1";
+	historyPadMigrationCompleted: "1";
 }
 
 export default class DatabaseMeta {

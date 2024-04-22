@@ -12,7 +12,7 @@ export type HistoryEntryObjectTypes = {
 	"Line": Omit<Line, "id">;
 	"View": Omit<View, "id">;
 	"Type": Omit<Type, "id">;
-	"Pad": MapData;
+	"Map": MapData;
 };
 
 export type HistoryEntryType = keyof HistoryEntryObjectTypes;
@@ -34,7 +34,7 @@ export type GenericHistoryEntry<ObjectTypes extends Record<HistoryEntryType, any
 			objectAfter?: undefined;
 		} : {
 			objectAfter: ObjectTypes[Type];
-		}) & (Type extends "Pad" ? {
+		}) & (Type extends "Map" ? {
 			objectId?: undefined;
 		} : {
 			objectId: ID;

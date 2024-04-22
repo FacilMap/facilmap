@@ -35,6 +35,7 @@ export default class DatabaseMigrations {
 		await this._typesIdxMigration();
 		await this._viewsIdxMigration();
 		await this._fieldIconsMigration();
+		await this._historyPadMigration();
 
 		(async () => {
 			await this._elevationMigration();
@@ -720,6 +721,24 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("fieldIconsMigrationCompleted", "1");
+	}
+
+	/** Rename Pad to Map in History.type */
+	async _historyPadMigration(): Promise<void> {
+		if(await this._db.meta.getMeta("historyPadMigrationCompleted") == "1")
+			return;
+
+		console.log("DB migration: Rename Pad to Map in History.type");
+
+		const queryInterface = this._db._conn.getQueryInterface();
+
+		await queryInterface.changeColumn("History", "type", DataTypes.TEXT);
+
+		await this._db.history.HistoryModel.update({ type: "Map" }, { where: { type: "Pad" } });
+
+		await queryInterface.changeColumn("History", "type", this._db.history.HistoryModel.getAttributes().type);
+
+		await this._db.meta.setMeta("historyPadMigrationCompleted", "1");
 	}
 
 }
