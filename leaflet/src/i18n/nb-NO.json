@@ -1,1 +1,7 @@
-{}
+{
+    "overpass-presets": {
+        "fuel": "Drivstoff",
+        "library": "Bibliotek",
+        "musicschool": "Musikkskole"
+    }
+}
