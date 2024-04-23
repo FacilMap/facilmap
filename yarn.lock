@@ -3993,7 +3993,7 @@ __metadata:
     jquery: ^3.7.1
     js-cookie: ^3.0.5
     leaflet: ^1.9.4
-    leaflet-draggable-lines: ^2.0.0
+    leaflet-draggable-lines: ^3.0.0
     leaflet-graphicscale: ^0.0.4
     leaflet-mouse-position: ^1.2.0
     leaflet.heightgraph: ^1.4.0
@@ -4066,7 +4066,7 @@ __metadata:
     filtrex: ^2.2.3
     happy-dom: ^14.7.1
     leaflet-auto-graticule: ^2.0.0
-    leaflet-draggable-lines: ^2.0.0
+    leaflet-draggable-lines: ^3.0.0
     leaflet-freie-tonne: ^2.0.1
     leaflet-highlightable-layers: ^3.0.1
     leaflet.markercluster: ^1.5.3
@@ -5540,14 +5540,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-draggable-lines@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "leaflet-draggable-lines@npm:2.0.0"
-  dependencies:
-    leaflet-geometryutil: ^0.10.3
+"leaflet-draggable-lines@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "leaflet-draggable-lines@npm:3.0.0"
   peerDependencies:
     leaflet: x
-  checksum: f29b2b50fc38eacce09e6eec4792d5da083c300886319d5392c9b34aea5c32bbb0e13a3583d9c98286dfc78adb2c460f0e20870aac5e35aba4e5f65d577c1e40
+  checksum: fd13109322e9a9305d7d62aa80dcbdfcf14871c2248eea155bba15548e83d8e92d081cf42210fc93138fffa7fd90f1cd111336ab682a48a7a01b4cd4bf621e4f
   languageName: node
   linkType: hard
 
@@ -5557,15 +5555,6 @@ __metadata:
   peerDependencies:
     leaflet: x
   checksum: d9f7d7c6bf62d7d4421933b295d9226d01bc314e1c5bbe33421f6e9eda16cf3d5bf3a8c5a6e573f3b2e44b55b483fed5c2717dd4c73cbc4a431f7ac5ba093323
-  languageName: node
-  linkType: hard
-
-"leaflet-geometryutil@npm:^0.10.3":
-  version: 0.10.3
-  resolution: "leaflet-geometryutil@npm:0.10.3"
-  dependencies:
-    leaflet: ^1.6.0
-  checksum: b5611a71223f9ba4366f94fb48cda7a8f994beaba31c1e2d9db2dee343968203805d65ceadcc7b05769a892ca79c5d17e6ee40204fbca78e8b7f14d0cbafd7a4
   languageName: node
   linkType: hard
 

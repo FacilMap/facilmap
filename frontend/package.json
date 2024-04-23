@@ -56,7 +56,7 @@
     "jquery": "^3.7.1",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
-    "leaflet-draggable-lines": "^2.0.0",
+    "leaflet-draggable-lines": "^3.0.0",
     "leaflet-graphicscale": "^0.0.4",
     "leaflet-mouse-position": "^1.2.0",
     "leaflet.heightgraph": "^1.4.0",
