@@ -26,7 +26,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.mapId!, padId: client.value.mapData!.id, name: client.value.mapData!.name });
+		storage.bookmarks.push({ id: client.value.mapId!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
 	}
 </script>
 

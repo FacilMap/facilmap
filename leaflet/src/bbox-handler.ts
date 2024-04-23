@@ -40,7 +40,6 @@ export default class BboxHandler extends Handler {
 	}
 
 	shouldUpdateBbox(): boolean {
-		console.log(!!this.client.mapData, !!this.client.route, Object.keys(this.client.routes).length > 0);
 		return !!this.client.mapData || !!this.client.route || Object.keys(this.client.routes).length > 0;
 	}
 

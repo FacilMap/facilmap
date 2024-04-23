@@ -1,17 +1,43 @@
-import type { MapId } from "facilmap-types";
+import { mapIdValidator } from "facilmap-types";
+import { overwriteObject } from "facilmap-utils";
 import { isEqual } from "lodash-es";
 import { reactive, watch } from "vue";
+import * as z from "zod";
 
-export interface Bookmark {
-	/** ID used to open the map */
-	id: MapId;
-	/** Read-only ID of the map */
-	padId: MapId;
-	/** Last known name of the map */
-	name: string;
-	/** If this is defined, it is shown instead of the map name. */
-	customName?: string;
+function arrayIgnoringInvalids<T extends z.ZodTypeAny>(schema: T): z.ZodType<Array<z.output<T>>> {
+	return z.array(z.any()).transform((arr): Array<z.output<T>> => {
+		return arr.flatMap((v) => {
+			const parsed = schema.safeParse(v);
+			if (parsed.success) {
+				return [parsed.data];
+			} else {
+				return [];
+			}
+		});
+	});
 }
+
+export const bookmarkValidator = z.record(z.any()).transform((val) => ({
+	...val,
+	mapId: val.mapId ?? val.padId // padId is the legacy property name
+})).pipe(z.object({
+	/** ID used to open the map */
+	id: mapIdValidator,
+	/** Read-only ID of the map */
+	mapId: mapIdValidator,
+	/** Last known name of the map */
+	name: z.string(),
+	/** If this is defined, it is shown instead of the map name. */
+	customName: z.string().optional()
+}));
+
+export type Bookmark = z.infer<typeof bookmarkValidator>;
+
+export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(z.object({
+	zoomToAll: z.boolean().catch(false),
+	autoZoom: z.boolean().catch(true),
+	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => [])
+}));
 
 export interface Storage {
 	zoomToAll: boolean;
@@ -19,35 +45,39 @@ export interface Storage {
 	bookmarks: Bookmark[];
 }
 
-const storage: Storage = reactive({
-	zoomToAll: false,
-	autoZoom: true,
-	bookmarks: []
-});
+const storage: Storage = reactive(storageValidator.parse({}));
 
 export default storage;
 
-function load(): void {
+function parseStorage(logErrors = false): Storage {
 	try {
-		const val = localStorage.getItem("facilmap");
+		let val = localStorage.getItem("facilmap");
 		if (val) {
-			const parsed = JSON.parse(val);
-			storage.zoomToAll = !!parsed.zoomToAll;
-			storage.autoZoom = !!parsed.autoZoom;
-			storage.bookmarks = parsed.bookmarks || [];
+			val = JSON.parse(val);
 		}
+
+		return storageValidator.parse(val);
 	} catch (err) {
-		console.error("Error reading local storage", err);
+		if (logErrors) {
+			console.error("Error reading local storage", err);
+		}
+		return storageValidator.parse({});
 	}
+}
+
+function load(): void {
+	const val = parseStorage(true);
+	overwriteObject(val, storage);
 }
 
 async function save() {
 	try {
-		const currentItem = JSON.parse(localStorage.getItem("facilmap") || "null");
-		if (!currentItem || !isEqual(currentItem, storage)) {
+		const currentItem = parseStorage();
+
+		if (!isEqual(currentItem, storage)) {
 			localStorage.setItem("facilmap", JSON.stringify(storage));
 
-			if (storage.bookmarks.length > 0 && !isEqual(currentItem?.bookmarks, storage.bookmarks) && navigator.storage?.persist)
+			if (storage.bookmarks.length > 0 && !isEqual(currentItem.bookmarks, storage.bookmarks) && navigator.storage?.persist)
 				await navigator.storage.persist();
 		}
 	} catch (err) {

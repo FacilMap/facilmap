@@ -74,10 +74,10 @@
 				if (lastMapId && bookmark.id == lastMapId)
 					bookmark.id = newClient.mapId!;
 
-				if (lastMapData && lastMapData.id == bookmark.padId)
-					bookmark.padId = newClient.mapData!.id;
+				if (lastMapData && lastMapData.id == bookmark.mapId)
+					bookmark.mapId = newClient.mapData!.id;
 
-				if (bookmark.padId == newClient.mapData!.id)
+				if (bookmark.mapId == newClient.mapData!.id)
 					bookmark.name = newClient.mapData!.name;
 			}
 
