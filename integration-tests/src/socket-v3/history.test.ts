@@ -1,3 +1,5 @@
+import { test } from "vitest";
+
 // listenToHistory returns all past history events and transmits all future history events
 // stopListeningToHistory stops transmitting future history events
 // revertHistoryEntry reverts a marker creation
@@ -20,3 +22,6 @@
 // revertHistoryEntry cannot revert type deletion in non-admin mode
 // revertHistoryEntry reverts a pad data update
 // revertHistoryEntry cannot revert a pad data update in non-admin mode
+
+test(() => {
+});
