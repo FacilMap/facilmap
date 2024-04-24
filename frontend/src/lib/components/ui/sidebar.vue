@@ -1,8 +1,9 @@
 <script setup lang="ts">
 	import hammer from "hammerjs";
-	import { ref, watchEffect } from "vue";
+	import { onMounted, ref, watchEffect } from "vue";
 	import { useRefWithOverride } from "../../utils/vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getUniqueId } from "../../utils/utils";
 
 	const context = injectContextRequired();
 
@@ -19,6 +20,12 @@
 	const isDragging = ref(false);
 
 	const innerSidebarRef = ref<HTMLElement>();
+
+	const isMounted = ref(false);
+	const teleportTargetRef = ref<HTMLElement>();
+	onMounted(() => {
+		isMounted.value = true;
+	});
 
 	const sidebarVisible = useRefWithOverride(false, () => props.visible, (visible) => {
 		emit("update:visible", visible);
@@ -80,19 +87,19 @@
 				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>
 				<div class="fm-sidebar-inner bg-body" ref="innerSidebarRef" :class="{ shadow: sidebarVisible }">
 					<nav class="navbar">
-						<div class="container-fluid">
-							<slot></slot>
-						</div>
+						<div class="container-fluid" :ref="(el) => { if (el) { teleportTargetRef = el as any; } }"></div>
 					</nav>
 				</div>
 			</div>
 		</template>
 
 		<nav v-if="!context.isNarrow" class="navbar navbar-expand bg-light">
-			<div class="container-fluid">
-				<slot></slot>
-			</div>
+			<div class="container-fluid" :ref="(el) => { if (el) { teleportTargetRef = el as any; } }"></div>
 		</nav>
+
+		<Teleport v-if="teleportTargetRef" :to="teleportTargetRef">
+			<slot></slot>
+		</Teleport>
 	</div>
 </template>
 

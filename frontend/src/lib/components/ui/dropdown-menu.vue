@@ -61,7 +61,10 @@
 		}
 	}
 
-	watch(() => buttonRef.value?.elementRef, (newRef, oldRef, onCleanup) => {
+	watch([
+		() => buttonRef.value?.elementRef,
+		isNarrow
+	], ([newRef], [oldRef], onCleanup) => {
 		if (newRef) {
 			dropdownRef.value = new CustomDropdown(newRef, {
 				popperConfig: (defaultConfig) => ({
