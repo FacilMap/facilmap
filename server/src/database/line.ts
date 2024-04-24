@@ -16,7 +16,7 @@ export type LineWithTrackPoints = Line & {
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
-	padId: ForeignKey<MapModel["id"]>;
+	mapId: ForeignKey<MapModel["id"]>;
 	routePoints: Point[];
 	typeId: ForeignKey<TypeModel["id"]>;
 	mode: RouteMode;
@@ -172,8 +172,8 @@ export default class DatabaseLines {
 	}
 
 	afterInit(): void {
-		this.LineModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("pad", "padId"));
-		this._db.maps.MapModel.hasMany(this.LineModel, { foreignKey: "padId" });
+		this.LineModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this._db.maps.MapModel.hasMany(this.LineModel, { foreignKey: "mapId" });
 
 		// TODO: Cascade
 		this.LineModel.belongsTo(this._db.types.TypeModel, makeNotNullForeignKey("type", "typeId", true));
@@ -245,12 +245,12 @@ export default class DatabaseLines {
 		delete update.trackPoints; // They came if mode is track
 
 		if (Object.keys(update).length > 0) {
-			const newLine = await this._db.helpers._updateMapObject<Line>("Line", originalLine.padId, originalLine.id, update, noHistory);
+			const newLine = await this._db.helpers._updateMapObject<Line>("Line", originalLine.mapId, originalLine.id, update, noHistory);
 
-			this._db.emit("line", originalLine.padId, newLine);
+			this._db.emit("line", originalLine.mapId, newLine);
 
 			if(routeInfo)
-				await this._setLinePoints(originalLine.padId, originalLine.id, routeInfo.trackPoints);
+				await this._setLinePoints(originalLine.mapId, originalLine.id, routeInfo.trackPoints);
 
 			return newLine;
 		} else {
@@ -280,7 +280,7 @@ export default class DatabaseLines {
 	}
 
 	async* getLinePointsForMap(mapId: MapId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
-		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { padId: mapId } });
+		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
 		for (const lineIds of chunks) {
 			const linePoints = await this.LinePointModel.findAll({

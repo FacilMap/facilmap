@@ -39,7 +39,7 @@ test("Create marker (using default values)", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			padId: mapData.id,
+			mapId: mapData.id,
 			name: "",
 			colour: "ff0000",
 			size: 30,
@@ -92,7 +92,7 @@ test("Create marker (using custom values)", async () => {
 
 		const expectedMarker = {
 			id: marker.id,
-			padId: mapData.id,
+			mapId: mapData.id,
 			...data
 		};
 
@@ -154,7 +154,7 @@ test("Edit marker", async () => {
 		const marker = await client1.editMarker(newData);
 
 		const expectedMarker = {
-			padId: mapData.id,
+			mapId: mapData.id,
 			...newData
 		};
 
@@ -248,7 +248,7 @@ test("Get marker", async () => {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
-			padId: mapData.id,
+			mapId: mapData.id,
 			name: "",
 			colour: "ff0000",
 			size: 30,

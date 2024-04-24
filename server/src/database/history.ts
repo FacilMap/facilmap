@@ -13,7 +13,7 @@ interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreatio
 	objectId: ID;
 	objectBefore: string | null;
 	objectAfter: string | null;
-	padId: ForeignKey<MapData["id"]>;
+	mapId: ForeignKey<MapData["id"]>;
 	toJSON: () => HistoryEntry;
 }
 
@@ -33,7 +33,7 @@ export default class DatabaseHistory {
 			time: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Map"), allowNull: false },
 			action: { type: DataTypes.ENUM("create", "update", "delete"), allowNull: false },
-			objectId: { type: DataTypes.INTEGER(), allowNull: true }, // Is null when type is pad
+			objectId: { type: DataTypes.INTEGER(), allowNull: true }, // Is null when type is map
 			objectBefore: {
 				type: DataTypes.TEXT,
 				allowNull: true,
@@ -65,14 +65,14 @@ export default class DatabaseHistory {
 
 
 	afterInit(): void {
-		this._db.maps.MapModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "padId"));
-		this.HistoryModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("pad", "padId"));
+		this._db.maps.MapModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "mapId"));
+		this.HistoryModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
 	}
 
 
 	async addHistoryEntry(mapId: MapId, data: HistoryEntryCreate): Promise<HistoryEntry> {
 		const oldEntryIds = (await this.HistoryModel.findAll({
-			where: { padId: mapId },
+			where: { mapId },
 			order: [[ "time", "DESC" ]],
 			offset: this.HISTORY_ENTRIES-1,
 			attributes: [ "id" ]
@@ -82,17 +82,17 @@ export default class DatabaseHistory {
 		if(data.type != "Map") {
 			if(dataClone.objectBefore) {
 				delete (dataClone.objectBefore as any).id;
-				delete (dataClone.objectBefore as any).padId;
+				delete (dataClone.objectBefore as any).mapId;
 			}
 			if(dataClone.objectAfter) {
 				delete (dataClone.objectAfter as any).id;
-				delete (dataClone.objectAfter as any).padId;
+				delete (dataClone.objectAfter as any).mapId;
 			}
 		}
 
 		const [newEntry] = await Promise.all([
 			this._db.helpers._createMapObject<HistoryEntry>("History", mapId, dataClone),
-			oldEntryIds.length > 0 ? this.HistoryModel.destroy({ where: { padId: mapId, id: oldEntryIds } }) : undefined
+			oldEntryIds.length > 0 ? this.HistoryModel.destroy({ where: { mapId: mapId, id: oldEntryIds } }) : undefined
 		]);
 
 		this._db.emit("addHistoryEntry", mapId, newEntry);
@@ -189,14 +189,14 @@ export default class DatabaseHistory {
 					break;
 			}
 
-			await this.HistoryModel.update({ objectId: newObj.id }, { where: { padId: mapId, type: entry.type, objectId: entry.objectId } });
+			await this.HistoryModel.update({ objectId: newObj.id }, { where: { mapId, type: entry.type, objectId: entry.objectId } });
 			this._db.emit("historyChange", mapId);
 		}
 	}
 
 
 	async clearHistory(mapId: MapId): Promise<void> {
-		await this.HistoryModel.destroy({ where: { padId: mapId } });
+		await this.HistoryModel.destroy({ where: { mapId } });
 	}
 
 }

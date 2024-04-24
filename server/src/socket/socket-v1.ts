@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type MapData, type Line, type FindMapsResult, type FindOnMapLine, type SocketServerToClientEmitArgs, type LegacyV2FindOnMapMarker, type LegacyV2Marker, type LegacyV2FindOnMapResult } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type MapData, type FindMapsResult, type FindOnMapLine, type SocketServerToClientEmitArgs, type LegacyV2FindOnMapMarker, type LegacyV2Marker, type LegacyV2FindOnMapResult, type LegacyV2Line } from "facilmap-types";
 import { SocketConnectionV2 } from "./socket-v2";
 import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { normalizeLineName, normalizeMarkerName, normalizeMapName } from "facilmap-utils";
@@ -18,7 +18,7 @@ function prepareMarker<M extends LegacyV2Marker | LegacyV2FindOnMapMarker>(marke
 	};
 }
 
-function prepareLine<L extends Line | FindOnMapLine>(line: L): L {
+function prepareLine<L extends LegacyV2Line | FindOnMapLine>(line: L): L {
 	return {
 		...line,
 		name: normalizeLineName(line.name)
@@ -68,24 +68,24 @@ export class SocketConnectionV1 implements SocketConnection<SocketVersion.V1> {
 	}
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V1> {
-		const socketHandlers = this.socketV2.getSocketHandlers();
+		const socketHandlersV2 = this.socketV2.getSocketHandlers();
 
 		return {
-			...socketHandlers,
-			setPadId: mapResult(socketHandlers.setPadId, (events) => prepareMultiple(events)),
-			updateBbox: mapResult(socketHandlers.updateBbox, (events) => prepareMultiple(events)),
-			getPad: mapResult(socketHandlers.getPad, (result) => result ? prepareMapData(result) : result),
-			findPads: mapResult(socketHandlers.findPads, (result) => ({ ...result, results: result.results.map((r) => prepareMapData(r)) })),
-			createPad: mapResult(socketHandlers.createPad, (events) => prepareMultiple(events)),
-			editPad: mapResult(socketHandlers.editPad, (mapData) => prepareMapData(mapData)),
-			getMarker: mapResult(socketHandlers.getMarker, (marker) => prepareMarker(marker)),
-			addMarker: mapResult(socketHandlers.addMarker, (marker) => prepareMarker(marker)),
-			editMarker: mapResult(socketHandlers.editMarker, (marker) => prepareMarker(marker)),
-			deleteMarker: mapResult(socketHandlers.deleteMarker, (marker) => prepareMarker(marker)),
-			addLine: mapResult(socketHandlers.addLine, (line) => prepareLine(line)),
-			editLine: mapResult(socketHandlers.editLine, (line) => prepareLine(line)),
-			deleteLine: mapResult(socketHandlers.deleteLine, (line) => prepareLine(line)),
-			findOnMap: mapResult(socketHandlers.findOnMap, (results) => results.map((r) => prepareMapResult(r)))
+			...socketHandlersV2,
+			setPadId: mapResult(socketHandlersV2.setPadId, (events) => prepareMultiple(events)),
+			updateBbox: mapResult(socketHandlersV2.updateBbox, (events) => prepareMultiple(events)),
+			getPad: mapResult(socketHandlersV2.getPad, (result) => result ? prepareMapData(result) : result),
+			findPads: mapResult(socketHandlersV2.findPads, (result) => ({ ...result, results: result.results.map((r) => prepareMapData(r)) })),
+			createPad: mapResult(socketHandlersV2.createPad, (events) => prepareMultiple(events)),
+			editPad: mapResult(socketHandlersV2.editPad, (mapData) => prepareMapData(mapData)),
+			getMarker: mapResult(socketHandlersV2.getMarker, (marker) => prepareMarker(marker)),
+			addMarker: mapResult(socketHandlersV2.addMarker, (marker) => prepareMarker(marker)),
+			editMarker: mapResult(socketHandlersV2.editMarker, (marker) => prepareMarker(marker)),
+			deleteMarker: mapResult(socketHandlersV2.deleteMarker, (marker) => prepareMarker(marker)),
+			addLine: mapResult(socketHandlersV2.addLine, (line) => prepareLine(line)),
+			editLine: mapResult(socketHandlersV2.editLine, (line) => prepareLine(line)),
+			deleteLine: mapResult(socketHandlersV2.deleteLine, (line) => prepareLine(line)),
+			findOnMap: mapResult(socketHandlersV2.findOnMap, (results) => results.map((r) => prepareMapResult(r)))
 		};
 	}
 

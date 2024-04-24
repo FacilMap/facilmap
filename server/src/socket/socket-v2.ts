@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, mapHistoryEntry, MapNotFoundError } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, mapHistoryEntry, MapNotFoundError, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2 } from "facilmap-types";
 import { mapMultipleEvents, type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
@@ -7,21 +7,35 @@ import { omit } from "lodash-es";
 function prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Array<SocketServerToClientEmitArgs<SocketVersion.V2>> {
 	if (args[0] === "marker") {
 		return [[args[0], currentMarkerToLegacyV2(args[1])]];
+	} else if (args[0] === "line") {
+		return [[args[0], currentLineToLegacyV2(args[1])]];
 	} else if (args[0] === "type") {
 		return [[args[0], currentTypeToLegacyV2(args[1])]];
+	} else if (args[0] === "view") {
+		return [[args[0], currentViewToLegacyV2(args[1])]];
 	} else if (args[0] === "history") {
 		if (args[1].type === "Marker") {
 			return [[
 				args[0],
-				mapHistoryEntry(args[1], (obj) => obj && currentMarkerToLegacyV2(obj))
+				currentHistoryEntryToLegacyV2(mapHistoryEntry(args[1], (obj) => obj && currentMarkerToLegacyV2(obj)))
+			]];
+		} else if (args[1].type === "Line") {
+			return [[
+				args[0],
+				currentHistoryEntryToLegacyV2(mapHistoryEntry(args[1], (obj) => obj && currentLineToLegacyV2(obj)))
 			]];
 		} else if (args[1].type === "Type") {
 			return [[
 				args[0],
-				mapHistoryEntry(args[1], (obj) => obj && currentTypeToLegacyV2(obj))
+				currentHistoryEntryToLegacyV2(mapHistoryEntry(args[1], (obj) => obj && currentTypeToLegacyV2(obj)))
+			]];
+		} else if (args[1].type === "View") {
+			return [[
+				args[0],
+				currentHistoryEntryToLegacyV2(mapHistoryEntry(args[1], (obj) => obj && currentViewToLegacyV2(obj)))
 			]];
 		} else {
-			return [[args[0], args[1]]];
+			return [[args[0], currentHistoryEntryToLegacyV2(args[1])]];
 		}
 	} else if (args[0] === "mapData") {
 		return [["padData", args[1]]];
@@ -87,6 +101,12 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			revertHistoryEntry: async (entry) => prepareMultiple(await socketHandlersV3.revertHistoryEntry(entry)),
 			getMarker: async (data) => currentMarkerToLegacyV2(await socketHandlersV3.getMarker(data)),
 			deleteMarker: async (data) => currentMarkerToLegacyV2(await socketHandlersV3.deleteMarker(data)),
+			addLine: async (line) => currentLineToLegacyV2(await socketHandlersV3.addLine(line)),
+			editLine: async (line) => currentLineToLegacyV2(await socketHandlersV3.editLine(line)),
+			deleteLine: async (data) => currentLineToLegacyV2(await socketHandlersV3.deleteLine(data)),
+			addView: async (view) => currentViewToLegacyV2(await socketHandlersV3.addView(view)),
+			editView: async (view) => currentViewToLegacyV2(await socketHandlersV3.editView(view)),
+			deleteView: async (view) => currentViewToLegacyV2(await socketHandlersV3.deleteView(view)),
 			findOnMap: async (data) => (await socketHandlersV3.findOnMap(data)).map((result) => prepareMapResultOutput(result)),
 			deleteType: async (data) => currentTypeToLegacyV2(await socketHandlersV3.deleteType(data))
 		};

@@ -189,7 +189,7 @@ export default class LinesLayer extends FeatureGroup {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
 				id: -1,
-				padId: "",
+				mapId: "",
 				top: 0,
 				right: 0,
 				bottom: 0,

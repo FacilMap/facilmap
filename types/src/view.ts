@@ -4,7 +4,7 @@ import * as z from "zod";
 
 export const viewValidator = cruValidator({
 	id: onlyRead(idValidator),
-	padId: onlyRead(mapIdValidator),
+	mapId: onlyRead(mapIdValidator),
 
 	name: optionalUpdate(z.string().trim().min(1).max(100)),
 	idx: optionalCreate(z.number().int().min(0)),

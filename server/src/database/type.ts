@@ -11,7 +11,7 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	name: string;
 	type: "marker" | "line";
 	idx: number;
-	padId: ForeignKey<MapModel["id"]>;
+	mapId: ForeignKey<MapModel["id"]>;
 	defaultColour: Colour;
 	colourFixed: boolean;
 	defaultSize: Size;
@@ -85,8 +85,8 @@ export default class DatabaseTypes {
 
 	afterInit(): void {
 		const MapModel = this._db.maps.MapModel;
-		this.TypeModel.belongsTo(MapModel, makeNotNullForeignKey("pad", "padId"));
-		MapModel.hasMany(this.TypeModel, { foreignKey: "padId" });
+		this.TypeModel.belongsTo(MapModel, makeNotNullForeignKey("map", "mapId"));
+		MapModel.hasMany(this.TypeModel, { foreignKey: "mapId" });
 	}
 
 	getTypes(mapId: MapId): AsyncIterable<Type> {
@@ -107,7 +107,7 @@ export default class DatabaseTypes {
 		for (const obj of newIndexes) {
 			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
 				const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, obj.id, { idx: obj.newIdx }, true);
-				this._db.emit("type", result.padId, result);
+				this._db.emit("type", result.mapId, result);
 			}
 		}
 
@@ -121,7 +121,7 @@ export default class DatabaseTypes {
 			...data,
 			idx
 		});
-		this._db.emit("type", createdType.padId, createdType);
+		this._db.emit("type", createdType.mapId, createdType);
 		return createdType;
 	}
 
@@ -154,12 +154,12 @@ export default class DatabaseTypes {
 		}
 
 		const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, typeId, data);
-		this._db.emit("type", result.padId, result);
+		this._db.emit("type", result.mapId, result);
 
 		if(Object.keys(rename).length > 0)
 			await this._db.helpers.renameObjectDataField(mapId, result.id, rename, result.type == "line");
 
-		await this.recalculateObjectStylesForType(result.padId, typeId, result.type == "line");
+		await this.recalculateObjectStylesForType(result.mapId, typeId, result.type == "line");
 
 		return result;
 	}
@@ -170,8 +170,8 @@ export default class DatabaseTypes {
 
 	async isTypeUsed(mapId: MapId, typeId: ID): Promise<boolean> {
 		const [ marker, line ] = await Promise.all([
-			this._db.markers.MarkerModel.findOne({ where: { padId: mapId, typeId: typeId } }),
-			this._db.lines.LineModel.findOne({ where: { padId: mapId, typeId: typeId } })
+			this._db.markers.MarkerModel.findOne({ where: { mapId, typeId: typeId } }),
+			this._db.lines.LineModel.findOne({ where: { mapId, typeId: typeId } })
 		]);
 
 		return !!marker || !!line;

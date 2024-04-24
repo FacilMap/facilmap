@@ -8,7 +8,7 @@ import { insertIdx } from "facilmap-utils";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
 	id: CreationOptional<ID>;
-	padId: ForeignKey<MapModel["id"]>;
+	mapId: ForeignKey<MapModel["id"]>;
 	name: string;
 	idx: number;
 	baseLayer: string;
@@ -58,8 +58,8 @@ export default class DatabaseViews {
 	}
 
 	afterInit(): void {
-		this.ViewModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("pad", "padId"));
-		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "padId" });
+		this.ViewModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "mapId" });
 	}
 
 	getViews(mapId: MapId): AsyncIterable<View> {

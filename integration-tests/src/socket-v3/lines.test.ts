@@ -49,7 +49,7 @@ test("Create line (using default values)", async () => {
 				{ lat: 14, lon: 14 }
 			],
 			typeId: lineType.id,
-			padId: mapData.id,
+			mapId: mapData.id,
 			name: "",
 			mode: "",
 			colour: "0000ff",
@@ -146,7 +146,7 @@ test("Create line (using custom values)", async () => {
 
 		const expectedLine = {
 			id: line.id,
-			padId: mapData.id,
+			mapId: mapData.id,
 			...omit(data, ["trackPoints"]),
 			top: 14,
 			right: 14,
@@ -245,7 +245,7 @@ test("Edit line", async () => {
 		const line = await client1.editLine(newData);
 
 		const expectedLine = {
-			padId: mapData.id,
+			mapId: mapData.id,
 			...omit(newData, ["trackPoints"]),
 			top: 14,
 			right: 14,

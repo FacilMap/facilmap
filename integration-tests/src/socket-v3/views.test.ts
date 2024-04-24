@@ -33,7 +33,7 @@ test("Create view (default values)", async () => {
 			idx: 0,
 			filter: null,
 			id: viewResult.id,
-			padId: mapData.id
+			mapId: mapData.id
 		};
 
 		expect(viewResult).toEqual(expectedView);
@@ -84,7 +84,7 @@ test("Create view (custom values)", async () => {
 		const expectedView: View = {
 			...view,
 			id: viewResult.id,
-			padId: mapData.id
+			mapId: mapData.id
 		};
 
 		expect(viewResult).toEqual(expectedView);
@@ -134,7 +134,7 @@ test("Update view", async () => {
 
 		const expectedView: View = {
 			...update,
-			padId: mapData.id
+			mapId: mapData.id
 		};
 
 		expect(view).toEqual(expectedView);

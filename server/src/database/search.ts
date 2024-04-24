@@ -18,7 +18,7 @@ export default class DatabaseSearch {
 			const model = this._db._conn.model(kind) as ModelStatic<MarkerModel | LineModel>;
 			const objs = await model.findAll<MarkerModel | LineModel>({
 				where: and(
-					{ padId: mapId },
+					{ mapId },
 					where(fn("lower", col(`${kind}.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
 				),
 				attributes: [ "id", "name", "typeId" ].concat(kind == "Marker" ? [ "pos", "lat", "lon", "icon" ] : [ "top", "left", "bottom", "right" ])

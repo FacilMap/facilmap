@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryMapV2, openClient, retry } from "../utils";
-import { SocketVersion, type Line } from "facilmap-types";
+import { SocketVersion, type LegacyV2Line } from "facilmap-types";
 
 test("Socket v1 line name", async () => {
 	// client1: Creates the line and has it in its bbox
@@ -56,7 +56,7 @@ test("Socket v1 line name", async () => {
 			bottom: 6,
 			left: 6,
 			data: {}
-		} satisfies Line;
+		} satisfies LegacyV2Line;
 
 		expect(line).toEqual(expectedLine);
 

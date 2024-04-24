@@ -25,7 +25,7 @@ export type GenericHistoryEntry<ObjectTypes extends Record<HistoryEntryType, any
 			time: string;
 			type: Type;
 			action: Action;
-			padId: MapId;
+			mapId: MapId;
 		} & (Action extends "create" ? {
 			objectBefore?: undefined;
 		} : {
@@ -44,4 +44,4 @@ export type GenericHistoryEntry<ObjectTypes extends Record<HistoryEntryType, any
 
 export type HistoryEntry = GenericHistoryEntry<HistoryEntryObjectTypes>;
 
-export type HistoryEntryCreate = Omit<HistoryEntry, "id" | "time" | "padId">;
+export type HistoryEntryCreate = Omit<HistoryEntry, "id" | "time" | "mapId">;

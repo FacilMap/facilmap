@@ -42,17 +42,17 @@ test("Create type (socket v2)", async () => {
 
 		expect(onType1).toHaveBeenNthCalledWith(1, expect.objectContaining(type));
 		expect(cloneDeep(client1.types)).toEqual({
-			[typeResult.id]: expect.objectContaining(type)
+			[typeResult.id]: expect.objectContaining({ ...type, padId: mapData.id })
 		});
 
 		expect(onType2).toHaveBeenNthCalledWith(1, expect.objectContaining(type));
 		expect(cloneDeep(client2.types)).toEqual({
-			[typeResult.id]: expect.objectContaining(type)
+			[typeResult.id]: expect.objectContaining({ ...type, padId: mapData.id })
 		});
 
 		const client3 = await openClient(mapData.id, SocketVersion.V2);
 		expect(cloneDeep(client3.types)).toEqual({
-			[typeResult.id]: expect.objectContaining(type)
+			[typeResult.id]: expect.objectContaining({ ...type, padId: mapData.id })
 		});
 
 		const client4 = await openClient(mapData.id);
@@ -109,21 +109,21 @@ test("Update type (socket v2)", async () => {
 
 		const typeResult = await client1.editType(update);
 
-		expect(typeResult).toMatchObject(update);
+		expect(typeResult).toMatchObject({ ...update, padId: mapData.id });
 
 		await retry(async () => {
 			expect(onType1).toBeCalledTimes(1);
 			expect(onType2).toBeCalledTimes(1);
 		});
 
-		expect(onType1).toHaveBeenNthCalledWith(1, expect.objectContaining(update));
+		expect(onType1).toHaveBeenNthCalledWith(1, expect.objectContaining({ ...update, padId: mapData.id }));
 		expect(cloneDeep(client1.types)).toEqual({
-			[createdType.id]: expect.objectContaining(update)
+			[createdType.id]: expect.objectContaining({ ...update, padId: mapData.id })
 		});
 
-		expect(onType2).toHaveBeenNthCalledWith(1, expect.objectContaining(update));
+		expect(onType2).toHaveBeenNthCalledWith(1, expect.objectContaining({ ...update, padId: mapData.id }));
 		expect(cloneDeep(client2.types)).toEqual({
-			[createdType.id]: expect.objectContaining(update)
+			[createdType.id]: expect.objectContaining({ ...update, padId: mapData.id })
 		});
 
 		const client3 = await openClient(mapData.id);

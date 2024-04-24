@@ -127,7 +127,7 @@ export const defaultFields = (): Field[] => [ { name: "Description", type: "text
 export const rawTypeValidator = cruValidator({
 	id: onlyRead(idValidator),
 	type: exceptUpdate(objectTypeValidator),
-	padId: onlyRead(mapIdValidator),
+	mapId: onlyRead(mapIdValidator),
 
 	name: optionalUpdate(z.string().trim().min(1).max(100)),
 	idx: optionalCreate(z.number().int().min(0)),

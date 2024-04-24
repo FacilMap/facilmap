@@ -27,9 +27,9 @@ export function exportGeoJson(database: Database, mapId: MapId, filter?: string)
 				searchEngines: mapData.searchEngines,
 				description: mapData.description,
 				clusterMarkers: mapData.clusterMarkers,
-				views: jsonStreamArray(mapAsyncIterator(database.views.getViews(mapId), (view) => omit(view, ["id", "padId"])))
+				views: jsonStreamArray(mapAsyncIterator(database.views.getViews(mapId), (view) => omit(view, ["id", "mapId"])))
 			}),
-			types: mapValues(types, (type) => omit(type, ["id", "padId"])),
+			types: mapValues(types, (type) => omit(type, ["id", "mapId"])),
 			features: jsonStreamArray(concatAsyncIterators(
 				flatMapAsyncIterator(database.markers.getMapMarkers(mapId), (marker) => {
 					if (filterFunc(marker, types[marker.typeId])) {

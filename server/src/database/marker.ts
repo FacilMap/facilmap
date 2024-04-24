@@ -10,7 +10,7 @@ import { getI18n } from "../i18n.js";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
-	padId: ForeignKey<MapModel["id"]>;
+	mapId: ForeignKey<MapModel["id"]>;
 	pos: GeoJsonPoint;
 	lat: Latitude;
 	lon: Longitude;
@@ -69,8 +69,8 @@ export default class DatabaseMarkers {
 		const MapModel = this._db.maps.MapModel;
 		const TypeModel = this._db.types.TypeModel;
 
-		MapModel.hasMany(this.MarkerModel, makeNotNullForeignKey("Markers", "padId"));
-		this.MarkerModel.belongsTo(MapModel, makeNotNullForeignKey("pad", "padId"));
+		MapModel.hasMany(this.MarkerModel, makeNotNullForeignKey("Markers", "mapId"));
+		this.MarkerModel.belongsTo(MapModel, makeNotNullForeignKey("map", "mapId"));
 		this.MarkerModel.belongsTo(TypeModel, makeNotNullForeignKey("type", "typeId", true));
 
 		this.MarkerDataModel.belongsTo(this.MarkerModel, makeNotNullForeignKey("marker", "markerId"));
@@ -82,7 +82,7 @@ export default class DatabaseMarkers {
 	}
 
 	getMapMarkersByType(mapId: MapId, typeId: ID): AsyncIterable<Marker> {
-		return this._db.helpers._getMapObjects<Marker>("Marker", mapId, { where: { padId: mapId, typeId: typeId } });
+		return this._db.helpers._getMapObjects<Marker>("Marker", mapId, { where: { mapId, typeId: typeId } });
 	}
 
 	getMarker(mapId: MapId, markerId: ID): Promise<Marker> {
@@ -125,14 +125,14 @@ export default class DatabaseMarkers {
 		const update = resolveUpdateMarker(originalMarker, data, newType);
 
 		if (Object.keys(update).length > 0) {
-			const result = await this._db.helpers._updateMapObject<Marker>("Marker", originalMarker.padId, originalMarker.id, update, noHistory);
+			const result = await this._db.helpers._updateMapObject<Marker>("Marker", originalMarker.mapId, originalMarker.id, update, noHistory);
 
-			this._db.emit("marker", originalMarker.padId, result);
+			this._db.emit("marker", originalMarker.mapId, result);
 
 			if (update.lat != null && update.lon != null && update.ele === undefined) {
 				getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
 					if (ele != null) {
-						await this.updateMarker(originalMarker.padId, originalMarker.id, { ele }, true);
+						await this.updateMarker(originalMarker.mapId, originalMarker.id, { ele }, true);
 					}
 				}).catch((err) => {
 					console.warn("Error updating marker elevation", err);

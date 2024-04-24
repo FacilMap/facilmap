@@ -33,7 +33,8 @@ test("Create marker (Socket v2)", async () => {
 		});
 
 		const expectedMarker = {
-			symbol: "test"
+			symbol: "test",
+			padId: mapData.id
 		};
 
 		expect(marker).toMatchObject(expectedMarker);
@@ -97,7 +98,7 @@ test("Edit marker (socket v2)", async () => {
 		};
 		const marker = await client1.editMarker(newData);
 
-		expect(marker).toMatchObject({ symbol: "icon" });
+		expect(marker).toMatchObject({ symbol: "icon", padId: mapData.id });
 
 		await retry(() => {
 			expect(onMarker1).toHaveBeenCalledTimes(1);
@@ -105,8 +106,8 @@ test("Edit marker (socket v2)", async () => {
 			expect(onMarker3).toHaveBeenCalledTimes(1);
 		});
 
-		expect(onMarker1).toHaveBeenCalledWith(expect.objectContaining({ symbol: "icon" }));
-		expect(onMarker2).toHaveBeenCalledWith(expect.objectContaining({ symbol: "icon" }));
+		expect(onMarker1).toHaveBeenCalledWith(expect.objectContaining({ symbol: "icon", padId: mapData.id }));
+		expect(onMarker2).toHaveBeenCalledWith(expect.objectContaining({ symbol: "icon", padId: mapData.id }));
 		expect(onMarker3).toHaveBeenCalledWith(expect.objectContaining({ icon: "icon" }));
 	});
 });
@@ -145,11 +146,11 @@ test("Get marker (socket v2)", async () => {
 			symbol: "icon"
 		});
 
-		expect(await client.getMarker({ id: marker.id })).toMatchObject({ symbol: "icon" });
+		expect(await client.getMarker({ id: marker.id })).toMatchObject({ symbol: "icon", padId: mapData.id });
 	});
 });
 
-test("Find marker", async () => {
+test("Find marker (socket v2)", async () => {
 	const client = await openClient(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client, {}, async (createMapData, mapData) => {

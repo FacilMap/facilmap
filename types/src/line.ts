@@ -30,7 +30,7 @@ export const lineValidator = cruValidator({
 	ascent: onlyRead(z.number().or(z.null())),
 	descent: onlyRead(z.number().or(z.null())),
 	time: onlyRead(z.number().or(z.null())),
-	padId: onlyRead(mapIdValidator),
+	mapId: onlyRead(mapIdValidator),
 
 	trackPoints: exceptRead(z.array(trackPointValidator.create).optional())
 });

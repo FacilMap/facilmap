@@ -28,7 +28,7 @@ export const lineTemplateRequestValidator = z.object({
 });
 export type LineTemplateRequest = z.infer<typeof lineTemplateRequestValidator>;
 
-export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "padId">;
+export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId">;
 
 export const lineExportRequestValidator = z.object({
 	id: idValidator,

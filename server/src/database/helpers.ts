@@ -120,7 +120,7 @@ export default class DatabaseHelpers {
 	async _updateObjectStyles(objects: Marker | Line | AsyncIterable<Marker | Line>): Promise<void> {
 		const types: Record<ID, Type> = { };
 		for await (const object of Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects])) {
-			const mapId = object.padId;
+			const mapId = object.mapId;
 
 			if(!types[object.typeId]) {
 				types[object.typeId] = await this._db.types.getType(mapId, object.typeId);
@@ -140,7 +140,7 @@ export default class DatabaseHelpers {
 
 	async _mapObjectExists(type: string, mapId: MapId, id: ID): Promise<boolean> {
 		const entry = await this._db._conn.model(type).findOne({
-			where: { padId: mapId, id: id },
+			where: { mapId, id: id },
 			attributes: ['id']
 		});
 		return entry != null;
@@ -150,7 +150,7 @@ export default class DatabaseHelpers {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		const entry = await this._db._conn.model(type).findOne({
-			where: { id: id, padId: mapId },
+			where: { id: id, mapId },
 			include: includeData ? [ this._db._conn.model(type + "Data") ] : [ ],
 			nest: true
 		});
@@ -198,7 +198,7 @@ export default class DatabaseHelpers {
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
 		const obj = this._db._conn.model(type).build(data);
-		(obj as any).padId = mapId;
+		(obj as any).mapId = mapId;
 
 		const result: any = (await obj.save()).toJSON();
 
@@ -225,7 +225,7 @@ export default class DatabaseHelpers {
 		const oldObject = await this._getMapObject(type, mapId, objId);
 
 		if(Object.keys(data).length > 0 && (!includeData || !isEqual(Object.keys(data), ["data"])))
-			await this._db._conn.model(type).update(data, { where: { id: objId, padId: mapId } });
+			await this._db._conn.model(type).update(data, { where: { id: objId, mapId } });
 
 		const newObject: any = await this._getMapObject(type, mapId, objId);
 
@@ -365,9 +365,9 @@ export default class DatabaseHelpers {
 
 			if(!isEqual(object.data, newData)) {
 				if(isLine)
-					await this._db.lines.updateLine(object.padId, object.id, { data: newData }, true); // Last param true to not create history entry
+					await this._db.lines.updateLine(object.mapId, object.id, { data: newData }, true); // Last param true to not create history entry
 				else
-					await this._db.markers.updateMarker(object.padId, object.id, { data: newData }, true); // Last param true to not create history entry
+					await this._db.markers.updateMarker(object.mapId, object.id, { data: newData }, true); // Last param true to not create history entry
 			}
 		}
 	}
