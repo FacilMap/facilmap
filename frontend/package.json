@@ -1,6 +1,6 @@
 {
   "name": "facilmap-frontend",
-  "version": "5.0.0",
+  "version": "5.0.0-alpha",
   "description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
   "keywords": [
     "maps",

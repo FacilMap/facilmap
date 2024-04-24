@@ -1,6 +1,6 @@
 {
   "name": "facilmap-utils",
-  "version": "5.0.0",
+  "version": "5.0.0-alpha",
   "description": "FacilMap helper functions used in both the frontend and backend.",
   "keywords": [
     "facilmap"

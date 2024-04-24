@@ -1,6 +1,6 @@
 {
   "name": "facilmap-leaflet",
-  "version": "5.0.0",
+  "version": "5.0.0-alpha",
   "description": "Utilities to show FacilMap objects on a Leaflet map.",
   "keywords": [
     "maps",
