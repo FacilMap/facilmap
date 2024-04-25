@@ -1,1 +1,37 @@
-{}
+{
+    "elevation": {
+        "http-error": "Falló la búsqueda de elevaciones con el estado {{status}}."
+    },
+    "routing": {
+        "format-by-foot": "a pie",
+        "query-from": "desde",
+        "query-to": "hasta"
+    },
+    "search": {
+        "http-error": "La búsqueda falló con el estado {{status}}."
+    },
+    "format": {
+        "line-type-name": "Línea",
+        "marker-type-name": "Indicador",
+        "description-field-name": "Descripción",
+        "unnamed-poi": "PDI sin nombre",
+        "time": "{{hours}}:{{minutes}} h",
+        "route-time": "{{time}} {{mode}}",
+        "distance-km": "{{distance}} km",
+        "elevation-m": "{{elevation}} m"
+    },
+    "i18n": {
+        "language-en": "Inglés",
+        "language-de": "Alemán",
+        "language-ru": "Ruso",
+        "language-nb-no": "Noruego «bokmål»"
+    },
+    "objects": {
+        "untitled-line": "Línea sin título",
+        "untitled-marker": "Indicador sin título"
+    },
+    "maps": {
+        "unnamed-map": "Mapa sin nombre",
+        "fallback-page-description": "Un completo mapa basado en OpenStreetMap donde se pueden añadir colaborativamente indicadores y líneas en tiempo real."
+    }
+}
