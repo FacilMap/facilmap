@@ -1,1 +1,44 @@
-{}
+{
+    "map-read-not-found-error": "No se pudo encontrar el mapa con el identificador de solo lectura {{mapId}}.",
+    "database": {
+        "unknown-type-error": "Se desconoce el tipo «{{type}}».",
+        "object-not-found-in-map-error": "No se pudo encontrar el objeto {{type}} {{id}} del mapa {{mapId}}.",
+        "cannot-use-type-for-line-error": "No se puede usar el tipo {{type}} en la línea.",
+        "route-points-less-than-two-points-error": "Una línea no puede tener menos de dos puntos de enrutamiento.",
+        "map-disappeared-error": "El mapa desapareció tras la actualización.",
+        "type-not-found-error": "El tipo {{typeId}} no existe.",
+        "cannot-use-type-for-marker-error": "No se puede usar el tipo {{type}} en el indicador."
+    },
+    "frontend": {
+        "requires-javascript": "{{appName}} necesita JavaScript para funcionar.",
+        "loading": "Cargando…",
+        "load-error": "No se pudo cargar {{appName}}."
+    },
+    "socket": {
+        "only-in-admin-error": "Disponible solo en modo administrativo.",
+        "only-in-write-error": "Disponible solo en modo editable.",
+        "map-id-set-error": "Ya se definió el identificador del mapa.",
+        "map-not-exist-error": "Este mapa no existe.",
+        "map-already-loaded-error": "Ya se cargó el mapa.",
+        "no-map-open-error": "No se abrió ningún mapa.",
+        "unknown-format-error": "Formato desconocido",
+        "route-not-available-error": "Ruta no disponible.",
+        "admin-revert-error": "Este tipo de modificación solo se puede revertir en el modo administrativo.",
+        "route-name": "Ruta de FacilMap"
+    },
+    "tabular": {
+        "field-position": "Posición",
+        "field-distance": "Distancia",
+        "field-time": "Tiempo",
+        "field-name": "Nombre"
+    },
+    "webserver": {
+        "map-not-found-error": "No se pudo encontrar el mapa con el identificador {{mapId}}."
+    },
+    "search": {
+        "url-request-error": "Falló la solicitud a «{{url}}» con el estado {{status}}.",
+        "url-response-error": "Respuesta de servidor no válida.",
+        "url-unknown-format-error": "Formato de archivo desconocido."
+    },
+    "map-not-found-error": "No se pudo encontrar el mapa {{mapId}}."
+}
