@@ -618,7 +618,8 @@
         "pois-error": "Error al cargar los PDI: {{message}}"
     },
     "leaflet-map": {
-        "loading": "Cargando…"
+        "loading": "Cargando…",
+        "attribution-notice": "Esta aplicación reutiliza datos cartográficos de [OpenStreetMap](https://www.openstreetmap.org/copyright). Para más información, consulte el diálogo «[Acerca de {{appName}}](#about-dialog)» del menú Ayuda."
     },
     "legend-content": {
         "click-explanation": "Pulse para mostrar u ocultar los objetos de este tipo."
