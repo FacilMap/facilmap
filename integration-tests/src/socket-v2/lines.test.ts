@@ -13,6 +13,11 @@ test("Create line (Socket v2)", async () => {
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
 		const client2 = await openClient(mapData.id, SocketVersion.V2);
 
+		const onLine1 = vi.fn();
+		client1.on("line", onLine1);
+		const onLine2 = vi.fn();
+		client2.on("line", onLine2);
+
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
 		const line = await client1.addLine({
@@ -22,11 +27,6 @@ test("Create line (Socket v2)", async () => {
 			],
 			typeId: lineType.id
 		});
-
-		const onLine1 = vi.fn();
-		client1.on("line", onLine1);
-		const onLine2 = vi.fn();
-		client2.on("line", onLine2);
 
 		const expectedLine = {
 			padId: mapData.id
