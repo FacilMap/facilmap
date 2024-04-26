@@ -5,7 +5,21 @@
     "routing": {
         "format-by-foot": "a pie",
         "query-from": "desde",
-        "query-to": "hasta"
+        "query-to": "hasta",
+        "query-by-car": "en coche",
+        "query-by-road-bike": "en bicicleta de carretera",
+        "query-by-mountain-bike": "en bicicleta de montaña",
+        "query-by-electric-bike": "en bicicleta eléctrica",
+        "query-by-bicycle": "en bicicleta|en bici",
+        "query-by-wheelchair": "en silla de ruedas",
+        "query-by-foot": "a pie|caminando|andando|al andar",
+        "format-by-electric-bike": "en bicicleta eléctrica",
+        "format-by-bicycle": "en bicicleta",
+        "format-by-car": "en coche",
+        "format-by-mountain-bike": "en bicicleta de montaña",
+        "format-by-road-bike": "en bicicleta de carretera",
+        "format-by-wheelchair": "en silla de ruedas",
+        "query-by-straight": "recto|en helicóptero"
     },
     "search": {
         "http-error": "La búsqueda falló con el estado {{status}}."
@@ -24,7 +38,8 @@
         "language-en": "Inglés",
         "language-de": "Alemán",
         "language-ru": "Ruso",
-        "language-nb-no": "Noruego «bokmål»"
+        "language-nb-no": "Noruego «bokmål»",
+        "language-es": "Español"
     },
     "objects": {
         "untitled-line": "Línea sin título",
@@ -32,6 +47,7 @@
     },
     "maps": {
         "unnamed-map": "Mapa sin nombre",
-        "fallback-page-description": "Un completo mapa basado en OpenStreetMap donde se pueden añadir colaborativamente indicadores y líneas en tiempo real."
+        "fallback-page-description": "Un completo mapa basado en OpenStreetMap donde se pueden añadir colaborativamente indicadores y líneas en tiempo real.",
+        "page-title": "{{mapName}}. {{appName}}"
     }
 }
