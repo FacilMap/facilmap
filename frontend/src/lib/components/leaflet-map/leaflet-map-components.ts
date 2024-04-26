@@ -18,7 +18,7 @@ import { requireClientContext } from "../facil-map-context-provider/facil-map-co
 import { type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
-import { isMaxBreakpoint, isNarrowBreakpoint } from "../../utils/bootstrap";
+import { isNarrowBreakpoint } from "../../utils/bootstrap";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -134,7 +134,6 @@ function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 				} else {
 					map.addControl(attribution);
 				}
-				//attribution.setPosition(isNarrow ? "topleft" : "bottomright");
 			}, { immediate: true });
 
 			watch(i18nResourceChangeCounter, () => {
@@ -216,15 +215,16 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 						outOfView: "setView",
 						inViewNotFollowing: "outOfView"
 					},
+					// These class names are not used anywhere, we just set them to avoid the default class names being set,
+					// which would apply the default icons using CSS.
+					icon: "fm-locate-control-icon",
+					iconLoading: "fm-locate-control-icon-loading",
 					createButtonCallback: (container, options) => {
 						const { link, icon } = (Control.Locate.prototype.options as Control.LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLElement; icon: HTMLElement };
-						icon.remove();
-						const newIcon = document.createElement("span");
-						link.appendChild(newIcon);
 						screenshotIconHtmlP.then((iconHtml) => {
-							newIcon.innerHTML = iconHtml;
+							icon.innerHTML = iconHtml;
 						}).catch(console.error);
-						return { link, icon: newIcon };
+						return { link, icon };
 					}
 				}));
 			}

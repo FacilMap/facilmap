@@ -162,7 +162,7 @@
 			}
 
 			.leaflet-control-locate.leaflet-control-locate {
-				a {
+				a, a > span {
 					font-size: inherit;
 					display: inline-flex;
 					align-items: center;
