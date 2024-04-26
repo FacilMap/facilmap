@@ -215,6 +215,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 						outOfView: "setView",
 						inViewNotFollowing: "outOfView"
 					},
+					setView: "untilPan",
 					// These class names are not used anywhere, we just set them to avoid the default class names being set,
 					// which would apply the default icons using CSS.
 					icon: "fm-locate-control-icon",
