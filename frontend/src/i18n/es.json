@@ -1,0 +1,627 @@
+{
+    "about-dialog": {
+        "license-text-license": "Licencia Pública General Affero de GNU, versión 3",
+        "help-text-documentation": "documentación",
+        "help-text-discussions": "foro de debates",
+        "help-text-chat": "Charla en Matrix",
+        "map-data-pois": "PDI",
+        "map-data-directions": "Indicaciones",
+        "programs-libraries": "Programas/bibliotecas",
+        "icons": "Iconos",
+        "attribution-osm-contributors": "Contribuidores de OSM",
+        "header": "Acerca de FacilMap {{version}}",
+        "license-text": "{{facilmap}} está disponible en virtud de la {{license}}.",
+        "license-text-facilmap": "FacilMap",
+        "privacy-information": "Información sobre la privacidad",
+        "map-data-search": "Buscar",
+        "map-data": "Datos cartográficos",
+        "map-data-geoip-description": "Este producto incluye datos GeoLite2 creados por MaxMind, disponibles en {{maxmind}}."
+    },
+    "add": {
+        "hidden-markers-added-title_one": "Indicador añadido",
+        "hidden-markers-added-title_many": "{{count}} indicadores añadidos",
+        "hidden-markers-added-title_other": "{{count}} indicadores añadidos",
+        "hidden-markers-added-message_one": "El indicador se añadió correctamente, pero el filtro activo evita que se muestre.",
+        "hidden-markers-added-message_many": "Se añadieron {{count}} indicadores correctamente, pero el filtro activo evita que se muestren.",
+        "hidden-markers-added-message_other": "Se añadieron {{count}} indicadores correctamente, pero el filtro activo evita que se muestren."
+    },
+    "client-provider": {
+        "loading-map": "Cargando mapa…",
+        "connecting-header": "Conectando",
+        "close-map": "Cerrar mapa",
+        "map-deleted-header": "Mapa eliminado",
+        "disconnected-header": "Desconectado",
+        "disconnected": "Se perdió la conexión con el servidor. Intentando volver a conectarse…",
+        "connecting": "Conectando con el servidor…",
+        "open-map-error": "Error al abrir el mapa",
+        "map-deleted": "Se eliminó este mapa.",
+        "connection-error": "Error al conectar con el servidor",
+        "loading-map-header": "Cargando"
+    },
+    "add-to-map-dropdown": {
+        "add-error": "Error al añadir al mapa",
+        "add-marker-items": "Elementos indicadores como {{typeName}}"
+    },
+    "coordinates": {
+        "copied-title": "Coordenadas copiadas",
+        "copied-message": "Las coordenadas se copiaron en el portapapeles.",
+        "copy-to-clipboard": "Copiar en el portapapeles",
+        "elevation": "Elevación"
+    },
+    "copy-to-clipboard-input": {
+        "copied-fallback-title": "Enlace copiado",
+        "copied-fallback-message": "El enlace se copió en el portapapeles.",
+        "qr-code-alt": "Código QR",
+        "copy": "Copiar",
+        "qr-code-tooltip": "Mostrar código QR"
+    },
+    "custom-import-dialog": {
+        "no-import": "No importar",
+        "dialog-title": "Importación personalizada",
+        "existing-type": "Tipo existente «{{name}}»",
+        "import-type": "Importar tipo «{{name}}»",
+        "import-error": "Error al importar al mapa",
+        "ok-label": "Importar",
+        "type": "Tipo"
+    },
+    "draw": {
+        "add-marker-title": "Añadir {{typeName}}",
+        "add-marker-error": "Error al añadir el indicador",
+        "move-marker-title": "Arrastrar indicador",
+        "add-marker-current": "Añadir en ubicación actual",
+        "move-marker-current": "Mover a ubicación actual",
+        "add-line-title": "Añadir {{typeName}}",
+        "add-line-error": "Error al añadir la línea",
+        "move-marker-message": "Arrastre el indicador para reposicionarlo.",
+        "add-line-message": "Pulse sobre el mapa varias veces para dibujar una línea. Luego, para guardarla, pulse en «Finalizar».",
+        "move-marker-save": "Guardar",
+        "add-marker-cancel": "Cancelar",
+        "move-marker-cancel": "Cancelar",
+        "add-line-finish": "Finalizar",
+        "add-line-cancel": "Cancelar",
+        "add-marker-message": "Pulse sobre el mapa para añadir un indicador.",
+        "move-marker-error": "Error al mover el indicador"
+    },
+    "edit-filter-dialog": {
+        "title": "Filtrar",
+        "syntax-header": "Sintaxis",
+        "example": "Ejemplo",
+        "data-description-1": "Valores de campo (ejemplo: {{example1}} o {{example2}}).",
+        "width-description": "Anchura de línea",
+        "stroke-description": "Trazo de línea ({{solid}} (sólido) / {{dashed}} / {{dotted}})",
+        "text-description": "Valor textual",
+        "logical-description": "Operadores lógicos",
+        "apply": "Aplicar",
+        "variable": "Variable",
+        "operator": "Operador",
+        "description": "Descripción",
+        "functions-description": "Funciones matemáticas",
+        "number-description": "Valor numérico",
+        "icon-description": "Icono del indicador",
+        "lon-lat-description": "Coordenadas del indicador",
+        "size-description": "Tamaño del indicador",
+        "shape-description": "Forma del indicador",
+        "ele-description": "Elevación del indicador"
+    },
+    "edit-line-dialog": {
+        "save-error": "Error al guardar la línea",
+        "change-type": "Cambiar tipo",
+        "stroke": "Trazo",
+        "name": "Nombre",
+        "colour": "Color",
+        "width": "Anchura",
+        "title": "Editar línea"
+    },
+    "edit-marker-dialog": {
+        "save-error": "Error al guardar el indicador",
+        "title": "Editar indicador",
+        "change-type": "Cambiar tipo",
+        "icon": "Icono",
+        "size": "Tamaño",
+        "name": "Nombre",
+        "colour": "Color",
+        "shape": "Forma"
+    },
+    "edit-type-dialog": {
+        "delete-field-title": "Eliminar campo",
+        "delete-field-message": "¿Realmente quiere eliminar el campo «{{fieldName}}»?",
+        "create-type-error": "Error al crear el tipo",
+        "save-type-error": "Error al guardar el tipo",
+        "field-disappeared-error": "El campo ya no figura en el tipo.",
+        "default-colour": "Color predeterminado",
+        "title": "Editar tipo",
+        "type-line": "Línea",
+        "type-marker": "Indicador",
+        "default-size": "Tamaño predeterminado",
+        "legend": "Simbología",
+        "show-in-legend": "Mostrar en simbología",
+        "default-stroke": "Trazo predeterminado",
+        "field-type-dropdown": "Desplegable",
+        "field-reorder": "Reordenar",
+        "field-type-input": "Campo de texto",
+        "delete-field-button": "Eliminar",
+        "name": "Nombre",
+        "type": "Tipo",
+        "default-shape": "Forma predeterminada",
+        "field-type": "Tipo",
+        "default-icon": "Icono predeterminado",
+        "default-width": "Anchura predeterminada",
+        "fields": "Campos",
+        "field-name": "Nombre",
+        "field-default-value": "Valor predeterminado",
+        "field-delete": "Eliminar",
+        "field-type-textarea": "Área de texto",
+        "field-add": "Añadir",
+        "field-type-checkbox": "Casilla",
+        "field-edit": "Editar",
+        "field-update-error": "Error al actualizar el campo"
+    },
+    "edit-type-dropdown-dialog": {
+        "delete-option-title": "Eliminar opción",
+        "delete-option-button": "Eliminar",
+        "ok-button": "Aceptar",
+        "control": "Control",
+        "delete-option-message": "¿Realmente quiere eliminar la opción «{{value}}»?",
+        "no-options-error": "Los campos de control deben tener por lo menos una opción.",
+        "title-checkbox": "Editar casilla",
+        "title-dropdown": "Editar desplegable",
+        "control-interpolation-line": "línea",
+        "control-colour": "Color del control {{type}}",
+        "control-size": "Tamaño del control {{type}}",
+        "control-width": "Anchura del control {{type}}",
+        "control-interpolation-marker": "indicador",
+        "control-stroke": "Trazo del control {{type}}",
+        "label": "Etiqueta (para simbología)",
+        "option-reorder": "Reordenar",
+        "stroke": "Trazo",
+        "option": "Opción",
+        "colour": "Color",
+        "size": "Tamaño",
+        "icon": "Icono",
+        "shape": "Forma",
+        "width": "Anchura",
+        "option-remove": "Quitar",
+        "option-add": "Añadir",
+        "control-icon": "Icono del control {{type}}",
+        "control-shape": "Forma del control {{type}}"
+    },
+    "export-dialog": {
+        "format-option-gpx": "GPX",
+        "column-name": "Nombre",
+        "column-position": "Posición",
+        "copy-ok": "Copiar",
+        "open-file": "Abrir archivo",
+        "export-copied-message": "Se copió la exportación a {{format}} en el portapapeles.",
+        "export-method": "Método de exportación",
+        "type": "Tipo",
+        "include-columns": "Incluir columnas",
+        "apply-filter": "Aplicar filtro",
+        "column-distance": "Distancia",
+        "format-option-geojson": "GeoJSON",
+        "format-option-html": "HTML",
+        "format-option-csv": "CSV",
+        "download-file": "Descargar archivo",
+        "select-type-error": "Seleccione un tipo.",
+        "generate-link": "General enlace",
+        "title": "Exportar mapa colaborativo",
+        "copy-to-clipboard": "Copiar en el portapapeles",
+        "export-ok": "Exportar",
+        "format": "Formato",
+        "gpx-explanation-interpolation-gpx": "GPX",
+        "csv-explanation-interpolation-csv": "CSV",
+        "geojson-explanation-interpolation-geojson": "GeoJSON",
+        "html-explanation-interpolation-html": "HTML"
+    },
+    "file-results": {
+        "views": "Vistas",
+        "view": "Vista",
+        "import-view-error": "Error al importar la vista",
+        "import-type-error": "Error al importar el tipo",
+        "add-view-tooltip": "Añadir esta vista al mapa",
+        "add-view-alt": "Añadir",
+        "types": "Tipos",
+        "markers-lines": "Indicadores/líneas",
+        "type": "Tipo",
+        "add-type-alt": "Añadir",
+        "add-type-tooltip": "Añadir este tipo al mapa"
+    },
+    "export-dropdown": {
+        "export-error": "Error al exportar la ruta",
+        "button-label": "Exportar"
+    },
+    "files": {
+        "invalid-xml-error": "XML no válido: {{textContent}}"
+    },
+    "heightgraph": {
+        "type": "Tipo",
+        "legend": "Simbología",
+        "steepness": "Pendiente",
+        "traildifficulty": "Dificultad del sendero",
+        "waytype-track": "Camino",
+        "waytype-cycleway": "Ciclovía",
+        "surface-paved": "Pavimentada",
+        "waytype-ferry": "Trasbordador",
+        "surface-cobblestone": "Empedrada",
+        "surface-compacted-gravel": "Grava compactada",
+        "surface-fine-gravel": "Gravilla",
+        "surface-dirt": "Tierra",
+        "surface-ground": "Barro",
+        "surface-gravel": "Ripio",
+        "surface-paving-stones": "Adoquinada",
+        "surface-grass-paver": "Gramoquín",
+        "access-private": "Privada",
+        "access-destination": "Solo tránsito local",
+        "waytype-state-road": "Carretera estatal",
+        "distance": "Distancia",
+        "elevation": "Elevación",
+        "segment-length": "Longitud de segmento",
+        "surface": "Superficie",
+        "waytype-footway": "Vía peatonal",
+        "avgspeed": "Velocidad promedio",
+        "roadaccessrestrictions": "Restricciones de acceso",
+        "unknown": "Desconocido",
+        "waytype-other": "Otro",
+        "waytype-road": "Carretera",
+        "waytype-street": "Calle",
+        "waytype-path": "Vereda",
+        "waytype-steps": "Escalera",
+        "waytype-construction": "En construcción",
+        "surface-ice": "Hielo",
+        "surface-grass": "Césped",
+        "surface-sand": "Arena",
+        "access-yes": "Sí",
+        "access-no": "No",
+        "access-customers": "Para clientes",
+        "access-delivery": "Para entregas",
+        "access-permissive": "Permisiva",
+        "surface-unpaved": "No pavimentada",
+        "surface-asphalt": "Asfalto",
+        "surface-contrete": "Hormigón",
+        "surface-metal": "Metálica"
+    },
+    "history-dialog": {
+        "action": "Acción",
+        "diff-after": "Después",
+        "loading-error": "Error al cargar el histórico",
+        "revert-error": "Error al revertir la entrada del histórico",
+        "title": "Histórico",
+        "introduction": "Aquí puede inspeccionar y revertir las últimas 50 modificaciones hechas al mapa.",
+        "date": "Fecha",
+        "restore": "Restaurar",
+        "diff-field": "Campo",
+        "diff-before": "Antes"
+    },
+    "help-popover": {
+        "show-alt": "Mostrar explicación"
+    },
+    "history-utils": {
+        "revert-create-marker-title": "Eliminar indicador",
+        "revert-create": "Revertir (eliminar)",
+        "revert-create-line-title": "Eliminar línea",
+        "revert-create-view-title": "Eliminar vista",
+        "revert-create-line-message-named": "¿Realmente quiere eliminar la línea {{quotedName}}?",
+        "revert-create-type-message-named": "¿Realmente quiere eliminar el tipo {{quotedName}}?",
+        "revert-update-type-title": "Revertir tipo",
+        "revert-update-map-message": "¿Realmente quiere restaurar la versión anterior de la configuración del mapa?",
+        "revert-update-marker-message-unnamed": "¿Realmente quiere restaurar la versión anterior de este indicador?",
+        "revert-update-marker-message-named": "¿Realmente quiere restaurar la versión anterior del indicador {{quotedName}}?",
+        "revert-update-line-message-named": "¿Realmente quiere restaurar la versión anterior de la línea {{quotedName}}?",
+        "revert-update-button": "Revertir",
+        "revert-update-type-message-named": "¿Realmente quiere restaurar la versión anterior del tipo {{quotedName}}?",
+        "revert-update-type-message-unnamed": "¿Realmente quiere restaurar la versión anterior de este tipo?",
+        "revert-delete-view-title": "Restaurar vista",
+        "revert-delete": "Restaurar",
+        "revert-delete-line-message-named": "¿Realmente quiere restaurar la línea {{quotedName}}?",
+        "revert-delete-view-message-named": "¿Realmente quiere restaurar la vista {{quotedName}}?",
+        "revert-delete-view-message-unnamed": "¿Realmente quiere restaurar esta vista?",
+        "description-interpolation-quotedName": "«{{name}}»",
+        "revert-create-type-message-unnamed": "¿Realmente quiere eliminar este tipo?",
+        "revert-create-button": "Eliminar",
+        "revert-update": "Revertir",
+        "revert-update-map-title": "Revertir configuración del mapa",
+        "revert-update-marker-title": "Revertir indicador",
+        "revert-update-line-title": "Revertir línea",
+        "revert-update-view-title": "Revertir vista",
+        "revert-update-view-message-unnamed": "¿Realmente quiere restaurar la versión anterior de esta vista?",
+        "revert-create-marker-message-named": "¿Realmente quiere eliminar el indicador {{quotedName}}?",
+        "revert-create-marker-message-unnamed": "¿Realmente quiere eliminar este indicador?",
+        "revert-delete-marker-title": "Restaurar indicador",
+        "revert-delete-marker-message-named": "¿Realmente quiere restaurar el indicador {{quotedName}}?",
+        "revert-delete-marker-message-unnamed": "¿Realmente quiere restaurar este indicador?",
+        "revert-create-line-message-unnamed": "¿Realmente quiere eliminar esta línea?",
+        "revert-create-view-message-named": "¿Realmente quiere eliminar la vista {{quotedName}}?",
+        "revert-update-line-message-unnamed": "¿Realmente quiere restaurar la versión anterior de esta línea?",
+        "revert-delete-type-title": "Restaurar tipo",
+        "revert-delete-line-title": "Restaurar línea",
+        "revert-create-view-message-unnamed": "¿Realmente quiere eliminar esta vista?",
+        "revert-update-view-message-named": "¿Realmente quiere restaurar la versión anterior de la vista {{quotedName}}?",
+        "revert-delete-line-message-unnamed": "¿Realmente quiere restaurar esta línea?",
+        "revert-delete-type-message-named": "¿Realmente quiere restaurar el tipo {{quotedName}}?",
+        "revert-delete-type-message-unnamed": "¿Realmente quiere restaurar este tipo?",
+        "revert-create-type-title": "Eliminar tipo"
+    },
+    "import-tab": {
+        "read-error-title": "Error al leer los archivos",
+        "no-geometries-error-title": "Ninguna geometría",
+        "no-geometries-error-message_one": "El archivo seleccionado no contenía ningúna geometría.",
+        "no-geometries-error-message_many": "Los archivos seleccionados no contenían ningúna geometría.",
+        "no-geometries-error-message_other": "Los archivos seleccionados no contenían ningúna geometría."
+    },
+    "line-info": {
+        "delete-line-title": "Eliminar línea",
+        "delete-line-message": "¿Realmente quiere eliminar la línea «{{name}}»?",
+        "save-line-error": "Error al guardar la línea",
+        "move-line-finish": "Finalizar",
+        "distance": "Distancia",
+        "edit-data": "Editar datos",
+        "actions": "Acciones",
+        "delete-line-error": "Error al eliminar la línea",
+        "delete-line-ok": "Eliminar",
+        "move-line-cancel": "Cancelar",
+        "delete": "Eliminar"
+    },
+    "legend": {
+        "tab-label": "Simbología"
+    },
+    "manage-bookmarks-dialog": {
+        "map-id": "Identificador de mapa",
+        "title": "Gestionar marcadores",
+        "name": "Nombre",
+        "delete": "Eliminar",
+        "reorder-alt": "Reordenar"
+    },
+    "manage-types-dialog": {
+        "title": "Gestionar tipos",
+        "delete-title": "Eliminar tipo",
+        "name": "Nombre",
+        "reorder-alt": "Reordenar",
+        "type-marker": "Indicadores",
+        "marker-type": "Tipo de indicador",
+        "delete-error": "Error al eliminar el tipo «{{typeName}}»",
+        "delete-message": "¿Realmente quiere eliminar el tipo «{{typeName}}»?",
+        "delete-ok": "Eliminar",
+        "delete-button": "Eliminar",
+        "type": "Tipo",
+        "edit": "Editar",
+        "edit-button": "Editar",
+        "type-line": "Líneas",
+        "create": "Crear"
+    },
+    "manage-views-dialog": {
+        "reorder-alt": "Reordenar",
+        "default-view-error": "Error al establecer la vista predeterminada",
+        "delete-view-error": "Error al eliminar la vista «{{viewName}}»",
+        "delete-view-message": "¿Realmente quiere eliminar la vista «{{viewName}}»?"
+    },
+    "marker-info": {
+        "delete-marker-message": "¿Realmente quiere eliminar el indicador «{{name}}»?",
+        "move": "Mover",
+        "delete": "Eliminar",
+        "delete-marker-error": "Error al eliminar el indicador",
+        "delete-marker-ok": "Eliminar",
+        "coordinates": "Coordenadas",
+        "actions": "Acciones",
+        "delete-marker-title": "Eliminar indicador",
+        "edit-data": "Editar datos"
+    },
+    "overpass-form": {
+        "filter": "Filtrar…",
+        "custom-query": "Consulta personalizada"
+    },
+    "open-map-dialog": {
+        "open-map-by-search-button": "Abrir",
+        "description": "Descripción",
+        "name": "Nombre",
+        "map-id-format-error": "Introduzca un identificador o URL de mapa válido.",
+        "map-not-found-error": "No se pudo encontrar ningún mapa con este identificador.",
+        "no-maps-found": "No se pudo encontrar ningún mapa.",
+        "search-alt": "Buscar",
+        "open-map-by-id-button": "Abrir"
+    },
+    "overpass-multiple-info": {
+        "details": "Detalles",
+        "show-details": "Mostrar detalles",
+        "zoom": "Zum"
+    },
+    "map-settings-dialog": {
+        "delete-map-error": "Error al eliminar el mapa",
+        "delete-map-message": "¿Confirma que quiere eliminar el mapa «{{name}}»? Los mapas eliminados no se pueden restaurar.",
+        "admin-link-label": "Enlace administrativo",
+        "write-link-label": "Enlace editable",
+        "read-link-description": "Cuando se abre el mapa a través de este enlace, los indicadores, las líneas y las vistas pueden consultarse, pero no se pueden modificar.",
+        "legend-text": "Texto en simbología",
+        "delete-map-button": "Eliminar mapa",
+        "delete-map": "Eliminar mapa",
+        "legend-text-description-interpolation-markdown": "Markdown",
+        "legend-text-description": "El texto que se mostrará encima y debajo de la simbología. Se le puede dar formato con {{markdown}}.",
+        "delete-code": "ELIMINAR",
+        "cluster-markers-label": "Indicadores de agrupación",
+        "cluster-markers": "Indicadores de agrupación",
+        "map-description-description": "Esta descripción se mostrará bajo el resultado en los buscadores.",
+        "map-description": "Descripción breve",
+        "search-engines-description": "Si se activa, los buscadores como Google podrán indizar la versión de solo lectura de este mapa.",
+        "search-engines": "Buscadores",
+        "create-button": "Crear",
+        "delete-map-ok": "Eliminar mapa",
+        "search-engines-label": "Accesible a buscadores",
+        "map-name": "Nombre del mapa",
+        "title-edit": "Configuración del mapa",
+        "read-link-label": "Enlace de solo lectura",
+        "title-create": "Crear mapa colaborativo",
+        "delete-map-title": "Eliminar mapa",
+        "save-map-error": "Error al guardar la configuración del mapa",
+        "create-map-error": "Error al crear el mapa"
+    },
+    "search-result-info": {
+        "address": "Dirección",
+        "type": "Tipo",
+        "coordinates": "Coordenadas"
+    },
+    "share-dialog": {
+        "show-controls": "Mostrar controles",
+        "show-search-box": "Cuadro de búsqueda",
+        "show-toolbox": "Cuadro de herramientas",
+        "show-legend": "Simbología",
+        "embed-explanation-interpolation-learnMore": "Más información",
+        "embed": "Incrustar",
+        "share-link": "Compartir enlace",
+        "link-type": "Tipo de enlace",
+        "show-locate": "Ubicación",
+        "include-view-interpolation-conditionalPois": ", PDI: {{pois}}",
+        "settings": "Configuración",
+        "title": "Compartir",
+        "type-read": "De solo lectura"
+    },
+    "icon-picker": {
+        "unknown-icon-error": "Icono desconocido",
+        "no-icons-found-error": "No se pudo encontrar ningún icono.",
+        "filter-placeholder": "Filtro"
+    },
+    "stroke-picker": {
+        "solid": "Sólido",
+        "dashed": "Discontinuo",
+        "dotted": "Punteado"
+    },
+    "user-preferences-dialog": {
+        "introduction": "Esta configuración se almacena en su equipo como una «cookie» y se aplica independientemente del mapa que se abra.",
+        "units-us": "Imperiales estadounidenses (millas, pies)",
+        "units-metric": "Métricas",
+        "language": "Idioma",
+        "units": "Unidades",
+        "language-description-interpolation-weblate": "Weblate",
+        "title": "Preferencias de usuario"
+    },
+    "utils": {
+        "required-error": "No debe quedar vacío."
+    },
+    "route-form": {
+        "some-destinations-not-found": "No se pudieron encontrar algunos destinos.",
+        "route-calculation-error": "Error al calcular la ruta",
+        "zoom-alt": "Zum",
+        "add-destination-alt": "Añadir",
+        "submit": "Ir",
+        "add-destination-tooltip": "Añadir otro destino",
+        "remove-destination-alt": "Quitar",
+        "remove-destination-tooltip": "Quitar este destino",
+        "distance": "Distancia",
+        "reorder-alt": "Reordenar",
+        "export-filename": "Ruta de FacilMap"
+    },
+    "route-form-tab": {
+        "tab-label": "Ruta"
+    },
+    "search-box": {
+        "close-alt": "Cerrar"
+    },
+    "search-results": {
+        "select-all": "Seleccionar todo",
+        "show-details-alt": "Detalles",
+        "show-details-tooltip": "Mostrar detalles",
+        "zoom-to-result-alt": "Zum"
+    },
+    "toolbox-collab-maps-dropdown": {
+        "open-other-map": "Abrir otro mapa",
+        "close-map": "Cerrar mapa «{{mapName}}»",
+        "open-map": "Abrir un mapa existente",
+        "create-map": "Crear un mapa nuevo",
+        "label": "Mapas colaborativos",
+        "manage-bookmarks": "Gestionar indicadores"
+    },
+    "toolbox-tools-dropdown": {
+        "filter": "Filtrar",
+        "settings": "Configuración del mapa",
+        "export": "Exportar",
+        "share": "Compartir",
+        "label": "Herramientas",
+        "user-preferences": "Preferencias de usuario",
+        "open-file": "Abrir archivo"
+    },
+    "toolbox-views-dropdown": {
+        "manage-views": "Gestionar vistas",
+        "label": "Vistas",
+        "save-current-view": "Guardar vista actual"
+    },
+    "alert": {
+        "fallback-ok-label": "Aceptar"
+    },
+    "elevation-stats": {
+        "show-alt": "Mostrar estadísticas"
+    },
+    "validated-field": {
+        "validation-error": "Error al validar el campo del formulario"
+    },
+    "toolbox-map-style-dropdown": {
+        "bing-maps": "Mapas de Bing",
+        "google-maps": "Mapas de Google",
+        "google-maps-satellite": "Mapas de Google (satelital)",
+        "openstreetmap": "OpenStreetMap",
+        "label": "Estilo de mapa"
+    },
+    "toolbox-help-dropdown": {
+        "about": "Acerca de {{appName}}",
+        "forum": "Formular una pregunta",
+        "matrix-chat": "Sala de charla en Matrix",
+        "bugtracker": "Informar de un problema",
+        "documentation": "Documentación",
+        "label": "Ayuda"
+    },
+    "toolbox-add-dropdown": {
+        "manage-types": "Gestionar tipos",
+        "label": "Añadir"
+    },
+    "toasts": {
+        "spinner-label": "Cargando…",
+        "close-label": "Cerrar",
+        "unexpected-error": "Error inesperado"
+    },
+    "route-mode": {
+        "avoid-steps": "Evitar escaleras"
+    },
+    "search-form": {
+        "search-description": "Buscar {{query}}",
+        "search-alt": "Buscar",
+        "search-error": "Error de búsqueda"
+    },
+    "search-form-tab": {
+        "tab-label": "Buscar"
+    },
+    "shape-picker": {
+        "no-shapes-error": "No se pudo encontrar ninguna forma.",
+        "unknown-shape-error": "Forma desconocida"
+    },
+    "save-view-dialog": {
+        "base-layer": "Capa básica",
+        "name": "Nombre",
+        "title": "Guardar vista actual",
+        "save-view-error": "Error al guardar la vista"
+    },
+    "modal-dialog": {
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "close": "Cerrar"
+    },
+    "overpass-info": {
+        "coordinates": "Coordenadas"
+    },
+    "overpass-form-tab": {
+        "pois": "PDI"
+    },
+    "multiple-info": {
+        "delete": "Eliminar",
+        "delete-objects-error": "Error al eliminar objetos",
+        "delete-objects-ok": "Eliminar",
+        "delete-objects-message_one": "¿Realmente quiere quitar {{count}} objeto?",
+        "delete-objects-message_many": "¿Realmente quiere quitar {{count}} objetos?",
+        "delete-objects-message_other": "¿Realmente quiere quitar {{count}} objetos?"
+    },
+    "leaflet-map-components": {
+        "pois-error": "Error al cargar los PDI: {{message}}"
+    },
+    "leaflet-map": {
+        "loading": "Cargando…",
+        "attribution-notice": "Esta aplicación reutiliza datos cartográficos de [OpenStreetMap](https://www.openstreetmap.org/copyright). Para más información, consulte el diálogo «[Acerca de {{appName}}](#about-dialog)» del menú Ayuda."
+    },
+    "legend-content": {
+        "click-explanation": "Pulse para mostrar u ocultar los objetos de este tipo."
+    }
+}
