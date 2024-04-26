@@ -58,8 +58,6 @@ test("Edit view (socket v2)", async () => {
 	const client1 = await openClient(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id, SocketVersion.V2);
-
 		const createdView = await client1.addView({
 			name: "Test view 1",
 			left: -10,
@@ -69,6 +67,8 @@ test("Edit view (socket v2)", async () => {
 			baseLayer: "Mpnk",
 			layers: []
 		});
+
+		const client2 = await openClient(mapData.id, SocketVersion.V2);
 
 		const onView1 = vi.fn();
 		client1.on("view", onView1);
