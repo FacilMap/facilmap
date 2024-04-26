@@ -40,5 +40,8 @@
         "url-response-error": "Respuesta de servidor no válida.",
         "url-unknown-format-error": "Formato de archivo desconocido."
     },
-    "map-not-found-error": "No se pudo encontrar el mapa {{mapId}}."
+    "map-not-found-error": "No se pudo encontrar el mapa {{mapId}}.",
+    "routing": {
+        "mapbox-error": "No se pudo calcular la ruta ({{code}})."
+    }
 }
