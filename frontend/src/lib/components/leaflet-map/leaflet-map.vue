@@ -224,10 +224,10 @@
 			color: #333;
 			line-height: 1.4;
 			font-size: 0.75rem;
+		}
 
-			&.visible {
-				opacity: 1;
-			}
+		&.isNarrow .fm-leaflet-map-narrow-attribution.visible {
+			opacity: 1;
 		}
 
 		.fm-leaflet-map-disabled-cover {
