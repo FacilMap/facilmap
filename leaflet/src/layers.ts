@@ -114,12 +114,12 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			Rlie: fixAttribution(tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
+			Rlie: tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
 				maxZoom: 16,
 				...fmName(() => getI18n().t("layers.rlie-name")),
 				zIndex: 300,
 				noWrap: true
-			})),
+			}),
 
 			grid: new AutoGraticule({
 				...fmName(() => getI18n().t("layers.grid-name")),

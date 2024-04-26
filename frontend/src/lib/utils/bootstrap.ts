@@ -35,11 +35,19 @@ export function isMaxBreakpoint(breakpoint: Breakpoint): boolean {
 	return breakpoints.indexOf(reactiveBreakpoint.value) <= breakpoints.indexOf(breakpoint);
 }
 
+export function isNarrowBreakpoint(): boolean {
+	return isMaxBreakpoint("sm");
+}
+
 /**
  * Returns a reactive boolean that is true if the current breakpoint is the specified one or smaller.
  */
 export function useMaxBreakpoint(breakpoint: Breakpoint): Ref<boolean> {
 	return computed(() => isMaxBreakpoint(breakpoint));
+}
+
+export function useIsNarrow(): Ref<boolean> {
+	return computed(() => isNarrowBreakpoint());
 }
 
 /**

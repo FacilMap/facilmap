@@ -469,7 +469,8 @@
     },
     "leaflet-map": {
         "open-full-size": "{{appName}} als ganze Seite öffnen",
-        "loading": "Wird geladen…"
+        "loading": "Wird geladen…",
+        "attribution-notice": "Diese App basiert auf Kartendaten von [OpenStreetMap](https://www.openstreetmap.org/copyright/de). Mehr Details im Dialog „[Über {{appName}}](#about-dialog)“ im Hilfe-Menü."
     },
     "leaflet-map-components": {
         "pois-too-many-results": "Nicht alle POIs konnten geladen werden, weil zu viele gefunden wurden. Zoom Sie weiter hinein, um alle POIs anzuzeigen.",

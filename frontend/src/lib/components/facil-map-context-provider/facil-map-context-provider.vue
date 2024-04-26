@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch, reactive, readonly, shallowReadonly } from "vue";
-	import { useMaxBreakpoint } from "../../utils/bootstrap";
+	import { useIsNarrow } from "../../utils/bootstrap";
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
 
 	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
@@ -45,7 +45,7 @@
 		appName: "FacilMap"
 	});
 
-	const isNarrow = useMaxBreakpoint("sm");
+	const isNarrow = useIsNarrow();
 
 	const components = shallowReactive<FacilMapComponents>({});
 

@@ -1,7 +1,7 @@
-<script setup lang="ts">
+<script lang="ts">
 	import Sidebar from "../ui/sidebar.vue";
 	import Icon from "../ui/icon.vue";
-	import { ref } from "vue";
+	import { ref, toRef, useCssModule, watchEffect } from "vue";
 	import ToolboxAddDropdown from "./toolbox-add-dropdown.vue";
 	import ToolboxCollabMapsDropdown from "./toolbox-collab-maps-dropdown.vue";
 	import ToolboxHelpDropdown from "./toolbox-help-dropdown.vue";
@@ -9,8 +9,20 @@
 	import ToolboxToolsDropdown from "./toolbox-tools-dropdown.vue";
 	import ToolboxViewsDropdown from "./toolbox-views-dropdown.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { isNarrowBreakpoint } from "../../utils/bootstrap";
+	import { fixOnCleanup } from "../../utils/vue";
+	import { Control, DomUtil, type Map } from "leaflet";
 
+	class CustomControl extends Control {
+		override onAdd(map: Map) {
+			return DomUtil.create("div", "leaflet-bar");
+		}
+	}
+</script>
+
+<script setup lang="ts">
 	const context = injectContextRequired();
+	const mapContext = toRef(() => context.components.map);
 	const client = requireClientContext(context);
 
 	const props = withDefaults(defineProps<{
@@ -19,18 +31,39 @@
 		interactive: true
 	});
 
+	const styles = useCssModule();
+
 	const sidebarVisible = ref(false);
+
+	const menuButtonContainerRef = ref<HTMLElement>();
+
+	watchEffect((onCleanup_) => {
+		const onCleanup = fixOnCleanup(onCleanup_);
+
+		if (isNarrowBreakpoint() && mapContext.value) {
+			const customControl = new CustomControl({ position: "topright" });
+			customControl.addTo(mapContext.value.components.map);
+			customControl._container.classList.add(styles["toggle-container"]);
+			menuButtonContainerRef.value = customControl._container;
+
+			onCleanup(() => {
+				menuButtonContainerRef.value = undefined;
+				customControl.remove();
+			});
+		}
+	});
 </script>
 
 <template>
 	<div class="fm-toolbox">
-		<a
-			v-if="context.isNarrow"
-			v-show="!sidebarVisible"
-			href="javascript:"
-			class="fm-toolbox-toggle"
-			@click="sidebarVisible = true"
-		><Icon icon="menu-hamburger"></Icon></a>
+		<Teleport v-if="menuButtonContainerRef" :to="menuButtonContainerRef">
+			<a
+				v-show="!sidebarVisible"
+				href="javascript:"
+				class="fm-toolbox-toggle"
+				@click="sidebarVisible = true"
+			><Icon icon="menu-hamburger" size="1.5em"></Icon></a>
+		</Teleport>
 
 		<Sidebar :id="`fm${context.id}-toolbox-sidebar`" v-model:visible="sidebarVisible">
 			<ul class="navbar-nav">
@@ -75,22 +108,6 @@
 			z-index: 1000;
 		}
 
-		.fm-toolbox-toggle {
-			color: #444;
-			border-radius: 4px;
-			background: #fff;
-			border: 2px solid rgba(0,0,0,0.2);
-			width: 34px;
-			height: 34px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-
-			&:hover {
-				background: #f4f4f4;
-			}
-		}
-
 		.fm-sidebar.isNarrow {
 			.navbar-nav {
 				max-width: 100%;
@@ -123,5 +140,13 @@
 		@media print {
 			display: none;
 		}
+	}
+</style>
+
+<style lang="scss" module>
+	.toggle-container > a {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 </style>

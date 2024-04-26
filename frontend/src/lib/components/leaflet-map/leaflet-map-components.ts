@@ -1,5 +1,5 @@
-import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick } from "vue";
-import { type Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
+import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
+import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
@@ -18,17 +18,20 @@ import { requireClientContext } from "../facil-map-context-provider/facil-map-co
 import { type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
-import { fixOnCleanup } from "../../utils/vue";
+import { isMaxBreakpoint, isNarrowBreakpoint } from "../../utils/bootstrap";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
-type OnCleanup = (cleanupFn: () => void) => void;
 
 function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponents): Ref<Raw<Map>> {
 	const mapRef = shallowRef(undefined as any as Map);
 	const interaction = ref(0);
 
 	watchEffect((onCleanup) => {
-		const map = mapRef.value = markRaw(leafletMap(element.value, { boxZoom: false, attributionControl: false }));
+		const map = mapRef.value = markRaw(leafletMap(element.value, {
+			boxZoom: false,
+			attributionControl: false,
+			zoomControl: false
+		}));
 
 		map._controlCorners.bottomcenter = DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
@@ -80,7 +83,7 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 function useMapComponent<T>(
 	map: Ref<Map>,
 	construct: () => T,
-	activate: (component: T, onCleanup: OnCleanup) => void
+	activate: (component: T, map: Map) => void
 ): Ref<T> {
 	const componentRef = shallowRef(undefined as any as T);
 	watchEffect(() => {
@@ -90,26 +93,56 @@ function useMapComponent<T>(
 	watch([
 		componentRef,
 		map
-	], ([component], prev, onCleanup_) => {
-		const onCleanup = fixOnCleanup(onCleanup_);
-		activate(component as T, onCleanup);
+	], ([component, map], prev, onCleanup) => {
+		const scope = effectScope();
+		scope.run(() => {
+			activate(component as any, map);
+		});
+		onCleanup(() => {
+			scope.stop();
+		});
 	}, { immediate: true });
 
 	return componentRef;
+}
+
+function useZoomControl(map: Ref<Map>): Ref<Raw<Control.Zoom>> {
+	return useMapComponent(
+		map,
+		() => markRaw(control.zoom()),
+		(zoomControl, map) => {
+			watch(() => isNarrowBreakpoint(), (isNarrow) => {
+				zoomControl.setPosition(isNarrow ? "bottomright" : "topleft");
+			}, { immediate: true });
+			map.addControl(zoomControl);
+
+			onScopeDispose(() => {
+				zoomControl.remove();
+			});
+		}
+	);
 }
 
 function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	return useMapComponent(
 		map,
 		() => markRaw(new AttributionControl()),
-		(attribution, onCleanup) => {
-			map.value.addControl(attribution);
+		(attribution, map) => {
+			watch(() => isNarrowBreakpoint(), (isNarrow) => {
+				if (isNarrow) {
+					attribution.remove();
+				} else {
+					map.addControl(attribution);
+				}
+				//attribution.setPosition(isNarrow ? "topleft" : "bottomright");
+			}, { immediate: true });
 
-			const i18nWatcher = watch(i18nResourceChangeCounter, () => {
+			watch(i18nResourceChangeCounter, () => {
 				attribution.update();
 			});
-			onCleanup(() => {
-				i18nWatcher();
+
+			onScopeDispose(() => {
+				attribution.remove();
 			});
 		}
 	);
@@ -119,9 +152,9 @@ function useBboxHandler(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Bbox
 	return useMapComponent(
 		map,
 		() => markRaw(new BboxHandler(map.value, client.value)),
-		(bboxHandler, onCleanup) => {
+		(bboxHandler) => {
 			bboxHandler.enable();
-			onCleanup(() => {
+			onScopeDispose(() => {
 				bboxHandler.disable();
 			});
 		}
@@ -132,9 +165,16 @@ function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	return useMapComponent(
 		map,
 		() => markRaw(control.graphicScale({ fill: "hollow", position: "bottomcenter" })),
-		(graphicScale, onCleanup) => {
-			graphicScale.addTo(map.value);
-			onCleanup(() => {
+		(graphicScale, map) => {
+			watch(() => isNarrowBreakpoint(), (isNarrow) => {
+				if (isNarrow) {
+					graphicScale.remove();
+				} else {
+					graphicScale.addTo(map);
+				}
+			}, { immediate: true });
+
+			onScopeDispose(() => {
 				graphicScale.remove();
 			});
 		}
@@ -145,9 +185,9 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	return useMapComponent(
 		map,
 		() => markRaw(new LinesLayer(client.value)),
-		(linesLayer, onCleanup) => {
-			linesLayer.addTo(map.value);
-			onCleanup(() => {
+		(linesLayer, map) => {
+			linesLayer.addTo(map);
+			onScopeDispose(() => {
 				linesLayer.remove();
 			});
 		}
@@ -159,10 +199,14 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 		map,
 		() => {
 			if (context.settings.locate) {
+				if (!coreIconList.includes("screenshot")) {
+					console.warn(`Icon "screenshot" is not in core icons.`);
+				}
+
+				let screenshotIconHtmlP = getIconHtml("currentColor", "1.5em", "screenshot");
+
 				return markRaw(control.locate({
 					flyTo: true,
-					icon: "a",
-					iconLoading: "a",
 					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
 					locateOptions: {
 						enableHighAccuracy: true
@@ -171,25 +215,29 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 						inView: "stop",
 						outOfView: "setView",
 						inViewNotFollowing: "outOfView"
+					},
+					createButtonCallback: (container, options) => {
+						const { link, icon } = (Control.Locate.prototype.options as Control.LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLElement; icon: HTMLElement };
+						icon.remove();
+						const newIcon = document.createElement("span");
+						link.appendChild(newIcon);
+						screenshotIconHtmlP.then((iconHtml) => {
+							newIcon.innerHTML = iconHtml;
+						}).catch(console.error);
+						return { link, icon: newIcon };
 					}
 				}));
 			}
 		},
-		(locateControl, onCleanup) => {
+		(locateControl, map) => {
 			if (locateControl) {
-				locateControl.addTo(map.value);
+				watch(() => isNarrowBreakpoint(), (isNarrow) => {
+					locateControl.setPosition(isNarrow ? "bottomright" : "topleft");
+				}, { immediate: true });
 
-				if (!coreIconList.includes("screenshot")) {
-					console.warn(`Icon "screenshot" is not in core icons.`);
-				}
+				locateControl.addTo(map);
 
-				getIconHtml("currentColor", "1.5em", "screenshot").then((html) => {
-					locateControl._container.querySelector("a")?.insertAdjacentHTML("beforeend", html);
-				}).catch((err) => {
-					console.error("Error loading locate control icon", err);
-				});
-
-				onCleanup(() => {
+				onScopeDispose(() => {
 					locateControl.remove();
 				});
 			}
@@ -201,9 +249,9 @@ function useMarkersLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Mar
 	return useMapComponent(
 		map,
 		() => markRaw(new MarkersLayer(client.value)),
-		(markersLayer, onCleanup) => {
-			markersLayer.addTo(map.value);
-			onCleanup(() => {
+		(markersLayer, map) => {
+			markersLayer.addTo(map);
+			onScopeDispose(() => {
 				markersLayer.remove();
 			});
 		}
@@ -214,9 +262,16 @@ function useMousePosition(map: Ref<Map>): Ref<Raw<Control.MousePosition>> {
 	return useMapComponent(
 		map,
 		() => markRaw(control.mousePosition({ emptyString: "0, 0", separator: ", ", position: "bottomright" })),
-		(mousePosition, onCleanup) => {
-			mousePosition.addTo(map.value);
-			onCleanup(() => {
+		(mousePosition, map) => {
+			watch(() => isNarrowBreakpoint(), (isNarrow) => {
+				if (isNarrow) {
+					mousePosition.remove();
+				} else {
+					mousePosition.addTo(map);
+				}
+			}, { immediate: true });
+
+			onScopeDispose(() => {
 				mousePosition.remove();
 			});
 		}
@@ -252,9 +307,9 @@ function useOverpassLayer(map: Ref<Map>, mapContext: MapContextWithoutComponents
 			.on("clear", () => {
 				mapContext.overpassMessage = undefined;
 			}),
-		(overpassLayer, onCleanup) => {
-			overpassLayer.addTo(map.value)
-			onCleanup(() => {
+		(overpassLayer, map) => {
+			overpassLayer.addTo(map)
+			onScopeDispose(() => {
 				overpassLayer.remove();
 			});
 		}
@@ -265,9 +320,9 @@ function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 	return useMapComponent(
 		map,
 		() => markRaw(new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } })),
-		(searchResultsLayer, onCleanup) => {
-			searchResultsLayer.addTo(map.value);
-			onCleanup(() => {
+		(searchResultsLayer, map) => {
+			searchResultsLayer.addTo(map);
+			onScopeDispose(() => {
 				searchResultsLayer.remove();
 			});
 		}
@@ -301,9 +356,9 @@ function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext
 
 			return selectionHandler;
 		},
-		(selectionHandler, onCleanup) => {
+		(selectionHandler) => {
 			selectionHandler.enable();
-			onCleanup(() => {
+			onScopeDispose(() => {
 				selectionHandler.disable();
 			});
 		}
@@ -339,8 +394,8 @@ function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: Faci
 				}
 			});
 		},
-		(hashHandler, onCleanup) => {
-			onCleanup(() => {
+		(hashHandler) => {
+			onScopeDispose(() => {
 				hashHandler.disable();
 			});
 		}
@@ -351,6 +406,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const client = requireClientContext(context);
 	const map = useMap(mapRef, mapContext);
 	const attribution = useAttribution(map);
+	const zoomControl = useZoomControl(map);
 	const bboxHandler = useBboxHandler(map, client);
 	const graphicScale = useGraphicScale(map);
 	const linesLayer = useLinesLayer(map, client);
@@ -364,6 +420,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 
 	const components: MapComponents = reactive({
 		map,
+		zoomControl,
 		attribution,
 		bboxHandler,
 		graphicScale,

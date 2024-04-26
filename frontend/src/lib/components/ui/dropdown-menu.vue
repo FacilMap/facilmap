@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
-	import { getMaxSizeModifiers, type ButtonSize, type ButtonVariant, useMaxBreakpoint } from "../../utils/bootstrap";
+	import { getMaxSizeModifiers, type ButtonSize, type ButtonVariant, useIsNarrow } from "../../utils/bootstrap";
 	import Dropdown from "bootstrap/js/dist/dropdown";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
@@ -42,7 +42,7 @@
 	const buttonRef = ref<InstanceType<typeof AttributePreservingElement>>();
 	const dropdownRef = shallowRef<Dropdown>();
 
-	const isNarrow = useMaxBreakpoint("sm");
+	const isNarrow = useIsNarrow();
 
 	class CustomDropdown extends Dropdown {
 		_detectNavbar() {

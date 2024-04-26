@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { type i18n } from "i18next";
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, type Directive } from "vue";
 import messagesEn from "../../i18n/en.json";
 import messagesDe from "../../i18n/de.json";
 import messagesNbNo from "../../i18n/nb-NO.json";
@@ -97,6 +97,26 @@ export const T = defineComponent({
 		};
 	}
 });
+
+/**
+ * Replaces all descendent links of the element that match the given URLs with the given link configuration. This allows
+ * replacing links in translation texts using markdown with custom functionality (such as opening a dialog).
+ */
+export const vReplaceLinks: Directive<HTMLElement, Record<string, { onClick: (e: Event) => void }>> = (el, binding) => {
+	for (const link of el.querySelectorAll("a[href]")) {
+		const href = link.getAttribute("href");
+		if (binding.value[href!]) {
+			link.setAttribute("href", "javascript:");
+			link.removeAttribute("target");
+
+			link.addEventListener("click", (e) => {
+				e.preventDefault();
+
+				binding.value[href!].onClick(e);
+			});
+		}
+	}
+};
 
 export function isLanguageExplicit(): boolean {
 	const queryParams = decodeQueryString(location.search);

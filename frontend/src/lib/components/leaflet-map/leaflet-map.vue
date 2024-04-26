@@ -4,7 +4,9 @@
 	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { useI18n } from "../../utils/i18n";
+	import { useI18n, vReplaceLinks } from "../../utils/i18n";
+	import AboutDialog from "../about-dialog.vue";
+	import { markdownInline } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -15,6 +17,8 @@
 
 	const loaded = ref(false);
 	const fatalError = ref<string>();
+	const showNarrowAttribution = ref(true);
+	const aboutDialogOpen = ref(false);
 
 	const selfUrl = computed(() => {
 		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
@@ -26,6 +30,9 @@
 		try {
 			mapContext.value = await useMapContext(context, mapRef as Ref<HTMLElement>, innerContainerRef as Ref<HTMLElement>);
 			loaded.value = true;
+			setTimeout(() => {
+				showNarrowAttribution.value = false;
+			}, 5000); // According to https://osmfoundation.org/wiki/Licence/Attribution_Guidelines#Interactive_maps we can fade out the attribution after 5 seconds
 		} catch (err: any) {
 			console.error(err);
 			fatalError.value = err.message;
@@ -42,6 +49,19 @@
 		<div class="fm-leaflet-map-wrapper">
 			<div class="fm-leaflet-map-inner-container" ref="innerContainerRef">
 				<div class="fm-leaflet-map" ref="mapRef"></div>
+
+				<div
+					class="fm-leaflet-map-narrow-attribution"
+					:class="{ visible: showNarrowAttribution }"
+					v-html="markdownInline(i18n.t('leaflet-map.attribution-notice', { appName: context.appName }), true)"
+					v-replace-links="{
+						'#about-dialog': { onClick: () => { aboutDialogOpen = true; } }
+					}"
+				></div>
+				<AboutDialog
+					v-if="aboutDialogOpen"
+					@hidden="aboutDialogOpen = false"
+				></AboutDialog>
 
 				<div v-if="mapContext && mapContext.overpassMessage" class="alert alert-warning fm-overpass-message">
 					{{mapContext.overpassMessage}}
@@ -118,6 +138,10 @@
 				pointer-events: none;
 				padding-right: 0;
 
+				// Make font size the same as attribution control
+				font-size: inherit;
+				line-height: 1.4;
+
 				&:after {
 					content: " |";
 				}
@@ -162,8 +186,47 @@
 		}
 
 		&.isNarrow {
-			.leaflet-control-graphicscale,.leaflet-control-mouseposition {
-				display: none !important;
+			.leaflet-control-locate {
+				float: none;
+				position: absolute;
+				bottom: 0px;
+				right: 44px;
+			}
+
+			.leaflet-control-zoom {
+				border: none;
+
+				.leaflet-control-zoom-in {
+					margin-bottom: 10px;
+				}
+
+				.leaflet-control-zoom-in,.leaflet-control-zoom-out {
+					border: 2px solid rgba(0,0,0,0.2);
+					width: 34px;
+					height: 34px;
+					border-radius: 4px;
+					background-clip: padding-box;
+				}
+			}
+		}
+
+		.fm-leaflet-map-narrow-attribution {
+			position: absolute;
+			top: 0;
+			left: 0;
+			max-width: calc(100% - 54px);
+			opacity: 0;
+			transition: opacity 1s;
+
+			// Style like attribution control
+			background: rgba(255, 255, 255, 0.8);
+			padding: 0 5px;
+			color: #333;
+			line-height: 1.4;
+			font-size: 0.75rem;
+
+			&.visible {
+				opacity: 1;
 			}
 		}
 

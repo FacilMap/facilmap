@@ -3,7 +3,6 @@
 	import { onMounted, ref, watchEffect } from "vue";
 	import { useRefWithOverride } from "../../utils/vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { getUniqueId } from "../../utils/utils";
 
 	const context = injectContextRequired();
 
