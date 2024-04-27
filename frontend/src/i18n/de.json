@@ -31,7 +31,7 @@
         "hidden-lines-added-message_one": "Die Linie wurde erstellt, aber der aktive Filter verhindert, dass sie angezeigt wird.",
         "hidden-lines-added-message_other": "{{count}} Linien wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden.",
         "hidden-objects-added-title": "{{count}} Objekte erstellt",
-        "hidden-objects-added-message": "{{count}} Objekte wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden",
+        "hidden-objects-added-message": "{{count}} Objekte wurden erstellt, aber der aktive Filter verhindert, dass sie angezeigt werden.",
         "hidden-objects-added-message-some": "{{count}} Objekte wurden erstellt, aber der aktive Filter verhindert, dass manche von ihnen angezeigt werden."
     },
     "add-to-map-dropdown": {

@@ -3,7 +3,7 @@
         "license-text-license": "Licencia Pública General Affero de GNU, versión 3",
         "help-text-documentation": "documentación",
         "help-text-discussions": "foro de debates",
-        "help-text-chat": "Charla en Matrix",
+        "help-text-chat": "charla en Matrix",
         "map-data-pois": "PDI",
         "map-data-directions": "Indicaciones",
         "programs-libraries": "Programas/bibliotecas",
@@ -13,9 +13,10 @@
         "license-text": "{{facilmap}} está disponible en virtud de la {{license}}.",
         "license-text-facilmap": "FacilMap",
         "privacy-information": "Información sobre la privacidad",
-        "map-data-search": "Buscar",
+        "map-data-search": "Búsqueda",
         "map-data": "Datos cartográficos",
-        "map-data-geoip-description": "Este producto incluye datos GeoLite2 creados por MaxMind, disponibles en {{maxmind}}."
+        "map-data-geoip-description": "Este producto incluye datos GeoLite2 creados por MaxMind, disponibles en {{maxmind}}.",
+        "help-text": "Si tiene preguntas, consulte la {{documentation}}, use el {{discussions}} o conéctese al canal de {{chat}}."
     },
     "add": {
         "hidden-markers-added-title_one": "Indicador añadido",
@@ -40,7 +41,8 @@
     },
     "add-to-map-dropdown": {
         "add-error": "Error al añadir al mapa",
-        "add-marker-items": "Elementos indicadores como {{typeName}}"
+        "add-marker-items": "Elementos indicadores como {{typeName}}",
+        "fallback-label": "Añadir al mapa"
     },
     "coordinates": {
         "copied-title": "Coordenadas copiadas",
@@ -101,7 +103,10 @@
         "lon-lat-description": "Coordenadas del indicador",
         "size-description": "Tamaño del indicador",
         "shape-description": "Forma del indicador",
-        "ele-description": "Elevación del indicador"
+        "ele-description": "Elevación del indicador",
+        "colour-description": "Color de indicador/línea",
+        "mode-description": "Modo de enrutamiento de línea ({{straight}} / {{car}} / {{bicycle}} / {{pedestrian}} / {{track}})",
+        "ternary-description": "Operador «if/then/else»"
     },
     "edit-line-dialog": {
         "save-error": "Error al guardar la línea",
@@ -110,7 +115,8 @@
         "name": "Nombre",
         "colour": "Color",
         "width": "Anchura",
-        "title": "Editar línea"
+        "title": "Editar línea",
+        "routing-mode": "Modo de enrutamiento"
     },
     "edit-marker-dialog": {
         "save-error": "Error al guardar el indicador",
@@ -154,7 +160,8 @@
         "field-add": "Añadir",
         "field-type-checkbox": "Casilla",
         "field-edit": "Editar",
-        "field-update-error": "Error al actualizar el campo"
+        "field-update-error": "Error al actualizar el campo",
+        "default-route-mode": "Modo de enrutamiento predeterminado"
     },
     "edit-type-dropdown-dialog": {
         "delete-option-title": "Eliminar opción",
@@ -210,7 +217,10 @@
         "gpx-explanation-interpolation-gpx": "GPX",
         "csv-explanation-interpolation-csv": "CSV",
         "geojson-explanation-interpolation-geojson": "GeoJSON",
-        "html-explanation-interpolation-html": "HTML"
+        "html-explanation-interpolation-html": "HTML",
+        "geojson-explanation": "Puede utilizar archivos {{geojson}} para crear copias de respaldo completas del mapa. Contienen todos los datos del mapa, incluidas las configuraciones, vistas, tipos, indicadores y líneas, así como todos sus atributos. Para restaurar una copia de respaldo GeoJSON o crear una copia de su mapa, basta con importar nuevamente el archivo en FacilMap.",
+        "apply-filter-label": "Incluir solo los objetos visibles con el filtro actual",
+        "gpx-explanation": "Los archivos {{gpx}} se pueden usar para transferir los datos de su mapa a programas y dispositivos de navegación y planificación de ruta como OsmAnd o Garmin. Contienen los indicadores y líneas con sus nombres y descripciones, pero no sus atributos de estilo (salvo determinadas propiedades que OsmAnd admite)."
     },
     "file-results": {
         "views": "Vistas",
@@ -227,7 +237,9 @@
     },
     "export-dropdown": {
         "export-error": "Error al exportar la ruta",
-        "button-label": "Exportar"
+        "button-label": "Exportar",
+        "gpx-track-label": "Exportar como traza GPX",
+        "gpx-route-label": "Exportar como ruta GPX"
     },
     "files": {
         "invalid-xml-error": "XML no válido: {{textContent}}"
@@ -338,7 +350,9 @@
         "revert-delete-line-message-unnamed": "¿Realmente quiere restaurar esta línea?",
         "revert-delete-type-message-named": "¿Realmente quiere restaurar el tipo {{quotedName}}?",
         "revert-delete-type-message-unnamed": "¿Realmente quiere restaurar este tipo?",
-        "revert-create-type-title": "Eliminar tipo"
+        "revert-create-type-title": "Eliminar tipo",
+        "description-interpolation-quotedName-renamed": "{{quotedBefore}} (nombre nuevo: {{quotedAfter}})",
+        "revert-delete-button": "Restaurar"
     },
     "import-tab": {
         "read-error-title": "Error al leer los archivos",
@@ -385,13 +399,18 @@
         "edit": "Editar",
         "edit-button": "Editar",
         "type-line": "Líneas",
-        "create": "Crear"
+        "create": "Crear",
+        "line-type": "Tipo de línea"
     },
     "manage-views-dialog": {
         "reorder-alt": "Reordenar",
         "default-view-error": "Error al establecer la vista predeterminada",
         "delete-view-error": "Error al eliminar la vista «{{viewName}}»",
-        "delete-view-message": "¿Realmente quiere eliminar la vista «{{viewName}}»?"
+        "delete-view-message": "¿Realmente quiere eliminar la vista «{{viewName}}»?",
+        "delete-view-title": "Eliminar vista",
+        "title": "Gestionar vistas",
+        "delete-view-ok": "Eliminar",
+        "delete": "Eliminar"
     },
     "marker-info": {
         "delete-marker-message": "¿Realmente quiere eliminar el indicador «{{name}}»?",
@@ -416,7 +435,10 @@
         "map-not-found-error": "No se pudo encontrar ningún mapa con este identificador.",
         "no-maps-found": "No se pudo encontrar ningún mapa.",
         "search-alt": "Buscar",
-        "open-map-by-id-button": "Abrir"
+        "open-map-by-id-button": "Abrir",
+        "title": "Abrir mapa colaborativo",
+        "search-public-maps": "Buscar mapas públicos",
+        "find-maps-error": "Error al buscar mapas públicos"
     },
     "overpass-multiple-info": {
         "details": "Detalles",
@@ -450,7 +472,8 @@
         "title-create": "Crear mapa colaborativo",
         "delete-map-title": "Eliminar mapa",
         "save-map-error": "Error al guardar la configuración del mapa",
-        "create-map-error": "Error al crear el mapa"
+        "create-map-error": "Error al crear el mapa",
+        "write-link-description": "Cuando se abre el mapa con este enlace, es posible añadir, modificar y eliminar indicadores y líneas, pero no la configuración del mapa, los tipos de objeto y las vistas."
     },
     "search-result-info": {
         "address": "Dirección",
@@ -470,7 +493,12 @@
         "include-view-interpolation-conditionalPois": ", PDI: {{pois}}",
         "settings": "Configuración",
         "title": "Compartir",
-        "type-read": "De solo lectura"
+        "type-read": "De solo lectura",
+        "include-view": "Incluir vista de mapa actual (centro: {{centre}}; nivel de zum: {{zoom}}; capa(s): {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
+        "embed-copied-message": "El código para incrustar {{appName}} se copió en el portapapeles.",
+        "type-write": "Editable",
+        "show-route": "Pestaña Ruta",
+        "show-pois": "Pestaña PDI"
     },
     "icon-picker": {
         "unknown-icon-error": "Icono desconocido",
@@ -534,7 +562,8 @@
         "share": "Compartir",
         "label": "Herramientas",
         "user-preferences": "Preferencias de usuario",
-        "open-file": "Abrir archivo"
+        "open-file": "Abrir archivo",
+        "history": "Histórico"
     },
     "toolbox-views-dropdown": {
         "manage-views": "Gestionar vistas",
@@ -545,7 +574,8 @@
         "fallback-ok-label": "Aceptar"
     },
     "elevation-stats": {
-        "show-alt": "Mostrar estadísticas"
+        "show-alt": "Mostrar estadísticas",
+        "show-tooltip": "Mostrar estadísticas de elevación"
     },
     "validated-field": {
         "validation-error": "Error al validar el campo del formulario"
@@ -575,7 +605,28 @@
         "unexpected-error": "Error inesperado"
     },
     "route-mode": {
-        "avoid-steps": "Evitar escaleras"
+        "avoid-steps": "Evitar escaleras",
+        "custom-alt": "Personalizado",
+        "straight-alt": "Recto",
+        "avoid-ferries": "Evitar trasbordadores",
+        "avoid-fords": "Evitar vados",
+        "avoid-toll-roads": "Evitar carreteras de peaje",
+        "car": "Coche",
+        "bicycle": "Bicicleta",
+        "road-bike": "Bicicleta de carretera",
+        "fastest": "La más rápida",
+        "straight": "Línea recta",
+        "shortest": "La más corta",
+        "pedestrian-title": "Ir a pie",
+        "bicycle-title": "Ir en bicicleta",
+        "straight-title": "Ir en línea recta",
+        "car-title": "Ir en coche",
+        "pedestrian-alt": "A pie",
+        "car-alt": "Coche",
+        "bicycle-alt": "Bicicleta",
+        "mountain-bike": "Bicicleta de montaña",
+        "electric-bike": "Bicicleta eléctrica",
+        "wheelchair": "Silla de ruedas"
     },
     "search-form": {
         "search-description": "Buscar {{query}}",
@@ -593,7 +644,12 @@
         "base-layer": "Capa básica",
         "name": "Nombre",
         "title": "Guardar vista actual",
-        "save-view-error": "Error al guardar la vista"
+        "save-view-error": "Error al guardar la vista",
+        "filter": "Filtrar",
+        "default-view": "Vista predeterminada",
+        "pois": "PDI",
+        "include-pois": "Incluir PDI ({{pois}})",
+        "include-current-filter": "Incluir filtro actual ({{filter}})"
     },
     "modal-dialog": {
         "save": "Guardar",
@@ -612,10 +668,14 @@
         "delete-objects-ok": "Eliminar",
         "delete-objects-message_one": "¿Realmente quiere quitar {{count}} objeto?",
         "delete-objects-message_many": "¿Realmente quiere quitar {{count}} objetos?",
-        "delete-objects-message_other": "¿Realmente quiere quitar {{count}} objetos?"
+        "delete-objects-message_other": "¿Realmente quiere quitar {{count}} objetos?",
+        "zoom": "Zum",
+        "show-details": "Mostrar detalles",
+        "details": "Detalles"
     },
     "leaflet-map-components": {
-        "pois-error": "Error al cargar los PDI: {{message}}"
+        "pois-error": "Error al cargar los PDI: {{message}}",
+        "pois-too-many-results": "No todos los PDI se muestran porque hay demasiados resultados. Acérquese para ver todos los resultados."
     },
     "leaflet-map": {
         "loading": "Cargando…",
@@ -623,5 +683,18 @@
     },
     "legend-content": {
         "click-explanation": "Pulse para mostrar u ocultar los objetos de este tipo."
+    },
+    "hybrid-popover": {
+        "ok-label": "Aceptar",
+        "close-label": "Cerrar"
+    },
+    "use-as-dropdown": {
+        "to": "Destino de la ruta",
+        "label": "Utilizar como",
+        "from": "Inicio de la ruta"
+    },
+    "pagination": {
+        "next-label": "Siguiente",
+        "previous-label": "Anterior"
     }
 }
