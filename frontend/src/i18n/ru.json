@@ -25,7 +25,9 @@
         "attribution-osm-contributors": "Участники OSM",
         "help-text-documentation": "документация",
         "help-text-chat": "Matrix-чат",
-        "icons": "Иконки"
+        "icons": "Иконки",
+        "map-data-geoip": "GeoIP",
+        "map-data-pois": "POI"
     },
     "route-form-tab": {
         "tab-label": "Навигация"
@@ -38,5 +40,32 @@
     },
     "open-map-dialog": {
         "search-alt": "Поиск"
+    },
+    "overpass-form": {
+        "custom-query": "Пользовательский запрос"
+    },
+    "toolbox-tools-dropdown": {
+        "share": "Поделиться",
+        "export": "Экспорт",
+        "open-file": "Открыть файл",
+        "label": "Инструменты",
+        "history": "История",
+        "user-preferences": "Настройки",
+        "settings": "Настройки карты"
+    },
+    "toolbox-map-style-dropdown": {
+        "label": "Стиль карты",
+        "openstreetmap": "OpenStreetMap",
+        "google-maps": "Google Карты",
+        "bing-maps": "Bing Maps",
+        "google-maps-satellite": "Google Карты (Спутник)"
+    },
+    "toolbox-help-dropdown": {
+        "matrix-chat": "Matrix-чат",
+        "bugtracker": "Сообщить о проблеме",
+        "forum": "Задать вопрос",
+        "about": "О {{appName}}",
+        "label": "Справка",
+        "documentation": "Документация"
     }
 }
