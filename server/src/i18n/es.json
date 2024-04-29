@@ -7,7 +7,9 @@
         "route-points-less-than-two-points-error": "Una línea no puede tener menos de dos puntos de enrutamiento.",
         "map-disappeared-error": "El mapa desapareció tras la actualización.",
         "type-not-found-error": "El tipo {{typeId}} no existe.",
-        "cannot-use-type-for-marker-error": "No se puede usar el tipo {{type}} en el indicador."
+        "cannot-use-type-for-marker-error": "No se puede usar el tipo {{type}} en el indicador.",
+        "old-map-data-not-available-error": "Los datos cartográficos antiguos no están disponibles.",
+        "route-points-not-an-array-error": "«routePoints» no es una matriz"
     },
     "frontend": {
         "requires-javascript": "{{appName}} necesita JavaScript para funcionar.",

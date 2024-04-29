@@ -16,7 +16,9 @@
         "map-data-search": "Búsqueda",
         "map-data": "Datos cartográficos",
         "map-data-geoip-description": "Este producto incluye datos GeoLite2 creados por MaxMind, disponibles en {{maxmind}}.",
-        "help-text": "Si tiene preguntas, consulte la {{documentation}}, use el {{discussions}} o conéctese al canal de {{chat}}."
+        "help-text": "Si tiene preguntas, consulte la {{documentation}}, use el {{discussions}} o conéctese al canal de {{chat}}.",
+        "issues-text": "Si algo no funciona o tiene sugerencias de mejora, compártalas en el {{tracker}}.",
+        "map-data-geoip": "GeoIP"
     },
     "add": {
         "hidden-markers-added-title_one": "Indicador añadido",
@@ -24,7 +26,11 @@
         "hidden-markers-added-title_other": "{{count}} indicadores añadidos",
         "hidden-markers-added-message_one": "El indicador se añadió correctamente, pero el filtro activo evita que se muestre.",
         "hidden-markers-added-message_many": "Se añadieron {{count}} indicadores correctamente, pero el filtro activo evita que se muestren.",
-        "hidden-markers-added-message_other": "Se añadieron {{count}} indicadores correctamente, pero el filtro activo evita que se muestren."
+        "hidden-markers-added-message_other": "Se añadieron {{count}} indicadores correctamente, pero el filtro activo evita que se muestren.",
+        "hidden-lines-added-title_one": "Línea añadida",
+        "hidden-lines-added-title_many": "{{count}} líneas añadidas",
+        "hidden-lines-added-title_other": "{{count}} líneas añadidas",
+        "hidden-objects-added-title": "{{count}} objetos añadidos"
     },
     "client-provider": {
         "loading-map": "Cargando mapa…",
@@ -42,7 +48,8 @@
     "add-to-map-dropdown": {
         "add-error": "Error al añadir al mapa",
         "add-marker-items": "Elementos indicadores como {{typeName}}",
-        "fallback-label": "Añadir al mapa"
+        "fallback-label": "Añadir al mapa",
+        "add-line-items": "Elementos de línea/polígono como {{typeName}}"
     },
     "coordinates": {
         "copied-title": "Coordenadas copiadas",
@@ -64,7 +71,19 @@
         "import-type": "Importar tipo «{{name}}»",
         "import-error": "Error al importar al mapa",
         "ok-label": "Importar",
-        "type": "Tipo"
+        "type": "Tipo",
+        "markers_one": "Indicador de tipo {{typeName}} ({{count}})",
+        "markers_many": "Indicadores de tipo {{typeName}} ({{count}})",
+        "markers_other": "Indicadores de tipo {{typeName}} ({{count}})",
+        "lines_one": "Línea de tipo {{typeName}} ({{count}})",
+        "lines_many": "Líneas de tipo {{typeName}} ({{count}})",
+        "lines_other": "Líneas de tipo {{typeName}} ({{count}})",
+        "untyped-markers_one": "Indicador sin tipo ({{count}})",
+        "untyped-markers_many": "Indicadores sin tipo ({{count}})",
+        "untyped-markers_other": "Indicadores sin tipo ({{count}})",
+        "untyped-lines_one": "Línea/polígono sin tipo ({{count}})",
+        "untyped-lines_many": "Líneas/polígonos sin tipo ({{count}})",
+        "untyped-lines_other": "Líneas/polígonos sin tipo ({{count}})"
     },
     "draw": {
         "add-marker-title": "Añadir {{typeName}}",
@@ -106,7 +125,13 @@
         "ele-description": "Elevación del indicador",
         "colour-description": "Color de indicador/línea",
         "mode-description": "Modo de enrutamiento de línea ({{straight}} / {{car}} / {{bicycle}} / {{pedestrian}} / {{track}})",
-        "ternary-description": "Operador «if/then/else»"
+        "ternary-description": "Operador «if/then/else»",
+        "name-description": "Nombre de indicador/línea",
+        "distance-description": "Distancia de línea en kilómetros",
+        "time-description": "Tiempo de enrutamiento de línea en segundos",
+        "routePoints-description": "Coordenadas de puntos de línea",
+        "lower-description": "Convertir en minúsculas",
+        "round-description": "Redondear ({{ceil}}: al alza, {{floor}}: a la baja)"
     },
     "edit-line-dialog": {
         "save-error": "Error al guardar la línea",
@@ -161,7 +186,8 @@
         "field-type-checkbox": "Casilla",
         "field-edit": "Editar",
         "field-update-error": "Error al actualizar el campo",
-        "default-route-mode": "Modo de enrutamiento predeterminado"
+        "default-route-mode": "Modo de enrutamiento predeterminado",
+        "unique-field-name-error": "Varios campos no pueden compartir el mismo nombre."
     },
     "edit-type-dropdown-dialog": {
         "delete-option-title": "Eliminar opción",
@@ -190,7 +216,8 @@
         "option-remove": "Quitar",
         "option-add": "Añadir",
         "control-icon": "Icono del control {{type}}",
-        "control-shape": "Forma del control {{type}}"
+        "control-shape": "Forma del control {{type}}",
+        "unique-value-error": "Varias opciones no pueden compartir una misma etiqueta."
     },
     "export-dialog": {
         "format-option-gpx": "GPX",
@@ -220,7 +247,18 @@
         "html-explanation-interpolation-html": "HTML",
         "geojson-explanation": "Puede utilizar archivos {{geojson}} para crear copias de respaldo completas del mapa. Contienen todos los datos del mapa, incluidas las configuraciones, vistas, tipos, indicadores y líneas, así como todos sus atributos. Para restaurar una copia de respaldo GeoJSON o crear una copia de su mapa, basta con importar nuevamente el archivo en FacilMap.",
         "apply-filter-label": "Incluir solo los objetos visibles con el filtro actual",
-        "gpx-explanation": "Los archivos {{gpx}} se pueden usar para transferir los datos de su mapa a programas y dispositivos de navegación y planificación de ruta como OsmAnd o Garmin. Contienen los indicadores y líneas con sus nombres y descripciones, pero no sus atributos de estilo (salvo determinadas propiedades que OsmAnd admite)."
+        "gpx-explanation": "Los archivos {{gpx}} se pueden usar para transferir los datos de su mapa a programas y dispositivos de navegación y planificación de ruta como OsmAnd o Garmin. Contienen los indicadores y líneas con sus nombres y descripciones, pero no sus atributos de estilo (salvo determinadas propiedades que OsmAnd admite).",
+        "route-type-track": "Puntos de camino",
+        "route-type-track-zip": "Puntos de camino, un archivo por línea (archivo ZIP)",
+        "route-type-route": "Puntos de ruta",
+        "html-explanation": "Los archivos {{html}} se pueden abrir en cualquier navegador web. Exportar un mapa a HTML creará una tabla con únicamente los atributos de datos de todos los indicadores y líneas. Esta tabla también se puede copiar y pegar en una hoja de cálculo para su procesamiento.",
+        "csv-explanation": "Los archivos {{csv}} pueden importarse en la mayoría de las hojas de cálculo y contienen solo los atributos de datos de los objetos de un tipo de indicador o línea concreto.",
+        "route-type": "Tipo de ruta",
+        "track-explanation": "{{track}} exportará sus líneas tal como figuran en su mapa.",
+        "track-explanation-interpolation-track": "Puntos de camino",
+        "track-zip-explanation-interpolation-trackZip": "Puntos de camino, un archivo por línea (archivo ZIP)",
+        "route-explanation-interpolation-route": "Puntos de ruta",
+        "track-zip-explanation": "{{trackZip}} creará un archivo ZIP con un GPX para todos los indicadores y otro por cada línea. Esto funciona mejor con aplicaciones como OsmAnd, que admiten únicamente un estilo de línea por archivo."
     },
     "file-results": {
         "views": "Vistas",
@@ -238,8 +276,10 @@
     "export-dropdown": {
         "export-error": "Error al exportar la ruta",
         "button-label": "Exportar",
-        "gpx-track-label": "Exportar como traza GPX",
-        "gpx-route-label": "Exportar como ruta GPX"
+        "gpx-track-label": "Exportar como camino GPX",
+        "gpx-route-label": "Exportar como ruta GPX",
+        "gpx-track-tooltip": "Los archivos GPX se pueden abrir en la mayoría de los programas de navegación. En el modo de camino, la ruta calculada se guarda en el archivo.",
+        "gpx-route-tooltip": "Los archivos GPX pueden abrirse en la mayoría de las aplicaciones de navegación. En el modo ruta, solo se guardan en el archivo los puntos inicial, final y de enrutamiento, y deja que el programa calcule la ruta."
     },
     "files": {
         "invalid-xml-error": "XML no válido: {{textContent}}"
@@ -352,14 +392,33 @@
         "revert-delete-type-message-unnamed": "¿Realmente quiere restaurar este tipo?",
         "revert-create-type-title": "Eliminar tipo",
         "description-interpolation-quotedName-renamed": "{{quotedBefore}} (nombre nuevo: {{quotedAfter}})",
-        "revert-delete-button": "Restaurar"
+        "revert-delete-button": "Restaurar",
+        "description-create-marker": "Creado el indicador {{id}} {{quotedName}}",
+        "description-create-line": "Creada la línea {{id}} {{quotedName}}",
+        "description-create-view": "Creada la vista {{id}} {{quotedName}}",
+        "description-create-type": "Creado el tipo {{id}} {{quotedName}}",
+        "description-update-map": "Modificada la configuración del mapa",
+        "description-update-marker": "Modificado el indicador {{id}} {{quotedName}}",
+        "description-update-line": "Modificada la línea {{id}} {{quotedName}}",
+        "description-update-view": "Modificada la vista {{id}} {{quotedName}}",
+        "description-update-type": "Modificado el tipo {{id}} {{quotedName}}",
+        "description-delete-marker": "Eliminado el indicador {{id}} {{quotedName}}",
+        "description-delete-line": "Eliminada la línea {{id}} {{quotedName}}",
+        "description-delete-view": "Eliminada la vista {{id}} {{quotedName}}",
+        "description-delete-type": "Eliminado el tipo {{id}} {{quotedName}}"
     },
     "import-tab": {
         "read-error-title": "Error al leer los archivos",
         "no-geometries-error-title": "Ninguna geometría",
         "no-geometries-error-message_one": "El archivo seleccionado no contenía ningúna geometría.",
         "no-geometries-error-message_many": "Los archivos seleccionados no contenían ningúna geometría.",
-        "no-geometries-error-message_other": "Los archivos seleccionados no contenían ningúna geometría."
+        "no-geometries-error-message_other": "Los archivos seleccionados no contenían ningúna geometría.",
+        "parse-error-title": "Error de procesamiento",
+        "parse-error-message_one": "No se pudo eliminar el archivo seleccionado.",
+        "parse-error-message_many": "No se pudieron eliminar los archivos seleccionados.",
+        "parse-error-message_other": "No se pudieron eliminar los archivos seleccionados.",
+        "partial-parse-error-title": "Error de procesamiento",
+        "partial-parse-error-message": "No se pudieron procesar algunos de los archivos seleccionados."
     },
     "line-info": {
         "delete-line-title": "Eliminar línea",
@@ -372,7 +431,8 @@
         "delete-line-error": "Error al eliminar la línea",
         "delete-line-ok": "Eliminar",
         "move-line-cancel": "Cancelar",
-        "delete": "Eliminar"
+        "delete": "Eliminar",
+        "zoom-to-object-label": "Zum a línea"
     },
     "legend": {
         "tab-label": "Simbología"
@@ -421,7 +481,8 @@
         "coordinates": "Coordenadas",
         "actions": "Acciones",
         "delete-marker-title": "Eliminar indicador",
-        "edit-data": "Editar datos"
+        "edit-data": "Editar datos",
+        "zoom-to-object-label": "Zum a indicador"
     },
     "overpass-form": {
         "filter": "Filtrar…",
@@ -443,7 +504,9 @@
     "overpass-multiple-info": {
         "details": "Detalles",
         "show-details": "Mostrar detalles",
-        "zoom": "Zum"
+        "zoom": "Zum",
+        "zoom-to-object": "Zum a objeto",
+        "zoom-to-object-label": "Zum a selección"
     },
     "map-settings-dialog": {
         "delete-map-error": "Error al eliminar el mapa",
@@ -478,7 +541,8 @@
     "search-result-info": {
         "address": "Dirección",
         "type": "Tipo",
-        "coordinates": "Coordenadas"
+        "coordinates": "Coordenadas",
+        "zoom-to-result-label": "Zum a resultado de búsqueda"
     },
     "share-dialog": {
         "show-controls": "Mostrar controles",
@@ -533,7 +597,8 @@
         "remove-destination-tooltip": "Quitar este destino",
         "distance": "Distancia",
         "reorder-alt": "Reordenar",
-        "export-filename": "Ruta de FacilMap"
+        "export-filename": "Ruta de FacilMap",
+        "zoom-to-object-label": "Zum a ruta"
     },
     "route-form-tab": {
         "tab-label": "Ruta"
@@ -545,7 +610,8 @@
         "select-all": "Seleccionar todo",
         "show-details-alt": "Detalles",
         "show-details-tooltip": "Mostrar detalles",
-        "zoom-to-result-alt": "Zum"
+        "zoom-to-result-alt": "Zum",
+        "zoom-to-result-tooltip": "Zum a resultado"
     },
     "toolbox-collab-maps-dropdown": {
         "open-other-map": "Abrir otro mapa",
@@ -631,7 +697,9 @@
     "search-form": {
         "search-description": "Buscar {{query}}",
         "search-alt": "Buscar",
-        "search-error": "Error de búsqueda"
+        "search-error": "Error de búsqueda",
+        "auto-zoom": "Zum a resultados automático",
+        "zoom-to-all": "Zum a todos los resultados"
     },
     "search-form-tab": {
         "tab-label": "Buscar"
@@ -657,7 +725,8 @@
         "close": "Cerrar"
     },
     "overpass-info": {
-        "coordinates": "Coordenadas"
+        "coordinates": "Coordenadas",
+        "zoom-to-object-label": "Zum a PDI"
     },
     "overpass-form-tab": {
         "pois": "PDI"
@@ -671,15 +740,22 @@
         "delete-objects-message_other": "¿Realmente quiere quitar {{count}} objetos?",
         "zoom": "Zum",
         "show-details": "Mostrar detalles",
-        "details": "Detalles"
+        "details": "Detalles",
+        "delete-objects-title_one": "Eliminar {{count}} objeto",
+        "delete-objects-title_many": "Eliminar {{count}} objetos",
+        "delete-objects-title_other": "Eliminar {{count}} objetos",
+        "zoom-to-object": "Zum a objeto",
+        "zoom-to-object-label": "Zum a selección"
     },
     "leaflet-map-components": {
         "pois-error": "Error al cargar los PDI: {{message}}",
-        "pois-too-many-results": "No todos los PDI se muestran porque hay demasiados resultados. Acérquese para ver todos los resultados."
+        "pois-too-many-results": "No todos los PDI se muestran porque hay demasiados resultados. Acérquese para ver todos los resultados.",
+        "pois-zoom-in": "Amplíe para ver PDI."
     },
     "leaflet-map": {
         "loading": "Cargando…",
-        "attribution-notice": "Esta aplicación reutiliza datos cartográficos de [OpenStreetMap](https://www.openstreetmap.org/copyright). Para más información, consulte el diálogo «[Acerca de {{appName}}](#about-dialog)» del menú Ayuda."
+        "attribution-notice": "Esta aplicación reutiliza datos cartográficos de [OpenStreetMap](https://www.openstreetmap.org/copyright). Para más información, consulte el diálogo «[Acerca de {{appName}}](#about-dialog)» del menú Ayuda.",
+        "open-full-size": "Abrir {{appName}} a tamaño completo"
     },
     "legend-content": {
         "click-explanation": "Pulse para mostrar u ocultar los objetos de este tipo."
@@ -696,5 +772,8 @@
     "pagination": {
         "next-label": "Siguiente",
         "previous-label": "Anterior"
+    },
+    "zoom-to-object-button": {
+        "fallback-label": "Zum a objeto"
     }
 }
