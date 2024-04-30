@@ -166,7 +166,9 @@
         "construction": "Construcción",
         "foodcourt": "Áreas de restaurantes",
         "defibrillator": "Desfibriladores (AED)",
-        "watermill": "Molinos de agua"
+        "watermill": "Molinos de agua",
+        "monumentaltree": "Árboles monumentales",
+        "bbq": "Barbacoas"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Objeto GeoJSON no válido."
