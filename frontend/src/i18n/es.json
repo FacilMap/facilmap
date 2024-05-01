@@ -598,20 +598,26 @@
         "distance": "Distancia",
         "reorder-alt": "Reordenar",
         "export-filename": "Ruta de FacilMap",
-        "zoom-to-object-label": "Zum a ruta"
+        "zoom-to-object-label": "Zum a ruta",
+        "find-destination-error": "Error al encontrar el destino «{{query}}»"
     },
     "route-form-tab": {
         "tab-label": "Ruta"
     },
     "search-box": {
-        "close-alt": "Cerrar"
+        "close-alt": "Cerrar",
+        "resize-tooltip": "Arrastre para redimensionar; pulse para restablecer"
     },
     "search-results": {
         "select-all": "Seleccionar todo",
         "show-details-alt": "Detalles",
         "show-details-tooltip": "Mostrar detalles",
         "zoom-to-result-alt": "Zum",
-        "zoom-to-result-tooltip": "Zum a resultado"
+        "zoom-to-result-tooltip": "Zum a resultado",
+        "no-results": "No se encontró ningún resultado.",
+        "add-to-map-label_one": "Añadir elemento seleccionado al mapa",
+        "add-to-map-label_many": "Añadir elementos seleccionados al mapa",
+        "add-to-map-label_other": "Añadir elementos seleccionados al mapa"
     },
     "toolbox-collab-maps-dropdown": {
         "open-other-map": "Abrir otro mapa",
