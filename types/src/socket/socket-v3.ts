@@ -8,8 +8,9 @@ import { type View, viewValidator } from "../view.js";
 import type { MultipleEvents } from "../events.js";
 import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
-import { findMapsQueryValidator, getMapQueryValidator, type FindMapsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
+import { findMapsQueryValidator, getMapQueryValidator, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
+import type { FindMapsResult, FindOnMapResult, PagedResults } from "../api.js";
 
 export const requestDataValidatorsV3 = {
 	updateBbox: bboxWithZoomValidator,

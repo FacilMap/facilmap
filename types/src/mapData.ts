@@ -1,5 +1,5 @@
 import { viewValidator } from "./view.js";
-import { idValidator, mapIdValidator } from "./base.js";
+import { idValidator, mapSlugValidator } from "./base.js";
 import * as z from "zod";
 import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead, onlyCreate } from "./cru.js";
 
@@ -11,16 +11,16 @@ export enum Writable {
 export const writableValidator = z.nativeEnum(Writable);
 
 export const mapDataValidator = cruValidator({
-	id: optionalUpdate(mapIdValidator),
+	id: optionalUpdate(mapSlugValidator),
 	writeId: {
-		read: mapIdValidator.optional(), // Unavailable if map is opened in read-only mode
-		create: mapIdValidator,
-		update: mapIdValidator.optional()
+		read: mapSlugValidator.optional(), // Unavailable if map is opened in read-only mode
+		create: mapSlugValidator,
+		update: mapSlugValidator.optional()
 	},
 	adminId: {
-		read: mapIdValidator.optional(), // Unavailable if map is opened in read-only/writeable mode
-		create: mapIdValidator,
-		update: mapIdValidator.optional()
+		read: mapSlugValidator.optional(), // Unavailable if map is opened in read-only/writeable mode
+		create: mapSlugValidator,
+		update: mapSlugValidator.optional()
 	},
 
 	name: optionalCreate(z.string().max(100), ""),

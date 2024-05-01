@@ -1,8 +1,7 @@
 import { asyncIteratorToArray, asyncIteratorToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem } from "../utils/streams.js";
 import Database from "../database/database.js";
-import type { Field, Line, Marker, MapId, TrackPoint, Type } from "facilmap-types";
+import type { Field, Line, Marker, MapId, TrackPoint, Type, LineWithTrackPoints } from "facilmap-types";
 import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
-import type { LineWithTrackPoints } from "../database/line.js";
 import { keyBy } from "lodash-es";
 import type { ReadableStream } from "stream/web";
 import { getI18n } from "../i18n.js";
@@ -126,7 +125,7 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 
 		for await (const marker of database.markers.getMapMarkers(mapId)) {
 			if (filterFunc(marker, types[marker.typeId])) {
-				for await (const chunk of indentStream(getMarkerGpx(marker, types[marker.typeId]), { indent: "\t", indentFirst: true, addNewline: true })) {
+				for await (const chunk of getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 					yield chunk;
 				}
 			}
@@ -135,12 +134,12 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 		for await (const line of database.lines.getMapLines(mapId)) {
 			if (filterFunc(line, types[line.typeId])) {
 				if (useTracks || line.mode == "track") {
-					const trackPoints = database.lines.getAllLinePoints(line.id);
-					for await (const chunk of indentStream(getLineTrackGpx(line, types[line.typeId], trackPoints), { indent: "\t", indentFirst: true, addNewline: true })) {
+					const trackPoints = database.lines.getLinePointsForLine(line.id);
+					for await (const chunk of getLineTrackGpx(line, types[line.typeId], trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 						yield chunk;
 					}
 				} else {
-					for await (const chunk of indentStream(getLineRouteGpx(line, types[line.typeId]), { indent: "\t", indentFirst: true, addNewline: true })) {
+					for await (const chunk of getLineRouteGpx(line, types[line.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 						yield chunk;
 					}
 				}
@@ -176,7 +175,7 @@ export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolea
 
 				for await (const marker of database.markers.getMapMarkers(mapId)) {
 					if (filterFunc(marker, types[marker.typeId])) {
-						for await (const chunk of indentStream(getMarkerGpx(marker, types[marker.typeId]), { indent: "\t", indentFirst: true, addNewline: true })) {
+						for await (const chunk of getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 							yield chunk;
 						}
 					}
@@ -205,7 +204,7 @@ export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolea
 				const filename = `lines/${getSafeFilename(name)}.gpx`;
 
 				if (useTracks || line.mode == "track") {
-					const trackPoints = database.lines.getAllLinePoints(line.id);
+					const trackPoints = database.lines.getLinePointsForLine(line.id);
 					yield {
 						filename,
 						data: exportLineToTrackGpx(line, types[line.typeId], trackPoints)
@@ -250,7 +249,7 @@ export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined
 			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const chunk of indentStream(getLineTrackGpx(line, type, trackPoints), { indent: "\t", indentFirst: true, addNewline: true })) {
+		for await (const chunk of getLineTrackGpx(line, type, trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 			yield chunk;
 		}
 
@@ -265,7 +264,7 @@ export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined
 			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const chunk of indentStream(getLineRouteGpx(line, type), { indent: "\t", indentFirst: true, addNewline: true })) {
+		for await (const chunk of getLineRouteGpx(line, type).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
 			yield chunk;
 		}
 

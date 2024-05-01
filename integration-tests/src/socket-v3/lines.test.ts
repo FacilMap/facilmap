@@ -1,7 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { createTemporaryMap, openClient, retry } from "../utils";
-import { CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID } from "facilmap-types";
-import type { LineWithTrackPoints } from "facilmap-client";
+import { CRU, type Line, type LinePointsEvent, type FindOnMapLine, type ID, type LineWithTrackPoints } from "facilmap-types";
 import { cloneDeep, omit } from "lodash-es";
 
 test("Create line (using default values)", async () => {

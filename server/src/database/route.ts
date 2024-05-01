@@ -156,7 +156,7 @@ export default class DatabaseRoutes {
 			return;
 
 		const line = await this._db.lines.getLine(mapId, lineId);
-		const linePointsIt = this._db.lines.getAllLinePoints(lineId);
+		const linePointsIt = this._db.lines.getLinePointsForLine(lineId);
 		const linePoints = await asyncIteratorToArray((async function*() {
 			for await (const linePoint of linePointsIt) {
 				yield {

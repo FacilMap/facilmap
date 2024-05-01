@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapSlug, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest, type TrackPoints, type LineWithTrackPoints } from "facilmap-types";
 import { deserializeError, errorConstructors, serializeError } from "serialize-error";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
@@ -29,15 +29,6 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
-
-export interface TrackPoints {
-	[idx: number]: TrackPoint;
-	length: number;
-}
-
-export interface LineWithTrackPoints extends Line {
-	trackPoints: TrackPoints;
-}
 
 export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
 	routeId?: string;
@@ -352,7 +343,7 @@ class Client {
 		}
 	};
 
-	async setMapId(mapId: MapId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+	async setMapId(mapId: MapSlug): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		if(this.state.mapId != null)
 			throw new Error("Map ID already set.");
 

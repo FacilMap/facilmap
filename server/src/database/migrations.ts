@@ -142,7 +142,7 @@ export default class DatabaseMigrations {
 				let writeId;
 				do {
 					writeId = generateRandomId(14);
-				} while (await this._db.maps.mapIdExists(writeId));
+				} while (await this._db.maps.mapSlugExists(writeId));
 
 				await MapModel.update({writeId}, { where: { id: map.id } });
 			}

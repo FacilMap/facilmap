@@ -1,4 +1,1 @@
-declare module "compressjs" {
-	const compressjs: any;
-	export default compressjs;
-}
+declare module "JSONStream";

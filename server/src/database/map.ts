@@ -1,5 +1,5 @@
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey } from "sequelize";
-import type { CRU, FindMapsQuery, FindMapsResult, MapData, MapId, PagedResults } from "facilmap-types";
+import type { CRU, FindMapsQuery, FindMapsResult, MapData, MapId, MapSlug, PagedResults } from "facilmap-types";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 import type { ViewModel } from "./view.js";
@@ -8,10 +8,10 @@ import { getI18n } from "../i18n.js";
 type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
 
 export interface MapModel extends Model<InferAttributes<MapModel>, InferCreationAttributes<MapModel>> {
-	id: MapId;
+	id: MapSlug;
 	name: string;
-	writeId: MapId;
-	adminId: MapId;
+	writeId: MapSlug;
+	adminId: MapSlug;
 	searchEngines: boolean;
 	description: string;
 	clusterMarkers: boolean;
@@ -59,8 +59,8 @@ export default class DatabaseMaps {
 
 	// =====================================================================================================================
 
-	async mapIdExists(mapId: MapId): Promise<boolean> {
-		const num = await this.MapModel.count({ where: { [Op.or]: [ { id: mapId }, { writeId: mapId }, { adminId: mapId } ] } });
+	async mapSlugExists(mapSlug: MapSlug): Promise<boolean> {
+		const num = await this.MapModel.count({ where: { [Op.or]: [ { id: mapSlug }, { writeId: mapSlug }, { adminId: mapSlug } ] } });
 		return num > 0;
 	}
 
@@ -69,18 +69,18 @@ export default class DatabaseMaps {
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
-	async getMapDataByWriteId(writeId: MapId): Promise<MapData | undefined> {
+	async getMapDataByWriteId(writeId: MapSlug): Promise<MapData | undefined> {
 		const obj = await this.MapModel.findOne({ where: { writeId: writeId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
-	async getMapDataByAdminId(adminId: MapId): Promise<MapData | undefined> {
+	async getMapDataByAdminId(adminId: MapSlug): Promise<MapData | undefined> {
 		const obj = await this.MapModel.findOne({ where: { adminId: adminId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
-	async getMapDataByAnyId(mapId: MapId): Promise<MapData | undefined> {
-		const obj = await this.MapModel.findOne({ where: { [Op.or]: { id: mapId, writeId: mapId, adminId: mapId } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
+	async getMapDataByAnyId(mapSlug: MapSlug): Promise<MapData | undefined> {
+		const obj = await this.MapModel.findOne({ where: { [Op.or]: { id: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
@@ -89,7 +89,7 @@ export default class DatabaseMaps {
 			throw new Error(getI18n().t("database.unique-map-ids-error"));
 
 		await Promise.all([data.id, data.writeId, data.adminId].map(async (id) => {
-			if (await this.mapIdExists(id))
+			if (await this.mapSlugExists(id))
 				throw new Error(getI18n().t("database.map-id-taken-error", { id }));
 		}));
 
@@ -109,7 +109,7 @@ export default class DatabaseMaps {
 			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 
 		if(data.id != null && data.id != mapId) {
-			if (await this.mapIdExists(data.id))
+			if (await this.mapSlugExists(data.id))
 				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.id }));
 		}
 
@@ -117,7 +117,7 @@ export default class DatabaseMaps {
 			if(data.writeId == (data.id != null ? data.id : mapId))
 				throw new Error(getI18n().t("database.unique-map-ids-read-write-error"));
 
-			if (await this.mapIdExists(data.writeId))
+			if (await this.mapSlugExists(data.writeId))
 				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.writeId }));
 		}
 
@@ -127,7 +127,7 @@ export default class DatabaseMaps {
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
 				throw new Error(getI18n().t("database.unique-map-ids-write-admin-error"));
 
-			if (await this.mapIdExists(data.adminId))
+			if (await this.mapSlugExists(data.adminId))
 				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.adminId }));
 		}
 
@@ -150,7 +150,7 @@ export default class DatabaseMaps {
 	}
 
 	async deleteMap(mapId: MapId): Promise<void> {
-		const mapData = await this.getMapDataByAnyId(mapId);
+		const mapData = await this.getMapData(mapId);
 
 		if (!mapData)
 			throw new Error(getI18n().t("map-not-found-error", { mapId }));

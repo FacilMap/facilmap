@@ -45,8 +45,8 @@
     },
     "search": {
         "url-request-error": "Laden von „{{url}}“ fehlgeschlagen (Status: {{status}}).",
-        "url-response-error": "Ungültige Antwort vom Server.",
-        "url-unknown-format-error": "Unbekanntes Dateiformat."
+        "url-unknown-format-error": "Unbekanntes Dateiformat.",
+        "invalid-url-error": "Ungültige URL."
     },
     "tabular": {
         "field-name": "Name",

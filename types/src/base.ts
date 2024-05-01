@@ -28,19 +28,20 @@ export type Width = z.infer<typeof widthValidator>;
 export const strokeValidator = z.enum(["", "dashed", "dotted"]);
 export type Stroke = z.infer<typeof strokeValidator>;
 
-export const stringifiedIdValidator = z.string().regex(/^\d+$/).transform(Number);
+export const stringifiedIdValidator = z.coerce.number().int().transform(Number);
 export const idValidator = z.number().int();
 export type ID = z.infer<typeof idValidator>;
 
-export const forbiddenMapIds = [
-	"_app" // Static frontend resources are hosted under https://facilmap.org/_app/, so a map with such an ID would not be accessible
-];
-export const mapIdValidator = z.string()
+export const mapSlugValidator = z.string()
 	.min(1)
 	.max(100)
 	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
-	.refine((val) => !forbiddenMapIds.includes(val), { message: `The following IDs are not allowed: ${forbiddenMapIds.join(", ")}.` });
-export type MapId = z.infer<typeof mapIdValidator>;
+	.refine((val) => !val.startsWith("_"), { message: "May not start with an underscore." })
+	.refine((val) => !val.startsWith("."), { message: "May not start with a period." });
+export type MapSlug = z.infer<typeof mapSlugValidator>;
+
+export const mapIdValidator = mapSlugValidator;
+export type MapId = MapSlug; // Will be changed later
 
 export const routeModeValidator = z.string();
 export type RouteMode = z.infer<typeof routeModeValidator>;

@@ -80,7 +80,7 @@ test("Default types are not added", async () => {
 	const client = await openClient();
 
 	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		expect(result.type).toEqual([]);
+		expect(result.type).toEqual(undefined);
 		expect(client.types).toEqual({});
 	});
 });

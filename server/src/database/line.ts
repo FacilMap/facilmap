@@ -1,5 +1,5 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, MapId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, MapId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate, LinePoints } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -9,10 +9,6 @@ import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
 import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
-
-export type LineWithTrackPoints = Line & {
-	trackPoints: TrackPoint[];
-}
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
@@ -279,7 +275,7 @@ export default class DatabaseLines {
 		return oldLine;
 	}
 
-	async* getLinePointsForMap(mapId: MapId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
+	async* getLinePointsForMap(mapId: MapId, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<LinePoints> {
 		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
 		for (const lineIds of chunks) {
@@ -287,7 +283,9 @@ export default class DatabaseLines {
 				where: {
 					[Op.and]: [
 						{
-							zoom: { [Op.lte]: bboxWithZoom.zoom },
+							...bboxWithZoom ? {
+								zoom: { [Op.lte]: bboxWithZoom.zoom }
+							} : {},
 							lineId: { [Op.in]: lineIds }
 						},
 						this._db.helpers.makeBboxCondition(bboxWithZoom)
@@ -298,20 +296,30 @@ export default class DatabaseLines {
 
 			for (const [key, val] of Object.entries(groupBy(linePoints, "lineId"))) {
 				yield {
-					id: Number(key),
+					lineId: Number(key),
 					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId", "pos"]))
 				};
 			}
 		}
 	}
 
-	async* getAllLinePoints(lineId: ID): AsyncIterable<TrackPoint> {
+	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
 		const points = await this.LineModel.build({ id: lineId } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints({
 			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
-			order: [["idx", "ASC"]]
+			order: [["idx", "ASC"]],
+			...bboxWithZoom ? {
+				where: {
+					[Op.and]: [
+						{
+							zoom: { [Op.lte]: bboxWithZoom.zoom },
+						},
+						this._db.helpers.makeBboxCondition(bboxWithZoom)
+					]
+				}
+			} : {}
 		});
 		for (const point of points) {
-			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
+			yield omit(point.toJSON(), ["pos"]);
 		}
 	}
 

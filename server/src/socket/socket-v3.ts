@@ -1,23 +1,32 @@
 import { promiseProps, type PromiseMap } from "../utils/utils.js";
-import { asyncIteratorToArray, streamToString } from "../utils/streams.js";
+import { asyncIteratorToArray, mapAsyncIterator, streamToString } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { find } from "../search.js";
-import { geoipLookup } from "../geoip.js";
 import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, MapNotFoundError, type SocketServerToClientEmitArgs, type EventName } from "facilmap-types";
-import { calculateRoute, prepareForBoundingBox } from "../routing/routing.js";
+import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, MapNotFoundError, type SocketServerToClientEmitArgs, type EventName, type MapSlug } from "facilmap-types";
+import { prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
+import { ApiBackend } from "../api/api.js";
 
 export type MultipleEventPromises = {
 	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V3>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName];
 }
 
-function isMapId(mapId: MapId | true | undefined): mapId is MapId {
-	return !!(mapId && mapId !== true);
+export async function objectStreamToMultipleEvents<T extends [string, any]>(stream: AsyncIterable<T>): Promise<{
+	[Key in T[0]]: Array<Extract<T, [Key, any]>[1]>;
+}> {
+	const result: any = {};
+	for await (const [key, object] of stream) {
+		if (!result[key]) {
+			result[key] = [];
+		}
+		result[key].push(object);
+	}
+	return result;
 }
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
@@ -25,8 +34,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void;
 	database: Database;
 	remoteAddr: string;
+	api: ApiBackend;
 
-	mapId: MapId | true | undefined = undefined;
+	mapSlug: MapSlug | undefined = undefined;
+	mapId: MapId | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
 	writable: Writable | undefined = undefined;
 	route: Omit<RouteWithId, "trackPoints"> | undefined = undefined;
@@ -40,6 +51,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.emit = emit;
 		this.database = database;
 		this.remoteAddr = remoteAddr;
+		this.api = new ApiBackend(database, remoteAddr);
 
 		this.registerDatabaseHandlers();
 	}
@@ -87,16 +99,16 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
-			setMapId: async (mapId) => {
-				if(this.mapId != null)
+			setMapId: async (mapSlug) => {
+				if(this.mapSlug != null)
 					throw new Error(getI18n().t("socket.map-id-set-error"));
 
-				this.mapId = true;
+				this.mapSlug = mapSlug;
 
 				const [admin, write, read] = await Promise.all([
-					this.database.maps.getMapDataByAdminId(mapId),
-					this.database.maps.getMapDataByWriteId(mapId),
-					this.database.maps.getMapData(mapId)
+					this.database.maps.getMapDataByAdminId(mapSlug),
+					this.database.maps.getMapDataByWriteId(mapSlug),
+					this.database.maps.getMapData(mapSlug)
 				]);
 
 				let map;
@@ -107,7 +119,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				else if(read)
 					map = omit({ ...read, writable: Writable.READ }, ["writeId", "adminId"]);
 				else {
-					this.mapId = undefined;
+					this.mapSlug = undefined;
 					throw new MapNotFoundError(getI18n().t("socket.map-not-exist-error"));
 				}
 
@@ -144,9 +156,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				const ret: MultipleEventPromises = {};
 
-				if(this.mapId && this.mapId !== true) {
+				if(this.mapId) {
 					ret.marker = asyncIteratorToArray(this.database.markers.getMapMarkers(this.mapId, markerBboxWithExcept));
-					ret.linePoints = asyncIteratorToArray(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept));
+					ret.linePoints = asyncIteratorToArray(mapAsyncIterator(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept), ({ lineId, ...rest }) => ({ id: lineId, ...rest })));
 				}
 				if(this.route)
 					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, lineBboxWithExcept, !lineBboxWithExcept.except).then((points) => ([points]));
@@ -160,8 +172,6 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			getMap: async (data) => {
-				this.validatePermissions(Writable.READ);
-
 				const mapData = await this.database.maps.getMapDataByAnyId(data.mapId);
 				return mapData && {
 					id: mapData.id,
@@ -171,97 +181,86 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			findMaps: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				return this.database.maps.findMaps(data);
+				const { query, ...other } = data;
+				return await this.api.findMaps(query, other);
 			},
 
 			createMap: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				if(this.mapId)
+				if(this.mapSlug)
 					throw new Error(getI18n().t("socket.map-already-loaded-error"));
 
-				const mapData = await this.database.maps.createMap(data);
+				const result = await this.api.createMap(data);
+				const events = await objectStreamToMultipleEvents(result.results);
+				const mapData = events.mapData[0];
 
+				this.mapSlug = mapData.adminId;
 				this.mapId = mapData.id;
 				this.writable = Writable.ADMIN;
 
 				this.registerDatabaseHandlers();
 
-				return await this.getMapObjects({ ...mapData, writable: Writable.ADMIN });
+				return events;
 			},
 
 			editMap: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return {
-					...await this.database.maps.updateMapData(this.mapId, data),
-					writable: this.writable!
-				};
+				return await this.api.updateMap(this.mapSlug, data);
 			},
 
 			deleteMap: async () => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				await this.database.maps.deleteMap(this.mapId);
+				await this.api.deleteMap(this.mapSlug);
 			},
 
 			getMarker: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.markers.getMarker(this.mapId, data.id);
+				return await this.api.getMarker(this.mapSlug, data.id);
 			},
 
 			addMarker: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.markers.createMarker(this.mapId, data);
+				return await this.api.createMarker(this.mapSlug, data);
 			},
 
 			editMarker: async (data) => {
-				this.validatePermissions(Writable.WRITE);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.markers.updateMarker(this.mapId, data.id, data);
+				return await this.api.updateMarker(this.mapSlug, data.id, data);
 			},
 
 			deleteMarker: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.markers.deleteMarker(this.mapId, data.id);
+				const marker = await this.api.getMarker(this.mapSlug, data.id);
+				await this.api.deleteMarker(this.mapSlug, data.id);
+				return marker;
 			},
 
 			getLineTemplate: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapId)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				return await this.database.lines.getLineTemplate(this.mapId, data);
 			},
 
 			addLine: async (data) => {
-				this.validatePermissions(Writable.WRITE);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
@@ -274,13 +273,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.database.lines.createLine(this.mapId, data, fromRoute);
+				return await this.api.createLine(this.mapSlug, data, fromRoute);
 			},
 
 			editLine: async (data) => {
-				this.validatePermissions(Writable.WRITE);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				let fromRoute;
@@ -293,22 +290,22 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.database.lines.updateLine(this.mapId, data.id, data, undefined, fromRoute);
+				return await this.api.updateLine(this.mapSlug, data.id, data, fromRoute);
 			},
 
 			deleteLine: async (data) => {
-				this.validatePermissions(Writable.WRITE);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return this.database.lines.deleteLine(this.mapId, data.id);
+				const line = await this.api.getLine(this.mapSlug, data.id);
+				await this.api.deleteLine(this.mapSlug, data.id);
+				return line;
 			},
 
 			exportLine: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapId)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const lineP = this.database.lines.getLine(this.mapId, data.id);
@@ -321,7 +318,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				switch(data.format) {
 					case "gpx-trk":
-						return await streamToString(exportLineToTrackGpx(line, type, this.database.lines.getAllLinePoints(line.id)));
+						return await streamToString(exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id)));
 					case "gpx-rte":
 						return await streamToString(exportLineToRouteGpx(line, type));
 					default:
@@ -330,78 +327,71 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			addView: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.createView(this.mapId, data);
+				return await this.api.createView(this.mapSlug, data);
 			},
 
 			editView: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.updateView(this.mapId, data.id, data);
+				return await this.api.updateView(this.mapSlug, data.id, data);
 			},
 
 			deleteView: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.views.deleteView(this.mapId, data.id);
+				const view = await this.api.getView(this.mapSlug, data.id);
+				await this.api.deleteView(this.mapSlug, data.id);
+				return view;
 			},
 
 			addType: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.createType(this.mapId, data);
+				return await this.api.createType(this.mapSlug, data);
 			},
 
 			editType: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.updateType(this.mapId, data.id, data);
+				return await this.api.updateType(this.mapSlug, data.id, data);
 			},
 
 			deleteType: async (data) => {
-				this.validatePermissions(Writable.ADMIN);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.types.deleteType(this.mapId, data.id);
+				const type = await this.api.getType(this.mapSlug, data.id);
+				await this.api.deleteType(this.mapSlug, data.id);
+				return type;
 			},
 
 			find: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				return await find(data.query, data.loadUrls);
+				const result = await find(data.query, data.loadUrls);
+				if (Array.isArray(result)) {
+					return result;
+				} else {
+					return await streamToString(result.data);
+				}
 			},
 
 			findOnMap: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
-				return await this.database.search.search(this.mapId, data.query);
+				return await this.api.findOnMap(this.mapSlug, data.query);
 			},
 
 			getRoute: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				return await calculateRoute(data.destinations, data.mode);
+				return await this.api.getRoute(data);
 			},
 
 			setRoute: async (data) => {
@@ -469,7 +459,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			lineToRoute: async (data) => {
 				this.validatePermissions(Writable.READ);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapId)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
@@ -530,7 +520,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			listenToHistory: async () => {
 				this.validatePermissions(Writable.WRITE);
 
-				if (!isMapId(this.mapId))
+				if (!this.mapId)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 
 				if(this.listeningToHistory)
@@ -555,20 +545,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			revertHistoryEntry: async (data) => {
-				this.validatePermissions(Writable.WRITE);
-
-				if (!isMapId(this.mapId))
+				if (!this.mapSlug || !this.mapId)
 					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const historyEntry = await this.database.history.getHistoryEntry(this.mapId, data.id);
-
-				if(!["Marker", "Line"].includes(historyEntry.type) && this.writable != Writable.ADMIN)
-					throw new Error(getI18n().t("socket.admin-revert-error"));
 
 				this.pauseHistoryListener++;
 
 				try {
-					await this.database.history.revertHistoryEntry(this.mapId, data.id);
+					await this.api.revertHistoryEntry(this.mapSlug, data.id);
 				} finally {
 					this.pauseHistoryListener--;
 				}
@@ -579,7 +562,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			geoip: async () => {
-				return await geoipLookup(this.remoteAddr);
+				return await this.api.geoip();
 			}
 
 			/*copyPad : function(data, callback) {
@@ -632,10 +615,16 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				mapData: (mapId, data) => {
 					if(mapId == this.mapId) {
 						const dataClone = cloneDeep(data);
-						if(this.writable == Writable.READ)
-							delete dataClone.writeId;
-						if(this.writable != Writable.ADMIN)
+						if (this.writable === Writable.ADMIN) {
+							this.mapSlug = dataClone.adminId;
+						} else if (this.writable === Writable.WRITE) {
 							delete dataClone.adminId;
+							this.mapSlug = dataClone.writeId;
+						} else {
+							delete dataClone.adminId;
+							delete dataClone.writeId;
+							this.mapSlug = dataClone.id;
+						}
 
 						this.mapId = data.id;
 

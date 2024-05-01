@@ -3,25 +3,17 @@ import { type MapData } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line, type TrackPoint } from "../line.js";
 import * as z from "zod";
+import { pagingValidator } from "../api.js";
 
 export const getMapQueryValidator = z.object({
 	mapId: z.string()
 });
 export type GetMapQuery = z.infer<typeof getMapQueryValidator>;
 
-export const findMapsQueryValidator = z.object({
-	query: z.string(),
-	start: z.number().optional(),
-	limit: z.number().optional()
+export const findMapsQueryValidator = pagingValidator.extend({
+	query: z.string()
 });
 export type FindMapsQuery = z.infer<typeof findMapsQueryValidator>;
-
-export type FindMapsResult = Pick<MapData, "id" | "name" | "description">;
-
-export interface PagedResults<T> {
-	results: T[];
-	totalLength: number;
-}
 
 export const lineTemplateRequestValidator = z.object({
 	typeId: idValidator
@@ -52,10 +44,6 @@ export const findOnMapQueryValidator = z.object({
 	query: z.string()
 });
 export type FindOnMapQuery = z.infer<typeof findOnMapQueryValidator>;
-
-export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon"> & { kind: "marker"; similarity: number };
-export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
-export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
 export interface LinePointsEvent {
 	id: ID;

@@ -7,7 +7,7 @@ import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
 import { normalizeMapName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
 import config from "./config";
-import { streamPromiseToStream, streamReplace } from "./utils/streams";
+import { streamPromiseToStream, streamReplace, stringToStream } from "./utils/streams";
 import { ReadableStream } from "stream/web";
 import { generateRandomId } from "./utils/utils";
 import type { TableParams } from "./export/table";
@@ -132,8 +132,7 @@ export function renderTable({ mapData, types, renderSingleTable, url }: {
 			types,
 			url
 		});
-
-		return streamReplace(rendered, replace);
+		return stringToStream(rendered).pipeThrough(streamReplace(replace));
 	})());
 }
 

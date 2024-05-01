@@ -1,10 +1,11 @@
 <script setup lang="ts">
 	import FmHeightgraph from "../../utils/heightgraph";
-	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
+	import type { RouteWithTrackPoints } from "facilmap-client";
 	import { computed, markRaw, ref, toRef, watch } from "vue";
 	import { useDomEventListener, useEventListener } from "../../utils/utils";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { fixOnCleanup } from "../../utils/vue";
+	import type { LineWithTrackPoints } from "facilmap-types";
 
 	const props = defineProps<{
 		route: RouteWithTrackPoints | LineWithTrackPoints;

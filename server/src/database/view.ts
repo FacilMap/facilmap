@@ -66,6 +66,10 @@ export default class DatabaseViews {
 		return this._db.helpers._getMapObjects<View>("View", mapId);
 	}
 
+	getView(mapId: MapId, viewId: ID): Promise<View> {
+		return this._db.helpers._getMapObject<View>("View", mapId, viewId);
+	}
+
 	async _freeViewIdx(mapId: MapId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
 		const existingViews = await asyncIteratorToArray(this.getViews(mapId));
 

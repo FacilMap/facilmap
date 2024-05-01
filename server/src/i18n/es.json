@@ -39,7 +39,6 @@
     },
     "search": {
         "url-request-error": "Falló la solicitud a «{{url}}» con el estado {{status}}.",
-        "url-response-error": "Respuesta de servidor no válida.",
         "url-unknown-format-error": "Formato de archivo desconocido."
     },
     "map-not-found-error": "No se pudo encontrar el mapa {{mapId}}.",

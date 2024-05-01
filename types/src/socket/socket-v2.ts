@@ -2,7 +2,7 @@ import { idValidator, type MapId, type ReplaceProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { MultipleEvents } from "../events.js";
-import { renameProperty, type FindOnMapMarker, type FindOnMapResult, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
+import { renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
 import { requestDataValidatorsV3, type MapEventsV3, type ResponseDataMapV3 } from "./socket-v3.js";
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
@@ -10,6 +10,7 @@ import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEnt
 import { omit } from "lodash-es";
 import { lineValidator } from "../line.js";
 import { viewValidator } from "../view.js";
+import type { FindOnMapMarker, FindOnMapResult } from "../api.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and

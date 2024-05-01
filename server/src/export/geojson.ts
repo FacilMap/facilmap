@@ -31,16 +31,16 @@ export function exportGeoJson(database: Database, mapId: MapId, filter?: string)
 			}),
 			types: mapValues(types, (type) => omit(type, ["id", "mapId"])),
 			features: jsonStreamArray(concatAsyncIterators(
-				flatMapAsyncIterator(database.markers.getMapMarkers(mapId), (marker) => {
+				() => flatMapAsyncIterator(database.markers.getMapMarkers(mapId), (marker) => {
 					if (filterFunc(marker, types[marker.typeId])) {
 						return [markerToGeoJson(marker)];
 					} else {
 						return [];
 					}
 				}),
-				flatMapAsyncIterator(database.lines.getMapLines(mapId), (line) => {
+				() => flatMapAsyncIterator(database.lines.getMapLines(mapId), (line) => {
 					if (filterFunc(line, types[line.typeId])) {
-						return [lineToGeoJson(line, database.lines.getAllLinePoints(line.id))];
+						return [lineToGeoJson(line, database.lines.getLinePointsForLine(line.id))];
 					} else {
 						return [];
 					}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { sortBy } from "lodash-es";
-	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
+	import type { RouteWithTrackPoints } from "facilmap-client";
 	import { createElevationStats } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
 	import { formatAscentDescent, formatDistance, numberKeys } from "facilmap-utils";
@@ -8,6 +8,7 @@
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { useI18n } from "../../utils/i18n";
+	import type { LineWithTrackPoints } from "facilmap-types";
 
 	const i18n = useI18n();
 
