@@ -3,7 +3,7 @@ import type { Line, Marker, MapId, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import type { MapModel } from "./map.js";
-import { arrayToAsyncIterator } from "../utils/streams";
+import { iterableToAsync } from "../utils/streams";
 import { getI18n } from "../i18n.js";
 
 const ITEMS_PER_BATCH = 5000;
@@ -119,7 +119,7 @@ export default class DatabaseHelpers {
 
 	async _updateObjectStyles(objects: Marker | Line | AsyncIterable<Marker | Line>): Promise<void> {
 		const types: Record<ID, Type> = { };
-		for await (const object of Symbol.asyncIterator in objects ? objects : arrayToAsyncIterator([objects])) {
+		for await (const object of Symbol.asyncIterator in objects ? objects : iterableToAsync([objects])) {
 			const mapId = object.mapId;
 
 			if(!types[object.typeId]) {
@@ -131,9 +131,9 @@ export default class DatabaseHelpers {
 			const type = types[object.typeId];
 
 			if (type.type === "line") {
-				await this._db.lines._updateLine(object as Line, {}, type, true);
+				await this._db.lines._updateLine(object as Line, {}, type, { noHistory: true });
 			} else {
-				await this._db.markers._updateMarker(object as Marker, {}, type, true);
+				await this._db.markers._updateMarker(object as Marker, {}, type, { noHistory: true });
 			}
 		}
 	}
@@ -146,7 +146,7 @@ export default class DatabaseHelpers {
 		return entry != null;
 	}
 
-	async _getMapObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", mapId: MapId, id: ID): Promise<T> {
+	async _getMapObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", mapId: MapId, id: ID, options?: { notFound404?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		const entry = await this._db._conn.model(type).findOne({
@@ -156,7 +156,10 @@ export default class DatabaseHelpers {
 		});
 
 		if(entry == null) {
-			throw new Error(getI18n().t("database.object-not-found-in-map-error", { type, id, mapId }));
+			throw Object.assign(
+				new Error(getI18n().t("database.object-not-found-in-map-error", { type, id, mapId })),
+				options?.notFound404 ? { status: 404 } : {}
+			);
 		}
 
 		const data: any = entry.toJSON();
@@ -215,14 +218,14 @@ export default class DatabaseHelpers {
 		return result;
 	}
 
-	async _updateMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, data: any, _noHistory?: boolean): Promise<T> {
+	async _updateMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, data: any, options?: { notFound404?: boolean; noHistory?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
-		const makeHistory = !_noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
+		const makeHistory = !options?.noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
 
 		// Fetch the old object for the history, but also to make sure that the object exists. Unfortunately,
 		// we cannot rely on the return value of the update() method, as on some platforms it returns 0 even
 		// if the object was found (but no fields were changed)
-		const oldObject = await this._getMapObject(type, mapId, objId);
+		const oldObject = await this._getMapObject(type, mapId, objId, { notFound404: options?.notFound404 });
 
 		if(Object.keys(data).length > 0 && (!includeData || !isEqual(Object.keys(data), ["data"])))
 			await this._db._conn.model(type).update(data, { where: { id: objId, mapId } });
@@ -243,11 +246,11 @@ export default class DatabaseHelpers {
 		return newObject;
 	}
 
-	async _deleteMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID): Promise<T> {
+	async _deleteMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, options?: { notFound404?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
-		const oldObject = await this._getMapObject<T>(type, mapId, objId);
+		const oldObject = await this._getMapObject<T>(type, mapId, objId, { notFound404: options?.notFound404 });
 
 		if(includeData)
 			await this._setObjectData(type, objId, { });
@@ -365,9 +368,9 @@ export default class DatabaseHelpers {
 
 			if(!isEqual(object.data, newData)) {
 				if(isLine)
-					await this._db.lines.updateLine(object.mapId, object.id, { data: newData }, true); // Last param true to not create history entry
+					await this._db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true });
 				else
-					await this._db.markers.updateMarker(object.mapId, object.id, { data: newData }, true); // Last param true to not create history entry
+					await this._db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true });
 			}
 		}
 	}

@@ -1,8 +1,6 @@
-import { LookupTransformStream, PipeableTransformStream, asyncIteratorToStream, streamReplace } from "./utils/streams";
-import { ReadableStream, TextDecoderStream, TransformStream } from "stream/web";
+import { LookupTransformStream, PipeableTransformStream, iterableToStream, streamReplace, streamToIterable, writableToWeb } from "./utils/streams";
 import sax from "sax";
 import { isEqual } from "lodash-es";
-import { Writable } from "stream";
 import config from "./config";
 import { sleep } from "facilmap-utils";
 
@@ -42,7 +40,7 @@ function detectReferencedRelations(onRelation: (relationId: string) => void): Tr
 		openTags.pop();
 	});
 
-	const parserWriter = Writable.toWeb(parser).getWriter();
+	const parserWriter = writableToWeb(parser).getWriter();
 
 	return new TransformStream({
 		transform: async (chunk, controller) => {
@@ -70,7 +68,7 @@ export function loadSubRelations(): TransformStream<string, string> {
 		return readable
 			.pipeThrough(detectReferencedRelations(onRelation))
 			.pipeThrough(streamReplace({
-				"</osm>": asyncIteratorToStream((async function*() {
+				"</osm>": iterableToStream((async function*() {
 					await sleep(0); // Allow for relations to be detected
 					while (loadStack.length > 0) {
 						const relationId = loadStack.shift()!;
@@ -82,12 +80,12 @@ export function loadSubRelations(): TransformStream<string, string> {
 								}
 							}
 						);
-						const stream = (res.body as ReadableStream<Uint8Array>)
+						const stream = res.body!
 							.pipeThrough(new TextDecoderStream())
 							.pipeThrough(detectReferencedRelations(onRelation))
 							.pipeThrough(removeOsmRootTag());
 
-						for await (const chunk of stream) {
+						for await (const chunk of streamToIterable(stream)) {
 							yield chunk;
 						}
 					}

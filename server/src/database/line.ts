@@ -187,7 +187,7 @@ export default class DatabaseLines {
 	}
 
 	getMapLinesByType(mapId: MapId, typeId: ID): AsyncIterable<Line> {
-		return this._db.helpers._getMapObjects<Line>("Line", mapId, { where: { typeId: typeId } });
+		return this._db.helpers._getMapObjects<Line>("Line", mapId, { where: { typeId } });
 	}
 
 	async getLineTemplate(mapId: MapId, data: { typeId: ID }): Promise<LineTemplate> {
@@ -196,8 +196,8 @@ export default class DatabaseLines {
 		return getLineTemplate(type);
 	}
 
-	getLine(mapId: MapId, lineId: ID): Promise<Line> {
-		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId);
+	getLine(mapId: MapId, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
+		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId, options);
 	}
 
 	async createLine(mapId: MapId, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
@@ -220,13 +220,13 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(mapId: MapId, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
-		const originalLine = await this.getLine(mapId, lineId);
+	async updateLine(mapId: MapId, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { noHistory?: boolean; trackPointsFromRoute?: Route; notFound404?: boolean }): Promise<Line> {
+		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
 		const newType = await this._db.types.getType(mapId, data.typeId ?? originalLine.typeId);
-		return await this._updateLine(originalLine, data, newType, noHistory, trackPointsFromRoute);
+		return await this._updateLine(originalLine, data, newType, options);
 	}
 
-	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, noHistory?: boolean, trackPointsFromRoute?: Route): Promise<Line> {
+	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: { noHistory?: boolean; trackPointsFromRoute?: Route; notFound404?: boolean }): Promise<Line> {
 		if (newType.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: newType.type }));
 		}
@@ -235,13 +235,13 @@ export default class DatabaseLines {
 
 		let routeInfo: RouteInfo | undefined;
 		if((update.mode == "track" && update.trackPoints) || (update.routePoints && !isEqual(update.routePoints, originalLine.routePoints)) || (update.mode != null && update.mode != originalLine.mode))
-			routeInfo = await calculateRouteForLine({ ...originalLine, ...update }, trackPointsFromRoute);
+			routeInfo = await calculateRouteForLine({ ...originalLine, ...update }, options?.trackPointsFromRoute);
 
 		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
 		delete update.trackPoints; // They came if mode is track
 
 		if (Object.keys(update).length > 0) {
-			const newLine = await this._db.helpers._updateMapObject<Line>("Line", originalLine.mapId, originalLine.id, update, noHistory);
+			const newLine = await this._db.helpers._updateMapObject<Line>("Line", originalLine.mapId, originalLine.id, update, options);
 
 			this._db.emit("line", originalLine.mapId, newLine);
 
@@ -268,9 +268,9 @@ export default class DatabaseLines {
 			this._db.emit("linePoints", mapId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
 	}
 
-	async deleteLine(mapId: MapId, lineId: ID): Promise<Line> {
+	async deleteLine(mapId: MapId, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
 		await this._setLinePoints(mapId, lineId, [ ], true);
-		const oldLine = await this._db.helpers._deleteMapObject<Line>("Line", mapId, lineId);
+		const oldLine = await this._db.helpers._deleteMapObject<Line>("Line", mapId, lineId, options);
 		this._db.emit("deleteLine", mapId, { id: lineId });
 		return oldLine;
 	}

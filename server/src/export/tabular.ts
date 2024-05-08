@@ -1,8 +1,7 @@
-import { flatMapStream, asyncIteratorToStream, mapStream } from "../utils/streams.js";
+import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { MapId, ID } from "facilmap-types";
 import Database from "../database/database.js";
-import { ReadableStream } from "stream/web";
 import { getI18n } from "../i18n.js";
 
 export type TabularData = {
@@ -42,7 +41,7 @@ export async function getTabularData(
 		...type.fields.map((f) => [f.name, formatFieldName(f.name)])
 	];
 
-	const objects = type.type === "marker" ? flatMapStream(asyncIteratorToStream(database.markers.getMapMarkersByType(mapId, typeId)), (marker): Array<Array<() => string>> => {
+	const objects = type.type === "marker" ? flatMapStream(iterableToStream(database.markers.getMapMarkersByType(mapId, typeId)), (marker): Array<Array<() => string>> => {
 		if (!filterFunc(marker, type)) {
 			return [];
 		}
@@ -52,7 +51,7 @@ export async function getTabularData(
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
 			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.name], html).trim())
 		]];
-	}) : flatMapStream(asyncIteratorToStream(database.lines.getMapLinesByType(mapId, typeId)), (line): Array<Array<() => string>> => {
+	}) : flatMapStream(iterableToStream(database.lines.getMapLinesByType(mapId, typeId)), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
 			return [];
 		}

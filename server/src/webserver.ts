@@ -7,7 +7,6 @@ import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
 import { exportGpx, exportGpxZip } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
-import { Readable, Writable } from "stream";
 import { getOembedJson, getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
 import { getSafeFilename, normalizeMapName, parseMapUrl } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
@@ -16,6 +15,8 @@ import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
 import { getI18n, i18nMiddleware } from "./i18n.js";
+import { getApiMiddleware } from "./api/api.js";
+import { readableFromWeb, writableToWeb } from "./utils/streams.js";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -132,6 +133,8 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 	app.use(await getStaticFrontendMiddleware());
 
+	app.use("/_api", getApiMiddleware(database));
+
 	// If no file with this name has been found, we render a map
 	app.get("/:mapId", mapMiddleware);
 
@@ -148,7 +151,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(`${getSafeFilename(normalizeMapName(mapData.name))}.gpx`);
-		void exportGpx(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		void exportGpx(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
 	});
 
 	app.get("/:mapId/gpx/zip", async (req: Request<{ mapId: string }>, res: Response<string>) => {
@@ -164,7 +167,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		res.set("Content-type", "application/zip");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
-		void exportGpxZip(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(Writable.toWeb(res));
+		void exportGpxZip(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
 	});
 
 	app.get("/:mapId/table", async (req: Request<{ mapId: string }>, res: Response<string>) => {
@@ -182,7 +185,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			query.filter,
 			query.hide ? query.hide.split(',') : [],
 			`${baseUrl}${encodeURIComponent(req.params.mapId)}/table`
-		).pipeTo(Writable.toWeb(res));
+		).pipeTo(writableToWeb(res));
 	});
 
 	app.get("/:mapId/rawTable/:typeId", async (req: Request<{ mapId: MapId; typeId: string }>, res: Response<string>) => {
@@ -200,7 +203,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []
-		).pipeTo(Writable.toWeb(res));
+		).pipeTo(writableToWeb(res));
 	});
 
 	app.get("/:mapId/geojson", async (req: Request<{ mapId: string }>, res: Response<string>) => {
@@ -217,7 +220,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
 
 		const result = exportGeoJson(database, req.params.mapId, query.filter);
-		Readable.fromWeb(result).pipe(res);
+		readableFromWeb(result).pipe(res);
 	});
 
 	app.get("/:mapId/csv/:typeId", async (req: Request<{ mapId: string; typeId: string }>, res: Response<string>) => {
@@ -242,7 +245,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			query.filter,
 			query.hide ? query.hide.split(',') : []
 		);
-		Readable.fromWeb(result).pipe(res);
+		readableFromWeb(result).pipe(res);
 	});
 
 	const server = createServer(app);

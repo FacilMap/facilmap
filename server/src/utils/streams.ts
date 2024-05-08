@@ -1,56 +1,45 @@
-import { Readable, Transform, Writable } from "stream";
-import { type QueuingStrategy, ReadableStream, TransformStream } from "stream/web";
+import { Duplex, Readable, Transform, Writable } from "stream";
+import { type QueuingStrategy } from "stream/web";
 import Packer from "zip-stream";
 import bz2 from "unbzip2-stream";
 import zlib from "zlib";
+import { PipeableTransformStream } from "json-stream-es";
 
-export async function asyncIteratorToArray<T>(iterator: AsyncIterable<T>): Promise<Array<T>> {
+export { iterableToStream, PipeableTransformStream, streamToIterable, streamToArray, stringToStream, streamToString } from "json-stream-es";
+
+export async function iterableToArray<T>(iterable: Iterable<T> | AsyncIterable<T>): Promise<Array<T>> {
 	const result: T[] = [];
-	for await (const it of iterator) {
+	for await (const it of iterable) {
 		result.push(it);
 	}
 	return result;
 }
 
-export async function* arrayToAsyncIterator<T>(array: T[]): AsyncIterable<T> {
-	for (const it of array) {
+export async function* iterableToAsync<T>(iterable: Iterable<T>): AsyncIterable<T> {
+	for (const it of iterable) {
 		yield it;
 	}
 }
 
-export function asyncIteratorToStream<T>(iterator: AsyncIterable<T>, strategy?: QueuingStrategy<T>): ReadableStream<T> {
-	const it = iterator[Symbol.asyncIterator]();
-	return new ReadableStream<T>({
-		async pull(controller) {
-			const { value, done } = await it.next();
-			if (done) {
-				controller.close();
-			} else {
-				controller.enqueue(value);
-			}
-		},
-	}, strategy);
+export function mapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O | Promise<O>)): AsyncIterable<O> {
+	return flatMapAsyncIterable(iterable, async (it) => [await mapper(it)]);
 }
 
-export function mapAsyncIterator<T, O>(iterator: AsyncIterable<T>, mapper: (it: T) => (O | Promise<O>)): AsyncIterable<O> {
-	return flatMapAsyncIterator(iterator, async (it) => [await mapper(it)]);
+export function filterAsyncIterable<T>(iterable: AsyncIterable<T>, filter: (it: T) => (boolean | Promise<boolean>)): AsyncIterable<T> {
+	return flatMapAsyncIterable(iterable, async (it) => (await filter(it)) ? [it] : []);
 }
 
-export function filterAsyncIterator<T>(iterator: AsyncIterable<T>, filter: (it: T) => (boolean | Promise<boolean>)): AsyncIterable<T> {
-	return flatMapAsyncIterator(iterator, async (it) => (await filter(it)) ? [it] : []);
-}
-
-export async function* flatMapAsyncIterator<T, O>(iterator: AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
-	for await (const it of iterator) {
+export async function* flatMapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
+	for await (const it of iterable) {
 		for (const o of await mapper(it)) {
 			yield o;
 		}
 	}
 }
 
-export async function* concatAsyncIterators<T>(...iterators: Array<AsyncIterable<T> | (() => AsyncIterable<T>)>): AsyncIterable<T> {
-	for (const iterator of iterators) {
-		for await (const it of typeof iterator === "function" ? iterator() : iterator) {
+export async function* concatAsyncIterables<T>(...iterables: Array<AsyncIterable<T> | (() => AsyncIterable<T>)>): AsyncIterable<T> {
+	for (const iterable of iterables) {
+		for await (const it of typeof iterable === "function" ? iterable() : iterable) {
 			yield it;
 		}
 	}
@@ -84,68 +73,6 @@ export function flatMapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) =
 	});
 	void stream.pipeTo(transform.writable);
 	return transform.readable;
-}
-
-type Stringifiable = boolean | number | string | undefined | null | Array<Stringifiable> | /* Should be Record<any, Stringifiable> here, but that does not work */ object;
-const jsonStreamSymbol = Symbol("jsonStream");
-export type JsonStream = ReadableStream<string> & { [jsonStreamSymbol]: true };
-const isJsonStream = (obj: unknown): obj is JsonStream => !!obj && typeof obj === "object" && jsonStreamSymbol in obj && !!obj[jsonStreamSymbol];
-
-export function jsonStreamArray(iterator: Iterable<Stringifiable | JsonStream> | AsyncIterable<Stringifiable | JsonStream>): JsonStream {
-	return Object.assign(asyncIteratorToStream((async function*() {
-		let first = true;
-		yield "[";
-		for await (const value of iterator) {
-			const prefix = `${first ? "" : ","}\n\t`;
-			first = false;
-
-			if (isJsonStream(value)) {
-				yield prefix;
-				for await (const chunk of value.pipeThrough(streamReplace({ "\n": `\n\t` }))) {
-					yield chunk;
-				}
-			} else {
-				yield `${prefix}${JSON.stringify(value, undefined, "\t").replaceAll("\n", "\n\t")}`;
-			}
-		}
-		yield `${first ? "" : "\n"}]`;
-	})()), {
-		[jsonStreamSymbol]: true as const
-	})
-}
-
-export function jsonStreamRecord(iterator: Record<string | number, Stringifiable | Promise<Stringifiable> | JsonStream> | AsyncIterable<[key: string | number, value: Stringifiable | Promise<Stringifiable> | JsonStream]>): JsonStream {
-	return Object.assign(asyncIteratorToStream((async function*() {
-		let first = true;
-		yield "{";
-		const normalizedIterator = Symbol.asyncIterator in iterator ? iterator : Object.entries(iterator);
-		for await (const [key, value] of normalizedIterator) {
-			const prefix = `${first ? "" : ","}\n\t${JSON.stringify(key)}: `;
-			first = false;
-
-			if (isJsonStream(value)) {
-				yield prefix;
-				for await (const chunk of value.pipeThrough(streamReplace({ "\n": `\n\t` }))) {
-					yield chunk;
-				}
-			} else {
-				yield `${prefix}${JSON.stringify(await value, undefined, "\t").replaceAll("\n", "\n\t")}`;
-			}
-		}
-		yield `${first ? "" : "\n"}}`;
-	})()), {
-		[jsonStreamSymbol]: true as const
-	})
-}
-
-export function stringToStream(string: string): ReadableStream<string> {
-	return asyncIteratorToStream((async function*() {
-		yield string;
-	})());
-}
-
-export async function streamToString(stream: ReadableStream<string>): Promise<string> {
-	return (await asyncIteratorToArray(stream)).join("");
 }
 
 /**
@@ -237,27 +164,6 @@ export function streamReplace(replace: Record<string, ReadableStream<string> | s
 	});
 }
 
-/**
- * A TransformStream that is set up by providing a ReadableStream mapper rather than transforming individual chunks using
- * start(), transform() and flush().
- * This allows access to ReadableStream methods such as pipeThrough(), which makes it easy to reuse other TransformStreams
- * in the implementation.
- * @param transformReadable Retrieves one parameter with a ReadableStream that emits the input data of the TransformStream.
- *     Should return a ReadableStream whose output will become the output data of the TransformStream.
- */
-// https://stackoverflow.com/a/78404600/242365
-export class PipeableTransformStream<I, O> extends TransformStream<I, O> {
-	constructor(transformReadable: (readable: ReadableStream<I>) => ReadableStream<O>, writableStrategy?: QueuingStrategy<I>, readableStrategy?: QueuingStrategy<O>) {
-		super({}, writableStrategy);
-		const readable = transformReadable(super.readable as any).pipeThrough(new TransformStream({}, undefined, readableStrategy));
-		Object.defineProperty(this, "readable", {
-			get() {
-				return readable;
-			}
-		});
-	}
-}
-
 export type ZipEncodeStreamItem = { filename: string, data: ReadableStream<string> | null };
 
 export function getZipEncodeStream(): TransformStream<ZipEncodeStreamItem, Uint8Array> {
@@ -267,7 +173,7 @@ export function getZipEncodeStream(): TransformStream<ZipEncodeStreamItem, Uint8
 		void readable.pipeTo(new WritableStream<ZipEncodeStreamItem>({
 			async write(chunk) {
 				await new Promise<void>((resolve, reject) => {
-					archive.entry(chunk.data && Readable.fromWeb(chunk.data), { name: chunk.filename }, (err: any) => {
+					archive.entry(chunk.data && readableFromWeb(chunk.data), { name: chunk.filename }, (err: any) => {
 						if (err) {
 							reject(err);
 						} else {
@@ -282,7 +188,7 @@ export function getZipEncodeStream(): TransformStream<ZipEncodeStreamItem, Uint8
 			}
 		}));
 
-		return Readable.toWeb(archive) as ReadableStream<Uint8Array>;
+		return readableToWeb(archive);
 	});
 }
 
@@ -405,13 +311,37 @@ export function decompressStreamIfApplicable(): TransformStream<Uint8Array, Uint
 				_readableState: {}
 			});
 			return readable2.pipeThrough({
-				readable: Readable.toWeb(bzip2),
-				writable: Writable.toWeb(bzip2)
+				readable: readableToWeb(bzip2),
+				writable: writableToWeb(bzip2)
 			});
 		} else if (result === "gzip") {
-			return readable2.pipeThrough(Transform.toWeb(zlib.createGunzip()));
+			return readable2.pipeThrough(transformToWeb(zlib.createGunzip()));
 		} else {
 			return readable2;
 		}
 	})()));
+}
+
+export function readableToWeb<T>(stream: Readable): ReadableStream<T> {
+	return Readable.toWeb(stream) as any;
+}
+
+export function readableFromWeb(stream: ReadableStream): Readable {
+	return Readable.fromWeb(stream as any);
+}
+
+export function writableToWeb<T>(stream: Writable): WritableStream<T> {
+	return Writable.toWeb(stream);
+}
+
+export function writableFromWeb(stream: WritableStream): Writable {
+	return Writable.fromWeb(stream);
+}
+
+export function transformToWeb<T>(stream: Duplex): TransformStream<T> {
+	return Transform.toWeb(stream) as any;
+}
+
+export function transformFromWeb(stream: TransformStream): Duplex {
+	return Transform.fromWeb(stream as any);
 }

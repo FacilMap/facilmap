@@ -32,11 +32,14 @@
     "check-types": "tsc -b --emitDeclarationOnly"
   },
   "dependencies": {
+    "content-disposition": "^0.5.4",
     "facilmap-types": "workspace:^",
+    "json-stream-es": "portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es",
     "serialize-error": "^11.0.3",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
+    "@types/content-disposition": "^0.5.8",
     "@types/geojson": "^7946.0.14",
     "rimraf": "^5.0.5",
     "typescript": "^5.4.4",

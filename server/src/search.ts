@@ -2,9 +2,8 @@ import type { SearchResult } from "facilmap-types";
 import config from "./config.js";
 import { find as findSearch, parseUrlQuery } from "facilmap-utils";
 import { getDomainLang, getI18n } from "./i18n.js";
-import { decompressStreamIfApplicable, peekFirstBytes } from "./utils/streams.js";
+import { decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
 import { Writable } from "stream";
-import { ReadableStream, TextDecoderStream } from "stream/web";
 import sax from "sax";
 import JSONStream from "JSONStream";
 import { loadSubRelations } from "./osm.js";
@@ -40,7 +39,7 @@ export async function findUrl(url: string): Promise<{ data: ReadableStream<strin
 	return await _loadUrl(url);
 }
 
-async function _loadUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStream<string> }> {
 	const res = await fetch(
 		url,
 		{
@@ -54,12 +53,14 @@ async function _loadUrl(url: string): Promise<{ data: ReadableStream<string> }> 
 		throw new Error(getI18n().t("search.url-request-error", { url, status: res.status }));
 	}
 
-	let bodyStream = (res.body! as ReadableStream<Uint8Array>)
+	const type = res.headers.get("Content-type") ?? undefined;
+
+	let bodyStream = res.body!
 		.pipeThrough(decompressStreamIfApplicable())
 		.pipeThrough(new TextDecoderStream());
 
 	if (url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/)) {
-		return { data: bodyStream };
+		return { type, data: bodyStream };
 	}
 
 	const peek = peekFirstBytes(
@@ -96,18 +97,23 @@ async function _loadUrl(url: string): Promise<{ data: ReadableStream<string> }> 
 
 		let peek;
 		[bodyStream, peek] = bodyStream.tee();
-		void peek.pipeTo(Writable.toWeb(parser));
+		const abortPeek = new AbortController();
+		peek.pipeTo(writableToWeb(parser), { signal: abortPeek.signal }).catch((err) => {
+			if (err.name !== "AbortError") {
+				throw err;
+			}
+		});
 		const rootTag = await rootTagP;
 
-		if(rootTag === "osm" && url.startsWith("https://api.openstreetmap.org/api/")) {
-			void peek.cancel();
-			return { data: bodyStream.pipeThrough(loadSubRelations()) };
-		} else if ((["gpx", "kml", "osm"] as any[]).includes(rootTag)) {
-			void peek.cancel();
-			return { data: bodyStream };
+		if(rootTag === "OSM" && url.startsWith("https://api.openstreetmap.org/api/")) {
+			abortPeek.abort();
+			return { type, data: bodyStream.pipeThrough(loadSubRelations()) };
+		} else if ((["GPX", "KML", "OSM"] as any[]).includes(rootTag)) {
+			abortPeek.abort();
+			return { type, data: bodyStream };
 		} else {
 			void bodyStream.cancel();
-			void peek.cancel();
+			abortPeek.abort();
 			throw new Error(getI18n().t("search.url-unknown-format-error"));
 		}
 	} else if (result === "json") {
@@ -130,10 +136,10 @@ async function _loadUrl(url: string): Promise<{ data: ReadableStream<string> }> 
 				resolve(false);
 			});
 		});
-		void peek.pipeTo(Writable.toWeb(parse));
+		void peek.pipeTo(writableToWeb(parse));
 		const isGeoJson = await isGeoJsonP;
 		if (isGeoJson) {
-			return { data: bodyStream };
+			return { type, data: bodyStream };
 		} else {
 			throw new Error(getI18n().t("search.url-unknown-format-error"));
 		}

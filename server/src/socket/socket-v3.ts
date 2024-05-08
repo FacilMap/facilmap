@@ -1,5 +1,5 @@
 import { promiseProps, type PromiseMap } from "../utils/utils.js";
-import { asyncIteratorToArray, mapAsyncIterator, streamToString } from "../utils/streams.js";
+import { iterableToArray, mapAsyncIterable, streamToString } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { find } from "../search.js";
@@ -10,7 +10,7 @@ import { prepareForBoundingBox } from "../routing/routing.js";
 import type { RouteWithId } from "../database/route.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
-import { ApiBackend } from "../api/api.js";
+import { ApiV3Backend } from "../api/api-v3.js";
 
 export type MultipleEventPromises = {
 	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V3>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName];
@@ -34,7 +34,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void;
 	database: Database;
 	remoteAddr: string;
-	api: ApiBackend;
+	api: ApiV3Backend;
 
 	mapSlug: MapSlug | undefined = undefined;
 	mapId: MapId | undefined = undefined;
@@ -51,7 +51,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.emit = emit;
 		this.database = database;
 		this.remoteAddr = remoteAddr;
-		this.api = new ApiBackend(database, remoteAddr);
+		this.api = new ApiV3Backend(database, remoteAddr);
 
 		this.registerDatabaseHandlers();
 	}
@@ -59,15 +59,15 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	getMapObjects(mapData: MapData & { writable: Writable }): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
 		const promises: PromiseMap<MultipleEvents<SocketEvents<SocketVersion.V3>>> = {
 			mapData: [ mapData ],
-			view: asyncIteratorToArray(this.database.views.getViews(mapData.id)),
-			type: asyncIteratorToArray(this.database.types.getTypes(mapData.id)),
-			line: asyncIteratorToArray(this.database.lines.getMapLines(mapData.id))
+			view: iterableToArray(this.database.views.getViews(mapData.id)),
+			type: iterableToArray(this.database.types.getTypes(mapData.id)),
+			line: iterableToArray(this.database.lines.getMapLines(mapData.id))
 		};
 
 		if(this.bbox) { // In case bbox is set while fetching map data
 			Object.assign(promises, {
-				marker: asyncIteratorToArray(this.database.markers.getMapMarkers(mapData.id, this.bbox)),
-				linePoints: asyncIteratorToArray(this.database.lines.getLinePointsForMap(mapData.id, this.bbox))
+				marker: iterableToArray(this.database.markers.getMapMarkers(mapData.id, this.bbox)),
+				linePoints: iterableToArray(this.database.lines.getLinePointsForMap(mapData.id, this.bbox))
 			});
 		}
 
@@ -157,8 +157,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				const ret: MultipleEventPromises = {};
 
 				if(this.mapId) {
-					ret.marker = asyncIteratorToArray(this.database.markers.getMapMarkers(this.mapId, markerBboxWithExcept));
-					ret.linePoints = asyncIteratorToArray(mapAsyncIterator(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept), ({ lineId, ...rest }) => ({ id: lineId, ...rest })));
+					ret.marker = iterableToArray(this.database.markers.getMapMarkers(this.mapId, markerBboxWithExcept));
+					ret.linePoints = iterableToArray(mapAsyncIterable(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept), ({ lineId, ...rest }) => ({ id: lineId, ...rest })));
 				}
 				if(this.route)
 					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, lineBboxWithExcept, !lineBboxWithExcept.except).then((points) => ([points]));
@@ -267,7 +267,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (data.mode != "track") {
 					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await asyncIteratorToArray(this.database.routes.getAllRoutePoints(route.id)) };
+							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.id)) };
 							break;
 						}
 					}
@@ -284,7 +284,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (data.mode != "track") {
 					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await asyncIteratorToArray(this.database.routes.getAllRoutePoints(route.id)) };
+							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.id)) };
 							break;
 						}
 					}
@@ -530,7 +530,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				this.registerDatabaseHandlers();
 
 				return promiseProps({
-					history: asyncIteratorToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+					history: iterableToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 				});
 			},
 
@@ -557,7 +557,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				}
 
 				return promiseProps({
-					history: asyncIteratorToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
+					history: iterableToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
 				});
 			},
 

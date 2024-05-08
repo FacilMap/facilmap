@@ -6,8 +6,8 @@ import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
 import { getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
-import { ReadableStream } from "stream/web";
 import type { MapId } from "facilmap-types";
+import { streamToIterable } from "../utils/streams.js";
 
 export default class DatabaseMigrations {
 
@@ -431,7 +431,7 @@ export default class DatabaseMigrations {
 					}
 
 					if(!isEqual(newData, object.data))
-						return this._db.helpers._updateMapObject(type.type == "line" ? "Line" : "Marker", object.mapId, object.id, {data: newData}, true);
+						return this._db.helpers._updateMapObject(type.type == "line" ? "Line" : "Marker", object.mapId, object.id, {data: newData}, { noHistory: true });
 				}
 
 				dropdowns.forEach((dropdown) => {
@@ -448,7 +448,7 @@ export default class DatabaseMigrations {
 					});
 				});
 
-				await this._db.helpers._updateMapObject("Type", type.mapId, type.id, {fields: newFields}, true);
+				await this._db.helpers._updateMapObject("Type", type.mapId, type.id, {fields: newFields}, { noHistory: true });
 			}
 		}
 
@@ -485,8 +485,8 @@ export default class DatabaseMigrations {
 			});
 
 			let i = 0;
-			for await (const { marker, ele } of stream) {
-				await this._db.helpers._updateMapObject("Marker", marker.mapId, marker.id, { ele }, true);
+			for await (const { marker, ele } of streamToIterable(stream)) {
+				await this._db.helpers._updateMapObject("Marker", marker.mapId, marker.id, { ele }, { noHistory: true });
 
 				if (++i % 1000 === 0) {
 					console.log(`DB migration: Elevation migration ${i}/${markers.length}`);
@@ -529,7 +529,7 @@ export default class DatabaseMigrations {
 				}
 			}
 
-			await this._db.helpers._updateMapObject("Type", type.mapId, type.id, { showInLegend }, true);
+			await this._db.helpers._updateMapObject("Type", type.mapId, type.id, { showInLegend }, { noHistory: true });
 		}
 
 		await this._db.meta.setMeta("hasLegendOption", "1");
@@ -556,7 +556,7 @@ export default class DatabaseMigrations {
 			if(isNaN(bbox.top) || isNaN(bbox.left) || isNaN(bbox.bottom) || isNaN(bbox.right)) // This is a broken line without track points
 				await this._db.helpers._deleteMapObject("Line", line.mapId, line.id);
 			else
-				await this._db.helpers._updateMapObject("Line", line.mapId, line.id, bbox, true);
+				await this._db.helpers._updateMapObject("Line", line.mapId, line.id, bbox, { noHistory: true });
 		}
 
 		await this._db.meta.setMeta("hasBboxes", "1");

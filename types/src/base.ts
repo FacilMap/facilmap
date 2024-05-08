@@ -83,3 +83,8 @@ export enum Units {
 export const unitsValidator = z.nativeEnum(Units);
 
 export type ReplaceProperties<T1 extends Record<keyof any, any>, T2 extends Partial<Record<keyof T1, any>>> = Omit<T1, keyof T2> & T2;
+
+/** Deeply converts an interface to a type, see https://stackoverflow.com/a/78441681/242365 */
+export type InterfaceToType<T> = {
+	[K in keyof T]: InterfaceToType<T[K]>;
+}

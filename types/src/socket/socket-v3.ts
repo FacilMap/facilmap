@@ -10,7 +10,7 @@ import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
 import { findMapsQueryValidator, getMapQueryValidator, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
-import type { FindMapsResult, FindOnMapResult, PagedResults } from "../api.js";
+import type { FindMapsResult, FindOnMapResult, PagedResults } from "../api/api-common.js";
 
 export const requestDataValidatorsV3 = {
 	updateBbox: bboxWithZoomValidator,

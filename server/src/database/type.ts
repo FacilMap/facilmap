@@ -3,7 +3,7 @@ import { typeValidator, type CRU, type Field, type ID, type MapId, type Type, ty
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
-import { asyncIteratorToArray } from "../utils/streams.js";
+import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
 
 export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreationAttributes<TypeModel>> {
@@ -93,12 +93,12 @@ export default class DatabaseTypes {
 		return this._db.helpers._getMapObjects<Type>("Type", mapId);
 	}
 
-	getType(mapId: MapId, typeId: ID): Promise<Type> {
-		return this._db.helpers._getMapObject<Type>("Type", mapId, typeId);
+	getType(mapId: MapId, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
+		return this._db.helpers._getMapObject<Type>("Type", mapId, typeId, options);
 	}
 
 	async _freeTypeIdx(mapId: MapId, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
-		const existingTypes = await asyncIteratorToArray(this.getTypes(mapId));
+		const existingTypes = await iterableToArray(this.getTypes(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingTypes.length > 0 ? existingTypes[existingTypes.length - 1].idx + 1 : 0);
 
@@ -106,7 +106,7 @@ export default class DatabaseTypes {
 
 		for (const obj of newIndexes) {
 			if ((typeId == null || obj.id !== typeId) && obj.oldIdx !== obj.newIdx) {
-				const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, obj.id, { idx: obj.newIdx }, true);
+				const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, obj.id, { idx: obj.newIdx }, { noHistory: true });
 				this._db.emit("type", result.mapId, result);
 			}
 		}
@@ -125,7 +125,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(mapId: MapId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
+	async updateType(mapId: MapId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Type> {
 		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
 		for(const field of (data.fields || [])) {
 			if(field.oldName && field.oldName != field.name)
@@ -153,7 +153,7 @@ export default class DatabaseTypes {
 			await this._freeTypeIdx(mapId, typeId, data.idx);
 		}
 
-		const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, typeId, data);
+		const result = await this._db.helpers._updateMapObject<Type>("Type", mapId, typeId, data, options);
 		this._db.emit("type", result.mapId, result);
 
 		if(Object.keys(rename).length > 0)
@@ -177,11 +177,11 @@ export default class DatabaseTypes {
 		return !!marker || !!line;
 	}
 
-	async deleteType(mapId: MapId, typeId: ID): Promise<Type> {
+	async deleteType(mapId: MapId, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
 		if (await this.isTypeUsed(mapId, typeId))
 			throw new Error("This type is in use.");
 
-		const type = await this._db.helpers._deleteMapObject<Type>("Type", mapId, typeId);
+		const type = await this._db.helpers._deleteMapObject<Type>("Type", mapId, typeId, options);
 
 		this._db.emit("deleteType", mapId, { id: type.id });
 

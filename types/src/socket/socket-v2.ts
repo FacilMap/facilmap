@@ -10,7 +10,7 @@ import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEnt
 import { omit } from "lodash-es";
 import { lineValidator } from "../line.js";
 import { viewValidator } from "../view.js";
-import type { FindOnMapMarker, FindOnMapResult } from "../api.js";
+import type { FindOnMapMarker, FindOnMapResult } from "../api/api-common.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and

@@ -2,8 +2,7 @@ import type { ID, MapId } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
 import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
-import { ReadableStream } from "stream/web";
-import { asyncIteratorToArray, asyncIteratorToStream, streamPromiseToStream } from "../utils/streams.js";
+import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable } from "../utils/streams.js";
 import { getTabularData } from "./tabular.js";
 import { getI18n } from "../i18n.js";
 
@@ -27,7 +26,7 @@ export function createSingleTable(
 	hide: string[] = [],
 	{ indent = "", tableAttrs, getThAttrs, before, after, leaveEmpty }: TableParams = {}
 ): ReadableStream<string> {
-	return asyncIteratorToStream((async function* () {
+	return iterableToStream((async function* () {
 		function attrs(a: Record<string, string> = {}) {
 			return Object.entries(a).map(([k, v]) => ` ${quoteHtml(k)}="${quoteHtml(v)}"`).join("");
 		}
@@ -65,7 +64,7 @@ export function createSingleTable(
 			beforeEmitted = true;
 		}
 
-		for await (const object of tabular.objects) {
+		for await (const object of streamToIterable(tabular.objects)) {
 			if (!beforeEmitted) {
 				for (const chunk of generateBefore()) {
 					yield chunk;
@@ -96,7 +95,7 @@ export function createTable(database: Database, mapId: MapId, filter: string | u
 	return streamPromiseToStream((async () => {
 		const [mapData, types] = await Promise.all([
 			database.maps.getMapData(mapId),
-			asyncIteratorToArray(database.types.getTypes(mapId))
+			iterableToArray(database.types.getTypes(mapId))
 		]);
 
 		if (!mapData) {

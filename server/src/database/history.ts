@@ -109,8 +109,8 @@ export default class DatabaseHistory {
 	}
 
 
-	async getHistoryEntry(mapId: MapId, entryId: ID): Promise<HistoryEntry> {
-		return await this._db.helpers._getMapObject<HistoryEntry>("History", mapId, entryId);
+	async getHistoryEntry(mapId: MapId, entryId: ID, options?: { notFound404?: boolean }): Promise<HistoryEntry> {
+		return await this._db.helpers._getMapObject<HistoryEntry>("History", mapId, entryId, options);
 	}
 
 

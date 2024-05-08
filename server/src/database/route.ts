@@ -6,7 +6,7 @@ import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVir
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
 import type { Point as GeoJsonPoint } from "geojson";
-import { asyncIteratorToArray } from "../utils/streams.js";
+import { iterableToArray } from "../utils/streams.js";
 
 const updateTimes: Record<string, number> = {};
 
@@ -157,7 +157,7 @@ export default class DatabaseRoutes {
 
 		const line = await this._db.lines.getLine(mapId, lineId);
 		const linePointsIt = this._db.lines.getLinePointsForLine(lineId);
-		const linePoints = await asyncIteratorToArray((async function*() {
+		const linePoints = await iterableToArray((async function*() {
 			for await (const linePoint of linePointsIt) {
 				yield {
 					routeId,

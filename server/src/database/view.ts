@@ -3,7 +3,7 @@ import type { CRU, ID, Latitude, Longitude, MapId, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
-import { asyncIteratorToArray } from "../utils/streams.js";
+import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
@@ -66,12 +66,12 @@ export default class DatabaseViews {
 		return this._db.helpers._getMapObjects<View>("View", mapId);
 	}
 
-	getView(mapId: MapId, viewId: ID): Promise<View> {
-		return this._db.helpers._getMapObject<View>("View", mapId, viewId);
+	getView(mapId: MapId, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+		return this._db.helpers._getMapObject<View>("View", mapId, viewId, options);
 	}
 
 	async _freeViewIdx(mapId: MapId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
-		const existingViews = await asyncIteratorToArray(this.getViews(mapId));
+		const existingViews = await iterableToArray(this.getViews(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingViews.length > 0 ? existingViews[existingViews.length - 1].idx + 1 : 0);
 
@@ -79,7 +79,7 @@ export default class DatabaseViews {
 
 		for (const obj of newIndexes) {
 			if ((viewId == null || obj.id !== viewId) && obj.oldIdx !== obj.newIdx) {
-				const newData = await this._db.helpers._updateMapObject<View>("View", mapId, obj.id, { idx: obj.newIdx }, true);
+				const newData = await this._db.helpers._updateMapObject<View>("View", mapId, obj.id, { idx: obj.newIdx }, { noHistory: true });
 				this._db.emit("view", mapId, newData);
 			}
 		}
@@ -106,19 +106,19 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(mapId: MapId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
+	async updateView(mapId: MapId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<View> {
 		if (data.idx != null) {
 			await this._freeViewIdx(mapId, viewId, data.idx);
 		}
 
-		const newData = await this._db.helpers._updateMapObject<View>("View", mapId, viewId, data);
+		const newData = await this._db.helpers._updateMapObject<View>("View", mapId, viewId, data, options);
 
 		this._db.emit("view", mapId, newData);
 		return newData;
 	}
 
-	async deleteView(mapId: MapId, viewId: ID): Promise<View> {
-		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId);
+	async deleteView(mapId: MapId, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId, options);
 
 		this._db.emit("deleteView", mapId, { id: data.id });
 		return data;

@@ -1,7 +1,6 @@
-import { streamPromiseToStream } from "../utils/streams.js";
+import { readableToWeb, streamPromiseToStream, writableToWeb } from "../utils/streams.js";
 import type { MapId, ID } from "facilmap-types";
 import Database from "../database/database.js";
-import type { ReadableStream } from "stream/web";
 import { stringify } from "csv-stringify";
 import { Readable, Writable } from "stream";
 import { getTabularData } from "./tabular.js";
@@ -18,8 +17,8 @@ export function exportCsv(
 
 		const stringifier = stringify();
 		stringifier.write(tabular.fieldNames);
-		void tabular.objects.pipeTo(Writable.toWeb(stringifier));
+		void tabular.objects.pipeTo(writableToWeb(stringifier));
 
-		return Readable.toWeb(stringifier);
+		return readableToWeb(stringifier);
 	})());
 }

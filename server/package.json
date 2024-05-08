@@ -57,6 +57,7 @@
     "find-cache-dir": "^5.0.0",
     "i18next": "^23.11.1",
     "i18next-http-middleware": "^3.5.0",
+    "json-stream-es": "portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es",
     "lodash-es": "^4.17.21",
     "maxmind": "^4.3.18",
     "md5-file": "^5.0.0",

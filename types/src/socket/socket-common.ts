@@ -1,9 +1,7 @@
+import { pagingValidator } from "../api/api-common.js";
 import { exportFormatValidator, idValidator, unitsValidator, type Bbox, type ID } from "../base.js";
-import { type MapData } from "../mapData.js";
-import { type Marker } from "../marker.js";
 import { type Line, type TrackPoint } from "../line.js";
 import * as z from "zod";
-import { pagingValidator } from "../api.js";
 
 export const getMapQueryValidator = z.object({
 	mapId: z.string()

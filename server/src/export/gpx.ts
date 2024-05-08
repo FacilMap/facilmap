@@ -1,9 +1,8 @@
-import { asyncIteratorToArray, asyncIteratorToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem } from "../utils/streams.js";
+import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable } from "../utils/streams.js";
 import Database from "../database/database.js";
 import type { Field, Line, Marker, MapId, TrackPoint, Type, LineWithTrackPoints } from "facilmap-types";
 import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
 import { keyBy } from "lodash-es";
-import type { ReadableStream } from "stream/web";
 import { getI18n } from "../i18n.js";
 
 const gpxHeader = (
@@ -89,7 +88,7 @@ function getLineRouteGpx(line: LineForExport, type: Type | undefined): ReadableS
 }
 
 function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
-	return asyncIteratorToStream((async function*() {
+	return iterableToStream((async function*() {
 		yield (
 			`<trk>\n` +
 			`\t<name>${quoteHtml(normalizeLineName(line.name))}</name>\n` +
@@ -107,12 +106,12 @@ function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoint
 }
 
 export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<string> {
-	return asyncIteratorToStream((async function* () {
+	return iterableToStream((async function* () {
 		const filterFunc = compileExpression(filter);
 
 		const [mapData, types] = await Promise.all([
 			database.maps.getMapData(mapId),
-			asyncIteratorToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
+			iterableToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
 		]);
 
 		if (!mapData)
@@ -125,7 +124,7 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 
 		for await (const marker of database.markers.getMapMarkers(mapId)) {
 			if (filterFunc(marker, types[marker.typeId])) {
-				for await (const chunk of getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+				for await (const chunk of streamToIterable(getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 					yield chunk;
 				}
 			}
@@ -135,11 +134,11 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 			if (filterFunc(line, types[line.typeId])) {
 				if (useTracks || line.mode == "track") {
 					const trackPoints = database.lines.getLinePointsForLine(line.id);
-					for await (const chunk of getLineTrackGpx(line, types[line.typeId], trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+					for await (const chunk of streamToIterable(getLineTrackGpx(line, types[line.typeId], trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 						yield chunk;
 					}
 				} else {
-					for await (const chunk of getLineRouteGpx(line, types[line.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+					for await (const chunk of streamToIterable(getLineRouteGpx(line, types[line.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 						yield chunk;
 					}
 				}
@@ -153,12 +152,12 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
-	void asyncIteratorToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
+	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
 		const filterFunc = compileExpression(filter);
 
 		const [mapData, types] = await Promise.all([
 			database.maps.getMapData(mapId),
-			asyncIteratorToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
+			iterableToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
 		]);
 
 		if (!mapData) {
@@ -167,7 +166,7 @@ export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolea
 
 		yield {
 			filename: "markers.gpx",
-			data: asyncIteratorToStream((async function*() {
+			data: iterableToStream((async function*() {
 				yield (
 					`${gpxHeader}\n` +
 					`\t${getMetadataGpx({ name: normalizeMapName(mapData.name) }).replaceAll("\n", "\n\t")}\n`
@@ -175,7 +174,7 @@ export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolea
 
 				for await (const marker of database.markers.getMapMarkers(mapId)) {
 					if (filterFunc(marker, types[marker.typeId])) {
-						for await (const chunk of getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+						for await (const chunk of streamToIterable(getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 							yield chunk;
 						}
 					}
@@ -243,13 +242,13 @@ function getLineMetadataGpx(line: LineForExport, type: Type | undefined): string
 }
 
 export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
-	return asyncIteratorToStream((async function*() {
+	return iterableToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +
 			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const chunk of getLineTrackGpx(line, type, trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+		for await (const chunk of streamToIterable(getLineTrackGpx(line, type, trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 			yield chunk;
 		}
 
@@ -258,13 +257,13 @@ export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined
 }
 
 export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined): ReadableStream<string> {
-	return asyncIteratorToStream((async function*() {
+	return iterableToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +
 			`\t${getLineMetadataGpx(line, type).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const chunk of getLineRouteGpx(line, type).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true }))) {
+		for await (const chunk of streamToIterable(getLineRouteGpx(line, type).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 			yield chunk;
 		}
 

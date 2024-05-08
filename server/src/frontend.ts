@@ -8,7 +8,6 @@ import { static as expressStatic } from "express";
 import { normalizeMapName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
 import config from "./config";
 import { streamPromiseToStream, streamReplace, stringToStream } from "./utils/streams";
-import { ReadableStream } from "stream/web";
 import { generateRandomId } from "./utils/utils";
 import type { TableParams } from "./export/table";
 import { getI18n } from "./i18n";

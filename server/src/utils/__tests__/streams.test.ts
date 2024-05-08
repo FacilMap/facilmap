@@ -1,6 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { arrayToAsyncIterator, asyncIteratorToArray, asyncIteratorToStream, decompressStreamIfApplicable, jsonStreamArray, jsonStreamRecord, peekFirstBytes, streamPromiseToStream, streamReplace, streamToString } from "../streams.js";
-import { ReadableStream } from "stream/web";
+import { iterableToAsync, iterableToStream, decompressStreamIfApplicable, peekFirstBytes, streamPromiseToStream, streamReplace, streamToString, streamToIterable, streamToArray } from "../streams.js";
 
 describe("streamPromiseToStream", () => {
 	test("retrieves data for resolved promise", async () => {
@@ -14,7 +13,7 @@ describe("streamPromiseToStream", () => {
 		const stream = streamPromiseToStream(streamPromise);
 
 		let result = "";
-		for await (const chunk of stream) {
+		for await (const chunk of streamToIterable(stream)) {
 			result += chunk;
 		}
 
@@ -47,80 +46,23 @@ describe("streamPromiseToStream", () => {
 	});
 });
 
-test('jsonStream', async () => {
-	const stream = jsonStreamRecord({
-		test1: { test: 'object' },
-		test2: jsonStreamRecord({
-			one: "one",
-			two: jsonStreamArray([ { object: 'one' }, { object: 'two' } ]),
-			three: "three"
-		}),
-		test3: jsonStreamRecord(arrayToAsyncIterator(Object.entries({
-			one: "one",
-			two: jsonStreamArray(arrayToAsyncIterator([ { object: 'one' }, { object: 'two' } ])),
-			three: "three"
-		}))),
-		test4: jsonStreamArray([
-			"one",
-			jsonStreamRecord({ object1: "one", object2: "two" }),
-			"three"
-		]),
-		test5: jsonStreamArray(arrayToAsyncIterator([
-			"one",
-			jsonStreamRecord(arrayToAsyncIterator(Object.entries({ object1: "one", object2: "two" }))),
-			"three"
-		])),
-		test6: Promise.resolve("promise"),
-		test7: "string"
-	});
-
-	const result = (await asyncIteratorToArray(stream as any)).join("");
-	expect(result).toBe(JSON.stringify({
-		test1: {
-			test: "object"
-		},
-		test2: {
-			one: "one",
-			two: [{ object: "one" }, { object: "two" }],
-			three: "three"
-		},
-		test3: {
-			one: "one",
-			two: [{ object: "one" }, { object: "two" }],
-			three: "three"
-		},
-		test4: [
-			"one",
-			{ object1: "one", object2: "two" },
-			"three"
-		],
-		test5: [
-			"one",
-			{ object1: "one", object2: "two" },
-			"three"
-		],
-		test6: "promise",
-		test7: "string"
-	}, undefined, "\t"));
-});
-
 test("streamReplace", async () => {
 	const replaceMap = {
 		"%VAR1%": "var1 replacement",
 		"%VAR2%": "var2 replacement",
-		"%VAR3%": asyncIteratorToStream((async function* () {
+		"%VAR3%": iterableToStream((async function* () {
 			yield "var2 ";
 			yield "replacement";
 		})())
 	};
 
-	const stream = asyncIteratorToStream((async function* () {
+	const stream = iterableToStream((async function* () {
 		yield "Before %VA";
 		yield "R1% between %V";
 		yield "AR2% and %VAR3% after";
 	})());
 
-	const result = await asyncIteratorToArray(stream.pipeThrough(streamReplace(replaceMap)));
+	const result = await streamToArray(stream.pipeThrough(streamReplace(replaceMap)));
 	expect(result).toEqual([
 		"Before ",
 		"var1 replacement",
@@ -143,7 +85,7 @@ describe("peekFirstBytes", () => {
 		});
 		const peek = peekFirstBytes(getResult);
 
-		const stream = asyncIteratorToStream(arrayToAsyncIterator(["t", "e", "s", "t"])).pipeThrough(peek);
+		const stream = iterableToStream(iterableToAsync(["t", "e", "s", "t"])).pipeThrough(peek);
 
 		expect(await peek.result).toEqual("tes");
 		expect(getResult).toBeCalledTimes(3);
@@ -159,7 +101,7 @@ describe("peekFirstBytes", () => {
 			}
 		});
 
-		const stream = asyncIteratorToStream(arrayToAsyncIterator(["t", "e", "s", "t"])).pipeThrough(peek);
+		const stream = iterableToStream(iterableToAsync(["t", "e", "s", "t"])).pipeThrough(peek);
 
 		expect(await peek.result).toEqual(undefined);
 		expect(await streamToString(stream)).toEqual("test");
@@ -189,23 +131,23 @@ describe("decompressStreamIfApplicable", () => {
 	const testData = new TextEncoder().encode("test");
 
 	test("passes through plain text", async () => {
-		const stream = asyncIteratorToStream(arrayToAsyncIterator([testData]))
+		const stream = iterableToStream(iterableToAsync([testData]))
 			.pipeThrough(decompressStreamIfApplicable());
 
-		expect(await asyncIteratorToArray(stream)).toEqual([testData]);
+		expect(await streamToArray(stream)).toEqual([testData]);
 	});
 
 	test("decodes bzip2 data", async () => {
-		const stream = asyncIteratorToStream(arrayToAsyncIterator([Uint8Array.from(atob("QlpoOTFBWSZTWTOLz6wAAAEBgAIADAAgACGYGYQYXckU4UJAzi8+sA=="), c => c.charCodeAt(0))]))
+		const stream = iterableToStream(iterableToAsync([Uint8Array.from(atob("QlpoOTFBWSZTWTOLz6wAAAEBgAIADAAgACGYGYQYXckU4UJAzi8+sA=="), c => c.charCodeAt(0))]))
 			.pipeThrough(decompressStreamIfApplicable());
 
-		expect(await asyncIteratorToArray(stream)).toEqual([testData]);
+		expect(await streamToArray(stream)).toEqual([testData]);
 	});
 
 	test("decodes gzip data", async () => {
-		const stream = asyncIteratorToStream(arrayToAsyncIterator([Uint8Array.from(atob("H4sIAAAAAAAAAytJLS4BAAx+f9gEAAAA"), c => c.charCodeAt(0))]))
+		const stream = iterableToStream(iterableToAsync([Uint8Array.from(atob("H4sIAAAAAAAAAytJLS4BAAx+f9gEAAAA"), c => c.charCodeAt(0))]))
 			.pipeThrough(decompressStreamIfApplicable());
 
-		expect(await asyncIteratorToArray(stream)).toEqual([testData]);
+		expect(await streamToArray(stream)).toEqual([testData]);
 	});
 });

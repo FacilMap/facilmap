@@ -1068,6 +1068,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/content-disposition@npm:^0.5.8":
+  version: 0.5.8
+  resolution: "@types/content-disposition@npm:0.5.8"
+  checksum: eeea868fb510ae7a32aa2d7de680fba79d59001f3e758a334621e10bc0a6496d3a42bb79243a5e53b9c63cb524522853ccc144fe1ab160c4247d37cdb81146c4
+  languageName: node
+  linkType: hard
+
 "@types/cookie-parser@npm:^1.4.7":
   version: 1.4.7
   resolution: "@types/cookie-parser@npm:1.4.7"
@@ -2666,7 +2673,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-disposition@npm:0.5.4":
+"content-disposition@npm:0.5.4, content-disposition@npm:^0.5.4":
   version: 0.5.4
   resolution: "content-disposition@npm:0.5.4"
   dependencies:
@@ -3970,8 +3977,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "facilmap-client@workspace:client"
   dependencies:
+    "@types/content-disposition": ^0.5.8
     "@types/geojson": ^7946.0.14
+    content-disposition: ^0.5.4
     facilmap-types: "workspace:^"
+    json-stream-es: "portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es"
     rimraf: ^5.0.5
     serialize-error: ^11.0.3
     socket.io-client: ^4.7.5
@@ -4161,6 +4171,7 @@ __metadata:
     find-cache-dir: ^5.0.0
     i18next: ^23.11.1
     i18next-http-middleware: ^3.5.0
+    json-stream-es: "portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es"
     lodash-es: ^4.17.21
     maxmind: ^4.3.18
     md5-file: ^5.0.0
@@ -5472,6 +5483,18 @@ __metadata:
   checksum: cff44156ddce9c67c44386ad5cddf91925fe06b1d217f2da9c4910d01f358c6e3989c4d5a02683c7a5667f9727ff05831f7aa8ae66c8ff691c556f0884d49215
   languageName: node
   linkType: hard
+
+"json-stream-es@portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es::locator=facilmap-client%40workspace%3Aclient":
+  version: 0.0.0-use.local
+  resolution: "json-stream-es@portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es::locator=facilmap-client%40workspace%3Aclient"
+  languageName: node
+  linkType: soft
+
+"json-stream-es@portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es::locator=facilmap-server%40workspace%3Aserver":
+  version: 0.0.0-use.local
+  resolution: "json-stream-es@portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es::locator=facilmap-server%40workspace%3Aserver"
+  languageName: node
+  linkType: soft
 
 "json5@npm:^1.0.2":
   version: 1.0.2
