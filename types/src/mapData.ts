@@ -37,3 +37,9 @@ export const mapDataValidator = cruValidator({
 });
 
 export type MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapDataValidator>;
+
+export type MapDataWithWritable = (
+	| { writable: Writable.ADMIN } & MapData
+	| { writable: Writable.WRITE } & Omit<MapData, "adminId">
+	| { writable: Writable.READ } & Omit<MapData, "adminId" | "writeId">
+);

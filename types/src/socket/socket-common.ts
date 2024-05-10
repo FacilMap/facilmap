@@ -1,47 +1,12 @@
-import { pagingValidator } from "../api/api-common.js";
-import { exportFormatValidator, idValidator, unitsValidator, type Bbox, type ID } from "../base.js";
-import { type Line, type TrackPoint } from "../line.js";
+import { exportFormatValidator, unitsValidator, type ID } from "../base.js";
+import { type TrackPoint } from "../line.js";
 import * as z from "zod";
-
-export const getMapQueryValidator = z.object({
-	mapId: z.string()
-});
-export type GetMapQuery = z.infer<typeof getMapQueryValidator>;
-
-export const findMapsQueryValidator = pagingValidator.extend({
-	query: z.string()
-});
-export type FindMapsQuery = z.infer<typeof findMapsQueryValidator>;
-
-export const lineTemplateRequestValidator = z.object({
-	typeId: idValidator
-});
-export type LineTemplateRequest = z.infer<typeof lineTemplateRequestValidator>;
-
-export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId">;
-
-export const lineExportRequestValidator = z.object({
-	id: idValidator,
-	format: exportFormatValidator
-});
-export type LineExportRequest = z.infer<typeof lineExportRequestValidator>;
 
 export const routeExportRequestValidator = z.object({
 	format: exportFormatValidator,
 	routeId: z.string().optional()
 });
 export type RouteExportRequest = z.infer<typeof routeExportRequestValidator>;
-
-export const findQueryValidator = z.object({
-	query: z.string(),
-	loadUrls: z.boolean().optional()
-});
-export type FindQuery = z.infer<typeof findQueryValidator>;
-
-export const findOnMapQueryValidator = z.object({
-	query: z.string()
-});
-export type FindOnMapQuery = z.infer<typeof findOnMapQueryValidator>;
 
 export interface LinePointsEvent {
 	id: ID;
@@ -88,3 +53,12 @@ export function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: 
 		..."objectAfter" in entry && entry.objectAfter !== undefined ? { objectAfter: mapper(entry.objectAfter) } : {}
 	} as any;
 }
+
+export type StreamId = string;
+
+export type StreamToStreamId<T> = (
+	T extends AsyncIterable<any> | ReadableStream<any> ? StreamId :
+	T extends Promise<infer Value> ? Promise<StreamToStreamId<Value>> :
+	T extends (...args: infer Args) => infer Result ? (...args: Args) => StreamToStreamId<Result> :
+	{ [K in keyof T]: StreamToStreamId<T[K]> }
+);

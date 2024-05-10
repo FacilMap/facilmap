@@ -28,7 +28,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		let params: RenderMapParams;
 		if(req.params?.mapId) {
-			const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
+			const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
 			if (mapData) {
 				params = {
 					mapData: {
@@ -119,7 +119,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		} else {
 			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				mapData = await database.maps.getMapDataByAnyId(parsed.mapId);
+				mapData = await database.maps.getMapDataBySlug(parsed.mapId);
 			} else {
 				res.status(404).send();
 				return;
@@ -144,7 +144,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
 
 		if(!mapData)
 			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
@@ -160,7 +160,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataByAnyId(req.params.mapId);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
 
 		if(!mapData)
 			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));

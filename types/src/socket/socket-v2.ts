@@ -1,16 +1,17 @@
-import { idValidator, type MapId, type ReplaceProperties } from "../base.js";
+import { exportFormatValidator, idValidator, objectWithIdValidator, type MapId, type ReplaceProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { MultipleEvents } from "../events.js";
-import { renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
-import { requestDataValidatorsV3, type MapEventsV3, type ResponseDataMapV3 } from "./socket-v3.js";
+import { nullOrUndefinedValidator, renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
+import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3.js";
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
 import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
-import { omit } from "lodash-es";
-import { lineValidator } from "../line.js";
+import { pick } from "lodash-es";
+import { lineValidator, type LineTemplate } from "../line.js";
 import { viewValidator } from "../view.js";
-import type { FindOnMapMarker, FindOnMapResult } from "../api/api-common.js";
+import { pagingValidator, type FindMapsResult, type FindOnMapMarker, type FindOnMapResult, type MapDataWithWritable, type PagedResults } from "../api/api-common.js";
+import { mapDataValidator } from "../mapData.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and
@@ -92,29 +93,68 @@ export type LegacyV2HistoryEntry = Omit<GenericHistoryEntry<ReplaceProperties<Hi
 	padId: MapId;
 };
 
+export const legacyV2FindMapsQueryValidator = pagingValidator.extend({
+	query: z.string()
+});
+
 export const legacyV2GetMapQueryValidator = z.object({
 	padId: z.string()
 });
 
-export const requestDataValidatorsV2 = {
-	...omit(requestDataValidatorsV3, ["getMap", "findMaps", "createMap", "editMap", "deleteMap", "setMapId"]),
-	getPad: legacyV2GetMapQueryValidator,
-	findPads: requestDataValidatorsV3.findMaps,
-	createPad: requestDataValidatorsV3.createMap,
-	editPad: requestDataValidatorsV3.editMap,
-	deletePad: requestDataValidatorsV3.deleteMap,
-	setPadId: requestDataValidatorsV3.setMapId,
-	addMarker: legacyV2MarkerValidator.create,
-	editMarker: legacyV2MarkerValidator.update.extend({ id: idValidator }),
-	addType: legacyV2TypeValidator.create,
-	editType: legacyV2TypeValidator.update.extend({ id: idValidator })
+export const legacyV2LineTemplateRequestValidator = z.object({
+	typeId: idValidator
+});
+
+export const legacyV2LineExportRequestValidator = z.object({
+	id: idValidator,
+	format: exportFormatValidator
+});
+
+export const legacyV2FindQueryValidator = z.object({
+	query: z.string(),
+	loadUrls: z.boolean().optional()
+});
+
+export const legacyV2FindOnMapQueryValidator = z.object({
+	query: z.string()
+});
+
+export const socketV2RequestValidators = {
+	...pick(socketV3RequestValidators, [
+		"updateBbox", "listenToHistory", "stopListeningToHistory", "getRoute", "setRoute", "clearRoute", "lineToRoute", "exportRoute",
+		"geoip", "setLanguage"
+	]),
+	getPad: z.tuple([legacyV2GetMapQueryValidator]),
+	findPads: z.tuple([legacyV2FindMapsQueryValidator]),
+	createPad: z.tuple([mapDataValidator.create]),
+	editPad: z.tuple([mapDataValidator.update]),
+	deletePad: z.tuple([nullOrUndefinedValidator]),
+	revertHistoryEntry: z.tuple([objectWithIdValidator]),
+	setPadId: z.tuple([socketV3RequestValidators.setMapId]),
+	getMarker: z.tuple([objectWithIdValidator]),
+	addMarker: z.tuple([legacyV2MarkerValidator.create]),
+	editMarker: z.tuple([legacyV2MarkerValidator.update.extend({ id: idValidator })]),
+	deleteMarker: z.tuple([objectWithIdValidator]),
+	getLineTemplate: z.tuple([legacyV2LineTemplateRequestValidator]),
+	addLine: z.tuple([lineValidator.create]),
+	editLine: z.tuple([lineValidator.update.extend({ id: idValidator })]),
+	deleteLine: z.tuple([objectWithIdValidator]),
+	exportLine: z.tuple([legacyV2LineExportRequestValidator]),
+	addType: z.tuple([legacyV2TypeValidator.create]),
+	editType: z.tuple([legacyV2TypeValidator.update.extend({ id: idValidator })]),
+	deleteType: z.tuple([objectWithIdValidator]),
+	addView: z.tuple([viewValidator.create]),
+	editView: z.tuple([viewValidator.update.extend({ id: idValidator })]),
+	deleteView: z.tuple([objectWithIdValidator]),
+	find: z.tuple([legacyV2FindQueryValidator]),
+	findOnMap: z.tuple([legacyV2FindOnMapQueryValidator])
 };
 
-export type ResponseDataMapV2 = ReplaceProperties<Omit<ResponseDataMapV3, "getMap" | "findMaps" | "createMap" | "editMap" | "deleteMap" | "setMapId">, {
-	getPad: ResponseDataMapV3["getMap"];
-	findPads: ResponseDataMapV3["findMaps"];
-	editPad: ResponseDataMapV3["editMap"];
-	deletePad: ResponseDataMapV3["deleteMap"];
+type SocketV2Response = {
+	getPad: FindMapsResult | null;
+	findPads: PagedResults<FindMapsResult>;
+	editPad: MapDataWithWritable;
+	deletePad: null;
 	updateBbox: MultipleEvents<MapEventsV2>;
 	createPad: MultipleEvents<MapEventsV2>;
 	listenToHistory: MultipleEvents<MapEventsV2>;
@@ -123,9 +163,11 @@ export type ResponseDataMapV2 = ReplaceProperties<Omit<ResponseDataMapV3, "getMa
 	addMarker: LegacyV2Marker;
 	editMarker: LegacyV2Marker;
 	deleteMarker: LegacyV2Marker;
+	getLineTemplate: LineTemplate;
 	addLine: LegacyV2Line;
 	editLine: LegacyV2Line;
 	deleteLine: LegacyV2Line;
+	exportLine: string;
 	findOnMap: Array<LegacyV2FindOnMapResult>;
 	addType: LegacyV2Type;
 	editType: LegacyV2Type;
@@ -134,7 +176,14 @@ export type ResponseDataMapV2 = ReplaceProperties<Omit<ResponseDataMapV3, "getMa
 	editView: LegacyV2View;
 	deleteView: LegacyV2View;
 	setPadId: MultipleEvents<MapEventsV2>;
-}>;
+};
+
+export type SocketApiV2<Validated extends boolean = false> = Pick<SocketApiV3<Validated>, (
+	| "stopListeningToHistory" | "find" | "getRoute" | "setRoute" | "clearRoute" | "lineToRoute" | "exportRoute"
+	| "geoip" | "setLanguage"
+)> & {
+	[K in keyof SocketV2Response]: (...args: Validated extends true ? z.infer<typeof socketV2RequestValidators[K]> : z.input<typeof socketV2RequestValidators[K]>) => Promise<SocketV2Response[K]>;
+};
 
 export type MapEventsV2 = ReplaceProperties<Omit<MapEventsV3, "mapData" | "deleteMap">, {
 	marker: [LegacyV2Marker];

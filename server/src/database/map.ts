@@ -1,9 +1,11 @@
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey } from "sequelize";
-import type { CRU, FindMapsQuery, FindMapsResult, MapData, MapId, MapSlug, PagedResults } from "facilmap-types";
+import { type CRU, type FindMapsResult, type MapData, type MapId, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput } from "facilmap-types";
 import Database from "./database.js";
 import { createModel } from "./helpers.js";
 import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
+import { getWritable } from "facilmap-utils";
+import { omit } from "lodash-es";
 
 type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
 
@@ -69,19 +71,26 @@ export default class DatabaseMaps {
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
-	async getMapDataByWriteId(writeId: MapSlug): Promise<MapData | undefined> {
-		const obj = await this.MapModel.findOne({ where: { writeId: writeId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj ? fixMapData(obj.toJSON()) : undefined;
-	}
-
-	async getMapDataByAdminId(adminId: MapSlug): Promise<MapData | undefined> {
-		const obj = await this.MapModel.findOne({ where: { adminId: adminId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj ? fixMapData(obj.toJSON()) : undefined;
-	}
-
-	async getMapDataByAnyId(mapSlug: MapSlug): Promise<MapData | undefined> {
+	async getMapDataBySlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable | undefined> {
 		const obj = await this.MapModel.findOne({ where: { [Op.or]: { id: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		return obj ? fixMapData(obj.toJSON()) : undefined;
+		const mapData = obj ? fixMapData(obj.toJSON()) : undefined;
+
+		if (mapData) {
+			const writable = getWritable(mapData, mapSlug);
+
+			if (minimumPermissions === Writable.ADMIN && ![Writable.ADMIN].includes(writable))
+				throw Object.assign(new Error(getI18n().t("api.only-in-admin-error")), { status: 403 });
+			else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
+				throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
+
+			if (writable === Writable.ADMIN) {
+				return { ...mapData, writable };
+			} else if (writable === Writable.WRITE) {
+				return { ...omit(mapData, ["adminId"]), writable };
+			} else {
+				return { ...omit(mapData, ["adminId", "writeId"]), writable };
+			}
+		}
 	}
 
 	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<MapData> {
@@ -182,15 +191,17 @@ export default class DatabaseMaps {
 		this._db.emit("deleteMap", mapId);
 	}
 
-	async findMaps(query: FindMapsQuery): Promise<PagedResults<FindMapsResult>> {
-		const like = query.query.toLowerCase().replace(/[%_\\]/g, "\\$&").replace(/[*]/g, "%").replace(/[?]/g, "_");
+	async findMaps(query: string, paging?: PagingInput): Promise<PagedResults<FindMapsResult>> {
+		const like = query.toLowerCase().replace(/[%_\\]/g, "\\$&").replace(/[*]/g, "%").replace(/[?]/g, "_");
 		const { count, rows } = await this.MapModel.findAndCountAll({
 			where: Sequelize.and(
 				{ searchEngines: true },
 				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Map.name`)), {[Op.like]: `%${like}%`})
 			),
-			offset: query.start ?? 0,
-			...(query.limit != null ? { limit: query.limit } : {}),
+			offset: paging?.start ?? 0,
+			...paging?.limit != null ? {
+				limit: paging.limit
+			} : {},
 			attributes: ["id", "name", "description"]
 		});
 

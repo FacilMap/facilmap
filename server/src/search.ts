@@ -3,7 +3,6 @@ import config from "./config.js";
 import { find as findSearch, parseUrlQuery } from "facilmap-utils";
 import { getDomainLang, getI18n } from "./i18n.js";
 import { decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
-import { Writable } from "stream";
 import sax from "sax";
 import JSONStream from "JSONStream";
 import { loadSubRelations } from "./osm.js";

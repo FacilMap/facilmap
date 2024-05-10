@@ -2,8 +2,6 @@
     "map-not-found-error": "Map {{mapId}} could not be found.",
     "map-read-not-found-error": "Map with read-only ID {{mapId}} could not be found.",
     "api": {
-        "only-in-admin-error": "Only available in admin mode.",
-        "only-in-write-error": "Only available in write mode.",
         "map-not-exist-error": "This map does not exist.",
         "unknown-format-error": "Unknown format",
         "route-not-available-error": "Route not available.",
@@ -23,7 +21,9 @@
         "unique-map-ids-read-admin-error": "Read-only and admin ID cannot be the same.",
         "unique-map-ids-write-admin-error": "Read-write and admin ID cannot be the same.",
         "map-id-taken-error": "ID '{{id}}' is already taken.",
-        "map-disappeared-error": "Map has disappeared after updating."
+        "map-disappeared-error": "Map has disappeared after updating.",
+        "only-in-admin-error": "Only available in admin mode.",
+        "only-in-write-error": "Only available in write mode."
     },
     "frontend": {
         "requires-javascript": "{{appName}} requires JavaScript to work.",
@@ -38,8 +38,6 @@
         "mapbox-error": "Route could not be calculated ({{code}})."
     },
     "socket": {
-        "only-in-admin-error": "Only available in admin mode.",
-        "only-in-write-error": "Only available in write mode.",
         "map-id-set-error": "Map ID already set.",
         "map-not-exist-error": "This map does not exist.",
         "map-already-loaded-error": "Map already loaded.",

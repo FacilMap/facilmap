@@ -1,4 +1,4 @@
-import type { ID, Type, View } from "facilmap-types";
+import { Writable, type ID, type MapData, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -32,4 +32,14 @@ export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {
 export function getOrderedViews(views: View[] | Record<ID, View>): View[] {
 	const typeArr = Array.isArray(views) ? [...views] : Object.values(views);
 	return typeArr.sort((a, b) => a.idx - b.idx);
+}
+
+export function getWritable(mapData: MapData, mapSlug: MapSlug): Writable {
+	if (mapData.adminId === mapSlug) {
+		return Writable.ADMIN;
+	} else if (mapData.writeId === mapSlug) {
+		return Writable.WRITE;
+	} else {
+		return Writable.READ;
+	}
 }

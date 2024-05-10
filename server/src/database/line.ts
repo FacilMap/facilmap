@@ -1,5 +1,5 @@
 import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, MapId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LineTemplate, LinePoints } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, MapId, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LinePoints } from "facilmap-types";
 import Database from "./database.js";
 import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
@@ -7,7 +7,7 @@ import { calculateRouteForLine } from "../routing/routing.js";
 import type { MapModel } from "./map.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
-import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
+import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
@@ -188,12 +188,6 @@ export default class DatabaseLines {
 
 	getMapLinesByType(mapId: MapId, typeId: ID): AsyncIterable<Line> {
 		return this._db.helpers._getMapObjects<Line>("Line", mapId, { where: { typeId } });
-	}
-
-	async getLineTemplate(mapId: MapId, data: { typeId: ID }): Promise<LineTemplate> {
-		const type = await this._db.types.getType(mapId, data.typeId);
-
-		return getLineTemplate(type);
 	}
 
 	getLine(mapId: MapId, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {

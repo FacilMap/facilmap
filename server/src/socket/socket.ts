@@ -82,12 +82,12 @@ export default class Socket {
 
 			const socketHandlers = handler.getSocketHandlers();
 			for (const i of Object.keys(socketHandlers) as Array<keyof SocketHandlers<SocketVersion>>) {
-				socket.on(i, async (data: unknown, callback: unknown): Promise<void> => {
-					const validatedCallback = typeof callback === 'function' ? callback : undefined;
+				socket.on(i, async (...args: unknown[]): Promise<void> => {
+					const validatedCallback = (typeof args[args.length - 1] === "function" ? args.pop() as (...args: any) => any : undefined);
 
 					try {
-						const validatedData = socketRequestValidators[version][i].parse(data);
-						const res = await (socketHandlers[i] as any)(validatedData);
+						const validatedArgs = socketRequestValidators[version][i].parse(args);
+						const res = await (socketHandlers[i] as any)(...validatedArgs);
 
 						if(!validatedCallback && res)
 							console.trace("No callback available to send result of socket handler " + i);

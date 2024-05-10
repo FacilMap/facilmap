@@ -1,7 +1,7 @@
 import * as z from "zod";
-import { requestDataValidatorsV3, type ResponseDataMapV3, type MapEventsV3 } from "./socket-v3";
-import { requestDataValidatorsV1, type MapEventsV1, type ResponseDataMapV1 } from "./socket-v1";
-import { requestDataValidatorsV2, type MapEventsV2, type ResponseDataMapV2 } from "./socket-v2";
+import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3";
+import { socketV1RequestValidators, type MapEventsV1, type SocketApiV1 } from "./socket-v1";
+import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2";
 
 export * from "./socket-common";
 
@@ -12,24 +12,10 @@ export enum SocketVersion {
 };
 
 export const socketRequestValidators = {
-	[SocketVersion.V1]: requestDataValidatorsV1,
-	[SocketVersion.V2]: requestDataValidatorsV2,
-	[SocketVersion.V3]: requestDataValidatorsV3
+	[SocketVersion.V1]: socketV1RequestValidators,
+	[SocketVersion.V2]: socketV2RequestValidators,
+	[SocketVersion.V3]: socketV3RequestValidators
 } satisfies Record<SocketVersion, Record<string, z.ZodType>>;
-
-type SocketRequestMap<V extends SocketVersion> = {
-	[E in keyof typeof socketRequestValidators[V]]: typeof socketRequestValidators[V][E] extends z.ZodType ? z.input<typeof socketRequestValidators[V][E]> : never;
-};
-
-type ValidatedSocketRequestMap<V extends SocketVersion> = {
-	[E in keyof typeof socketRequestValidators[V]]: typeof socketRequestValidators[V][E] extends z.ZodType ? z.output<typeof socketRequestValidators[V][E]> : never;
-};
-
-type SocketResponseMap<V extends SocketVersion> = {
-	[SocketVersion.V1]: ResponseDataMapV1;
-	[SocketVersion.V2]: ResponseDataMapV2;
-	[SocketVersion.V3]: ResponseDataMapV3;
-}[V];
 
 export type SocketEvents<V extends SocketVersion> = {
 	[SocketVersion.V1]: Pick<MapEventsV1, keyof MapEventsV1>;
@@ -37,16 +23,19 @@ export type SocketEvents<V extends SocketVersion> = {
 	[SocketVersion.V3]: Pick<MapEventsV3, keyof MapEventsV3>;
 }[V];
 
-export type SocketRequestName<V extends SocketVersion> = keyof typeof socketRequestValidators[V];
-export type SocketRequest<V extends SocketVersion, E extends SocketRequestName<V>> = SocketRequestMap<V>[E];
-export type ValidatedSocketRequest<V extends SocketVersion, E extends SocketRequestName<V>> = ValidatedSocketRequestMap<V>[E];
-export type SocketResponse<V extends SocketVersion, E extends SocketRequestName<V>> = E extends keyof SocketResponseMap<V> ? SocketResponseMap<V>[E] : never;
+export type SocketApi<V extends SocketVersion, Validated extends boolean> = {
+	[SocketVersion.V1]: SocketApiV1<Validated>;
+	[SocketVersion.V2]: SocketApiV2<Validated>;
+	[SocketVersion.V3]: SocketApiV3<Validated>;
+}[V];
 
-export type SocketClientToServerEvents<V extends SocketVersion> = {
-	[E in keyof SocketRequestMap<V>]: (
-		data: SocketRequestMap<V>[E],
-		callback: E extends keyof SocketResponseMap<V> ? (err: Error | null, data: SocketResponseMap<V>[E]) => void : (err: Error | null) => void
-	) => void;
+export type SocketClientToServerEvents<V extends SocketVersion, Validated extends boolean> = {
+	[E in keyof SocketApi<V, Validated>]: SocketApi<V, Validated>[E] extends (...args: any) => any ? ((
+		...args: [
+			...Parameters<SocketApi<V, Validated>[E]>,
+			(err: Error | null, data: Awaited<ReturnType<SocketApi<V, Validated>[E]>>) => void
+		]
+	) => void) : never;
 };
 
 export type SocketServerToClientEvents<V extends SocketVersion> = {

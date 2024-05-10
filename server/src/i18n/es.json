@@ -9,7 +9,9 @@
         "type-not-found-error": "El tipo {{typeId}} no existe.",
         "cannot-use-type-for-marker-error": "No se puede usar el tipo {{type}} en el indicador.",
         "old-map-data-not-available-error": "Los datos cartográficos antiguos no están disponibles.",
-        "route-points-not-an-array-error": "«routePoints» no es una matriz"
+        "route-points-not-an-array-error": "«routePoints» no es una matriz",
+        "only-in-admin-error": "Disponible solo en modo administrativo.",
+        "only-in-write-error": "Disponible solo en modo editable."
     },
     "frontend": {
         "requires-javascript": "{{appName}} necesita JavaScript para funcionar.",
@@ -17,8 +19,6 @@
         "load-error": "No se pudo cargar {{appName}}."
     },
     "socket": {
-        "only-in-admin-error": "Disponible solo en modo administrativo.",
-        "only-in-write-error": "Disponible solo en modo editable.",
         "map-id-set-error": "Ya se definió el identificador del mapa.",
         "map-not-exist-error": "Este mapa no existe.",
         "map-already-loaded-error": "Ya se cargó el mapa.",

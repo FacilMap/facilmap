@@ -1,4 +1,4 @@
-import { ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type Paging, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
+import { ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
 import { parseJsonStream, streamToIterable } from "json-stream-es";
 import { parse as parseContentDisposition } from "content-disposition";
 
@@ -6,8 +6,7 @@ function parseStreamedResults<T>(res: Response): StreamedResults<T> {
 	return {
 		results: streamToIterable(
 			res.body!.pipeThrough(new TextDecoderStream())
-				.pipeThrough(parseJsonStream(["results", undefined]))
-				.pipeThrough(new TransformStream({ transform: (chunk, controller) => { controller.enqueue(chunk.value as any); } }))
+				.pipeThrough(parseJsonStream(["results", undefined])) as ReadableStream<any>
 		)
 	};
 }
@@ -59,7 +58,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return res;
 	}
 
-	async findMaps(query: string, data: Paging): Promise<PagedResults<FindMapsResult>> {
+	async findMaps(query: string, data?: PagingInput): Promise<PagedResults<FindMapsResult>> {
 		const res = await this.fetch("/map", { query: { query, ...data } });
 		return await res.json();
 	}
@@ -116,7 +115,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async getHistory(mapSlug: MapSlug, data: Paging): Promise<HistoryEntry[]> {
+	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<HistoryEntry[]> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/history`, {
 			query: data
 		});

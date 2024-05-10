@@ -1,6 +1,8 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapSlug, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest, type TrackPoints, type LineWithTrackPoints } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindMapsResult, type ID, type Line, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type MapData, type MapSlug, type PagedResults, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, MapNotFoundError, type SetLanguageRequest, type TrackPoints, type Api, ApiVersion, type PagingInput, type MapDataWithWritable, type AllMapObjectsPick, type StreamedResults, type AllAdminMapObjectsItem, type BboxWithExcept, type AllMapObjectsItem, type SocketApi, type StreamId, type FindOnMapResult, type HistoryEntry, type ExportFormat } from "facilmap-types";
 import { deserializeError, errorConstructors, serializeError } from "serialize-error";
+import { defaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactive";
+import { streamToIterable } from "json-stream-es";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	connect: [];
@@ -21,9 +23,9 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	route: [RouteWithTrackPoints];
 	clearRoute: [RouteClear];
 
-	emit: { [eventName in SocketRequestName<SocketVersion.V3>]: [eventName, SocketRequest<SocketVersion.V3, eventName>] }[SocketRequestName<SocketVersion.V3>];
-	emitResolve: { [eventName in SocketRequestName<SocketVersion.V3>]: [eventName, SocketResponse<SocketVersion.V3, eventName>] }[SocketRequestName<SocketVersion.V3>];
-	emitReject: [SocketRequestName<SocketVersion.V3>, Error];
+	emit: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, ...Parameters<SocketApi<SocketVersion.V3, false>[E]>] }[keyof SocketApi<SocketVersion.V3, false>];
+	emitResolve: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, UndefinedToNull<Awaited<ReturnType<SocketApi<SocketVersion.V3, false>[E]>>>] }[keyof SocketApi<SocketVersion.V3, false>];
+	emitReject: [keyof SocketApi<SocketVersion.V3, false>, Error];
 }
 
 export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
@@ -46,32 +48,29 @@ interface ClientState {
 	serverError: Error | undefined;
 	loading: number;
 	listeningToHistory: boolean;
+	routes: Record<string, Route>;
 }
 
-interface ClientData {
-	mapData: (MapData & { writable: Writable }) | undefined;
-	markers: Record<ID, Marker>;
-	lines: Record<ID, LineWithTrackPoints>;
-	views: Record<ID, View>;
-	types: Record<ID, Type>;
-	history: Record<ID, HistoryEntry>;
-	route: RouteWithTrackPoints | undefined;
-	routes: Record<string, RouteWithTrackPoints>;
-}
+// Socket.io converts undefined to null.
+type UndefinedToNull<T> = undefined extends T ? Exclude<T, undefined> | null : T;
 
 errorConstructors.set("MapNotFoundError", MapNotFoundError as any);
 
-class Client {
-	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3>>;
-	private state: ClientState;
-	private data: ClientData;
+class Client implements Api<ApiVersion.V3> {
+	protected reactiveObjectProvider;
+	protected socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3, false>>;
+	protected state: ClientState;
+	protected streams: Record<string, { handleChunks: (chunks: any[]) => void; handleDone: () => void }> = {};
 
 	private listeners: {
 		[E in EventName<ClientEvents>]?: Array<EventHandler<ClientEvents, E>>
 	} = { };
 
-	constructor(server: string, mapId?: string, socketOptions?: Partial<ManagerOptions & SocketOptions>) {
-		this.state = this._makeReactive({
+	constructor(server: string, mapId?: string, options?: Partial<ManagerOptions & SocketOptions> & {
+		reactiveObjectProvider?: ReactiveObjectProvider;
+	}) {
+		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? defaultReactiveObjectProvider;
+		this.state = this.reactiveObjectProvider.create({
 			disconnected: true,
 			server,
 			mapId,
@@ -81,51 +80,29 @@ class Client {
 			deleted: false,
 			serverError: undefined,
 			loading: 0,
-			listeningToHistory: false
-		});
-
-		this.data = this._makeReactive({
-			mapData: undefined,
-			markers: { },
-			lines: { },
-			views: { },
-			types: { },
-			history: { },
-			route: undefined,
-			routes: { }
+			listeningToHistory: false,
+			routes: {}
 		});
 
 		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
 		const socket = io(`${serverUrl.origin}/v3`, {
 			forceNew: true,
 			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io",
-			...socketOptions
+			...options
 		});
 		this.socket = socket;
 
-		for(const i of Object.keys(this._handlers) as EventName<ClientEvents>[]) {
-			this.on(i, this._handlers[i] as EventHandler<ClientEvents, typeof i>);
+		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
+			this.on(i as any, handler as any);
 		}
 
 		void Promise.resolve().then(() => {
-			this._simulateEvent("loadStart");
+			this._emit("loadStart");
 		});
 
 		this.once("connect", () => {
-			this._simulateEvent("loadEnd");
+			this._emit("loadEnd");
 		});
-	}
-
-	protected _makeReactive<O extends object>(object: O): O {
-		return object;
-	}
-
-	protected _set<O, K extends keyof O>(object: O, key: K, value: O[K]): void {
-		object[key] = value;
-	}
-
-	protected _delete<O>(object: O, key: keyof O): void {
-		delete object[key];
 	}
 
 	protected _decodeData(data: Record<string, string>): Record<string, string> {
@@ -134,7 +111,7 @@ class Client {
 		return result;
 	}
 
-	private _fixResponseObject<T>(requestName: SocketRequestName<SocketVersion.V3>, obj: T): T {
+	protected _fixResponseObject<T>(requestName: keyof SocketApi<SocketVersion.V3, false>, obj: T): T {
 		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
 			return obj;
 
@@ -144,7 +121,7 @@ class Client {
 		};
 	}
 
-	private _fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
+	protected _fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
 		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
 			return obj;
 
@@ -157,10 +134,27 @@ class Client {
 		] as T;
 	}
 
+	protected _handleStream(streamId: StreamId): ReadableStream<any> {
+		const stream = new TransformStream();
+		const writer = stream.writable.getWriter();
+		this.streams[streamId] = {
+			handleChunks: (chunks) => {
+				for (const chunk of chunks) {
+					void writer.write(chunk);
+				}
+			},
+			handleDone: () => {
+				void writer.close();
+				delete this.streams[streamId];
+			}
+		};
+		return stream.readable;
+	}
+
 	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
 		if(!this.listeners[eventName]) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
-				.on(eventName, (...[data]: ClientEvents[E]) => { this._simulateEvent(eventName as any, data); });
+				.on(eventName, (...[data]: ClientEvents[E]) => { this._emit(eventName as any, data); });
 		}
 
 		this.listeners[eventName] = [...(this.listeners[eventName] || [] as any), fn];
@@ -181,166 +175,92 @@ class Client {
 		}
 	}
 
-	private async _emit<R extends SocketRequestName<SocketVersion.V3>>(eventName: R, ...[data]: SocketRequest<SocketVersion.V3, R> extends undefined | null ? [ ] : [ SocketRequest<SocketVersion.V3, R> ]): Promise<SocketResponse<SocketVersion.V3, R>> {
+	protected async _call<R extends keyof SocketApi<SocketVersion.V3, false>>(
+		eventName: R,
+		...args: Parameters<SocketApi<SocketVersion.V3, false>[R]>
+	): Promise<ReturnType<SocketApi<SocketVersion.V3, false>[R]> extends Promise<infer Result> ? UndefinedToNull<Result> : never> {
 		try {
-			this._simulateEvent("loadStart");
+			this._emit("loadStart");
 
-			this._simulateEvent("emit", eventName as any, data as any);
+			this._emit("emit", eventName as any, args as any);
 
 			const outerError = new Error();
 			return await new Promise((resolve, reject) => {
-				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V3, R>) => {
+				this.socket.emit(eventName as any, args, (err: any, data: any) => {
 					if(err) {
 						const cause = deserializeError(err);
 						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
-						this._simulateEvent("emitReject", eventName as any, err);
+						this._emit("emitReject", eventName as any, err);
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);
 						resolve(fixedData);
-						this._simulateEvent("emitResolve", eventName as any, fixedData as any);
+						this._emit("emitResolve", eventName as any, fixedData);
 					}
 				});
 			});
 		} finally {
-			this._simulateEvent("loadEnd");
+			this._emit("loadEnd");
 		}
 	}
 
-	private _handlers: {
+	protected _getEventHandlers(): {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
-	} = {
-		mapData: (data) => {
-			this._set(this.data, 'mapData', data);
+	} {
+		return {
+			mapData: (data) => {
+				if(data.writable != null) {
+					this.reactiveObjectProvider.set(this.state, 'readonly', data.writable == 0);
+					this.reactiveObjectProvider.set(this.state, 'writable', data.writable);
+				}
 
-			if(data.writable != null) {
-				this._set(this.state, 'readonly', data.writable == 0);
-				this._set(this.state, 'writable', data.writable);
+				const id = this.state.writable == 2 ? data.adminId : this.state.writable == 1 ? data.writeId : data.id;
+				if(id != null)
+					this.reactiveObjectProvider.set(this.state, 'mapId', id);
+			},
+
+			deleteMap: () => {
+				this.reactiveObjectProvider.set(this.state, 'readonly', true);
+				this.reactiveObjectProvider.set(this.state, 'writable', 0);
+				this.reactiveObjectProvider.set(this.state, 'deleted', true);
+			},
+
+			disconnect: () => {
+				this.reactiveObjectProvider.set(this.state, 'disconnected', true);
+			},
+
+			connect: () => {
+				this.reactiveObjectProvider.set(this.state, 'disconnected', false); // Otherwise it gets set when mapData arrives
+
+				if(this.state.mapId)
+					this._setMapId(this.state.mapId).catch(() => undefined);
+
+				// TODO: Handle errors
+
+				if(this.state.bbox)
+					this.updateBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
+
+				if(this.state.listeningToHistory) // TODO: Execute after setMapId() returns
+					this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
+
+				for (const route of Object.values(this.state.routes))
+					this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
+			},
+
+			connect_error: (err) => {
+				if (!this.socket.active) { // Fatal error, client will not try to reconnect anymore
+					this.reactiveObjectProvider.set(this.state, 'serverError', err);
+					this._emit("serverError", err);
+				}
+			},
+
+			loadStart: () => {
+				this.reactiveObjectProvider.set(this.state, 'loading', this.state.loading + 1);
+			},
+
+			loadEnd: () => {
+				this.reactiveObjectProvider.set(this.state, 'loading', this.state.loading - 1);
 			}
-
-			const id = this.state.writable == 2 ? data.adminId : this.state.writable == 1 ? data.writeId : data.id;
-			if(id != null)
-				this._set(this.state, 'mapId', id);
-		},
-
-		deleteMap: () => {
-			this._set(this.state, 'readonly', true);
-			this._set(this.state, 'writable', 0);
-			this._set(this.state, 'deleted', true);
-		},
-
-		marker: (data) => {
-			this._set(this.data.markers, data.id, data);
-		},
-
-		deleteMarker: (data) => {
-			this._delete(this.data.markers, data.id);
-		},
-
-		line: (data) => {
-			this._set(this.data.lines, data.id, {
-				...data,
-				trackPoints: this.data.lines[data.id]?.trackPoints || { length: 0 }
-			});
-		},
-
-		deleteLine: (data) => {
-			this._delete(this.data.lines, data.id);
-		},
-
-		linePoints: (data) => {
-			const line = this.data.lines[data.id];
-			if(line == null)
-				return console.error("Received line points for non-existing line "+data.id+".");
-
-			this._set(line, 'trackPoints', this._mergeTrackPoints(data.reset ? {} : line.trackPoints, data.trackPoints));
-		},
-
-		routePoints: (data) => {
-			if(!this.data.route) {
-				console.error("Received route points for non-existing route.");
-				return;
-			}
-
-			this._set(this.data.route, 'trackPoints', this._mergeTrackPoints(this.data.route.trackPoints, data));
-		},
-
-		routePointsWithId: (data) => {
-			const route = this.data.routes[data.routeId];
-			if(!route) {
-				console.error("Received route points for non-existing route.");
-				return;
-			}
-
-			this._set(route, 'trackPoints', this._mergeTrackPoints(route.trackPoints, data.trackPoints));
-		},
-
-		view: (data) => {
-			this._set(this.data.views, data.id, data);
-		},
-
-		deleteView: (data) => {
-			this._delete(this.data.views, data.id);
-			if (this.data.mapData) {
-				if(this.data.mapData.defaultViewId == data.id)
-					this._set(this.data.mapData, 'defaultViewId', null);
-			}
-		},
-
-		type: (data) => {
-			this._set(this.data.types, data.id, data);
-		},
-
-		deleteType: (data) => {
-			this._delete(this.data.types, data.id);
-		},
-
-		disconnect: () => {
-			this._set(this.state, 'disconnected', true);
-			this._set(this.data, 'markers', { });
-			this._set(this.data, 'lines', { });
-			this._set(this.data, 'views', { });
-			this._set(this.data, 'history', { });
-		},
-
-		connect: () => {
-			this._set(this.state, 'disconnected', false); // Otherwise it gets set when mapData arrives
-
-			if(this.state.mapId)
-				this._setMapId(this.state.mapId).catch(() => undefined);
-
-			// TODO: Handle errors
-
-			if(this.state.bbox)
-				this.updateBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
-
-			if(this.state.listeningToHistory) // TODO: Execute after setMapId() returns
-				this.listenToHistory().catch(function(err) { console.error("Error listening to history", err); });
-
-			if(this.data.route)
-				this.setRoute(this.data.route).catch((err) => { console.error("Error setting route.", err); });
-			for (const route of Object.values(this.data.routes))
-				this.setRoute(route).catch((err) => { console.error("Error setting route.", err); });
-		},
-
-		connect_error: (err) => {
-			if (!this.socket.active) { // Fatal error, client will not try to reconnect anymore
-				this._set(this.state, 'serverError', err);
-				this._simulateEvent("serverError", err);
-			}
-		},
-
-		history: (data) => {
-			this._set(this.data.history, data.id, data);
-			// TODO: Limit to 50 entries
-		},
-
-		loadStart: () => {
-			this._set(this.state, 'loading', this.state.loading + 1);
-		},
-
-		loadEnd: () => {
-			this._set(this.state, 'loading', this.state.loading - 1);
-		}
+		};
 	};
 
 	async setMapId(mapId: MapSlug): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
@@ -351,141 +271,203 @@ class Client {
 	}
 
 	async setLanguage(language: SetLanguageRequest): Promise<void> {
-		await this._emit("setLanguage", language);
+		await this._call("setLanguage", language);
+	}
+
+	// Overridden by StoringClient
+	protected async _updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+		this.reactiveObjectProvider.set(this.state, 'bbox', bbox);
+		return await this._call("updateBbox", bbox);
 	}
 
 	async updateBbox(bbox: BboxWithZoom): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const isZoomChange = this.bbox && bbox.zoom !== this.bbox.zoom;
-
-		this._set(this.state, 'bbox', bbox);
-		const obj = await this._emit("updateBbox", bbox);
-
-		if (isZoomChange) {
-			// Reset line points on zoom change to prevent us from accumulating too many unneeded line points.
-			// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
-			// so we can be sure that we will receive all line points that are relevant for the new bbox.
-			obj.linePoints = obj.linePoints || [];
-			const linePointEventsById = new Map(obj.linePoints.map((e): [number, LinePointsEvent] => [e.id, e])); // Cannot use "as const" due to https://github.com/microsoft/rushstack/issues/3875
-			for (const lineIdStr of Object.keys(this.data.lines)) {
-				const lineId = Number(lineIdStr);
-				const e = linePointEventsById.get(lineId);
-				if (e) {
-					e.reset = true;
-				} else {
-					obj.linePoints.push({
-						id: lineId,
-						trackPoints: [],
-						reset: true
-					});
-				}
-			}
-		}
-
-		this._receiveMultiple(obj);
+		const obj = await this._updateBbox(bbox);
+		this._emitMultiple(obj);
 		return obj;
 	}
 
-	async getMap(data: GetMapQuery): Promise<FindMapsResult | null> {
-		return await this._emit("getMap", data);
+	async findMaps(query: string, paging?: PagingInput): Promise<PagedResults<FindMapsResult>> {
+		return await this._call("findMaps", query, paging);
 	}
 
-	async findMaps(data: FindMapsQuery): Promise<PagedResults<FindMapsResult>> {
-		return await this._emit("findMaps", data);
+	async getMap(mapSlug: string): Promise<MapDataWithWritable> {
+		return await this._call("getMap", mapSlug);
 	}
 
-	async createMap(data: MapData<CRU.CREATE>): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const obj = await this._emit("createMap", data);
-		this._set(this.state, 'serverError', undefined);
-		this._set(this.state, 'readonly', false);
-		this._set(this.state, 'writable', 2);
-		this._receiveMultiple(obj);
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllAdminMapObjectsItem<Pick>>> {
+		const result = await this._call("createMap", data, options);
+		// this.reactiveObjectProvider.set(this.state, 'serverError', undefined);
+		// this.reactiveObjectProvider.set(this.state, 'readonly', false);
+		// this.reactiveObjectProvider.set(this.state, 'writable', 2);
+		// this._emitMultiple(result);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
+	}
+
+	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
+		return await this._call("updateMap", mapSlug, data);
+	}
+
+	async deleteMap(mapSlug: MapSlug): Promise<void> {
+		await this._call("deleteMap", mapSlug);
+	}
+
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }): Promise<StreamedResults<AllMapObjectsItem<Pick>>> {
+		const result = await this._call("getAllMapObjects", mapSlug, options);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
+	}
+
+	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
+		return await this._call("findOnMap", mapSlug, query);
+	}
+
+	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<HistoryEntry[]> {
+		return await this._call("getHistory", mapSlug, data);
+	}
+
+	async revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {
+		await this._call("revertHistoryEntry", mapSlug, historyEntryId);
+		this.reactiveObjectProvider.set(this.data, 'history', {});
+		this._emitMultiple(obj);
 		return obj;
 	}
 
-	async editMap(data: MapData<CRU.UPDATE>): Promise<MapData> {
-		return await this._emit("editMap", data);
+	async getMapMarkers(mapSlug: MapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
+		const result = await this._call("getMapMarkers", mapSlug, options);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
 	}
 
-	async deleteMap(): Promise<void> {
-		await this._emit("deleteMap");
-	}
-
-	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const obj = await this._emit("listenToHistory");
-		this._set(this.state, 'listeningToHistory', true);
-		this._receiveMultiple(obj);
-		return obj;
-	}
-
-	async stopListeningToHistory(): Promise<void> {
-		this._set(this.state, 'listeningToHistory', false);
-		await this._emit("stopListeningToHistory");
-	}
-
-	async revertHistoryEntry(data: ObjectWithId): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const obj = await this._emit("revertHistoryEntry", data);
-		this._set(this.data, 'history', {});
-		this._receiveMultiple(obj);
-		return obj;
-	}
-
-	async getMarker(data: ObjectWithId): Promise<Marker> {
-		const marker = await this._emit("getMarker", data);
-		this._set(this.data.markers, marker.id, marker);
+	async getMarker(mapSlug: MapSlug, markerId: ID): Promise<Marker> {
+		const marker = await this._call("getMarker", mapSlug, markerId);
+		this.reactiveObjectProvider.set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
-	async addMarker(data: Marker<CRU.CREATE>): Promise<Marker> {
-		const marker = await this._emit("addMarker", data);
+	async createMarker(mapSlug: MapSlug, data: Marker<CRU.CREATE>): Promise<Marker> {
+		const marker = await this._call("createMarker", mapSlug, data);
 		// If the marker is out of view, we will not recieve it in an event. Add it here manually to make sure that we have it.
-		this._set(this.data.markers, marker.id, marker);
+		this.reactiveObjectProvider.set(this.data.markers, marker.id, marker);
 		return marker;
 	}
 
-	async editMarker(data: Marker<CRU.UPDATE> & { id: ID }): Promise<Marker> {
-		return await this._emit("editMarker", data);
+	async updateMarker(mapSlug: MapSlug, markerId: ID, data: Marker<CRU.UPDATE>): Promise<Marker> {
+		return await this._call("updateMarker", mapSlug, markerId);
 	}
 
-	async deleteMarker(data: ObjectWithId): Promise<Marker> {
-		return await this._emit("deleteMarker", data);
+	async deleteMarker(mapSlug: MapSlug, markerId: ID): Promise<void> {
+		await this._call("deleteMarker", mapSlug, markerId);
 	}
 
-	async getLineTemplate(data: LineTemplateRequest): Promise<LineTemplate> {
-		return await this._emit("getLineTemplate", data);
+	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
+		const result = await this._call("getMapLines", mapSlug, options);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
 	}
 
-	async addLine(data: Line<CRU.CREATE>): Promise<Line> {
-		return await this._emit("addLine", data);
+	async getLine(mapSlug: MapSlug, lineId: ID): Promise<Line> {
+		return await this._call("getLine", mapSlug, lineId);
 	}
 
-	async editLine(data: Line<CRU.UPDATE> & { id: ID }): Promise<Line> {
-		return await this._emit("editLine", data);
+	async getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithZoom & { except?: Bbox } }): Promise<StreamedResults<TrackPoint>> {
+		const result = await this._call("getLinePoints", mapSlug, lineId, options);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
 	}
 
-	async deleteLine(data: ObjectWithId): Promise<Line> {
-		return await this._emit("deleteLine", data);
+	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE>): Promise<Line> {
+		return await this._call("createLine", mapSlug, data);
 	}
 
-	async exportLine(data: LineExportRequest): Promise<string> {
-		return await this._emit("exportLine", data);
+	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE>): Promise<Line> {
+		return await this._call("updateLine", mapSlug, lineId, data);
 	}
 
-	async find(data: FindQuery & { loadUrls?: false }): Promise<SearchResult[]>;
-	async find(data: FindQuery & { loadUrls: true }): Promise<string | SearchResult[]>; // eslint-disable-line no-dupe-class-members
-	async find(data: FindQuery): Promise<string | SearchResult[]> { // eslint-disable-line no-dupe-class-members
-		return await this._emit("find", data);
+	async deleteLine(mapSlug: MapSlug, lineId: ID): Promise<void> {
+		await this._call("deleteLine", mapSlug, lineId);
 	}
 
-	async findOnMap(data: FindOnMapQuery): Promise<SocketResponse<SocketVersion.V3, 'findOnMap'>> {
-		return await this._emit("findOnMap", data);
+	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<string> }> {
+		const result = await this._call("exportLine", mapSlug, lineId, options);
+		return {
+			...result,
+			data: this._handleStream(result.data)
+		};
+	}
+
+	async getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {
+		const result = await this._call("getMapTypes", mapSlug);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
+	}
+
+	async getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
+		return await this._call("getType", mapSlug, typeId);
+	}
+
+	async createType(mapSlug: MapSlug, data: Type<CRU.CREATE>): Promise<Type> {
+		return await this._call("createType", mapSlug, data);
+	}
+
+	async updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Type> {
+		return await this._call("updateType", mapSlug, typeId, data);
+	}
+
+	async deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
+		await this._call("deleteType", mapSlug, typeId);
+	}
+
+	async getMapViews(mapSlug: MapSlug): Promise<StreamedResults<View>> {
+		const result = await this._call("getMapViews", mapSlug);
+		return {
+			results: streamToIterable(this._handleStream(result.results))
+		};
+	}
+
+	async getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
+		return await this._call("getView", mapSlug, viewId);
+	}
+
+	async createView(mapSlug: MapSlug, data: View<CRU.CREATE>): Promise<View> {
+		return await this._call("createView", mapSlug, data);
+	}
+
+	async updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+		return await this._call("updateView", mapSlug, viewId, data);
+	}
+
+	async deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
+		await this._call("deleteView", mapSlug, viewId);
+	}
+
+	async find(query: string): Promise<SearchResult[]> {
+		return await this._call("find", query);
+	}
+
+	async findUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+		const result = await this._call("findUrl", url);
+		return {
+			data: this._handleStream(result.data)
+		};
 	}
 
 	async getRoute(data: RouteRequest): Promise<RouteInfo> {
-		return await this._emit("getRoute", data);
+		return await this._call("getRoute", data);
+	}
+
+	async geoip(): Promise<Bbox | undefined> {
+		return (await this._call("geoip")) ?? undefined;
 	}
 
 	async setRoute(data: RouteCreate): Promise<RouteWithTrackPoints | undefined> {
-		const route = await this._emit("setRoute", data);
+		const route = await this._call("setRoute", data);
 
 		if(!route) // A newer submitted route has returned in the meantime
 			return undefined;
@@ -496,28 +478,28 @@ class Client {
 		};
 
 		if (data.routeId)
-			this._set(this.data.routes, data.routeId, result);
+			this.reactiveObjectProvider.set(this.data.routes, data.routeId, result);
 		else
-			this._set(this.data, "route", result);
+			this.reactiveObjectProvider.set(this.data, "route", result);
 
-		this._simulateEvent("route", result);
+		this._emit("route", result);
 		return result;
 	}
 
 	async clearRoute(data?: RouteClear): Promise<void> {
 		if (data?.routeId) {
-			this._delete(this.data.routes, data.routeId);
-			this._simulateEvent("clearRoute", { routeId: data.routeId });
-			await this._emit("clearRoute", data);
+			this.reactiveObjectProvider.delete(this.data.routes, data.routeId);
+			this._emit("clearRoute", { routeId: data.routeId });
+			await this._call("clearRoute", data);
 		} else if (this.data.route) {
-			this._set(this.data, 'route', undefined);
-			this._simulateEvent("clearRoute", { routeId: undefined });
-			await this._emit("clearRoute", data);
+			this.reactiveObjectProvider.set(this.data, 'route', undefined);
+			this._emit("clearRoute", { routeId: undefined });
+			await this._call("clearRoute", data);
 		}
 	}
 
 	async lineToRoute(data: LineToRouteCreate): Promise<RouteWithTrackPoints | undefined> {
-		const route = await this._emit("lineToRoute", data);
+		const route = await this._call("lineToRoute", data);
 
 		if (!route) // A newer submitted route has returned in the meantime
 			return undefined;
@@ -528,44 +510,28 @@ class Client {
 		};
 
 		if (data.routeId)
-			this._set(this.data.routes, data.routeId, result);
+			this.reactiveObjectProvider.set(this.data.routes, data.routeId, result);
 		else
-			this._set(this.data, "route", result);
+			this.reactiveObjectProvider.set(this.data, "route", result);
 
-		this._simulateEvent("route", result);
+		this._emit("route", result);
 		return result;
 	}
 
 	async exportRoute(data: RouteExportRequest): Promise<string> {
-		return await this._emit("exportRoute", data);
+		return await this._call("exportRoute", data);
 	}
 
-	async addType(data: Type<CRU.CREATE>): Promise<Type> {
-		return await this._emit("addType", data);
+	async listenToHistory(): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
+		const obj = await this._call("listenToHistory");
+		this.reactiveObjectProvider.set(this.state, 'listeningToHistory', true);
+		this._emitMultiple(obj);
+		return obj;
 	}
 
-	async editType(data: Type<CRU.UPDATE> & { id: ID }): Promise<Type> {
-		return await this._emit("editType", data);
-	}
-
-	async deleteType(data: ObjectWithId): Promise<Type> {
-		return await this._emit("deleteType", data);
-	}
-
-	async addView(data: View<CRU.CREATE>): Promise<View> {
-		return await this._emit("addView", data);
-	}
-
-	async editView(data: View<CRU.UPDATE> & { id: ID }): Promise<View> {
-		return await this._emit("editView", data);
-	}
-
-	async deleteView(data: ObjectWithId): Promise<View> {
-		return await this._emit("deleteView", data);
-	}
-
-	async geoip(): Promise<Bbox | null> {
-		return await this._emit("geoip");
+	async stopListeningToHistory(): Promise<void> {
+		this.reactiveObjectProvider.set(this.state, 'listeningToHistory', false);
+		await this._call("stopListeningToHistory");
 	}
 
 	disconnect(): void {
@@ -574,27 +540,27 @@ class Client {
 	}
 
 	private async _setMapId(mapId: string): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		this._set(this.state, 'serverError', undefined);
-		this._set(this.state, 'mapId', mapId);
+		this.reactiveObjectProvider.set(this.state, 'serverError', undefined);
+		this.reactiveObjectProvider.set(this.state, 'mapId', mapId);
 		try {
-			const obj = await this._emit("setMapId", mapId);
-			this._receiveMultiple(obj);
+			const obj = await this._call("setMapId", mapId);
+			this._emitMultiple(obj);
 			return obj;
 		} catch(err: any) {
-			this._set(this.state, 'serverError', err);
-			this._simulateEvent("serverError", err);
+			this.reactiveObjectProvider.set(this.state, 'serverError', err);
+			this._emit("serverError", err);
 			throw err;
 		}
 	}
 
-	private _receiveMultiple(obj?: MultipleEvents<ClientEvents>): void {
+	private _emitMultiple(obj?: MultipleEvents<ClientEvents>): void {
 		if (obj) {
 			for(const i of Object.keys(obj) as EventName<ClientEvents>[])
-				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._simulateEvent(i, it as any); });
+				(obj[i] as Array<ClientEvents[typeof i][0]>).forEach((it) => { this._emit(i, it as any); });
 		}
 	}
 
-	private _simulateEvent<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
+	protected _emit<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
 		const fixedData = this._fixEventObject(eventName, data);
 
 		const listeners = this.listeners[eventName] as Array<EventHandler<ClientEvents, E>> | undefined;
@@ -659,38 +625,6 @@ class Client {
 
 	get listeningToHistory(): boolean {
 		return this.state.listeningToHistory;
-	}
-
-	get mapData(): (MapData & { writable: Writable }) | undefined {
-		return this.data.mapData;
-	}
-
-	get markers(): Record<ID, Marker> {
-		return this.data.markers;
-	}
-
-	get lines(): Record<ID, LineWithTrackPoints> {
-		return this.data.lines;
-	}
-
-	get views(): Record<ID, View> {
-		return this.data.views;
-	}
-
-	get types(): Record<ID, Type> {
-		return this.data.types;
-	}
-
-	get history(): Record<ID, HistoryEntry> {
-		return this.data.history;
-	}
-
-	get route(): RouteWithTrackPoints | undefined {
-		return this.data.route;
-	}
-
-	get routes(): Record<string, RouteWithTrackPoints> {
-		return this.data.routes;
 	}
 }
 

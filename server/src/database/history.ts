@@ -1,6 +1,6 @@
-import { Model, DataTypes, type FindOptions, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
+import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, MapData, MapId } from "facilmap-types";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, MapData, MapId, PagingInput } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
@@ -101,11 +101,17 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(mapId: MapId, types?: HistoryEntryType[]): AsyncIterable<HistoryEntry> {
-		const query: FindOptions = { order: [[ "time", "DESC" ]] };
-		if(types)
-			query.where = {type: types};
-		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, query);
+	getHistory(mapId: MapId, types?: HistoryEntryType[], paging?: PagingInput): AsyncIterable<HistoryEntry> {
+		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
+			order: [[ "time", "DESC" ]],
+			offset: paging?.start ?? 0,
+			...paging?.limit != null ? {
+				limit: paging.limit
+			} : {},
+			...types ? {
+				where: { type: types }
+			} : {}
+		});
 	}
 
 

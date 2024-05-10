@@ -1,10 +1,9 @@
-import { ApiVersion, CRU, Writable, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator, exportFormatValidator, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator, routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LinePoints, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type Paging, type ReplaceProperties, type Route, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
+import { ApiVersion, CRU, DEFAULT_PAGING, Writable, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator, exportFormatValidator, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator, routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LinePoints, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
 import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
 import { apiImpl, stringArrayValidator, stringifiedJsonValidator, type ApiImpl } from "./api-common";
 import { getSafeFilename, normalizeLineName } from "facilmap-utils";
-import { omit } from "lodash-es";
 import { exportLineToTrackGpx, exportLineToRouteGpx } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
@@ -21,24 +20,11 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	protected async resolveMapSlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
-		const map = await this.database.maps.getMapDataByAnyId(mapSlug);
+		const map = await this.database.maps.getMapDataBySlug(mapSlug, minimumPermissions);
 		if (!map) {
 			throw Object.assign(new Error(getI18n().t("api.map-not-exist-error")), { status: 404 });
 		}
-		const writable = map.adminId === mapSlug ? Writable.ADMIN : map.writeId === mapSlug ? Writable.WRITE : Writable.READ;
-
-		if (minimumPermissions === Writable.ADMIN && ![Writable.ADMIN].includes(writable))
-			throw Object.assign(new Error(getI18n().t("api.only-in-admin-error")), { status: 403 });
-		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
-			throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
-
-		if (writable === Writable.ADMIN) {
-			return { ...map, writable };
-		} else if (writable === Writable.WRITE) {
-			return { ...omit(map, ["adminId"]), writable };
-		} else {
-			return { ...omit(map, ["adminId", "writeId"]), writable };
-		}
+		return map;
 	}
 
 	protected async* getMapObjectsUntyped<M extends MapDataWithWritable = MapDataWithWritable>(
@@ -87,8 +73,8 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return this.getMapObjectsUntyped(mapData, { pick: pick as AllMapObjectsPick[], bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: ["mapData", M] }>[Pick]>;
 	}
 
-	async findMaps(query: string, data: Paging): Promise<PagedResults<FindMapsResult>> {
-		return await this.database.maps.findMaps({ ...data, query });
+	async findMaps(query: string, paging = DEFAULT_PAGING): Promise<PagedResults<FindMapsResult>> {
+		return await this.database.maps.findMaps(query, paging);
 	}
 
 	async getMap(mapSlug: string): Promise<MapDataWithWritable> {
@@ -128,10 +114,10 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.database.search.search(mapData.id, query);
 	}
 
-	async getHistory(mapSlug: MapSlug, data: Paging): Promise<HistoryEntry[]> {
+	async getHistory(mapSlug: MapSlug, paging = DEFAULT_PAGING): Promise<HistoryEntry[]> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 
-		return await iterableToArray(this.database.history.getHistory(mapData.id, mapData.writable === Writable.ADMIN ? undefined : ["Marker", "Line"]));
+		return await iterableToArray(this.database.history.getHistory(mapData.id, mapData.writable === Writable.ADMIN ? undefined : ["Marker", "Line"], paging));
 	}
 
 	async revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {

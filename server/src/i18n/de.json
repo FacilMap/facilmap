@@ -15,7 +15,9 @@
         "unique-map-ids-read-admin-error": "Lese-ID und Admin-ID müssen unterschiedlich sein.",
         "unique-map-ids-write-admin-error": "Schreib-ID und Admin-ID müssen unterschiedlich sein.",
         "map-id-taken-error": "ID „{{id}}“ ist bereits vergeben.",
-        "map-disappeared-error": "Karte wurde während des Abspeicherns gelöscht."
+        "map-disappeared-error": "Karte wurde während des Abspeicherns gelöscht.",
+        "only-in-admin-error": "Nur im Admin-Modus verfügbar.",
+        "only-in-write-error": "Nur im Schreib-Modus verfügbar."
     },
     "frontend": {
         "requires-javascript": "{{appName}} benötigt JavaScript.",
@@ -30,8 +32,6 @@
         "mapbox-error": "Route konnte nicht berechnet werden ({{code}})."
     },
     "socket": {
-        "only-in-admin-error": "Nur im Admin-Modus verfügbar.",
-        "only-in-write-error": "Nur im Schreib-Modus verfügbar.",
         "map-id-set-error": "Karten-ID bereits gesetzt.",
         "map-not-exist-error": "Diese Karte existiert nicht.",
         "map-already-loaded-error": "Karte bereits geladen.",

@@ -1,11 +1,11 @@
 import { type DatabaseEvents } from "../database/database.js";
-import { type EventHandler, type EventName, type SocketRequestName, type SocketResponse, SocketVersion, type ValidatedSocketRequest, type SocketServerToClientEmitArgs, type SocketEvents, type MultipleEvents } from "facilmap-types";
+import { type EventHandler, type EventName, SocketVersion, type SocketServerToClientEmitArgs, type SocketEvents, type MultipleEvents, type SocketApi } from "facilmap-types";
 
 // Socket.io converts undefined to null. In socket handlers that allow a null response, let's also allow undefined.
 type FixedNullResponse<T> = null extends T ? T | undefined | void : T;
 
 export type SocketHandlers<V extends SocketVersion> = {
-	[K in SocketRequestName<V>]: K extends SocketRequestName<V> ? ((data: ValidatedSocketRequest<V, K>) => FixedNullResponse<SocketResponse<V, K>> | PromiseLike<FixedNullResponse<SocketResponse<V, K>>>) : never;
+	[K in keyof SocketApi<V, true>]: SocketApi<V, true>[K] extends (...args: infer Args) => infer Ret ? (...args: Args) => FixedNullResponse<Ret> | PromiseLike<FixedNullResponse<Ret>> : never;
 };
 
 export type DatabaseHandlers = {

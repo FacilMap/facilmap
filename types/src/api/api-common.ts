@@ -1,5 +1,5 @@
 import * as z from "zod";
-import type { MapData, Writable } from "../mapData";
+import type { MapData, MapDataWithWritable, Writable } from "../mapData";
 import { bboxValidator, bboxWithZoomValidator, type ID, type ReplaceProperties } from "../base";
 import type { Line, TrackPoint } from "../line";
 import type { Marker } from "../marker";
@@ -7,10 +7,12 @@ import type { Type } from "../type";
 import type { View } from "../view";
 
 export const pagingValidator = z.object({
-	start: z.coerce.number().int().min(0).optional(),
-	limit: z.coerce.number().int().min(1).optional()
+	start: z.coerce.number().int().min(0).default(() => 0),
+	limit: z.coerce.number().int().min(1).max(200).default(() => 50)
 });
+export type PagingInput = z.input<typeof pagingValidator>;
 export type Paging = z.infer<typeof pagingValidator>;
+export const DEFAULT_PAGING = pagingValidator.parse({});
 
 export type FindMapsResult = Pick<MapData, "id" | "name" | "description">;
 
@@ -40,12 +42,6 @@ export type LinePoints = {
 	lineId: ID;
 	trackPoints: TrackPoint[];
 }
-
-export type MapDataWithWritable = (
-	| { writable: Writable.ADMIN } & MapData
-	| { writable: Writable.WRITE } & Omit<MapData, "adminId">
-	| { writable: Writable.READ } & Omit<MapData, "adminId" | "writeId">
-);
 
 export const allMapObjectsPickValidator = z.enum(["mapData", "types", "views", "markers", "lines", "linesWithTrackPoints", "linePoints"]);
 export type AllMapObjectsPick = z.infer<typeof allMapObjectsPickValidator>;
