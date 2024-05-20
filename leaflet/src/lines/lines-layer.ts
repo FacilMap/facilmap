@@ -76,7 +76,10 @@ export default class LinesLayer extends FeatureGroup {
 		return !this.hiddenLinesIds.has(line.id) && !!this.filterResults.get(line.id);
 	}
 
-	protected handleLine = (line: Line): void => {
+	protected handleLine = (line_: Line): void => {
+		// Line from event doesn't have track points
+		const line = this.client.lines[line_.id];
+
 		this.recalculateFilter(line);
 
 		if(this.shouldShowLine(line))
