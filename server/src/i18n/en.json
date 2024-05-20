@@ -4,7 +4,6 @@
     "api": {
         "map-not-exist-error": "This map does not exist.",
         "unknown-format-error": "Unknown format",
-        "route-not-available-error": "Route not available.",
         "admin-revert-error": "This kind of change can only be reverted in admin mode."
     },
     "database": {
@@ -47,7 +46,9 @@
         "route-name": "FacilMap route",
         "already-listening-to-history-error": "Already listening to history.",
         "not-listening-to-history-error": "Not listening to history.",
-        "admin-revert-error": "This kind of change can only be reverted in admin mode."
+        "admin-revert-error": "This kind of change can only be reverted in admin mode.",
+        "map-not-subscribed-error": "Not subscribed to map with slug {{mapSlug}}.",
+        "route-not-subscribed-error": "Not subscribed to route with key {{routeKey}}."
     },
     "search": {
         "url-request-error": "Request to \"{{url}}\" failed with status {{status}}.",

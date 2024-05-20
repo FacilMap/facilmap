@@ -26,7 +26,7 @@ export interface DatabaseEventsInterface {
 	marker: [mapId: MapId, newMarker: Marker];
 	deleteMarker: [mapId: MapId, data: ObjectWithId];
 
-	mapData: [mapId: MapId, mapData: MapData];
+	mapData: [mapId: MapId, mapData: MapData & Required<Pick<MapData, "writeId" | "adminId">>];
 	deleteMap: [mapId: MapId];
 
 	type: [mapId: MapId, newType: Type];

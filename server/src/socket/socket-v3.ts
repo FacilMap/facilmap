@@ -1,21 +1,16 @@
-import { generateRandomId, promiseProps, type PromiseMap } from "../utils/utils.js";
-import { iterableToArray, iterableToStream, mapAsyncIterable, streamToIterable, streamToString } from "../utils/streams.js";
+import { generateRandomId } from "../utils/utils.js";
+import { iterableToArray, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
-import { find } from "../search.js";
-import { cloneDeep, isEqual, omit } from "lodash-es";
+import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type Bbox, type BboxWithZoom, type SocketEvents, type MultipleEvents, type MapData, type MapId, SocketVersion, Writable, MapNotFoundError, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type MapDataWithWritable, type StreamToStreamId, type StreamedResults } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribePick, type Route, type BboxWithExcept, type MapId, type BboxItem, DEFAULT_PAGING } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
-import type { RouteWithId } from "../database/route.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { getWritable } from "facilmap-utils";
-
-export type MultipleEventPromises = {
-	[eventName in keyof MultipleEvents<SocketEvents<SocketVersion.V3>>]: PromiseLike<MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName]> | MultipleEvents<SocketEvents<SocketVersion.V3>>[eventName];
-}
+import { getMapDataWithWritable, getMapSlug, getSafeFilename } from "facilmap-utils";
+import { serializeError } from "serialize-error";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -25,10 +20,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	api: ApiV3Backend;
 
 	bbox: BboxWithZoom | undefined = undefined;
-	writable: Writable | undefined = undefined;
-	route: Omit<RouteWithId, "trackPoints"> | undefined = undefined;
-	routes: Record<string, Omit<RouteWithId, "trackPoints">> = { };
-	listeningToHistory = false;
+	mapSubscriptions: Record<MapId, Array<{ pick: SubscribePick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	routeSubscriptions: Record<string, Omit<Route, "trackPoints">> = { };
 
 	unregisterDatabaseHandlers = (): void => undefined;
 
@@ -41,40 +34,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.registerDatabaseHandlers();
 	}
 
-	getMapObjects(mapData: MapData & { writable: Writable }): Promise<MultipleEvents<SocketEvents<SocketVersion.V3>>> {
-		const promises: PromiseMap<MultipleEvents<SocketEvents<SocketVersion.V3>>> = {
-			mapData: [ mapData ],
-			view: iterableToArray(this.database.views.getViews(mapData.id)),
-			type: iterableToArray(this.database.types.getTypes(mapData.id)),
-			line: iterableToArray(this.database.lines.getMapLines(mapData.id))
-		};
-
-		if(this.bbox) { // In case bbox is set while fetching map data
-			Object.assign(promises, {
-				marker: iterableToArray(this.database.markers.getMapMarkers(mapData.id, this.bbox)),
-				linePoints: iterableToArray(this.database.lines.getLinePointsForMap(mapData.id, this.bbox))
-			});
-		}
-
-		return promiseProps(promises);
-	}
-
-	validatePermissions(minimumPermissions: Writable): void {
-		if (minimumPermissions == Writable.ADMIN && ![Writable.ADMIN].includes(this.writable!))
-			throw new Error(getI18n().t("socket.only-in-admin-error"));
-		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(this.writable!))
-			throw new Error(getI18n().t("socket.only-in-write-error"));
-	}
-
 	handleDisconnect(): void {
-		if(this.route) {
-			this.database.routes.deleteRoute(this.route.id).catch((err) => {
-				console.error("Error clearing route", err);
-			});
-		}
-
-		for (const routeId of Object.keys(this.routes)) {
-			this.database.routes.deleteRoute(this.routes[routeId].id).catch((err) => {
+		for (const routeId of Object.keys(this.routeSubscriptions)) {
+			this.database.routes.deleteRoute(this.routeSubscriptions[routeId].routeId).catch((err) => {
 				console.error("Error clearing route", err);
 			});
 		}
@@ -82,29 +44,33 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.unregisterDatabaseHandlers();
 	};
 
-	emitStream(stream: AsyncIterable<any>): StreamId {
-		const streamId: StreamId = `${generateRandomId(8)}-${Date.now()}`;
+	emitStream<T>(stream: AsyncIterable<T>): StreamId<T> {
+		const streamId = `${generateRandomId(8)}-${Date.now()}` as StreamId<T>;
 		void (async () => {
 			let chunks: any[] = [];
 			let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 			let done = false;
-			for await (const chunk of stream) {
-				chunks.push(chunk);
-				if (!timeout) {
-					timeout = setTimeout(() => {
-						this.emit("streamChunks", { streamId, chunks });
-						chunks = [];
-						timeout = undefined;
+			try {
+				for await (const chunk of stream) {
+					chunks.push(chunk);
+					if (!timeout) {
+						timeout = setTimeout(() => {
+							this.emit("streamChunks", streamId, chunks);
+							chunks = [];
+							timeout = undefined;
 
-						if (done) {
-							this.emit("streamDone", { streamId });
-						}
-					});
+							if (done) {
+								this.emit("streamDone", streamId);
+							}
+						});
+					}
 				}
-			}
-			done = true;
-			if (!timeout) {
-				this.emit("streamDone", { streamId });
+				done = true;
+				if (!timeout) {
+					this.emit("streamDone", streamId);
+				}
+			} catch (err: any) {
+				this.emit("streamError", streamId, serializeError(err));
 			}
 		})();
 		return streamId;
@@ -112,31 +78,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	emitStreamedResults<T>(results: StreamedResults<T>): StreamToStreamId<StreamedResults<T>> {
 		return {
-			results: this.emitStream(results.results)
+			results: this.emitStream<any>(results.results)
 		};
 	}
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
-			setMapId: async (mapSlug) => {
-				if(this.mapSlug != null)
-					throw new Error(getI18n().t("socket.map-id-set-error"));
-
-				this.mapSlug = mapSlug;
-				const map = await this.database.maps.getMapDataBySlug(mapSlug, Writable.READ);
-				if (!map) {
-					this.mapSlug = undefined;
-					throw new MapNotFoundError(getI18n().t("socket.map-not-exist-error"));
-				}
-
-				this.mapId = map.id;
-				this.writable = map.writable;
-
-				this.registerDatabaseHandlers();
-
-				return await this.getMapObjects(map);
-			},
-
 			setLanguage: async (settings) => {
 				if (settings.lang) {
 					await getI18n().changeLanguage(settings.lang);
@@ -146,38 +93,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				}
 			},
 
-			updateBbox: async (bbox) => {
-				this.validatePermissions(Writable.READ);
-
-				const markerBboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
-				const lineBboxWithExcept: BboxWithZoom & { except?: Bbox } = { ...bbox };
-				if(this.bbox) {
-					markerBboxWithExcept.except = this.bbox;
-					if (bbox.zoom == this.bbox.zoom) {
-						lineBboxWithExcept.except = this.bbox;
-					}
-				}
-
-				this.bbox = bbox;
-
-				const ret: MultipleEventPromises = {};
-
-				if(this.mapId) {
-					ret.marker = iterableToArray(this.database.markers.getMapMarkers(this.mapId, markerBboxWithExcept));
-					ret.linePoints = iterableToArray(mapAsyncIterable(this.database.lines.getLinePointsForMap(this.mapId, lineBboxWithExcept), ({ lineId, ...rest }) => ({ id: lineId, ...rest })));
-				}
-				if(this.route)
-					ret.routePoints = this.database.routes.getRoutePoints(this.route.id, lineBboxWithExcept, !lineBboxWithExcept.except).then((points) => ([points]));
-				if(Object.keys(this.routes).length > 0) {
-					ret.routePointsWithId = Promise.all(Object.keys(this.routes).map(
-						(routeId) => this.database.routes.getRoutePoints(this.routes[routeId].id, lineBboxWithExcept, !lineBboxWithExcept.except).then((trackPoints) => ({ routeId, trackPoints }))
-					));
-				}
-
-				return await promiseProps(ret);
-			},
-
-			findMaps: async (query, paging) => {
+			findMaps: async (query, paging = DEFAULT_PAGING) => {
 				return await this.api.findMaps(query, paging);
 			},
 
@@ -189,11 +105,18 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return mapData;
 			},
 
-			createMap: async (data, options) => {
-				if(this.mapSlug)
-					throw new Error(getI18n().t("socket.map-already-loaded-error"));
-
-				return this.emitStreamedResults(await this.api.createMap(data, options));
+			createMap: async (data, options = {}) => {
+				const results = await this.api.createMap(data, options);
+				type This = this;
+				return this.emitStream((async function*(this: This) {
+					for await (const obj of results) {
+						if (obj.type === "mapData") {
+							yield obj;
+						} else {
+							yield { ...obj, data: this.emitStream<any>(obj.data) };
+						}
+					}
+				}).call(this));
 			},
 
 			updateMap: async (mapSlug, data) => {
@@ -201,33 +124,36 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			deleteMap: async (mapSlug) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
 				await this.api.deleteMap(mapSlug);
 			},
 
 			getAllMapObjects: async (mapSlug, options) => {
-				return this.emitStreamedResults(await this.api.getAllMapObjects(mapSlug, options));
+				const results = await this.api.getAllMapObjects(mapSlug, options);
+				type This = this;
+				return this.emitStream((async function*(this: This) {
+					for await (const obj of results) {
+						if (obj.type === "mapData") {
+							yield obj;
+						} else {
+							yield { ...obj, data: this.emitStream<any>(obj.data) };
+						}
+					}
+				}).call(this));
 			},
 
 			findOnMap: async (mapSlug, query) => {
 				return await this.api.findOnMap(mapSlug, query);
 			},
 
-			getHistory: async (mapSlug, paging) => {
+			getHistory: async (mapSlug, paging = DEFAULT_PAGING) => {
 				return await this.api.getHistory(mapSlug, paging);
 			},
 
 			revertHistoryEntry: async (mapSlug, historyEntryId) => {
 				await this.api.revertHistoryEntry(mapSlug, historyEntryId);
-
-				return promiseProps({
-					history: iterableToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
-				});
 			},
 
-			getMapMarkers: async (mapSlug, options) => {
+			getMapMarkers: async (mapSlug, options = {}) => {
 				return this.emitStreamedResults(await this.api.getMapMarkers(mapSlug, options));
 			},
 
@@ -251,155 +177,168 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return this.emitStreamedResults(await this.api.getMapLines(mapSlug, options));
 			},
 
+			getLine: async (mapSlug, lineId) => {
+				return await this.api.getLine(mapSlug, lineId);
+			},
+
 			getLinePoints: async (mapSlug, lineId, options) => {
 				return this.emitStreamedResults(await this.api.getLinePoints(mapSlug, lineId, options));
 			},
 
-			createLine: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
+			createLine: async (mapSlug, data) => {
 				let fromRoute;
 				if (data.mode != "track") {
-					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
+					for (const route of Object.values(this.routeSubscriptions)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.id)) };
+							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
 							break;
 						}
 					}
 				}
 
-				return await this.api.createLine(this.mapSlug, data, fromRoute);
+				return await this.api.createLine(mapSlug, data, fromRoute);
 			},
 
-			editLine: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
+			updateLine: async (mapSlug, lineId, data) => {
 				let fromRoute;
 				if (data.mode != "track") {
-					for (const route of [...(this.route ? [this.route] : []), ...Object.values(this.routes)]) {
+					for (const route of Object.values(this.routeSubscriptions)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.id)) };
+							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
 							break;
 						}
 					}
 				}
 
-				return await this.api.updateLine(this.mapSlug, data.id, data, fromRoute);
+				return await this.api.updateLine(mapSlug, lineId, data, fromRoute);
 			},
 
-			deleteLine: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const line = await this.api.getLine(this.mapSlug, data.id);
-				await this.api.deleteLine(this.mapSlug, data.id);
-				return line;
+			deleteLine: async (mapSlug, lineId) => {
+				await this.api.deleteLine(mapSlug, lineId);
 			},
 
-			exportLine: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				if (!this.mapId)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const lineP = this.database.lines.getLine(this.mapId, data.id);
-				lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
-
-				const [line, type] = await Promise.all([
-					lineP,
-					lineP.then((line) => this.database.types.getType(this.mapId as string, line.typeId))
-				]);
-
-				switch(data.format) {
-					case "gpx-trk":
-						return await streamToString(exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id)));
-					case "gpx-rte":
-						return await streamToString(exportLineToRouteGpx(line, type));
-					default:
-						throw new Error(getI18n().t("socket.unknown-format"));
-				}
+			exportLine: async (mapSlug, lineId, options) => {
+				const result = await this.api.exportLine(mapSlug, lineId, options);
+				return {
+					...result,
+					data: this.emitStream(streamToIterable(result.data))
+				};
 			},
 
-			addView: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				return await this.api.createView(this.mapSlug, data);
+			getMapTypes: async (mapSlug) => {
+				return this.emitStreamedResults(await this.api.getMapTypes(mapSlug));
 			},
 
-			editView: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				return await this.api.updateView(this.mapSlug, data.id, data);
+			getType: async (mapSlug, id) => {
+				return await this.api.getType(mapSlug, id);
 			},
 
-			deleteView: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const view = await this.api.getView(this.mapSlug, data.id);
-				await this.api.deleteView(this.mapSlug, data.id);
-				return view;
+			createType: async (mapSlug, data) => {
+				return await this.api.createType(mapSlug, data);
 			},
 
-			addType: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				return await this.api.createType(this.mapSlug, data);
+			updateType: async (mapSlug, typeId, data) => {
+				return await this.api.updateType(mapSlug, typeId, data);
 			},
 
-			editType: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				return await this.api.updateType(this.mapSlug, data.id, data);
+			deleteType: async (mapSlug, typeId) => {
+				await this.api.deleteType(mapSlug, typeId);
 			},
 
-			deleteType: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const type = await this.api.getType(this.mapSlug, data.id);
-				await this.api.deleteType(this.mapSlug, data.id);
-				return type;
+			getMapViews: async (mapSlug) => {
+				return this.emitStreamedResults(await this.api.getMapViews(mapSlug));
 			},
 
-			find: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				const result = await find(data.query, data.loadUrls);
-				if (Array.isArray(result)) {
-					return result;
-				} else {
-					return await streamToString(result.data);
-				}
+			getView: async (mapSlug, viewId) => {
+				return await this.api.getView(mapSlug, viewId);
 			},
 
-			findOnMap: async (data) => {
-				if (!this.mapSlug)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
+			createView: async (mapSlug, data) => {
+				return await this.api.createView(mapSlug, data);
+			},
 
-				return await this.api.findOnMap(this.mapSlug, data.query);
+			updateView: async (mapSlug, viewId, data) => {
+				return await this.api.updateView(mapSlug, viewId, data);
+			},
+
+			deleteView: async (mapSlug, viewId) => {
+				await this.api.deleteView(mapSlug, viewId);
+			},
+
+			find: async (query) => {
+				return await this.api.find(query);
+			},
+
+			findUrl: async (url) => {
+				const result = await this.api.findUrl(url);
+				return {
+					data: this.emitStream(streamToIterable(result.data))
+				};
 			},
 
 			getRoute: async (data) => {
 				return await this.api.getRoute(data);
 			},
 
-			setRoute: async (data) => {
-				this.validatePermissions(Writable.READ);
+			geoip: async () => {
+				return await this.api.geoip();
+			},
 
-				const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
+			subscribeToMap: async (mapSlug, { pick = ["mapData" as const, "markers" as const, "lines" as const, "linePoints" as const, "types" as const, "views" as const], history = false } = {}) => {
+				const subscription = Object.values(this.mapSubscriptions).flat().find((s) => s.mapSlug === mapSlug);
+				const pickBefore = subscription?.pick;
+				if (!subscription) {
+					const mapData = await this.api.getMap(mapSlug);
+					if (!this.mapSubscriptions[mapData.id]) {
+						this.mapSubscriptions[mapData.id] = [];
+					}
+					this.mapSubscriptions[mapData.id].push({ pick, history, mapSlug, writable: mapData.writable });
+				}
+
+				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
+				const results = await this.api.getAllMapObjects(mapSlug, {
+					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p))
+				});
+				type This = this;
+				return this.emitStream((async function*(this: This) {
+					for await (const obj of results) {
+						if (obj.type === "mapData") {
+							yield obj;
+						} else {
+							yield { ...obj, data: this.emitStream<any>(obj.data) };
+						}
+					}
+				}).call(this));
+			},
+
+			unsubscribeFromMap: async (mapSlug) => {
+				for (const [mapId, subs] of Object.entries(this.mapSubscriptions)) {
+					const without = subs.filter((s) => s.mapSlug !== mapSlug);
+					if (without.length !== subs.length) {
+						if (without.length === 0) {
+							delete this.mapSubscriptions[mapId];
+						} else {
+							this.mapSubscriptions[mapId] = without;
+						}
+						return;
+					}
+				}
+
+				throw new Error(getI18n().t("socket.map-not-subscribed-error", { mapSlug }));
+			},
+
+			subscribeToRoute: async (routeKey, params) => {
+				const existingRoute = this.routeSubscriptions[routeKey];
 
 				let routeInfo;
-				if(existingRoute)
-					routeInfo = await this.database.routes.updateRoute(existingRoute.id, data.routePoints, data.mode);
-				else
-					routeInfo = await this.database.routes.createRoute(data.routePoints, data.mode);
+				if ("lineId" in params) {
+					const mapData = await this.api.getMap(params.mapSlug);
+					routeInfo = await this.database.routes.lineToRoute(existingRoute?.routeId, mapData.id, params.lineId);
+				} else if (existingRoute) {
+					routeInfo = await this.database.routes.updateRoute(existingRoute.routeId, params.routePoints, params.mode);
+				} else {
+					routeInfo = await this.database.routes.createRoute(params.routePoints, params.mode);
+				}
 
 				if(!routeInfo) {
 					// A newer submitted route has returned in the meantime
@@ -407,10 +346,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					return;
 				}
 
-				if (data.routeId)
-					this.routes[data.routeId] = omit(routeInfo, "trackPoints");
-				else
-					this.route = omit(routeInfo, "trackPoints");
+				this.routeSubscriptions[routeKey] = omit(routeInfo, ["trackPoints"]);
 
 				if(this.bbox)
 					routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
@@ -418,7 +354,6 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					routeInfo.trackPoints = [];
 
 				return {
-					routeId: data.routeId,
 					top: routeInfo.top,
 					left: routeInfo.left,
 					bottom: routeInfo.bottom,
@@ -434,115 +369,83 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				};
 			},
 
-			clearRoute: async (data) => {
-				if (data) {
-					this.validatePermissions(Writable.READ);
+			unsubscribeFromRoute: async (routeKey) => {
+				if (!this.routeSubscriptions[routeKey]) {
+					throw new Error(getI18n().t("socket.route-not-subscribed-error", { routeKey }));
 				}
 
-				let route;
-				if (data?.routeId != null) {
-					route = this.routes[data.routeId];
-					delete this.routes[data.routeId];
-				} else {
-					route = this.route;
-					this.route = undefined;
-				}
-
-				if (route)
-					await this.database.routes.deleteRoute(route.id);
+				await this.database.routes.deleteRoute(this.routeSubscriptions[routeKey].routeId);
+				delete this.routeSubscriptions[routeKey];
 			},
 
-			lineToRoute: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				if (!this.mapId)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
-
-				const existingRoute = data.routeId ? this.routes[data.routeId] : this.route;
-				const routeInfo = await this.database.routes.lineToRoute(existingRoute?.id, this.mapId, data.id);
-
-				if (!routeInfo) {
-					// A newer submitted route has returned in the meantime
-					console.log("Ignoring outdated route");
-					return;
-				}
-
-				if (data.routeId)
-					this.routes[routeInfo.id] = omit(routeInfo, "trackPoints");
-				else
-					this.route = omit(routeInfo, "trackPoints");
-
-				if(this.bbox)
-					routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
-				else
-					routeInfo.trackPoints = [];
-
-				return {
-					routeId: data.routeId,
-					top: routeInfo.top,
-					left: routeInfo.left,
-					bottom: routeInfo.bottom,
-					right: routeInfo.right,
-					routePoints: routeInfo.routePoints,
-					mode: routeInfo.mode,
-					time: routeInfo.time,
-					distance: routeInfo.distance,
-					ascent: routeInfo.ascent,
-					descent: routeInfo.descent,
-					trackPoints: routeInfo.trackPoints
-				};
-			},
-
-			exportRoute: async (data) => {
-				this.validatePermissions(Writable.READ);
-
-				const route = data.routeId ? this.routes[data.routeId] : this.route;
+			exportRoute: async (routeId, options) => {
+				const route = this.routeSubscriptions[routeId];
 				if (!route) {
-					throw new Error(getI18n().t("route-not-available-error"));
+					throw new Error(getI18n().t("socket.route-not-available-error"));
 				}
 
 				const routeInfo = { ...route, name: getI18n().t("socket.route-name"), data: {} };
+				const filename = getSafeFilename(routeInfo.name);
 
-				switch(data.format) {
+				switch(options.format) {
 					case "gpx-trk":
-						return await streamToString(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.id)));
+						return {
+							type: "application/gpx+xml",
+							filename: `${filename}.gpx`,
+							data: this.emitStream(streamToIterable(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId))))
+						};
 					case "gpx-rte":
-						return await streamToString(exportLineToRouteGpx(routeInfo, undefined));
+						return {
+							type: "application/gpx+xml",
+							filename: `${filename}.gpx`,
+							data: this.emitStream(streamToIterable(exportLineToRouteGpx(routeInfo, undefined)))
+						};
 					default:
 						throw new Error(getI18n().t("socket.unknown-format"));
 				}
 			},
 
-			listenToHistory: async () => {
-				this.validatePermissions(Writable.WRITE);
+			setBbox: async (bbox) => {
+				const markerBboxWithExcept: BboxWithExcept = { ...bbox };
+				const lineBboxWithExcept: BboxWithExcept = { ...bbox };
+				if(this.bbox) {
+					markerBboxWithExcept.except = this.bbox;
+					if (bbox.zoom == this.bbox.zoom) {
+						lineBboxWithExcept.except = this.bbox;
+					}
+				}
 
-				if (!this.mapId)
-					throw new Error(getI18n().t("socket.no-map-open-error"));
+				this.bbox = bbox;
 
-				if(this.listeningToHistory)
-					throw new Error(getI18n().t("socket.already-listening-to-history-error"));
+				type This = this;
+				return this.emitStream((async function*(this: This): AsyncIterable<StreamToStreamId<BboxItem>> {
+					for (const subs of Object.values(this.mapSubscriptions)) {
+						for (const sub of subs) {
+							const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
+							for await (const obj of markerObjs) {
+								yield { ...obj, mapSlug: sub.mapSlug, data: this.emitStream(obj.data) };
+							}
 
-				this.listeningToHistory = true;
-				this.registerDatabaseHandlers();
+							const lineObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["linePoints"], bbox: lineBboxWithExcept });
+							for await (const obj of lineObjs) {
+								yield { ...obj, mapSlug: sub.mapSlug, data: this.emitStream(obj.data) };
+							}
+						}
+					}
 
-				return promiseProps({
-					history: iterableToArray(this.database.history.getHistory(this.mapId, this.writable == Writable.ADMIN ? undefined : ["Marker", "Line"]))
-				});
+					yield {
+						type: "routePoints",
+						data: this.emitStream((async function*(this: This) {
+							for (const [routeKey, sub] of Object.entries(this.routeSubscriptions)) {
+								yield {
+									routeKey,
+									trackPoints: await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except)
+								};
+							}
+						}).call(this))
+					};
+				}).call(this));
 			},
-
-			stopListeningToHistory: () => {
-				this.validatePermissions(Writable.WRITE);
-
-				if(!this.listeningToHistory)
-					throw new Error(getI18n().t("socket.not-listening-to-history-error"));
-
-				this.listeningToHistory = false;
-				this.registerDatabaseHandlers();
-			},
-
-			geoip: async () => {
-				return await this.api.geoip();
-			}
 
 			/*copyPad : function(data, callback) {
 				if(!stripObject(data, { toId: "string" }))
@@ -555,89 +458,142 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getDatabaseHandlers(): DatabaseHandlers {
 		return {
-			...(this.mapId ? {
-				line: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("line", data);
-				},
-
-				linePoints: (mapId, lineId, trackPoints) => {
-					if(mapId == this.mapId)
-						this.emit("linePoints", { reset: true, id: lineId, trackPoints : (this.bbox ? prepareForBoundingBox(trackPoints, this.bbox) : [ ]) });
-				},
-
-				deleteLine: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("deleteLine", data);
-				},
-
-				marker: (mapId, data) => {
-					if(mapId == this.mapId && this.bbox && isInBbox(data, this.bbox))
-						this.emit("marker", data);
-				},
-
-				deleteMarker: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("deleteMarker", data);
-				},
-
-				type: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("type", data);
-				},
-
-				deleteType: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("deleteType", data);
-				},
-
+			...(Object.keys(this.mapSubscriptions).length > 0 ? {
 				mapData: (mapId, data) => {
-					if(mapId == this.mapId) {
-						const dataClone = cloneDeep(data);
-						if (this.writable === Writable.ADMIN) {
-							this.mapSlug = dataClone.adminId;
-						} else if (this.writable === Writable.WRITE) {
-							delete dataClone.adminId;
-							this.mapSlug = dataClone.writeId;
-						} else {
-							delete dataClone.adminId;
-							delete dataClone.writeId;
-							this.mapSlug = dataClone.id;
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("mapData")) {
+								this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
+							}
+
+							const newSlug = getMapSlug({ ...data, writable: sub.writable });
+							if (sub.mapSlug !== newSlug) {
+								this.emit("mapSlugRename", sub.mapSlug, newSlug);
+								sub.mapSlug = newSlug;
+							}
 						}
 
-						this.mapId = data.id;
-
-						this.emit("mapData", {
-							...dataClone,
-							writable: this.writable!
-						});
+						if (data.id !== mapId) {
+							this.mapSubscriptions[data.id] = [
+								...this.mapSubscriptions[data.id] ?? [],
+								...this.mapSubscriptions[mapId]
+							];
+							delete this.mapSubscriptions[mapId];
+						}
 					}
 				},
 
 				deleteMap: (mapId) => {
-					if (mapId == this.mapId) {
-						this.emit("deleteMap");
-						this.writable = Writable.READ;
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							this.emit("deleteMap", sub.mapSlug);
+						}
+					}
+				},
+
+				marker: (mapId, marker) => {
+					if (this.mapSubscriptions[mapId] && this.bbox && isInBbox(marker, this.bbox)) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("markers")) {
+								this.emit("marker", sub.mapSlug, marker);
+							}
+						}
+					}
+				},
+
+				deleteMarker: (mapId, data) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("markers")) {
+								this.emit("deleteMarker", sub.mapSlug, data);
+							}
+						}
+					}
+				},
+
+				line: (mapId, line) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("lines")) {
+								this.emit("line", sub.mapSlug, line);
+							}
+						}
+					}
+				},
+
+				linePoints: (mapId, lineId, trackPoints) => {
+					if (this.mapSubscriptions[mapId] && this.bbox) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("linePoints")) {
+								this.emit("linePoints", sub.mapSlug, {
+									lineId,
+									// Emit track points even if none are in the bbox so that client resets cached track points
+									trackPoints: prepareForBoundingBox(trackPoints, this.bbox)
+								});
+							}
+						}
+					}
+				},
+
+				deleteLine: (mapId, data) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("lines")) {
+								this.emit("deleteLine", sub.mapSlug, data);
+							}
+						}
+					}
+				},
+
+				type: (mapId, data) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("types")) {
+								this.emit("type", sub.mapSlug, data);
+							}
+						}
+					}
+				},
+
+				deleteType: (mapId, data) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("types")) {
+								this.emit("deleteType", sub.mapSlug, data);
+							}
+						}
 					}
 				},
 
 				view: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("view", data);
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("views")) {
+								this.emit("view", sub.mapSlug, data);
+							}
+						}
+					}
 				},
 
 				deleteView: (mapId, data) => {
-					if(mapId == this.mapId)
-						this.emit("deleteView", data);
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.pick.includes("views")) {
+								this.emit("deleteView", sub.mapSlug, data);
+							}
+						}
+					}
 				},
 
-				...(this.listeningToHistory ? {
-					addHistoryEntry: (mapId, data) => {
-						if(mapId == this.mapId && (this.writable == Writable.ADMIN || ["Marker", "Line"].includes(data.type)) && !this.pauseHistoryListener)
-							this.emit("history", data);
+				addHistoryEntry: (mapId, data) => {
+					if (this.mapSubscriptions[mapId]) {
+						for (const sub of this.mapSubscriptions[mapId]) {
+							if (sub.history && (sub.writable === Writable.ADMIN || ["Marker", "Line"].includes(data.type))) {
+								this.emit("history", sub.mapSlug, data);
+							}
+						}
 					}
-				} : {})
-
+				}
 			} : {})
 		};
 	}

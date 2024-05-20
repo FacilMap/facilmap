@@ -1,9 +1,9 @@
-import type { MapData, Writable, ID, Marker, LineWithTrackPoints, View, Type, HistoryEntry, EventName, EventHandler, MultipleEvents, MultipleEvents, SocketEvents, SocketVersion, BboxWithZoom, LinePointsEvent } from "facilmap-types";
-import type { ClientEvents, ClientEvents, RouteWithTrackPoints } from "./client";
-import Client from "./client";
+import type { MapData, Writable, ID, Marker, LineWithTrackPoints, View, Type, HistoryEntry, EventName, EventHandler, MultipleEvents, MultipleEvents, SocketEvents, SocketVersion, BboxWithZoom, LinePointsEvent, MapDataWithWritable } from "facilmap-types";
+import type { ClientEvents, ClientEvents, RouteWithTrackPoints } from "./socket";
+import Client from "./socket";
 
 export interface ClientData {
-	mapData: (MapData & { writable: Writable }) | undefined;
+	mapData: MapDataWithWritable | undefined;
 	markers: Record<ID, Marker>;
 	lines: Record<ID, LineWithTrackPoints>;
 	views: Record<ID, View>;
@@ -153,7 +153,7 @@ export default class StoringClient extends Client {
 		return obj;
 	}
 
-	get mapData(): (MapData & { writable: Writable }) | undefined {
+	get mapData(): MapDataWithWritable | undefined {
 		return this.data.mapData;
 	}
 

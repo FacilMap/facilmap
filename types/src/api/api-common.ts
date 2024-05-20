@@ -29,14 +29,14 @@ export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "l
 export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
-export interface TrackPoints {
+export type TrackPoints = {
 	[idx: number]: TrackPoint;
 	length: number;
-}
+};
 
-export interface LineWithTrackPoints extends Line {
+export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoints;
-}
+};
 
 export type LinePoints = {
 	lineId: ID;
@@ -47,13 +47,13 @@ export const allMapObjectsPickValidator = z.enum(["mapData", "types", "views", "
 export type AllMapObjectsPick = z.infer<typeof allMapObjectsPickValidator>;
 
 export type AllMapObjectsTypes = {
-	mapData: ["mapData", MapDataWithWritable];
-	types: ["type", Type];
-	views: ["view", View];
-	markers: ["marker", Marker];
-	lines: ["line", Line];
-	linesWithTrackPoints: ["line", LineWithTrackPoints];
-	linePoints: ["linePoints", LinePoints];
+	mapData: { type: "mapData"; data: MapDataWithWritable };
+	types: { type: "types", data: AsyncIterable<Type> };
+	views: { type: "views", data: AsyncIterable<View> };
+	markers: { type: "markers", data: AsyncIterable<Marker> };
+	lines: { type: "lines", data: AsyncIterable<Line> };
+	linesWithTrackPoints: { type: "lines", data: AsyncIterable<LineWithTrackPoints> };
+	linePoints: { type: "linePoints", data: AsyncIterable<LinePoints> };
 };
 
 export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = (
@@ -62,7 +62,7 @@ export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = (
 
 export type AllAdminMapObjectsItem<Pick extends AllMapObjectsPick> = (
 	ReplaceProperties<AllMapObjectsTypes, {
-		mapData: ["mapData", Extract<MapDataWithWritable, { writable: Writable.ADMIN }>]
+		mapData: { type: "mapData", data: Extract<MapDataWithWritable, { writable: Writable.ADMIN }> }
 	}>[Pick]
 );
 

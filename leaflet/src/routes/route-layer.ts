@@ -4,7 +4,7 @@ import { Map, type PolylineOptions } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
-import type { RouteClear, RoutePointsEvent } from "facilmap-types";
+import type { RouteClear, RoutePoints } from "facilmap-types";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 }
@@ -55,7 +55,7 @@ export default class RouteLayer extends HighlightablePolyline {
 		this.updateLine(false);
 	};
 
-	handleRoutePointsWithId = (data: RoutePointsEvent): void => {
+	handleRoutePointsWithId = (data: RoutePoints): void => {
 		if (this.routeId == data.routeId)
 			this.updateLine(false);
 	};

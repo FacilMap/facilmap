@@ -1,4 +1,4 @@
-import { mapDataValidator, type MapData } from "../mapData";
+import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData";
 import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base";
 import type { CRU } from "../cru";
 import { lineValidator, type Line, type TrackPoint } from "../line";
@@ -8,28 +8,48 @@ import { routeRequestValidator, type RouteInfo } from "../route";
 import { typeValidator, type Type } from "../type";
 import { viewValidator, type View } from "../view";
 import type { HistoryEntry } from "../historyEntry";
-import { allMapObjectsPickValidator, bboxWithExceptValidator, pagingValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type MapDataWithWritable, type PagedResults, type StreamedResults } from "./api-common";
+import { allMapObjectsPickValidator, bboxWithExceptValidator, pagingValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common";
 import * as z from "zod";
 
 export const apiV3RequestValidators = {
-	findMaps: z.tuple([/** query */ z.string(), pagingValidator.default(() => ({}))]),
+	findMaps: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([/** query */ z.string()]),
+		z.tuple([/** query */ z.string(), pagingValidator.optional()])
+	]),
 	getMap: z.tuple([z.string()]),
-	createMap: z.tuple([mapDataValidator.create, z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithZoomValidator.optional() }).optional()]),
+	createMap: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapDataValidator.create]),
+		z.tuple([mapDataValidator.create, z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithZoomValidator.optional() }).optional()])
+	]),
 	updateMap: z.tuple([mapSlugValidator, mapDataValidator.update]),
 	deleteMap: z.tuple([mapSlugValidator]),
 	getAllMapObjects: z.tuple([mapSlugValidator, z.object({ pick: z.array(allMapObjectsPickValidator), bbox: bboxWithExceptValidator.optional() })]),
 	findOnMap: z.tuple([mapSlugValidator, /** query */ z.string()]),
 
-	getHistory: z.tuple([mapSlugValidator, pagingValidator.default(() => ({}))]),
+	getHistory: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapSlugValidator]),
+		z.tuple([mapSlugValidator, pagingValidator.optional()])
+	]),
 	revertHistoryEntry: z.tuple([mapSlugValidator, idValidator]),
 
-	getMapMarkers: z.tuple([mapSlugValidator, z.object({ bbox: bboxWithExceptValidator.optional(), typeId: idValidator.optional() }).optional()]),
+	getMapMarkers: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapSlugValidator]),
+		z.tuple([mapSlugValidator, z.object({ bbox: bboxWithExceptValidator.optional(), typeId: idValidator.optional() }).optional()])
+	]),
 	getMarker: z.tuple([mapSlugValidator, idValidator]),
 	createMarker: z.tuple([mapSlugValidator, markerValidator.create]),
 	updateMarker: z.tuple([mapSlugValidator, idValidator, markerValidator.update]),
 	deleteMarker: z.tuple([mapSlugValidator, idValidator]),
 
-	getMapLines: z.tuple([mapSlugValidator, z.object({ bbox: bboxWithZoomValidator.optional(), includeTrackPoints: z.boolean().optional(), typeId: idValidator.optional() }).optional()]),
+	getMapLines: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapSlugValidator]),
+		z.tuple([mapSlugValidator, z.object({ bbox: bboxWithZoomValidator.optional(), includeTrackPoints: z.boolean().optional(), typeId: idValidator.optional() }).optional()])
+	]),
 	getLine: z.tuple([mapSlugValidator, idValidator]),
 	getLinePoints: z.tuple([mapSlugValidator, idValidator, z.object({ bbox: bboxWithExceptValidator.optional() }).optional()]),
 	createLine: z.tuple([mapSlugValidator, lineValidator.create]),
@@ -60,10 +80,10 @@ type ApiV3Response = {
 	findMaps: PagedResults<FindMapsResult>;
 
 	getMap: MapDataWithWritable;
-	//createMap: generic
+	//createMap: generic, manual declaration in ApiV3 type
 	updateMap: MapDataWithWritable;
 	deleteMap: void;
-	//getAllMapObjects: generic
+	//getAllMapObjects: generic, manual declaration in ApiV3 type
 	findOnMap: FindOnMapResult[];
 
 	getHistory: HistoryEntry[];
@@ -75,7 +95,7 @@ type ApiV3Response = {
 	updateMarker: Marker;
 	deleteMarker: void;
 
-	// getMapLines: generic
+	// getMapLines: generic, manual declaration in ApiV3 type
 	getLine: Line;
 	getLinePoints: StreamedResults<TrackPoint>;
 	createLine: Line;
@@ -105,7 +125,7 @@ type ApiV3Response = {
 export type ApiV3<Validated extends boolean = false> = {
 	[K in keyof ApiV3Response]: (...args: Validated extends true ? z.infer<typeof apiV3RequestValidators[K]> : z.input<typeof apiV3RequestValidators[K]>) => Promise<ApiV3Response[K]>;
 } & {
-	createMap: <Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<Validated extends true ? CRU.CREATE_VALIDATED : CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }) => Promise<StreamedResults<AllAdminMapObjectsItem<Pick>>>;
-	getAllMapObjects: <Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }) => Promise<StreamedResults<AllMapObjectsItem<Pick>>>;
+	createMap: <Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<Validated extends true ? CRU.CREATE_VALIDATED : CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }) => Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>>;
+	getAllMapObjects: <Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }) => Promise<AsyncIterable<AllMapObjectsItem<Pick>>>;
 	getMapLines: <IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }) => Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>>;
 };

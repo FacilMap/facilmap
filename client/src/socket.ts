@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindMapsResult, type ID, type Line, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type MapData, type MapSlug, type PagedResults, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, MapNotFoundError, type SetLanguageRequest, type TrackPoints, type Api, ApiVersion, type PagingInput, type MapDataWithWritable, type AllMapObjectsPick, type StreamedResults, type AllAdminMapObjectsItem, type BboxWithExcept, type AllMapObjectsItem, type SocketApi, type StreamId, type FindOnMapResult, type HistoryEntry, type ExportFormat } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindMapsResult, type ID, type Line, type SocketEvents, type Marker, type MultipleEvents, type MapData, type MapSlug, type PagedResults, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, MapNotFoundError, type SetLanguageRequest, type TrackPoints, type Api, ApiVersion, type PagingInput, type MapDataWithWritable, type AllMapObjectsPick, type StreamedResults, type AllAdminMapObjectsSubStream, type BboxWithExcept, type AllMapObjectsItem, type SocketApi, type StreamId, type FindOnMapResult, type HistoryEntry, type ExportFormat } from "facilmap-types";
 import { deserializeError, errorConstructors, serializeError } from "serialize-error";
 import { defaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactive";
 import { streamToIterable } from "json-stream-es";
@@ -31,11 +31,6 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
-
-export interface RouteWithTrackPoints extends Omit<Route, "trackPoints"> {
-	routeId?: string;
-	trackPoints: TrackPoints;
-}
 
 interface ClientState {
 	disconnected: boolean;
@@ -294,7 +289,7 @@ class Client implements Api<ApiVersion.V3> {
 		return await this._call("getMap", mapSlug);
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllAdminMapObjectsItem<Pick>>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllAdminMapObjectsSubStream<Pick>>> {
 		const result = await this._call("createMap", data, options);
 		// this.reactiveObjectProvider.set(this.state, 'serverError', undefined);
 		// this.reactiveObjectProvider.set(this.state, 'readonly', false);

@@ -4,7 +4,7 @@
 		"outDir": "./out",
 		"composite": true,
 		"paths": {
-			"facilmap-client": ["../client/src/client.ts"],
+			"facilmap-client": ["../client/src/socket.ts"],
 			"facilmap-leaflet": ["../leaflet/src/index.ts"],
 			"facilmap-types": ["../types/src/index.ts"],
 			"facilmap-utils": ["../utils/src/index.ts"]

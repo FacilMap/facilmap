@@ -1,14 +1,55 @@
 import { ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
-import { parseJsonStream, streamToIterable } from "json-stream-es";
+import { JsonDeserializer, JsonParser, JsonPathDetector, JsonPathSelector, JsonPathStreamSplitter, deserializeJsonValue, parseJsonStream, streamToIterable } from "json-stream-es";
 import { parse as parseContentDisposition } from "content-disposition";
 
 function parseStreamedResults<T>(res: Response): StreamedResults<T> {
 	return {
 		results: streamToIterable(
 			res.body!.pipeThrough(new TextDecoderStream())
-				.pipeThrough(parseJsonStream(["results", undefined])) as ReadableStream<any>
+				.pipeThrough(parseJsonStream(["results"])) as ReadableStream<any>
 		)
 	};
+}
+
+function parseAllMapObjects(res: Response): AsyncIterable<AllMapObjectsItem<AllMapObjectsPick>> {
+	return flatMapAsyncIterable(streamToIterable(
+		res.body!
+			.pipeThrough(new TextDecoderStream())
+			.pipeThrough(new JsonParser())
+			.pipeThrough(new JsonPathDetector())
+			.pipeThrough(new JsonPathSelector([undefined]))
+			.pipeThrough(new JsonPathStreamSplitter())
+	), async (stream): Promise<Array<AllMapObjectsItem<AllMapObjectsPick>>> => {
+		const type = stream.path[0]
+		switch (type) {
+			case "mapData":
+				return [{ type, data: (await deserializeJsonValue(stream)) as any }];
+			case "markers":
+			case "lines":
+			case "linePoints":
+			case "types":
+			case "views":
+				return [{
+					type,
+					data: flatMapAsyncIterable(streamToIterable(
+						stream
+							.pipeThrough(new JsonPathSelector([undefined]))
+							.pipeThrough(new JsonDeserializer())
+					), (it) => [it.value as any])
+				}];
+			default:
+				stream.cancel();
+				return [];
+		}
+	});
+}
+
+async function* flatMapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
+	for await (const it of iterable) {
+		for (const o of await mapper(it)) {
+			yield o;
+		}
+	}
 }
 
 function encodeStringArray(arr: string[]): string {
@@ -68,7 +109,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllAdminMapObjectsItem<Pick>>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
 		const res = await this.fetch("/map", {
 			method: "POST",
 			query: {
@@ -77,7 +118,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 			},
 			body: data
 		});
-		return parseStreamedResults(res);
+		return parseAllMapObjects(res) as AsyncIterable<AllAdminMapObjectsItem<Pick>>;
 	}
 
 	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
@@ -94,7 +135,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }): Promise<StreamedResults<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/all`, {
 			query: {
 				pick: encodeStringArray(options.pick),
@@ -103,7 +144,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 				} : {}
 			}
 		});
-		return parseStreamedResults(res);
+		return parseAllMapObjects(res) as AsyncIterable<AllMapObjectsItem<Pick>>;
 	}
 
 	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {

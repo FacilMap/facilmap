@@ -8,7 +8,8 @@ import { exportLineToTrackGpx, exportLineToRouteGpx } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
 import { findQuery, findUrl } from "../search";
-import { iterableToArray, writableToWeb } from "../utils/streams";
+import { iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
+import { JsonSerializer, arrayStream, objectStream, type SerializableJsonValue } from "json-stream-es";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected database: Database;
@@ -30,47 +31,37 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected async* getMapObjectsUntyped<M extends MapDataWithWritable = MapDataWithWritable>(
 		mapData: M,
 		{ pick, bbox }: { pick: AllMapObjectsPick[]; bbox?: BboxWithZoom }
-	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: ["mapData", M] }>[AllMapObjectsPick]> {
+	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[AllMapObjectsPick]> {
 		if (pick.includes("mapData")) {
-			yield ["mapData", mapData];
+			yield { type: "mapData", data: mapData };
 		}
 
 		if (pick.includes("types")) {
-			for await (const type of this._getMapTypes(mapData)) {
-				yield ["type", type];
-			}
+			yield { type: "types", data: this._getMapTypes(mapData) };
 		}
 
 		if (pick.includes("views")) {
-			for await (const view of this._getMapViews(mapData)) {
-				yield ["view", view];
-			}
+			yield { type: "views", data: this._getMapViews(mapData) };
 		}
 
 		if (pick.includes("markers")) {
-			for await (const marker of this._getMapMarkers(mapData, { bbox })) {
-				yield ["marker", marker];
-			}
+			yield { type: "markers", data: this._getMapMarkers(mapData, { bbox }) };
 		}
 
 		if (pick.includes("lines") || pick.includes("linesWithTrackPoints")) {
-			for await (const line of this._getMapLines(mapData, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox })) {
-				yield ["line", line];
-			}
+			yield { type: "lines", data: this._getMapLines(mapData, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox }) };
 		}
 
 		if (pick.includes("linePoints")) {
-			for await (const linePoints of this._getMapLinePoints(mapData, { bbox })) {
-				yield ["linePoints", linePoints];
-			}
+			yield { type: "linePoints", data: this._getMapLinePoints(mapData, { bbox }) };
 		}
 	}
 
 	protected getMapObjects<Pick extends AllMapObjectsPick, M extends MapDataWithWritable = MapDataWithWritable>(
 		mapData: M,
 		{ pick, bbox }: { pick: Pick[]; bbox?: BboxWithZoom }
-	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: ["mapData", M] }>[Pick]> {
-		return this.getMapObjectsUntyped(mapData, { pick: pick as AllMapObjectsPick[], bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: ["mapData", M] }>[Pick]>;
+	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]> {
+		return this.getMapObjectsUntyped(mapData, { pick: pick as AllMapObjectsPick[], bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]>;
 	}
 
 	async findMaps(query: string, paging = DEFAULT_PAGING): Promise<PagedResults<FindMapsResult>> {
@@ -81,11 +72,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.resolveMapSlug(mapSlug, Writable.READ);
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllAdminMapObjectsItem<Pick>>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
 		const mapData = await this.database.maps.createMap(data);
-		return {
-			results: this.getMapObjects({ ...mapData, writable: Writable.ADMIN }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] })
-		};
+		return this.getMapObjects({ ...mapData, writable: Writable.ADMIN }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
 	}
 
 	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapDataWithWritable> {
@@ -102,11 +91,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.maps.deleteMap(mapData.id);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithZoom }): Promise<StreamedResults<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
-		return {
-			results: this.getMapObjects(mapData, options)
-		};
+		return this.getMapObjects(mapData, options);
 	}
 
 	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
@@ -259,9 +246,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async getType (mapSlug: MapSlug, id: ID): Promise<Type> {
+	async getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
-		return await this.database.types.getType(mapData.id, id, { notFound404: true });
+		return await this.database.types.getType(mapData.id, typeId, { notFound404: true });
 	}
 
 	async createType(mapSlug: MapSlug, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
@@ -269,14 +256,14 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.database.types.createType(mapData.id, data);
 	}
 
-	async updateType(mapSlug: MapSlug, id: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
+	async updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
-		return await this.database.types.updateType(mapData.id, id, data, { notFound404: true });
+		return await this.database.types.updateType(mapData.id, typeId, data, { notFound404: true });
 	}
 
-	async deleteType(mapSlug: MapSlug, id: ID): Promise<void> {
+	async deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
-		await this.database.types.deleteType(mapData.id, id, { notFound404: true });
+		await this.database.types.deleteType(mapData.id, typeId, { notFound404: true });
 	}
 
 	_getMapViews(mapData: MapDataWithWritable): AsyncIterable<View> {
@@ -290,9 +277,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async getView(mapSlug: MapSlug, id: ID): Promise<View> {
+	async getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
-		return await this.database.views.getView(mapData.id, id, { notFound404: true });
+		return await this.database.views.getView(mapData.id, viewId, { notFound404: true });
 	}
 
 	async createView(mapSlug: MapSlug, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
@@ -300,14 +287,14 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.database.views.createView(mapData.id, data);
 	}
 
-	async updateView(mapSlug: MapSlug, id: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
+	async updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
-		return await this.database.views.updateView(mapData.id, id, data, { notFound404: true });
+		return await this.database.views.updateView(mapData.id, viewId, data, { notFound404: true });
 	}
 
-	async deleteView(mapSlug: MapSlug, id: ID): Promise<void> {
+	async deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
-		await this.database.views.deleteView(mapData.id, id, { notFound404: true });
+		await this.database.views.deleteView(mapData.id, viewId, { notFound404: true });
 	}
 
 	async find(query: string): Promise<SearchResult[]> {
@@ -348,7 +335,15 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 			bbox: bboxWithZoomValidator.optional()
 		}).parse(req.query);
 		return [mapDataValidator.create.parse(req.body), { pick, bbox }];
-	}, "stream"),
+	}, (res, result) => {
+		new JsonSerializer(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
+			if (obj.type === "mapData") {
+				return [obj.type, obj.data];
+			} else {
+				return [obj.type, arrayStream<SerializableJsonValue>(obj.data)];
+			}
+		}))).pipeTo(writableToWeb(res)).catch(() => undefined);
+	}),
 
 	updateMap: apiImpl.put("/map/:mapSlug", (req) => [req.params.mapSlug, mapDataValidator.update.parse(req.body)], "json"),
 
@@ -360,7 +355,15 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator.optional())
 		}).parse(req.query);
 		return [req.params.mapSlug, { pick, bbox }];
-	}, "stream"),
+	}, (res, result) => {
+		new JsonSerializer(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
+			if (obj.type === "mapData") {
+				return [obj.type, obj.data];
+			} else {
+				return [obj.type, arrayStream<SerializableJsonValue>(obj.data)];
+			}
+		}))).pipeTo(writableToWeb(res)).catch(() => undefined);
+	}),
 
 	findOnMap: apiImpl.get("/map/:mapSlug/find", (req) => {
 		const { query } = z.object({

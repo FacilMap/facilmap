@@ -1,17 +1,19 @@
-import { exportFormatValidator, idValidator, objectWithIdValidator, type MapId, type ReplaceProperties } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, objectWithIdValidator, type ID, type MapId, type ObjectWithId, type ReplaceProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
-import type { MultipleEvents } from "../events.js";
+import type { EventName } from "../events.js";
 import { nullOrUndefinedValidator, renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
-import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3.js";
+import { socketV3RequestValidators, type SocketApiV3 } from "./socket-v3.js";
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
-import type { GenericHistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
+import type { GenericHistoryEntry, HistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
 import { pick } from "lodash-es";
-import { lineValidator, type LineTemplate } from "../line.js";
+import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
-import { pagingValidator, type FindMapsResult, type FindOnMapMarker, type FindOnMapResult, type MapDataWithWritable, type PagedResults } from "../api/api-common.js";
-import { mapDataValidator } from "../mapData.js";
+import { pagingValidator, type FindMapsResult, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
+import { mapDataValidator, type MapDataWithWritable } from "../mapData.js";
+import type { SearchResult } from "../searchResult.js";
+import { routeParametersValidator, type Route } from "../route.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and
@@ -119,18 +121,48 @@ export const legacyV2FindOnMapQueryValidator = z.object({
 	query: z.string()
 });
 
+export const legacyV2RouteCreateValidator = routeParametersValidator.extend({
+	routeId: z.string().optional()
+});
+
+export const legacyV2LineToRouteCreateValidator = z.object({
+	/** The ID of the line. */
+	id: idValidator,
+	routeId: z.string().optional()
+});
+
+export const legacyV2RouteExportRequestValidator = z.object({
+	format: exportFormatValidator,
+	routeId: z.string().optional()
+});
+
+export const legacyV2RouteClearValidator = z.object({
+	routeId: z.string().optional()
+});
+
+export interface LegacyV2LinePointsEvent {
+	id: ID;
+	reset?: boolean;
+	trackPoints: TrackPoint[];
+}
+
+export type MultipleEvents<Events extends Record<string, any[]>> = {
+	[E in EventName<Events>]?: Array<Events[E][0]>;
+};
+
+export type LegacyV2Route = ReplaceProperties<Route, { routeId?: string }>;
+
 export const socketV2RequestValidators = {
 	...pick(socketV3RequestValidators, [
-		"updateBbox", "listenToHistory", "stopListeningToHistory", "getRoute", "setRoute", "clearRoute", "lineToRoute", "exportRoute",
-		"geoip", "setLanguage"
+		"getRoute", "geoip", "setLanguage"
 	]),
 	getPad: z.tuple([legacyV2GetMapQueryValidator]),
 	findPads: z.tuple([legacyV2FindMapsQueryValidator]),
 	createPad: z.tuple([mapDataValidator.create]),
 	editPad: z.tuple([mapDataValidator.update]),
 	deletePad: z.tuple([nullOrUndefinedValidator]),
+	findOnMap: z.tuple([legacyV2FindOnMapQueryValidator]),
 	revertHistoryEntry: z.tuple([objectWithIdValidator]),
-	setPadId: z.tuple([socketV3RequestValidators.setMapId]),
 	getMarker: z.tuple([objectWithIdValidator]),
 	addMarker: z.tuple([legacyV2MarkerValidator.create]),
 	editMarker: z.tuple([legacyV2MarkerValidator.update.extend({ id: idValidator })]),
@@ -147,17 +179,25 @@ export const socketV2RequestValidators = {
 	editView: z.tuple([viewValidator.update.extend({ id: idValidator })]),
 	deleteView: z.tuple([objectWithIdValidator]),
 	find: z.tuple([legacyV2FindQueryValidator]),
-	findOnMap: z.tuple([legacyV2FindOnMapQueryValidator])
+
+	setPadId: z.tuple([z.string()]),
+	updateBbox: z.tuple([bboxWithZoomValidator]),
+	listenToHistory: z.tuple([nullOrUndefinedValidator]),
+	stopListeningToHistory: z.tuple([nullOrUndefinedValidator]),
+
+	setRoute: z.tuple([legacyV2RouteCreateValidator]),
+	clearRoute: z.tuple([legacyV2RouteClearValidator.or(nullOrUndefinedValidator)]),
+	lineToRoute: z.tuple([legacyV2LineToRouteCreateValidator]),
+	exportRoute: z.tuple([legacyV2RouteExportRequestValidator]),
 };
 
 type SocketV2Response = {
 	getPad: FindMapsResult | null;
 	findPads: PagedResults<FindMapsResult>;
+	createPad: MultipleEvents<MapEventsV2>;
 	editPad: MapDataWithWritable;
 	deletePad: null;
-	updateBbox: MultipleEvents<MapEventsV2>;
-	createPad: MultipleEvents<MapEventsV2>;
-	listenToHistory: MultipleEvents<MapEventsV2>;
+	findOnMap: Array<LegacyV2FindOnMapResult>;
 	revertHistoryEntry: MultipleEvents<MapEventsV2>;
 	getMarker: LegacyV2Marker;
 	addMarker: LegacyV2Marker;
@@ -168,32 +208,47 @@ type SocketV2Response = {
 	editLine: LegacyV2Line;
 	deleteLine: LegacyV2Line;
 	exportLine: string;
-	findOnMap: Array<LegacyV2FindOnMapResult>;
 	addType: LegacyV2Type;
 	editType: LegacyV2Type;
 	deleteType: LegacyV2Type;
 	addView: LegacyV2View;
 	editView: LegacyV2View;
 	deleteView: LegacyV2View;
+	find: SearchResult[] | string;
+
 	setPadId: MultipleEvents<MapEventsV2>;
+	updateBbox: MultipleEvents<MapEventsV2>;
+	listenToHistory: MultipleEvents<MapEventsV2>;
+	stopListeningToHistory: null;
+
+	setRoute: LegacyV2Route | null;
+	clearRoute: null;
+	lineToRoute: LegacyV2Route | null;
+	exportRoute: string;
 };
 
 export type SocketApiV2<Validated extends boolean = false> = Pick<SocketApiV3<Validated>, (
-	| "stopListeningToHistory" | "find" | "getRoute" | "setRoute" | "clearRoute" | "lineToRoute" | "exportRoute"
-	| "geoip" | "setLanguage"
+	| "getRoute" | "geoip" | "setLanguage"
 )> & {
 	[K in keyof SocketV2Response]: (...args: Validated extends true ? z.infer<typeof socketV2RequestValidators[K]> : z.input<typeof socketV2RequestValidators[K]>) => Promise<SocketV2Response[K]>;
 };
 
-export type MapEventsV2 = ReplaceProperties<Omit<MapEventsV3, "mapData" | "deleteMap">, {
+export type MapEventsV2 = {
 	marker: [LegacyV2Marker];
+	deleteMarker: [ObjectWithId];
 	line: [LegacyV2Line];
+	deleteLine: [ObjectWithId];
+	linePoints: [LegacyV2LinePointsEvent];
 	type: [LegacyV2Type];
+	deleteType: [ObjectWithId];
 	view: [LegacyV2View];
+	deleteView: [ObjectWithId];
 	history: [LegacyV2HistoryEntry];
-	padData: MapEventsV3["mapData"];
-	deletePad: MapEventsV3["deleteMap"];
-}>;
+	padData: [MapDataWithWritable];
+	deletePad: [];
+	routePoints: [TrackPoint[]];
+	routePointsWithId: [{ routeId: string; trackPoints: TrackPoint[] }];
+};
 
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
 	return renameProperty(marker, "symbol", "icon", keepOld);
@@ -277,6 +332,27 @@ export function currentViewToLegacyV2<V extends Record<keyof any, any>, KeepOld 
 	return renameProperty(view, "mapId", "padId", keepOld);
 }
 
-export function currentHistoryEntryToLegacyV2<H extends Record<keyof any, any>>(historyEntry: H): RenameProperty<H, "mapId", "padId"> {
-	return renameProperty(historyEntry, "mapId", "padId");
+type ReplacePropertyIfNotUndefined<T extends Record<keyof any, any>, Key extends keyof any, Value> = T[Key] extends undefined ? T : ReplaceProperty<T, Key, Value>;
+function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: any }, Out>(entry: Obj, mapper: (obj: (Obj extends { objectBefore: {} } ? Obj["objectBefore"] : never) | (Obj extends { objectAfter: {} } ? Obj["objectAfter"] : never)) => Out): ReplacePropertyIfNotUndefined<ReplacePropertyIfNotUndefined<Obj, "objectBefore", Out>, "objectAfter", Out> {
+	return {
+		...entry,
+		..."objectBefore" in entry && entry.objectBefore !== undefined ? { objectBefore: mapper(entry.objectBefore) } : {},
+		..."objectAfter" in entry && entry.objectAfter !== undefined ? { objectAfter: mapper(entry.objectAfter) } : {}
+	} as any;
+}
+
+export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry): LegacyV2HistoryEntry {
+	let renamed = renameProperty(historyEntry, "mapId", "padId");
+
+	if (renamed.type === "Marker") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj));
+	} else if (renamed.type === "Line") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj));
+	} else if (renamed.type === "Type") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentTypeToLegacyV2(obj));
+	} else if (renamed.type === "View") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentViewToLegacyV2(obj));
+	} else {
+		return renamed;
+	}
 }

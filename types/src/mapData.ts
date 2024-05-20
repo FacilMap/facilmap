@@ -13,12 +13,12 @@ export const writableValidator = z.nativeEnum(Writable);
 export const mapDataValidator = cruValidator({
 	id: optionalUpdate(mapSlugValidator),
 	writeId: {
-		read: mapSlugValidator.optional(), // Unavailable if map is opened in read-only mode
+		read: mapSlugValidator,
 		create: mapSlugValidator,
 		update: mapSlugValidator.optional()
 	},
 	adminId: {
-		read: mapSlugValidator.optional(), // Unavailable if map is opened in read-only/writeable mode
+		read: mapSlugValidator,
 		create: mapSlugValidator,
 		update: mapSlugValidator.optional()
 	},
@@ -37,6 +37,7 @@ export const mapDataValidator = cruValidator({
 });
 
 export type MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapDataValidator>;
+export type AdminMapData = MapData & Required<Pick<MapData, "writeId" | "adminId">>;
 
 export type MapDataWithWritable = (
 	| { writable: Writable.ADMIN } & MapData

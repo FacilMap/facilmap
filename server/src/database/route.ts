@@ -21,10 +21,6 @@ interface RoutePointModel extends Model<InferAttributes<RoutePointModel>, InferC
 	toJSON: () => TrackPoint;
 }
 
-export interface RouteWithId extends Route {
-	id: string;
-}
-
 export default class DatabaseRoutes {
 
 	private RoutePointModel = createModel<RoutePointModel>();
@@ -89,12 +85,12 @@ export default class DatabaseRoutes {
 		return generateRandomId(20);
 	}
 
-	async createRoute(routePoints: Point[], mode: RouteMode): Promise<RouteWithId | undefined> {
+	async createRoute(routePoints: Point[], mode: RouteMode): Promise<Route | undefined> {
 		const routeId = await this.generateRouteId();
 		return await this.updateRoute(routeId, routePoints, mode, true);
 	}
 
-	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<RouteWithId | undefined> {
+	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<Route | undefined> {
 		const thisTime = Date.now();
 		updateTimes[routeId] = thisTime;
 
@@ -130,14 +126,14 @@ export default class DatabaseRoutes {
 			return;
 
 		return {
-			id: routeId,
+			routeId,
 			routePoints,
 			mode,
 			...routeInfo
 		};
 	}
 
-	async lineToRoute(routeId: string | undefined, mapId: MapId, lineId: ID): Promise<RouteWithId | undefined> {
+	async lineToRoute(routeId: string | undefined, mapId: MapId, lineId: ID): Promise<Route | undefined> {
 		const clear = !!routeId;
 
 		if (!routeId)
@@ -179,7 +175,7 @@ export default class DatabaseRoutes {
 			return;
 
 		return {
-			id: routeId,
+			routeId,
 			mode: line.mode,
 			routePoints: line.routePoints,
 			trackPoints: linePoints,

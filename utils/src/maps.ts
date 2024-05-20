@@ -1,4 +1,4 @@
-import { Writable, type ID, type MapData, type MapSlug, type Type, type View } from "facilmap-types";
+import { Writable, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -41,5 +41,20 @@ export function getWritable(mapData: MapData, mapSlug: MapSlug): Writable {
 		return Writable.WRITE;
 	} else {
 		return Writable.READ;
+	}
+}
+
+export function getMapSlug(mapData: MapDataWithWritable): MapSlug {
+	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.id;
+}
+
+export function getMapDataWithWritable(mapData: MapData, writable: Writable): MapDataWithWritable {
+	const { adminId, writeId, ...rest } = mapData;
+	if (writable === Writable.ADMIN) {
+		return { ...rest, adminId, writeId, writable };
+	} else if (writable === Writable.WRITE) {
+		return { ...rest, writeId, writable };
+	} else {
+		return { ...rest, writable };
 	}
 }

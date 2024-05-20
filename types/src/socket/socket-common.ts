@@ -1,23 +1,7 @@
-import { exportFormatValidator, unitsValidator, type ID } from "../base.js";
+import { mapSlugValidator, unitsValidator, type MapSlug } from "../base.js";
 import { type TrackPoint } from "../line.js";
 import * as z from "zod";
-
-export const routeExportRequestValidator = z.object({
-	format: exportFormatValidator,
-	routeId: z.string().optional()
-});
-export type RouteExportRequest = z.infer<typeof routeExportRequestValidator>;
-
-export interface LinePointsEvent {
-	id: ID;
-	reset?: boolean;
-	trackPoints: TrackPoint[];
-}
-
-export interface RoutePointsEvent {
-	routeId: string;
-	trackPoints: TrackPoint[];
-}
+import { allMapObjectsPickValidator, type AllMapObjectsItem, type AllMapObjectsPick } from "../api/api-common.js";
 
 // socket.io converts undefined to null, so if we send an event as undefined, it will arrive as null
 export const nullOrUndefinedValidator = z.null().or(z.undefined()).transform((val) => val ?? null);
@@ -45,20 +29,25 @@ export function renameProperty<T, From extends keyof any, To extends keyof any, 
 	}
 }
 
-type ReplacePropertyIfNotUndefined<T extends Record<keyof any, any>, Key extends keyof any, Value> = T[Key] extends undefined ? T : ReplaceProperty<T, Key, Value>;
-export function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: any }, Out>(entry: Obj, mapper: (obj: (Obj extends { objectBefore: {} } ? Obj["objectBefore"] : never) | (Obj extends { objectAfter: {} } ? Obj["objectAfter"] : never)) => Out): ReplacePropertyIfNotUndefined<ReplacePropertyIfNotUndefined<Obj, "objectBefore", Out>, "objectAfter", Out> {
-	return {
-		...entry,
-		..."objectBefore" in entry && entry.objectBefore !== undefined ? { objectBefore: mapper(entry.objectBefore) } : {},
-		..."objectAfter" in entry && entry.objectAfter !== undefined ? { objectAfter: mapper(entry.objectAfter) } : {}
-	} as any;
-}
-
-export type StreamId = string;
+declare const streamType: unique symbol;
+export type StreamId<R> = string & { [streamType]: R };
 
 export type StreamToStreamId<T> = (
-	T extends AsyncIterable<any> | ReadableStream<any> ? StreamId :
+	T extends AsyncIterable<infer R> | ReadableStream<infer R> ? StreamId<StreamToStreamId<R>> :
 	T extends Promise<infer Value> ? Promise<StreamToStreamId<Value>> :
 	T extends (...args: infer Args) => infer Result ? (...args: Args) => StreamToStreamId<Result> :
 	{ [K in keyof T]: StreamToStreamId<T[K]> }
+);
+
+export const mapSubscriptionValidator = z.object({
+	mapSlug: mapSlugValidator,
+
+});
+
+export const subscribePickValidator = allMapObjectsPickValidator.exclude(["linesWithTrackPoints"]);
+export type SubscribePick = z.infer<typeof subscribePickValidator>;
+
+export type BboxItem = (
+	| AllMapObjectsItem<Exclude<AllMapObjectsPick, "linesWithTrackPoints">> & { mapSlug: MapSlug }
+	| { type: "routePoints"; data: AsyncIterable<{ routeKey: string; trackPoints: TrackPoint[] }> }
 );

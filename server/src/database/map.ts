@@ -4,8 +4,7 @@ import Database from "./database.js";
 import { createModel } from "./helpers.js";
 import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
-import { getWritable } from "facilmap-utils";
-import { omit } from "lodash-es";
+import { getMapDataWithWritable, getWritable } from "facilmap-utils";
 
 type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
 
@@ -83,13 +82,7 @@ export default class DatabaseMaps {
 			else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
 				throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
 
-			if (writable === Writable.ADMIN) {
-				return { ...mapData, writable };
-			} else if (writable === Writable.WRITE) {
-				return { ...omit(mapData, ["adminId"]), writable };
-			} else {
-				return { ...omit(mapData, ["adminId", "writeId"]), writable };
-			}
+			return getMapDataWithWritable(mapData, writable);
 		}
 	}
 

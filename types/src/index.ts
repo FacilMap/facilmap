@@ -3,7 +3,6 @@ export * from "./api/api-v3.js";
 export * from "./api/api.js";
 export * from "./base.js";
 export * from "./cru.js";
-export * from "./errors.js";
 export * from "./events.js";
 export * from "./historyEntry.js";
 export * from "./line.js";
