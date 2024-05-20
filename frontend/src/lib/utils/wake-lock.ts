@@ -17,7 +17,6 @@ export function useWakeLock(active: Ref<boolean>): void {
 		if (!wakeLockPending.value && !wakeLock.value) {
 			wakeLockPending.value = true;
 			try {
-				console.log("wake lock activate");
 				wakeLock.value = await navigator.wakeLock.request("screen");
 				wakeLock.value.addEventListener("release", () => {
 					wakeLock.value = undefined;
@@ -37,7 +36,6 @@ export function useWakeLock(active: Ref<boolean>): void {
 
 	const releaseWakeLock = () => {
 		if (wakeLock.value) {
-			console.log("wake lock deactivate");
 			// Will call "release" event handler which sets wakeLock.value to undefined
 			wakeLock.value.release().catch((err) => {
 				console.warn("Error releasing wake lock", err);
