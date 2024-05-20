@@ -19,6 +19,7 @@ import { type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
+import { useWakeLock } from "../../utils/wake-lock";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -239,8 +240,27 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 
 				locateControl.addTo(map);
 
+				const active = ref(false);
+				const handleActivate = () => {
+					active.value = true;
+				};
+				const handleDeactivate = () => {
+					active.value = false;
+				};
+				map.on("locateactivate", handleActivate);
+				map.on("locatedeactivate", handleDeactivate);
+
+				const wakeLockScope = effectScope();
+				wakeLockScope.run(() => {
+					useWakeLock(active);
+				});
+
 				onScopeDispose(() => {
+					handleDeactivate();
 					locateControl.remove();
+					map.off("locateactivate", handleActivate);
+					map.off("locatedeactivate", handleDeactivate);
+					wakeLockScope.stop();
 				});
 			}
 		}

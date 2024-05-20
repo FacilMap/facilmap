@@ -14,7 +14,9 @@ The cross-hair icon will be shown in one of these colours:
 * **Orange:** Your location is shown on the map and the map will follow you as your location changes.
 * **Blue:** Your location is shown on the map, but the map does not follow you.
 
-Clicking the cross-hair icon will enable the orange mode. As soon as you move the map by hand, it will switch to blue mode. To go back to orange mode, first go back to black mode by clicking the icon once and then go to orange mode by clicking it again.
+Clicking the cross-hair icon will enable the orange mode. As soon as you move the map by hand, it will switch to blue mode. To go back to orange mode, click the icon again.
+
+While your location is visible on the map, FacilMap will try to prevent your screen from turning off, which would be disruptive during live navigation. It will depend on your browser and on your operating system whether this works and whether your browser will ask you for permission for this first.
 
 Your location will be indicated as a blue circle with a blue dot at the center. Your location may be anywhere within the circle, it is not necessarily at its centre. If the circle is very small, it means that your browser could determine your location very accurately. If the circle is very big, it means that your browser had trouble to make an accurate guess about your location, and you may be anywhere within the circle.
 
