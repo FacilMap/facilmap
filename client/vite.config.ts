@@ -9,7 +9,7 @@ export default defineConfig({
 		sourcemap: true,
 		minify: false,
 		lib: {
-			entry: './src/client.ts',
+			entry: './src/index.ts',
 			fileName: () => 'facilmap-client.mjs',
 			formats: ['es']
 		},

@@ -1,5 +1,5 @@
 import { Map, MarkerClusterGroup, type MarkerClusterGroupOptions } from "leaflet";
-import type Client from "facilmap-client";
+import type SocketClient from "facilmap-client";
 import type { MapData } from "facilmap-types";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -10,10 +10,10 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 
 export default class MarkerCluster extends MarkerClusterGroup {
 
-	protected client: Client;
+	protected client: SocketClient;
 	protected _maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
 
-	constructor(client: Client, options?: MarkerClusterOptions) {
+	constructor(client: SocketClient, options?: MarkerClusterOptions) {
 		super({
 			showCoverageOnHover: false,
 			maxClusterRadius: 50,

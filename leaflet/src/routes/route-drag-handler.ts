@@ -1,4 +1,4 @@
-import type Client from "facilmap-client";
+import type SocketClient from "facilmap-client";
 import { Map, type Polyline } from "leaflet";
 import DraggableLines, { type DraggableLinesHandlerOptions } from "leaflet-draggable-lines";
 
@@ -8,9 +8,9 @@ interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 export default class RouteDragHandler extends DraggableLines {
 
 	declare realOptions: RouteDragHandlerOptions;
-	client: Client;
+	client: SocketClient;
 
-	constructor(map: Map, client: Client, options?: RouteDragHandlerOptions) {
+	constructor(map: Map, client: SocketClient, options?: RouteDragHandlerOptions) {
 		super(map, {
 			enableForLayer: false,
 			dragMarkerOptions: () => ({ pane: "fm-raised-marker" }),

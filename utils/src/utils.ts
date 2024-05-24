@@ -102,12 +102,20 @@ export function encodeQueryString(obj: Record<string, string>): string {
 	return pairs.join("&");
 }
 
-export function* numberKeys(obj: Record<number, any>): Generator<number> {
+export function* numberKeys(obj: Record<number, any>): Iterable<number> {
 	for (const idx of Object.keys(obj)) {
 		// https://stackoverflow.com/a/175787/242365
 		const number = Number(idx);
 		if (!isNaN(number) && !isNaN(parseFloat(idx)))
 			yield number;
+	}
+}
+
+export function* numberEntries<V>(obj: Record<number, V>): Iterable<[number, V]> {
+	for (const [k, v] of Object.entries(obj)) {
+		const number = Number(k);
+		if (!isNaN(number) && !isNaN(parseFloat(k)))
+			yield [number, v];
 	}
 }
 

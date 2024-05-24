@@ -314,6 +314,7 @@
 							const m = query.match(/^m(\d+)$/);
 							if (m) {
 								const marker = await client.value.getMarker({ id: Number(m[1]) });
+								client.value.storeMarker(mapSlug, marker);
 								return marker ? [{ kind: "marker" as const, similarity: 1, ...marker }] : [];
 							} else
 								return (await client.value.findOnMap({ query })).filter((res) => res.kind == "marker") as MapSuggestion[];

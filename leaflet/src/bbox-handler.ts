@@ -1,6 +1,4 @@
-import type Client from "facilmap-client";
-import type { ClientEvents } from "facilmap-client";
-import type { EventHandler } from "facilmap-types";
+import type { SocketClient } from "facilmap-client";
 import { Bounds, Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
@@ -18,7 +16,13 @@ function extendBounds(bounds: Bounds, pixels: number): Bounds {
 	);
 }
 
+/**
+ * Calls setBbox() on the client when the bbox of the map changes (only if there are any map/route subscriptions).
+ */
 export default class BboxHandler extends Handler {
+
+	protected _shouldUpdateBbox = false;
+	protected _unsubscribeClientUpdate: (() => void) | undefined = undefined;
 
 	/**
 	 * The min and max values how much wider the map pixel bounds should be used than what they actually are.
@@ -26,16 +30,21 @@ export default class BboxHandler extends Handler {
 	 * of the min value, no update is triggered. This avoids an update every second when the locate control
 	 * adjusts the map position very slightly.
 	 */
-	margin = [50, 400];
-	lastBounds: { bounds: Bounds; zoom: number } | undefined = undefined;
+	protected margin = [50, 400];
+	protected lastBounds: { bounds: Bounds; zoom: number } | undefined = undefined;
 
-	client: Client;
+	client: SocketClient;
 
-	constructor(map: Map, client: Client) {
+	constructor(map: Map, client: SocketClient) {
 		super(map);
 		this.client = client;
 	}
 
+	/**
+	 * Calls the setBbox method on the client with the current map bbox. If a custom center and zoom is supplied, the
+	 * method is called with its bbox instead. This can be used for example when the next bbox is known in advance,
+	 * for example when flying to a new place on the map.
+	 */
 	updateBbox(center?: LatLng, zoom?: number): void {
 		if (!this._map._loaded && (center == null || zoom == null))
 			return;
@@ -55,54 +64,56 @@ export default class BboxHandler extends Handler {
 			this._map.unproject(maxBounds.getBottomLeft(), resolvedZoom),
 			this._map.unproject(maxBounds.getTopRight(), resolvedZoom)
 		);
-		void this.client.updateBbox(leafletToFmBbox(bounds, resolvedZoom));
+		void this.client.setBbox(leafletToFmBbox(bounds, resolvedZoom));
 		this.lastBounds = { bounds: maxBounds, zoom: resolvedZoom };
 	}
 
+	/**
+	 * Returns true if the client is subscribed to any map/route and thus the bbox should be kept up to date.
+	 */
 	shouldUpdateBbox(): boolean {
-		return !!this.client.mapData || !!this.client.route || Object.keys(this.client.routes).length > 0;
+		return this._shouldUpdateBbox;
 	}
 
-	handleMoveEnd = (): void => {
+	protected handleMoveEnd = (): void => {
 		if (this.shouldUpdateBbox()) {
 			this.updateBbox();
 		}
 	};
 
-	handleViewReset = (): void => {
+	protected handleViewReset = (): void => {
 		if (this.shouldUpdateBbox()) {
 			this.updateBbox();
 		}
 	};
 
-	handleFlyTo = ({ latlng, zoom }: any): void => {
+	protected handleFlyTo = ({ latlng, zoom }: any): void => {
 		if (this.shouldUpdateBbox()) {
 			this.updateBbox(latlng, zoom);
 		}
 	};
 
-	handleEmitResolve: EventHandler<ClientEvents, "emitResolve"> = (name, data) => {
-		if (["createPad", "setPadId", "setRoute"].includes(name)) {
-			this.updateBbox();
-		}
+	protected handleClientUpdate = (): void => {
+		this._shouldUpdateBbox = Object.keys(this.client.mapSubscriptions).length > 0 || Object.keys(this.client.routeSubscriptions).length > 0;
 	}
 
-	addHooks(): void {
+	override addHooks(): void {
 		this._map.on("moveend", this.handleMoveEnd);
 		this._map.on("viewreset", this.handleViewReset);
 		this._map.on("fmFlyTo", this.handleFlyTo);
-		this.client.on("emitResolve", this.handleEmitResolve);
+		this._unsubscribeClientUpdate = this.client.reactiveObjectProvider.subscribe(this.handleClientUpdate);
 
 		if (this.shouldUpdateBbox()) {
 			this.updateBbox();
 		}
 	}
 
-	removeHooks(): void {
+	override removeHooks(): void {
 		this._map.off("moveend", this.handleMoveEnd);
 		this._map.off("viewreset", this.handleViewReset);
 		this._map.off("fmFlyTo", this.handleFlyTo);
-		this.client.removeListener("emitResolve", this.handleEmitResolve);
+		this._unsubscribeClientUpdate?.();
+		this._unsubscribeClientUpdate = undefined;
 		this.lastBounds = undefined;
 	}
 }

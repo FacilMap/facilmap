@@ -6,7 +6,7 @@
 		"paths": {
 			"facilmap-types": ["../types/src/index.ts"],
 			"facilmap-utils": ["../utils/src/index.ts"],
-			"facilmap-client": ["../client/src/client.ts"],
+			"facilmap-client": ["../client/src/index.ts"],
 		}
 	},
 	"references": [

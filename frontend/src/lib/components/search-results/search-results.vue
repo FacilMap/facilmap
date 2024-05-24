@@ -125,8 +125,10 @@
 
 		setTimeout(async () => {
 			if (isMapResult(result)) {
-				if (result.kind == "marker" && !client.value.markers[result.id])
-					await client.value.getMarker({ id: result.id });
+				if (result.kind == "marker" && !client.value.markers[result.id]) {
+					const marker = await client.value.getMarker({ id: result.id });
+					client.value.storeMarker(mapSlug, marker);
+				}
 				searchBoxContext.value?.activateTab(`fm${context.id}-${result.kind}-info-tab`);
 			} else
 				carousel.setTab(1);

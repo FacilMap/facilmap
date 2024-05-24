@@ -2,6 +2,7 @@ import * as z from "zod";
 import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3";
 import { socketV1RequestValidators, type MapEventsV1, type SocketApiV1 } from "./socket-v1";
 import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2";
+import type { StreamToStreamId } from "./socket-common";
 
 export * from "./socket-common";
 
@@ -33,7 +34,7 @@ export type SocketClientToServerEvents<V extends SocketVersion, Validated extend
 	[E in keyof SocketApi<V, Validated>]: SocketApi<V, Validated>[E] extends (...args: any) => any ? ((
 		...args: [
 			...Parameters<SocketApi<V, Validated>[E]>,
-			(err: Error | null, data: Awaited<ReturnType<SocketApi<V, Validated>[E]>>) => void
+			(err: Error | null, data: StreamToStreamId<Awaited<ReturnType<SocketApi<V, Validated>[E]>>>) => void
 		]
 	) => void) : never;
 };

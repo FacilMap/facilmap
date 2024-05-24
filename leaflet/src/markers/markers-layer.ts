@@ -1,4 +1,4 @@
-import type Client from "facilmap-client";
+import type SocketClient from "facilmap-client";
 import type { ID, Marker, ObjectWithId, Type } from "facilmap-types";
 import { Map as LeafletMap } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";
@@ -19,7 +19,7 @@ export default class MarkersLayer extends MarkerCluster {
 	/** The position of these markers will not be touched until they are unlocked again. */
 	protected lockedMarkerIds = new Set<ID>();
 
-	constructor(client: Client, options?: MarkersLayerOptions) {
+	constructor(client: SocketClient, options?: MarkersLayerOptions) {
 		super(client, options);
 	}
 
@@ -94,7 +94,11 @@ export default class MarkersLayer extends MarkerCluster {
 	};
 
 	async showMarker(id: ID, zoom = false): Promise<void> {
-		const marker = this.client.markers[id] || await this.client.getMarker({ id });
+		let marker = this.client.markers[id];
+		if (!marker) {
+			marker = await this.client.getMarker({ id });
+			this.client.storeMarker(mapSlug, marker);
+		}
 
 		if(zoom)
 			this._map.flyTo([marker.lat, marker.lon], 15);

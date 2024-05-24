@@ -4,7 +4,7 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribePick, type Route, type BboxWithExcept, type MapId, type BboxItem, DEFAULT_PAGING } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, type MapId, type SetBboxItem, DEFAULT_PAGING } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
@@ -20,7 +20,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	api: ApiV3Backend;
 
 	bbox: BboxWithZoom | undefined = undefined;
-	mapSubscriptions: Record<MapId, Array<{ pick: SubscribePick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	mapSubscriptions: Record<MapId, Array<{ pick: SubscribeToMapPick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
 	routeSubscriptions: Record<string, Omit<Route, "trackPoints">> = { };
 
 	unregisterDatabaseHandlers = (): void => undefined;
@@ -418,7 +418,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				this.bbox = bbox;
 
 				type This = this;
-				return this.emitStream((async function*(this: This): AsyncIterable<StreamToStreamId<BboxItem>> {
+				return this.emitStream((async function*(this: This): AsyncIterable<StreamToStreamId<SetBboxItem>> {
 					for (const subs of Object.values(this.mapSubscriptions)) {
 						for (const sub of subs) {
 							const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
@@ -465,12 +465,21 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 							if (sub.pick.includes("mapData")) {
 								this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
 							}
+						}
 
+						const slugMap = Object.fromEntries(this.mapSubscriptions[mapId].flatMap((sub) => {
+							const oldSlug = sub.mapSlug;
 							const newSlug = getMapSlug({ ...data, writable: sub.writable });
-							if (sub.mapSlug !== newSlug) {
-								this.emit("mapSlugRename", sub.mapSlug, newSlug);
+							if (oldSlug !== newSlug) {
 								sub.mapSlug = newSlug;
+								return [[oldSlug, newSlug]];
+							} else {
+								return [];
 							}
+						}));
+
+						if (Object.keys(slugMap).length > 0) {
+							this.emit("mapSlugRename", slugMap);
 						}
 
 						if (data.id !== mapId) {

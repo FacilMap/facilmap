@@ -4,7 +4,7 @@
 		"outDir": "./out",
 		"composite": true,
 		"paths": {
-			"facilmap-client": ["../client/src/socket.ts"],
+			"facilmap-client": ["../client/src/index.ts"],
 			"facilmap-leaflet": ["../leaflet/src/index.ts"],
 			"facilmap-types": ["../types/src/index.ts"],
 			"facilmap-utils": ["../utils/src/index.ts"]
@@ -18,5 +18,8 @@
 		{ "path": "../utils/tsconfig.json" },
 		{ "path": "../tsconfig.json" }
 	],
-	"include": ["src/**/*", "src/**/*.json"]
+	"include": ["src/**/*", "src/**/*.json"],
+	"vueCompilerOptions": {
+		"strictTemplates": true
+	}
 }

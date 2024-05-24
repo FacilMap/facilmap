@@ -44,10 +44,14 @@ export const mapSubscriptionValidator = z.object({
 
 });
 
-export const subscribePickValidator = allMapObjectsPickValidator.exclude(["linesWithTrackPoints"]);
-export type SubscribePick = z.infer<typeof subscribePickValidator>;
+export const subscribeToMapPickValidator = allMapObjectsPickValidator.exclude(["linesWithTrackPoints"]);
+export type SubscribeToMapPick = z.infer<typeof subscribeToMapPickValidator>;
 
-export type BboxItem = (
-	| AllMapObjectsItem<Exclude<AllMapObjectsPick, "linesWithTrackPoints">> & { mapSlug: MapSlug }
-	| { type: "routePoints"; data: AsyncIterable<{ routeKey: string; trackPoints: TrackPoint[] }> }
+export type SubscribeToMapItem = AllMapObjectsItem<Exclude<AllMapObjectsPick, "linesWithTrackPoints">>;
+
+export type RoutePoints = { routeKey: string; trackPoints: TrackPoint[] };
+
+export type SetBboxItem = (
+	| (AllMapObjectsItem<"markers" | "linePoints"> & { mapSlug: MapSlug })
+	| { type: "routePoints"; data: AsyncIterable<RoutePoints> }
 );

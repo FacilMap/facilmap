@@ -88,3 +88,7 @@ export type ReplaceProperties<T1 extends Record<keyof any, any>, T2 extends Part
 export type InterfaceToType<T> = {
 	[K in keyof T]: InterfaceToType<T[K]>;
 }
+
+export type DeepReadonly<T> = {
+	readonly [P in keyof T]: DeepReadonly<T[P]>;
+};

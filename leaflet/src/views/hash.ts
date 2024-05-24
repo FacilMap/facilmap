@@ -1,4 +1,4 @@
-import type Client from "facilmap-client";
+import type SocketClient from "facilmap-client";
 import { numberKeys } from "facilmap-utils";
 import { Evented, Handler, latLng, LatLng, Map } from "leaflet";
 import { debounce, isEqual } from "lodash-es";
@@ -24,12 +24,12 @@ export interface HashHandlerOptions {
 export default class HashHandler extends Handler {
 
 	options: HashHandlerOptions;
-	client: Client;
+	client: SocketClient;
 	activeQuery?: HashQuery;
 	_isApplyingHash = false;
 	_lastHash: string | undefined = undefined;
 
-	constructor(map: Map, client: Client, options?: HashHandlerOptions) {
+	constructor(map: Map, client: SocketClient, options?: HashHandlerOptions) {
 		super(map);
 		this.client = client;
 		this.options = {

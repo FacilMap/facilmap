@@ -1,10 +1,10 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2 } from "facilmap-types";
+import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2, type DeepReadonly } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 import { normalizeFieldValue } from "./objects";
 
-export type FilterFunc = (obj: Marker<CRU> | Line<CRU>, type: Type) => boolean;
+export type FilterFunc = (obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>) => boolean;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
@@ -110,7 +110,7 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 	return ret;
 }
 
-export function prepareObject(obj: Marker<CRU> | Line<CRU>, type: Type): any {
+export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>): any {
 	const fixedObj: any = cloneDeep(obj);
 
 	if (!fixedObj.data) {

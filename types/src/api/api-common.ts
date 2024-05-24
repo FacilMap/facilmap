@@ -72,3 +72,11 @@ export const bboxWithExceptValidator = bboxWithZoomValidator.extend({
 	except: bboxValidator.optional()
 });
 export type BboxWithExcept = z.infer<typeof bboxWithExceptValidator>;
+
+/**
+ * Returns an optional zod type that transforms null to undefined. This can be used for socket.io method parameters, as socket.io will convert
+ * undefined to null.
+ */
+export function optionalParam<T extends z.ZodTypeAny>(type: T): z.ZodOptional<z.ZodEffects<T, any, z.input<T>>> {
+	return type.transform((v) => v == null ? undefined : v).optional();
+}

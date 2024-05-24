@@ -1,7 +1,7 @@
 import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { stringifiedIdValidator, type MapData, type MapId } from "facilmap-types";
+import { Writable, stringifiedIdValidator, type MapDataWithWritable, type MapId } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
@@ -28,7 +28,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 
 		let params: RenderMapParams;
 		if(req.params?.mapId) {
-			const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
+			const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
 			if (mapData) {
 				params = {
 					mapData: {
@@ -113,13 +113,13 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}
 
 		const baseUrl = getBaseUrl(req);
-		let mapData: MapData | undefined;
+		let mapData: MapDataWithWritable | undefined;
 		if (query.url === baseUrl || `${query.url}/` === baseUrl) {
 			mapData = undefined;
 		} else {
 			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				mapData = await database.maps.getMapDataBySlug(parsed.mapId);
+				mapData = await database.maps.getMapDataBySlug(parsed.mapId, Writable.READ);
 			} else {
 				res.status(404).send();
 				return;
@@ -144,7 +144,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
 
 		if(!mapData)
 			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
@@ -160,7 +160,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapId);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
 
 		if(!mapData)
 			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));

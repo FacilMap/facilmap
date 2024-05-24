@@ -68,7 +68,8 @@ export default class Socket {
 			const remoteAttr = proxyAddr(socket.request, compiledTrust);
 
 			const handler = new constructors[version]((...args: any) => {
-				socket.emit.apply(socket, args);
+				console.log("emit", args);
+				socket.emit(args[0], ...args.slice(1));
 			}, this.database, remoteAttr);
 
 			socket.on("error", (err) => {

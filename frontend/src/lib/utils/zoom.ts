@@ -169,6 +169,7 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 		if (!marker) {
 			try {
 				marker = await client.value.getMarker({ id: markerId });
+				client.value.storeMarker(mapSlug, marker);
 			} catch (err) {
 				console.error("Could not find marker", err);
 			}

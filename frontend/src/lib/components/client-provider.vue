@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { computed, onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
-	import Client from "facilmap-client";
+	import SocketClient from "facilmap-client";
 	import { MapNotFoundError, type MapData, type MapId } from "facilmap-types";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
@@ -11,7 +11,7 @@
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 
-	function isMapNotFoundError(serverError: Client["serverError"]): boolean {
+	function isMapNotFoundError(serverError: SocketClient["serverError"]): boolean {
 		return !!serverError && serverError instanceof MapNotFoundError;
 	}
 </script>
@@ -44,7 +44,7 @@
 		if (existingClient && existingClient.server == props.serverUrl && existingClient.mapId == props.mapId)
 			return;
 
-		class CustomClient extends Client implements ClientContext {
+		class CustomClient extends SocketClient implements ClientContext {
 			_makeReactive<O extends object>(obj: O) {
 				return reactive(obj) as O;
 			}

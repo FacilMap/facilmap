@@ -17,10 +17,11 @@ export const routeParametersValidator = z.object({
 });
 export type RouteParameters = z.infer<typeof routeParametersValidator>;
 
-export const lineToRouteValidator = z.object({
+export const lineToRouteRequestValidator = z.object({
 	mapSlug: mapSlugValidator,
 	lineId: idValidator
 });
+export type LineToRouteRequest = z.infer<typeof lineToRouteRequestValidator>;
 
 export interface Route extends RouteParameters, RouteInfo {
 	routeId: string;

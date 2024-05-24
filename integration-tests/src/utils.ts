@@ -1,10 +1,9 @@
 import { io, Socket } from "socket.io-client";
-import Client from "facilmap-client";
+import { SocketClient, SocketClientStorage } from "facilmap-client";
 import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
-import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents } from "facilmap-types";
+import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, type MapDataWithWritable } from "facilmap-types";
 import { generateRandomMapId, sleep } from "facilmap-utils";
-
 
 export function getFacilMapUrl(): string {
 	if (!process.env.FACILMAP_URL) {
@@ -13,7 +12,7 @@ export function getFacilMapUrl(): string {
 	return process.env.FACILMAP_URL;
 }
 
-export async function openSocket<V extends SocketVersion>(version: V): Promise<Socket<SocketServerToClientEvents<V>, SocketClientToServerEvents<V>>> {
+export async function openSocket<V extends SocketVersion>(version: V): Promise<Socket<SocketServerToClientEvents<V>, SocketClientToServerEvents<V, false>>> {
 	const serverUrl = new URL(getFacilMapUrl());
 	const socket = io(`${serverUrl.origin}${version !== SocketVersion.V1 ? `/${version}` : ""}`, {
 		forceNew: true,
@@ -29,12 +28,37 @@ export async function openSocket<V extends SocketVersion>(version: V): Promise<S
 const clientConstructors = {
 	[SocketVersion.V1]: ClientV3,
 	[SocketVersion.V2]: ClientV4,
-	[SocketVersion.V3]: Client
+	[SocketVersion.V3]: SocketClient
+};
+
+const clientStorageConstructors = {
+	[SocketVersion.V3]: SocketClientStorage
 };
 
 type ClientInstance<V extends SocketVersion> = InstanceType<typeof clientConstructors[V]> & { _version: V };
 
-export async function openClient<V extends SocketVersion = SocketVersion.V3>(id?: string, version: V = SocketVersion.V3 as any): Promise<ClientInstance<V>> {
+type ClientStorageInstance<V extends keyof typeof clientStorageConstructors> = InstanceType<typeof clientStorageConstructors[V]> & { _version: V };
+
+export async function openClient<V extends SocketVersion.V3 = SocketVersion.V3>(version: V = SocketVersion.V3 as any): Promise<ClientInstance<V>> {
+	const client = Object.assign(new clientConstructors[version](getFacilMapUrl(), { reconnection: false }) as any, { _version: version });
+	await new Promise<void>((resolve, reject) => {
+		client.on("connect", resolve);
+		client.on("serverError", reject);
+		client.on("connect_error", reject);
+	});
+	return client;
+}
+
+export async function openClientStorage<V extends SocketVersion.V3 = SocketVersion.V3>(mapSlug?: string, version: V = SocketVersion.V3 as any): Promise<ClientStorageInstance<V>> {
+	const client = await openClient(version);
+	const storage = Object.assign(new clientStorageConstructors[version](client), { _version: version }) as ClientStorageInstance<V>;
+	if (mapSlug) {
+		await storage.subscribeToMap(mapSlug);
+	}
+	return storage;
+}
+
+export async function openClientV2<V extends SocketVersion.V1 | SocketVersion.V2>(id: string | undefined, version: V): Promise<ClientInstance<V>> {
 	const client = Object.assign(new clientConstructors[version](getFacilMapUrl(), id, { reconnection: false }) as any, { _version: version });
 	await new Promise<void>((resolve, reject) => {
 		if (id != null) {
@@ -67,16 +91,17 @@ export function getTemporaryMapData<V extends SocketVersion, D extends Partial<M
 }
 
 export async function createTemporaryMap<V extends SocketVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
-	client: ClientInstance<V>,
+	storage: ClientStorageInstance<V>,
 	data: D,
-	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: NonNullable<ClientInstance<V>["mapData"]>, result: Awaited<ReturnType<ClientInstance<V>["createMap"]>>) => Promise<void>
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: MapDataWithWritable, result: Awaited<ReturnType<ClientInstance<V>["createMap"]>>) => Promise<void>
 ): Promise<void> {
-	const createMapData = getTemporaryMapData(client._version, data);
-	const result = await client.createMap(createMapData as any);
+	const createMapData = getTemporaryMapData(storage._version, data);
+	const result = await storage.client.createMap(createMapData);
+	await storage.subscribeToMap(createMapData.adminId);
 	try {
-		await callback?.(createMapData, client.mapData!, result as any);
+		await callback?.(createMapData, storage.maps[createMapData.adminId].mapData!, result);
 	} finally {
-		await client.deleteMap();
+		await storage.client.deleteMap(createMapData.adminId);
 	}
 }
 

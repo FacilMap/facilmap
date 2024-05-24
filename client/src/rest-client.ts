@@ -1,6 +1,16 @@
-import { ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
-import { JsonDeserializer, JsonParser, JsonPathDetector, JsonPathSelector, JsonPathStreamSplitter, deserializeJsonValue, parseJsonStream, streamToIterable } from "json-stream-es";
+import {
+	ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox,
+	type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
+	type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable,
+	type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest,
+	type SearchResult, type StreamedResults, type TrackPoint, type Type, type View
+} from "facilmap-types";
+import {
+	JsonDeserializer, JsonParser, JsonPathDetector, JsonPathSelector, JsonPathStreamSplitter, deserializeJsonValue,
+	parseJsonStream, streamToIterable
+} from "json-stream-es";
 import { parse as parseContentDisposition } from "content-disposition";
+import { flatMapAsyncIterable } from "./utils";
 
 function parseStreamedResults<T>(res: Response): StreamedResults<T> {
 	return {
@@ -38,18 +48,10 @@ function parseAllMapObjects(res: Response): AsyncIterable<AllMapObjectsItem<AllM
 					), (it) => [it.value as any])
 				}];
 			default:
-				stream.cancel();
+				stream.cancel().catch(() => undefined);
 				return [];
 		}
 	});
-}
-
-async function* flatMapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
-	for await (const it of iterable) {
-		for (const o of await mapper(it)) {
-			yield o;
-		}
-	}
 }
 
 function encodeStringArray(arr: string[]): string {

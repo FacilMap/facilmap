@@ -1,4 +1,4 @@
-import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
+import { lineValidator, markerValidator, type CRU, type DeepReadonly, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
 import { omit } from "lodash-es";
 import { getI18n } from "./i18n.js";
 
@@ -10,7 +10,7 @@ export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> 
 	return "routePoints" in object && object.routePoints != null;
 }
 
-export function canControl<T extends Marker | Line = Marker | Line>(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, ignoreField?: Field | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
+export function canControl<T extends Marker | Line = Marker | Line>(type: DeepReadonly<Type<CRU.READ | CRU.CREATE_VALIDATED>>, ignoreField?: DeepReadonly<Field> | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
 	const props: string[] = type.type == "marker" ? ["colour", "size", "icon", "shape"] : type.type == "line" ? ["colour", "width", "stroke", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)
@@ -25,7 +25,7 @@ export function canControl<T extends Marker | Line = Marker | Line>(type: Type<C
 	}) as Array<T extends any ? keyof T : never>;
 }
 
-export function getSelectedOption(field: Field, value: string | undefined, ignoreDefault = false): FieldOption | undefined {
+export function getSelectedOption(field: DeepReadonly<Field>, value: string | undefined, ignoreDefault = false): FieldOption | undefined {
 	const get = (val: string) => {
 		if (field.type === "dropdown") {
 			return field.options?.find((option) => option.value == val);
@@ -37,7 +37,7 @@ export function getSelectedOption(field: Field, value: string | undefined, ignor
 	return (value != null && get(value)) || (!ignoreDefault && field.default != null && get(field.default)) || field.options?.[0];
 }
 
-export function normalizeFieldValue(field: Field, value: string | undefined, ignoreDefault = false): string {
+export function normalizeFieldValue(field: DeepReadonly<Field>, value: string | undefined, ignoreDefault = false): string {
 	if (field.type === "dropdown") {
 		return getSelectedOption(field, value, ignoreDefault)?.value ?? "";
 	} else if (field.type === "checkbox") {
@@ -47,7 +47,7 @@ export function normalizeFieldValue(field: Field, value: string | undefined, ign
 	}
 }
 
-export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Marker<CRU.UPDATE_VALIDATED> {
+export function applyMarkerStyles(marker: DeepReadonly<Marker<CRU.READ | CRU.CREATE_VALIDATED>>, type: DeepReadonly<Type>): Marker<CRU.UPDATE_VALIDATED> {
 	const update: Marker<CRU.UPDATE_VALIDATED> = {};
 
 	if(type.colourFixed && marker.colour != type.defaultColour)
@@ -79,7 +79,7 @@ export function applyMarkerStyles(marker: Marker<CRU.READ | CRU.CREATE_VALIDATED
 	return update;
 }
 
-export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Marker<CRU.CREATE_VALIDATED> {
+export function resolveCreateMarker(marker: DeepReadonly<Marker<CRU.CREATE>>, type: DeepReadonly<Type>): Marker<CRU.CREATE_VALIDATED> {
 	const parsed = markerValidator.create.parse(marker);
 	const result: Marker<CRU.CREATE_VALIDATED> = {
 		...parsed,
@@ -92,7 +92,7 @@ export function resolveCreateMarker(marker: Marker<CRU.CREATE>, type: Type): Mar
 	return result;
 }
 
-export function resolveUpdateMarker(marker: Marker, update: Marker<CRU.UPDATE>, newType: Type): Marker<CRU.UPDATE_VALIDATED> {
+export function resolveUpdateMarker(marker: DeepReadonly<Marker>, update: DeepReadonly<Marker<CRU.UPDATE>>, newType: DeepReadonly<Type>): Marker<CRU.UPDATE_VALIDATED> {
 	const resolvedUpdate = markerValidator.update.parse(update);
 	return {
 		...resolvedUpdate,
@@ -100,7 +100,7 @@ export function resolveUpdateMarker(marker: Marker, update: Marker<CRU.UPDATE>, 
 	};
 }
 
-export function applyLineStyles(line: Line<CRU.READ | CRU.CREATE_VALIDATED>, type: Type): Line<CRU.UPDATE_VALIDATED> {
+export function applyLineStyles(line: DeepReadonly<Line<CRU.READ | CRU.CREATE_VALIDATED>>, type: DeepReadonly<Type>): Line<CRU.UPDATE_VALIDATED> {
 	const update: Line<CRU.UPDATE_VALIDATED> = {};
 
 	if(type.colourFixed && line.colour != type.defaultColour) {
@@ -137,7 +137,7 @@ export function applyLineStyles(line: Line<CRU.READ | CRU.CREATE_VALIDATED>, typ
 	return update;
 }
 
-export function resolveCreateLine(line: Line<CRU.CREATE>, type: Type): Line<CRU.CREATE_VALIDATED> {
+export function resolveCreateLine(line: DeepReadonly<Line<CRU.CREATE>>, type: DeepReadonly<Type>): Line<CRU.CREATE_VALIDATED> {
 	const parsed = lineValidator.create.parse(line);
 	const result: Line<CRU.CREATE_VALIDATED> = {
 		...parsed,
@@ -150,7 +150,7 @@ export function resolveCreateLine(line: Line<CRU.CREATE>, type: Type): Line<CRU.
 	return result;
 }
 
-export function resolveUpdateLine(line: Line, update: Line<CRU.UPDATE>, newType: Type): Line<CRU.UPDATE_VALIDATED> {
+export function resolveUpdateLine(line: DeepReadonly<Line>, update: DeepReadonly<Line<CRU.UPDATE>>, newType: DeepReadonly<Type>): Line<CRU.UPDATE_VALIDATED> {
 	const resolvedUpdate = lineValidator.update.parse(update);
 	return {
 		...resolvedUpdate,
@@ -158,7 +158,7 @@ export function resolveUpdateLine(line: Line, update: Line<CRU.UPDATE>, newType:
 	};
 }
 
-export function getLineTemplate(type: Type): LineTemplate {
+export function getLineTemplate(type: DeepReadonly<Type>): LineTemplate {
 	return {
 		data: {},
 		...omit(resolveCreateLine({
