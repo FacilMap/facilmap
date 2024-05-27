@@ -9,7 +9,12 @@
         "type-not-found-error": "El tipo {{typeId}} no existe.",
         "cannot-use-type-for-marker-error": "No se puede usar el tipo {{type}} en el indicador.",
         "old-map-data-not-available-error": "Los datos cartográficos antiguos no están disponibles.",
-        "route-points-not-an-array-error": "«routePoints» no es una matriz"
+        "route-points-not-an-array-error": "«routePoints» no es una matriz",
+        "unique-map-ids-error": "Solo lectura, lectura-escritura y el ID del administrador deben ser diferentes entre sí.",
+        "unique-map-ids-read-write-error": "El ID de solo lectura y el de escritura no pueden ser iguales.",
+        "unique-map-ids-write-admin-error": "El ID de lectura y escritura y el de administrador no pueden ser los mismos.",
+        "map-id-taken-error": "El ID '{{id}}' ya está usado.",
+        "unique-map-ids-read-admin-error": "El ID de solo lectura y el de administrador no pueden ser iguales."
     },
     "frontend": {
         "requires-javascript": "{{appName}} necesita JavaScript para funcionar.",
@@ -44,6 +49,10 @@
     },
     "map-not-found-error": "No se pudo encontrar el mapa {{mapId}}.",
     "routing": {
-        "mapbox-error": "No se pudo calcular la ruta ({{code}})."
+        "mapbox-error": "No se pudo calcular la ruta ({{code}}).",
+        "ors-token-warning": "No hay token ORS configurados. Por favor pida al administrador que establezca ORS_TOKEN en el entorno o en config.env.",
+        "too-much-distance-error": "Demasiada distancia entre los puntos de la ruta. Considera agregar algunos puntos intermedios.",
+        "invalid-response-error": "Respuesta no válida del servidor de la ruta.",
+        "mapbox-token-warning": "No hay ningún token de Mapbox configurado. Pídale al administrador que configure MAPBOX_TOKEN en el entorno o en config.env."
     }
 }
