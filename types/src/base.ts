@@ -92,3 +92,7 @@ export type InterfaceToType<T> = {
 export type DeepReadonly<T> = {
 	readonly [P in keyof T]: DeepReadonly<T[P]>;
 };
+
+export type DistributiveKeyOf<T> = T extends any ? keyof T : never;
+export type DistributivePick<T, K extends DistributiveKeyOf<T>> = T extends any ? Pick<T, K & keyof T> : never;
+export type DistributiveOmit<T, K extends DistributiveKeyOf<T>> = T extends any ? Omit<T, K> : never;

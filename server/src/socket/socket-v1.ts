@@ -1,10 +1,10 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type MapData, type FindMapsResult, type FindOnMapLine, type SocketServerToClientEmitArgs, type LegacyV2FindOnMapMarker, type LegacyV2Marker, type LegacyV2FindOnMapResult, type LegacyV2Line } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapLine, type SocketServerToClientEmitArgs, type LegacyV2FindOnMapMarker, type LegacyV2Marker, type LegacyV2FindOnMapResult, type LegacyV2Line, type LegacyV2MapData, type LegacyV2FindMapsResult } from "facilmap-types";
 import { SocketConnectionV2, mapMultipleEvents } from "./socket-v2";
 import { type SocketConnection, type SocketHandlers } from "./socket-common";
 import { normalizeLineName, normalizeMarkerName, normalizeMapName } from "facilmap-utils";
 import type Database from "../database/database";
 
-function prepareMapData<P extends MapData | FindMapsResult>(mapData: P): P {
+function prepareMapData<P extends LegacyV2MapData | LegacyV2FindMapsResult>(mapData: P): P {
 	return {
 		...mapData,
 		name: normalizeMapName(mapData.name)

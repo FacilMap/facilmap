@@ -857,6 +857,29 @@ export default class DatabaseMigrations {
 				}
 			}
 
+			console.log("DB migration: Rename Map.id to Map.readId in history");
+			const historyEntries = await this._db.history.HistoryModel.findAll({
+				where: { type: "Map" },
+				attributes: ["id", "objectBefore", "objectAfter"]
+			});
+			for (const historyEntry of historyEntries) {
+				if (historyEntry.objectBefore && (historyEntry.objectBefore as any).id) {
+					historyEntry.objectBefore = {
+						...omit(historyEntry.objectBefore as any, ["id"]),
+						readId: (historyEntry.objectBefore as any).id
+					} as any;
+				}
+
+				if (historyEntry.objectAfter && (historyEntry.objectAfter as any).id) {
+					historyEntry.objectAfter = {
+						...omit(historyEntry.objectAfter as any, ["id"]),
+						readId: (historyEntry.objectAfter as any).id
+					} as any;
+				}
+
+				await historyEntry.save();
+			}
+
 			await this._db.meta.setMeta("mapIdMigrationCompleted", "3");
 			mapIdMigrationCompleted = "3";
 		}

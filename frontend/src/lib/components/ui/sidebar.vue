@@ -8,6 +8,7 @@
 
 	const props = withDefaults(defineProps<{
 		visible?: boolean;
+		id?: string;
 	}>(), {
 		visible: undefined
 	});
@@ -80,7 +81,7 @@
 </script>
 
 <template>
-	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow, isDragging }">
+	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow, isDragging }" :id="props.id">
 		<template v-if="context.isNarrow">
 			<div class="fm-sidebar-outer" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
 				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>

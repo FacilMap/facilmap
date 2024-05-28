@@ -12,6 +12,8 @@
 	import { isNarrowBreakpoint } from "../../utils/bootstrap";
 	import { fixOnCleanup } from "../../utils/vue";
 	import { Control, DomUtil, type Map } from "leaflet";
+	import { Writable } from "facilmap-types";
+	import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 
 	class CustomControl extends Control {
 		override onAdd(map: Map) {
@@ -73,19 +75,19 @@
 				></ToolboxCollabMapsDropdown>
 
 				<ToolboxAddDropdown
-					v-if="!client.readonly && client.mapData"
+					v-if="client.map?.state === ClientContextMapState.OPEN && client.map.data.mapData!.writable !== Writable.READ"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxAddDropdown>
 
 				<ToolboxViewsDropdown
-					v-if="client.mapData && (!client.readonly || Object.keys(client.views).length > 0)"
+					v-if="client.map?.state === ClientContextMapState.OPEN && (client.map.data.mapData!.writable !== Writable.READ || Object.keys(client.map.data.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxViewsDropdown>
 
 				<ToolboxMapStyleDropdown></ToolboxMapStyleDropdown>
 
 				<ToolboxToolsDropdown
-					v-if="props.interactive || client.mapData"
+					v-if="props.interactive || client.map?.state === ClientContextMapState.OPEN"
 					:interactive="props.interactive"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxToolsDropdown>

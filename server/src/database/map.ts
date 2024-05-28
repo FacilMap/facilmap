@@ -102,7 +102,7 @@ export default class DatabaseMaps {
 		const createdObj = await this.MapModel.create(data);
 
 		if (data.createDefaultTypes) {
-			await this._db.types.createDefaultTypes(data.id);
+			await this._db.types.createDefaultTypes(createdObj.id);
 		}
 
 		return fixMapData(createdObj.toJSON());
@@ -139,12 +139,12 @@ export default class DatabaseMaps {
 
 		await this.MapModel.update(data, { where: { id: mapId } });
 
-		const newData = await this.getMapData(data.id || mapId);
+		const newData = await this.getMapData(mapId);
 
 		if (!newData)
 			throw new Error(getI18n().t("database.map-disappeared-error"));
 
-		await this._db.history.addHistoryEntry(data.id || mapId, {
+		await this._db.history.addHistoryEntry(mapId, {
 			type: "Map",
 			action: "update",
 			objectBefore: oldData,

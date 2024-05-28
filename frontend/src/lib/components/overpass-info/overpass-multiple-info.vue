@@ -12,6 +12,8 @@
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatPOIName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
+	import { Writable } from "facilmap-types";
+import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -65,7 +67,7 @@
 						</li>
 					</ul>
 
-					<div v-if="client.mapData && !client.readonly" class="btn-toolbar mt-2">
+					<div class="btn-toolbar mt-2">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
 							:label="i18n.t('overpass-multiple-info.zoom-to-object-label')"
@@ -73,10 +75,12 @@
 							:destination="zoomDestination"
 						></ZoomToObjectButton>
 
-						<AddToMapDropdown
-							:markers="markersWithTags"
-							size="sm"
-						></AddToMapDropdown>
+						<template v-if="client.map?.state === ClientContextMapState.OPEN && client.map.data.mapData!.writable !== Writable.READ">
+							<AddToMapDropdown
+								:markers="markersWithTags"
+								size="sm"
+							></AddToMapDropdown>
+						</template>
 					</div>
 				</div>
 

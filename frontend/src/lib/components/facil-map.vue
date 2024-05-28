@@ -43,15 +43,15 @@
 	const context = toRef(() => contextRef.value?.context);
 	const client = toRef(() => context.value?.components.client);
 
-	watch(() => client.value?.mapSlug, () => {
-		if (client.value && client.value.mapSlug !== props.mapSlug) {
-			emit("update:mapSlug", client.value.mapSlug);
+	watch(() => client.value?.map?.mapSlug, () => {
+		if (client.value && client.value.map?.mapSlug !== props.mapSlug) {
+			emit("update:mapSlug", client.value.map?.mapSlug);
 		}
 	});
 
-	watch(() => client.value?.mapData?.name, () => {
+	watch(() => client.value?.map?.data?.mapData?.name, () => {
 		if (client.value) {
-			emit("update:mapName", client.value.mapData?.name);
+			emit("update:mapName", client.value.map?.data?.mapData?.name);
 		}
 	});
 

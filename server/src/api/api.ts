@@ -2,8 +2,7 @@ import { ApiVersion } from "facilmap-types";
 import type Database from "../database/database";
 import { Router } from "express";
 import { ApiV3Backend, apiV3Impl } from "./api-v3";
-import { Writable } from "stream";
-import { JsonSerializer, arrayStream } from "json-stream-es";
+import { arrayStream, serializeJsonValue } from "json-stream-es";
 import { writableToWeb } from "../utils/streams";
 
 const apiBackend = {
@@ -38,7 +37,7 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 				res.json(result);
 			} else if (sendResult === "stream") {
 				res.header("Content-type", "application/json");
-				void new JsonSerializer({
+				void serializeJsonValue({
 					results: arrayStream(result.results)
 				}, "\t").pipeTo(writableToWeb(res));
 			} else {

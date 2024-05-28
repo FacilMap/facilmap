@@ -126,7 +126,7 @@ export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line
 	};
 
 	// Backwards compatibility for filter expressions that were created before "symbol" was renamed to "icon" (keep old and new properties)
-	ret = currentMarkerToLegacyV2(ret, true);
+	ret = currentMarkerToLegacyV2(ret, undefined as any, true);
 
 	if(type)
 		ret.type = type.type;

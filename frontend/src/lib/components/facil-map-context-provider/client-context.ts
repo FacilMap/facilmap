@@ -1,4 +1,4 @@
-import type { SocketClientStorage } from "facilmap-client";
+import type { MapStorage, SocketClientStorage } from "facilmap-client";
 import type { MapSlug } from "facilmap-types";
 
 export enum ClientContextMapState {
@@ -12,8 +12,9 @@ export enum ClientContextMapState {
 export type ClientContextMap = {
 	mapSlug: MapSlug;
 } & (
-	| { state: Exclude<ClientContextMapState, ClientContextMapState.ERROR> }
-	| { state: ClientContextMapState.ERROR; error: Error }
+	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; error?: undefined }
+	| { state: ClientContextMapState.OPEN; get data(): MapStorage; error?: undefined }
+	| { state: ClientContextMapState.ERROR; get data(): MapStorage | undefined; error: Error }
 );
 
 export type ClientContext = SocketClientStorage & {

@@ -1,5 +1,3 @@
-export type DistributiveOmit<T, K extends keyof T> = T extends any ? Omit<T, K> : never;
-
 export type IterableType<I extends AsyncIterable<any>> = I extends AsyncIterable<infer T> ? T : never;
 
 export async function* flatMapAsyncIterable<I extends AsyncIterable<any>, O>(iterable: I, mapper: (it: IterableType<I>) => (O[] | Promise<O[]>)): AsyncIterable<O> {

@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, objectWithIdValidator, type ID, type MapId, type ObjectWithId, type ReplaceProperties } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId, type ReplaceProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { EventName } from "../events.js";
@@ -6,8 +6,8 @@ import { nullOrUndefinedValidator, renameProperty, type RenameProperty, type Rep
 import { socketV3RequestValidators, type SocketApiV3 } from "./socket-v3.js";
 import type { CRU, CRUType } from "../cru.js";
 import * as z from "zod";
-import type { GenericHistoryEntry, HistoryEntry, HistoryEntryObjectTypes } from "../historyEntry.js";
-import { pick } from "lodash-es";
+import type { GenericHistoryEntry, HistoryEntry } from "../historyEntry.js";
+import { omit, pick } from "lodash-es";
 import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
 import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
@@ -28,17 +28,17 @@ export const legacyV2MapDataValidator = {
 };
 export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
 export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
-export type LegacyV2MapDataWithWritable = Omit<MapDataWithWritable, "readId" | "id"> & { id: MapData["readId"] };
+export type LegacyV2MapDataWithWritable = DistributiveOmit<MapDataWithWritable, "readId" | "id"> & { id: MapData["readId"] };
 
 export const legacyV2MarkerValidator = {
-	read: markerValidator.read.omit({ icon: true, mapId: true }).extend({ symbol: markerValidator.read.shape.icon, padId: markerValidator.read.shape.mapId }),
+	read: markerValidator.read.omit({ icon: true, mapId: true }).extend({ symbol: markerValidator.read.shape.icon, padId: mapSlugValidator }),
 	create: markerValidator.create.omit({ icon: true }).extend({ symbol: markerValidator.create.shape.icon }),
 	update: markerValidator.update.omit({ icon: true }).extend({ symbol: markerValidator.update.shape.icon })
 };
 export type LegacyV2Marker<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MarkerValidator>;
 
 export const legacyV2LineValidator = {
-	read: lineValidator.read.omit({ mapId: true }).extend({ padId: lineValidator.read.shape.mapId }),
+	read: lineValidator.read.omit({ mapId: true }).extend({ padId: mapSlugValidator }),
 	create: lineValidator.create,
 	update: lineValidator.update
 };
@@ -70,7 +70,7 @@ export const legacyV2TypeValidator = refineRawTypeValidator({
 		defaultSymbol: rawTypeValidator.read.shape.defaultIcon,
 		symbolFixed: rawTypeValidator.read.shape.iconFixed,
 		fields: legacyV2FieldsValidator.read,
-		padId: rawTypeValidator.read.shape.mapId
+		padId: mapSlugValidator
 	}),
 	create: rawTypeValidator.create.omit({ defaultIcon: true, iconFixed: true }).extend({
 		defaultSymbol: rawTypeValidator.create.shape.defaultIcon,
@@ -86,7 +86,7 @@ export const legacyV2TypeValidator = refineRawTypeValidator({
 export type LegacyV2Type<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2TypeValidator>;
 
 export const legacyV2ViewValidator = {
-	read: viewValidator.read.omit({ mapId: true }).extend({ padId: viewValidator.read.shape.mapId }),
+	read: viewValidator.read.omit({ mapId: true }).extend({ padId: mapSlugValidator }),
 	create: viewValidator.create,
 	update: viewValidator.update
 };
@@ -95,13 +95,14 @@ export type LegacyV2View<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof leg
 export type LegacyV2FindOnMapMarker = RenameProperty<FindOnMapMarker, "icon", "symbol", false>;
 export type LegacyV2FindOnMapResult = LegacyV2FindOnMapMarker | Exclude<FindOnMapResult, FindOnMapMarker>;
 
-export type LegacyV2HistoryEntry = Omit<GenericHistoryEntry<ReplaceProperties<HistoryEntryObjectTypes, {
-	Marker: Omit<LegacyV2Marker, "id">;
-	Line: Omit<LegacyV2Line, "id">;
-	Type: Omit<LegacyV2Type, "id">;
-	View: Omit<LegacyV2View, "id">;
-}>>, "mapId"> & {
-	padId: MapId;
+export type LegacyV2HistoryEntry = Omit<GenericHistoryEntry<{
+	Map: Omit<LegacyV2MapData, "id" | "defaultView">;
+	Marker: Omit<LegacyV2Marker, "id" | "padId">;
+	Line: Omit<LegacyV2Line, "id" | "padId">;
+	Type: Omit<LegacyV2Type, "id" | "padId">;
+	View: Omit<LegacyV2View, "id" | "padId">;
+}>, "mapId"> & {
+	padId: MapSlug;
 };
 
 export const legacyV2FindMapsQueryValidator = pagingValidator.extend({
@@ -109,7 +110,7 @@ export const legacyV2FindMapsQueryValidator = pagingValidator.extend({
 });
 
 export const legacyV2GetMapQueryValidator = z.object({
-	padId: z.string()
+	padId: mapSlugValidator
 });
 
 export const legacyV2LineTemplateRequestValidator = z.object({
@@ -259,16 +260,36 @@ export type MapEventsV2 = {
 	routePointsWithId: [{ routeId: string; trackPoints: TrackPoint[] }];
 };
 
+type MapIdToLegacyV2<T extends Record<keyof any, any>, KeepOld> = "mapId" extends DistributiveKeyOf<T> ? DistributiveOmit<T, KeepOld extends true ? never : "mapId"> & { padId: MapSlug } : T;
+function mapIdToLegacyV2<T extends Record<keyof any, any>, KeepOld extends boolean = false>(obj: T, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<T, KeepOld> {
+	if (obj.mapId) {
+		return {
+			...keepOld ? obj : omit(obj, ["mapId"]),
+			padId: readId
+		} as any;
+	} else {
+		return obj as any;
+	}
+}
+
+export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapData: M): RenameProperty<M, "id", "readId"> {
+	return renameProperty(mapData, "id", "readId");
+}
+
+export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapData: M): RenameProperty<M extends { id: any } ? Omit<M, "id"> : M, "readId", "id"> {
+	return renameProperty(omit(mapData, ["id"]), "readId", "id") as any;
+}
+
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
 	return renameProperty(marker, "symbol", "icon", keepOld);
 }
 
-export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<RenameProperty<M, "icon", "symbol", KeepOld>, "mapId", "padId", KeepOld> {
-	return renameProperty(renameProperty(marker, "icon", "symbol", keepOld), "mapId", "padId", keepOld);
+export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<RenameProperty<M, "icon", "symbol", KeepOld>, KeepOld> {
+	return mapIdToLegacyV2(renameProperty(marker, "icon", "symbol", keepOld), readId, keepOld);
 }
 
-export function currentLineToLegacyV2<L extends Record<keyof any, any>, KeepOld extends boolean = false>(line: L, keepOld?: KeepOld): RenameProperty<L, "mapId", "padId", KeepOld> {
-	return renameProperty(line, "mapId", "padId", keepOld);
+export function currentLineToLegacyV2<L extends Record<keyof any, any>, KeepOld extends boolean = false>(line: L, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<L, KeepOld> {
+	return mapIdToLegacyV2(line, readId, keepOld);
 }
 
 type RenameNestedArrayProperty<T, Key extends keyof any, From extends keyof any, To extends keyof any, KeepOld extends boolean = false> = (
@@ -283,8 +304,6 @@ type RenameNestedNestedArrayProperty<T, Key1 extends keyof any, Key2 extends key
 );
 type RenameTypeProperties<
 	T,
-	MapIdKeyOld extends keyof any,
-	MapIdKeyNew extends keyof any,
 	DefaultIconKeyOld extends keyof any,
 	DefaultIconKeyNew extends keyof any,
 	IconFixedKeyOld extends keyof any,
@@ -297,16 +316,14 @@ type RenameTypeProperties<
 > = RenameNestedNestedArrayProperty<
 	RenameNestedArrayProperty<
 		RenameProperty<
-			RenameProperty<
-				RenameProperty<T, MapIdKeyOld, MapIdKeyNew, KeepOld>,
-			DefaultIconKeyOld, DefaultIconKeyNew, KeepOld>,
+			RenameProperty<T, DefaultIconKeyOld, DefaultIconKeyNew, KeepOld>,
 			IconFixedKeyOld, IconFixedKeyNew, KeepOld
 		>, "fields", ControlIconKeyOld, ControlIconKeyNew, KeepOld
 	>, "fields", "options", OptionIconKeyOld, OptionIconKeyNew, KeepOld
 >;
 
-export function legacyV2TypeToCurrent<T extends Record<keyof any, any>, KeepOld extends boolean = false>(type: T, keepOld?: KeepOld): RenameTypeProperties<T, "padId", "mapId", "defaultSymbol", "defaultIcon", "symbolFixed", "iconFixed", "controlSymbol", "controlIcon", "symbol", "icon", KeepOld> {
-	const renamedType = renameProperty(renameProperty(renameProperty(type, "defaultSymbol", "defaultIcon", keepOld), "symbolFixed", "iconFixed", keepOld), "padId", "mapId", keepOld) as any;
+export function legacyV2TypeToCurrent<T extends Record<keyof any, any>, KeepOld extends boolean = false>(type: T, keepOld?: KeepOld): RenameTypeProperties<T, "defaultSymbol", "defaultIcon", "symbolFixed", "iconFixed", "controlSymbol", "controlIcon", "symbol", "icon", KeepOld> {
+	const renamedType = renameProperty(renameProperty(type, "defaultSymbol", "defaultIcon", keepOld), "symbolFixed", "iconFixed", keepOld) as any;
 
 	if (renamedType.fields && Array.isArray(renamedType.fields)) {
 		renamedType.fields = renamedType.fields.map((field: any) => {
@@ -321,8 +338,8 @@ export function legacyV2TypeToCurrent<T extends Record<keyof any, any>, KeepOld 
 	return renamedType;
 }
 
-export function currentTypeToLegacyV2<T extends Record<keyof any, any>, KeepOld extends boolean = false>(type: T, keepOld?: KeepOld): RenameTypeProperties<T, "mapId", "padId", "defaultIcon", "defaultSymbol", "iconFixed", "symbolFixed", "controlIcon", "controlSymbol", "icon", "symbol", KeepOld> {
-	const renamedType = renameProperty(renameProperty(renameProperty(type, "defaultIcon", "defaultSymbol", keepOld), "iconFixed", "symbolFixed", keepOld), "mapId", "padId", keepOld) as any;
+export function currentTypeToLegacyV2<T extends Record<keyof any, any>, KeepOld extends boolean = false>(type: T, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<RenameTypeProperties<T, "defaultIcon", "defaultSymbol", "iconFixed", "symbolFixed", "controlIcon", "controlSymbol", "icon", "symbol", KeepOld>, KeepOld> {
+	const renamedType = mapIdToLegacyV2(renameProperty(renameProperty(type, "defaultIcon", "defaultSymbol", keepOld), "iconFixed", "symbolFixed", keepOld), readId, keepOld) as any;
 
 	if (renamedType.fields && Array.isArray(renamedType.fields)) {
 		renamedType.fields = renamedType.fields.map((field: any) => {
@@ -337,8 +354,8 @@ export function currentTypeToLegacyV2<T extends Record<keyof any, any>, KeepOld 
 	return renamedType;
 }
 
-export function currentViewToLegacyV2<V extends Record<keyof any, any>, KeepOld extends boolean = false>(view: V, keepOld?: KeepOld): RenameProperty<V, "mapId", "padId", KeepOld> {
-	return renameProperty(view, "mapId", "padId", keepOld);
+export function currentViewToLegacyV2<V extends Record<keyof any, any>, KeepOld extends boolean = false>(view: V, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<V, KeepOld> {
+	return mapIdToLegacyV2(view, readId, keepOld);
 }
 
 type ReplacePropertyIfNotUndefined<T extends Record<keyof any, any>, Key extends keyof any, Value> = T[Key] extends undefined ? T : ReplaceProperty<T, Key, Value>;
@@ -350,18 +367,20 @@ function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: any }, 
 	} as any;
 }
 
-export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry): LegacyV2HistoryEntry {
-	let renamed = renameProperty(historyEntry, "mapId", "padId");
+export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId: MapSlug): LegacyV2HistoryEntry {
+	let renamed = mapIdToLegacyV2(historyEntry, readId);
 
-	if (renamed.type === "Marker") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj));
+	if (renamed.type === "Map") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentMapDataToLegacyV2(obj));
+		} else if (renamed.type === "Marker") {
+		return mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj, readId));
 	} else if (renamed.type === "Line") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj));
+		return mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj, readId));
 	} else if (renamed.type === "Type") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentTypeToLegacyV2(obj));
+		return mapHistoryEntry(renamed, (obj) => obj && currentTypeToLegacyV2(obj, readId));
 	} else if (renamed.type === "View") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentViewToLegacyV2(obj));
+		return mapHistoryEntry(renamed, (obj) => obj && currentViewToLegacyV2(obj, readId));
 	} else {
-		return renamed;
+		return mapHistoryEntry(renamed, (obj) => obj);
 	}
 }

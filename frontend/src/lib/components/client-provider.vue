@@ -9,7 +9,7 @@
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
-	import { VueReactiveObjectProvider, computedWithDeps, fixOnCleanup } from "../utils/vue";
+	import { VueReactiveObjectProvider, computedWithDeps, fixOnCleanup, withoutTracking } from "../utils/vue";
 
 	function isMapNotFoundError(fatalError: Error): boolean {
 		return (fatalError as any).status === 404;
@@ -72,6 +72,9 @@
 		if (mapSlug) {
 			const mapObj: ClientContextMap = reactive({
 				mapSlug,
+				get data() {
+					return client.maps[mapSlug];
+				},
 				state: ClientContextMapState.OPENING
 			});
 
@@ -84,7 +87,11 @@
 
 			try {
 				await client.subscribeToMap(mapSlug);
-				mapObj.state = ClientContextMapState.OPEN;
+				Object.assign(mapObj, {
+					state: ClientContextMapState.OPEN,
+
+					mapData: client.maps[mapSlug].mapData
+				});
 			} catch(err: any) {
 				if (context.settings.interactive && isMapNotFoundError(err)) {
 					mapObj.state = ClientContextMapState.CREATE;
@@ -98,7 +105,17 @@
 		}
 	}, { immediate: true });
 
-	watch(() => client.value.map ? client.value.maps[client.value.map.mapSlug]?.mapData : undefined, (mapData, oldMapData) => {
+	const mapData = computed(() => client.value.map ? client.value.maps[client.value.map.mapSlug]?.mapData : undefined);
+
+	watch(mapData, (mapData) => {
+		withoutTracking(() => {
+			if (mapData && client.value.map?.state === ClientContextMapState.OPEN) {
+				client.value.map.mapData = mapData;
+			}
+		});
+	}, { immediate: true, flush: "sync" });
+
+	watch(mapData, (mapData, oldMapData) => {
 		if (mapData) {
 			// Update map name and set mapId on legacy bookmarks that don't have it set yet
 			for (const bookmark of storage.bookmarks) {

@@ -1,6 +1,6 @@
 import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, MapData, PagingInput } from "facilmap-types";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagingInput } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
@@ -11,8 +11,8 @@ interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreatio
 	type: HistoryEntryType;
 	action: HistoryEntryAction;
 	objectId: ID;
-	objectBefore: string | null;
-	objectAfter: string | null;
+	objectBefore: HistoryEntryObject<HistoryEntryType> | null;
+	objectAfter: HistoryEntryObject<HistoryEntryType> | null;
 	mapId: ForeignKey<MapData["id"]>;
 	toJSON: () => HistoryEntry;
 }
@@ -39,10 +39,10 @@ export default class DatabaseHistory {
 				allowNull: true,
 				get(this: HistoryModel) {
 					const obj = this.getDataValue("objectBefore");
-					return obj == null ? null : JSON.parse(obj);
+					return obj == null ? null : JSON.parse(obj as any);
 				},
 				set(this: HistoryModel, v) {
-					this.setDataValue("objectBefore", v == null ? null : JSON.stringify(v));
+					this.setDataValue("objectBefore", (v == null ? null : JSON.stringify(v)) as any);
 				}
 			},
 			objectAfter: {
@@ -50,10 +50,10 @@ export default class DatabaseHistory {
 				allowNull: true,
 				get: function(this: HistoryModel) {
 					const obj = this.getDataValue("objectAfter");
-					return obj == null ? null : JSON.parse(obj);
+					return obj == null ? null : JSON.parse(obj as any);
 				},
 				set: function(this: HistoryModel, v) {
-					this.setDataValue("objectAfter", v == null ? null : JSON.stringify(v));
+					this.setDataValue("objectAfter", (v == null ? null : JSON.stringify(v)) as any);
 				}
 			}
 		}, {
@@ -79,15 +79,15 @@ export default class DatabaseHistory {
 		})).map(it => it.id);
 
 		const dataClone = cloneDeep(data);
-		if(data.type != "Map") {
-			if(dataClone.objectBefore) {
-				delete (dataClone.objectBefore as any).id;
-				delete (dataClone.objectBefore as any).mapId;
-			}
-			if(dataClone.objectAfter) {
-				delete (dataClone.objectAfter as any).id;
-				delete (dataClone.objectAfter as any).mapId;
-			}
+		if(dataClone.objectBefore) {
+			delete (dataClone.objectBefore as any).id;
+			delete (dataClone.objectBefore as any).mapId;
+			delete (dataClone.objectBefore as any).defaultView;
+		}
+		if(dataClone.objectAfter) {
+			delete (dataClone.objectAfter as any).id;
+			delete (dataClone.objectAfter as any).mapId;
+			delete (dataClone.objectAfter as any).defaultView;
 		}
 
 		const [newEntry] = await Promise.all([

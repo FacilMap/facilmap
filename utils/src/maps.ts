@@ -1,4 +1,4 @@
-import { Writable, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
+import { Writable, type DeepReadonly, type DistributivePick, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -24,17 +24,17 @@ export function normalizePageDescription(mapDescription: string | undefined): st
 	return mapDescription || getI18n().t("maps.fallback-page-description");
 }
 
-export function getOrderedTypes(types: Type[] | Record<ID, Type>): Type[] {
+export function getOrderedTypes(types: Array<DeepReadonly<Type>> | Record<ID, Type>): Array<DeepReadonly<Type>> {
 	const typeArr = Array.isArray(types) ? [...types] : Object.values(types);
 	return typeArr.sort((a, b) => a.idx - b.idx);
 }
 
-export function getOrderedViews(views: View[] | Record<ID, View>): View[] {
+export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, DeepReadonly<View>>): Array<DeepReadonly<View>> {
 	const typeArr = Array.isArray(views) ? [...views] : Object.values(views);
 	return typeArr.sort((a, b) => a.idx - b.idx);
 }
 
-export function getWritable(mapData: MapDataWithWritable, mapSlug: MapSlug): Writable {
+export function getWritable(mapData: MapDataWithWritable | MapData, mapSlug: MapSlug): Writable {
 	if ("adminId" in mapData && mapData.adminId === mapSlug) {
 		return Writable.ADMIN;
 	} else if ("writeId" in mapData && mapData.writeId === mapSlug) {
@@ -44,7 +44,7 @@ export function getWritable(mapData: MapDataWithWritable, mapSlug: MapSlug): Wri
 	}
 }
 
-export function getMapSlug(mapData: MapDataWithWritable): MapSlug {
+export function getMapSlug(mapData: DistributivePick<MapDataWithWritable, "writable" | "adminId" | "writeId" | "readId">): MapSlug {
 	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.readId;
 }
 

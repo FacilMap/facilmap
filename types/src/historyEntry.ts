@@ -8,11 +8,11 @@ import type { Type } from "./type.js";
 export type HistoryEntryAction = "create" | "update" | "delete";
 
 export type HistoryEntryObjectTypes = {
-	"Marker": Omit<Marker, "id">;
-	"Line": Omit<Line, "id">;
-	"View": Omit<View, "id">;
-	"Type": Omit<Type, "id">;
-	"Map": MapData;
+	"Map": Omit<MapData, "id" | "defaultView">;
+	"Marker": Omit<Marker, "id" | "mapId">;
+	"Line": Omit<Line, "id" | "mapId">;
+	"View": Omit<View, "id" | "mapId">;
+	"Type": Omit<Type, "id" | "mapId">;
 };
 
 export type HistoryEntryType = keyof HistoryEntryObjectTypes;
