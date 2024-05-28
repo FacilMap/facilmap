@@ -16,7 +16,7 @@
 	}>();
 
 	const isBookmarked = computed(() => {
-		return !!client.value.mapId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapId);
+		return !!client.value.mapSlug && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapSlug);
 	});
 
 	function deleteBookmark(bookmark: Bookmark): void {
@@ -26,7 +26,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.mapId!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
+		storage.bookmarks.push({ id: client.value.mapSlug!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
 	}
 </script>
 

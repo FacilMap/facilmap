@@ -1,13 +1,12 @@
 import { readableToWeb, streamPromiseToStream, writableToWeb } from "../utils/streams.js";
-import type { MapId, ID } from "facilmap-types";
+import type { ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { stringify } from "csv-stringify";
-import { Readable, Writable } from "stream";
 import { getTabularData } from "./tabular.js";
 
 export function exportCsv(
 	database: Database,
-	mapId: MapId,
+	mapId: ID,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = []

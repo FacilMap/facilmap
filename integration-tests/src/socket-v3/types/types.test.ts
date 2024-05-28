@@ -89,7 +89,7 @@ test("Create type (marker, default settings)", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -146,7 +146,7 @@ test("Create type (marker, default settings)", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -160,7 +160,7 @@ test("Create type (line, default settings)", async () => {
 	client1.on("type", onType);
 
 	await createTemporaryMap(client1, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -217,7 +217,7 @@ test("Create type (line, default settings)", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -291,7 +291,7 @@ test("Update type", async () => {
 			type: "marker"
 		});
 
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onType1 = vi.fn();
 		client1.on("type", onType1);
@@ -348,7 +348,7 @@ test("Update type", async () => {
 			[expectedType.id]: expectedType
 		});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({
 			[expectedType.id]: expectedType
 		});
@@ -364,7 +364,7 @@ test("Delete type", async () => {
 			type: "marker"
 		});
 
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -387,7 +387,7 @@ test("Delete type", async () => {
 		expect(onDeleteType2).toHaveBeenNthCalledWith(1, { id: type.id });
 		expect(cloneDeep(client2.types)).toEqual({});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({});
 	});
 });
@@ -407,7 +407,7 @@ test("Delete type (existing markers)", async () => {
 			typeId: type.id
 		});
 
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -428,7 +428,7 @@ test("Delete type (existing markers)", async () => {
 			[type.id]: type
 		});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({
 			[type.id]: type
 		});
@@ -452,7 +452,7 @@ test("Delete type (existing lines)", async () => {
 			typeId: type.id
 		});
 
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const onDeleteType1 = vi.fn();
 		client1.on("deleteType", onDeleteType1);
@@ -473,7 +473,7 @@ test("Delete type (existing lines)", async () => {
 			[type.id]: type
 		});
 
-		const client3 = await openClient(mapData.id);
+		const client3 = await openClient(mapData.readId);
 		expect(cloneDeep(client3.types)).toEqual({
 			[type.id]: type
 		});

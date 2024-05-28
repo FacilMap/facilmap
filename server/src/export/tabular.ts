@@ -1,6 +1,6 @@
 import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
-import type { MapId, ID } from "facilmap-types";
+import type { ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { getI18n } from "../i18n.js";
 
@@ -12,7 +12,7 @@ export type TabularData = {
 
 export async function getTabularData(
 	database: Database,
-	mapId: MapId,
+	mapId: ID,
 	typeId: ID,
 	html: boolean,
 	filter?: string,

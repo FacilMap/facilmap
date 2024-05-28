@@ -1,6 +1,6 @@
 import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, MapData, MapId, PagingInput } from "facilmap-types";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryType, ID, MapData, PagingInput } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
@@ -70,7 +70,7 @@ export default class DatabaseHistory {
 	}
 
 
-	async addHistoryEntry(mapId: MapId, data: HistoryEntryCreate): Promise<HistoryEntry> {
+	async addHistoryEntry(mapId: ID, data: HistoryEntryCreate): Promise<HistoryEntry> {
 		const oldEntryIds = (await this.HistoryModel.findAll({
 			where: { mapId },
 			order: [[ "time", "DESC" ]],
@@ -101,7 +101,7 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(mapId: MapId, types?: HistoryEntryType[], paging?: PagingInput): AsyncIterable<HistoryEntry> {
+	getHistory(mapId: ID, types?: HistoryEntryType[], paging?: PagingInput): AsyncIterable<HistoryEntry> {
 		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
 			order: [[ "time", "DESC" ]],
 			offset: paging?.start ?? 0,
@@ -115,12 +115,12 @@ export default class DatabaseHistory {
 	}
 
 
-	async getHistoryEntry(mapId: MapId, entryId: ID, options?: { notFound404?: boolean }): Promise<HistoryEntry> {
+	async getHistoryEntry(mapId: ID, entryId: ID, options?: { notFound404?: boolean }): Promise<HistoryEntry> {
 		return await this._db.helpers._getMapObject<HistoryEntry>("History", mapId, entryId, options);
 	}
 
 
-	async revertHistoryEntry(mapId: MapId, id: ID): Promise<void> {
+	async revertHistoryEntry(mapId: ID, id: ID): Promise<void> {
 		const entry = await this.getHistoryEntry(mapId, id);
 
 		if(entry.type == "Map") {
@@ -201,7 +201,7 @@ export default class DatabaseHistory {
 	}
 
 
-	async clearHistory(mapId: MapId): Promise<void> {
+	async clearHistory(mapId: ID): Promise<void> {
 		await this.HistoryModel.destroy({ where: { mapId } });
 	}
 

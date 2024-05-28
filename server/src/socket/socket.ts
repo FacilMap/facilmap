@@ -68,7 +68,6 @@ export default class Socket {
 			const remoteAttr = proxyAddr(socket.request, compiledTrust);
 
 			const handler = new constructors[version]((...args: any) => {
-				console.log("emit", args);
 				socket.emit(args[0], ...args.slice(1));
 			}, this.database, remoteAttr);
 
@@ -95,9 +94,10 @@ export default class Socket {
 
 						validatedCallback?.(null, res);
 					} catch (err: any) {
-						console.log(err);
+						const outerErr = new Error(`Invalid arguments for socket method ${i}`, { cause: err });
+						console.log(outerErr);
 
-						validatedCallback?.(serializeError(err));
+						validatedCallback?.(serializeError(outerErr));
 					}
 				});
 			}

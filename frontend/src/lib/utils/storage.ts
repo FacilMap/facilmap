@@ -1,4 +1,4 @@
-import { mapIdValidator } from "facilmap-types";
+import { idValidator, mapSlugValidator } from "facilmap-types";
 import { overwriteObject } from "facilmap-utils";
 import { isEqual } from "lodash-es";
 import { reactive, watch } from "vue";
@@ -19,12 +19,13 @@ function arrayIgnoringInvalids<T extends z.ZodTypeAny>(schema: T): z.ZodType<Arr
 
 export const bookmarkValidator = z.record(z.any()).transform((val) => ({
 	...val,
-	mapId: val.mapId ?? val.padId // padId is the legacy property name
+	mapId: typeof val.mapId === "number" ? val.mapId : undefined, // Used to be the read-only ID
+	mapSlug: val.mapSlug ?? val.id // id is the legacy property name
 })).pipe(z.object({
 	/** ID used to open the map */
-	id: mapIdValidator,
-	/** Read-only ID of the map */
-	mapId: mapIdValidator,
+	mapSlug: mapSlugValidator,
+	/** ID of the map */
+	mapId: idValidator.optional(),
 	/** Last known name of the map */
 	name: z.string(),
 	/** If this is defined, it is shown instead of the map name. */

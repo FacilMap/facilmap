@@ -13,27 +13,27 @@ import DatabaseSearch from "./search.js";
 import DatabaseRoutes from "./route.js";
 import DatabaseMigrations from "./migrations.js";
 import { TypedEventEmitter } from "../utils/events.js";
-import type { HistoryEntry, ID, Line, Marker, ObjectWithId, MapData, MapId, TrackPoint, Type, View } from "facilmap-types";
+import type { HistoryEntry, ID, Line, Marker, ObjectWithId, MapData, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEventsInterface {
-	addHistoryEntry: [mapId: MapId, newEntry: HistoryEntry];
-	historyChange: [mapId: MapId];
+	addHistoryEntry: [mapId: ID, newEntry: HistoryEntry];
+	historyChange: [mapId: ID];
 
-	line: [mapId: MapId, newLine: Line];
-	linePoints: [mapId: MapId, lineId: ID, points: TrackPoint[]];
-	deleteLine: [mapId: MapId, data: ObjectWithId];
+	line: [mapId: ID, newLine: Line];
+	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[]];
+	deleteLine: [mapId: ID, data: ObjectWithId];
 
-	marker: [mapId: MapId, newMarker: Marker];
-	deleteMarker: [mapId: MapId, data: ObjectWithId];
+	marker: [mapId: ID, newMarker: Marker];
+	deleteMarker: [mapId: ID, data: ObjectWithId];
 
-	mapData: [mapId: MapId, mapData: MapData & Required<Pick<MapData, "writeId" | "adminId">>];
-	deleteMap: [mapId: MapId];
+	mapData: [mapId: ID, mapData: MapData & Required<Pick<MapData, "writeId" | "adminId">>];
+	deleteMap: [mapId: ID];
 
-	type: [mapId: MapId, newType: Type];
-	deleteType: [mapId: MapId, data: ObjectWithId];
+	type: [mapId: ID, newType: Type];
+	deleteType: [mapId: ID, data: ObjectWithId];
 
-	view: [mapId: MapId, newView: View];
-	deleteView: [mapId: MapId, data: ObjectWithId];
+	view: [mapId: ID, newView: View];
+	deleteView: [mapId: ID, data: ObjectWithId];
 }
 
 export type DatabaseEvents = Pick<DatabaseEventsInterface, keyof DatabaseEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
@@ -90,8 +90,12 @@ export default class Database extends TypedEventEmitter<DatabaseEvents> {
 
 	async connect(force?: boolean): Promise<void> {
 		await this._conn.authenticate();
+		const isNewDatabase = (await this._conn.getQueryInterface().showAllTables()).length === 0;
 		await this.migrations._runMigrationsBeforeSync();
 		await this._conn.sync({ force: !!force });
+		if (isNewDatabase) {
+			await this.meta.initializeMeta();
+		}
 		await this.migrations._runMigrationsAfterSync();
 
 		await this.routes.afterConnect();

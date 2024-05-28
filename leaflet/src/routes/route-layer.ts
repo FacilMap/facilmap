@@ -1,10 +1,8 @@
-import type SocketClient from "facilmap-client";
-import type { RouteWithTrackPoints } from "facilmap-client";
+import { isReactivePropertyUpdate, type ReactiveObjectUpdate, type SocketClientStorage } from "facilmap-client";
 import { Map, type PolylineOptions } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
-import type { RouteClear, RoutePoints } from "facilmap-types";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 }
@@ -12,25 +10,27 @@ interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 export default class RouteLayer extends HighlightablePolyline {
 
 	declare realOptions: RouteLayerOptions;
-	client: SocketClient;
-	routeId: string | undefined;
+	clientStorage: SocketClientStorage;
+	routeKey: string;
+	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
 
-	constructor(client: SocketClient, routeId?: string, options?: RouteLayerOptions) {
+	constructor(clientStorage: SocketClientStorage, routeKey: string, options?: RouteLayerOptions) {
 		super([], options);
-		this.client = client;
-		this.routeId = routeId;
+		this.clientStorage = clientStorage;
+		this.routeKey = routeKey;
 	}
 
 	onAdd(map: Map): this {
 		super.onAdd(map);
 
-		this.client.on("route", this.handleRoute);
-		if (this.routeId)
-			this.client.on("routePointsWithId", this.handleRoutePointsWithId);
-		else
-			this.client.on("routePoints", this.handleRoutePoints);
-		this.client.on("clearRoute", this.handleClearRoute);
-		this.updateLine(true);
+		this.unsubscribeStorageUpdate = this.clientStorage.reactiveObjectProvider.subscribe((update) => this.handleStorageUpdate(update));
+		// this.storage.on("route", this.handleRoute);
+		// if (this.routeId)
+		// 	this.storage.on("routePointsWithId", this.handleRoutePointsWithId);
+		// else
+		// 	this.storage.on("routePoints", this.handleRoutePoints);
+		// this.storage.on("clearRoute", this.handleClearRoute);
+		this.updateRoute();
 
 		return this;
 	}
@@ -38,41 +38,27 @@ export default class RouteLayer extends HighlightablePolyline {
 	onRemove(map: Map): this {
 		super.onRemove(map);
 
-		this.client.removeListener("route", this.handleRoute);
-		this.client.removeListener("routePoints", this.handleRoutePoints);
-		this.client.removeListener("routePointsWithId", this.handleRoutePointsWithId);
-		this.client.removeListener("clearRoute", this.handleClearRoute);
+		this.unsubscribeStorageUpdate?.();
+		this.unsubscribeStorageUpdate = undefined;
+		// this.storage.removeListener("route", this.handleRoute);
+		// this.storage.removeListener("routePoints", this.handleRoutePoints);
+		// this.storage.removeListener("routePointsWithId", this.handleRoutePointsWithId);
+		// this.storage.removeListener("clearRoute", this.handleClearRoute);
 
 		return this;
 	}
 
-	handleRoute = (route: RouteWithTrackPoints): void => {
-		if (this.routeId ? (route.routeId == this.routeId) : !route.routeId)
-			this.updateLine(true);
-	};
-
-	handleRoutePoints = (): void => {
-		this.updateLine(false);
-	};
-
-	handleRoutePointsWithId = (data: RoutePoints): void => {
-		if (this.routeId == data.routeId)
-			this.updateLine(false);
-	};
-
-	handleClearRoute = (data: RouteClear): void => {
-		if (this.routeId ? (data.routeId == this.routeId) : !data.routeId)
-			this.updateLine(true);
+	protected handleStorageUpdate(update: ReactiveObjectUpdate): void {
+		if (isReactivePropertyUpdate(update, this.clientStorage.routes, this.routeKey)) {
+			this.updateRoute();
+		}
 	}
 
-	updateLine(updateRoutePoints: boolean): void {
-		const route = this.routeId ? this.client.routes[this.routeId] : this.client.route;
+	updateRoute(): void {
+		const route = this.clientStorage.routes[this.routeKey];
 		if (route) {
-			if (updateRoutePoints)
-				this.setDraggableLinesRoutePoints(route.routePoints.map((p) => [p.lat, p.lon]));
-
-			const trackPoints = trackPointsToLatLngArray(route.trackPoints);
-			this.setLatLngs(trackPoints);
+			this.setDraggableLinesRoutePoints(route.routePoints.map((p) => [p.lat, p.lon]));
+			this.setLatLngs(trackPointsToLatLngArray(route.trackPoints));
 		} else {
 			this.setLatLngs([]);
 			this.setDraggableLinesRoutePoints([]);

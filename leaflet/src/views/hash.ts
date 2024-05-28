@@ -1,5 +1,5 @@
-import type SocketClient from "facilmap-client";
-import { numberKeys } from "facilmap-utils";
+import { SocketClientStorage } from "facilmap-client";
+import { numberEntries } from "facilmap-utils";
 import { Evented, Handler, latLng, LatLng, Map } from "leaflet";
 import { debounce, isEqual } from "lodash-es";
 import { defaultVisibleLayers, getVisibleLayers, setVisibleLayers } from "../layers";
@@ -24,14 +24,14 @@ export interface HashHandlerOptions {
 export default class HashHandler extends Handler {
 
 	options: HashHandlerOptions;
-	client: SocketClient;
+	clientStorage: SocketClientStorage;
 	activeQuery?: HashQuery;
 	_isApplyingHash = false;
 	_lastHash: string | undefined = undefined;
 
-	constructor(map: Map, client: SocketClient, options?: HashHandlerOptions) {
+	constructor(map: Map, clientStorage: SocketClientStorage, options?: HashHandlerOptions) {
 		super(map);
-		this.client = client;
+		this.clientStorage = clientStorage;
 		this.options = {
 			simulate: false,
 			...options
@@ -104,9 +104,13 @@ export default class HashHandler extends Handler {
 			this.fireEvent("fmHash", { hash });
 
 			const viewMatch = hash.match(/^q=v(\d+)$/i);
-			if(viewMatch && this.client.views[viewMatch[1] as any]) {
-				displayView(this._map, this.client.views[viewMatch[1] as any], { overpassLayer: this.options.overpassLayer });
-				return;
+			if (viewMatch) {
+				for (const map of Object.values(this.clientStorage.maps)) {
+					if (map.views[viewMatch[1] as any]) {
+						displayView(this._map, map.views[viewMatch[1] as any], { overpassLayer: this.options.overpassLayer });
+						return;
+					}
+				}
 			}
 
 			let args;
@@ -170,16 +174,19 @@ export default class HashHandler extends Handler {
 
 		if (this.activeQuery && !this._map.fmFilter && isEqual(visibleLayers, defaultVisibleLayers) && this.activeQuery.zoom != null && this.activeQuery.center != null && this._map.getZoom() == this.activeQuery.zoom && pointsEqual(this._map.getCenter(), this.activeQuery.center, this._map, this.activeQuery.zoom)) {
 			result = "q=" + encodeURIComponent(this.activeQuery.query);
-		} else if(!this.activeQuery) {
+		} else if (!this.activeQuery) {
 			// Check if we have a saved view open
-			const defaultView = (this.client.mapData && this.client.mapData.defaultViewId && this.client.views[this.client.mapData.defaultViewId]);
-			if(isAtView(this._map, defaultView || undefined, { overpassLayer: this.options.overpassLayer }))
-				result = "";
-			else {
-				for(const viewId of numberKeys(this.client.views)) {
-					if(isAtView(this._map, this.client.views[viewId], { overpassLayer: this.options.overpassLayer })) {
-						result = `q=v${encodeURIComponent(viewId)}`;
-						break;
+			outer: for (const map of Object.values(this.clientStorage.maps)) {
+				const defaultView = (map.mapData && map.mapData.defaultViewId && map.views[map.mapData.defaultViewId]);
+				if (isAtView(this._map, defaultView || undefined, { overpassLayer: this.options.overpassLayer })) {
+					result = "";
+					break outer;
+				} else {
+					for (const [viewId, view] of numberEntries(map.views)) {
+						if (isAtView(this._map, view, { overpassLayer: this.options.overpassLayer })) {
+							result = `q=v${encodeURIComponent(viewId)}`;
+							break outer;
+						}
 					}
 				}
 			}

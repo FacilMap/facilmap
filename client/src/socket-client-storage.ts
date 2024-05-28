@@ -5,7 +5,7 @@ import type {
 	DeepReadonly
 } from "facilmap-types";
 import { SocketClient, type ClientEvents } from "./socket-client";
-import { getReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
+import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
 
 export interface MapStorage {
 	mapData: DeepReadonly<MapDataWithWritable> | undefined;
@@ -19,13 +19,14 @@ export interface MapStorage {
 export type RouteWithTrackPoints = Omit<Route, "routeId" | "trackPoints"> & { trackPoints: TrackPoints };
 
 export class SocketClientStorage {
-	reactiveObjectProvider: ReactiveObjectProvider = getReactiveObjectProvider();
+	reactiveObjectProvider: ReactiveObjectProvider;
 	client: SocketClient;
 
 	maps: Record<MapSlug, MapStorage>;
-	routes: Record<string, RouteWithTrackPoints>;
+	routes: Record<string, DeepReadonly<RouteWithTrackPoints>>;
 
-	constructor(client: SocketClient) {
+	constructor(client: SocketClient, options?: { reactiveObjectProvider?: ReactiveObjectProvider }) {
+		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
 		this.client = client;
 		this.maps = this.reactiveObjectProvider.create({});
 		this.routes = this.reactiveObjectProvider.create({});
@@ -39,8 +40,8 @@ export class SocketClientStorage {
 		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
 			this.client.removeListener(i as any, handler as any);
 		}
-		this.reactiveObjectProvider.set(this, "maps", {});
-		this.reactiveObjectProvider.set(this, "routes", {});
+		this.maps = this.reactiveObjectProvider.create({});
+		this.routes = this.reactiveObjectProvider.create({});
 	}
 
 	protected _getEventHandlers(): {
@@ -114,8 +115,8 @@ export class SocketClientStorage {
 			},
 
 			disconnect: (reason) => {
-				this.reactiveObjectProvider.set(this, 'maps', { });
-				this.reactiveObjectProvider.set(this, 'routes', { });
+				this.maps = this.reactiveObjectProvider.create({});
+				this.routes = this.reactiveObjectProvider.create({});
 			},
 		};
 	};
@@ -179,7 +180,11 @@ export class SocketClientStorage {
 	clearView(mapSlug: MapSlug, viewId: ID): void {
 		this.reactiveObjectProvider.delete(this.getMapStorage(mapSlug).views, viewId);
 		if(this.maps[mapSlug].mapData?.defaultViewId === viewId) {
-			this.reactiveObjectProvider.set(this.maps[mapSlug].mapData!, 'defaultViewId', null);
+			this.reactiveObjectProvider.set(this.maps[mapSlug], "mapData", {
+				...this.maps[mapSlug].mapData!,
+				defaultView: null,
+				defaultViewId: null
+			});
 		}
 	}
 

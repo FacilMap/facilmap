@@ -25,7 +25,11 @@ export const apiV3RequestValidators = {
 	]),
 	updateMap: z.tuple([mapSlugValidator, mapDataValidator.update]),
 	deleteMap: z.tuple([mapSlugValidator]),
-	getAllMapObjects: z.tuple([mapSlugValidator, z.object({ pick: z.array(allMapObjectsPickValidator), bbox: bboxWithExceptValidator.optional() })]),
+	getAllMapObjects: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapSlugValidator]),
+		z.tuple([mapSlugValidator, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithExceptValidator.optional() }))])
+	]),
 	findOnMap: z.tuple([mapSlugValidator, /** query */ z.string()]),
 
 	getHistory: z.union([
@@ -126,6 +130,6 @@ export type ApiV3<Validated extends boolean = false> = {
 	[K in keyof ApiV3Response]: (...args: Validated extends true ? z.infer<typeof apiV3RequestValidators[K]> : z.input<typeof apiV3RequestValidators[K]>) => Promise<ApiV3Response[K]>;
 } & {
 	createMap: <Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<Validated extends true ? CRU.CREATE_VALIDATED : CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }) => Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>>;
-	getAllMapObjects: <Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }) => Promise<AsyncIterable<AllMapObjectsItem<Pick>>>;
+	getAllMapObjects: <Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }) => Promise<AsyncIterable<AllMapObjectsItem<Pick>>>;
 	getMapLines: <IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }) => Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>>;
 };

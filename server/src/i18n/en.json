@@ -1,6 +1,5 @@
 {
     "map-not-found-error": "Map {{mapId}} could not be found.",
-    "map-read-not-found-error": "Map with read-only ID {{mapId}} could not be found.",
     "api": {
         "map-not-exist-error": "This map does not exist.",
         "unknown-format-error": "Unknown format",
@@ -60,8 +59,5 @@
         "field-position": "Position",
         "field-distance": "Distance",
         "field-time": "Time"
-    },
-    "webserver": {
-        "map-not-found-error": "Map with ID {{mapId}} could not be found."
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "./ui/icon.vue";
-	import type { FindMapsResult } from "facilmap-types";
+	import type { FindMapsResult, MapSlug } from "facilmap-types";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import Pagination from "./ui/pagination.vue";
@@ -22,7 +22,7 @@
 
 	const ITEMS_PER_PAGE = 20;
 
-	function parseMapId(val: string, context: FacilMapContext): { mapId: string; hash: string } | undefined {
+	function parseMapSlug(val: string, context: FacilMapContext): { mapSlug: string; hash: string } | undefined {
 		const url = val.startsWith(context.baseUrl) ? val : `${context.baseUrl}${val}`;
 		return parseMapUrl(url, context.baseUrl);
 	}
@@ -33,7 +33,7 @@
 
 	const id = getUniqueId("fm-open-map");
 
-	const mapId = ref("");
+	const mapSlug = ref<MapSlug>("");
 	const searchQuery = ref("");
 	const submittedSearchQuery = ref<string>();
 	const isSearching = ref(false);
@@ -45,16 +45,16 @@
 	const openFormRef = ref<InstanceType<typeof ValidatedForm>>();
 
 	const url = computed(() => {
-		const parsed = parseMapId(mapId.value, context);
+		const parsed = parseMapSlug(mapSlug.value, context);
 		if (parsed) {
-			return context.baseUrl + encodeURIComponent(parsed.mapId) + parsed.hash;
+			return context.baseUrl + encodeURIComponent(parsed.mapSlug) + parsed.hash;
 		}
 	});
 
 	function handleSubmit(): void {
-		const parsed = parseMapId(mapId.value, context);
+		const parsed = parseMapSlug(mapSlug.value, context);
 		if (parsed) {
-			client.value.openMap(parsed.mapId);
+			client.value.openMap(parsed.mapSlug);
 			modalRef.value!.modal.hide();
 
 			setTimeout(() => {
@@ -65,7 +65,7 @@
 	}
 
 	function openResult(result: FindMapsResult): void {
-		client.value.openMap(result.id);
+		client.value.openMap(result.readId);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
@@ -103,19 +103,19 @@
 		}
 	}
 
-	function validateMapIdFormat(mapId: string) {
-		const parsed = parseMapId(mapId, context);
+	function validateMapSlugFormat(mapSlug: string) {
+		const parsed = parseMapSlug(mapSlug, context);
 
 		if (!parsed) {
 			return i18n.t("open-map-dialog.map-id-format-error");
 		}
 	}
 
-	async function validateMapExistence(mapId: string) {
-		const parsed = parseMapId(mapId, context);
+	async function validateMapExistence(mapSlug: MapSlug) {
+		const parsed = parseMapSlug(mapSlug, context);
 
 		if (parsed) {
-			const mapInfo = await client.value.getMap({ mapId: parsed.mapId });
+			const mapInfo = await client.value.getMap({ mapId: parsed.mapSlug });
 			if (!mapInfo) {
 				return i18n.t("open-map-dialog.map-not-found-error");
 			}
@@ -133,26 +133,26 @@
 	>
 		<p>{{i18n.t("open-map-dialog.introduction")}}</p>
 		<ValidatedField
-			:value="mapId"
-			:validators="mapId ? [
-				validateMapIdFormat,
+			:value="mapSlug"
+			:validators="mapSlug ? [
+				validateMapSlugFormat,
 				validateMapExistence
 			] : []"
-			:reportValid="!!mapId"
+			:reportValid="!!mapSlug"
 			:debounceMs="300"
 			class="input-group has-validation position-relative"
 		>
 			<template #default="slotProps">
 				<input
 					class="form-control"
-					v-model="mapId"
+					v-model="mapSlug"
 					:form="`${id}-open-form`"
 					:ref="slotProps.inputRef"
 				/>
 				<button
 					type="submit"
 					class="btn btn-primary"
-					:disabled="!mapId"
+					:disabled="!mapSlug"
 					:form="`${id}-open-form`"
 				>
 					<div v-if="openFormRef?.formData.isValidating" class="spinner-border spinner-border-sm"></div>
@@ -208,7 +208,7 @@
 							<td class="td-buttons">
 								<a
 									class="btn btn-secondary"
-									:href="context.baseUrl + encodeURIComponent(result.id)"
+									:href="context.baseUrl + encodeURIComponent(result.readId)"
 									@click.exact.prevent="openResult(result)"
 								>{{i18n.t("open-map-dialog.open-map-by-search-button")}}</a>
 							</td>

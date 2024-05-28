@@ -9,7 +9,7 @@ import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
 import { findQuery, findUrl } from "../search";
 import { iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
-import { JsonSerializer, arrayStream, objectStream, type SerializableJsonValue } from "json-stream-es";
+import { arrayStream, stringifyJsonStream, objectStream, type SerializableJsonValue } from "json-stream-es";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected database: Database;
@@ -21,11 +21,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	protected async resolveMapSlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
-		const map = await this.database.maps.getMapDataBySlug(mapSlug, minimumPermissions);
-		if (!map) {
-			throw Object.assign(new Error(getI18n().t("api.map-not-exist-error")), { status: 404 });
-		}
-		return map;
+		return await this.database.maps.getMapDataBySlug(mapSlug, minimumPermissions);
 	}
 
 	protected async* getMapObjectsUntyped<M extends MapDataWithWritable = MapDataWithWritable>(
@@ -91,9 +87,12 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.maps.deleteMap(mapData.id);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linePoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
-		return this.getMapObjects(mapData, options);
+		return this.getMapObjects(mapData, {
+			...options,
+			pick: options?.pick ?? ["mapData", "lines", "types", "views", ...options?.bbox ? ["markers", "linePoints"] : []] as Pick[]
+		});
 	}
 
 	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
@@ -336,7 +335,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}).parse(req.query);
 		return [mapDataValidator.create.parse(req.body), { pick, bbox }];
 	}, (res, result) => {
-		new JsonSerializer(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
+		stringifyJsonStream(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
 			if (obj.type === "mapData") {
 				return [obj.type, obj.data];
 			} else {
@@ -351,12 +350,12 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 
 	getAllMapObjects: apiImpl.get("/map/:mapSlug/all", (req) => {
 		const { pick, bbox } = z.object({
-			pick: stringArrayValidator.pipe(z.array(allMapObjectsPickValidator)),
-			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator.optional())
+			pick: stringArrayValidator.pipe(z.array(allMapObjectsPickValidator)).optional(),
+			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator).optional()
 		}).parse(req.query);
 		return [req.params.mapSlug, { pick, bbox }];
 	}, (res, result) => {
-		new JsonSerializer(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
+		stringifyJsonStream(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
 			if (obj.type === "mapData") {
 				return [obj.type, obj.data];
 			} else {

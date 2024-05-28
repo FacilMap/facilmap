@@ -11,8 +11,8 @@ test("Create line (using default values)", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const onLine1 = vi.fn();
 		client1.on("line", onLine1);
@@ -185,8 +185,8 @@ test("Edit line", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
@@ -314,8 +314,8 @@ test("Delete line", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 
@@ -363,7 +363,7 @@ test("Find line", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const lineType = Object.values(client1.types).find((t) => t.type === "line")!;
 

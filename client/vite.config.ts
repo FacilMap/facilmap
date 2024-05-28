@@ -1,3 +1,4 @@
+/// <reference types="vitest"/>
 import { defineConfig } from "vite";
 import dtsPlugin from "vite-plugin-dts";
 
@@ -15,6 +16,11 @@ export default defineConfig({
 		},
 		rollupOptions: {
 			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/")
+		}
+	},
+	test: {
+		typecheck: {
+			enabled: true
 		}
 	}
 });

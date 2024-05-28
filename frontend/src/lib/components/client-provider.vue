@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { computed, onBeforeUnmount, reactive, ref, toRaw, watch } from "vue";
-	import SocketClient from "facilmap-client";
-	import { MapNotFoundError, type MapData, type MapId } from "facilmap-types";
+	import { computed, reactive, shallowReactive, watch, type ComputedRef } from "vue";
+	import { ClientStateType, SocketClient, SocketClientStorage } from "facilmap-client";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
 	import { type ToastAction } from "./ui/toasts/toasts.vue";
 	import Toast from "./ui/toasts/toast.vue";
-	import type { ClientContext } from "./facil-map-context-provider/client-context";
+	import { ClientContextMapState, type ClientContext, type ClientContextMap } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
+	import { VueReactiveObjectProvider, computedWithDeps, fixOnCleanup } from "../utils/vue";
 
-	function isMapNotFoundError(serverError: SocketClient["serverError"]): boolean {
-		return !!serverError && serverError instanceof MapNotFoundError;
+	function isMapNotFoundError(fatalError: Error): boolean {
+		return (fatalError as any).status === 404;
 	}
 </script>
 
@@ -20,95 +20,114 @@
 	const context = injectContextRequired();
 	const i18n = useI18n();
 
-	const client = ref<ClientContext>();
-	const connectingClient = ref<ClientContext>();
-
 	const props = defineProps<{
-		mapId: string | undefined;
+		mapSlug: string | undefined;
 		serverUrl: string;
 	}>();
 
 	const emit = defineEmits<{
-		"update:mapId": [mapId: string | undefined];
+		"update:mapSlug": [mapSlug: string | undefined];
 	}>();
 
-	function openMap(mapId: string | undefined): void {
-		emit("update:mapId", mapId);
+	function openMap(mapSlug: string | undefined): void {
+		emit("update:mapSlug", mapSlug);
 	}
 
-	watch([
-		() => props.mapId,
-		() => props.serverUrl
-	], async () => {
-		const existingClient = connectingClient.value || client.value;
-		if (existingClient && existingClient.server == props.serverUrl && existingClient.mapId == props.mapId)
-			return;
-
-		class CustomClient extends SocketClient implements ClientContext {
-			_makeReactive<O extends object>(obj: O) {
-				return reactive(obj) as O;
-			}
-
-			openMap(mapId: string | undefined) {
-				openMap(mapId);
-			}
-
-			get isCreateMap() {
-				return context.settings.interactive && isMapNotFoundError(super.serverError);
-			}
-		}
-
-		const newClient = new CustomClient(props.serverUrl, props.mapId, {
+	const client: ComputedRef<ClientContext> = computedWithDeps(() => props.serverUrl, (serverUrl, oldValue, onCleanup): ClientContext => {
+		const client = new SocketClient(serverUrl, {
+			reactiveObjectProvider: new VueReactiveObjectProvider(),
 			query: {
 				...isLanguageExplicit() ? { lang: getCurrentLanguage() } : {},
 				...isUnitsExplicit() ? { units: getCurrentUnits() } : {}
 			}
 		});
-		connectingClient.value = newClient;
 
-		let lastMapId: MapId | undefined = undefined;
-		let lastMapData: MapData | undefined = undefined;
+		const clientStorage = shallowReactive<ClientContext>(Object.assign(new SocketClientStorage(client, {
+			reactiveObjectProvider: new VueReactiveObjectProvider()
+		}), { openMap }));
 
-		newClient.on("mapData", () => {
-			for (const bookmark of storage.bookmarks) {
-				if (lastMapId && bookmark.id == lastMapId)
-					bookmark.id = newClient.mapId!;
+		onCleanup(() => {
+			clientStorage.dispose();
+			client.disconnect();
+		});
 
-				if (lastMapData && lastMapData.id == bookmark.mapId)
-					bookmark.mapId = newClient.mapData!.id;
-
-				if (bookmark.mapId == newClient.mapData!.id)
-					bookmark.name = newClient.mapData!.name;
+		client.on("deleteMap", (mapSlug) => {
+			if (clientStorage.map && clientStorage.map.mapSlug === mapSlug) {
+				// Replace whole map object so that other state changes below don't have an effect
+				clientStorage.map = reactive<ClientContextMap>({
+					mapSlug,
+					state: ClientContextMapState.DELETED
+				});
 			}
-
-			lastMapId = newClient.mapId;
-			lastMapData = newClient.mapData;
 		});
 
-		await new Promise<void>((resolve) => {
-			newClient.once(props.mapId ? "mapData" : "connect", () => { resolve(); });
-			newClient.on("serverError", () => { resolve(); });
-		});
+		return clientStorage;
+	});
 
-		if (toRaw(connectingClient.value) !== newClient) {
-			// Another client has been initiated in the meantime
-			newClient.disconnect();
-			return;
+	watch([
+		() => client.value,
+		() => props.mapSlug
+	], async ([client, mapSlug], oldValue, onCleanup_) => {
+		const onCleanup = fixOnCleanup(onCleanup_);
+		if (mapSlug) {
+			const mapObj: ClientContextMap = reactive({
+				mapSlug,
+				state: ClientContextMapState.OPENING
+			});
+
+			client.map = mapObj;
+
+			onCleanup(() => {
+				client.map = undefined;
+				client.unsubscribeFromMap(mapSlug).catch(() => undefined);
+			});
+
+			try {
+				await client.subscribeToMap(mapSlug);
+				mapObj.state = ClientContextMapState.OPEN;
+			} catch(err: any) {
+				if (context.settings.interactive && isMapNotFoundError(err)) {
+					mapObj.state = ClientContextMapState.CREATE;
+				} else {
+					Object.assign(mapObj, {
+						state: ClientContextMapState.ERROR,
+						error: err
+					});
+				}
+			}
 		}
-
-		connectingClient.value = undefined;
-		client.value?.disconnect();
-		client.value = newClient;
 	}, { immediate: true });
 
-	onBeforeUnmount(() => {
-		client.value?.disconnect();
-	});
+	watch(() => client.value.map ? client.value.maps[client.value.map.mapSlug]?.mapData : undefined, (mapData, oldMapData) => {
+		if (mapData) {
+			// Update map name and set mapId on legacy bookmarks that don't have it set yet
+			for (const bookmark of storage.bookmarks) {
+				if (bookmark.mapSlug === mapData.readId || ("writeId" in mapData && bookmark.mapSlug === mapData.writeId) || ("adminId" in mapData && bookmark.mapSlug === mapData.adminId)) {
+					bookmark.mapId = mapData.id;
+					bookmark.name = mapData.name;
+				}
+			}
+		}
+
+		if (mapData && oldMapData && oldMapData.id === mapData.id) {
+			// If map slug was changed, update it in bookmarks
+			for (const bookmark of storage.bookmarks) {
+				if (bookmark.mapSlug === oldMapData.readId) {
+					bookmark.mapSlug = mapData.readId;
+				} else if ("writeId" in oldMapData && bookmark.mapSlug === oldMapData.writeId && "writeId" in mapData) {
+					bookmark.mapSlug = mapData.writeId;
+				} else if ("adminId" in oldMapData && bookmark.mapSlug === oldMapData.adminId && "adminId" in mapData) {
+					bookmark.mapSlug = mapData.adminId;
+				}
+			}
+		}
+	}, { immediate: true });
 
 	context.provideComponent("client", client);
 
 	function handleCreateDialogHide() {
-		if (client.value?.isCreateMap) {
+		// If the dialog was canceled, we are still in CREATE state. Otherwise, we have already created and opened a map.
+		if (client.value.map?.state === ClientContextMapState.CREATE) {
 			client.value.openMap(undefined);
 		}
 	}
@@ -126,61 +145,66 @@
 </script>
 
 <template>
-	<template v-if="connectingClient">
+	<template v-if="client.client.state.type === ClientStateType.INITIAL">
 		<Toast
 			:id="`fm${context.id}-client-connecting`"
-			:title="props.mapId ? i18n.t('client-provider.loading-map-header') : i18n.t('client-provider.connecting-header')"
-			:message="props.mapId ? i18n.t('client-provider.loading-map') : i18n.t('client-provider.connecting')"
+			:title="i18n.t('client-provider.connecting-header')"
+			:message="i18n.t('client-provider.connecting')"
 			spinner
 			noCloseButton
 		/>
 	</template>
-	<template v-else-if="client">
-		<template v-if="client.serverError && !client.isCreateMap">
-			<template v-if="client.disconnected || !props.mapId">
-				<Toast
-					:id="`fm${context.id}-client-error`"
-					:title="i18n.t('client-provider.connection-error')"
-					:message="client.serverError"
-					:noCloseButton="!!props.mapId"
-				/>
-			</template>
-			<template v-else>
-				<Toast
-					:id="`fm${context.id}-client-error`"
-					:title="i18n.t('client-provider.open-map-error')"
-					:message="client.serverError"
-					noCloseButton
-					:actions="context.settings.interactive ? [closeMapAction] : []"
-				/>
-			</template>
-		</template>
-		<template v-else-if="client.disconnected">
-			<Toast
-				:id="`fm${context.id}-client-disconnected`"
-				variant="danger"
-				:title="i18n.t('client-provider.disconnected-header')"
-				:message="i18n.t('client-provider.disconnected')"
-				no-close-button visible
-				spinner
-			/>
-		</template>
-		<template v-else-if="client.deleted">
-			<Toast
-				:id="`fm${context.id}-client-deleted`"
-				variant="danger"
-				:title="i18n.t('client-provider.map-deleted-header')"
-				:message="i18n.t('client-provider.map-deleted')"
-				noCloseButton
-				:actions="context.settings.interactive ? [closeMapAction] : []"
-			/>
-		</template>
+	<template v-else-if="client.client.state.type === ClientStateType.DISCONNECTED">
+		<Toast
+			:id="`fm${context.id}-client-disconnected`"
+			variant="danger"
+			:title="i18n.t('client-provider.disconnected-header')"
+			:message="i18n.t('client-provider.disconnected')"
+			no-close-button
+			spinner
+		/>
 	</template>
-
-	<MapSettingsDialog
-		v-if="client?.isCreateMap"
-		isCreate
-		:proposedAdminId="client.mapId"
-		@hide="handleCreateDialogHide"
-	></MapSettingsDialog>
+	<template v-else-if="client.client.state.type === ClientStateType.FATAL_ERROR">
+		<Toast
+			:id="`fm${context.id}-client-error`"
+			:title="i18n.t('client-provider.connection-error')"
+			:message="client.client.state.error"
+			:noCloseButton="!!props.mapSlug"
+		/>
+	</template>
+	<template v-else-if="client.map?.state === ClientContextMapState.OPENING">
+		<Toast
+			:id="`fm${context.id}-client-connecting`"
+			:title="i18n.t('client-provider.loading-map-header')"
+			:message="i18n.t('client-provider.loading-map')"
+			spinner
+			noCloseButton
+		/>
+	</template>
+	<template v-else-if="client.map?.state === ClientContextMapState.CREATE">
+		<MapSettingsDialog
+			isCreate
+			:proposedAdminId="client.map.mapSlug"
+			@hide="handleCreateDialogHide"
+		></MapSettingsDialog>
+	</template>
+	<template v-else-if="client.map?.state === ClientContextMapState.DELETED">
+		<Toast
+			:id="`fm${context.id}-client-deleted`"
+			variant="danger"
+			:title="i18n.t('client-provider.map-deleted-header')"
+			:message="i18n.t('client-provider.map-deleted')"
+			noCloseButton
+			:actions="context.settings.interactive ? [closeMapAction] : []"
+		/>
+	</template>
+	<template v-else-if="client.map?.state === ClientContextMapState.ERROR">
+		<Toast
+			:id="`fm${context.id}-client-error`"
+			:title="i18n.t('client-provider.open-map-error')"
+			:message="client.map.error"
+			noCloseButton
+			:actions="context.settings.interactive ? [closeMapAction] : []"
+		/>
+	</template>
 </template>

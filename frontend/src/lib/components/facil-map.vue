@@ -21,21 +21,21 @@
 	const props = defineProps<{
 		baseUrl: string;
 		serverUrl: string;
-		mapId: string | undefined;
+		mapSlug: string | undefined;
 		appName?: string;
 		hideCommercialMapLinks?: boolean;
 		settings?: Partial<FacilMapSettings>;
 	}>();
 
 	const emit = defineEmits<{
-		"update:mapId": [mapId: string | undefined];
+		"update:mapSlug": [mapSlug: string | undefined];
 		"update:mapName": [mapName: string | undefined];
 	}>();
 
-	const mapId = computed({
-		get: () => props.mapId,
-		set: (mapId) => {
-			emit("update:mapId", mapId);
+	const mapSlug = computed({
+		get: () => props.mapSlug,
+		set: (mapSlug) => {
+			emit("update:mapSlug", mapSlug);
 		}
 	});
 
@@ -43,9 +43,9 @@
 	const context = toRef(() => contextRef.value?.context);
 	const client = toRef(() => context.value?.components.client);
 
-	watch(() => client.value?.mapId, () => {
-		if (client.value && client.value.mapId !== props.mapId) {
-			emit("update:mapId", client.value.mapId);
+	watch(() => client.value?.mapSlug, () => {
+		if (client.value && client.value.mapSlug !== props.mapSlug) {
+			emit("update:mapSlug", client.value.mapSlug);
 		}
 	});
 
@@ -73,7 +73,7 @@
 			:settings="props.settings"
 			ref="contextRef"
 		>
-			<ClientProvider v-model:mapId="mapId" :serverUrl="serverUrl"></ClientProvider>
+			<ClientProvider v-model:mapSlug="mapSlug" :serverUrl="serverUrl"></ClientProvider>
 
 			<LeafletMap v-if="context?.components.client">
 				<Toolbox v-if="context.settings.toolbox" :interactive="context.settings.interactive"></Toolbox>

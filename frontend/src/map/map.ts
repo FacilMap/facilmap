@@ -28,7 +28,7 @@ const queryParams = decodeQueryString(location.search);
 const toBoolean = (val: string, def: boolean) => (val == null ? def : val != "0" && val != "false" && val != "no");
 
 const baseUrl = location.protocol + "//" + location.host + location.pathname.replace(/[^/]*$/, "");
-const initialMapId = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
+const initialMapSlug = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
 
 registerDereferrerHandler(baseUrl);
 
@@ -44,17 +44,17 @@ if(!location.hash || location.hash == "#") {
 		const query = encodeQueryString(queryParams);
 		const hash = encodeQueryString(hashParams);
 
-		history.replaceState(null, "", baseUrl + encodeURIComponent(initialMapId || "") + (query ? "?" + query : "") + "#" + hash);
+		history.replaceState(null, "", baseUrl + encodeURIComponent(initialMapSlug || "") + (query ? "?" + query : "") + "#" + hash);
 	}
 }
 
 const Root = defineComponent({
 	setup() {
-		const mapId = ref(initialMapId);
+		const mapSlug = ref(initialMapSlug);
 		const mapName = ref<string | undefined>(undefined);
 
-		watch(mapId, () => {
-			history.replaceState(null, "", baseUrl + (mapId.value ? encodeURIComponent(mapId.value) : "") + location.search + location.hash);
+		watch(mapSlug, () => {
+			history.replaceState(null, "", baseUrl + (mapSlug.value ? encodeURIComponent(mapSlug.value) : "") + location.search + location.hash);
 		});
 
 		const pageTitle = computed(() => mapName.value != null ? `${normalizeMapName(mapName.value)} – ${config.appName}` : config.appName);
@@ -68,7 +68,7 @@ const Root = defineComponent({
 		return () => h(FacilMap, {
 			baseUrl,
 			serverUrl: baseUrl,
-			mapId: mapId.value,
+			mapSlug: mapSlug.value,
 			appName: config.appName,
 			hideCommercialMapLinks: config.hideCommercialMapLinks,
 			settings: {
@@ -85,7 +85,7 @@ const Root = defineComponent({
 				routing: config.supportsRoutes,
 				advancedRouting: config.supportsAdvancedRoutes
 			},
-			"onUpdate:mapId": (v) => mapId.value = v,
+			"onUpdate:mapSlug": (v) => mapSlug.value = v,
 			"onUpdate:mapName": (v) => mapName.value = v
 		});
 	}

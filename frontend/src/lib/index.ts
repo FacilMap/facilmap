@@ -53,7 +53,7 @@ export { default as MultipleInfoTab } from "./components/multiple-info/multiple-
 export { default as MultipleInfo } from "./components/multiple-info/multiple-info.vue";
 export { default as OverpassFormTab } from "./components/overpass-form/overpass-form-tab.vue";
 export { default as OverpassForm } from "./components/overpass-form/overpass-form.vue";
-export { default as MapIdEdit } from "./components/map-settings-dialog/map-id-edit.vue";
+export { default as MapSlugEdit } from "./components/map-settings-dialog/map-slug-edit.vue";
 export { default as MapSettingsDialog } from "./components/map-settings-dialog/map-settings-dialog.vue";
 export { default as RouteFormTab } from "./components/route-form/route-form-tab.vue";
 export { default as RouteForm } from "./components/route-form/route-form.vue";

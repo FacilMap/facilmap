@@ -1,12 +1,12 @@
 import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIterables, flatMapAsyncIterable } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
-import type { Marker, MarkerFeature, MapId, TrackPoint, Line, InterfaceToType, LineFeature, ReplaceProperties } from "facilmap-types";
+import type { Marker, MarkerFeature, TrackPoint, Line, InterfaceToType, LineFeature, ReplaceProperties, ID } from "facilmap-types";
 import Database from "../database/database.js";
 import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
 import { getI18n } from "../i18n.js";
-import { JsonSerializer, JsonStringifier, arrayStream, type ArrayStream } from "json-stream-es";
+import { JsonStringifier, arrayStream, serializeJsonValue, type ArrayStream } from "json-stream-es";
 
-export function exportGeoJson(database: Database, mapId: MapId, filter?: string): ReadableStream<string> {
+export function exportGeoJson(database: Database, mapId: ID, filter?: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const mapData = await database.maps.getMapData(mapId);
 
@@ -17,7 +17,7 @@ export function exportGeoJson(database: Database, mapId: MapId, filter?: string)
 
 		const types = keyBy(await iterableToArray(database.types.getTypes(mapId)), "id");
 
-		return new JsonSerializer({
+		return serializeJsonValue({
 			type: "FeatureCollection",
 			...(mapData.defaultView ? {
 				bbox: [mapData.defaultView.left, mapData.defaultView.bottom, mapData.defaultView.right, mapData.defaultView.top]

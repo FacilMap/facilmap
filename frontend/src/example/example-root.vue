@@ -4,9 +4,9 @@
 	import { ref } from "vue";
 
 	const serverUrl = "http://localhost:40829/";
-	const mapId1 = ref("test");
+	const mapSlug1 = ref("test");
 	const mapName1 = ref<string>();
-	const mapId2 = ref("test");
+	const mapSlug2 = ref("test");
 	const mapName2 = ref<string>();
 
 	const map1Ref = ref<InstanceType<typeof FacilMap>>();
@@ -17,12 +17,12 @@
 	<FacilMap
 		:baseUrl="serverUrl"
 		:serverUrl="serverUrl"
-		v-model:mapId="mapId1"
+		v-model:mapSlug="mapSlug1"
 		@update:mapName="mapName1 = $event"
 		ref="map1Ref"
 	>
 		<template #before>
-			<div>{{mapId1}} | {{mapName1}}</div>
+			<div>{{mapSlug1}} | {{mapName1}}</div>
 			<div>
 				#{{map1Ref?.context?.components.map?.hash}}
 			</div>
@@ -32,12 +32,12 @@
 	<FacilMap
 		:baseUrl="serverUrl"
 		:serverUrl="serverUrl"
-		v-model:mapId="mapId2"
+		v-model:mapSlug="mapSlug2"
 		@update:mapName="mapName2 = $event"
 		ref="map2Ref"
 	>
 		<template #before>
-			<div>{{mapId2}} | {{mapName2}}</div>
+			<div>{{mapSlug2}} | {{mapName2}}</div>
 			<div>
 				#{{map2Ref?.context?.components.map?.hash}}
 			</div>

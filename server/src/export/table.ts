@@ -1,4 +1,4 @@
-import type { ID, MapId } from "facilmap-types";
+import type { ID } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
 import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
@@ -20,7 +20,7 @@ export type TableParams = {
 
 export function createSingleTable(
 	database: Database,
-	mapId: MapId,
+	mapId: ID,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = [],
@@ -91,7 +91,7 @@ export function createSingleTable(
 	})());
 }
 
-export function createTable(database: Database, mapId: MapId, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
+export function createTable(database: Database, mapId: ID, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const [mapData, types] = await Promise.all([
 			database.maps.getMapData(mapId),
@@ -99,7 +99,7 @@ export function createTable(database: Database, mapId: MapId, filter: string | u
 		]);
 
 		if (!mapData) {
-			throw new Error(getI18n().t("map-read-not-found-error", { mapId }));
+			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 		}
 
 		return renderTable({

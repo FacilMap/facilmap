@@ -1,10 +1,10 @@
-import type { DeepReadonly, ID, Line, LineTemplate, MapSlug, Point, Stroke, Type, Width } from "facilmap-types";
+import type { DeepReadonly, ID, Line, LineTemplate, MapSlug, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
 import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type PolylineOptions, type LatLngBounds } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
 import { numberEntries, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
-import type { ReactiveObjectSubscription, SocketClientStorage } from "facilmap-client";
+import { isReactiveObjectUpdate, type ReactiveObjectUpdate, type SocketClientStorage } from "facilmap-client";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
 	if (stroke === "dashed") {
@@ -20,7 +20,7 @@ interface LinesLayerOptions extends LayerOptions {
 export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
-	protected storage: SocketClientStorage;
+	protected clientStorage: SocketClientStorage;
 	protected mapSlug: MapSlug;
 	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	protected highlightedLinesIds = new Set<ID>();
@@ -29,16 +29,16 @@ export default class LinesLayer extends FeatureGroup {
 	protected filterResults = new Map<ID, boolean>();
 	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
 
-	constructor(storage: SocketClientStorage, mapSlug: MapSlug, options?: LinesLayerOptions) {
+	constructor(clientStorage: SocketClientStorage, mapSlug: MapSlug, options?: LinesLayerOptions) {
 		super([], options);
 		this.mapSlug = mapSlug;
-		this.storage = storage;
+		this.clientStorage = clientStorage;
 	}
 
 	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
 
-		this.unsubscribeStorageUpdate = this.storage.reactiveObjectProvider.subscribe(this.handleStorageUpdate);
+		this.unsubscribeStorageUpdate = this.clientStorage.reactiveObjectProvider.subscribe((update) => this.handleStorageUpdate(update));
 		// this.storage.on("line", this.handleLine);
 		// this.storage.on("linePoints", this.handleLinePoints);
 		// this.storage.on("deleteLine", this.handleDeleteLine);
@@ -51,7 +51,7 @@ export default class LinesLayer extends FeatureGroup {
 			this.lastMapBounds = this._map.getBounds();
 		}
 
-		for (const line of Object.values(this.storage.maps[this.mapSlug]?.lines ?? {})) {
+		for (const line of Object.values(this.clientStorage.maps[this.mapSlug]?.lines ?? {})) {
 			this.handleLine(line);
 		}
 
@@ -76,31 +76,37 @@ export default class LinesLayer extends FeatureGroup {
 	}
 
 	protected recalculateFilter(line: DeepReadonly<Line>): void {
-		this.filterResults.set(line.id, this._map.fmFilterFunc(line, this.storage.maps[this.mapSlug]?.types[line.typeId]));
+		this.filterResults.set(line.id, this._map.fmFilterFunc(line, this.clientStorage.maps[this.mapSlug]?.types[line.typeId]));
 	}
 
 	protected shouldShowLine(line: DeepReadonly<Line>): boolean {
 		return !this.hiddenLinesIds.has(line.id) && !!this.filterResults.get(line.id);
 	}
 
-	protected handleStorageUpdate: ReactiveObjectSubscription = (action, object, key, value?) => {
-		if (action === "set" && object === this.storage.maps[this.mapSlug]?.lines) {
-			this.handleLine(value);
-		} else if (action === "set" && object === this.storage.maps[this.mapSlug]?.types) {
-			this.handleType(value);
-		} else if (action === "delete") {
-			this.handleDeleteLine(Number(key));
+	protected handleStorageUpdate(update: ReactiveObjectUpdate): void {
+		if (!this.clientStorage.maps[this.mapSlug]) {
+			return;
 		}
-	};
 
-	protected handleLine = (line: DeepReadonly<Line>): void => {
+		if (isReactiveObjectUpdate(update, this.clientStorage.maps[this.mapSlug].lines)) {
+			if (update.action === "set") {
+				this.handleLine(update.value);
+			} else if (update.action === "delete") {
+				this.handleDeleteLine(Number(update.key));
+			}
+		} else if (isReactiveObjectUpdate(update, this.clientStorage.maps[this.mapSlug].types) && update.action === "set") {
+			this.handleType(update.value);
+		}
+	}
+
+	protected handleLine(line: DeepReadonly<Line>): void {
 		this.recalculateFilter(line);
 
 		if(this.shouldShowLine(line))
 			this._addLine(line);
 		else
-			this._deleteLine(line.id);
-	};
+			this._deleteLine(line);
+	}
 
 	// protected handleLinePoints = (event: LinePointsEvent): void => {
 	// 	const line = this.storage.lines[event.id];
@@ -108,18 +114,18 @@ export default class LinesLayer extends FeatureGroup {
 	// 		this._addLine(line);
 	// };
 
-	protected handleDeleteLine = (lineId: ID): void => {
-		this._deleteLine(lineId);
+	protected handleDeleteLine(lineId: ID): void {
+		this._deleteLine({ id: lineId });
 		this.filterResults.delete(lineId);
-	};
+	}
 
-	protected handleType = (type: DeepReadonly<Type>): void => {
-		for (const line of Object.values(this.storage.maps[this.mapSlug]?.lines ?? {})) {
+	protected handleType(type: DeepReadonly<Type>): void {
+		for (const line of Object.values(this.clientStorage.maps[this.mapSlug]?.lines ?? {})) {
 			if (line.typeId === type.id) {
 				this.recalculateFilter(line);
 			}
 		}
-	};
+	}
 
 	protected handleMoveEnd = (): void => {
 		// Rerender all lines to recall disconnectSegmentsOutsideViewport()
@@ -127,7 +133,7 @@ export default class LinesLayer extends FeatureGroup {
 		void Promise.resolve().then(() => {
 			const lastMapBounds = this.lastMapBounds;
 			const mapBounds = this.lastMapBounds = this._map.getBounds();
-			for(const line of Object.values(this.storage.maps[this.mapSlug]?.lines ?? {})) {
+			for(const line of Object.values(this.clientStorage.maps[this.mapSlug]?.lines ?? {})) {
 				const lineBounds = fmToLeafletBbox(line);
 				if (
 					(
@@ -147,11 +153,11 @@ export default class LinesLayer extends FeatureGroup {
 	};
 
 	protected handleFilter = (): void => {
-		for(const [lineId, line] of numberEntries(this.storage.maps[this.mapSlug]?.lines ?? {})) {
+		for(const [lineId, line] of numberEntries(this.clientStorage.maps[this.mapSlug]?.lines ?? {})) {
 			this.recalculateFilter(line);
 			const show = this.shouldShowLine(line);
 			if(this.linesById[lineId] && !show)
-				this._deleteLine(line.id);
+				this._deleteLine(line);
 			else if(!this.linesById[lineId] && show)
 				this._addLine(line);
 		}
@@ -159,14 +165,14 @@ export default class LinesLayer extends FeatureGroup {
 
 	highlightLine(lineId: ID): void {
 		this.highlightedLinesIds.add(lineId);
-		const line = this.storage.maps[this.mapSlug]?.lines[lineId];
+		const line = this.clientStorage.maps[this.mapSlug]?.lines[lineId];
 		if (this._map && line)
 			this.handleLine(line);
 	}
 
 	unhighlightLine(lineId: ID): void {
 		this.highlightedLinesIds.delete(lineId);
-		const line = this.storage.maps[this.mapSlug]?.lines[lineId];
+		const line = this.clientStorage.maps[this.mapSlug]?.lines[lineId];
 		if (this._map && line)
 			this.handleLine(line);
 	}
@@ -185,12 +191,12 @@ export default class LinesLayer extends FeatureGroup {
 
 	hideLine(lineId: ID): void {
 		this.hiddenLinesIds.add(lineId);
-		this._deleteLine(lineId);
+		this._deleteLine({ id: lineId });
 	}
 
 	unhideLine(lineId: ID): void {
 		this.hiddenLinesIds.delete(lineId);
-		const line = this.storage.maps[this.mapSlug]?.lines[lineId];
+		const line = this.clientStorage.maps[this.mapSlug]?.lines[lineId];
 		if (line) {
 			this.handleLine(line);
 		}
@@ -209,7 +215,7 @@ export default class LinesLayer extends FeatureGroup {
 		return new Promise<Point[] | undefined>((resolve) => {
 			const line: Line & { trackPoints: BasicTrackPoints } = {
 				id: -1,
-				mapId: "",
+				mapId: -1,
 				top: 0,
 				right: 0,
 				bottom: 0,
@@ -278,7 +284,7 @@ export default class LinesLayer extends FeatureGroup {
 					handler.cancel();
 				document.removeEventListener("keydown", handleKeyDown);
 
-				this._deleteLine(line.id);
+				this._deleteLine(line);
 
 				delete this._endDrawLine;
 
@@ -303,7 +309,7 @@ export default class LinesLayer extends FeatureGroup {
 		const splitLatLngs = line.mode ? disconnectSegmentsOutsideViewport(trackPoints, this._map.getBounds()) : [trackPoints];
 
 		if(splitLatLngs.length == 0) {
-			this._deleteLine(line.id);
+			this._deleteLine(line);
 			return;
 		}
 
@@ -314,7 +320,7 @@ export default class LinesLayer extends FeatureGroup {
 				this.linesById[line.id]
 					.bindTooltip("", { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 					.on("tooltipopen", () => {
-						this.linesById[line.id].setTooltipContent(quoteHtml(this.storage.maps[this.mapSlug]?.lines[line.id].name ?? ""));
+						this.linesById[line.id].setTooltipContent(quoteHtml(this.clientStorage.maps[this.mapSlug]?.lines[line.id].name ?? ""));
 					});
 			}
 		}
@@ -358,12 +364,12 @@ export default class LinesLayer extends FeatureGroup {
 			this.addLayer(this.linesById[line.id]);
 	}
 
-	protected _deleteLine(lineId: ID): void {
-		if(!this.linesById[lineId])
+	protected _deleteLine(line: ObjectWithId): void {
+		if(!this.linesById[line.id])
 			return;
 
-		this.removeLayer(this.linesById[lineId]);
-		delete this.linesById[lineId];
+		this.removeLayer(this.linesById[line.id]);
+		delete this.linesById[line.id];
 	}
 
 }

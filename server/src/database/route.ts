@@ -1,7 +1,7 @@
 import { generateRandomId } from "../utils/utils.js";
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
-import type { BboxWithZoom, ID, Latitude, Longitude, MapId, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, Longitude, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
@@ -133,7 +133,7 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async lineToRoute(routeId: string | undefined, mapId: MapId, lineId: ID): Promise<Route | undefined> {
+	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<Route | undefined> {
 		const clear = !!routeId;
 
 		if (!routeId)

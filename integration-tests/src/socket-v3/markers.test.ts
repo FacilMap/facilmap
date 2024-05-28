@@ -11,8 +11,8 @@ test("Create marker (using default values)", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);
@@ -108,8 +108,8 @@ test("Edit marker", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -184,8 +184,8 @@ test("Delete marker", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
-		const client3 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
+		const client3 = await openClient(mapData.readId);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -232,7 +232,7 @@ test("Get marker", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -266,7 +266,7 @@ test("Find marker", async () => {
 	const client1 = await openClient();
 
 	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id);
+		const client2 = await openClient(mapData.readId);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 

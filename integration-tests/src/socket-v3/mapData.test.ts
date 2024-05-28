@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMap, generateTestMapId, getFacilMapUrl, getTemporaryMapData, openClient, openClientStorage } from "../utils";
+import { createTemporaryMap, generateTestMapSlug, getFacilMapUrl, getTemporaryMapData, openClient, openClientStorage } from "../utils";
 import { Writable, type MapData, CRU, type FindMapsResult, type PagedResults, SocketVersion } from "facilmap-types";
 import { pick } from "lodash-es";
 
@@ -84,18 +84,18 @@ test("Create map (ID already taken)", async () => {
 test("Create map (duplicate IDs)", async () => {
 	const storage = await openClientStorage();
 
-	const newId = generateTestMapId();
+	const newId = generateTestMapSlug();
 
 	await expect(async () => {
 		await createTemporaryMap(storage, {
-			id: newId,
+			readId: newId,
 			writeId: newId
 		});
 	}).rejects.toThrowError("have to be different");
 
 	await expect(async () => {
 		await createTemporaryMap(storage, {
-			id: newId,
+			readId: newId,
 			adminId: newId
 		});
 	}).rejects.toThrowError("have to be different");
@@ -152,9 +152,9 @@ test("Rename map", async () => {
 
 	await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
 		const update = {
-			id: generateTestMapId(),
-			writeId: generateTestMapId(),
-			adminId: generateTestMapId()
+			readId: generateTestMapSlug(),
+			writeId: generateTestMapSlug(),
+			adminId: generateTestMapSlug()
 		} satisfies MapData<CRU.UPDATE>;
 
 		const updatedMapData = await storage.client.updateMap(createMapData.adminId, update);
@@ -187,19 +187,19 @@ test("Rename map (ID already taken)", async () => {
 		await createTemporaryMap(storage2, {}, async (createMapData2) => {
 			await expect(async () => {
 				await storage2.client.updateMap(createMapData1.adminId, {
-					id: createMapData1.id
+					readId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
 				await storage2.client.updateMap(createMapData1.adminId, {
-					writeId: createMapData1.id
+					writeId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
 				await storage2.client.updateMap(createMapData1.adminId, {
-					adminId: createMapData1.id
+					adminId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
 		});
@@ -210,18 +210,18 @@ test("Rename map (duplicate IDs)", async () => {
 	const storage = await openClientStorage();
 
 	await createTemporaryMap(storage, {}, async (createMapData) => {
-		const newId = generateTestMapId();
+		const newId = generateTestMapSlug();
 
 		await expect(async () => {
 			await storage.client.updateMap(createMapData.adminId, {
-				id: newId,
+				readId: newId,
 				writeId: newId
 			});
 		}).rejects.toThrowError("cannot be the same");
 
 		await expect(async () => {
 			await storage.client.updateMap(createMapData.adminId, {
-				id: newId,
+				readId: newId,
 				adminId: newId
 			});
 		}).rejects.toThrowError("cannot be the same");
@@ -294,7 +294,7 @@ test("Open existing map", async () => {
 });
 
 test("Open non-existing map", async () => {
-	const id = generateTestMapId();
+	const id = generateTestMapSlug();
 
 	const client1 = new Client(getFacilMapUrl(), id, { reconnection: false });
 	await expect(new Promise<any>((resolve, reject) => {
@@ -312,7 +312,7 @@ test("Open non-existing map", async () => {
 });
 
 test("Find maps", async () => {
-	const uniqueId = generateTestMapId();
+	const uniqueId = generateTestMapSlug();
 
 	const storage = await openClientStorage();
 	await createTemporaryMap(storage, {
@@ -320,7 +320,7 @@ test("Find maps", async () => {
 		searchEngines: true
 	}, async (createMapData) => {
 		const expectedFound: PagedResults<FindMapsResult> = {
-			results: [{ id: createMapData.id, name: `Test ${uniqueId} map`, description: "" }],
+			results: [{ id: createMapData.id, readId: createMapData.readId, name: `Test ${uniqueId} map`, description: "" }],
 			totalLength: 1
 		};
 

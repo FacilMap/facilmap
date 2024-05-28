@@ -11,18 +11,10 @@ export enum Writable {
 export const writableValidator = z.nativeEnum(Writable);
 
 export const mapDataValidator = cruValidator({
-	id: optionalUpdate(mapSlugValidator),
-	writeId: {
-		read: mapSlugValidator,
-		create: mapSlugValidator,
-		update: mapSlugValidator.optional()
-	},
-	adminId: {
-		read: mapSlugValidator,
-		create: mapSlugValidator,
-		update: mapSlugValidator.optional()
-	},
-
+	id: onlyRead(idValidator),
+	readId: optionalUpdate(mapSlugValidator),
+	writeId: optionalUpdate(mapSlugValidator),
+	adminId: optionalUpdate(mapSlugValidator),
 	name: optionalCreate(z.string().max(100), ""),
 	searchEngines: optionalCreate(z.boolean(), false),
 	description: optionalCreate(z.string(), ""),

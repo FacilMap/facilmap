@@ -1,4 +1,4 @@
-import type SocketClient from "facilmap-client";
+import { SocketClientStorage } from "facilmap-client";
 import { Map, type Polyline } from "leaflet";
 import DraggableLines, { type DraggableLinesHandlerOptions } from "leaflet-draggable-lines";
 
@@ -8,9 +8,9 @@ interface RouteDragHandlerOptions extends DraggableLinesHandlerOptions {
 export default class RouteDragHandler extends DraggableLines {
 
 	declare realOptions: RouteDragHandlerOptions;
-	client: SocketClient;
+	clientStorage: SocketClientStorage;
 
-	constructor(map: Map, client: SocketClient, options?: RouteDragHandlerOptions) {
+	constructor(map: Map, clientStorage: SocketClientStorage, options?: RouteDragHandlerOptions) {
 		super(map, {
 			enableForLayer: false,
 			dragMarkerOptions: () => ({ pane: "fm-raised-marker" }),
@@ -18,18 +18,19 @@ export default class RouteDragHandler extends DraggableLines {
 			plusTempMarkerOptions: () => ({ pane: "fm-raised-marker" }),
 			...options
 		});
-		this.client = client;
+		this.clientStorage = clientStorage;
 
 		this.on("dragend remove insert", this.handleDrag);
 	}
 
 	handleDrag = (e: any): void => {
-		const route = e.layer.routeId ? this.client.routes[e.layer.routeId] : this.client.route;
+		const routeKey: string = e.layer.routeKey;
+		const route = this.clientStorage.routes[routeKey];
 		if (route) {
 			const routePoints = (e.layer as Polyline).getDraggableLinesRoutePoints();
 
 			if (routePoints) {
-				void this.client.setRoute({
+				void this.clientStorage.subscribeToRoute(routeKey, {
 					...route,
 					routePoints: routePoints.map((p) => ({ lat: p.lat, lon: p.lng }))
 				});

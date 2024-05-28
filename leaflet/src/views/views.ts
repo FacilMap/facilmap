@@ -1,4 +1,4 @@
-import type { CRU, View } from "facilmap-types";
+import type { CRU, DeepReadonly, View } from "facilmap-types";
 import { fmToLeafletBbox, leafletToFmBbox, pointsEqual } from "../utils/leaflet";
 import { Map } from "leaflet";
 import { getVisibleLayers, setVisibleLayers } from "../layers";
@@ -26,15 +26,15 @@ export function getCurrentView(map: Map, { includeFilter = false, overpassLayer 
 	return ret;
 }
 
-const DEFAULT_VIEW: UnsavedView = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
+const DEFAULT_VIEW: DeepReadonly<UnsavedView> = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
 
-export function displayView(map: Map, view?: UnsavedView | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
+export function displayView(map: Map, view?: DeepReadonly<UnsavedView> | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
 	if (view == null)
 		view = DEFAULT_VIEW;
 
 	setVisibleLayers(map, {
 		baseLayer: view.baseLayer,
-		overlays: view.layers
+		overlays: [...view.layers]
 	});
 
 	if (overpassLayer)

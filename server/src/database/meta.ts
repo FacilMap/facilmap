@@ -19,7 +19,24 @@ export interface MetaProperties {
 	viewsIdxMigrationCompleted: "1";
 	fieldIconsMigrationCompleted: "1";
 	historyPadMigrationCompleted: "1";
+	mapIdMigrationCompleted: "1" | "2" | "3";
 }
+
+/** In a newly created database, the meta properties are set to this. */
+const INITIAL_META: { [K in keyof MetaProperties]: MetaProperties[K] } = {
+	dropdownKeysMigrated: "1",
+	hasElevation: "2",
+	hasLegendOption: "1",
+	hasBboxes: "1",
+	untitledMigrationCompleted: "1",
+	fieldsNullMigrationCompleted: "1",
+	extraInfoNullMigrationCompleted: "1",
+	typesIdxMigrationCompleted: "1",
+	viewsIdxMigrationCompleted: "1",
+	fieldIconsMigrationCompleted: "1",
+	historyPadMigrationCompleted: "1",
+	mapIdMigrationCompleted: "3"
+};
 
 export default class DatabaseMeta {
 
@@ -46,6 +63,11 @@ export default class DatabaseMeta {
 
 	async setMeta<K extends keyof MetaProperties>(key: K, value: MetaProperties[K]): Promise<void> {
 		await this.MetaModel.upsert({key, value});
+	}
+
+	/** Initializes the contents of the Meta table for a newly created database. */
+	async initializeMeta(): Promise<void> {
+		await this.MetaModel.bulkCreate(Object.entries(INITIAL_META).map(([key, value]) => ({ key, value })));
 	}
 
 }

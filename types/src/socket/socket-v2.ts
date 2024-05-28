@@ -10,8 +10,8 @@ import type { GenericHistoryEntry, HistoryEntry, HistoryEntryObjectTypes } from 
 import { pick } from "lodash-es";
 import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
-import { pagingValidator, type FindMapsResult, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
-import { mapDataValidator, type MapDataWithWritable } from "../mapData.js";
+import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
+import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
 import { routeParametersValidator, type Route } from "../route.js";
 
@@ -20,6 +20,15 @@ import { routeParametersValidator, type Route } from "../route.js";
 //   `Type.fields[].options[].symbol`.
 // - “map” is called “pad” in events, types, methods
 // - "MapNotFoundError" is called "PadNotFoundError"
+
+export const legacyV2MapDataValidator = {
+	read: mapDataValidator.read.omit({ readId: true, id: true }).extend({ id: mapDataValidator.read.shape.readId }),
+	create: mapDataValidator.create.omit({ readId: true, id: true }).extend({ id: mapDataValidator.create.shape.readId }),
+	update: mapDataValidator.update.omit({ readId: true, id: true }).extend({ id: mapDataValidator.update.shape.readId }),
+};
+export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
+export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
+export type LegacyV2MapDataWithWritable = Omit<MapDataWithWritable, "readId" | "id"> & { id: MapData["readId"] };
 
 export const legacyV2MarkerValidator = {
 	read: markerValidator.read.omit({ icon: true, mapId: true }).extend({ symbol: markerValidator.read.shape.icon, padId: markerValidator.read.shape.mapId }),
@@ -158,8 +167,8 @@ export const socketV2RequestValidators = {
 	]),
 	getPad: z.tuple([legacyV2GetMapQueryValidator]),
 	findPads: z.tuple([legacyV2FindMapsQueryValidator]),
-	createPad: z.tuple([mapDataValidator.create]),
-	editPad: z.tuple([mapDataValidator.update]),
+	createPad: z.tuple([legacyV2MapDataValidator.create]),
+	editPad: z.tuple([legacyV2MapDataValidator.update]),
 	deletePad: z.tuple([nullOrUndefinedValidator]),
 	findOnMap: z.tuple([legacyV2FindOnMapQueryValidator]),
 	revertHistoryEntry: z.tuple([objectWithIdValidator]),
@@ -192,10 +201,10 @@ export const socketV2RequestValidators = {
 };
 
 type SocketV2Response = {
-	getPad: FindMapsResult | null;
-	findPads: PagedResults<FindMapsResult>;
+	getPad: LegacyV2FindMapsResult | null;
+	findPads: PagedResults<LegacyV2FindMapsResult>;
 	createPad: MultipleEvents<MapEventsV2>;
-	editPad: MapDataWithWritable;
+	editPad: LegacyV2MapDataWithWritable;
 	deletePad: null;
 	findOnMap: Array<LegacyV2FindOnMapResult>;
 	revertHistoryEntry: MultipleEvents<MapEventsV2>;
@@ -244,7 +253,7 @@ export type MapEventsV2 = {
 	view: [LegacyV2View];
 	deleteView: [ObjectWithId];
 	history: [LegacyV2HistoryEntry];
-	padData: [MapDataWithWritable];
+	padData: [LegacyV2MapDataWithWritable];
 	deletePad: [];
 	routePoints: [TrackPoint[]];
 	routePointsWithId: [{ routeId: string; trackPoints: TrackPoint[] }];

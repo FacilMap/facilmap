@@ -30,11 +30,11 @@
 	});
 
 	const isBookmarked = computed(() => {
-		return !!client.value.mapId && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapId);
+		return !!client.value.mapSlug && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapSlug);
 	});
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.mapId!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
+		storage.bookmarks.push({ id: client.value.mapSlug!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
 	}
 </script>
 
@@ -51,7 +51,7 @@
 		<li v-for="bookmark in storage.bookmarks" :key="bookmark.id">
 			<a
 				class="dropdown-item"
-				:class="{ active: bookmark.id == client.mapId }"
+				:class="{ active: bookmark.id == client.mapSlug }"
 				:href="`${context.baseUrl}${encodeURIComponent(bookmark.id)}#${hash}`"
 				@click.exact.prevent="client.openMap(bookmark.id); emit('hide-sidebar')"
 				draggable="false"
@@ -84,7 +84,7 @@
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="!client.mapId">
+		<li v-if="!client.mapSlug">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -99,7 +99,7 @@
 				href="javascript:"
 				@click="dialog = 'open-map'; emit('hide-sidebar')"
 				draggable="false"
-			>{{client.mapId ? i18n.t("toolbox-collab-maps-dropdown.open-other-map") : i18n.t("toolbox-collab-maps-dropdown.open-map")}}</a>
+			>{{client.mapSlug ? i18n.t("toolbox-collab-maps-dropdown.open-other-map") : i18n.t("toolbox-collab-maps-dropdown.open-map")}}</a>
 		</li>
 
 		<li v-if="client.mapData">

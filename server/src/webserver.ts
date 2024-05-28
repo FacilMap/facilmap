@@ -1,7 +1,7 @@
 import compression from "compression";
 import express, { type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { Writable, stringifiedIdValidator, type MapDataWithWritable, type MapId } from "facilmap-types";
+import { Writable, stringifiedIdValidator, type MapDataWithWritable } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
@@ -14,7 +14,7 @@ import config from "./config";
 import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
-import { getI18n, i18nMiddleware } from "./i18n.js";
+import { i18nMiddleware } from "./i18n.js";
 import { getApiMiddleware } from "./api/api.js";
 import { readableFromWeb, writableToWeb } from "./utils/streams.js";
 
@@ -23,33 +23,37 @@ function getBaseUrl(req: Request): string {
 }
 
 export async function initWebserver(database: Database, port: number, host?: string): Promise<HttpServer> {
-	const mapMiddleware = async (req: Request<{ mapId: string }>, res: Response<string>) => {
+	const mapMiddleware = async (req: Request<{ mapSlug: string }>, res: Response<string>) => {
 		const baseUrl = getBaseUrl(req);
 
 		let params: RenderMapParams;
-		if(req.params?.mapId) {
-			const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
-			if (mapData) {
+		if(req.params?.mapSlug) {
+			try {
+				const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
 				params = {
 					mapData: {
 						searchEngines: mapData.searchEngines,
 						name: normalizeMapName(mapData.name),
 						description: mapData.description
 					},
-					isReadOnly: mapData.id === req.params.mapId,
-					url: `${baseUrl}${encodeURIComponent(req.params.mapId)}`
+					isReadOnly: mapData.readId === req.params.mapSlug,
+					url: `${baseUrl}${encodeURIComponent(req.params.mapSlug)}`
 				};
-			} else {
-				res.status(404);
-				params = {
-					mapData: {
-						searchEngines: false,
-						name: undefined,
-						description: undefined
-					},
-					isReadOnly: true,
-					url: `${baseUrl}${encodeURIComponent(req.params.mapId)}`
-				};
+			} catch (err: any) {
+				if (err.status === 404) {
+					res.status(404);
+					params = {
+						mapData: {
+							searchEngines: false,
+							name: undefined,
+							description: undefined
+						},
+						isReadOnly: true,
+						url: `${baseUrl}${encodeURIComponent(req.params.mapSlug)}`
+					};
+				} else {
+					throw err;
+				}
 			}
 		} else {
 			params = {
@@ -119,7 +123,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		} else {
 			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				mapData = await database.maps.getMapDataBySlug(parsed.mapId, Writable.READ);
+				mapData = await database.maps.getMapDataBySlug(parsed.mapSlug, Writable.READ);
 			} else {
 				res.status(404).send();
 				return;
@@ -136,111 +140,103 @@ export async function initWebserver(database: Database, port: number, host?: str
 	app.use("/_api", getApiMiddleware(database));
 
 	// If no file with this name has been found, we render a map
-	app.get("/:mapId", mapMiddleware);
+	app.get("/:mapSlug", mapMiddleware);
 
-	app.get("/:mapId/gpx", async (req: Request<{ mapId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/gpx", async (req, res) => {
 		const query = z.object({
 			useTracks: z.enum(["0", "1"]).default("0"),
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
-
-		if(!mapData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(`${getSafeFilename(normalizeMapName(mapData.name))}.gpx`);
-		void exportGpx(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
+		void exportGpx(database, mapData.id, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
 	});
 
-	app.get("/:mapId/gpx/zip", async (req: Request<{ mapId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/gpx/zip", async (req, res) => {
 		const query = z.object({
 			useTracks: z.enum(["0", "1"]).default("0"),
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapId, Writable.READ);
-
-		if(!mapData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
 
 		res.set("Content-type", "application/zip");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
-		void exportGpxZip(database, mapData ? mapData.id : req.params.mapId, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
+		void exportGpxZip(database, mapData.id, query.useTracks == "1", query.filter).pipeTo(writableToWeb(res));
 	});
 
-	app.get("/:mapId/table", async (req: Request<{ mapId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/table", async (req, res) => {
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
 		const baseUrl = getBaseUrl(req);
 
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
 		void createTable(
 			database,
-			req.params.mapId,
+			mapData.id,
 			query.filter,
 			query.hide ? query.hide.split(',') : [],
-			`${baseUrl}${encodeURIComponent(req.params.mapId)}/table`
+			`${baseUrl}${encodeURIComponent(req.params.mapSlug)}/table`
 		).pipeTo(writableToWeb(res));
 	});
 
-	app.get("/:mapId/rawTable/:typeId", async (req: Request<{ mapId: MapId; typeId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/rawTable/:typeId", async (req, res) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
 
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
 		void createSingleTable(
 			database,
-			req.params.mapId,
+			mapData.id,
 			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []
 		).pipeTo(writableToWeb(res));
 	});
 
-	app.get("/:mapId/geojson", async (req: Request<{ mapId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/geojson", async (req, res) => {
 		const query = z.object({
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapData(req.params.mapId);
-
-		if(!mapData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
 
 		res.set("Content-type", "application/geo+json");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
 
-		const result = exportGeoJson(database, req.params.mapId, query.filter);
+		const result = exportGeoJson(database, mapData.id, query.filter);
 		readableFromWeb(result).pipe(res);
 	});
 
-	app.get("/:mapId/csv/:typeId", async (req: Request<{ mapId: string; typeId: string }>, res: Response<string>) => {
+	app.get("/:mapSlug/csv/:typeId", async (req, res) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapData(req.params.mapId);
-
-		if(!mapData)
-			throw new Error(getI18n().t("webserver.map-not-found-error", { mapId: req.params.mapId }));
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
 
 		res.set("Content-type", "text/csv");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");
 
 		const result = exportCsv(
 			database,
-			req.params.mapId,
+			mapData.id,
 			typeId,
 			query.filter,
 			query.hide ? query.hide.split(',') : []

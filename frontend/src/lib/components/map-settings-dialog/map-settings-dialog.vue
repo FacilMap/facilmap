@@ -1,13 +1,13 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
 	import { mapDataValidator, type CRU, type MapData } from "facilmap-types";
-	import { generateRandomMapId, mergeObject } from "facilmap-utils";
+	import { generateRandomMapSlug, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import MapIdEdit from "./map-id-edit.vue";
+	import MapSlugEdit from "./map-slug-edit.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
@@ -39,9 +39,9 @@
 		searchEngines: false,
 		description: "",
 		clusterMarkers: false,
-		adminId: (props.proposedAdminId || generateRandomMapId(16)),
-		writeId: generateRandomMapId(14),
-		id: generateRandomMapId(12),
+		adminId: (props.proposedAdminId || generateRandomMapSlug(16)),
+		writeId: generateRandomMapSlug(14),
+		readId: generateRandomMapSlug(12),
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
@@ -114,29 +114,29 @@
 		@hidden="emit('hidden')"
 	>
 		<template v-if="mapData">
-			<MapIdEdit
+			<MapSlugEdit
 				:mapData="mapData"
 				idProp="adminId"
 				v-model="mapData.adminId"
 				:label="i18n.t('map-settings-dialog.admin-link-label')"
 				:description="i18n.t('map-settings-dialog.admin-link-description')"
-			></MapIdEdit>
+			></MapSlugEdit>
 
-			<MapIdEdit
+			<MapSlugEdit
 				:mapData="mapData"
 				idProp="writeId"
 				v-model="mapData.writeId"
 				:label="i18n.t('map-settings-dialog.write-link-label')"
 				:description="i18n.t('map-settings-dialog.write-link-description')"
-			></MapIdEdit>
+			></MapSlugEdit>
 
-			<MapIdEdit
+			<MapSlugEdit
 				:mapData="mapData"
 				idProp="id"
 				v-model="mapData.id"
 				:label="i18n.t('map-settings-dialog.read-link-label')"
 				:description="i18n.t('map-settings-dialog.read-link-description')"
-			></MapIdEdit>
+			></MapSlugEdit>
 
 			<ValidatedField
 				class="row mb-3"

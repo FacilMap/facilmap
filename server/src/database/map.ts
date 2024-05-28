@@ -1,7 +1,7 @@
-import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey } from "sequelize";
-import { type CRU, type FindMapsResult, type MapData, type MapId, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput } from "facilmap-types";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional } from "sequelize";
+import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput, type ID } from "facilmap-types";
 import Database from "./database.js";
-import { createModel } from "./helpers.js";
+import { createModel, getDefaultIdType } from "./helpers.js";
 import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
 import { getMapDataWithWritable, getWritable } from "facilmap-utils";
@@ -9,8 +9,9 @@ import { getMapDataWithWritable, getWritable } from "facilmap-utils";
 type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
 
 export interface MapModel extends Model<InferAttributes<MapModel>, InferCreationAttributes<MapModel>> {
-	id: MapSlug;
+	id: CreationOptional<ID>;
 	name: string;
+	readId: MapSlug;
 	writeId: MapSlug;
 	adminId: MapSlug;
 	searchEngines: boolean;
@@ -39,8 +40,9 @@ export default class DatabaseMaps {
 		this._db = database;
 
 		this.MapModel.init({
-			id : { type: DataTypes.STRING, allowNull: false, primaryKey: true, validate: { is: /^.+$/ } },
+			id: getDefaultIdType(),
 			name: { type: DataTypes.TEXT, allowNull: false },
+			readId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
@@ -65,32 +67,34 @@ export default class DatabaseMaps {
 		return num > 0;
 	}
 
-	async getMapData(mapId: MapId): Promise<MapData | undefined> {
+	async getMapData(mapId: ID): Promise<MapData | undefined> {
 		const obj = await this.MapModel.findOne({ where: { id: mapId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ]});
 		return obj ? fixMapData(obj.toJSON()) : undefined;
 	}
 
-	async getMapDataBySlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable | undefined> {
+	async getMapDataBySlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
 		const obj = await this.MapModel.findOne({ where: { [Op.or]: { id: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
 		const mapData = obj ? fixMapData(obj.toJSON()) : undefined;
 
-		if (mapData) {
-			const writable = getWritable(mapData, mapSlug);
-
-			if (minimumPermissions === Writable.ADMIN && ![Writable.ADMIN].includes(writable))
-				throw Object.assign(new Error(getI18n().t("api.only-in-admin-error")), { status: 403 });
-			else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
-				throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
-
-			return getMapDataWithWritable(mapData, writable);
+		if (!mapData) {
+			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId: mapSlug })), { status: 404 });
 		}
+
+		const writable = getWritable(mapData, mapSlug);
+
+		if (minimumPermissions === Writable.ADMIN && ![Writable.ADMIN].includes(writable))
+			throw Object.assign(new Error(getI18n().t("api.only-in-admin-error")), { status: 403 });
+		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
+			throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
+
+		return getMapDataWithWritable(mapData, writable);
 	}
 
 	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<MapData> {
-		if(data.id == data.writeId || data.id == data.adminId || data.writeId == data.adminId)
+		if(data.readId == data.writeId || data.readId == data.adminId || data.writeId == data.adminId)
 			throw new Error(getI18n().t("database.unique-map-ids-error"));
 
-		await Promise.all([data.id, data.writeId, data.adminId].map(async (id) => {
+		await Promise.all([data.readId, data.writeId, data.adminId].map(async (id) => {
 			if (await this.mapSlugExists(id))
 				throw new Error(getI18n().t("database.map-id-taken-error", { id }));
 		}));
@@ -104,19 +108,19 @@ export default class DatabaseMaps {
 		return fixMapData(createdObj.toJSON());
 	}
 
-	async updateMapData(mapId: MapId, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapData> {
+	async updateMapData(mapId: ID, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapData> {
 		const oldData = await this.getMapData(mapId);
 
 		if(!oldData)
 			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 
-		if(data.id != null && data.id != mapId) {
-			if (await this.mapSlugExists(data.id))
-				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.id }));
+		if(data.readId != null && data.readId != oldData.readId) {
+			if (await this.mapSlugExists(data.readId))
+				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.readId }));
 		}
 
 		if(data.writeId != null && data.writeId != oldData.writeId) {
-			if(data.writeId == (data.id != null ? data.id : mapId))
+			if(data.writeId == (data.readId != null ? data.readId : oldData.readId))
 				throw new Error(getI18n().t("database.unique-map-ids-read-write-error"));
 
 			if (await this.mapSlugExists(data.writeId))
@@ -124,7 +128,7 @@ export default class DatabaseMaps {
 		}
 
 		if(data.adminId != null && data.adminId != oldData.adminId) {
-			if(data.adminId == (data.id != null ? data.id : mapId))
+			if(data.adminId == (data.readId != null ? data.readId : oldData.readId))
 				throw new Error(getI18n().t("database.unique-map-ids-read-admin-error"));
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
 				throw new Error(getI18n().t("database.unique-map-ids-write-admin-error"));
@@ -151,7 +155,7 @@ export default class DatabaseMaps {
 		return newData;
 	}
 
-	async deleteMap(mapId: MapId): Promise<void> {
+	async deleteMap(mapId: ID): Promise<void> {
 		const mapData = await this.getMapData(mapId);
 
 		if (!mapData)
@@ -195,7 +199,7 @@ export default class DatabaseMaps {
 			...paging?.limit != null ? {
 				limit: paging.limit
 			} : {},
-			attributes: ["id", "name", "description"]
+			attributes: ["id", "readId", "name", "description"]
 		});
 
 		return {

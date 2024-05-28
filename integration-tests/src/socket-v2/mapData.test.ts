@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMap, generateTestMapId, getFacilMapUrl, getTemporaryMapData, openClient } from "../utils";
+import { createTemporaryMap, generateTestMapSlug, getFacilMapUrl, getTemporaryMapData, openClient } from "../utils";
 import { Writable, type MapData, CRU, type FindMapsResult, type PagedResults, SocketVersion } from "facilmap-types";
 import { pick } from "lodash-es";
 import Client from "facilmap-client";
@@ -99,7 +99,7 @@ test("Create map (ID already taken)", async () => {
 test("Create map (duplicate IDs)", async () => {
 	const client = await openClient();
 
-	const newId = generateTestMapId();
+	const newId = generateTestMapSlug();
 
 	await expect(async () => {
 		await createTemporaryMap(client, {
@@ -164,9 +164,9 @@ test("Rename map", async () => {
 
 	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
 		const update = {
-			id: generateTestMapId(),
-			writeId: generateTestMapId(),
-			adminId: generateTestMapId()
+			id: generateTestMapSlug(),
+			writeId: generateTestMapSlug(),
+			adminId: generateTestMapSlug()
 		} satisfies MapData<CRU.UPDATE>;
 
 		const updatedMapData = await client.editMap(update);
@@ -221,7 +221,7 @@ test("Rename map (duplicate IDs)", async () => {
 	const client = await openClient();
 
 	await createTemporaryMap(client, {}, async () => {
-		const newId = generateTestMapId();
+		const newId = generateTestMapSlug();
 
 		await expect(async () => {
 			await client.editMap({
@@ -306,7 +306,7 @@ test("Open existing map", async () => {
 });
 
 test("Open non-existing map", async () => {
-	const id = generateTestMapId();
+	const id = generateTestMapSlug();
 
 	const client1 = new Client(getFacilMapUrl(), id, { reconnection: false });
 	await expect(new Promise<any>((resolve, reject) => {
@@ -324,7 +324,7 @@ test("Open non-existing map", async () => {
 });
 
 test("Find maps", async () => {
-	const uniqueId = generateTestMapId();
+	const uniqueId = generateTestMapSlug();
 
 	const client = await openClient();
 	await createTemporaryMap(client, {

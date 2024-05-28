@@ -1,5 +1,5 @@
 import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
-import type { Line, Marker, MapId, ID, Type, Bbox } from "facilmap-types";
+import type { Line, Marker, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import type { MapModel } from "./map.js";
@@ -138,7 +138,7 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _mapObjectExists(type: string, mapId: MapId, id: ID): Promise<boolean> {
+	async _mapObjectExists(type: string, mapId: ID, id: ID): Promise<boolean> {
 		const entry = await this._db._conn.model(type).findOne({
 			where: { mapId, id: id },
 			attributes: ['id']
@@ -146,7 +146,7 @@ export default class DatabaseHelpers {
 		return entry != null;
 	}
 
-	async _getMapObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", mapId: MapId, id: ID, options?: { notFound404?: boolean }): Promise<T> {
+	async _getMapObject<T>(type: "Marker" | "Line" | "Type" | "View" | "History", mapId: ID, id: ID, options?: { notFound404?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		const entry = await this._db._conn.model(type).findOne({
@@ -172,7 +172,7 @@ export default class DatabaseHelpers {
 		return data;
 	}
 
-	async* _getMapObjects<T>(type: string, mapId: MapId, condition?: FindOptions): AsyncIterable<T> {
+	async* _getMapObjects<T>(type: string, mapId: ID, condition?: FindOptions): AsyncIterable<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 
 		if(includeData) {
@@ -196,7 +196,7 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _createMapObject<T>(type: string, mapId: MapId, data: any): Promise<T> {
+	async _createMapObject<T>(type: string, mapId: ID, data: any): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
@@ -218,7 +218,7 @@ export default class DatabaseHelpers {
 		return result;
 	}
 
-	async _updateMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, data: any, options?: { notFound404?: boolean; noHistory?: boolean }): Promise<T> {
+	async _updateMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: ID, objId: ID, data: any, options?: { notFound404?: boolean; noHistory?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = !options?.noHistory && [ "Marker", "Line", "View", "Type" ].includes(type);
 
@@ -246,7 +246,7 @@ export default class DatabaseHelpers {
 		return newObject;
 	}
 
-	async _deleteMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: MapId, objId: ID, options?: { notFound404?: boolean }): Promise<T> {
+	async _deleteMapObject<T>(type: "Marker" | "Line" | "View" | "Type" | "History", mapId: ID, objId: ID, options?: { notFound404?: boolean }): Promise<T> {
 		const includeData = [ "Marker", "Line" ].includes(type);
 		const makeHistory = [ "Marker", "Line", "View", "Type" ].includes(type);
 
@@ -345,7 +345,7 @@ export default class DatabaseHelpers {
 		};
 	}
 
-	async renameObjectDataField(mapId: MapId, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
+	async renameObjectDataField(mapId: ID, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
 		const objectStream = (isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 
 		for await (const object of objectStream) {

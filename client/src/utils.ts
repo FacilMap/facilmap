@@ -27,6 +27,6 @@ export function mapNestedIterable<I extends AsyncIterable<{ type: string; data: 
 	mapper: (obj: Exclude<IterableType<I>, { type: "mapData" }>) => O | Promise<O>
 ): AsyncIterable<IterableType<I> extends { type: "mapData" } ? IterableType<I> : O> {
 	return mapAsyncIterable(iterable, async (obj) => {
-		return obj.type === "mapData" ? obj as any : await mapper(obj.data);
+		return obj.type === "mapData" ? obj as any : await mapper(obj as any);
 	});
 }

@@ -4,12 +4,12 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, type MapId, type SetBboxItem, DEFAULT_PAGING } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, type SetBboxItem, DEFAULT_PAGING, type ID } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { getMapDataWithWritable, getMapSlug, getSafeFilename } from "facilmap-utils";
+import { getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
@@ -20,7 +20,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	api: ApiV3Backend;
 
 	bbox: BboxWithZoom | undefined = undefined;
-	mapSubscriptions: Record<MapId, Array<{ pick: SubscribeToMapPick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	mapSubscriptions: Record<ID, Array<{ pick: SubscribeToMapPick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
 	routeSubscriptions: Record<string, Omit<Route, "trackPoints">> = { };
 
 	unregisterDatabaseHandlers = (): void => undefined;
@@ -98,11 +98,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			getMap: async (mapSlug) => {
-				const mapData = await this.database.maps.getMapDataBySlug(mapSlug, Writable.READ);
-				if (!mapData) {
-					throw new Error(getI18n().t("socket.map-not-exist-error"));
-				}
-				return mapData;
+				return await this.database.maps.getMapDataBySlug(mapSlug, Writable.READ);
 			},
 
 			createMap: async (data, options = {}) => {
@@ -312,7 +308,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			unsubscribeFromMap: async (mapSlug) => {
-				for (const [mapId, subs] of Object.entries(this.mapSubscriptions)) {
+				for (const [mapId, subs] of numberEntries(this.mapSubscriptions)) {
 					const without = subs.filter((s) => s.mapSlug !== mapSlug);
 					if (without.length !== subs.length) {
 						if (without.length === 0) {

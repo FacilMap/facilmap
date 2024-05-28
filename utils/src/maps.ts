@@ -4,12 +4,12 @@ import { getI18n } from "./i18n.js";
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
 
-export function generateRandomMapId(length: number = LENGTH): string {
-	let randomMapId = "";
+export function generateRandomMapSlug(length: number = LENGTH): MapSlug {
+	let randomMapSlug = "";
 	for(let i=0; i<length; i++) {
-		randomMapId += LETTERS[Math.floor(Math.random() * LETTERS.length)];
+		randomMapSlug += LETTERS[Math.floor(Math.random() * LETTERS.length)];
 	}
-	return randomMapId;
+	return randomMapSlug;
 }
 
 export function normalizeMapName(name: string | undefined): string {
@@ -34,10 +34,10 @@ export function getOrderedViews(views: View[] | Record<ID, View>): View[] {
 	return typeArr.sort((a, b) => a.idx - b.idx);
 }
 
-export function getWritable(mapData: MapData, mapSlug: MapSlug): Writable {
-	if (mapData.adminId === mapSlug) {
+export function getWritable(mapData: MapDataWithWritable, mapSlug: MapSlug): Writable {
+	if ("adminId" in mapData && mapData.adminId === mapSlug) {
 		return Writable.ADMIN;
-	} else if (mapData.writeId === mapSlug) {
+	} else if ("writeId" in mapData && mapData.writeId === mapSlug) {
 		return Writable.WRITE;
 	} else {
 		return Writable.READ;
@@ -45,7 +45,7 @@ export function getWritable(mapData: MapData, mapSlug: MapSlug): Writable {
 }
 
 export function getMapSlug(mapData: MapDataWithWritable): MapSlug {
-	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.id;
+	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.readId;
 }
 
 export function getMapDataWithWritable(mapData: MapData, writable: Writable): MapDataWithWritable {

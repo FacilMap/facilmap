@@ -10,7 +10,7 @@ import {
 	type LineWithTrackPoints
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
-import { getReactiveObjectProvider } from "./reactivity";
+import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
 import { streamToIterable } from "json-stream-es";
 import { mapNestedIterable } from "./utils";
 import { EventEmitter } from "./events";
@@ -26,10 +26,10 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	reconnect_error: [Error];
 	reconnect_failed: [];
 
-	serverError: [Error];
+	fatalError: [Error];
 
-	loadStart: [];
-	loadEnd: [];
+	operationStart: [];
+	operationEnd: [];
 
 	emit: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, ...Parameters<SocketApi<SocketVersion.V3, false>[E]>] }[keyof SocketApi<SocketVersion.V3, false>];
 	emitResolve: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, UndefinedToNull<Awaited<ReturnType<SocketApi<SocketVersion.V3, false>[E]>>>] }[keyof SocketApi<SocketVersion.V3, false>];
@@ -40,8 +40,24 @@ export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterfa
 
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
-interface ClientState {
-	disconnected: boolean;
+export enum ClientStateType {
+	/** The client has been set up and is not connected it. Usually this means that it is currently connecting (unless autoConnect was set to false). */
+	INITIAL = "initial",
+	/** The client is connected. */
+	CONNECTED = "connected",
+	/** The socket connection has been lost and is currently trying to reconnect. */
+	DISCONNECTED = "disconnected",
+	/** The socket connection has been lost and has given up trying to reconnect. */
+	FATAL_ERROR = "fatal_error"
+};
+
+export type ClientState = (
+	| { type: ClientStateType.INITIAL | ClientStateType.CONNECTED | ClientStateType.DISCONNECTED }
+	| { type: ClientStateType.FATAL_ERROR; error: Error }
+);
+
+interface ClientData {
+	state: ClientState;
 	server: string;
 	bbox: BboxWithZoom | undefined;
 	mapSubscriptions: Record<MapSlug, {
@@ -49,8 +65,7 @@ interface ClientState {
 		pick?: SubscribeToMapPick[];
 	}>;
 	routeSubscriptions: Record<string, RouteParameters | LineToRouteRequest>;
-	serverError: Error | undefined;
-	loading: number;
+	runningOperations: number;
 }
 
 type StreamHandler = {
@@ -64,25 +79,27 @@ type StreamHandler = {
 type UndefinedToNull<T> = undefined extends T ? Exclude<T, undefined> | null : T;
 
 export class SocketClient extends EventEmitter<ClientEvents> implements SocketApi<SocketVersion.V3, false> {
-	reactiveObjectProvider = getReactiveObjectProvider();
+	reactiveObjectProvider: ReactiveObjectProvider;
+
 	protected socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3, false>>;
-	protected state: ClientState;
+	protected data: ClientData;
 	protected streams: Record<string, StreamHandler> = {};
 
-	constructor(server: string, options?: Partial<ManagerOptions & SocketOptions>) {
+	constructor(server: string, options?: Partial<ManagerOptions & SocketOptions & { reactiveObjectProvider?: ReactiveObjectProvider }>) {
 		super();
 
-		this.state = this.reactiveObjectProvider.create({
-			disconnected: true,
+		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
+
+		this.data = this.reactiveObjectProvider.create({
+			state: { type: ClientStateType.INITIAL },
 			server,
 			bbox: undefined,
 			mapSubscriptions: {},
 			routeSubscriptions: {},
-			serverError: undefined,
-			loading: 0
+			runningOperations: 0
 		});
 
-		const serverUrl = typeof location != "undefined" ? new URL(this.state.server, location.href) : new URL(this.state.server);
+		const serverUrl = typeof location != "undefined" ? new URL(this.data.server, location.href) : new URL(this.data.server);
 		const socket = io(`${serverUrl.origin}/v3`, {
 			forceNew: true,
 			path: serverUrl.pathname.replace(/\/$/, "") + "/socket.io",
@@ -95,11 +112,11 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 		}
 
 		void Promise.resolve().then(() => {
-			this._emit("loadStart");
+			this._emit("operationStart");
 		});
 
 		this.once("connect", () => {
-			this._emit("loadEnd");
+			this._emit("operationEnd");
 		});
 	}
 
@@ -135,9 +152,24 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 	protected _getStream(streamId: StreamId<any>): StreamHandler {
 		if (!this.streams[streamId]) {
 			const stream = new TransformStream();
+			const reader = stream.readable.getReader();
 			const writer = stream.writable.getWriter();
 			this.streams[streamId] = {
-				readable: stream.readable,
+				readable: new ReadableStream({
+					pull: async (controller) => {
+						const { done, value } = await reader.read();
+						if (done) {
+							controller.close();
+							delete this.streams[streamId];
+						} else {
+							controller.enqueue(value);
+						}
+					},
+					cancel: async (reason) => {
+						await reader.cancel(reason);
+						delete this.streams[streamId];
+					}
+				}),
 				handleChunks: (chunks) => {
 					for (const chunk of chunks) {
 						writer.write(chunk).catch(() => undefined);
@@ -145,11 +177,9 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 				},
 				handleDone: () => {
 					writer.close().catch(() => undefined);
-					//delete this.streams[streamId];
 				},
 				handleError: (err) => {
 					writer.abort(err).catch(() => undefined);
-					//delete this.streams[streamId];
 				}
 			};
 		}
@@ -177,8 +207,12 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 		eventName: R,
 		...args: Parameters<SocketApi<SocketVersion.V3, false>[R]>
 	): Promise<StreamToStreamId<ReturnType<SocketApi<SocketVersion.V3, false>[R]>> extends Promise<infer Result> ? UndefinedToNull<Result> : never> {
+		if (this.state.type === ClientStateType.FATAL_ERROR) {
+			throw this.state.error;
+		}
+
 		try {
-			this._emit("loadStart");
+			this._emit("operationStart");
 
 			this._emit("emit", eventName as any, args as any);
 
@@ -197,7 +231,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 				});
 			});
 		} finally {
-			this._emit("loadEnd");
+			this._emit("operationEnd");
 		}
 	}
 
@@ -206,73 +240,79 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 	} {
 		return {
 			mapSlugRename: (slugMap) => {
-				const newSubs: ClientState["mapSubscriptions"] = {};
+				const newSubs: ClientData["mapSubscriptions"] = {};
 				for (const [oldSlug, newSlug] of Object.entries(slugMap)) {
-					if (!this.state.mapSubscriptions[oldSlug]) {
+					if (!this.data.mapSubscriptions[oldSlug]) {
 						// This should never happen
 						console.warn(`Received map slug rename for non-subscribed map ${oldSlug}.`);
 					} else {
-						newSubs[newSlug] = this.state.mapSubscriptions[oldSlug];
-						this.reactiveObjectProvider.delete(this.state.mapSubscriptions, oldSlug);
+						newSubs[newSlug] = this.data.mapSubscriptions[oldSlug];
+						this.reactiveObjectProvider.delete(this.data.mapSubscriptions, oldSlug);
 					}
 				}
 
 				for (const [newSlug, sub] of Object.entries(newSubs)) {
-					if (this.state.mapSubscriptions[newSlug]) {
+					if (this.data.mapSubscriptions[newSlug]) {
 						// This should never happen
 						console.warn(`Map slug was renamed to one that is already subscribed (${newSlug}). Removing subscription to old slug.`);
 					} else {
-						this.reactiveObjectProvider.set(this.state.mapSubscriptions, newSlug, sub);
+						this.reactiveObjectProvider.set(this.data.mapSubscriptions, newSlug, sub);
 					}
 				}
 			},
 
 			deleteMap: (mapSlug) => {
-				if (!this.state.mapSubscriptions[mapSlug]) {
+				if (!this.data.mapSubscriptions[mapSlug]) {
 					// This should never happen
 					console.warn(`deleteMap event was received for unsubscribed map ${mapSlug}.`);
 				} else {
-					this.reactiveObjectProvider.delete(this.state.mapSubscriptions, mapSlug);
+					this.reactiveObjectProvider.delete(this.data.mapSubscriptions, mapSlug);
 				}
 			},
 
 			disconnect: () => {
-				this.reactiveObjectProvider.set(this.state, 'disconnected', true);
+				this.reactiveObjectProvider.set(this.data, 'state', {
+					type: ClientStateType.DISCONNECTED
+				});
 			},
 
 			connect: async () => {
-				this.reactiveObjectProvider.set(this.state, 'disconnected', false); // Otherwise it gets set when mapData arrives
+				this.reactiveObjectProvider.set(this.data, 'state', {
+					type: ClientStateType.CONNECTED
+				});
 
-				if (this.state.bbox) {
-					this.setBbox(this.state.bbox).catch((err) => { console.error("Error updating bbox.", err); });
+				if (this.data.bbox) {
+					this.setBbox(this.data.bbox).catch((err) => { console.error("Error updating bbox.", err); });
 				}
 
-				for (const [mapSlug, sub] of Object.entries(this.state.mapSubscriptions)) {
+				for (const [mapSlug, sub] of Object.entries(this.data.mapSubscriptions)) {
 					await this.subscribeToMap(mapSlug, { history: sub.history }).catch((err) => { console.error("Error subscribing route.", err); });
 				}
 
-				for (const [routeKey, route] of Object.entries(this.state.routeSubscriptions)) {
+				for (const [routeKey, route] of Object.entries(this.data.routeSubscriptions)) {
 					this.subscribeToRoute(routeKey, route).catch((err) => { console.error("Error subscribing route.", err); });
 				}
 			},
 
 			connect_error: (err) => {
 				if (!this.socket.active) { // Fatal error, client will not try to reconnect anymore
-					this.reactiveObjectProvider.set(this.state, 'serverError', err);
-					this._emit("serverError", err);
+					this.reactiveObjectProvider.set(this.data, 'state', {
+						type: ClientStateType.FATAL_ERROR,
+						error: err
+					});
+					this._emit("fatalError", err);
 				}
 			},
 
-			loadStart: () => {
-				this.reactiveObjectProvider.set(this.state, 'loading', this.state.loading + 1);
+			operationStart: () => {
+				this.reactiveObjectProvider.set(this.data, 'runningOperations', this.data.runningOperations + 1);
 			},
 
-			loadEnd: () => {
-				this.reactiveObjectProvider.set(this.state, 'loading', this.state.loading - 1);
+			operationEnd: () => {
+				this.reactiveObjectProvider.set(this.data, 'runningOperations', this.data.runningOperations - 1);
 			},
 
 			streamChunks: (streamId, chunks) => {
-				console.log(streamId, typeof chunks, chunks);
 				this._getStream(streamId).handleChunks(chunks);
 			},
 
@@ -307,7 +347,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 		await this._call("deleteMap", mapSlug);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const result = await this._call("getAllMapObjects", mapSlug, options);
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllMapObjectsItem<Pick>));
 	}
@@ -451,7 +491,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 	}
 
 	async subscribeToMap(mapSlug: MapSlug, options?: { pick?: SubscribeToMapPick[]; history?: boolean }): Promise<AsyncIterable<SubscribeToMapItem>> {
-		this.reactiveObjectProvider.set(this.state.mapSubscriptions, mapSlug, {
+		this.reactiveObjectProvider.set(this.data.mapSubscriptions, mapSlug, {
 			pick: options?.pick,
 			history: options?.history
 		});
@@ -461,17 +501,17 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 	}
 
 	async unsubscribeFromMap(mapSlug: MapSlug): Promise<void> {
-		this.reactiveObjectProvider.delete(this.state.mapSubscriptions, mapSlug);
+		this.reactiveObjectProvider.delete(this.data.mapSubscriptions, mapSlug);
 		await this._call("unsubscribeFromMap", mapSlug);
 	}
 
 	async subscribeToRoute(routeKey: string, params: RouteParameters | LineToRouteRequest): Promise<Omit<Route, "routeId"> | undefined> {
-		this.reactiveObjectProvider.set(this.state.routeSubscriptions, routeKey, params);
+		this.reactiveObjectProvider.set(this.data.routeSubscriptions, routeKey, params);
 		return (await this._call("subscribeToRoute", routeKey, params)) ?? undefined;
 	}
 
 	async unsubscribeFromRoute(routeKey: string): Promise<void> {
-		this.reactiveObjectProvider.delete(this.state.routeSubscriptions, routeKey);
+		this.reactiveObjectProvider.delete(this.data.routeSubscriptions, routeKey);
 		await this._call("unsubscribeFromRoute", routeKey);
 	}
 
@@ -484,10 +524,10 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 	}
 
 	async setBbox(bbox: BboxWithZoom): Promise<AsyncIterable<SetBboxItem>> {
-		this.reactiveObjectProvider.set(this.state, "bbox", bbox);
+		this.reactiveObjectProvider.set(this.data, "bbox", bbox);
 		const result = this._handleIterable(await this._call("setBbox", bbox));
 		return mapNestedIterable(result, (obj) => (
-			{ type: obj.type, data: this._handleIterable<any>(obj.data) } as SetBboxItem
+			{ ...obj, data: this._handleIterable<any>(obj.data) } as SetBboxItem
 		));
 	}
 
@@ -505,31 +545,27 @@ export class SocketClient extends EventEmitter<ClientEvents> implements SocketAp
 		super._emit(eventName, ...fixedData);
 	}
 
-	get disconnected(): boolean {
-		return this.state.disconnected;
+	get state(): ClientState {
+		return this.data.state;
 	}
 
 	get server(): string {
-		return this.state.server;
+		return this.data.server;
 	}
 
 	get bbox(): BboxWithZoom | undefined {
-		return this.state.bbox;
+		return this.data.bbox;
 	}
 
-	get mapSubscriptions(): ClientState["mapSubscriptions"] {
-		return this.state.mapSubscriptions;
+	get mapSubscriptions(): ClientData["mapSubscriptions"] {
+		return this.data.mapSubscriptions;
 	}
 
-	get routeSubscriptions(): ClientState["routeSubscriptions"] {
-		return this.state.routeSubscriptions;
+	get routeSubscriptions(): ClientData["routeSubscriptions"] {
+		return this.data.routeSubscriptions;
 	}
 
-	get serverError(): Error | undefined {
-		return this.state.serverError;
-	}
-
-	get loading(): number {
-		return this.state.loading;
+	get runningOperations(): number {
+		return this.data.runningOperations;
 	}
 }

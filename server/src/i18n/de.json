@@ -1,6 +1,5 @@
 {
     "map-not-found-error": "Karte {{mapId}} konnte nicht gefunden werden.",
-    "map-read-not-found-error": "Karte mit der Lese-ID {{mapId}} konnte nicht gefunden werden.",
     "database": {
         "type-not-found-error": "Typ {{typeId}} existiert nicht.",
         "object-not-found-in-map-error": "Objekt {{id}} vom Typ „{{type}}“ konnte auf der Karte {{mapId}} nicht gefunden werden.",
@@ -53,8 +52,5 @@
         "field-position": "Position",
         "field-distance": "Länge",
         "field-time": "Reisedauer"
-    },
-    "webserver": {
-        "map-not-found-error": "Karte mit der ID {{mapId}} konnte nicht gefunden werden."
     }
 }

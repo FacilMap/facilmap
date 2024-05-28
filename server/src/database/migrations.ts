@@ -1,6 +1,6 @@
 import { generateRandomId, promiseProps } from "../utils/utils.js";
 import { DataTypes, Op, Utils, col, fn } from "sequelize";
-import { cloneDeep, isEqual } from "lodash-es";
+import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database from "./database.js";
 import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
@@ -36,6 +36,7 @@ export default class DatabaseMigrations {
 		await this._viewsIdxMigration();
 		await this._fieldIconsMigration();
 		await this._historyPadMigration();
+		await this._mapIdMigration();
 
 		(async () => {
 			await this._elevationMigration();
@@ -775,6 +776,90 @@ export default class DatabaseMigrations {
 		await queryInterface.changeColumn("History", "type", this._db.history.HistoryModel.getAttributes().type);
 
 		await this._db.meta.setMeta("historyPadMigrationCompleted", "1");
+	}
+
+	/** Rename Map.id to Map.readId and create Map.id */
+	async _mapIdMigration(): Promise<void> {
+		const queryInterface = this._db._conn.getQueryInterface();
+
+		let mapIdMigrationCompleted = await this._db.meta.getMeta("mapIdMigrationCompleted");
+
+		if (mapIdMigrationCompleted == null) {
+			console.log("DB migration: Copy values of Map.id to Map.readId");
+
+			// readId column was added in addColMigrations()
+			await queryInterface.bulkUpdate("Maps", { readId: col("id") }, {});
+
+			// We store this completion separately so that if the migration aborts later while generating new IDs, we don't copy
+			// those new IDs to readId on the next run.
+			await this._db.meta.setMeta("mapIdMigrationCompleted", "1");
+			mapIdMigrationCompleted = "1";
+		}
+
+		if (mapIdMigrationCompleted === "1") {
+			console.log("DB migration: Generate values for Map.id");
+
+			// Copy back readId to id, in case the last ID generation failed (otherwise the ID generation below would crash with duplicate
+			// primary keys).
+			await queryInterface.bulkUpdate("Maps", { id: col("readId") }, {});
+
+			const maps = await this._db.maps.MapModel.findAll({
+				attributes: ["id"]
+			});
+
+			// First generate increasing ID numbers as strings in the existing column
+			for (let i = 0; i < maps.length; i++) {
+				await this._db.maps.MapModel.update({
+					id: `${i + 1}` as any
+				}, {
+					where: {
+						id: maps[i].id
+					}
+				});
+			}
+
+			await this._db.meta.setMeta("mapIdMigrationCompleted", "2");
+			mapIdMigrationCompleted = "2";
+		}
+
+		if (mapIdMigrationCompleted === "2") {
+			// We cannot change the type of Map.id, since there are foreign key constraints.
+			// We need to remove the foreign keys and add them back later
+			console.log("DB migration: Delete mapId foreign keys");
+			for (const tableName of ["Markers", "Lines", "Types", "Views", "History"]) {
+				for (const foreignKey of await queryInterface.getForeignKeyReferencesForTable(tableName) as any[]) {
+					if (foreignKey.columnName === "mapId") {
+						await queryInterface.removeConstraint(tableName, foreignKey.constraintName);
+					}
+				}
+			}
+
+			// Then convert the ID field to an integer. We need to omit the primary key field here, as the field is already the
+			// primary key, and adding the statement again will lead to "ERROR 1068 (42000): Multiple primary key defined".
+			console.log("DB migration: Change Map.id to integer");
+			await queryInterface.changeColumn("Maps", "id", omit(this._db.maps.MapModel.getAttributes().id, ["primaryKey"]));
+
+			console.log("DB migration: Add back mapId foreign keys");
+			for (const tableName of ["Markers", "Lines", "Types", "Views", "History"]) {
+				await queryInterface.changeColumn(tableName, "mapId", { type: DataTypes.INTEGER.UNSIGNED });
+
+				if (!(await queryInterface.getForeignKeyReferencesForTable(tableName) as any[]).some((v) => v.columnName === "mapId")) {
+					await queryInterface.addConstraint(tableName, {
+						fields: ["mapId"],
+						type: "foreign key",
+						references: {
+							table: "Maps",
+							field: "id"
+						},
+						onUpdate: "CASCADE",
+						onDelete: "CASCADE"
+					});
+				}
+			}
+
+			await this._db.meta.setMeta("mapIdMigrationCompleted", "3");
+			mapIdMigrationCompleted = "3";
+		}
 	}
 
 }

@@ -41,7 +41,7 @@
 			<input
 				type="button"
 				value="Open map wqxygV4R506PlBlZ"
-				onclick="client.setMapId('wqxygV4R506PlBlZ').catch(log('setMapId error'))"
+				onclick="clientStorage.subscribeToMap('wqxygV4R506PlBlZ').catch(log('subscribeToMap error'))"
 			/>
 			<a href="http://localhost:40829/wqxygV4R506PlBlZ" target="_blank"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg=="></a>
 
@@ -54,29 +54,29 @@
 			<input
 				type="button"
 				value="Route 1"
-				onclick="client.setRoute({ routePoints: [{ lat: 52.51704, lon: 13.38886 }, { lat: 53.55034, lon: 10.00065 }], mode: 'car' })"
+				onclick="clientStorage.subscribeToRoute('route1', { routePoints: [{ lat: 52.51704, lon: 13.38886 }, { lat: 53.55034, lon: 10.00065 }], mode: 'car' })"
 			/>
 			<input
 				type="button"
 				value="Clear route 1"
-				onclick="client.clearRoute()"
+				onclick="clientStorage.unsubscribeFromRoute('route1')"
 			/>
 
 			<input
 				type="button"
 				value="Route 2"
-				onclick="client.setRoute({ routeId: 'route2', routePoints: [{ lat: 51.34063, lon: 12.37473 }, { lat: 53.07582, lon: 8.80716 }], mode: 'car' })"
+				onclick="clientStorage.subscribeToRoute('route2', { routePoints: [{ lat: 51.34063, lon: 12.37473 }, { lat: 53.07582, lon: 8.80716 }], mode: 'car' })"
 			/>
 			<input
 				type="button"
 				value="Clear route 2"
-				onclick="client.clearRoute({ routeId: 'route2' })"
+				onclick="clientStorage.unsubscribeFromRoute('route2')"
 			/>
 
 			<input
 				type="button"
 				value="Search for &quot;Berlin&quot;"
-				onclick="client.find({ query: 'Berlin' }).then((res) => { searchResultsLayer.setResults(res) }).catch((err) => { console.error(err); })"
+				onclick="client.find('Berlin').then((res) => { searchResultsLayer.setResults(res) }).catch((err) => { console.error(err); })"
 			/>
 			<input
 				type="button"
@@ -118,8 +118,9 @@
 
 		<script type="module">
 			import L from "leaflet";
-			import Client from "facilmap-client";
+			import { SocketClient, SocketClientStorage } from "facilmap-client";
 			import * as FacilMap from "facilmap-leaflet";
+			import { getLineTemplate } from "facilmap-utils";
 
 			window.FacilMap = FacilMap;
 
@@ -128,7 +129,8 @@
 				zoom: 5,
 			});
 
-			window.client = new Client("http://localhost:40829/");
+			window.client = new SocketClient("http://localhost:40829/");
+			window.clientStorage = new SocketClientStorage(client);
 
 			FacilMap.setVisibleLayers(map);
 
@@ -136,9 +138,9 @@
 			const byName = (layerMap) => Object.fromEntries(Object.entries(layerMap).map(([key, layer]) => [layer.options.fmName, layer]));
 			L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
 
-			new FacilMap.BboxHandler(map, client).enable();
+			new FacilMap.BboxHandler(map, clientStorage).enable();
 
-			const markersLayer = new FacilMap.MarkersLayer(client).addTo(map)
+			const markersLayer = new FacilMap.MarkersLayer(clientStorage, "wqxygV4R506PlBlZ").addTo(map)
 				.on("click", (e) => {
 					markersLayer.setHighlightedMarkers(new Set([e.layer.marker.id]));
 					linesLayer.setHighlightedLines(new Set());
@@ -146,7 +148,7 @@
 					overpassLayer.setHighlightedElements(new Set());
 				});
 
-			window.linesLayer = new FacilMap.LinesLayer(client).addTo(map)
+			window.linesLayer = new FacilMap.LinesLayer(clientStorage, "wqxygV4R506PlBlZ").addTo(map)
 				.on("click", (e) => {
 					L.DomEvent.stopPropagation(e);
 					markersLayer.setHighlightedMarkers(new Set());
@@ -162,9 +164,9 @@
 				overpassLayer.setHighlightedElements(new Set());
 			});
 
-			const routeLayer1 = new FacilMap.RouteLayer(client, undefined, { raised: true }).addTo(map);
-			const routeLayer2 = new FacilMap.RouteLayer(client, "route2", { raised: true }).addTo(map);
-			const routeDragHandler = new FacilMap.RouteDragHandler(map, client).enable();
+			const routeLayer1 = new FacilMap.RouteLayer(clientStorage, "route1", { raised: true }).addTo(map);
+			const routeLayer2 = new FacilMap.RouteLayer(clientStorage, "route2", { raised: true }).addTo(map);
+			const routeDragHandler = new FacilMap.RouteDragHandler(map, clientStorage).enable();
 			setTimeout(() => {
 				routeDragHandler.enableForLayer(routeLayer1);
 				routeDragHandler.enableForLayer(routeLayer2);
@@ -213,11 +215,11 @@
 					overpassStatus.style.opacity = 0;
 				});
 
-			const hashHandler = new FacilMap.HashHandler(map, client, { overpassLayer }).enable();
+			const hashHandler = new FacilMap.HashHandler(map, clientStorage, { overpassLayer }).enable();
 
 			window.drawLine = async () => {
 				try {
-					const lineTemplate = await client.getLineTemplate({ typeId: Object.keys(client.types).find((type) => client.types[type].type == "line") });
+					const lineTemplate = getLineTemplate(Object.values(clientStorage.maps["wqxygV4R506PlBlZ"].types).find((type) => type.type == "line"));
 					const result = await linesLayer.drawLine(lineTemplate);
 					console.log(result);
 				} catch (err) {

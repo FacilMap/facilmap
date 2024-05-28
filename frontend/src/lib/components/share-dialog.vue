@@ -28,7 +28,7 @@
 	const showPois = ref(true);
 	const showLegend = ref(true);
 	const showLocate = ref(true);
-	const mapIdType = ref<Writable>(2);
+	const mapSlugType = ref<Writable>(2);
 	const activeShareTab = ref(0);
 
 	const layers = computed(() => {
@@ -43,7 +43,7 @@
 		return !!client.value.mapData && getLegendItems(context).length > 0;
 	});
 
-	const mapIdTypes = computed(() => {
+	const mapSlugTypes = computed(() => {
 		return [
 			{ value: 2, text: i18n.t("share-dialog.type-admin") },
 			{ value: 1, text: i18n.t("share-dialog.type-write") },
@@ -75,7 +75,7 @@
 		const paramsStr = params.toString();
 
 		return context.baseUrl
-			+ (client.value.mapData ? encodeURIComponent((mapIdType.value == 2 && client.value.mapData.adminId) || (mapIdType.value == 1 && client.value.mapData.writeId) || client.value.mapData.id) : '')
+			+ (client.value.mapData ? encodeURIComponent((mapSlugType.value == 2 && client.value.mapData.adminId) || (mapSlugType.value == 1 && client.value.mapData.writeId) || client.value.mapData.id) : '')
 			+ (paramsStr ? `?${paramsStr}` : '')
 			+ (includeMapView.value && mapContext.value.hash ? `#${mapContext.value.hash}` : '');
 	});
@@ -232,10 +232,10 @@
 
 		<template v-if="client.mapData">
 			<div class="row mb-3">
-				<label :for="`${id}-mapIdType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
+				<label :for="`${id}-mapSlugType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
 				<div class="col-sm-9">
-					<select :id="`${id}-mapIdType-input`" class="form-select" v-model="mapIdType">
-						<option v-for="type in mapIdTypes" :key="type.value" :value="type.value">{{type.text}}</option>
+					<select :id="`${id}-mapSlugType-input`" class="form-select" v-model="mapSlugType">
+						<option v-for="type in mapSlugTypes" :key="type.value" :value="type.value">{{type.text}}</option>
 					</select>
 				</div>
 			</div>

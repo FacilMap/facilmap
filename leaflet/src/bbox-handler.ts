@@ -1,4 +1,4 @@
-import type { SocketClient } from "facilmap-client";
+import type { SocketClient, SocketClientStorage } from "facilmap-client";
 import { Bounds, Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
@@ -33,11 +33,12 @@ export default class BboxHandler extends Handler {
 	protected margin = [50, 400];
 	protected lastBounds: { bounds: Bounds; zoom: number } | undefined = undefined;
 
+	clientStorage: SocketClientStorage | undefined;
 	client: SocketClient;
 
-	constructor(map: Map, client: SocketClient) {
+	constructor(map: Map, clientOrStorage: SocketClient | SocketClientStorage) {
 		super(map);
-		this.client = client;
+		[this.clientStorage, this.client] = "client" in clientOrStorage ? [clientOrStorage, clientOrStorage.client] : [undefined, clientOrStorage];
 	}
 
 	/**
@@ -64,7 +65,7 @@ export default class BboxHandler extends Handler {
 			this._map.unproject(maxBounds.getBottomLeft(), resolvedZoom),
 			this._map.unproject(maxBounds.getTopRight(), resolvedZoom)
 		);
-		void this.client.setBbox(leafletToFmBbox(bounds, resolvedZoom));
+		void (this.clientStorage ?? this.client).setBbox(leafletToFmBbox(bounds, resolvedZoom));
 		this.lastBounds = { bounds: maxBounds, zoom: resolvedZoom };
 	}
 
@@ -93,15 +94,19 @@ export default class BboxHandler extends Handler {
 		}
 	};
 
-	protected handleClientUpdate = (): void => {
+	protected handleClientUpdate(): void {
+		const before = this._shouldUpdateBbox;
 		this._shouldUpdateBbox = Object.keys(this.client.mapSubscriptions).length > 0 || Object.keys(this.client.routeSubscriptions).length > 0;
+		if (!before && this._shouldUpdateBbox) {
+			this.updateBbox();
+		}
 	}
 
 	override addHooks(): void {
 		this._map.on("moveend", this.handleMoveEnd);
 		this._map.on("viewreset", this.handleViewReset);
 		this._map.on("fmFlyTo", this.handleFlyTo);
-		this._unsubscribeClientUpdate = this.client.reactiveObjectProvider.subscribe(this.handleClientUpdate);
+		this._unsubscribeClientUpdate = this.client.reactiveObjectProvider.subscribe(() => this.handleClientUpdate());
 
 		if (this.shouldUpdateBbox()) {
 			this.updateBbox();

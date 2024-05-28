@@ -1,5 +1,5 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { CRU, ID, Latitude, Longitude, MapId, View } from "facilmap-types";
+import type { CRU, ID, Latitude, Longitude, View } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
@@ -62,15 +62,15 @@ export default class DatabaseViews {
 		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "mapId" });
 	}
 
-	getViews(mapId: MapId): AsyncIterable<View> {
+	getViews(mapId: ID): AsyncIterable<View> {
 		return this._db.helpers._getMapObjects<View>("View", mapId);
 	}
 
-	getView(mapId: MapId, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+	getView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
 		return this._db.helpers._getMapObject<View>("View", mapId, viewId, options);
 	}
 
-	async _freeViewIdx(mapId: MapId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
+	async _freeViewIdx(mapId: ID, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
 		const existingViews = await iterableToArray(this.getViews(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingViews.length > 0 ? existingViews[existingViews.length - 1].idx + 1 : 0);
@@ -87,7 +87,7 @@ export default class DatabaseViews {
 		return resolvedNewIdx;
 	}
 
-	async createView(mapId: MapId, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
+	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
 		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
 		const newData = await this._db.helpers._createMapObject<View>("View", mapId, {
@@ -106,7 +106,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(mapId: MapId, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<View> {
+	async updateView(mapId: ID, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<View> {
 		if (data.idx != null) {
 			await this._freeViewIdx(mapId, viewId, data.idx);
 		}
@@ -117,7 +117,7 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async deleteView(mapId: MapId, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+	async deleteView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
 		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId, options);
 
 		this._db.emit("deleteView", mapId, { id: data.id });

@@ -3,7 +3,7 @@ import { SocketClient, SocketClientStorage } from "facilmap-client";
 import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
 import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, type MapDataWithWritable } from "facilmap-types";
-import { generateRandomMapId, sleep } from "facilmap-utils";
+import { generateRandomMapSlug, sleep } from "facilmap-utils";
 
 export function getFacilMapUrl(): string {
 	if (!process.env.FACILMAP_URL) {
@@ -77,15 +77,15 @@ export async function openClientV2<V extends SocketVersion.V1 | SocketVersion.V2
 	return client;
 }
 
-export function generateTestMapId(): string {
-	return `integration-test-${generateRandomMapId()}`;
+export function generateTestMapSlug(): string {
+	return `integration-test-${generateRandomMapSlug()}`;
 }
 
-export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & Pick<MapData<CRU.CREATE>, "id" | "writeId" | "adminId"> {
+export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & Pick<MapData<CRU.CREATE>, "readId" | "writeId" | "adminId"> {
 	return {
-		id: generateTestMapId(),
-		writeId: generateTestMapId(),
-		adminId: generateTestMapId(),
+		readId: generateTestMapSlug(),
+		writeId: generateTestMapSlug(),
+		adminId: generateTestMapSlug(),
 		...data
 	};
 }

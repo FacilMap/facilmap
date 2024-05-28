@@ -14,7 +14,7 @@ export type PagingInput = z.input<typeof pagingValidator>;
 export type Paging = z.infer<typeof pagingValidator>;
 export const DEFAULT_PAGING = pagingValidator.parse({});
 
-export type FindMapsResult = Pick<MapData, "id" | "name" | "description">;
+export type FindMapsResult = Pick<MapData, "id" | "readId" | "name" | "description">;
 
 export interface PagedResults<T> {
 	results: T[];
@@ -77,6 +77,6 @@ export type BboxWithExcept = z.infer<typeof bboxWithExceptValidator>;
  * Returns an optional zod type that transforms null to undefined. This can be used for socket.io method parameters, as socket.io will convert
  * undefined to null.
  */
-export function optionalParam<T extends z.ZodTypeAny>(type: T): z.ZodOptional<z.ZodEffects<T, any, z.input<T>>> {
-	return type.transform((v) => v == null ? undefined : v).optional();
+export function optionalParam<T extends z.ZodTypeAny>(type: T): z.ZodOptional<z.ZodEffects<z.ZodUnion<[T, z.ZodNull]>, z.output<T> extends null ? undefined : z.output<T>, z.input<T>>> {
+	return type.or(z.null()).transform((v) => v == null ? undefined : v).optional();
 }

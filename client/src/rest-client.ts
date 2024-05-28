@@ -137,11 +137,13 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options: { pick: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/all`, {
 			query: {
-				pick: encodeStringArray(options.pick),
-				...options.bbox ? {
+				...options?.pick ? {
+					pick: encodeStringArray(options.pick)
+				} : {},
+				...options?.bbox ? {
 					bbox: JSON.stringify(options.bbox)
 				} : {}
 			}

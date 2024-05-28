@@ -1,8 +1,8 @@
-import type SocketClient from "facilmap-client";
-import type { ID, Marker, ObjectWithId, Type } from "facilmap-types";
+import { SocketClientStorage, isReactiveObjectUpdate, type ReactiveObjectUpdate } from "facilmap-client";
+import type { DeepReadonly, ID, MapSlug, Marker, ObjectWithId, Type } from "facilmap-types";
 import { Map as LeafletMap } from "leaflet";
 import { tooltipOptions } from "../utils/leaflet";
-import { numberKeys, quoteHtml } from "facilmap-utils";
+import { numberEntries, quoteHtml } from "facilmap-utils";
 import MarkerCluster, { type MarkerClusterOptions } from "./marker-cluster";
 import MarkerLayer from "./marker-layer";
 
@@ -19,19 +19,22 @@ export default class MarkersLayer extends MarkerCluster {
 	/** The position of these markers will not be touched until they are unlocked again. */
 	protected lockedMarkerIds = new Set<ID>();
 
-	constructor(client: SocketClient, options?: MarkersLayerOptions) {
-		super(client, options);
+	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
+
+	constructor(clientStorage: SocketClientStorage, mapSlug: MapSlug, options?: MarkersLayerOptions) {
+		super(clientStorage, mapSlug, options);
 	}
 
 	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
 
-		this.client.on("marker", this.handleMarker);
-		this.client.on("deleteMarker", this.handleDeleteMarker);
-		this.client.on("type", this.handleType);
+		this.unsubscribeStorageUpdate = this.clientStorage.reactiveObjectProvider.subscribe((update) => this.handleStorageUpdate(update));
+		// this.storage.on("marker", this.handleMarker);
+		// this.storage.on("deleteMarker", this.handleDeleteMarker);
+		// this.storage.on("type", this.handleType);
 
-		for (const markerId of numberKeys(this.client.markers)) {
-			this.handleMarker(this.client.markers[markerId]);
+		for (const marker of Object.values(this.clientStorage.maps[this.mapSlug]?.markers ?? {})) {
+			this.handleMarker(marker);
 		}
 
 		map.on("fmFilter", this.handleFilter);
@@ -42,9 +45,11 @@ export default class MarkersLayer extends MarkerCluster {
 	onRemove(map: LeafletMap): this {
 		super.onRemove(map);
 
-		this.client.removeListener("marker", this.handleMarker);
-		this.client.removeListener("deleteMarker", this.handleDeleteMarker);
-		this.client.removeListener("type", this.handleType);
+		this.unsubscribeStorageUpdate?.();
+		this.unsubscribeStorageUpdate = undefined;
+		// this.storage.removeListener("marker", this.handleMarker);
+		// this.storage.removeListener("deleteMarker", this.handleDeleteMarker);
+		// this.storage.removeListener("type", this.handleType);
 
 		map.off("fmFilter", this.handleFilter);
 
@@ -52,52 +57,68 @@ export default class MarkersLayer extends MarkerCluster {
 	}
 
 	protected recalculateFilter(marker: Marker): void {
-		this.filterResults.set(marker.id, this._map.fmFilterFunc(marker, this.client.types[marker.typeId]));
+		this.filterResults.set(marker.id, this._map.fmFilterFunc(marker, this.clientStorage.maps[this.mapSlug]?.types[marker.typeId]));
 	}
 
 	protected shouldShowMarker(marker: Marker): boolean {
 		return !!this.filterResults.get(marker.id);
 	}
 
-	protected handleMarker = (marker: Marker): void => {
+	protected handleStorageUpdate(update: ReactiveObjectUpdate): void {
+		if (!this.clientStorage.maps[this.mapSlug]) {
+			return;
+		}
+
+		if (isReactiveObjectUpdate(update, this.clientStorage.maps[this.mapSlug].markers)) {
+			if (update.action === "set") {
+				this.handleMarker(update.value);
+			} else if (update.action === "delete") {
+				this.handleDeleteMarker({ id: Number(update.key) });
+			}
+		} else if (isReactiveObjectUpdate(update, this.clientStorage.maps[this.mapSlug].types) && update.action === "set") {
+			this.handleType(update.value);
+		}
+	}
+
+	protected handleMarker(marker: DeepReadonly<Marker>): void {
 		this.recalculateFilter(marker);
 		if(this.shouldShowMarker(marker))
 			this._addMarker(marker);
 		else
 			this._deleteMarker(marker);
-	};
+	}
 
-	protected handleDeleteMarker = (data: ObjectWithId): void => {
+	protected handleDeleteMarker(data: ObjectWithId): void {
 		this._deleteMarker(data);
 		this.filterResults.delete(data.id);
-	};
+	}
 
-	protected handleType = (type: Type): void => {
-		for (const markerId of numberKeys(this.client.markers)) {
-			if (this.client.markers[markerId].typeId === type.id) {
-				this.recalculateFilter(this.client.markers[markerId]);
+	protected handleType(type: DeepReadonly<Type>): void {
+		for (const marker of Object.values(this.clientStorage.maps[this.mapSlug]?.markers ?? {})) {
+			if (marker.typeId === type.id) {
+				this.recalculateFilter(marker);
 			}
 		}
-	};
+	}
 
 	protected handleFilter = (): void => {
-		for(const markerId of numberKeys(this.client.markers)) {
-			this.recalculateFilter(this.client.markers[markerId]);
+		for(const [markerId, marker] of numberEntries(this.clientStorage.maps[this.mapSlug]?.markers ?? {})) {
+			this.recalculateFilter(marker);
 			if (!this.lockedMarkerIds.has(markerId)) {
-				const show = this.shouldShowMarker(this.client.markers[markerId]);
+				const show = this.shouldShowMarker(marker);
 				if(this.markersById[markerId] && !show)
-					this._deleteMarker(this.client.markers[markerId]);
+					this._deleteMarker(marker);
 				else if(!this.markersById[markerId] && show)
-					this._addMarker(this.client.markers[markerId]);
+					this._addMarker(marker);
 			}
 		}
 	};
 
-	async showMarker(id: ID, zoom = false): Promise<void> {
-		let marker = this.client.markers[id];
+	async showMarker(markerId: ID, zoom = false): Promise<void> {
+		let marker = this.clientStorage.maps[this.mapSlug]?.markers[markerId];
 		if (!marker) {
-			marker = await this.client.getMarker({ id });
-			this.client.storeMarker(mapSlug, marker);
+			marker = await this.clientStorage.client.getMarker(this.mapSlug, markerId);
+			this.clientStorage.storeMarker(this.mapSlug, marker);
 		}
 
 		if(zoom)
@@ -106,27 +127,29 @@ export default class MarkersLayer extends MarkerCluster {
 		this._addMarker(marker);
 	}
 
-	highlightMarker(id: ID): void {
-		this.highlightedMarkerIds.add(id);
-		if (this._map && this.client.markers[id])
-			this.handleMarker(this.client.markers[id]);
+	highlightMarker(markerId: ID): void {
+		this.highlightedMarkerIds.add(markerId);
+		const marker = this.clientStorage.maps[this.mapSlug]?.markers[markerId];
+		if (this._map && marker)
+			this.handleMarker(marker);
 	}
 
-	unhighlightMarker(id: ID): void {
-		this.highlightedMarkerIds.delete(id);
-		if (this._map && this.client.markers[id])
-			this.handleMarker(this.client.markers[id]);
+	unhighlightMarker(markerId: ID): void {
+		this.highlightedMarkerIds.delete(markerId);
+		const marker = this.clientStorage.maps[this.mapSlug]?.markers[markerId];
+		if (this._map && marker)
+			this.handleMarker(marker);
 	}
 
-	setHighlightedMarkers(ids: Set<ID>): void {
-		for (const id of this.highlightedMarkerIds) {
-			if (!ids.has(id))
-				this.unhighlightMarker(id);
+	setHighlightedMarkers(markerIds: Set<ID>): void {
+		for (const markerId of this.highlightedMarkerIds) {
+			if (!markerIds.has(markerId))
+				this.unhighlightMarker(markerId);
 		}
 
-		for (const id of ids) {
-			if (!this.highlightedMarkerIds.has(id))
-				this.highlightMarker(id);
+		for (const markerId of markerIds) {
+			if (!this.highlightedMarkerIds.has(markerId))
+				this.highlightMarker(markerId);
 		}
 	}
 
@@ -140,11 +163,11 @@ export default class MarkersLayer extends MarkerCluster {
 	 * The purpose of this is to allow the user to edit the position of a marker by dragging it around. Panning/zooming the map would update the
 	 * bbox and the server might resend the marker. In this case we don't want the position to be reset while the user is dragging the marker.
 	*/
-	lockMarker(id: ID): void {
-		this.lockedMarkerIds.add(id);
+	lockMarker(markerId: ID): void {
+		this.lockedMarkerIds.add(markerId);
 
 		// Remove marker from cluster and add directly to map
-		const markerLayer = this.getLayerByMarkerId(id);
+		const markerLayer = this.getLayerByMarkerId(markerId);
 		if (markerLayer) {
 			this.removeLayer(markerLayer);
 			this._map.addLayer(markerLayer);
@@ -154,20 +177,21 @@ export default class MarkersLayer extends MarkerCluster {
 	/**
 	 * Unlock a marker previously locked using lockMarker(). The current position and filter is applied to the marker.
 	 */
-	unlockMarker(id: ID): void {
-		this.lockedMarkerIds.delete(id);
+	unlockMarker(markerId: ID): void {
+		this.lockedMarkerIds.delete(markerId);
 
 		// Move marker back into cluster
-		const markerLayer = this.getLayerByMarkerId(id);
+		const markerLayer = this.getLayerByMarkerId(markerId);
 		if (markerLayer) {
 			this._map.removeLayer(markerLayer);
 			this.addLayer(markerLayer);
 		}
 
-		if (this.shouldShowMarker(this.client.markers[id]))
-			this._addMarker(this.client.markers[id]);
+		const marker = this.clientStorage.maps[this.mapSlug]?.markers[markerId];
+		if (marker && this.shouldShowMarker(marker))
+			this._addMarker(marker);
 		else
-			this._deleteMarker(this.client.markers[id]);
+			this._deleteMarker({ id: markerId });
 	}
 
 	getLayerByMarkerId(markerId: ID): MarkerLayer | undefined {

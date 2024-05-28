@@ -1,6 +1,6 @@
 import { Map, MarkerClusterGroup, type MarkerClusterGroupOptions } from "leaflet";
-import type SocketClient from "facilmap-client";
-import type { MapData } from "facilmap-types";
+import { SocketClientStorage, isReactivePropertyUpdate, type ReactiveObjectUpdate } from "facilmap-client";
+import type { MapSlug } from "facilmap-types";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -10,10 +10,12 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 
 export default class MarkerCluster extends MarkerClusterGroup {
 
-	protected client: SocketClient;
+	protected clientStorage: SocketClientStorage;
+	protected mapSlug: MapSlug;
 	protected _maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
+	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
 
-	constructor(client: SocketClient, options?: MarkerClusterOptions) {
+	constructor(clientStorage: SocketClientStorage, mapSlug: MapSlug, options?: MarkerClusterOptions) {
 		super({
 			showCoverageOnHover: false,
 			maxClusterRadius: 50,
@@ -23,10 +25,44 @@ export default class MarkerCluster extends MarkerClusterGroup {
 		this._maxClusterRadiusBkp = this.options.maxClusterRadius;
 		this.options.maxClusterRadius = 0;
 
-		this.client = client;
+		this.clientStorage = clientStorage;
+		this.mapSlug = mapSlug;
 	}
 
-	protected handleMapData = (mapData: MapData): void => {
+	onAdd(map: Map): this {
+		super.onAdd(map);
+
+		this.unsubscribeStorageUpdate = this.clientStorage.reactiveObjectProvider.subscribe((update) => this.handleStorageUpdate(update));
+		this.handleMapData();
+
+		return this;
+	}
+
+	onRemove(map: Map): this {
+		super.onRemove(map);
+
+		this.unsubscribeStorageUpdate?.();
+		this.unsubscribeStorageUpdate = undefined;
+
+		return this;
+	}
+
+	protected handleStorageUpdate(update: ReactiveObjectUpdate): void {
+		if (!this.clientStorage.maps[this.mapSlug]) {
+			return;
+		}
+
+		if (isReactivePropertyUpdate(update, this.clientStorage.maps[this.mapSlug], "mapData")) {
+			this.handleMapData();
+		}
+	}
+
+	protected handleMapData(): void {
+		const mapData = this.clientStorage.maps[this.mapSlug]?.mapData;
+		if (!mapData) {
+			return;
+		}
+
 		const isClusterEnabled = this._maxClusterRadiusBkp == null;
 
 		if (!!mapData.clusterMarkers !== isClusterEnabled) {
@@ -42,24 +78,6 @@ export default class MarkerCluster extends MarkerClusterGroup {
 			this.clearLayers();
 			this.addLayers(layers);
 		}
-	}
-
-	onAdd(map: Map): this {
-		super.onAdd(map);
-
-		this.client.on("mapData", this.handleMapData);
-		if (this.client.mapData)
-			this.handleMapData(this.client.mapData);
-
-		return this;
-	}
-
-	onRemove(map: Map): this {
-		super.onRemove(map);
-
-		this.client.removeListener("mapData", this.handleMapData);
-
-		return this;
 	}
 
 }

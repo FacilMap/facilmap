@@ -1,6 +1,6 @@
 import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable } from "../utils/streams.js";
 import Database from "../database/database.js";
-import type { Field, Line, Marker, MapId, TrackPoint, Type, LineWithTrackPoints } from "facilmap-types";
+import type { Field, Line, Marker, TrackPoint, Type, LineWithTrackPoints, ID } from "facilmap-types";
 import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
 import { keyBy } from "lodash-es";
 import { getI18n } from "../i18n.js";
@@ -105,7 +105,7 @@ function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoint
 	})());
 }
 
-export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<string> {
+export function exportGpx(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<string> {
 	return iterableToStream((async function* () {
 		const filterFunc = compileExpression(filter);
 
@@ -149,7 +149,7 @@ export function exportGpx(database: Database, mapId: MapId, useTracks: boolean, 
 	})());
 }
 
-export function exportGpxZip(database: Database, mapId: MapId, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
+export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
 	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {

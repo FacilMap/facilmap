@@ -1,10 +1,16 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps } from "vue";
+import { DefaultReactiveObjectProvider } from "facilmap-client";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
+// eslint-disable-next-line vue/prefer-import-from-vue, import/no-extraneous-dependencies
+import { pauseTracking, resetTracking } from "@vue/reactivity";
 
 // https://stackoverflow.com/a/73784241/242365
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
   ? Omit<InstanceType<C>['$props'], keyof VNodeProps | keyof AllowedComponentProps>
   : never;
 
+/**
+ * A directive that scrolls its element into view when its binding value becomes true.
+ */
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)
 		el.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -29,6 +35,17 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 	return shallowReadonly(value);
 }
 
+/**
+ * A ref that maintains an internal state that can be overridden by a specified prop. Changing the value will both change the internal state
+ * and emit an event.
+ * This allows specifying hybrid stateful/stateless components, where the prop is used when specified and otherwise the internal state.
+ * @param fallbackValue The initial value of the internal state if the prop is not defined. If the prop is defined, its current value will
+ *     be used as the initial value instead.
+ * @param getProp Should return the value of the prop. If this returns a value, it is used. If this returns undefined, the prop is assumed
+ *     to not be defined and the value of the internal state is returned.
+ * @param onUpdate Should emit the change event. Called when the value changes, in addition to updating the internal state.
+ * @returns A computed ref with a setter.
+ */
 export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
     const internalValue = ref(getProp() ?? fallbackValue);
     return computed({
@@ -43,6 +60,12 @@ export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => V
     });
 }
 
+/**
+ * Returns a ref callback that allows storing an element ref inside a map of refs.
+ * This can be used to keep multiple refs, for example for a list of elements that is dynamically generated. The refs will be stored in a
+ * map = reactive(new Map<Key, Element | ComponentPublicInstance>), where Key is a unique identifier for each item in the collection.
+ * This should be used on the elements as :ref="mapRef(map, key)". It will maintain a ref for each rendered element by its key in the map.
+ */
 export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K): (ref: Element | ComponentPublicInstance | null) => void {
 	return (ref) => {
 		if (ref) {
@@ -114,3 +137,61 @@ export const vHtmlAsync: Directive<Element, Promise<string>> = (el, binding) => 
 		el.innerHTML = val ?? "";
 	});
 };
+
+export class VueReactiveObjectProvider extends DefaultReactiveObjectProvider {
+	override create<T extends Record<any, any>>(object: T): T {
+		return reactive(object);
+	}
+}
+
+/**
+ * Like Vue's onCleanup, but provides an onCleanup callback that allows running code before a new value is calculated or the scope is disposed.
+ */
+export function computedWithCleanup<T>(getter: ((oldValue: T | undefined, onCleanup: (cleanupFn: () => void) => void) => T), debugOptions?: DebuggerOptions): ComputedRef<T> {
+	let cleanupStack: Array<() => void> = [];
+	const cleanup = () => {
+		for (const c of cleanupStack) {
+			c();
+		}
+		cleanupStack = [];
+	};
+
+	onScopeDispose(() => {
+		cleanup();
+	});
+
+	return computed((oldValue) => {
+		cleanup();
+
+		return getter(oldValue, (cleanupFn) => {
+			cleanupStack.push(cleanupFn);
+		});
+	}, debugOptions);
+}
+
+/**
+ * Calls the given callback while temporarily disabling reactivity tracking. This allows more explicit dependency management in reactive
+ * effects or computed properties.
+ */
+export function withoutTracking<R>(callback: () => R): R {
+	try {
+		pauseTracking();
+		return callback();
+	} finally {
+		resetTracking();
+	}
+}
+
+type ComputedWithDepsCallback<D, OV, R> = (deps: D, oldValue: OV, onCleanup: (cleanupFn: () => void) => void) => R;
+/**
+ * Returns a computed ref whose dependencies are not automatically inferred but specified like for a watcher.
+ */
+// Types mostly copied from Vue watch()
+export function computedWithDeps<T, R>(source: WatchSource<T>, cb: ComputedWithDepsCallback<T, R | undefined, R>, debugOptions?: DebuggerOptions): ComputedRef<R>;
+export function computedWithDeps<T extends ReadonlyArray<WatchSource<unknown>>, R>(sources: [...T], cb: ComputedWithDepsCallback<{ [K in keyof T]: T[K] extends WatchSource<infer V> ? V : T[K] extends object ? T[K] : never }, R | undefined, R>, debugOptions?: DebuggerOptions): ComputedRef<R>;
+export function computedWithDeps<T extends object, R>(source: T, cb: ComputedWithDepsCallback<T, R | undefined, R>, debugOptions?: DebuggerOptions): ComputedRef<R> {
+	return computedWithCleanup((oldValue, onCleanup) => {
+		const values = Array.isArray(source) ? source.map((s) => toValue(s)) : toValue(source);
+		return withoutTracking(() => cb(values as any, oldValue, onCleanup));
+	});
+}

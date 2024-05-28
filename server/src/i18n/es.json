@@ -1,5 +1,4 @@
 {
-    "map-read-not-found-error": "No se pudo encontrar el mapa con el identificador de solo lectura {{mapId}}.",
     "database": {
         "unknown-type-error": "Se desconoce el tipo «{{type}}».",
         "object-not-found-in-map-error": "No se pudo encontrar el objeto {{type}} {{id}} del mapa {{mapId}}.",
@@ -33,9 +32,6 @@
         "field-distance": "Distancia",
         "field-time": "Tiempo",
         "field-name": "Nombre"
-    },
-    "webserver": {
-        "map-not-found-error": "No se pudo encontrar el mapa con el identificador {{mapId}}."
     },
     "search": {
         "url-request-error": "Falló la solicitud a «{{url}}» con el estado {{status}}.",

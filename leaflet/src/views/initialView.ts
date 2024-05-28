@@ -1,17 +1,12 @@
-import type { SocketClient } from "facilmap-client";
-import type { MapData } from "facilmap-types";
+import type { SocketClient, SocketClientStorage } from "facilmap-client";
+import type { DeepReadonly, MapSlug } from "facilmap-types";
 import type { UnsavedView } from "./views";
 
-export async function getInitialView(client: SocketClient): Promise<UnsavedView | undefined> {
-	if(client.mapId) {
-		const mapData = client.mapData || await new Promise<MapData>((resolve, reject) => {
-			client.on("mapData", resolve);
-			client.on("serverError", reject);
+export async function getInitialView(clientOrStorage: SocketClient | SocketClientStorage, mapSlug?: MapSlug): Promise<DeepReadonly<UnsavedView> | undefined> {
+	let [storage, client] = "client" in clientOrStorage ? [clientOrStorage, clientOrStorage.client] : [undefined, clientOrStorage];
 
-			if (client.serverError)
-				reject(client.serverError);
-		});
-
+	if (mapSlug) {
+		const mapData = storage?.maps[mapSlug]?.mapData ?? await client.getMap(mapSlug);
 		return mapData.defaultView ?? undefined;
 	}
 

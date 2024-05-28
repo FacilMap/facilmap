@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { mapIdValidator, type CRU, type MapData } from "facilmap-types";
+	import { mapSlugValidator, type CRU, type MapData } from "facilmap-types";
 	import { computed } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -50,7 +50,7 @@
 				successTitle="Map link copied"
 				successMessage="The map link was copied to the clipboard."
 				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
-				:validators="[validateRequired, getZodValidator(mapIdValidator), validateDistinctMapId]"
+				:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapId]"
 			></CopyToClipboardInput>
 
 			<div class="form-text">

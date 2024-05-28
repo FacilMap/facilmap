@@ -1,5 +1,5 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import { typeValidator, type CRU, type Field, type ID, type MapId, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
+import { typeValidator, type CRU, type Field, type ID, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
 import Database from "./database.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
@@ -89,15 +89,15 @@ export default class DatabaseTypes {
 		MapModel.hasMany(this.TypeModel, { foreignKey: "mapId" });
 	}
 
-	getTypes(mapId: MapId): AsyncIterable<Type> {
+	getTypes(mapId: ID): AsyncIterable<Type> {
 		return this._db.helpers._getMapObjects<Type>("Type", mapId);
 	}
 
-	getType(mapId: MapId, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
+	getType(mapId: ID, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
 		return this._db.helpers._getMapObject<Type>("Type", mapId, typeId, options);
 	}
 
-	async _freeTypeIdx(mapId: MapId, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
+	async _freeTypeIdx(mapId: ID, typeId: ID | undefined, newIdx: number | undefined): Promise<number> {
 		const existingTypes = await iterableToArray(this.getTypes(mapId));
 
 		const resolvedNewIdx = newIdx ?? (existingTypes.length > 0 ? existingTypes[existingTypes.length - 1].idx + 1 : 0);
@@ -114,7 +114,7 @@ export default class DatabaseTypes {
 		return resolvedNewIdx;
 	}
 
-	async createType(mapId: MapId, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
+	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
 		const idx = await this._freeTypeIdx(mapId, undefined, data.idx);
 
 		const createdType = await this._db.helpers._createMapObject<Type>("Type", mapId, {
@@ -125,7 +125,7 @@ export default class DatabaseTypes {
 		return createdType;
 	}
 
-	async updateType(mapId: MapId, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Type> {
+	async updateType(mapId: ID, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Type> {
 		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
 		for(const field of (data.fields || [])) {
 			if(field.oldName && field.oldName != field.name)
@@ -164,11 +164,11 @@ export default class DatabaseTypes {
 		return result;
 	}
 
-	async recalculateObjectStylesForType(mapId: MapId, typeId: ID, isLine: boolean): Promise<void> {
+	async recalculateObjectStylesForType(mapId: ID, typeId: ID, isLine: boolean): Promise<void> {
 		await this._db.helpers._updateObjectStyles(isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 	}
 
-	async isTypeUsed(mapId: MapId, typeId: ID): Promise<boolean> {
+	async isTypeUsed(mapId: ID, typeId: ID): Promise<boolean> {
 		const [ marker, line ] = await Promise.all([
 			this._db.markers.MarkerModel.findOne({ where: { mapId, typeId: typeId } }),
 			this._db.lines.LineModel.findOne({ where: { mapId, typeId: typeId } })
@@ -177,7 +177,7 @@ export default class DatabaseTypes {
 		return !!marker || !!line;
 	}
 
-	async deleteType(mapId: MapId, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
+	async deleteType(mapId: ID, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
 		if (await this.isTypeUsed(mapId, typeId))
 			throw new Error("This type is in use.");
 
@@ -188,7 +188,7 @@ export default class DatabaseTypes {
 		return type;
 	}
 
-	async createDefaultTypes(mapId: MapId): Promise<Type[]> {
+	async createDefaultTypes(mapId: ID): Promise<Type[]> {
 		const result: Type[] = [];
 		for (const type of DEFAULT_TYPES) {
 			result.push(await this.createType(mapId, type));
