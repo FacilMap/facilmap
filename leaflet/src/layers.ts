@@ -93,7 +93,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})),
 		},
 		overlays: {
-			OPTM: fixAttribution(tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
+			OPTM: fixAttribution(tileLayer("https://pt.facilmap.org/tile/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.optm-name")),
 				...attribution(() => getI18n().t("layers.optm-attribution")),
 				zIndex: 300,
