@@ -19,7 +19,8 @@
         "language-de": "Deutsch",
         "language-es": "Spanisch",
         "language-nb-no": "Norwegisch Bokmål (Norwegen)",
-        "language-ru": "Russian"
+        "language-ru": "Russian",
+        "language-zh-hant": "Chinesisch (traditionell)"
 	},
     "objects": {
         "untitled-marker": "Unbenannter Marker",

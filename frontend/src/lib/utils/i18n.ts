@@ -6,6 +6,7 @@ import messagesDe from "../../i18n/de.json";
 import messagesEs from "../../i18n/es.json";
 import messagesNbNo from "../../i18n/nb-NO.json";
 import messagesRu from "../../i18n/ru.json";
+import messagesZhHant from "../../i18n/zh-Hant.json";
 import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
@@ -18,6 +19,7 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("es", namespace, messagesEs);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 	i18n.addResourceBundle("ru", namespace, messagesRu);
+	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
 });
 
 if (import.meta.hot) {
@@ -26,6 +28,7 @@ if (import.meta.hot) {
 	import.meta.hot!.accept(`../../i18n/es.json`, getAcceptHotI18n("es", namespace));
 	import.meta.hot!.accept(`../../i18n/nb-NO.json`, getAcceptHotI18n("nb-NO", namespace));
 	import.meta.hot!.accept(`../../i18n/ru.json`, getAcceptHotI18n("ru", namespace));
+	import.meta.hot!.accept(`../../i18n/zh-Hant.json`, getAcceptHotI18n("zh-Hant", namespace));
 }
 
 export const i18nResourceChangeCounter = ref(0);

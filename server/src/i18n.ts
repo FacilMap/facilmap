@@ -4,6 +4,7 @@ import messagesDe from "./i18n/de.json";
 import messagesEs from "./i18n/es.json";
 import messagesNbNo from "./i18n/nb-NO.json";
 import messagesRu from "./i18n/ru.json";
+import messagesZhHant from "./i18n/zh-Hant.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
 import { Router } from "express";
@@ -43,6 +44,7 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("es", namespace, messagesEs);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 	i18n.addResourceBundle("ru", namespace, messagesRu);
+	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
 });
 
 export function getDomainLang(): FacilMapProcessLang | undefined {
