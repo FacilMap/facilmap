@@ -12,16 +12,23 @@
         "attribution-osm-contributors": "OSM 貢獻者",
         "icons": "圖示",
         "license-text-facilmap": "FacilMap",
-        "issues-text-tracker": "問題追蹤器"
+        "issues-text-tracker": "問題追蹤器",
+        "license-text-license": "GNU Affero 通用公眾授權條款第 3 版",
+        "license-text": "{{facilmap}} 是基於 {{license}} 下提供。",
+        "issues-text": "如果出現問題或者你有改進建議，請在 {{tracker}} 上報告。",
+        "help-text": "如果你有疑問，請參閱 {{documentation}}、在 {{discussions}} 中提出問題或在 {{chat}} 中提問。",
+        "map-data-geoip-description": "此產品包含由 MaxMind 建立的 GeoLite2 資料，可以從 {{maxmind}} 取得。"
     },
     "add": {
         "hidden-markers-added-message_other": "{{count}} 個標記已成功新增，但是目前的過濾器正在阻止顯示它們。",
         "hidden-objects-added-title": "{{count}} 個物件已新增",
-        "hidden-markers-added-title_other": "{{count}} 個標記已新增"
+        "hidden-markers-added-title_other": "{{count}} 個標記已新增",
+        "hidden-objects-added-message": "{{count}} 個物件已成功新增，但是目前的過濾器正在阻止顯示它們。",
+        "hidden-objects-added-message-some": "{{count}} 個物件已成功新增，但是目前的過濾器正在阻止顯示其中一些物件。"
     },
     "add-to-map-dropdown": {
         "fallback-label": "新增至地圖",
-        "add-error": "新增至地圖時出錯"
+        "add-error": "新增至地圖時發生錯誤"
     },
     "alert": {
         "fallback-ok-label": "好的"
@@ -34,20 +41,23 @@
         "connecting": "正在連接至伺服器…",
         "map-deleted": "此地圖已經被刪除。",
         "map-deleted-header": "地圖已刪除",
-        "connection-error": "連接至伺服器時出錯",
-        "open-map-error": "開啟地圖時出錯",
-        "disconnected-header": "已斷開連接"
+        "connection-error": "連接至伺服器時發生錯誤",
+        "open-map-error": "開啟地圖時發生錯誤",
+        "disconnected-header": "已斷開連接",
+        "disconnected": "與伺服器的連接遺失。正在嘗試重新連接…"
     },
     "coordinates": {
         "copied-title": "座標已複製",
         "copy-to-clipboard": "複製至剪貼簿",
-        "elevation": "海拔"
+        "elevation": "海拔",
+        "copied-message": "座標已複製至剪貼簿。"
     },
     "copy-to-clipboard-input": {
         "copied-fallback-title": "連結已複製",
         "copy": "複製",
         "qr-code-alt": "QR 圖碼",
-        "qr-code-tooltip": "顯示 QR 圖碼"
+        "qr-code-tooltip": "顯示 QR 圖碼",
+        "copied-fallback-message": "連結已複製至剪貼簿。"
     },
     "custom-import-dialog": {
         "dialog-title": "自訂匯入",
@@ -198,5 +208,253 @@
         "description-update-map": "已變更地圖設定",
         "description-interpolation-quotedName": "「{{name}}」",
         "revert-create-button": "刪除"
+    },
+    "hybrid-popover": {
+        "close-label": "關閉",
+        "ok-label": "好的"
+    },
+    "import-tab": {
+        "parse-error-title": "解析錯誤"
+    },
+    "leaflet-map": {
+        "loading": "正在載入…"
+    },
+    "legend": {
+        "tab-label": "圖例"
+    },
+    "line-info": {
+        "move-line-cancel": "取消",
+        "distance": "距離"
+    },
+    "manage-bookmarks-dialog": {
+        "reorder-alt": "重新排序"
+    },
+    "manage-types-dialog": {
+        "title": "管理類型",
+        "reorder-alt": "重新排序"
+    },
+    "manage-views-dialog": {
+        "reorder-alt": "重新排序"
+    },
+    "marker-info": {
+        "coordinates": "座標"
+    },
+    "modal-dialog": {
+        "close": "關閉",
+        "cancel": "取消",
+        "save": "儲存"
+    },
+    "multiple-info": {
+        "zoom": "縮放",
+        "show-details": "顯示詳細資料",
+        "details": "詳細資料"
+    },
+    "overpass-multiple-info": {
+        "zoom": "縮放",
+        "show-details": "顯示詳細資料",
+        "details": "詳細資料"
+    },
+    "open-map-dialog": {
+        "search-alt": "搜尋"
+    },
+    "overpass-info": {
+        "coordinates": "座標"
+    },
+    "save-view-dialog": {
+        "save-view-error": "儲存檢視時發生錯誤",
+        "include-pois": "包括 POIs（{{pois}}）",
+        "bottom-right": "右下角",
+        "top-left": "左上角",
+        "name": "名稱",
+        "title": "儲存目前檢視",
+        "empty": "—",
+        "filter": "過濾器",
+        "make-default": "設為預設檢視",
+        "default-view": "預設檢視",
+        "include-current-filter": "包括目前過濾器（{{filter}}）"
+    },
+    "shape-picker": {
+        "unknown-shape-error": "未知的形狀"
+    },
+    "search-result-info": {
+        "zoom-to-result-label": "縮放至搜尋結果",
+        "coordinates": "座標",
+        "address": "地址",
+        "type": "類型"
+    },
+    "share-dialog": {
+        "title": "分享",
+        "settings": "設定",
+        "embed": "嵌入",
+        "share-link": "分享連結",
+        "link-type": "連結類型",
+        "show-locate": "地點",
+        "show-legend": "圖例",
+        "show-pois": "POI 分頁",
+        "show-route": "路線分頁",
+        "show-search-box": "搜尋框",
+        "show-toolbox": "工具箱",
+        "show-controls": "顯示控制項",
+        "type-read": "唯讀",
+        "type-write": "可以寫入",
+        "embed-explanation-interpolation-learnMore": "瞭解更多",
+        "embed-copied-message": "嵌入 {{appName}} 的程式碼已複製至剪貼簿。",
+        "embed-copied-title": "嵌入程式碼已複製",
+        "link-copied-message": "地圖連結已複製至剪貼簿。",
+        "link-copied-title": "地圖連結已複製"
+    },
+    "stroke-picker": {
+        "solid": "實線",
+        "dashed": "虛線",
+        "dotted": "點線"
+    },
+    "icon-picker": {
+        "no-icons-found-error": "找不到圖示。",
+        "filter-placeholder": "過濾器",
+        "unknown-icon-error": "未知的圖示"
+    },
+    "user-preferences-dialog": {
+        "units": "單位",
+        "language": "語言",
+        "introduction": "這些設定作為 Cookie 儲存在你的電腦上，並且分別套用於已開啟的地圖。",
+        "title": "使用者偏好設定",
+        "units-us": "美制（英里、英呎）",
+        "units-metric": "公制",
+        "language-description-interpolation-weblate": "Weblate",
+        "language-description": "有些翻譯可能尚未完成。翻譯由社群建立，請隨時在 {{weblate}} 上作出貢獻。"
+    },
+    "use-as-dropdown": {
+        "to": "路線目的地",
+        "via": "路線經",
+        "from": "路線起點"
+    },
+    "route-form": {
+        "remove-destination-tooltip": "移除此目的地",
+        "remove-destination-alt": "移除",
+        "add-destination-tooltip": "新增另一個目的地",
+        "add-destination-alt": "新增",
+        "submit": "去！",
+        "via-placeholder": "經",
+        "from-placeholder": "由",
+        "to-placeholder": "前往",
+        "reorder-alt": "重新排序",
+        "some-destinations-not-found": "找不到某些目的地。",
+        "route-description-inner": "{{destinations}} {{mode}}",
+        "route-calculation-error": "計算路線時發生錯誤",
+        "find-destination-error": "尋找目的地「{{query}}」時發生錯誤",
+        "export-filename": "FacilMap 路線",
+        "zoom-to-object-label": "縮放至路線",
+        "clear-route-alt": "清除",
+        "distance": "距離",
+        "clear-route-tooltip": "清除路線",
+        "zoom-alt": "縮放"
+    },
+    "route-mode": {
+        "car-alt": "汽車",
+        "bicycle-alt": "單車",
+        "avoid-highways": "避免高速公路",
+        "shortest": "最短",
+        "fastest": "最快",
+        "car": "汽車",
+        "pedestrian-title": "步行前往",
+        "straight-title": "沿著直線前往",
+        "hgv": "重型貨車",
+        "mountain-bike": "越野單車",
+        "road-bike": "道路單車",
+        "bicycle": "單車",
+        "load-details": "載入路線詳細資訊（海拔、道路類型…）",
+        "custom-alt": "自訂",
+        "avoid-steps": "避免台階",
+        "avoid-ferries": "避免渡輪",
+        "avoid-fords": "避免淺灘",
+        "avoid-toll-roads": "避免收費道路",
+        "straight": "直線",
+        "electric-bike": "電動單車",
+        "wheelchair": "輪椅",
+        "walking": "步行",
+        "hiking": "遠足",
+        "bicycle-title": "騎單車前往",
+        "car-title": "駕車前往",
+        "pedestrian-alt": "腳"
+    },
+    "route-form-tab": {
+        "tab-label": "路線"
+    },
+    "search-box": {
+        "close-alt": "關閉",
+        "resize-tooltip": "拖曳以調整大小，點擊以重置"
+    },
+    "search-form": {
+        "zoom-to-all": "縮放至所有結果",
+        "auto-zoom": "自動縮放至結果",
+        "search-error": "搜尋錯誤",
+        "search-description": "搜尋 {{query}}",
+        "search-alt": "搜尋",
+        "clear-alt": "清除"
+    },
+    "search-results": {
+        "select-all": "選取全部",
+        "show-details-tooltip": "顯示詳細資料",
+        "show-details-alt": "詳細資料",
+        "zoom-to-result-alt": "縮放",
+        "zoom-to-result-tooltip": "縮放至結果",
+        "no-results": "找不到結果。",
+        "add-to-map-label_other": "新增已選取的項目至地圖"
+    },
+    "toasts": {
+        "close-label": "關閉",
+        "unexpected-error": "出乎意料的錯誤",
+        "spinner-label": "正在載入…"
+    },
+    "toolbox-collab-maps-dropdown": {
+        "manage-bookmarks": "管理書籤",
+        "label": "協作地圖",
+        "close-map": "關閉地圖「{{mapName}}」",
+        "open-other-map": "開啟另一張地圖",
+        "open-map": "開啟一張現有地圖",
+        "create-map": "建立一張新地圖"
+    },
+    "toolbox-add-dropdown": {
+        "manage-types": "管理類型",
+        "label": "新增"
+    },
+    "toolbox-help-dropdown": {
+        "matrix-chat": "Matrix 聊天室",
+        "documentation": "文件",
+        "label": "幫助",
+        "about": "關於 {{appName}}",
+        "forum": "問一個問題",
+        "bugtracker": "報告一個問題"
+    },
+    "toolbox-map-style-dropdown": {
+        "bing-maps": "Bing 地圖",
+        "google-maps-satellite": "Google 地圖（衛星）",
+        "google-maps": "Google 地圖",
+        "openstreetmap": "OpenStreetMap",
+        "label": "地圖樣式"
+    },
+    "toolbox-tools-dropdown": {
+        "settings": "地圖設定",
+        "filter": "過濾器",
+        "export": "匯出",
+        "open-file": "開啟檔案",
+        "share": "分享",
+        "label": "工具",
+        "user-preferences": "使用者偏好設定",
+        "history": "歷史"
+    },
+    "zoom-to-object-button": {
+        "fallback-label": "縮放至物件"
+    },
+    "validated-field": {
+        "validation-error": "驗證表單欄位時發生錯誤"
+    },
+    "toolbox-views-dropdown": {
+        "manage-views": "管理檢視",
+        "save-current-view": "儲存目前檢視",
+        "label": "檢視"
+    },
+    "search-form-tab": {
+        "tab-label": "搜尋"
     }
 }
