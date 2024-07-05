@@ -11,12 +11,12 @@
 <% } -%>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
-		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
-		<link rel="mask-icon" href="<%=paths.base%>static/favicon.svg" color="#00272a">
-		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
-		<link rel="manifest" href="<%=paths.base%>manifest.json">
-		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href="<%=paths.base%>opensearch.xml">
-		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(mapData ? normalizeMapName(mapData.name) : undefined, appName)%>" />
+		<link rel="icon" href=".<%=paths.base%>static/favicon.svg">
+		<link rel="mask-icon" href=".<%=paths.base%>static/favicon.svg" color="#00272a">
+		<link rel="apple-touch-icon" href=".<%=paths.base%>static/app-180.png">
+		<link rel="manifest" href=".<%=paths.base%>manifest.json">
+		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href=".<%=paths.base%>opensearch.xml">
+		<link rel="alternate" type="application/json+oembed" href=".<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(mapData ? normalizeMapName(mapData.name) : undefined, appName)%>" />
 		<link rel="iframely geolocation web-share resizable" href="<%=url%>">
 		<style type="text/css">
 			html, body, #app {
@@ -64,17 +64,17 @@
 		</style>
 		<style type="text/css">
 <% for (const path of styles) { -%>
-			@import url("<%=paths.base%><%=path%>");
+			@import url(".<%=paths.base%><%=path%>");
 <% } -%>
 <% if (hasCustomCssFile) { -%>
-			@import url("<%=paths.base%>custom.css");
+			@import url(".<%=paths.base%>custom.css");
 <% } -%>
 		</style>
 <% for (const path of scripts) { -%>
-		<script type="module" src="<%=paths.base%><%=path%>"></script>
+		<script type="module" src=".<%=paths.base%><%=path%>"></script>
 <% } -%>
 <% for (const path of preloadScripts) { -%>
-		<link rel="modulepreload" href="<%=paths.base%><%=path%>"/>
+		<link rel="modulepreload" href=".<%=paths.base%><%=path%>"/>
 <% } -%>
 	</head>
 	<body>
