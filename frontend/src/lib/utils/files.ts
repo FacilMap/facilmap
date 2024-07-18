@@ -24,36 +24,15 @@ export interface FileResultObject {
 }
 
 async function extractKmz(zip: Uint8Array): Promise<Uint8Array | undefined> {
-	const dataView = new DataView(zip.buffer);
-	let index = 0;
-	while (true) { // eslint-disable-line no-constant-condition
-		const signature = dataView.getUint32(index, true);
-		if (signature === 0x04034b50) { // local file
-			const fileNameLength = dataView.getUint16(index + 26, true);
-			const fileName = [...zip.slice(index + 30, index + 30 + fileNameLength)].map((b) => String.fromCharCode(b)).join("");
-			const startsAt = index + 30 + fileNameLength + dataView.getUint16(index + 28, true);
-			const compressedSize = dataView.getUint32(index + 18, true);
-			// According to https://developers.google.com/kml/documentation/kmzarchives#recommended-directory-structure, the first .kml
-			// file on the root level is used.
-			if (!fileName.includes("/") && fileName.toLowerCase().endsWith(".kml")) {
-				const compressionMethod = dataView.getUint16(index + 8, true);
-				const buffer = zip.slice(startsAt, startsAt + compressedSize);
-				if (compressionMethod === 0x00){
-					return buffer;
-				} else if (compressionMethod === 0x08) {
-					return new Uint8Array(await new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
-				} else {
-					throw new Error(`Unknown compression method 0x${compressionMethod.toString(16)}`);
-				}
-			} else {
-				index = startsAt + compressedSize;
-			}
-		} else if (signature === 0x02014b50) { // central directory
-			index += 46 + dataView.getUint16(index + 28, true) + dataView.getUint16(index + 30, true) + dataView.getUint16(index + 32, true);
-		} else if (signature === 0x06054b50) { // end of central directory
-			break;
-		} else {
-			throw new Error(`Unrecognized signature 0x${signature.toString(16)}`);
+	const { ZipReader, Uint8ArrayReader, Uint8ArrayWriter } = await import("@zip.js/zip.js");
+
+	const entries = await new ZipReader(new Uint8ArrayReader(zip)).getEntries();
+
+	for (const entry of entries) {
+		// According to https://developers.google.com/kml/documentation/kmzarchives#recommended-directory-structure, the first .kml
+		// file on the root level is used.
+		if (entry.filename.toLowerCase().endsWith(".kml") && !entry.filename.includes("/") && entry.getData) {
+			return await entry.getData(new Uint8ArrayWriter());
 		}
 	}
 }
