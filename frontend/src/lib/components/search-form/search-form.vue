@@ -116,7 +116,7 @@
 					if(typeof newSearchResults == "string") {
 						searchResults.value = undefined;
 						mapResults.value = undefined;
-						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([ newSearchResults ]));
+						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([ new TextEncoder().encode(newSearchResults) ]));
 						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
 					} else {
 						const reactiveResults = reactive(newSearchResults);

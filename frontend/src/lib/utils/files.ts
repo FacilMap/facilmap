@@ -23,9 +23,52 @@ export interface FileResultObject {
 	errors: boolean;
 }
 
-async function fileToGeoJSON(file: string): Promise<any> {
-	if(file.match(/^\s*</)) {
-		const doc = (new window.DOMParser()).parseFromString(file, "text/xml");
+async function extractKmz(zip: Uint8Array): Promise<Uint8Array | undefined> {
+	const dataView = new DataView(zip.buffer);
+	let index = 0;
+	while (true) { // eslint-disable-line no-constant-condition
+		const signature = dataView.getUint32(index, true);
+		if (signature === 0x04034b50) { // local file
+			const fileNameLength = dataView.getUint16(index + 26, true);
+			const fileName = [...zip.slice(index + 30, index + 30 + fileNameLength)].map((b) => String.fromCharCode(b)).join("");
+			const startsAt = index + 30 + fileNameLength + dataView.getUint16(index + 28, true);
+			const compressedSize = dataView.getUint32(index + 18, true);
+			// According to https://developers.google.com/kml/documentation/kmzarchives#recommended-directory-structure, the first .kml
+			// file on the root level is used.
+			if (!fileName.includes("/") && fileName.toLowerCase().endsWith(".kml")) {
+				const compressionMethod = dataView.getUint16(index + 8, true);
+				const buffer = zip.slice(startsAt, startsAt + compressedSize);
+				if (compressionMethod === 0x00){
+					return buffer;
+				} else if (compressionMethod === 0x08) {
+					return new Uint8Array(await new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+				} else {
+					throw new Error(`Unknown compression method 0x${compressionMethod.toString(16)}`);
+				}
+			} else {
+				index = startsAt + compressedSize;
+			}
+		} else if (signature === 0x02014b50) { // central directory
+			index += 46 + dataView.getUint16(index + 28, true) + dataView.getUint16(index + 30, true) + dataView.getUint16(index + 32, true);
+		} else if (signature === 0x06054b50) { // end of central directory
+			break;
+		} else {
+			throw new Error(`Unrecognized signature 0x${signature.toString(16)}`);
+		}
+	}
+}
+
+async function fileToGeoJSON(file: Uint8Array): Promise<any> {
+	let buf: Uint8Array | undefined = file;
+
+	if (buf[0] === 0x50 && buf[1] === 0x4b) { // ZIP file
+		buf = await extractKmz(buf);
+	}
+
+	const str = buf && new TextDecoder().decode(buf);
+
+	if (str?.match(/^\s*</)) {
+		const doc = (new window.DOMParser()).parseFromString(str, "text/xml");
 		const parserErrorElem = doc.getElementsByTagName("parsererror")[0];
 		if (parserErrorElem) {
 			throw new Error(getI18n().t("files.invalid-xml-error", { textContent: parserErrorElem.textContent }));
@@ -46,14 +89,14 @@ async function fileToGeoJSON(file: string): Promise<any> {
 			const { tcx } = await import("@tmcw/togeojson");
 			return tcx(xml);
 		}
-	} else if(file.match(/^\s*\{/)) {
-		const content = JSON.parse(file);
+	} else if (str?.match(/^\s*\{/)) {
+		const content = JSON.parse(str);
 		if(content.type)
 			return content;
 	}
 }
 
-export async function parseFiles(files: string[]): Promise<FileResultObject> {
+export async function parseFiles(files: Uint8Array[]): Promise<FileResultObject> {
 	const filesGeoJSON = await Promise.all(files.map(fileToGeoJSON));
 
 	const ret: FileResultObject = { features: [ ], views: [ ], types: { }, errors: false };
@@ -79,7 +122,7 @@ export async function parseFiles(files: string[]): Promise<FileResultObject> {
 				ret.views.push(...geojson.facilmap.views);
 		}
 
-		let features: Feature<Geometry, FeatureProperties>[];
+		let features: Feature<Geometry | null, FeatureProperties>[];
 		if(geojson.type == "FeatureCollection")
 			features = geojson.features || [ ];
 		else if(geojson.type == "Feature")
@@ -88,6 +131,10 @@ export async function parseFiles(files: string[]): Promise<FileResultObject> {
 			features = [ { type: "Feature", geometry: geojson, properties: { } } ];
 
 		for (const feature of features) {
+			if (!feature.geometry) {
+				continue;
+			}
+
 			let name;
 
 			if(typeof feature.properties != "object")
