@@ -18,7 +18,8 @@
         "map-data-geoip-description": "Este producto incluye datos GeoLite2 creados por MaxMind, disponibles en {{maxmind}}.",
         "help-text": "Si tiene preguntas, consulte la {{documentation}}, use el {{discussions}} o conéctese al canal de {{chat}}.",
         "issues-text": "Si algo no funciona o tiene sugerencias de mejora, compártalas en el {{tracker}}.",
-        "map-data-geoip": "GeoIP"
+        "map-data-geoip": "GeoIP",
+        "issues-text-tracker": "rastreador de problemas"
     },
     "add": {
         "hidden-markers-added-title_one": "Indicador añadido",
