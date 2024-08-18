@@ -56,7 +56,7 @@ const UNITS_QUERY = "units";
 
 setCurrentUnitsGetter(() => {
 	const queryParams = decodeQueryString(location.search);
-	const query = queryParams.format ? unitsValidator.safeParse(queryParams[UNITS_QUERY]) : undefined;
+	const query = queryParams[UNITS_QUERY] ? unitsValidator.safeParse(queryParams[UNITS_QUERY]) : undefined;
 	return query?.success ? query.data : cookies[UNITS_COOKIE];
 });
 
