@@ -205,7 +205,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 
 				let screenshotIconHtmlP = getIconHtml("currentColor", "1.5em", "screenshot");
 
-				return markRaw(control.locate({
+				const locateControl = control.locate({
 					flyTo: true,
 					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
 					locateOptions: {
@@ -217,7 +217,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 						inViewNotFollowing: "outOfView"
 					},
 					setView: "untilPan",
-					keepCurrentZoomLevel: true,
+					keepCurrentZoomLevel: false,
 					// These class names are not used anywhere, we just set them to avoid the default class names being set,
 					// which would apply the default icons using CSS.
 					icon: "fm-locate-control-icon",
@@ -228,6 +228,15 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 							icon.innerHTML = iconHtml;
 						}).catch(console.error);
 						return { link, icon };
+					}
+				});
+				return markRaw(Object.assign(Object.create(locateControl), {
+					setView(this: typeof locateControl) {
+						locateControl.setView.apply(this);
+
+						// After the control zoomed to the location on first activation, we keep the zoom level constant to not annoy
+						// the user. This is reset on the "locatedeactivate" event below.
+						this.options.keepCurrentZoomLevel = true;
 					}
 				}));
 			}
@@ -246,6 +255,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 				};
 				const handleDeactivate = () => {
 					active.value = false;
+					locateControl.options.keepCurrentZoomLevel = false;
 				};
 				map.on("locateactivate", handleActivate);
 				map.on("locatedeactivate", handleDeactivate);

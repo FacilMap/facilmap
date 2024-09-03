@@ -36,6 +36,10 @@ declare module "leaflet" {
 
 	namespace Control {
 		const Heightgraph: any;
+
+		interface Locate {
+			options: LocateOptions;
+		}
 	}
 
 	namespace Draggable {
