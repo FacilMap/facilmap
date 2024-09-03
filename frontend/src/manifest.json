@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
     "name": "%APP_NAME%",
     "short_name": "%APP_NAME%",
     "icons": [{
@@ -9,5 +10,11 @@
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
     "display": "standalone",
-    "start_url": "../"
+    "start_url": "../",
+    "protocol_handlers": [
+        {
+            "protocol": "geo",
+            "url": "../#q=%s"
+        }
+    ]
 }
