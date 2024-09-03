@@ -34,6 +34,10 @@
 	const importTabContext = ref<WritableImportTabContext>({
 		openFilePicker() {
 			fileInputRef.value?.click();
+		},
+
+		async importFiles(files: FileList | File[]) {
+			await importFiles(files);
 		}
 	});
 
@@ -62,7 +66,7 @@
 		void importFiles((event as DragEvent).dataTransfer?.files);
 	}
 
-	async function importFiles(fileList: FileList | undefined): Promise<void> {
+	async function importFiles(fileList: FileList | File[] | undefined): Promise<void> {
 		toasts.hideToast(`fm${context.id}-import-error`);
 
 		if(!fileList || fileList.length == 0)
