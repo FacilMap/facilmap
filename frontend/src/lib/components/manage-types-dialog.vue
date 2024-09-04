@@ -1,11 +1,11 @@
 <script setup lang="ts">
-	import type { ID, Type } from "facilmap-types";
+	import type { DeepReadonly, ID, Type } from "facilmap-types";
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
 	import { computed, ref, watchEffect } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { showConfirm } from "./ui/alert.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
 	import Draggable from "vuedraggable";
@@ -13,7 +13,8 @@
 	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -41,7 +42,7 @@
 				return;
 			}
 
-			await client.value.deleteType({ id: type.id });
+			await clientContext.value.client.deleteType(clientSub.value.mapSlug, type.id);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-manage-types-delete-${type.id}`, () => i18n.t("manage-types-dialog.delete-error", { typeName: formatTypeName(type.name) }), err);
 		} finally {
@@ -49,10 +50,10 @@
 		}
 	}
 
-	const orderedTypes = ref<Type[]>([]);
+	const orderedTypes = ref<Array<DeepReadonly<Type>>>([]);
 	watchEffect(() => {
 		if (isMoving.value == null) {
-			orderedTypes.value = getOrderedTypes(client.value.types);
+			orderedTypes.value = getOrderedTypes(clientSub.value.data.types);
 		}
 	});
 
@@ -63,8 +64,7 @@
 			try {
 				// This handler is called when orderedTypes is already reordered
 				const newIdx = e.moved.newIndex === 0 ? 0 : (orderedTypes.value[e.moved.newIndex - 1].idx + 1);
-				await client.value.editType({
-					id: e.moved.element.id,
+				await clientContext.value.client.updateType(clientSub.value.mapSlug, e.moved.element.id, {
 					idx: newIdx
 				});
 			} finally {

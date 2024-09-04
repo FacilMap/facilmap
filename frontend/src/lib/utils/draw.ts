@@ -1,14 +1,14 @@
 import { addClickListener } from "facilmap-leaflet";
-import type { ID, Point, Type } from "facilmap-types";
+import type { DeepReadonly, ID, Point, Type } from "facilmap-types";
 import type { ToastContext } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { addToMap } from "./add";
-import { formatTypeName } from "facilmap-utils";
+import { formatTypeName, getLineTemplate } from "facilmap-utils";
 import { getI18n } from "./i18n";
 import { reactive, ref, toRef } from "vue";
 
-export function drawMarker(type: Type, context: FacilMapContext, toasts: ToastContext): void {
+export function drawMarker(type: DeepReadonly<Type>, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
 
 	const isSaving = ref(false);
@@ -122,14 +122,13 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 	markerLayer.dragging!.enable();
 }
 
-export async function drawLine(type: Type, context: FacilMapContext, toasts: ToastContext): Promise<void> {
+export async function drawLine(type: DeepReadonly<Type>, context: FacilMapContext, toasts: ToastContext): Promise<void> {
 	try {
 		toasts.hideToast("fm-draw-add-line");
 
 		const mapContext = requireMapContext(context);
-		const client = requireClientContext(context);
 
-		const lineTemplate = await client.value.getLineTemplate({ typeId: type.id });
+		const lineTemplate = getLineTemplate(type);
 
 		const isDisabled = ref(true);
 		const isSaving = ref(false);

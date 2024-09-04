@@ -85,12 +85,12 @@ export default class DatabaseRoutes {
 		return generateRandomId(20);
 	}
 
-	async createRoute(routePoints: Point[], mode: RouteMode): Promise<Route | undefined> {
+	async createRoute(routePoints: Point[], mode: RouteMode): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
 		const routeId = await this.generateRouteId();
 		return await this.updateRoute(routeId, routePoints, mode, true);
 	}
 
-	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<Route | undefined> {
+	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
 		const thisTime = Date.now();
 		updateTimes[routeId] = thisTime;
 
@@ -133,7 +133,7 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<Route | undefined> {
+	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
 		const clear = !!routeId;
 
 		if (!routeId)

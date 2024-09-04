@@ -11,7 +11,7 @@
 
 	const i18n = useI18n();
 	const context = injectContextOptional();
-	const client = toRef(() => context?.components.client);
+	const clientContext = toRef(() => context?.components.client);
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -37,8 +37,8 @@
 		await setLangCookie(values.lang);
 		await setUnitsCookie(values.units);
 
-		if (client.value) {
-			await client.value.setLanguage({
+		if (clientContext.value) {
+			await clientContext.value.client.setLanguage({
 				lang: values.lang,
 				units: values.units
 			});

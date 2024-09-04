@@ -1,17 +1,17 @@
 <script setup lang="ts">
 	import { getLayers } from "facilmap-leaflet";
 	import { getLegendItems } from "./legend/legend-utils";
-	import type { Writable } from "facilmap-types";
+	import { Writable } from "facilmap-types";
 	import { formatCoordinates, quoteHtml } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 	import { T, useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
@@ -40,7 +40,7 @@
 	});
 
 	const hasLegend = computed(() => {
-		return !!client.value.mapData && getLegendItems(context).length > 0;
+		return !!clientSub.value && getLegendItems(context).length > 0;
 	});
 
 	const mapSlugTypes = computed(() => {
@@ -48,7 +48,7 @@
 			{ value: 2, text: i18n.t("share-dialog.type-admin") },
 			{ value: 1, text: i18n.t("share-dialog.type-write") },
 			{ value: 0, text: i18n.t("share-dialog.type-read") }
-		].filter((option) => client.value.writable != null && option.value <= client.value.writable);
+		].filter((option) => clientSub.value && option.value <= clientSub.value.data.mapData!.writable);
 	});
 
 	const url = computed(() => {
@@ -75,7 +75,12 @@
 		const paramsStr = params.toString();
 
 		return context.baseUrl
-			+ (client.value.mapData ? encodeURIComponent((mapSlugType.value == 2 && client.value.mapData.adminId) || (mapSlugType.value == 1 && client.value.mapData.writeId) || client.value.mapData.id) : '')
+			+ (clientSub.value ? encodeURIComponent(
+				mapSlugType.value == 2 && clientSub.value.data.mapData!.writable === Writable.ADMIN ? clientSub.value.data.mapData!.adminId :
+				mapSlugType.value == 1 && clientSub.value.data.mapData!.writable !== Writable.READ ? clientSub.value.data.mapData!.writeId :
+				mapSlugType.value == 0 ? clientSub.value.data.mapData!.readId
+				: ""
+			) : "")
 			+ (paramsStr ? `?${paramsStr}` : '')
 			+ (includeMapView.value && mapContext.value.hash ? `#${mapContext.value.hash}` : '');
 	});
@@ -101,7 +106,7 @@
 						class="form-check-input"
 						:id="`${id}-include-map-view-input`"
 						v-model="includeMapView"
-						:disabled="!client.mapData"
+						:disabled="!clientSub"
 					/>
 					<label :for="`${id}-include-map-view-input`" class="form-check-label">
 						<T k="share-dialog.include-view">
@@ -230,7 +235,7 @@
 			</div>
 		</div>
 
-		<template v-if="client.mapData">
+		<template v-if="clientSub">
 			<div class="row mb-3">
 				<label :for="`${id}-mapSlugType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
 				<div class="col-sm-9">

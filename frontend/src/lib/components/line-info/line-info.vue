@@ -77,17 +77,17 @@
 		toasts.hideToast(`fm${context.id}-line-info-move`);
 
 		mapContext.value.components.map.fire('fmInteractionStart');
-		const routeId = `l${line.value.id}`;
+		const routeKey = `l${line.value.id}`;
 
 		try {
-			await client.value.lineToRoute({ id: line.value.id, routeId });
+			await client.value.lineToRoute({ id: line.value.id, routeKey });
 
 			mapContext.value.components.linesLayer.hideLine(line.value.id);
 
 			const isSaving = ref(false);
 
 			const done = async (save: boolean) => {
-				const route = client.value.routes[routeId];
+				const route = client.value.routes[routeKey];
 				if (save && !route)
 					return;
 
@@ -105,7 +105,7 @@
 					isMoving.value = false;
 
 					// Clear route after editing line so that the server can take the trackPoints from the route
-					client.value.clearRoute({ routeId }).catch((err) => {
+					client.value.clearRoute({ routeKey }).catch((err) => {
 						console.error("Error clearing route", err);
 					});
 
@@ -138,7 +138,7 @@
 			toasts.hideToast(`fm${context.id}-line-info-move`);
 			mapContext.value.components.map.fire('fmInteractionEnd');
 			isMoving.value = false;
-			client.value.clearRoute({ routeId }).catch((err) => {
+			client.value.clearRoute({ routeKey }).catch((err) => {
 				console.error("Error clearing route", err);
 			});
 			mapContext.value.components.linesLayer.unhideLine(line.value.id);
@@ -248,7 +248,7 @@
 			v-if="isMoving"
 			active
 			ref="routeForm"
-			:routeId="`l${line.id}`"
+			:routeKey="`l${line.id}`"
 			:showToolbar="false"
 			noClear
 		></RouteForm>

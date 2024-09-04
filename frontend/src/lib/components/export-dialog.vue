@@ -2,7 +2,7 @@
 	import { computed, ref } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { getUniqueId } from "../utils/utils";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import HelpPopover from "./ui/help-popover.vue";
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 	import type { ComponentProps } from "../utils/vue";
@@ -22,12 +22,12 @@
 	}>();
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 
 	const id = getUniqueId("fm-export-map");
 
-	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
+	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data?.types));
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
@@ -77,7 +77,7 @@
 		}
 	});
 
-	const resolveTypeId = (typeId: ID | undefined) => typeId != null && client.value.types[typeId] ? typeId : undefined;
+	const resolveTypeId = (typeId: ID | undefined) => typeId != null && clientSub.value.data.types[typeId] ? typeId : undefined;
 	const resolvedTypeId = computed(() => resolveTypeId(typeId.value));
 
 	const canSelectRouteType = computed(() => format.value === "gpx");
@@ -113,7 +113,7 @@
 					}
 					return (
 						context.baseUrl
-							+ client.value.mapData!.id
+							+ clientSub.value.data.mapData!.id
 							+ `/rawTable`
 							+ `/${resolvedTypeId.value}`
 							+ (paramsStr ? `?${paramsStr}` : '')
@@ -121,7 +121,7 @@
 				} else {
 					return (
 						context.baseUrl
-							+ client.value.mapData!.id
+							+ clientSub.value.data.mapData!.id
 							+ `/table`
 							+ (paramsStr ? `?${paramsStr}` : '')
 					);
@@ -134,7 +134,7 @@
 				}
 				return (
 					context.baseUrl
-						+ client.value.mapData!.id
+						+ clientSub.value.data.mapData!.id
 						+ `/csv`
 						+ `/${resolvedTypeId.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -144,7 +144,7 @@
 			case "gpx": {
 				return (
 					context.baseUrl
-						+ client.value.mapData!.id
+						+ clientSub.value.data.mapData!.id
 						+ `/${format.value}`
 						+ (routeType.value === "zip" ? `/zip` : "")
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -154,7 +154,7 @@
 			default: {
 				return (
 					context.baseUrl
-						+ client.value.mapData!.id
+						+ clientSub.value.data.mapData!.id
 						+ `/${format.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
 				);

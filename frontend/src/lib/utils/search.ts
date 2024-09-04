@@ -2,7 +2,7 @@ import type { FindOnMapResult, SearchResult } from "facilmap-types";
 import { numberKeys } from "facilmap-utils";
 import { isEqual } from "lodash-es";
 import type { FileResult, FileResultObject } from "./files";
-import type { ClientContext } from "../components/facil-map-context-provider/client-context";
+import type { ClientSub } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 
 const VIEW_KEYS: Array<keyof FileResultObject["views"][0]> = ["name", "baseLayer", "layers", "top", "bottom", "left", "right", "filter"];
 const TYPE_KEYS: Array<keyof FileResultObject["types"][0]> = ["name", "type", "defaultColour", "colourFixed", "defaultSize", "sizeFixed", "defaultIcon", "iconFixed", "defaultShape", "shapeFixed", "defaultWidth", "widthFixed", "defaultStroke", "strokeFixed", "defaultMode", "modeFixed", "fields"];
@@ -33,17 +33,17 @@ export function isLineResult(result: SearchResult | FindOnMapResult | FileResult
 		return !!result.geojson && ["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(result.geojson.type);
 }
 
-export function viewExists(client: ClientContext, view: FileResultObject["views"][0]): boolean {
-	for (const viewId of numberKeys(client.views)) {
-		if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], client.views[viewId][idx])))
+export function viewExists(clientSub: ClientSub, view: FileResultObject["views"][0]): boolean {
+	for (const viewId of numberKeys(clientSub.data.views)) {
+		if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], clientSub.data.views[viewId][idx])))
 			return true;
 	}
 	return false;
 }
 
-export function typeExists(client: ClientContext, type: FileResultObject["types"][0]): boolean {
-	for (const typeId of numberKeys(client.types)) {
-		if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], client.types[typeId][idx])))
+export function typeExists(clientSub: ClientSub, type: FileResultObject["types"][0]): boolean {
+	for (const typeId of numberKeys(clientSub.data.types)) {
+		if(!TYPE_KEYS.some((idx) => !isEqual(type[idx], clientSub.data.types[typeId][idx])))
 			return true;
 	}
 	return false;

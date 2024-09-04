@@ -2,6 +2,7 @@
 	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch, reactive, readonly, shallowReadonly } from "vue";
 	import { useIsNarrow } from "../../utils/bootstrap";
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
+import { ClientContextMapState, type ClientContextMap } from "./client-context";
 
 	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
 
@@ -31,6 +32,23 @@
 	export const requireClientContext = getRequireContext("client", "ClientProvider");
 	export const requireMapContext = getRequireContext("map", "LeafletMap");
 	export const requireSearchBoxContext = getRequireContext("searchBox", "SearchBox");
+
+	export type ClientSub = Extract<ClientContextMap, { state: ClientContextMapState.OPEN }>;
+
+	export function getClientSub(context: FacilMapContext): Readonly<Ref<ClientSub | undefined>> {
+		const clientContext = requireClientContext(context);
+		return toRef(() => clientContext.value.map?.state === ClientContextMapState.OPEN ? clientContext.value.map : undefined);
+	}
+
+	export function requireClientSub(context: FacilMapContext): Readonly<Ref<ClientSub>> {
+		const clientSub = getClientSub(context);
+		return toRef(() => {
+			if (!clientSub.value) {
+				throw new Error("No map is currently open.");
+			}
+			return clientSub.value;
+		});
+	}
 
 	let idCounter = 1;
 </script>

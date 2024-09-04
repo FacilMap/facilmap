@@ -5,14 +5,15 @@
 	import { computed, ref } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { formatCoordinates } from "facilmap-utils";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { viewValidator } from "facilmap-types";
 	import { T, useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -43,7 +44,7 @@
 		toasts.hideToast(`fm${context.id}-save-view-error`);
 
 		try {
-			const view = await client.value.addView({
+			const view = await clientContext.value.client.createView(clientSub.value.mapSlug, {
 				...getCurrentView(mapContext.value.components.map, {
 					includeFilter: includeFilter.value,
 					overpassLayer: includeOverpass.value ? mapContext.value.components.overpassLayer : undefined
@@ -52,7 +53,7 @@
 			});
 
 			if (makeDefault.value) {
-				await client.value.editMap({ defaultViewId: view.id });
+				await clientContext.value.client.updateMap(clientSub.value.mapSlug, { defaultViewId: view.id });
 			}
 
 			modalRef.value?.modal.hide();

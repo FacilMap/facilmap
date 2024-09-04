@@ -41,17 +41,17 @@
 
 	const contextRef = ref<InstanceType<typeof FacilMapContextProvider>>();
 	const context = toRef(() => contextRef.value?.context);
-	const client = toRef(() => context.value?.components.client);
+	const clientContext = toRef(() => context.value?.components.client);
 
-	watch(() => client.value?.map?.mapSlug, () => {
-		if (client.value && client.value.map?.mapSlug !== props.mapSlug) {
-			emit("update:mapSlug", client.value.map?.mapSlug);
+	watch(() => clientContext.value?.map?.mapSlug, () => {
+		if (clientContext.value && clientContext.value.map?.mapSlug !== props.mapSlug) {
+			emit("update:mapSlug", clientContext.value.map?.mapSlug);
 		}
 	});
 
-	watch(() => client.value?.map?.data?.mapData?.name, () => {
-		if (client.value) {
-			emit("update:mapName", client.value.map?.data?.mapData?.name);
+	watch(() => clientContext.value?.map?.data?.mapData?.name, () => {
+		if (clientContext.value) {
+			emit("update:mapName", clientContext.value.map?.data?.mapData?.name);
 		}
 	});
 

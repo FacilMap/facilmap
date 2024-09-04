@@ -8,12 +8,11 @@
 	import ToolboxMapStyleDropdown from "./toolbox-map-style-dropdown.vue";
 	import ToolboxToolsDropdown from "./toolbox-tools-dropdown.vue";
 	import ToolboxViewsDropdown from "./toolbox-views-dropdown.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { isNarrowBreakpoint } from "../../utils/bootstrap";
 	import { fixOnCleanup } from "../../utils/vue";
 	import { Control, DomUtil, type Map } from "leaflet";
 	import { Writable } from "facilmap-types";
-	import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 
 	class CustomControl extends Control {
 		override onAdd(map: Map) {
@@ -25,7 +24,7 @@
 <script setup lang="ts">
 	const context = injectContextRequired();
 	const mapContext = toRef(() => context.components.map);
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 
 	const props = withDefaults(defineProps<{
 		interactive?: boolean;
@@ -75,19 +74,19 @@
 				></ToolboxCollabMapsDropdown>
 
 				<ToolboxAddDropdown
-					v-if="client.map?.state === ClientContextMapState.OPEN && client.map.data.mapData!.writable !== Writable.READ"
+					v-if="clientSub && clientSub.data.mapData!.writable !== Writable.READ"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxAddDropdown>
 
 				<ToolboxViewsDropdown
-					v-if="client.map?.state === ClientContextMapState.OPEN && (client.map.data.mapData!.writable !== Writable.READ || Object.keys(client.map.data.views).length > 0)"
+					v-if="clientSub && (clientSub.data.mapData!.writable !== Writable.READ || Object.keys(clientSub.data.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxViewsDropdown>
 
 				<ToolboxMapStyleDropdown></ToolboxMapStyleDropdown>
 
 				<ToolboxToolsDropdown
-					v-if="props.interactive || client.map?.state === ClientContextMapState.OPEN"
+					v-if="props.interactive || clientSub"
 					:interactive="props.interactive"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxToolsDropdown>

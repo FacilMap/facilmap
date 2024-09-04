@@ -89,9 +89,21 @@ export type InterfaceToType<T> = {
 	[K in keyof T]: InterfaceToType<T[K]>;
 }
 
-export type DeepReadonly<T> = {
-	readonly [P in keyof T]: DeepReadonly<T[P]>;
-};
+// export type DeepReadonly<T> = {
+// 	readonly [P in keyof T]: DeepReadonly<T[P]>;
+// };
+export type DeepReadonly<T> = (
+	T extends string | number | boolean | bigint | symbol | undefined | null | Function | Date | Error | RegExp ? T :
+	T extends Map<infer K, infer V> ? ReadonlyMap<DeepReadonly<K>, DeepReadonly<V>> :
+	T extends ReadonlyMap<infer K, infer V> ? ReadonlyMap<DeepReadonly<K>, DeepReadonly<V>> :
+	T extends WeakMap<infer K, infer V> ? WeakMap<DeepReadonly<K>, DeepReadonly<V>> :
+	T extends Set<infer U> ? ReadonlySet<DeepReadonly<U>> :
+	T extends ReadonlySet<infer U> ? ReadonlySet<DeepReadonly<U>> :
+	T extends WeakSet<infer U> ? WeakSet<DeepReadonly<U>> :
+	T extends Promise<infer U> ? Promise<DeepReadonly<U>> :
+	T extends {} ? { readonly [K in keyof T]: DeepReadonly<T[K]> } :
+	Readonly<T>
+);
 
 export type DistributiveKeyOf<T> = T extends any ? keyof T : never;
 export type DistributivePick<T, K extends DistributiveKeyOf<T>> = T extends any ? Pick<T, K & keyof T> : never;

@@ -16,7 +16,7 @@ export interface MapStorage {
 	history: Record<ID, DeepReadonly<HistoryEntry>>;
 };
 
-export type RouteWithTrackPoints = Omit<Route, "routeId" | "trackPoints"> & { trackPoints: TrackPoints };
+export type RouteWithTrackPoints = Route & { trackPoints: TrackPoints };
 
 export class SocketClientStorage {
 	reactiveObjectProvider: ReactiveObjectProvider;
@@ -115,6 +115,7 @@ export class SocketClientStorage {
 			},
 
 			disconnect: (reason) => {
+				// TODO: Handle reconnect gracefully
 				this.maps = this.reactiveObjectProvider.create({});
 				this.routes = this.reactiveObjectProvider.create({});
 			},

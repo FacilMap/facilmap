@@ -4,7 +4,7 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, type SetBboxItem, DEFAULT_PAGING, type ID } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
@@ -21,7 +21,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	bbox: BboxWithZoom | undefined = undefined;
 	mapSubscriptions: Record<ID, Array<{ pick: SubscribeToMapPick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
-	routeSubscriptions: Record<string, Omit<Route, "trackPoints">> = { };
+	routeSubscriptions: Record<string, Route & { routeId: string }> = { };
 
 	unregisterDatabaseHandlers = (): void => undefined;
 
@@ -35,8 +35,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	}
 
 	handleDisconnect(): void {
-		for (const routeId of Object.keys(this.routeSubscriptions)) {
-			this.database.routes.deleteRoute(this.routeSubscriptions[routeId].routeId).catch((err) => {
+		for (const routeKey of Object.keys(this.routeSubscriptions)) {
+			this.database.routes.deleteRoute(this.routeSubscriptions[routeKey].routeId).catch((err) => {
 				console.error("Error clearing route", err);
 			});
 		}
@@ -295,16 +295,32 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				const results = await this.api.getAllMapObjects(mapSlug, {
 					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p))
 				});
-				type This = this;
-				return this.emitStream((async function*(this: This) {
-					for await (const obj of results) {
-						if (obj.type === "mapData") {
-							yield obj;
-						} else {
-							yield { ...obj, data: this.emitStream<any>(obj.data) };
+
+				for await (const obj of results) {
+					if (obj.type === "mapData") {
+						this.emit("mapData", mapSlug, obj.data);
+					} else if (obj.type === "markers") {
+						for await (const marker of obj.data) {
+							this.emit("marker", mapSlug, marker);
+						}
+					} else if (obj.type === "lines") {
+						for await (const line of obj.data) {
+							this.emit("line", mapSlug, line);
+						}
+					} else if (obj.type === "linePoints") {
+						for await (const linePoints of obj.data) {
+							this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
+						}
+					} else if (obj.type === "types") {
+						for await (const type of obj.data) {
+							this.emit("type", mapSlug, type);
+						}
+					} else if (obj.type === "views") {
+						for await (const view of obj.data) {
+							this.emit("view", mapSlug, view);
 						}
 					}
-				}).call(this));
+				}
 			},
 
 			unsubscribeFromMap: async (mapSlug) => {
@@ -344,25 +360,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				this.routeSubscriptions[routeKey] = omit(routeInfo, ["trackPoints"]);
 
-				if(this.bbox)
-					routeInfo.trackPoints = prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true);
-				else
-					routeInfo.trackPoints = [];
+				this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
 
-				return {
-					top: routeInfo.top,
-					left: routeInfo.left,
-					bottom: routeInfo.bottom,
-					right: routeInfo.right,
-					routePoints: routeInfo.routePoints,
-					mode: routeInfo.mode,
-					time: routeInfo.time,
-					distance: routeInfo.distance,
-					ascent: routeInfo.ascent,
-					descent: routeInfo.descent,
-					extraInfo: routeInfo.extraInfo,
-					trackPoints: routeInfo.trackPoints
-				};
+				if(this.bbox) {
+					this.emit("routePoints", routeKey, {
+						trackPoints: prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true),
+						reset: true
+					});
+				}
 			},
 
 			unsubscribeFromRoute: async (routeKey) => {
@@ -413,34 +418,28 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				this.bbox = bbox;
 
-				type This = this;
-				return this.emitStream((async function*(this: This): AsyncIterable<StreamToStreamId<SetBboxItem>> {
-					for (const subs of Object.values(this.mapSubscriptions)) {
-						for (const sub of subs) {
-							const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
-							for await (const obj of markerObjs) {
-								yield { ...obj, mapSlug: sub.mapSlug, data: this.emitStream(obj.data) };
+				for (const subs of Object.values(this.mapSubscriptions)) {
+					for (const sub of subs) {
+						const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
+						for await (const obj of markerObjs) {
+							for await (const marker of obj.data) {
+								this.emit("marker", sub.mapSlug, marker);
 							}
+						}
 
-							const lineObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["linePoints"], bbox: lineBboxWithExcept });
-							for await (const obj of lineObjs) {
-								yield { ...obj, mapSlug: sub.mapSlug, data: this.emitStream(obj.data) };
+						const lineObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["linePoints"], bbox: lineBboxWithExcept });
+						for await (const obj of lineObjs) {
+							for await (const linePoints of obj.data) {
+								this.emit("linePoints", sub.mapSlug, { ...linePoints, reset: false });
 							}
 						}
 					}
+				}
 
-					yield {
-						type: "routePoints",
-						data: this.emitStream((async function*(this: This) {
-							for (const [routeKey, sub] of Object.entries(this.routeSubscriptions)) {
-								yield {
-									routeKey,
-									trackPoints: await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except)
-								};
-							}
-						}).call(this))
-					};
-				}).call(this));
+				for (const [routeKey, sub] of Object.entries(this.routeSubscriptions)) {
+					const trackPoints = await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except);
+					this.emit("routePoints", routeKey, { trackPoints, reset: false });
+				}
 			},
 
 			/*copyPad : function(data, callback) {
@@ -533,7 +532,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 								this.emit("linePoints", sub.mapSlug, {
 									lineId,
 									// Emit track points even if none are in the bbox so that client resets cached track points
-									trackPoints: prepareForBoundingBox(trackPoints, this.bbox)
+									trackPoints: prepareForBoundingBox(trackPoints, this.bbox),
+									reset: true
 								});
 							}
 						}

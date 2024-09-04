@@ -121,3 +121,25 @@ export function isReactiveObjectUpdate<T>(update: ReactiveObjectUpdate<any, any>
 export function isReactivePropertyUpdate<T, K extends keyof T>(update: ReactiveObjectUpdate<any, any>, object: T, key: K): update is ReactiveObjectUpdate<T, K> {
 	return update.object === object && update.key === key;
 }
+
+/**
+ * Defines a getter in "object" for each property of "data". Through the reactivity provider, changes on "data" are
+ * detected and getters are defined for any properties added later.
+ * This allows non-reactive "object" to become a view for reactive "data".
+ */
+export function _defineDynamicGetters(object: any, data: any, reactiveObjectProvider: ReactiveObjectProvider): void {
+	for (const key of Object.keys(data)) {
+		void Object.defineProperty(object, key, {
+			get: () => data[key]
+		});
+	}
+	reactiveObjectProvider.subscribe((update) => {
+		if (update.action === "set" && update.object === data && !Object.prototype.hasOwnProperty.call(object, update.key)) {
+			void Object.defineProperty(object, update.key, {
+				get: () => data[update.key],
+				configurable: true,
+				enumerable: true
+			});
+		}
+	});
+}

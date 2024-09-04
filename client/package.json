@@ -36,7 +36,7 @@
   "dependencies": {
     "content-disposition": "^0.5.4",
     "facilmap-types": "workspace:^",
-    "json-stream-es": "portal:/home/cdauth/Documents/workspace/programming/web/json-stream-es",
+    "json-stream-es": "^1.2.0",
     "serialize-error": "^11.0.3",
     "socket.io-client": "^4.7.5"
   },

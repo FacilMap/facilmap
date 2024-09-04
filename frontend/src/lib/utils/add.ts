@@ -1,16 +1,14 @@
-import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
+import type { CRU, DeepReadonly, Line, Marker, Point, SearchResult, Type } from "facilmap-types";
 import { omit } from "lodash-es";
 import type { FileResult } from "./files";
 import type { LineString, MultiLineString, MultiPolygon, Point as GeoJSONPoint, Polygon, Position } from "geojson";
 import type { Optional } from "facilmap-utils";
 import type { OverpassElement } from "facilmap-leaflet";
 import type { SelectedItem } from "./selection";
-import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import { isLineResult, isMarkerResult } from "./search";
 import { useToasts } from "../components/ui/toasts/toasts.vue";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
-import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
-import type { Ref } from "vue";
+import { requireClientContext, requireClientSub, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { getI18n } from "./i18n";
 
 export type MarkerWithTags = Omit<Marker<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
@@ -90,7 +88,7 @@ export function overpassElementsToMarkersWithTags(elements: OverpassElement[]): 
  * Maps the tags from a search result to fields whose name is similar to the tag key (ignoring case and
  * non-letters). The resulting object can be used as "data" for a marker and line.
  */
-export function mapTagsToType(tags: Record<string, string>, type: Type): Record<string, string> {
+export function mapTagsToType(tags: Record<string, string>, type: DeepReadonly<Type>): Record<string, string> {
 	let keyMap = (keys: string[]) => {
 		let ret: Record<string, string> = Object.create(null);
 		for(let key of keys)
@@ -123,8 +121,11 @@ function lineStringToTrackPoints(geometry: LineString | MultiLineString | Polygo
 	return coords.flat().map((latlng) => ({ lat: latlng[1], lon: latlng[0] }));
 }
 
-export async function addMarkerToMap(client: Ref<ClientContext>, marker: MarkerWithTags, type: Type): Promise<SelectedItem> {
-	const newMarker = await client.value.addMarker({
+export async function addMarkerToMap(context: FacilMapContext, marker: MarkerWithTags, type: DeepReadonly<Type>): Promise<SelectedItem> {
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
+
+	const newMarker = await clientContext.value.client.createMarker(clientSub.value.mapSlug, {
 		...marker,
 		data: {
 			...marker.tags && mapTagsToType(marker.tags, type),
@@ -136,8 +137,11 @@ export async function addMarkerToMap(client: Ref<ClientContext>, marker: MarkerW
 	return { type: "marker", id: newMarker.id };
 }
 
-export async function addLineToMap(client: Ref<ClientContext>, line: LineWithTags, type: Type): Promise<SelectedItem> {
-	const newLine = await client.value.addLine({
+export async function addLineToMap(context: FacilMapContext, line: LineWithTags, type: DeepReadonly<Type>): Promise<SelectedItem> {
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
+
+	const newLine = await clientContext.value.client.createLine(clientSub.value.mapSlug, {
 		...line,
 		typeId: type.id
 	});
@@ -145,16 +149,14 @@ export async function addLineToMap(client: Ref<ClientContext>, line: LineWithTag
 	return { type: "line", id: newLine.id };
 }
 
-export async function addToMap(context: FacilMapContext, objects: Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }>): Promise<SelectedItem[]> {
+export async function addToMap(context: FacilMapContext, objects: Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: DeepReadonly<Type> }>): Promise<SelectedItem[]> {
 	const selection: SelectedItem[] = [];
-
-	const client = requireClientContext(context);
 
 	for (const object of objects) {
 		if ("marker" in object) {
-			selection.push(await addMarkerToMap(client, object.marker, object.type));
+			selection.push(await addMarkerToMap(context, object.marker, object.type));
 		} else {
-			selection.push(await addLineToMap(client, object.line, object.type));
+			selection.push(await addLineToMap(context, object.line, object.type));
 		}
 	}
 
@@ -164,14 +166,14 @@ export async function addToMap(context: FacilMapContext, objects: Array<({ marke
 }
 
 function showAddConfirmation(context: FacilMapContext, selection: SelectedItem[]) {
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 
-	const markers = selection.flatMap((item) => (item.type === "marker" ? [client.value.markers[item.id]] : []));
-	const lines = selection.flatMap((item) => (item.type === "line" ? [client.value.lines[item.id]] : []));
+	const markers = selection.flatMap((item) => (item.type === "marker" ? [clientSub.value.data.markers[item.id]] : []));
+	const lines = selection.flatMap((item) => (item.type === "line" ? [clientSub.value.data.lines[item.id]] : []));
 
 	const objects = [...markers, ...lines].length;
-	const hiddenObjects = [...markers, ...lines].filter((obj) => !mapContext.value.components.map.fmFilterFunc(obj, client.value.types[obj.typeId])).length;
+	const hiddenObjects = [...markers, ...lines].filter((obj) => !mapContext.value.components.map.fmFilterFunc(obj, clientSub.value.data.types[obj.typeId])).length;
 
 	if (hiddenObjects > 0) {
 		const i18n = getI18n();

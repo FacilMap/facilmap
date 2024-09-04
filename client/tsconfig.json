@@ -5,7 +5,8 @@
 		"composite": true,
 		"paths": {
 			"facilmap-types": ["../types/src/index.ts"]
-		}
+		},
+		"strictFunctionTypes": true
 	},
 	"references": [
 		{ "path": "./tsconfig.node.json" },

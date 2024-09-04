@@ -5,13 +5,14 @@
 	import ShareDialog from "../share-dialog.vue";
 	import { ref, toRef } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDialog from "../export-dialog.vue";
 	import UserPreferencesDialog from "../user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
+	import { Writable } from "facilmap-types";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const i18n = useI18n();
 	const importTabContext = toRef(() => context.components.importTab);
 
@@ -60,7 +61,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.open-file")}}</a>
 		</li>
 
-		<li v-if="client.mapData">
+		<li v-if="clientSub">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -69,11 +70,11 @@
 			>{{i18n.t("toolbox-tools-dropdown.export")}}</a>
 		</li>
 
-		<li v-if="client.mapData">
+		<li v-if="clientSub">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="client.mapData">
+		<li v-if="clientSub">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -82,7 +83,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.filter")}}</a>
 		</li>
 
-		<li v-if="client.writable == 2 && client.mapData">
+		<li v-if="clientSub && clientSub.data.mapData!.writable === Writable.ADMIN">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -91,7 +92,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.settings")}}</a>
 		</li>
 
-		<li v-if="!client.readonly && client.mapData">
+		<li v-if="clientSub && clientSub.data.mapData!.writable !== Writable.READ">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -115,7 +116,7 @@
 	</DropdownMenu>
 
 	<MapSettingsDialog
-		v-if="dialog === 'edit-map' && client.mapData"
+		v-if="dialog === 'edit-map' && clientSub"
 		@hidden="dialog = undefined"
 	></MapSettingsDialog>
 
@@ -132,12 +133,12 @@
 	</KeepAlive>
 
 	<EditFilterDialog
-		v-if="dialog === 'edit-filter' && client.mapData"
+		v-if="dialog === 'edit-filter' && clientSub"
 		@hidden="dialog = undefined"
 	></EditFilterDialog>
 
 	<HistoryDialog
-		v-if="dialog === 'history' && client.mapData"
+		v-if="dialog === 'history' && clientSub"
 		@hidden="dialog = undefined"
 	></HistoryDialog>
 

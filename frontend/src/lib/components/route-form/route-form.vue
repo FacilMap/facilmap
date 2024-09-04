@@ -87,7 +87,7 @@
 	const props = withDefaults(defineProps<{
 		/** If false, the route layer will be opaque and not draggable. */
 		active?: boolean;
-		routeId?: string;
+		routeKey?: string;
 		showToolbar?: boolean;
 		noClear?: boolean;
 	}>(), {
@@ -100,7 +100,7 @@
 		"hash-query-change": [hashQuery: HashQuery | undefined];
 	}>();
 
-	const routeObj = computed(() => props.routeId ? client.value.routes[props.routeId] : client.value.route);
+	const routeObj = computed(() => props.routeKey ? client.value.routes[props.routeKey] : client.value.route);
 	const hasRoute = computed(() => !!routeObj.value);
 
 	const routeMode = ref(routeObj.value?.mode ?? "car");
@@ -116,7 +116,7 @@
 	const suggestionMarker = ref<MarkerLayer>();
 
 	// TODO: Handle client.value change
-	const routeLayer = new RouteLayer(client.value, props.routeId, { weight: 7, opacity: 1, raised: true });
+	const routeLayer = new RouteLayer(client.value, props.routeKey, { weight: 7, opacity: 1, raised: true });
 	routeLayer.on("click", (e) => {
 		if (!props.active && !(e.originalEvent as any).ctrlKey) {
 			emit("activate");
@@ -436,7 +436,7 @@
 			const route = await client.value.setRoute({
 				routePoints: points.map((point) => ({ lat: point!.lat!, lon: point!.lon! })),
 				mode,
-				routeId: props.routeId
+				routeKey: props.routeKey
 			});
 
 			if (route && zoom)
@@ -466,7 +466,7 @@
 			suggestionMarker.value = undefined;
 		}
 
-		client.value.clearRoute({ routeId: props.routeId });
+		client.value.clearRoute({ routeKey: props.routeKey });
 	}
 
 	function clear(): void {

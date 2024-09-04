@@ -2,13 +2,13 @@
 	import { filterHasError, getOrderedTypes } from "facilmap-utils";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, ref } from "vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const i18n = useI18n();
 
 	const emit = defineEmits<{
@@ -18,7 +18,7 @@
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 	const filter = ref(mapContext.value.filter ?? "");
 
-	const types = computed(() => getOrderedTypes(client.value.types));
+	const types = computed(() => getOrderedTypes(clientSub.value.data.types));
 
 	function validateFilter(filter: string) {
 		return filterHasError(filter)?.message;

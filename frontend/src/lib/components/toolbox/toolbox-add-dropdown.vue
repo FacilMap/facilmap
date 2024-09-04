@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import type { Type } from "facilmap-types";
+	import { Writable, type DeepReadonly, type Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
 	import { computed, ref } from "vue";
 	import ManageTypesDialog from "../manage-types-dialog.vue";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { formatTypeName, getOrderedTypes, sleep } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
@@ -15,7 +15,7 @@
 	}>();
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -24,7 +24,7 @@
 		| "manage-types"
 	>();
 
-	async function addObject(type: Type): Promise<void> {
+	async function addObject(type: DeepReadonly<Type>): Promise<void> {
 		if(type.type == "marker") {
 			await sleep(0); // For some reason this is necessary for the dropdown to close itself
 			drawMarker(type, context, toasts);
@@ -33,7 +33,7 @@
 		}
 	}
 
-	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
+	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data.types));
 </script>
 
 <template>
@@ -56,11 +56,11 @@
 			>{{formatTypeName(type.name)}}</a>
 		</li>
 
-		<li v-if="client.writable == 2">
+		<li v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="client.writable == 2">
+		<li v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
 			<a
 				class="dropdown-item"
 				v-link-disabled="!!mapContext.interaction"
@@ -72,7 +72,7 @@
 	</DropdownMenu>
 
 	<ManageTypesDialog
-		v-if="dialog === 'manage-types' && client.mapData"
+		v-if="dialog === 'manage-types' && clientSub"
 		@hidden="dialog = undefined"
 	></ManageTypesDialog>
 </template>

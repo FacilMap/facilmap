@@ -24,14 +24,14 @@ export function normalizePageDescription(mapDescription: string | undefined): st
 	return mapDescription || getI18n().t("maps.fallback-page-description");
 }
 
-export function getOrderedTypes(types: Array<DeepReadonly<Type>> | Record<ID, Type>): Array<DeepReadonly<Type>> {
-	const typeArr = Array.isArray(types) ? [...types] : Object.values(types);
+export function getOrderedTypes(types: Array<DeepReadonly<Type>> | Record<ID, DeepReadonly<Type>> | undefined): Array<DeepReadonly<Type>> {
+	const typeArr = !types ? [] : Array.isArray(types) ? [...types] : Object.values(types);
 	return typeArr.sort((a, b) => a.idx - b.idx);
 }
 
-export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, DeepReadonly<View>>): Array<DeepReadonly<View>> {
-	const typeArr = Array.isArray(views) ? [...views] : Object.values(views);
-	return typeArr.sort((a, b) => a.idx - b.idx);
+export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, DeepReadonly<View>> | undefined): Array<DeepReadonly<View>> {
+	const viewArr = !views ? [] : Array.isArray(views) ? [...views] : Object.values(views);
+	return viewArr.sort((a, b) => a.idx - b.idx);
 }
 
 export function getWritable(mapData: MapDataWithWritable | MapData, mapSlug: MapSlug): Writable {

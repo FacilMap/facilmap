@@ -1,18 +1,19 @@
 <script setup lang="ts">
-	import type { ID, View } from "facilmap-types";
+	import type { DeepReadonly, ID, View } from "facilmap-types";
 	import { displayView } from "facilmap-leaflet";
 	import { computed, ref, watchEffect } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { showConfirm } from "./ui/alert.vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { getOrderedViews } from "facilmap-utils";
 	import Draggable from "vuedraggable";
 	import Icon from "./ui/icon.vue";
 	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -38,7 +39,7 @@
 		toasts.hideToast(`fm${context.id}-save-view-error-default`);
 
 		try {
-			await client.value.editMap({ defaultViewId: view.id });
+			await clientContext.value.client.updateMap(clientSub.value.mapSlug, { defaultViewId: view.id });
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-save-view-error-default`, () => i18n.t("manage-views-dialog.default-view-error"), err);
 		} finally {
@@ -60,7 +61,7 @@
 
 			isDeleting.value.add(view.id);
 
-			await client.value.deleteView({ id: view.id });
+			await clientContext.value.client.deleteView(clientSub.value.mapSlug, view.id);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-save-view-error-${view.id}`, () => i18n.t("manage-views-dialog.delete-view-error", { viewName: view.name }), err);
 		} finally {
@@ -68,10 +69,10 @@
 		}
 	};
 
-	const orderedViews = ref<View[]>([]);
+	const orderedViews = ref<DeepReadonly<View>[]>([]);
 	watchEffect(() => {
 		if (isMoving.value == null) {
-			orderedViews.value = getOrderedViews(client.value.views);
+			orderedViews.value = getOrderedViews(clientSub.value.data.views);
 		}
 	});
 
@@ -82,10 +83,7 @@
 			try {
 				// This handler is called when orderedViews is already reordered
 				const newIdx = e.moved.newIndex === 0 ? 0 : (orderedViews.value[e.moved.newIndex - 1].idx + 1);
-				await client.value.editView({
-					id: e.moved.element.id,
-					idx: newIdx
-				});
+				await clientContext.value.client.updateView(clientSub.value.mapSlug, e.moved.element.id, { idx: newIdx });
 			} finally {
 				isMoving.value = undefined;
 			}
@@ -114,7 +112,7 @@
 						<td
 							class="text-break align-middle"
 							:class="{
-								'font-weight-bold': client.mapData?.defaultView && view.id == client.mapData.defaultView.id
+								'font-weight-bold': view.id == clientSub.data.mapData!.defaultViewId
 							}"
 						>
 							<a href="javascript:" @click="display(view)">{{view.name}}</a>
@@ -123,7 +121,7 @@
 							<button
 								type="button"
 								class="btn btn-secondary"
-								v-show="!client.mapData?.defaultView || view.id !== client.mapData.defaultView.id"
+								v-show="!clientSub.data.mapData!.defaultViewId || view.id !== clientSub.data.mapData!.defaultViewId"
 								@click="makeDefault(view)"
 								:disabled="!!isSavingDefaultView || isDeleting.has(view.id)"
 							>

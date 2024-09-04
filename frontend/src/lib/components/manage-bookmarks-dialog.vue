@@ -4,11 +4,11 @@
 	import Draggable from "vuedraggable";
 	import { computed } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
-	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const i18n = useI18n();
 
 	const emit = defineEmits<{
@@ -16,7 +16,7 @@
 	}>();
 
 	const isBookmarked = computed(() => {
-		return !!client.value.mapSlug && storage.bookmarks.some((bookmark) => bookmark.id == client.value.mapSlug);
+		return !!clientSub.value && storage.bookmarks.some((bookmark) => bookmark.mapSlug == clientSub.value!.mapSlug);
 	});
 
 	function deleteBookmark(bookmark: Bookmark): void {
@@ -26,7 +26,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ id: client.value.mapSlug!, mapId: client.value.mapData!.id, name: client.value.mapData!.name });
+		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData!.id, name: clientSub.value!.data.mapData!.name });
 	}
 </script>
 
@@ -54,7 +54,7 @@
 			>
 				<template #item="{ element: bookmark }">
 					<tr>
-						<td class="align-middle text-break" :class="{ 'font-weight-bold': bookmark.id == client.mapId }">
+						<td class="align-middle text-break" :class="{ 'font-weight-bold': clientSub && bookmark.mapSlug == clientSub.mapSlug }">
 							{{bookmark.id}}
 						</td>
 						<td class="align-middle">
@@ -67,7 +67,7 @@
 					</tr>
 				</template>
 			</Draggable>
-			<tfoot v-if="client.mapData && !isBookmarked">
+			<tfoot v-if="clientSub && !isBookmarked">
 				<tr>
 					<td colspan="3">
 						<button type="button" class="btn btn-secondary" @click="addBookmark()">{{i18n.t("manage-bookmarks-dialog.bookmark-current")}}</button>

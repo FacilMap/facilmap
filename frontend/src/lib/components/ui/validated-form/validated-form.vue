@@ -117,6 +117,8 @@
 		target?: string;
 		noValidate?: boolean;
 		formValidationError?: string | undefined;
+		id?: string;
+		method?: string;
 	}>();
 
 	const emit = defineEmits<{
@@ -155,6 +157,8 @@
 		:action="actionWithoutQuery ?? 'javascript:'"
 		:target="props.target"
 		:class="{ 'fm-was-validated': formData.isTouched }"
+		:id="props.id"
+		:method="props.method"
 	>
 		<template v-for="[key, value] in actionParams?.entries()" :key="key">
 			<input type="hidden" :name="key" :value="value" />

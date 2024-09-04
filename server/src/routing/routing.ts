@@ -16,7 +16,7 @@ export type RawRouteInfo = Omit<RouteInfo, "trackPoints" | keyof Bbox> & {
 	trackPoints: Array<Point & { ele?: number }>;
 }
 
-export async function calculateRoute(routePoints: Point[], encodedMode: RouteMode | undefined): Promise<RouteInfo> {
+export async function calculateRoute(routePoints: Point[], encodedMode: RouteMode | undefined): Promise<RouteInfo & { trackPoints: TrackPoint[] }> {
 	const decodedMode = decodeRouteMode(encodedMode);
 
 	const simple = (!config.mapboxToken && config.orsToken) ? false : isSimpleRoute(decodedMode);
@@ -47,11 +47,11 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 	return {
 		...route,
 		...calculateBbox(route!.trackPoints)
-	} as RouteInfo;
+	} as RouteInfo & { trackPoints: TrackPoint[] };
 }
 
-export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
-	const result: Partial<RouteInfo> = {};
+export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<RouteInfo & { trackPoints: TrackPoint[] }> {
+	const result: Partial<RouteInfo & { trackPoints: TrackPoint[] }> = {};
 
 	if(trackPointsFromRoute) {
 		result.distance = trackPointsFromRoute.distance;
@@ -97,7 +97,7 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 
 	Object.assign(result, calculateBbox(result.trackPoints!));
 
-	return result as RouteInfo;
+	return result as RouteInfo & { trackPoints: TrackPoint[] };
 }
 
 function _getTrackPointsFromTrack(trackPoints: Point[], maxDistance: number) {

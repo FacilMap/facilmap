@@ -13,15 +13,17 @@
 	import FileResults from "../file-results.vue";
 	import { computed, reactive, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { isLanguageExplicit, useI18n } from "../../utils/i18n";
+	import { streamToString } from "json-stream-es";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
 	}>();
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
@@ -93,13 +95,13 @@
 
 					const [newSearchResults, newMapResults] = await Promise.all([
 						url ? (
-							client.value.find({ query, loadUrls: true })
+							clientContext.value.client.findUrl(query)
 						) : (
 							mapContext.value.runOperation(async () => await find(query, {
 								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
 							}))
 						),
-						client.value.mapData ? client.value.findOnMap({ query }) : undefined
+						clientSub.value ? clientContext.value.client.findOnMap(clientSub.value.mapSlug, query) : undefined
 					]);
 
 					if (counter != searchCounter.value)
@@ -113,12 +115,7 @@
 						loadedSearchString.value = query;
 					}
 
-					if(typeof newSearchResults == "string") {
-						searchResults.value = undefined;
-						mapResults.value = undefined;
-						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([ newSearchResults ]));
-						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
-					} else {
+					if (Array.isArray(newSearchResults)) {
 						const reactiveResults = reactive(newSearchResults);
 						searchResults.value = reactiveResults;
 						mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
@@ -138,6 +135,12 @@
 								console.warn("Error fetching search result elevations", err);
 							});
 						}
+					} else {
+						searchResults.value = undefined;
+						mapResults.value = undefined;
+						const content = await streamToString(newSearchResults.data);
+						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([content]));
+						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
 					}
 				} catch(err) {
 					toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);

@@ -28,7 +28,7 @@
 	}
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 
 	const id = getUniqueId("fm-open-map");
@@ -54,7 +54,7 @@
 	function handleSubmit(): void {
 		const parsed = parseMapSlug(mapSlug.value, context);
 		if (parsed) {
-			client.value.openMap(parsed.mapSlug);
+			clientContext.value.openMap(parsed.mapSlug);
 			modalRef.value!.modal.hide();
 
 			setTimeout(() => {
@@ -65,7 +65,7 @@
 	}
 
 	function openResult(result: FindMapsResult): void {
-		client.value.openMap(result.readId);
+		clientContext.value.openMap(result.readId);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
@@ -87,8 +87,7 @@
 		toasts.hideToast(`fm${context.id}-open-map-search-error`);
 
 		try {
-			const newResults = await client.value.findMaps({
-				query,
+			const newResults = await clientContext.value.client.findMaps(query, {
 				start: page * ITEMS_PER_PAGE,
 				limit: ITEMS_PER_PAGE
 			});
@@ -115,7 +114,7 @@
 		const parsed = parseMapSlug(mapSlug, context);
 
 		if (parsed) {
-			const mapInfo = await client.value.getMap({ mapId: parsed.mapSlug });
+			const mapInfo = await clientContext.value.client.getMap(parsed.mapSlug);
 			if (!mapInfo) {
 				return i18n.t("open-map-dialog.map-not-found-error");
 			}

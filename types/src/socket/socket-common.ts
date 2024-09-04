@@ -49,7 +49,7 @@ export type SubscribeToMapPick = z.infer<typeof subscribeToMapPickValidator>;
 
 export type SubscribeToMapItem = AllMapObjectsItem<Exclude<AllMapObjectsPick, "linesWithTrackPoints">>;
 
-export type RoutePoints = { routeKey: string; trackPoints: TrackPoint[] };
+export type RoutePoints = { trackPoints: TrackPoint[] };
 
 export type SetBboxItem = (
 	| (AllMapObjectsItem<"markers" | "linePoints"> & { mapSlug: MapSlug })

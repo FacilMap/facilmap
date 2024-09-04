@@ -5,13 +5,12 @@
 	import ManageViewsDialog from "../manage-views-dialog.vue";
 	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getOrderedViews } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
-	import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
@@ -24,7 +23,7 @@
 		| "manage-views"
 	>();
 
-	const orderedViews = computed(() => getOrderedViews(client.value.map?.data?.views ?? {}));
+	const orderedViews = computed(() => getOrderedViews(clientSub.value.data.views));
 
 	function doDisplayView(view: DeepReadonly<View>): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
@@ -49,7 +48,7 @@
 			>{{view.name}}</a>
 		</li>
 
-		<template v-if="client.map?.data?.mapData?.writable == Writable.ADMIN">
+		<template v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
 			<li v-if="orderedViews.length > 0">
 				<hr class="dropdown-divider">
 			</li>
@@ -75,12 +74,12 @@
 	</DropdownMenu>
 
 	<SaveViewDialog
-		v-if="dialog === 'save-view' && client.map?.state === ClientContextMapState.OPEN"
+		v-if="dialog === 'save-view'"
 		@hidden="dialog = undefined"
 	></SaveViewDialog>
 
 	<ManageViewsDialog
-		v-if="dialog === 'manage-views' && client.map?.state === ClientContextMapState.OPEN"
+		v-if="dialog === 'manage-views'"
 		@hidden="dialog = undefined"
 	></ManageViewsDialog>
 </template>

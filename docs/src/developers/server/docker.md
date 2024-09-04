@@ -47,6 +47,8 @@ services:
         command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         healthcheck:
             test: healthcheck.sh --su-mysql --connect --innodb_initialized
+        volumes:
+            - ./mysql:/var/lib/mysql
         restart: unless-stopped
 ```
 
@@ -85,6 +87,8 @@ services:
             POSTGRES_DB: facilmap
         healthcheck:
             test: pg_isready -d $$POSTGRES_DB
+        volumes:
+            - ./postgis:/var/lib/postgresql/data
         restart: unless-stopped
 ```
 

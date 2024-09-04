@@ -7,16 +7,15 @@
 	import { computed, ref } from "vue";
 	import { useCarousel } from "../../utils/carousel";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatPOIName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 	import { Writable } from "facilmap-types";
-import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
@@ -75,7 +74,7 @@ import { ClientContextMapState } from "../facil-map-context-provider/client-cont
 							:destination="zoomDestination"
 						></ZoomToObjectButton>
 
-						<template v-if="client.map?.state === ClientContextMapState.OPEN && client.map.data.mapData!.writable !== Writable.READ">
+						<template v-if="clientSub && clientSub.data.mapData!.writable !== Writable.READ">
 							<AddToMapDropdown
 								:markers="markersWithTags"
 								size="sm"

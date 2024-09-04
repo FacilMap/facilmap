@@ -194,7 +194,7 @@ export default class DatabaseLines {
 		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId, options);
 	}
 
-	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route): Promise<Line> {
+	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
 		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
@@ -214,13 +214,13 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { noHistory?: boolean; trackPointsFromRoute?: Route; notFound404?: boolean }): Promise<Line> {
+	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }; notFound404?: boolean }): Promise<Line> {
 		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
 		const newType = await this._db.types.getType(mapId, data.typeId ?? originalLine.typeId);
 		return await this._updateLine(originalLine, data, newType, options);
 	}
 
-	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: { noHistory?: boolean; trackPointsFromRoute?: Route; notFound404?: boolean }): Promise<Line> {
+	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }; notFound404?: boolean }): Promise<Line> {
 		if (newType.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: newType.type }));
 		}
