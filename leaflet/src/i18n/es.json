@@ -179,7 +179,18 @@
         "alpinehut": "Refugio de montaña",
         "campsite": "Zona de acampada",
         "gardencentre": "Centro de jardinería",
-        "horseriding": "Equitación"
+        "horseriding": "Equitación",
+        "leathershop": "Cuero",
+        "biergarten": "Biergarten",
+        "town": "Ciudad",
+        "village": "Aldea",
+        "hamlet": "Pueblo",
+        "pub": "Pub",
+        "fixme": "fixme",
+        "image": "Imagen",
+        "camera": "Cámara pública",
+        "city": "Ciudad",
+        "suburb": "Zona residencial"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Objeto GeoJSON no válido."
