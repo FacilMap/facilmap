@@ -25,7 +25,9 @@
         "frto-name": "Señalización marítima",
         "bike-name": "Rutas ciclistas",
         "bike-attribution": "© [Waymarked Trails](https://cycling.waymarkedtrails.org/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
-        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)"
+        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
+        "mpnw-name": "Mapnik Water",
+        "hike-name": "Rutas de senderismo"
     },
     "overpass-presets": {
         "atm": "Cajeros automáticos",
@@ -168,7 +170,16 @@
         "defibrillator": "Desfibriladores (AED)",
         "watermill": "Molinos de agua",
         "monumentaltree": "Árboles monumentales",
-        "bbq": "Barbacoas"
+        "bbq": "Barbacoas",
+        "bicycleparking": "Estacionamiento de bicicletas",
+        "parking": "Aparcamiento para coches",
+        "worship": "Centro de culto",
+        "artwork": "Obra de arte",
+        "picnic": "Picnic",
+        "alpinehut": "Refugio de montaña",
+        "campsite": "Zona de acampada",
+        "gardencentre": "Centro de jardinería",
+        "horseriding": "Equitación"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Objeto GeoJSON no válido."
