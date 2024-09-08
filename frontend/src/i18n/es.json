@@ -31,7 +31,12 @@
         "hidden-lines-added-title_one": "Línea añadida",
         "hidden-lines-added-title_many": "{{count}} líneas añadidas",
         "hidden-lines-added-title_other": "{{count}} líneas añadidas",
-        "hidden-objects-added-title": "{{count}} objetos añadidos"
+        "hidden-objects-added-title": "{{count}} objetos añadidos",
+        "hidden-objects-added-message": "Los {{count}} objetos se han añadido correctamente, pero el filtro activo impide que se muestren.",
+        "hidden-objects-added-message-some": "Los {{count}} objetos se han añadido correctamente, pero el filtro activo impide que se muestren algunos de ellos.",
+        "hidden-lines-added-message_one": "La línea se ha añadido correctamente, pero el filtro activo impide que se muestre.",
+        "hidden-lines-added-message_many": "Las {{count}} líneas se han añadido correctamente, pero el filtro activo impide que se muestren.",
+        "hidden-lines-added-message_other": "Las {{count}} líneas se han añadido correctamente, pero el filtro activo impide que se muestren."
     },
     "client-provider": {
         "loading-map": "Cargando mapa…",
@@ -84,7 +89,8 @@
         "untyped-markers_other": "Indicadores sin tipo ({{count}})",
         "untyped-lines_one": "Línea/polígono sin tipo ({{count}})",
         "untyped-lines_many": "Líneas/polígonos sin tipo ({{count}})",
-        "untyped-lines_other": "Líneas/polígonos sin tipo ({{count}})"
+        "untyped-lines_other": "Líneas/polígonos sin tipo ({{count}})",
+        "map-to": "Mapa para…"
     },
     "draw": {
         "add-marker-title": "Añadir {{typeName}}",
@@ -132,7 +138,19 @@
         "time-description": "Tiempo de enrutamiento de línea en segundos",
         "routePoints-description": "Coordenadas de puntos de línea",
         "lower-description": "Convertir en minúsculas",
-        "round-description": "Redondear ({{ceil}}: al alza, {{floor}}: a la baja)"
+        "round-description": "Redondear ({{ceil}}: al alza, {{floor}}: a la baja)",
+        "introduction": "Aquí puede establecer una expresión avanzada para mostrar/ocultar determinados marcadores/líneas en función de sus atributos. La expresión de filtro sólo se aplica a su vista del mapa, pero puede persistir como parte de una vista guardada o un enlace compartido.",
+        "type-description": "{{marker}} / {{line}}",
+        "typeId-description": "{{items}})",
+        "typeId-description-item": "{{typeId}} ({{typeName}})",
+        "typeId-description-separator": " / ",
+        "data-description-2": "Para los campos de casilla de verificación, el valor es {{uncheckedValue}} (sin marcar) o {{checkedValue}} (marcado).",
+        "ascent-descent-description": "Ascenso/descenso total de la línea",
+        "min-max-description": "Valor más pequeño/más alto",
+        "mathematical-description": "Operaciones matemáticas ({{modulo}}: módulo, {{power}}: potencia)",
+        "comparison-description": "Comparación ({{notEqual}}: no igual) (distingue mayúsculas de minúsculas)",
+        "list-description": "Operador de lista (distingue mayúsculas de minúsculas)",
+        "regexp-description": "Coincidencia de expresión regular (distingue mayúsculas de minúsculas)"
     },
     "edit-line-dialog": {
         "save-error": "Error al guardar la línea",
@@ -188,7 +206,10 @@
         "field-edit": "Editar",
         "field-update-error": "Error al actualizar el campo",
         "default-route-mode": "Modo de enrutamiento predeterminado",
-        "unique-field-name-error": "Varios campos no pueden compartir el mismo nombre."
+        "unique-field-name-error": "Varios campos no pueden compartir el mismo nombre.",
+        "styles-introduction": "Estos estilos se aplican cuando se crea un nuevo objeto de este tipo. Si \"Fijo\" está activado, el estilo se aplica a todos los objetos de este tipo y ya no se puede cambiar para un objeto individual. Para un control más complejo del estilo, los campos desplegables o de casilla de verificación pueden configurarse a continuación para cambiar el estilo en función de su valor seleccionado.",
+        "fixed": "Fijado",
+        "show-in-legend-description": "Un elemento de este tipo se mostrará en la leyenda. Se le aplicará cualquier atributo de estilo fijo. Los campos desplegables o de casilla de verificación que controlan el estilo generan elementos de leyenda adicionales."
     },
     "edit-type-dropdown-dialog": {
         "delete-option-title": "Eliminar opción",
@@ -259,7 +280,11 @@
         "track-explanation-interpolation-track": "Puntos de camino",
         "track-zip-explanation-interpolation-trackZip": "Puntos de camino, un archivo por línea (archivo ZIP)",
         "route-explanation-interpolation-route": "Puntos de ruta",
-        "track-zip-explanation": "{{trackZip}} creará un archivo ZIP con un GPX para todos los indicadores y otro por cada línea. Esto funciona mejor con aplicaciones como OsmAnd, que admiten únicamente un estilo de línea por archivo."
+        "track-zip-explanation": "{{trackZip}} creará un archivo ZIP con un GPX para todos los indicadores y otro por cada línea. Esto funciona mejor con aplicaciones como OsmAnd, que admiten únicamente un estilo de línea por archivo.",
+        "column-time": "Duración del viaje",
+        "export-copied-title": "{{format}} exportación copiada",
+        "introduction": "Exporta tu mapa aquí para transferirlo a otra aplicación, otro dispositivo u otro mapa colaborativo.",
+        "route-explanation": "{{route}} exportará solo los puntos de ruta desde/hacia/ tus líneas, y tu software/dispositivo de navegación tendrá que calcular la ruta utilizando sus propios datos cartográficos y algoritmo."
     },
     "file-results": {
         "views": "Vistas",
@@ -330,7 +355,19 @@
         "surface-unpaved": "No pavimentada",
         "surface-asphalt": "Asfalto",
         "surface-contrete": "Hormigón",
-        "surface-metal": "Metálica"
+        "surface-metal": "Metálica",
+        "traildifficulty-unknown": "Falta la etiqueta SAC",
+        "suitablity": "Idoneidad",
+        "waytypes": "Tipos de vías",
+        "green": "Verde",
+        "noise": "Ruido",
+        "tollways": "Autopistas",
+        "label-with-total": "{{label}} ({{total}})",
+        "surface-other": "Otras",
+        "surface-wood": "Madera",
+        "surface-woodchips": "Virutas de madera",
+        "tollway-no": "Sin peaje",
+        "tollway-yes": "Autopista"
     },
     "history-dialog": {
         "action": "Acción",
@@ -433,7 +470,13 @@
         "delete-line-ok": "Eliminar",
         "move-line-cancel": "Cancelar",
         "delete": "Eliminar",
-        "zoom-to-object-label": "Zum a línea"
+        "zoom-to-object-label": "Zum a línea",
+        "move-line-title": "Editar puntos de referencia",
+        "move-line-message": "Utilice el formulario de enrutamiento o arrastre la línea para modificarla. Haga clic en “Finalizar” para guardar los cambios.",
+        "hide-elevation-plot": "Ocultar gráfico de elevación",
+        "show-elevation-plot": "Mostrar gráfico de elevación",
+        "ascent-descent": "Ascenso/descenso",
+        "edit-waypoints": "Editar puntos de referencia"
     },
     "legend": {
         "tab-label": "Simbología"
@@ -443,7 +486,9 @@
         "title": "Gestionar marcadores",
         "name": "Nombre",
         "delete": "Eliminar",
-        "reorder-alt": "Reordenar"
+        "reorder-alt": "Reordenar",
+        "bookmark-current": "Añadir mapa actual a favoritos",
+        "introduction": "Los marcadores son una forma rápida de recordar y acceder a los mapas colaborativos. Se guardan en tu navegador, otros usuarios no podrán verlos."
     },
     "manage-types-dialog": {
         "title": "Gestionar tipos",
@@ -471,7 +516,8 @@
         "delete-view-title": "Eliminar vista",
         "title": "Gestionar vistas",
         "delete-view-ok": "Eliminar",
-        "delete": "Eliminar"
+        "delete": "Eliminar",
+        "make-default": "Hacer como predeterminado"
     },
     "marker-info": {
         "delete-marker-message": "¿Realmente quiere eliminar el indicador «{{name}}»?",
@@ -487,7 +533,11 @@
     },
     "overpass-form": {
         "filter": "Filtrar…",
-        "custom-query": "Consulta personalizada"
+        "custom-query": "Consulta personalizada",
+        "custom-explanation-1": "Introduzca aquí una {{statement}}. Las configuraciones y una declaración {{out}} se añaden automáticamente en segundo plano. Para caminos y relaciones, se mostrará un marcador en el centro geométrico, no se dibujan líneas ni polígonos.",
+        "custom-explanation-1-interpolation-statement": "Declaración de consulta Overpass",
+        "custom-explanation-1-interpolation-statement-url": "https://wiki.openstreetmap.org/wiki/ES:API_de_Overpass/Overpass_QL",
+        "custom-explanation-2": "Ejemplos de consulta son {{parking}} para obtener plazas de aparcamiento o {{atm}} para cajeros automáticos."
     },
     "open-map-dialog": {
         "open-map-by-search-button": "Abrir",
@@ -500,7 +550,8 @@
         "open-map-by-id-button": "Abrir",
         "title": "Abrir mapa colaborativo",
         "search-public-maps": "Buscar mapas públicos",
-        "find-maps-error": "Error al buscar mapas públicos"
+        "find-maps-error": "Error al buscar mapas públicos",
+        "introduction": "Introduzca aquí el enlace o el ID de un mapa colaborativo existente para abrir dicho mapa."
     },
     "overpass-multiple-info": {
         "details": "Detalles",
@@ -537,7 +588,10 @@
         "delete-map-title": "Eliminar mapa",
         "save-map-error": "Error al guardar la configuración del mapa",
         "create-map-error": "Error al crear el mapa",
-        "write-link-description": "Cuando se abre el mapa con este enlace, es posible añadir, modificar y eliminar indicadores y líneas, pero no la configuración del mapa, los tipos de objeto y las vistas."
+        "write-link-description": "Cuando se abre el mapa con este enlace, es posible añadir, modificar y eliminar indicadores y líneas, pero no la configuración del mapa, los tipos de objeto y las vistas.",
+        "admin-link-description": "Al abrir el mapa a través de este enlace, se pueden editar todas las partes del mapa, incluidos los ajustes del mapa, los tipos de objetos y las vistas.",
+        "cluster-markers-description": "Si se activa, cuando haya muchos marcadores en un área, se sustituirán por un marcador de posición en niveles bajos de zoom. Esto mejora el rendimiento en mapas con muchos marcadores.",
+        "delete-description": "Para eliminar este mapa, escriba {{code}} en el campo y haga clic en el botón \"Eliminar mapa\"."
     },
     "search-result-info": {
         "address": "Dirección",
@@ -563,7 +617,16 @@
         "embed-copied-message": "El código para incrustar {{appName}} se copió en el portapapeles.",
         "type-write": "Editable",
         "show-route": "Pestaña Ruta",
-        "show-pois": "Pestaña PDI"
+        "show-pois": "Pestaña PDI",
+        "include-view-interpolation-conditionalPois-interpolation-pois-joiner": ", ",
+        "include-view-interpolation-layers-joiner": ", ",
+        "include-view-interpolation-conditionalSelection": "; objeto(s) activo(s): {{description}}",
+        "include-view-interpolation-conditionalFilter": "; filtro: {{filter}}",
+        "link-copied-title": "Enlace del mapa copiado",
+        "embed-explanation": "Añade este código HTML a una página web para incrustar {{appName}}. {{learnMore}}",
+        "type-admin": "Admin",
+        "link-copied-message": "El enlace del mapa se ha copiado en el portapapeles.",
+        "embed-copied-title": "Código de inserción copiado"
     },
     "icon-picker": {
         "unknown-icon-error": "Icono desconocido",
@@ -582,7 +645,8 @@
         "language": "Idioma",
         "units": "Unidades",
         "language-description-interpolation-weblate": "Weblate",
-        "title": "Preferencias de usuario"
+        "title": "Preferencias de usuario",
+        "language-description": "Algunas traducciones pueden no estar completas todavía. Las traducciones son creadas por la comunidad, siéntase libre de contribuir en {{weblate}}."
     },
     "utils": {
         "required-error": "No debe quedar vacío."
@@ -600,7 +664,16 @@
         "reorder-alt": "Reordenar",
         "export-filename": "Ruta de FacilMap",
         "zoom-to-object-label": "Zum a ruta",
-        "find-destination-error": "Error al encontrar el destino «{{query}}»"
+        "find-destination-error": "Error al encontrar el destino «{{query}}»",
+        "route-description-outer": "Ruta desde {{inner}}",
+        "route-description-inner": "{{destinations}} {{mode}}",
+        "route-description-inner-joiner": " a ",
+        "from-placeholder": "Desde",
+        "via-placeholder": "A través de",
+        "ascent-descent": "Ascenso/descenso",
+        "to-placeholder": "A",
+        "clear-route-tooltip": "Borrar la ruta",
+        "clear-route-alt": "Borrar"
     },
     "route-form-tab": {
         "tab-label": "Ruta"
@@ -618,7 +691,8 @@
         "no-results": "No se encontró ningún resultado.",
         "add-to-map-label_one": "Añadir elemento seleccionado al mapa",
         "add-to-map-label_many": "Añadir elementos seleccionados al mapa",
-        "add-to-map-label_other": "Añadir elementos seleccionados al mapa"
+        "add-to-map-label_other": "Añadir elementos seleccionados al mapa",
+        "custom-type-mapping": "Asignación de tipos personalizada…"
     },
     "toolbox-collab-maps-dropdown": {
         "open-other-map": "Abrir otro mapa",
@@ -626,7 +700,8 @@
         "open-map": "Abrir un mapa existente",
         "create-map": "Crear un mapa nuevo",
         "label": "Mapas colaborativos",
-        "manage-bookmarks": "Gestionar indicadores"
+        "manage-bookmarks": "Gestionar indicadores",
+        "bookmark": "Marcador mapa \"{{mapName}}\""
     },
     "toolbox-tools-dropdown": {
         "filter": "Filtrar",
@@ -648,7 +723,11 @@
     },
     "elevation-stats": {
         "show-alt": "Mostrar estadísticas",
-        "show-tooltip": "Mostrar estadísticas de elevación"
+        "show-tooltip": "Mostrar estadísticas de elevación",
+        "ascent-alt": "Ascenso",
+        "descent-alt": "Descenso",
+        "total-ascent": "Ascenso total",
+        "total-descent": "Descenso total"
     },
     "validated-field": {
         "validation-error": "Error al validar el campo del formulario"
@@ -699,14 +778,20 @@
         "bicycle-alt": "Bicicleta",
         "mountain-bike": "Bicicleta de montaña",
         "electric-bike": "Bicicleta eléctrica",
-        "wheelchair": "Silla de ruedas"
+        "wheelchair": "Silla de ruedas",
+        "load-details": "Cargar detalles de la ruta (elevación, tipos de carretera, ...)",
+        "hgv": "Vehículo pesado",
+        "walking": "Andando",
+        "hiking": "Senderismo",
+        "avoid-highways": "Evitar las autopistas"
     },
     "search-form": {
         "search-description": "Buscar {{query}}",
         "search-alt": "Buscar",
         "search-error": "Error de búsqueda",
         "auto-zoom": "Zum a resultados automático",
-        "zoom-to-all": "Zum a todos los resultados"
+        "zoom-to-all": "Zum a todos los resultados",
+        "clear-alt": "Borrar"
     },
     "search-form-tab": {
         "tab-label": "Buscar"
@@ -724,7 +809,14 @@
         "default-view": "Vista predeterminada",
         "pois": "PDI",
         "include-pois": "Incluir PDI ({{pois}})",
-        "include-current-filter": "Incluir filtro actual ({{filter}})"
+        "include-current-filter": "Incluir filtro actual ({{filter}})",
+        "empty": "—",
+        "top-left": "Arriba a la izquierda",
+        "overlays": "Superposiciones",
+        "bottom-right": "Abajo a la derecha",
+        "overlays-joiner": ", ",
+        "include-pois-interpolation-pois-joiner": ", ",
+        "make-default": "Vista por defecto"
     },
     "modal-dialog": {
         "save": "Guardar",
@@ -774,13 +866,30 @@
     "use-as-dropdown": {
         "to": "Destino de la ruta",
         "label": "Utilizar como",
-        "from": "Inicio de la ruta"
+        "from": "Inicio de la ruta",
+        "via": "Ruta a través de"
     },
     "pagination": {
         "next-label": "Siguiente",
-        "previous-label": "Anterior"
+        "previous-label": "Anterior",
+        "first-label": "Primero",
+        "last-label": "Último"
     },
     "zoom-to-object-button": {
         "fallback-label": "Zum a objeto"
+    },
+    "click-marker-tab": {
+        "look-up-error": "Error al buscar el punto"
+    },
+    "colour-picker": {
+        "format-error": "Debe estar en formato hexadecimal de 6 dígitos, por ejemplo 0000ff."
+    },
+    "overpass-info-tab": {
+        "tab-label_one": "{{count}} PDI",
+        "tab-label_many": "{{count}} PDIS",
+        "tab-label_other": "{{count}} PDIS"
+    },
+    "map-id-edit": {
+        "unique-id-error": "No se puede utilizar el mismo enlace para diferentes niveles de acceso."
     }
 }
