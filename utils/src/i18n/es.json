@@ -45,7 +45,8 @@
         "language-ru": "Ruso",
         "language-nb-no": "Noruego «bokmål»",
         "language-es": "Español",
-        "language-zh-hant": "Chino (tradicional)"
+        "language-zh-hant": "Chino (tradicional)",
+        "language-fr": "Francés"
     },
     "objects": {
         "untitled-line": "Línea sin título",
