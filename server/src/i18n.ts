@@ -2,6 +2,7 @@ import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18
 import messagesEn from "./i18n/en.json";
 import messagesDe from "./i18n/de.json";
 import messagesEs from "./i18n/es.json";
+import messagesFr from "./i18n/fr.json";
 import messagesNbNo from "./i18n/nb-NO.json";
 import messagesRu from "./i18n/ru.json";
 import messagesZhHant from "./i18n/zh-Hant.json";
@@ -42,6 +43,7 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("en", namespace, messagesEn);
 	i18n.addResourceBundle("de", namespace, messagesDe);
 	i18n.addResourceBundle("es", namespace, messagesEs);
+	i18n.addResourceBundle("fr", namespace, messagesFr);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 	i18n.addResourceBundle("ru", namespace, messagesRu);
 	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
