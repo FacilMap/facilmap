@@ -1,1 +1,31 @@
-{}
+{
+    "about-dialog": {
+        "license-text-facilmap": "FacilMap",
+        "map-data-pois": "Points d'intérêt",
+        "map-data-directions": "Itinéraire",
+        "header": "À propos de FacilMap {{version}}",
+        "license-text": "{{facilmap}} est disponible sous licence {{license}}.",
+        "icons": "Icônes",
+        "attribution-osm-contributors": "Contributeurs OSM"
+    },
+    "add": {
+        "hidden-objects-added-title": "{{count}} objets ajoutés"
+    },
+    "alert": {
+        "fallback-ok-label": "OK"
+    },
+    "client-provider": {
+        "disconnected-header": "Déconnecté",
+        "disconnected": "Connexion perdue avec le serveur. Nouvelle tentative en cours…",
+        "loading-map-header": "Chargement en cours",
+        "loading-map": "Chargement de la carte…"
+    },
+    "add-to-map-dropdown": {
+        "fallback-label": "Ajouter à la carte",
+        "add-error": "Erreur lors de l'ajout"
+    },
+    "custom-import-dialog": {
+        "type": "Type",
+        "ok-label": "Importer"
+    }
+}
