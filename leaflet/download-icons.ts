@@ -39,6 +39,11 @@ function cleanIcon(icon: string): string {
     }
 
     $("metadata,sodipodi\\:namedview,defs,image").remove();
+    $("[sodipodi\\:rx]").removeAttr("sodipodi:rx");
+    $("[sodipodi\\:ry]").removeAttr("sodipodi:ry");
+    $("[sodipodi\\:cx]").removeAttr("sodipodi:cx");
+    $("[sodipodi\\:cy]").removeAttr("sodipodi:cy");
+    $("[inkscape\\:connector-curvature]").removeAttr("inkscape:connector-curvature");
 
     for (const el of $("*").toArray()) {
         const $el = $(el);
