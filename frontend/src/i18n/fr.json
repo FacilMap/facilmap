@@ -9,7 +9,10 @@
         "attribution-osm-contributors": "Contributeurs OSM"
     },
     "add": {
-        "hidden-objects-added-title": "{{count}} objets ajoutés"
+        "hidden-objects-added-title": "{{count}} objets ajoutés",
+        "hidden-markers-added-title_one": "Marqueur ajouté",
+        "hidden-markers-added-title_many": "{{count}} marqueurs ajoutés",
+        "hidden-markers-added-title_other": ""
     },
     "alert": {
         "fallback-ok-label": "OK"
