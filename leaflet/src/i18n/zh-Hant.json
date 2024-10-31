@@ -1,1 +1,13 @@
-{}
+{
+    "layers": {
+        "optm-name": "公共交通",
+        "hike-name": "遠足路徑",
+        "lima-name": "Lima Labs",
+        "bike-name": "腳踏車路線"
+    },
+    "overpass-presets": {
+        "bank": "銀行",
+        "bench": "長椅",
+        "bicycleparking": "腳踏車停車處"
+    }
+}
