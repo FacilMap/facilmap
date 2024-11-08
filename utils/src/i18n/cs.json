@@ -1,0 +1,8 @@
+{
+    "elevation": {
+        "http-error": "Vyhledávání nadmořských výšek se nezdařilo se stavem {{status}}."
+    },
+    "format": {
+        "marker-type-name": "Značka"
+    }
+}
