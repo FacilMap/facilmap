@@ -1,1 +1,14 @@
-{}
+{
+    "layers": {
+        "topl-name": "TopPlus",
+        "topl-attribution": "© [Bundesamt für Kartographie und Geodäsie](https://www.bkg.bund.de/) {{year}}",
+        "lima-name": "Lima Labs",
+        "lima-attribution": "© [Lima Labs](https://maps.lima-labs.com/) / [OSM Contributors](https://www.openstreetmap.org/copyright)",
+        "mpnk-name": "Mapnik",
+        "mpnk-attribution": "© [OSM Přispěvatelé](https://www.openstreetmap.org/copyright)",
+        "topo-attribution": "© [OpenTopoMap](https://opentopomap.org/) ([CC-BY-SA](https://creativecommons.org/licenses/by-sa/3.0/)) / [OSM Přispěvatelé](https://www.openstreetmap.org/copyright)",
+        "map1-name": "Map1.eu",
+        "map1-attribution": "© [Map1.eu](http://map1.eu/) / [OSM Přispěvatelé](https://www.openstreetmap.org/copyright)",
+        "topo-name": "OpenTopoMap"
+    }
+}
