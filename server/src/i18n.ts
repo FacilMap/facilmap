@@ -1,5 +1,6 @@
 import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18nGetter, isCustomLanguageDetector, isCustomI18nGetter, LANG_QUERY, LANG_COOKIE, setCurrentUnitsGetter } from "facilmap-utils";
 import messagesEn from "./i18n/en.json";
+import messagesCs from "./i18n/cs.json";
 import messagesDe from "./i18n/de.json";
 import messagesEs from "./i18n/es.json";
 import messagesFr from "./i18n/fr.json";
@@ -41,6 +42,7 @@ declare module 'domain' {
 
 onI18nReady((i18n) => {
 	i18n.addResourceBundle("en", namespace, messagesEn);
+	i18n.addResourceBundle("cs", namespace, messagesCs);
 	i18n.addResourceBundle("de", namespace, messagesDe);
 	i18n.addResourceBundle("es", namespace, messagesEs);
 	i18n.addResourceBundle("fr", namespace, messagesFr);
