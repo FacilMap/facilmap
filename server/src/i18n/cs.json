@@ -1,1 +1,16 @@
-{}
+{
+    "map-not-found-error": "Mapa {{mapId}} nebyla nalezena.",
+    "map-read-not-found-error": "Mapu s ID {{mapId}} určenou pouze pro čtení se nepodařilo najít.",
+    "database": {
+        "type-not-found-error": "Typ {{typeId}} neexistuje.",
+        "old-map-data-not-available-error": "Stará mapová data nejsou k dispozici.",
+        "unknown-type-error": "Neznámý typ „{{type}}“.",
+        "route-points-not-an-array-error": "routePoints není pole",
+        "route-points-less-than-two-points-error": "Linie nemůže mít méně než dva body trasy.",
+        "cannot-use-type-for-marker-error": "Nelze použít typ {{type}} pro značku.",
+        "object-not-found-in-map-error": "{{type}} {{id}} mapy {{mapId}} se nepodařilo najít.",
+        "cannot-use-type-for-line-error": "Nelze použít typ {{type}} pro linii.",
+        "unique-map-ids-error": "ID jen pro čtení, ID pro čtení a zápis a ID správce se musí navzájem lišit.",
+        "unique-map-ids-read-write-error": "ID jen pro čtení a ID pro čtení a zápis nemůže být stejné."
+    }
+}

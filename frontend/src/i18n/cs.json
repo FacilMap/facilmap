@@ -1,1 +1,29 @@
-{}
+{
+    "about-dialog": {
+        "header": "O FacilMap {{version}}",
+        "license-text-facilmap": "FacilMap",
+        "issues-text-tracker": "sledování problémů",
+        "help-text": "Pokud máte dotaz, podívejte se na {{documentation}}, vzneste dotaz v {{discussions}} nebo se zeptejte v {{chat}}.",
+        "help-text-documentation": "dokumentaci",
+        "help-text-chat": "Matrix chatu",
+        "privacy-information": "Informace o ochraně soukromí",
+        "map-data": "Mapová data",
+        "map-data-pois": "Body zájmu",
+        "map-data-directions": "Navigace",
+        "map-data-geoip": "GeoIP",
+        "map-data-geoip-description": "Tento produkt obsahuje data GeoLite2 vytvořená společností MaxMind, která jsou k dispozici na adrese {{maxmind}}.",
+        "programs-libraries": "Programy/knihovny",
+        "attribution-osm-contributors": "OSM Přispěvatelé",
+        "license-text": "{{facilmap}} je dostupná pod {{license}}.",
+        "license-text-license": "GNU Affero General Public License, Version 3",
+        "issues-text": "Pokud něco nefunguje nebo máte návrh na zlepšení, nahlaste to prosím na {{tracker}}.",
+        "map-data-search": "Hledání",
+        "help-text-discussions": "diskusním fóru",
+        "icons": "Ikony"
+    },
+    "add": {
+        "hidden-objects-added-message": "{{count}} objektů bylo úspěšně přidáno, ale aktivní filtr brání jejich zobrazení.",
+        "hidden-objects-added-title": "{{count}} objektů přidáno",
+        "hidden-objects-added-message-some": "{{count}} objektů bylo úspěšně přidáno, ale aktivní filtr brání zobrazení některých z nich."
+    }
+}
