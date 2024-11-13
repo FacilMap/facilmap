@@ -6,13 +6,23 @@
         "header": "À propos de FacilMap {{version}}",
         "license-text": "{{facilmap}} est disponible sous licence {{license}}.",
         "icons": "Icônes",
-        "attribution-osm-contributors": "Contributeurs OSM"
+        "attribution-osm-contributors": "Contributeurs OSM",
+        "issues-text-tracker": "Suivi des problèmes",
+        "help-text-documentation": "documentation",
+        "help-text-discussions": "forum de discussion",
+        "privacy-information": "Information privée",
+        "map-data": "Données cartographiques",
+        "map-data-search": "Recherche",
+        "help-text": "Si vous avez une question, merci de consulter la {{documentation}}, poser une question dans la {{discussions}} ou poser une question dans le{{chat}}."
     },
     "add": {
         "hidden-objects-added-title": "{{count}} objets ajoutés",
         "hidden-markers-added-title_one": "Marqueur ajouté",
         "hidden-markers-added-title_many": "{{count}} marqueurs ajoutés",
-        "hidden-markers-added-title_other": ""
+        "hidden-markers-added-title_other": "",
+        "hidden-markers-added-message_one": "Le marqueur a été ajouté avec succès, mais le filtre actif l'empêche de s'afficher.",
+        "hidden-markers-added-message_many": "{{count}} marqueurs ont été ajoutés avec succès, mais le filtre actif les empêche de s'afficher.",
+        "hidden-markers-added-message_other": ""
     },
     "alert": {
         "fallback-ok-label": "OK"
