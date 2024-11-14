@@ -1,1 +1,7 @@
-{}
+{
+    "layers": {
+        "bike-name": "Itinéraires cyclables",
+        "hike-name": "Chemins de randonnée",
+        "hobi-name": "Carte des randonnées pédestres et cyclistes"
+    }
+}
