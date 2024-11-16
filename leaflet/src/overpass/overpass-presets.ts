@@ -75,6 +75,7 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "heritage", query: "(node[heritage];way[heritage];rel[heritage];)", label: i18n.t("overpass-presets.heritage") },
 					// Check for all historic tags but exclude those that already have their own
 					{ key: "historic", query: "(node[historic][historic!~'memorial|monument|statue|castle'];way[historic][historic!~'memorial|monument|statue|castle'];rel[historic][historic!~'memorial|monument|statue|castle'];)", label: i18n.t("overpass-presets.historic") },
+					{ key: "hotspring", query: "nwr[natural=hot_spring]", label: i18n.t("overpass-presets.hotspring") },
 					{ key: "touristinformation", query: "(node[tourism=information];way[tourism=information];)", label: i18n.t("overpass-presets.touristinformation") },
 					{ key: "monument", query: "(node[historic~'^monument$|^memorial$'];way[historic~'^monument$|^memorial$'];rel[historic~'^monument$|^memorial$'];)", label: i18n.t("overpass-presets.monument") },
 					{ key: "monumentaltree", query: "(node[natural=tree][monument=yes];)", label: i18n.t("overpass-presets.monumentaltree") },
