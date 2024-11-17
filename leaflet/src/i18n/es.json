@@ -190,7 +190,8 @@
         "image": "Imagen",
         "camera": "Cámara pública",
         "city": "Ciudad",
-        "suburb": "Zona residencial"
+        "suburb": "Zona residencial",
+        "hotspring": "Fuente termal"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Objeto GeoJSON no válido."
