@@ -68,6 +68,14 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
+			...(layerOptions.tracestrackToken ? {
+				TrTo: fixAttribution(tileLayer(`https://tile.tracestrack.com/topo__/{z}/{x}/{y}.png?key=${encodeURIComponent(layerOptions.tracestrackToken)}`, {
+					...fmName(() => getI18n().t("layers.trto-name")),
+					...attribution(() => getI18n().t("layers.trto-attribution")),
+					noWrap: true
+				}))
+			} : {}),
+
 			CycO: fixAttribution(tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.cyco-name")),
 				...attribution(() => getI18n().t("layers.cyco-attribution")),
@@ -146,6 +154,7 @@ export function setLayers(create: typeof createDefaultLayers): void {
 
 export interface LayerOptions {
 	limaLabsToken?: string;
+	tracestrackToken?: string;
 }
 
 let layerOptions: LayerOptions = {};

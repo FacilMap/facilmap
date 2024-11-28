@@ -21,7 +21,8 @@ if ('serviceWorker' in navigator && location.hostname !== "localhost") {
 }
 
 setLayerOptions({
-	limaLabsToken: config.limaLabsToken
+	limaLabsToken: config.limaLabsToken,
+	tracestrackToken: config.tracestrackToken
 });
 
 const queryParams = decodeQueryString(location.search);

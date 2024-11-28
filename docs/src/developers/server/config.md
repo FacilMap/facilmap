@@ -21,6 +21,7 @@ The config of the FacilMap server can be set either by using environment variabl
 | `MAXMIND_USER_ID`     |          |             | [MaxMind user ID](https://www.maxmind.com/en/geolite2/signup). |
 | `MAXMIND_LICENSE_KEY` |          |             | MaxMind license key. |
 | `LIMA_LABS_TOKEN`     |          |             | [Lima Labs](https://maps.lima-labs.com/) API key |
+| `TRACESTRACK_TOKEN`   |          |             | [Tracestrack](https://tracestrack.com/) API key |
 | `HIDE_COMMERCIAL_MAP_LINKS` |    |             | Set to `1` to hide the links to Google/Bing Maps in the “Map style” menu. |
 | `CUSTOM_CSS_FILE`     |          |             | The path of a CSS file that should be included ([see more details below](#custom-css-file)). |
 | `NOMINATIM_URL`       |          | `https://nominatim.openstreetmap.org` | The URL to the Nominatim server (used to search for places). |
