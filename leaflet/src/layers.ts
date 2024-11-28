@@ -82,11 +82,13 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			OCyc: fixAttribution(tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
-				...fmName(() => getI18n().t("layers.ocyc-name")),
-				...attribution(() => getI18n().t("layers.ocyc-attribution")),
-				noWrap: true
-			})),
+			...(layerOptions.thunderforestToken ? {
+				OCyc: fixAttribution(tileLayer(`https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=${encodeURIComponent(layerOptions.thunderforestToken)}`, {
+					...fmName(() => getI18n().t("layers.ocyc-name")),
+					...attribution(() => getI18n().t("layers.ocyc-attribution")),
+					noWrap: true
+				}))
+			} : {}),
 
 			HiBi: fixAttribution(tileLayer("https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.hobi-name")),
@@ -154,6 +156,7 @@ export function setLayers(create: typeof createDefaultLayers): void {
 
 export interface LayerOptions {
 	limaLabsToken?: string;
+	thunderforestToken?: string;
 	tracestrackToken?: string;
 }
 

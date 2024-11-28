@@ -29,6 +29,7 @@ L.control.layers(byName(layers.baseLayers), byName(layers.overlays)).addTo(map);
 
 There are some global layer options that change the behaviour of the available layers:
 * `limaLabsToken`: A [Lima Labs](https://maps.lima-labs.com/) API token. If defined, the Lima Labs layer will be available and used as the default layer instead of Mapnik. Lima Labs layers are very similar to Mapnik in style, but they are double resolution (so they don’t look pixely on high-resolution screens) and have English place names in addition to the local language.
+* `thunderforestToken`: A [Thunderforest](https://www.thunderforest.com/) API token. If defined, the OpenCycleMap map style will be available.
 * `tracestrackToken`: A [Tracestrack](https://tracestrack.com/) API token. If defined, the Tracestrack Topo map style will be available.
 
 To set the global layer options, use the `setLayerOptions()` function:
@@ -37,6 +38,7 @@ import { setLayerOptions } from "facilmap-leaflet";
 
 setLayerOptions({
 	limaLabsToken: "...",
+	thunderforestToken: "...",
 	tracestrackToken: "..."
 });
 ```

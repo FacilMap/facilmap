@@ -14,6 +14,7 @@ export interface InjectedConfig {
 	openElevationMaxBatchSize: number;
 	nominatimUrl: string;
 	limaLabsToken?: string;
+	thunderforestToken?: string;
 	tracestrackToken?: string;
 	hideCommercialMapLinks?: boolean;
 	supportsRoutes: boolean;
