@@ -13,7 +13,7 @@
         "ocyc-name": "OpenCycleMap",
         "topl-attribution": "© [Oficina Federal de Cartografía y Geodesia](https://www.bkg.bund.de/) {{year}}",
         "topo-name": "OpenTopoMap",
-        "topo-attribution": "© [OpenTopoMap](https://opentopomap.org/) ([CC-BY-SA](https://creativecommons.org/licenses/by-sa/3.0/)) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
+        "topo-attribution": "Datos: © [OpenTopoMap](https://opentopomap.org/) ([CC-BY-SA](https://creativecommons.org/licenses/by-sa/3.0/)) / [Colaboradores de OSM](https://www.openstreetmap.org/copyright)",
         "map1-attribution": "© [Map1.eu](http://map1.eu/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
         "cyco-attribution": "© [CyclOSM](https://www.cyclosm.org/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
         "cyco-name": "CyclOSM",
@@ -27,7 +27,9 @@
         "bike-attribution": "© [Waymarked Trails](https://cycling.waymarkedtrails.org/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
         "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [Contribuidores de OSM](https://www.openstreetmap.org/copyright)",
         "mpnw-name": "Mapnik Water",
-        "hike-name": "Rutas de senderismo"
+        "hike-name": "Rutas de senderismo",
+        "trto-name": "Topografía de Tracestrack",
+        "trto-attribution": "© [Colaboradores de OSM](https://www.openstreetmap.org/copyright), [SRTM](http://viewfinderpanoramas.org/), [GEBCO](https://www.gebco.net/), [DTM LiDAR de SONNY](https://sonny.4lima.de/), [NASADEM](https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.032021.4326.2), [ESA WorldCover](https://worldcover2021.esa.int/); Mapas © [Tracestrack](https://www.tracestrack.com/)"
     },
     "overpass-presets": {
         "atm": "Cajeros automáticos",
