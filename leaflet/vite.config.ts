@@ -6,6 +6,7 @@ import dtsPlugin from "vite-plugin-dts";
 import iconsPlugin from "./rollup-icons";
 import { appendFile, readFile } from "fs/promises";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { isAbsolute } from "node:path";
 
 export default defineConfig({
 	plugins: [
@@ -34,7 +35,7 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !id.startsWith("virtual:icons:") && /* resolved internal modules */ !id.startsWith("/")
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !id.startsWith("virtual:icons:") && /* resolved internal modules */ !isAbsolute(id)
 		}
 	},
 	resolve: {
