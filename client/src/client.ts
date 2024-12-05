@@ -201,7 +201,7 @@ class Client {
 				this.socket.emit(eventName as any, data, (err: any, data: SocketResponse<SocketVersion.V3, R>) => {
 					if(err) {
 						const cause = deserializeError(err);
-						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
+						reject(deserializeError({ ...serializeError(outerError), message: cause.message, name: cause.name, cause }));
 						this._simulateEvent("emitReject", eventName as any, err);
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);
