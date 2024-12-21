@@ -856,6 +856,7 @@
         "google-maps": "Google Maps",
         "google-maps-satellite": "Google Maps (Satellite)",
         "bing-maps": "Bing Maps",
+        "bing-maps-satellite": "Bing Maps (Satellite)",
         "park4night": "park4night"
     },
     "toolbox-tools-dropdown": {
