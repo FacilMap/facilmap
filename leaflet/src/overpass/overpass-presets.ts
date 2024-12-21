@@ -71,6 +71,7 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "attraction", query: "(node[tourism=attraction];way[tourism=attraction];rel[tourism=attraction];)", label: i18n.t("overpass-presets.attraction") },
 					{ key: "casino", query: "(node[leisure=casino];way[leisure=casino];rel[leisure=casino];)", label: i18n.t("overpass-presets.casino") },
 					{ key: "castle", query: "(node[historic=castle];way[historic=castle];rel[historic=castle];)", label: i18n.t("overpass-presets.castle") },
+					{ key: "cave", query: "nwr[natural=cave_entrance]", label: i18n.t("overpass-presets.cave") },
 					{ key: "gallery", query: "(node[tourism=gallery];way[tourism=gallery];rel[tourism=gallery];)", label: i18n.t("overpass-presets.gallery") },
 					{ key: "heritage", query: "(node[heritage];way[heritage];rel[heritage];)", label: i18n.t("overpass-presets.heritage") },
 					// Check for all historic tags but exclude those that already have their own
