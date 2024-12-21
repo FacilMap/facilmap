@@ -852,7 +852,8 @@
         "openstreetmap": "OpenStreetMap",
         "google-maps": "Google Maps",
         "google-maps-satellite": "Google Maps (Satellit)",
-        "bing-maps": "Bing Maps"
+        "bing-maps": "Bing Maps",
+        "park4night": "park4night"
     },
     "toolbox-tools-dropdown": {
         "label": "Werkzeuge",

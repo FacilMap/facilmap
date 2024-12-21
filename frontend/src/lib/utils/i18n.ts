@@ -9,7 +9,7 @@ import messagesFr from "../../i18n/fr.json";
 import messagesNbNo from "../../i18n/nb-NO.json";
 import messagesRu from "../../i18n/ru.json";
 import messagesZhHant from "../../i18n/zh-Hant.json";
-import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
+import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getCurrentLanguage, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
 
@@ -69,12 +69,19 @@ setCurrentUnitsGetter(() => {
 export function getI18n(): {
 	t: i18n["t"];
 	changeLanguage: (lang: string) => Promise<void>;
+	currentLanguage: string;
 } {
 	return {
 		t: getRawI18n().getFixedT(null, namespace),
 
 		changeLanguage: async (lang) => {
 			await getRawI18n().changeLanguage(lang);
+		},
+
+		get currentLanguage() {
+			// Consume resource change counter to make this reactive to language changes
+			i18nResourceChangeCounter.value;
+			return getCurrentLanguage();
 		}
 	};
 }

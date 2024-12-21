@@ -16,7 +16,8 @@
 			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
 			google: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}`,
 			googleSatellite: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}&basemap=satellite`,
-			bing: `https://www.bing.com/maps?cp=${v.center.lat}~${v.center.lng}&lvl=${v.zoom}`
+			bing: `https://www.bing.com/maps?cp=${v.center.lat}~${v.center.lng}&lvl=${v.zoom}`,
+			park4night: `https://park4night.com/${["fr", "de", "es", "it", "nl"].includes(i18n.currentLanguage) ? i18n.currentLanguage : "en"}/search?lat=${v.center.lat}&lng=${v.center.lng}&z=${v.zoom}`
 		};
 	});
 
@@ -128,6 +129,18 @@
 				draggable="false"
 			>
 				<span>{{i18n.t("toolbox-map-style-dropdown.bing-maps")}}</span>
+				<Icon icon="new-window"></Icon>
+			</a>
+		</li>
+
+		<li v-if="!context.hideCommercialMapLinks">
+			<a
+				class="dropdown-item fm-toolbox-new-window-item"
+				:href="links.park4night"
+				target="_blank"
+				draggable="false"
+			>
+				<span>{{i18n.t("toolbox-map-style-dropdown.park4night")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
