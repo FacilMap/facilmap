@@ -6,6 +6,7 @@ import messagesEs from "./i18n/es.json";
 import messagesFr from "./i18n/fr.json";
 import messagesNbNo from "./i18n/nb-NO.json";
 import messagesRu from "./i18n/ru.json";
+import messagesTa from "./i18n/ta.json";
 import messagesZhHant from "./i18n/zh-Hant.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
@@ -48,6 +49,7 @@ onI18nReady((i18n) => {
 	i18n.addResourceBundle("fr", namespace, messagesFr);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 	i18n.addResourceBundle("ru", namespace, messagesRu);
+	i18n.addResourceBundle("ta", namespace, messagesTa);
 	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
 });
 
