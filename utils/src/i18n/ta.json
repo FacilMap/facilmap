@@ -1,5 +1,62 @@
 {
-	"i18n": {
+    "elevation": {
+        "http-error": "நிலை {{status} with உடன் உயரங்களைப் பார்ப்பது தோல்வியுற்றது."
+    },
+    "format": {
+        "marker-type-name": "மார்க்கர்",
+        "line-type-name": "வரி",
+        "description-field-name": "விவரம்",
+        "route-time": "{{time}} {{mode}}",
+        "unnamed-poi": "அப்போது பெயரிடப்படாதது",
+        "time": "{{hours}}: {{minutes}} h",
+        "distance-km": "{{distance}} கி.மீ.",
+        "distance-mi": "{{distance}} mi",
+        "elevation-m": "{{elevation}} மீ",
+        "elevation-ft": "{{elevation}} ft"
+    },
+    "i18n": {
+        "language-nb-no": "நோர்வே போக்மால் (நோர்வே)",
+        "language-ru": "ரச்ய",
+        "language-zh-hant": "சீன (பாரம்பரிய)",
+        "language-en": "ஆங்கிலம்",
+        "language-cs": "செக்",
+        "language-de": "செர்மன்",
+        "language-es": "ச்பானிச்",
+        "language-fr": "பிரஞ்சு",
 		"language-ta": "தமிழ்"
-	}
+    },
+    "objects": {
+        "untitled-marker": "பெயரிடப்படாத மார்க்கர்",
+        "untitled-line": "பெயரிடப்படாத வரி"
+    },
+    "routing": {
+        "query-by-electric-bike": "மின்சார பைக் மூலம்",
+        "query-by-bicycle": "மூலம் சைக்கிள் | பைக் மூலம்",
+        "query-by-wheelchair": "மூலம் சக்கர நாற்காலி",
+        "query-by-foot": "காலில் | நடைப்பயணத்தின் மூலம் | நடைபயிற்சி | நடைபயிற்சி",
+        "format-by-hgv": "வழங்கியவர் எச்.சி.வி.",
+        "format-by-car": "கார் மூலம்",
+        "format-by-road-bike": "சாலை பைக் மூலம்",
+        "query-from": "இருந்து",
+        "format-by-mountain-bike": "மவுண்டன் பைக் மூலம்",
+        "format-by-electric-bike": "மின்சார பைக் மூலம்",
+        "query-to": "பெறுநர்",
+        "format-by-bicycle": "மூலம் சைக்கிள்",
+        "format-by-wheelchair": "மூலம் சக்கர நாற்காலி",
+        "format-by-foot": "காலில்",
+        "query-via": "வழிமம்",
+        "query-by-hgv": "வழங்கியவர் எச்.சி.வி.",
+        "query-by-car": "கார் மூலம்",
+        "query-by-road-bike": "சாலை பைக் மூலம்",
+        "query-by-mountain-bike": "மவுண்டன் பைக் மூலம்",
+        "query-by-straight": "நேராக | எலிகாப்டர் மூலம்"
+    },
+    "maps": {
+        "unnamed-map": "பெயரிடப்படாத வரைபடம்",
+        "page-title": "{{mapName}} - {{appName}}}",
+        "fallback-page-description": "நேரடி ஒத்துழைப்புடன் குறிப்பான்கள் மற்றும் வரிகளைச் சேர்க்கக்கூடிய முழு அம்சமான ஓபன்ச்ட்ரீட்மேப் அடிப்படையிலான வரைபடம்."
+    },
+    "search": {
+        "http-error": "STATE {{status} with உடன் தேடல் தோல்வியுற்றது."
+    }
 }
