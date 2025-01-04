@@ -161,7 +161,8 @@
         "colour": "Colour",
         "width": "Width",
         "stroke": "Stroke",
-        "change-type": "Change type"
+        "change-type": "Change type",
+        "edit-type": "Edit type “{{type}}”"
     },
     "edit-marker-dialog": {
         "save-error": "Error saving marker",
@@ -171,7 +172,8 @@
         "size": "Size",
         "icon": "Icon",
         "shape": "Shape",
-        "change-type": "Change type"
+        "change-type": "Change type",
+        "edit-type": "Edit type “{{type}}”"
     },
     "edit-type-dialog": {
         "delete-field-title": "Delete field",

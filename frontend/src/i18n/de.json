@@ -159,7 +159,8 @@
         "colour": "Farbe",
         "width": "Dicke",
         "stroke": "Kontur",
-        "change-type": "Objekttyp wechseln"
+        "change-type": "Objekttyp wechseln",
+        "edit-type": "Objekttyp „{{type}}“ bearbeiten"
     },
     "edit-marker-dialog": {
         "save-error": "Fehler beim Speichern des Markers",
@@ -169,7 +170,8 @@
         "size": "Größe",
         "icon": "Symbol",
         "shape": "Form",
-        "change-type": "Objekttyp wechseln"
+        "change-type": "Objekttyp wechseln",
+        "edit-type": "Objekttyp „{{type}}“ bearbeiten"
     },
     "edit-type-dialog": {
         "delete-field-title": "Feld löschen",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { lineValidator, type ID } from "facilmap-types";
+	import { Writable, lineValidator, type ID } from "facilmap-types";
 	import { canControl, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual, omit } from "lodash-es";
@@ -45,6 +45,8 @@
 	const resolvedCanControl = computed(() => canControl(client.value.types[line.value.typeId]));
 
 	const isXs = useMaxBreakpoint("xs");
+
+	const showEditTypeDialog = ref<ID>();
 
 	watch(originalLine, (newLine, oldLine) => {
 		if (!newLine) {
@@ -163,7 +165,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
+			<DropdownMenu v-if="types.length > 1 || client.writable === Writable.ADMIN" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a
@@ -174,7 +176,24 @@
 						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>
+
+				<template v-if="client.writable === Writable.ADMIN && client.types[line.typeId]">
+					<li><hr class="dropdown-divider"></li>
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="showEditTypeDialog = line.typeId"
+						>{{i18n.t("edit-marker-dialog.edit-type", { type: client.types[line.typeId].name })}}</a>
+					</li>
+				</template>
 			</DropdownMenu>
+
+			<EditTypeDialog
+				v-if="showEditTypeDialog"
+				:typeId="showEditTypeDialog"
+				@hidden="showEditTypeDialog = undefined"
+			></EditTypeDialog>
 		</template>
 	</ModalDialog>
 </template>
