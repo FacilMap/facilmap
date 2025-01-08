@@ -26,7 +26,7 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "bicyclerental", query: "nwr[amenity=bicycle_rental]", label: i18n.t("overpass-presets.bicyclerental") },
 					{ key: "cinema", query: "nwr[amenity=cinema]", label: i18n.t("overpass-presets.cinema") },
 					{ key: "clinic", query: "nwr[amenity=clinic]", label: i18n.t("overpass-presets.clinic") },
-					{ key: "drinkingwater", query: "nwr[amenity=drinking_water]", label: i18n.t("overpass-presets.drinkingwater") },
+					{ key: "drinkingwater", query: "(nwr[amenity=drinking_water];nwr[man_made=water_tap][drinking_water=yes];nwr[man_made=drinking_fountain];nwr[man_made=water_well][drinking_water=yes];)", label: i18n.t("overpass-presets.drinkingwater") },
 					{ key: "embassy", query: "nwr[amenity=embassy]", label: i18n.t("overpass-presets.embassy") },
 					{ key: "firestation", query: "nwr[amenity=fire_station]", label: i18n.t("overpass-presets.firestation") },
 					{ key: "fuel", query: "nwr[amenity=fuel]", label: i18n.t("overpass-presets.fuel") },
@@ -43,7 +43,8 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "taxi", query: "nwr[amenity=taxi]", label: i18n.t("overpass-presets.taxi") },
 					{ key: "theatre", query: "nwr[amenity=theatre]", label: i18n.t("overpass-presets.theatre") },
 					{ key: "toilets", query: "nwr[amenity=toilets]", label: i18n.t("overpass-presets.toilets") },
-					{ key: "university", query: "nwr[amenity=university]", label: i18n.t("overpass-presets.university") }
+					{ key: "university", query: "nwr[amenity=university]", label: i18n.t("overpass-presets.university") },
+					{ key: "watertap", query: "(nwr[man_made=water_tap];nwr[man_made=water_well][pump][pump!=no];nwr[amenity=water_point];nwr[waterway=water_point];)", label: i18n.t("overpass-presets.watertap") },
 				], [
 					// Check for various religions. We check on 5 religions AND also on a general place_of_worship but excluding the others.
 					// zaterdag 9 januari 2016 Included rel for the stand-alone religions
