@@ -73,5 +73,5 @@ export function decodeOverpassQuery(shortQuery: string | undefined): string | Ov
 	else if (shortQuery.startsWith("o_"))
 		return getOverpassPresets(shortQuery.substr(2).split("_"));
 	else if (shortQuery.startsWith("O_"))
-		return atob(shortQuery.substr(2)).replace(/\./g, '+').replace(/_/g, '/');
+		return atob(shortQuery.substr(2).replace(/\./g, '+').replace(/_/g, '/'));
 }
