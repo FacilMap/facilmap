@@ -20,6 +20,7 @@ interface NominatimResult {
 	place_rank: number;
 	category: string;
 	type: string;
+	addresstype: string;
 	importance: number;
 	icon: string;
 	address: Partial<Record<string, string>>;
@@ -318,10 +319,13 @@ function _prepareSearchResult(result: NominatimResult): SearchResult {
 		lat: Number(result.lat),
 		lon: Number(result.lon),
 		zoom: result.zoom,
-		extratags: result.extratags,
+		extratags: {
+			[result.category]: result.type,
+			...result.extratags
+		},
 		geojson: result.geojson,
 		icon: result.icon && result.icon.replace(/^.*\/([a-z0-9_]+)\.[a-z0-9]+\.[0-9]+\.[a-z0-9]+$/i, "$1"),
-		type: result.type == "yes" ? result.category : result.type,
+		type: result.addresstype,
 		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : undefined
 	};
 }
@@ -336,20 +340,21 @@ function _formatAddress(result: NominatimResult) {
 	// See http://en.wikipedia.org/wiki/Address_%28geography%29#Mailing_address_format_by_country for
 	// address notation guidelines
 
-	let type = result.type;
+	let type = result.addresstype;
 	let name = result.namedetails?.name ?? result.name;
 	const countryCode = result.address.country_code;
 
 	let road = result.address.road;
 	const housenumber = result.address.house_number;
-	let suburb = result.address.town || result.address.suburb || result.address.village || result.address.hamlet || result.address.residential;
+	const suburbType = ["town", "suburb", "village", "hamlet", "residential"].find((t) => !!result.address[t]);
+	let suburb = suburbType && result.address[suburbType];
 	const postcode = result.address.postcode;
 	let city = result.address.city;
 	let county = result.address.county;
 	let state = result.address.state;
 	const country = result.address.country;
 
-	if([ "road", "residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state" ].indexOf(type) != -1)
+	if(["road", suburbType, "city", "county", "state", "country"].includes(type))
 		name = "";
 
 	if(!city && suburb) {
