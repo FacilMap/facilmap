@@ -10,8 +10,11 @@ env:
 
 jobs:
   push_to_registry:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
     name: Push Docker image to Docker Hub
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       -
         name: Checkout
