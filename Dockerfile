@@ -1,4 +1,4 @@
-FROM node:21-alpine
+FROM node:22-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
 CMD yarn run prod-server
