@@ -341,7 +341,7 @@
 					if(referencedMapResult) {
 						if (dest.query == query)
 							dest.query = normalizeMarkerName(referencedMapResult.name);
-						dest.loadedQuery = referencedMapResult.name;
+						dest.loadedQuery = normalizeMarkerName(referencedMapResult.name);
 						dest.selectedSuggestion = referencedMapResult;
 					}
 				}
@@ -418,6 +418,8 @@
 		reset();
 
 		try {
+			mapContext.value.components.selectionHandler.setSelectedItems([]); // Workaround for now to force route into the hash query
+
 			const mode = routeMode.value;
 
 			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
@@ -447,6 +449,8 @@
 
 	async function reroute(zoom: boolean, smooth = true): Promise<void> {
 		if(hasRoute.value) {
+			mapContext.value.components.selectionHandler.setSelectedItems([]); // Workaround for now to force route into the hash query
+
 			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
