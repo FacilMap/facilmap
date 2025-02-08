@@ -53,6 +53,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          load: true
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,"name=${{ env.FACILMAP_REPO }}",push-by-digest=true,name-canonical=true,push=true
           tags: facilmap-ci
