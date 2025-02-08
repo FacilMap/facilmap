@@ -54,11 +54,9 @@ jobs:
         with:
           context: .
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ env.FACILMAP_REPO }}",push-by-digest=true,name-canonical=true,push=true
-
-      -
-        name: Tag docker image for integration tests
-        run: docker tag ${{ env.FACILMAP_REPO }}@${{ steps.build.outputs.digest }} facilmap-ci
+          outputs: |
+            type=image,"name=${{ env.FACILMAP_REPO }}",push-by-digest=true,name-canonical=true,push=true
+            type=docker,name=facilmap-ci
 
       -
         name: Start integration test components
