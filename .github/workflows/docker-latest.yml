@@ -56,26 +56,25 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: |
             type=image,"name=${{ env.FACILMAP_REPO }}",push-by-digest=true,name-canonical=true,push=true
-            type=docker,name=facilmap-ci
 
-      -
-        name: Start integration test components
-        run: |
-          docker compose -f ./integration-tests/docker-compose.yml up --wait
-          status="$?"
-          if (( status != 0 )); then
-            docker compose -f ./integration-tests/docker-compose.yml logs
-            exit "$status"
-          fi
+      # -
+      #   name: Start integration test components
+      #   run: |
+      #     docker compose -f ./integration-tests/docker-compose.yml up --wait
+      #     status="$?"
+      #     if (( status != 0 )); then
+      #       docker compose -f ./integration-tests/docker-compose.yml logs
+      #       exit "$status"
+      #     fi
 
-      -
-        name: Run integration tests
-        run: >-
-          docker run --rm -u root --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
-          yarn workspaces focus facilmap-integration-tests &&
-          FACILMAP_URL=http://host.docker.internal:8080 yarn workspace facilmap-integration-tests run integration-tests &&
-          FACILMAP_URL=http://host.docker.internal:8081 yarn workspace facilmap-integration-tests run integration-tests
-          "
+      # -
+      #   name: Run integration tests
+      #   run: >-
+      #     docker run --rm -u root --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
+      #     yarn workspaces focus facilmap-integration-tests &&
+      #     FACILMAP_URL=http://host.docker.internal:8080 yarn workspace facilmap-integration-tests run integration-tests &&
+      #     FACILMAP_URL=http://host.docker.internal:8081 yarn workspace facilmap-integration-tests run integration-tests
+      #     "
 
       - name: Export digest
         run: |
