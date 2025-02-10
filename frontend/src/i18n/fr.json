@@ -13,7 +13,10 @@
         "privacy-information": "Information privée",
         "map-data": "Données cartographiques",
         "map-data-search": "Recherche",
-        "help-text": "Si vous avez une question, merci de consulter la {{documentation}}, poser une question dans la {{discussions}} ou poser une question dans le{{chat}}."
+        "help-text": "Si vous avez une question, merci de consulter la {{documentation}}, poser une question dans la {{discussions}} ou poser une question dans le{{chat}}.",
+        "license-text-license": "Licence publique générale GNU Affero, version 3",
+        "help-text-chat": "Chat Matrix",
+        "programs-libraries": "Programmes/Bibliothèques"
     },
     "add": {
         "hidden-objects-added-title": "{{count}} objets ajoutés",
@@ -22,7 +25,13 @@
         "hidden-markers-added-title_other": "",
         "hidden-markers-added-message_one": "Le marqueur a été ajouté avec succès, mais le filtre actif l'empêche de s'afficher.",
         "hidden-markers-added-message_many": "{{count}} marqueurs ont été ajoutés avec succès, mais le filtre actif les empêche de s'afficher.",
-        "hidden-markers-added-message_other": ""
+        "hidden-markers-added-message_other": "",
+        "hidden-lines-added-title_one": "Ligne ajoutée",
+        "hidden-lines-added-title_many": "{{count}} lignes ajoutées",
+        "hidden-lines-added-title_other": "{{count}} lignes ajoutées",
+        "hidden-lines-added-message_one": "La ligne a bien été ajoutée, mais le filtre actif ne permet pas de l'afficher.",
+        "hidden-lines-added-message_many": "{{count}} lignes ont bien été ajoutées, mais le filtre actif ne permet pas de les afficher.",
+        "hidden-lines-added-message_other": "{{count}} lignes ont bien été ajoutées, mais le filtre actif ne permet pas de les afficher."
     },
     "alert": {
         "fallback-ok-label": "OK"
