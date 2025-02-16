@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { computed, markRaw, onBeforeUnmount, onMounted, ref, toRaw, watch, watchEffect } from "vue";
+	import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, reactive, ref, toRaw, watch, watchEffect } from "vue";
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
@@ -18,11 +18,12 @@
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { UseAsType, type RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
+	import { mapRef } from "../../utils/vue";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -82,6 +83,7 @@
 	const toasts = useToasts();
 	const i18n = useI18n();
 
+	const inputRefs = reactive(new Map<number, HTMLInputElement>());
 	const submitButton = ref<HTMLButtonElement>();
 
 	const props = withDefaults(defineProps<{
@@ -505,22 +507,59 @@
 		void route(zoom, smooth);
 	}
 
-	function setFrom(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value[0] = makeDestination(data);
-		void reroute(true);
+	function useAs(data: Parameters<typeof makeDestination>[0], as: UseAsType): void {
+		let focusIdx: number;
+		const dest = makeDestination(data);
+
+		switch (as) {
+			case UseAsType.BEFORE_FROM:
+				destinations.value.unshift(dest);
+				focusIdx = 0;
+				break;
+
+			case UseAsType.AS_FROM:
+				destinations.value[0] = dest;
+				focusIdx = 0;
+				break;
+
+			case UseAsType.AFTER_FROM:
+				destinations.value.splice(1, 0, dest);
+				focusIdx = 1;
+				break;
+
+			case UseAsType.BEFORE_TO:
+				destinations.value.splice(destinations.value.length - 1, 0, dest);
+				focusIdx = destinations.value.length - 1;
+				break;
+
+			case UseAsType.AS_TO:
+				destinations.value[destinations.value.length - 1] = dest;
+				focusIdx = destinations.value.length - 1;
+				break;
+
+			case UseAsType.AFTER_TO:
+				destinations.value.push(dest);
+				focusIdx = destinations.value.length - 1;
+				break;
+		}
+
+		if (focusIdx != null) {
+			void nextTick(() => { // New destinations are rendered
+				void nextTick(() => { // New destinations have been rendered, refs are available
+					inputRefs.get(focusIdx)?.focus();
+				});
+			});
+			void reroute(true);
+		}
 	}
 
-	function addVia(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value.splice(destinations.value.length - 1, 0, makeDestination(data));
-		void reroute(true);
-	}
-
-	function setTo(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value[destinations.value.length - 1] = makeDestination(data);
-		void reroute(true);
-	}
-
-	defineExpose({ setQuery, setFrom, addVia, setTo });
+	defineExpose({
+		setQuery,
+		useAs,
+		hasFrom: computed(() => destinations.value[0].query.trim() != ''),
+		hasTo: computed(() => destinations.value[destinations.value.length - 1].query.trim() != ''),
+		hasVia: computed(() => destinations.value.length > 2)
+	});
 </script>
 
 <template>
@@ -555,6 +594,7 @@
 									'fm-autofocus': idx === 0
 								}"
 								@blur="loadSuggestions(destination)"
+								:ref="mapRef(inputRefs, idx)"
 							/>
 							<template v-if="destination.query.trim() != ''">
 								<DropdownMenu

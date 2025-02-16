@@ -726,8 +726,14 @@
     "use-as-dropdown": {
         "label": "Route",
         "from": "Als Start verwenden",
+        "from-insert": "Als Start verwenden (vor aktuellem Start hinzufügen)",
+        "from-replace": "Als Start verwenden (aktuellen Start ersetzen)",
         "via": "Zwischenstopp hinzufügen",
-        "to": "Als Ziel verwenden"
+        "via-first": "Zwischenstopp hinzufügen (am Anfang)",
+        "via-last": "Zwischenstopp hinzufügen (am Ende)",
+        "to": "Als Ziel verwenden",
+        "to-insert": "Als Ziel verwenden (hinter aktuellem Ziel hinzufügen)",
+        "to-replace": "Als Ziel verwenden (aktuelles Ziel ersetzen)"
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",

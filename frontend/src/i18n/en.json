@@ -728,8 +728,14 @@
     "use-as-dropdown": {
         "label": "Use as",
         "from": "Route start",
+        "from-insert": "Route start (insert before current start)",
+        "from-replace": "Route start (replace current start)",
         "via": "Route via",
-        "to": "Route destination"
+        "via-first": "Route via (first)",
+        "via-last": "Route via (last)",
+        "to": "Route destination",
+        "to-insert": "Route destination (insert after current destination)",
+        "to-replace": "Route destination (replace current destination)"
     },
     "user-preferences-dialog": {
         "title": "User preferences",

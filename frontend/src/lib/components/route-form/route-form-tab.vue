@@ -2,9 +2,9 @@
 	import RouteForm from "./route-form.vue";
 	import type { HashQuery } from "facilmap-leaflet";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { readonly, ref, toRef } from "vue";
+	import { computed, readonly, ref, toRef } from "vue";
 	import { injectContextRequired, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import type { WritableRouteFormTabContext } from "../facil-map-context-provider/route-form-tab-context";
+	import type { RouteDestination, UseAsType } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
@@ -15,22 +15,18 @@
 
 	const hashQuery = ref<HashQuery>();
 
-	const routeFormTabContext = ref<WritableRouteFormTabContext>({
-		setQuery(query, zoom, smooth) {
+	const routeFormTabContext = ref({
+		setQuery(query: string, zoom?: boolean, smooth?: boolean) {
 			routeForm.value!.setQuery(query, zoom, smooth);
 		},
 
-		setFrom(destination) {
-			routeForm.value!.setFrom(destination);
+		useAs(destination: RouteDestination, as: UseAsType) {
+			routeForm.value!.useAs(destination, as);
 		},
 
-		addVia(destination) {
-			routeForm.value!.addVia(destination);
-		},
-
-		setTo(destination) {
-			routeForm.value!.setTo(destination);
-		}
+		hasFrom: computed(() => routeForm.value?.hasFrom ?? false),
+		hasTo: computed(() => routeForm.value?.hasTo ?? false),
+		hasVia: computed(() => routeForm.value?.hasVia ?? false)
 	});
 
 	context.provideComponent("routeFormTab", toRef(readonly(routeFormTabContext)));
