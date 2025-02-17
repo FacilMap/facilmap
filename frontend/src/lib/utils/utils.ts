@@ -29,14 +29,14 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 	});
 }
 
-export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: AnyRef<EventTarget | undefined>, ...args: Args): void {
+export function useDomEventListener<K extends keyof HTMLElementEventMap | keyof WindowEventHandlersEventMap>(element: AnyRef<EventTarget | undefined>, type: K, listener: (this: HTMLElement, ev: (HTMLElementEventMap & WindowEventHandlersEventMap)[K]) => any, options?: boolean | AddEventListenerOptions): void {
 	watchEffect((onCleanup) => {
 		const elementRef = toRef(element);
 		if (elementRef.value) {
-			const el = elementRef.value as any;
-			el.addEventListener(...args);
+			const el = elementRef.value;
+			el.addEventListener(type, listener as any, options);
 			onCleanup(() => {
-				el.removeEventListener(...args);
+				el.removeEventListener(type, listener as any, options);
 			});
 		}
 	});

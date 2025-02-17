@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	import hammer from "hammerjs";
-	import { onMounted, ref, watchEffect } from "vue";
+	import { onMounted, ref } from "vue";
 	import { useRefWithOverride } from "../../utils/vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useDrag } from "../../utils/drag";
 
 	const context = injectContextRequired();
 
@@ -16,8 +16,6 @@
 		"update:visible": [visible: boolean];
 	}>();
 
-	const isDragging = ref(false);
-
 	const innerSidebarRef = ref<HTMLElement>();
 
 	const isMounted = ref(false);
@@ -30,43 +28,52 @@
 		emit("update:visible", visible);
 	});
 
-	watchEffect((onCleanup) => {
-		if (innerSidebarRef.value) {
-			const pan = new hammer.Manager(innerSidebarRef.value);
-			pan.add(new hammer.Pan({ direction: hammer.DIRECTION_RIGHT }));
-			pan.on("panstart", handleDragStart);
-			pan.on("pan", handleDragMove);
-			pan.on("panend", handleDragEnd);
-
-			onCleanup(() => {
-				pan.destroy();
+	const drag = useDrag(innerSidebarRef, {
+		onDrag: ({ deltaX }) => {
+			Object.assign(innerSidebarRef.value!.style, {
+				transform: `translateX(${Math.max(0, deltaX)}px)`,
+				transition: "none"
 			});
+		},
+
+		onDragEnd: ({ deltaX, velocityX }) => {
+			Object.assign(innerSidebarRef.value!.style, {
+				transform: "",
+				transition: ""
+			});
+
+			if (velocityX > 0.3 || deltaX > innerSidebarRef.value!.offsetWidth / 2) {
+				// If the dragging is happening with a high velocity and we then use the default CSS transition to close the sidebar,
+				// the sliding of the sidebar does not feel smooth, since the initial velocity of the CSS animation might be slower
+				// than the drag velocity.
+				// The default easing function of a CSS transition is "ease", which is equivalent to cubic-bezier(0.25, 0.1, 0.25, 1).
+				// Since x1 is 0.25 und y1 is 0.1, the initial speed is 0.1/0.25 = 0.4 (in the unit total distance / total time,
+				// so in this case the number of pixels that the sidebar still needs to move divided by the transition time (300 ms)).
+				// To avoid the perceived stutter in the animation, we try to adjust the initial speed of the transition to the speed
+				// of the drag operation by adjusting x1.
+
+				// Total distance of the transition (number of pixels that the sidebar has to move to slide out)
+				const totalDistance = innerSidebarRef.value!.offsetWidth - Math.max(0, deltaX);
+				// Total time in ms of the transition (defined below in the CSS)
+				const totalTime = 300;
+				// Convert px/ms velocity of the drag operation to the desired initial transition speed in the unit total distance / total time
+				const speed = velocityX * totalTime / totalDistance;
+				// x1 for the CSS easing function with the desired initial speed (y1 stays 0.1 as in the default)
+				const x1 = 0.1 / speed;
+				innerSidebarRef.value!.style.transitionTimingFunction = `cubic-bezier(${x1}, 0.1, 0.25, 1)`;
+
+				const handleTransitionEnd = () => {
+					innerSidebarRef.value!.style.transitionTimingFunction = "";
+					innerSidebarRef.value!.removeEventListener("transitionend", handleTransitionEnd);
+					innerSidebarRef.value!.removeEventListener("transitioncancel", handleTransitionEnd);
+				};
+				innerSidebarRef.value!.addEventListener("transitionend", handleTransitionEnd);
+				innerSidebarRef.value!.addEventListener("transitioncancel", handleTransitionEnd);
+
+				sidebarVisible.value = false;
+			}
 		}
 	});
-
-	function handleDragStart(): void {
-		isDragging.value = true;
-	}
-
-	function handleDragMove(event: any): void {
-		Object.assign(innerSidebarRef.value!.style, {
-			transform: `translateX(${Math.max(0, event.deltaX)}px)`,
-			transition: "none"
-		});
-	}
-
-	function handleDragEnd(event: any): void {
-		isDragging.value = false;
-
-		Object.assign(innerSidebarRef.value!.style, {
-			transform: "",
-			transition: ""
-		});
-
-		if (event.velocityX > 0.3 || event.deltaX > innerSidebarRef.value!.offsetWidth / 2) {
-			sidebarVisible.value = false;
-		}
-	}
 
 	function handleSidebarKeyDown(event: KeyboardEvent): void {
 		if (event.key === "Escape") {
@@ -80,7 +87,7 @@
 </script>
 
 <template>
-	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow, isDragging }">
+	<div class="fm-sidebar" :class="{ isNarrow: context.isNarrow, isDragging: drag.isDragging }">
 		<template v-if="context.isNarrow">
 			<div class="fm-sidebar-outer" @keydown="handleSidebarKeyDown" :class="{ show: sidebarVisible }">
 				<div class="fm-sidebar-backdrop bg-dark" @click="handleBackdropClick"></div>
