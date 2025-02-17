@@ -5,6 +5,10 @@ on:
     branches:
       - 'main'
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FACILMAP_REPO: facilmap/facilmap
   DOCS_REPO: facilmap/facilmap-docs
