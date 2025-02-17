@@ -29,7 +29,7 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 	});
 }
 
-export function useDomEventListener<K extends keyof HTMLElementEventMap | keyof WindowEventHandlersEventMap>(element: AnyRef<EventTarget | undefined>, type: K, listener: (this: HTMLElement, ev: (HTMLElementEventMap & WindowEventHandlersEventMap)[K]) => any, options?: boolean | AddEventListenerOptions): void {
+export function useDomEventListener<K extends string>(element: AnyRef<EventTarget | undefined>, type: K, listener: (this: HTMLElement, ev: K extends keyof HTMLElementEventMap ? HTMLElementEventMap[K] : K extends keyof WindowEventHandlersEventMap ? WindowEventHandlersEventMap[K] : Event) => any, options?: boolean | AddEventListenerOptions): void {
 	watchEffect((onCleanup) => {
 		const elementRef = toRef(element);
 		if (elementRef.value) {
