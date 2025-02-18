@@ -37,15 +37,18 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 			const touchActionBkp = value.style.touchAction;
 			value.style.touchAction = "none";
 
+			const draggableBkp = value.draggable;
+			value.draggable = false;
+
 			onCleanup(() => {
 				value.style.touchAction = touchActionBkp;
+				value.draggable = draggableBkp;
 			});
 		}
 	}, { immediate: true });
 
 	useDomEventListener(elementRef, "pointerdown", (e) => {
 		// Is called when starting to drag, but also when clicking. To distinguish, we set "started" to true only in the first pointermove event.
-		e.preventDefault();
 		dragData.value = {
 			startX: e.clientX,
 			startY: e.clientY,
@@ -57,12 +60,12 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 			pointerId: e.pointerId,
 			started: false
 		};
-		elementRef.value!.setPointerCapture(e.pointerId);
 	});
 
 	useDomEventListener(elementRef, "pointermove", (e) => {
 		if (dragData.value && e.pointerId === dragData.value.pointerId) {
 			if (!dragData.value.started) {
+				elementRef.value!.setPointerCapture(e.pointerId);
 				Object.assign(dragData.value, {
 					customData: handlers.onDragStart?.(),
 					started: true
