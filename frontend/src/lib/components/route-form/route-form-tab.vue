@@ -8,6 +8,7 @@
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
+	const mapContext = toRef(() => context.components.map);
 	const searchBoxContext = requireSearchBoxContext(context);
 	const i18n = useI18n();
 
@@ -34,6 +35,14 @@
 	function activate(): void {
 		searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { expand: true });
 	}
+
+	function handleHashQueryChange(query: HashQuery | undefined) {
+		hashQuery.value = query;
+
+		if (query) {
+			mapContext.value?.components.selectionHandler.setSelectedItems([]); // Workaround for now to force route into the hash query
+		}
+	}
 </script>
 
 <template>
@@ -44,7 +53,7 @@
 		class="fm-route-form-tab"
 	>
 		<template #default="slotProps">
-			<RouteForm :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="hashQuery = $event"></RouteForm>
+			<RouteForm :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="handleHashQueryChange($event)"></RouteForm>
 		</template>
 	</SearchBoxTab>
 </template>
