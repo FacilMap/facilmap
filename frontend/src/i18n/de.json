@@ -737,13 +737,16 @@
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",
+        "tab-general": "Allgemein",
+        "tab-map-style": "Kartenstil",
         "introduction": "Diese Einstellungen werden als Cookies auf Ihrem Computer gespeichert und werden unabhängig von der geöffneten Karte angewendet.",
         "language": "Sprache",
         "language-description": "Manche Übersetzungen sind möglicherweise noch unvollständig. Die Übersetzungen werden gemeinschaftlich erstellt, Sie können sich gerne auf {{weblate}} daran beteiligen.",
         "language-description-interpolation-weblate": "Weblate",
         "units": "Einheiten",
         "units-metric": "Metrisch",
-        "units-us": "US customary (Meilen und Füße)"
+        "units-us": "US customary (Meilen und Füße)",
+        "default-map-style": "Voreingestellter Kartenstil"
     },
     "utils": {
         "required-error": "Dieses Feld muss ausgefüllt werden."

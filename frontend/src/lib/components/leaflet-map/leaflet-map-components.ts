@@ -1,7 +1,7 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList } from "facilmap-leaflet";
+import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
 import "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -20,6 +20,7 @@ import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
+import storage from "../../utils/storage";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -523,7 +524,13 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		if (!map._loaded) {
 			try {
 				// Initial view was not set by hash handler
-				displayView(map, await getInitialView(client.value), { overpassLayer });
+				const initialView = await getInitialView(client.value);
+				displayView(map, {
+					top: -90, bottom: 90, left: -180, right: 180,
+					...initialView,
+					baseLayer: initialView?.baseLayer ?? storage.baseLayer ?? defaultVisibleLayers.baseLayer,
+					layers: initialView?.layers ?? storage.overlays ?? defaultVisibleLayers.overlays
+				}, { overpassLayer });
 			} catch (error) {
 				console.error(error);
 				displayView(map, undefined, { overpassLayer });

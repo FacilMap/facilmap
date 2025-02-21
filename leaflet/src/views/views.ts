@@ -5,8 +5,11 @@ import { getVisibleLayers, setVisibleLayers } from "../layers";
 import { isEqual } from "lodash-es";
 import OverpassLayer from "../overpass/overpass-layer";
 import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from "../overpass/overpass-utils";
+import type { Optional } from "facilmap-utils";
 
 export type UnsavedView = Omit<View<CRU.CREATE>, 'name'>;
+
+export type PartialView = Optional<UnsavedView, "baseLayer" | "layers">;
 
 export function getCurrentView(map: Map, { includeFilter = false, overpassLayer }: { includeFilter?: boolean; overpassLayer?: OverpassLayer } = {}): UnsavedView {
 	const visibleLayers = getVisibleLayers(map);
@@ -26,9 +29,9 @@ export function getCurrentView(map: Map, { includeFilter = false, overpassLayer 
 	return ret;
 }
 
-const DEFAULT_VIEW: UnsavedView = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
+const DEFAULT_VIEW: PartialView = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined, layers: undefined };
 
-export function displayView(map: Map, view?: UnsavedView | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
+export function displayView(map: Map, view?: PartialView | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
 	if (view == null)
 		view = DEFAULT_VIEW;
 
@@ -38,7 +41,7 @@ export function displayView(map: Map, view?: UnsavedView | null, { _zoomFactor =
 	});
 
 	if (overpassLayer)
-		overpassLayer.setQuery(decodeOverpassQuery(view.layers.find((l) => isEncodedOverpassQuery(l))));
+		overpassLayer.setQuery(decodeOverpassQuery(view.layers?.find((l) => isEncodedOverpassQuery(l))));
 
 	const bounds = fmToLeafletBbox(view);
 

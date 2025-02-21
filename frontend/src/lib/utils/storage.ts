@@ -33,16 +33,16 @@ export const bookmarkValidator = z.record(z.any()).transform((val) => ({
 
 export type Bookmark = z.infer<typeof bookmarkValidator>;
 
-export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(z.object({
+const storageValidator2 = z.object({
 	zoomToAll: z.boolean().catch(false),
 	autoZoom: z.boolean().catch(true),
-	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => [])
-}));
+	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => []),
+	baseLayer: z.string().optional(),
+	overlays: z.array(z.string()).optional()
+});
+export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 
-export interface Storage {
-	zoomToAll: boolean;
-	autoZoom: boolean;
-	bookmarks: Bookmark[];
+export interface Storage extends z.infer<typeof storageValidator2> {
 }
 
 const storage: Storage = reactive(storageValidator.parse({}));
