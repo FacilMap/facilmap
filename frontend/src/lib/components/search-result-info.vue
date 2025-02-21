@@ -24,6 +24,7 @@
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		mapResults?: FindOnMapResult[];
 		isLoading?: boolean;
+		zoom?: number;
 	}>(), {
 		showBackButton: false
 	});
@@ -69,7 +70,7 @@
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="result.lat != null && result.lon != null">
 				<dt class="pos">{{i18n.t("search-result-info.coordinates")}}</dt>
-				<dd class="pos"><Coordinates :point="result as Point" :ele="result.elevation"></Coordinates></dd>
+				<dd class="pos"><Coordinates :point="result as Point" :ele="result.elevation" :zoom="props.zoom"></Coordinates></dd>
 			</template>
 
 			<template v-if="result.type">

@@ -143,6 +143,12 @@ export function round(number: number, digits: number): number {
 	return Math.round(number*fac)/fac;
 }
 
+export function padNumber(number: number, digits: number): string {
+	const spl = String(number).split(/(?=\.)/);
+	spl[0] = spl[0].padStart(digits, "0");
+	return spl.join("");
+}
+
 export function formatTime(seconds: number): string {
 	const hours = Math.floor(seconds/3600);
 	let minutes: string | number = Math.floor((seconds%3600)/60);
@@ -221,4 +227,47 @@ export function renderOsmTag(key: string, value: string): string {
 
 export function formatCoordinates(point: Point): string {
 	return `${point.lat.toFixed(5)},${point.lon.toFixed(5)}`;
+}
+
+export type Degrees = {
+	sign: "-" | "";
+	degFloat: number;
+	degInt: number;
+	minFloat: number;
+	minInt: number;
+	secFloat: number;
+};
+
+function getDegrees(coord: number): Degrees {
+	const sign =  coord < 0 ? "-" : "";
+	const degFloat = Math.abs(coord);
+	const degInt = Math.floor(degFloat);
+	const minFloat = (degFloat - degInt) * 60;
+	const minInt = Math.floor(minFloat);
+	const secFloat = (minFloat - minInt) * 60;
+	return { sign, degFloat, degInt, minInt, minFloat, secFloat };
+}
+
+export function getCoordinateDegrees(point: Point): { lat: Degrees & { letter: "N" | "S" }; lon: Degrees & { letter: "E" | "W" } } {
+	const lat = getDegrees(point.lat);
+	const lon = getDegrees(point.lon);
+	return {
+		lat: {
+			...lat,
+			letter: lat.sign === "-" ? "S" : "N"
+		},
+		lon: {
+			...lon,
+			letter: lon.sign === "-" ? "W" : "E"
+		}
+	};
+}
+
+export function formatCoordinateDegrees(point: Point): string {
+	const deg = getCoordinateDegrees(point);
+	return (
+		`${deg.lat.degInt}°\u202f${padNumber(deg.lat.minInt, 2)}\u2032\u202f${padNumber(round(deg.lat.secFloat, 1), 2)}\u2033\u202f${deg.lat.letter}`
+		+ ", "
+		+ `${deg.lon.degInt}°\u202f${padNumber(deg.lon.minInt, 2)}\u2032\u202f${padNumber(round(deg.lon.secFloat, 1), 2)}\u2033\u202f${deg.lon.letter}`
+	);
 }

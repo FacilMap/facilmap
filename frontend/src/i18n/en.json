@@ -859,13 +859,7 @@
         "about": "About {{appName}}"
     },
     "toolbox-map-style-dropdown": {
-        "label": "Map style",
-        "openstreetmap": "OpenStreetMap",
-        "google-maps": "Google Maps",
-        "google-maps-satellite": "Google Maps (Satellite)",
-        "bing-maps": "Bing Maps",
-        "bing-maps-satellite": "Bing Maps (Satellite)",
-        "park4night": "park4night"
+        "label": "Map style"
     },
     "toolbox-tools-dropdown": {
         "label": "Tools",
@@ -887,5 +881,14 @@
     },
     "zoom-to-object-button": {
         "fallback-label": "Zoom to object"
+    },
+    "links": {
+        "geo-link": "geo: link",
+        "openstreetmap": "OpenStreetMap",
+        "google-maps": "Google Maps",
+        "google-maps-satellite": "Google Maps (Satellite)",
+        "bing-maps": "Bing Maps",
+        "bing-maps-satellite": "Bing Maps (Satellite)",
+        "park4night": "park4night"
     }
 }

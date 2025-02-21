@@ -19,6 +19,7 @@
 		element: OverpassElement;
 		showBackButton?: boolean;
 		isAdding?: boolean;
+		zoom?: number;
 	}>(), {
 		showBackButton: false,
 		isAdding: false
@@ -48,7 +49,7 @@
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<dt>{{i18n.t("overpass-info.coordinates")}}</dt>
-			<dd><Coordinates :point="element"></Coordinates></dd>
+			<dd><Coordinates :point="element" :zoom="props.zoom"></Coordinates></dd>
 
 			<template v-for="(value, key) in element.tags" :key="key">
 				<dt>{{key}}</dt>

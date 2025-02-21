@@ -45,7 +45,7 @@
 			isCloseable
 			@close="close()"
 		>
-			<MarkerInfo :markerId="markerId"></MarkerInfo>
+			<MarkerInfo :markerId="markerId" :zoom="mapContext.zoom"></MarkerInfo>
 		</SearchBoxTab>
 	</template>
 </template>

@@ -145,6 +145,7 @@
 					v-if="openedObject && isMarker(openedObject)"
 					:markerId="openedObject.id"
 					show-back-button
+					:zoom="mapContext.zoom"
 					@back="carousel.setTab(0)"
 				></MarkerInfo>
 				<LineInfo

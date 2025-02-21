@@ -54,11 +54,7 @@
         "settings": "Настройки карты"
     },
     "toolbox-map-style-dropdown": {
-        "label": "Стиль карты",
-        "openstreetmap": "OpenStreetMap",
-        "google-maps": "Google Карты",
-        "bing-maps": "Bing Maps",
-        "google-maps-satellite": "Google Карты (Спутник)"
+        "label": "Стиль карты"
     },
     "toolbox-help-dropdown": {
         "matrix-chat": "Matrix-чат",
@@ -67,5 +63,11 @@
         "about": "О {{appName}}",
         "label": "Справка",
         "documentation": "Документация"
+    },
+    "links": {
+        "openstreetmap": "OpenStreetMap",
+        "google-maps": "Google Карты",
+        "bing-maps": "Bing Maps",
+        "google-maps-satellite": "Google Карты (Спутник)"
     }
 }

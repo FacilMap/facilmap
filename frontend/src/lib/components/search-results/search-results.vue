@@ -249,6 +249,7 @@
 					showBackButton
 					:searchSuggestions="props.searchResults"
 					:mapSuggestions="props.mapResults"
+					:zoom="mapContext.zoom"
 					@back="closeResult()"
 				></SearchResultInfo>
 			</div>

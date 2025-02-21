@@ -458,13 +458,7 @@
         "spinner-label": "ஏற்றுகிறது…"
     },
     "toolbox-map-style-dropdown": {
-        "bing-maps-satellite": "பிங் வரைபடங்கள் (செயற்கைக்கோள்)",
-        "park4night": "பூங்கா 4 இரவு",
-        "openstreetmap": "ஓபன்ச்ட்ரீட் வரைபடம்",
-        "label": "வரைபட நடை",
-        "google-maps": "கூகிள் வரைபடங்கள்",
-        "google-maps-satellite": "கூகிள் வரைபடங்கள் (செயற்கைக்கோள்)",
-        "bing-maps": "பிங் வரைபடங்கள்"
+        "label": "வரைபட நடை"
     },
     "toolbox-tools-dropdown": {
         "label": "கருவிகள்",
@@ -879,5 +873,13 @@
         "bugtracker": "ஒரு சிக்கலைப் புகாரளிக்கவும்",
         "forum": "கேள்வி கேளுங்கள்",
         "about": "{{appName}} பற்றி"
+    },
+    "links": {
+        "bing-maps-satellite": "பிங் வரைபடங்கள் (செயற்கைக்கோள்)",
+        "park4night": "பூங்கா 4 இரவு",
+        "openstreetmap": "ஓபன்ச்ட்ரீட் வரைபடம்",
+        "google-maps": "கூகிள் வரைபடங்கள்",
+        "google-maps-satellite": "கூகிள் வரைபடங்கள் (செயற்கைக்கோள்)",
+        "bing-maps": "பிங் வரைபடங்கள்"
     }
 }

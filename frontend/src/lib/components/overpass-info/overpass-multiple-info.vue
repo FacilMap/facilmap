@@ -50,7 +50,7 @@
 <template>
 	<div class="fm-overpass-multiple-info">
 		<template v-if="elements.length == 1">
-			<OverpassInfo :element="elements[0]"></OverpassInfo>
+			<OverpassInfo :element="elements[0]" :zoom="mapContext.zoom"></OverpassInfo>
 		</template>
 		<template v-else>
 			<div class="carousel slide" ref="carouselRef">
@@ -85,6 +85,7 @@
 						v-if="openedElement"
 						:element="openedElement"
 						show-back-button
+						:zoom="mapContext.zoom"
 						@back="carousel.setTab(0)"
 					></OverpassInfo>
 				</div>

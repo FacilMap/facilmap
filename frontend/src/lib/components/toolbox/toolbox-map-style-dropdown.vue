@@ -93,7 +93,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.openstreetmap")}}</span>
+				<span>{{i18n.t("links.openstreetmap")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -105,7 +105,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps")}}</span>
+				<span>{{i18n.t("links.google-maps")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -117,7 +117,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps-satellite")}}</span>
+				<span>{{i18n.t("links.google-maps-satellite")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -129,7 +129,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.bing-maps")}}</span>
+				<span>{{i18n.t("links.bing-maps")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -141,7 +141,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.bing-maps-satellite")}}</span>
+				<span>{{i18n.t("links.bing-maps-satellite")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>
@@ -153,7 +153,7 @@
 				target="_blank"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.park4night")}}</span>
+				<span>{{i18n.t("links.park4night")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>

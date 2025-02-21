@@ -733,10 +733,6 @@
         "validation-error": "Error al validar el campo del formulario"
     },
     "toolbox-map-style-dropdown": {
-        "bing-maps": "Mapas de Bing",
-        "google-maps": "Mapas de Google",
-        "google-maps-satellite": "Mapas de Google (satelital)",
-        "openstreetmap": "OpenStreetMap",
         "label": "Estilo de mapa"
     },
     "toolbox-help-dropdown": {
@@ -891,5 +887,11 @@
     },
     "map-id-edit": {
         "unique-id-error": "No se puede utilizar el mismo enlace para diferentes niveles de acceso."
+    },
+    "links": {
+        "bing-maps": "Mapas de Bing",
+        "google-maps": "Mapas de Google",
+        "google-maps-satellite": "Mapas de Google (satelital)",
+        "openstreetmap": "OpenStreetMap"
     }
 }

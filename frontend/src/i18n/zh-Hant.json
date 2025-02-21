@@ -427,10 +427,6 @@
         "bugtracker": "報告一個問題"
     },
     "toolbox-map-style-dropdown": {
-        "bing-maps": "Bing 地圖",
-        "google-maps-satellite": "Google 地圖（衛星）",
-        "google-maps": "Google 地圖",
-        "openstreetmap": "OpenStreetMap",
         "label": "地圖樣式"
     },
     "toolbox-tools-dropdown": {
@@ -456,5 +452,11 @@
     },
     "search-form-tab": {
         "tab-label": "搜尋"
+    },
+    "links": {
+        "bing-maps": "Bing 地圖",
+        "google-maps-satellite": "Google 地圖（衛星）",
+        "google-maps": "Google 地圖",
+        "openstreetmap": "OpenStreetMap"
     }
 }
