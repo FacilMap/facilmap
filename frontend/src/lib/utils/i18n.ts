@@ -142,10 +142,10 @@ export const vReplaceLinks: Directive<HTMLElement, Record<string, { onClick: (e:
 
 export function isLanguageExplicit(): boolean {
 	const queryParams = decodeQueryString(location.search);
-	return !!queryParams[LANG_QUERY] || !!queryParams[LANG_COOKIE];
+	return !!queryParams[LANG_QUERY] || !!cookies[LANG_COOKIE];
 }
 
 export function isUnitsExplicit(): boolean {
 	const queryParams = decodeQueryString(location.search);
-	return !!queryParams[UNITS_QUERY] || !!queryParams[UNITS_COOKIE];
+	return !!queryParams[UNITS_QUERY] || !!cookies[UNITS_COOKIE];
 }
