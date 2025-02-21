@@ -5,9 +5,7 @@ import { getI18n } from "./utils/i18n";
 import { markdownInline } from "facilmap-utils";
 
 export const defaultVisibleLayers: VisibleLayers = {
-	get baseLayer() {
-		return layerOptions.limaLabsToken ? 'Lima' : 'Mpnk';
-	},
+	baseLayer: "Mpnk",
 	overlays: []
 };
 
@@ -30,6 +28,12 @@ const fixAttribution = <T extends Layer>(layer: T): T => Object.assign(layer, { 
 export function createDefaultLayers(): Layers & { fallbackLayer: string | undefined } {
 	return {
 		baseLayers: {
+			Mpnk: fixAttribution(tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+				...fmName(() => getI18n().t("layers.mpnk-name")),
+				...attribution(() => getI18n().t("layers.mpnk-attribution")),
+				noWrap: true
+			})),
+
 			...(layerOptions.limaLabsToken ? {
 				Lima: fixAttribution(tileLayer(`https://cdn.lima-labs.com/{z}/{x}/{y}.png?api=${encodeURIComponent(layerOptions.limaLabsToken)}`, {
 					...fmName(() => getI18n().t("layers.lima-name")),
@@ -37,12 +41,6 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 					noWrap: true
 				}))
 			} : {}),
-
-			Mpnk: fixAttribution(tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-				...fmName(() => getI18n().t("layers.mpnk-name")),
-				...attribution(() => getI18n().t("layers.mpnk-attribution")),
-				noWrap: true
-			})),
 
 			/*MSfR: tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 				fmName: "MapSurfer Road",
