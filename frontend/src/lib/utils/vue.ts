@@ -1,4 +1,4 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted } from "vue";
 
 // https://stackoverflow.com/a/73784241/242365
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
@@ -114,3 +114,14 @@ export const vHtmlAsync: Directive<Element, Promise<string>> = (el, binding) => 
 		el.innerHTML = val ?? "";
 	});
 };
+
+export function useIsMounted(): Readonly<Ref<boolean>> {
+	const isMounted = ref(false);
+	onMounted(() => {
+		isMounted.value = true;
+	});
+	onBeforeUnmount(() => {
+		isMounted.value = false;
+	});
+	return readonly(isMounted);
+}
