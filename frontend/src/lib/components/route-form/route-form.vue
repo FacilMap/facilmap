@@ -203,7 +203,7 @@
 				draggable.value.disable();
 			});
 		}
-	});
+	}, { immediate: true });
 	watch([isMounted, routeLayer, () => mapContext.value.components.map], (v, o, onCleanup) => {
 		if (isMounted.value) {
 			routeLayer.value.addTo(mapContext.value.components.map);
@@ -212,7 +212,7 @@
 				routeLayer.value.remove();
 			});
 		}
-	});
+	}, { immediate: true });
 
 	watch([hasRoute, () => props.active, draggable, routeLayer], () => {
 		if (hasRoute.value)
@@ -224,7 +224,7 @@
 		} else {
 			draggable.value.disableForLayer(routeLayer.value);
 		}
-	});
+	}, { immediate: true });
 
 	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
