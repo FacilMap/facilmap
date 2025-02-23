@@ -1,4 +1,5 @@
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted } from "vue";
+import { cloneDeep, isEqual } from "lodash-es";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw } from "vue";
 
 // https://stackoverflow.com/a/73784241/242365
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
@@ -124,4 +125,23 @@ export function useIsMounted(): Readonly<Ref<boolean>> {
 		isMounted.value = false;
 	});
 	return readonly(isMounted);
+}
+
+/**
+ * Will return a ref to a deep clone of the given ref. When the given model ref is updated, a deep clone is applied
+ * to the returned ref. When the returned ref is updated (deep watch), a deep clone is applied to the model ref.
+ * Use this as `useImmutableModel(defineModel(...))` to allow changing nested properties of the model without mutating
+ * the actual object passed as the model value.
+ */
+export function useImmutableModel<T>(modelRef: Ref<T>): Ref<T> {
+	const value = ref() as Ref<T>;
+	watch(modelRef, () => {
+		value.value = cloneDeep(modelRef.value);
+	}, { immediate: true });
+	watch(value, () => {
+		if (!isEqual(toRaw(value.value), toRaw(modelRef.value))) {
+			modelRef.value = cloneDeep(value.value);
+		}
+	}, { deep: true });
+	return value;
 }

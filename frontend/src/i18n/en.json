@@ -748,7 +748,15 @@
         "units": "Units",
         "units-metric": "Metric",
         "units-us": "US customary (miles, feet)",
-        "default-map-style": "Default map style"
+        "default-map-style": "Default map style",
+        "external-links": "External links",
+        "external-links-description": "Configure links to external maps here that will appear in the “Map style” toolbox menu (to show the current map section), and in the coordinates dropdown of markers, search results and POIs (to show the marker). Enable or disable preset map links here or configure your own by using the `%LAT`, `%LON%` and `%ZOOM%` placeholders in the URL.",
+        "external-links-label": "Label",
+        "external-links-map-url": "Map URL",
+        "external-links-marker-url": "Marker URL",
+        "external-links-delete-tooltip": "Delete",
+        "external-links-reorder-alt": "Reorder",
+        "external-links-create": "Create"
     },
     "utils": {
         "required-error": "Must not be empty."

@@ -1,7 +1,7 @@
 import { mapIdValidator } from "facilmap-types";
 import { overwriteObject } from "facilmap-utils";
-import { isEqual } from "lodash-es";
-import { reactive, watch } from "vue";
+import { isEqual, omit } from "lodash-es";
+import { reactive, toRaw, watch } from "vue";
 import * as z from "zod";
 
 function arrayIgnoringInvalids<T extends z.ZodTypeAny>(schema: T): z.ZodType<Array<z.output<T>>> {
@@ -33,17 +33,33 @@ export const bookmarkValidator = z.record(z.any()).transform((val) => ({
 
 export type Bookmark = z.infer<typeof bookmarkValidator>;
 
+export const customLinkValidator = z.object({
+	label: z.string(),
+	map: z.string(),
+	marker: z.string()
+});
+
+export type CustomLink = z.infer<typeof customLinkValidator>;
+
 const storageValidator2 = z.object({
 	zoomToAll: z.boolean().catch(false),
 	autoZoom: z.boolean().catch(true),
 	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => []),
 	baseLayer: z.string().optional(),
-	overlays: z.array(z.string()).optional()
+	overlays: z.array(z.string()).optional(),
+	customLinks: z.array(customLinkValidator).optional(),
+	presetLinks: z.record(z.object({
+		enabled: z.boolean().optional(),
+		idx: z.number().optional()
+	})).optional()
 });
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 
 export interface Storage extends z.infer<typeof storageValidator2> {
 }
+
+/** When only these keys are updated, we don't need to request persistent storage. */
+const NON_CRITICAL_KEYS: Array<keyof z.infer<typeof storageValidator2>> = ["zoomToAll", "autoZoom"];
 
 const storage: Storage = reactive(storageValidator.parse({}));
 
@@ -74,11 +90,12 @@ async function save() {
 	try {
 		const currentItem = parseStorage();
 
-		if (!isEqual(currentItem, storage)) {
+		if (!isEqual(currentItem, toRaw(storage))) {
 			localStorage.setItem("facilmap", JSON.stringify(storage));
 
-			if (storage.bookmarks.length > 0 && !isEqual(currentItem.bookmarks, storage.bookmarks) && navigator.storage?.persist)
+			if (!isEqual(omit(currentItem, NON_CRITICAL_KEYS), omit(toRaw(storage), NON_CRITICAL_KEYS)) && navigator.storage?.persist) {
 				await navigator.storage.persist();
+			}
 		}
 	} catch (err) {
 		console.error("Error saving to local storage", err);

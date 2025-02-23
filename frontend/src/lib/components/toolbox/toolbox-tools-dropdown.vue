@@ -7,7 +7,7 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDialog from "../export-dialog.vue";
-	import UserPreferencesDialog from "../user-preferences-dialog.vue";
+	import UserPreferencesDialog from "../user-preferences-dialog/user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();

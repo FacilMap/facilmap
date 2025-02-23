@@ -67,15 +67,3 @@
 		</template>
 	</div>
 </template>
-
-<style lang="scss">
-	.fm-field-input {
-
-		.fm-large-checkbox {
-			margin-top: 0;
-			height: 1.5rem;
-			width: 1.5rem;
-		}
-
-	}
-</style>

@@ -9,6 +9,7 @@
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "./dropdown-menu.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getExternalLinks } from "../../utils/external-links";
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
@@ -21,20 +22,10 @@
 	}>();
 
 	const formattedCoordinates = computed(() => formatCoordinates(props.point));
+	const degrees = computed(() => formatCoordinateDegrees(props.point));
+	const geo = computed(() => `geo:${props.point.lat.toFixed(5)},${props.point.lon.toFixed(5)}${props.zoom != null ? `?z=${props.zoom}` : ""}`);
 
-	const links = computed(() => {
-		const lat = props.point.lat.toFixed(5);
-		const lon = props.point.lon.toFixed(5);
-		return {
-			degrees: formatCoordinateDegrees(props.point),
-			geo: `geo:${lat},${lon}${props.zoom != null ? `?z=${props.zoom}` : ""}`,
-			osm: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${props.zoom ?? 12}/${lat}/${lon}`,
-			google: `https://maps.google.com/maps?t=m&q=loc:${lat},${lon}`,
-			googleSatellite: `https://maps.google.com/maps?t=k&q=loc:${lat},${lon}`,
-			bing: `https://www.bing.com/maps?q=${lat},${lon}`,
-			bingSatellite: `https://www.bing.com/maps?q=${lat},${lon}&style=h`
-		};
-	});
+	const externalLinks = computed(() => getExternalLinks({ ...props.point, zoom: props.zoom }, "marker", context.hideCommercialMapLinks));
 
 	function copy(coordinates: string): void {
 		copyToClipboard(coordinates);
@@ -64,11 +55,11 @@
 				<a
 					href="javascript:"
 					class="dropdown-item"
-					@click="copy(links.degrees)"
+					@click="copy(degrees)"
 					v-tooltip="i18n.t('coordinates.copy-to-clipboard')"
 					draggable="false"
 				>
-					<span>{{links.degrees}}</span>
+					<span>{{degrees}}</span>
 					<Icon icon="copy" :alt="i18n.t('coordinates.copy-to-clipboard')"></Icon>
 				</a>
 			</li>
@@ -77,84 +68,25 @@
 				<a
 					href="javascript:"
 					class="dropdown-item"
-					@click="copy(links.geo)"
+					@click="copy(geo)"
 					v-tooltip="i18n.t('coordinates.copy-to-clipboard')"
 					draggable="false"
 				>
-					<span>{{links.geo}}</span>
+					<span>{{geo}}</span>
 					<Icon icon="copy" :alt="i18n.t('coordinates.copy-to-clipboard')"></Icon>
 				</a>
 			</li>
 
 			<li><hr class="dropdown-divider"></li>
 
-			<li>
+			<li v-for="link in externalLinks" :key="link.key">
 				<a
 					class="dropdown-item"
-					:href="links.geo"
+					:href="link.href"
+					:target="link.target"
 					draggable="false"
 				>
-					<span>{{i18n.t("links.geo-link")}}</span>
-					<Icon icon="new-window"></Icon>
-				</a>
-			</li>
-
-			<li>
-				<a
-					class="dropdown-item"
-					:href="links.osm"
-					target="_blank"
-					draggable="false"
-				>
-					<span>{{i18n.t("links.openstreetmap")}}</span>
-					<Icon icon="new-window"></Icon>
-				</a>
-			</li>
-
-			<li v-if="!context.hideCommercialMapLinks">
-				<a
-					class="dropdown-item"
-					:href="links.google"
-					target="_blank"
-					draggable="false"
-				>
-					<span>{{i18n.t("links.google-maps")}}</span>
-					<Icon icon="new-window"></Icon>
-				</a>
-			</li>
-
-			<li v-if="!context.hideCommercialMapLinks">
-				<a
-					class="dropdown-item"
-					:href="links.googleSatellite"
-					target="_blank"
-					draggable="false"
-				>
-					<span>{{i18n.t("links.google-maps-satellite")}}</span>
-					<Icon icon="new-window"></Icon>
-				</a>
-			</li>
-
-			<li v-if="!context.hideCommercialMapLinks">
-				<a
-					class="dropdown-item"
-					:href="links.bing"
-					target="_blank"
-					draggable="false"
-				>
-					<span>{{i18n.t("links.bing-maps")}}</span>
-					<Icon icon="new-window"></Icon>
-				</a>
-			</li>
-
-			<li v-if="!context.hideCommercialMapLinks">
-				<a
-					class="dropdown-item"
-					:href="links.bingSatellite"
-					target="_blank"
-					draggable="false"
-				>
-					<span>{{i18n.t("links.bing-maps-satellite")}}</span>
+					<span>{{link.label}}</span>
 					<Icon icon="new-window"></Icon>
 				</a>
 			</li>
