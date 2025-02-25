@@ -4,7 +4,7 @@ import vuePlugin from "eslint-plugin-vue";
 import globals from "globals";
 
 export default tseslint.config({
-	ignores: ["**/dist/*", "**/out/*", "**/out.*/*", "**/vite.config.ts.timestamp-*.mjs", "docs/**/*"],
+	ignores: ["**/dist/*", "**/out/*", "**/out.*/*", "**/vite.config.ts.timestamp-*.mjs", "docs/**/*", "server/bin/facilmap-server.js"],
 }, {
 	extends: [
 		tseslint.configs.base,
