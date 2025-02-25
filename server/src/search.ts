@@ -37,7 +37,7 @@ async function _loadUrl(url: string): Promise<string> {
 		throw new Error(getI18n().t("search.url-request-error", { url, status: res.status }));
 	}
 
-	let bodyBuf = new Uint8Array(await res.arrayBuffer());
+	let bodyBuf = new Uint8Array<ArrayBufferLike>(await res.arrayBuffer());
 
 	if(!bodyBuf)
 		throw new Error(getI18n().t("search.url-response-error"));
@@ -77,7 +77,6 @@ async function _loadUrl(url: string): Promise<string> {
 async function _loadSubRelations($: CheerioAPI) {
 	const loadedIds = new Set<string>();
 
-	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const promises: Array<Promise<string>> = [ ];
 

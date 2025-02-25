@@ -1,9 +1,9 @@
 import * as z from "zod";
-import { requestDataValidatorsV3, type ResponseDataMapV3, type MapEventsV3 } from "./socket-v3";
-import { requestDataValidatorsV1, type MapEventsV1, type ResponseDataMapV1 } from "./socket-v1";
-import { requestDataValidatorsV2, type MapEventsV2, type ResponseDataMapV2 } from "./socket-v2";
+import { requestDataValidatorsV3, type ResponseDataMapV3, type MapEventsV3 } from "./socket-v3.js";
+import { requestDataValidatorsV1, type MapEventsV1, type ResponseDataMapV1 } from "./socket-v1.js";
+import { requestDataValidatorsV2, type MapEventsV2, type ResponseDataMapV2 } from "./socket-v2.js";
 
-export * from "./socket-common";
+export * from "./socket-common.js";
 
 export enum SocketVersion {
 	V1 = "v1",

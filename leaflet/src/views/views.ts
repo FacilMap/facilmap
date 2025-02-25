@@ -48,7 +48,7 @@ export function displayView(map: Map, view?: PartialView | null, { _zoomFactor =
 	try {
 		map.getCenter(); // Throws exception if map not initialised
 		map.flyTo(bounds.getCenter(), map.getBoundsZoom(bounds, view === DEFAULT_VIEW) + _zoomFactor);
-	} catch(e) {
+	} catch {
 		map.setView(bounds.getCenter(), map.getBoundsZoom(bounds, view === DEFAULT_VIEW) + _zoomFactor);
 	}
 
@@ -58,7 +58,7 @@ export function displayView(map: Map, view?: PartialView | null, { _zoomFactor =
 export function isAtView(map: Map, view = DEFAULT_VIEW, { overpassLayer }: { overpassLayer?: OverpassLayer } = {}): boolean {
 	try {
 		map.getCenter();
-	} catch(e) {
+	} catch {
 		return false;
 	}
 

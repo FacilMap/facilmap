@@ -36,10 +36,6 @@ declare module "leaflet" {
 
 	namespace Control {
 		const Heightgraph: any;
-
-		interface Locate {
-			options: LocateOptions;
-		}
 	}
 
 	namespace Draggable {
@@ -48,5 +44,11 @@ declare module "leaflet" {
 
 	namespace Map {
 		const BoxZoom: any;
+	}
+}
+
+declare module "leaflet.locatecontrol" {
+	interface LocateControl {
+		options: LocateOptions;
 	}
 }

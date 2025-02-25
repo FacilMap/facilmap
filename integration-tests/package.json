@@ -28,14 +28,14 @@
     "facilmap-types-v4": "npm:facilmap-types@4",
     "facilmap-utils": "workspace:^",
     "lodash-es": "^4.17.21",
-    "socket.io-client": "^4.7.5",
-    "vitest": "^1.4.0"
+    "socket.io-client": "^4.8.1",
+    "vitest": "^3.0.7"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.12",
-    "typescript": "^5.4.4",
-    "vite": "^5.2.8",
-    "vite-plugin-dts": "^3.8.2",
-    "vite-tsconfig-paths": "^4.3.2"
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.0",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

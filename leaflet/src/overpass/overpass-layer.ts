@@ -53,15 +53,15 @@ export default class OverpassLayer extends FeatureGroup {
 	}
 
 	getEvents(): ReturnType<NonNullable<Layer['getEvents']>> {
-        return {
-            moveend: this.redraw
-        };
-    }
+		return {
+			moveend: this.redraw
+		};
+	}
 
-    onAdd(): this {
-        void this.redraw();
-        return this;
-    }
+	onAdd(): this {
+		void this.redraw();
+		return this;
+	}
 
 	isEmpty(): boolean {
 		return isOverpassQueryEmpty(this._query);
@@ -126,7 +126,7 @@ export default class OverpassLayer extends FeatureGroup {
 		return layer;
 	}
 
-    async redraw(): Promise<void> {
+	async redraw(): Promise<void> {
 		if (this._lastRequestController)
 			this._lastRequestController.abort();
 
@@ -159,6 +159,6 @@ export default class OverpassLayer extends FeatureGroup {
 			else
 				this.fire("loadend", { status: OverpassLoadStatus.ERROR, error });
 		}
-    }
+	}
 
 }

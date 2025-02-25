@@ -67,7 +67,7 @@
 		}
 	});
 
-	const attrs = useAttrs();
+	const attrs: Record<string, unknown> = useAttrs();
 
 	const attributes = computed(() => Object.fromEntries([
 		...Object.entries(manualAttributes.value).filter(([k, v]) => !ownAttributeNames.has(k)),
@@ -77,7 +77,7 @@
 	const className = computed(() => [
 		...manualClassNames.value.filter((c) => !ownClassNames.has(c)),
 		props.class ?? ''
-	].join(' '));
+	]);
 
 	defineExpose({
 		elementRef

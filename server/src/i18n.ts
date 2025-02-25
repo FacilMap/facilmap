@@ -11,7 +11,7 @@ import messagesZhHant from "./i18n/zh-Hant.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
 import { Router } from "express";
-import i18nextHttpMiddleware from "i18next-http-middleware";
+import * as i18nextHttpMiddleware from "i18next-http-middleware";
 import { type Socket as SocketIO } from "socket.io";
 import { unitsValidator, type Units } from "facilmap-types";
 import { parse } from "cookie";
@@ -87,7 +87,7 @@ export function setDomainUnits(units: Units): void {
 
 export const i18nMiddleware = Router();
 i18nMiddleware.use((req, res, next) => {
-	i18nextHttpMiddleware.handle(getRawI18n())(req, res, next);
+	void i18nextHttpMiddleware.handle(getRawI18n())(req, res, next);
 });
 i18nMiddleware.use((req, res, next) => {
 	if ((req as any).i18n) {
@@ -125,7 +125,7 @@ export async function handleSocketConnection(socket: SocketIO): Promise<void> {
 			setHeader: () => undefined
 		} as any;
 
-		i18nMiddleware(req, res, (err) => {
+		void i18nMiddleware(req, res, (err) => {
 			if (err) {
 				reject(err);
 			} else {

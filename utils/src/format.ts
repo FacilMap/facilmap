@@ -107,35 +107,35 @@ export function* domTreeIterator(el: Cheerio<ParentNode>): Generator<{ type: "op
  * block elements and paragraphs in the given data.
  */
 export function getTextContent(el: Cheerio<ParentNode>): string {
-    let result = "";
-    let currentPrefix = "";
-    for (const { type, node } of domTreeIterator(el)) {
-        if (node instanceof Element) {
-            if (node.tagName === "p") {
-                if (type === "open") {
-                    result += "\n";
-                }
-                currentPrefix = "\n";
-            } else if (node.tagName === "br" && type === "open") {
-                result += "\n";
-                currentPrefix = "";
-            } else if (!result.endsWith("\n") && ["address", "article", "aside", "blockquote", "details", "dialog", "dd", "dl", "div", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "ol", "pre", "section", "table", "ul"].includes(node.tagName)) {
-                currentPrefix = "\n";
-            } else if (!result.endsWith("\n") && !result.endsWith(" ") && ["td", "th"].includes(node.tagName) && currentPrefix === "") {
-                currentPrefix = " ";
-            }
-        }
+	let result = "";
+	let currentPrefix = "";
+	for (const { type, node } of domTreeIterator(el)) {
+		if (node instanceof Element) {
+			if (node.tagName === "p") {
+				if (type === "open") {
+					result += "\n";
+				}
+				currentPrefix = "\n";
+			} else if (node.tagName === "br" && type === "open") {
+				result += "\n";
+				currentPrefix = "";
+			} else if (!result.endsWith("\n") && ["address", "article", "aside", "blockquote", "details", "dialog", "dd", "dl", "div", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "ol", "pre", "section", "table", "ul"].includes(node.tagName)) {
+				currentPrefix = "\n";
+			} else if (!result.endsWith("\n") && !result.endsWith(" ") && ["td", "th"].includes(node.tagName) && currentPrefix === "") {
+				currentPrefix = " ";
+			}
+		}
 
-        if (type === "open") {
-            const text = node instanceof Text ? node.nodeValue.replace(/[\r\n\t ]+/g, " ").trim() : undefined;
-            if (text) {
-                result += currentPrefix;
-                currentPrefix = "";
-                result += text;
-            }
-        }
-    }
-    return result.trim();
+		if (type === "open") {
+			const text = node instanceof Text ? node.nodeValue.replace(/[\r\n\t ]+/g, " ").trim() : undefined;
+			if (text) {
+				result += currentPrefix;
+				currentPrefix = "";
+				result += text;
+			}
+		}
+	}
+	return result.trim();
 }
 
 export function round(number: number, digits: number): number {

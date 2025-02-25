@@ -2,7 +2,7 @@ import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shall
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
-import "leaflet.locatecontrol";
+import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
 import "leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
@@ -195,7 +195,7 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	);
 }
 
-function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Control.Locate> | undefined> {
+function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<LocateControl> | undefined> {
 	return useMapComponent(
 		map,
 		() => {
@@ -206,7 +206,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 
 				let screenshotIconHtmlP = getIconHtml("currentColor", "1.5em", "screenshot");
 
-				const locateControl = control.locate({
+				const locateControl = new LocateControl({
 					flyTo: true,
 					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
 					locateOptions: {
@@ -215,7 +215,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 					clickBehavior: {
 						inView: "stop",
 						outOfView: "setView",
-						inViewNotFollowing: "outOfView"
+						inViewNotFollowing: "setView"
 					},
 					setView: "untilPan",
 					keepCurrentZoomLevel: false,
@@ -224,7 +224,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 					icon: "fm-locate-control-icon",
 					iconLoading: "fm-locate-control-icon-loading",
 					createButtonCallback: (container, options) => {
-						const { link, icon } = (Control.Locate.prototype.options as Control.LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLElement; icon: HTMLElement };
+						const { link, icon } = (LocateControl.prototype.options as LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLAnchorElement; icon: HTMLElement };
 						screenshotIconHtmlP.then((iconHtml) => {
 							icon.innerHTML = iconHtml;
 						}).catch(console.error);

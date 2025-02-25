@@ -1,6 +1,6 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
 import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest } from "facilmap-types";
-import { deserializeError, errorConstructors, serializeError } from "serialize-error";
+import { addKnownErrorConstructor, deserializeError, serializeError } from "serialize-error";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	connect: [];
@@ -68,7 +68,9 @@ interface ClientData {
 	routes: Record<string, RouteWithTrackPoints>;
 }
 
-errorConstructors.set("MapNotFoundError", MapNotFoundError as any);
+// Workaround for https://github.com/sindresorhus/serialize-error/issues/106
+Object.defineProperty(MapNotFoundError, "name", { value: "MapNotFoundError" });
+addKnownErrorConstructor(MapNotFoundError);
 
 class Client {
 	private socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3>>;

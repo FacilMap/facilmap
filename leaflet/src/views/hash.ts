@@ -203,14 +203,13 @@ export default class HashHandler extends Handler {
 
 }
 
-// eslint-disable-next-line no-redeclare
 export default interface HashHandler extends Evented {}
 Object.assign(HashHandler.prototype, Evented.prototype);
 
 export function decodeURIComponentTolerantly(str: string): string {
 	try {
 		return decodeURIComponent(str.replace(/\+/g, ' '));
-	} catch(e) {
+	} catch {
 		return str;
 	}
 }

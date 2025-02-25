@@ -86,8 +86,8 @@
 			tag="div"
 			class="modal fade fm-modal"
 			:class="[
-				props.size !== 'default' ? `modal-${props.size}` : undefined,
-				props.class
+				props.size !== 'default' ? `modal-${props.size}` : '',
+				props.class ?? ''
 			]"
 			tabindex="-1"
 			aria-hidden="true"

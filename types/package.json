@@ -27,14 +27,14 @@
     "README.md"
   ],
   "dependencies": {
-    "@types/geojson": "^7946.0.14",
+    "@types/geojson": "^7946.0.16",
     "lodash-es": "^4.17.21",
-    "zod": "^3.22.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "rimraf": "^5.0.5",
-    "typescript": "^5.4.4",
-    "vite": "^5.2.8",
-    "vite-plugin-dts": "^3.8.2"
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.1",
+    "vite-plugin-dts": "4.2"
   }
 }

@@ -1,5 +1,4 @@
 import type { Plugin } from "rollup";
-// eslint-disable-next-line import/no-named-as-default
 import glob from "fast-glob";
 import { readFile } from "fs/promises";
 import { createRequire } from "module";

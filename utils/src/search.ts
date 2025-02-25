@@ -568,35 +568,3 @@ function _formatAddress(result: NominatimResult) {
 		name: fullName[0]
 	};
 }
-
-const lonLatRegexp = (() => {
-	const number = `[-\u2212]?\\s*\\d+([.,]\\d+)?`;
-
-	const getCoordinate = (n: number) => (
-		`(` +
-			`(?<hemispherePrefix${n}>[NWSE])` +
-		`)?(` +
-			`(?<degrees${n}>${number})` +
-			`(\\s*[°]\\s*|\\s*deg\\s*|\\s+|$|(?!\\d))` +
-		`)(` +
-			`(?<minutes${n}>${number})` +
-			`(\\s*['\u2032\u2019]\\s*)` +
-		`)?(` +
-			`(?<seconds${n}>${number})` +
-			`(\\s*["\u2033\u201d]\\s*)` +
-		`)?(` +
-			`(?<hemisphereSuffix${n}>[NWSE])` +
-		`)?`
-	);
-
-	const coords = (
-		`(geo\\s*:\\s*)?` +
-		`\\s*` +
-		getCoordinate(1) +
-		`(?<separator>\\s*[,;]\\s*|\\s+)` +
-		getCoordinate(2) +
-		`(\\?z=(?<zoom>\\d+))?`
-	);
-
-	return new RegExp(`^\\s*${coords}\\s*$`, "i");
-})();

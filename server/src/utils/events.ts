@@ -1,9 +1,6 @@
 import { EventEmitter } from "events";
 import type { EventHandler, EventName } from "facilmap-types";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
-
 interface AddListener<EventTypes extends Record<string, any[]>, This> {
 	<E extends EventName<EventTypes>>(event: E, listener: EventHandler<EventTypes, E>): This;
 }

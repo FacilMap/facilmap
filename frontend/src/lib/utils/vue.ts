@@ -31,17 +31,17 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 }
 
 export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
-    const internalValue = ref(getProp() ?? fallbackValue);
-    return computed({
-        get: (): Value => {
-            const propValue = getProp();
-            return propValue !== undefined ? propValue : internalValue.value as Value;
-        },
-        set: (val: Value) => {
-            internalValue.value = val as any;
-            onUpdate(val);
-        }
-    });
+	const internalValue = ref(getProp() ?? fallbackValue);
+	return computed({
+		get: (): Value => {
+			const propValue = getProp();
+			return propValue !== undefined ? propValue : internalValue.value as Value;
+		},
+		set: (val: Value) => {
+			internalValue.value = val as any;
+			onUpdate(val);
+		}
+	});
 }
 
 export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K): (ref: Element | ComponentPublicInstance | null) => void {

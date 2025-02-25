@@ -112,8 +112,8 @@ export function* numberKeys(obj: Record<number, any>): Generator<number> {
 }
 
 export function getProperty<K, V, T extends Map<K, V>>(obj: T, key: K): V;
-export function getProperty<T, K extends keyof T>(obj: T, key: K): T[K]; // eslint-disable-line no-redeclare
-export function getProperty(obj: any, key: any): any { // eslint-disable-line no-redeclare
+export function getProperty<T, K extends keyof T>(obj: T, key: K): T[K];
+export function getProperty(obj: any, key: any): any {
 	if (Object.getPrototypeOf(obj)?.get)// This is an ES6 map
 		return obj.get(key);
 	else

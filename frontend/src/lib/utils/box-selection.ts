@@ -41,6 +41,5 @@ export default class BoxSelection extends Map.BoxZoom {
 
 }
 
-// eslint-disable-next-line no-redeclare
 export default interface BoxSelection extends Evented {}
 Object.assign(BoxSelection.prototype, Evented.prototype);
