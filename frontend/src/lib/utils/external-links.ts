@@ -23,7 +23,7 @@ export const DEFAULT_LINKS: PresetLink[] = [
 	{
 		id: "gmaps",
 		get label(): string { return getI18n().t("links.google-maps"); },
-		map: "https://www.google.com/maps/@?api=1&map_action=map&center=%LAT%,%LAT%&zoom=%ZOOM%",
+		map: "https://www.google.com/maps/@?api=1&map_action=map&center=%LAT%,%LON%&zoom=%ZOOM%",
 		marker: "https://maps.google.com/maps?t=m&q=loc:%LAT%,%LON%",
 		enabled: true,
 		commercial: true
@@ -31,7 +31,7 @@ export const DEFAULT_LINKS: PresetLink[] = [
 	{
 		id: "gmaps-s",
 		get label(): string { return getI18n().t("links.google-maps-satellite"); },
-		map: "https://www.google.com/maps/@?api=1&map_action=map&center=%LAT%,%LAT%&zoom=%ZOOM%&basemap=satellite",
+		map: "https://www.google.com/maps/@?api=1&map_action=map&center=%LAT%,%LON%&zoom=%ZOOM%&basemap=satellite",
 		marker: "https://maps.google.com/maps?t=k&q=loc:%LAT%,%LON%",
 		enabled: true,
 		commercial: true
@@ -39,7 +39,7 @@ export const DEFAULT_LINKS: PresetLink[] = [
 	{
 		id: "bing",
 		get label(): string { return getI18n().t("links.bing-maps"); },
-		map: "https://www.bing.com/maps?cp=%LAT%~%LAT%&lvl=%ZOOM%",
+		map: "https://www.bing.com/maps?cp=%LAT%~%LON%&lvl=%ZOOM%",
 		marker: "https://www.bing.com/maps?q=%LAT%,%LON%",
 		enabled: true,
 		commercial: true
@@ -47,7 +47,7 @@ export const DEFAULT_LINKS: PresetLink[] = [
 	{
 		id: "bing-s",
 		get label(): string { return getI18n().t("links.bing-maps-satellite"); },
-		map: "https://www.bing.com/maps?cp=%LAT%~%LAT%&lvl=%ZOOM%&style=h",
+		map: "https://www.bing.com/maps?cp=%LAT%~%LON%&lvl=%ZOOM%&style=h",
 		marker: "https://www.bing.com/maps?q=%LAT%,%LON%&style=h",
 		enabled: true,
 		commercial: true
@@ -55,7 +55,7 @@ export const DEFAULT_LINKS: PresetLink[] = [
 	{
 		id: "p4n",
 		get label(): string { return getI18n().t("links.park4night"); },
-		get map(): string { return `https://park4night.com/${["fr", "de", "es", "it", "nl"].find((l) => l === getI18n().currentLanguage) ?? "en"}/search?lat=%LAT%&lng=%LAT%&z=%ZOOM%`; },
+		get map(): string { return `https://park4night.com/${["fr", "de", "es", "it", "nl"].find((l) => l === getI18n().currentLanguage) ?? "en"}/search?lat=%LAT%&lng=%LON%&z=%ZOOM%`; },
 		marker: "",
 		enabled: false,
 		commercial: true
