@@ -161,7 +161,8 @@
         "colour": "Colour",
         "width": "Width",
         "stroke": "Stroke",
-        "change-type": "Change type"
+        "change-type": "Change type",
+        "edit-type": "Edit type “{{type}}”"
     },
     "edit-marker-dialog": {
         "save-error": "Error saving marker",
@@ -171,7 +172,8 @@
         "size": "Size",
         "icon": "Icon",
         "shape": "Shape",
-        "change-type": "Change type"
+        "change-type": "Change type",
+        "edit-type": "Edit type “{{type}}”"
     },
     "edit-type-dialog": {
         "delete-field-title": "Delete field",
@@ -726,18 +728,35 @@
     "use-as-dropdown": {
         "label": "Use as",
         "from": "Route start",
+        "from-insert": "Route start (insert before current start)",
+        "from-replace": "Route start (replace current start)",
         "via": "Route via",
-        "to": "Route destination"
+        "via-first": "Route via (first)",
+        "via-last": "Route via (last)",
+        "to": "Route destination",
+        "to-insert": "Route destination (insert after current destination)",
+        "to-replace": "Route destination (replace current destination)"
     },
     "user-preferences-dialog": {
         "title": "User preferences",
+        "tab-general": "General",
+        "tab-map-style": "Map style",
         "introduction": "These settings are stored on your computer as a cookie and are applied independently of the opened map.",
         "language": "Language",
         "language-description": "Some translations may not be complete yet. Translations are created by the community, feel free to contribute on {{weblate}}.",
         "language-description-interpolation-weblate": "Weblate",
         "units": "Units",
         "units-metric": "Metric",
-        "units-us": "US customary (miles, feet)"
+        "units-us": "US customary (miles, feet)",
+        "default-map-style": "Default map style",
+        "external-links": "External links",
+        "external-links-description": "Configure links to external maps here that will appear in the “Map style” toolbox menu (to show the current map section), and in the coordinates dropdown of markers, search results and POIs (to show the marker). Enable or disable preset map links here or configure your own by using the `%LAT`, `%LON%` and `%ZOOM%` placeholders in the URL.",
+        "external-links-label": "Label",
+        "external-links-map-url": "Map URL",
+        "external-links-marker-url": "Marker URL",
+        "external-links-delete-tooltip": "Delete",
+        "external-links-reorder-alt": "Reorder",
+        "external-links-create": "Create"
     },
     "utils": {
         "required-error": "Must not be empty."
@@ -851,11 +870,7 @@
         "about": "About {{appName}}"
     },
     "toolbox-map-style-dropdown": {
-        "label": "Map style",
-        "openstreetmap": "OpenStreetMap",
-        "google-maps": "Google Maps",
-        "google-maps-satellite": "Google Maps (Satellite)",
-        "bing-maps": "Bing Maps"
+        "label": "Map style"
     },
     "toolbox-tools-dropdown": {
         "label": "Tools",
@@ -877,5 +892,14 @@
     },
     "zoom-to-object-button": {
         "fallback-label": "Zoom to object"
+    },
+    "links": {
+        "geo-link": "geo: link",
+        "openstreetmap": "OpenStreetMap",
+        "google-maps": "Google Maps",
+        "google-maps-satellite": "Google Maps (Satellite)",
+        "bing-maps": "Bing Maps",
+        "bing-maps-satellite": "Bing Maps (Satellite)",
+        "park4night": "park4night"
     }
 }

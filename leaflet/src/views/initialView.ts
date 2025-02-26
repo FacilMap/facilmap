@@ -1,8 +1,8 @@
 import type { SocketClient, SocketClientStorage } from "facilmap-client";
 import type { DeepReadonly, MapSlug } from "facilmap-types";
-import type { UnsavedView } from "./views";
+import type { PartialView } from "./views";
 
-export async function getInitialView(clientOrStorage: SocketClient | SocketClientStorage, mapSlug?: MapSlug): Promise<DeepReadonly<UnsavedView> | undefined> {
+export async function getInitialView(clientOrStorage: SocketClient | SocketClientStorage, mapSlug?: MapSlug): Promise<DeepReadonly<PartialView> | undefined> {
 	let [storage, client] = "client" in clientOrStorage ? [clientOrStorage, clientOrStorage.client] : [undefined, clientOrStorage];
 
 	if (mapSlug) {
@@ -14,7 +14,7 @@ export async function getInitialView(clientOrStorage: SocketClient | SocketClien
 		const geoip = await client.geoip();
 
 		if (geoip) {
-			return { ...geoip, baseLayer: undefined as any, layers: [] };
+			return { ...geoip, baseLayer: undefined, layers: undefined };
 		}
 	} catch (err) {
 		console.error("Error contacting GeoIP service", err);

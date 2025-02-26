@@ -1,8 +1,8 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList } from "facilmap-leaflet";
-import "leaflet.locatecontrol";
+import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
+import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
 import "leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
@@ -20,6 +20,7 @@ import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
+import storage from "../../utils/storage";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -194,7 +195,7 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	);
 }
 
-function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Control.Locate> | undefined> {
+function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<LocateControl> | undefined> {
 	return useMapComponent(
 		map,
 		() => {
@@ -205,7 +206,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 
 				let screenshotIconHtmlP = getIconHtml("currentColor", "1.5em", "screenshot");
 
-				return markRaw(control.locate({
+				const locateControl = new LocateControl({
 					flyTo: true,
 					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
 					locateOptions: {
@@ -214,20 +215,29 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 					clickBehavior: {
 						inView: "stop",
 						outOfView: "setView",
-						inViewNotFollowing: "outOfView"
+						inViewNotFollowing: "setView"
 					},
 					setView: "untilPan",
-					keepCurrentZoomLevel: true,
+					keepCurrentZoomLevel: false,
 					// These class names are not used anywhere, we just set them to avoid the default class names being set,
 					// which would apply the default icons using CSS.
 					icon: "fm-locate-control-icon",
 					iconLoading: "fm-locate-control-icon-loading",
 					createButtonCallback: (container, options) => {
-						const { link, icon } = (Control.Locate.prototype.options as Control.LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLElement; icon: HTMLElement };
+						const { link, icon } = (LocateControl.prototype.options as LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLAnchorElement; icon: HTMLElement };
 						screenshotIconHtmlP.then((iconHtml) => {
 							icon.innerHTML = iconHtml;
 						}).catch(console.error);
 						return { link, icon };
+					}
+				});
+				return markRaw(Object.assign(Object.create(locateControl), {
+					setView(this: typeof locateControl) {
+						locateControl.setView.apply(this);
+
+						// After the control zoomed to the location on first activation, we keep the zoom level constant to not annoy
+						// the user. This is reset on the "locatedeactivate" event below.
+						this.options.keepCurrentZoomLevel = true;
 					}
 				}));
 			}
@@ -246,6 +256,7 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Cont
 				};
 				const handleDeactivate = () => {
 					active.value = false;
+					locateControl.options.keepCurrentZoomLevel = false;
 				};
 				map.on("locateactivate", handleActivate);
 				map.on("locatedeactivate", handleDeactivate);
@@ -513,7 +524,13 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		if (!map._loaded) {
 			try {
 				// Initial view was not set by hash handler
-				displayView(map, await getInitialView(client.value), { overpassLayer });
+				const initialView = await getInitialView(client.value);
+				displayView(map, {
+					top: -90, bottom: 90, left: -180, right: 180,
+					...initialView,
+					baseLayer: initialView?.baseLayer ?? storage.baseLayer ?? defaultVisibleLayers.baseLayer,
+					layers: initialView?.layers ?? storage.overlays ?? defaultVisibleLayers.overlays
+				}, { overpassLayer });
 			} catch (error) {
 				console.error(error);
 				displayView(map, undefined, { overpassLayer });

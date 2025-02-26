@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import hammer from "hammerjs";
-	import { type Ref, defineComponent, nextTick, onMounted, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
-	import vTooltip, { hideAllTooltips } from "../../utils/tooltip";
+	import { type Ref, defineComponent, nextTick, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
+	import vTooltip from "../../utils/tooltip";
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
 	import mitt from "mitt";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
+	import { useDrag } from "../../utils/drag";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -36,7 +36,7 @@
 			tabHistory.value = tabHistory.value.filter((v) => v !== id);
 			if (isActive) {
 				activeTabId.value = tabHistory.value[tabHistory.value.length - 1];
-				if (restoreHeight.value && context.isNarrow && containerRef.value) {
+				if (restoreHeight.value != null && context.isNarrow && containerRef.value) {
 					containerRef.value.style.flexBasis = `${restoreHeight.value}px`;
 				}
 				restoreHeight.value = undefined;
@@ -84,45 +84,25 @@
 	const cardHeaderRef = ref<HTMLElement>();
 	const resizeHandleRef = ref<HTMLElement>();
 
-	const isPanning = ref<boolean>();
-	const panStartHeight = ref<number>();
 	const restoreHeight = ref<number>();
-	const resizeStartHeight = ref<number>();
-	const resizeStartWidth = ref<number>();
 	const hasFocus = ref(false);
-	const isResizing = ref(false);
 
-	onMounted(() => {
-		const pan = new hammer.Manager(cardHeaderRef.value!);
-		pan.add(new hammer.Pan({ direction: hammer.DIRECTION_VERTICAL }));
-		pan.on("panstart", handlePanStart);
-		pan.on("pan", handlePanMove);
-		pan.on("panend", handlePanEnd);
+	const panDrag = useDrag(cardHeaderRef, {
+		onDragStart: () => {
+			restoreHeight.value = undefined;
+			return { height: parseInt(getComputedStyle(containerRef.value!).flexBasis) };
+		},
 
-		const resize = new hammer.Manager(resizeHandleRef.value!);
-		resize.add(new hammer.Pan({ direction: hammer.DIRECTION_ALL }));
-		resize.add(new hammer.Tap());
-		resize.on("panstart", handleResizeStart);
-		resize.on("pan", handleResizeMove);
-		resize.on("panend", handleResizeEnd);
-		resize.on("tap", handleResizeClick);
+		onDrag: ({ deltaY, customData }) => {
+			if (context.isNarrow) {
+				containerRef.value!.style.flexBasis = `${getSanitizedHeight(customData.height - deltaY)}px`;
+			}
+		},
+
+		onDragEnd: () => {
+			mapContext.value.components.map.invalidateSize({ pan: false });
+		}
 	});
-
-	function handlePanStart(): void {
-		isPanning.value = true;
-		restoreHeight.value = undefined;
-		panStartHeight.value = parseInt(getComputedStyle(containerRef.value!).flexBasis);
-	}
-
-	function handlePanMove(event: any): void {
-		if (context.isNarrow && panStartHeight.value != null && event.srcEvent.type != "pointercancel")
-			containerRef.value!.style.flexBasis = `${getSanitizedHeight(panStartHeight.value - event.deltaY)}px`;
-	}
-
-	function handlePanEnd(): void {
-		isPanning.value = false;
-		mapContext.value.components.map.invalidateSize({ pan: false });
-	}
 
 	function getSanitizedHeight(height: number): number {
 		const maxHeight = (containerRef.value!.offsetParent as HTMLElement).offsetHeight - 5;
@@ -141,31 +121,28 @@
 		}
 	}
 
-	function handleResizeStart(): void {
-		isResizing.value = true;
-		resizeStartWidth.value = containerRef.value!.offsetWidth;
-		resizeStartHeight.value = containerRef.value!.offsetHeight;
-		hideAllTooltips();
-		searchBoxContext.emit("resizestart");
-	}
+	const resizeDrag = useDrag(resizeHandleRef, {
+		onDragStart: () => {
+			searchBoxContext.emit("resizestart");
+			return { width: containerRef.value!.offsetWidth, height: containerRef.value!.offsetHeight };
+		},
 
-	function handleResizeMove(event: any): void {
-		containerRef.value!.style.width = `${resizeStartWidth.value + event.deltaX}px`;
-		containerRef.value!.style.height = `${resizeStartHeight.value + event.deltaY}px`;
-		searchBoxContext.emit("resize");
-	}
+		onDrag: ({ deltaX, deltaY, customData }) => {
+			containerRef.value!.style.width = `${customData.width + deltaX}px`;
+			containerRef.value!.style.height = `${customData.height + deltaY}px`;
+			searchBoxContext.emit("resize");
+		},
 
-	function handleResizeEnd(): void {
-		isResizing.value = false;
-		searchBoxContext.emit("resizeend");
-	}
+		onDragEnd: () => {
+			searchBoxContext.emit("resizeend");
+		},
 
-	function handleResizeClick(): void {
-		containerRef.value!.style.width = "";
-		containerRef.value!.style.height = "";
-		hideAllTooltips();
-		searchBoxContext.emit("resizereset");
-	}
+		onClick: () => {
+			containerRef.value!.style.width = "";
+			containerRef.value!.style.height = "";
+			searchBoxContext.emit("resizereset");
+		}
+	});
 
 	function handleFocusIn(e: FocusEvent): void {
 		if ((e.target as HTMLElement).closest("input,textarea"))
@@ -200,7 +177,7 @@
 		class="card fm-search-box"
 		v-show="searchBoxContext.tabs.size > 0"
 		ref="containerRef"
-		:class="{ isNarrow: context.isNarrow, hasFocus, isPanning }"
+		:class="{ isNarrow: context.isNarrow, hasFocus, isPanning: panDrag.isDragging }"
 		@focusin="handleFocusIn"
 		@focusout="handleFocusOut"
 		@transitionend="handleTransitionEnd"
@@ -245,7 +222,7 @@
 			v-show="!context.isNarrow"
 			href="javascript:"
 			class="fm-search-box-resize"
-			v-tooltip.right="i18n.t('search-box.resize-tooltip')"
+			v-tooltip.right="resizeDrag.isDragging ? undefined : i18n.t('search-box.resize-tooltip')"
 			ref="resizeHandleRef"
 		><Icon icon="resize-horizontal"></Icon></a>
 	</div>
@@ -459,6 +436,10 @@
 
 		.fm-search-box:hover &,.fm-search-box.hasFocus & {
 			opacity: 1;
+		}
+
+		&:hover {
+			z-index: 10;
 		}
 	}
 </style>

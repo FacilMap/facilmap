@@ -1,4 +1,4 @@
-import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2";
+import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2.js";
 
 // Socket v1:
 // - Marker name, line name and map name is never an empty string but defaults to "Untitled marker", "Untitled line" and "Unnamed map"

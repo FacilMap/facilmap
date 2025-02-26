@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import dtsPlugin from "vite-plugin-dts";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { isAbsolute } from "node:path";
 
 export default defineConfig({
 	plugins: [
@@ -19,7 +20,7 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => id.includes("/node_modules/") || (!id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/"))
+			external: (id) => id.includes("/node_modules/") || (!id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !isAbsolute(id))
 		}
 	},
 	test: {

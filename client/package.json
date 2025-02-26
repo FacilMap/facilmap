@@ -37,16 +37,16 @@
     "content-disposition": "^0.5.4",
     "facilmap-types": "workspace:^",
     "json-stream-es": "^1.2.0",
-    "serialize-error": "^11.0.3",
-    "socket.io-client": "^4.7.5"
+    "serialize-error": "^12.0.0",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@types/content-disposition": "^0.5.8",
-    "@types/geojson": "^7946.0.14",
-    "rimraf": "^5.0.5",
-    "typescript": "^5.4.4",
-    "vite": "^5.2.8",
-    "vite-plugin-dts": "^3.8.2",
+    "@types/geojson": "^7946.0.16",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.0",
     "vitest": "^1.6.0"
   }
 }

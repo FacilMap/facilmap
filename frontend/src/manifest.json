@@ -1,13 +1,33 @@
 {
-    "name": "%APP_NAME%",
-    "short_name": "%APP_NAME%",
-    "icons": [{
-        "src": "./static/app-512.png",
-        "sizes": "512x512",
-        "type": "image/png"
-    }],
-    "background_color": "#ffffff",
-    "theme_color": "#ffffff",
-    "display": "standalone",
-    "start_url": "../"
+	"$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/web-manifest.json",
+	"name": "%APP_NAME%",
+	"short_name": "%APP_NAME%",
+	"icons": [{
+		"src": "./static/app-512.png",
+		"sizes": "512x512",
+		"type": "image/png"
+	}],
+	"background_color": "#ffffff",
+	"theme_color": "#ffffff",
+	"display": "standalone",
+	"start_url": "../",
+	"protocol_handlers": [
+		{
+			"protocol": "geo",
+			"url": "../#q=%s"
+		}
+	],
+	"file_handlers": [
+		{
+			"action": "../",
+			"accept": {
+				"application/gpx+xml": [".gpx"],
+				"application/vnd.google-earth.kml+xml": [".kml"],
+				"application/vnd.google-earth.kmz": [".kmz"],
+				"application/vnd.garmin.tcx+xml": [".tcx"],
+				"application/vnd.openstreetmap.data+xml": [".osm"],
+				"application/geo+json": [".geojson"]
+			}
+		}
+	]
 }

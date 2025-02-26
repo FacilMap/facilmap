@@ -4,6 +4,7 @@ import type { Geometry } from "geojson";
 import { formatCoordinates } from "./format.js";
 import { fetchAdapter, getConfig } from "./config.js";
 import { getI18n } from "./i18n.js";
+import { parseGpsCoordinates } from "parse-gps-coordinates";
 
 interface NominatimResult {
 	place_id: number;
@@ -19,6 +20,7 @@ interface NominatimResult {
 	place_rank: number;
 	category: string;
 	type: string;
+	addresstype: string;
 	importance: number;
 	icon: string;
 	address: Partial<Record<string, string>>;
@@ -196,7 +198,7 @@ type FindOptions = { lang?: string };
 export async function find(query: string, options: FindOptions = {}): Promise<Array<SearchResult>> {
 	query = query.replace(/^\s+/, "").replace(/\s+$/, "");
 
-	const lonlat_match = matchLonLat(query);
+	const lonlat_match = parseGpsCoordinates(query);
 	if(lonlat_match) {
 		const result = await _findLonLat(lonlat_match, options);
 		return result.map((res) => ({ ...res, id: query }));
@@ -317,10 +319,13 @@ function _prepareSearchResult(result: NominatimResult): SearchResult {
 		lat: Number(result.lat),
 		lon: Number(result.lon),
 		zoom: result.zoom,
-		extratags: result.extratags,
+		extratags: {
+			[result.category]: result.type,
+			...result.extratags
+		},
 		geojson: result.geojson,
 		icon: result.icon && result.icon.replace(/^.*\/([a-z0-9_]+)\.[a-z0-9]+\.[0-9]+\.[a-z0-9]+$/i, "$1"),
-		type: result.type == "yes" ? result.category : result.type,
+		type: result.addresstype,
 		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : undefined
 	};
 }
@@ -335,20 +340,21 @@ function _formatAddress(result: NominatimResult) {
 	// See http://en.wikipedia.org/wiki/Address_%28geography%29#Mailing_address_format_by_country for
 	// address notation guidelines
 
-	let type = result.type;
+	let type = result.addresstype;
 	let name = result.namedetails?.name ?? result.name;
 	const countryCode = result.address.country_code;
 
 	let road = result.address.road;
 	const housenumber = result.address.house_number;
-	let suburb = result.address.town || result.address.suburb || result.address.village || result.address.hamlet || result.address.residential;
+	const suburbType = ["town", "suburb", "village", "hamlet", "residential"].find((t) => !!result.address[t]);
+	let suburb = suburbType && result.address[suburbType];
 	const postcode = result.address.postcode;
 	let city = result.address.city;
 	let county = result.address.county;
 	let state = result.address.state;
 	const country = result.address.country;
 
-	if([ "road", "residential", "town", "suburb", "village", "hamlet", "residential", "city", "county", "state" ].indexOf(type) != -1)
+	if(["road", suburbType, "city", "county", "state", "country"].includes(type))
 		name = "";
 
 	if(!city && suburb) {
@@ -561,76 +567,4 @@ function _formatAddress(result: NominatimResult) {
 		nameWithAddress: fullName.join(", "),
 		name: fullName[0]
 	};
-}
-
-const lonLatRegexp = (() => {
-	const number = `[-\u2212]?\\s*\\d+([.,]\\d+)?`;
-
-	const getCoordinate = (n: number) => (
-		`(` +
-			`(?<hemispherePrefix${n}>[NWSE])` +
-		`)?(` +
-			`(?<degrees${n}>${number})` +
-			`(\\s*[°]\\s*|\\s*deg\\s*|\\s+|$|(?!\\d))` +
-		`)(` +
-			`(?<minutes${n}>${number})` +
-			`(\\s*['\u2032\u2019]\\s*)` +
-		`)?(` +
-			`(?<seconds${n}>${number})` +
-			`(\\s*["\u2033\u201d]\\s*)` +
-		`)?(` +
-			`(?<hemisphereSuffix${n}>[NWSE])` +
-		`)?`
-	);
-
-	const coords = (
-		`(geo\\s*:\\s*)?` +
-		`\\s*` +
-		getCoordinate(1) +
-		`(?<separator>\\s*[,;]\\s*|\\s+)` +
-		getCoordinate(2) +
-		`(\\?z=(?<zoom>\\d+))?`
-	);
-
-	return new RegExp(`^\\s*${coords}\\s*$`, "i");
-})();
-
-export function matchLonLat(query: string): (Point & { zoom?: number }) | undefined {
-	const m = lonLatRegexp.exec(query);
-
-	const prepareNumber = (str: string) => Number(str.replace(",", ".").replace("\u2212", "-").replace(/\s+/, ""));
-	const prepareCoords = (deg: string, min: string | undefined, sec: string | undefined, hem: string | undefined) => {
-		const degrees = prepareNumber(deg);
-		const result = Math.abs(degrees) + (min ? prepareNumber(min) / 60 : 0) + (sec ? prepareNumber(sec) / 3600 : 0);
-		return result * (degrees < 0 ? -1 : 1) * (hem && ["s", "S", "w", "W"].includes(hem) ? -1 : 1);
-	};
-
-	if (m) {
-		const { hemispherePrefix1, degrees1, minutes1, seconds1, hemisphereSuffix1, separator, hemispherePrefix2, degrees2, minutes2, seconds2, hemisphereSuffix2, zoom } = m.groups!;
-
-		let hemisphere1: string | undefined = undefined, hemisphere2: string | undefined = undefined;
-		if (hemispherePrefix1 && !hemisphereSuffix1 && hemispherePrefix2 && !hemisphereSuffix2) {
-			[hemisphere1, hemisphere2] = [hemispherePrefix1, hemispherePrefix2];
-		} else if (!hemispherePrefix1 && hemisphereSuffix1 && !hemispherePrefix2 && hemisphereSuffix2) {
-			[hemisphere1, hemisphere2] = [hemisphereSuffix1, hemisphereSuffix2];
-		} else if (hemispherePrefix1 && hemisphereSuffix1 && !hemispherePrefix2 && !hemisphereSuffix2 && !separator.trim()) {
-			// Coordinate 2 has a hemisphere prefix, but because the two coordinates are separated by whitespace only, it was matched as a coordinate 1 suffix
-			[hemisphere1, hemisphere2] = [hemispherePrefix1, hemisphereSuffix1];
-		} else if (hemispherePrefix1 || hemisphereSuffix1 || hemispherePrefix2 || hemisphereSuffix2) {
-			// Unsupported combination of hemisphere prefixes/suffixes
-			return undefined;
-		} // else: no hemispheres specified
-
-		const coordinate1 = prepareCoords(degrees1, minutes1, seconds1, hemisphere1);
-		const coordinate2 = prepareCoords(degrees2, minutes2, seconds2, hemisphere2);
-		const zoomNumber = zoom ? Number(zoom) : undefined;
-		const zoomObj = zoomNumber != null && isFinite(zoomNumber) ? { zoom: zoomNumber } : {};
-
-		// Handle cases where lat/lon are switched
-		if ([undefined, "n", "N", "s", "S"].includes(hemisphere1) && [undefined, "w", "W", "e", "E"].includes(hemisphere2)) {
-			return { lat: coordinate1, lon: coordinate2, ...zoomObj };
-		} else if ((["w", "W", "e", "E"] as Array<string | undefined>).includes(hemisphere1) && [undefined, "n", "N", "s", "S"].includes(hemisphere2)) {
-			return { lat: coordinate2, lon: coordinate1, ...zoomObj };
-		}
-	}
 }

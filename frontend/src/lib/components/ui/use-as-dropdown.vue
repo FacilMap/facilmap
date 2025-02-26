@@ -2,7 +2,7 @@
 	import { toRef } from "vue";
 	import type { ButtonSize } from "../../utils/bootstrap";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { type RouteDestination, UseAsType } from "../facil-map-context-provider/route-form-tab-context";
 	import DropdownMenu from "./dropdown-menu.vue";
 	import { useI18n } from "../../utils/i18n";
 
@@ -17,15 +17,8 @@
 		size?: ButtonSize;
 	}>();
 
-	function useAs(type: "from" | "via" | "to"): void {
-		if (type === "from") {
-			routeFormContext.value!.setFrom(props.destination);
-		} else if (type === "via") {
-			routeFormContext.value!.addVia(props.destination);
-		} else if (type === "to") {
-			routeFormContext.value!.setTo(props.destination);
-		}
-
+	function useAs(as: UseAsType): void {
+		routeFormContext.value!.useAs(props.destination, as);
 		searchBoxContext.value!.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 	}
 </script>
@@ -37,28 +30,52 @@
 		:isDisabled="props.isDisabled"
 		:label="i18n.t('use-as-dropdown.label')"
 	>
-		<li>
+		<li v-if="routeFormContext.hasFrom">
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('from')"
-			>{{i18n.t("use-as-dropdown.from")}}</a>
+				@click="useAs(UseAsType.BEFORE_FROM)"
+			>{{i18n.t("use-as-dropdown.from-insert")}}</a>
 		</li>
 
 		<li>
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('via')"
-			>{{i18n.t("use-as-dropdown.via")}}</a>
+				@click="useAs(UseAsType.AS_FROM)"
+			>{{routeFormContext.hasFrom ? i18n.t("use-as-dropdown.from-replace") : i18n.t("use-as-dropdown.from")}}</a>
 		</li>
 
 		<li>
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="useAs('to')"
-			>{{i18n.t("use-as-dropdown.to")}}</a>
+				@click="useAs(UseAsType.AFTER_FROM)"
+			>{{routeFormContext.hasVia ? i18n.t("use-as-dropdown.via-first") : i18n.t("use-as-dropdown.via")}}</a>
+		</li>
+
+		<li v-if="routeFormContext.hasVia">
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="useAs(UseAsType.BEFORE_TO)"
+			>{{i18n.t("use-as-dropdown.via-last")}}</a>
+		</li>
+
+		<li>
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="useAs(UseAsType.AS_TO)"
+			>{{routeFormContext.hasTo ? i18n.t("use-as-dropdown.to-replace") : i18n.t("use-as-dropdown.to")}}</a>
+		</li>
+
+		<li v-if="routeFormContext.hasTo">
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="useAs(UseAsType.AFTER_TO)"
+			>{{i18n.t("use-as-dropdown.to-insert")}}</a>
 		</li>
 	</DropdownMenu>
 </template>

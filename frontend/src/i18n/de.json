@@ -159,7 +159,8 @@
         "colour": "Farbe",
         "width": "Dicke",
         "stroke": "Kontur",
-        "change-type": "Objekttyp wechseln"
+        "change-type": "Objekttyp wechseln",
+        "edit-type": "Objekttyp „{{type}}“ bearbeiten"
     },
     "edit-marker-dialog": {
         "save-error": "Fehler beim Speichern des Markers",
@@ -169,7 +170,8 @@
         "size": "Größe",
         "icon": "Symbol",
         "shape": "Form",
-        "change-type": "Objekttyp wechseln"
+        "change-type": "Objekttyp wechseln",
+        "edit-type": "Objekttyp „{{type}}“ bearbeiten"
     },
     "edit-type-dialog": {
         "delete-field-title": "Feld löschen",
@@ -724,18 +726,27 @@
     "use-as-dropdown": {
         "label": "Route",
         "from": "Als Start verwenden",
+        "from-insert": "Als Start verwenden (vor aktuellem Start hinzufügen)",
+        "from-replace": "Als Start verwenden (aktuellen Start ersetzen)",
         "via": "Zwischenstopp hinzufügen",
-        "to": "Als Ziel verwenden"
+        "via-first": "Zwischenstopp hinzufügen (am Anfang)",
+        "via-last": "Zwischenstopp hinzufügen (am Ende)",
+        "to": "Als Ziel verwenden",
+        "to-insert": "Als Ziel verwenden (hinter aktuellem Ziel hinzufügen)",
+        "to-replace": "Als Ziel verwenden (aktuelles Ziel ersetzen)"
     },
     "user-preferences-dialog": {
         "title": "Benutzereinstellungen",
+        "tab-general": "Allgemein",
+        "tab-map-style": "Kartenstil",
         "introduction": "Diese Einstellungen werden als Cookies auf Ihrem Computer gespeichert und werden unabhängig von der geöffneten Karte angewendet.",
         "language": "Sprache",
         "language-description": "Manche Übersetzungen sind möglicherweise noch unvollständig. Die Übersetzungen werden gemeinschaftlich erstellt, Sie können sich gerne auf {{weblate}} daran beteiligen.",
         "language-description-interpolation-weblate": "Weblate",
         "units": "Einheiten",
         "units-metric": "Metrisch",
-        "units-us": "US customary (Meilen und Füße)"
+        "units-us": "US customary (Meilen und Füße)",
+        "default-map-style": "Voreingestellter Kartenstil"
     },
     "utils": {
         "required-error": "Dieses Feld muss ausgefüllt werden."
@@ -848,11 +859,7 @@
         "about": "Über {{appName}}"
     },
     "toolbox-map-style-dropdown": {
-        "label": "Kartenstil",
-        "openstreetmap": "OpenStreetMap",
-        "google-maps": "Google Maps",
-        "google-maps-satellite": "Google Maps (Satellit)",
-        "bing-maps": "Bing Maps"
+        "label": "Kartenstil"
     },
     "toolbox-tools-dropdown": {
         "label": "Werkzeuge",
@@ -874,5 +881,14 @@
     },
     "zoom-to-object-button": {
         "fallback-label": "Zum Objekt zoomen"
+    },
+    "links": {
+        "geo-link": "geo:-Link",
+        "openstreetmap": "OpenStreetMap",
+        "google-maps": "Google Maps",
+        "google-maps-satellite": "Google Maps (Satellit)",
+        "bing-maps": "Bing Maps",
+        "bing-maps-satellite": "Bing Maps (Satellit)",
+        "park4night": "park4night"
     }
 }

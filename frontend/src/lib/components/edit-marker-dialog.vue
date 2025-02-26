@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { markerValidator, type ID } from "facilmap-types";
+	import { Writable, markerValidator, type ID } from "facilmap-types";
 	import { canControl, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
@@ -16,6 +16,7 @@
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { useI18n } from "../utils/i18n";
 	import { useMaxBreakpoint } from "../utils/bootstrap";
+	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -44,6 +45,8 @@
 	const resolvedCanControl = computed(() => canControl(client.value.types[marker.value.typeId]));
 
 	const isXs = useMaxBreakpoint("xs");
+
+	const showEditTypeDialog = ref<ID>();
 
 	watch(originalMarker, (newMarker, oldMarker) => {
 		if (!newMarker) {
@@ -161,7 +164,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
+			<DropdownMenu v-if="types.length > 1 || client.writable === Writable.ADMIN" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a
@@ -172,7 +175,24 @@
 						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>
+
+				<template v-if="client.writable === Writable.ADMIN && client.types[marker.typeId]">
+					<li><hr class="dropdown-divider"></li>
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click="showEditTypeDialog = marker.typeId"
+						>{{i18n.t("edit-marker-dialog.edit-type", { type: client.types[marker.typeId].name })}}</a>
+					</li>
+				</template>
 			</DropdownMenu>
+
+			<EditTypeDialog
+				v-if="showEditTypeDialog"
+				:typeId="showEditTypeDialog"
+				@hidden="showEditTypeDialog = undefined"
+			></EditTypeDialog>
 		</template>
 	</ModalDialog>
 </template>

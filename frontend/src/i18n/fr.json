@@ -1,0 +1,53 @@
+{
+    "about-dialog": {
+        "license-text-facilmap": "FacilMap",
+        "map-data-pois": "Points d'intérêt",
+        "map-data-directions": "Itinéraire",
+        "header": "À propos de FacilMap {{version}}",
+        "license-text": "{{facilmap}} est disponible sous licence {{license}}.",
+        "icons": "Icônes",
+        "attribution-osm-contributors": "Contributeurs OSM",
+        "issues-text-tracker": "Suivi des problèmes",
+        "help-text-documentation": "documentation",
+        "help-text-discussions": "forum de discussion",
+        "privacy-information": "Information privée",
+        "map-data": "Données cartographiques",
+        "map-data-search": "Recherche",
+        "help-text": "Si vous avez une question, merci de consulter la {{documentation}}, poser une question dans la {{discussions}} ou poser une question dans le{{chat}}.",
+        "license-text-license": "Licence publique générale GNU Affero, version 3",
+        "help-text-chat": "Chat Matrix",
+        "programs-libraries": "Programmes/Bibliothèques"
+    },
+    "add": {
+        "hidden-objects-added-title": "{{count}} objets ajoutés",
+        "hidden-markers-added-title_one": "Marqueur ajouté",
+        "hidden-markers-added-title_many": "{{count}} marqueurs ajoutés",
+        "hidden-markers-added-title_other": "",
+        "hidden-markers-added-message_one": "Le marqueur a été ajouté avec succès, mais le filtre actif l'empêche de s'afficher.",
+        "hidden-markers-added-message_many": "{{count}} marqueurs ont été ajoutés avec succès, mais le filtre actif les empêche de s'afficher.",
+        "hidden-markers-added-message_other": "",
+        "hidden-lines-added-title_one": "Ligne ajoutée",
+        "hidden-lines-added-title_many": "{{count}} lignes ajoutées",
+        "hidden-lines-added-title_other": "{{count}} lignes ajoutées",
+        "hidden-lines-added-message_one": "La ligne a bien été ajoutée, mais le filtre actif ne permet pas de l'afficher.",
+        "hidden-lines-added-message_many": "{{count}} lignes ont bien été ajoutées, mais le filtre actif ne permet pas de les afficher.",
+        "hidden-lines-added-message_other": "{{count}} lignes ont bien été ajoutées, mais le filtre actif ne permet pas de les afficher."
+    },
+    "alert": {
+        "fallback-ok-label": "OK"
+    },
+    "client-provider": {
+        "disconnected-header": "Déconnecté",
+        "disconnected": "Connexion perdue avec le serveur. Nouvelle tentative en cours…",
+        "loading-map-header": "Chargement en cours",
+        "loading-map": "Chargement de la carte…"
+    },
+    "add-to-map-dropdown": {
+        "fallback-label": "Ajouter à la carte",
+        "add-error": "Erreur lors de l'ajout"
+    },
+    "custom-import-dialog": {
+        "type": "Type",
+        "ok-label": "Importer"
+    }
+}

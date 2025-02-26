@@ -327,6 +327,5 @@ export default class SelectionHandler extends Handler {
 
 }
 
-// eslint-disable-next-line no-redeclare
 export default interface SelectionHandler extends Evented {}
 Object.assign(SelectionHandler.prototype, Evented.prototype);

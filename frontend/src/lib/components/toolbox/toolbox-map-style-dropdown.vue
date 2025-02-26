@@ -5,20 +5,17 @@
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "../ui/icon.vue";
 	import { useI18n } from "../../utils/i18n";
+import { getExternalLinks } from "../../utils/external-links";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
-	const links = computed(() => {
-		const v = mapContext.value;
-		return {
-			osm: `https://www.openstreetmap.org/#map=${v.zoom}/${v.center.lat}/${v.center.lng}`,
-			google: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}`,
-			googleSatellite: `https://www.google.com/maps/@?api=1&map_action=map&center=${v.center.lat},${v.center.lng}&zoom=${v.zoom}&basemap=satellite`,
-			bing: `https://www.bing.com/maps?cp=${v.center.lat}~${v.center.lng}&lvl=${v.zoom}`
-		};
-	});
+	const externalLinks = computed(() => getExternalLinks({
+		lat: mapContext.value.center.lat,
+		lon: mapContext.value.center.lng,
+		zoom: mapContext.value.zoom
+	}, "map", context.hideCommercialMapLinks));
 
 	const baseLayers = computed(() => {
 		const { baseLayers } = getLayers(mapContext.value.components.map);
@@ -84,50 +81,14 @@
 			<hr class="dropdown-divider">
 		</li>
 
-		<li>
+		<li v-for="link in externalLinks" :key="link.key">
 			<a
 				class="dropdown-item fm-toolbox-new-window-item"
-				:href="links.osm"
-				target="_blank"
+				:href="link.href"
+				:target="link.target"
 				draggable="false"
 			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.openstreetmap")}}</span>
-				<Icon icon="new-window"></Icon>
-			</a>
-		</li>
-
-		<li v-if="!context.hideCommercialMapLinks">
-			<a
-				class="dropdown-item fm-toolbox-new-window-item"
-				:href="links.google"
-				target="_blank"
-				draggable="false"
-			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps")}}</span>
-				<Icon icon="new-window"></Icon>
-			</a>
-		</li>
-
-		<li v-if="!context.hideCommercialMapLinks">
-			<a
-				class="dropdown-item fm-toolbox-new-window-item"
-				:href="links.googleSatellite"
-				target="_blank"
-				draggable="false"
-			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.google-maps-satellite")}}</span>
-				<Icon icon="new-window"></Icon>
-			</a>
-		</li>
-
-		<li v-if="!context.hideCommercialMapLinks">
-			<a
-				class="dropdown-item fm-toolbox-new-window-item"
-				:href="links.bing"
-				target="_blank"
-				draggable="false"
-			>
-				<span>{{i18n.t("toolbox-map-style-dropdown.bing-maps")}}</span>
+				<span>{{link.label}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>

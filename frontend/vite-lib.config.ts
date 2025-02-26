@@ -4,6 +4,7 @@ import dtsPlugin from "vite-plugin-dts";
 import vuePlugin from "@vitejs/plugin-vue";
 import tsconfigPaths from "vite-tsconfig-paths";
 import definePlugin from "./vite-define";
+import { isAbsolute } from "node:path";
 
 export default defineConfig(({ mode }) => ({
 	plugins: [
@@ -24,7 +25,7 @@ export default defineConfig(({ mode }) => ({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !id.startsWith("/")
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !isAbsolute(id)
 		}
 	}
 }));

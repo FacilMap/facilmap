@@ -1,4 +1,4 @@
-import { computed, createApp, defineComponent, h, ref, watch } from "vue";
+import { computed, createApp, defineComponent, h, ref, watch, watchEffect } from "vue";
 import { FacilMap } from "../lib";
 import { decodeQueryString, encodeQueryString, normalizeMapName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
@@ -21,7 +21,8 @@ if ('serviceWorker' in navigator && location.hostname !== "localhost") {
 }
 
 setLayerOptions({
-	limaLabsToken: config.limaLabsToken
+	limaLabsToken: config.limaLabsToken,
+	tracestrackToken: config.tracestrackToken
 });
 
 const queryParams = decodeQueryString(location.search);
@@ -47,6 +48,8 @@ if(!location.hash || location.hash == "#") {
 		history.replaceState(null, "", baseUrl + encodeURIComponent(initialMapSlug || "") + (query ? "?" + query : "") + "#" + hash);
 	}
 }
+
+const facilMapRef = ref<InstanceType<typeof FacilMap>>();
 
 const Root = defineComponent({
 	setup() {
@@ -86,7 +89,8 @@ const Root = defineComponent({
 				advancedRouting: config.supportsAdvancedRoutes
 			},
 			"onUpdate:mapSlug": (v) => mapSlug.value = v,
-			"onUpdate:mapName": (v) => mapName.value = v
+			"onUpdate:mapName": (v) => mapName.value = v,
+			ref: facilMapRef
 		});
 	}
 });
@@ -95,3 +99,19 @@ createApp(Root)
 	.mount(document.getElementById("app")!);
 
 document.getElementById("loading")!.remove();
+
+let launchQueueInitialized = false;
+watchEffect(() => {
+	if (facilMapRef.value && !launchQueueInitialized) {
+		launchQueueInitialized = true;
+
+		if ("launchQueue" in window) {
+			(window.launchQueue as any).setConsumer(async (launchParams: any) => {
+				if (launchParams.files && launchParams.files.length > 0 && facilMapRef.value) {
+					const files = await Promise.all(launchParams.files.flatMap((f: FileSystemHandle) => f.kind === "file" ? [(f as FileSystemFileHandle).getFile()] : []));
+					await facilMapRef.value.context?.components.importTab?.importFiles(files);
+				}
+			});
+		}
+	}
+});

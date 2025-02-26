@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { computed, markRaw, onBeforeUnmount, onMounted, ref, toRaw, watch, watchEffect } from "vue";
+	import { computed, markRaw, nextTick, reactive, ref, toRaw, watch } from "vue";
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
@@ -18,11 +18,12 @@
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { UseAsType, type RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
+	import { mapRef, useIsMounted } from "../../utils/vue";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -82,6 +83,7 @@
 	const toasts = useToasts();
 	const i18n = useI18n();
 
+	const inputRefs = reactive(new Map<number, HTMLInputElement>());
 	const submitButton = ref<HTMLButtonElement>();
 
 	const props = withDefaults(defineProps<{
@@ -115,85 +117,114 @@
 	const hoverInsertIdx = ref<number>();
 	const suggestionMarker = ref<MarkerLayer>();
 
-	// TODO: Handle client.value change
-	const routeLayer = new RouteLayer(client.value, props.routeKey, { weight: 7, opacity: 1, raised: true });
-	routeLayer.on("click", (e) => {
-		if (!props.active && !(e.originalEvent as any).ctrlKey) {
-			emit("activate");
-		}
+	const routeLayer = computed(() => {
+		const layer = markRaw(new RouteLayer(client.value, props.routeKey, { weight: 7, opacity: 1, raised: true }));
+		layer.on("click", (e) => {
+			if (!props.active && !(e.originalEvent as any).ctrlKey) {
+				emit("activate");
+			}
+		});
+		return layer;
 	});
 
-	const draggable = new DraggableLines(mapContext.value.components.map, {
-		enableForLayer: false,
-		tempMarkerOptions: () => ({
-			icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
-			pane: "fm-raised-marker"
-		}),
-		plusTempMarkerOptions: () => ({
-			icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
-			pane: "fm-raised-marker"
-		}),
-		dragMarkerOptions: (layer, i, length) => ({
-			icon: getIcon(i, length),
-			pane: "fm-raised-marker"
-		})
-	});
-	draggable.on({
-		insert: (e: any) => {
-			destinations.value.splice(e.idx, 0, makeCoordDestination(e.latlng));
-			void reroute(false);
-		},
-		dragstart: (e: any) => {
-			hoverDestinationIdx.value = e.idx;
-			hoverInsertIdx.value = undefined;
-			if (e.isNew)
-				destinations.value.splice(e.idx, 0, makeCoordDestination(e.to));
-		},
-		drag: throttle((e: any) => {
-			destinations.value[e.idx] = makeCoordDestination(e.to);
-		}, 300),
-		dragend: (e: any) => {
-			destinations.value[e.idx] = makeCoordDestination(e.to);
-			void reroute(false);
-		},
-		remove: (e: any) => {
-			hoverDestinationIdx.value = undefined;
-			destinations.value.splice(e.idx, 1);
-			void reroute(false);
-		},
-		dragmouseover: (e: any) => {
-			destinationMouseOver(e.idx);
-		},
-		dragmouseout: (e: any) => {
-			destinationMouseOut(e.idx);
-		},
-		plusmouseover: (e: any) => {
-			hoverInsertIdx.value = e.idx;
-		},
-		plusmouseout: (e: any) => {
-			hoverInsertIdx.value = undefined;
-		},
-		tempmouseover: (e: any) => {
-			hoverInsertIdx.value = e.idx;
-		},
-		tempmousemove: (e: any) => {
-			if (e.idx != hoverInsertIdx.value)
+	const draggable = computed(() => {
+		const draggable = markRaw(new DraggableLines(mapContext.value.components.map, {
+			enableForLayer: false,
+			tempMarkerOptions: () => ({
+				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
+				pane: "fm-raised-marker"
+			}),
+			plusTempMarkerOptions: () => ({
+				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
+				pane: "fm-raised-marker"
+			}),
+			dragMarkerOptions: (layer, i, length) => ({
+				icon: getIcon(i, length),
+				pane: "fm-raised-marker"
+			})
+		}));
+
+		draggable.on({
+			insert: (e: any) => {
+				destinations.value.splice(e.idx, 0, makeCoordDestination(e.latlng));
+				void reroute(false);
+			},
+			dragstart: (e: any) => {
+				hoverDestinationIdx.value = e.idx;
+				hoverInsertIdx.value = undefined;
+				if (e.isNew)
+					destinations.value.splice(e.idx, 0, makeCoordDestination(e.to));
+			},
+			drag: throttle((e: any) => {
+				destinations.value[e.idx] = makeCoordDestination(e.to);
+			}, 300),
+			dragend: (e: any) => {
+				destinations.value[e.idx] = makeCoordDestination(e.to);
+				void reroute(false);
+			},
+			remove: (e: any) => {
+				hoverDestinationIdx.value = undefined;
+				destinations.value.splice(e.idx, 1);
+				void reroute(false);
+			},
+			dragmouseover: (e: any) => {
+				destinationMouseOver(e.idx);
+			},
+			dragmouseout: (e: any) => {
+				destinationMouseOut(e.idx);
+			},
+			plusmouseover: (e: any) => {
 				hoverInsertIdx.value = e.idx;
-		},
-		tempmouseout: (e: any) => {
-			hoverInsertIdx.value = undefined;
+			},
+			plusmouseout: (e: any) => {
+				hoverInsertIdx.value = undefined;
+			},
+			tempmouseover: (e: any) => {
+				hoverInsertIdx.value = e.idx;
+			},
+			tempmousemove: (e: any) => {
+				if (e.idx != hoverInsertIdx.value)
+					hoverInsertIdx.value = e.idx;
+			},
+			tempmouseout: (e: any) => {
+				hoverInsertIdx.value = undefined;
+			}
+		} as any);
+
+		return draggable;
+	});
+
+	const isMounted = useIsMounted();
+	watch([isMounted, draggable], (v, o, onCleanup) => {
+		if (isMounted.value) {
+			draggable.value.enable();
+
+			onCleanup(() => {
+				draggable.value.disable();
+			});
 		}
-	} as any);
+	}, { immediate: true });
+	watch([isMounted, routeLayer, () => mapContext.value.components.map], (v, o, onCleanup) => {
+		if (isMounted.value) {
+			routeLayer.value.addTo(mapContext.value.components.map);
 
-	onMounted(() => {
-		routeLayer.addTo(mapContext.value.components.map);
-		draggable.enable();
-	});
+			onCleanup(() => {
+				routeLayer.value.remove();
+			});
+		}
+	}, { immediate: true });
 
-	onBeforeUnmount(() => {
-		draggable.disable();
-		routeLayer.remove();
-	});
+	watch([hasRoute, () => props.active, draggable, routeLayer], () => {
+		if (hasRoute.value)
+			routeLayer.value.setStyle({ opacity: props.active ? 1 : 0.35, raised: props.active });
+
+		// Enable dragging after updating the style, since that might re-add the layer to the map
+		if (props.active) {
+			draggable.value.enableForLayer(routeLayer.value);
+		} else {
+			draggable.value.disableForLayer(routeLayer.value);
+		}
+	}, { immediate: true });
 
 	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
@@ -219,17 +250,6 @@
 	const destinationsMeta = computed(() => destinations.value.map((destination) => ({
 		isInvalid: getValidationState(destination) === false
 	})));
-
-	watchEffect(() => {
-		if (hasRoute.value)
-			routeLayer.setStyle({ opacity: props.active ? 1 : 0.35, raised: props.active });
-
-		// Enable dragging after updating the style, since that might re-add the layer to the map
-		if (props.active)
-			draggable.enableForLayer(routeLayer);
-		else
-			draggable.disableForLayer(routeLayer);
-	});
 
 	watch(hashQuery, (hashQuery) => {
 		emit("hash-query-change", hashQuery);
@@ -342,7 +362,7 @@
 					if(referencedMapResult) {
 						if (dest.query == query)
 							dest.query = normalizeMarkerName(referencedMapResult.name);
-						dest.loadedQuery = referencedMapResult.name;
+						dest.loadedQuery = normalizeMarkerName(referencedMapResult.name);
 						dest.selectedSuggestion = referencedMapResult;
 					}
 				}
@@ -385,23 +405,23 @@
 	}
 
 	function destinationMouseOver(idx: number): void {
-		const marker = routeLayer._draggableLines?.dragMarkers[idx];
+		const marker = routeLayer.value._draggableLines?.dragMarkers[idx];
 
 		if (marker) {
 			hoverDestinationIdx.value = idx;
-			marker.setIcon(getIcon(idx, routeLayer._draggableLines!.dragMarkers.length, true));
+			marker.setIcon(getIcon(idx, routeLayer.value._draggableLines!.dragMarkers.length, true));
 		}
 	}
 
 	function destinationMouseOut(idx: number): void {
 		hoverDestinationIdx.value = undefined;
 
-		const marker = routeLayer._draggableLines?.dragMarkers[idx];
+		const marker = routeLayer.value._draggableLines?.dragMarkers[idx];
 		if (marker) {
 			void Promise.resolve().then(() => {
 				// If mouseout event is directly followed by a dragend event, the marker will be removed. Only update the icon if the marker is not removed.
 				if (marker["_map"])
-					marker.setIcon(getIcon(idx, routeLayer._draggableLines!.dragMarkers.length));
+					marker.setIcon(getIcon(idx, routeLayer.value._draggableLines!.dragMarkers.length));
 			});
 		}
 	}
@@ -502,22 +522,59 @@
 		void route(zoom, smooth);
 	}
 
-	function setFrom(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value[0] = makeDestination(data);
-		void reroute(true);
+	function useAs(data: Parameters<typeof makeDestination>[0], as: UseAsType): void {
+		let focusIdx: number;
+		const dest = makeDestination(data);
+
+		switch (as) {
+			case UseAsType.BEFORE_FROM:
+				destinations.value.unshift(dest);
+				focusIdx = 0;
+				break;
+
+			case UseAsType.AS_FROM:
+				destinations.value[0] = dest;
+				focusIdx = 0;
+				break;
+
+			case UseAsType.AFTER_FROM:
+				destinations.value.splice(1, 0, dest);
+				focusIdx = 1;
+				break;
+
+			case UseAsType.BEFORE_TO:
+				destinations.value.splice(destinations.value.length - 1, 0, dest);
+				focusIdx = destinations.value.length - 1;
+				break;
+
+			case UseAsType.AS_TO:
+				destinations.value[destinations.value.length - 1] = dest;
+				focusIdx = destinations.value.length - 1;
+				break;
+
+			case UseAsType.AFTER_TO:
+				destinations.value.push(dest);
+				focusIdx = destinations.value.length - 1;
+				break;
+		}
+
+		if (focusIdx != null) {
+			void nextTick(() => { // New destinations are rendered
+				void nextTick(() => { // New destinations have been rendered, refs are available
+					inputRefs.get(focusIdx)?.focus();
+				});
+			});
+			void reroute(true);
+		}
 	}
 
-	function addVia(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value.splice(destinations.value.length - 1, 0, makeDestination(data));
-		void reroute(true);
-	}
-
-	function setTo(data: Parameters<typeof makeDestination>[0]): void {
-		destinations.value[destinations.value.length - 1] = makeDestination(data);
-		void reroute(true);
-	}
-
-	defineExpose({ setQuery, setFrom, addVia, setTo });
+	defineExpose({
+		setQuery,
+		useAs,
+		hasFrom: computed(() => destinations.value[0].query.trim() != ''),
+		hasTo: computed(() => destinations.value[destinations.value.length - 1].query.trim() != ''),
+		hasVia: computed(() => destinations.value.length > 2)
+	});
 </script>
 
 <template>
@@ -552,6 +609,7 @@
 									'fm-autofocus': idx === 0
 								}"
 								@blur="loadSuggestions(destination)"
+								:ref="mapRef(inputRefs, idx)"
 							/>
 							<template v-if="destination.query.trim() != ''">
 								<DropdownMenu

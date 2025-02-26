@@ -107,40 +107,46 @@ export function* domTreeIterator(el: Cheerio<ParentNode>): Generator<{ type: "op
  * block elements and paragraphs in the given data.
  */
 export function getTextContent(el: Cheerio<ParentNode>): string {
-    let result = "";
-    let currentPrefix = "";
-    for (const { type, node } of domTreeIterator(el)) {
-        if (node instanceof Element) {
-            if (node.tagName === "p") {
-                if (type === "open") {
-                    result += "\n";
-                }
-                currentPrefix = "\n";
-            } else if (node.tagName === "br" && type === "open") {
-                result += "\n";
-                currentPrefix = "";
-            } else if (!result.endsWith("\n") && ["address", "article", "aside", "blockquote", "details", "dialog", "dd", "dl", "div", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "ol", "pre", "section", "table", "ul"].includes(node.tagName)) {
-                currentPrefix = "\n";
-            } else if (!result.endsWith("\n") && !result.endsWith(" ") && ["td", "th"].includes(node.tagName) && currentPrefix === "") {
-                currentPrefix = " ";
-            }
-        }
+	let result = "";
+	let currentPrefix = "";
+	for (const { type, node } of domTreeIterator(el)) {
+		if (node instanceof Element) {
+			if (node.tagName === "p") {
+				if (type === "open") {
+					result += "\n";
+				}
+				currentPrefix = "\n";
+			} else if (node.tagName === "br" && type === "open") {
+				result += "\n";
+				currentPrefix = "";
+			} else if (!result.endsWith("\n") && ["address", "article", "aside", "blockquote", "details", "dialog", "dd", "dl", "div", "dt", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav", "ol", "pre", "section", "table", "ul"].includes(node.tagName)) {
+				currentPrefix = "\n";
+			} else if (!result.endsWith("\n") && !result.endsWith(" ") && ["td", "th"].includes(node.tagName) && currentPrefix === "") {
+				currentPrefix = " ";
+			}
+		}
 
-        if (type === "open") {
-            const text = node instanceof Text ? node.nodeValue.replace(/[\r\n\t ]+/g, " ").trim() : undefined;
-            if (text) {
-                result += currentPrefix;
-                currentPrefix = "";
-                result += text;
-            }
-        }
-    }
-    return result.trim();
+		if (type === "open") {
+			const text = node instanceof Text ? node.nodeValue.replace(/[\r\n\t ]+/g, " ").trim() : undefined;
+			if (text) {
+				result += currentPrefix;
+				currentPrefix = "";
+				result += text;
+			}
+		}
+	}
+	return result.trim();
 }
 
 export function round(number: number, digits: number): number {
 	const fac = Math.pow(10, digits);
 	return Math.round(number*fac)/fac;
+}
+
+export function padNumber(number: number, digits: number): string {
+	const spl = String(number).split(/(?=\.)/);
+	spl[0] = spl[0].padStart(digits, "0");
+	return spl.join("");
 }
 
 export function formatTime(seconds: number): string {
@@ -221,4 +227,47 @@ export function renderOsmTag(key: string, value: string): string {
 
 export function formatCoordinates(point: Point): string {
 	return `${point.lat.toFixed(5)},${point.lon.toFixed(5)}`;
+}
+
+export type Degrees = {
+	sign: "-" | "";
+	degFloat: number;
+	degInt: number;
+	minFloat: number;
+	minInt: number;
+	secFloat: number;
+};
+
+function getDegrees(coord: number): Degrees {
+	const sign =  coord < 0 ? "-" : "";
+	const degFloat = Math.abs(coord);
+	const degInt = Math.floor(degFloat);
+	const minFloat = (degFloat - degInt) * 60;
+	const minInt = Math.floor(minFloat);
+	const secFloat = (minFloat - minInt) * 60;
+	return { sign, degFloat, degInt, minInt, minFloat, secFloat };
+}
+
+export function getCoordinateDegrees(point: Point): { lat: Degrees & { letter: "N" | "S" }; lon: Degrees & { letter: "E" | "W" } } {
+	const lat = getDegrees(point.lat);
+	const lon = getDegrees(point.lon);
+	return {
+		lat: {
+			...lat,
+			letter: lat.sign === "-" ? "S" : "N"
+		},
+		lon: {
+			...lon,
+			letter: lon.sign === "-" ? "W" : "E"
+		}
+	};
+}
+
+export function formatCoordinateDegrees(point: Point): string {
+	const deg = getCoordinateDegrees(point);
+	return (
+		`${deg.lat.degInt}°\u202f${padNumber(deg.lat.minInt, 2)}\u2032\u202f${padNumber(round(deg.lat.secFloat, 1), 2)}\u2033\u202f${deg.lat.letter}`
+		+ ", "
+		+ `${deg.lon.degInt}°\u202f${padNumber(deg.lon.minInt, 2)}\u2032\u202f${padNumber(round(deg.lon.secFloat, 1), 2)}\u2033\u202f${deg.lon.letter}`
+	);
 }

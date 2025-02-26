@@ -5,9 +5,7 @@ import { getI18n } from "./utils/i18n";
 import { markdownInline } from "facilmap-utils";
 
 export const defaultVisibleLayers: VisibleLayers = {
-	get baseLayer() {
-		return layerOptions.limaLabsToken ? 'Lima' : 'Mpnk';
-	},
+	baseLayer: "Mpnk",
 	overlays: []
 };
 
@@ -30,6 +28,12 @@ const fixAttribution = <T extends Layer>(layer: T): T => Object.assign(layer, { 
 export function createDefaultLayers(): Layers & { fallbackLayer: string | undefined } {
 	return {
 		baseLayers: {
+			Mpnk: fixAttribution(tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+				...fmName(() => getI18n().t("layers.mpnk-name")),
+				...attribution(() => getI18n().t("layers.mpnk-attribution")),
+				noWrap: true
+			})),
+
 			...(layerOptions.limaLabsToken ? {
 				Lima: fixAttribution(tileLayer(`https://cdn.lima-labs.com/{z}/{x}/{y}.png?api=${encodeURIComponent(layerOptions.limaLabsToken)}`, {
 					...fmName(() => getI18n().t("layers.lima-name")),
@@ -37,12 +41,6 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 					noWrap: true
 				}))
 			} : {}),
-
-			Mpnk: fixAttribution(tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-				...fmName(() => getI18n().t("layers.mpnk-name")),
-				...attribution(() => getI18n().t("layers.mpnk-attribution")),
-				noWrap: true
-			})),
 
 			/*MSfR: tileLayer('https://maps.heigit.org/openmapsurfer/tiles/roads/webmercator/{z}/{x}/{y}.png', {
 				fmName: "MapSurfer Road",
@@ -68,17 +66,27 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
+			...(layerOptions.tracestrackToken ? {
+				TrTo: fixAttribution(tileLayer(`https://tile.tracestrack.com/topo__/{z}/{x}/{y}.png?key=${encodeURIComponent(layerOptions.tracestrackToken)}`, {
+					...fmName(() => getI18n().t("layers.trto-name")),
+					...attribution(() => getI18n().t("layers.trto-attribution")),
+					noWrap: true
+				}))
+			} : {}),
+
 			CycO: fixAttribution(tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.cyco-name")),
 				...attribution(() => getI18n().t("layers.cyco-attribution")),
 				noWrap: true
 			})),
 
-			OCyc: fixAttribution(tileLayer("https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=bc74ceb5f91c448b9615f9b576c61c16", {
-				...fmName(() => getI18n().t("layers.ocyc-name")),
-				...attribution(() => getI18n().t("layers.ocyc-attribution")),
-				noWrap: true
-			})),
+			...(layerOptions.thunderforestToken ? {
+				OCyc: fixAttribution(tileLayer(`https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=${encodeURIComponent(layerOptions.thunderforestToken)}`, {
+					...fmName(() => getI18n().t("layers.ocyc-name")),
+					...attribution(() => getI18n().t("layers.ocyc-attribution")),
+					noWrap: true
+				}))
+			} : {}),
 
 			HiBi: fixAttribution(tileLayer("https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.hobi-name")),
@@ -93,7 +101,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})),
 		},
 		overlays: {
-			OPTM: fixAttribution(tileLayer("http://openptmap.org/tiles/{z}/{x}/{y}.png", {
+			OPTM: fixAttribution(tileLayer("https://pt.facilmap.org/tile/{z}/{x}/{y}.png", {
 				...fmName(() => getI18n().t("layers.optm-name")),
 				...attribution(() => getI18n().t("layers.optm-attribution")),
 				zIndex: 300,
@@ -146,6 +154,8 @@ export function setLayers(create: typeof createDefaultLayers): void {
 
 export interface LayerOptions {
 	limaLabsToken?: string;
+	thunderforestToken?: string;
+	tracestrackToken?: string;
 }
 
 let layerOptions: LayerOptions = {};

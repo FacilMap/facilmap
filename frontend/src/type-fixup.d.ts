@@ -46,3 +46,9 @@ declare module "leaflet" {
 		const BoxZoom: any;
 	}
 }
+
+declare module "leaflet.locatecontrol" {
+	interface LocateControl {
+		options: LocateOptions;
+	}
+}

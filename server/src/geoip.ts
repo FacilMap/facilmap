@@ -79,7 +79,7 @@ async function download() {
 	const file = createWriteStream(tmpfname);
 	gunzip.pipe(file);
 
-	await new Promise((resolve, reject) => {
+	await new Promise<void>((resolve, reject) => {
 		file.on("finish", resolve);
 		file.on("error", reject);
 	});

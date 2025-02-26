@@ -147,4 +147,3 @@ async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStr
 		throw new Error(getI18n().t("search.url-unknown-format-error"));
 	}
 }
-

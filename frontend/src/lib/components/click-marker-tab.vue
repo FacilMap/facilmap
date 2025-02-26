@@ -126,7 +126,7 @@
 			isCloseable
 			@close="close(tab)"
 		>
-			<SearchResultInfo :result="tab.result" :isLoading="tab.isLoading"></SearchResultInfo>
+			<SearchResultInfo :result="tab.result" :isLoading="tab.isLoading" :zoom="mapContext.zoom"></SearchResultInfo>
 		</SearchBoxTab>
 	</template>
 </template>

@@ -67,6 +67,8 @@ function getInjectedConfig(): InjectedConfig {
 		openElevationMaxBatchSize: config.openElevationMaxBatchSize,
 		nominatimUrl: config.nominatimUrl,
 		limaLabsToken: config.limaLabsToken,
+		thunderforestToken: config.thunderforestToken,
+		tracestrackToken: config.tracestrackToken,
 		hideCommercialMapLinks: config.hideCommercialMapLinks,
 		supportsRoutes: !!config.mapboxToken || !!config.orsToken,
 		supportsAdvancedRoutes: !!config.orsToken

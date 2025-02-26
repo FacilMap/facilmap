@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import dtsPlugin from "vite-plugin-dts";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { isAbsolute } from "node:path";
 
 export default defineConfig({
 	plugins: [
@@ -21,7 +22,7 @@ export default defineConfig({
 			external: (id) => (
 				!id.startsWith("./")
 				&& !id.startsWith("../")
-				&& /* resolved internal modules */ !id.startsWith("/")
+				&& /* resolved internal modules */ !isAbsolute(id)
 				&& !["facilmap-types", "facilmap-utils"].includes(id)
 			)
 		}

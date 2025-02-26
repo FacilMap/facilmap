@@ -1,5 +1,5 @@
 import { bboxValidator, colourValidator, idValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator, type Bbox } from "./base.js";
-import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, optionalUpdate, mapValues, exceptRead } from "./cru";
+import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, optionalUpdate, mapValues, exceptRead } from "./cru.js";
 import * as z from "zod";
 
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));

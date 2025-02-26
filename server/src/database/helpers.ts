@@ -353,7 +353,7 @@ export default class DatabaseHelpers {
 			const newNames: string[] = [ ];
 
 			for(const oldName in rename) {
-				if(rename[oldName].name) {
+				if(rename[oldName].name && object.data[oldName] != null) {
 					newData[rename[oldName].name!] = object.data[oldName];
 					newNames.push(rename[oldName].name!);
 					if(!newNames.includes(oldName))

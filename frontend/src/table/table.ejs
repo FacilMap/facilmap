@@ -17,26 +17,26 @@
 <%
 	}
 -%>
-		<link rel="icon" href="<%=paths.base%>static/favicon.svg">
-		<link rel="mask-icon" href="<%=paths.base%>favicon.svg" color="#00272a">
-		<link rel="apple-touch-icon" href="<%=paths.base%>static/app-180.png">
-		<link rel="manifest" href="<%=paths.base%>static/manifest.json">
-		<link rel="alternate" type="application/json+oembed" href="<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(normalizeMapName(mapData.name), appName)%>" />
+		<link rel="icon" href=".<%=paths.base%>static/favicon.svg">
+		<link rel="mask-icon" href=".<%=paths.base%>favicon.svg" color="#00272a">
+		<link rel="apple-touch-icon" href=".<%=paths.base%>static/app-180.png">
+		<link rel="manifest" href=".<%=paths.base%>static/manifest.json">
+		<link rel="alternate" type="application/json+oembed" href=".<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(normalizeMapName(mapData.name), appName)%>" />
 		<link rel="iframely resizable" href="<%=url%>">
 
 		<style type="text/css">
 <% for (const path of styles) { -%>
-			@import url("<%=paths.base%><%=path%>");
+			@import url(".<%=paths.base%><%=path%>");
 <% } -%>
 <% if (hasCustomCssFile) { -%>
-			@import url("<%=paths.base%>custom.css");
+			@import url(".<%=paths.base%>custom.css");
 <% } -%>
 		</style>
 <% for (const path of scripts) { -%>
-		<script type="module" src="<%=paths.base%><%=path%>"></script>
+		<script type="module" src=".<%=paths.base%><%=path%>"></script>
 <% } -%>
 <% for (const path of preloadScripts) { -%>
-		<link rel="modulepreload" href="<%=paths.base%><%=path%>"/>
+		<link rel="modulepreload" href=".<%=paths.base%><%=path%>"/>
 <% } -%>
 	</head>
 	<body>

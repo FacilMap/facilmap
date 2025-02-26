@@ -7,11 +7,21 @@ export interface RouteDestination {
 	selectedSuggestion?: SearchResult | FindOnMapResult;
 }
 
+export enum UseAsType {
+	BEFORE_FROM = "before_from",
+	AS_FROM = "as_from",
+	AFTER_FROM = "after_from",
+	BEFORE_TO = "before_to",
+	AS_TO = "as_to",
+	AFTER_TO = "after_to"
+}
+
 export interface WritableRouteFormTabContext {
 	setQuery(query: string, zoom?: boolean, smooth?: boolean): void;
-	setFrom(destination: RouteDestination): void;
-	addVia(destination: RouteDestination): void;
-	setTo(destination: RouteDestination): void;
+	useAs(destination: RouteDestination, as: UseAsType): void;
+	hasFrom: boolean;
+	hasTo: boolean;
+	hasVia: boolean;
 }
 
 export type RouteFormTabContext = Readonly<WritableRouteFormTabContext>;

@@ -1,0 +1,37 @@
+{
+    "i18n": {
+        "language-ru": "Russe",
+        "language-de": "Allemand",
+        "language-es": "Espagnol",
+        "language-en": "Anglais",
+        "language-nb-no": "Norvégien",
+        "language-zh-hant": "Chinois (Traditionnel)"
+    },
+    "routing": {
+        "query-via": "via",
+        "query-by-hgv": "en poids lourd",
+        "query-by-car": "en voiture",
+        "query-by-road-bike": "en vélo de route",
+        "query-by-mountain-bike": "en vélo tout-terrain",
+        "format-by-car": "en voiture",
+        "format-by-road-bike": "en vélo de route",
+        "format-by-electric-bike": "en vélo électrique",
+        "query-from": "de",
+        "format-by-bicycle": "en vélo",
+        "format-by-wheelchair": "en fauteuil roulant",
+        "format-by-foot": "à pied",
+        "query-to": "vers",
+        "format-by-mountain-bike": "en vélo tout-terrain"
+    },
+    "elevation": {
+        "http-error": "Erreur lors de la récupération des profils altimétriques : {{status}}."
+    },
+    "format": {
+        "description-field-name": "Description",
+        "unnamed-poi": "POI sans nom",
+        "distance-km": "{{distance}} km",
+        "elevation-ft": "{{elevation}} pieds",
+        "elevation-m": "{{elevation}} m",
+        "distance-mi": "{{distance}} mille(s)"
+    }
+}

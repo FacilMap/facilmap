@@ -51,7 +51,7 @@ export default class DatabaseMigrations {
 	async _renamePadsTableMigration(): Promise<void> {
 		const queryInterface = this._db._conn.getQueryInterface();
 
-		if (await queryInterface.tableExists("Pads")) {
+		if (await queryInterface.tableExists("Pads") && !await queryInterface.tableExists("Maps")) {
 			console.log("DB migration: Rename Pads table to Maps");
 
 			await queryInterface.renameTable("Pads", "Maps");

@@ -1,13 +1,17 @@
 import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18nGetter, isCustomLanguageDetector, isCustomI18nGetter, LANG_QUERY, LANG_COOKIE, setCurrentUnitsGetter } from "facilmap-utils";
 import messagesEn from "./i18n/en.json";
+import messagesCs from "./i18n/cs.json";
 import messagesDe from "./i18n/de.json";
 import messagesEs from "./i18n/es.json";
+import messagesFr from "./i18n/fr.json";
 import messagesNbNo from "./i18n/nb-NO.json";
 import messagesRu from "./i18n/ru.json";
+import messagesTa from "./i18n/ta.json";
+import messagesZhHant from "./i18n/zh-Hant.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
 import { Router } from "express";
-import i18nextHttpMiddleware from "i18next-http-middleware";
+import * as i18nextHttpMiddleware from "i18next-http-middleware";
 import { type Socket as SocketIO } from "socket.io";
 import { unitsValidator, type Units } from "facilmap-types";
 import { parse } from "cookie";
@@ -39,10 +43,14 @@ declare module 'domain' {
 
 onI18nReady((i18n) => {
 	i18n.addResourceBundle("en", namespace, messagesEn);
+	i18n.addResourceBundle("cs", namespace, messagesCs);
 	i18n.addResourceBundle("de", namespace, messagesDe);
 	i18n.addResourceBundle("es", namespace, messagesEs);
+	i18n.addResourceBundle("fr", namespace, messagesFr);
 	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
 	i18n.addResourceBundle("ru", namespace, messagesRu);
+	i18n.addResourceBundle("ta", namespace, messagesTa);
+	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
 });
 
 export function getDomainLang(): FacilMapProcessLang | undefined {
@@ -79,7 +87,7 @@ export function setDomainUnits(units: Units): void {
 
 export const i18nMiddleware = Router();
 i18nMiddleware.use((req, res, next) => {
-	i18nextHttpMiddleware.handle(getRawI18n())(req, res, next);
+	void i18nextHttpMiddleware.handle(getRawI18n())(req, res, next);
 });
 i18nMiddleware.use((req, res, next) => {
 	if ((req as any).i18n) {
@@ -117,7 +125,7 @@ export async function handleSocketConnection(socket: SocketIO): Promise<void> {
 			setHeader: () => undefined
 		} as any;
 
-		i18nMiddleware(req, res, (err) => {
+		void i18nMiddleware(req, res, (err) => {
 			if (err) {
 				reject(err);
 			} else {

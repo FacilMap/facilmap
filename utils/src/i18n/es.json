@@ -19,7 +19,10 @@
         "format-by-mountain-bike": "en bicicleta de montaña",
         "format-by-road-bike": "en bicicleta de carretera",
         "format-by-wheelchair": "en silla de ruedas",
-        "query-by-straight": "recto|en helicóptero"
+        "query-by-straight": "recto|en helicóptero",
+        "query-via": "vía",
+        "query-by-hgv": "Para vehículos pesados",
+        "format-by-hgv": "Para vehículos pesados"
     },
     "search": {
         "http-error": "La búsqueda falló con el estado {{status}}."
@@ -32,14 +35,19 @@
         "time": "{{hours}}:{{minutes}} h",
         "route-time": "{{time}} {{mode}}",
         "distance-km": "{{distance}} km",
-        "elevation-m": "{{elevation}} m"
+        "elevation-m": "{{elevation}} m",
+        "distance-mi": "{{distance}} mi",
+        "elevation-ft": "{{elevation}} ft"
     },
     "i18n": {
         "language-en": "Inglés",
         "language-de": "Alemán",
         "language-ru": "Ruso",
         "language-nb-no": "Noruego «bokmål»",
-        "language-es": "Español"
+        "language-es": "Español",
+        "language-zh-hant": "Chino (tradicional)",
+        "language-fr": "Francés",
+        "language-cs": "Checo"
     },
     "objects": {
         "untitled-line": "Línea sin título",

@@ -1,26 +1,38 @@
-/** @type {import('eslint').Linter.Config} */
-module.exports = {
-	root: true,
-	ignorePatterns: ["**/dist/*", "**/out/*", "**/out.*/*", "**/vite.config.ts.timestamp-*.mjs"],
-	parserOptions: {
-		parser: "@typescript-eslint/parser",
-		project: ["*/tsconfig.json", "*/tsconfig.node.json"],
-		extraFileExtensions: [".vue"]
-	},
-	plugins: ["@typescript-eslint", "import"],
+import tseslint from "typescript-eslint";
+import importPlugin from "eslint-plugin-import";
+import vuePlugin from "eslint-plugin-vue";
+import globals from "globals";
+
+export default tseslint.config({
+	ignores: ["**/dist/*", "**/out/*", "**/out.*/*", "**/vite.config.ts.timestamp-*.mjs", "docs/**/*", "server/bin/facilmap-server.js"],
+}, {
 	extends: [
-		"plugin:import/typescript",
-		"plugin:vue/vue3-essential"
+		tseslint.configs.base,
+		{ ...importPlugin.flatConfigs.recommended, rules: {} },
+		importPlugin.flatConfigs.typescript,
+		...vuePlugin.configs['flat/essential']
 	],
-	overrides: [
-		{
-			extends: ["plugin:@typescript-eslint/disable-type-checked"],
-			files: ["**/*.js", "**/*.cjs"]
+
+	files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
+
+	languageOptions: {
+		globals: globals.browser, // ...globals.node,
+		parserOptions: {
+			parser: tseslint.parser,
+			tsconfigRootDir: import.meta.dirname,
+			project: ["*/tsconfig.json", "*/tsconfig.node.json"],
+			extraFileExtensions: [".vue"]
 		}
-	],
-	env: {
-		node: true
 	},
+
+	settings: {
+		"import/resolver": {
+			"typescript": {
+				"project": ["tsconfig.json", "*/tsconfig.json"],
+			}
+		},
+	},
+
 	rules: {
 		"@typescript-eslint/explicit-module-boundary-types": ["warn", { "allowArgumentsExplicitlyTypedAsAny": true }],
 		"import/no-unresolved": ["error", { "ignore": [ "geojson", "virtual:icons" ], "caseSensitive": true }],
@@ -28,7 +40,6 @@ module.exports = {
 		"@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
 		"import/no-named-as-default": ["warn"],
 		"import/no-duplicates": ["warn"],
-		"import/namespace": ["error"],
 		"import/default": ["error"],
 		"@typescript-eslint/no-extra-non-null-assertion": ["error"],
 		"@typescript-eslint/no-non-null-asserted-optional-chain": ["error"],
@@ -94,11 +105,9 @@ module.exports = {
 		"use-isnan": ["error"],
 		"valid-typeof": ["error"]
 	},
-	"settings": {
-		"import/resolver": {
-			"typescript": {
-				"project": ["tsconfig.json", "*/tsconfig.json"],
-			}
-		},
-	}
-};
+}, {
+	files: ["**/*.{js,cjs,mjs}"],
+	extends: [
+		tseslint.configs.disableTypeChecked
+	]
+});

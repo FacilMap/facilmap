@@ -1,5 +1,6 @@
 import { DefaultReactiveObjectProvider } from "facilmap-client";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
+import { cloneDeep, isEqual } from "lodash-es";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
 // eslint-disable-next-line vue/prefer-import-from-vue, import/no-extraneous-dependencies
 import { pauseTracking, resetTracking } from "@vue/reactivity";
 
@@ -47,17 +48,17 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
  * @returns A computed ref with a setter.
  */
 export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
-    const internalValue = ref(getProp() ?? fallbackValue);
-    return computed({
-        get: (): Value => {
-            const propValue = getProp();
-            return propValue !== undefined ? propValue : internalValue.value as Value;
-        },
-        set: (val: Value) => {
-            internalValue.value = val as any;
-            onUpdate(val);
-        }
-    });
+	const internalValue = ref(getProp() ?? fallbackValue);
+	return computed({
+		get: (): Value => {
+			const propValue = getProp();
+			return propValue !== undefined ? propValue : internalValue.value as Value;
+		},
+		set: (val: Value) => {
+			internalValue.value = val as any;
+			onUpdate(val);
+		}
+	});
 }
 
 /**
@@ -194,4 +195,34 @@ export function computedWithDeps<T extends object, R>(source: T, cb: ComputedWit
 		const values = Array.isArray(source) ? source.map((s) => toValue(s)) : toValue(source);
 		return withoutTracking(() => cb(values as any, oldValue, onCleanup));
 	});
+}
+
+export function useIsMounted(): Readonly<Ref<boolean>> {
+	const isMounted = ref(false);
+	onMounted(() => {
+		isMounted.value = true;
+	});
+	onBeforeUnmount(() => {
+		isMounted.value = false;
+	});
+	return readonly(isMounted);
+}
+
+/**
+ * Will return a ref to a deep clone of the given ref. When the given model ref is updated, a deep clone is applied
+ * to the returned ref. When the returned ref is updated (deep watch), a deep clone is applied to the model ref.
+ * Use this as `useImmutableModel(defineModel(...))` to allow changing nested properties of the model without mutating
+ * the actual object passed as the model value.
+ */
+export function useImmutableModel<T>(modelRef: Ref<T>): Ref<T> {
+	const value = ref() as Ref<T>;
+	watch(modelRef, () => {
+		value.value = cloneDeep(modelRef.value);
+	}, { immediate: true });
+	watch(value, () => {
+		if (!isEqual(toRaw(value.value), toRaw(modelRef.value))) {
+			modelRef.value = cloneDeep(value.value);
+		}
+	}, { deep: true });
+	return value;
 }

@@ -16,10 +16,14 @@
     },
     "i18n": {
         "language-en": "English",
+        "language-cs": "Czech",
         "language-de": "German",
         "language-es": "Spanish",
+        "language-fr": "French",
         "language-nb-no": "Norwegian Bokmål (Norway)",
-        "language-ru": "Russian"
+        "language-ru": "Russian",
+        "language-ta": "Tamil",
+        "language-zh-hant": "Chinese (Traditional)"
     },
     "objects": {
         "untitled-marker": "Untitled marker",

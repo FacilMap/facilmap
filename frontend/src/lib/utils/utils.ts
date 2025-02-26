@@ -6,6 +6,8 @@ import { getI18n } from "./i18n";
 // https://stackoverflow.com/a/62085569/242365
 export type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
+export type DistributedOmit<T, K extends DistributedKeyOf<T>> = T extends any ? Omit<T, K> : never;
+
 export type AnyRef<T> = T | Ref<T> | (() => T);
 
 
@@ -29,14 +31,14 @@ export function useEventListener<EventMap extends Record<string, unknown>, Event
 	});
 }
 
-export function useDomEventListener<Element extends EventTarget, Args extends Parameters<Element["addEventListener"]>>(element: AnyRef<EventTarget | undefined>, ...args: Args): void {
+export function useDomEventListener<K extends string>(element: AnyRef<EventTarget | undefined>, type: K, listener: (this: HTMLElement, ev: K extends keyof HTMLElementEventMap ? HTMLElementEventMap[K] : K extends keyof WindowEventHandlersEventMap ? WindowEventHandlersEventMap[K] : Event) => any, options?: boolean | AddEventListenerOptions): void {
 	watchEffect((onCleanup) => {
 		const elementRef = toRef(element);
 		if (elementRef.value) {
-			const el = elementRef.value as any;
-			el.addEventListener(...args);
+			const el = elementRef.value;
+			el.addEventListener(type, listener as any, options);
 			onCleanup(() => {
-				el.removeEventListener(...args);
+				el.removeEventListener(type, listener as any, options);
 			});
 		}
 	});
@@ -62,7 +64,6 @@ export const extendableEventMixin: ExtendableEventMixin = {
 		} else if (this._promises) {
 			this._promises.push(promise);
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			this._promises = [promise];
 		}
 	},

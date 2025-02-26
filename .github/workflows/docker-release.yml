@@ -19,6 +19,7 @@ jobs:
         with:
           images: facilmap/facilmap
           tags: type=semver,pattern={{major}}.{{minor}}
+          flavor: latest=false
 
       -
         name: Set up QEMU

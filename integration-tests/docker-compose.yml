@@ -16,7 +16,7 @@ services:
             DB_PASSWORD: facilmap
 
     mysql:
-        image: mysql:5.7
+        image: mariadb:11.6
         environment:
             MYSQL_DATABASE: facilmap
             MYSQL_USER: facilmap
@@ -24,7 +24,7 @@ services:
             MYSQL_RANDOM_ROOT_PASSWORD: "true"
         command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         healthcheck:
-            test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
 
 
     facilmap-postgres:

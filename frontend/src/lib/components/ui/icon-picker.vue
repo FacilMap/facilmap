@@ -76,7 +76,7 @@
 
 	function validateSymbol(symbol: string) {
 		if (symbol && symbol.length !== 1 && !iconList.includes(symbol)) {
-			return i18n.t("symbol-picker.unknown-icon-error");
+			return i18n.t("icon-picker.unknown-icon-error");
 		}
 	}
 
@@ -121,7 +121,7 @@
 				type="search"
 				class="form-control fm-keyboard-navigation-exception"
 				v-model="filter"
-				:placeholder="i18n.t('symbol-picker.filter-placeholder')"
+				:placeholder="i18n.t('icon-picker.filter-placeholder')"
 				autocomplete="off"
 				ref="filterRef"
 				tabindex="-1"
@@ -132,7 +132,7 @@
 			</div>
 
 			<template v-else>
-				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">{{i18n.t("symbol-picker.no-icons-found-error")}}</div>
+				<div v-if="Object.keys(items).length == 0" class="alert alert-danger mt-2 mb-1">{{i18n.t("icon-picker.no-icons-found-error")}}</div>
 
 				<PrerenderedList
 					:items="items"

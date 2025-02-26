@@ -34,6 +34,10 @@
 	const importTabContext = ref<WritableImportTabContext>({
 		openFilePicker() {
 			fileInputRef.value?.click();
+		},
+
+		async importFiles(files: FileList | File[]) {
+			await importFiles(files);
 		}
 	});
 
@@ -62,22 +66,22 @@
 		void importFiles((event as DragEvent).dataTransfer?.files);
 	}
 
-	async function importFiles(fileList: FileList | undefined): Promise<void> {
+	async function importFiles(fileList: FileList | File[] | undefined): Promise<void> {
 		toasts.hideToast(`fm${context.id}-import-error`);
 
 		if(!fileList || fileList.length == 0)
 			return;
 
 		try {
-			const loadedFiles = await Promise.all([...fileList].map((file) => new Promise<string>((resolve, reject) => {
+			const loadedFiles = await Promise.all([...fileList].map((file) => new Promise<Uint8Array>((resolve, reject) => {
 				const reader = new FileReader();
 				reader.onload = () => {
-					resolve(reader.result as string);
+					resolve(new Uint8Array(reader.result as ArrayBuffer));
 				};
 				reader.onerror = () => {
 					reject(reader.error);
 				};
-				reader.readAsText(file);
+				reader.readAsArrayBuffer(file);
 			})));
 
 			const result = {

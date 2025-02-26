@@ -24,6 +24,8 @@ export interface Config {
 	maxmindUserId?: string;
 	maxmindLicenseKey?: string;
 	limaLabsToken?: string;
+	thunderforestToken?: string;
+	tracestrackToken?: string;
 	/** Hide the "Open this on Google/Bing Maps" links in the map style menu */
 	hideCommercialMapLinks?: boolean;
 	customCssFile?: string;
@@ -61,7 +63,9 @@ const config: Config = {
 	maxmindUserId: process.env.MAXMIND_USER_ID || "",
 	maxmindLicenseKey: process.env.MAXMIND_LICENSE_KEY || "",
 
-	limaLabsToken: process.env.LIMA_LABS_TOKEN || "", // Get a token on https://maps.lima-labs.com/,
+	limaLabsToken: process.env.LIMA_LABS_TOKEN || "", // Get a token on https://maps.lima-labs.com/
+	thunderforestToken: process.env.THUNDERFOREST_TOKEN || "", // Get a token on https://www.thunderforest.com/
+	tracestrackToken: process.env.TRACESTRACK_TOKEN || "", // Get a token on https://tracestrack.com/
 
 	hideCommercialMapLinks: process.env.HIDE_COMMERCIAL_MAP_LINKS === "1",
 

@@ -27,9 +27,9 @@ export function exportGeoJson(database: Database, mapId: ID, filter?: string): R
 				searchEngines: mapData.searchEngines,
 				description: mapData.description,
 				clusterMarkers: mapData.clusterMarkers,
-				views: () => arrayStream(mapAsyncIterable(database.views.getViews(mapId), (view) => omit(view, ["id", "mapId"])))
+				views: () => arrayStream(mapAsyncIterable(database.views.getViews(mapId), (view) => omit(view, ["id", "mapId"]))),
+				types: mapValues(types, (type) => omit(type, ["id", "mapId"]))
 			},
-			types: mapValues(types, (type) => omit(type, ["id", "mapId"])),
 			features: () => arrayStream(concatAsyncIterables<InterfaceToType<MarkerFeature> | StreamedLineFeature>(
 				() => flatMapAsyncIterable(database.markers.getMapMarkers(mapId), (marker) => {
 					if (filterFunc(marker, types[marker.typeId])) {

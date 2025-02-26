@@ -5,8 +5,11 @@ import { getVisibleLayers, setVisibleLayers } from "../layers";
 import { isEqual } from "lodash-es";
 import OverpassLayer from "../overpass/overpass-layer";
 import { decodeOverpassQuery, encodeOverpassQuery, isEncodedOverpassQuery } from "../overpass/overpass-utils";
+import type { Optional } from "facilmap-utils";
 
 export type UnsavedView = Omit<View<CRU.CREATE>, 'name'>;
+
+export type PartialView = Optional<UnsavedView, "baseLayer" | "layers">;
 
 export function getCurrentView(map: Map, { includeFilter = false, overpassLayer }: { includeFilter?: boolean; overpassLayer?: OverpassLayer } = {}): UnsavedView {
 	const visibleLayers = getVisibleLayers(map);
@@ -26,9 +29,9 @@ export function getCurrentView(map: Map, { includeFilter = false, overpassLayer 
 	return ret;
 }
 
-const DEFAULT_VIEW: DeepReadonly<UnsavedView> = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined as any, layers: [] };
+const DEFAULT_VIEW: DeepReadonly<PartialView> = { top: -90, bottom: 90, left: -180, right: 180, baseLayer: undefined, layers: undefined };
 
-export function displayView(map: Map, view?: DeepReadonly<UnsavedView> | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
+export function displayView(map: Map, view?: DeepReadonly<PartialView> | null, { _zoomFactor = 0, overpassLayer }: { _zoomFactor?: number, overpassLayer?: OverpassLayer } = {}): void {
 	if (view == null)
 		view = DEFAULT_VIEW;
 
@@ -38,14 +41,14 @@ export function displayView(map: Map, view?: DeepReadonly<UnsavedView> | null, {
 	});
 
 	if (overpassLayer)
-		overpassLayer.setQuery(decodeOverpassQuery(view.layers.find((l) => isEncodedOverpassQuery(l))));
+		overpassLayer.setQuery(decodeOverpassQuery(view.layers?.find((l) => isEncodedOverpassQuery(l))));
 
 	const bounds = fmToLeafletBbox(view);
 
 	try {
 		map.getCenter(); // Throws exception if map not initialised
 		map.flyTo(bounds.getCenter(), map.getBoundsZoom(bounds, view === DEFAULT_VIEW) + _zoomFactor);
-	} catch(e) {
+	} catch {
 		map.setView(bounds.getCenter(), map.getBoundsZoom(bounds, view === DEFAULT_VIEW) + _zoomFactor);
 	}
 
@@ -55,7 +58,7 @@ export function displayView(map: Map, view?: DeepReadonly<UnsavedView> | null, {
 export function isAtView(map: Map, view = DEFAULT_VIEW, { overpassLayer }: { overpassLayer?: OverpassLayer } = {}): boolean {
 	try {
 		map.getCenter();
-	} catch(e) {
+	} catch {
 		return false;
 	}
 
