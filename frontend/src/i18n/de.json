@@ -773,7 +773,15 @@
         "units": "Einheiten",
         "units-metric": "Metrisch",
         "units-us": "US customary (Meilen und Füße)",
-        "default-map-style": "Voreingestellter Kartenstil"
+        "default-map-style": "Voreingestellter Kartenstil",
+        "external-links-label": "Bezeichnung",
+        "external-links": "Externe Links",
+        "external-links-description": "Hier kannst du Links zu externen Karten konfigurieren, die im Menü „Kartenstil“ (zur Anzeige des aktuellen Kartenausschnitts) und im Dropdown-Menü „Koordinaten“ von Markierungen, Suchergebnissen und POIs (zur Anzeige der Markierung) angezeigt werden. Hier kannst du voreingestellte Kartenlinks aktivieren oder deaktivieren oder deine eigenen konfigurieren, indem du die Platzhalter `%LAT`, `%LON%` und `%ZOOM%` in der URL verwendest.",
+        "external-links-map-url": "Karten-URL",
+        "external-links-marker-url": "Marker-URL",
+        "external-links-delete-tooltip": "Löschen",
+        "external-links-reorder-alt": "Neu anordnen",
+        "external-links-create": "Erstellen"
     },
     "utils": {
         "required-error": "Dieses Feld muss ausgefüllt werden."
