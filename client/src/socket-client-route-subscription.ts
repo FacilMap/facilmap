@@ -1,7 +1,7 @@
-import type { ApiV3, DeepReadonly, EventHandler, EventName, ExportFormat, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoint, TrackPoints } from "facilmap-types";
+import type { ApiV3, DeepReadonly, EventHandler, EventName, ExportFormat, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoints } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
-import { mergeEventHandlers, mergeTrackPoints } from "./utils";
+import { mergeEventHandlers } from "./utils";
 import { SocketClientSubscription, type BasicSubscriptionData } from "./socket-client-subscription";
 
 type SocketClientRouteSubscriptionInterface = {
@@ -22,7 +22,7 @@ export interface SocketClientRouteSubscription extends Readonly<RouteSubscriptio
 	// Getters are defined in SocketClientSubscription
 }
 
-export class SocketClientRouteSubscription extends SocketClientSubscription<RouteSubscriptionData> implements SocketClientRouteSubscriptionInterface, Omit<Promise<SocketClientRouteSubscription>, typeof Symbol.toStringTag> {
+export class SocketClientRouteSubscription extends SocketClientSubscription<RouteSubscriptionData> implements SocketClientRouteSubscriptionInterface {
 	constructor(client: SocketClient, routeKey: string, options: DeepReadonly<SubscribeToRouteOptions & {
 		reactiveObjectProvider?: ReactiveObjectProvider;
 	}>) {
@@ -48,41 +48,10 @@ export class SocketClientRouteSubscription extends SocketClientSubscription<Rout
 		await this.client._unsubscribeFromRoute(this.data.routeKey);
 	}
 
-	storeRoute(route: Route): void {
-		this.reactiveObjectProvider.set(this.data, "route", {
-			...route,
-			trackPoints: this.data.route?.trackPoints || { length: 0 }
-		});
-	}
-
-	storeRoutePoints(trackPoints: TrackPoint[], reset: boolean): void {
-		if (!this.data.route) {
-			console.error(`Received route points before route.`);
-			return;
-		}
-
-		this.reactiveObjectProvider.set(this.data, "route", {
-			...this.data.route,
-			trackPoints: mergeTrackPoints(reset ? {} : this.data.route.trackPoints, trackPoints)
-		});
-	}
-
 	protected _getEventHandlers(): {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} {
-		return mergeEventHandlers(super._getEventHandlers(), {
-			route: (routeKey, route) => {
-				if (routeKey === this.data.routeKey) {
-					this.storeRoute(route);
-				}
-			},
-
-			routePoints: (routeKey, data) => {
-				if (routeKey === this.data.routeKey) {
-					this.storeRoutePoints(data.trackPoints, data.reset);
-				}
-			}
-		});
+		return mergeEventHandlers(super._getEventHandlers(), {});
 	};
 
 	async exportRoute(data: { format: ExportFormat }): ReturnType<ApiV3<true>["exportLine"]> {

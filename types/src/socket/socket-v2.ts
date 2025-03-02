@@ -23,8 +23,8 @@ import { routeParametersValidator, type Route } from "../route.js";
 
 export const legacyV2MapDataValidator = {
 	read: mapDataValidator.read.omit({ readId: true, id: true }).extend({ id: mapDataValidator.read.shape.readId }),
-	create: mapDataValidator.create.omit({ readId: true, id: true }).extend({ id: mapDataValidator.create.shape.readId }),
-	update: mapDataValidator.update.omit({ readId: true, id: true }).extend({ id: mapDataValidator.update.shape.readId }),
+	create: mapDataValidator.create.omit({ readId: true }).extend({ id: mapDataValidator.create.shape.readId }),
+	update: mapDataValidator.update.omit({ readId: true }).extend({ id: mapDataValidator.update.shape.readId }),
 };
 export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
 export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
@@ -160,7 +160,7 @@ export type MultipleEvents<Events extends Record<string, any[]>> = {
 	[E in EventName<Events>]?: Array<Events[E][0]>;
 };
 
-export type LegacyV2Route = ReplaceProperties<Route, { routeId?: string }>;
+export type LegacyV2Route = Route & { routeId?: string };
 
 export const socketV2RequestValidators = {
 	...pick(socketV3RequestValidators, [

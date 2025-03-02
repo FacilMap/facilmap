@@ -24,10 +24,10 @@ export type BasicSubscriptionData = {
 	state: DeepReadonly<SubscriptionState>;
 };
 
-export abstract class SocketClientSubscription<Data extends { state: any }> implements Omit<Promise<any>, typeof Symbol.toStringTag> {
+export abstract class SocketClientSubscription<Data extends { state: any }> {
 	client: SocketClient;
 	protected reactiveObjectProvider: ReactiveObjectProvider;
-	protected subscribePromise: Promise<void>;
+	subscribePromise: Promise<this>;
 	protected data: Data;
 
 	constructor(client: SocketClient, data: Omit<Data, "state"> & {
@@ -37,7 +37,7 @@ export abstract class SocketClientSubscription<Data extends { state: any }> impl
 		const { reactiveObjectProvider, ...otherData } = data;
 		this.reactiveObjectProvider = reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
 
-		this.data = this.reactiveObjectProvider.create({
+		this.data = this.reactiveObjectProvider.makeReactive({
 			...otherData,
 			state: { type: SubscriptionStateType.SUBSCRIBING }
 		}) as Data;
@@ -46,21 +46,9 @@ export abstract class SocketClientSubscription<Data extends { state: any }> impl
 			client.on(i as any, handler as any);
 		}
 
-		this.subscribePromise = this._subscribe();
+		this.subscribePromise = this._subscribe().then(() => this);
 
 		_defineDynamicGetters(this, this.data, this.reactiveObjectProvider);
-	}
-
-	then<T1 = this, T2 = never>(onfulfilled?: ((value: this) => T1 | PromiseLike<T1>) | undefined | null, onrejected?: ((reason: any) => T2 | PromiseLike<T2>) | undefined | null): Promise<T1 | T2> {
-		return this.subscribePromise.then(() => this).then(onfulfilled, onrejected);
-	}
-
-	catch<T = never>(onrejected?: ((reason: any) => T | PromiseLike<T>) | undefined | null): Promise<this | T> {
-		return this.subscribePromise.then(() => this).catch(onrejected);
-	}
-
-	finally(onfinally?: (() => void) | undefined | null): Promise<this> {
-		return this.subscribePromise.then(() => this).finally(onfinally);
 	}
 
 	protected async _subscribe(): Promise<void> {

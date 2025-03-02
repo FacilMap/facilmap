@@ -12,7 +12,7 @@ export interface DecodedRouteMode {
 
 export const R = 6371; // km
 
-export function calculateDistance(posList: Array<{ lat: number; lon: number; }>): number {
+export function calculateDistance(posList: ReadonlyArray<{ lat: number; lon: number; }>): number {
 	// From http://stackoverflow.com/a/365853/242365
 	let ret = 0;
 

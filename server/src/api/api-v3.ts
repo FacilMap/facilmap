@@ -26,7 +26,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	protected async* getMapObjectsUntyped<M extends MapDataWithWritable = MapDataWithWritable>(
 		mapData: M,
-		{ pick, bbox }: { pick: AllMapObjectsPick[]; bbox?: BboxWithZoom }
+		{ pick, bbox }: { pick: ReadonlyArray<AllMapObjectsPick>; bbox?: BboxWithZoom }
 	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[AllMapObjectsPick]> {
 		if (pick.includes("mapData")) {
 			yield { type: "mapData", data: mapData };
@@ -55,9 +55,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	protected getMapObjects<Pick extends AllMapObjectsPick, M extends MapDataWithWritable = MapDataWithWritable>(
 		mapData: M,
-		{ pick, bbox }: { pick: Pick[]; bbox?: BboxWithZoom }
+		{ pick, bbox }: { pick: ReadonlyArray<Pick>; bbox?: BboxWithZoom }
 	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]> {
-		return this.getMapObjectsUntyped(mapData, { pick: pick as AllMapObjectsPick[], bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]>;
+		return this.getMapObjectsUntyped(mapData, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]>;
 	}
 
 	async findMaps(query: string, paging = DEFAULT_PAGING): Promise<PagedResults<FindMapsResult>> {
@@ -87,7 +87,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.maps.deleteMap(mapData.id);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linePoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linePoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return this.getMapObjects(mapData, {
 			...options,

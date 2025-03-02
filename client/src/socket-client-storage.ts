@@ -1,11 +1,10 @@
 import type {
-	ID, Marker, LineWithTrackPoints, View, Type, HistoryEntry, EventName, EventHandler, BboxWithZoom, MapDataWithWritable,
-	MapSlug, TrackPoint, TrackPoints, Route, Line, LineToRouteRequest, RouteParameters, SubscribeToMapPick, LinePoints,
-	RoutePoints,
-	DeepReadonly
+	ID, Marker, LineWithTrackPoints, View, Type, HistoryEntry, EventName, EventHandler, MapDataWithWritable,
+	MapSlug, TrackPoints, Route, Line, LinePoints, RoutePoints, DeepReadonly
 } from "facilmap-types";
 import { SocketClient, type ClientEvents } from "./socket-client";
 import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
+import { mergeTrackPoints } from "./utils";
 
 export interface MapStorage {
 	mapData: DeepReadonly<MapDataWithWritable> | undefined;
@@ -28,8 +27,8 @@ export class SocketClientStorage {
 	constructor(client: SocketClient, options?: { reactiveObjectProvider?: ReactiveObjectProvider }) {
 		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
 		this.client = client;
-		this.maps = this.reactiveObjectProvider.create({});
-		this.routes = this.reactiveObjectProvider.create({});
+		this.maps = this.reactiveObjectProvider.makeReactive({});
+		this.routes = this.reactiveObjectProvider.makeReactive({});
 
 		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
 			this.client.on(i as any, handler as any);
@@ -40,8 +39,8 @@ export class SocketClientStorage {
 		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
 			this.client.removeListener(i as any, handler as any);
 		}
-		this.maps = this.reactiveObjectProvider.create({});
-		this.routes = this.reactiveObjectProvider.create({});
+		this.maps = this.reactiveObjectProvider.makeReactive({});
+		this.routes = this.reactiveObjectProvider.makeReactive({});
 	}
 
 	protected _getEventHandlers(): {
@@ -93,6 +92,14 @@ export class SocketClientStorage {
 			deleteView: (mapSlug, data) => {
 				if (this.maps[mapSlug]) {
 					this.clearView(mapSlug, data.id);
+
+					if(this.maps[mapSlug].mapData?.defaultViewId === data.id) {
+						this.storeMapData(mapSlug, {
+							...this.maps[mapSlug].mapData!,
+							defaultView: null,
+							defaultViewId: null
+						});
+					}
 				}
 			},
 
@@ -114,11 +121,64 @@ export class SocketClientStorage {
 				}
 			},
 
-			disconnect: (reason) => {
-				// TODO: Handle reconnect gracefully
-				this.maps = this.reactiveObjectProvider.create({});
-				this.routes = this.reactiveObjectProvider.create({});
+			route: (routeKey, data) => {
+				this.storeRoute(routeKey, data);
 			},
+
+			routePoints: (routeKey, { reset, ...routePoints }) => {
+				this.storeRoutePoints(routeKey, routePoints, reset);
+			},
+
+			emit: (...args) => {
+				switch (args[0]) {
+					case "subscribeToMap":
+						this.reactiveObjectProvider.set(this.maps, args[1].args[0], {
+							mapData: undefined,
+							markers: {},
+							lines: {},
+							types: {},
+							views: {},
+							history: {}
+						});
+						break;
+
+					case "unsubscribeFromMap":
+						this.reactiveObjectProvider.delete(this.maps, args[1].args[0]);
+						break;
+
+					case "unsubscribeFromRoute":
+						this.reactiveObjectProvider.delete(this.routes, args[1].args[0]);
+						break;
+
+					case "setBbox":
+						if (this.client.bbox && args[1].args[0].zoom !== this.client.bbox.zoom) {
+							// Reset line points on zoom change to prevent us from accumulating too many unneeded line points.
+							// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
+							// so we can be sure that we will receive all line points that are relevant for the new bbox.
+
+							const linesHandled = new Set<ID>();
+							const linePointsHandler: EventHandler<ClientEvents, "linePoints"> = (mapSlug, data) => {
+								linesHandled.add(data.lineId);
+							};
+							this.client.on("linePoints", linePointsHandler);
+
+							args[1].result.finally(() => {
+								this.client.removeListener("linePoints", linePointsHandler);
+							}).catch((err) => console.error(err));
+
+							args[1].result.then(() => {
+								for (const [mapSlug, objs] of Object.entries(this.maps)) {
+									for (const lineId_ of Object.keys(objs.lines)) {
+										const lineId = Number(lineId_);
+										if (!linesHandled.has(lineId)) {
+											this.storeLinePoints(mapSlug, { lineId, trackPoints: [] }, true);
+										}
+									}
+								}
+							}).catch((err) => console.error(err));
+						}
+				}
+			}
 		};
 	};
 
@@ -158,7 +218,7 @@ export class SocketClientStorage {
 
 		this.reactiveObjectProvider.set(this.getMapStorage(mapSlug).lines, linePoints.lineId, {
 			...line,
-			trackPoints: this._mergeTrackPoints(reset ? {} : line.trackPoints, linePoints.trackPoints)
+			trackPoints: mergeTrackPoints(reset ? {} : line.trackPoints, linePoints.trackPoints)
 		});
 	}
 
@@ -180,13 +240,6 @@ export class SocketClientStorage {
 
 	clearView(mapSlug: MapSlug, viewId: ID): void {
 		this.reactiveObjectProvider.delete(this.getMapStorage(mapSlug).views, viewId);
-		if(this.maps[mapSlug].mapData?.defaultViewId === viewId) {
-			this.reactiveObjectProvider.set(this.maps[mapSlug], "mapData", {
-				...this.maps[mapSlug].mapData!,
-				defaultView: null,
-				defaultViewId: null
-			});
-		}
 	}
 
 	storeHistoryEntry(mapSlug: MapSlug, historyEntry: HistoryEntry): void {
@@ -198,131 +251,23 @@ export class SocketClientStorage {
 		this.reactiveObjectProvider.delete(this.getMapStorage(mapSlug).history, historyEntryId);
 	}
 
+	storeRoute(routeKey: string, route: Route): void {
+		this.reactiveObjectProvider.set(this.routes, routeKey, {
+			...route,
+			trackPoints: this.routes[routeKey]?.trackPoints || { length: 0 }
+		});
+	}
+
 	storeRoutePoints(routeKey: string, routePoints: RoutePoints, reset: boolean): void {
 		const route = this.routes[routeKey];
 		if (!route) {
 			throw new Error(`Route ${routeKey} is not in storage.`);
 		}
 
-		this.reactiveObjectProvider.set(this.routes, routePoints.routeKey, {
+		this.reactiveObjectProvider.set(this.routes, routeKey, {
 			...route,
-			trackPoints: this._mergeTrackPoints(reset ? {} : route.trackPoints, routePoints.trackPoints)
+			trackPoints: mergeTrackPoints(reset ? {} : route.trackPoints, routePoints.trackPoints)
 		});
 	}
 
-
-	async subscribeToMap(mapSlug: MapSlug, options?: { pick?: SubscribeToMapPick[]; history?: boolean }): Promise<void> {
-		if (!this.maps[mapSlug]) {
-			this.reactiveObjectProvider.set(this.maps, mapSlug, {
-				mapData: undefined,
-				markers: {},
-				lines: {},
-				types: {},
-				views: {},
-				history: {}
-			});
-		}
-
-		const results = await this.client.subscribeToMap(mapSlug, options);
-		for await (const obj of results) {
-			if (obj.type === "mapData") {
-				this.storeMapData(mapSlug, obj.data);
-			} else if (obj.type === "markers") {
-				for await (const marker of obj.data) {
-					this.storeMarker(mapSlug, marker);
-				}
-			} else if (obj.type === "lines") {
-				for await (const line of obj.data) {
-					this.storeLine(mapSlug, line);
-				}
-			} else if (obj.type === "linePoints") {
-				for await (const linePoints of obj.data) {
-					this.storeLinePoints(mapSlug, linePoints, true);
-				}
-			} else if (obj.type === "types") {
-				for await (const type of obj.data) {
-					this.storeType(mapSlug, type);
-				}
-			} else if (obj.type === "views") {
-				for await (const view of obj.data) {
-					this.storeView(mapSlug, view);
-				}
-			}
-		}
-	}
-
-	async unsubscribeFromMap(mapSlug: MapSlug): Promise<void> {
-		this.reactiveObjectProvider.delete(this.maps, mapSlug);
-		await this.client.unsubscribeFromMap(mapSlug);
-	}
-
-	async subscribeToRoute(routeKey: string, params: RouteParameters | LineToRouteRequest): Promise<void> {
-		const result = await this.client.subscribeToRoute(routeKey, params);
-		if (result) {
-			this.reactiveObjectProvider.set(this.routes, routeKey, {
-				...result,
-				trackPoints: this._mergeTrackPoints({}, result.trackPoints)
-			});
-		}
-	}
-
-	async unsubscribeFromRoute(routeKey: string): Promise<void> {
-		this.reactiveObjectProvider.delete(this.routes, routeKey);
-		await this.client.unsubscribeFromRoute(routeKey);
-	}
-
-	async setBbox(bbox: BboxWithZoom): Promise<void> {
-		const isZoomChange = !!this.client.bbox && bbox.zoom !== this.client.bbox.zoom;
-
-		const results = await this.client.setBbox(bbox);
-
-		const linesHandled = new Set<ID>();
-
-		for await (const obj of results) {
-			if (obj.type === "markers") {
-				for await (const marker of obj.data) {
-					this.storeMarker(obj.mapSlug, marker);
-				}
-			} else if (obj.type === "linePoints") {
-				for await (const linePoints of obj.data) {
-					this.storeLinePoints(obj.mapSlug, linePoints, isZoomChange);
-					linesHandled.add(linePoints.lineId);
-				}
-			} else if (obj.type === "routePoints") {
-				for await (const routePoints of obj.data) {
-					this.storeRoutePoints(routePoints.routeKey, routePoints, isZoomChange);
-				}
-			}
-		}
-
-		if (isZoomChange) {
-			// Reset line points on zoom change to prevent us from accumulating too many unneeded line points.
-			// On zoom change the line points are sent from the server without applying the "except" rule for the last bbox,
-			// so we can be sure that we will receive all line points that are relevant for the new bbox.
-			for (const [mapSlug, objs] of Object.entries(this.maps)) {
-				for (const lineId_ of Object.keys(objs.lines)) {
-					const lineId = Number(lineId_);
-					if (!linesHandled.has(lineId)) {
-						this.storeLinePoints(mapSlug, { lineId, trackPoints: [] }, true);
-					}
-				}
-			}
-		}
-	}
-
-	private _mergeTrackPoints(existingTrackPoints: Record<number, TrackPoint> | null, newTrackPoints: TrackPoint[]): TrackPoints {
-		const ret = { ...(existingTrackPoints || { }) } as TrackPoints;
-
-		for(let i=0; i<newTrackPoints.length; i++) {
-			ret[newTrackPoints[i].idx] = newTrackPoints[i];
-		}
-
-		ret.length = 0;
-		for(const i in ret) {
-			if(i != "length")
-				ret.length = Math.max(ret.length, parseInt(i) + 1);
-		}
-
-		return ret;
-	}
 }

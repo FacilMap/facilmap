@@ -1,4 +1,4 @@
-import type { SocketClient, SocketClientStorage } from "facilmap-client";
+import type { SocketClient } from "facilmap-client";
 import { Bounds, Handler, LatLng, LatLngBounds, Map } from "leaflet";
 import { leafletToFmBbox } from "./utils/leaflet";
 
@@ -33,12 +33,11 @@ export default class BboxHandler extends Handler {
 	protected margin = [50, 400];
 	protected lastBounds: { bounds: Bounds; zoom: number } | undefined = undefined;
 
-	clientStorage: SocketClientStorage | undefined;
 	client: SocketClient;
 
-	constructor(map: Map, clientOrStorage: SocketClient | SocketClientStorage) {
+	constructor(map: Map, client: SocketClient) {
 		super(map);
-		[this.clientStorage, this.client] = "client" in clientOrStorage ? [clientOrStorage, clientOrStorage.client] : [undefined, clientOrStorage];
+		this.client = client;
 	}
 
 	/**
@@ -65,7 +64,7 @@ export default class BboxHandler extends Handler {
 			this._map.unproject(maxBounds.getBottomLeft(), resolvedZoom),
 			this._map.unproject(maxBounds.getTopRight(), resolvedZoom)
 		);
-		void (this.clientStorage ?? this.client).setBbox(leafletToFmBbox(bounds, resolvedZoom));
+		void this.client.setBbox(leafletToFmBbox(bounds, resolvedZoom));
 		this.lastBounds = { bounds: maxBounds, zoom: resolvedZoom };
 	}
 

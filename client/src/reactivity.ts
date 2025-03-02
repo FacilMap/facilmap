@@ -19,9 +19,15 @@ export type DeletableKeysOf<T> = { [K in WritableKeysOf<T>]: {} extends Pick<T, 
  */
 export interface ReactiveObjectProvider {
 	/**
-	 * Creates a new empty object.
+	 * Returns a reactive version of the provided object.
 	 */
-	create: <T extends Record<any, any>>(object: T) => T;
+	makeReactive: <T extends Record<any, any>>(object: T) => T;
+
+	/**
+	 * Returns a non-reactive version of the provided object. This non-reactive object should have the ability to be a property of
+	 * a reactive object without its own properties being reactive.
+	 */
+	makeUnreactive: <T extends Record<any, any>>(object: T) => T;
 
 	/**
 	 * Sets an object property.
@@ -67,7 +73,11 @@ export class DefaultReactiveObjectProvider implements ReactiveObjectProvider {
 		}
 	}
 
-	create<T extends Record<any, any>>(object: T): T {
+	makeReactive<T extends Record<any, any>>(object: T): T {
+		return object;
+	}
+
+	makeUnreactive<T extends Record<any, any>>(object: T): T {
 		return object;
 	}
 

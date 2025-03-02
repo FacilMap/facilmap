@@ -22,7 +22,7 @@ export interface PagedResults<T> {
 }
 
 export type StreamedResults<T> = {
-	results: AsyncGenerator<T, void, undefined>;
+	results: AsyncIterable<T, void, undefined>;
 };
 
 export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon"> & { kind: "marker"; similarity: number };
@@ -48,12 +48,12 @@ export type AllMapObjectsPick = z.infer<typeof allMapObjectsPickValidator>;
 
 export type AllMapObjectsTypes = {
 	mapData: { type: "mapData"; data: MapDataWithWritable };
-	types: { type: "types", data: AsyncGenerator<Type, void, undefined> };
-	views: { type: "views", data: AsyncGenerator<View, void, undefined> };
-	markers: { type: "markers", data: AsyncGenerator<Marker, void, undefined> };
-	lines: { type: "lines", data: AsyncGenerator<Line, void, undefined> };
-	linesWithTrackPoints: { type: "lines", data: AsyncGenerator<LineWithTrackPoints, void, undefined> };
-	linePoints: { type: "linePoints", data: AsyncGenerator<LinePoints, void, undefined> };
+	types: { type: "types", data: AsyncIterable<Type, void, undefined> };
+	views: { type: "views", data: AsyncIterable<View, void, undefined> };
+	markers: { type: "markers", data: AsyncIterable<Marker, void, undefined> };
+	lines: { type: "lines", data: AsyncIterable<Line, void, undefined> };
+	linesWithTrackPoints: { type: "lines", data: AsyncIterable<LineWithTrackPoints, void, undefined> };
+	linePoints: { type: "linePoints", data: AsyncIterable<LinePoints, void, undefined> };
 };
 
 export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = (

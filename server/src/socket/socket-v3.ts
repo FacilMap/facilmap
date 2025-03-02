@@ -20,7 +20,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	api: ApiV3Backend;
 
 	bbox: BboxWithZoom | undefined = undefined;
-	mapSubscriptions: Record<ID, Array<{ pick: SubscribeToMapPick[]; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	mapSubscriptions: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
 	routeSubscriptions: Record<string, Route & { routeId: string }> = { };
 
 	unregisterDatabaseHandlers = (): void => undefined;
@@ -347,9 +347,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					const mapData = await this.api.getMap(params.mapSlug);
 					routeInfo = await this.database.routes.lineToRoute(existingRoute?.routeId, mapData.id, params.lineId);
 				} else if (existingRoute) {
-					routeInfo = await this.database.routes.updateRoute(existingRoute.routeId, params.routePoints, params.mode);
+					routeInfo = await this.database.routes.updateRoute(existingRoute.routeId, [...params.routePoints], params.mode);
 				} else {
-					routeInfo = await this.database.routes.createRoute(params.routePoints, params.mode);
+					routeInfo = await this.database.routes.createRoute([...params.routePoints], params.mode);
 				}
 
 				if(!routeInfo) {

@@ -91,7 +91,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 			let responseBody: string | undefined = undefined;
 			try {
 				responseBody = await res.text();
-			} catch (err: any) {
+			} catch {
 				// Ignore
 			}
 

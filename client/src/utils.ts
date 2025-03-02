@@ -2,7 +2,7 @@ import type { EventHandler, EventName, TrackPoint, TrackPoints } from "facilmap-
 
 export type IterableType<I extends AsyncIterable<any>> = I extends AsyncIterable<infer T> ? T : never;
 
-export async function* flatMapAsyncIterable<I extends AsyncIterable<any>, O>(iterable: I, mapper: (it: IterableType<I>) => (O[] | Promise<O[]>)): AsyncGenerator<O, void, undefined> {
+export async function* flatMapAsyncIterable<I extends AsyncIterable<any>, O>(iterable: I, mapper: (it: IterableType<I>) => (O[] | Promise<O[]>)): AsyncIterable<O, void, undefined> {
 	for await (const it of iterable) {
 		for (const o of await mapper(it)) {
 			yield o;
@@ -10,7 +10,7 @@ export async function* flatMapAsyncIterable<I extends AsyncIterable<any>, O>(ite
 	}
 }
 
-export function mapAsyncIterable<I extends AsyncIterable<any>, O>(iterable: I, mapper: (it: IterableType<I>) => (O | Promise<O>)): AsyncGenerator<O, void, undefined> {
+export function mapAsyncIterable<I extends AsyncIterable<any>, O>(iterable: I, mapper: (it: IterableType<I>) => (O | Promise<O>)): AsyncIterable<O, void, undefined> {
 	return flatMapAsyncIterable(iterable, async (it) => [await mapper(it)]);
 }
 
@@ -25,7 +25,7 @@ export async function iterableToArray<I extends AsyncIterable<any>>(iterable: I)
 export function mapNestedIterable<I extends AsyncIterable<{ type: string; data: any }>, O extends { type: string; data: any }>(
 	iterable: I,
 	mapper: (obj: Exclude<IterableType<I>, { type: "mapData" }>) => O | Promise<O>
-): AsyncGenerator<IterableType<I> extends { type: "mapData" } ? IterableType<I> : O, void, undefined> {
+): AsyncIterable<IterableType<I> extends { type: "mapData" } ? IterableType<I> : O, void, undefined> {
 	return mapAsyncIterable(iterable, async (obj) => {
 		return obj.type === "mapData" ? obj as any : await mapper(obj as any);
 	});

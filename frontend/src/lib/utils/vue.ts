@@ -140,7 +140,7 @@ export const vHtmlAsync: Directive<Element, Promise<string>> = (el, binding) => 
 };
 
 export class VueReactiveObjectProvider extends DefaultReactiveObjectProvider {
-	override create<T extends Record<any, any>>(object: T): T {
+	override makeReactive<T extends Record<any, any>>(object: T): T {
 		return reactive(object);
 	}
 }

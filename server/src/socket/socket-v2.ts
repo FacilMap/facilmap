@@ -39,10 +39,13 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 	readId: MapSlug | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
 	writable: Writable | undefined = undefined;
-	route: Omit<Route, "trackPoints"> | undefined = undefined;
-	routes: Record<string, Omit<Route, "trackPoints">> = { };
+	routes: Record<string, Route> = { };
 	listeningToHistory = false;
 	pauseHistoryListener = 0;
+
+	eventInterceptors: Array<(...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => boolean | void> = [];
+
+	routeAborts: Record<string, AbortController> = {};
 
 	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void, database: Database, remoteAddr: string) {
 		this.socketV3 = new SocketConnectionV3((...args) => {
@@ -52,9 +55,13 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				this.streams[args[1]].close().catch(() => undefined);
 			} else if (args[0] === "streamError") {
 				this.streams[args[1]].abort(deserializeError(args[1])).catch(() => undefined);
+			} else if (args[0] === "route") {
+				this.routes[args[1]] = args[2];
 			} else {
 				for (const ev of this.prepareEvent(...args)) {
-					emit(...ev);
+					if (!this.eventInterceptors.some((interceptor) => interceptor(...ev))) {
+						emit(...ev);
+					}
 				}
 			}
 		}, database, remoteAddr);
@@ -89,6 +96,12 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			}]];
 		} else if (args[0] === "deleteMarker" || args[0] === "deleteLine" || args[0] == "deleteType" || args[0] === "deleteView") {
 			return [[args[0], args[2]]];
+		} else if (args[0] === "routePoints" && args[2].reset) {
+			if (args[1] === "") {
+				return [["routePoints", args[2].trackPoints]];
+			} else {
+				return [["routePointsWithId", { routeId: args[1], trackPoints: args[2].trackPoints }]];
+			}
 		} else {
 			return [];
 		}
@@ -140,6 +153,30 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 		const stream = new TransformStream();
 		this.streams[streamId] = stream.writable.getWriter();
 		return stream.readable;
+	}
+
+	/**
+	 * Pauses the emission of the specified event types while the (async) callback is running and returns all the intercepted events at the end.
+	 */
+	async interceptEvents(eventTypes: Array<keyof SocketEvents<SocketVersion.V2>> | ((...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => boolean), callback: () => Promise<void>): Promise<MultipleEvents<SocketEvents<SocketVersion.V2>>> {
+		const events: MultipleEvents<SocketEvents<SocketVersion.V2>> = {};
+		const interceptor = (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => {
+			if (typeof eventTypes === "function" ? eventTypes(...args) : eventTypes.includes(args[0])) {
+				if (!events[args[0]]) {
+					events[args[0]] = [];
+				}
+				(events as any)[args[0]].push(args.slice(1));
+				return true;
+			}
+		};
+		this.eventInterceptors.push(interceptor);
+
+		try {
+			await callback();
+			return events;
+		} finally {
+			this.eventInterceptors = this.eventInterceptors.filter((i) => i !== interceptor);
+		}
 	}
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V2> {
@@ -359,30 +396,24 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 				this.mapSlug = mapSlug;
 
-				let results;
-				try {
-					results = await socketHandlersV3.subscribeToMap(mapSlug);
-				} catch (err: any) {
-					if (err.status === 404) {
-						this.mapSlug = undefined;
-						throw Object.assign(new Error(getI18n().t("socket.map-not-exist-error")), {
-							name: "PadNotFoundError"
-						});
-					} else {
-						throw err;
+				const multiple = await this.interceptEvents(["padData", "marker", "line", "linePoints", "type", "view"], async () => {
+					try {
+						await socketHandlersV3.subscribeToMap(mapSlug);
+					} catch (err: any) {
+						if (err.status === 404) {
+							this.mapSlug = undefined;
+							throw Object.assign(new Error(getI18n().t("socket.map-not-exist-error")), {
+								name: "PadNotFoundError"
+							});
+						} else {
+							throw err;
+						}
 					}
-				}
-
-				const multiple = await this.prepareAllMapObjects(results);
+				});
 
 				const mapData = multiple.padData![0];
 				this.readId = mapData.id;
 				this.writable = mapData.writable;
-
-				// const result = await socketHandlersV3.getAllMapObjects(mapSlug, {
-				// 	pick: ["mapData", "views", "types", "lines", ...this.bbox ? ["markers" as const, "linePoints" as const] : []],
-				// 	bbox: this.bbox
-				// });
 
 				return multiple;
 			},
@@ -418,8 +449,9 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			},
 
 			updateBbox: async (bbox) => {
-				const results = await socketHandlersV3.setBbox(bbox);
-				return await this.prepareAllMapObjects(results);
+				return await this.interceptEvents(["marker", "linePoints", "routePoints"], async () => {
+					await socketHandlersV3.setBbox(bbox);
+				});
 			},
 
 			revertHistoryEntry: async (entry) => {
@@ -441,11 +473,25 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 			setRoute: async (data) => {
 				const { routeId, routePoints, mode } = data;
-				const result = await socketHandlersV3.subscribeToRoute(routeId ?? "", { routePoints, mode });
-				return result && { ...result, routeId };
+
+				this.routeAborts[routeId ?? ""]?.abort();
+				const abort = this.routeAborts[routeId ?? ""] = new AbortController();
+
+				await socketHandlersV3.subscribeToRoute(routeId ?? "", { routePoints, mode });
+
+				if (!abort.signal.aborted) {
+					return {
+						...this.routes[routeId ?? ""],
+						...(routeId ? { routeId } : {})
+					};
+				}
 			},
 
 			clearRoute: async (data) => {
+				const { routeId } = data ?? {};
+
+				this.routeAborts[routeId ?? ""]?.abort();
+				delete this.routes[routeId ?? ""];
 				await socketHandlersV3.unsubscribeFromRoute(data?.routeId ?? "");
 			},
 
@@ -455,8 +501,17 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				}
 
 				const { id, routeId } = data;
-				const result = await socketHandlersV3.subscribeToRoute(routeId ?? "", { mapSlug: this.mapSlug, lineId: id });
-				return result && { ...result, routeId };
+				this.routeAborts[routeId ?? ""]?.abort();
+				const abort = this.routeAborts[routeId ?? ""] = new AbortController();
+
+				await socketHandlersV3.subscribeToRoute(routeId ?? "", { mapSlug: this.mapSlug, lineId: id });
+
+				if (!abort.signal.aborted) {
+					return {
+						...this.routes[routeId ?? ""],
+						...(routeId ? { routeId } : {})
+					};
+				}
 			},
 
 			exportRoute: async (data) => {

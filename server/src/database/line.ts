@@ -227,7 +227,7 @@ export default class DatabaseLines {
 
 		const update = resolveUpdateLine(originalLine, data, newType);
 
-		let routeInfo: RouteInfo | undefined;
+		let routeInfo: (RouteInfo & { trackPoints: TrackPoint[] }) | undefined;
 		if((update.mode == "track" && update.trackPoints) || (update.routePoints && !isEqual(update.routePoints, originalLine.routePoints)) || (update.mode != null && update.mode != originalLine.mode))
 			routeInfo = await calculateRouteForLine({ ...originalLine, ...update }, options?.trackPointsFromRoute);
 

@@ -36,7 +36,7 @@
   "dependencies": {
     "content-disposition": "^0.5.4",
     "facilmap-types": "workspace:^",
-    "json-stream-es": "^1.2.0",
+    "json-stream-es": "^1.2.1",
     "serialize-error": "^12.0.0",
     "socket.io-client": "^4.8.1"
   },
@@ -47,6 +47,6 @@
     "typescript": "^5.7.3",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.0",
-    "vitest": "^1.6.0"
+    "vitest": "^3.0.7"
   }
 }

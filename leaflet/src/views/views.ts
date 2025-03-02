@@ -37,7 +37,7 @@ export function displayView(map: Map, view?: DeepReadonly<PartialView> | null, {
 
 	setVisibleLayers(map, {
 		baseLayer: view.baseLayer,
-		overlays: [...view.layers]
+		overlays: [...view.layers ?? []]
 	});
 
 	if (overpassLayer)

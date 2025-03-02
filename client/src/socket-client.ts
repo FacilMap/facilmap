@@ -37,9 +37,12 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	operationStart: [];
 	operationEnd: [];
 
-	emit: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, ...Parameters<SocketApi<SocketVersion.V3, false>[E]>] }[keyof SocketApi<SocketVersion.V3, false>];
-	emitResolve: { [E in keyof SocketApi<SocketVersion.V3, false>]: [E, UndefinedToNull<Awaited<ReturnType<SocketApi<SocketVersion.V3, false>[E]>>>] }[keyof SocketApi<SocketVersion.V3, false>];
-	emitReject: [keyof SocketApi<SocketVersion.V3, false>, Error];
+	emit: {
+		[E in keyof SocketApi<SocketVersion.V3, false>]: [E, {
+			args: Parameters<SocketApi<SocketVersion.V3, false>[E]>;
+			result: ReturnType<SocketApi<SocketVersion.V3, false>[E]>;
+		}]
+	}[keyof SocketApi<SocketVersion.V3, false>];
 }
 
 export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
@@ -66,6 +69,8 @@ interface ClientData {
 	state: DeepReadonly<ClientState>;
 	server: string;
 	bbox: DeepReadonly<BboxWithZoom> | undefined;
+	mapSubscriptions: Record<MapSlug, SocketClientMapSubscription>;
+	routeSubscriptions: Record<string, SocketClientRouteSubscription>;
 	runningOperations: number;
 }
 
@@ -83,20 +88,20 @@ export interface SocketClient extends Readonly<ClientData> {
 	// Getters are created in constructor
 }
 
-export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiVersion.V3, false>, Omit<Promise<SocketClient>, typeof Symbol.toStringTag> {
+export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiVersion.V3, false> {
 	reactiveObjectProvider: ReactiveObjectProvider;
+	connectPromise: Promise<this>;
 
 	protected socket: SocketIO<SocketServerToClientEvents<SocketVersion.V3>, SocketClientToServerEvents<SocketVersion.V3, false>>;
 	protected data: ClientData;
 	protected streams: Record<string, StreamHandler> = {};
-	protected connectPromise: Promise<void>;
 
 	constructor(server: string, options?: Partial<ManagerOptions & SocketOptions & { reactiveObjectProvider?: ReactiveObjectProvider }>) {
 		super();
 
 		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
 
-		this.data = this.reactiveObjectProvider.create({
+		this.data = this.reactiveObjectProvider.makeReactive({
 			state: { type: ClientStateType.INITIAL },
 			server,
 			bbox: undefined,
@@ -134,7 +139,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			};
 			this.on("connect", handleConnect);
 			this.on("fatalError", handleFatalError);
-		});
+		}).then(() => this);
 
 		void Promise.resolve().then(() => {
 			this._emit("operationStart");
@@ -142,18 +147,6 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		}).finally(() => {
 			this._emit("operationEnd");
 		});
-	}
-
-	then<T1 = this, T2 = never>(onfulfilled?: ((value: this) => T1 | PromiseLike<T1>) | undefined | null, onrejected?: ((reason: any) => T2 | PromiseLike<T2>) | undefined | null): Promise<T1 | T2> {
-		return this.connectPromise.then(() => this).then(onfulfilled, onrejected);
-	}
-
-	catch<T = never>(onrejected?: ((reason: any) => T | PromiseLike<T>) | undefined | null): Promise<this | T> {
-		return this.connectPromise.then(() => this).catch(onrejected);
-	}
-
-	finally(onfinally?: (() => void) | undefined | null): Promise<this> {
-		return this.connectPromise.then(() => this).finally(onfinally);
 	}
 
 	protected _decodeData(data: Record<string, string>): Record<string, string> {
@@ -226,7 +219,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return this._getStream(streamId).readable;
 	}
 
-	protected _handleIterable<S extends StreamId<any>>(streamId: S): AsyncGenerator<S extends StreamId<infer T> ? T : never, void, undefined> {
+	protected _handleIterable<S extends StreamId<any>>(streamId: S): AsyncIterable<S extends StreamId<infer T> ? T : never, void, undefined> {
 		return streamToIterable(this._handleStream(streamId));
 	}
 
@@ -250,22 +243,20 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		try {
 			this._emit("operationStart");
 
-			this._emit("emit", eventName as any, args as any);
-
 			const outerError = new Error();
-			return await new Promise((resolve, reject) => {
+			let result = new Promise<any>((resolve, reject) => {
 				this.socket.emit(eventName as any, ...args, (err: any, data: any) => {
 					if(err) {
 						const cause = deserializeError(err);
 						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
-						this._emit("emitReject", eventName as any, err);
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);
 						resolve(fixedData);
-						this._emit("emitResolve", eventName as any, fixedData);
 					}
 				});
 			});
+			this._emit("emit", eventName as any, { args: args as any, result });
+			return await result;
 		} finally {
 			this._emit("operationEnd");
 		}
@@ -331,7 +322,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("getMap", mapSlug);
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncGenerator<AllAdminMapObjectsItem<Pick>, void, undefined>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>, void, undefined>> {
 		const result = await this._call("createMap", data, options);
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllAdminMapObjectsItem<Pick>));
 	}
@@ -344,7 +335,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("deleteMap", mapSlug);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncGenerator<AllMapObjectsItem<Pick>, void, undefined>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
 		const result = await this._call("getAllMapObjects", mapSlug, options);
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllMapObjectsItem<Pick>));
 	}
@@ -387,7 +378,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
 		const result = await this._call("getMapLines", mapSlug, options);
 		return {
-			results: this._handleIterable(result.results) as AsyncGenerator<IncludeTrackPoints extends true ? LineWithTrackPoints : Line, void, undefined>
+			results: this._handleIterable(result.results) as AsyncIterable<IncludeTrackPoints extends true ? LineWithTrackPoints : Line, void, undefined>
 		};
 	}
 
@@ -492,13 +483,20 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	}
 
 	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription {
-		return new SocketClientMapSubscription(this, mapSlug, {
+		if (this.data.mapSubscriptions[mapSlug]) {
+			throw new Error(`There is already a subscription to map ${mapSlug}.`);
+		}
+
+		const subscription = new SocketClientMapSubscription(this, mapSlug, {
 			reactiveObjectProvider: this.reactiveObjectProvider,
 			...options
 		});
+		this.reactiveObjectProvider.set(this.data.mapSubscriptions, mapSlug, this.reactiveObjectProvider.makeUnreactive(subscription));
+		return subscription;
 	}
 
 	async _unsubscribeFromMap(mapSlug: MapSlug): Promise<void> {
+		this.reactiveObjectProvider.delete(this.data.mapSubscriptions, mapSlug);
 		await this._call("unsubscribeFromMap", mapSlug);
 	}
 
@@ -507,13 +505,20 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	}
 
 	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription {
-		return new SocketClientRouteSubscription(this, routeKey, {
+		if (this.data.routeSubscriptions[routeKey]) {
+			throw new Error(`There is already a subscription to route ${routeKey}.`);
+		}
+
+		const subscription = new SocketClientRouteSubscription(this, routeKey, {
 			reactiveObjectProvider: this.reactiveObjectProvider,
 			...params
 		});
+		this.reactiveObjectProvider.set(this.data.routeSubscriptions, routeKey, this.reactiveObjectProvider.makeUnreactive(subscription));
+		return subscription;
 	}
 
 	async _unsubscribeFromRoute(routeKey: string): Promise<void> {
+		this.reactiveObjectProvider.delete(this.data.routeSubscriptions, routeKey);
 		await this._call("unsubscribeFromRoute", routeKey);
 	}
 

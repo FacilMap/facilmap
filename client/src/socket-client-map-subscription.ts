@@ -1,7 +1,7 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LinePoints, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
-import { mergeEventHandlers, mergeTrackPoints } from "./utils";
+import { mergeEventHandlers } from "./utils";
 import { SocketClientSubscription, type SubscriptionState } from "./socket-client-subscription";
 
 type SocketClientMapSubscriptionInterface = {
@@ -26,11 +26,6 @@ declare global {
 	}
 }
 
-const test: WritableStream<{ a: string }> = new WritableStream<{ a: string; b: string }>();
-
-const writable = new WritableStream<{ a: string; b: string }>();
-void new ReadableStream<{ a: string }>().pipeTo(writable); // No error
-
 export enum MapSubscriptionStateType {
 	/** The map has been deleted. */
 	DELETED = "deleted"
@@ -43,12 +38,6 @@ export interface MapSubscriptionData {
 	state: DeepReadonly<MapSubscriptionState>,
 	mapSlug: MapSlug;
 	options: DeepReadonly<SubscribeToMapOptions>;
-	mapData: DeepReadonly<MapDataWithWritable> | undefined;
-	markers: Record<ID, DeepReadonly<Marker>>;
-	lines: Record<ID, DeepReadonly<LineWithTrackPoints>>;
-	views: Record<ID, DeepReadonly<View>>;
-	types: Record<ID, DeepReadonly<Type>>;
-	history: Record<ID, DeepReadonly<HistoryEntry>>;
 };
 
 export interface SocketClientMapSubscription extends Readonly<MapSubscriptionData> {
@@ -64,13 +53,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		super(client, {
 			reactiveObjectProvider,
 			mapSlug,
-			options: mapOptions,
-			mapData: undefined,
-			markers: {},
-			lines: {},
-			types: {},
-			views: {},
-			history: {}
+			options: mapOptions
 		});
 	}
 
@@ -87,74 +70,6 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client._unsubscribeFromMap(this.mapSlug);
 	}
 
-	storeMapData(mapData: MapDataWithWritable): void {
-		this.reactiveObjectProvider.set(this.data, "mapData", mapData);
-	}
-
-	storeMarker(marker: Marker): void {
-		this.reactiveObjectProvider.set(this.data.markers, marker.id, marker);
-	}
-
-	clearMarker(markerId: ID): void {
-		this.reactiveObjectProvider.delete(this.data.markers, markerId);
-	}
-
-	storeLine(line: Line): void {
-		this.reactiveObjectProvider.set(this.data.lines, line.id, {
-			...line,
-			trackPoints: this.data.lines[line.id]?.trackPoints || { length: 0 }
-		});
-	}
-
-	storeLinePoints(linePoints: LinePoints, reset: boolean): void {
-		const line = this.data.lines[linePoints.lineId];
-		if (!line) {
-			console.error(`Received line points for non-existing line ${linePoints.lineId}.`);
-			return;
-		}
-
-		this.reactiveObjectProvider.set(this.data.lines, linePoints.lineId, {
-			...line,
-			trackPoints: mergeTrackPoints(reset ? {} : line.trackPoints, linePoints.trackPoints)
-		});
-	}
-
-	clearLine(lineId: ID): void {
-		this.reactiveObjectProvider.delete(this.data.lines, lineId);
-	}
-
-	storeType(type: Type): void {
-		this.reactiveObjectProvider.set(this.data.types, type.id, type);
-	}
-
-	clearType(typeId: ID): void {
-		this.reactiveObjectProvider.delete(this.data.types, typeId);
-	}
-
-	storeView(view: View): void {
-		this.reactiveObjectProvider.set(this.data.views, view.id, view);
-	}
-
-	clearView(viewId: ID): void {
-		this.reactiveObjectProvider.delete(this.data.views, viewId);
-		if(this.data.mapData?.defaultViewId === viewId) {
-			this.reactiveObjectProvider.set(this.data, "mapData", {
-				...this.data.mapData!,
-				defaultView: null,
-				defaultViewId: null
-			});
-		}
-	}
-
-	storeHistoryEntry(historyEntry: HistoryEntry): void {
-		this.reactiveObjectProvider.set(this.data.history, historyEntry.id, historyEntry);
-		// TODO: Limit to 50 entries
-	}
-
-	clearHistoryEntry(historyEntryId: ID): void {
-		this.reactiveObjectProvider.delete(this.data.history, historyEntryId);
-	}
-
 	protected _getEventHandlers(): {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} {
@@ -165,75 +80,9 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 				}
 			},
 
-			mapData: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeMapData(data);
-				}
-			},
-
 			deleteMap: (mapSlug) => {
 				if (mapSlug === this.data.mapSlug) {
 					this.reactiveObjectProvider.set(this.data, "state", { type: MapSubscriptionStateType.DELETED });
-				}
-			},
-
-			marker: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeMarker(data);
-				}
-			},
-
-			deleteMarker: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.clearMarker(data.id);
-				}
-			},
-
-			line: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeLine(data);
-				}
-			},
-
-			deleteLine: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.clearLine(data.id);
-				}
-			},
-
-			linePoints: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeLinePoints(data, data.reset);
-				}
-			},
-
-			view: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeView(data);
-				}
-			},
-
-			deleteView: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.clearView(data.id);
-				}
-			},
-
-			type: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeType(data);
-				}
-			},
-
-			deleteType: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.clearType(data.id);
-				}
-			},
-
-			history: (mapSlug, data) => {
-				if (mapSlug === this.data.mapSlug) {
-					this.storeHistoryEntry(data);
 				}
 			}
 		});
@@ -251,7 +100,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.deleteMap(this.data.mapSlug);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncGenerator<AllMapObjectsItem<Pick>, void, undefined>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
 		return await this.client.getAllMapObjects(this.data.mapSlug, options);
 	}
 

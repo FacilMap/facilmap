@@ -4,7 +4,7 @@ import { DefaultReactiveObjectProvider, _defineDynamicGetters } from "../reactiv
 test("_defineDynamicGetters", () => {
 	const reactiveObjectProvider = new DefaultReactiveObjectProvider();
 
-	const data = reactiveObjectProvider.create<any>({
+	const data = reactiveObjectProvider.makeReactive<any>({
 		test1: "test 1"
 	});
 
