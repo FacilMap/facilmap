@@ -70,6 +70,7 @@ export const fieldValidator = cruValidator({
 	controlShape: z.boolean().optional(),
 	controlWidth: z.boolean().optional(),
 	controlStroke: z.boolean().optional(),
+	showInLegend: z.boolean().optional(),
 
 	options: {
 		read: fieldOptionsValidator.read.optional(),

@@ -25,6 +25,14 @@ export function canControl<T extends Marker | Line = Marker | Line>(type: Type<C
 	}) as Array<T extends any ? keyof T : never>;
 }
 
+export function getDefaultFieldShowInLegend(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: Field): boolean {
+	return !!(
+		field.controlColour ||
+		(type.type === "marker" && (field.controlIcon || field.controlShape)) ||
+		(type.type === "line" && (field.controlWidth || field.controlStroke))
+	);
+}
+
 export function getSelectedOption(field: Field, value: string | undefined, ignoreDefault = false): FieldOption | undefined {
 	const get = (val: string) => {
 		if (field.type === "dropdown") {

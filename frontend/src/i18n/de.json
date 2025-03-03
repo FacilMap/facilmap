@@ -230,6 +230,7 @@
         "control-shape": "Form {{type}} kontrollieren",
         "control-width": "Dicke {{type}} kontrollieren",
         "control-stroke": "Kontur {{type}} kontrollieren",
+        "show-in-legend": "In der Legende anzeigen",
         "option": "Option",
         "label": "Bezeichnung (für Legende)",
         "colour": "Farbe",

@@ -1,6 +1,6 @@
 import type { ID, Shape, Stroke, Icon, Type } from "facilmap-types";
 import { iconList } from "facilmap-leaflet";
-import { formatTypeName, getOrderedTypes, isBright } from "facilmap-utils";
+import { formatTypeName, getDefaultFieldShowInLegend, getOrderedTypes, isBright } from "facilmap-utils";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -80,13 +80,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 		for (const field of type.fields) {
 			if (
 				(field.type != "dropdown" && field.type != "checkbox") ||
-				(
-					!field.controlColour &&
-					!(type.type === "marker" && field.controlIcon) &&
-					!(type.type === "marker" && field.controlShape) &&
-					!(type.type === "line" && field.controlWidth) &&
-					!(type.type === "line" && field.controlStroke)
-				)
+				!(field.showInLegend ?? getDefaultFieldShowInLegend(type, field))
 			)
 				continue;
 

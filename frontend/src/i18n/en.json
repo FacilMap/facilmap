@@ -232,6 +232,7 @@
         "control-shape": "Control {{type}} shape",
         "control-width": "Control {{type}} width",
         "control-stroke": "Control {{type}} stroke",
+        "show-in-legend": "Show in legend",
         "option": "Option",
         "label": "Label (for legend)",
         "colour": "Colour",
