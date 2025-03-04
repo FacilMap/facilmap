@@ -12,7 +12,7 @@ const coreIcons = [
 	"arrow-left", "arrow-right", "car", "check", "circle-info", "cog", "copy", "info-sign",
 	"menu-hamburger", "minus", "new-window", "person-biking", "person-walking", "plus",
 	"question-sign", "qrcode", "remove", "resize-horizontal", "resize-vertical", "screenshot",
-	"search", "slash", "triangle-bottom", "triangle-top", "unchecked", "zoom-in"
+	"search", "slash", "trash", "triangle-bottom", "triangle-top", "unchecked", "zoom-in"
 ];
 
 async function getIconFilenames(): Promise<Record<string, Record<string, string>>> {
