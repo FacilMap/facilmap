@@ -51,8 +51,8 @@
 			"square"
 		),
 		iconTooltip: (
-			!feature.new ? i18n.t("changeset-results.created-tooltip") :
-			!feature.old ? i18n.t("changeset-results.deleted-tooltip") :
+			!feature.new ? i18n.t("changeset-results.deleted-tooltip") :
+			!feature.old ? i18n.t("changeset-results.created-tooltip") :
 			i18n.t("changeset-results.modified-tooltip")
 		),
 		className: (
