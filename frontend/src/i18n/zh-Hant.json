@@ -1,4 +1,7 @@
 {
+    "common": {
+        "coordinates": "座標"
+    },
     "about-dialog": {
         "header": "關於 FacilMap {{version}}",
         "help-text-documentation": "文件",
@@ -236,9 +239,6 @@
     "manage-views-dialog": {
         "reorder-alt": "重新排序"
     },
-    "marker-info": {
-        "coordinates": "座標"
-    },
     "modal-dialog": {
         "close": "關閉",
         "cancel": "取消",
@@ -256,9 +256,6 @@
     },
     "open-map-dialog": {
         "search-alt": "搜尋"
-    },
-    "overpass-info": {
-        "coordinates": "座標"
     },
     "save-view-dialog": {
         "save-view-error": "儲存檢視時發生錯誤",
@@ -278,7 +275,6 @@
     },
     "search-result-info": {
         "zoom-to-result-label": "縮放至搜尋結果",
-        "coordinates": "座標",
         "address": "地址",
         "type": "類型"
     },

@@ -92,7 +92,7 @@
 			</span>
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
-			<dt class="pos">{{i18n.t("marker-info.coordinates")}}</dt>
+			<dt class="pos">{{i18n.t("common.coordinates")}}</dt>
 			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele" :zoom="props.zoom"></Coordinates></dd>
 
 			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">

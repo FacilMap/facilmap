@@ -59,7 +59,7 @@
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="feature.type === 'node'">
-				<dt>{{i18n.t("changeset-feature-info.coordinates")}}</dt>
+				<dt>{{i18n.t("common.coordinates")}}</dt>
 				<dd>
 					<ChangesetOldNew
 						:oldValue="feature.old && { lat: feature.old.lat, lon: feature.old.lon }"
@@ -98,7 +98,7 @@
 										:href="`https://www.openstreetmap.org/${encodeURIComponent(slotProps.value.type)}/${encodeURIComponent(slotProps.value.id)}`"
 										target="_blank"
 										v-tooltip="i18n.t('changeset-feature-info.openstreetmap-tooltip')"
-									>{{getOsmObjectLabel(slotProps.value.type, slotProps.value.id)}} <Icon icon="new-window"></Icon></a>
+									>{{getOsmObjectLabel(slotProps.value.type, slotProps.value.id)}} <Icon icon="new-window" size="1em"></Icon></a>
 								</template>
 							</ChangesetOldNew>
 							<template v-if="member.oldValue?.role || member.newValue?.role">
@@ -123,7 +123,7 @@
 				:href="`https://www.openstreetmap.org/${encodeURIComponent(feature.type)}/${encodeURIComponent(feature.id)}`"
 				target="_blank"
 				v-tooltip="i18n.t('changeset-feature-info.openstreetmap-tooltip')"
-			>OpenStreetMap <Icon icon="new-window"></Icon></a>
+			>OpenStreetMap <Icon icon="new-window" size="1em"></Icon></a>
 		</div>
 	</div>
 </template>

@@ -1,4 +1,7 @@
 {
+    "general": {
+        "coordinates": "Coordenadas"
+    },
     "about-dialog": {
         "license-text-license": "Licencia Pública General Affero de GNU, versión 3",
         "help-text-documentation": "documentación",
@@ -525,7 +528,6 @@
         "delete": "Eliminar",
         "delete-marker-error": "Error al eliminar el indicador",
         "delete-marker-ok": "Eliminar",
-        "coordinates": "Coordenadas",
         "actions": "Acciones",
         "delete-marker-title": "Eliminar indicador",
         "edit-data": "Editar datos",
@@ -596,7 +598,6 @@
     "search-result-info": {
         "address": "Dirección",
         "type": "Tipo",
-        "coordinates": "Coordenadas",
         "zoom-to-result-label": "Zum a resultado de búsqueda"
     },
     "share-dialog": {
@@ -820,7 +821,6 @@
         "close": "Cerrar"
     },
     "overpass-info": {
-        "coordinates": "Coordenadas",
         "zoom-to-object-label": "Zum a PDI"
     },
     "overpass-form-tab": {

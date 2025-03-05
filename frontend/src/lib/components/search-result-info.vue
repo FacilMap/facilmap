@@ -69,7 +69,7 @@
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
 			<template v-if="result.lat != null && result.lon != null">
-				<dt class="pos">{{i18n.t("search-result-info.coordinates")}}</dt>
+				<dt class="pos">{{i18n.t("common.coordinates")}}</dt>
 				<dd class="pos"><Coordinates :point="result as Point" :ele="result.elevation" :zoom="props.zoom"></Coordinates></dd>
 			</template>
 

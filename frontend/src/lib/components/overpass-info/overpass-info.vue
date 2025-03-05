@@ -48,7 +48,7 @@
 			{{formatPOIName(element.tags.name)}}
 		</h2>
 		<dl class="fm-search-box-collapse-point fm-search-box-dl">
-			<dt>{{i18n.t("overpass-info.coordinates")}}</dt>
+			<dt>{{i18n.t("common.coordinates")}}</dt>
 			<dd><Coordinates :point="element" :zoom="props.zoom"></Coordinates></dd>
 
 			<template v-for="(value, key) in element.tags" :key="key">

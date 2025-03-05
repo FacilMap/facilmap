@@ -110,17 +110,17 @@
 					<h2>{{i18n.t("changeset-results.heading", { id: props.changeset.changeset.id })}}</h2>
 					<dl class="fm-search-box-dl">
 						<dt>{{i18n.t("changeset-results.created")}}</dt>
-						<dd>{{props.changeset.changeset.created_at}}</dd>
+						<dd>{{props.changeset.changeset.created_at.toISOString().replace(".000", "")}}</dd>
 
 						<dt>{{i18n.t("changeset-results.closed")}}</dt>
-						<dd>{{props.changeset.changeset.closed_at}}</dd>
+						<dd>{{props.changeset.changeset.closed_at.toISOString().replace(".000", "")}}</dd>
 
 						<dt>{{i18n.t("changeset-results.user")}}</dt>
 						<dd>
 							<a
 								:href="`https://www.openstreetmap.org/user/${encodeURIComponent(props.changeset.changeset.user)}`"
 								target="_blank"
-							>{{props.changeset.changeset.user}} <Icon icon="new-window"></Icon></a>
+							>{{props.changeset.changeset.user}} <Icon icon="new-window" size="1em"></Icon></a>
 						</dd>
 
 						<template v-for="(value, key) in props.changeset.changeset.tags" :key="key">
@@ -167,6 +167,13 @@
 						size="sm"
 						:destination="zoomDestination"
 					></ZoomToObjectButton>
+
+					<a
+						class="btn btn-secondary btn-sm"
+						:href="`https://www.openstreetmap.org/changeset/${encodeURIComponent(props.changeset.changeset.id)}`"
+						target="_blank"
+						v-tooltip="i18n.t('changeset-results.openstreetmap-tooltip')"
+					>OpenStreetMap <Icon icon="new-window" size="1em"></Icon></a>
 				</div>
 			</div>
 

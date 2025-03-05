@@ -1,4 +1,7 @@
 {
+    "common": {
+        "coordinates": "ஒருங்கிணைப்புகள்"
+    },
     "about-dialog": {
         "map-data-search": "தேடல்",
         "header": "FacilMap பற்றி {{version}}",
@@ -383,7 +386,6 @@
         "default-view": "இயல்புநிலை பார்வை"
     },
     "search-result-info": {
-        "coordinates": "ஒருங்கிணைப்புகள்",
         "type": "வகை",
         "address": "முகவரி",
         "zoom-to-result-label": "தேடல் முடிவுக்கு பெரிதாக்கு"
@@ -712,7 +714,6 @@
         "delete-marker-message": "“{{name}}” மார்க்கரை நீக்க விரும்புகிறீர்களா?",
         "delete-marker-ok": "நீக்கு",
         "delete-marker-error": "மார்க்கரை நீக்குவதில் பிழை",
-        "coordinates": "ஒருங்கிணைப்புகள்",
         "zoom-to-object-label": "மார்க்கருக்கு பெரிதாக்கு",
         "edit-data": "தரவைத் திருத்தவும்",
         "actions": "செயல்கள்",
@@ -754,7 +755,6 @@
         "tab-label_other": "{{count}} pois"
     },
     "overpass-info": {
-        "coordinates": "ஒருங்கிணைப்புகள்",
         "zoom-to-object-label": "போயுக்கு பெரிதாக்கு"
     },
     "overpass-multiple-info": {

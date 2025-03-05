@@ -1,4 +1,7 @@
 {
+    "common": {
+        "coordinates": "Coordinates"
+    },
     "about-dialog": {
         "header": "About FacilMap {{version}}",
         "license-text": "{{facilmap}} is available under the {{license}}.",
@@ -61,12 +64,12 @@
         "show-details-no-tag-changes-tooltip": "Show details (no tag changes)",
         "show-details-no-tag-member-changes-tooltip": "Show details (no tag/member changes)",
         "show-details-alt": "Details",
-        "zoom-to-changeset-label": "Zoom to changeset"
+        "zoom-to-changeset-label": "Zoom to changeset",
+        "openstreetmap-tooltip": "Open changeset on OpenStreetMap"
     },
     "changeset-feature-info": {
-        "coordinates": "Coordinates",
         "zoom-to-feature-label": "Zoom to feature",
-        "openstreetmap-tooltip": "Open on OpenStreetMap",
+        "openstreetmap-tooltip": "Open feature on OpenStreetMap",
         "members": "Members"
     },
     "click-marker-tab": {
@@ -577,7 +580,6 @@
         "delete-marker-message": "Do you really want to delete the marker “{{name}}”?",
         "delete-marker-ok": "Delete",
         "delete-marker-error": "Error deleting marker",
-        "coordinates": "Coordinates",
         "zoom-to-object-label": "Zoom to marker",
         "edit-data": "Edit data",
         "actions": "Actions",
@@ -633,7 +635,6 @@
         "tab-label_other": "{{count}} POIs"
     },
     "overpass-info": {
-        "coordinates": "Coordinates",
         "zoom-to-object-label": "Zoom to POI"
     },
     "overpass-multiple-info": {
@@ -704,7 +705,6 @@
         "make-default": "Make default view"
     },
     "search-result-info": {
-        "coordinates": "Coordinates",
         "type": "Type",
         "address": "Address",
         "zoom-to-result-label": "Zoom to search result"
