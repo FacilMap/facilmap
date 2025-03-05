@@ -22,7 +22,7 @@
 
 	const id = getUniqueId("fm-save-view");
 
-	const name = ref("");
+	const label = ref("");
 	const includeOverpass = ref(false);
 	const includeFilter = ref(false);
 	const makeDefault = ref(false);
@@ -48,7 +48,7 @@
 					includeFilter: includeFilter.value,
 					overpassLayer: includeOverpass.value ? mapContext.value.components.overpassLayer : undefined
 				}),
-				name: name.value
+				name: label.value
 			});
 
 			if (makeDefault.value) {

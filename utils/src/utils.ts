@@ -253,3 +253,42 @@ export function insertIdx<IDType>(objects: Array<{ id: IDType; idx: number }>, i
 
 	return result;
 }
+
+/**
+ * Can be used in the form of fetch(...).then(validateResponse) to throw an error if the fetch succeeded with a non-ok status code.
+ */
+export async function validateResponse(response: Response): Promise<Response> {
+	if (!response.ok) {
+		let body;
+		try {
+			body = await response.text();
+		} catch {
+			// Ignore
+		}
+		throw new Error(`Error loading ${response.url} (status ${response.status}${body ? `, body: ${body}` : ""})`);
+	}
+	return response;
+}
+
+export type OnProgress = {
+	signal?: AbortSignal;
+	onProgress?: (progress: number) => void;
+};
+
+export function scaleProgress(onProgress: OnProgress | undefined, min: number, max: number): OnProgress {
+	return {
+		signal: onProgress?.signal,
+		onProgress: onProgress?.onProgress && ((p) => onProgress.onProgress!(min + (p * (max - min))))
+	};
+}
+
+export function sendProgress(onProgress: OnProgress | undefined, progress: number): void {
+	onProgress?.signal?.throwIfAborted();
+	onProgress?.onProgress?.(progress);
+}
+
+export function getOsmFeatureName(tags: Record<string, string>, language: string): string | undefined {
+	const lowerTags = Object.fromEntries(Object.entries(tags).map(([k, v]) => [k.toLowerCase(), v]));
+	const lowerLang = language.toLowerCase();
+	return lowerTags[`name:${lowerLang}`] ?? tags[`name:${lowerLang.split("-")[0]}`] ?? tags.name;
+}

@@ -21,6 +21,7 @@ import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
+import ChangesetLayer from "facilmap-leaflet/src/changeset-layer";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -362,11 +363,24 @@ function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 	);
 }
 
-function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>, searchResultsLayer: Ref<SearchResultsLayer>, overpassLayer: Ref<OverpassLayer>): Ref<Raw<SelectionHandler>> {
+function useChangesetLayer(map: Ref<Map>): Ref<Raw<ChangesetLayer>> {
+	return useMapComponent(
+		map,
+		() => markRaw(new ChangesetLayer(undefined, { lineWidth: 7 })),
+		(changesetLayer, map) => {
+			changesetLayer.addTo(map);
+			onScopeDispose(() => {
+				changesetLayer.remove();
+			});
+		}
+	);
+}
+
+function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>, searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>, overpassLayer: Ref<OverpassLayer>): Ref<Raw<SelectionHandler>> {
 	return useMapComponent(
 		map,
 		() => {
-			const selectionHandler = markRaw(new SelectionHandler(map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, overpassLayer.value));
+			const selectionHandler = markRaw(new SelectionHandler(map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, changesetLayer.value, overpassLayer.value));
 
 			selectionHandler.on("fmChangeSelection", (event: any) => {
 				const selection = selectionHandler.getSelection();
@@ -448,7 +462,8 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const mousePosition = useMousePosition(map);
 	const overpassLayer = useOverpassLayer(map, mapContext);
 	const searchResultsLayer = useSearchResultsLayer(map);
-	const selectionHandler = useSelectionHandler(map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, overpassLayer);
+	const changesetLayer = useChangesetLayer(map);
+	const selectionHandler = useSelectionHandler(map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, changesetLayer, overpassLayer);
 	const hashHandler = useHashHandler(map, client, context, mapContext, overpassLayer);
 
 	const components: MapComponents = reactive({
@@ -463,6 +478,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 		mousePosition,
 		overpassLayer,
 		searchResultsLayer,
+		changesetLayer,
 		selectionHandler,
 		hashHandler,
 		container: innerContainerRef

@@ -1332,7 +1332,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/geojson@npm:*, @types/geojson@npm:^7946.0, @types/geojson@npm:^7946.0.14, @types/geojson@npm:^7946.0.16, @types/geojson@npm:^7946.0.7":
+"@types/geojson@npm:*, @types/geojson@npm:^7946.0, @types/geojson@npm:^7946.0.13, @types/geojson@npm:^7946.0.14, @types/geojson@npm:^7946.0.16, @types/geojson@npm:^7946.0.7":
   version: 7946.0.16
   resolution: "@types/geojson@npm:7946.0.16"
   checksum: d66e5e023f43b3e7121448117af1930af7d06410a32a585a8bc9c6bb5d97e0d656cd93d99e31fa432976c32e98d4b780f82bf1fd1acd20ccf952eb6b8e39edf2
@@ -4136,6 +4136,7 @@ __metadata:
     lodash-es: ^4.17.21
     markdown: ^0.5.0
     mitt: ^3.0.1
+    osm-api: ^2.4.0
     osmtogeojson: ^3.0.0-beta.5
     p-debounce: ^4.0.0
     p-throttle: ^7.0.0
@@ -4203,10 +4204,11 @@ __metadata:
     leaflet-auto-graticule: ^2.0.0
     leaflet-draggable-lines: ^3.2.1
     leaflet-freie-tonne: ^2.0.1
-    leaflet-highlightable-layers: ^3.0.1
+    leaflet-highlightable-layers: ^4.0.2
     leaflet.markercluster: ^1.5.3
     lodash-es: ^4.17.21
     node-fetch: ^3.3.2
+    osm-api: ^2.4.0
     rimraf: ^6.0.1
     rollup: ^4.34.8
     svgo: ^3.3.2
@@ -4353,6 +4355,7 @@ __metadata:
     linkifyjs: ^4.2.0
     lodash-es: ^4.17.21
     marked: ^15.0.7
+    osm-api: ^2.4.0
     p-throttle: ^7.0.0
     parse-gps-coordinates: ^1.0.0
     rimraf: ^6.0.1
@@ -4402,6 +4405,17 @@ __metadata:
   version: 3.0.6
   resolution: "fast-uri@npm:3.0.6"
   checksum: 7161ba2a7944778d679ba8e5f00d6a2bb479a2142df0982f541d67be6c979b17808f7edbb0ce78161c85035974bde3fa52b5137df31da46c0828cb629ba67c4e
+  languageName: node
+  linkType: hard
+
+"fast-xml-parser@npm:^4.4.1":
+  version: 4.5.3
+  resolution: "fast-xml-parser@npm:4.5.3"
+  dependencies:
+    strnum: ^1.1.1
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: cd6a184941ec6c23f9e6b514421a3f396cfdff5f4a8c7c27bd0eff896edb4a2b55c27da16f09b789663613dfc4933602b9b71ac3e9d1d2ddcc0492fc46c8fa52
   languageName: node
   linkType: hard
 
@@ -5734,12 +5748,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-highlightable-layers@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "leaflet-highlightable-layers@npm:3.0.1"
+"leaflet-highlightable-layers@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "leaflet-highlightable-layers@npm:4.0.2"
   peerDependencies:
     leaflet: x
-  checksum: 7f9478533eb86cf411f247b38a446c25d3530d077349896ba55527c9bb9300b4162ad6786a74b62ca103b8941c839336216412fd5fb03f120e247da3cb0946bf
+  checksum: dd0f29082f0e1962cfed413882bbbe5ea5eaacd97c2d96b3a861261d8cf32a678c3f83582d10bf2a9afd1afc2b53a07b5119f1e3bb666fe5d50c2cc956ec3793
   languageName: node
   linkType: hard
 
@@ -6572,6 +6586,16 @@ __metadata:
     type-check: ^0.4.0
     word-wrap: ^1.2.5
   checksum: ecbd010e3dc73e05d239976422d9ef54a82a13f37c11ca5911dff41c98a6c7f0f163b27f922c37e7f8340af9d36febd3b6e9cef508f3339d4c393d7276d716bb
+  languageName: node
+  linkType: hard
+
+"osm-api@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "osm-api@npm:2.4.0"
+  dependencies:
+    "@types/geojson": ^7946.0.13
+    fast-xml-parser: ^4.4.1
+  checksum: bfb922019e502dcf877367d00f1ec209c115b47720eba8c6d3601feaa4ef3891b1144402939c555c99d109a757eb0fed00eb1a7f519f7efe513d62c71c22b239
   languageName: node
   linkType: hard
 
@@ -8124,6 +8148,13 @@ __metadata:
   version: 3.1.1
   resolution: "strip-json-comments@npm:3.1.1"
   checksum: 492f73e27268f9b1c122733f28ecb0e7e8d8a531a6662efbd08e22cccb3f9475e90a1b82cab06a392f6afae6d2de636f977e231296400d0ec5304ba70f166443
+  languageName: node
+  linkType: hard
+
+"strnum@npm:^1.1.1":
+  version: 1.1.2
+  resolution: "strnum@npm:1.1.2"
+  checksum: a85219eda13e97151c95e343a9e5960eacfb0a0ff98104b4c9cb7a212e3008bddf0c9714c9c37c2e508be78e741a04afc80027c2dc18509d1b5ffd4c37191fc2
   languageName: node
   linkType: hard
 

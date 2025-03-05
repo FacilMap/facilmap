@@ -46,6 +46,7 @@
     "linkifyjs": "^4.2.0",
     "lodash-es": "^4.17.21",
     "marked": "^15.0.7",
+    "osm-api": "^2.4.0",
     "p-throttle": "^7.0.0",
     "parse-gps-coordinates": "^1.0.0"
   },

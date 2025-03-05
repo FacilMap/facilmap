@@ -5,7 +5,7 @@ import type { SelectedItem } from "./selection";
 import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery } from "facilmap-utils";
+import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type AnalyzedChangeset, type ChangesetFeature } from "facilmap-utils";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -16,6 +16,8 @@ export type ZoomDestination = {
 	zoom?: number;
 	bounds?: LatLngBounds;
 };
+
+const MAX_ZOOM = 15;
 
 export function getZoomDestinationForGeoJSON(geojson: DeepReadonly<Geometry>): ZoomDestination | undefined {
 	if (geojson.type == "GeometryCollection")
@@ -33,7 +35,7 @@ export function getZoomDestinationForGeoJSON(geojson: DeepReadonly<Geometry>): Z
 }
 
 export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker | OverpassElement): ZoomDestination {
-	return { center: latLng(marker.lat, marker.lon), zoom: 15 };
+	return { center: latLng(marker.lat, marker.lon), zoom: MAX_ZOOM };
 }
 
 export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
@@ -77,6 +79,34 @@ export function getZoomDestinationForResults(results: Array<SearchResult | FindO
 	);
 }
 
+export function getZoomDestinationForChangeset(changeset: AnalyzedChangeset): ZoomDestination {
+	return {
+		bounds: latLngBounds([
+			[changeset.changeset.min_lat, changeset.changeset.min_lon],
+			[changeset.changeset.max_lat, changeset.changeset.max_lon]
+		])
+	};
+}
+
+export function getZoomDestinationForChangesetFeature(feature: ChangesetFeature): ZoomDestination | undefined {
+	if (feature.type === "node") {
+		if (feature.old && feature.new && (feature.old.lat !== feature.new.lat || feature.old.lon !== feature.new.lon)) {
+			return {
+				bounds: latLngBounds([[feature.old.lat, feature.old.lon], [feature.new.lat, feature.new.lon]]),
+			};
+		} else {
+			return {
+				center: latLng((feature.old ?? feature.new).lat, (feature.old ?? feature.new).lon),
+				zoom: MAX_ZOOM
+			};
+		}
+	} else if (feature.type === "way") {
+		return {
+			bounds: latLngBounds([...feature.unchanged, ...feature.created, ...feature.deleted].flatMap((p) => p).map((p) => [p.lat, p.lon]))
+		};
+	}
+}
+
 export function combineZoomDestinations(destinations: Array<ZoomDestination | undefined>): ZoomDestination | undefined {
 	if (destinations.length == 0)
 		return undefined;
@@ -96,7 +126,7 @@ export function normalizeZoomDestination(map: Map, destination: ZoomDestination)
 	if (result.center == null)
 		result.center = destination.bounds!.getCenter();
 	if (result.zoom == null)
-		result.zoom = result.bounds ? Math.min(15, map.getBoundsZoom(result.bounds)) : 15;
+		result.zoom = result.bounds ? Math.min(MAX_ZOOM, map.getBoundsZoom(result.bounds)) : MAX_ZOOM;
 	return result as any;
 }
 

@@ -1,20 +1,22 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
-	import { flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
+	import { flyTo, getZoomDestinationForChangeset, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
 	import { Util } from "leaflet";
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
 	import type { HashQuery } from "facilmap-leaflet";
 	import { type FileResultObject, parseFiles } from "../../utils/files";
 	import FileResults from "../file-results.vue";
+	import ChangesetResults from "../changeset-results/changeset-results.vue";
 	import { computed, reactive, ref, watch } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { isLanguageExplicit, useI18n } from "../../utils/i18n";
+	import { throttle } from "lodash-es";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
@@ -32,19 +34,27 @@
 	const searchInput = ref<HTMLInputElement>();
 
 	const searchString = ref("");
-	const loadingSearchString = ref("");
-	const loadedSearchString = ref("");
-	const searchCounter = ref(0);
+	const loadingSearchString = ref<string>();
+	const loadingSearchProgress = ref<number>();
+	let loadingSearchAbort: AbortController | undefined = undefined;
+	const loadedSearchString = ref<string>();
 
 	const searchResults = ref<SearchResult[]>();
 	const mapResults = ref<FindOnMapResult[]>();
 	const fileResult = ref<FileResultObject>();
+	const changesetResult = ref<AnalyzedChangeset>();
 
-	const zoomDestination = computed(() => getZoomDestinationForResults([
-		...(searchResults.value || []),
-		...(mapResults.value || []),
-		...(fileResult.value?.features || [])
-	]));
+	const zoomDestination = computed(() => {
+		if (changesetResult.value) {
+			return getZoomDestinationForChangeset(changesetResult.value);
+		} else {
+			return getZoomDestinationForResults([
+				...(searchResults.value || []),
+				...(mapResults.value || []),
+				...(fileResult.value?.features || [])
+			]);
+		}
+	});
 
 	const hashQuery = computed(() => {
 		if (loadedSearchString.value) {
@@ -77,8 +87,6 @@
 		if (searchString.value != loadedSearchString.value) {
 			reset();
 
-			const counter = ++searchCounter.value;
-
 			if(searchString.value.trim() != "") {
 				try {
 					if (await openSpecialQuery(searchString.value, context, zoom)) {
@@ -88,13 +96,24 @@
 
 					const query = searchString.value;
 					loadingSearchString.value = searchString.value;
+					loadingSearchAbort = new AbortController();
+					const signal = loadingSearchAbort.signal;
 
+					const onProgress = throttle((p) => {
+						if (!signal.aborted) {
+							loadingSearchProgress.value = p * 100;
+						}
+					}, 200);
+					const loadedUrl = await mapContext.value.runOperation(async () => await loadDirectUrlQuery(query, {
+						signal: loadingSearchAbort!.signal,
+						onProgress
+					}));
+					onProgress.flush();
 					const url = parseUrlQuery(query);
 
 					const [newSearchResults, newMapResults] = await Promise.all([
-						url ? (
-							client.value.find({ query, loadUrls: true })
-						) : (
+						loadedUrl ? loadedUrl :
+						url ? client.value.find({ query, loadUrls: true }) : (
 							mapContext.value.runOperation(async () => await find(query, {
 								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
 							}))
@@ -102,10 +121,12 @@
 						client.value.mapData ? client.value.findOnMap({ query }) : undefined
 					]);
 
-					if (counter != searchCounter.value)
-						return; // Another search has been started in the meantime
+					if (signal.aborted)
+						return;
 
-					loadingSearchString.value = "";
+					loadingSearchString.value = undefined;
+					loadingSearchProgress.value = undefined;
+					loadingSearchAbort = undefined;
 					loadedSearchString.value = query;
 
 					if(isSearchId(query) && Array.isArray(newSearchResults) && newSearchResults.length > 0 && newSearchResults[0].display_name) {
@@ -113,17 +134,20 @@
 						loadedSearchString.value = query;
 					}
 
-					if(typeof newSearchResults == "string") {
-						searchResults.value = undefined;
-						mapResults.value = undefined;
-						fileResult.value = await mapContext.value.runOperation(async () => await parseFiles([ new TextEncoder().encode(newSearchResults) ]));
+					if (typeof newSearchResults == "string") {
+						const parsed = await mapContext.value.runOperation(async () => await parseFiles([ new TextEncoder().encode(newSearchResults) ]));
+						if (signal.aborted)
+							return; // Another search has been started in the meantime
+						fileResult.value = parsed;
 						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
+					} else if ("changeset" in newSearchResults) {
+						changesetResult.value = newSearchResults;
+						mapContext.value.components.changesetLayer.setChangeset(newSearchResults);
 					} else {
 						const reactiveResults = reactive(newSearchResults);
 						searchResults.value = reactiveResults;
 						mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
 						mapResults.value = newMapResults ?? undefined;
-						fileResult.value = undefined;
 
 						const points = newSearchResults.filter((res) => (res.lon && res.lat));
 						if(points.length > 0) {
@@ -139,8 +163,10 @@
 							});
 						}
 					}
-				} catch(err) {
-					toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);
+				} catch(err: any) {
+					if (err.name !== "AbortError") {
+						toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);
+					}
 					return;
 				}
 			}
@@ -157,23 +183,27 @@
 			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
 			if (zoom)
 				zoomToResult(searchResults.value[0], smooth);
-		} else if (fileResult.value) {
+		} else if (fileResult.value || changesetResult.value) {
 			if (zoom)
 				zoomToAllResults(smooth);
 		}
 	}
 
 	function reset(): void {
-		searchCounter.value++;
+		loadingSearchAbort?.abort();
 
 		mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((item) => item.type != "searchResult" || item.layerId != layerId));
 		toasts.hideToast(`fm${context.id}-search-form-error`);
-		loadingSearchString.value = "";
-		loadedSearchString.value = "";
+		loadingSearchString.value = undefined;
+		loadingSearchProgress.value = undefined;
+		loadingSearchAbort = undefined;
+		loadedSearchString.value = undefined;
 		searchResults.value = undefined;
 		mapResults.value = undefined;
 		fileResult.value = undefined;
+		changesetResult.value = undefined;
 		mapContext.value.components.searchResultsLayer.setResults([]);
+		mapContext.value.components.changesetLayer.setChangeset(undefined);
 	};
 
 	function zoomToResult(result: SearchResult | FindOnMapResult, smooth = true): void {
@@ -205,7 +235,7 @@
 					<Icon icon="search" :alt="i18n.t('search-form.search-alt')"></Icon>
 				</button>
 				<button
-					v-if="searchResults || mapResults || fileResult"
+					v-if="loadingSearchString != null || searchResults || mapResults || fileResult || changesetResult"
 					type="button"
 					class="btn btn-secondary"
 					@click="reset()"
@@ -236,6 +266,19 @@
 			</div>
 		</form>
 
+		<div v-if="loadingSearchProgress != null" class="progress mt-2">
+			<div
+				class="progress-bar progress-bar-striped progress-bar-animated"
+				role="progressbar"
+				:aria-valuenow="Math.floor(loadingSearchProgress)"
+				aria-valuemin="0"
+				aria-valuemax="100"
+				:style="{ width: `${loadingSearchProgress}%` }"
+			>
+				{{Math.floor(loadingSearchProgress)}}&#x202f;%
+			</div>
+		</div>
+
 		<FileResults
 			v-if="fileResult"
 			:file="fileResult"
@@ -243,6 +286,15 @@
 			:union-zoom="storage.zoomToAll"
 			:layer-id="layerId"
 		/>
+		<template v-else-if="changesetResult">
+			<hr />
+			<ChangesetResults
+				:changeset="changesetResult"
+				:auto-zoom="storage.autoZoom"
+				:union-zoom="storage.zoomToAll"
+				:layer-id="layerId"
+			/>
+		</template>
 		<SearchResults
 			v-else-if="searchResults || mapResults"
 			:search-results="searchResults"
@@ -271,6 +323,10 @@
 		.fm-search-box-collapse-point {
 			// Set min-height to one list group item
 			min-height: calc(/* line-height */ 1.5rem + /* list-group-item padding */ 2 * 7px + /* list-group-item border */ 2 * 1px);
+		}
+
+		.progress {
+			height: 1.5rem;
 		}
 	}
 </style>

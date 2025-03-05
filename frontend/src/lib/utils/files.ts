@@ -2,6 +2,7 @@ import type { Feature, Geometry } from "geojson";
 import { legacyV2MarkerToCurrent, legacyV2TypeToCurrent, type GeoJsonExport, type LineFeature, type MarkerFeature, type SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 import { getI18n } from "./i18n";
+import type { Changeset } from "osm-api";
 
 type FmFeatureProperties = Partial<MarkerFeature["properties"]> | Partial<LineFeature["properties"]>;
 type FeatureProperties = FmFeatureProperties & {
@@ -21,6 +22,9 @@ export interface FileResultObject {
 	views: GeoJsonExport["facilmap"]["views"];
 	types: GeoJsonExport["facilmap"]["types"];
 	errors: boolean;
+
+	// OSM Changeset properties
+	changeset?: Changeset;
 }
 
 async function extractKmz(zip: Uint8Array): Promise<Uint8Array | undefined> {

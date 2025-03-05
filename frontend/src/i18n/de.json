@@ -43,6 +43,32 @@
     "alert": {
         "fallback-ok-label": "OK"
     },
+    "changeset-results": {
+        "heading": "Changeset {{id}}",
+        "created": "Erstellt",
+        "closed": "Beendet",
+        "user": "Benutzer",
+        "features": "Objekte",
+        "osm-node": "Punkte",
+        "osm-way": "Linien",
+        "osm-relation": "Relation",
+        "created-tooltip": "Erstellt",
+        "deleted-tooltip": "Gelöscht",
+        "modified-tooltip": "Geändert",
+        "zoom-to-feature-tooltip": "Zum Objekt zoomen",
+        "zoom-to-feature-alt": "Zoomen",
+        "show-details-tooltip": "Details anzeigen",
+        "show-details-no-tag-changes-tooltip": "Details anzeigen (keine veränderten Werte)",
+        "show-details-no-tag-member-changes-tooltip": "Details anzeigen (keine veränderten Werte/Elemente)",
+        "show-details-alt": "Details",
+        "zoom-to-changeset-label": "Zum Changeset zoomen"
+    },
+    "changeset-feature-info": {
+        "coordinates": "Koordinaten",
+        "zoom-to-feature-label": "Zum Objekt zoomen",
+        "openstreetmap-tooltip": "Auf OpenStreetMap öffnen",
+        "members": "Elemente"
+    },
     "click-marker-tab": {
         "look-up-error": "Fehler beim Laden der Geoinformationen"
     },

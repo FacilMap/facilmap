@@ -43,6 +43,32 @@
     "alert": {
         "fallback-ok-label": "OK"
     },
+    "changeset-results": {
+        "heading": "Changeset {{id}}",
+        "created": "Creation time",
+        "closed": "Closing time",
+        "user": "User",
+        "features": "Features",
+        "osm-node": "Node",
+        "osm-way": "Way",
+        "osm-relation": "Relation",
+        "created-tooltip": "Created",
+        "deleted-tooltip": "Deleted",
+        "modified-tooltip": "Modified",
+        "zoom-to-feature-tooltip": "Zoom to feature",
+        "zoom-to-feature-alt": "Zoom",
+        "show-details-tooltip": "Show details",
+        "show-details-no-tag-changes-tooltip": "Show details (no tag changes)",
+        "show-details-no-tag-member-changes-tooltip": "Show details (no tag/member changes)",
+        "show-details-alt": "Details",
+        "zoom-to-changeset-label": "Zoom to changeset"
+    },
+    "changeset-feature-info": {
+        "coordinates": "Coordinates",
+        "zoom-to-feature-label": "Zoom to feature",
+        "openstreetmap-tooltip": "Open on OpenStreetMap",
+        "members": "Members"
+    },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"
     },

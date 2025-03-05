@@ -7,6 +7,7 @@ import type { SelectedItem } from "../../utils/selection";
 import type SelectionHandler from "../../utils/selection";
 import type { AttributionControl } from "../leaflet-map/attribution";
 import type { Point } from "facilmap-types";
+import type ChangesetLayer from "facilmap-leaflet/src/changeset-layer";
 
 export type MapContextEvents = {
 	"open-selection": { selection: DeepReadonly<SelectedItem[]> };
@@ -26,6 +27,7 @@ export interface MapComponents {
 	mousePosition: L.Control.MousePosition;
 	overpassLayer: OverpassLayer;
 	searchResultsLayer: SearchResultsLayer;
+	changesetLayer: ChangesetLayer;
 	selectionHandler: SelectionHandler;
 }
 
