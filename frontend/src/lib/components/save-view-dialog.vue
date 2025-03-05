@@ -74,7 +74,7 @@
 		<div class="row mb-3">
 			<label :for="`${id}-name-input`" class="col-sm-3 col-form-label">{{i18n.t("save-view-dialog.name")}}</label>
 			<ValidatedField
-				:value="name"
+				:value="label"
 				:validators="[
 					validateRequired,
 					getZodValidator(viewValidator.update.shape.name)
@@ -85,7 +85,7 @@
 					<input
 						class="form-control"
 						:id="`${id}-name-input`"
-						v-model="name"
+						v-model="label"
 						:ref="slotProps.inputRef"
 					/>
 					<div class="invalid-tooltip">
