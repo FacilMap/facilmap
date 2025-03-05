@@ -2,7 +2,7 @@ import { type LatLng, latLng, type LatLngBounds, latLngBounds, type Map } from "
 import { fmToLeafletBbox, type HashQuery, type OverpassElement } from "facilmap-leaflet";
 import type { RouteWithTrackPoints } from "facilmap-client";
 import type { SelectedItem } from "./selection";
-import type { FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
+import type { Bbox, FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
 import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type AnalyzedChangeset, type ChangesetFeature } from "facilmap-utils";
@@ -85,6 +85,12 @@ export function getZoomDestinationForChangeset(changeset: AnalyzedChangeset): Zo
 			[changeset.changeset.min_lat, changeset.changeset.min_lon],
 			[changeset.changeset.max_lat, changeset.changeset.max_lon]
 		])
+	};
+}
+
+export function getZoomDestinationForBbox(bbox: Bbox): ZoomDestination {
+	return {
+		bounds: latLngBounds([[bbox.bottom, bbox.left], [bbox.top, bbox.right]])
 	};
 }
 

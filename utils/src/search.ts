@@ -1,4 +1,4 @@
-import type { Point, SearchResult, ZoomLevel } from "facilmap-types";
+import type { Bbox, Point, SearchResult, ZoomLevel } from "facilmap-types";
 import throttle from "p-throttle";
 import type { Geometry } from "geojson";
 import { formatCoordinates } from "./format.js";
@@ -184,7 +184,7 @@ export function isSearchId(string: string | undefined): boolean {
  * If the search query is a URL for which this is supported, loads the content of the URL through a direct fetch request.
  * Otherwise returns undefined.
  */
-export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress): Promise<string | AnalyzedChangeset | undefined> {
+export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<string | AnalyzedChangeset | undefined> {
 	query = query.trim();
 
 	let m = query.match(/^(node|way|relation)\s+(\d+)$/);

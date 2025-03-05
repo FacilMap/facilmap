@@ -2,9 +2,9 @@
 	import Icon from "../ui/icon.vue";
 	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { Bbox, FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
-	import { flyTo, getZoomDestinationForChangeset, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery } from "../../utils/zoom";
+	import { flyTo, getZoomDestinationForBbox, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, type ZoomDestination } from "../../utils/zoom";
 	import { Util } from "leaflet";
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
@@ -43,10 +43,11 @@
 	const mapResults = ref<FindOnMapResult[]>();
 	const fileResult = ref<FileResultObject>();
 	const changesetResult = ref<AnalyzedChangeset>();
+	const changesetZoomDestination = ref<ZoomDestination>();
 
 	const zoomDestination = computed(() => {
-		if (changesetResult.value) {
-			return getZoomDestinationForChangeset(changesetResult.value);
+		if (changesetZoomDestination.value) {
+			return changesetZoomDestination.value;
 		} else {
 			return getZoomDestinationForResults([
 				...(searchResults.value || []),
@@ -83,110 +84,128 @@
 		void search(storage.autoZoom, storage.zoomToAll);
 	}
 
-	async function search(zoom: boolean, zoomToAll?: boolean, smooth = true): Promise<void> {
-		if (searchString.value != loadedSearchString.value) {
-			reset();
+	function search(zoom: boolean, zoomToAll?: boolean, smooth = true): { zoomed: Promise<void>; loaded: Promise<void> } {
+		let onZoomed: () => void;
+		return {
+			zoomed: new Promise((resolve) => {
+				onZoomed = resolve;
+			}),
+			loaded: (async () => {
+				if (searchString.value != loadedSearchString.value) {
+					reset();
 
-			if(searchString.value.trim() != "") {
-				try {
-					if (await openSpecialQuery(searchString.value, context, zoom)) {
-						searchString.value = "";
-						return;
-					}
+					if(searchString.value.trim() != "") {
+						try {
+							if (await openSpecialQuery(searchString.value, context, zoom)) {
+								searchString.value = "";
+								return;
+							}
 
-					const query = searchString.value;
-					loadingSearchString.value = searchString.value;
-					loadingSearchAbort = new AbortController();
-					const signal = loadingSearchAbort.signal;
+							const query = searchString.value;
+							loadingSearchString.value = searchString.value;
+							loadingSearchAbort = new AbortController();
+							const signal = loadingSearchAbort.signal;
 
-					const onProgress = throttle((p) => {
-						if (!signal.aborted) {
-							loadingSearchProgress.value = p * 100;
+							const onProgress = throttle((p) => {
+								if (!signal.aborted) {
+									loadingSearchProgress.value = p * 100;
+								}
+							}, 200);
+							const loadedUrl = await mapContext.value.runOperation(async () => await loadDirectUrlQuery(query, {
+								signal: loadingSearchAbort!.signal,
+								onProgress,
+								onBbox: (bbox: Bbox) => {
+									if (!signal.aborted) {
+										changesetZoomDestination.value = getZoomDestinationForBbox(bbox);
+										if (zoom) {
+											zoomToAllResults(smooth);
+										}
+									}
+									onZoomed();
+								}
+							}));
+							onProgress.flush();
+							const url = parseUrlQuery(query);
+
+							const [newSearchResults, newMapResults] = await Promise.all([
+								loadedUrl ? loadedUrl :
+								url ? client.value.find({ query, loadUrls: true }) : (
+									mapContext.value.runOperation(async () => await find(query, {
+										lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
+									}))
+								),
+								client.value.mapData ? client.value.findOnMap({ query }) : undefined
+							]);
+
+							if (signal.aborted)
+								return;
+
+							loadingSearchString.value = undefined;
+							loadingSearchProgress.value = undefined;
+							loadingSearchAbort = undefined;
+							loadedSearchString.value = query;
+
+							if(isSearchId(query) && Array.isArray(newSearchResults) && newSearchResults.length > 0 && newSearchResults[0].display_name) {
+								searchString.value = newSearchResults[0].display_name;
+								loadedSearchString.value = query;
+							}
+
+							if (typeof newSearchResults == "string") {
+								const parsed = await mapContext.value.runOperation(async () => await parseFiles([ new TextEncoder().encode(newSearchResults) ]));
+								if (signal.aborted)
+									return; // Another search has been started in the meantime
+								fileResult.value = parsed;
+								mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
+							} else if ("changeset" in newSearchResults) {
+								changesetResult.value = newSearchResults;
+								mapContext.value.components.changesetLayer.setChangeset(newSearchResults);
+							} else {
+								const reactiveResults = reactive(newSearchResults);
+								searchResults.value = reactiveResults;
+								mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
+								mapResults.value = newMapResults ?? undefined;
+
+								const points = newSearchResults.filter((res) => (res.lon && res.lat));
+								if(points.length > 0) {
+									(async () => {
+										const elevations = await Promise.all(points.map(async (point) => {
+											return await getElevationForPoint({ lat: Number(point.lat), lon: Number(point.lon) });
+										}));
+										elevations.forEach((elevation, i) => {
+											reactiveResults[i].elevation = elevation;
+										});
+									})().catch((err) => {
+										console.warn("Error fetching search result elevations", err);
+									});
+								}
+							}
+						} catch(err: any) {
+							if (err.name !== "AbortError") {
+								toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);
+							}
+							return;
 						}
-					}, 200);
-					const loadedUrl = await mapContext.value.runOperation(async () => await loadDirectUrlQuery(query, {
-						signal: loadingSearchAbort!.signal,
-						onProgress
-					}));
-					onProgress.flush();
-					const url = parseUrlQuery(query);
-
-					const [newSearchResults, newMapResults] = await Promise.all([
-						loadedUrl ? loadedUrl :
-						url ? client.value.find({ query, loadUrls: true }) : (
-							mapContext.value.runOperation(async () => await find(query, {
-								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
-							}))
-						),
-						client.value.mapData ? client.value.findOnMap({ query }) : undefined
-					]);
-
-					if (signal.aborted)
-						return;
-
-					loadingSearchString.value = undefined;
-					loadingSearchProgress.value = undefined;
-					loadingSearchAbort = undefined;
-					loadedSearchString.value = query;
-
-					if(isSearchId(query) && Array.isArray(newSearchResults) && newSearchResults.length > 0 && newSearchResults[0].display_name) {
-						searchString.value = newSearchResults[0].display_name;
-						loadedSearchString.value = query;
 					}
-
-					if (typeof newSearchResults == "string") {
-						const parsed = await mapContext.value.runOperation(async () => await parseFiles([ new TextEncoder().encode(newSearchResults) ]));
-						if (signal.aborted)
-							return; // Another search has been started in the meantime
-						fileResult.value = parsed;
-						mapContext.value.components.searchResultsLayer.setResults(fileResult.value.features);
-					} else if ("changeset" in newSearchResults) {
-						changesetResult.value = newSearchResults;
-						mapContext.value.components.changesetLayer.setChangeset(newSearchResults);
-					} else {
-						const reactiveResults = reactive(newSearchResults);
-						searchResults.value = reactiveResults;
-						mapContext.value.components.searchResultsLayer.setResults(newSearchResults);
-						mapResults.value = newMapResults ?? undefined;
-
-						const points = newSearchResults.filter((res) => (res.lon && res.lat));
-						if(points.length > 0) {
-							(async () => {
-								const elevations = await Promise.all(points.map(async (point) => {
-									return await getElevationForPoint({ lat: Number(point.lat), lon: Number(point.lon) });
-								}));
-								elevations.forEach((elevation, i) => {
-									reactiveResults[i].elevation = elevation;
-								});
-							})().catch((err) => {
-								console.warn("Error fetching search result elevations", err);
-							});
-						}
-					}
-				} catch(err: any) {
-					if (err.name !== "AbortError") {
-						toasts.showErrorToast(`fm${context.id}-search-form-error`, () => i18n.t("search-form.search-error"), err);
-					}
-					return;
 				}
-			}
-		}
 
-		if (zoomToAll || (zoomToAll == null && (searchResults.value?.length ?? 0) + (mapResults.value?.length ?? 0) > 1)) {
-			if (zoom)
-				zoomToAllResults(smooth);
-		} else if (mapResults.value && mapResults.value.length > 0 && (mapResults.value[0].similarity == 1 || (!searchResults.value || searchResults.value.length == 0))) {
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: mapResults.value[0].kind, id: mapResults.value[0].id }])
-			if (zoom)
-				zoomToResult(mapResults.value[0], smooth);
-		} else if (searchResults.value && searchResults.value.length > 0) {
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
-			if (zoom)
-				zoomToResult(searchResults.value[0], smooth);
-		} else if (fileResult.value || changesetResult.value) {
-			if (zoom)
-				zoomToAllResults(smooth);
-		}
+				if (zoomToAll || (zoomToAll == null && (searchResults.value?.length ?? 0) + (mapResults.value?.length ?? 0) > 1)) {
+					if (zoom)
+						zoomToAllResults(smooth);
+				} else if (mapResults.value && mapResults.value.length > 0 && (mapResults.value[0].similarity == 1 || (!searchResults.value || searchResults.value.length == 0))) {
+					mapContext.value.components.selectionHandler.setSelectedItems([{ type: mapResults.value[0].kind, id: mapResults.value[0].id }])
+					if (zoom)
+						zoomToResult(mapResults.value[0], smooth);
+				} else if (searchResults.value && searchResults.value.length > 0) {
+					mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: searchResults.value[0], layerId }]);
+					if (zoom)
+						zoomToResult(searchResults.value[0], smooth);
+				} else if (fileResult.value) {
+					if (zoom)
+						zoomToAllResults(smooth);
+				}
+				// For changesets, we already zoomed above in onBbox()
+			})()
+		};
 	}
 
 	function reset(): void {
@@ -202,6 +221,7 @@
 		mapResults.value = undefined;
 		fileResult.value = undefined;
 		changesetResult.value = undefined;
+		changesetZoomDestination.value = undefined;
 		mapContext.value.components.searchResultsLayer.setResults([]);
 		mapContext.value.components.changesetLayer.setChangeset(undefined);
 	};

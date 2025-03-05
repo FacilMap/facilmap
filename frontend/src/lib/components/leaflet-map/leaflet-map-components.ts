@@ -425,9 +425,9 @@ function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: Faci
 					const searchFormTab = context.components.searchFormTab;
 					queryChangePromise = (async () => {
 						if (!e.query)
-							await searchFormTab?.setQuery("", false, false);
+							await searchFormTab?.setQuery("", false, false).zoomed;
 						else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
-							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus);
+							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus).zoomed;
 					})();
 					await queryChangePromise;
 				})

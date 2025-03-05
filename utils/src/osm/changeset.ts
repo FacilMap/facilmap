@@ -2,7 +2,7 @@ import { intersectionBy, memoize, pullAllBy } from "lodash-es";
 import { getFeatureAtTimestamp, getFixedChangesetDiff, getPreviousVersions, nodeListToSegments, segmentsToMultiPolyline, type NodeListSegment } from "./utils";
 import * as OSM from "osm-api";
 import type { DistributedPick } from "../types";
-import type { Point } from "facilmap-types";
+import type { Bbox, Point } from "facilmap-types";
 import { scaleProgress, sendProgress, type OnProgress } from "../utils";
 
 export type ChangesetFeature = {
@@ -25,11 +25,18 @@ export type AnalyzedChangeset = {
 	features: ChangesetFeature[];
 };
 
-export async function analyzeChangeset(changesetId: number, onProgress?: OnProgress): Promise<AnalyzedChangeset> {
+export async function analyzeChangeset(changesetId: number, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<AnalyzedChangeset> {
 	const nodeHistory = memoize((nodeId: number) => OSM.getFeatureHistory("node", nodeId));
 	const wayHistory = memoize((wayId: number) => OSM.getFeatureHistory("way", wayId));
 
 	const changeset = await OSM.getChangeset(changesetId);
+
+	// Some old changesets (for example 123456) seem to have no bbox
+	const hasBbox = changeset.min_lat != null && changeset.min_lon != null && changeset.max_lat != null && changeset.max_lon != null;
+	if (hasBbox) {
+		onProgress?.onBbox?.({ top: changeset.max_lat, left: changeset.min_lon, bottom: changeset.min_lat, right: changeset.max_lon });
+	}
+
 	const timeBefore = new Date(changeset.created_at.getTime() - 1);
 	sendProgress(onProgress, 0.01);
 	const rawDiff = await OSM.getChangesetDiff(changesetId);
@@ -139,6 +146,27 @@ export async function analyzeChangeset(changesetId: number, onProgress?: OnProgr
 			return true;
 		}
 	});
+
+	if (!hasBbox) {
+		const allNodes = features.flatMap((f) => {
+			if (f.type === "node") {
+				return [...f.old ? [f.old] : [], ...f.new ? [f.new] : []];
+			} else if (f.type === "way") {
+				return [...f.deleted, ...f.created, ...f.unchanged].flat();
+			} else {
+				return [];
+			}
+		});
+		const allLats = allNodes.map((n) => n.lat);
+		const allLons = allNodes.map((n) => n.lon);
+
+		changeset.min_lat = Math.min(...allLats);
+		changeset.max_lat = Math.max(...allLats);
+		changeset.min_lon = Math.min(...allLons);
+		changeset.max_lon = Math.max(...allLons);
+
+		onProgress?.onBbox?.({ top: changeset.max_lat, left: changeset.min_lon, bottom: changeset.min_lat, right: changeset.max_lon });
+	}
 
 	return { changeset, features };
 }
