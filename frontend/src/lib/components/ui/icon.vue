@@ -22,8 +22,11 @@
 </script>
 
 <template>
-	<span class="fm-icon" v-html-async="iconCodeP"></span>
+	<span class="fm-icon" :style="{ verticalAlign: `calc(-0.125em - (${props.size} - 1em) * 0.5)` }" v-html-async="iconCodeP"></span>
 </template>
 
 <style lang="scss">
+	.fm-icon {
+		display: inline-flex;
+	}
 </style>

@@ -1,10 +1,10 @@
 import type { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, type LatLngBounds, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
-import { LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
+import { type ChangesetLayer, LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
-import type { DeepReadonly } from "vue";
-import type ChangesetLayer from "facilmap-leaflet/src/changeset-layer";
-import type { ChangesetFeature } from "facilmap-utils";
+import { toRaw, type DeepReadonly } from "vue";
+import type { ChangesetFeature, OsmFeatureBlameSection } from "facilmap-utils";
+import type FeatureBlameLayer from "facilmap-leaflet/src/osm/feature-blame-layer";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -16,6 +16,9 @@ export type SelectedItem = {
 } | {
 	type: "changeset";
 	feature: ChangesetFeature;
+} | {
+	type: "featureBlame";
+	section: OsmFeatureBlameSection;
 } | {
 	type: "overpass";
 	element: OverpassElement;
@@ -57,6 +60,7 @@ export default class SelectionHandler extends Handler {
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
 	_changesetLayer: ChangesetLayer;
+	_featureBlameLayer: FeatureBlameLayer;
 	_overpassLayer: OverpassLayer;
 
 	_boxSelectionHandler: BoxSelection;
@@ -66,7 +70,10 @@ export default class SelectionHandler extends Handler {
 	_mapInteraction: number = 0;
 	_isLongClick: boolean = false;
 
-	constructor(map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, changesetLayer: ChangesetLayer, overpassLayer: OverpassLayer) {
+	constructor(
+		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, changesetLayer: ChangesetLayer,
+		featureBlameLayer: FeatureBlameLayer, overpassLayer: OverpassLayer
+	) {
 		super(map);
 
 		this._boxSelectionHandler = new BoxSelection(map)
@@ -78,6 +85,7 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer = linesLayer;
 		this._searchResultLayers = [searchResultsLayer];
 		this._changesetLayer = changesetLayer;
+		this._featureBlameLayer = featureBlameLayer;
 		this._overpassLayer = overpassLayer;
 	}
 
@@ -99,6 +107,7 @@ export default class SelectionHandler extends Handler {
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
 		this._changesetLayer.on("click", this.handleClickChangeset);
+		this._featureBlameLayer.on("click", this.handleClickFeatureBlame);
 		this._overpassLayer.on("click", this.handleClickOverpass);
 		this._map.on("click", this.handleClickMap);
 		this._map.on("fmInteractionStart", this.handleMapInteractionStart);
@@ -115,6 +124,7 @@ export default class SelectionHandler extends Handler {
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
 		this._changesetLayer.off("click", this.handleClickChangeset);
+		this._featureBlameLayer.off("click", this.handleClickFeatureBlame);
 		this._overpassLayer.off("click", this.handleClickOverpass);
 		this._map.off("click", this.handleClickMap);
 		this._map.off("fmInteractionStart", this.handleMapInteractionStart);
@@ -167,7 +177,8 @@ export default class SelectionHandler extends Handler {
 				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => i.result)
 			));
 		}
-		this._changesetLayer.setHighlightedFeatures(new Set(byType(items, "changeset").map((i) => i.feature)));
+		this._changesetLayer.setHighlightedFeatures(new Set(byType(items, "changeset").map((i) => toRaw(i.feature))));
+		this._featureBlameLayer.setHighlightedSections(new Set(byType(items, "featureBlame").map((i) => i.section)));
 		this._overpassLayer.setHighlightedElements(new Set(
 			byType(items, "overpass").map((i) => i.element)
 		));
@@ -226,6 +237,12 @@ export default class SelectionHandler extends Handler {
 	handleClickChangeset = (e: LeafletEvent): void => {
 		if (e.propagatedFrom?._fmChangesetFeature) {
 			this.handleClickItem({ type: "changeset", feature: e.propagatedFrom._fmChangesetFeature }, e);
+		}
+	};
+
+	handleClickFeatureBlame = (e: LeafletEvent): void => {
+		if (e.propagatedFrom?._fmBlameSection) {
+			this.handleClickItem({ type: "featureBlame", section: e.propagatedFrom._fmBlameSection }, e);
 		}
 	};
 

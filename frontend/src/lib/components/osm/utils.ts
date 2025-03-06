@@ -4,13 +4,12 @@ import type { OsmFeatureType } from "osm-api";
 
 export function getOsmObjectLabel(type: OsmFeatureType, id: number): string {
 	const i18n = getI18n();
-	const typeLabel = (
-		type === "node" ? i18n.t("changeset-results.osm-node") :
-		type === "way" ? i18n.t("changeset-results.osm-way") :
-		type === "relation" ? i18n.t("changeset-results.osm-relation") :
+	return (
+		type === "node" ? i18n.t("osm-feature-link.node", { id }) :
+		type === "way" ? i18n.t("osm-feature-link.way", { id }) :
+		type === "relation" ? i18n.t("osm-feature-link.relation", { id }) :
 		""
 	);
-	return `${typeLabel ? `${typeLabel} ` : ""}${id}`;
 }
 
 export function getChangesetFeatureLabel(feature: ChangesetFeature): string {

@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
-import { isEqual } from 'lodash-es';
-import { computed } from 'vue';
+	import { isEqual } from 'lodash-es';
+	import { computed } from 'vue';
 
 	const props = defineProps<{
 		oldValue: T | undefined;

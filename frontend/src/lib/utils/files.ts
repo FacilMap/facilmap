@@ -67,7 +67,7 @@ async function fileToGeoJSON(file: Uint8Array): Promise<any> {
 			return kml(xml);
 		} else if (xml.matches("osm")) {
 			const { default: osmtogeojson } = await import("osmtogeojson");
-			return osmtogeojson(xml);
+			return osmtogeojson(doc);
 		} else if (xml.matches("TrainingCenterDatabase")) {
 			const { tcx } = await import("@tmcw/togeojson");
 			return tcx(xml);

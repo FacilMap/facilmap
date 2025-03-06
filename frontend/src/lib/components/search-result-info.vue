@@ -13,6 +13,7 @@
 	import type { RouteDestination } from "./facil-map-context-provider/route-form-tab-context";
 	import AddToMapDropdown from "./ui/add-to-map-dropdown.vue";
 	import { useI18n } from "../utils/i18n";
+import OsmFeatureLink from "./osm/osm-feature-link.vue";
 
 	const i18n = useI18n();
 
@@ -115,6 +116,14 @@
 				size="sm"
 				:destination="routeDestination"
 			></UseAsDropdown>
+
+			<OsmFeatureLink
+				class="btn btn-secondary btn-sm"
+				v-if="result.osm_type && result.osm_id != null"
+				:type="result.osm_type"
+				:id="result.osm_id"
+				label="OpenStreetMap"
+			></OsmFeatureLink>
 		</div>
 	</div>
 </template>

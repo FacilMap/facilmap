@@ -1,5 +1,5 @@
 import { intersectionBy, memoize, pullAllBy } from "lodash-es";
-import { getFeatureAtTimestamp, getFixedChangesetDiff, getPreviousVersions, nodeListToSegments, segmentsToMultiPolyline, type NodeListSegment } from "./utils";
+import { getBboxForNodeList, getFeatureAtTimestamp, getFixedChangesetDiff, getPreviousVersions, nodeListToSegments, segmentsToMultiPolyline, type NodeListSegment } from "./utils";
 import * as OSM from "osm-api";
 import type { DistributedPick } from "../types";
 import type { Bbox, Point } from "facilmap-types";
@@ -23,18 +23,23 @@ export type ChangesetFeature = {
 export type AnalyzedChangeset = {
 	changeset: OSM.Changeset;
 	features: ChangesetFeature[];
+	bbox: Bbox | undefined;
 };
 
 export async function analyzeChangeset(changesetId: number, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<AnalyzedChangeset> {
 	const nodeHistory = memoize((nodeId: number) => OSM.getFeatureHistory("node", nodeId));
 	const wayHistory = memoize((wayId: number) => OSM.getFeatureHistory("way", wayId));
 
+	sendProgress(onProgress, 0);
+
 	const changeset = await OSM.getChangeset(changesetId);
 
 	// Some old changesets (for example 123456) seem to have no bbox
-	const hasBbox = changeset.min_lat != null && changeset.min_lon != null && changeset.max_lat != null && changeset.max_lon != null;
-	if (hasBbox) {
-		onProgress?.onBbox?.({ top: changeset.max_lat, left: changeset.min_lon, bottom: changeset.min_lat, right: changeset.max_lon });
+	let bbox = changeset.min_lat != null && changeset.min_lon != null && changeset.max_lat != null && changeset.max_lon != null ? (
+		{ top: changeset.max_lat, left: changeset.min_lon, bottom: changeset.min_lat, right: changeset.max_lon }
+	) : undefined;
+	if (bbox) {
+		onProgress?.onBbox?.(bbox);
 	}
 
 	const timeBefore = new Date(changeset.created_at.getTime() - 1);
@@ -92,10 +97,10 @@ export async function analyzeChangeset(changesetId: number, onProgress?: OnProgr
 
 	const rawFeatures: Array<DistributedPick<ChangesetFeature, "type" | "id" | "old" | "new">> = [
 		...diff.modify.map((f) => ({ type: f.type, id: f.id, old: prev.get(f), new: f })),
-		...Object.values(waysChanged).map((f) => ({ type: f.type, id: f.id, old: f, new: f })),
+		...[...waysChanged.values()].map((f) => ({ type: f.type, id: f.id, old: f, new: f })),
 		...diff.create.map((f) => ({ type: f.type, id: f.id, old: undefined, new: f })),
 		...diff.delete.map((f) => ({ type: f.type, id: f.id, old: f, new: undefined }))
-	];
+	] as any;
 
 	// Now make an array of node arrays to represent the old and the new form of the changed way
 	const getSegments = async (way: OSM.OsmWay, time: Date, nodesMap: Map<number, OSM.OsmNode>) => {
@@ -147,8 +152,8 @@ export async function analyzeChangeset(changesetId: number, onProgress?: OnProgr
 		}
 	});
 
-	if (!hasBbox) {
-		const allNodes = features.flatMap((f) => {
+	if (!bbox) {
+		const nodes = features.flatMap((f) => {
 			if (f.type === "node") {
 				return [...f.old ? [f.old] : [], ...f.new ? [f.new] : []];
 			} else if (f.type === "way") {
@@ -157,16 +162,11 @@ export async function analyzeChangeset(changesetId: number, onProgress?: OnProgr
 				return [];
 			}
 		});
-		const allLats = allNodes.map((n) => n.lat);
-		const allLons = allNodes.map((n) => n.lon);
-
-		changeset.min_lat = Math.min(...allLats);
-		changeset.max_lat = Math.max(...allLats);
-		changeset.min_lon = Math.min(...allLons);
-		changeset.max_lon = Math.max(...allLons);
-
-		onProgress?.onBbox?.({ top: changeset.max_lat, left: changeset.min_lon, bottom: changeset.min_lat, right: changeset.max_lon });
+		if (nodes.length > 1) {
+			bbox = getBboxForNodeList(nodes);
+			onProgress?.onBbox?.(bbox);
+		}
 	}
 
-	return { changeset, features };
+	return { changeset, features, bbox };
 }

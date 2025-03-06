@@ -5,7 +5,7 @@ import type { SelectedItem } from "./selection";
 import type { Bbox, FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type AnalyzedChangeset, type ChangesetFeature } from "facilmap-utils";
+import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type ChangesetFeature, type OsmFeatureBlameSection } from "facilmap-utils";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -79,15 +79,6 @@ export function getZoomDestinationForResults(results: Array<SearchResult | FindO
 	);
 }
 
-export function getZoomDestinationForChangeset(changeset: AnalyzedChangeset): ZoomDestination {
-	return {
-		bounds: latLngBounds([
-			[changeset.changeset.min_lat, changeset.changeset.min_lon],
-			[changeset.changeset.max_lat, changeset.changeset.max_lon]
-		])
-	};
-}
-
 export function getZoomDestinationForBbox(bbox: Bbox): ZoomDestination {
 	return {
 		bounds: latLngBounds([[bbox.bottom, bbox.left], [bbox.top, bbox.right]])
@@ -111,6 +102,21 @@ export function getZoomDestinationForChangesetFeature(feature: ChangesetFeature)
 			bounds: latLngBounds([...feature.unchanged, ...feature.created, ...feature.deleted].flatMap((p) => p).map((p) => [p.lat, p.lon]))
 		};
 	}
+}
+
+export function getZoomDestinationForFeatureBlameSection(section: OsmFeatureBlameSection): ZoomDestination {
+	return combineZoomDestinations(section.paths.map((p) => {
+		if (p.length === 1) {
+			return {
+				center: latLng(p[0].lat, p[0].lon),
+				zoom: MAX_ZOOM
+			};
+		} else {
+			return {
+				bounds: latLngBounds(p.map((n) => [n.lat, n.lon]))
+			};
+		}
+	}))!;
 }
 
 export function combineZoomDestinations(destinations: Array<ZoomDestination | undefined>): ZoomDestination | undefined {

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { type i18n } from "i18next";
-import { defineComponent, ref, type Directive } from "vue";
+import { defineComponent, h, ref, type Directive } from "vue";
 import messagesEn from "../../i18n/en.json";
 import messagesCs from "../../i18n/cs.json";
 import messagesDe from "../../i18n/de.json";
@@ -99,7 +99,8 @@ export function useI18n(): ReturnType<typeof getI18n> {
  */
 export const T = defineComponent({
 	props: {
-		k: { type: String, required: true }
+		k: { type: String, required: true },
+		spans: { type: Boolean }
 	},
 	setup(props, { slots }) {
 		const i18n = useI18n();
@@ -110,10 +111,12 @@ export const T = defineComponent({
 			const slotByPlaceholder = Object.fromEntries(mappedSlots.map(({ placeholder, slot }) => [placeholder, slot]));
 			const message = i18n.t(props.k, placeholderByName);
 			return message.split(/(%___SLOT_\d+___%)/g).map((v, i) => {
-				if (i % 2 === 0) {
-					return v;
-				} else {
+				if (i % 2 === 1) {
 					return slotByPlaceholder[v]!();
+				} else if (props.spans && v) {
+					return h("span", v);
+				} else {
+					return v;
 				}
 			});
 		};

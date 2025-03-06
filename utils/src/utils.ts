@@ -1,5 +1,6 @@
 import { cloneDeep, isEqual } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
+import type { Colour } from "facilmap-types";
 
 export function quoteHtml(str: string | number): string {
 	return `${str}`
@@ -283,6 +284,9 @@ export function scaleProgress(onProgress: OnProgress | undefined, min: number, m
 }
 
 export function sendProgress(onProgress: OnProgress | undefined, progress: number): void {
+	if (progress < 0 || progress > 1) {
+		console.trace("Unexpected progress", progress);
+	}
 	onProgress?.signal?.throwIfAborted();
 	onProgress?.onProgress?.(progress);
 }
@@ -291,4 +295,40 @@ export function getOsmFeatureName(tags: Record<string, string>, language: string
 	const lowerTags = Object.fromEntries(Object.entries(tags).map(([k, v]) => [k.toLowerCase(), v]));
 	const lowerLang = language.toLowerCase();
 	return lowerTags[`name:${lowerLang}`] ?? tags[`name:${lowerLang.split("-")[0]}`] ?? tags.name;
+}
+
+function* generateUniqueColourParts(): Generator<number, void, void> {
+	yield 255;
+	yield 0;
+	for (let fac = 2; true; fac *= 2) {
+		const frac = 256 / fac;
+		for (let i = fac - 1; i > 0; i -= 2) {
+			yield Math.round(i * frac);
+		}
+	}
+}
+
+export function* generateUniqueColours(): Generator<Colour, void, void> {
+	let prevLength = 0;
+	let parts: number[] = [];
+	const gen = generateUniqueColourParts();
+	while (true) {
+		parts.push(gen.next().value!);
+		for (let i = 0; i < parts.length; i++) {
+			for (let j = 0; j < parts.length; j++) {
+				for (let k = 0; k < parts.length; k++) {
+					if (i < prevLength && j < prevLength && k < prevLength) { // We have yielded this combination before
+						continue;
+					}
+
+					if ((parts[i] === 0 && parts[j] === 0 && parts[k] === 0) || (parts[i] === 255 && parts[j] === 255 && parts[k] === 255)) { // Skip these, they are not colours
+						continue;
+					}
+
+					yield `${parts[i].toString(16).padStart(2, "0")}${parts[j].toString(16).padStart(2, "0")}${parts[k].toString(16).padStart(2, "0")}`;
+				}
+			}
+		}
+		prevLength = parts.length;
+	}
 }

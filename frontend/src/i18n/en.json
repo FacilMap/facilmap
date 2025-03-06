@@ -46,15 +46,41 @@
     "alert": {
         "fallback-ok-label": "OK"
     },
+    "blame-results": {
+        "heading-way-named": "Way {{id}} ({{name}})",
+        "heading-way-unnamed": "Way {{id}}",
+        "heading-relation-named": "Relation {{id}} ({{name}})",
+        "heading-relation-unnamed": "Relation {{id}} ({{name}})",
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "Show details",
+        "show-details-alt": "Details",
+        "zoom-to-section-tooltip": "Zoom to section",
+        "zoom-to-section-alt": "Zoom",
+        "zoom-to-feature-label": "Zoom to feature"
+    },
+    "blame-section-info": {
+        "changeset": "Changeset",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "Analyze changeset",
+        "timestamp": "Timestamp",
+        "user": "User",
+        "created-modified": "Created/modified"
+    },
+    "blame-section-membership": {
+        "tooltip": "Show membership hierarchy",
+        "alt": "Info",
+        "heading": "Membership hierarchy",
+        "member-with-name-role": "{{feature}} ({{name}}, role: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (role: {{role}})"
+    },
     "changeset-results": {
         "heading": "Changeset {{id}}",
         "created": "Creation time",
         "closed": "Closing time",
         "user": "User",
         "features": "Features",
-        "osm-node": "Node",
-        "osm-way": "Way",
-        "osm-relation": "Relation",
         "created-tooltip": "Created",
         "deleted-tooltip": "Deleted",
         "modified-tooltip": "Modified",
@@ -64,13 +90,22 @@
         "show-details-no-tag-changes-tooltip": "Show details (no tag changes)",
         "show-details-no-tag-member-changes-tooltip": "Show details (no tag/member changes)",
         "show-details-alt": "Details",
-        "zoom-to-changeset-label": "Zoom to changeset",
-        "openstreetmap-tooltip": "Open changeset on OpenStreetMap"
+        "zoom-to-changeset-label": "Zoom to changeset"
     },
     "changeset-feature-info": {
         "zoom-to-feature-label": "Zoom to feature",
-        "openstreetmap-tooltip": "Open feature on OpenStreetMap",
         "members": "Members"
+    },
+    "osm-feature-link": {
+        "node": "Node {{id}}",
+        "way": "Way {{id}}",
+        "relation": "Relation {{id}}",
+        "changeset": "Changeset {{id}}",
+        "node-tooltip": "Open node on OpenStreetMap",
+        "way-tooltip": "Open way on OpenStreetMap",
+        "relation-tooltip": "Open relation on OpenStreetMap",
+        "changeset-tooltip": "Open changeset on OpenStreetMap",
+        "user-tooltip": "Open user on OpenStreetMap"
     },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"

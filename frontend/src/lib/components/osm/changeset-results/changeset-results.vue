@@ -1,17 +1,18 @@
 <script setup lang="ts">
-	import { useI18n } from "../../utils/i18n";
+	import { useI18n } from "../../../utils/i18n";
 	import { renderOsmTag, type AnalyzedChangeset, type ChangesetFeature } from "facilmap-utils";
 	import { computed, ref, toRaw, watch } from "vue";
-	import { useCarousel } from "../../utils/carousel";
-	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import Icon from "../ui/icon.vue";
-	import vTooltip from "../../utils/tooltip";
-	import { vScrollIntoView } from "../../utils/vue";
-	import { combineZoomDestinations, flyTo, getZoomDestinationForChangeset, getZoomDestinationForChangesetFeature } from "../../utils/zoom";
-	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import { useCarousel } from "../../../utils/carousel";
+	import { injectContextRequired, requireMapContext } from "../../facil-map-context-provider/facil-map-context-provider.vue";
+	import Icon from "../../ui/icon.vue";
+	import vTooltip from "../../../utils/tooltip";
+	import { vScrollIntoView } from "../../../utils/vue";
+	import { combineZoomDestinations, flyTo, getZoomDestinationForBbox, getZoomDestinationForChangesetFeature } from "../../../utils/zoom";
+	import ZoomToObjectButton from "../../ui/zoom-to-object-button.vue";
 	import ChangesetFeatureInfo from "./changeset-feature-info.vue";
-	import { getChangesetFeatureLabel } from "./utils";
+	import { getChangesetFeatureLabel } from "../utils";
 	import { isEqual } from "lodash-es";
+import OsmFeatureLink from "../osm-feature-link.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -31,7 +32,7 @@
 	const carouselRef = ref<HTMLElement>();
 	const carousel = useCarousel(carouselRef);
 
-	const zoomDestination = computed(() => getZoomDestinationForChangeset(props.changeset));
+	const zoomDestination = computed(() => props.changeset.bbox && getZoomDestinationForBbox(props.changeset.bbox));
 
 	const activeFeatures = computed(() => props.changeset.features.filter((f) => mapContext.value.selection.some((i) => i.type === "changeset" && i.feature === f)));
 	const openFeature = computed(() => activeFeatures.value.length == 1 ? activeFeatures.value[0] : undefined);
@@ -117,10 +118,7 @@
 
 						<dt>{{i18n.t("changeset-results.user")}}</dt>
 						<dd>
-							<a
-								:href="`https://www.openstreetmap.org/user/${encodeURIComponent(props.changeset.changeset.user)}`"
-								target="_blank"
-							>{{props.changeset.changeset.user}} <Icon icon="new-window" size="1em"></Icon></a>
+							<OsmFeatureLink type="user" :id="props.changeset.changeset.user" onlyId></OsmFeatureLink>
 						</dd>
 
 						<template v-for="(value, key) in props.changeset.changeset.tags" :key="key">
@@ -163,17 +161,18 @@
 				</div>
 				<div class="btn-toolbar mt-2">
 					<ZoomToObjectButton
+						v-if="zoomDestination"
 						:label="i18n.t('changeset-results.zoom-to-changeset-label')"
 						size="sm"
 						:destination="zoomDestination"
 					></ZoomToObjectButton>
 
-					<a
+					<OsmFeatureLink
 						class="btn btn-secondary btn-sm"
-						:href="`https://www.openstreetmap.org/changeset/${encodeURIComponent(props.changeset.changeset.id)}`"
-						target="_blank"
-						v-tooltip="i18n.t('changeset-results.openstreetmap-tooltip')"
-					>OpenStreetMap <Icon icon="new-window" size="1em"></Icon></a>
+						type="changeset"
+						:id="props.changeset.changeset.id"
+						label="OpenStreetMap"
+					></OsmFeatureLink>
 				</div>
 			</div>
 

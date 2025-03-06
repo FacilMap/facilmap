@@ -1,14 +1,14 @@
 <script setup lang="ts">
-	import { renderOsmTag, type ChangesetFeature } from 'facilmap-utils';
-	import { getChangesetFeatureLabel, getOsmObjectLabel } from './utils';
-	import { useI18n } from '../../utils/i18n';
-	import Icon from '../ui/icon.vue';
-	import ChangesetOldNew from './changeset-old-new.vue';
-	import ZoomToObjectButton from '../ui/zoom-to-object-button.vue';
-	import { getZoomDestinationForChangesetFeature } from '../../utils/zoom';
-	import { computed } from 'vue';
-	import Coordinates from '../ui/coordinates.vue';
-	import vTooltip from '../../utils/tooltip';
+	import { renderOsmTag, type ChangesetFeature } from "facilmap-utils";
+	import { getChangesetFeatureLabel } from "../utils";
+	import { useI18n } from "../../../utils/i18n";
+	import Icon from "../../ui/icon.vue";
+	import ChangesetOldNew from "./changeset-old-new.vue";
+	import ZoomToObjectButton from "../../ui/zoom-to-object-button.vue";
+	import { getZoomDestinationForChangesetFeature } from "../../../utils/zoom";
+	import { computed } from "vue";
+	import Coordinates from "../../ui/coordinates.vue";
+	import OsmFeatureLink from "../osm-feature-link.vue";
 
 	const props = withDefaults(defineProps<{
 		feature: ChangesetFeature;
@@ -94,11 +94,7 @@
 								:newValue="member.newValue && { type: member.newValue.type, id: member.newValue.ref }"
 							>
 								<template #default="slotProps">
-									<a
-										:href="`https://www.openstreetmap.org/${encodeURIComponent(slotProps.value.type)}/${encodeURIComponent(slotProps.value.id)}`"
-										target="_blank"
-										v-tooltip="i18n.t('changeset-feature-info.openstreetmap-tooltip')"
-									>{{getOsmObjectLabel(slotProps.value.type, slotProps.value.id)}} <Icon icon="new-window" size="1em"></Icon></a>
+									<OsmFeatureLink :type="slotProps.value.type" :id="slotProps.value.id"></OsmFeatureLink>
 								</template>
 							</ChangesetOldNew>
 							<template v-if="member.oldValue?.role || member.newValue?.role">
@@ -118,12 +114,12 @@
 				:destination="zoomDestination"
 			></ZoomToObjectButton>
 
-			<a
+			<OsmFeatureLink
 				class="btn btn-secondary btn-sm"
-				:href="`https://www.openstreetmap.org/${encodeURIComponent(feature.type)}/${encodeURIComponent(feature.id)}`"
-				target="_blank"
-				v-tooltip="i18n.t('changeset-feature-info.openstreetmap-tooltip')"
-			>OpenStreetMap <Icon icon="new-window" size="1em"></Icon></a>
+				:type="feature.type"
+				:id="feature.id"
+				label="OpenStreetMap"
+			></OsmFeatureLink>
 		</div>
 	</div>
 </template>

@@ -1,7 +1,7 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
+import { BboxHandler, ChangesetLayer, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
 import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -21,7 +21,7 @@ import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
-import ChangesetLayer from "facilmap-leaflet/src/changeset-layer";
+import FeatureBlameLayer from "facilmap-leaflet/src/osm/feature-blame-layer";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -366,7 +366,7 @@ function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 function useChangesetLayer(map: Ref<Map>): Ref<Raw<ChangesetLayer>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new ChangesetLayer(undefined, { lineWidth: 7 })),
+		() => markRaw(new ChangesetLayer(undefined)),
 		(changesetLayer, map) => {
 			changesetLayer.addTo(map);
 			onScopeDispose(() => {
@@ -376,11 +376,30 @@ function useChangesetLayer(map: Ref<Map>): Ref<Raw<ChangesetLayer>> {
 	);
 }
 
-function useSelectionHandler(map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>, searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>, overpassLayer: Ref<OverpassLayer>): Ref<Raw<SelectionHandler>> {
+function useFeatureBlameLayer(map: Ref<Map>): Ref<Raw<FeatureBlameLayer>> {
+	return useMapComponent(
+		map,
+		() => markRaw(new FeatureBlameLayer(undefined)),
+		(featureBlameLayer, map) => {
+			featureBlameLayer.addTo(map);
+			onScopeDispose(() => {
+				featureBlameLayer.remove();
+			});
+		}
+	);
+}
+
+function useSelectionHandler(
+	map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>,
+	searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>, featureBlameLayer: Ref<FeatureBlameLayer>, overpassLayer: Ref<OverpassLayer>
+): Ref<Raw<SelectionHandler>> {
 	return useMapComponent(
 		map,
 		() => {
-			const selectionHandler = markRaw(new SelectionHandler(map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, changesetLayer.value, overpassLayer.value));
+			const selectionHandler = markRaw(new SelectionHandler(
+				map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, changesetLayer.value, featureBlameLayer.value,
+				overpassLayer.value
+			));
 
 			selectionHandler.on("fmChangeSelection", (event: any) => {
 				const selection = selectionHandler.getSelection();
@@ -463,7 +482,10 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const overpassLayer = useOverpassLayer(map, mapContext);
 	const searchResultsLayer = useSearchResultsLayer(map);
 	const changesetLayer = useChangesetLayer(map);
-	const selectionHandler = useSelectionHandler(map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, changesetLayer, overpassLayer);
+	const featureBlameLayer = useFeatureBlameLayer(map);
+	const selectionHandler = useSelectionHandler(
+		map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, changesetLayer, featureBlameLayer, overpassLayer
+	);
 	const hashHandler = useHashHandler(map, client, context, mapContext, overpassLayer);
 
 	const components: MapComponents = reactive({
@@ -479,6 +501,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 		overpassLayer,
 		searchResultsLayer,
 		changesetLayer,
+		featureBlameLayer,
 		selectionHandler,
 		hashHandler,
 		container: innerContainerRef
