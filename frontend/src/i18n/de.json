@@ -888,7 +888,8 @@
         "search-alt": "Suchen",
         "clear-alt": "Verstecken",
         "auto-zoom": "Automatisch zu den Ergebnissen zoomen",
-        "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen"
+        "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen",
+        "map-only": "Nur auf der Karte „{{mapName}}“ suchen"
     },
     "search-form-tab": {
         "tab-label": "Suche"

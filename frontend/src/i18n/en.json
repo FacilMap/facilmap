@@ -889,7 +889,8 @@
         "search-alt": "Search",
         "clear-alt": "Clear",
         "auto-zoom": "Auto-zoom to results",
-        "zoom-to-all": "Zoom to all results"
+        "zoom-to-all": "Zoom to all results",
+        "map-only": "Only search on map “{{mapName}}”"
     },
     "search-form-tab": {
         "tab-label": "Search"

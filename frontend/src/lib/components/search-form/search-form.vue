@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { Bbox, FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
@@ -33,12 +33,14 @@
 	const layerId = Util.stamp(mapContext.value.components.searchResultsLayer);
 
 	const searchInput = ref<HTMLInputElement>();
+	const mapOnly = ref(false);
 
 	const searchString = ref("");
 	const loadingSearchString = ref<string>();
 	const loadingSearchProgress = ref<number>();
 	let loadingSearchAbort: AbortController | undefined = undefined;
 	const loadedSearchString = ref<string>();
+	const loadedMapOnly = ref<boolean>();
 
 	const result = ref<{
 		type: "search";
@@ -105,7 +107,8 @@
 			rejectZoomed = reject;
 		});
 		const loaded = (async () => {
-			if (searchString.value != loadedSearchString.value) {
+			const resolvedMapOnly = mapOnly.value && !!client.value.mapData;
+			if (searchString.value != loadedSearchString.value || resolvedMapOnly !== loadedMapOnly.value) {
 				reset();
 
 				if(searchString.value.trim() != "") {
@@ -125,7 +128,7 @@
 								loadingSearchProgress.value = p * 100;
 							}
 						}, 200);
-						const loadedUrl = await mapContext.value.runOperation(async () => await loadDirectUrlQuery(query, {
+						const loadedUrl = !resolvedMapOnly && await mapContext.value.runOperation(async () => await loadDirectUrlQuery(query, {
 							signal: loadingSearchAbort!.signal,
 							onProgress,
 							onBbox: (bbox: Bbox) => {
@@ -144,11 +147,11 @@
 
 						const [newSearchResults, newMapResults] = await Promise.all([
 							loadedUrl ? loadedUrl :
-							url ? client.value.find({ query, loadUrls: true }) : (
-								mapContext.value.runOperation(async () => await find(query, {
-									lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
-								}))
-							),
+							!resolvedMapOnly && url ? client.value.find({ query, loadUrls: true }) :
+							!resolvedMapOnly ? mapContext.value.runOperation(async () => await find(query, {
+								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
+							})) :
+							[],
 							client.value.mapData ? client.value.findOnMap({ query }) : undefined
 						]);
 
@@ -159,6 +162,7 @@
 						loadingSearchProgress.value = undefined;
 						loadingSearchAbort = undefined;
 						loadedSearchString.value = query;
+						loadedMapOnly.value = resolvedMapOnly;
 
 						if(isSearchId(query) && Array.isArray(newSearchResults) && newSearchResults.length > 0 && newSearchResults[0].display_name) {
 							searchString.value = newSearchResults[0].display_name;
@@ -253,6 +257,7 @@
 		loadingSearchProgress.value = undefined;
 		loadingSearchAbort = undefined;
 		loadedSearchString.value = undefined;
+		loadedMapOnly.value = undefined;
 		result.value = undefined;
 		preloadedZoomDestination.value = undefined;
 		mapContext.value.components.searchResultsLayer.setResults([]);
@@ -316,6 +321,20 @@
 							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.zoom-to-all")}}
 						</a>
 					</li>
+
+					<template v-if="client.mapData">
+						<li><hr class="dropdown-divider"></li>
+
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								@click.capture.stop.prevent="mapOnly = !mapOnly"
+							>
+								<Icon :icon="mapOnly ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.map-only", { mapName: normalizeMapName(client.mapData.name) })}}
+							</a>
+						</li>
+					</template>
 				</DropdownMenu>
 			</div>
 		</form>
