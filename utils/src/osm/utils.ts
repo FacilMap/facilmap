@@ -3,8 +3,9 @@ import { groupBy, orderBy, sortBy } from "lodash-es";
 import * as OSM from "osm-api";
 import { sendProgress, type OnProgress } from "../utils";
 
-export function getFeatureKey(feature: OSM.OsmFeature): string {
-	return `${feature.type}-${feature.id}`;
+export function getFeatureKey(...args: [feature: OSM.OsmFeature | OSM.OsmRelation["members"][number]] | [type: OSM.OsmFeatureType, id: number]): string {
+	const [type, id] = typeof args[0] !== "object" ? args : "id" in args[0] ? [args[0].type, args[0].id] : [args[0].type, args[0].ref];
+	return `${type}-${id}`;
 }
 
 /**

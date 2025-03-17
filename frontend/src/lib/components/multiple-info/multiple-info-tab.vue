@@ -33,12 +33,12 @@
 
 	const title = computed(() => objects.value ? `${objects.value.length} objects` : "");
 
-	function handleObjectClick(object: Marker | Line, event: MouseEvent): void {
+	function handleObjectClick(object: Marker | Line, toggle: boolean): void {
 		const item = mapContext.value.selection.find((it) => {
 			return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
 		});
 		if (item) {
-			if (event.ctrlKey)
+			if (toggle)
 				mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it !== item), true);
 			else
 				mapContext.value.components.selectionHandler.setSelectedItems([item], true);

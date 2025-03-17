@@ -685,9 +685,7 @@
     },
     "search-results": {
         "select-all": "Seleccionar todo",
-        "show-details-alt": "Detalles",
         "show-details-tooltip": "Mostrar detalles",
-        "zoom-to-result-alt": "Zum",
         "zoom-to-result-tooltip": "Zum a resultado",
         "no-results": "No se encontró ningún resultado.",
         "add-to-map-label_one": "Añadir elemento seleccionado al mapa",
@@ -870,6 +868,10 @@
         "previous-label": "Anterior",
         "first-label": "Primero",
         "last-label": "Último"
+    },
+    "results": {
+        "zoom-alt": "Zum",
+        "show-details-alt": "Detalles"
     },
     "zoom-to-object-button": {
         "fallback-label": "Zum a objeto"

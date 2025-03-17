@@ -1,10 +1,11 @@
 import type { FindOnMapResult, SearchResult } from "facilmap-types";
+import type { DeepReadonly } from "vue";
 
 export interface RouteDestination {
 	query: string;
-	searchSuggestions?: SearchResult[];
+	searchSuggestions?: DeepReadonly<SearchResult[]>;
 	mapSuggestions?: FindOnMapResult[];
-	selectedSuggestion?: SearchResult | FindOnMapResult;
+	selectedSuggestion?: DeepReadonly<SearchResult | FindOnMapResult>;
 }
 
 export enum UseAsType {
@@ -18,7 +19,7 @@ export enum UseAsType {
 
 export interface WritableRouteFormTabContext {
 	setQuery(query: string, zoom?: boolean, smooth?: boolean): void;
-	useAs(destination: RouteDestination, as: UseAsType): void;
+	useAs(destination: DeepReadonly<RouteDestination>, as: UseAsType): void;
 	hasFrom: boolean;
 	hasTo: boolean;
 	hasVia: boolean;

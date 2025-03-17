@@ -47,16 +47,10 @@
         "fallback-ok-label": "OK"
     },
     "blame-results": {
-        "heading-way-named": "Way {{id}} ({{name}})",
-        "heading-way-unnamed": "Way {{id}}",
-        "heading-relation-named": "Relation {{id}} ({{name}})",
-        "heading-relation-unnamed": "Relation {{id}} ({{name}})",
         "section-label": "{{timestamp}}, {{username}}",
         "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
         "show-details-tooltip": "Show details",
-        "show-details-alt": "Details",
         "zoom-to-section-tooltip": "Zoom to section",
-        "zoom-to-section-alt": "Zoom",
         "zoom-to-feature-label": "Zoom to feature"
     },
     "blame-section-info": {
@@ -85,11 +79,9 @@
         "deleted-tooltip": "Deleted",
         "modified-tooltip": "Modified",
         "zoom-to-feature-tooltip": "Zoom to feature",
-        "zoom-to-feature-alt": "Zoom",
         "show-details-tooltip": "Show details",
         "show-details-no-tag-changes-tooltip": "Show details (no tag changes)",
         "show-details-no-tag-member-changes-tooltip": "Show details (no tag/member changes)",
-        "show-details-alt": "Details",
         "zoom-to-changeset-label": "Zoom to changeset"
     },
     "changeset-feature-info": {
@@ -97,15 +89,25 @@
         "members": "Members"
     },
     "osm-feature-link": {
-        "node": "Node {{id}}",
-        "way": "Way {{id}}",
-        "relation": "Relation {{id}}",
         "changeset": "Changeset {{id}}",
         "node-tooltip": "Open node on OpenStreetMap",
         "way-tooltip": "Open way on OpenStreetMap",
         "relation-tooltip": "Open relation on OpenStreetMap",
         "changeset-tooltip": "Open changeset on OpenStreetMap",
         "user-tooltip": "Open user on OpenStreetMap"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "Zoom to node",
+        "zoom-to-way": "Zoom to way",
+        "zoom-to-relation": "Zoom to relation",
+        "show-details-tooltip": "Show feature details",
+        "total-length": "Total length",
+        "sections": "Sections",
+        "nodes": "Nodes",
+        "members": "Relation members",
+        "section-label": "Section ({{distance}})",
+        "zoom-to-section-tooltip": "Zoom to section",
+        "role": "Role"
     },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"
@@ -721,6 +723,10 @@
         "next-label": "Next",
         "last-label": "Last"
     },
+    "results": {
+        "zoom-alt": "Zoom",
+        "show-details-alt": "Details"
+    },
     "save-view-dialog": {
         "save-view-error": "Error saving view",
         "empty": "—",
@@ -898,9 +904,7 @@
     "search-results": {
         "no-results": "No results have been found.",
         "zoom-to-result-tooltip": "Zoom to result",
-        "zoom-to-result-alt": "Zoom",
         "show-details-tooltip": "Show details",
-        "show-details-alt": "Details",
         "select-all": "Select all",
         "add-to-map-label_one": "Add selected item to map",
         "add-to-map-label_other": "Add selected items to map",

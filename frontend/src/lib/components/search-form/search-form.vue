@@ -1,10 +1,10 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName, type AnalyzedOsmFeature } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { Bbox, FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
-	import { flyTo, getZoomDestinationForBbox, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, type ZoomDestination } from "../../utils/zoom";
+	import { flyTo, getZoomDestinationForBbox, getZoomDestinationForMapResult, getZoomDestinationForOsmFeature, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, type ZoomDestination } from "../../utils/zoom";
 	import { Util } from "leaflet";
 	import { isMapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
@@ -18,6 +18,8 @@
 	import { isLanguageExplicit, useI18n } from "../../utils/i18n";
 	import { throttle } from "lodash-es";
 	import BlameResults from "../osm/blame-results/blame-results.vue";
+	import RelationResults from "../osm/relation-results/relation-results.vue";
+	import OsmFeatureInfo from "../osm/osm-feature-info.vue";
 
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
@@ -50,6 +52,9 @@
 		type: "file";
 		file: FileResultObject;
 	} | {
+		type: "osm";
+		feature: AnalyzedOsmFeature;
+	} | {
 		type: "changeset";
 		changeset: AnalyzedChangeset;
 	} | {
@@ -68,6 +73,8 @@
 			]);
 		} else if (result.value?.type === "file") {
 			return getZoomDestinationForResults(result.value.file.features);
+		} else if (result.value?.type === "osm") {
+			return getZoomDestinationForOsmFeature(result.value.feature);
 		}
 	});
 
@@ -178,6 +185,21 @@
 								file: parsed
 							};
 							mapContext.value.components.searchResultsLayer.setResults(result.value.file.features);
+						} else if ("type" in newSearchResults) {
+							result.value = {
+								type: "osm",
+								feature: newSearchResults
+							};
+							if (newSearchResults.type === "relation") {
+								for (const section of newSearchResults.sections) {
+									mapContext.value.components.osmLayer.addFeature(section);
+								}
+								for (const node of newSearchResults.singleNodes) {
+									mapContext.value.components.osmLayer.addFeature(node);
+								}
+							} else {
+								mapContext.value.components.osmLayer.addFeature(newSearchResults);
+							}
 						} else if ("changeset" in newSearchResults) {
 							result.value = {
 								type: "changeset",
@@ -235,7 +257,7 @@
 					mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: result.value.search[0], layerId }]);
 					if (zoom)
 						zoomToResult(result.value.search[0], smooth);
-				} else if (result.value?.type === "file" || result.value?.type === "changeset" || result.value?.type === "blame") {
+				} else if (result.value && ["file", "relation", "changeset", "blame"].includes(result.value.type)) {
 					if (zoom)
 						zoomToAllResults(smooth);
 				}
@@ -261,6 +283,7 @@
 		result.value = undefined;
 		preloadedZoomDestination.value = undefined;
 		mapContext.value.components.searchResultsLayer.setResults([]);
+		mapContext.value.components.osmLayer.clearFeatures();
 		mapContext.value.components.changesetLayer.setChangeset(undefined);
 		mapContext.value.components.featureBlameLayer.setBlame(undefined);
 	};
@@ -368,6 +391,24 @@
 				:union-zoom="storage.zoomToAll"
 				:layer-id="layerId"
 			/>
+		</template>
+		<template v-else-if="result?.type === 'osm'">
+			<hr />
+			<template v-if="result.feature.type === 'relation'">
+				<RelationResults
+					:relation="result.feature"
+					:autoZoom="storage.autoZoom"
+					:unionZoom="storage.zoomToAll"
+				></RelationResults>
+			</template>
+			<template v-else>
+				<OsmFeatureInfo
+					:feature="result.feature"
+					:autoZoom="storage.autoZoom"
+					:unionZoom="storage.zoomToAll"
+					:zoom="mapContext.zoom"
+				></OsmFeatureInfo>
+			</template>
 		</template>
 		<template v-else-if="result?.type === 'changeset'">
 			<hr />

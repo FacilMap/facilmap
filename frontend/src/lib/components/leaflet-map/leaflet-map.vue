@@ -6,7 +6,7 @@
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n, vReplaceLinks } from "../../utils/i18n";
 	import AboutDialog from "../about-dialog.vue";
-	import { markdownInline } from "facilmap-utils";
+	import { markdownInline, quoteMarkdown } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -53,7 +53,7 @@
 				<div
 					class="fm-leaflet-map-narrow-attribution"
 					:class="{ visible: showNarrowAttribution }"
-					v-html="markdownInline(i18n.t('leaflet-map.attribution-notice', { appName: context.appName }), true)"
+					v-html="markdownInline(i18n.t('leaflet-map.attribution-notice', { appName: quoteMarkdown(context.appName) }), true)"
 					v-replace-links="{
 						'#about-dialog': { onClick: () => { aboutDialogOpen = true; } }
 					}"

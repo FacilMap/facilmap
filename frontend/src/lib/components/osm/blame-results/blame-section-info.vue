@@ -4,13 +4,13 @@
 	import Icon from "../../ui/icon.vue";
 	import ZoomToObjectButton from "../../ui/zoom-to-object-button.vue";
 	import { getZoomDestinationForFeatureBlameSection } from "../../../utils/zoom";
-	import { computed } from "vue";
+	import { computed, type DeepReadonly } from "vue";
 	import BlameSectionMembership from "./blame-section-membership.vue";
 	import OsmFeatureLink from "../osm-feature-link.vue";
 	import { injectContextRequired } from "../../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const props = withDefaults(defineProps<{
-		section: OsmFeatureBlameSection;
+		section: DeepReadonly<OsmFeatureBlameSection>;
 		showBackButton?: boolean;
 		zoom?: number;
 	}>(), {

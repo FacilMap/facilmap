@@ -1,6 +1,8 @@
 import { cloneDeep, isEqual } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
 import type { Colour } from "facilmap-types";
+import type { OsmFeatureType } from "osm-api";
+import { getI18n } from "./i18n";
 
 export function quoteHtml(str: string | number): string {
 	return `${str}`
@@ -16,6 +18,10 @@ export function quoteHtml(str: string | number): string {
 
 export function quoteRegExp(str: string): string {
 	return `${str}`.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
+}
+
+export function quoteMarkdown(str: string): string {
+	return str.split("").map((c) => `&#${c.charCodeAt(0)};`).join("");
 }
 
 export function makeTextColour(backgroundColour: string, threshold = 0.5): string {
@@ -295,6 +301,29 @@ export function getOsmFeatureName(tags: Record<string, string>, language: string
 	const lowerTags = Object.fromEntries(Object.entries(tags).map(([k, v]) => [k.toLowerCase(), v]));
 	const lowerLang = language.toLowerCase();
 	return lowerTags[`name:${lowerLang}`] ?? tags[`name:${lowerLang.split("-")[0]}`] ?? tags.name;
+}
+
+export function getOsmFeatureUrl(...args: [type: OsmFeatureType | "changeset", id: number] | [type: "user", name: string]): string {
+	return `https://www.openstreetmap.org/${encodeURIComponent(args[0])}/${encodeURIComponent(args[1])}`;
+}
+
+export function getOsmFeatureLabel(type: OsmFeatureType, id: number, name?: string, role?: string): string {
+	const i18n = getI18n();
+	const feature = (
+		type === "node" ? i18n.t("utils.node", { id }) :
+		type === "way" ? i18n.t("utils.way", { id }) :
+		type === "relation" ? i18n.t("utils.relation", { id }) :
+		`${id}`
+	);
+	if (name && role) {
+		return i18n.t("utils.feature-with-name-role", { feature, name, role });
+	} else if (name) {
+		return i18n.t("utils.feature-with-name", { feature, name });
+	} else if (role) {
+		return i18n.t("utils.feature-with-role", { feature, role });
+	} else {
+		return feature;
+	}
 }
 
 function* generateUniqueColourParts(): Generator<number, void, void> {

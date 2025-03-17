@@ -7,7 +7,9 @@ import { getI18n } from "./i18n.js";
 import { parseGpsCoordinates } from "parse-gps-coordinates";
 import type { AnalyzedChangeset } from "./osm/changeset.js";
 import { validateResponse, type OnProgress } from "./utils.js";
-import type { OsmFeatureBlame } from "./osm/feature-blame";
+import type { OsmFeatureBlame } from "./osm/feature-blame.js";
+import type { AnalyzedOsmFeature } from "./osm/feature.js";
+import type { OsmFeatureType } from "osm-api";
 
 interface NominatimResult {
 	place_id: number;
@@ -185,12 +187,14 @@ export function isSearchId(string: string | undefined): boolean {
  * If the search query is a URL for which this is supported, loads the content of the URL through a direct fetch request.
  * Otherwise returns undefined.
  */
-export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<string | AnalyzedChangeset | OsmFeatureBlame | undefined> {
+export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<string | AnalyzedOsmFeature | AnalyzedChangeset | OsmFeatureBlame | undefined> {
 	query = query.trim();
 
 	let m = query.match(/^(node|way|relation)\s+(\d+)$/);
 	if (m) {
-		return await fetch(`https://api.openstreetmap.org/api/0.6/${m[1]}/${m[2]}${m[1] != "node" ? "/full" : ""}`).then(validateResponse).then((res) => res.text());
+		const { fetchOsmFeature, analyzeOsmRelation } = await import("./osm/feature.js");
+		const feature = await fetchOsmFeature(m[1] as OsmFeatureType, Number(m[2]));
+		return feature.type === "relation" ? analyzeOsmRelation(feature) : feature;
 	}
 
 	m = query.match(/^trace\s+(\d+)$/);
@@ -200,13 +204,13 @@ export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress 
 
 	m = query.match(/^changeset\s+(\d+)$/);
 	if (m) {
-		const { analyzeChangeset } = await import("./osm/changeset");
+		const { analyzeChangeset } = await import("./osm/changeset.js");
 		return await analyzeChangeset(Number(m[1]), onProgress);
 	}
 
 	m = query.match(/^blame\s+(way|relation)\s+(\d+)$/);
 	if (m) {
-		const { blameOsmFeature } = await import("./osm/feature-blame");
+		const { blameOsmFeature } = await import("./osm/feature-blame.js");
 		return await blameOsmFeature(m[1] as "way" | "relation", Number(m[2]), onProgress);
 	}
 }

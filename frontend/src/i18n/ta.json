@@ -450,9 +450,7 @@
         "custom-type-mapping": "தனிப்பயன் வகை மேப்பிங்…",
         "no-results": "முடிவுகள் எதுவும் கிடைக்கவில்லை.",
         "zoom-to-result-tooltip": "முடிவுக்கு பெரிதாக்கவும்",
-        "zoom-to-result-alt": "பெரிதாக்கு",
-        "show-details-tooltip": "விவரங்களைக் காட்டு",
-        "show-details-alt": "விவரங்கள்"
+        "show-details-tooltip": "விவரங்களைக் காட்டு"
     },
     "toasts": {
         "unexpected-error": "எதிர்பாராத பிழை",
@@ -772,6 +770,10 @@
         "previous-label": "முந்தைய",
         "next-label": "அடுத்தது",
         "last-label": "கடைசி"
+    },
+    "results": {
+        "zoom-alt": "பெரிதாக்கு",
+        "show-details-alt": "விவரங்கள்"
     },
     "shape-picker": {
         "no-shapes-error": "வடிவங்கள் எதுவும் காணப்படவில்லை.",

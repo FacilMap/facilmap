@@ -2,7 +2,7 @@
 	import RouteForm from "./route-form.vue";
 	import type { HashQuery } from "facilmap-leaflet";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { computed, readonly, ref, toRef } from "vue";
+	import { computed, readonly, ref, toRef, type DeepReadonly } from "vue";
 	import { injectContextRequired, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { RouteDestination, UseAsType } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
@@ -21,7 +21,7 @@
 			routeForm.value!.setQuery(query, zoom, smooth);
 		},
 
-		useAs(destination: RouteDestination, as: UseAsType) {
+		useAs(destination: DeepReadonly<RouteDestination>, as: UseAsType) {
 			routeForm.value!.useAs(destination, as);
 		},
 

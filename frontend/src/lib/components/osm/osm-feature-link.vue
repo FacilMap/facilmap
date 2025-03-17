@@ -2,7 +2,8 @@
 	import { computed } from "vue";
 	import { useI18n } from "../../utils/i18n";
 	import vTooltip from "../../utils/tooltip";
-	import Icon from "../ui/icon.vue";
+	import { getOsmFeatureLabel, getOsmFeatureUrl } from "facilmap-utils";
+	import ExternalLink from "../ui/external-link.vue";
 
 	const props = defineProps<{
 		type: T;
@@ -24,35 +25,23 @@
 </script>
 
 <template>
-	<a
-		:href="`https://www.openstreetmap.org/${encodeURIComponent(props.type)}/${encodeURIComponent(props.id)}`"
+	<ExternalLink
+		:href="getOsmFeatureUrl(props.type, props.id as any)"
 		target="_blank"
 		v-tooltip="tooltip"
 		class="fm-osm-feature-link"
 	>
-		<span>
-			<span>
-				<template v-if="props.label">
-					{{props.label}}
-				</template>
-				<template v-else-if="props.type === 'node'">
-					{{props.onlyId ? props.id : i18n.t("osm-feature-link.node", { id: props.id })}}
-				</template>
-				<template v-else-if="props.type === 'way'">
-					{{props.onlyId ? props.id : i18n.t("osm-feature-link.way", { id: props.id })}}
-				</template>
-				<template v-else-if="props.type === 'relation'">
-					{{props.onlyId ? props.id : i18n.t("osm-feature-link.relation", { id: props.id })}}
-				</template>
-				<template v-else-if="props.type === 'changeset'">
-					{{props.onlyId ? props.id : i18n.t("osm-feature-link.changeset", { id: props.id })}}
-				</template>
-				<template v-else-if="props.type === 'user'">
-					{{props.id}}
-				</template>
-			</span>
-		</span>
-		{{" "}}
-		<Icon icon="new-window" size="1em"></Icon>
-	</a>
+		<template v-if="props.label">
+			{{props.label}}
+		</template>
+		<template v-else-if="props.type === 'changeset'">
+			{{props.onlyId ? props.id : i18n.t("common.changeset", { id: props.id })}}
+		</template>
+		<template v-else-if="props.type === 'user'">
+			{{props.id}}
+		</template>
+		<template v-else>
+			{{props.onlyId ? props.id : getOsmFeatureLabel(props.type, props.id as number)}}
+		</template>
+	</ExternalLink>
 </template>

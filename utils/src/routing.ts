@@ -12,7 +12,10 @@ export interface DecodedRouteMode {
 
 export const R = 6371; // km
 
-export function calculateDistance(posList: Array<{ lat: number; lon: number; }>): number {
+/**
+ * Returns the distance of the given path in kilometers.
+ */
+export function calculateDistance(posList: ReadonlyArray<{ readonly lat: number; readonly lon: number; }>): number {
 	// From http://stackoverflow.com/a/365853/242365
 	let ret = 0;
 

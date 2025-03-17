@@ -1,18 +1,18 @@
 <script setup lang="ts">
 	import type { ID, Line, Marker } from "facilmap-types";
-	import { combineZoomDestinations, flyTo, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
-	import Icon from "../ui/icon.vue";
+	import { combineZoomDestinations, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
 	import MarkerInfo from "../marker-info/marker-info.vue";
 	import LineInfo from "../line-info/line-info.vue";
-	import { computed, ref, watch } from "vue";
+	import { computed, ref, type ComponentInstance } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import { useCarousel } from "../../utils/carousel";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import vTooltip from "../../utils/tooltip";
 	import { formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
+	import type { ResultsItem } from "../ui/results.vue";
+	import Results from "../ui/results.vue";
+	import Carousel, { CarouselTab } from "../ui/carousel.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -25,26 +25,32 @@
 	}>();
 
 	const emit = defineEmits<{
-		"click-object": [object: Marker | Line, event: MouseEvent];
+		"click-object": [object: Marker | Line, toggle: boolean];
 	}>();
 
 	const isDeleting = ref(false);
 	const openedObjectId = ref<ID>();
 	const openedObjectType = ref<"marker" | "line">();
 
-	const carouselRef = ref<HTMLElement>();
-	const carousel = useCarousel(carouselRef);
+	const carouselRef = ref<ComponentInstance<typeof Carousel>>();
 
-	function zoomToObject(object: Marker | Line): void {
-		const zoomDestination = isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined;
-		if (zoomDestination)
-			flyTo(mapContext.value.components.map, zoomDestination);
-	}
+	const objectItems = computed(() => props.objects.map((object): ResultsItem<Marker | Line> => ({
+		key: `${isMarker(object) ? 'm' : 'l'}-${object.id}`,
+		object,
+		label: isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name),
+		labelSuffix: client.value.types[object.typeId] && formatTypeName(client.value.types[object.typeId].name),
+		zoomDestination: isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined,
+		zoomTooltip: i18n.t('multiple-info.zoom-to-object'),
+		canOpen: true,
+		openTooltip: i18n.t('multiple-info.show-details')
+	})));
 
 	function openObject(object: Marker | Line): void {
 		openedObjectId.value = object.id;
 		openedObjectType.value = isMarker(object) ? "marker" : isLine(object) ? "line" : undefined;
-		carousel.setTab(1);
+		setTimeout(() => {
+			carouselRef.value!.setTab(1);
+		}, 0);
 	}
 
 	const openedObject = computed(() => {
@@ -57,11 +63,6 @@
 		}
 
 		return openedObject && props.objects.includes(openedObject) ? openedObject : undefined;
-	});
-
-	watch(openedObject, () => {
-		if (!openedObject.value)
-			carousel.setTab(0);
 	});
 
 	async function deleteObjects(): Promise<void> {
@@ -105,19 +106,15 @@
 
 <template>
 	<div class="fm-multiple-info">
-		<div class="carousel slide fm-flex-carousel" ref="carouselRef">
-			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-				<ul class="list-group fm-search-box-collapse-point">
-					<li v-for="object in props.objects" :key="`${isMarker(object) ? 'm' : 'l'}-${object.id}`" class="list-group-item active">
-						<span class="text-break">
-							<a href="javascript:" @click="emit('click-object', object, $event)">{{isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name)}}</a>
-							{{" "}}
-							<span class="result-type" v-if="client.types[object.typeId]">({{formatTypeName(client.types[object.typeId].name)}})</span>
-						</span>
-						<a href="javascript:" @click="zoomToObject(object)" v-tooltip.left="i18n.t('multiple-info.zoom-to-object')"><Icon icon="zoom-in" :alt="i18n.t('multiple-info.zoom')"></Icon></a>
-						<a href="javascript:" @click="openObject(object)" v-tooltip.right="i18n.t('multiple-info.show-details')"><Icon icon="arrow-right" :alt="i18n.t('multiple-info.details')"></Icon></a>
-					</li>
-				</ul>
+		<Carousel ref="carouselRef">
+			<CarouselTab>
+				<Results
+					class="fm-search-box-collapse-point"
+					:items="objectItems"
+					:active="props.objects"
+					@select="(object, toggle) => emit('click-object', object, toggle)"
+					@open="(object) => openObject(object)"
+				></Results>
 
 				<div class="btn-toolbar mt-2">
 					<ZoomToObjectButton
@@ -138,24 +135,24 @@
 						{{i18n.t("multiple-info.delete")}}
 					</button>
 				</div>
-			</div>
+			</CarouselTab>
 
-			<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
+			<CarouselTab v-if="openedObject">
 				<MarkerInfo
-					v-if="openedObject && isMarker(openedObject)"
+					v-if="isMarker(openedObject)"
 					:markerId="openedObject.id"
 					show-back-button
 					:zoom="mapContext.zoom"
-					@back="carousel.setTab(0)"
+					@back="carouselRef!.setTab(0)"
 				></MarkerInfo>
 				<LineInfo
-					v-else-if="openedObject && isLine(openedObject)"
+					v-else-if="isLine(openedObject)"
 					:lineId="openedObject.id"
 					show-back-button
-					@back="carousel.setTab(0)"
+					@back="carouselRef!.setTab(0)"
 				></LineInfo>
-			</div>
-		</div>
+			</CarouselTab>
+		</Carousel>
 	</div>
 </template>
 
@@ -164,14 +161,5 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-
-		.list-group-item {
-			display: flex;
-			align-items: center;
-
-			> :first-child {
-				flex-grow: 1;
-			}
-		}
 	}
 </style>

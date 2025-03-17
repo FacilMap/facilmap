@@ -47,16 +47,10 @@
         "fallback-ok-label": "OK"
     },
     "blame-results": {
-        "heading-way-named": "Linie {{id}} ({{name}})",
-        "heading-way-unnamed": "Linie {{id}}",
-        "heading-relation-named": "Relation {{id}} ({{name}})",
-        "heading-relation-unnamed": "Relation {{id}} ({{name}})",
         "section-label": "{{timestamp}}, {{username}}",
         "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
         "show-details-tooltip": "Details anzeigen",
-        "show-details-alt": "Details",
         "zoom-to-section-tooltip": "Zum Abschnitt zoomen",
-        "zoom-to-section-alt": "Zoomen",
         "zoom-to-feature-label": "Zum Objekt zoomen"
     },
     "blame-section-info": {
@@ -85,11 +79,9 @@
         "deleted-tooltip": "Gelöscht",
         "modified-tooltip": "Geändert",
         "zoom-to-feature-tooltip": "Zum Objekt zoomen",
-        "zoom-to-feature-alt": "Zoomen",
         "show-details-tooltip": "Details anzeigen",
         "show-details-no-tag-changes-tooltip": "Details anzeigen (keine veränderten Werte)",
         "show-details-no-tag-member-changes-tooltip": "Details anzeigen (keine veränderten Werte/Elemente)",
-        "show-details-alt": "Details",
         "zoom-to-changeset-label": "Zum Changeset zoomen"
     },
     "changeset-feature-info": {
@@ -98,15 +90,25 @@
         "members": "Elemente"
     },
     "osm-feature-link": {
-        "node": "Punkt {{id}}",
-        "way": "Linie {{id}}",
-        "relation": "Relation {{id}}",
         "changeset": "Changeset {{id}}",
         "node-tooltip": "Punkt auf OpenStreetMap öffnen",
         "way-tooltip": "Linie auf OpenStreetMap öffnen",
         "relation-tooltip": "Relation auf OpenStreetMap öffnen",
         "changeset-tooltip": "Changeset auf OpenStreetMap öffnen",
         "user-tooltip": "Benutzer auf OpenStreetMap öffnen"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "Zum Punkt zoomen",
+        "zoom-to-way": "Zur Linie zoomen",
+        "zoom-to-relation": "Zur Relation zoomen",
+        "show-details-tooltip": "Details anzeigen",
+        "total-length": "Gesamtlänge",
+        "sections": "Abschnitte",
+        "nodes": "Punkte",
+        "members": "Elemente",
+        "section-label": "Abschnitt ({{distance}})",
+        "zoom-to-section-tooltip": "Zum Abschnitt zoomen",
+        "role": "Rolle"
     },
     "click-marker-tab": {
         "look-up-error": "Fehler beim Laden der Geoinformationen"
@@ -720,6 +722,10 @@
         "next-label": "Nächste Seite",
         "last-label": "Letzte Seite"
     },
+    "results": {
+        "zoom-alt": "Zoomen",
+        "show-details-alt": "Details"
+    },
     "save-view-dialog": {
         "save-view-error": "Fehler beim Speichern der Ansicht",
         "empty": "—",
@@ -897,9 +903,7 @@
     "search-results": {
         "no-results": "Es wurden keine Ergebnisse gefunden.",
         "zoom-to-result-tooltip": "Zum Suchergebnis zoomen",
-        "zoom-to-result-alt": "Zoomen",
         "show-details-tooltip": "Details anzeigen",
-        "show-details-alt": "Details",
         "select-all": "Alle auswählen",
         "add-to-map-label": "Zur Karte hinzufügen",
         "custom-type-mapping": "Benutzerdefiniert…"

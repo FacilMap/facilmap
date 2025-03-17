@@ -5,7 +5,6 @@ export * from "./utils/add";
 export * from "./utils/bootstrap";
 export { default as BoxSelection } from "./utils/box-selection";
 export * from "./utils/box-selection";
-export * from "./utils/carousel";
 export * from "./utils/draw";
 export * from "./utils/files";
 export { default as FmHeightgraph } from "./utils/heightgraph";
@@ -82,6 +81,8 @@ export { default as AddToMapDropdown } from "./components/ui/add-to-map-dropdown
 export * from "./components/ui/alert.vue";
 export { default as Alert } from "./components/ui/alert.vue";
 export { default as AttributePreservingElement } from "./components/ui/attribute-preserving-element.vue";
+export * from "./components/ui/carousel.vue";
+export { default as Carousel } from "./components/ui/carousel.vue";
 export { default as ColourPicker } from "./components/ui/colour-picker.vue";
 export { default as Coordinates } from "./components/ui/coordinates.vue";
 export { default as DropdownMenu } from "./components/ui/dropdown-menu.vue";

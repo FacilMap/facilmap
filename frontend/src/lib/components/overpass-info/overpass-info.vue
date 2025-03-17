@@ -52,8 +52,8 @@
 			<dd><Coordinates :point="element" :zoom="props.zoom"></Coordinates></dd>
 
 			<template v-for="(value, key) in element.tags" :key="key">
-				<dt>{{key}}</dt>
-				<dd v-html="renderOsmTag(key, value)"></dd>
+				<dt class="text-break font-monospace">{{key}}</dt>
+				<dd class="text-break" v-html="renderOsmTag(key, value)"></dd>
 			</template>
 		</dl>
 

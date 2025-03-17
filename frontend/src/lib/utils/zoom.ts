@@ -2,10 +2,10 @@ import { type LatLng, latLng, type LatLngBounds, latLngBounds, type Map } from "
 import { fmToLeafletBbox, type HashQuery, type OverpassElement } from "facilmap-leaflet";
 import type { RouteWithTrackPoints } from "facilmap-client";
 import type { SelectedItem } from "./selection";
-import type { Bbox, FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, SearchResult } from "facilmap-types";
+import type { Bbox, FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, Point, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
 import { isMapResult } from "./search";
-import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type ChangesetFeature, type OsmFeatureBlameSection } from "facilmap-utils";
+import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type ChangesetFeature, type OsmFeatureBlameSection, type ResolvedOsmFeature } from "facilmap-utils";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
@@ -19,31 +19,43 @@ export type ZoomDestination = {
 
 const MAX_ZOOM = 15;
 
+export function getZoomDestinationForPoint(point: Point): ZoomDestination {
+	return { center: latLng(point.lat, point.lon) };
+}
+
+export function getZoomDestinationForPoints(points: DeepReadonly<Point[]>): ZoomDestination | undefined {
+	return combineZoomDestinations(points.map((point) => getZoomDestinationForPoint(point)));
+}
+
+export function getZoomDestinationForBbox(bbox: Bbox): ZoomDestination {
+	return { bounds: fmToLeafletBbox(bbox) };
+}
+
 export function getZoomDestinationForGeoJSON(geojson: DeepReadonly<Geometry>): ZoomDestination | undefined {
 	if (geojson.type == "GeometryCollection")
 		return combineZoomDestinations(geojson.geometries.map((geo) => getZoomDestinationForGeoJSON(geo)));
 	else if (geojson.type == "Point")
-		return { center: latLng(geojson.coordinates[1], geojson.coordinates[0]) };
+		return getZoomDestinationForPoint({ lat: geojson.coordinates[1], lon: geojson.coordinates[0] });
 	else if (geojson.type == "LineString" || geojson.type == "MultiPoint")
-		return combineZoomDestinations(geojson.coordinates.map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+		return getZoomDestinationForPoints(geojson.coordinates.map((pos) => ({ lat: pos[1], lon: pos[0] })));
 	else if (geojson.type == "Polygon" || geojson.type == "MultiLineString")
-		return combineZoomDestinations(geojson.coordinates.flat().map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+		return getZoomDestinationForPoints(geojson.coordinates.flat().map((pos) => ({ lat: pos[1], lon: pos[0] })));
 	else if (geojson.type == "MultiPolygon")
-		return combineZoomDestinations(geojson.coordinates.flat().flat().map((pos) => ({ center: latLng(pos[1], pos[0]) })));
+		return getZoomDestinationForPoints(geojson.coordinates.flat().flat().map((pos) => ({ lat: pos[1], lon: pos[0] })));
 	else
 		return undefined;
 }
 
 export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker | OverpassElement): ZoomDestination {
-	return { center: latLng(marker.lat, marker.lon), zoom: MAX_ZOOM };
+	return getZoomDestinationForPoint(marker);
 }
 
 export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
-	return { bounds: fmToLeafletBbox(line) };
+	return getZoomDestinationForBbox(line);
 }
 
 export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDestination {
-	return { bounds: fmToLeafletBbox(route) };
+	return getZoomDestinationForBbox(route);
 }
 
 export function getZoomDestinationForSearchResult(result: DeepReadonly<SearchResult>): ZoomDestination | undefined {
@@ -79,13 +91,7 @@ export function getZoomDestinationForResults(results: Array<SearchResult | FindO
 	);
 }
 
-export function getZoomDestinationForBbox(bbox: Bbox): ZoomDestination {
-	return {
-		bounds: latLngBounds([[bbox.bottom, bbox.left], [bbox.top, bbox.right]])
-	};
-}
-
-export function getZoomDestinationForChangesetFeature(feature: ChangesetFeature): ZoomDestination | undefined {
+export function getZoomDestinationForChangesetFeature(feature: DeepReadonly<ChangesetFeature>): ZoomDestination | undefined {
 	if (feature.type === "node") {
 		if (feature.old && feature.new && (feature.old.lat !== feature.new.lat || feature.old.lon !== feature.new.lon)) {
 			return {
@@ -93,8 +99,7 @@ export function getZoomDestinationForChangesetFeature(feature: ChangesetFeature)
 			};
 		} else {
 			return {
-				center: latLng((feature.old ?? feature.new).lat, (feature.old ?? feature.new).lon),
-				zoom: MAX_ZOOM
+				center: latLng((feature.old ?? feature.new).lat, (feature.old ?? feature.new).lon)
 			};
 		}
 	} else if (feature.type === "way") {
@@ -104,12 +109,11 @@ export function getZoomDestinationForChangesetFeature(feature: ChangesetFeature)
 	}
 }
 
-export function getZoomDestinationForFeatureBlameSection(section: OsmFeatureBlameSection): ZoomDestination {
+export function getZoomDestinationForFeatureBlameSection(section: DeepReadonly<OsmFeatureBlameSection>): ZoomDestination {
 	return combineZoomDestinations(section.paths.map((p) => {
 		if (p.length === 1) {
 			return {
-				center: latLng(p[0].lat, p[0].lon),
-				zoom: MAX_ZOOM
+				center: latLng(p[0].lat, p[0].lon)
 			};
 		} else {
 			return {
@@ -119,6 +123,14 @@ export function getZoomDestinationForFeatureBlameSection(section: OsmFeatureBlam
 	}))!;
 }
 
+export function getZoomDestinationForOsmFeature(feature: DeepReadonly<ResolvedOsmFeature>): ZoomDestination {
+	if (feature.type === "node") {
+		return getZoomDestinationForPoint(feature);
+	} else {
+		return getZoomDestinationForBbox(feature.bbox);
+	}
+}
+
 export function combineZoomDestinations(destinations: Array<ZoomDestination | undefined>): ZoomDestination | undefined {
 	if (destinations.length == 0)
 		return undefined;
@@ -126,11 +138,25 @@ export function combineZoomDestinations(destinations: Array<ZoomDestination | un
 		return destinations[0];
 
 	const bounds = latLngBounds(undefined as any);
+	let one = false;
+	let zoom: number | undefined = undefined;
 	for (const destination of destinations) {
-		if (destination)
+		if (destination) {
+			one = true;
 			bounds.extend((destination.bounds || destination.center)!);
+
+			if (destination.zoom != null && (zoom == null || destination.zoom < zoom)) {
+				zoom = destination.zoom;
+			}
+		}
 	}
-	return { bounds };
+	if (!one) {
+		return undefined;
+	} else if (bounds.getNorth() === bounds.getSouth() && bounds.getWest() === bounds.getEast()) {
+		return { center: latLng(bounds.getNorth(), bounds.getWest()), ...(zoom != null ? { zoom } : {}) };
+	} else {
+		return { bounds };
+	}
 }
 
 export function normalizeZoomDestination(map: Map, destination: ZoomDestination): Required<ZoomDestination> & Pick<ZoomDestination, "bounds"> {

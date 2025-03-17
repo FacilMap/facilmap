@@ -1,7 +1,7 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, ChangesetLayer, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers } from "facilmap-leaflet";
+import { BboxHandler, ChangesetLayer, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers, FeatureBlameLayer, OsmLayer } from "facilmap-leaflet";
 import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "leaflet-graphicscale";
@@ -21,7 +21,6 @@ import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
-import FeatureBlameLayer from "facilmap-leaflet/src/osm/feature-blame-layer";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -363,6 +362,19 @@ function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 	);
 }
 
+function useOsmLayer(map: Ref<Map>): Ref<Raw<OsmLayer>> {
+	return useMapComponent(
+		map,
+		() => markRaw(new OsmLayer()),
+		(osmLayer, map) => {
+			osmLayer.addTo(map);
+			onScopeDispose(() => {
+				osmLayer.remove();
+			});
+		}
+	);
+}
+
 function useChangesetLayer(map: Ref<Map>): Ref<Raw<ChangesetLayer>> {
 	return useMapComponent(
 		map,
@@ -391,14 +403,15 @@ function useFeatureBlameLayer(map: Ref<Map>): Ref<Raw<FeatureBlameLayer>> {
 
 function useSelectionHandler(
 	map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>,
-	searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>, featureBlameLayer: Ref<FeatureBlameLayer>, overpassLayer: Ref<OverpassLayer>
+	searchResultsLayer: Ref<SearchResultsLayer>, osmLayer: Ref<OsmLayer>, changesetLayer: Ref<ChangesetLayer>,
+	featureBlameLayer: Ref<FeatureBlameLayer>, overpassLayer: Ref<OverpassLayer>
 ): Ref<Raw<SelectionHandler>> {
 	return useMapComponent(
 		map,
 		() => {
 			const selectionHandler = markRaw(new SelectionHandler(
-				map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, changesetLayer.value, featureBlameLayer.value,
-				overpassLayer.value
+				map.value, markersLayer.value, linesLayer.value, searchResultsLayer.value, osmLayer.value, changesetLayer.value,
+				featureBlameLayer.value, overpassLayer.value
 			));
 
 			selectionHandler.on("fmChangeSelection", (event: any) => {
@@ -481,10 +494,11 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const mousePosition = useMousePosition(map);
 	const overpassLayer = useOverpassLayer(map, mapContext);
 	const searchResultsLayer = useSearchResultsLayer(map);
+	const osmLayer = useOsmLayer(map);
 	const changesetLayer = useChangesetLayer(map);
 	const featureBlameLayer = useFeatureBlameLayer(map);
 	const selectionHandler = useSelectionHandler(
-		map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, changesetLayer, featureBlameLayer, overpassLayer
+		map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, osmLayer, changesetLayer, featureBlameLayer, overpassLayer
 	);
 	const hashHandler = useHashHandler(map, client, context, mapContext, overpassLayer);
 
@@ -500,6 +514,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 		mousePosition,
 		overpassLayer,
 		searchResultsLayer,
+		osmLayer,
 		changesetLayer,
 		featureBlameLayer,
 		selectionHandler,

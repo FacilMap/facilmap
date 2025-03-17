@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { getOsmFeatureName, type OsmFeatureBlameSection } from "facilmap-utils";
-	import { computed, ref } from "vue";
+	import { computed, ref, type DeepReadonly } from "vue";
 	import Icon from "../../ui/icon.vue";
 	import Popover from "../../ui/popover.vue";
 	import OsmFeatureLink from "../osm-feature-link.vue";
@@ -8,7 +8,7 @@
 	import vTooltip from "../../../utils/tooltip";
 
 	const props = defineProps<{
-		membership: OsmFeatureBlameSection["causingChanges"][number]["featureMembership"];
+		membership: DeepReadonly<OsmFeatureBlameSection["causingChanges"][number]["featureMembership"]>;
 	}>();
 
 	const i18n = useI18n();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { toRef } from "vue";
+	import { toRef, type DeepReadonly } from "vue";
 	import type { ButtonSize } from "../../utils/bootstrap";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { type RouteDestination, UseAsType } from "../facil-map-context-provider/route-form-tab-context";
@@ -12,7 +12,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		destination: RouteDestination;
+		destination: DeepReadonly<RouteDestination>;
 		isDisabled?: boolean;
 		size?: ButtonSize;
 	}>();

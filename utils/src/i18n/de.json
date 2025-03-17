@@ -59,5 +59,13 @@
     },
     "search": {
         "http-error": "Unerwarteter Fehler bei der Suche (Status {{status}})."
+    },
+    "utils": {
+        "node": "Punkt {{id}}",
+        "node-with-name": "Punkt {{id}} ({{name}})",
+        "way": "Linie {{id}}",
+        "way-with-name": "Linie {{id}} ({{name}})",
+        "relation": "Relation {{id}}",
+        "relation-with-name": "Relation {{id}} ({{name}})"
     }
 }

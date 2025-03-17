@@ -6,12 +6,12 @@
 	import ChangesetOldNew from "./changeset-old-new.vue";
 	import ZoomToObjectButton from "../../ui/zoom-to-object-button.vue";
 	import { getZoomDestinationForChangesetFeature } from "../../../utils/zoom";
-	import { computed } from "vue";
+	import { computed, type DeepReadonly } from "vue";
 	import Coordinates from "../../ui/coordinates.vue";
 	import OsmFeatureLink from "../osm-feature-link.vue";
 
 	const props = withDefaults(defineProps<{
-		feature: ChangesetFeature;
+		feature: DeepReadonly<ChangesetFeature>;
 		showBackButton?: boolean;
 		zoom?: number;
 	}>(), {
@@ -73,7 +73,7 @@
 			</template>
 
 			<template v-for="t in tags" :key="t.key">
-				<dt>{{t.key}}</dt>
+				<dt class="text-break font-monospace">{{t.key}}</dt>
 				<dd class="text-break">
 					<ChangesetOldNew :oldValue="t.oldValue" :newValue="t.newValue">
 						<template #default="slotProps">

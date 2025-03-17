@@ -1,10 +1,9 @@
 import type { ID, SearchResult } from "facilmap-types";
-import { DomEvent, Evented, Handler, type LatLngBounds, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
-import { type ChangesetLayer, LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
+import { DomEvent, Evented, Handler, type LatLngBounds, Layer, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
+import { type ChangesetLayer, FeatureBlameLayer, LinesLayer, MarkerLayer, MarkersLayer, OsmLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
 import { toRaw, type DeepReadonly } from "vue";
-import type { ChangesetFeature, OsmFeatureBlameSection } from "facilmap-utils";
-import type FeatureBlameLayer from "facilmap-leaflet/src/osm/feature-blame-layer";
+import type { AnalyzedOsmRelationSection, ChangesetFeature, OsmFeatureBlameSection, ResolvedOsmFeature } from "facilmap-utils";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -13,6 +12,12 @@ export type SelectedItem = {
 	type: "searchResult";
 	result: SearchResult;
 	layerId: number;
+} | {
+	type: "osm";
+	feature: DeepReadonly<ResolvedOsmFeature>;
+} | {
+	type: "relationSection";
+	section: DeepReadonly<AnalyzedOsmRelationSection>;
 } | {
 	type: "changeset";
 	feature: ChangesetFeature;
@@ -25,14 +30,13 @@ export type SelectedItem = {
 };
 
 function isAllowedSibling(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>) {
-	if (["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))
-		return true;
-	else if (a.type == "searchResult" && b.type == "searchResult")
-		return a.layerId == b.layerId;
-	else if (a.type == "overpass" && b.type == "overpass")
-		return true;
-	else
-		return false;
+	return (
+		(["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))
+		|| (a.type == "searchResult" && b.type == "searchResult" && a.layerId == b.layerId)
+		|| (a.type == "overpass" && b.type == "overpass")
+		|| (a.type === "osm" && b.type === "osm")
+		|| (a.type === "relationSection" && b.type === "relationSection")
+	);
 }
 
 function byType<T extends SelectedItem["type"]>(items: Array<DeepReadonly<SelectedItem>>, type: T): Array<SelectedItem & { type: T }> {
@@ -59,6 +63,7 @@ export default class SelectionHandler extends Handler {
 	_markersLayer: MarkersLayer;
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
+	_osmLayer: OsmLayer;
 	_changesetLayer: ChangesetLayer;
 	_featureBlameLayer: FeatureBlameLayer;
 	_overpassLayer: OverpassLayer;
@@ -71,8 +76,8 @@ export default class SelectionHandler extends Handler {
 	_isLongClick: boolean = false;
 
 	constructor(
-		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, changesetLayer: ChangesetLayer,
-		featureBlameLayer: FeatureBlameLayer, overpassLayer: OverpassLayer
+		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, osmLayer: OsmLayer,
+		changesetLayer: ChangesetLayer, featureBlameLayer: FeatureBlameLayer, overpassLayer: OverpassLayer
 	) {
 		super(map);
 
@@ -84,6 +89,7 @@ export default class SelectionHandler extends Handler {
 		this._markersLayer = markersLayer;
 		this._linesLayer = linesLayer;
 		this._searchResultLayers = [searchResultsLayer];
+		this._osmLayer = osmLayer;
 		this._changesetLayer = changesetLayer;
 		this._featureBlameLayer = featureBlameLayer;
 		this._overpassLayer = overpassLayer;
@@ -106,6 +112,7 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.on("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
+		this._osmLayer.on("click", this.handleClickOsmFeature);
 		this._changesetLayer.on("click", this.handleClickChangeset);
 		this._featureBlameLayer.on("click", this.handleClickFeatureBlame);
 		this._overpassLayer.on("click", this.handleClickOverpass);
@@ -123,6 +130,7 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.off("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
+		this._osmLayer.off("click", this.handleClickOsmFeature);
 		this._changesetLayer.off("click", this.handleClickChangeset);
 		this._featureBlameLayer.off("click", this.handleClickFeatureBlame);
 		this._overpassLayer.off("click", this.handleClickOverpass);
@@ -177,6 +185,10 @@ export default class SelectionHandler extends Handler {
 				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => i.result)
 			));
 		}
+		this._osmLayer.setHighlightedFeatures(new Set([
+			...byType(items, "osm").map((i) => toRaw(i.feature)),
+			...byType(items, "relationSection").map((i) => toRaw(i.section))
+		]));
 		this._changesetLayer.setHighlightedFeatures(new Set(byType(items, "changeset").map((i) => toRaw(i.feature))));
 		this._featureBlameLayer.setHighlightedSections(new Set(byType(items, "featureBlame").map((i) => i.section)));
 		this._overpassLayer.setHighlightedElements(new Set(
@@ -230,25 +242,40 @@ export default class SelectionHandler extends Handler {
 	}
 
 	handleClickSearchResult = (e: LeafletEvent): void => {
-		if (e.propagatedFrom?._fmSearchResult)
-			this.handleClickItem({ type: "searchResult", result: e.propagatedFrom._fmSearchResult, layerId: Util.stamp(e.target) }, e);
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmSearchResult)
+			this.handleClickItem({ type: "searchResult", result: layer._fmSearchResult!, layerId: Util.stamp(e.target) }, e);
+	}
+
+	handleClickOsmFeature = (e: LeafletEvent): void => {
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmOsmFeature) {
+			if ("paths" in layer._fmOsmFeature) {
+				this.handleClickItem({ type: "relationSection", section: layer._fmOsmFeature }, e);
+			} else {
+				this.handleClickItem({ type: "osm", feature: layer._fmOsmFeature }, e);
+			}
+		}
 	}
 
 	handleClickChangeset = (e: LeafletEvent): void => {
-		if (e.propagatedFrom?._fmChangesetFeature) {
-			this.handleClickItem({ type: "changeset", feature: e.propagatedFrom._fmChangesetFeature }, e);
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmChangesetFeature) {
+			this.handleClickItem({ type: "changeset", feature: layer._fmChangesetFeature! }, e);
 		}
 	};
 
 	handleClickFeatureBlame = (e: LeafletEvent): void => {
-		if (e.propagatedFrom?._fmBlameSection) {
-			this.handleClickItem({ type: "featureBlame", section: e.propagatedFrom._fmBlameSection }, e);
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmBlameSection) {
+			this.handleClickItem({ type: "featureBlame", section: layer._fmBlameSection! }, e);
 		}
 	};
 
 	handleClickOverpass = (e: LeafletEvent): void => {
-		if (e.propagatedFrom?._fmOverpassElement)
-			this.handleClickItem({ type: "overpass", element: e.propagatedFrom._fmOverpassElement }, e);
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmOverpassElement)
+			this.handleClickItem({ type: "overpass", element: layer._fmOverpassElement! }, e);
 	}
 
 	handleClickMap = (e: LeafletEvent): void => {

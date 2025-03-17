@@ -1,21 +1,20 @@
 <script setup lang="ts">
 	import type { FindOnMapResult, SearchResult } from "facilmap-types";
-	import Icon from "../ui/icon.vue";
 	import SearchResultInfo from "../search-result-info.vue";
 	import type { SelectedItem } from "../../utils/selection";
 	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../../utils/add";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
-	import vTooltip from "../../utils/tooltip";
-	import { vScrollIntoView } from "../../utils/vue";
-	import { computed, ref, toRef, watch } from "vue";
+	import { computed, ref, toRef } from "vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
-	import { useCarousel } from "../../utils/carousel";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatTypeName, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
+	import type { ResultsItem } from "../ui/results.vue";
+	import Results from "../ui/results.vue";
+	import SelectionCarousel from "../ui/selection-carousel.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -38,18 +37,7 @@
 		customTypes: () => ({})
 	});
 
-	const carouselRef = ref<HTMLElement>();
-	const carousel = useCarousel(carouselRef);
 	const customImport = ref(false);
-
-	const showZoom = computed(() => !props.autoZoom || props.unionZoom);
-
-	const openResult = computed(() => {
-		if (activeResults.value.length == 1 && !isMapResult(activeResults.value[0]))
-			return activeResults.value[0];
-		else
-			return undefined;
-	});
 
 	const activeResults = computed(() => {
 		return [
@@ -82,29 +70,34 @@
 	});
 
 	const activeFileResults = computed(() => {
-		return activeResults.value.filter(isFileResult);
+		return activeResults.value.filter((result): result is FileResult => isFileResult(result));
 	});
 
 	const hasCustomTypes = computed(() => {
 		return Object.keys(props.customTypes).length > 0;
 	});
 
-	function closeResult(): void {
-		carousel.setTab(0);
-	}
+	const mapResultItems = computed(() => (props.mapResults ?? []).map((result, i): ResultsItem<FindOnMapResult> => ({
+		key: i,
+		object: result,
+		label: isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name),
+		labelSuffix: formatTypeName(client.value.types[result.typeId].name),
+		zoomDestination: getZoomDestinationForMapResult(result),
+		zoomTooltip: i18n.t('search-results.zoom-to-result-tooltip'),
+		canOpen: true,
+		openTooltip: i18n.t('search-results.show-details-tooltip')
+	})));
 
-	watch(openResult, () => {
-		if (!openResult.value && carousel.tab != 0)
-			carousel.setTab(0);
-	});
-
-	function handleClick(result: SearchResult | FileResult | FindOnMapResult, event: MouseEvent): void {
-		const toggle = event.ctrlKey;
-		selectResult(result, toggle);
-
-		if (props.autoZoom)
-			zoomToSelectedResults(props.unionZoom || toggle);
-	}
+	const searchResultItems = computed(() => (props.searchResults ?? []).map((result, i): ResultsItem<SearchResult | FileResult> => ({
+		key: i,
+		object: result,
+		label: result.display_name,
+		labelSuffix: result.type,
+		zoomDestination: getZoomDestinationForSearchResult(result),
+		zoomTooltip: i18n.t('search-results.zoom-to-result-tooltip'),
+		canOpen: true,
+		openTooltip: i18n.t('search-results.show-details-tooltip')
+	})));
 
 	function zoomToSelectedResults(unionZoom: boolean): void {
 		let dest = getZoomDestinationForResults(activeResults.value);
@@ -114,23 +107,20 @@
 			flyTo(mapContext.value.components.map, dest);
 	}
 
-	function zoomToResult(result: SearchResult | FileResult | FindOnMapResult): void {
-		const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
-		if (dest)
-			flyTo(mapContext.value.components.map, dest);
-	}
-
-	function handleOpen(result: SearchResult | FileResult | FindOnMapResult, event: MouseEvent): void {
-		selectResult(result, false);
-
-		setTimeout(async () => {
-			if (isMapResult(result)) {
+	function handleOpen(
+		result: SearchResult | FileResult | FindOnMapResult,
+		open: (item: Extract<SelectedItem, { type: 'searchResult' }>) => void
+	): void {
+		if (isMapResult(result)) {
+			selectResult(result, false);
+			setTimeout(async () => {
 				if (result.kind == "marker" && !client.value.markers[result.id])
 					await client.value.getMarker({ id: result.id });
 				searchBoxContext.value?.activateTab(`fm${context.id}-${result.kind}-info-tab`);
-			} else
-				carousel.setTab(1);
-		}, 0);
+			}, 0);
+		} else {
+			open({ type: "searchResult", result, layerId: props.layerId });
+		}
 	}
 
 	function selectResult(result: SearchResult | FileResult | FindOnMapResult, toggle: boolean): void {
@@ -161,55 +151,39 @@
 
 <template>
 	<div class="fm-search-results" :class="{ isNarrow: context.isNarrow }">
-		<div class="carousel slide fm-flex-carousel" ref="carouselRef">
-			<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
+		<SelectionCarousel :selector="(item): item is Extract<SelectedItem, { type: 'searchResult' }> => item.type == 'searchResult'">
+			<template #default="openResult">
 				<div class="fm-search-box-collapse-point">
 					<slot name="before"></slot>
 
 					<div
-						v-if="(!searchResults || searchResults.length == 0) && (!mapResults || mapResults.length == 0)"
+						v-if="(!searchResults || searchResults.length == 0) && (mapResultItems.length == 0)"
 						class="alert alert-danger"
 					>
 						{{i18n.t("search-results.no-results")}}
 					</div>
 
-					<ul v-if="mapResults && mapResults.length > 0" class="list-group">
-						<!-- eslint-disable-next-line vue/require-v-for-key -->
-						<li
-							v-for="result in mapResults"
-							class="list-group-item"
-							:class="{ active: activeResults.includes(result) }"
-							v-scroll-into-view="activeResults.includes(result)"
-						>
-							<span class="text-break">
-								<a href="javascript:" @click="handleClick(result, $event)">{{isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name)}}</a>
-								{{" "}}
-								<span class="result-type">({{formatTypeName(client.types[result.typeId].name)}})</span>
-							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.hover.left="i18n.t('search-results.zoom-to-result-tooltip')"><Icon icon="zoom-in" :alt="i18n.t('search-results.zoom-to-result-alt')"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.left="i18n.t('search-results.show-details-tooltip')"><Icon icon="arrow-right" :alt="i18n.t('search-results.show-details-alt')"></Icon></a>
-						</li>
-					</ul>
+					<Results
+						v-if="mapResultItems.length > 0"
+						:items="mapResultItems"
+						:active="activeResults"
+						:autoZoom="props.autoZoom"
+						:unionZoom="props.unionZoom"
+						@select="(result, toggle) => selectResult(result, toggle)"
+						@open="(result) => handleOpen(result, (item) => openResult.open(item))"
+					></Results>
 
-					<hr v-if="mapResults && mapResults.length > 0 && searchResults && searchResults.length > 0"/>
+					<hr v-if="mapResultItems.length > 0 && searchResultItems.length > 0"/>
 
-					<ul v-if="searchResults && searchResults.length > 0" class="list-group">
-						<!-- eslint-disable-next-line vue/require-v-for-key -->
-						<li
-							v-for="result in searchResults"
-							class="list-group-item"
-							:class="{ active: activeResults.includes(result) }"
-							v-scroll-into-view="activeResults.includes(result)"
-						>
-							<span class="text-break">
-								<a href="javascript:" @click="handleClick(result, $event)">{{result.display_name}}</a>
-								{{" "}}
-								<span class="result-type" v-if="result.type">({{result.type}})</span>
-							</span>
-							<a v-if="showZoom" href="javascript:" @click="zoomToResult(result)" v-tooltip.left="i18n.t('search-results.zoom-to-result-tooltip')"><Icon icon="zoom-in" :alt="i18n.t('search-results.zoom-to-result-alt')"></Icon></a>
-							<a href="javascript:" @click="handleOpen(result, $event)" v-tooltip.right="i18n.t('search-results.show-details-tooltip')"><Icon icon="arrow-right" :alt="i18n.t('search-results.show-details-alt')"></Icon></a>
-						</li>
-					</ul>
+					<Results
+						v-if="searchResultItems.length > 0"
+						:items="searchResultItems"
+						:active="activeResults"
+						:autoZoom="props.autoZoom"
+						:unionZoom="props.unionZoom"
+						@select="(result, toggle) => selectResult(result, toggle)"
+						@open="(result) => handleOpen(result, (item) => openResult.open(item))"
+					></Results>
 
 					<slot name="after"></slot>
 				</div>
@@ -240,20 +214,19 @@
 						</template>
 					</AddToMapDropdown>
 				</div>
-			</div>
+			</template>
 
-			<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
+			<template #openItem="openResult">
 				<SearchResultInfo
-					v-if="openResult"
-					:result="openResult"
+					:result="openResult.item.result"
 					showBackButton
-					:searchSuggestions="props.searchResults"
-					:mapSuggestions="props.mapResults"
+					:searchResults="props.searchResults"
+					:mapResults="props.mapResults"
 					:zoom="mapContext.zoom"
-					@back="closeResult()"
+					@back="openResult.close()"
 				></SearchResultInfo>
-			</div>
-		</div>
+			</template>
+		</SelectionCarousel>
 
 		<CustomImportDialog
 			v-if="customImport"
@@ -269,18 +242,5 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-
-		.list-group-item {
-			display: flex;
-			align-items: center;
-
-			> :first-child {
-				flex-grow: 1;
-			}
-
-			> a, > a > .fm-icon {
-				display: inline-flex;
-			}
-		}
 	}
 </style>

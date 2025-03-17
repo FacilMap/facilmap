@@ -7,18 +7,18 @@
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../utils/add";
 	import { getZoomDestinationForSearchResult } from "../utils/zoom";
 	import Coordinates from "./ui/coordinates.vue";
-	import { computed } from "vue";
+	import { computed, type DeepReadonly } from "vue";
 	import UseAsDropdown from "./ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "./ui/zoom-to-object-button.vue";
 	import type { RouteDestination } from "./facil-map-context-provider/route-form-tab-context";
 	import AddToMapDropdown from "./ui/add-to-map-dropdown.vue";
 	import { useI18n } from "../utils/i18n";
-import OsmFeatureLink from "./osm/osm-feature-link.vue";
+	import OsmFeatureLink from "./osm/osm-feature-link.vue";
 
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
-		result: SearchResult | FileResult;
+		result: DeepReadonly<SearchResult | FileResult>;
 		showBackButton?: boolean;
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		searchResults?: SearchResult[];
@@ -39,7 +39,7 @@ import OsmFeatureLink from "./osm/osm-feature-link.vue";
 
 	const zoomDestination = computed(() => getZoomDestinationForSearchResult(props.result));
 
-	const routeDestination = computed<RouteDestination | undefined>(() => {
+	const routeDestination = computed<DeepReadonly<RouteDestination> | undefined>(() => {
 		if (isFileResult(props.result)) {
 			if (props.result.lat != null && props.result.lon != null) {
 				return { query: formatCoordinates({ lat: props.result.lat, lon: props.result.lon }) };
@@ -85,7 +85,7 @@ import OsmFeatureLink from "./osm/osm-feature-link.vue";
 			</template>
 
 			<template v-for="(value, key) in result.extratags" :key="key">
-				<dt>{{key}}</dt>
+				<dt class="text-break font-monospace">{{key}}</dt>
 				<dd class="text-break" v-html="renderOsmTag(key, value)"></dd>
 			</template>
 		</dl>
