@@ -47,7 +47,7 @@
     "leaflet-auto-graticule": "^2.0.0",
     "leaflet-draggable-lines": "^3.2.1",
     "leaflet-freie-tonne": "^2.0.1",
-    "leaflet-highlightable-layers": "^4.0.2",
+    "leaflet-highlightable-layers": "^4.0.4",
     "leaflet.markercluster": "^1.5.3",
     "lodash-es": "^4.17.21"
   },
