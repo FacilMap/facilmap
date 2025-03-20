@@ -3,7 +3,7 @@
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, type LatLng } from "leaflet";
@@ -507,7 +507,7 @@
 		mode: routeObj.value.mode
 	}]);
 
-	async function getExport(format: ExportFormat): Promise<string> {
+	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
 		return await client.value.exportRoute({ format });
 	}
 
@@ -749,6 +749,7 @@
 					<ExportDropdown
 						:filename="i18n.t('route-form.export-filename')"
 						:getExport="getExport"
+						:formats="['gpx-trk', 'gpx-rte']"
 						size="sm"
 					></ExportDropdown>
 				</div>

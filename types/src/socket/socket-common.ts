@@ -32,12 +32,12 @@ export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof
 
 export const lineExportRequestValidator = z.object({
 	id: idValidator,
-	format: exportFormatValidator
+	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"])
 });
 export type LineExportRequest = z.infer<typeof lineExportRequestValidator>;
 
 export const routeExportRequestValidator = z.object({
-	format: exportFormatValidator,
+	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]),
 	routeId: z.string().optional()
 });
 export type RouteExportRequest = z.infer<typeof routeExportRequestValidator>;

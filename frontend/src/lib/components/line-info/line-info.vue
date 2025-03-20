@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { ExportFormat, ID } from "facilmap-types";
+	import type { ID } from "facilmap-types";
 	import EditLineDialog from "../edit-line-dialog.vue";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
@@ -69,7 +69,7 @@
 		}
 	}
 
-	async function getExport(format: ExportFormat): Promise<string> {
+	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
 		return await client.value.exportLine({ id: line.value.id, format });
 	}
 
@@ -206,6 +206,7 @@
 			<ExportDropdown
 				:filename="normalizeLineName(line.name)"
 				:getExport="getExport"
+				:formats="['gpx-trk', 'gpx-rte']"
 				size="sm"
 			></ExportDropdown>
 

@@ -370,7 +370,9 @@
         "gpx-track-tooltip": "GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.",
         "gpx-track-label": "Export as GPX track",
         "gpx-route-tooltip": "GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.",
-        "gpx-route-label": "Export as GPX route"
+        "gpx-route-label": "Export as GPX route",
+        "geojson-tooltip": "GeoJSON files are commonly used in software that visualizes or analyzes geographical data.",
+        "geojson-label": "Export as GeoJSON"
     },
     "file-results": {
         "import-view-error": "Error importing view",

@@ -1,9 +1,9 @@
-<script setup lang="ts">
-	import { ref } from "vue";
+<script setup lang="ts" generic="F extends ExportFormat = ExportFormat">
+	import { computed, ref } from "vue";
 	import type { ButtonSize } from "../../utils/bootstrap";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import DropdownMenu from "./dropdown-menu.vue";
-	import type { ExportFormat } from "facilmap-types";
+	import { exportFormatValidator, type ExportFormat } from "facilmap-types";
 	import { useToasts } from "./toasts/toasts.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
@@ -16,19 +16,22 @@
 
 	const props = defineProps<{
 		filename: string;
-		getExport: (format: ExportFormat) => Promise<string>;
+		formats?: F[];
+		getExport: (format: NoInfer<F>) => Promise<string>;
 		isDisabled?: boolean;
 		size?: ButtonSize;
 	}>();
 
 	const isExporting = ref(false);
 
-	async function exportRoute(format: ExportFormat): Promise<void> {
+	const formats = computed(() => props.formats as ExportFormat[] ?? exportFormatValidator.options);
+
+	async function doExport(format: ExportFormat): Promise<void> {
 		toasts.hideToast(`fm${context.id}-export-dropdown-error`);
 		isExporting.value = true;
 
 		try {
-			const exported = await props.getExport(format);
+			const exported = await props.getExport(format as F);
 			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${getSafeFilename(props.filename)}.gpx`);
 		} catch(err: any) {
 			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, () => i18n.t("export-dropdown.export-error"), err);
@@ -45,21 +48,29 @@
 		:label="i18n.t('export-dropdown.button-label')"
 		:isBusy="isExporting"
 	>
-		<li>
+		<li v-if="formats.includes('gpx-trk')">
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="exportRoute('gpx-trk')"
+				@click="doExport('gpx-trk')"
 				v-tooltip.right="i18n.t('export-dropdown.gpx-track-tooltip')"
 			>{{i18n.t("export-dropdown.gpx-track-label")}}</a>
 		</li>
-		<li>
+		<li v-if="formats.includes('gpx-rte')">
 			<a
 				href="javascript:"
 				class="dropdown-item"
-				@click="exportRoute('gpx-rte')"
+				@click="doExport('gpx-rte')"
 				v-tooltip.right="i18n.t('export-dropdown.gpx-route-tooltip')"
 			>{{i18n.t("export-dropdown.gpx-route-label")}}</a>
+		</li>
+		<li v-if="formats.includes('geojson')">
+			<a
+				href="javascript:"
+				class="dropdown-item"
+				@click="doExport('geojson')"
+				v-tooltip.right="i18n.t('export-dropdown.geojson-tooltip')"
+			>{{i18n.t("export-dropdown.geojson-label")}}</a>
 		</li>
 	</DropdownMenu>
 </template>

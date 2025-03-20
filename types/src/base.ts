@@ -48,7 +48,7 @@ export type RouteMode = z.infer<typeof routeModeValidator>;
 export const layerValidator = z.string();
 export type Layer = z.infer<typeof layerValidator>;
 
-export const exportFormatValidator = z.enum(["gpx-trk", "gpx-rte"]);
+export const exportFormatValidator = z.enum(["gpx-trk", "gpx-rte", "geojson"]);
 export type ExportFormat = z.infer<typeof exportFormatValidator>;
 
 export const pointValidator = z.object({
