@@ -3,11 +3,6 @@ import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vu
 import type * as z from "zod";
 import { getI18n } from "./i18n";
 
-// https://stackoverflow.com/a/62085569/242365
-export type DistributedKeyOf<T> = T extends any ? keyof T : never;
-
-export type DistributedOmit<T, K extends DistributedKeyOf<T>> = T extends any ? Omit<T, K> : never;
-
 export type AnyRef<T> = T | Ref<T> | (() => T);
 
 

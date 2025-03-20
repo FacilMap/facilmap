@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { type i18n } from "i18next";
-import { defineComponent, ref, type Directive } from "vue";
+import { defineComponent, h, ref, type Directive } from "vue";
 import messagesEn from "../../i18n/en.json";
 import messagesCs from "../../i18n/cs.json";
 import messagesDe from "../../i18n/de.json";
@@ -10,7 +10,7 @@ import messagesNbNo from "../../i18n/nb-NO.json";
 import messagesRu from "../../i18n/ru.json";
 import messagesTa from "../../i18n/ta.json";
 import messagesZhHant from "../../i18n/zh-Hant.json";
-import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getCurrentLanguage, getRawI18n, onI18nReady, setCurrentUnitsGetter } from "facilmap-utils";
+import { LANG_COOKIE, LANG_QUERY, decodeQueryString, getAcceptHotI18n, getCurrentLanguage, getRawI18n, onI18nReady, quoteRegExp, setCurrentUnitsGetter } from "facilmap-utils";
 import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
 
@@ -94,12 +94,36 @@ export function useI18n(): ReturnType<typeof getI18n> {
 }
 
 /**
+ * Outputs the given text, replacing each occurrence of each provided slot key with the contents of that slot.
+ */
+export const ReplacePlaceholders = defineComponent({
+	props: {
+		text: { type: String, required: true },
+		spans: { type: Boolean }
+	},
+	setup(props, { slots }) {
+		return () => {
+			return props.text.split(new RegExp(`(${Object.keys(slots).map((slotName) => quoteRegExp(slotName)).join("|")})`, "g")).map((v, i) => {
+				if (i % 2 === 1) {
+					return slots[v]!();
+				} else if (props.spans && v) {
+					return h("span", v);
+				} else {
+					return v;
+				}
+			});
+		};
+	}
+});
+
+/**
  * Renders a translated message. Each interpolation variable needs to be specified as a slot, making it possible to interpolate
  * components and rich text.
  */
 export const T = defineComponent({
 	props: {
-		k: { type: String, required: true }
+		k: { type: String, required: true },
+		spans: { type: Boolean }
 	},
 	setup(props, { slots }) {
 		const i18n = useI18n();
@@ -109,13 +133,10 @@ export const T = defineComponent({
 			const placeholderByName = Object.fromEntries(mappedSlots.map(({ name, placeholder }) => [name, placeholder]));
 			const slotByPlaceholder = Object.fromEntries(mappedSlots.map(({ placeholder, slot }) => [placeholder, slot]));
 			const message = i18n.t(props.k, placeholderByName);
-			return message.split(/(%___SLOT_\d+___%)/g).map((v, i) => {
-				if (i % 2 === 0) {
-					return v;
-				} else {
-					return slotByPlaceholder[v]!();
-				}
-			});
+			return h(ReplacePlaceholders, {
+				text: message,
+				spans: props.spans
+			}, slotByPlaceholder);
 		};
 	}
 });

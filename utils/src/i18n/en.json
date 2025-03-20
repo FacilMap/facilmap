@@ -58,5 +58,13 @@
     },
     "search": {
         "http-error": "Search failed with status {{status}}."
+    },
+    "utils": {
+        "node": "Node {{id}}",
+        "way": "Way {{id}}",
+        "relation": "Relation {{id}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, role: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (role: {{role}})"
     }
 }

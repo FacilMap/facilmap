@@ -24,6 +24,7 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "bench", query: "(node[amenity=bench];node(w);)", label: i18n.t("overpass-presets.bench") },
 					{ key: "bicycleparking", query: "nwr[amenity=bicycle_parking]", label: i18n.t("overpass-presets.bicycleparking") },
 					{ key: "bicyclerental", query: "nwr[amenity=bicycle_rental]", label: i18n.t("overpass-presets.bicyclerental") },
+					{ key: "border", query: "nwr[barrier=border_control]", label: i18n.t("overpass-presets.border") },
 					{ key: "cinema", query: "nwr[amenity=cinema]", label: i18n.t("overpass-presets.cinema") },
 					{ key: "clinic", query: "nwr[amenity=clinic]", label: i18n.t("overpass-presets.clinic") },
 					{ key: "drinkingwater", query: "(nwr[amenity=drinking_water];nwr[man_made=water_tap][drinking_water=yes];nwr[man_made=drinking_fountain];nwr[man_made=water_well][drinking_water=yes];)", label: i18n.t("overpass-presets.drinkingwater") },

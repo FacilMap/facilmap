@@ -2,7 +2,7 @@
 	import { type InjectionKey, type Ref, inject, onScopeDispose, provide, shallowReactive, toRef, watch, reactive, readonly, shallowReadonly } from "vue";
 	import { useIsNarrow } from "../../utils/bootstrap";
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
-import { ClientContextMapState, type ClientContextMap } from "./client-context";
+	import { ClientContextMapState, type ClientContextMap } from "./client-context";
 
 	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
 

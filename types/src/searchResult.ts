@@ -16,4 +16,6 @@ export interface SearchResult {
 	type: SearchResultType;
 	id?: string;
 	elevation?: number;
+	osm_type?: "node" | "way" | "relation";
+	osm_id?: number;
 }

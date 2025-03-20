@@ -59,7 +59,7 @@ export const apiV3RequestValidators = {
 	createLine: z.tuple([mapSlugValidator, lineValidator.create]),
 	updateLine: z.tuple([mapSlugValidator, idValidator, lineValidator.update]),
 	deleteLine: z.tuple([mapSlugValidator, idValidator]),
-	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator })]),
+	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]) })]),
 
 	getMapTypes: z.tuple([mapSlugValidator]),
 	getType: z.tuple([mapSlugValidator, idValidator]),

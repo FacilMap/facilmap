@@ -28,7 +28,7 @@ export const socketV3RequestValidators = {
 	unsubscribeFromMap: z.tuple([mapSlugValidator]),
 	subscribeToRoute: z.tuple([z.string(), subscribeToRouteOptionsValidator]),
 	unsubscribeFromRoute: z.tuple([z.string()]),
-	exportRoute: z.tuple([z.string(), z.object({ format: exportFormatValidator })]),
+	exportRoute: z.tuple([z.string(), z.object({ format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]) })]),
 	setBbox: z.tuple([bboxWithZoomValidator]),
 	setLanguage: z.tuple([setLanguageRequestValidator])
 };

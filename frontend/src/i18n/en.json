@@ -1,4 +1,7 @@
 {
+    "common": {
+        "coordinates": "Coordinates"
+    },
     "about-dialog": {
         "header": "About FacilMap {{version}}",
         "license-text": "{{facilmap}} is available under the {{license}}.",
@@ -42,6 +45,69 @@
     },
     "alert": {
         "fallback-ok-label": "OK"
+    },
+    "blame-results": {
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "Show details",
+        "zoom-to-section-tooltip": "Zoom to section",
+        "zoom-to-feature-label": "Zoom to feature"
+    },
+    "blame-section-info": {
+        "changeset": "Changeset",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "Analyze changeset",
+        "timestamp": "Timestamp",
+        "user": "User",
+        "created-modified": "Created/modified"
+    },
+    "blame-section-membership": {
+        "tooltip": "Show membership hierarchy",
+        "alt": "Info",
+        "heading": "Membership hierarchy",
+        "member-with-name-role": "{{feature}} ({{name}}, role: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (role: {{role}})"
+    },
+    "changeset-results": {
+        "heading": "Changeset {{id}}",
+        "created": "Creation time",
+        "closed": "Closing time",
+        "user": "User",
+        "features": "Features",
+        "created-tooltip": "Created",
+        "deleted-tooltip": "Deleted",
+        "modified-tooltip": "Modified",
+        "zoom-to-feature-tooltip": "Zoom to feature",
+        "show-details-tooltip": "Show details",
+        "show-details-no-tag-changes-tooltip": "Show details (no tag changes)",
+        "show-details-no-tag-member-changes-tooltip": "Show details (no tag/member changes)",
+        "zoom-to-changeset-label": "Zoom to changeset"
+    },
+    "changeset-feature-info": {
+        "zoom-to-feature-label": "Zoom to feature",
+        "members": "Members"
+    },
+    "osm-feature-link": {
+        "changeset": "Changeset {{id}}",
+        "node-tooltip": "Open node on OpenStreetMap",
+        "way-tooltip": "Open way on OpenStreetMap",
+        "relation-tooltip": "Open relation on OpenStreetMap",
+        "changeset-tooltip": "Open changeset on OpenStreetMap",
+        "user-tooltip": "Open user on OpenStreetMap"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "Zoom to node",
+        "zoom-to-way": "Zoom to way",
+        "zoom-to-relation": "Zoom to relation",
+        "show-details-tooltip": "Show feature details",
+        "total-length": "Total length",
+        "sections": "Sections",
+        "nodes": "Nodes",
+        "members": "Relation members",
+        "section-label": "Section ({{distance}})",
+        "zoom-to-section-tooltip": "Zoom to section",
+        "role": "Role"
     },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"
@@ -232,6 +298,7 @@
         "control-shape": "Control {{type}} shape",
         "control-width": "Control {{type}} width",
         "control-stroke": "Control {{type}} stroke",
+        "show-in-legend": "Show in legend",
         "option": "Option",
         "label": "Label (for legend)",
         "colour": "Colour",
@@ -303,7 +370,9 @@
         "gpx-track-tooltip": "GPX files can be opened with most navigation software. In track mode, the calculated route is saved in the file.",
         "gpx-track-label": "Export as GPX track",
         "gpx-route-tooltip": "GPX files can be opened with most navigation software. In route mode, only the start/end/via points are saved in the file, and the navigation software needs to calculate the route.",
-        "gpx-route-label": "Export as GPX route"
+        "gpx-route-label": "Export as GPX route",
+        "geojson-tooltip": "GeoJSON files are commonly used in software that visualizes or analyzes geographical data.",
+        "geojson-label": "Export as GeoJSON"
     },
     "file-results": {
         "import-view-error": "Error importing view",
@@ -550,7 +619,6 @@
         "delete-marker-message": "Do you really want to delete the marker “{{name}}”?",
         "delete-marker-ok": "Delete",
         "delete-marker-error": "Error deleting marker",
-        "coordinates": "Coordinates",
         "zoom-to-object-label": "Zoom to marker",
         "edit-data": "Edit data",
         "actions": "Actions",
@@ -606,7 +674,6 @@
         "tab-label_other": "{{count}} POIs"
     },
     "overpass-info": {
-        "coordinates": "Coordinates",
         "zoom-to-object-label": "Zoom to POI"
     },
     "overpass-multiple-info": {
@@ -658,6 +725,10 @@
         "next-label": "Next",
         "last-label": "Last"
     },
+    "results": {
+        "zoom-alt": "Zoom",
+        "show-details-alt": "Details"
+    },
     "save-view-dialog": {
         "save-view-error": "Error saving view",
         "empty": "—",
@@ -677,7 +748,6 @@
         "make-default": "Make default view"
     },
     "search-result-info": {
-        "coordinates": "Coordinates",
         "type": "Type",
         "address": "Address",
         "zoom-to-result-label": "Zoom to search result"
@@ -827,7 +897,8 @@
         "search-alt": "Search",
         "clear-alt": "Clear",
         "auto-zoom": "Auto-zoom to results",
-        "zoom-to-all": "Zoom to all results"
+        "zoom-to-all": "Zoom to all results",
+        "map-only": "Only search on map “{{mapName}}”"
     },
     "search-form-tab": {
         "tab-label": "Search"
@@ -835,9 +906,7 @@
     "search-results": {
         "no-results": "No results have been found.",
         "zoom-to-result-tooltip": "Zoom to result",
-        "zoom-to-result-alt": "Zoom",
         "show-details-tooltip": "Show details",
-        "show-details-alt": "Details",
         "select-all": "Select all",
         "add-to-map-label_one": "Add selected item to map",
         "add-to-map-label_other": "Add selected items to map",

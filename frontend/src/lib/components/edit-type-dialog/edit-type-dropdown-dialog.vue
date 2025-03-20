@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { CRU, Field, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
-	import { canControl, formatCheckboxValue, mergeObject } from "facilmap-utils";
+	import { canControl, formatCheckboxValue, getDefaultFieldShowInLegend, mergeObject } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ColourPicker from "../ui/colour-picker.vue";
@@ -123,6 +123,23 @@
 	const controlNumber = computed(() => getControlNumber(props.type, fieldValue.value));
 
 	const columns = computed(() => controlNumber.value + (fieldValue.value.type === "checkbox" ? 2 : 3));
+
+	const defaultShowInLegend = computed(() => getDefaultFieldShowInLegend(props.type, fieldValue.value));
+
+	const showInLegend = computed({
+		get: () => fieldValue.value.showInLegend ?? defaultShowInLegend.value,
+		set: (v) => {
+			if (v === defaultShowInLegend.value) {
+				delete fieldValue.value.showInLegend;
+			} else {
+				fieldValue.value.showInLegend = v;
+			}
+		}
+	});
+
+	watch(defaultShowInLegend, () => {
+		delete fieldValue.value.showInLegend;
+	});
 
 	function validateOptionValue(value: string): string | undefined {
 		if (fieldValue.value.type !== "checkbox" && fieldValue.value.options!.filter((op) => op.value === value).length > 1) {
@@ -257,13 +274,28 @@
 						{{i18n.t("edit-type-dropdown-dialog.control-stroke", { type: typeInterpolation })}}
 					</label>
 				</div>
+
+				<div v-if="type.showInLegend" class="form-check">
+					<input
+						:id="`${id}-showInLegend`"
+						class="form-check-input"
+						type="checkbox"
+						v-model="showInLegend"
+					/>
+					<label
+						class="form-check-label"
+						:for="`${id}-showInLegend`"
+					>
+						{{i18n.t("edit-type-dropdown-dialog.show-in-legend")}}
+					</label>
+				</div>
 			</div>
 		</div>
-		<table v-if="fieldValue.type != 'checkbox' || controlNumber > 0" class="table table-striped table-hover">
+		<table v-if="fieldValue.type != 'checkbox' || controlNumber > 0 || showInLegend" class="table table-striped table-hover">
 			<thead>
 				<tr>
 					<th>{{i18n.t("edit-type-dropdown-dialog.option")}}</th>
-					<th v-if="fieldValue.type == 'checkbox'">{{i18n.t("edit-type-dropdown-dialog.label")}}</th>
+					<th v-if="fieldValue.type == 'checkbox' && showInLegend">{{i18n.t("edit-type-dropdown-dialog.label")}}</th>
 					<th v-if="fieldValue.controlColour">{{i18n.t("edit-type-dropdown-dialog.colour")}}</th>
 					<th v-if="fieldValue.controlSize">{{i18n.t("edit-type-dropdown-dialog.size")}}</th>
 					<th v-if="fieldValue.controlIcon">{{i18n.t("edit-type-dropdown-dialog.icon")}}</th>
@@ -286,6 +318,7 @@
 							<strong>{{formatCheckboxValue(idx === 0 ? "0" : "1")}}</strong>
 						</td>
 						<ValidatedField
+							v-if="fieldValue.type !== 'checkbox' || showInLegend"
 							tag="td"
 							class="field position-relative"
 							:value="option.value"

@@ -16,6 +16,7 @@
 	import StrokePicker from "./ui/stroke-picker.vue";
 	import { useI18n } from "../utils/i18n";
 	import { useMaxBreakpoint } from "../utils/bootstrap";
+	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);

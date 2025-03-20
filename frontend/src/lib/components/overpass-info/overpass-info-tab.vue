@@ -24,8 +24,8 @@
 			searchBoxContext.value.activateTab(`fm${context.id}-overpass-info-tab`, { expand: true });
 	}
 
-	function handleElementClick(element: OverpassElement, event: MouseEvent): void {
-		if (event.ctrlKey)
+	function handleElementClick(element: OverpassElement, toggle: boolean): void {
+		if (toggle)
 			mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it.type != "overpass" || it.element !== element), true);
 		else
 			mapContext.value.components.selectionHandler.setSelectedItems(mapContext.value.selection.filter((it) => it.type == "overpass" && it.element === element), true);

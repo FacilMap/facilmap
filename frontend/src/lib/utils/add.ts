@@ -14,7 +14,7 @@ import { getI18n } from "./i18n";
 export type MarkerWithTags = Omit<Marker<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
 export type LineWithTags = Omit<Line<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
 
-export function searchResultToMarkerWithTags(result: SearchResult | FileResult): MarkerWithTags | undefined {
+export function searchResultToMarkerWithTags(result: DeepReadonly<SearchResult | FileResult>): MarkerWithTags | undefined {
 	if (!isMarkerResult(result)) {
 		return undefined;
 	}
@@ -31,14 +31,14 @@ export function searchResultToMarkerWithTags(result: SearchResult | FileResult):
 	};
 }
 
-export function searchResultsToMarkersWithTags(results: Array<SearchResult | FileResult>): MarkerWithTags[] {
+export function searchResultsToMarkersWithTags(results: DeepReadonly<Array<SearchResult | FileResult>>): MarkerWithTags[] {
 	return results.flatMap((result) => {
 		const markerWithTags = searchResultToMarkerWithTags(result);
 		return markerWithTags ? [markerWithTags] : [];
 	});
 }
 
-export function searchResultToLineWithTags(result: SearchResult | FileResult): LineWithTags | undefined {
+export function searchResultToLineWithTags(result: DeepReadonly<SearchResult | FileResult>): LineWithTags | undefined {
 	if (!isLineResult(result)) {
 		return undefined;
 	}
@@ -66,7 +66,7 @@ export function searchResultToLineWithTags(result: SearchResult | FileResult): L
 	}
 }
 
-export function searchResultsToLinesWithTags(results: Array<SearchResult | FileResult>): LineWithTags[] {
+export function searchResultsToLinesWithTags(results: DeepReadonly<Array<SearchResult | FileResult>>): LineWithTags[] {
 	return results.flatMap((result) => {
 		const lineWithTags = searchResultToLineWithTags(result);
 		return lineWithTags ? [lineWithTags] : [];

@@ -1,5 +1,8 @@
 import { cloneDeep, isEqual } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
+import type { Colour } from "facilmap-types";
+import type { OsmFeatureType } from "osm-api";
+import { getI18n } from "./i18n";
 
 export function quoteHtml(str: string | number): string {
 	return `${str}`
@@ -15,6 +18,10 @@ export function quoteHtml(str: string | number): string {
 
 export function quoteRegExp(str: string): string {
 	return `${str}`.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&");
+}
+
+export function quoteMarkdown(str: string): string {
+	return str.split("").map((c) => `&#${c.charCodeAt(0)};`).join("");
 }
 
 export function makeTextColour(backgroundColour: string, threshold = 0.5): string {
@@ -260,4 +267,105 @@ export function insertIdx<IDType>(objects: Array<{ id: IDType; idx: number }>, i
 	}
 
 	return result;
+}
+
+/**
+ * Can be used in the form of fetch(...).then(validateResponse) to throw an error if the fetch succeeded with a non-ok status code.
+ */
+export async function validateResponse(response: Response): Promise<Response> {
+	if (!response.ok) {
+		let body;
+		try {
+			body = await response.text();
+		} catch {
+			// Ignore
+		}
+		throw new Error(`Error loading ${response.url} (status ${response.status}${body ? `, body: ${body}` : ""})`);
+	}
+	return response;
+}
+
+export type OnProgress = {
+	signal?: AbortSignal;
+	onProgress?: (progress: number) => void;
+};
+
+export function scaleProgress(onProgress: OnProgress | undefined, min: number, max: number): OnProgress {
+	return {
+		signal: onProgress?.signal,
+		onProgress: onProgress?.onProgress && ((p) => onProgress.onProgress!(min + (p * (max - min))))
+	};
+}
+
+export function sendProgress(onProgress: OnProgress | undefined, progress: number): void {
+	if (progress < 0 || progress > 1) {
+		console.trace("Unexpected progress", progress);
+	}
+	onProgress?.signal?.throwIfAborted();
+	onProgress?.onProgress?.(progress);
+}
+
+export function getOsmFeatureName(tags: Record<string, string>, language: string): string | undefined {
+	const lowerTags = Object.fromEntries(Object.entries(tags).map(([k, v]) => [k.toLowerCase(), v]));
+	const lowerLang = language.toLowerCase();
+	return lowerTags[`name:${lowerLang}`] ?? tags[`name:${lowerLang.split("-")[0]}`] ?? tags.name;
+}
+
+export function getOsmFeatureUrl(...args: [type: OsmFeatureType | "changeset", id: number] | [type: "user", name: string]): string {
+	return `https://www.openstreetmap.org/${encodeURIComponent(args[0])}/${encodeURIComponent(args[1])}`;
+}
+
+export function getOsmFeatureLabel(type: OsmFeatureType, id: number, name?: string, role?: string): string {
+	const i18n = getI18n();
+	const feature = (
+		type === "node" ? i18n.t("utils.node", { id }) :
+		type === "way" ? i18n.t("utils.way", { id }) :
+		type === "relation" ? i18n.t("utils.relation", { id }) :
+		`${id}`
+	);
+	if (name && role) {
+		return i18n.t("utils.feature-with-name-role", { feature, name, role });
+	} else if (name) {
+		return i18n.t("utils.feature-with-name", { feature, name });
+	} else if (role) {
+		return i18n.t("utils.feature-with-role", { feature, role });
+	} else {
+		return feature;
+	}
+}
+
+function* generateUniqueColourParts(): Generator<number, void, void> {
+	yield 255;
+	yield 0;
+	for (let fac = 2; true; fac *= 2) {
+		const frac = 256 / fac;
+		for (let i = fac - 1; i > 0; i -= 2) {
+			yield Math.round(i * frac);
+		}
+	}
+}
+
+export function* generateUniqueColours(): Generator<Colour, void, void> {
+	let prevLength = 0;
+	let parts: number[] = [];
+	const gen = generateUniqueColourParts();
+	while (true) {
+		parts.push(gen.next().value!);
+		for (let i = 0; i < parts.length; i++) {
+			for (let j = 0; j < parts.length; j++) {
+				for (let k = 0; k < parts.length; k++) {
+					if (i < prevLength && j < prevLength && k < prevLength) { // We have yielded this combination before
+						continue;
+					}
+
+					if ((parts[i] === 0 && parts[j] === 0 && parts[k] === 0) || (parts[i] === 255 && parts[j] === 255 && parts[k] === 255)) { // Skip these, they are not colours
+						continue;
+					}
+
+					yield `${parts[i].toString(16).padStart(2, "0")}${parts[j].toString(16).padStart(2, "0")}${parts[k].toString(16).padStart(2, "0")}`;
+				}
+			}
+		}
+		prevLength = parts.length;
+	}
 }

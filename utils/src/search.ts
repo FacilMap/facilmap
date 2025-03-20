@@ -1,10 +1,15 @@
-import type { Point, SearchResult, ZoomLevel } from "facilmap-types";
+import type { Bbox, Point, SearchResult, ZoomLevel } from "facilmap-types";
 import throttle from "p-throttle";
 import type { Geometry } from "geojson";
 import { formatCoordinates } from "./format.js";
 import { fetchAdapter, getConfig } from "./config.js";
 import { getI18n } from "./i18n.js";
 import { parseGpsCoordinates } from "parse-gps-coordinates";
+import type { AnalyzedChangeset } from "./osm/changeset.js";
+import { validateResponse, type OnProgress } from "./utils.js";
+import type { OsmFeatureBlame } from "./osm/feature-blame.js";
+import type { AnalyzedOsmFeature } from "./osm/feature.js";
+import type { OsmFeatureType } from "osm-api";
 
 interface NominatimResult {
 	place_id: number;
@@ -178,16 +183,43 @@ export function isSearchId(string: string | undefined): boolean {
 	return !!string?.match(/^[nwr]\d+$/i);
 }
 
-export function parseUrlQuery(query: string): string | undefined {
-	query = query.replace(/^\s+/, "").replace(/\s+$/, "");
+/**
+ * If the search query is a URL for which this is supported, loads the content of the URL through a direct fetch request.
+ * Otherwise returns undefined.
+ */
+export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<string | AnalyzedOsmFeature | AnalyzedChangeset | OsmFeatureBlame | undefined> {
+	query = query.trim();
 
 	let m = query.match(/^(node|way|relation)\s+(\d+)$/);
-	if(m)
-		return `https://api.openstreetmap.org/api/0.6/${m[1]}/${m[2]}${m[1] != "node" ? "/full" : ""}`;
+	if (m) {
+		const { fetchOsmFeature, analyzeOsmRelation } = await import("./osm/feature.js");
+		const feature = await fetchOsmFeature(m[1] as OsmFeatureType, Number(m[2]));
+		return feature.type === "relation" ? analyzeOsmRelation(feature) : feature;
+	}
 
 	m = query.match(/^trace\s+(\d+)$/);
-	if(m)
-		return `https://www.openstreetmap.org/trace/${m[1]}/data`;
+	if (m) {
+		return await fetch(`https://www.openstreetmap.org/trace/${m[1]}/data`).then(validateResponse).then((res) => res.text());
+	}
+
+	m = query.match(/^changeset\s+(\d+)$/);
+	if (m) {
+		const { analyzeChangeset } = await import("./osm/changeset.js");
+		return await analyzeChangeset(Number(m[1]), onProgress);
+	}
+
+	m = query.match(/^blame\s+(way|relation)\s+(\d+)$/);
+	if (m) {
+		const { blameOsmFeature } = await import("./osm/feature-blame.js");
+		return await blameOsmFeature(m[1] as "way" | "relation", Number(m[2]), onProgress);
+	}
+}
+
+/**
+ * If the search query is represents a URL, returns that URL. Otherwise returns undefined.
+ */
+export function parseUrlQuery(query: string): string | undefined {
+	query = query.trim();
 
 	if(query.match(/^https?:\/\//))
 		return query;
@@ -326,7 +358,9 @@ function _prepareSearchResult(result: NominatimResult): SearchResult {
 		geojson: result.geojson,
 		icon: result.icon && result.icon.replace(/^.*\/([a-z0-9_]+)\.[a-z0-9]+\.[0-9]+\.[a-z0-9]+$/i, "$1"),
 		type: result.addresstype,
-		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : undefined
+		id: result.osm_id ? result.osm_type.charAt(0) + result.osm_id : undefined,
+		osm_type: result.osm_type,
+		osm_id: result.osm_id
 	};
 }
 

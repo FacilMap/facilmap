@@ -119,7 +119,7 @@ export const legacyV2LineTemplateRequestValidator = z.object({
 
 export const legacyV2LineExportRequestValidator = z.object({
 	id: idValidator,
-	format: exportFormatValidator
+	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"])
 });
 
 export const legacyV2FindQueryValidator = z.object({
@@ -142,7 +142,7 @@ export const legacyV2LineToRouteCreateValidator = z.object({
 });
 
 export const legacyV2RouteExportRequestValidator = z.object({
-	format: exportFormatValidator,
+	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]),
 	routeId: z.string().optional()
 });
 

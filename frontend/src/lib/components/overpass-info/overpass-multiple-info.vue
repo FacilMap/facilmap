@@ -1,11 +1,8 @@
 <script setup lang="ts">
-	import { combineZoomDestinations, flyTo, getZoomDestinationForMarker } from "../../utils/zoom";
-	import Icon from "../ui/icon.vue";
+	import { combineZoomDestinations, getZoomDestinationForMarker } from "../../utils/zoom";
 	import OverpassInfo from "./overpass-info.vue";
 	import type { OverpassElement } from "facilmap-leaflet";
-	import vTooltip from "../../utils/tooltip";
 	import { computed, ref } from "vue";
-	import { useCarousel } from "../../utils/carousel";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { getClientSub, injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
@@ -13,6 +10,9 @@
 	import { formatPOIName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 	import { Writable } from "facilmap-types";
+	import Carousel, { CarouselTab } from "../ui/carousel.vue";
+	import type { ResultsItem } from "../ui/results.vue";
+	import Results from "../ui/results.vue";
 
 	const context = injectContextRequired();
 	const clientSub = getClientSub(context);
@@ -24,23 +24,28 @@
 	}>();
 
 	const emit = defineEmits<{
-		"click-element": [element: OverpassElement, event: MouseEvent];
+		"click-element": [element: OverpassElement, toggle: boolean];
 	}>();
 
 	const openedElement = ref<OverpassElement>();
 
-	const carouselRef = ref<HTMLElement>();
-	const carousel = useCarousel(carouselRef);
+	const carouselRef = ref<typeof Carousel>();
 
-	function zoomToElement(element: OverpassElement): void {
-		const zoomDestination = getZoomDestinationForMarker(element);
-		if (zoomDestination)
-			flyTo(mapContext.value.components.map, zoomDestination);
-	}
+	const elementItems = computed(() => props.elements.map((element): ResultsItem<OverpassElement> => ({
+		key: element.id,
+		object: element,
+		label: formatPOIName(element.tags.name),
+		zoomDestination: getZoomDestinationForMarker(element),
+		zoomTooltip: i18n.t('overpass-multiple-info.zoom-to-object'),
+		canOpen: true,
+		openTooltip: i18n.t('overpass-multiple-info.show-details')
+	})));
 
 	function openElement(element: OverpassElement): void {
 		openedElement.value = element;
-		carousel.setTab(1);
+		setTimeout(() => {
+			carouselRef.value!.setTab(1);
+		}, 0);
 	}
 
 	const markersWithTags = computed(() => overpassElementsToMarkersWithTags(props.elements));
@@ -54,17 +59,14 @@
 			<OverpassInfo :element="elements[0]" :zoom="mapContext.zoom"></OverpassInfo>
 		</template>
 		<template v-else>
-			<div class="carousel slide" ref="carouselRef">
-				<div class="carousel-item" :class="{ active: carousel.tab === 0 }">
-					<ul class="list-group">
-						<li v-for="element in elements" :key="element.id" class="list-group-item active">
-							<span>
-								<a href="javascript:" @click="emit('click-element', element, $event)">{{formatPOIName(element.tags.name)}}</a>
-							</span>
-							<a href="javascript:" @click="zoomToElement(element)" v-tooltip.left="i18n.t('overpass-multiple-info.zoom-to-object')"><Icon icon="zoom-in" :alt="i18n.t('overpass-multiple-info.zoom')"></Icon></a>
-							<a href="javascript:" @click="openElement(element)" v-tooltip.right="i18n.t('overpass-multiple-info.show-details')"><Icon icon="arrow-right" :alt="i18n.t('overpass-multiple-info.details')"></Icon></a>
-						</li>
-					</ul>
+			<Carousel ref="carouselRef">
+				<CarouselTab>
+					<Results
+						:items="elementItems"
+						:active="props.elements"
+						@select="(element, toggle) => emit('click-element', element, toggle)"
+						@open="(element) => openElement(element)"
+					></Results>
 
 					<div class="btn-toolbar mt-2">
 						<ZoomToObjectButton
@@ -81,31 +83,17 @@
 							></AddToMapDropdown>
 						</template>
 					</div>
-				</div>
+				</CarouselTab>
 
-				<div class="carousel-item" :class="{ active: carousel.tab === 1 }">
+				<CarouselTab v-if="openedElement">
 					<OverpassInfo
-						v-if="openedElement"
 						:element="openedElement"
 						show-back-button
 						:zoom="mapContext.zoom"
-						@back="carousel.setTab(0)"
+						@back="carouselRef!.setTab(0)"
 					></OverpassInfo>
-				</div>
-			</div>
+				</CarouselTab>
+			</Carousel>
 		</template>
 	</div>
 </template>
-
-<style lang="scss">
-	.fm-overpass-multiple-info {
-		.list-group-item {
-			display: flex;
-			align-items: center;
-
-			> :first-child {
-				flex-grow: 1;
-			}
-		}
-	}
-</style>

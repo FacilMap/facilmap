@@ -114,13 +114,14 @@ their `idx` property.
   different object properties
 * `colourFixed`, `sizeFixed`, `iconFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and
   cannot be changed for an individual object
-* `fields` ([object]): The form fields for this type. Each field has the following properties:
+* `fields` (object): The form fields for this type. Each field has the following properties:
 	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 	* `oldName` (string): When renaming a field (using [`editType(data)`](./methods.md#edittype-data)), specify the former name here
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
-	* `controlColour`, `controlSize`, `controlIcon`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown, whether the different options set a specific property on the object
+	* `controlColour`, `controlSize`, `controlIcon`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown or checkbox, whether the different options set a specific property on the object
+	* `showInLegend` (boolean): If this field is a dropdown or checkbox, whether items for its options should be shown in the legend. Only has an effect if the type itself is shown in the legend. If set to undefined, it is shown in the legend only if the field controls the colour, marker icon or shape, or line width or stroke.
 	* `default` (string/boolean): The default value of this field
-	* `options` ([object]): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
+	* `options` (object): If this field is a dropdown or a checkbox, an array of objects with the following properties. For a checkbox, the array has to have 2 items, the first representing the unchecked and the second the checked state.
 		* `value` (string): The value of this option.
 		* `oldValue` (string): When renaming a dropdown option (using [`editType(data)`](./methods.md#edittype-data)), specify the former value here
 		* `colour`, `size`, `shape`, `icon`, `width`, `stroke` (string/number): The property value if this field controls that property

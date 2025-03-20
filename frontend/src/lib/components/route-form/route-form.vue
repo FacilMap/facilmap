@@ -1,9 +1,9 @@
 <script setup lang="ts">
-	import { computed, markRaw, nextTick, reactive, ref, toRaw, watch } from "vue";
+	import { computed, markRaw, nextTick, reactive, ref, toRaw, watch, type DeepReadonly } from "vue";
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { ExportFormat, FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, type LatLng } from "leaflet";
@@ -34,9 +34,9 @@
 		loadingQuery?: string;
 		loadingPromise?: Promise<void>;
 		loadedQuery?: string;
-		searchSuggestions?: SearchSuggestion[];
+		searchSuggestions?: DeepReadonly<SearchSuggestion[]>;
 		mapSuggestions?: MapSuggestion[];
-		selectedSuggestion?: Suggestion;
+		selectedSuggestion?: DeepReadonly<Suggestion>;
 	}
 
 	function makeCoordDestination(latlng: LatLng) {
@@ -58,7 +58,7 @@
 		};
 	}
 
-	function makeDestination({ query, searchSuggestions, mapSuggestions, selectedSuggestion }: { query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult }): Destination {
+	function makeDestination({ query, searchSuggestions, mapSuggestions, selectedSuggestion }: DeepReadonly<{ query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult }>): Destination {
 		return {
 			query,
 			loadedQuery: searchSuggestions || mapSuggestions ? query : undefined,
@@ -270,7 +270,7 @@
 			destinations.value.splice(idx, 1);
 	}
 
-	function getSelectedSuggestion(dest: Destination): Suggestion | undefined {
+	function getSelectedSuggestion(dest: Destination): DeepReadonly<Suggestion> | undefined {
 		if(dest.selectedSuggestion && [...(dest.searchSuggestions || []), ...(dest.mapSuggestions || [])].includes(dest.selectedSuggestion))
 			return dest.selectedSuggestion;
 		else if(dest.mapSuggestions && dest.mapSuggestions.length > 0 && (dest.mapSuggestions[0].similarity == 1 || (dest.searchSuggestions || []).length == 0))
@@ -508,7 +508,7 @@
 		mode: routeObj.value.mode
 	}]);
 
-	async function getExport(format: ExportFormat): Promise<string> {
+	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
 		return await client.value.exportRoute({ format });
 	}
 
@@ -750,6 +750,7 @@
 					<ExportDropdown
 						:filename="i18n.t('route-form.export-filename')"
 						:getExport="getExport"
+						:formats="['gpx-trk', 'gpx-rte']"
 						size="sm"
 					></ExportDropdown>
 				</div>

@@ -360,10 +360,6 @@
 			margin: 0.5rem 0;
 		}
 
-		.list-group-item {
-			padding: 0.5rem;
-		}
-
 		h2 {
 			margin-top: 0;
 			font-size: 1.6em;

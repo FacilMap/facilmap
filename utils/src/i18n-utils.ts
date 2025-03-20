@@ -41,7 +41,8 @@ export const defaultI18nGetter = (): i18n => {
 			supportedLngs: LANGUAGES,
 			...(languageDetector ? {} : { lng: DEFAULT_LANGUAGE }),
 			fallbackLng: DEFAULT_LANGUAGE,
-			detection: languageDetectorOptions
+			detection: languageDetectorOptions,
+			interpolation: { escapeValue: false }
 		});
 	}
 

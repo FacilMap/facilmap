@@ -1,4 +1,7 @@
 {
+    "common": {
+        "coordinates": "Koordinaten"
+    },
     "about-dialog": {
         "header": "Über FacilMap {{version}}",
         "license-text": "{{facilmap}} is unter der {{license}} verfügbar.",
@@ -42,6 +45,70 @@
     },
     "alert": {
         "fallback-ok-label": "OK"
+    },
+    "blame-results": {
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "Details anzeigen",
+        "zoom-to-section-tooltip": "Zum Abschnitt zoomen",
+        "zoom-to-feature-label": "Zum Objekt zoomen"
+    },
+    "blame-section-info": {
+        "changeset": "Changeset",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "Changeset analysieren",
+        "timestamp": "Zeitpunkt",
+        "user": "Benutzer",
+        "created-modified": "Erstellt/verändert"
+    },
+    "blame-section-membership": {
+        "tooltip": "Objekthierarchie anziegen",
+        "alt": "Info",
+        "heading": "Objekthierarchie",
+        "member-with-name-role": "{{feature}} ({{name}}, Rolle: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (Rolle: {{role}})"
+    },
+    "changeset-results": {
+        "heading": "Changeset {{id}}",
+        "created": "Erstellt",
+        "closed": "Beendet",
+        "user": "Benutzer",
+        "features": "Objekte",
+        "created-tooltip": "Erstellt",
+        "deleted-tooltip": "Gelöscht",
+        "modified-tooltip": "Geändert",
+        "zoom-to-feature-tooltip": "Zum Objekt zoomen",
+        "show-details-tooltip": "Details anzeigen",
+        "show-details-no-tag-changes-tooltip": "Details anzeigen (keine veränderten Werte)",
+        "show-details-no-tag-member-changes-tooltip": "Details anzeigen (keine veränderten Werte/Elemente)",
+        "zoom-to-changeset-label": "Zum Changeset zoomen"
+    },
+    "changeset-feature-info": {
+        "zoom-to-feature-label": "Zum Objekt zoomen",
+        "openstreetmap-tooltip": "Objekt auf OpenStreetMap öffnen",
+        "members": "Elemente"
+    },
+    "osm-feature-link": {
+        "changeset": "Changeset {{id}}",
+        "node-tooltip": "Punkt auf OpenStreetMap öffnen",
+        "way-tooltip": "Linie auf OpenStreetMap öffnen",
+        "relation-tooltip": "Relation auf OpenStreetMap öffnen",
+        "changeset-tooltip": "Changeset auf OpenStreetMap öffnen",
+        "user-tooltip": "Benutzer auf OpenStreetMap öffnen"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "Zum Punkt zoomen",
+        "zoom-to-way": "Zur Linie zoomen",
+        "zoom-to-relation": "Zur Relation zoomen",
+        "show-details-tooltip": "Details anzeigen",
+        "total-length": "Gesamtlänge",
+        "sections": "Abschnitte",
+        "nodes": "Punkte",
+        "members": "Elemente",
+        "section-label": "Abschnitt ({{distance}})",
+        "zoom-to-section-tooltip": "Zum Abschnitt zoomen",
+        "role": "Rolle"
     },
     "click-marker-tab": {
         "look-up-error": "Fehler beim Laden der Geoinformationen"
@@ -230,6 +297,7 @@
         "control-shape": "Form {{type}} kontrollieren",
         "control-width": "Dicke {{type}} kontrollieren",
         "control-stroke": "Kontur {{type}} kontrollieren",
+        "show-in-legend": "In der Legende anzeigen",
         "option": "Option",
         "label": "Bezeichnung (für Legende)",
         "colour": "Farbe",
@@ -548,7 +616,6 @@
         "delete-marker-message": "Wollen Sie den Marker „{{name}}“ wirklich löschen?",
         "delete-marker-ok": "Löschen",
         "delete-marker-error": "Fehler beim Löschen des Markers",
-        "coordinates": "Koordinaten",
         "zoom-to-object-label": "Zum Marker zoomen",
         "edit-data": "Bearbeiten",
         "actions": "Aktionen",
@@ -604,7 +671,6 @@
         "tab-label_other": "{{count}} POIs"
     },
     "overpass-info": {
-        "coordinates": "Koordinaten",
         "zoom-to-object-label": "Zum POI zoomen"
     },
     "overpass-multiple-info": {
@@ -656,6 +722,10 @@
         "next-label": "Nächste Seite",
         "last-label": "Letzte Seite"
     },
+    "results": {
+        "zoom-alt": "Zoomen",
+        "show-details-alt": "Details"
+    },
     "save-view-dialog": {
         "save-view-error": "Fehler beim Speichern der Ansicht",
         "empty": "—",
@@ -675,7 +745,6 @@
         "make-default": "Zur Standardansicht machen"
     },
     "search-result-info": {
-        "coordinates": "Koordinaten",
         "type": "Art",
         "address": "Addresse",
         "zoom-to-result-label": "Zum Ergebnis zoomen"
@@ -746,7 +815,15 @@
         "units": "Einheiten",
         "units-metric": "Metrisch",
         "units-us": "US customary (Meilen und Füße)",
-        "default-map-style": "Voreingestellter Kartenstil"
+        "default-map-style": "Voreingestellter Kartenstil",
+        "external-links-label": "Bezeichnung",
+        "external-links": "Externe Links",
+        "external-links-description": "Hier können Links zu externen Karten konfiguriert werden, die im Menü „Kartenstil“ (zur Anzeige des aktuellen Kartenausschnitts) und im Koordinaten-Menü von Markern, Suchergebnissen und POIs (zur Anzeige des Markers) angezeigt werden. Voreingestellte Kartenlinks können aktiviert oder deaktiviert und eigene Links mithilfe der Platzhalter `%LAT`, `%LON%` und `%ZOOM%` in der URL erstellt werden.",
+        "external-links-map-url": "Karten-URL",
+        "external-links-marker-url": "Marker-URL",
+        "external-links-delete-tooltip": "Löschen",
+        "external-links-reorder-alt": "Neu anordnen",
+        "external-links-create": "Erstellen"
     },
     "utils": {
         "required-error": "Dieses Feld muss ausgefüllt werden."
@@ -817,7 +894,8 @@
         "search-alt": "Suchen",
         "clear-alt": "Verstecken",
         "auto-zoom": "Automatisch zu den Ergebnissen zoomen",
-        "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen"
+        "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen",
+        "map-only": "Nur auf der Karte „{{mapName}}“ suchen"
     },
     "search-form-tab": {
         "tab-label": "Suche"
@@ -825,9 +903,7 @@
     "search-results": {
         "no-results": "Es wurden keine Ergebnisse gefunden.",
         "zoom-to-result-tooltip": "Zum Suchergebnis zoomen",
-        "zoom-to-result-alt": "Zoomen",
         "show-details-tooltip": "Details anzeigen",
-        "show-details-alt": "Details",
         "select-all": "Alle auswählen",
         "add-to-map-label": "Zur Karte hinzufügen",
         "custom-type-mapping": "Benutzerdefiniert…"
