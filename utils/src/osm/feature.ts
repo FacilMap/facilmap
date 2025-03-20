@@ -3,6 +3,7 @@ import { getBboxForNodeList, getFeatureKey } from "./utils";
 import { intersection, pull, sortBy, sum, uniqBy } from "lodash-es";
 import type { Bbox, DeepReadonly } from "facilmap-types";
 import { calculateDistance } from "../routing";
+import { sendProgress, type OnProgress } from "../utils";
 
 export type ResolvedOsmRelationMember = OSM.OsmRelation["members"][number] & {
 	feature: ResolvedOsmFeature;
@@ -20,21 +21,24 @@ export type ResolvedOsmWay = Omit<OSM.OsmWay, "nodes"> & {
 
 export type ResolvedOsmFeature = ResolvedOsmRelation | ResolvedOsmWay | OSM.OsmNode;
 
-async function fetchOsmRelationFeatures(id: number, _handledRelationIds: number[] = []): Promise<Record<string, OSM.OsmFeature>> {
+async function fetchOsmRelationFeatures(id: number, onProgress?: OnProgress, _handledRelationIds: number[] = []): Promise<Record<string, OSM.OsmFeature>> {
 	const features = Object.fromEntries((await OSM.getFeature("relation", id, true)).map((f) => [getFeatureKey(f), f]));
+	_handledRelationIds.push(id);
+	sendProgress(onProgress, _handledRelationIds.length / (_handledRelationIds.length + 1));
 
-	const handledRelationIds = [..._handledRelationIds, id];
 	for (const member of (features[getFeatureKey("relation", id)] as OSM.OsmRelation).members) {
-		if (member.type === "relation" && !handledRelationIds.includes(member.ref)) {
-			Object.assign(features, await fetchOsmRelationFeatures(member.ref, handledRelationIds));
+		if (member.type === "relation" && !_handledRelationIds.includes(member.ref)) {
+			Object.assign(features, await fetchOsmRelationFeatures(member.ref, onProgress, _handledRelationIds));
 		}
 	}
 
 	return features;
 }
 
-export async function fetchOsmRelation(id: number): Promise<ResolvedOsmRelation> {
-	const rawFeatures = await fetchOsmRelationFeatures(id);
+export async function fetchOsmRelation(id: number, onProgress?: OnProgress): Promise<ResolvedOsmRelation> {
+	sendProgress(onProgress, 0);
+	const rawFeatures = await fetchOsmRelationFeatures(id, onProgress);
+	sendProgress(onProgress, 1);
 
 	const features: Record<string, ResolvedOsmRelationMember["feature"]> = Object.fromEntries(Object.entries(rawFeatures).map(([id, f]): [string, ResolvedOsmFeature] => {
 		if (f.type === "relation") {
@@ -73,9 +77,9 @@ export async function fetchOsmWay(id: number): Promise<ResolvedOsmWay> {
 	return resolveOsmWay(way, features);
 }
 
-export async function fetchOsmFeature(type: OSM.OsmFeatureType, id: number): Promise<ResolvedOsmFeature> {
+export async function fetchOsmFeature(type: OSM.OsmFeatureType, id: number, onProgress?: OnProgress): Promise<ResolvedOsmFeature> {
 	if (type === "relation") {
-		return await fetchOsmRelation(id);
+		return await fetchOsmRelation(id, onProgress);
 	} else if (type === "way") {
 		return await fetchOsmWay(id);
 	} else {
