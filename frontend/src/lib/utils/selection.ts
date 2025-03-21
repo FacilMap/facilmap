@@ -1,6 +1,6 @@
 import type { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, type LatLngBounds, Layer, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
-import { type ChangesetLayer, FeatureBlameLayer, LinesLayer, MarkerLayer, MarkersLayer, OsmLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
+import { type ChangesetLayer, FeatureBlameLayer, LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
 import { toRaw, type DeepReadonly } from "vue";
 import type { AnalyzedOsmRelationSection, ChangesetFeature, OsmFeatureBlameSection, ResolvedOsmFeature } from "facilmap-utils";
@@ -15,9 +15,11 @@ export type SelectedItem = {
 } | {
 	type: "osm";
 	feature: DeepReadonly<ResolvedOsmFeature>;
+	scopeId: string;
 } | {
 	type: "relationSection";
 	section: DeepReadonly<AnalyzedOsmRelationSection>;
+	scopeId: string;
 } | {
 	type: "changeset";
 	feature: ChangesetFeature;
@@ -63,7 +65,6 @@ export default class SelectionHandler extends Handler {
 	_markersLayer: MarkersLayer;
 	_linesLayer: LinesLayer;
 	_searchResultLayers: SearchResultsLayer[];
-	_osmLayer: OsmLayer;
 	_changesetLayer: ChangesetLayer;
 	_featureBlameLayer: FeatureBlameLayer;
 	_overpassLayer: OverpassLayer;
@@ -76,7 +77,7 @@ export default class SelectionHandler extends Handler {
 	_isLongClick: boolean = false;
 
 	constructor(
-		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer, osmLayer: OsmLayer,
+		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer,
 		changesetLayer: ChangesetLayer, featureBlameLayer: FeatureBlameLayer, overpassLayer: OverpassLayer
 	) {
 		super(map);
@@ -89,7 +90,6 @@ export default class SelectionHandler extends Handler {
 		this._markersLayer = markersLayer;
 		this._linesLayer = linesLayer;
 		this._searchResultLayers = [searchResultsLayer];
-		this._osmLayer = osmLayer;
 		this._changesetLayer = changesetLayer;
 		this._featureBlameLayer = featureBlameLayer;
 		this._overpassLayer = overpassLayer;
@@ -112,7 +112,6 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.on("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
-		this._osmLayer.on("click", this.handleClickOsmFeature);
 		this._changesetLayer.on("click", this.handleClickChangeset);
 		this._featureBlameLayer.on("click", this.handleClickFeatureBlame);
 		this._overpassLayer.on("click", this.handleClickOverpass);
@@ -130,7 +129,6 @@ export default class SelectionHandler extends Handler {
 		this._linesLayer.off("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
-		this._osmLayer.off("click", this.handleClickOsmFeature);
 		this._changesetLayer.off("click", this.handleClickChangeset);
 		this._featureBlameLayer.off("click", this.handleClickFeatureBlame);
 		this._overpassLayer.off("click", this.handleClickOverpass);
@@ -185,10 +183,6 @@ export default class SelectionHandler extends Handler {
 				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => i.result)
 			));
 		}
-		this._osmLayer.setHighlightedFeatures(new Set([
-			...byType(items, "osm").map((i) => toRaw(i.feature)),
-			...byType(items, "relationSection").map((i) => toRaw(i.section))
-		]));
 		this._changesetLayer.setHighlightedFeatures(new Set(byType(items, "changeset").map((i) => toRaw(i.feature))));
 		this._featureBlameLayer.setHighlightedSections(new Set(byType(items, "featureBlame").map((i) => i.section)));
 		this._overpassLayer.setHighlightedElements(new Set(
@@ -245,17 +239,6 @@ export default class SelectionHandler extends Handler {
 		const layer = e.propagatedFrom as Layer | undefined;
 		if (layer?._fmSearchResult)
 			this.handleClickItem({ type: "searchResult", result: layer._fmSearchResult!, layerId: Util.stamp(e.target) }, e);
-	}
-
-	handleClickOsmFeature = (e: LeafletEvent): void => {
-		const layer = e.propagatedFrom as Layer | undefined;
-		if (layer?._fmOsmFeature) {
-			if ("paths" in layer._fmOsmFeature) {
-				this.handleClickItem({ type: "relationSection", section: layer._fmOsmFeature }, e);
-			} else {
-				this.handleClickItem({ type: "osm", feature: layer._fmOsmFeature }, e);
-			}
-		}
 	}
 
 	handleClickChangeset = (e: LeafletEvent): void => {

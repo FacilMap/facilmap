@@ -5,16 +5,29 @@
 
 	export interface CarouselContext {
 		tab: number;
-		setTab(tab: number): void;
+		/** If a slide animation is currently in progress, the index of the destination tab. */
+		nextTab: number | undefined;
+		/** Slides to the given tab. Returns a promise that is resolved once the slide animation has finished. */
+		setTab(tab: number): Promise<void>;
 	}
 
 	export function useCarousel(element: Ref<HTMLElement | undefined>): DeepReadonly<CarouselContext> {
+		let onSlid: Array<() => void> = [];
+
 		const context = reactive<CarouselContext>({
 			tab: 0,
-			setTab: (tab) => {
+			nextTab: undefined,
+			setTab: async (tab) => {
 				const carousel = element.value && Carousel.getInstance(element.value);
 				if (carousel) {
+					context.nextTab = tab;
 					carousel.to(tab);
+					await new Promise<void>((resolve) => {
+						onSlid.push(resolve);
+					});
+					if (context.nextTab === tab) {
+						context.nextTab = undefined;
+					}
 				} else {
 					context.tab = tab;
 				}
@@ -44,6 +57,10 @@
 		function handleSlid(e: Event) {
 			const event = e as Event & Carousel.Event;
 			context.tab = event.to;
+			for (const callback of onSlid) {
+				callback();
+			}
+			onSlid = [];
 		}
 
 		return readonly(context);
@@ -62,7 +79,7 @@
 		props: {
 			activateOnMount: { type: Boolean }
 		},
-		setup(props, { slots }) {
+		setup(props, { slots, emit }) {
 			const context = inject(contextKey);
 			if (!context) {
 				throw new Error("Could not find carousel context.");
@@ -79,7 +96,7 @@
 			onMounted(() => {
 				context.registerTab(el.value!);
 				if (props.activateOnMount && !active.value) {
-					context.setTab(idx.value!);
+					void context.setTab(idx.value!);
 				}
 			});
 
@@ -103,6 +120,7 @@
 
 	const internalContext: InternalCarouselContext = reactive({
 		tab: toRef(() => context.tab),
+		nextTab: toRef(() => context.nextTab),
 		setTab: (tab: number) => context.setTab(tab),
 		tabs: [],
 		registerTab: (el: HTMLElement) => {
@@ -124,7 +142,7 @@
 	const actualTabCount = computed(() => internalContext.tabs.filter((el) => !virtualTabRefs.value?.some((r) => r.$el === el)).length);
 	watch([() => context.tab, actualTabCount], ([tab, actualTabCount]) => {
 		if (actualTabCount > 0 && tab >= actualTabCount) {
-			context.setTab(internalContext.tabs.length - 1);
+			void context.setTab(internalContext.tabs.length - 1);
 		}
 	});
 

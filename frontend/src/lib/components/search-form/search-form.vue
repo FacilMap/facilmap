@@ -21,6 +21,10 @@
 	import RelationResults from "../osm/relation-results/relation-results.vue";
 	import OsmFeatureInfo from "../osm/osm-feature-info.vue";
 
+	const props = defineProps<{
+		active: boolean;
+	}>();
+
 	const emit = defineEmits<{
 		"hash-query-change": [query: HashQuery | undefined];
 	}>();
@@ -190,16 +194,6 @@
 								type: "osm",
 								feature: newSearchResults
 							};
-							if (newSearchResults.type === "relation") {
-								for (const section of newSearchResults.sections) {
-									mapContext.value.components.osmLayer.addFeature(section);
-								}
-								for (const node of newSearchResults.singleNodes) {
-									mapContext.value.components.osmLayer.addFeature(node);
-								}
-							} else {
-								mapContext.value.components.osmLayer.addFeature(newSearchResults);
-							}
 						} else if ("changeset" in newSearchResults) {
 							result.value = {
 								type: "changeset",
@@ -283,7 +277,6 @@
 		result.value = undefined;
 		preloadedZoomDestination.value = undefined;
 		mapContext.value.components.searchResultsLayer.setResults([]);
-		mapContext.value.components.osmLayer.clearFeatures();
 		mapContext.value.components.changesetLayer.setChangeset(undefined);
 		mapContext.value.components.featureBlameLayer.setBlame(undefined);
 	};
@@ -396,6 +389,7 @@
 			<hr />
 			<template v-if="result.feature.type === 'relation'">
 				<RelationResults
+					:active="props.active"
 					:relation="result.feature"
 					:autoZoom="storage.autoZoom"
 					:unionZoom="storage.zoomToAll"
@@ -403,6 +397,7 @@
 			</template>
 			<template v-else>
 				<OsmFeatureInfo
+					:active="props.active"
 					:feature="result.feature"
 					:autoZoom="storage.autoZoom"
 					:unionZoom="storage.zoomToAll"

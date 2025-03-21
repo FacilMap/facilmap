@@ -24,7 +24,7 @@ export type ResolvedOsmFeature = ResolvedOsmRelation | ResolvedOsmWay | OSM.OsmN
 async function fetchOsmRelationFeatures(id: number, onProgress?: OnProgress, _handledRelationIds: number[] = []): Promise<Record<string, OSM.OsmFeature>> {
 	const features = Object.fromEntries((await OSM.getFeature("relation", id, true)).map((f) => [getFeatureKey(f), f]));
 	_handledRelationIds.push(id);
-	sendProgress(onProgress, _handledRelationIds.length / (_handledRelationIds.length + 1));
+	sendProgress(onProgress, _handledRelationIds.length / (_handledRelationIds.length + 4));
 
 	for (const member of (features[getFeatureKey("relation", id)] as OSM.OsmRelation).members) {
 		if (member.type === "relation" && !_handledRelationIds.includes(member.ref)) {

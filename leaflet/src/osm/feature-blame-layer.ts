@@ -32,6 +32,14 @@ export default class FeatureBlameLayer extends FeatureGroup {
 			this.setBlame(blame);
 	}
 
+	getSectionLayers(section: OsmFeatureBlameSection): Array<Layer & Required<Pick<Layer, "_fmBlameSection">>> {
+		return this.getLayers().filter((l): l is Layer & Required<Pick<Layer, "_fmBlameSection">> => l._fmBlameSection === section);
+	}
+
+	hasSection(section: OsmFeatureBlameSection): boolean {
+		return this.getLayers().some((l) => l._fmBlameSection === section);
+	}
+
 	highlightSection(section: OsmFeatureBlameSection): void {
 		this.highlightedSections.add(section);
 		this.redrawSection(section);
@@ -55,10 +63,13 @@ export default class FeatureBlameLayer extends FeatureGroup {
 	}
 
 	redrawSection(section: OsmFeatureBlameSection): void {
-		for (const layer of this.getLayers()) {
-			if (layer._fmBlameSection && layer._fmBlameSection === section) {
-				this.removeLayer(layer);
-			}
+		const layers = this.getSectionLayers(section);
+		if (layers.length === 0) {
+			return;
+		}
+
+		for (const layer of layers) {
+			this.removeLayer(layer);
 		}
 
 		for (const layer of this.sectionToLayers(section)) {

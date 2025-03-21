@@ -39,16 +39,25 @@ export default class OsmLayer extends FeatureGroup {
 		}
 	}
 
-	removeFeature(feature: DeepReadonly<OsmLayerFeature>): void {
-		for (const layer of this.getLayers()) {
-			if (layer._fmOsmFeature === feature) {
-				this.removeLayer(layer);
-			}
+	removeFeature(feature: DeepReadonly<OsmLayerFeature>): boolean {
+		let one = false;
+		for (const layer of this.getFeatureLayers(feature)) {
+			this.removeLayer(layer);
+			one = true;
 		}
+		return one;
 	}
 
 	clearFeatures(): void {
 		this.clearLayers();
+	}
+
+	getFeatureLayers(feature: DeepReadonly<OsmLayerFeature>): Array<Layer & Required<Pick<Layer, "_fmOsmFeature">>> {
+		return this.getLayers().filter((l): l is Layer & Required<Pick<Layer, "_fmOsmFeature">> => l._fmOsmFeature === feature);
+	}
+
+	hasFeature(feature: DeepReadonly<OsmLayerFeature>): boolean {
+		return this.getLayers().some((l) => l._fmOsmFeature === feature);
 	}
 
 	highlightFeature(feature: DeepReadonly<OsmLayerFeature>): void {
@@ -74,8 +83,9 @@ export default class OsmLayer extends FeatureGroup {
 	}
 
 	redrawFeature(feature: DeepReadonly<OsmLayerFeature>): void {
-		this.removeFeature(feature);
-		this.addFeature(feature);
+		if (this.removeFeature(feature)) {
+			this.addFeature(feature);
+		}
 	}
 
 	createNodeLayer(point: DeepReadonly<Point>, highlight: boolean): Layer {
