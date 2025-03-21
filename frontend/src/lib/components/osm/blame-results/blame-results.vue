@@ -35,6 +35,7 @@ import type { SelectedItem } from "../../../utils/selection";
 		key: i,
 		object: section,
 		iconColour: `#${section.user.colour}`,
+		icon: "square",
 		label: (
 			section.changeset.tags.comment ? i18n.t("blame-results.section-label-with-comment", { username: section.user.name, timestamp: section.timestamp, comment: section.changeset.tags.comment })
 			: i18n.t("blame-results.section-label", { username: section.user.name, timestamp: section.timestamp })

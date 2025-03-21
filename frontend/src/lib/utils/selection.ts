@@ -180,13 +180,13 @@ export default class SelectionHandler extends Handler {
 		for (const layer of this._searchResultLayers) {
 			const layerId = Util.stamp(layer);
 			layer.setHighlightedResults(new Set(
-				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => i.result)
+				byType(items, "searchResult").filter((i) => i.layerId == layerId).map((i) => toRaw(i.result))
 			));
 		}
 		this._changesetLayer.setHighlightedFeatures(new Set(byType(items, "changeset").map((i) => toRaw(i.feature))));
-		this._featureBlameLayer.setHighlightedSections(new Set(byType(items, "featureBlame").map((i) => i.section)));
+		this._featureBlameLayer.setHighlightedSections(new Set(byType(items, "featureBlame").map((i) => toRaw(i.section))));
 		this._overpassLayer.setHighlightedElements(new Set(
-			byType(items, "overpass").map((i) => i.element)
+			byType(items, "overpass").map((i) => toRaw(i.element))
 		));
 
 		this.fire("fmChangeSelection", { open });
