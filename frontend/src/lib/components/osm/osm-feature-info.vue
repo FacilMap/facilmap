@@ -70,7 +70,6 @@
 	useMapLayer(layer);
 
 	watchEffect((onCleanup) => {
-		console.log(props.visible);
 		if (props.visible) {
 			if (analyzedRelation.value) {
 				for (const section of analyzedRelation.value.sections) {
@@ -91,7 +90,7 @@
 	});
 
 	watchEffect((onCleanup) => {
-		if (props.visible && analyzedRelation.value) {
+		if (props.visible && showNodes.value && analyzedRelation.value) {
 			for (const section of analyzedRelation.value.singleNodes) {
 				layer.addFeature(toRaw(section));
 			}
