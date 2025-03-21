@@ -961,10 +961,12 @@
     "links": {
         "geo-link": "geo:-Link",
         "openstreetmap": "OpenStreetMap",
+        "openstreetmap-editor": "OpenStreetMap Editor",
         "google-maps": "Google Maps",
         "google-maps-satellite": "Google Maps (Satellit)",
         "bing-maps": "Bing Maps",
         "bing-maps-satellite": "Bing Maps (Satellit)",
+        "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
     }
 }

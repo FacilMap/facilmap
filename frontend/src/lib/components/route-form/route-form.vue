@@ -23,7 +23,8 @@
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
-	import { mapRef, useIsMounted } from "../../utils/vue";
+	import { mapRef } from "../../utils/vue";
+	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -194,25 +195,8 @@
 		return draggable;
 	});
 
-	const isMounted = useIsMounted();
-	watch([isMounted, draggable], (v, o, onCleanup) => {
-		if (isMounted.value) {
-			draggable.value.enable();
-
-			onCleanup(() => {
-				draggable.value.disable();
-			});
-		}
-	}, { immediate: true });
-	watch([isMounted, routeLayer, () => mapContext.value.components.map], (v, o, onCleanup) => {
-		if (isMounted.value) {
-			routeLayer.value.addTo(mapContext.value.components.map);
-
-			onCleanup(() => {
-				routeLayer.value.remove();
-			});
-		}
-	}, { immediate: true });
+	useMapHandler(draggable);
+	useMapLayer(routeLayer);
 
 	watch([hasRoute, () => props.active, draggable, routeLayer], () => {
 		if (hasRoute.value)

@@ -42,6 +42,16 @@ export default class ChangesetLayer extends FeatureGroup {
 			this.setChangeset(changeset);
 	}
 
+	getFeatureLayers(feature: ChangesetFeature | string): Array<Layer & Required<Pick<Layer, "_fmChangesetFeature">>> {
+		const key = getFeatureKey(feature);
+		return this.getLayers().filter((l): l is Layer & Required<Pick<Layer, "_fmChangesetFeature">> => !!l._fmChangesetFeature && getFeatureKey(l._fmChangesetFeature) === key);
+	}
+
+	hasFeature(feature: ChangesetFeature | string): boolean {
+		const key = getFeatureKey(feature);
+		return this.getLayers().some((l) => !!l._fmChangesetFeature && getFeatureKey(l._fmChangesetFeature) === key);
+	}
+
 	highlightFeature(feature: ChangesetFeature | string): void {
 		this.highlightedFeatures.add(getFeatureKey(feature));
 		this.redrawFeature(feature);
@@ -66,20 +76,16 @@ export default class ChangesetLayer extends FeatureGroup {
 	}
 
 	redrawFeature(feature: ChangesetFeature | string): void {
-		const key = getFeatureKey(feature);
-
 		// We always highlight all layers of an OSM feature at once (for example the old and new version of a marker).
 		// The feature key of two layers is the same if they refer to the same type and ID, but their feature object might be
 		// different, for example if they refer to different versions of the same object.
 		const layerGroups = new Map<ChangesetFeature, Layer[]>();
-		for (const layer of this.getLayers()) {
-			if (layer._fmChangesetFeature && getFeatureKey(layer._fmChangesetFeature) === key) {
-				let group = layerGroups.get(layer._fmChangesetFeature);
-				if (!group) {
-					layerGroups.set(layer._fmChangesetFeature, group = []);
-				}
-				group.push(layer);
+		for (const layer of this.getFeatureLayers(feature)) {
+			let group = layerGroups.get(layer._fmChangesetFeature);
+			if (!group) {
+				layerGroups.set(layer._fmChangesetFeature, group = []);
 			}
+			group.push(layer);
 		}
 
 		for (const [feature, layers] of layerGroups) {

@@ -136,15 +136,22 @@
 
 			> :first-child {
 				flex-grow: 1;
+				min-width: 0;
 			}
 
 			> * + * {
 				margin-left: 0.25rem;
 			}
 
-			span, a {
+			span:not(.fm-ellipsis-overflow), a {
 				display: inline-flex;
 				align-items: center;
+			}
+
+			.fm-results-label.ellipsis-overflow {
+				&, * {
+					min-width: 0;
+				}
 			}
 
 			.fm-results-label:not(.ellipsis-overflow) {

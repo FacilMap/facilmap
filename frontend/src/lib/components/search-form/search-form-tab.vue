@@ -44,7 +44,9 @@
 		:hashQuery="hashQuery"
 		class="fm-search-form-tab"
 	>
-		<SearchForm ref="searchForm" @hash-query-change="hashQuery = $event"></SearchForm>
+		<template #default="slotProps">
+			<SearchForm :active="slotProps.isActive" ref="searchForm" @hash-query-change="hashQuery = $event"></SearchForm>
+		</template>
 	</SearchBoxTab>
 </template>
 

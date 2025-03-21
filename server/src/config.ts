@@ -1,6 +1,7 @@
 import type { Options as SequelizeOptions } from "sequelize";
 import "dotenv/config";
 import { setConfig, setFetchAdapter } from "facilmap-utils";
+import { configure } from "osm-api";
 
 export interface DbConfig {
 	type: SequelizeOptions['dialect'];
@@ -89,6 +90,10 @@ setFetchAdapter(async (input, init) => {
 	const headers = new Headers(init?.headers);
 	headers.set("User-Agent", config.userAgent);
 	return await fetch(input, { ...init, headers });
+});
+
+configure({
+	userAgent: config.userAgent
 });
 
 export default config;

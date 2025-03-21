@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { useI18n } from "../../utils/i18n";
 	import { analyzeOsmRelation, calculateDistance, formatDistance, getOsmFeatureLabel, getOsmFeatureName, renderOsmTag, type AnalyzedOsmRelation, type AnalyzedOsmRelationSection, type AnalyzedOsmRelationSingleNode, type ResolvedOsmFeature } from "facilmap-utils";
-	import { computed, ref, toRaw, watchEffect, type DeepReadonly } from "vue";
+	import { computed, markRaw, ref, toRaw, useId, watchEffect, type DeepReadonly } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getZoomDestinationForOsmFeature, getZoomDestinationForPoints } from "../../utils/zoom";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
@@ -12,6 +12,9 @@
 	import type { OsmFeatureType, OsmNode } from "osm-api";
 	import Coordinates from "../ui/coordinates.vue";
 	import Collapse from "../ui/collapse.vue";
+	import { OsmLayer, type OsmLayerFeature } from "facilmap-leaflet";
+	import type { Layer } from "leaflet";
+	import { useMapLayer } from "../../utils/leaflet";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -19,6 +22,8 @@
 
 	const props = withDefaults(defineProps<{
 		feature: DeepReadonly<ResolvedOsmFeature | AnalyzedOsmRelation | AnalyzedOsmRelationSingleNode>;
+		active?: boolean;
+		visible?: boolean;
 		showBackButton?: boolean;
 		canOpenMember?: boolean;
 		/** When clicking a search result, union zoom to it. Normal zoom is done when clicking the zoom button. */
@@ -27,6 +32,8 @@
 		autoZoom?: boolean;
 		zoom?: number;
 	}>(), {
+		active: true,
+		visible: true,
 		showBackButton: false,
 		canOpenMember: false,
 		unionZoom: false,
@@ -42,6 +49,73 @@
 	const showNodes = ref(false);
 
 	const zoomDestination = computed(() => getZoomDestinationForOsmFeature(props.feature));
+
+	const analyzedRelation = computed(() => (
+		props.feature.type !== "relation" ? undefined :
+		"sections" in props.feature ? props.feature :
+		analyzeOsmRelation(props.feature)
+	));
+
+	const scopeId = useId();
+	const layer = markRaw(new OsmLayer());
+	layer.on("click", (e) => {
+		const layer = e.propagatedFrom as Layer | undefined;
+		if (layer?._fmOsmFeature) {
+			mapContext.value.components.selectionHandler.handleClickItem((
+				"paths" in layer._fmOsmFeature? { type: "relationSection", section: layer._fmOsmFeature, scopeId } :
+				{ type: "osm", feature: layer._fmOsmFeature, scopeId }
+			), e);
+		}
+	});
+	useMapLayer(layer);
+
+	watchEffect((onCleanup) => {
+		if (props.visible) {
+			if (analyzedRelation.value) {
+				for (const section of analyzedRelation.value.sections) {
+					layer.addFeature(toRaw(section));
+				}
+				onCleanup(() => {
+					for (const section of analyzedRelation.value!.sections) {
+						layer.removeFeature(toRaw(section));
+					}
+				});
+			} else {
+				layer.addFeature(toRaw(props.feature));
+				onCleanup(() => {
+					layer.removeFeature(toRaw(props.feature));
+				});
+			}
+		}
+	});
+
+	watchEffect((onCleanup) => {
+		if (props.visible && showNodes.value && analyzedRelation.value) {
+			for (const section of analyzedRelation.value.singleNodes) {
+				layer.addFeature(toRaw(section));
+			}
+			onCleanup(() => {
+				for (const section of analyzedRelation.value!.singleNodes) {
+					layer.removeFeature(toRaw(section));
+				}
+			});
+		}
+	});
+
+	watchEffect(() => {
+		layer.setHighlightedFeatures(new Set([
+			...(props.feature.type !== "relation" && props.active) ? [toRaw(props.feature)] : [],
+			...mapContext.value.selection.flatMap((i): Array<DeepReadonly<OsmLayerFeature>> => {
+				if (i.type === "osm" && i.scopeId === scopeId) {
+					return [toRaw(i.feature)];
+				} else if (i.type === "relationSection" && i.scopeId === scopeId) {
+					return [toRaw(i.section)];
+				} else {
+					return [];
+				}
+			})
+		]));
+	});
 
 	function getZoomTooltip(type: OsmFeatureType): string {
 		return (
@@ -65,12 +139,6 @@
 	const activeMembers = computed(() => mapContext.value.selection.flatMap((s) => s.type === "osm" ? [s.feature] : []));
 
 	const activeSections = computed(() => mapContext.value.selection.flatMap((s) => s.type === "relationSection" ? [s.section] : []));
-
-	const analyzedRelation = computed(() => (
-		props.feature.type !== "relation" ? undefined :
-		"sections" in props.feature ? props.feature :
-		analyzeOsmRelation(props.feature)
-	));
 
 	const length = computed(() => (
 		analyzedRelation.value ? analyzedRelation.value.distance :
@@ -99,9 +167,9 @@
 
 	function selectSection(section: DeepReadonly<AnalyzedOsmRelationSection>, toggle: boolean): void {
 		if (toggle) {
-			mapContext.value.components.selectionHandler.toggleItem({ type: "relationSection", section });
+			mapContext.value.components.selectionHandler.toggleItem({ type: "relationSection", section, scopeId });
 		} else {
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "relationSection", section }]);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "relationSection", section, scopeId }]);
 		}
 	}
 
@@ -109,15 +177,15 @@
 
 	const renderedFeatures = ref<Array<DeepReadonly<ResolvedOsmFeature>>>([]);
 	function selectFeature(feature: DeepReadonly<ResolvedOsmFeature>): void {
-		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "osm", feature }]);
+		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "osm", feature, scopeId }]);
 		renderedFeatures.value.push(feature);
-		mapContext.value.components.osmLayer.addFeature(toRaw(feature));
+		layer.addFeature(toRaw(feature));
 	}
 
 	watchEffect(() => {
 		for (let i = 0; i < renderedFeatures.value.length; i++) {
 			if (!mapContext.value.selection.some((s) => s.type === "osm" && s.feature === renderedFeatures.value[i])) {
-				mapContext.value.components.osmLayer.removeFeature(toRaw(renderedFeatures.value[i]));
+				layer.removeFeature(toRaw(renderedFeatures.value[i]));
 				renderedFeatures.value.splice(i--, 1);
 			}
 		}

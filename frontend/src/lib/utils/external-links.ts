@@ -21,6 +21,13 @@ export const DEFAULT_LINKS: PresetLink[] = [
 		enabled: true
 	},
 	{
+		id: "osme",
+		get label(): string { return getI18n().t("links.openstreetmap-editor"); },
+		map: "https://www.openstreetmap.org/edit#map=%ZOOM%/%LAT%/%LON%",
+		marker: "",
+		enabled: false,
+	},
+	{
 		id: "gmaps",
 		get label(): string { return getI18n().t("links.google-maps"); },
 		map: "https://www.google.com/maps/@?api=1&map_action=map&center=%LAT%,%LON%&zoom=%ZOOM%",
@@ -50,6 +57,14 @@ export const DEFAULT_LINKS: PresetLink[] = [
 		map: "https://www.bing.com/maps?cp=%LAT%~%LON%&lvl=%ZOOM%&style=h",
 		marker: "https://www.bing.com/maps?q=%LAT%,%LON%&style=h",
 		enabled: true,
+		commercial: true
+	},
+	{
+		id: "Mapy.cz",
+		get label(): string { return getI18n().t("links.mapy-cz"); },
+		map: "https://en.mapy.cz/zakladni?x=%LON%&y=%LAT%&z=%ZOOM%",
+		marker: "https://en.mapy.cz/zakladni?q=%LAT%,%LON%&x=%LON%&y=%LAT%&z=%ZOOM%",
+		enabled: false,
 		commercial: true
 	},
 	{

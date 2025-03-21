@@ -34,6 +34,14 @@ export default class SearchResultsLayer extends FeatureGroup {
 			this.setResults(results);
 	}
 
+	getResultLayers(result: SearchResult): Array<Layer & Required<Pick<Layer, "_fmSearchResult">>> {
+		return this.getLayers().filter((l): l is Layer & Required<Pick<Layer, "_fmSearchResult">> => l._fmSearchResult === result);
+	}
+
+	hasResult(result: SearchResult): boolean {
+		return this.getLayers().some((l) => l._fmSearchResult === result);
+	}
+
 	highlightResult(result: SearchResult): void {
 		this.highlightedResults.add(result);
 		this.redrawResult(result);
@@ -57,7 +65,12 @@ export default class SearchResultsLayer extends FeatureGroup {
 	}
 
 	redrawResult(result: SearchResult): void {
-		for (const layer of this.getLayers().filter((layer) => layer._fmSearchResult === result)) {
+		const layers = this.getResultLayers(result);
+		if (layers.length === 0) {
+			return;
+		}
+
+		for (const layer of layers) {
 			this.removeLayer(layer);
 		}
 

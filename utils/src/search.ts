@@ -193,7 +193,7 @@ export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress 
 	let m = query.match(/^(node|way|relation)\s+(\d+)$/);
 	if (m) {
 		const { fetchOsmFeature, analyzeOsmRelation } = await import("./osm/feature.js");
-		const feature = await fetchOsmFeature(m[1] as OsmFeatureType, Number(m[2]));
+		const feature = await fetchOsmFeature(m[1] as OsmFeatureType, Number(m[2]), onProgress);
 		return feature.type === "relation" ? analyzeOsmRelation(feature) : feature;
 	}
 

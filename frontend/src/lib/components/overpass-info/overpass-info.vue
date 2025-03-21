@@ -12,6 +12,7 @@
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
+	import OsmFeatureLink from "../osm/osm-feature-link.vue";
 
 	const i18n = useI18n();
 
@@ -75,6 +76,13 @@
 				:isDisabled="isAdding"
 				:destination="routeDestination"
 			></UseAsDropdown>
+
+			<OsmFeatureLink
+				class="btn btn-secondary btn-sm"
+				:type="element.type"
+				:id="element.id"
+				label="OpenStreetMap"
+			></OsmFeatureLink>
 		</div>
 	</div>
 </template>

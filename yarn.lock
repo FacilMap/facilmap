@@ -4168,6 +4168,7 @@ __metadata:
     vite-tsconfig-paths: ^5.1.4
     vitest: ^3.0.7
     vue: ^3.5.13
+    vue-component-type-helpers: ^2.2.8
     vue-tsc: ^2.2.4
     vuedraggable: ^4.1.0
     zod: ^3.24.2
@@ -4295,6 +4296,7 @@ __metadata:
     maxmind: ^4.3.24
     md5-file: ^5.0.0
     mysql2: ^3.12.0
+    osm-api: ^2.4.0
     p-throttle: ^7.0.0
     pg: ^8.13.3
     proxy-addr: ^2.0.7
@@ -8927,6 +8929,13 @@ __metadata:
   version: 3.1.0
   resolution: "vscode-uri@npm:3.1.0"
   checksum: d0f76a22f3d205dd2754d1c2820f55c1c9941c59b3baf1f4ed330fcdc006f2fc8b3c1338dafd6b30448f153173892651afe738a94b2c218ca4072d0e604c8d5e
+  languageName: node
+  linkType: hard
+
+"vue-component-type-helpers@npm:^2.2.8":
+  version: 2.2.8
+  resolution: "vue-component-type-helpers@npm:2.2.8"
+  checksum: 4f3f2c94e243990ed92efa0eab793320e6a37063cb95ab46c341a0a661d6333e1910d22ddc895831ccc2840b6c50209ed15f6629b38c1a0d94cb0d66bb731a61
   languageName: node
   linkType: hard
 
