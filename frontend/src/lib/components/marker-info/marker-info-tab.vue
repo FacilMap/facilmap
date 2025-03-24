@@ -7,7 +7,7 @@
 	import { normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
@@ -20,7 +20,7 @@
 			return undefined;
 	});
 
-	const marker = computed(() => markerId.value != null ? client.value.markers[markerId.value] : undefined);
+	const marker = computed(() => markerId.value != null ? clientContext.value.markers[markerId.value] : undefined);
 
 	watch(marker, () => {
 		if (!marker.value && markerId.value != null)

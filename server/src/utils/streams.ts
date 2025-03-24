@@ -4,6 +4,7 @@ import Packer from "zip-stream";
 import bz2 from "unbzip2-stream";
 import zlib from "zlib";
 import { PipeableTransformStream } from "json-stream-es";
+import { concatArrayBuffers } from "facilmap-utils";
 
 export { iterableToStream, PipeableTransformStream, streamToIterable, streamToArray, stringToStream, streamToString } from "json-stream-es";
 
@@ -249,7 +250,7 @@ export function peekFirstBytes<T, R>(
 
 		(async () => {
 			const chunks: T[] = [];
-			while (true) { // eslint-disable-line no-constant-condition
+			while (true) {
 				const { done, value } = await reader.read();
 				if (done) {
 					break;
@@ -269,16 +270,6 @@ export function peekFirstBytes<T, R>(
 
 		return copy;
 	}));
-}
-
-export function concatArrayBuffers(chunks: Uint8Array[]): Uint8Array {
-    const result = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
-    let offset = 0;
-    for (const chunk of chunks) {
-        result.set(chunk, offset);
-        offset += chunk.length;
-    }
-    return result;
 }
 
 /**

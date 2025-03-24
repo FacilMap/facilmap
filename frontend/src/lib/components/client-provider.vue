@@ -89,13 +89,13 @@
 
 			clientContext.map = mapObj;
 
-			onCleanup(() => {
-				clientContext.map = undefined;
-				clientContext.storage.unsubscribeFromMap(mapSlug).catch(() => undefined);
-			});
-
 			try {
-				await clientContext.storage.subscribeToMap(mapSlug);
+				const subscription = clientContext.client.subscribeToMap(mapSlug);
+				onCleanup(() => {
+					clientContext.map = undefined;
+					subscription.unsubscribe().catch(() => undefined);
+				});
+				await subscription.subscribePromise;
 				(mapObj as ClientContextMap).state = ClientContextMapState.OPEN;
 			} catch(err: any) {
 				if (context.settings.interactive && isMapNotFoundError(err)) {
@@ -166,7 +166,7 @@
 			noCloseButton
 		/>
 	</template>
-	<template v-else-if="clientContext.client.state.type === ClientStateType.DISCONNECTED">
+	<template v-else-if="clientContext.client.state.type === ClientStateType.RECONNECTING">
 		<Toast
 			:id="`fm${context.id}-client-disconnected`"
 			variant="danger"

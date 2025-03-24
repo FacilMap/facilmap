@@ -834,7 +834,8 @@
         "route-description-inner-joiner": " nach ",
         "find-destination-error": "Fehler bei der Suche nach dem Wegpunkt „{{query}}“",
         "some-destinations-not-found": "Manche Wegpunkte konnten nicht gefunden werden.",
-        "route-calculation-error": "Error calculating route",
+        "route-calculation-error": "Fehler beim Berechnen der Route",
+        "route-clear-error": "Fehler beim Zurücksetzen der Route",
         "reorder-alt": "Umordnen",
         "from-placeholder": "Von",
         "to-placeholder": "Nach",
@@ -849,8 +850,7 @@
         "clear-route-alt": "Ausblenden",
         "distance": "Länge",
         "ascent-descent": "Aufstieg/Abstieg",
-        "zoom-to-object-label": "Zur Route zoomen",
-        "export-filename": "FacilMap-Route"
+        "zoom-to-object-label": "Zur Route zoomen"
     },
     "route-form-tab": {
         "tab-label": "Route"

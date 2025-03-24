@@ -5,13 +5,14 @@ import {
 	type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type SocketClientToServerEvents,
 	type SocketServerToClientEvents, type SetLanguageRequest, type PagingInput, type MapDataWithWritable,
 	type AllMapObjectsPick, type StreamedResults, type BboxWithExcept, type AllMapObjectsItem, type SocketApi, type StreamId,
-	type FindOnMapResult, type HistoryEntry, type ExportFormat, type StreamToStreamId,
+	type FindOnMapResult, type HistoryEntry, type StreamToStreamId,
 	type RouteParameters, type LineToRouteRequest, type ApiV3, type AllAdminMapObjectsItem,
 	type LineWithTrackPoints,
 	type DeepReadonly,
 	type SubscribeToMapOptions,
 	ApiVersion,
-	type Api
+	type Api,
+	type ExportFormat
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
@@ -195,8 +196,14 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 						}
 					},
 					cancel: async (reason) => {
-						await reader.cancel(reason);
-						delete this.streams[streamId];
+						try {
+							await Promise.all([
+								reader.cancel(reason),
+								this._abortStream(streamId)
+							]);
+						} finally {
+							delete this.streams[streamId];
+						}
 					}
 				}),
 				handleChunks: (chunks) => {
@@ -223,6 +230,10 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return streamToIterable(this._handleStream(streamId));
 	}
 
+	protected async _abortStream(streamId: StreamId<any>): Promise<void> {
+		await this._call("abortStream", streamId);
+	}
+
 	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
 		if (!this._hasListeners(eventName)) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
@@ -234,7 +245,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 
 	protected async _call<R extends keyof SocketApi<SocketVersion.V3, false>>(
 		eventName: R,
-		...args: Parameters<SocketApi<SocketVersion.V3, false>[R]>
+		...args: DeepReadonly<Parameters<SocketApi<SocketVersion.V3, false>[R]>>
 	): Promise<StreamToStreamId<ReturnType<SocketApi<SocketVersion.V3, false>[R]>> extends Promise<infer Result> ? UndefinedToNull<Result> : never> {
 		if (this.state.type === ClientStateType.FATAL_ERROR) {
 			throw this.state.error;
@@ -393,11 +404,11 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		};
 	}
 
-	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE>): Promise<Line> {
+	async createLine(mapSlug: MapSlug, data: DeepReadonly<Line<CRU.CREATE>>): Promise<Line> {
 		return await this._call("createLine", mapSlug, data);
 	}
 
-	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE>): Promise<Line> {
+	async updateLine(mapSlug: MapSlug, lineId: ID, data: DeepReadonly<Line<CRU.UPDATE>>): Promise<Line> {
 		return await this._call("updateLine", mapSlug, lineId, data);
 	}
 
@@ -405,7 +416,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("deleteLine", mapSlug, lineId);
 	}
 
-	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<string> }> {
+	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		const result = await this._call("exportLine", mapSlug, lineId, options);
 		return {
 			...result,
@@ -463,7 +474,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("find", query);
 	}
 
-	async findUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+	async findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
 		const result = await this._call("findUrl", url);
 		return {
 			data: this._handleStream(result.data)

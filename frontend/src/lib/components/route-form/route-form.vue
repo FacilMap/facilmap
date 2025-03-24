@@ -3,7 +3,7 @@
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { ExportFormat, SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, type LatLng } from "leaflet";
@@ -13,21 +13,23 @@
 	import { cloneDeep, throttle } from "lodash-es";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
-	import { isMapResult } from "../../utils/search";
+	import { isMapResult, type MapResult } from "../../utils/search";
 	import type { LineWithTags } from "../../utils/add";
 	import vTooltip from "../../utils/tooltip";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { UseAsType, type RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import { mapRef } from "../../utils/vue";
 	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
+	import type { RouteWithTrackPoints } from "facilmap-client";
+import type { SocketClientRouteSubscription } from "facilmap-client/src/socket-client-route-subscription";
 
 	type SearchSuggestion = SearchResult;
-	type MapSuggestion = FindOnMapResult & { kind: "marker" };
+	type MapSuggestion = MapResult & { kind: "marker" };
 	type Suggestion = SearchSuggestion | MapSuggestion;
 
 	interface Destination extends RouteDestination {
@@ -59,7 +61,7 @@
 		};
 	}
 
-	function makeDestination({ query, searchSuggestions, mapSuggestions, selectedSuggestion }: DeepReadonly<{ query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult }>): Destination {
+	function makeDestination({ query, searchSuggestions, mapSuggestions, selectedSuggestion }: DeepReadonly<{ query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: MapResult[]; selectedSuggestion?: SearchResult | MapResult }>): Destination {
 		return {
 			query,
 			loadedQuery: searchSuggestions || mapSuggestions ? query : undefined,
@@ -78,7 +80,8 @@
 	}
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
@@ -90,7 +93,7 @@
 	const props = withDefaults(defineProps<{
 		/** If false, the route layer will be opaque and not draggable. */
 		active?: boolean;
-		routeKey?: string;
+		routeKey: string;
 		showToolbar?: boolean;
 		noClear?: boolean;
 	}>(), {
@@ -103,7 +106,8 @@
 		"hash-query-change": [hashQuery: HashQuery | undefined];
 	}>();
 
-	const routeObj = computed(() => props.routeKey ? client.value.routes[props.routeKey] : client.value.route);
+	const sub = computed((): SocketClientRouteSubscription | undefined => clientContext.value.client.routeSubscriptions[props.routeKey]);
+	const routeObj = computed((): DeepReadonly<RouteWithTrackPoints> | undefined => clientContext.value.storage.routes[props.routeKey]);
 	const hasRoute = computed(() => !!routeObj.value);
 
 	const routeMode = ref(routeObj.value?.mode ?? "car");
@@ -113,13 +117,14 @@
 		[{ query: "" }, { query: "" }]
 	));
 	const submittedQuery = ref<{ destinations: Destination[]; mode: string }>();
+	let loadingRouteAbort: AbortController | undefined = undefined;
 	const routeError = ref<string>();
 	const hoverDestinationIdx = ref<number>();
 	const hoverInsertIdx = ref<number>();
 	const suggestionMarker = ref<MarkerLayer>();
 
 	const routeLayer = computed(() => {
-		const layer = markRaw(new RouteLayer(client.value, props.routeKey, { weight: 7, opacity: 1, raised: true }));
+		const layer = markRaw(new RouteLayer(clientContext.value.storage, props.routeKey, { weight: 7, opacity: 1, raised: true }));
 		layer.on("click", (e) => {
 			if (!props.active && !(e.originalEvent as any).ctrlKey) {
 				emit("activate");
@@ -312,16 +317,18 @@
 
 			try {
 				const [searchResults, mapResults] = await Promise.all([
-					client.value.find({ query: query }),
+					clientContext.value.client.find(query),
 					(async () => {
-						if (client.value.mapData) {
+						if (clientSub.value?.data.mapData) {
 							const m = query.match(/^m(\d+)$/);
 							if (m) {
-								const marker = await client.value.getMarker({ id: Number(m[1]) });
-								client.value.storeMarker(mapSlug, marker);
-								return marker ? [{ kind: "marker" as const, similarity: 1, ...marker }] : [];
-							} else
-								return (await client.value.findOnMap({ query })).filter((res) => res.kind == "marker") as MapSuggestion[];
+								const marker = await clientContext.value.client.getMarker(clientSub.value.mapSlug, Number(m[1]));
+								clientContext.value.storage.storeMarker(clientSub.value.mapSlug, marker);
+								return marker ? [{ kind: "marker" as const, mapSlug: clientSub.value.mapSlug, similarity: 1, ...marker }] : [];
+							} else {
+								const results = (await clientContext.value.client.findOnMap(clientSub.value.mapSlug, query)).filter((res) => res.kind == "marker");
+								return results.map((r) => ({ ...r, mapSlug: clientSub.value!.mapSlug }));
+							}
 						}
 					})()
 				])
@@ -426,8 +433,15 @@
 			const mode = routeMode.value;
 
 			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
+			loadingRouteAbort = new AbortController();
+			const signal = loadingRouteAbort.signal;
 
 			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
+
+			if (signal.aborted) {
+				return;
+			}
+
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
 			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
@@ -437,14 +451,21 @@
 				return;
 			}
 
-			const route = await client.value.setRoute({
-				routePoints: points.map((point) => ({ lat: point!.lat!, lon: point!.lon! })),
-				mode,
-				routeKey: props.routeKey
-			});
+			const update = { routePoints: points.map((point) => ({ lat: point!.lat!, lon: point!.lon! })), mode };
+			if (sub.value) {
+				await sub.value.updateSubscription(update);
+			} else {
+				await clientContext.value.client.subscribeToRoute(props.routeKey, update).subscribePromise;
+			}
 
-			if (route && zoom)
-				flyTo(mapContext.value.components.map, getZoomDestinationForRoute(route), smooth);
+			if (signal.aborted) {
+				return;
+			}
+
+			loadingRouteAbort = undefined;
+
+			if (routeObj.value && zoom)
+				flyTo(mapContext.value.components.map, getZoomDestinationForRoute(routeObj.value), smooth);
 		} catch (err: any) {
 			toasts.showErrorToast(`fm${context.id}-route-form-error`, () => i18n.t("route-form.route-calculation-error"), err);
 		}
@@ -452,7 +473,16 @@
 
 	async function reroute(zoom: boolean, smooth = true): Promise<void> {
 		if(hasRoute.value) {
+			loadingRouteAbort?.abort();
+			loadingRouteAbort = new AbortController;
+			const signal = loadingRouteAbort.signal;
+
 			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
+
+			if (signal.aborted) {
+				return;
+			}
+
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
 			if(!points.some((point) => point == null))
@@ -462,7 +492,9 @@
 
 	function reset(): void {
 		toasts.hideToast(`fm${context.id}-route-form-error`);
+		loadingRouteAbort?.abort();
 		submittedQuery.value = undefined;
+		loadingRouteAbort = undefined;
 		routeError.value = undefined;
 
 		if(suggestionMarker.value) {
@@ -470,7 +502,9 @@
 			suggestionMarker.value = undefined;
 		}
 
-		client.value.clearRoute({ routeKey: props.routeKey });
+		sub.value?.unsubscribe().catch((err) => {
+			toasts.showErrorToast(`fm${context.id}-route-form-error`, () => i18n.t("route-form.route-clear-error"), err);
+		});
 	}
 
 	function clear(): void {
@@ -487,13 +521,13 @@
 		void route(true);
 	}
 
-	const linesWithTags = computed((): LineWithTags[] | undefined => routeObj.value && [{
+	const linesWithTags = computed((): Array<DeepReadonly<LineWithTags>> | undefined => routeObj.value && [{
 		routePoints: routeObj.value.routePoints,
 		mode: routeObj.value.mode
 	}]);
 
-	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
-		return await client.value.exportRoute({ format });
+	async function getExport(format: ExportFormat) {
+		return await clientContext.value.client.exportRoute(props.routeKey, { format });
 	}
 
 	function setQuery(query: string, zoom = true, smooth = true): void {
@@ -566,7 +600,7 @@
 		<form action="javascript:" @submit.prevent="handleSubmit">
 			<Draggable
 				v-model="destinations"
-				handle=".fm-drag-handle"
+				v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 				@end="reroute(true)"
 				:itemKey="(destination: any) => destinations.indexOf(destination)"
 			>
@@ -619,7 +653,7 @@
 												class="dropdown-item"
 												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
 												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.name}} ({{formatTypeName(client.types[suggestion.typeId].name)}})</a>
+											>{{suggestion.name}}{{clientSub?.data.types[suggestion.typeId] ? ` (${formatTypeName(clientSub.data.types[suggestion.typeId].name)})` : ""}}</a>
 										</li>
 									</template>
 
@@ -717,7 +751,7 @@
 
 				<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
-				<div v-if="showToolbar && !client.readonly" class="btn-toolbar" role="group">
+				<div v-if="showToolbar" class="btn-toolbar" role="group">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('route-form.zoom-to-object-label')"
@@ -732,7 +766,6 @@
 					></AddToMapDropdown>
 
 					<ExportDropdown
-						:filename="i18n.t('route-form.export-filename')"
 						:getExport="getExport"
 						:formats="['gpx-trk', 'gpx-rte']"
 						size="sm"

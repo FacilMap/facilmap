@@ -1,8 +1,8 @@
 <script setup lang="ts">
-	import { Writable, lineValidator, type ID } from "facilmap-types";
-	import { canControl, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
+	import { lineValidator, type ID } from "facilmap-types";
+	import { canControl, canEditType, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
-	import { cloneDeep, isEqual, omit } from "lodash-es";
+	import { isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";
 	import FieldInput from "./ui/field-input.vue";
@@ -11,7 +11,7 @@
 	import { computed, ref, toRef, watch } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
-	import { injectContextRequired, requireClientContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import StrokePicker from "./ui/stroke-picker.vue";
 	import { useI18n } from "../utils/i18n";
@@ -19,7 +19,8 @@
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -35,19 +36,21 @@
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const originalLine = toRef(() => client.value.lines[props.lineId]);
+	const originalLine = toRef(() => clientSub.value.data.lines[props.lineId]);
 
 	const line = ref(cloneDeep(originalLine.value));
 
 	const isModified = computed(() => !isEqual(line.value, originalLine.value));
 
-	const types = computed(() => getOrderedTypes(client.value.types).filter((type) => type.type === "line"));
+	const types = computed(() => getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "line"));
 
-	const resolvedCanControl = computed(() => canControl(client.value.types[line.value.typeId]));
+	const resolvedCanControl = computed(() => canControl(clientSub.value.data.types[line.value.typeId]));
 
 	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
+
+	const resolvedCanEditType = computed(() => !!clientSub.value.data.types[line.value.typeId] && canEditType(clientSub.value.data.mapData, clientSub.value.data.types[line.value.typeId]));
 
 	watch(originalLine, (newLine, oldLine) => {
 		if (!newLine) {
@@ -62,7 +65,7 @@
 		toasts.hideToast(`fm${context.id}-edit-line-error`);
 
 		try {
-			await client.value.editLine(omit(line.value, "trackPoints"));
+			await clientContext.value.client.updateLine(clientSub.value.mapSlug, line.value.id, omit(line.value, "trackPoints"));
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-edit-line-error`, () => i18n.t("edit-line-dialog.save-error"), err);
@@ -141,7 +144,7 @@
 				</div>
 			</template>
 
-			<template v-for="(field, idx) in client.types[line.typeId].fields" :key="field.name">
+			<template v-for="(field, idx) in clientSub.data.types[line.typeId].fields" :key="field.name">
 				<template v-if="field.type !== 'checkbox' || !isXs">
 					<div class="row mb-3">
 						<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
@@ -166,7 +169,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1 || client.writable === Writable.ADMIN" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
+			<DropdownMenu v-if="types.length > 1 || resolvedCanEditType" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a
@@ -178,14 +181,14 @@
 					</li>
 				</template>
 
-				<template v-if="client.writable === Writable.ADMIN && client.types[line.typeId]">
+				<template v-if="resolvedCanEditType">
 					<li><hr class="dropdown-divider"></li>
 					<li>
 						<a
 							href="javascript:"
 							class="dropdown-item"
 							@click="showEditTypeDialog = line.typeId"
-						>{{i18n.t("edit-marker-dialog.edit-type", { type: client.types[line.typeId].name })}}</a>
+						>{{i18n.t("edit-marker-dialog.edit-type", { type: clientSub.data.types[line.typeId].name })}}</a>
 					</li>
 				</template>
 			</DropdownMenu>

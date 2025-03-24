@@ -6,11 +6,11 @@
 	import { computed, ref } from "vue";
 	import { useDomEventListener } from "../../utils/utils";
 	import { useResizeObserver } from "../../utils/vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
@@ -38,11 +38,11 @@
 	}
 
 	const legend1 = computed(() => {
-		return client.value.mapData?.legend1?.trim() || "";
+		return clientSub.value?.data.mapData.legend1?.trim() || "";
 	});
 
 	const legend2 = computed(() => {
-		return client.value.mapData?.legend2?.trim() || "";
+		return clientSub.value?.data.mapData.legend2?.trim() || "";
 	});
 
 	const legendItems = computed(() => {

@@ -8,6 +8,7 @@
 
 	const props = defineProps<{
 		modelValue: Stroke;
+		id?: string;
 		validators?: Array<Validator<Stroke>>;
 	}>();
 
@@ -27,6 +28,7 @@
 	<select
 		v-model="value"
 		class="form-select"
+		:id="props.id"
 	>
 		<option value="">{{i18n.t("stroke-picker.solid")}}</option>
 		<option value="dashed">{{i18n.t("stroke-picker.dashed")}}</option>

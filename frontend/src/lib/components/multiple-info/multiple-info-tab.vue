@@ -4,22 +4,22 @@
 	import { useEventListener } from "../../utils/utils";
 	import { isLine, isMarker } from "facilmap-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { computed } from "vue";
-	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { computed, type DeepReadonly } from "vue";
+	import { injectContextRequired, requireClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
 	useEventListener(mapContext, "open-selection", handleOpenSelection);
 
 	const objects = computed(() => {
-		const objects = mapContext.value.selection.flatMap((item): Array<Marker | Line> => {
-			if (item.type == "marker" && client.value.markers[item.id])
-				return [client.value.markers[item.id]];
-			else if (item.type == "line" && client.value.lines[item.id])
-				return [client.value.lines[item.id]];
+		const objects = mapContext.value.selection.flatMap((item): Array<DeepReadonly<Marker | Line>> => {
+			if (item.type == "marker" && clientSub.value.data.markers[item.id])
+				return [clientSub.value.data.markers[item.id]];
+			else if (item.type == "line" && clientSub.value.data.lines[item.id])
+				return [clientSub.value.data.lines[item.id]];
 			else
 				return [];
 		});

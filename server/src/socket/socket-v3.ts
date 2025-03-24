@@ -11,6 +11,7 @@ import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
 import { getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries } from "facilmap-utils";
 import { serializeError } from "serialize-error";
+import { exportLineToGeoJson } from "../export/geojson.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -22,6 +23,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	bbox: BboxWithZoom | undefined = undefined;
 	mapSubscriptions: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
 	routeSubscriptions: Record<string, Route & { routeId: string }> = { };
+
+	streamAbort: Record<string, AbortController> = {};
 
 	unregisterDatabaseHandlers = (): void => undefined;
 
@@ -47,11 +50,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	emitStream<T>(stream: AsyncIterable<T>): StreamId<T> {
 		const streamId = `${generateRandomId(8)}-${Date.now()}` as StreamId<T>;
 		void (async () => {
+			this.streamAbort[streamId] = new AbortController();
 			let chunks: any[] = [];
 			let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 			let done = false;
 			try {
 				for await (const chunk of stream) {
+					this.streamAbort[streamId].signal.throwIfAborted();
 					chunks.push(chunk);
 					if (!timeout) {
 						timeout = setTimeout(() => {
@@ -70,7 +75,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					this.emit("streamDone", streamId);
 				}
 			} catch (err: any) {
+				if (timeout) {
+					clearTimeout(timeout);
+				}
 				this.emit("streamError", streamId, serializeError(err));
+			} finally {
+				delete this.streamAbort[streamId];
 			}
 		})();
 		return streamId;
@@ -393,13 +403,19 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						return {
 							type: "application/gpx+xml",
 							filename: `${filename}.gpx`,
-							data: this.emitStream(streamToIterable(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId))))
+							data: this.emitStream(streamToIterable(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
 						};
 					case "gpx-rte":
 						return {
 							type: "application/gpx+xml",
 							filename: `${filename}.gpx`,
-							data: this.emitStream(streamToIterable(exportLineToRouteGpx(routeInfo, undefined)))
+							data: this.emitStream(streamToIterable(exportLineToRouteGpx(routeInfo, undefined).pipeThrough(new TextEncoderStream())))
+						};
+					case "geojson":
+						return {
+							type: "application/geo+json",
+							filename: `${filename}.geojson`,
+							data: this.emitStream(streamToIterable(exportLineToGeoJson(routeInfo, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
 						};
 					default:
 						throw new Error(getI18n().t("socket.unknown-format"));
@@ -441,6 +457,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					this.emit("routePoints", routeKey, { trackPoints, reset: false });
 				}
 			},
+
+			abortStream: async (streamId) => {
+				if (this.streamAbort[streamId]) {
+					this.streamAbort[streamId].abort();
+				}
+			}
 
 			/*copyPad : function(data, callback) {
 				if(!stripObject(data, { toId: "string" }))

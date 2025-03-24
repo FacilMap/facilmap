@@ -48,7 +48,7 @@
 			>{{view.name}}</a>
 		</li>
 
-		<template v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
+		<template v-if="clientSub.data.mapData.writable == Writable.ADMIN">
 			<li v-if="orderedViews.length > 0">
 				<hr class="dropdown-divider">
 			</li>

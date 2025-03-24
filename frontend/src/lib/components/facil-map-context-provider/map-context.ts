@@ -19,10 +19,10 @@ export interface MapComponents {
 	container: HTMLElement;
 	graphicScale: any;
 	hashHandler: HashHandler & { _fmActivate: () => Promise<void> };
-	linesLayer: LinesLayer;
+	linesLayer: LinesLayer | undefined;
 	locateControl?: L.Control.Locate;
 	map: Map;
-	markersLayer: MarkersLayer;
+	markersLayer: MarkersLayer | undefined;
 	mousePosition: L.Control.MousePosition;
 	overpassLayer: OverpassLayer;
 	searchResultsLayer: SearchResultsLayer;

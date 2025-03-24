@@ -59,7 +59,7 @@ export const apiV3RequestValidators = {
 	createLine: z.tuple([mapSlugValidator, lineValidator.create]),
 	updateLine: z.tuple([mapSlugValidator, idValidator, lineValidator.update]),
 	deleteLine: z.tuple([mapSlugValidator, idValidator]),
-	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]) })]),
+	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator })]),
 
 	getMapTypes: z.tuple([mapSlugValidator]),
 	getType: z.tuple([mapSlugValidator, idValidator]),
@@ -105,7 +105,7 @@ type ApiV3Response = {
 	createLine: Line;
 	updateLine: Line;
 	deleteLine: void;
-	exportLine: { type: string; filename: string; data: ReadableStream<string> };
+	exportLine: { type: string; filename: string; data: ReadableStream<Uint8Array> };
 
 	getMapTypes: StreamedResults<Type>;
 	getType: Type;
@@ -120,7 +120,7 @@ type ApiV3Response = {
 	deleteView: void;
 
 	find: SearchResult[];
-	findUrl: { data: ReadableStream<string> };
+	findUrl: { data: ReadableStream<Uint8Array> };
 	getRoute: RouteInfo;
 
 	geoip: Bbox | undefined;

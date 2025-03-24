@@ -267,7 +267,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
-	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<string> }> {
+	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/line/${encodeURIComponent(lineId)}/export`, {
 			query: {
 				format: options.format
@@ -276,7 +276,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return {
 			type: res.headers.get("Content-type")!,
 			filename: parseContentDisposition(res.headers.get("Content-disposition")!).parameters.filename,
-			data: res.body!.pipeThrough(new TextDecoderStream())
+			data: res.body!
 		};
 	}
 
@@ -353,14 +353,14 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async findUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+	async findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
 		const res = await this.fetch("/find/url", {
 			query: {
 				url
 			}
 		});
 		return {
-			data: res.body!.pipeThrough(new TextDecoderStream())
+			data: res.body!
 		};
 	}
 

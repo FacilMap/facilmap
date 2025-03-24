@@ -26,7 +26,7 @@
 	}
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData!.id, name: clientSub.value!.data.mapData!.name });
+		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData.id, name: clientSub.value!.data.mapData.name });
 	}
 </script>
 
@@ -49,7 +49,7 @@
 			<Draggable
 				v-model="storage.bookmarks"
 				tag="tbody"
-				handle=".fm-drag-handle"
+				v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 				:itemKey="(bookmark: any) => storage.bookmarks.indexOf(bookmark)"
 			>
 				<template #item="{ element: bookmark }">

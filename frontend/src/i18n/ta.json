@@ -440,8 +440,7 @@
         "clear-route-alt": "தெளிவான",
         "distance": "தூரம்",
         "ascent-descent": "ஏறும்/கைவிடவும்",
-        "zoom-to-object-label": "பாதை பெரிதாக்கவும்",
-        "export-filename": "Fixilmap பாதை"
+        "zoom-to-object-label": "பாதை பெரிதாக்கவும்"
     },
     "search-results": {
         "select-all": "அனைத்தையும் தெரிவுசெய்",

@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import { Units, type Field, type Point, type RouteMode } from "facilmap-types";
+import { Units, type DeepReadonly, type Field, type Point, type RouteMode } from "facilmap-types";
 import { quoteHtml } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -20,7 +20,7 @@ export function formatCheckboxValue(value: string): string {
 	return value == "1" ? "✔" : "✘";
 }
 
-export function formatFieldValue(field: Field, value: string | undefined, html: boolean): string {
+export function formatFieldValue(field: DeepReadonly<Field>, value: string | undefined, html: boolean): string {
 	const normalizedValue = normalizeFieldValue(field, value);
 	switch(field.type) {
 		case "textarea":

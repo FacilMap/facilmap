@@ -309,7 +309,7 @@
 			<Draggable
 				v-model="fieldValue.options"
 				tag="tbody"
-				handle=".fm-drag-handle"
+				v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 				:itemKey="(option: any) => fieldValue.options!.indexOf(option)"
 			>
 				<template #item="{ element: option, index: idx }">

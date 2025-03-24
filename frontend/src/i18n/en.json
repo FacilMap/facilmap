@@ -838,6 +838,7 @@
         "find-destination-error": "Error finding destination “{{query}}”",
         "some-destinations-not-found": "Some destinations could not be found.",
         "route-calculation-error": "Error calculating route",
+        "route-clear-error": "Error clearing route",
         "reorder-alt": "Reorder",
         "from-placeholder": "From",
         "to-placeholder": "To",
@@ -852,8 +853,7 @@
         "clear-route-alt": "Clear",
         "distance": "Distance",
         "ascent-descent": "Climb/drop",
-        "zoom-to-object-label": "Zoom to route",
-        "export-filename": "FacilMap route"
+        "zoom-to-object-label": "Zoom to route"
     },
     "route-form-tab": {
         "tab-label": "Route"

@@ -103,7 +103,7 @@
 			<Draggable
 				v-model="orderedViews"
 				tag="tbody"
-				handle=".fm-drag-handle"
+				v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 				itemKey="id"
 				@change="handleDrag"
 			>
@@ -112,7 +112,7 @@
 						<td
 							class="text-break align-middle"
 							:class="{
-								'font-weight-bold': view.id == clientSub.data.mapData!.defaultViewId
+								'font-weight-bold': view.id == clientSub.data.mapData.defaultViewId
 							}"
 						>
 							<a href="javascript:" @click="display(view)">{{view.name}}</a>
@@ -121,7 +121,7 @@
 							<button
 								type="button"
 								class="btn btn-secondary"
-								v-show="!clientSub.data.mapData!.defaultViewId || view.id !== clientSub.data.mapData!.defaultViewId"
+								v-show="!clientSub.data.mapData.defaultViewId || view.id !== clientSub.data.mapData.defaultViewId"
 								@click="makeDefault(view)"
 								:disabled="!!isSavingDefaultView || isDeleting.has(view.id)"
 							>

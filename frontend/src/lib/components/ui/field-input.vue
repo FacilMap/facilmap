@@ -1,10 +1,10 @@
 <script setup lang="ts">
 	import type { Field } from "facilmap-types";
-	import { computed } from "vue";
+	import { computed, type DeepReadonly } from "vue";
 	import { formatFieldName, normalizeFieldValue } from "facilmap-utils";
 
 	const props = withDefaults(defineProps<{
-		field: Field;
+		field: DeepReadonly<Field>;
 		ignoreDefault?: boolean;
 		modelValue?: string;
 		id?: string;
@@ -14,10 +14,10 @@
 	});
 
 	const emit = defineEmits<{
-		"update:modelValue": [value: string | undefined];
+		"update:modelValue": [value: string];
 	}>();
 
-	const value = computed<string | undefined>({
+	const value = computed({
 		get: () => normalizeFieldValue(props.field, props.modelValue, props.ignoreDefault),
 		set: (value) => {
 			emit("update:modelValue", value);

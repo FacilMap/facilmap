@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName, type AnalyzedOsmFeature } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName, type AnalyzedOsmFeature, concatArrayBuffers } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { Bbox, FindOnMapResult, SearchResult } from "facilmap-types";
+	import type { Bbox, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
 	import { flyTo, getZoomDestinationForBbox, getZoomDestinationForMapResult, getZoomDestinationForOsmFeature, getZoomDestinationForResults, getZoomDestinationForSearchResult, normalizeZoomDestination, openSpecialQuery, type ZoomDestination } from "../../utils/zoom";
 	import { Util } from "leaflet";
-	import { isMapResult } from "../../utils/search";
+	import { isMapResult, type MapResult } from "../../utils/search";
 	import storage from "../../utils/storage";
 	import type { HashQuery } from "facilmap-leaflet";
 	import { type FileResultObject, parseFiles } from "../../utils/files";
@@ -20,7 +20,7 @@
 	import BlameResults from "../osm/blame-results/blame-results.vue";
 	import RelationResults from "../osm/relation-results/relation-results.vue";
 	import OsmFeatureInfo from "../osm/osm-feature-info.vue";
-	import { streamToString } from "json-stream-es";
+	import { streamToArray } from "json-stream-es";
 
 	const props = defineProps<{
 		active: boolean;
@@ -53,7 +53,7 @@
 	const result = ref<{
 		type: "search";
 		search: SearchResult[];
-		map?: FindOnMapResult[];
+		map?: MapResult[];
 	} | {
 		type: "file";
 		file: FileResultObject;
@@ -120,7 +120,7 @@
 			rejectZoomed = reject;
 		});
 		const loaded = (async () => {
-			const resolvedMapOnly = mapOnly.value && !!client.value.mapData;
+			const resolvedMapOnly = mapOnly.value && !!clientSub.value?.data.mapData;
 			if (searchString.value != loadedSearchString.value || resolvedMapOnly !== loadedMapOnly.value) {
 				reset();
 
@@ -159,13 +159,25 @@
 						const url = parseUrlQuery(query);
 
 						const [newSearchResults, newMapResults] = await Promise.all([
-							loadedUrl ? loadedUrl :
-							!resolvedMapOnly && url ? clientContext.value.client.findUrl(query) :
-							!resolvedMapOnly ? mapContext.value.runOperation(async () => await find(query, {
-								lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
-							})) :
-							[],
-							clientSub.value ? clientContext.value.client.findOnMap(clientSub.value.mapSlug, query) : undefined
+							(
+								loadedUrl ? loadedUrl :
+								!resolvedMapOnly && url ? (async () => {
+									const result = await clientContext.value.client.findUrl(query);
+									signal.addEventListener("abort", () => {
+										result.data.cancel();
+									});
+									return concatArrayBuffers(await streamToArray(result.data));
+								})() :
+								!resolvedMapOnly ? mapContext.value.runOperation(async () => await find(query, {
+									lang: isLanguageExplicit() ? getCurrentLanguage() : undefined
+								})) :
+								[]
+							),
+							clientSub.value ? (async () => {
+								const mapSlug = clientSub.value!.mapSlug;
+								const results = await clientContext.value.client.findOnMap(mapSlug, query);
+								return results.map((r) => ({ ...r, mapSlug }));
+							})() : undefined
 						]);
 
 						if (signal.aborted)
@@ -182,12 +194,8 @@
 							loadedSearchString.value = query;
 						}
 
-						if (typeof newSearchResults === "string" || "data" in newSearchResults) {
-							// TODO: Pass signal
-							const content = typeof newSearchResults === "string" ? newSearchResults : await streamToString(newSearchResults);
-							if (signal.aborted)
-								return; // Another search has been started in the meantime
-							const parsed = await mapContext.value.runOperation(async () => await parseFiles([content]));
+						if (newSearchResults instanceof Uint8Array) {
+							const parsed = await mapContext.value.runOperation(async () => await parseFiles([newSearchResults]));
 							if (signal.aborted)
 								return; // Another search has been started in the meantime
 							result.value = {
@@ -250,7 +258,7 @@
 					if (zoom)
 						zoomToAllResults(smooth);
 				} else if (result.value?.type === "search" && result.value.map && result.value.map.length > 0 && (result.value.map[0].similarity == 1 || result.value.search.length === 0)) {
-					mapContext.value.components.selectionHandler.setSelectedItems([{ type: result.value.map[0].kind, id: result.value.map[0].id }])
+					mapContext.value.components.selectionHandler.setSelectedItems([{ type: result.value.map[0].kind, mapSlug: result.value.map[0].mapSlug, id: result.value.map[0].id }])
 					if (zoom)
 						zoomToResult(result.value.map[0], smooth);
 				} else if (result.value?.type === "search" && result.value.search.length > 0) {
@@ -287,7 +295,7 @@
 		mapContext.value.components.featureBlameLayer.setBlame(undefined);
 	};
 
-	function zoomToResult(result: SearchResult | FindOnMapResult, smooth = true): void {
+	function zoomToResult(result: SearchResult | MapResult, smooth = true): void {
 		const dest = isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result);
 		if (dest)
 			flyTo(mapContext.value.components.map, dest, smooth);
@@ -344,7 +352,7 @@
 						</a>
 					</li>
 
-					<template v-if="clientContext.mapData">
+					<template v-if="clientContext.map?.data?.mapData">
 						<li><hr class="dropdown-divider"></li>
 
 						<li>
@@ -353,7 +361,7 @@
 								class="dropdown-item"
 								@click.capture.stop.prevent="mapOnly = !mapOnly"
 							>
-								<Icon :icon="mapOnly ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.map-only", { mapName: normalizeMapName(client.mapData.name) })}}
+								<Icon :icon="mapOnly ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.map-only", { mapName: normalizeMapName(clientContext.map.data.mapData.name) })}}
 							</a>
 						</li>
 					</template>

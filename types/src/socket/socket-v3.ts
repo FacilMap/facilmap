@@ -28,9 +28,10 @@ export const socketV3RequestValidators = {
 	unsubscribeFromMap: z.tuple([mapSlugValidator]),
 	subscribeToRoute: z.tuple([z.string(), subscribeToRouteOptionsValidator]),
 	unsubscribeFromRoute: z.tuple([z.string()]),
-	exportRoute: z.tuple([z.string(), z.object({ format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]) })]),
+	exportRoute: z.tuple([z.string(), z.object({ format: exportFormatValidator })]),
 	setBbox: z.tuple([bboxWithZoomValidator]),
-	setLanguage: z.tuple([setLanguageRequestValidator])
+	setLanguage: z.tuple([setLanguageRequestValidator]),
+	abortStream: z.tuple([z.string()])
 };
 
 export interface SocketV3Response {
@@ -38,9 +39,10 @@ export interface SocketV3Response {
 	unsubscribeFromMap: Promise<void>;
 	subscribeToRoute: Promise<void>;
 	unsubscribeFromRoute: Promise<void>;
-	exportRoute: Awaited<ReturnType<ApiV3<true>["exportLine"]>>;
+	exportRoute: ReturnType<ApiV3<true>["exportLine"]>;
 	setBbox: Promise<void>;
 	setLanguage: void;
+	abortStream: void;
 }
 
 type DeepReadonlyParams<T extends [...any[]]> = { [K in keyof T]: DeepReadonly<T[K]>; };

@@ -1,6 +1,7 @@
 import type { CRU, FieldUpdate, Type } from "facilmap-types";
 import { mergeObject } from "facilmap-utils";
 import { cloneDeep } from "lodash-es";
+import type { DeepReadonly } from "vue";
 
 function getIdxForInsertingField(targetFields: FieldUpdate[], targetField: FieldUpdate, mergedFields: FieldUpdate[]): number {
 	// Check which field comes after the field in the target field list, and return the index of that field in mergedFields
@@ -17,7 +18,7 @@ function getIdxForInsertingField(targetFields: FieldUpdate[], targetField: Field
 	return mergedFields.length;
 }
 
-function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customFields: FieldUpdate[]): FieldUpdate[] {
+function mergeFields(oldFields: DeepReadonly<FieldUpdate[]>, newFields: DeepReadonly<FieldUpdate[]>, customFields: FieldUpdate[]): FieldUpdate[] {
 	let mergedFields = newFields.map((newField) => {
 		let oldField = oldFields.find((field) => (field.name == newField.name));
 		let customField = customFields.find((field) => (field.oldName == newField.name));
@@ -40,7 +41,7 @@ function mergeFields(oldFields: FieldUpdate[], newFields: FieldUpdate[], customF
 	return mergedFields;
 }
 
-export function mergeTypeObject(oldObject: Type, newObject: Type, targetObject: Type<CRU.CREATE_VALIDATED | CRU.READ>): void {
+export function mergeTypeObject(oldObject: DeepReadonly<Type>, newObject: DeepReadonly<Type>, targetObject: Type<CRU.CREATE_VALIDATED | CRU.READ>): void {
 	let customFields = cloneDeep(targetObject.fields);
 
 	mergeObject(oldObject, newObject, targetObject);

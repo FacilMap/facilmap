@@ -13,7 +13,7 @@ export type ClientContextMap = {
 	mapSlug: MapSlug;
 } & (
 	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; error?: undefined }
-	| { state: ClientContextMapState.OPEN; get data(): MapStorage; error?: undefined }
+	| { state: ClientContextMapState.OPEN; get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> }; error?: undefined }
 	| { state: ClientContextMapState.ERROR; get data(): MapStorage | undefined; error: Error }
 );
 

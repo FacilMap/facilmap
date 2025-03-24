@@ -2,13 +2,13 @@ import { type LatLng, latLng, type LatLngBounds, latLngBounds, type Map } from "
 import { fmToLeafletBbox, type HashQuery, type OverpassElement } from "facilmap-leaflet";
 import type { RouteWithTrackPoints } from "facilmap-client";
 import type { SelectedItem } from "./selection";
-import type { Bbox, FindOnMapLine, FindOnMapMarker, FindOnMapResult, Line, Marker, Point, SearchResult } from "facilmap-types";
+import type { Bbox, FindOnMapLine, FindOnMapMarker, Line, Marker, Point, SearchResult } from "facilmap-types";
 import type { Geometry } from "geojson";
-import { isMapResult } from "./search";
+import { isMapResult, type MapResult } from "./search";
 import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type ChangesetFeature, type OsmFeatureBlameSection, type ResolvedOsmFeature } from "facilmap-utils";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
-import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
+import { getClientSub, requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { toRef, type DeepReadonly } from "vue";
 
 export type ZoomDestination = {
@@ -50,11 +50,11 @@ export function getZoomDestinationForMarker(marker: Marker | FindOnMapMarker | O
 	return getZoomDestinationForPoint(marker);
 }
 
-export function getZoomDestinationForLine(line: Line | FindOnMapLine): ZoomDestination {
+export function getZoomDestinationForLine(line: DeepReadonly<Line | FindOnMapLine>): ZoomDestination {
 	return getZoomDestinationForBbox(line);
 }
 
-export function getZoomDestinationForRoute(route: RouteWithTrackPoints): ZoomDestination {
+export function getZoomDestinationForRoute(route: DeepReadonly<RouteWithTrackPoints>): ZoomDestination {
 	return getZoomDestinationForBbox(route);
 }
 
@@ -77,14 +77,14 @@ export function getZoomDestinationForSearchResult(result: DeepReadonly<SearchRes
 	return Object.keys(dest).length == 0 ? undefined : dest;
 }
 
-export function getZoomDestinationForMapResult(result: FindOnMapResult): ZoomDestination {
+export function getZoomDestinationForMapResult(result: MapResult): ZoomDestination {
 	if (result.kind == "marker")
 		return getZoomDestinationForMarker(result);
 	else
 		return getZoomDestinationForLine(result);
 }
 
-export function getZoomDestinationForResults(results: Array<SearchResult | FindOnMapResult>): ZoomDestination | undefined {
+export function getZoomDestinationForResults(results: Array<SearchResult | MapResult>): ZoomDestination | undefined {
 	return combineZoomDestinations(results
 		.map((result) => (isMapResult(result) ? getZoomDestinationForMapResult(result) : getZoomDestinationForSearchResult(result)))
 		.filter((result) => !!result) as ZoomDestination[]
@@ -185,13 +185,13 @@ export function getHashQuery(map: Map, client: ClientContext, items: DeepReadonl
 			else
 				return undefined;
 		} else if (items[0].type == "marker") {
-			const marker = client.markers[items[0].id];
+			const marker = client.map?.data?.markers[items[0].id];
 			return {
 				query: `m${items[0].id}`,
 				...(marker ? { ...normalizeZoomDestination(map, getZoomDestinationForMarker(marker)), description: normalizeMarkerName(marker.name) } : {})
 			};
 		} else if (items[0].type == "line") {
-			const line = client.lines[items[0].id];
+			const line = client.map?.data?.lines[items[0].id];
 			return {
 				query: `l${items[0].id}`,
 				...(line ? { ...normalizeZoomDestination(map, getZoomDestinationForLine(line)), description: normalizeLineName(line.name) } : {})
@@ -204,7 +204,8 @@ export function getHashQuery(map: Map, client: ClientContext, items: DeepReadonl
 
 export async function openSpecialQuery(query: string, context: FacilMapContext, zoom: boolean, smooth = true): Promise<boolean> {
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
 	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
@@ -232,19 +233,19 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	}
 
 	const markerId = Number(query.match(/^m(\d+)$/)?.[1]);
-	if (markerId) {
-		let marker = client.value.markers[markerId];
+	if (markerId && clientSub.value) {
+		let marker = clientSub.value.data.markers[markerId];
 		if (!marker) {
 			try {
-				marker = await client.value.getMarker({ id: markerId });
-				client.value.storeMarker(mapSlug, marker);
+				marker = await clientContext.value.client.getMarker(clientSub.value.mapSlug, markerId);
+				clientContext.value.storage.storeMarker(clientSub.value.mapSlug, marker);
 			} catch (err) {
 				console.error("Could not find marker", err);
 			}
 		}
 
 		if (marker) {
-			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", id: marker.id }], true);
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "marker", mapSlug: clientSub.value.mapSlug, id: marker.id }], true);
 
 			if (zoom)
 				flyTo(mapContext.value.components.map, getZoomDestinationForMarker(marker), smooth);
@@ -258,10 +259,10 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	}
 
 	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
-	if (lineId && client.value.lines[lineId]) {
-		const line = client.value.lines[lineId];
+	if (lineId && clientSub.value?.data.lines[lineId]) {
+		const line = clientSub.value.data.lines[lineId];
 
-		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", id: line.id }], true);
+		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "line", mapSlug: clientSub.value.mapSlug, id: line.id }], true);
 
 		if (zoom)
 			flyTo(mapContext.value.components.map, getZoomDestinationForLine(line), smooth);

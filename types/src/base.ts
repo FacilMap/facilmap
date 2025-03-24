@@ -104,6 +104,21 @@ export type DeepReadonly<T> = (
 	T extends {} ? { readonly [K in keyof T]: DeepReadonly<T[K]> } :
 	Readonly<T>
 );
+export type Mutable<T> = {
+	-readonly [P in keyof T]: T[P]
+};
+export type DeepMutable<T> = (
+	T extends string | number | boolean | bigint | symbol | undefined | null | Function | Date | Error | RegExp ? T :
+	T extends Map<infer K, infer V> ? Map<DeepMutable<K>, DeepMutable<V>> :
+	T extends ReadonlyMap<infer K, infer V> ? Map<DeepMutable<K>, DeepMutable<V>> :
+	T extends WeakMap<infer K, infer V> ? WeakMap<DeepMutable<K>, DeepMutable<V>> :
+	T extends Set<infer U> ? Set<DeepMutable<U>> :
+	T extends ReadonlySet<infer U> ? Set<DeepMutable<U>> :
+	T extends WeakSet<infer U> ? WeakSet<DeepMutable<U>> :
+	T extends Promise<infer U> ? Promise<DeepMutable<U>> :
+	T extends {} ? { -readonly [K in keyof T]: DeepMutable<T[K]> } :
+	Mutable<T>
+);
 
 export type DistributiveKeyOf<T> = T extends any ? keyof T : never;
 export type DistributivePick<T, K extends DistributiveKeyOf<T>> = T extends any ? Pick<T, K & keyof T> : never;

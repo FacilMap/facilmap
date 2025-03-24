@@ -342,7 +342,6 @@
         "route-description-inner": "{{destinations}} {{mode}}",
         "route-calculation-error": "計算路線時發生錯誤",
         "find-destination-error": "尋找目的地「{{query}}」時發生錯誤",
-        "export-filename": "FacilMap 路線",
         "zoom-to-object-label": "縮放至路線",
         "clear-route-alt": "清除",
         "distance": "距離",

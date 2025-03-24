@@ -25,12 +25,13 @@ export default class RouteDragHandler extends DraggableLines {
 
 	handleDrag = (e: any): void => {
 		const routeKey: string = e.layer.routeKey;
+		const subscription = this.clientStorage.client.routeSubscriptions[routeKey];
 		const route = this.clientStorage.routes[routeKey];
-		if (route) {
+		if (subscription && route) {
 			const routePoints = (e.layer as Polyline).getDraggableLinesRoutePoints();
 
 			if (routePoints) {
-				void this.clientStorage.client.subscribeToRoute(routeKey, {
+				void subscription.updateSubscription({
 					...route,
 					routePoints: routePoints.map((p) => ({ lat: p.lat, lon: p.lng }))
 				});

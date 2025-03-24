@@ -37,7 +37,7 @@
 
 	export function getClientSub(context: FacilMapContext): Readonly<Ref<ClientSub | undefined>> {
 		const clientContext = requireClientContext(context);
-		return toRef(() => clientContext.value.map?.state === ClientContextMapState.OPEN ? clientContext.value.map : undefined);
+		return toRef(() => clientContext.value.map?.state === ClientContextMapState.OPEN ? clientContext.value.map as ClientSub : undefined);
 	}
 
 	export function requireClientSub(context: FacilMapContext): Readonly<Ref<ClientSub>> {

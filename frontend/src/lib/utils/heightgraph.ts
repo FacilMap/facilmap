@@ -6,6 +6,7 @@ import { type ExtraInfo, type TrackPoint, type TrackPoints } from "facilmap-type
 import type { FeatureCollection } from "geojson";
 import { calculateDistance, formatDistance, formatElevation, getCurrentUnits } from "facilmap-utils";
 import { getI18n } from "./i18n";
+import type { DeepReadonly } from "vue";
 
 function trackSegment(trackPoints: TrackPoints, fromIdx: number, toIdx: number): TrackPoint[] {
 	let ret: TrackPoint[] = [];
@@ -71,7 +72,7 @@ function createGeoJsonForHeightGraph(extraInfo: ExtraInfo | undefined, trackPoin
 	return geojson;
 }
 
-function getDistancesByInfoType(extraInfo: ExtraInfo[string] | undefined, trackPoints: TrackPoints): Record<number, number> {
+function getDistancesByInfoType(extraInfo: DeepReadonly<ExtraInfo[string]> | undefined, trackPoints: TrackPoints): Record<number, number> {
 	const ret: Record<number, number> = { };
 
 	if (!extraInfo)
@@ -87,7 +88,7 @@ function getDistancesByInfoType(extraInfo: ExtraInfo[string] | undefined, trackP
 	return ret;
 }
 
-export function createElevationStats(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): Record<number, number> | null {
+export function createElevationStats(extraInfo: DeepReadonly<ExtraInfo> | undefined, trackPoints: TrackPoints): Record<number, number> | null {
 	if (!extraInfo || !extraInfo.steepness)
 		return null;
 
@@ -274,7 +275,7 @@ export default class FmHeightgraph extends Control.Heightgraph {
 		this.translatedMapping = translatedMapping;
 	}
 
-	addData(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): void {
+	addData(extraInfo: DeepReadonly<ExtraInfo> | undefined, trackPoints: TrackPoints): void {
 		const translatedExtraInfo = extraInfo && Object.fromEntries(Object.entries(extraInfo).map(([k, v]) => [(this.translatedMapping as any)[k] ?? k, v]));
 
 		const data = createGeoJsonForHeightGraph(translatedExtraInfo, trackPoints);

@@ -10,6 +10,7 @@ export * from "./osm/feature-blame.js";
 export * from "./osm/feature.js";
 export * from "./osm/utils.js";
 export * from "./maps.js";
+export * from "./permissions.js";
 export * from "./routing.js";
 export * from "./search.js";
 export * from "./types.js";

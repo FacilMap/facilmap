@@ -6,7 +6,7 @@
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
 	import { useI18n } from "../../utils/i18n";
 
-	const idProps = ["id", "writeId", "adminId"] as const;
+	const idProps = ["readId", "writeId", "adminId"] as const;
 	type IdProp = typeof idProps[number];
 
 	const context = injectContextRequired();

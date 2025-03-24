@@ -86,6 +86,7 @@ export default class Socket {
 					const validatedCallback = (typeof args[args.length - 1] === "function" ? args.pop() as (...args: any) => any : undefined);
 
 					try {
+						console.log(i, args);
 						const validatedArgs = socketRequestValidators[version][i].parse(args);
 						const res = await (socketHandlers[i] as any)(...validatedArgs);
 

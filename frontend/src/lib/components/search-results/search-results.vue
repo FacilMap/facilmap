@@ -1,14 +1,14 @@
 <script setup lang="ts">
-	import type { FindOnMapResult, SearchResult } from "facilmap-types";
+	import { Writable, type SearchResult } from "facilmap-types";
 	import SearchResultInfo from "../search-result-info.vue";
 	import type { SelectedItem } from "../../utils/selection";
 	import type { FileResult, FileResultObject } from "../../utils/files";
-	import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
+	import { isFileResult, isLineResult, isMapResult, isMarkerResult, type MapResult } from "../../utils/search";
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../../utils/add";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
 	import { computed, ref, toRef } from "vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatTypeName, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
@@ -17,14 +17,15 @@
 	import SelectionCarousel from "../ui/selection-carousel.vue";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = toRef(() => context.components.searchBox);
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
 		searchResults?: Array<SearchResult | FileResult>;
-		mapResults?: FindOnMapResult[];
+		mapResults?: MapResult[];
 		layerId: number;
 		/** When clicking a search result, union zoom to it. Normal zoom is done when clicking the zoom button. */
 		unionZoom?: boolean;
@@ -77,11 +78,11 @@
 		return Object.keys(props.customTypes).length > 0;
 	});
 
-	const mapResultItems = computed(() => (props.mapResults ?? []).map((result, i): ResultsItem<FindOnMapResult> => ({
+	const mapResultItems = computed(() => (props.mapResults ?? []).map((result, i): ResultsItem<MapResult> => ({
 		key: i,
 		object: result,
 		label: isMarkerResult(result) ? normalizeMarkerName(result.name) : normalizeLineName(result.name),
-		labelSuffix: formatTypeName(client.value.types[result.typeId].name),
+		labelSuffix: clientSub.value?.data.types[result.typeId] ? formatTypeName(clientSub.value.data.types[result.typeId].name) : undefined,
 		zoomDestination: getZoomDestinationForMapResult(result),
 		zoomTooltip: i18n.t('search-results.zoom-to-result-tooltip'),
 		canOpen: true,
@@ -108,15 +109,15 @@
 	}
 
 	function handleOpen(
-		result: SearchResult | FileResult | FindOnMapResult,
+		result: SearchResult | FileResult | MapResult,
 		open: (item: Extract<SelectedItem, { type: 'searchResult' }>) => void
 	): void {
 		if (isMapResult(result)) {
 			selectResult(result, false);
 			setTimeout(async () => {
-				if (result.kind == "marker" && !client.value.markers[result.id]) {
-					const marker = await client.value.getMarker({ id: result.id });
-					client.value.storeMarker(mapSlug, marker);
+				if (result.kind == "marker" && clientSub.value && !clientSub.value.data.markers[result.id]) {
+					const marker = await clientContext.value.client.getMarker(clientSub.value.mapSlug, result.id);
+					clientContext.value.storage.storeMarker(clientSub.value.mapSlug, marker);
 				}
 				searchBoxContext.value?.activateTab(`fm${context.id}-${result.kind}-info-tab`);
 			}, 0);
@@ -125,8 +126,8 @@
 		}
 	}
 
-	function selectResult(result: SearchResult | FileResult | FindOnMapResult, toggle: boolean): void {
-		const item: SelectedItem = isMapResult(result) ? { type: result.kind, id: result.id } : { type: "searchResult", result, layerId: props.layerId };
+	function selectResult(result: SearchResult | FileResult | MapResult, toggle: boolean): void {
+		const item: SelectedItem = isMapResult(result) ? { type: result.kind, mapSlug: result.mapSlug, id: result.id } : { type: "searchResult", result, layerId: props.layerId };
 		if (toggle)
 			mapContext.value.components.selectionHandler.toggleItem(item);
 		else
@@ -190,7 +191,7 @@
 					<slot name="after"></slot>
 				</div>
 
-				<div v-if="client.mapData && !client.readonly && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
+				<div v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
 					<button
 						type="button"
 						class="btn btn-secondary btn-sm"

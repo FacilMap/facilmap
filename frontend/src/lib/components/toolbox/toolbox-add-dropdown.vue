@@ -56,11 +56,11 @@
 			>{{formatTypeName(type.name)}}</a>
 		</li>
 
-		<li v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
+		<li v-if="clientSub.data.mapData.writable == Writable.ADMIN">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="clientSub.data.mapData!.writable == Writable.ADMIN">
+		<li v-if="clientSub.data.mapData.writable == Writable.ADMIN">
 			<a
 				class="dropdown-item"
 				v-link-disabled="!!mapContext.interaction"

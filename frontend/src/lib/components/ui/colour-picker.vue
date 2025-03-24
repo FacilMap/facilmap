@@ -32,6 +32,7 @@
 <script setup lang="ts">
 	const props = defineProps<{
 		modelValue: string;
+		id?: string;
 		validators?: Array<Validator<string>>;
 	}>();
 
@@ -79,6 +80,7 @@
 	<Picker
 		customClass="fm-colour-field"
 		v-model="value"
+		:id="props.id"
 		@keydown="handleKeyDown"
 		:validators="[...props.validators ?? [], validateColour]"
 		:previewStyle="previewStyle"

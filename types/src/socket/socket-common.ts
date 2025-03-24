@@ -33,7 +33,7 @@ declare const streamType: unique symbol;
 export type StreamId<R> = string & { [streamType]: R };
 
 export type StreamToStreamId<T> = (
-	T extends AsyncIterable<infer R> | ReadableStream<infer R> ? StreamId<StreamToStreamId<R>> :
+	T extends AsyncIterable<infer R> | ReadableStream<infer R> ? StreamId<R> :
 	T extends Promise<infer Value> ? Promise<StreamToStreamId<Value>> :
 	T extends (...args: infer Args) => infer Result ? (...args: Args) => StreamToStreamId<Result> :
 	{ [K in keyof T]: StreamToStreamId<T[K]> }

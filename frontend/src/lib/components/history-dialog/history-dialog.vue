@@ -18,7 +18,7 @@
 	};
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -37,7 +37,7 @@
 
 	onMounted(async () => {
 		try {
-			await client.value.listenToHistory();
+			await clientContext.value.listenToHistory();
 		} catch (err) {
 			toasts.showErrorToast(`${id}-listen-error`, () => i18n.t("history-dialog.loading-error"), err);
 		} finally {
@@ -47,7 +47,7 @@
 
 	onBeforeUnmount(async () => {
 		try {
-			await client.value.stopListeningToHistory();
+			await clientContext.value.stopListeningToHistory();
 		} catch (err) {
 			console.error("Error stopping listening to history", err);
 		}
@@ -67,7 +67,7 @@
 		isReverting.value = entry;
 
 		try {
-			await client.value.revertHistoryEntry({ id: entry.id });
+			await clientContext.value.revertHistoryEntry({ id: entry.id });
 		} catch (err) {
 			toasts.showErrorToast(`${id}-revert-error`, () => i18n.t("history-dialog.revert-error"), err);
 		} finally {
@@ -77,10 +77,10 @@
 
 	const history = computed((): HistoryEntryWithLabels[] => {
 		return orderBy(
-			Object.values(client.value.history).map((entry) => ({
+			Object.values(clientContext.value.history).map((entry) => ({
 				...entry,
 				time: entry.time.replace(/\.\d+/, ""),
-				labels: getLabelsForHistoryEntry(client.value, entry)
+				labels: getLabelsForHistoryEntry(clientContext.value, entry)
 			})),
 			["time"],
 			["desc"]

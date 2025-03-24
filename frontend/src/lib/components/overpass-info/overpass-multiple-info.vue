@@ -76,7 +76,7 @@
 							:destination="zoomDestination"
 						></ZoomToObjectButton>
 
-						<template v-if="clientSub && clientSub.data.mapData!.writable !== Writable.READ">
+						<template v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ">
 							<AddToMapDropdown
 								:markers="markersWithTags"
 								size="sm"

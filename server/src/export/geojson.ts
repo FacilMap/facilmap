@@ -2,7 +2,7 @@ import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIt
 import { compileExpression } from "facilmap-utils";
 import type { Marker, MarkerFeature, TrackPoint, Line, InterfaceToType, LineFeature, ReplaceProperties, ID } from "facilmap-types";
 import Database from "../database/database.js";
-import { cloneDeep, keyBy, mapValues, omit } from "lodash-es";
+import { cloneDeep, keyBy, mapValues, omit, pick } from "lodash-es";
 import { getI18n } from "../i18n.js";
 import { JsonStringifier, arrayStream, serializeJsonValue, type ArrayStream } from "json-stream-es";
 
@@ -69,30 +69,26 @@ function markerToGeoJson(marker: Marker): InterfaceToType<MarkerFeature> {
 	};
 }
 
-type StreamedLineFeature = ReplaceProperties<LineFeature, {
+const lineProps = ["name", "mode", "colour", "width", "stroke", "distance", "time", "data", "routePoints", "typeId"] as const;
+type LineProp = typeof lineProps[number];
+type StreamedLineFeature<L extends Partial<Line> = Line> = ReplaceProperties<LineFeature, {
+	properties: Pick<LineFeature["properties"], keyof L & LineProp>;
 	geometry: ReplaceProperties<LineFeature["geometry"], {
 		coordinates: ArrayStream<LineFeature["geometry"]["coordinates"][0]>;
 	}>;
 }>;
 
-function lineToGeoJson(line: Line, trackPoints: AsyncIterable<TrackPoint>): StreamedLineFeature {
+function lineToGeoJson<L extends Partial<Line>>(line: L, trackPoints: AsyncIterable<TrackPoint>): StreamedLineFeature<L> {
 	return {
 		type: "Feature",
 		geometry: {
 			type: "LineString",
 			coordinates: arrayStream(mapAsyncIterable(trackPoints, (trackPoint) => [trackPoint.lon, trackPoint.lat]))
 		},
-		properties: {
-			name: line.name,
-			mode: line.mode,
-			colour: line.colour,
-			width: line.width,
-			stroke: line.stroke,
-			distance: line.distance,
-			time: line.time,
-			data: line.data,
-			routePoints: line.routePoints,
-			typeId: line.typeId
-		}
+		properties: pick(line, lineProps) as Pick<LineFeature["properties"], keyof L & LineProp>
 	};
+}
+
+export function exportLineToGeoJson(line: Partial<Line>, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+	return serializeJsonValue(lineToGeoJson(line, trackPoints)).pipeThrough(new JsonStringifier());
 }

@@ -11,7 +11,7 @@ export interface MarkerClusterOptions extends MarkerClusterGroupOptions {
 export default class MarkerCluster extends MarkerClusterGroup {
 
 	protected clientStorage: SocketClientStorage;
-	protected mapSlug: MapSlug;
+	readonly mapSlug: MapSlug;
 	protected _maxClusterRadiusBkp: MarkerClusterOptions['maxClusterRadius'];
 	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
 

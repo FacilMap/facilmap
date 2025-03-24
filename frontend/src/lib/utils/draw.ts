@@ -58,16 +58,16 @@ export function drawMarker(type: DeepReadonly<Type>, context: FacilMapContext, t
 
 export function moveMarker(markerId: ID, context: FacilMapContext, toasts: ToastContext): void {
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 
-	const markerLayer = mapContext.value.components.markersLayer.getLayerByMarkerId(markerId);
+	const markerLayer = mapContext.value.components.markersLayer?.getLayerByMarkerId(markerId);
 	if(!markerLayer)
 		return;
 
 	toasts.hideToast("fm-draw-drag-marker");
 
 	mapContext.value.components.map.fire('fmInteractionStart');
-	mapContext.value.components.markersLayer.lockMarker(markerId);
+	mapContext.value.components.markersLayer!.lockMarker(markerId);
 
 	const isSaving = ref(false);
 
@@ -75,9 +75,9 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 		markerLayer.dragging!.disable();
 
 		try {
-			if(pos) {
+			if (pos) {
 				isSaving.value = true;
-				await client.value.editMarker({ id: markerId, lat: pos.lat, lon: pos.lon });
+				await clientContext.value.client.updateMarker(clientContext.value.map!.mapSlug, markerId, pos);
 			}
 
 			toasts.hideToast("fm-draw-drag-marker");
@@ -85,7 +85,7 @@ export function moveMarker(markerId: ID, context: FacilMapContext, toasts: Toast
 			toasts.showErrorToast("fm-draw-drag-marker", () => getI18n().t("draw.move-marker-error"), err);
 		}
 
-		mapContext.value.components.markersLayer.unlockMarker(markerId);
+		mapContext.value.components.markersLayer!.unlockMarker(markerId);
 		mapContext.value.components.map.fire('fmInteractionEnd');
 	};
 
@@ -127,6 +127,9 @@ export async function drawLine(type: DeepReadonly<Type>, context: FacilMapContex
 		toasts.hideToast("fm-draw-add-line");
 
 		const mapContext = requireMapContext(context);
+		if (!mapContext.value.components.linesLayer) {
+			throw new Error("Cannot draw line with no map open.");
+		}
 
 		const lineTemplate = getLineTemplate(type);
 
@@ -139,7 +142,7 @@ export async function drawLine(type: DeepReadonly<Type>, context: FacilMapContex
 					label: getI18n().t("draw.add-line-finish"),
 					variant: "primary" as const,
 					onClick: () => {
-						mapContext.value.components.linesLayer.endDrawLine(true);
+						mapContext.value.components.linesLayer!.endDrawLine(true);
 					},
 					isDisabled: isDisabled.value || isSaving.value,
 					isPending: isSaving.value
@@ -147,7 +150,7 @@ export async function drawLine(type: DeepReadonly<Type>, context: FacilMapContex
 				{
 					label: getI18n().t("draw.add-line-cancel"),
 					onClick: () => {
-						mapContext.value.components.linesLayer.endDrawLine(false);
+						mapContext.value.components.linesLayer!.endDrawLine(false);
 					},
 					isDisabled: isSaving.value
 				}

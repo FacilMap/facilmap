@@ -7,17 +7,17 @@
 	import { useToasts } from "./toasts/toasts.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
-	import { getSafeFilename } from "facilmap-utils";
+	import { concatArrayBuffers } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
+	import { streamToArray } from "json-stream-es";
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		filename: string;
 		formats?: F[];
-		getExport: (format: NoInfer<F>) => Promise<string>;
+		getExport: (format: NoInfer<F>) => Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }>;
 		isDisabled?: boolean;
 		size?: ButtonSize;
 	}>();
@@ -31,8 +31,9 @@
 		isExporting.value = true;
 
 		try {
-			const exported = await props.getExport(format as F);
-			saveAs(new Blob([exported], { type: "application/gpx+xml" }), `${getSafeFilename(props.filename)}.gpx`);
+			const result = await props.getExport(format as F);
+			const content = concatArrayBuffers(await streamToArray(result.data));
+			saveAs(new Blob([content], { type: result.type }), `${result.filename}.gpx`);
 		} catch(err: any) {
 			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, () => i18n.t("export-dropdown.export-error"), err);
 		} finally {

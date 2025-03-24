@@ -1,23 +1,25 @@
 <script setup lang="ts">
-	import type { FindOnMapResult, ID } from "facilmap-types";
+	import { type ID } from "facilmap-types";
 	import { moveMarker } from "../../utils/draw";
 	import EditMarkerDialog from "../edit-marker-dialog.vue";
 	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import Coordinates from "../ui/coordinates.vue";
-	import { formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
+	import { canDeleteObject, canEditObject, formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import UseAsDropdown from "../ui/use-as-dropdown.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import type { MapResult } from "../../utils/search";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -37,10 +39,14 @@
 	const isBusy = ref(false);
 	const showEditDialog = ref(false);
 
-	const marker = computed(() => client.value.markers[props.markerId]);
+	const marker = computed(() => clientContext.value.map!.data!.markers[props.markerId]);
+	const type = computed(() => clientContext.value.map!.data!.types[marker.value.typeId]);
 
-	const typeName = computed(() => formatTypeName(client.value.types[marker.value.typeId].name));
-	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'marker').length > 1);
+	const canEdit = computed(() => canEditObject(clientSub.value.data.mapData, type.value, marker.value));
+	const canDelete = computed(() => canDeleteObject(clientSub.value.data.mapData, type.value, marker.value));
+
+	const typeName = computed(() => formatTypeName(type.value.name));
+	const showTypeName = computed(() => Object.values(clientContext.value.map!.data!.types).filter((t) => t.type === 'marker').length > 1);
 
 	function move(): void {
 		moveMarker(props.markerId, context, toasts);
@@ -60,7 +66,7 @@
 		isBusy.value = true;
 
 		try {
-			await client.value.deleteMarker({ id: props.markerId });
+			await clientContext.value.client.deleteMarker(clientContext.value.map!.mapSlug, props.markerId);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-marker-info-delete`, () => i18n.t("marker-info.delete-marker-error"), err);
 		} finally {
@@ -71,7 +77,7 @@
 	const zoomDestination = computed(() => getZoomDestinationForMarker(marker.value));
 
 	const routeDestination = computed<RouteDestination>(() => {
-		const markerSuggestion: FindOnMapResult = { ...marker.value, kind: "marker", similarity: 1 };
+		const markerSuggestion: MapResult = { ...marker.value, mapSlug: clientContext.value.map!.mapSlug, kind: "marker", similarity: 1 };
 		return {
 			query: normalizeMarkerName(marker.value.name),
 			mapSuggestions: [markerSuggestion],
@@ -95,7 +101,7 @@
 			<dt class="pos">{{i18n.t("common.coordinates")}}</dt>
 			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele" :zoom="props.zoom"></Coordinates></dd>
 
-			<template v-for="field in client.types[marker.typeId].fields" :key="field.name">
+			<template v-for="field in type.fields" :key="field.name">
 				<dt>{{formatFieldName(field.name)}}</dt>
 				<dd v-html="formatFieldValue(field, marker.data[field.name], true)"></dd>
 			</template>
@@ -115,7 +121,7 @@
 			></UseAsDropdown>
 
 			<button
-				v-if="!client.readonly"
+				v-if="canEdit"
 				type="button"
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
@@ -123,13 +129,13 @@
 			>{{i18n.t("marker-info.edit-data")}}</button>
 
 			<DropdownMenu
-				v-if="!client.readonly"
+				v-if="canEdit || canDelete"
 				size="sm"
 				:label="i18n.t('marker-info.actions')"
 				:isBusy="isBusy"
 				:isDisabled="mapContext.interaction"
 			>
-				<li>
+				<li v-if="canEdit">
 					<a
 						href="javascript:"
 						class="dropdown-item"
@@ -137,7 +143,7 @@
 					>{{i18n.t("marker-info.move")}}</a>
 				</li>
 
-				<li>
+				<li v-if="canDelete">
 					<a
 						href="javascript:"
 						class="dropdown-item"

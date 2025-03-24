@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { ID } from "facilmap-types";
+	import { Writable, type ExportFormat, type ID } from "facilmap-types";
 	import EditLineDialog from "../edit-line-dialog.vue";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
@@ -12,13 +12,14 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 
 	const toasts = useToasts();
@@ -42,10 +43,10 @@
 	const showElevationPlot = ref(false);
 	const isMoving = ref(false);
 
-	const line = computed(() => client.value.lines[props.lineId]);
+	const line = computed(() => clientSub.value.data.lines[props.lineId]);
 
-	const typeName = computed(() => formatTypeName(client.value.types[line.value.typeId].name));
-	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'line').length > 1);
+	const typeName = computed(() => formatTypeName(clientSub.value.data.types[line.value.typeId].name));
+	const showTypeName = computed(() => Object.values(clientSub.value.data.types).filter((t) => t.type === 'line').length > 1);
 
 	async function deleteLine(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-line-info-delete`);
@@ -61,7 +62,7 @@
 		isDeleting.value = true;
 
 		try {
-			await client.value.deleteLine({ id: props.lineId });
+			await clientContext.value.client.deleteLine(clientSub.value.mapSlug, props.lineId);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-line-info-delete`, () => i18n.t("line-info.delete-line-error"), err);
 		} finally {
@@ -69,8 +70,8 @@
 		}
 	}
 
-	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
-		return await client.value.exportLine({ id: line.value.id, format });
+	async function getExport(format: ExportFormat) {
+		return await clientContext.value.client.exportLine(clientSub.value.mapSlug, line.value.id, { format });
 	}
 
 	async function moveLine(): Promise<void> {
@@ -78,23 +79,24 @@
 
 		mapContext.value.components.map.fire('fmInteractionStart');
 		const routeKey = `l${line.value.id}`;
+		const routeSubscription = clientContext.value.client.subscribeToRoute(routeKey, { mapSlug: clientSub.value.mapSlug, lineId: line.value.id });
 
 		try {
-			await client.value.lineToRoute({ id: line.value.id, routeKey });
+			await routeSubscription.subscribePromise;
 
-			mapContext.value.components.linesLayer.hideLine(line.value.id);
+			mapContext.value.components.linesLayer?.hideLine(line.value.id);
 
 			const isSaving = ref(false);
 
 			const done = async (save: boolean) => {
-				const route = client.value.routes[routeKey];
+				const route = clientContext.value.storage.routes[routeKey];
 				if (save && !route)
 					return;
 
 				try {
 					if(save) {
 						isSaving.value = true;
-						await client.value.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
+						await clientContext.value.client.updateLine(clientSub.value.mapSlug, line.value.id, { routePoints: route.routePoints, mode: route.mode });
 					}
 
 					toasts.hideToast(`fm${context.id}-line-info-move`);
@@ -105,11 +107,11 @@
 					isMoving.value = false;
 
 					// Clear route after editing line so that the server can take the trackPoints from the route
-					client.value.clearRoute({ routeKey }).catch((err) => {
+					routeSubscription.unsubscribe().catch((err) => {
 						console.error("Error clearing route", err);
 					});
 
-					mapContext.value.components.linesLayer.unhideLine(line.value.id);
+					mapContext.value.components.linesLayer?.unhideLine(line.value.id);
 				}
 			};
 
@@ -138,10 +140,10 @@
 			toasts.hideToast(`fm${context.id}-line-info-move`);
 			mapContext.value.components.map.fire('fmInteractionEnd');
 			isMoving.value = false;
-			client.value.clearRoute({ routeKey }).catch((err) => {
+			routeSubscription.unsubscribe().catch((err) => {
 				console.error("Error clearing route", err);
 			});
-			mapContext.value.components.linesLayer.unhideLine(line.value.id);
+			mapContext.value.components.linesLayer?.unhideLine(line.value.id);
 		}
 	}
 
@@ -185,7 +187,7 @@
 				</template>
 
 				<template v-if="line.ascent == null || !showElevationPlot">
-					<template v-for="field in client.types[line.typeId].fields" :key="field.name">
+					<template v-for="field in clientSub.data.types[line.typeId].fields" :key="field.name">
 						<dt>{{formatFieldName(field.name)}}</dt>
 						<dd v-html="formatFieldValue(field, line.data[field.name], true)"></dd>
 					</template>
@@ -204,23 +206,21 @@
 			></ZoomToObjectButton>
 
 			<ExportDropdown
-				:filename="normalizeLineName(line.name)"
 				:getExport="getExport"
 				:formats="['gpx-trk', 'gpx-rte']"
 				size="sm"
 			></ExportDropdown>
 
 			<button
-				v-if="!client.readonly"
+				v-if="clientSub.data.mapData.writable !== Writable.READ"
 				type="button"
 				class="btn btn-secondary btn-sm"
-				size="sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
 			>{{i18n.t("line-info.edit-data")}}</button>
 
 			<DropdownMenu
-				v-if="!client.readonly"
+				v-if="clientSub.data.mapData.writable !== Writable.READ"
 				size="sm"
 				:label="i18n.t('line-info.actions')"
 				:isBusy="isDeleting"

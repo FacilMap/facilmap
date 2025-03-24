@@ -1,4 +1,4 @@
-import type { ID, SearchResult } from "facilmap-types";
+import type { ID, MapSlug, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, type LatLngBounds, Layer, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
 import { type ChangesetLayer, FeatureBlameLayer, LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
@@ -7,6 +7,7 @@ import type { AnalyzedOsmRelationSection, ChangesetFeature, OsmFeatureBlameSecti
 
 export type SelectedItem = {
 	type: "marker" | "line";
+	mapSlug: MapSlug;
 	id: ID;
 } | {
 	type: "searchResult";
@@ -62,8 +63,8 @@ export default class SelectionHandler extends Handler {
 
 	_selection: Array<DeepReadonly<SelectedItem>> = [];
 
-	_markersLayer: MarkersLayer;
-	_linesLayer: LinesLayer;
+	_markersLayer: MarkersLayer | undefined;
+	_linesLayer: LinesLayer | undefined;
 	_searchResultLayers: SearchResultsLayer[];
 	_changesetLayer: ChangesetLayer;
 	_featureBlameLayer: FeatureBlameLayer;
@@ -77,7 +78,7 @@ export default class SelectionHandler extends Handler {
 	_isLongClick: boolean = false;
 
 	constructor(
-		map: Map, markersLayer: MarkersLayer, linesLayer: LinesLayer, searchResultsLayer: SearchResultsLayer,
+		map: Map, markersLayer: MarkersLayer | undefined, linesLayer: LinesLayer | undefined, searchResultsLayer: SearchResultsLayer,
 		changesetLayer: ChangesetLayer, featureBlameLayer: FeatureBlameLayer, overpassLayer: OverpassLayer
 	) {
 		super(map);
@@ -108,8 +109,8 @@ export default class SelectionHandler extends Handler {
 	}
 
 	addHooks(): void {
-		this._markersLayer.on("click", this.handleClickMarker);
-		this._linesLayer.on("click", this.handleClickLine);
+		this._markersLayer?.on("click", this.handleClickMarker);
+		this._linesLayer?.on("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.on("click", this.handleClickSearchResult);
 		this._changesetLayer.on("click", this.handleClickChangeset);
@@ -125,8 +126,8 @@ export default class SelectionHandler extends Handler {
 	}
 
 	removeHooks(): void {
-		this._markersLayer.off("click", this.handleClickMarker);
-		this._linesLayer.off("click", this.handleClickLine);
+		this._markersLayer?.off("click", this.handleClickMarker);
+		this._linesLayer?.off("click", this.handleClickLine);
 		for (const layer of this._searchResultLayers)
 			layer.off("click", this.handleClickSearchResult);
 		this._changesetLayer.off("click", this.handleClickChangeset);
@@ -171,10 +172,10 @@ export default class SelectionHandler extends Handler {
 	setSelectedItems(items: Array<DeepReadonly<SelectedItem>>, open = false): void {
 		this._selection = items;
 
-		this._markersLayer.setHighlightedMarkers(new Set(
+		this._markersLayer?.setHighlightedMarkers(new Set(
 			byType(items, "marker").map((i) => i.id)
 		));
-		this._linesLayer.setHighlightedLines(new Set(
+		this._linesLayer?.setHighlightedLines(new Set(
 			byType(items, "line").map((i) => i.id)
 		));
 		for (const layer of this._searchResultLayers) {
@@ -227,12 +228,12 @@ export default class SelectionHandler extends Handler {
 
 	handleClickMarker = (e: LeafletEvent): void => {
 		if (e.propagatedFrom?.marker?.id)
-			this.handleClickItem({ type: "marker", id: e.propagatedFrom.marker.id }, e);
+			this.handleClickItem({ type: "marker", mapSlug: this._markersLayer!.mapSlug, id: e.propagatedFrom.marker.id }, e);
 	}
 
 	handleClickLine = (e: LeafletEvent): void => {
 		if (e.propagatedFrom?.line?.id)
-			this.handleClickItem({ type: "line", id: e.propagatedFrom.line.id }, e);
+			this.handleClickItem({ type: "line", mapSlug: this._linesLayer!.mapSlug, id: e.propagatedFrom.line.id }, e);
 	}
 
 	handleClickSearchResult = (e: LeafletEvent): void => {
@@ -344,12 +345,12 @@ export default class SelectionHandler extends Handler {
 		const bounds: LatLngBounds = e.bounds;
 
 		const selection = [
-			...this._markersLayer.getLayers()
+			...this._markersLayer?.getLayers()
 				.filter((layer) => layer instanceof MarkerLayer && bounds.contains(layer.getLatLng()))
-				.map((layer): SelectedItem => ({ type: "marker", id: (layer as any).marker.id })),
-			...this._linesLayer.getLayers()
+				.map((layer): SelectedItem => ({ type: "marker", mapSlug: this._markersLayer!.mapSlug, id: (layer as any).marker.id })) ?? [],
+			...this._linesLayer?.getLayers()
 				.filter((layer) => layer instanceof Polyline && bounds.contains(layer.getBounds()))
-				.map((layer): SelectedItem => ({ type: "line", id: (layer as any).line.id }))
+				.map((layer): SelectedItem => ({ type: "line", mapSlug: this._markersLayer!.mapSlug, id: (layer as any).line.id })) ?? []
 		].filter((item1) => !this._selectionBeforeBox.some((item2) => isSame(item1, item2)));
 
 		if (selection.length == 0)

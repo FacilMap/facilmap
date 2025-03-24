@@ -3,29 +3,30 @@
 	import { combineZoomDestinations, getZoomDestinationForLine, getZoomDestinationForMarker } from "../../utils/zoom";
 	import MarkerInfo from "../marker-info/marker-info.vue";
 	import LineInfo from "../line-info/line-info.vue";
-	import { computed, ref, type ComponentInstance } from "vue";
+	import { computed, ref, type ComponentInstance, type DeepReadonly } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { canDeleteObject, formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		objects: Array<Marker | Line>;
+		objects: DeepReadonly<Array<Marker | Line>>;
 	}>();
 
 	const emit = defineEmits<{
-		"click-object": [object: Marker | Line, toggle: boolean];
+		"click-object": [object: DeepReadonly<Marker | Line>, toggle: boolean];
 	}>();
 
 	const isDeleting = ref(false);
@@ -34,18 +35,18 @@
 
 	const carouselRef = ref<ComponentInstance<typeof Carousel>>();
 
-	const objectItems = computed(() => props.objects.map((object): ResultsItem<Marker | Line> => ({
+	const objectItems = computed(() => props.objects.map((object): ResultsItem<DeepReadonly<Marker | Line>> => ({
 		key: `${isMarker(object) ? 'm' : 'l'}-${object.id}`,
 		object,
 		label: isMarker(object) ? normalizeMarkerName(object.name) : normalizeLineName(object.name),
-		labelSuffix: client.value.types[object.typeId] && formatTypeName(client.value.types[object.typeId].name),
+		labelSuffix: clientSub.value.data.types[object.typeId] && formatTypeName(clientSub.value.data.types[object.typeId].name),
 		zoomDestination: isMarker(object) ? getZoomDestinationForMarker(object) : isLine(object) ? getZoomDestinationForLine(object) : undefined,
 		zoomTooltip: i18n.t('multiple-info.zoom-to-object'),
 		canOpen: true,
 		openTooltip: i18n.t('multiple-info.show-details')
 	})));
 
-	function openObject(object: Marker | Line): void {
+	function openObject(object: DeepReadonly<Marker | Line>): void {
 		openedObjectId.value = object.id;
 		openedObjectType.value = isMarker(object) ? "marker" : isLine(object) ? "line" : undefined;
 		setTimeout(() => {
@@ -54,16 +55,21 @@
 	}
 
 	const openedObject = computed(() => {
-		let openedObject: Marker | Line | undefined = undefined;
+		let openedObject: DeepReadonly<Marker | Line> | undefined = undefined;
 		if (openedObjectId.value != null) {
 			if (openedObjectType.value == "marker")
-				openedObject = client.value.markers[openedObjectId.value];
+				openedObject = clientSub.value.data.markers[openedObjectId.value];
 			else if (openedObjectType.value == "line")
-				openedObject = client.value.lines[openedObjectId.value];
+				openedObject = clientSub.value.data.lines[openedObjectId.value];
 		}
 
 		return openedObject && props.objects.includes(openedObject) ? openedObject : undefined;
 	});
+
+	const canDelete = computed(() => props.objects.some((object) => {
+		const type = clientSub.value.data.types[object.typeId];
+		return !!type && canDeleteObject(clientSub.value.data.mapData, type, object);
+	}));
 
 	async function deleteObjects(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-multiple-info-delete`);
@@ -81,9 +87,9 @@
 		try {
 			for (const object of props.objects) {
 				if (isMarker(object))
-					await client.value.deleteMarker({ id: object.id });
+					await clientContext.value.client.deleteMarker(clientSub.value.mapSlug, object.id);
 				else if (isLine(object))
-					await client.value.deleteLine({ id: object.id });
+					await clientContext.value.client.deleteLine(clientSub.value.mapSlug, object.id);
 			}
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-multiple-info-delete`, () => i18n.t("multiple-info.delete-objects-error"), err);
@@ -125,7 +131,7 @@
 					></ZoomToObjectButton>
 
 					<button
-						v-if="!client.readonly"
+						v-if="canDelete"
 						type="button"
 						class="btn btn-secondary btn-sm"
 						@click="deleteObjects()"

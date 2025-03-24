@@ -15,7 +15,7 @@
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -39,7 +39,7 @@
 	const hasTypes = computed(() => Object.keys(props.file.types).length > 0);
 
 	const existingViews = computed(() => {
-		return new Map(props.file.views.map((view) => [view, viewExists(client.value, view)]));
+		return new Map(props.file.views.map((view) => [view, viewExists(clientContext.value, view)]));
 	});
 
 	function showView(view: ViewImport): void {
@@ -51,7 +51,7 @@
 		isAddingView.value.add(view);
 
 		try {
-			await client.value.addView(view);
+			await clientContext.value.addView(view);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-view-error"), err);
 		} finally {
@@ -60,7 +60,7 @@
 	};
 
 	const existingTypes = computed(() => {
-		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(client.value, type)]));
+		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(clientContext.value, type)]));
 	});
 
 	async function addType(type: TypeImport): Promise<void> {
@@ -68,7 +68,7 @@
 		isAddingType.value.add(type);
 
 		try {
-			await client.value.addType(type);
+			await clientContext.value.addType(type);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-type-error"), err);
 		} finally {
@@ -100,7 +100,7 @@
 							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.mapData && client.writable == 2 && !existingViews.get(view)">
+							<template v-else-if="clientContext.mapData && clientContext.writable == 2 && !existingViews.get(view)">
 								<a
 									href="javascript:"
 									@click="addView(view)"
@@ -129,7 +129,7 @@
 							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="client.mapData && client.writable == 2 && !existingTypes.get(type)">
+							<template v-else-if="clientContext.mapData && clientContext.writable == 2 && !existingTypes.get(type)">
 								<a
 									href="javascript:"
 									@click="addType(type)"

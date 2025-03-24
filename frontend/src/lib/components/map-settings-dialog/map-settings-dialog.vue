@@ -8,12 +8,13 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import MapSlugEdit from "./map-slug-edit.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -47,7 +48,7 @@
 		defaultViewId: null
 	} : undefined;
 
-	const originalMapData = computed(() => props.isCreate ? initialMapData! : client.value.mapData as MapData<CRU.CREATE>);
+	const originalMapData = computed(() => props.isCreate ? initialMapData! : clientSub.value.data.mapData as MapData<CRU.CREATE>);
 
 	const mapData = ref(cloneDeep(originalMapData.value));
 
@@ -55,9 +56,9 @@
 
 	const isModified = computed(() => !isEqual(mapData.value, originalMapData.value));
 
-	watch(() => client.value.mapData, (newMapData, oldMapData) => {
+	watch(() => clientSub.value.data.mapData, (newMapData, oldMapData) => {
 		if (!props.isCreate && mapData.value && newMapData)
-			mergeObject(oldMapData, newMapData, mapData.value as MapData);
+			mergeObject<MapData>(oldMapData, newMapData, mapData.value as MapData);
 	}, { deep: true });
 
 	async function save(): Promise<void> {
@@ -65,9 +66,9 @@
 
 		try {
 			if(props.isCreate)
-				await client.value.createMap(mapData.value as MapData<CRU.CREATE>);
+				await clientContext.value.client.createMap(mapData.value as MapData<CRU.CREATE>);
 			else
-				await client.value.editMap(mapData.value);
+				await clientContext.value.client.updateMap(clientSub.value.mapSlug, mapData.value);
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => (props.isCreate ? i18n.t("map-settings-dialog.create-map-error") : i18n.t("map-settings-dialog.save-map-error")), err);
@@ -89,7 +90,7 @@
 		isDeleting.value = true;
 
 		try {
-			await client.value.deleteMap();
+			await clientContext.value.client.deleteMap(clientSub.value.mapSlug);
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => i18n.t("map-settings-dialog.delete-map-error"), err);
@@ -132,8 +133,8 @@
 
 			<MapSlugEdit
 				:mapData="mapData"
-				idProp="id"
-				v-model="mapData.id"
+				idProp="readId"
+				v-model="mapData.readId"
 				:label="i18n.t('map-settings-dialog.read-link-label')"
 				:description="i18n.t('map-settings-dialog.read-link-description')"
 			></MapSlugEdit>
@@ -221,13 +222,11 @@
 					<textarea
 						:id="`${id}-legend1-input`"
 						class="form-control"
-						type="text"
 						v-model="mapData.legend1"
 					></textarea>
 					<textarea
 						:id="`${id}-legend2-input`"
 						class="form-control mt-1"
-						type="text"
 						v-model="mapData.legend2"
 					></textarea>
 					<div class="form-text">

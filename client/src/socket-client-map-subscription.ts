@@ -1,4 +1,4 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, FindOnMapResult, HistoryEntry, ID, Line, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";

@@ -1,11 +1,12 @@
-import type { FindOnMapResult, SearchResult } from "facilmap-types";
+import type { SearchResult } from "facilmap-types";
 import type { DeepReadonly } from "vue";
+import type { MapResult } from "../../utils/search";
 
 export interface RouteDestination {
 	query: string;
 	searchSuggestions?: DeepReadonly<SearchResult[]>;
-	mapSuggestions?: FindOnMapResult[];
-	selectedSuggestion?: DeepReadonly<SearchResult | FindOnMapResult>;
+	mapSuggestions?: MapResult[];
+	selectedSuggestion?: DeepReadonly<SearchResult | MapResult>;
 }
 
 export enum UseAsType {

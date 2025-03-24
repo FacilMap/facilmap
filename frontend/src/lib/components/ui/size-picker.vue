@@ -5,6 +5,7 @@
 
 	const props = defineProps<{
 		modelValue: number;
+		id?: string;
 		validators?: Array<Validator<number>>;
 	}>();
 
@@ -31,6 +32,7 @@
 				type="range"
 				class="custom-range"
 				min="15"
+				:id="props.id"
 				v-model.number="value"
 				:ref="slotProps.inputRef"
 				v-tooltip="`${value}`"

@@ -2,11 +2,11 @@ import { lineValidator, markerValidator, type CRU, type DeepReadonly, type Field
 import { omit } from "lodash-es";
 import { getI18n } from "./i18n.js";
 
-export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Marker<Mode> {
+export function isMarker<Mode extends CRU.READ | CRU.CREATE>(object: DeepReadonly<Marker<Mode> | Line<Mode>>): object is DeepReadonly<Marker<Mode>> {
 	return "lat" in object && object.lat != null;
 }
 
-export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: Marker<Mode> | Line<Mode>): object is Line<Mode> {
+export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: DeepReadonly<Marker<Mode> | Line<Mode>>): object is DeepReadonly<Line<Mode>> {
 	return "routePoints" in object && object.routePoints != null;
 }
 
@@ -25,7 +25,7 @@ export function canControl<T extends Marker | Line = Marker | Line>(type: DeepRe
 	}) as Array<T extends any ? keyof T : never>;
 }
 
-export function getDefaultFieldShowInLegend(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: Field): boolean {
+export function getDefaultFieldShowInLegend(type: DeepReadonly<Type<CRU.READ | CRU.CREATE_VALIDATED>>, field: DeepReadonly<Field>): boolean {
 	return !!(
 		field.controlColour ||
 		(type.type === "marker" && (field.controlIcon || field.controlShape)) ||

@@ -4140,6 +4140,7 @@ __metadata:
     i18next: ^24.2.2
     jquery: ^3.7.1
     js-cookie: ^3.0.5
+    json-stream-es: ^1.2.1
     leaflet: ^1.9.4
     leaflet-draggable-lines: ^3.2.1
     leaflet-graphicscale: ^0.0.4

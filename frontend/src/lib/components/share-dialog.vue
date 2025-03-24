@@ -48,7 +48,7 @@
 			{ value: 2, text: i18n.t("share-dialog.type-admin") },
 			{ value: 1, text: i18n.t("share-dialog.type-write") },
 			{ value: 0, text: i18n.t("share-dialog.type-read") }
-		].filter((option) => clientSub.value && option.value <= clientSub.value.data.mapData!.writable);
+		].filter((option) => clientSub.value && option.value <= clientSub.value.data.mapData.writable);
 	});
 
 	const url = computed(() => {
@@ -76,9 +76,9 @@
 
 		return context.baseUrl
 			+ (clientSub.value ? encodeURIComponent(
-				mapSlugType.value == 2 && clientSub.value.data.mapData!.writable === Writable.ADMIN ? clientSub.value.data.mapData!.adminId :
-				mapSlugType.value == 1 && clientSub.value.data.mapData!.writable !== Writable.READ ? clientSub.value.data.mapData!.writeId :
-				mapSlugType.value == 0 ? clientSub.value.data.mapData!.readId
+				mapSlugType.value == 2 && clientSub.value.data.mapData.writable === Writable.ADMIN ? clientSub.value.data.mapData.adminId :
+				mapSlugType.value == 1 && clientSub.value.data.mapData.writable !== Writable.READ ? clientSub.value.data.mapData.writeId :
+				mapSlugType.value == 0 ? clientSub.value.data.mapData.readId
 				: ""
 			) : "")
 			+ (paramsStr ? `?${paramsStr}` : '')

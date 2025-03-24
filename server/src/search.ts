@@ -1,36 +1,21 @@
 import type { SearchResult } from "facilmap-types";
 import config from "./config.js";
-import { find as findSearch, parseUrlQuery } from "facilmap-utils";
+import { find } from "facilmap-utils";
 import { getDomainLang, getI18n } from "./i18n.js";
-import { decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
+import { concatArrayBuffers, decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
 import sax from "sax";
 import JSONStream from "JSONStream";
 import { loadSubRelations } from "./osm.js";
 
-export async function find<LoadUrls extends boolean = false>(query: string, loadUrls?: LoadUrls): Promise<Array<SearchResult> | (LoadUrls extends true ? { data: ReadableStream<string> } : never)> {
-	if (loadUrls) {
-		const url = parseUrlQuery(query);
-		if (url) {
-			return await _loadUrl(url) as LoadUrls extends true ? { data: ReadableStream<string> } : never;
-		}
-	}
-
-	const lang = getDomainLang();
-
-	return await findSearch(query, {
-		lang: lang?.isExplicit ? lang.i18n.languages.join(",") : lang?.acceptLanguage
-	});
-}
-
 export async function findQuery(query: string): Promise<SearchResult[]> {
 	const lang = getDomainLang();
 
-	return await findSearch(query, {
+	return await find(query, {
 		lang: lang?.isExplicit ? lang.i18n.languages.join(",") : lang?.acceptLanguage
 	});
 }
 
-export async function findUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+export async function findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
 	if (!url.match(/^https?:\/\//)) {
 		throw new Error(getI18n().t("search.invalid-url-error"));
 	}
@@ -38,7 +23,7 @@ export async function findUrl(url: string): Promise<{ data: ReadableStream<strin
 	return await _loadUrl(url);
 }
 
-async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStream<string> }> {
+async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStream<Uint8Array> }> {
 	const res = await fetch(
 		url,
 		{
@@ -48,23 +33,21 @@ async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStr
 		}
 	);
 
-	if (!res.ok) {
+	if (res.status !== 200) {
 		throw new Error(getI18n().t("search.url-request-error", { url, status: res.status }));
 	}
 
 	const type = res.headers.get("Content-type") ?? undefined;
 
-	let bodyStream = res.body!
-		.pipeThrough(decompressStreamIfApplicable())
-		.pipeThrough(new TextDecoderStream());
+	let bodyStream = res.body!.pipeThrough(decompressStreamIfApplicable());
 
 	if (url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/)) {
 		return { type, data: bodyStream };
 	}
 
 	const peek = peekFirstBytes(
-		(chunks: string[]) => {
-			const text = chunks.join("");
+		(chunks: Uint8Array[]) => {
+			const text = new TextDecoder().decode(concatArrayBuffers(chunks));
 			if (text.match(/^\s*$/)) {
 				return undefined;
 			} else if(text.match(/^\s*</)) {
@@ -106,7 +89,7 @@ async function _loadUrl(url: string): Promise<{ type?: string; data: ReadableStr
 
 		if(rootTag === "OSM" && url.startsWith("https://api.openstreetmap.org/api/")) {
 			abortPeek.abort();
-			return { type, data: bodyStream.pipeThrough(loadSubRelations()) };
+			return { type, data: bodyStream.pipeThrough(new TextDecoderStream()).pipeThrough(loadSubRelations()).pipeThrough(new TextEncoderStream()) };
 		} else if ((["GPX", "KML", "OSM"] as any[]).includes(rootTag)) {
 			abortPeek.abort();
 			return { type, data: bodyStream };

@@ -53,7 +53,7 @@
 		class="fm-route-form-tab"
 	>
 		<template #default="slotProps">
-			<RouteForm :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="handleHashQueryChange($event)"></RouteForm>
+			<RouteForm routeKey="" :active="slotProps.isActive" @activate="activate()" ref="routeForm" @hash-query-change="handleHashQueryChange($event)"></RouteForm>
 		</template>
 	</SearchBoxTab>
 </template>

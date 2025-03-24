@@ -100,7 +100,7 @@
 			<Draggable
 				v-model="externalLinks"
 				tag="tbody"
-				handle=".fm-drag-handle"
+				v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 				itemKey="key"
 			>
 				<template #item="{ element: link, index }">

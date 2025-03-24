@@ -74,12 +74,12 @@
 				></ToolboxCollabMapsDropdown>
 
 				<ToolboxAddDropdown
-					v-if="clientSub && clientSub.data.mapData!.writable !== Writable.READ"
+					v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxAddDropdown>
 
 				<ToolboxViewsDropdown
-					v-if="clientSub && (clientSub.data.mapData!.writable !== Writable.READ || Object.keys(clientSub.data.views).length > 0)"
+					v-if="clientSub && (clientSub.data.mapData.writable !== Writable.READ || Object.keys(clientSub.data.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxViewsDropdown>
 

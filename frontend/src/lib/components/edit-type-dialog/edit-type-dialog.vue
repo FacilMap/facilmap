@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import { typeValidator, type Field, type ID, type Type, type CRU } from "facilmap-types";
-	import { canControl, formatFieldName } from "facilmap-utils";
+	import { canControl, cloneDeep, formatFieldName } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
-	import { cloneDeep, isEqual } from "lodash-es";
+	import { isEqual } from "lodash-es";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import ColourPicker from "../ui/colour-picker.vue";
 	import ShapePicker from "../ui/shape-picker.vue";
@@ -18,13 +18,14 @@
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import StrokePicker from "../ui/stroke-picker.vue";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -42,7 +43,7 @@
 	const isCreate = computed(() => props.typeId === "createMarkerType" || props.typeId === "createLineType");
 
 	const originalType = computed(() => {
-		return typeof props.typeId === "number" ? client.value.types[props.typeId] : undefined;
+		return typeof props.typeId === "number" ? clientSub.value.data.types[props.typeId] : undefined;
 	});
 
 	const initialType = computed<Type<CRU.CREATE_VALIDATED | CRU.READ>>(() => {
@@ -112,9 +113,9 @@
 
 		try {
 			if (isCreate.value)
-				await client.value.addType(type.value);
+				await clientContext.value.client.createType(clientSub.value.mapSlug, type.value);
 			else
-				await client.value.editType(type.value as Type);
+				await clientContext.value.client.updateType(clientSub.value.mapSlug, (type.value as Type).id, type.value as Type);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {
@@ -424,7 +425,7 @@
 				<Draggable
 					v-model="type.fields"
 					tag="tbody"
-					handle=".fm-drag-handle"
+					v-bind="{ handle: '.fm-drag-handle' } as any /* https://github.com/SortableJS/vue.draggable.next/issues/220 */"
 					:itemKey="(field: any) => type.fields.indexOf(field)"
 				>
 					<template #item="{ element: field }">

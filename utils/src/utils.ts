@@ -1,6 +1,6 @@
-import { cloneDeep, isEqual } from "lodash-es";
+import { cloneDeep as originalCloneDeep, isEqual } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
-import type { Colour } from "facilmap-types";
+import type { Colour, DeepMutable, DeepReadonly } from "facilmap-types";
 import type { OsmFeatureType } from "osm-api";
 import { getI18n } from "./i18n";
 
@@ -147,15 +147,19 @@ export async function sleep(ms: number): Promise<void> {
  * @param newObject {Object}
  * @param targetObject {Object}
  */
-export function mergeObject<T extends Record<keyof any, any>>(oldObject: T | undefined, newObject: T, targetObject: T): void {
+export function mergeObject<T extends Record<keyof any, any>>(oldObject: DeepReadonly<NoInfer<T>> | undefined, newObject: DeepReadonly<NoInfer<T>>, targetObject: T): void {
+	// Code below does not work well with DeepReadonly types
+	const oldObject_ = oldObject as T;
+	const newObject_ = newObject as T;
+
 	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
 		if(
-			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject[i] == "object" && newObject[i] != null
+			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject_[i] == "object" && newObject_[i] != null
 			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
 		)
-			mergeObject(oldObject && oldObject[i], newObject[i], targetObject[i]);
-		else if(oldObject == null || !isEqual(oldObject[i], newObject[i]))
-			targetObject[i] = cloneDeep(newObject[i]);
+			mergeObject(oldObject && oldObject_[i], newObject_[i], targetObject[i]);
+		else if(oldObject == null || !isEqual(oldObject_[i], newObject_[i]))
+			targetObject[i] = cloneDeep(newObject_[i]);
 	}
 }
 
@@ -369,3 +373,53 @@ export function* generateUniqueColours(): Generator<Colour, void, void> {
 		prevLength = parts.length;
 	}
 }
+
+export function concatArrayBuffers(chunks: Uint8Array[]): Uint8Array {
+	const result = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+	let offset = 0;
+	for (const chunk of chunks) {
+		result.set(chunk, offset);
+		offset += chunk.length;
+	}
+	return result;
+}
+
+export function cloneDeep<T>(value: T): DeepMutable<T> {
+	// https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/70545
+	return originalCloneDeep(value) as DeepMutable<T>;
+}
+
+
+// type Type1 = { type: "a" };
+// type Type2 = { type: "b" };
+
+// function isType1(object: Type1 | Type2): object is Type1 {
+// 	return object.type === "a";
+// }
+
+// const mutable = { type: "a" } as Type1 | Type2;
+// if (isType1(mutable)) {
+// 	console.log(mutable);
+// }
+
+// const readonly = { type: "a" } as Readonly<Type1 | Type2>;
+// if (isType1(readonly)) {
+// 	console.log(readonly);
+// }
+
+// type Type1 = ["a"];
+// type Type2 = ["b"];
+
+// function isType1(object: Readonly<Type1 | Type2>): object is Readonly<Type1> {
+// 	return object[0] === "a";
+// }
+
+// const mutable = ["a"] as Type1 | Type2;
+// if (isType1(mutable)) {
+// 	console.log(mutable);
+// }
+
+// const readonly = ["a"] as Readonly<Type1 | Type2>;
+// if (isType1(readonly)) {
+// 	console.log(readonly);
+// }

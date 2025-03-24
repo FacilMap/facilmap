@@ -1,19 +1,20 @@
 <script setup lang="ts">
-	import type { ID, Type } from "facilmap-types";
+	import { type ID, type Type } from "facilmap-types";
 	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { isLineResult, isMarkerResult, typeExists } from "../../utils/search";
 	import { mapValues, pickBy, uniq } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { getUniqueId } from "../../utils/utils";
-	import { computed, ref } from "vue";
+	import { computed, ref, type DeepReadonly } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { type LineWithTags, type MarkerWithTags, addToMap, searchResultToLineWithTags, searchResultToMarkerWithTags } from "../../utils/add";
-	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
+	import { canCreateType, formatTypeName, getOrderedTypes } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -37,7 +38,7 @@
 
 	type Option = { key: string; value: string | false; text: string; disabled?: boolean };
 
-	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
+	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data.types));
 
 	const customMappingOptions = computed(() => {
 		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId): Option[] => {
@@ -48,7 +49,7 @@
 					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: i18n.t("custom-import-dialog.existing-type", { name: formatTypeName(type.name) }) });
 			}
 
-			if (client.value.writable == 2 && !typeExists(client.value, customType))
+			if (canCreateType(clientSub.value.data.mapData) && !typeExists(clientSub.value.data, customType))
 				recommendedOptions.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 
 			recommendedOptions.push({ key: "false1", value: false, text: i18n.t("custom-import-dialog.no-import") });
@@ -62,7 +63,7 @@
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
-				if (client.value.writable == 2 && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(client.value, customType2))
+				if (canCreateType(clientSub.value.data.mapData) && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(clientSub.value.data, customType2))
 					otherOptions.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: i18n.t("custom-import-dialog.import-type", { name: customType2.name }) });
 			}
 
@@ -95,7 +96,7 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (client.value.writable && customType.type == "marker" && !typeExists(client.value, customType))
+			if (canCreateType(clientSub.value.data.mapData) && customType.type == "marker" && !typeExists(clientSub.value.data, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 		}
 
@@ -113,7 +114,7 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (client.value.writable && customType.type == "line")
+			if (canCreateType(clientSub.value.data.mapData) && customType.type == "line")
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 		}
 
@@ -129,14 +130,14 @@
 		toasts.hideToast(`fm${context.id}-search-result-info-add-error`);
 
 		try {
-			const resolvedMapping: Record<string, Type> = {};
+			const resolvedMapping: Record<string, DeepReadonly<Type> | undefined> = {};
 			for (const id of uniq([...Object.values(customMapping.value), untypedMarkerMapping.value, untypedLineMapping.value])) {
 				if (id !== false) {
 					const m = id.match(/^([ei])(.*)$/);
 					if (m && m[1] == "e")
-						resolvedMapping[id] = client.value.types[m[2] as any];
+						resolvedMapping[id] = clientSub.value.data.types[m[2] as any];
 					else if (m && m[1] == "i")
-						resolvedMapping[id] = await client.value.addType(props.customTypes[m[2] as any]);
+						resolvedMapping[id] = await clientContext.value.client.createType(clientSub.value.mapSlug, props.customTypes[m[2] as any]);
 				}
 			}
 
@@ -145,7 +146,7 @@
 				return id !== false && resolvedMapping[id] ? [{ result, type: resolvedMapping[id] }] : [];
 			});
 
-			await addToMap(context, add.flatMap(({ result, type }): Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: Type }> => {
+			await addToMap(context, add.flatMap(({ result, type }): Array<({ marker: DeepReadonly<MarkerWithTags> } | { line: DeepReadonly<LineWithTags> }) & { type: DeepReadonly<Type> }> => {
 				if (type.type === 'marker') {
 					const marker = searchResultToMarkerWithTags(result);
 					return marker ? [{ marker, type }] : [];

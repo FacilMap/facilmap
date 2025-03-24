@@ -21,7 +21,7 @@ export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
 	protected clientStorage: SocketClientStorage;
-	protected mapSlug: MapSlug;
+	readonly mapSlug: MapSlug;
 	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	protected highlightedLinesIds = new Set<ID>();
 	protected hiddenLinesIds = new Set<ID>();

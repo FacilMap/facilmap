@@ -1,1 +1,5 @@
-{}
+{
+    "socket": {
+        "route-name": "FacilMap 路線"
+    }
+}

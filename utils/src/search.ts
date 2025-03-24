@@ -187,7 +187,7 @@ export function isSearchId(string: string | undefined): boolean {
  * If the search query is a URL for which this is supported, loads the content of the URL through a direct fetch request.
  * Otherwise returns undefined.
  */
-export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<string | AnalyzedOsmFeature | AnalyzedChangeset | OsmFeatureBlame | undefined> {
+export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress & { onBbox?: (bbox: Bbox) => void }): Promise<Uint8Array | AnalyzedOsmFeature | AnalyzedChangeset | OsmFeatureBlame | undefined> {
 	query = query.trim();
 
 	let m = query.match(/^(node|way|relation)\s+(\d+)$/);
@@ -199,7 +199,7 @@ export async function loadDirectUrlQuery(query: string, onProgress?: OnProgress 
 
 	m = query.match(/^trace\s+(\d+)$/);
 	if (m) {
-		return await fetch(`https://www.openstreetmap.org/trace/${m[1]}/data`).then(validateResponse).then((res) => res.text());
+		return await fetch(`https://www.openstreetmap.org/trace/${m[1]}/data`).then(validateResponse).then(async (res) => new Uint8Array(await res.arrayBuffer()));
 	}
 
 	m = query.match(/^changeset\s+(\d+)$/);

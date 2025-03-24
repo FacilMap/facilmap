@@ -7,7 +7,7 @@
 	import { normalizeLineName } from "facilmap-utils";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
@@ -21,7 +21,7 @@
 	});
 
 	const line = computed(() => {
-		return lineId.value != null ? client.value.lines[lineId.value] : undefined;
+		return lineId.value != null ? clientContext.value.lines[lineId.value] : undefined;
 	});
 
 	watch(line, () => {

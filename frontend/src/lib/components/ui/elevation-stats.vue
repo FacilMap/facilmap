@@ -4,7 +4,7 @@
 	import { createElevationStats } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
 	import { formatAscentDescent, formatDistance, numberKeys } from "facilmap-utils";
-	import { computed, ref } from "vue";
+	import { computed, ref, type DeepReadonly } from "vue";
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { useI18n } from "../../utils/i18n";
@@ -13,7 +13,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		route: LineWithTrackPoints | RouteWithTrackPoints;
+		route: DeepReadonly<LineWithTrackPoints | RouteWithTrackPoints>;
 	}>();
 
 	const statsButtonContainerRef = ref<HTMLElement>();

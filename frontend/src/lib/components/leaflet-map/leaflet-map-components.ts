@@ -85,7 +85,7 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 function useMapComponent<T>(
 	map: Ref<Map>,
 	construct: () => T,
-	activate: (component: T, map: Map) => void
+	activate: (component: NonNullable<T>, map: Map) => void
 ): Ref<T> {
 	const componentRef = shallowRef(undefined as any as T);
 	watchEffect(() => {
@@ -96,13 +96,15 @@ function useMapComponent<T>(
 		componentRef,
 		map
 	], ([component, map], prev, onCleanup) => {
-		const scope = effectScope();
-		scope.run(() => {
-			activate(component as any, map);
-		});
-		onCleanup(() => {
-			scope.stop();
-		});
+		if (component) {
+			const scope = effectScope();
+			scope.run(() => {
+				activate(component as any, map);
+			});
+			onCleanup(() => {
+				scope.stop();
+			});
+		}
 	}, { immediate: true });
 
 	return componentRef;
@@ -149,10 +151,10 @@ function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	);
 }
 
-function useBboxHandler(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<BboxHandler>> {
+function useBboxHandler(map: Ref<Map>, clientContext: Ref<ClientContext>): Ref<Raw<BboxHandler>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new BboxHandler(map.value, client.value)),
+		() => markRaw(new BboxHandler(map.value, clientContext.value.client)),
 		(bboxHandler) => {
 			bboxHandler.enable();
 			onScopeDispose(() => {
@@ -182,10 +184,10 @@ function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	);
 }
 
-function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<LinesLayer>> {
+function useLinesLayer(map: Ref<Map>, clientContext: Ref<ClientContext>): Ref<Raw<LinesLayer> | undefined> {
 	return useMapComponent(
 		map,
-		() => markRaw(new LinesLayer(client.value)),
+		() => clientContext.value.map ? markRaw(new LinesLayer(clientContext.value.storage, clientContext.value.map.mapSlug)) : undefined,
 		(linesLayer, map) => {
 			linesLayer.addTo(map);
 			onScopeDispose(() => {
@@ -278,10 +280,10 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 	);
 }
 
-function useMarkersLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<MarkersLayer>> {
+function useMarkersLayer(map: Ref<Map>, clientContext: Ref<ClientContext>): Ref<Raw<MarkersLayer> | undefined> {
 	return useMapComponent(
 		map,
-		() => markRaw(new MarkersLayer(client.value)),
+		() => clientContext.value.map ? markRaw(new MarkersLayer(clientContext.value.storage, clientContext.value.map.mapSlug)) : undefined,
 		(markersLayer, map) => {
 			markersLayer.addTo(map);
 			onScopeDispose(() => {
@@ -389,8 +391,8 @@ function useFeatureBlameLayer(map: Ref<Map>): Ref<Raw<FeatureBlameLayer>> {
 }
 
 function useSelectionHandler(
-	map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer>, linesLayer: Ref<LinesLayer>,
-	searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>,
+	map: Ref<Map>, context: FacilMapContext, mapContext: MapContextWithoutComponents, markersLayer: Ref<MarkersLayer | undefined>,
+	linesLayer: Ref<LinesLayer | undefined>, searchResultsLayer: Ref<SearchResultsLayer>, changesetLayer: Ref<ChangesetLayer>,
 	featureBlameLayer: Ref<FeatureBlameLayer>, overpassLayer: Ref<OverpassLayer>
 ): Ref<Raw<SelectionHandler>> {
 	return useMapComponent(
@@ -431,12 +433,12 @@ function useSelectionHandler(
 	);
 }
 
-function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: FacilMapContext, mapContext: MapContextWithoutComponents, overpassLayer: Ref<OverpassLayer>): Ref<Raw<HashHandler & { _fmActivate: () => Promise<void> }>> {
+function useHashHandler(map: Ref<Map>, clientContext: Ref<ClientContext>, context: FacilMapContext, mapContext: MapContextWithoutComponents, overpassLayer: Ref<OverpassLayer>): Ref<Raw<HashHandler & { _fmActivate: () => Promise<void> }>> {
 	return useMapComponent(
 		map,
 		() => {
 			let queryChangePromise: Promise<void> | undefined;
-			const hashHandler = markRaw(new HashHandler(map.value, client.value, { overpassLayer: overpassLayer.value, simulate: !context.settings.updateHash }))
+			const hashHandler = markRaw(new HashHandler(map.value, clientContext.value.storage, { overpassLayer: overpassLayer.value, simulate: !context.settings.updateHash }))
 				.on("fmQueryChange", async (e: any) => {
 					let smooth = true;
 					let autofocus = false;
@@ -469,15 +471,15 @@ function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: Faci
 }
 
 function useMapComponents(context: FacilMapContext, mapContext: MapContextWithoutComponents, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): MapComponents {
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const map = useMap(mapRef, mapContext);
 	const attribution = useAttribution(map);
 	const zoomControl = useZoomControl(map);
-	const bboxHandler = useBboxHandler(map, client);
+	const bboxHandler = useBboxHandler(map, clientContext);
 	const graphicScale = useGraphicScale(map);
-	const linesLayer = useLinesLayer(map, client);
+	const linesLayer = useLinesLayer(map, clientContext);
 	const locateControl = useLocateControl(map, context);
-	const markersLayer = useMarkersLayer(map, client);
+	const markersLayer = useMarkersLayer(map, clientContext);
 	const mousePosition = useMousePosition(map);
 	const overpassLayer = useOverpassLayer(map, mapContext);
 	const searchResultsLayer = useSearchResultsLayer(map);
@@ -486,7 +488,7 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const selectionHandler = useSelectionHandler(
 		map, context, mapContext, markersLayer, linesLayer, searchResultsLayer, changesetLayer, featureBlameLayer, overpassLayer
 	);
-	const hashHandler = useHashHandler(map, client, context, mapContext, overpassLayer);
+	const hashHandler = useHashHandler(map, clientContext, context, mapContext, overpassLayer);
 
 	const components: MapComponents = reactive({
 		map,
@@ -552,7 +554,7 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 	const map = mapContext.components.map;
 	const overpassLayer = mapContext.components.overpassLayer;
 
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 
 	(async () => {
 		await nextTick(); // useMapContext() return promise is resolved, setting mapContext.value in <LeafletMap>
@@ -563,7 +565,7 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		if (!map._loaded) {
 			try {
 				// Initial view was not set by hash handler
-				const initialView = await getInitialView(client.value);
+				const initialView = await getInitialView(clientContext.value.storage);
 				displayView(map, {
 					top: -90, bottom: 90, left: -180, right: 180,
 					...initialView,
@@ -581,7 +583,7 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		});
 
 		watchEffect(() => {
-			mapContext.activeQuery = getHashQuery(mapContext.components.map, client.value, mapContext.selection) || mapContext.fallbackQuery;
+			mapContext.activeQuery = getHashQuery(mapContext.components.map, clientContext.value, mapContext.selection) || mapContext.fallbackQuery;
 			mapContext.components.hashHandler.setQuery(mapContext.activeQuery);
 		});
 	})().catch(console.error);

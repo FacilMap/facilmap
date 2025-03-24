@@ -35,7 +35,7 @@
 	});
 
 	function addBookmark(): void {
-		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData!.id, name: clientSub.value!.data.mapData!.name });
+		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData.id, name: clientSub.value!.data.mapData.name });
 	}
 </script>
 
@@ -69,7 +69,7 @@
 				href="javascript:"
 				@click="addBookmark()"
 				draggable="false"
-			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { mapName: normalizeMapName(clientSub.data.mapData!.name) })}}</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { mapName: normalizeMapName(clientSub.data.mapData.name) })}}</a>
 		</li>
 
 		<li v-if="storage.bookmarks.length > 0">
@@ -109,7 +109,7 @@
 				:href="`${context.baseUrl}#${hash}`"
 				@click.exact.prevent="clientContext.openMap(undefined)"
 				draggable="false"
-			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { mapName: normalizeMapName(clientSub.data.mapData!.name) })}}</a>
+			>{{i18n.t("toolbox-collab-maps-dropdown.close-map", { mapName: normalizeMapName(clientSub.data.mapData.name) })}}</a>
 		</li>
 	</DropdownMenu>
 

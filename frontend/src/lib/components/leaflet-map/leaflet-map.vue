@@ -7,9 +7,11 @@
 	import { useI18n, vReplaceLinks } from "../../utils/i18n";
 	import AboutDialog from "../about-dialog.vue";
 	import { markdownInline, quoteMarkdown } from "facilmap-utils";
+	import { ClientContextMapState } from "../facil-map-context-provider/client-context";
+	import { ClientStateType } from "facilmap-client";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
+	const clientContext = requireClientContext(context);
 	const i18n = useI18n();
 
 	const innerContainerRef = ref<HTMLElement>();
@@ -78,15 +80,15 @@
 					<img src="./logo.png"/>
 				</div>
 
-				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
+				<div class="spinner-border fm-leaflet-map-spinner" v-show="clientContext.client.runningOperations > 0 || (mapContext && mapContext.loading > 0)"></div>
 
 				<slot v-if="mapContext"></slot>
 			</div>
 			<slot v-if="mapContext" name="after"></slot>
 		</div>
 
-		<div class="fm-leaflet-map-disabled-cover" v-show="client.mapSlug && (client.disconnected || (client.serverError && !client.isCreateMap) || client.deleted)"></div>
-		<div class="fm-leaflet-map-loading" v-show="!loaded && !client.serverError && !client.isCreateMap" :class="{ 'fatal-error': !!fatalError }">
+		<div class="fm-leaflet-map-disabled-cover" v-show="clientContext.map && (clientContext.client.state.type === ClientStateType.RECONNECTING || (clientContext.client.state.type === ClientStateType.FATAL_ERROR && clientContext.map.state !== ClientContextMapState.CREATE) || clientContext.map.state === ClientContextMapState.DELETED)"></div>
+		<div class="fm-leaflet-map-loading" v-show="!loaded && clientContext.client.state.type !== ClientStateType.FATAL_ERROR && clientContext.map?.state !== ClientContextMapState.CREATE" :class="{ 'fatal-error': !!fatalError }">
 			{{fatalError || i18n.t("leaflet-map.loading")}}
 		</div>
 	</div>

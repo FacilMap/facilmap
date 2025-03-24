@@ -663,7 +663,6 @@
         "remove-destination-tooltip": "Quitar este destino",
         "distance": "Distancia",
         "reorder-alt": "Reordenar",
-        "export-filename": "Ruta de FacilMap",
         "zoom-to-object-label": "Zum a ruta",
         "find-destination-error": "Error al encontrar el destino «{{query}}»",
         "route-description-outer": "Ruta desde {{inner}}",

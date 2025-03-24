@@ -17,6 +17,7 @@
 
 	const props = withDefaults(defineProps<{
 		modelValue: RouteModeType;
+		id?: string;
 		tabindex?: number;
 		disabled?: boolean;
 		tooltipPlacement?: TooltipPlacement;
@@ -28,7 +29,7 @@
 		"update:modelValue": [value: RouteModeType];
 	}>();
 
-	const id = getUniqueId("fm-route-mode");
+	const idPrefix = getUniqueId("fm-route-mode");
 
 	const constants = computed((): {
 		modes: Array<Mode>;
@@ -169,19 +170,19 @@
 
 <template>
 	<div class="fm-route-mode position-relative">
-		<div class="btn-group" role="group">
+		<div class="btn-group" role="group" :id="props.id">
 			<template v-for="(mode, idx) in constants.modes" :key="mode">
 				<input
 					type="radio"
 					class="btn-check"
-					:id="`${id}-mode-${mode}`"
-					:name="`${id}-mode`"
+					:id="`${idPrefix}-mode-${mode}`"
+					:name="`${idPrefix}-mode`"
 					v-model="decodedMode.mode"
 					:value="mode"
 					:tabindex="tabindex != null ? tabindex + idx : undefined"
 					:disabled="disabled"
 				/>
-				<label class="btn btn-secondary" :for="`${id}-mode-${mode}`" v-tooltip:[tooltipPlacement]="constants.modeTitle[mode]">
+				<label class="btn btn-secondary" :for="`${idPrefix}-mode-${mode}`" v-tooltip:[tooltipPlacement]="constants.modeTitle[mode]">
 					<Icon :icon="constants.modeIcon[mode]" :alt="constants.modeAlt[mode]"></Icon>
 				</label>
 			</template>

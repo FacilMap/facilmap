@@ -134,10 +134,10 @@ export async function addMarkerToMap(context: FacilMapContext, marker: MarkerWit
 		typeId: type.id
 	});
 
-	return { type: "marker", id: newMarker.id };
+	return { type: "marker", mapSlug: clientSub.value.mapSlug, id: newMarker.id };
 }
 
-export async function addLineToMap(context: FacilMapContext, line: LineWithTags, type: DeepReadonly<Type>): Promise<SelectedItem> {
+export async function addLineToMap(context: FacilMapContext, line: DeepReadonly<LineWithTags>, type: DeepReadonly<Type>): Promise<SelectedItem> {
 	const clientContext = requireClientContext(context);
 	const clientSub = requireClientSub(context);
 
@@ -146,10 +146,10 @@ export async function addLineToMap(context: FacilMapContext, line: LineWithTags,
 		typeId: type.id
 	});
 
-	return { type: "line", id: newLine.id };
+	return { type: "line", mapSlug: clientSub.value.mapSlug, id: newLine.id };
 }
 
-export async function addToMap(context: FacilMapContext, objects: Array<({ marker: MarkerWithTags } | { line: LineWithTags }) & { type: DeepReadonly<Type> }>): Promise<SelectedItem[]> {
+export async function addToMap(context: FacilMapContext, objects: Array<({ marker: DeepReadonly<MarkerWithTags> } | { line: DeepReadonly<LineWithTags> }) & { type: DeepReadonly<Type> }>): Promise<SelectedItem[]> {
 	const selection: SelectedItem[] = [];
 
 	for (const object of objects) {

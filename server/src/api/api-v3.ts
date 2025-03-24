@@ -10,6 +10,7 @@ import { calculateRoute } from "../routing/routing";
 import { findQuery, findUrl } from "../search";
 import { iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
 import { arrayStream, stringifyJsonStream, objectStream, type SerializableJsonValue } from "json-stream-es";
+import { exportLineToGeoJson } from "../export/geojson";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected database: Database;
@@ -203,7 +204,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.lines.deleteLine(mapData.id, lineId, { notFound404: true });
 	}
 
-	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<string> }> {
+	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 
 		const lineP = this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
@@ -221,13 +222,19 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 				return {
 					type: "application/gpx+xml",
 					filename: `${filename}.gpx`,
-					data: exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id))
+					data: exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
 				};
 			case "gpx-rte":
 				return {
 					type: "application/gpx+xml",
 					filename: `${filename}.gpx`,
-					data: exportLineToRouteGpx(line, type)
+					data: exportLineToRouteGpx(line, type).pipeThrough(new TextEncoderStream())
+				};
+			case "geojson":
+				return {
+					type: "application/geo+json",
+					filename: `${filename}.geojson`,
+					data: exportLineToGeoJson(line, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
 				};
 			default:
 				throw new Error(getI18n().t("api.unknown-format-error"));
@@ -300,7 +307,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await findQuery(query);
 	}
 
-	async findUrl(url: string): Promise<{ data: ReadableStream<string> }> {
+	async findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
 		const result = await findUrl(url);
 		return { data: result.data };
 	}
@@ -445,7 +452,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 	exportLine: apiImpl.get("/map/:mapSlug/line/:lineId/export", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		const { format } = z.object({
-			format: exportFormatValidator
+			format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"])
 		}).parse(req.query);
 		return [req.params.mapSlug, lineId, { format }];
 	}, (res, result) => {

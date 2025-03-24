@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import { formatCoordinates, renderOsmTag } from "facilmap-utils";
-	import type { FindOnMapResult, Point, SearchResult, Type } from "facilmap-types";
+	import type { Point, SearchResult, Type } from "facilmap-types";
 	import Icon from "./ui/icon.vue";
 	import type { FileResult } from "../utils/files";
-	import { isFileResult, isMarkerResult } from "../utils/search";
+	import { isFileResult, isMarkerResult, type MapResult } from "../utils/search";
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../utils/add";
 	import { getZoomDestinationForSearchResult } from "../utils/zoom";
 	import Coordinates from "./ui/coordinates.vue";
@@ -23,7 +23,7 @@
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
 		searchResults?: SearchResult[];
 		/** If specified, will be passed to the route form as suggestions when using the "Use as" menu */
-		mapResults?: FindOnMapResult[];
+		mapResults?: MapResult[];
 		isLoading?: boolean;
 		zoom?: number;
 	}>(), {
