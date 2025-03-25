@@ -1,4 +1,4 @@
-import { idValidator, mapSlugValidator } from "facilmap-types";
+import { idValidator, mapSlugValidator, renameProperty } from "facilmap-types";
 import { overwriteObject } from "facilmap-utils";
 import { isEqual, omit } from "lodash-es";
 import { reactive, toRaw, watch } from "vue";
@@ -17,9 +17,12 @@ function arrayIgnoringInvalids<T extends z.ZodTypeAny>(schema: T): z.ZodType<Arr
 	});
 }
 
-export const bookmarkValidator = z.record(z.any()).transform((val) => ({
-	...val,
-	mapId: typeof val.mapId === "number" ? val.mapId : undefined, // Used to be the read-only ID
+export const favouriteValidator = z.record(z.any()).transform((val) => ({
+	// Legacy 1: id: map slug (string), padId: read-only map slug of the map (string)
+	// Legacy 2: id: map slug (string), mapId: read-only map slug of the map (string)
+	// Now: mapId: map ID (number, undefined for transformed legacy favourite), mapSlug: map slug (string). read-only map slug is discarded
+	...omit(val, ["padId", "id"]),
+	mapId: typeof val.mapId === "number" ? val.mapId : undefined, // Used to be the read-only map slug
 	mapSlug: val.mapSlug ?? val.id // id is the legacy property name
 })).pipe(z.object({
 	/** ID used to open the map */
@@ -32,7 +35,7 @@ export const bookmarkValidator = z.record(z.any()).transform((val) => ({
 	customName: z.string().optional()
 }));
 
-export type Bookmark = z.infer<typeof bookmarkValidator>;
+export type Favourite = z.infer<typeof favouriteValidator>;
 
 export const customLinkValidator = z.object({
 	label: z.string(),
@@ -42,10 +45,10 @@ export const customLinkValidator = z.object({
 
 export type CustomLink = z.infer<typeof customLinkValidator>;
 
-const storageValidator2 = z.object({
+const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(val, "bookmarks", "favourites")).pipe(z.object({
 	zoomToAll: z.boolean().catch(false),
 	autoZoom: z.boolean().catch(true),
-	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => []),
+	favourites: arrayIgnoringInvalids(favouriteValidator).catch(() => []),
 	baseLayer: z.string().optional(),
 	overlays: z.array(z.string()).optional(),
 	customLinks: z.array(customLinkValidator).optional(),
@@ -53,7 +56,7 @@ const storageValidator2 = z.object({
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
 	})).optional()
-});
+}));
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 
 export interface Storage extends z.infer<typeof storageValidator2> {

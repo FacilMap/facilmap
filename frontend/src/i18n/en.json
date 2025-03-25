@@ -576,14 +576,14 @@
         "edit-waypoints": "Edit waypoints",
         "delete": "Delete"
     },
-    "manage-bookmarks-dialog": {
-        "title": "Manage Bookmarks",
-        "introduction": "Bookmarks are a quick way to remember and access collaborative maps. They are saved in your browser, other users will not be able to see them.",
+    "manage-favourites-dialog": {
+        "title": "Manage Favourites",
+        "introduction": "Favourites are a quick way to remember and access collaborative maps. They are saved in your browser, other users will not be able to see them.",
         "map-id": "Map ID",
         "name": "Name",
         "delete": "Delete",
         "reorder-alt": "Reorder",
-        "bookmark-current": "Bookmark current map"
+        "favourite-current": "Add current map to favourites"
     },
     "manage-types-dialog": {
         "delete-title": "Delete type",
@@ -923,8 +923,8 @@
     },
     "toolbox-collab-maps-dropdown": {
         "label": "Collaborative maps",
-        "bookmark": "Bookmark map “{{mapName}}”",
-        "manage-bookmarks": "Manage bookmarks",
+        "favourite": "Add map “{{mapName}}” to favourites",
+        "manage-favourites": "Manage favourites",
         "create-map": "Create a new map",
         "open-map": "Open an existing map",
         "open-other-map": "Open another map",

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import MapSettingsDialog from "../map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../../utils/storage";
-	import ManageBookmarksDialog from "../manage-bookmarks-dialog.vue";
+	import ManageFavouritesDialog from "../manage-favourites-dialog.vue";
 	import OpenMapDialog from "../open-map-dialog.vue";
 	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
@@ -21,7 +21,7 @@
 
 	const dialog = ref<
 		| "open-map"
-		| "manage-bookmarks"
+		| "manage-favourites"
 		| "create-map"
 	>();
 
@@ -30,12 +30,12 @@
 		return v.hash && v.hash != "#" ? v.hash : `${v.zoom}/${v.center.lat}/${v.center.lng}`;
 	});
 
-	const isBookmarked = computed(() => {
-		return !!clientSub.value && storage.bookmarks.some((bookmark) => bookmark.mapSlug == clientSub.value!.mapSlug);
+	const isFavourite = computed(() => {
+		return !!clientSub.value && storage.favourites.some((favourite) => favourite.mapSlug == clientSub.value!.mapSlug);
 	});
 
-	function addBookmark(): void {
-		storage.bookmarks.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData.id, name: clientSub.value!.data.mapData.name });
+	function addFavourite(): void {
+		storage.favourites.push({ mapSlug: clientSub.value!.mapSlug, mapId: clientSub.value!.data.mapData.id, name: clientSub.value!.data.mapData.name });
 	}
 </script>
 
@@ -49,39 +49,39 @@
 		menuClass="dropdown-menu-end"
 		:label="i18n.t('toolbox-collab-maps-dropdown.label')"
 	>
-		<li v-for="bookmark in storage.bookmarks" :key="bookmark.mapSlug">
+		<li v-for="favourite in storage.favourites" :key="favourite.mapSlug">
 			<a
 				class="dropdown-item"
-				:class="{ active: clientSub && bookmark.mapSlug == clientSub.mapSlug }"
-				:href="`${context.baseUrl}${encodeURIComponent(bookmark.mapSlug)}#${hash}`"
-				@click.exact.prevent="clientContext.openMap(bookmark.mapSlug); emit('hide-sidebar')"
+				:class="{ active: clientSub && favourite.mapSlug == clientSub.mapSlug }"
+				:href="`${context.baseUrl}${encodeURIComponent(favourite.mapSlug)}#${hash}`"
+				@click.exact.prevent="clientContext.openMap(favourite.mapSlug); emit('hide-sidebar')"
 				draggable="false"
-			>{{bookmark.customName || normalizeMapName(bookmark.name)}}</a>
+			>{{favourite.customName || normalizeMapName(favourite.name)}}</a>
 		</li>
 
-		<li v-if="storage.bookmarks.length > 0">
+		<li v-if="storage.favourites.length > 0">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="clientSub && !isBookmarked">
+		<li v-if="clientSub && !isFavourite">
 			<a
 				class="dropdown-item"
 				href="javascript:"
-				@click="addBookmark()"
+				@click="addFavourite()"
 				draggable="false"
-			>{{i18n.t('toolbox-collab-maps-dropdown.bookmark', { mapName: normalizeMapName(clientSub.data.mapData.name) })}}</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.favourite', { mapName: normalizeMapName(clientSub.data.mapData.name) })}}</a>
 		</li>
 
-		<li v-if="storage.bookmarks.length > 0">
+		<li v-if="storage.favourites.length > 0">
 			<a
 				class="dropdown-item"
 				href="javascript:"
-				@click="dialog = 'manage-bookmarks'; emit('hide-sidebar')"
+				@click="dialog = 'manage-favourites'; emit('hide-sidebar')"
 				draggable="false"
-			>{{i18n.t('toolbox-collab-maps-dropdown.manage-bookmarks')}}</a>
+			>{{i18n.t('toolbox-collab-maps-dropdown.manage-favourites')}}</a>
 		</li>
 
-		<li v-if="(clientSub && !isBookmarked) || storage.bookmarks.length > 0">
+		<li v-if="(clientSub && !isFavourite) || storage.favourites.length > 0">
 			<hr class="dropdown-divider">
 		</li>
 
@@ -118,10 +118,10 @@
 		@hidden="dialog = undefined"
 	></OpenMapDialog>
 
-	<ManageBookmarksDialog
-		v-if="dialog === 'manage-bookmarks'"
+	<ManageFavouritesDialog
+		v-if="dialog === 'manage-favourites'"
 		@hidden="dialog = undefined"
-	></ManageBookmarksDialog>
+	></ManageFavouritesDialog>
 
 	<MapSettingsDialog
 		v-if="dialog === 'create-map'"

@@ -573,14 +573,14 @@
         "edit-waypoints": "Bewegen",
         "delete": "Löschen"
     },
-    "manage-bookmarks-dialog": {
+    "manage-favourites-dialog": {
         "title": "Favoriten verwalten",
         "introduction": "Kollaborative Karten können als Favoriten abgespeichert werden, um sie schnell öffnen zu können, ohne den Link eingeben zu müssen. Ihre Favoriten werden in Ihrem Browser abgespeichert, andere Benutzer können darauf nicht zugreifen.",
         "map-id": "Karten-ID",
         "name": "Name",
         "delete": "Entfernen",
         "reorder-alt": "Umordnen",
-        "bookmark-current": "Aktuelle Karte hinzufügen"
+        "favourite-current": "Aktuelle Karte hinzufügen"
     },
     "manage-types-dialog": {
         "delete-title": "Objekttyp löschen",
@@ -919,8 +919,8 @@
     },
     "toolbox-collab-maps-dropdown": {
         "label": "Kollaborative Karten",
-        "bookmark": "Karte „{{mapName}}“ zu Favoriten hinzufügen",
-        "manage-bookmarks": "Favoriten verwalten",
+        "favourite": "Karte „{{mapName}}“ zu Favoriten hinzufügen",
+        "manage-favourites": "Favoriten verwalten",
         "create-map": "Neue Karte erstellen",
         "open-map": "Existierende Karte öffnen",
         "open-other-map": "Andere Karte öffnen",

@@ -229,7 +229,7 @@
         "move-line-cancel": "取消",
         "distance": "距離"
     },
-    "manage-bookmarks-dialog": {
+    "manage-favourites-dialog": {
         "reorder-alt": "重新排序"
     },
     "manage-types-dialog": {
@@ -404,7 +404,7 @@
         "spinner-label": "正在載入…"
     },
     "toolbox-collab-maps-dropdown": {
-        "manage-bookmarks": "管理書籤",
+        "manage-favourites": "管理書籤",
         "label": "協作地圖",
         "close-map": "關閉地圖「{{mapName}}」",
         "open-other-map": "開啟另一張地圖",

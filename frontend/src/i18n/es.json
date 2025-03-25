@@ -484,13 +484,13 @@
     "legend": {
         "tab-label": "Simbología"
     },
-    "manage-bookmarks-dialog": {
+    "manage-favourites-dialog": {
         "map-id": "Identificador de mapa",
         "title": "Gestionar marcadores",
         "name": "Nombre",
         "delete": "Eliminar",
         "reorder-alt": "Reordenar",
-        "bookmark-current": "Añadir mapa actual a favoritos",
+        "favourite-current": "Añadir mapa actual a favoritos",
         "introduction": "Los marcadores son una forma rápida de recordar y acceder a los mapas colaborativos. Se guardan en tu navegador, otros usuarios no podrán verlos."
     },
     "manage-types-dialog": {
@@ -698,8 +698,8 @@
         "open-map": "Abrir un mapa existente",
         "create-map": "Crear un mapa nuevo",
         "label": "Mapas colaborativos",
-        "manage-bookmarks": "Gestionar indicadores",
-        "bookmark": "Marcador mapa \"{{mapName}}\""
+        "manage-favourites": "Gestionar indicadores",
+        "favourite": "Marcador mapa \"{{mapName}}\""
     },
     "toolbox-tools-dropdown": {
         "filter": "Filtrar",

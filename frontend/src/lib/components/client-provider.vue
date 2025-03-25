@@ -113,24 +113,24 @@
 
 	watch(() => clientContext.value.map?.data?.mapData, (mapData, oldMapData) => {
 		if (mapData) {
-			// Update map name and set mapId on legacy bookmarks that don't have it set yet
-			for (const bookmark of storage.bookmarks) {
-				if (bookmark.mapSlug === mapData.readId || ("writeId" in mapData && bookmark.mapSlug === mapData.writeId) || ("adminId" in mapData && bookmark.mapSlug === mapData.adminId)) {
-					bookmark.mapId = mapData.id;
-					bookmark.name = mapData.name;
+			// Update map name and set mapId on legacy favourites that don't have it set yet
+			for (const favourite of storage.favourites) {
+				if (favourite.mapSlug === mapData.readId || ("writeId" in mapData && favourite.mapSlug === mapData.writeId) || ("adminId" in mapData && favourite.mapSlug === mapData.adminId)) {
+					favourite.mapId = mapData.id;
+					favourite.name = mapData.name;
 				}
 			}
 		}
 
 		if (mapData && oldMapData && oldMapData.id === mapData.id) {
-			// If map slug was changed, update it in bookmarks
-			for (const bookmark of storage.bookmarks) {
-				if (bookmark.mapSlug === oldMapData.readId) {
-					bookmark.mapSlug = mapData.readId;
-				} else if ("writeId" in oldMapData && bookmark.mapSlug === oldMapData.writeId && "writeId" in mapData) {
-					bookmark.mapSlug = mapData.writeId;
-				} else if ("adminId" in oldMapData && bookmark.mapSlug === oldMapData.adminId && "adminId" in mapData) {
-					bookmark.mapSlug = mapData.adminId;
+			// If map slug was changed, update it in favourites
+			for (const favourite of storage.favourites) {
+				if (favourite.mapSlug === oldMapData.readId) {
+					favourite.mapSlug = mapData.readId;
+				} else if ("writeId" in oldMapData && favourite.mapSlug === oldMapData.writeId && "writeId" in mapData) {
+					favourite.mapSlug = mapData.writeId;
+				} else if ("adminId" in oldMapData && favourite.mapSlug === oldMapData.adminId && "adminId" in mapData) {
+					favourite.mapSlug = mapData.adminId;
 				}
 			}
 		}
