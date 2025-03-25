@@ -1,4 +1,5 @@
 import type { MapStorage, SocketClient, SocketClientStorage } from "facilmap-client";
+import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
 import type { MapSlug } from "facilmap-types";
 
 export enum ClientContextMapState {
@@ -11,6 +12,7 @@ export enum ClientContextMapState {
 
 export type ClientContextMap = {
 	mapSlug: MapSlug;
+	subscription: SocketClientMapSubscription;
 } & (
 	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; error?: undefined }
 	| { state: ClientContextMapState.OPEN; get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> }; error?: undefined }

@@ -1,15 +1,16 @@
 import type { HistoryEntry } from "facilmap-types";
 import { getObjectDiff, type ObjectDiffItem } from "facilmap-utils";
-import type { ClientContext } from "../facil-map-context-provider/client-context";
 import { getI18n } from "../../utils/i18n";
+import type { DeepReadonly } from "vue";
+import type { ClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
-function existsNow(client: ClientContext, entry: HistoryEntry) {
+function existsNow(clientSub: ClientSub, entry: DeepReadonly<HistoryEntry>) {
 	// Look through the history of this particular object and see if the last entry indicates that the object exists now
 
 	let ret = null;
 	let time = 0;
-	for(const i in client.history) {
-		const item2 = client.history[i];
+	for(const i in clientSub.data.history) {
+		const item2 = clientSub.data.history[i];
 
 		const time2 = new Date(item2.time).getTime();
 		if(item2.type == entry.type && item2.objectId == entry.objectId && time2 > time) {
@@ -32,7 +33,7 @@ export interface HistoryEntryLabels {
 	diff?: Array<ObjectDiffItem>;
 }
 
-export function getLabelsForHistoryEntry(client: ClientContext, entry: HistoryEntry): HistoryEntryLabels {
+export function getLabelsForHistoryEntry(clientSub: ClientSub, entry: DeepReadonly<HistoryEntry>): HistoryEntryLabels {
 	const i18n = getI18n();
 
 	if(entry.type == "Map") {
@@ -50,7 +51,7 @@ export function getLabelsForHistoryEntry(client: ClientContext, entry: HistoryEn
 
 	const nameStrBefore = entry.objectBefore && entry.objectBefore.name ? i18n.t("history-utils.description-interpolation-quotedName", { name: entry.objectBefore.name }) : "";
 	const nameStrAfter = entry.objectAfter && entry.objectAfter.name ? i18n.t("history-utils.description-interpolation-quotedName", { name: entry.objectAfter.name }) : "";
-	const exists = existsNow(client, entry);
+	const exists = existsNow(clientSub, entry);
 	const descriptionName = (nameStrBefore && nameStrAfter && nameStrBefore != nameStrAfter ? (
 		i18n.t("history-utils.description-interpolation-quotedName-renamed", { quotedBefore: nameStrBefore, quotedAfter: nameStrAfter })
 	) : (nameStrBefore || nameStrAfter));

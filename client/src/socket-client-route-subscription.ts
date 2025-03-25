@@ -6,7 +6,7 @@ import { SocketClientSubscription, type BasicSubscriptionData } from "./socket-c
 
 type SocketClientRouteSubscriptionInterface = {
 	[K in (
-		| "exportRoute"
+		"exportRoute"
 	)]: SocketApi<SocketVersion.V3, false>[K] extends (routeKey: string, ...args: infer Args) => infer Result ? (...args: Args) => Result : never;
 };
 

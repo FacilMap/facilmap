@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { computed, readonly, ref, watch, type ComponentInstance, type DeepReadonly } from "vue";
+	import { computed, readonly, ref, toRaw, watch, watchEffect, type ComponentInstance, type DeepReadonly } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useEventListener } from "../../utils/utils";
 	import type { SelectedItem } from "../../utils/selection";
@@ -79,7 +79,7 @@
 
 	const ctx = readonly({
 		open: (item: T) => open(item, 0, true),
-		active: (carouselRef.value?.nextTab ?? carouselRef.value?.tab) === 0
+		active: carouselRef.value?.tab === 0
 	});
 
 	const ctxs = computed(() => openSelection.value.items.map((item, level) => readonly({
@@ -91,7 +91,7 @@
 		close: () => close(level),
 		item,
 		level,
-		active: (carouselRef.value?.nextTab ?? carouselRef.value?.tab) === level + 1
+		active: carouselRef.value?.tab === level + 1
 	})));
 </script>
 

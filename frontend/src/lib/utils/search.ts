@@ -2,7 +2,6 @@ import type { FindOnMapResult, MapSlug, SearchResult } from "facilmap-types";
 import { numberKeys } from "facilmap-utils";
 import { isEqual } from "lodash-es";
 import type { FileResult, FileResultObject } from "./files";
-import type { ClientSub } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import type { DeepReadonly } from "vue";
 import type { MapStorage } from "facilmap-client";
 
@@ -37,9 +36,9 @@ export function isLineResult(result: DeepReadonly<SearchResult | MapResult | Fil
 		return !!result.geojson && ["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(result.geojson.type);
 }
 
-export function viewExists(clientSub: ClientSub, view: FileResultObject["views"][0]): boolean {
-	for (const viewId of numberKeys(clientSub.data.views)) {
-		if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], clientSub.data.views[viewId][idx])))
+export function viewExists(mapStorage: MapStorage, view: FileResultObject["views"][0]): boolean {
+	for (const viewId of numberKeys(mapStorage.views)) {
+		if(!VIEW_KEYS.some((idx) => !isEqual(view[idx], mapStorage.views[viewId][idx])))
 			return true;
 	}
 	return false;

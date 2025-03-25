@@ -197,7 +197,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 					},
 					cancel: async (reason) => {
 						try {
-							await Promise.all([
+							await Promise.allSettled([
 								reader.cancel(reason),
 								this._abortStream(streamId)
 							]);

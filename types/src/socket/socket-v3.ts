@@ -39,7 +39,7 @@ export interface SocketV3Response {
 	unsubscribeFromMap: Promise<void>;
 	subscribeToRoute: Promise<void>;
 	unsubscribeFromRoute: Promise<void>;
-	exportRoute: ReturnType<ApiV3<true>["exportLine"]>;
+	exportRoute: Awaited<ReturnType<ApiV3<true>["exportLine"]>>;
 	setBbox: Promise<void>;
 	setLanguage: void;
 	abortStream: void;

@@ -7,8 +7,9 @@
 	import vTooltip from "../utils/tooltip";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
-	import { injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
+import { canCreateType, canCreateView } from "facilmap-utils";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -16,6 +17,7 @@
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -39,8 +41,11 @@
 	const hasTypes = computed(() => Object.keys(props.file.types).length > 0);
 
 	const existingViews = computed(() => {
-		return new Map(props.file.views.map((view) => [view, viewExists(clientContext.value, view)]));
+		return new Map(props.file.views.map((view) => [view, viewExists(clientSub.value.data, view)]));
 	});
+
+	const canCreateViews = computed(() => canCreateView(clientSub.value.data.mapData));
+	const canCreateTypes = computed(() => canCreateType(clientSub.value.data.mapData));
 
 	function showView(view: ViewImport): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
@@ -51,7 +56,7 @@
 		isAddingView.value.add(view);
 
 		try {
-			await clientContext.value.addView(view);
+			await clientContext.value.client.createView(clientSub.value.mapSlug, view);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-view-error"), err);
 		} finally {
@@ -60,7 +65,7 @@
 	};
 
 	const existingTypes = computed(() => {
-		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(clientContext.value, type)]));
+		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(clientSub.value.data, type)]));
 	});
 
 	async function addType(type: TypeImport): Promise<void> {
@@ -68,7 +73,7 @@
 		isAddingType.value.add(type);
 
 		try {
-			await clientContext.value.addType(type);
+			await clientContext.value.client.createType(clientSub.value.mapSlug, type);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-type-error"), err);
 		} finally {
@@ -100,7 +105,7 @@
 							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="clientContext.mapData && clientContext.writable == 2 && !existingViews.get(view)">
+							<template v-else-if="canCreateViews && !existingViews.get(view)">
 								<a
 									href="javascript:"
 									@click="addView(view)"
@@ -129,7 +134,7 @@
 							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="clientContext.mapData && clientContext.writable == 2 && !existingTypes.get(type)">
+							<template v-else-if="canCreateTypes && !existingTypes.get(type)">
 								<a
 									href="javascript:"
 									@click="addType(type)"

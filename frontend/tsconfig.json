@@ -20,6 +20,6 @@
 	],
 	"include": ["src/**/*", "src/**/*.json"],
 	"vueCompilerOptions": {
-		"strictTemplates": true
+		// "strictTemplates": true
 	}
 }

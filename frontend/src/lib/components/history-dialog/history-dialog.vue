@@ -3,14 +3,14 @@
 	import type { HistoryEntry, ID } from "facilmap-types";
 	import { orderBy } from "lodash-es";
 	import Icon from "../ui/icon.vue";
-	import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+	import { computed, onBeforeUnmount, onMounted, reactive, ref, type DeepReadonly } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { mapRef } from "../../utils/vue";
 	import { getUniqueId } from "../../utils/utils";
 	import Popover from "../ui/popover.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 
 	type HistoryEntryWithLabels = HistoryEntry & {
@@ -19,6 +19,7 @@
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -28,7 +29,7 @@
 	}>();
 
 	const isLoading = ref(true);
-	const isReverting = ref<HistoryEntryWithLabels>();
+	const isReverting = ref<DeepReadonly<HistoryEntryWithLabels>>();
 	const activeDiffPopoverId = ref<ID>();
 
 	const diffButtonRefs = reactive(new Map<ID, HTMLElement>());
@@ -37,7 +38,7 @@
 
 	onMounted(async () => {
 		try {
-			await clientContext.value.listenToHistory();
+			await clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: true });
 		} catch (err) {
 			toasts.showErrorToast(`${id}-listen-error`, () => i18n.t("history-dialog.loading-error"), err);
 		} finally {
@@ -47,13 +48,13 @@
 
 	onBeforeUnmount(async () => {
 		try {
-			await clientContext.value.stopListeningToHistory();
+			await clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: false });
 		} catch (err) {
 			console.error("Error stopping listening to history", err);
 		}
 	});
 
-	async function revert(entry: HistoryEntryWithLabels): Promise<void> {
+	async function revert(entry: DeepReadonly<HistoryEntryWithLabels>): Promise<void> {
 		toasts.hideToast(`${id}-revert-error`);
 
 		if (!await showConfirm({
@@ -67,7 +68,7 @@
 		isReverting.value = entry;
 
 		try {
-			await clientContext.value.revertHistoryEntry({ id: entry.id });
+			await clientContext.value.client.revertHistoryEntry(clientSub.value.mapSlug, entry.id);
 		} catch (err) {
 			toasts.showErrorToast(`${id}-revert-error`, () => i18n.t("history-dialog.revert-error"), err);
 		} finally {
@@ -75,12 +76,12 @@
 		}
 	}
 
-	const history = computed((): HistoryEntryWithLabels[] => {
+	const history = computed((): Array<DeepReadonly<HistoryEntryWithLabels>> => {
 		return orderBy(
-			Object.values(clientContext.value.history).map((entry) => ({
+			Object.values(clientSub.value.data.history).map((entry) => ({
 				...entry,
 				time: entry.time.replace(/\.\d+/, ""),
-				labels: getLabelsForHistoryEntry(clientContext.value, entry)
+				labels: getLabelsForHistoryEntry(clientSub.value, entry)
 			})),
 			["time"],
 			["desc"]

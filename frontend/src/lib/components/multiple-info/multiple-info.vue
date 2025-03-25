@@ -22,7 +22,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		objects: DeepReadonly<Array<Marker | Line>>;
+		objects: Array<DeepReadonly<Marker | Line>>;
 	}>();
 
 	const emit = defineEmits<{

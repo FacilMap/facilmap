@@ -62,11 +62,12 @@
 				// Replace whole map object so that other state changes below don't have an effect
 				result.map = reactive<ClientContextMap>({
 					mapSlug,
+					subscription: result.map.subscription,
 					get data() {
 						return undefined;
 					},
 					state: ClientContextMapState.DELETED
-				});
+				}) as ClientContextMap;
 			}
 		});
 
@@ -79,24 +80,24 @@
 	], async ([clientContext, mapSlug], oldValue, onCleanup_) => {
 		const onCleanup = fixOnCleanup(onCleanup_);
 		if (mapSlug) {
-			const mapObj: ClientContextMap = reactive({
+			const mapObj = reactive<ClientContextMap>({
 				mapSlug,
 				get data() {
 					return clientContext.storage.maps[mapSlug];
 				},
-				state: ClientContextMapState.OPENING
-			});
+				state: ClientContextMapState.OPENING,
+				subscription: clientContext.client.subscribeToMap(mapSlug)
+			}) as ClientContextMap;
 
 			clientContext.map = mapObj;
 
 			try {
-				const subscription = clientContext.client.subscribeToMap(mapSlug);
 				onCleanup(() => {
 					clientContext.map = undefined;
-					subscription.unsubscribe().catch(() => undefined);
+					mapObj.subscription.unsubscribe().catch(() => undefined);
 				});
-				await subscription.subscribePromise;
-				(mapObj as ClientContextMap).state = ClientContextMapState.OPEN;
+				await mapObj.subscription.subscribePromise;
+				mapObj.state = ClientContextMapState.OPEN;
 			} catch(err: any) {
 				if (context.settings.interactive && isMapNotFoundError(err)) {
 					mapObj.state = ClientContextMapState.CREATE;

@@ -1,4 +1,4 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, FindOnMapResult, HistoryEntry, ID, Line, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
@@ -61,7 +61,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client._subscribeToMap(this.mapSlug, this.data.options);
 	}
 
-	async updateSubscription(options: SubscribeToMapOptions): Promise<void> {
+	async updateSubscription(options: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		this.reactiveObjectProvider.set(this.data, "options", options);
 		await this._subscribe();
 	}
@@ -160,7 +160,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.deleteLine(this.data.mapSlug, lineId);
 	}
 
-	async exportLine(lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<string> }> {
+	async exportLine(lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		return await this.client.exportLine(this.data.mapSlug, lineId, options);
 	}
 

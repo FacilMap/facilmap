@@ -3,11 +3,11 @@
 	import MarkerInfo from "./marker-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue"
 	import { useEventListener } from "../../utils/utils";
-	import { injectContextRequired, requireClientContext, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { normalizeMarkerName } from "facilmap-utils";
 
 	const context = injectContextRequired();
-	const clientContext = requireClientContext(context);
+	const clientSub = requireClientSub(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
@@ -20,7 +20,7 @@
 			return undefined;
 	});
 
-	const marker = computed(() => markerId.value != null ? clientContext.value.markers[markerId.value] : undefined);
+	const marker = computed(() => markerId.value != null ? clientSub.value.data.markers[markerId.value] : undefined);
 
 	watch(marker, () => {
 		if (!marker.value && markerId.value != null)

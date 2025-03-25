@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { mapDataValidator, type CRU, type MapData } from "facilmap-types";
+	import { mapDataValidator, type CRU, type MapData, type MapDataWithWritable } from "facilmap-types";
 	import { generateRandomMapSlug, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
@@ -58,7 +58,7 @@
 
 	watch(() => clientSub.value.data.mapData, (newMapData, oldMapData) => {
 		if (!props.isCreate && mapData.value && newMapData)
-			mergeObject<MapData>(oldMapData, newMapData, mapData.value as MapData);
+			mergeObject<MapDataWithWritable | MapData<CRU.CREATE>>(oldMapData, newMapData, mapData.value);
 	}, { deep: true });
 
 	async function save(): Promise<void> {
