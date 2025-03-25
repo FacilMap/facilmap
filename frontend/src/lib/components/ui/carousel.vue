@@ -4,33 +4,42 @@
 	import { type ComponentInstance, type DeepReadonly, type InjectionKey, type Ref, computed, defineComponent, h, inject, onBeforeUnmount, onMounted, provide, reactive, readonly, ref, toRef, useTemplateRef, watch, watchEffect } from "vue";
 
 	export interface CarouselContext {
+		/** Is set to the active tab as soon as the slide animation starts. */
 		tab: number;
-		/** If a slide animation is currently in progress, the index of the destination tab. */
-		nextTab: number | undefined;
+		/** Is set to the active tab as soon as the slide animation finishes. */
+		slidTab: number;
 		/** Slides to the given tab. Returns a promise that is resolved once the slide animation has finished. */
 		setTab(tab: number): Promise<void>;
 	}
 
 	export function useCarousel(element: Ref<HTMLElement | undefined>): DeepReadonly<CarouselContext> {
-		let onSlid: Array<() => void> = [];
+		let slide = Promise.resolve();
 
 		const context = reactive<CarouselContext>({
 			tab: 0,
-			nextTab: undefined,
+			slidTab: 0,
 			setTab: async (tab) => {
-				const carousel = element.value && Carousel.getInstance(element.value);
-				if (carousel) {
-					context.nextTab = tab;
-					carousel.to(tab);
-					await new Promise<void>((resolve) => {
-						onSlid.push(resolve);
-					});
-					if (context.nextTab === tab) {
-						context.nextTab = undefined;
+				context.tab = tab;
+
+				// While Carousel has its own concurrency control, it does not seem to work for us, because it expects
+				// the "active" class to already be set when the "slid" event is fired, whereas in our case we only
+				// set it using Vue during the next render.
+				slide = slide.then(async () => {
+					const carousel = element.value && Carousel.getInstance(element.value);
+					if (carousel) {
+						carousel.to(tab);
+						await new Promise<void>((resolve) => {
+							const listener = () => {
+								element.value?.removeEventListener("slid.bs.carousel", listener);
+								resolve();
+							};
+							element.value!.addEventListener("slid.bs.carousel", listener);
+						});
 					}
-				} else {
-					context.tab = tab;
-				}
+
+					context.slidTab = tab;
+				});
+				await slide;
 			}
 		});
 
@@ -45,23 +54,11 @@
 					carousel.to(context.tab);
 				}
 
-				newRef.addEventListener("slid.bs.carousel", handleSlid);
-
 				onCleanup(() => {
 					carousel.dispose();
-					newRef.removeEventListener("slid.bs.carousel", handleSlid);
 				});
 			}
 		});
-
-		function handleSlid(e: Event) {
-			const event = e as Event & Carousel.Event;
-			context.tab = event.to;
-			for (const callback of onSlid) {
-				callback();
-			}
-			onSlid = [];
-		}
 
 		return readonly(context);
 	}
@@ -91,7 +88,7 @@
 				const result = el.value && context.tabs.indexOf(el.value);
 				return result !== -1 ? result : undefined;
 			});
-			const active = computed(() => idx.value != null && idx.value === context.tab);
+			const active = computed(() => idx.value != null && idx.value === context.slidTab);
 
 			onMounted(() => {
 				context.registerTab(el.value!);
@@ -120,7 +117,7 @@
 
 	const internalContext: InternalCarouselContext = reactive({
 		tab: toRef(() => context.tab),
-		nextTab: toRef(() => context.nextTab),
+		slidTab: toRef(() => context.slidTab),
 		setTab: (tab: number) => context.setTab(tab),
 		tabs: [],
 		registerTab: (el: HTMLElement) => {
@@ -142,7 +139,7 @@
 	const actualTabCount = computed(() => internalContext.tabs.filter((el) => !virtualTabRefs.value?.some((r) => r.$el === el)).length);
 	watch([() => context.tab, actualTabCount], ([tab, actualTabCount]) => {
 		if (actualTabCount > 0 && tab >= actualTabCount) {
-			void context.setTab(internalContext.tabs.length - 1);
+			void context.setTab(actualTabCount - 1);
 		}
 	});
 

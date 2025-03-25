@@ -79,7 +79,7 @@
 
 	const ctx = readonly({
 		open: (item: T) => open(item, 0, true),
-		active: (carouselRef.value?.nextTab ?? carouselRef.value?.tab) === 0
+		active: carouselRef.value?.tab === 0
 	});
 
 	const ctxs = computed(() => openSelection.value.items.map((item, level) => readonly({
@@ -91,7 +91,7 @@
 		close: () => close(level),
 		item,
 		level,
-		active: (carouselRef.value?.nextTab ?? carouselRef.value?.tab) === level + 1
+		active: carouselRef.value?.tab === level + 1
 	})));
 </script>
 
