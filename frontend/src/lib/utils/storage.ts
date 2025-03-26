@@ -1,7 +1,7 @@
 import { idValidator, mapSlugValidator, renameProperty } from "facilmap-types";
 import { overwriteObject } from "facilmap-utils";
 import { isEqual, omit } from "lodash-es";
-import { reactive, toRaw, watch } from "vue";
+import { reactive, ref, toRaw, toRef, watch } from "vue";
 import * as z from "zod";
 
 function arrayIgnoringInvalids<T extends z.ZodTypeAny>(schema: T): z.ZodType<Array<z.output<T>>> {
@@ -101,7 +101,7 @@ async function save() {
 			localStorage.setItem("facilmap", JSON.stringify(storage));
 
 			if (!isEqual(omit(currentItem, NON_CRITICAL_KEYS), omit(toRaw(storage), NON_CRITICAL_KEYS)) && navigator.storage?.persist) {
-				await navigator.storage.persist();
+				persisted.value = await navigator.storage.persist();
 			}
 		}
 	} catch (err) {
@@ -113,3 +113,13 @@ load();
 window.addEventListener("storage", load);
 
 watch(() => storage, save, { deep: true });
+
+const persisted = ref(false);
+if (navigator.storage?.persisted) {
+	navigator.storage.persisted().then((p) => {
+		persisted.value = p;
+	}).catch((err) => {
+		console.warn("Error getting persisted storage.", err);
+	});
+}
+export const storagePersisted = toRef(() => persisted.value);

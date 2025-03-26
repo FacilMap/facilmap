@@ -122,6 +122,8 @@
 
 						<div style="flex-grow: 1"></div>
 
+						<slot name="footer-right" v-bind="expose"></slot>
+
 						<button
 							v-if="!props.noCancel && !isCloseButton"
 							type="button"

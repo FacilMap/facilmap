@@ -717,7 +717,10 @@
         "delete-map": "Delete map",
         "delete-map-button": "Delete map",
         "delete-description": "To delete this map, type {{code}} into the field and click the “Delete map” button.",
-        "delete-code": "DELETE"
+        "delete-code": "DELETE",
+        "add-favourite": "Add map to favourites",
+        "add-favourite-persist": "Add map to favourites (browser will ask for persistent storage permission)",
+        "add-favourite-tooltip": "Favourites are available in the “Collaborative maps” menu, allowing you to quickly open them without having to remember their link. They are saved in the local storage of your browser."
     },
     "pagination": {
         "first-label": "First",

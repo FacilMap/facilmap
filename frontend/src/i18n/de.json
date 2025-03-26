@@ -714,7 +714,10 @@
         "delete-map": "Karte löschen",
         "delete-map-button": "Karte löschen",
         "delete-description": "Um die Karte zu löschen, tippen Sie {{code}} in das Feld und klicken Sie „Karte löschen“.",
-        "delete-code": "LÖSCHEN"
+        "delete-code": "LÖSCHEN",
+        "add-favourite": "Zu Favoriten hinzufügen",
+        "add-favourite-persist": "Zu Favoriten hinzufügen (Browser wird um Zugriff auf lokalen Speicher bitten)",
+        "add-favourite-tooltip": "Favoriten sind im Menü „Kollaborative Karten“ verfügbar und ermöglichen einen schnellen Zugriff auf Karten, ohne sich den Link merken zu müssen. Sie werden im lokalen Speicher des Browsers abgespeichert."
     },
     "pagination": {
         "first-label": "Erste Seite",

@@ -11,6 +11,9 @@
 	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
+	import storage, { storagePersisted } from "../../utils/storage";
+	import vTooltip from "../../utils/tooltip";
+	import Icon from "../ui/icon.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -34,6 +37,8 @@
 	const isDeleting = ref(false);
 	const deleteConfirmation = ref("");
 	const expectedDeleteConfirmation = computed(() => i18n.t('map-settings-dialog.delete-code'));
+
+	const addFavourite = ref(true);
 
 	const initialMapData: MapData<CRU.CREATE> | undefined = props.isCreate ? {
 		name: "",
@@ -75,6 +80,9 @@
 		try {
 			if (props.isCreate) {
 				await clientContext.value.createAndOpenMap(mapData.value as MapData<CRU.CREATE>);
+				if (addFavourite.value) {
+					storage.favourites.push({ mapSlug: clientSub.value!.mapSlug, name: clientSub.value!.data.mapData.name, mapId: clientSub.value!.data.mapData.id });
+				}
 			} else {
 				await clientContext.value.client.updateMap(clientSub.value!.mapSlug, mapData.value);
 			}
@@ -281,6 +289,22 @@
 						</T>
 					</div>
 				</div>
+			</div>
+		</template>
+
+		<template #footer-left v-if="isCreate">
+			<div class="form-check">
+				<input
+					:id="`${id}-add-favourite-input`"
+					class="form-check-input"
+					type="checkbox"
+					v-model="addFavourite"
+				/>
+				<label :for="`${id}-add-favourite-input`" class="form-check-label">
+					{{storagePersisted ? i18n.t("map-settings-dialog.add-favourite") : i18n.t("map-settings-dialog.add-favourite-persist")}}
+				</label>
+				{{" "}}
+				<Icon icon="question-sign" v-tooltip="i18n.t('map-settings-dialog.add-favourite-tooltip')"></Icon>
 			</div>
 		</template>
 	</ModalDialog>
