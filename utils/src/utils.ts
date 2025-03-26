@@ -1,4 +1,4 @@
-import { cloneDeep as originalCloneDeep, isEqual } from "lodash-es";
+import { cloneDeep as originalCloneDeep, isEqual, partition, sortBy } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
 import type { Colour, DeepMutable, DeepReadonly } from "facilmap-types";
 import type { OsmFeatureType } from "osm-api";
@@ -142,24 +142,79 @@ export async function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it to targetObject.
- * @param oldObject {Object}
- * @param newObject {Object}
- * @param targetObject {Object}
+ * Performs a 3-way merge. Takes the difference between oldObject and newObject and applies it directly to targetObject.
  */
-export function mergeObject<T extends Record<keyof any, any>>(oldObject: DeepReadonly<NoInfer<T>> | undefined, newObject: DeepReadonly<NoInfer<T>>, targetObject: T): void {
+export function mergeObject<T extends Record<keyof any, any>>(oldObject: NoInfer<T> | DeepReadonly<NoInfer<T>> | undefined, newObject: NoInfer<T> | DeepReadonly<NoInfer<T>>, targetObject: T): void {
 	// Code below does not work well with DeepReadonly types
-	const oldObject_ = oldObject as T;
+	const oldObject_ = oldObject as T | undefined;
 	const newObject_ = newObject as T;
 
-	for(const i of new Set<keyof T & (number | string)>([...Object.keys(newObject), ...Object.keys(targetObject)])) {
-		if(
-			Object.prototype.hasOwnProperty.call(newObject, i) && typeof newObject_[i] == "object" && newObject_[i] != null
+	for(const i of new Set([...oldObject_ ? Object.keys(oldObject_) : [], ...Object.keys(newObject_)] as Array<keyof T>)) {
+		if (!Object.prototype.hasOwnProperty.call(newObject_, i)) {
+			delete targetObject[i];
+		} else if (
+			typeof newObject_[i] == "object" && newObject_[i] != null
 			&& Object.prototype.hasOwnProperty.call(targetObject, i) && typeof targetObject[i] == "object" && targetObject[i] != null
-		)
-			mergeObject(oldObject && oldObject_[i], newObject_[i], targetObject[i]);
-		else if(oldObject == null || !isEqual(oldObject_[i], newObject_[i]))
+		) {
+			mergeObject(oldObject_?.[i], newObject_[i], targetObject[i]);
+		} else if (oldObject_ == null || !isEqual(oldObject_[i], newObject_[i])) {
 			targetObject[i] = cloneDeep(newObject_[i]);
+		}
+	}
+}
+
+/**
+ * Performs a 3-way merge. Takes the difference between oldArray and newArray and applies it directly to targetArray.
+ */
+export function mergeArray<T extends Record<keyof any, any>, K>(oldArray: DeepReadonly<Array<NoInfer<T>>> | undefined, newArray: DeepReadonly<Array<NoInfer<T>>>, targetArray: T[], getKey: (item: DeepReadonly<T> | T) => K): void {
+	const getItems = (arr: ReadonlyArray<T | DeepReadonly<T>>) => {
+		const result = new Map<K, Array<{ idx: number; obj: T | DeepReadonly<T> }>>();
+		for (let i = 0; i < arr.length; i++) {
+			const key = getKey(arr[i]);
+			const item = { idx: i, obj: arr[i] };
+			if (!result.has(key)) {
+				result.set(key, [item]);
+			} else {
+				result.get(key)!.push(item);
+			}
+		}
+		return [...result.entries()].flatMap(([key, items]) => items.map((item, i) => ({ ...item, key: [key, i] as const })));
+	};
+
+	const isKey = (a: { key: readonly [K, number] }) => (b: { key: readonly [K, number] }) => a.key[0] === b.key[0] && a.key[1] === b.key[1];
+
+	const oldItems = oldArray ? getItems(oldArray) : [];
+	const newItems = getItems(newArray);
+	const targetItems = getItems(targetArray);
+
+	const [deletedItems, keptItemsOld] = partition(oldItems, (oldItem) => !newItems.some(isKey(oldItem)));
+	const createdItems = newItems.filter((newItem) => !oldItems.some(isKey(newItem)));
+
+	for (const oldItem of keptItemsOld) {
+		const targetItem = targetItems.find(isKey(oldItem));
+		if (targetItem) {
+			const newItem = newItems.find((newItem) => oldItem.key[0] === newItem.key[0] && oldItem.key[1] === newItem.key[1])!;
+			// This already sets the new properties in the obj, but that's okay
+			mergeObject(oldItem, newItem, targetItem);
+		}
+	}
+
+	for (const deletedItem of deletedItems) {
+		const targetItemIdx = targetItems.findIndex(isKey(deletedItem));
+		if (targetItemIdx !== -1) {
+			targetItems.splice(targetItemIdx, 1);
+		}
+	}
+
+	targetItems.push(...createdItems);
+
+	const result = sortBy(targetItems, (item) => item.idx).map((item) => item.obj);
+	if (targetArray.length > result.length) {
+		targetArray.splice(result.length, targetArray.length - result.length);
+	}
+
+	for (let i = 0; i < result.length; i++) {
+		targetArray[i] = cloneDeep(result[i]) as T;
 	}
 }
 

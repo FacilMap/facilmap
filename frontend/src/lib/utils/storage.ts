@@ -21,9 +21,12 @@ export const favouriteValidator = z.record(z.any()).transform((val) => ({
 	// Legacy 1: id: map slug (string), padId: read-only map slug of the map (string)
 	// Legacy 2: id: map slug (string), mapId: read-only map slug of the map (string)
 	// Now: mapId: map ID (number, undefined for transformed legacy favourite), mapSlug: map slug (string). read-only map slug is discarded
-	...omit(val, ["padId", "id"]),
+	...omit(val, ["padId", "id", "customName"]),
 	mapId: typeof val.mapId === "number" ? val.mapId : undefined, // Used to be the read-only map slug
-	mapSlug: val.mapSlug ?? val.id // id is the legacy property name
+	mapSlug: val.mapSlug ?? val.id, // id is the legacy property name
+	..."customName" in val && val.customName != null && val.customName !== "" ? { // Omit empty custom name
+		customName: val.customName
+	} : {}
 })).pipe(z.object({
 	/** ID used to open the map */
 	mapSlug: mapSlugValidator,

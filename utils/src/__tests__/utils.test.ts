@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { insertIdx, mergeObject } from "../utils";
+import { insertIdx, mergeArray, mergeObject } from "../utils";
 
 test('mergeObject', () => {
 	interface TestObject {
@@ -107,6 +107,54 @@ test('mergeObject', () => {
 test('mergeObject prototype pollution', () => {
 	mergeObject({}, JSON.parse('{"__proto__":{"test": "test"}}'), {});
 	expect(({} as any).test).toBeUndefined();
+});
+
+test("mergeArray", () => {
+	const oldArray = [
+		{ key: "item 1", value: "value 1" },
+		{ key: "item 2", value: "value 2" },
+		{ key: "item 3", value: "value 3" },
+		{ key: "item 4", value: "value 4" },
+		{ key: "item 5", value: "value 5" },
+		{ key: "item 6", value: "value 6a" },
+		{ key: "item 6", value: "value 6b" } // Duplicate key
+	];
+
+	const newArray = [
+		{ key: "item 6", value: "value 6a" }, // Moved up, new index 0
+		// item 2: deleted
+		// item 3: deleted (has modifications in targetArray)
+		{ key: "item 4", value: "value 4 new" }, // Modified, new index 1
+		{ key: "item 6", value: "value 6b" }, // Duplicate key, unchanged, new index 2
+		{ key: "item 7", value: "value 7" }, // Inserted, index 3
+		{ key: "item 8", value: "value 8" }, // Inserted, but already exists in targetArray, index 4
+		{ key: "item 5", value: "value 5 new" }, // Modified, but has other modifications in targetArray, new index 5
+		{ key: "item 1", value: "value 1" } // Moved down, has modifications in targetArray, new index 6
+	];
+
+	const targetArray = [
+		{ key: "item 1", value: "value 1 changed" }, // Value changed
+		{ key: "item 2", value: "value 2" },
+		{ key: "item 3", value: "value 3 changed" }, // Value changed
+		{ key: "item 4", value: "value 4" },
+		{ key: "item 5", value: "value 5 changed" }, // Value changed
+		{ key: "item 6", value: "value 6a" },
+		{ key: "item 6", value: "value 6b" },
+		{ key: "item 8", value: "value 8 target" } // Inserted, index 7
+	];
+
+	mergeArray(oldArray, newArray, targetArray, (i) => i.key);
+
+	expect(targetArray).toEqual([
+		{ key: "item 6", value: "value 6a" },
+		{ key: "item 4", value: "value 4 new" },
+		{ key: "item 6", value: "value 6b" },
+		{ key: "item 7", value: "value 7" }, // Inserted
+		{ key: "item 8", value: "value 8" },
+		{ key: "item 5", value: "value 5 new" },
+		{ key: "item 1", value: "value 1 changed" },
+		{ key: "item 8", value: "value 8 target" },
+	]);
 });
 
 test("insertAtIdx", () => {

@@ -65,7 +65,7 @@
 		:title="i18n.t('user-preferences-dialog.title')"
 		class="fm-user-preferences"
 		:isModified="isModified"
-		@submit="save"
+		@submit="$event.waitUntil(save())"
 		ref="modalRef"
 		@hidden="emit('hidden')"
 	>
