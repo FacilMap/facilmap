@@ -1,8 +1,8 @@
 import type { SearchResult } from "facilmap-types";
 import config from "./config.js";
-import { find } from "facilmap-utils";
+import { concatArrayBuffers, find } from "facilmap-utils";
 import { getDomainLang, getI18n } from "./i18n.js";
-import { concatArrayBuffers, decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
+import { decompressStreamIfApplicable, peekFirstBytes, writableToWeb } from "./utils/streams.js";
 import sax from "sax";
 import JSONStream from "JSONStream";
 import { loadSubRelations } from "./osm.js";

@@ -1,10 +1,10 @@
 import { generateRandomId } from "../utils/utils.js";
-import { iterableToArray, streamToIterable } from "../utils/streams.js";
+import { iterableToArray, mapAsyncIterable, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
@@ -92,6 +92,34 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		};
 	}
 
+	async emitAllMapObjects(mapSlug: MapSlug, objects: AsyncIterable<AllMapObjectsItem<AllMapObjectsPick>>): Promise<void> {
+		for await (const obj of objects) {
+			if (obj.type === "mapData") {
+				this.emit("mapData", mapSlug, obj.data);
+			} else if (obj.type === "markers") {
+				for await (const marker of obj.data) {
+					this.emit("marker", mapSlug, marker);
+				}
+			} else if (obj.type === "lines") {
+				for await (const line of obj.data) {
+					this.emit("line", mapSlug, line);
+				}
+			} else if (obj.type === "linePoints") {
+				for await (const linePoints of obj.data) {
+					this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
+				}
+			} else if (obj.type === "types") {
+				for await (const type of obj.data) {
+					this.emit("type", mapSlug, type);
+				}
+			} else if (obj.type === "views") {
+				for await (const view of obj.data) {
+					this.emit("view", mapSlug, view);
+				}
+			}
+		}
+	}
+
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
 			setLanguage: async (settings) => {
@@ -113,16 +141,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 			createMap: async (data, options = {}) => {
 				const results = await this.api.createMap(data, options);
-				type This = this;
-				return this.emitStream((async function*(this: This) {
-					for await (const obj of results) {
-						if (obj.type === "mapData") {
-							yield obj;
-						} else {
-							yield { ...obj, data: this.emitStream<any>(obj.data) };
-						}
+				return this.emitStream(mapAsyncIterable(results, (obj) => {
+					if (obj.type === "mapData") {
+						return obj;
+					} else {
+						return { ...obj, data: this.emitStream<any>(obj.data) };
 					}
-				}).call(this));
+				}));
 			},
 
 			updateMap: async (mapSlug, data) => {
@@ -135,16 +160,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 			getAllMapObjects: async (mapSlug, options) => {
 				const results = await this.api.getAllMapObjects(mapSlug, options);
-				type This = this;
-				return this.emitStream((async function*(this: This) {
-					for await (const obj of results) {
-						if (obj.type === "mapData") {
-							yield obj;
-						} else {
-							yield { ...obj, data: this.emitStream<any>(obj.data) };
-						}
+				return this.emitStream(mapAsyncIterable(results, (obj) => {
+					if (obj.type === "mapData") {
+						return obj;
+					} else {
+						return { ...obj, data: this.emitStream<any>(obj.data) };
 					}
-				}).call(this));
+				}));
 			},
 
 			findOnMap: async (mapSlug, query) => {
@@ -303,34 +325,27 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
 				const results = await this.api.getAllMapObjects(mapSlug, {
-					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p))
+					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p)),
+					bbox: this.bbox
 				});
 
-				for await (const obj of results) {
+				await this.emitAllMapObjects(mapSlug, results);
+			},
+
+			createMapAndSubscribe: async (data, { pick = ["mapData" as const, "markers" as const, "lines" as const, "linePoints" as const, "types" as const, "views" as const], history = false } = {}) => {
+				const results = await this.api.createMap(data, {
+					pick: this.bbox ? pick : pick.filter((p) => !["markers", "linePoints"].includes(p)),
+					bbox: this.bbox
+				});
+				await this.emitAllMapObjects(data.adminId, mapAsyncIterable(results, (obj) => {
 					if (obj.type === "mapData") {
-						this.emit("mapData", mapSlug, obj.data);
-					} else if (obj.type === "markers") {
-						for await (const marker of obj.data) {
-							this.emit("marker", mapSlug, marker);
+						if (!this.mapSubscriptions[obj.data.id]) {
+							this.mapSubscriptions[obj.data.id] = [];
 						}
-					} else if (obj.type === "lines") {
-						for await (const line of obj.data) {
-							this.emit("line", mapSlug, line);
-						}
-					} else if (obj.type === "linePoints") {
-						for await (const linePoints of obj.data) {
-							this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
-						}
-					} else if (obj.type === "types") {
-						for await (const type of obj.data) {
-							this.emit("type", mapSlug, type);
-						}
-					} else if (obj.type === "views") {
-						for await (const view of obj.data) {
-							this.emit("view", mapSlug, view);
-						}
+						this.mapSubscriptions[obj.data.id].push({ pick, history, mapSlug: data.adminId, writable: obj.data.writable });
 					}
-				}
+					return obj;
+				}));
 			},
 
 			unsubscribeFromMap: async (mapSlug) => {

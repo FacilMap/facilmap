@@ -205,3 +205,19 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 	}
 
 }
+
+export class SocketClientCreateMapSubscription extends SocketClientMapSubscription {
+	protected readonly createMapData: DeepReadonly<MapData<CRU.CREATE>>;
+
+	constructor(client: SocketClient, data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions & {
+		reactiveObjectProvider?: ReactiveObjectProvider;
+	}) {
+		super(client, data.adminId, options);
+
+		this.createMapData = data;
+	}
+
+	protected override async _doSubscribe(): Promise<void> {
+		await this.client._createMapAndSubscribe(this.createMapData, this.data.options);
+	}
+}

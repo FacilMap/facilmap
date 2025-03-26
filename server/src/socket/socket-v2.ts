@@ -321,7 +321,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 				const result = await socketHandlersV3.exportLine(this.mapSlug, data.id, { format: data.format });
-				return await streamToString(this.handleStream(result.data));
+				return await streamToString(this.handleStream(result.data).pipeThrough(new TextDecoderStream()));
 			},
 
 			addType: async (type) => {
@@ -383,7 +383,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					const url = parseUrlQuery(data.query);
 					if (url) {
 						const result = await socketHandlersV3.findUrl(url);
-						return await streamToString(this.handleStream(result.data));
+						return await streamToString(this.handleStream(result.data).pipeThrough(new TextDecoderStream()));
 					}
 				}
 
@@ -517,7 +517,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			exportRoute: async (data) => {
 				const { routeId, format } = data;
 				const result = await socketHandlersV3.exportRoute(routeId ?? "", { format });
-				return await streamToString(this.handleStream(result.data));
+				return await streamToString(this.handleStream(result.data).pipeThrough(new TextDecoderStream()));
 			}
 
 		};

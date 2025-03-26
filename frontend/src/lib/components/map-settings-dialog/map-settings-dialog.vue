@@ -8,13 +8,13 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import MapSlugEdit from "./map-slug-edit.vue";
-	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
-	const clientSub = requireClientSub(context);
+	const clientSub = getClientSub(context);
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -48,7 +48,15 @@
 		defaultViewId: null
 	} : undefined;
 
-	const originalMapData = computed(() => props.isCreate ? initialMapData! : clientSub.value.data.mapData as MapData<CRU.CREATE>);
+	const originalMapData = computed(() => {
+		if (props.isCreate) {
+			return initialMapData!;
+		} else if (clientSub.value) {
+			return clientSub.value.data.mapData as MapData<CRU.CREATE>;
+		} else {
+			throw new Error("No map is currently open.");
+		}
+	});
 
 	const mapData = ref(cloneDeep(originalMapData.value));
 
@@ -56,8 +64,8 @@
 
 	const isModified = computed(() => !isEqual(mapData.value, originalMapData.value));
 
-	watch(() => clientSub.value.data.mapData, (newMapData, oldMapData) => {
-		if (!props.isCreate && mapData.value && newMapData)
+	watch(originalMapData, (newMapData, oldMapData) => {
+		if (mapData.value && newMapData)
 			mergeObject<MapDataWithWritable | MapData<CRU.CREATE>>(oldMapData, newMapData, mapData.value);
 	}, { deep: true });
 
@@ -65,10 +73,11 @@
 		toasts.hideToast(`fm${context.id}-map-settings-error`);
 
 		try {
-			if(props.isCreate)
-				await clientContext.value.client.createMap(mapData.value as MapData<CRU.CREATE>);
-			else
-				await clientContext.value.client.updateMap(clientSub.value.mapSlug, mapData.value);
+			if (props.isCreate) {
+				await clientContext.value.createAndOpenMap(mapData.value as MapData<CRU.CREATE>);
+			} else {
+				await clientContext.value.client.updateMap(clientSub.value!.mapSlug, mapData.value);
+			}
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => (props.isCreate ? i18n.t("map-settings-dialog.create-map-error") : i18n.t("map-settings-dialog.save-map-error")), err);
@@ -90,7 +99,7 @@
 		isDeleting.value = true;
 
 		try {
-			await clientContext.value.client.deleteMap(clientSub.value.mapSlug);
+			await clientContext.value.client.deleteMap(clientSub.value!.mapSlug);
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => i18n.t("map-settings-dialog.delete-map-error"), err);

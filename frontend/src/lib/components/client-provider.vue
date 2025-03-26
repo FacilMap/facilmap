@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { computed, reactive, shallowReactive, watch, type ComputedRef } from "vue";
+	import { computed, onBeforeUnmount, reactive, shallowReactive, watch, type ComputedRef } from "vue";
 	import { ClientStateType, SocketClient, SocketClientStorage } from "facilmap-client";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
@@ -9,7 +9,9 @@
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
-	import { VueReactiveObjectProvider, computedWithDeps, fixOnCleanup } from "../utils/vue";
+	import { VueReactiveObjectProvider, computedWithDeps } from "../utils/vue";
+import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
+import type { CRU, MapData } from "facilmap-types";
 
 	function isMapNotFoundError(fatalError: Error): boolean {
 		return (fatalError as any).status === 404;
@@ -28,10 +30,6 @@
 	const emit = defineEmits<{
 		"update:mapSlug": [mapSlug: string | undefined];
 	}>();
-
-	function openMap(mapSlug: string | undefined): void {
-		emit("update:mapSlug", mapSlug);
-	}
 
 	const clientContext: ComputedRef<ClientContext> = computedWithDeps(() => props.serverUrl, (serverUrl, oldValue, onCleanup): ClientContext => {
 		const client = new SocketClient(serverUrl, {
@@ -54,7 +52,8 @@
 		const result = shallowReactive<ClientContext>({
 			client,
 			storage,
-			openMap
+			openMap,
+			createAndOpenMap
 		});
 
 		client.on("deleteMap", (mapSlug) => {
@@ -74,42 +73,20 @@
 		return result;
 	});
 
-	watch([
-		() => clientContext.value,
-		() => props.mapSlug
-	], async ([clientContext, mapSlug], oldValue, onCleanup_) => {
-		const onCleanup = fixOnCleanup(onCleanup_);
-		if (mapSlug) {
-			const mapObj = reactive<ClientContextMap>({
-				mapSlug,
-				get data() {
-					return clientContext.storage.maps[mapSlug];
-				},
-				state: ClientContextMapState.OPENING,
-				subscription: clientContext.client.subscribeToMap(mapSlug)
-			}) as ClientContextMap;
-
-			clientContext.map = mapObj;
-
-			try {
-				onCleanup(() => {
-					clientContext.map = undefined;
-					mapObj.subscription.unsubscribe().catch(() => undefined);
-				});
-				await mapObj.subscription.subscribePromise;
-				mapObj.state = ClientContextMapState.OPEN;
-			} catch(err: any) {
-				if (context.settings.interactive && isMapNotFoundError(err)) {
-					mapObj.state = ClientContextMapState.CREATE;
-				} else {
-					Object.assign(mapObj, {
-						state: ClientContextMapState.ERROR,
-						error: err
-					});
-				}
-			}
+	watch(() => props.mapSlug, async (mapSlug) => {
+		if (clientContext.value.map && (!mapSlug || clientContext.value.map.mapSlug !== mapSlug)) {
+			clientContext.value.map.subscription.unsubscribe().catch(() => undefined);
+			clientContext.value.map = undefined;
 		}
-	}, { immediate: true });
+
+		if (mapSlug && (!clientContext.value.map || clientContext.value.map.mapSlug !== mapSlug)) {
+			await setSubscription(clientContext.value.client.subscribeToMap(mapSlug));
+		}
+	});
+
+	onBeforeUnmount(() => {
+		clientContext.value.map?.subscription.unsubscribe().catch(() => undefined);
+	});
 
 	watch(() => clientContext.value.map?.data?.mapData, (mapData, oldMapData) => {
 		if (mapData) {
@@ -137,6 +114,41 @@
 	}, { immediate: true });
 
 	context.provideComponent("client", clientContext);
+
+	function openMap(mapSlug: string | undefined): void {
+		emit("update:mapSlug", mapSlug);
+	}
+
+	async function setSubscription(subscription: SocketClientMapSubscription) {
+		const mapObj = clientContext.value.map = {
+			mapSlug: subscription.mapSlug,
+			get data() {
+				return clientContext.value.storage.maps[subscription.mapSlug];
+			},
+			state: ClientContextMapState.OPENING,
+			subscription
+		} as ClientContextMap;
+
+		try {
+			await mapObj.subscription.subscribePromise;
+			mapObj.state = ClientContextMapState.OPEN;
+		} catch(err: any) {
+			if (context.settings.interactive && isMapNotFoundError(err)) {
+				mapObj.state = ClientContextMapState.CREATE;
+			} else {
+				Object.assign(mapObj, {
+					state: ClientContextMapState.ERROR,
+					error: err
+				});
+			}
+		}
+	}
+
+	async function createAndOpenMap(data: MapData<CRU.CREATE>) {
+		const promise = setSubscription(clientContext.value.client.createMapAndSubscribe(data));
+		emit("update:mapSlug", data.adminId);
+		await promise;
+	}
 
 	function handleCreateDialogHide() {
 		// If the dialog was canceled, we are still in CREATE state. Otherwise, we have already created and opened a map.

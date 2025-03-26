@@ -1,6 +1,6 @@
 import type { MapStorage, SocketClient, SocketClientStorage } from "facilmap-client";
 import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
-import type { MapSlug } from "facilmap-types";
+import type { CRU, MapData, MapSlug } from "facilmap-types";
 
 export enum ClientContextMapState {
 	OPENING = "opening",
@@ -25,4 +25,5 @@ export type ClientContext = {
 	/** Contains information about the currently subscribed map. */
 	map?: ClientContextMap;
 	openMap(mapSlug: MapSlug | undefined): void;
+	createAndOpenMap(data: MapData<CRU.CREATE>): Promise<void>;
 };

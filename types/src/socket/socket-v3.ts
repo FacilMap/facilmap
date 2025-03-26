@@ -1,5 +1,5 @@
 import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type DeepReadonly, type MapSlug, type ObjectWithId } from "../base.js";
-import { type MapDataWithWritable } from "../mapData.js";
+import { mapDataValidator, type MapDataWithWritable } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line } from "../line.js";
 import { lineToRouteRequestValidator, routeParametersValidator, type Route } from "../route.js";
@@ -25,6 +25,10 @@ export const socketV3RequestValidators = {
 		z.tuple([mapSlugValidator]),
 		z.tuple([mapSlugValidator, optionalParam(subscribeToMapOptionsValidator)])
 	]),
+	createMapAndSubscribe: z.union([
+		z.tuple([mapDataValidator.create,]),
+		z.tuple([mapDataValidator.create, optionalParam(subscribeToMapOptionsValidator)])
+	]),
 	unsubscribeFromMap: z.tuple([mapSlugValidator]),
 	subscribeToRoute: z.tuple([z.string(), subscribeToRouteOptionsValidator]),
 	unsubscribeFromRoute: z.tuple([z.string()]),
@@ -35,6 +39,7 @@ export const socketV3RequestValidators = {
 };
 
 export interface SocketV3Response {
+	createMapAndSubscribe: Promise<void>;
 	subscribeToMap: Promise<void>;
 	unsubscribeFromMap: Promise<void>;
 	subscribeToRoute: Promise<void>;

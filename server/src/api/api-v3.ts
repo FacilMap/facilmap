@@ -1,4 +1,14 @@
-import { ApiVersion, CRU, DEFAULT_PAGING, Writable, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator, exportFormatValidator, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator, routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LinePoints, type LineWithTrackPoints, type MapData, type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type, type View } from "facilmap-types";
+import {
+	ApiVersion, CRU, DEFAULT_PAGING, Writable, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator,
+	exportFormatValidator, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator,
+	routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator,
+	type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api,
+	type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
+	type HistoryEntry, type ID, type Line, type LinePoints, type LineWithTrackPoints, type MapData,
+	type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route,
+	type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type,
+	type View
+} from "facilmap-types";
 import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
@@ -56,7 +66,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	protected getMapObjects<Pick extends AllMapObjectsPick, M extends MapDataWithWritable = MapDataWithWritable>(
 		mapData: M,
-		{ pick, bbox }: { pick: ReadonlyArray<Pick>; bbox?: BboxWithZoom }
+		{ pick, bbox }: { readonly pick: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }
 	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]> {
 		return this.getMapObjectsUntyped(mapData, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]>;
 	}
@@ -69,7 +79,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.resolveMapSlug(mapSlug, Writable.READ);
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { readonly pick?: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
 		const mapData = await this.database.maps.createMap(data);
 		return this.getMapObjects({ ...mapData, writable: Writable.ADMIN }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
 	}

@@ -19,7 +19,7 @@ import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObje
 import { streamToIterable } from "json-stream-es";
 import { mapNestedIterable } from "./utils";
 import { EventEmitter } from "./events";
-import { SocketClientMapSubscription } from "./socket-client-map-subscription";
+import { SocketClientCreateMapSubscription, SocketClientMapSubscription } from "./socket-client-map-subscription";
 import { SocketClientRouteSubscription } from "./socket-client-route-subscription";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
@@ -503,6 +503,23 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			...options
 		});
 		this.reactiveObjectProvider.set(this.data.mapSubscriptions, mapSlug, this.reactiveObjectProvider.makeUnreactive(subscription));
+		return subscription;
+	}
+
+	async _createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
+		await this._call("createMapAndSubscribe", data, options);
+	}
+
+	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription {
+		if (this.data.mapSubscriptions[data.adminId]) {
+			throw new Error(`There is already a subscription to map ${data.adminId}.`);
+		}
+
+		const subscription = new SocketClientCreateMapSubscription(this, data, {
+			reactiveObjectProvider: this.reactiveObjectProvider,
+			...options
+		});
+		this.reactiveObjectProvider.set(this.data.mapSubscriptions, data.adminId, this.reactiveObjectProvider.makeUnreactive(subscription));
 		return subscription;
 	}
 
