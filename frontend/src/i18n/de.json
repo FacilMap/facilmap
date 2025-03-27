@@ -138,9 +138,10 @@
     "copy-to-clipboard-input": {
         "copied-fallback-title": "Link kopiert",
         "copied-fallback-message": "Der Link wurde in die Zwischenablage kopiert.",
-        "copy": "Kopieren",
+        "copy-fallback-tooltip": "In die Zwischenablage kopieren",
+        "copy-alt": "Kopieren",
         "qr-code-alt": "QR-Code",
-        "qr-code-tooltip": "QR-Code anzeigen"
+        "qr-code-fallback-tooltip": "QR-Code anzeigen"
     },
     "custom-import-dialog": {
         "existing-type": "Existierender Objekttyp „{{name}}“",
@@ -681,7 +682,13 @@
         "zoom-to-object-label": "Zur Auswahl zoomen"
     },
     "map-id-edit": {
-        "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden."
+        "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden.",
+        "copy-tooltip": "Kartenlink in die Zwischenablage kopieren",
+        "qr-tooltip": "QR-Code für Kartenlink anzeigen",
+        "copied-title": "Kartenlink kopiert",
+        "copied-message": "Der Kartenlink wurde in die Zwischenablage kopiert.",
+        "random-tooltip": "Zufällige ID generieren",
+        "random-alt": "Zufällig"
     },
     "map-settings-dialog": {
         "create-map-error": "Fehler beim Erstellen der Karte",

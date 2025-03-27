@@ -70,8 +70,8 @@
         "copied-fallback-title": "Enlace copiado",
         "copied-fallback-message": "El enlace se copió en el portapapeles.",
         "qr-code-alt": "Código QR",
-        "copy": "Copiar",
-        "qr-code-tooltip": "Mostrar código QR"
+        "copy-alt": "Copiar",
+        "qr-code-fallback-tooltip": "Mostrar código QR"
     },
     "custom-import-dialog": {
         "no-import": "No importar",

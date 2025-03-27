@@ -137,9 +137,10 @@
     "copy-to-clipboard-input": {
         "copied-fallback-title": "Link copied",
         "copied-fallback-message": "The link was copied to the clipboard.",
-        "copy": "Copy",
+        "copy-fallback-tooltip": "Copy to clipboard",
+        "copy-alt": "Copy",
         "qr-code-alt": "QR code",
-        "qr-code-tooltip": "Show QR code"
+        "qr-code-fallback-tooltip": "Show QR code"
     },
     "custom-import-dialog": {
         "existing-type": "Existing type “{{name}}”",
@@ -684,7 +685,13 @@
         "zoom-to-object-label": "Zoom to selection"
     },
     "map-id-edit": {
-        "unique-id-error": "The same link cannot be used for different access levels."
+        "unique-id-error": "The same link cannot be used for different access levels.",
+        "copy-tooltip": "Copy map link to clipboard",
+        "qr-tooltip": "Show QR code for map link",
+        "copied-title": "Map link copied",
+        "copied-message": "The map link was copied to the clipboard.",
+        "random-tooltip": "Generate random ID",
+        "random-alt": "Random"
     },
     "map-settings-dialog": {
         "create-map-error": "Error creating map",

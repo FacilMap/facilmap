@@ -51,7 +51,7 @@
 		clusterMarkers: false,
 		adminId: (props.proposedAdminId || random("admin")),
 		writeId: random("write"),
-		id: random("read"),
+		readId: random("read"),
 		legend1: "",
 		legend2: "",
 		defaultViewId: null

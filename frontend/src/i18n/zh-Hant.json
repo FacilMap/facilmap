@@ -57,9 +57,9 @@
     },
     "copy-to-clipboard-input": {
         "copied-fallback-title": "連結已複製",
-        "copy": "複製",
+        "copy-alt": "複製",
         "qr-code-alt": "QR 圖碼",
-        "qr-code-tooltip": "顯示 QR 圖碼",
+        "qr-code-fallback-tooltip": "顯示 QR 圖碼",
         "copied-fallback-message": "連結已複製至剪貼簿。"
     },
     "custom-import-dialog": {

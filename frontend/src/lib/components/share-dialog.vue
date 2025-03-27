@@ -271,8 +271,8 @@
 				class="mt-2"
 				:modelValue="url"
 				readonly
-				:successTitle="i18n.t('share-dialog.link-copied-title')"
-				:successMessage="i18n.t('share-dialog.link-copied-message')"
+				:copiedTitle="i18n.t('share-dialog.link-copied-title')"
+				:copiedMessage="i18n.t('share-dialog.link-copied-message')"
 			></CopyToClipboardInput>
 		</template>
 
@@ -281,8 +281,8 @@
 				class="mt-2"
 				:modelValue="embedCode"
 				readonly
-				:successTitle="i18n.t('share-dialog.embed-copied-title')"
-				:successMessage="i18n.t('share-dialog.embed-copied-message', { appName: context.appName })"
+				:copiedTitle="i18n.t('share-dialog.embed-copied-title')"
+				:copiedMessage="i18n.t('share-dialog.embed-copied-message', { appName: context.appName })"
 				:rows="2"
 				noQr
 			></CopyToClipboardInput>

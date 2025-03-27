@@ -26,10 +26,10 @@
     },
     "copy-to-clipboard-input": {
         "qr-code-alt": "QR குறியீடு",
-        "qr-code-tooltip": "QR குறியீட்டைக் காட்டு",
+        "qr-code-fallback-tooltip": "QR குறியீட்டைக் காட்டு",
         "copied-fallback-title": "இணைப்பு நகலெடுக்கப்பட்டது",
         "copied-fallback-message": "இணைப்பு இடைநிலைப்பலகைக்கு நகலெடுக்கப்பட்டது.",
-        "copy": "நகலெடு"
+        "copy-alt": "நகலெடு"
     },
     "custom-import-dialog": {
         "existing-type": "தற்போதுள்ள வகை “{{name}}”",
