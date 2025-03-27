@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMapV2, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClientStorage, openClientV2, retry } from "../utils";
 import { SocketVersion } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
@@ -9,10 +9,10 @@ test("Create marker (Socket v2)", async () => {
 	// client3: Opens the map later
 	// client4: Opens the map later (Socket v3)
 
-	const client1 = await openClient(undefined, SocketVersion.V2);
+	const client1 = await openClientV2(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id, SocketVersion.V2);
+		const client2 = await openClientV2(mapData.id, SocketVersion.V2);
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);
@@ -51,26 +51,26 @@ test("Create marker (Socket v2)", async () => {
 		expect(cloneDeep(client1.markers)).toMatchObject(expectedMarkerRecord);
 		expect(cloneDeep(client2.markers)).toMatchObject(expectedMarkerRecord);
 
-		const client3 = await openClient(mapData.id, SocketVersion.V2);
+		const client3 = await openClientV2(mapData.id, SocketVersion.V2);
 		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		expect(cloneDeep(client3.markers)).toMatchObject(expectedMarkerRecord);
 
-		const client4 = await openClient(mapData.id, SocketVersion.V3);
-		await client4.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		expect(cloneDeep(client4.markers)).toMatchObject({ [marker.id]: { icon: "test" } });
+		const storage4 = await openClientStorage(mapData.id, SocketVersion.V3);
+		await storage4.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		expect(cloneDeep(storage4.maps[mapData.id].markers)).toMatchObject({ [marker.id]: { icon: "test" } });
 	});
 });
 
 test("Edit marker (socket v2)", async () => {
 	// client1: Creates the marker and has it in its bbox
 	// client2: Has the marker in its bbox
-	// client3: Has the marker in its bbox (Socket v3)
+	// storage3: Has the marker in its bbox (Socket v3)
 
-	const client1 = await openClient(undefined, SocketVersion.V2);
+	const client1 = await openClientV2(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.id, SocketVersion.V2);
-		const client3 = await openClient(mapData.id, SocketVersion.V3);
+		const client2 = await openClientV2(mapData.id, SocketVersion.V2);
+		const storage3 = await openClientStorage(mapData.id, SocketVersion.V3);
 
 		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
 
@@ -83,14 +83,14 @@ test("Edit marker (socket v2)", async () => {
 
 		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage3.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);
 		const onMarker2 = vi.fn();
 		client2.on("marker", onMarker2);
 		const onMarker3 = vi.fn();
-		client3.on("marker", onMarker3);
+		storage3.client.on("marker", onMarker3);
 
 		const newData = {
 			id: createdMarker.id,
@@ -113,7 +113,7 @@ test("Edit marker (socket v2)", async () => {
 });
 
 test("Delete marker (socket v2)", async () => {
-	const client = await openClient(undefined, SocketVersion.V2);
+	const client = await openClientV2(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client, {}, async (createMapData, mapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
@@ -133,7 +133,7 @@ test("Delete marker (socket v2)", async () => {
 });
 
 test("Get marker (socket v2)", async () => {
-	const client = await openClient(undefined, SocketVersion.V2);
+	const client = await openClientV2(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client, {}, async (createMapData, mapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
@@ -151,7 +151,7 @@ test("Get marker (socket v2)", async () => {
 });
 
 test("Find marker (socket v2)", async () => {
-	const client = await openClient(undefined, SocketVersion.V2);
+	const client = await openClientV2(undefined, SocketVersion.V2);
 
 	await createTemporaryMapV2(client, {}, async (createMapData, mapData) => {
 		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;

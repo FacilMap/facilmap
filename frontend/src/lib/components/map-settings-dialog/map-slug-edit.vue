@@ -18,6 +18,7 @@
 		modelValue: string;
 		label: string;
 		description: string;
+		getRandom: () => string;
 	}>();
 
 	const emit = defineEmits<{
@@ -51,7 +52,18 @@
 				successMessage="The map link was copied to the clipboard."
 				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
 				:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapId]"
-			></CopyToClipboardInput>
+			>
+				<template #after1>
+					<button
+						type="button"
+						class="btn btn-secondary"
+						@click="value = props.getRandom()"
+						v-tooltip="i18n.t('map-id-edit.random-tooltip')"
+					>
+						<Icon icon="random" :alt="i18n.t('map-id-edit.random-alt')"></Icon>
+					</button>
+				</template>
+			</CopyToClipboardInput>
 
 			<div class="form-text">
 				{{props.description}}

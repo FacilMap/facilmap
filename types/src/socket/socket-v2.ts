@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId, type ReplaceProperties } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { EventName } from "../events.js";

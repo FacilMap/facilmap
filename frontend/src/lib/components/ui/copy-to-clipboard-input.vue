@@ -67,6 +67,7 @@
 						:ref="slotProps.inputRef"
 					/>
 				</template>
+				<slot name="after1"></slot>
 				<button type="button" :class="`btn btn-${props.variant ?? 'secondary'}`" @click="copy()">{{i18n.t("copy-to-clipboard-input.copy")}}</button>
 				<button
 					v-if="!props.noQr"

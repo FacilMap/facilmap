@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { SocketClient, SocketClientStorage } from "facilmap-client";
 import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
-import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, type MapDataWithWritable } from "facilmap-types";
+import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, type MapDataWithWritable, type DeepReadonly, type LegacyV2MapData } from "facilmap-types";
 import { generateRandomMapSlug, sleep } from "facilmap-utils";
 
 export function getFacilMapUrl(): string {
@@ -39,21 +39,16 @@ type ClientInstance<V extends SocketVersion> = InstanceType<typeof clientConstru
 
 type ClientStorageInstance<V extends keyof typeof clientStorageConstructors> = InstanceType<typeof clientStorageConstructors[V]> & { _version: V };
 
-export async function openClient<V extends SocketVersion.V3 = SocketVersion.V3>(version: V = SocketVersion.V3 as any): Promise<ClientInstance<V>> {
+export async function openClientStorage<V extends SocketVersion.V3 = SocketVersion.V3>(mapSlug?: string, version: V = SocketVersion.V3 as any): Promise<ClientStorageInstance<V>> {
 	const client = Object.assign(new clientConstructors[version](getFacilMapUrl(), { reconnection: false }) as any, { _version: version });
 	await new Promise<void>((resolve, reject) => {
 		client.on("connect", resolve);
 		client.on("serverError", reject);
 		client.on("connect_error", reject);
 	});
-	return client;
-}
-
-export async function openClientStorage<V extends SocketVersion.V3 = SocketVersion.V3>(mapSlug?: string, version: V = SocketVersion.V3 as any): Promise<ClientStorageInstance<V>> {
-	const client = await openClient(version);
 	const storage = Object.assign(new clientStorageConstructors[version](client), { _version: version }) as ClientStorageInstance<V>;
 	if (mapSlug) {
-		await storage.subscribeToMap(mapSlug);
+		await client.subscribeToMap(mapSlug);
 	}
 	return storage;
 }
@@ -81,9 +76,9 @@ export function generateTestMapSlug(): string {
 	return `integration-test-${generateRandomMapSlug()}`;
 }
 
-export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & Pick<MapData<CRU.CREATE>, "readId" | "writeId" | "adminId"> {
+export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & (V extends SocketVersion.V1 | SocketVersion.V2 ? Pick<LegacyV2MapData<CRU.CREATE>, "id" | "writeId" | "adminId"> : Pick<MapData<CRU.CREATE>, "readId" | "writeId" | "adminId">) {
 	return {
-		readId: generateTestMapSlug(),
+		[[SocketVersion.V1, SocketVersion.V2].includes(version) ? "id" : "readId"]: generateTestMapSlug(),
 		writeId: generateTestMapSlug(),
 		adminId: generateTestMapSlug(),
 		...data
@@ -93,11 +88,11 @@ export function getTemporaryMapData<V extends SocketVersion, D extends Partial<M
 export async function createTemporaryMap<V extends SocketVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
 	storage: ClientStorageInstance<V>,
 	data: D,
-	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: MapDataWithWritable, result: Awaited<ReturnType<ClientInstance<V>["createMap"]>>) => Promise<void>
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: DeepReadonly<MapDataWithWritable>, result: Awaited<ReturnType<ClientInstance<V>["createMap"]>>) => Promise<void>
 ): Promise<void> {
 	const createMapData = getTemporaryMapData(storage._version, data);
 	const result = await storage.client.createMap(createMapData);
-	await storage.subscribeToMap(createMapData.adminId);
+	await storage.client.subscribeToMap(createMapData.adminId).subscribePromise;
 	try {
 		await callback?.(createMapData, storage.maps[createMapData.adminId].mapData!, result);
 	} finally {

@@ -40,14 +40,18 @@
 
 	const addFavourite = ref(true);
 
+	function random(id: "admin" | "write" | "read") {
+		return generateRandomMapSlug(id === "admin" ? 16 : id === "write" ? 14 : 12);
+	}
+
 	const initialMapData: MapData<CRU.CREATE> | undefined = props.isCreate ? {
 		name: "",
 		searchEngines: false,
 		description: "",
 		clusterMarkers: false,
-		adminId: (props.proposedAdminId || generateRandomMapSlug(16)),
-		writeId: generateRandomMapSlug(14),
-		readId: generateRandomMapSlug(12),
+		adminId: (props.proposedAdminId || random("admin")),
+		writeId: random("write"),
+		id: random("read"),
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
@@ -138,6 +142,7 @@
 				v-model="mapData.adminId"
 				:label="i18n.t('map-settings-dialog.admin-link-label')"
 				:description="i18n.t('map-settings-dialog.admin-link-description')"
+				:getRandom="() => random('admin')"
 			></MapSlugEdit>
 
 			<MapSlugEdit
@@ -146,6 +151,7 @@
 				v-model="mapData.writeId"
 				:label="i18n.t('map-settings-dialog.write-link-label')"
 				:description="i18n.t('map-settings-dialog.write-link-description')"
+				:getRandom="() => random('write')"
 			></MapSlugEdit>
 
 			<MapSlugEdit
@@ -154,6 +160,7 @@
 				v-model="mapData.readId"
 				:label="i18n.t('map-settings-dialog.read-link-label')"
 				:description="i18n.t('map-settings-dialog.read-link-description')"
+				:getRandom="() => random('read')"
 			></MapSlugEdit>
 
 			<ValidatedField

@@ -10,8 +10,8 @@
 	import { isLanguageExplicit, isUnitsExplicit, useI18n } from "../utils/i18n";
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 	import { VueReactiveObjectProvider, computedWithDeps } from "../utils/vue";
-import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
-import type { CRU, MapData } from "facilmap-types";
+	import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
+	import type { CRU, MapData } from "facilmap-types";
 
 	function isMapNotFoundError(fatalError: Error): boolean {
 		return (fatalError as any).status === 404;
@@ -82,7 +82,7 @@ import type { CRU, MapData } from "facilmap-types";
 		if (mapSlug && (!clientContext.value.map || clientContext.value.map.mapSlug !== mapSlug)) {
 			await setSubscription(clientContext.value.client.subscribeToMap(mapSlug));
 		}
-	});
+	}, { immediate: true });
 
 	onBeforeUnmount(() => {
 		clientContext.value.map?.subscription.unsubscribe().catch(() => undefined);
@@ -120,14 +120,14 @@ import type { CRU, MapData } from "facilmap-types";
 	}
 
 	async function setSubscription(subscription: SocketClientMapSubscription) {
-		const mapObj = clientContext.value.map = {
+		const mapObj = clientContext.value.map = reactive({
 			mapSlug: subscription.mapSlug,
 			get data() {
 				return clientContext.value.storage.maps[subscription.mapSlug];
 			},
 			state: ClientContextMapState.OPENING,
 			subscription
-		} as ClientContextMap;
+		}) as ClientContextMap;
 
 		try {
 			await mapObj.subscription.subscribePromise;
