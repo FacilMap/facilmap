@@ -30,8 +30,8 @@ async function getIconFilenames(): Promise<Record<string, Record<string, string>
 
 	icons["fontawesome"] = {};
 	for (const name of [
-		"arrow-left", "arrow-right", "person-biking", "car", "chart-line", "copy", "circle-info", "slash", "person-walking", "square",
-		"square-plus", "square-minus", "trash"
+		"arrow-left", "arrow-right", "person-biking", "car", "chart-line", "copy", "circle-info", "slash", "person-walking",
+		"shuffle", "square", "square-plus", "square-minus", "trash"
 	]) {
 		icons["fontawesome"][name] = require.resolve(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
 	}

@@ -17,8 +17,10 @@
 	const props = defineProps<{
 		prefix?: string;
 		noQr?: boolean;
-		successTitle?: string;
-		successMessage?: string;
+		copyTooltip?: string;
+		qrTooltip?: string;
+		copiedTitle?: string;
+		copiedMessage?: string;
 		readonly?: boolean;
 		rows?: number;
 		/** If specified, will be used for the clipboard/QR code instead of `${prefix}${modelValue}` */
@@ -36,7 +38,7 @@
 
 	function copy(): void {
 		copyToClipboard(fullUrl.value);
-		toasts.showToast(undefined, () => (props.successTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title")), () => (props.successMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message")), { variant: "success", autoHide: true });
+		toasts.showToast(undefined, () => (props.copiedTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title")), () => (props.copiedMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message")), { variant: "success", autoHide: true });
 	}
 </script>
 
@@ -67,7 +69,15 @@
 						:ref="slotProps.inputRef"
 					/>
 				</template>
-				<button type="button" :class="`btn btn-${props.variant ?? 'secondary'}`" @click="copy()">{{i18n.t("copy-to-clipboard-input.copy")}}</button>
+				<slot name="after1"></slot>
+				<button
+					type="button"
+					:class="`btn btn-${props.variant ?? 'secondary'}`"
+					@click="copy()"
+					v-tooltip="props.copyTooltip ?? i18n.t('copy-to-clipboard-input.copy-fallback-tooltip')"
+				>
+					<Icon icon="copy" :alt="i18n.t('copy-to-clipboard-input.copy-alt')"></Icon>
+				</button>
 				<button
 					v-if="!props.noQr"
 					type="button"
@@ -77,7 +87,7 @@
 					@click="showQr = !showQr"
 				>
 					<Icon icon="qrcode" :alt="i18n.t('copy-to-clipboard-input.qr-code-alt')"></Icon>
-					<span v-if="!showQr" class="fm-copy-to-clipboard-input-qr-tooltip" v-tooltip="i18n.t('copy-to-clipboard-input.qr-code-tooltip')"></span>
+					<span v-if="!showQr" class="fm-copy-to-clipboard-input-qr-tooltip" v-tooltip="props.qrTooltip ?? i18n.t('copy-to-clipboard-input.qr-code-fallback-tooltip')"></span>
 				</button>
 				<div class="invalid-tooltip">
 					{{slotProps.validationError}}
