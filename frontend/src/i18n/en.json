@@ -684,7 +684,7 @@
         "details": "Details",
         "zoom-to-object-label": "Zoom to selection"
     },
-    "map-id-edit": {
+    "map-slug-edit": {
         "unique-id-error": "The same link cannot be used for different access levels.",
         "copy-tooltip": "Copy map link to clipboard",
         "qr-tooltip": "Show QR code for map link",

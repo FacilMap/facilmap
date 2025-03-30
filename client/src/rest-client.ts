@@ -1,5 +1,5 @@
 import {
-	ApiVersion, CRU, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox,
+	ApiVersion, CRU, Units, type AllAdminMapObjects, type AllAdminMapObjectsItem, type AllMapObjects, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox,
 	type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
 	type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable,
 	type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest,
@@ -61,17 +61,22 @@ function encodeStringArray(arr: string[]): string {
 export class RestClient implements Api<ApiVersion.V3, false> {
 	baseUrl: string;
 	fetchImpl: typeof fetch;
+	query: { lang?: string;  units?: Units } | undefined;
 
-	constructor(server: string, options: { fetch?: typeof fetch } = {}) {
+	constructor(server: string, options: { fetch?: typeof fetch, query?: RestClient["query"] }) {
 		this.baseUrl = `${server.endsWith("/") ? server.slice(0, -1) : server}/_api/${ApiVersion.V3}`;
 		this.fetchImpl = options.fetch ?? fetch;
+		this.query = options.query;
 	}
 
 	protected async fetch(path: string, init?: Omit<RequestInit, "body"> & { query?: Record<string, string | number | undefined>; body?: BodyInit | object }): Promise<Response> {
 		const { query, body, ...rest } = init ?? {};
 
 		const urlWithoutQuery = `${this.baseUrl}${path}`;
-		const queryString = `${new URLSearchParams(Object.fromEntries(Object.entries(query ?? {}).flatMap(([k, v]) => v != null ? [[k, `${v}`]] : [])))}`;
+		const queryString = `${new URLSearchParams(Object.fromEntries(Object.entries({
+			...this.query ?? {},
+			...query ?? {}
+		}).flatMap(([k, v]) => v != null ? [[k, `${v}`]] : [])))}`;
 		const url = `${urlWithoutQuery}${queryString ? `${urlWithoutQuery.includes("?") ? "&" : "?"}${queryString}` : ""}`;
 
 		const resolvedInit: RequestInit = { ...rest };
@@ -111,16 +116,25 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
-		const res = await this.fetch("/map", {
+	protected async _createMap(data: MapData<CRU.CREATE>, options?: { pick?: AllMapObjectsPick[]; bbox?: BboxWithZoom }): Promise<Response> {
+		return await this.fetch("/map", {
 			method: "POST",
 			query: {
 				pick: options?.pick?.join(","),
 				bbox: options?.bbox && JSON.stringify(options?.bbox)
 			},
 			body: data
-		});
+		})
+	}
+
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
+		const res = await this._createMap(data, options);
 		return parseAllMapObjects(res) as AsyncIterable<AllAdminMapObjectsItem<Pick>>;
+	}
+
+	async createMapUnstreamed<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AllAdminMapObjects<Pick>> {
+		const res = await this._createMap(data, options);
+		return await res.json();
 	}
 
 	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
@@ -137,8 +151,8 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
-		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/all`, {
+	async _getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<Response> {
+		return await this.fetch(`/map/${encodeURIComponent(mapSlug)}/all`, {
 			query: {
 				...options?.pick ? {
 					pick: encodeStringArray(options.pick)
@@ -148,7 +162,15 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 				} : {}
 			}
 		});
-		return parseAllMapObjects(res) as AsyncIterable<AllMapObjectsItem<Pick>>;
+	}
+
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+		return parseAllMapObjects(await this._getAllMapObjects(mapSlug, options)) as AsyncIterable<AllMapObjectsItem<Pick>>;
+	}
+
+	async getAllMapObjectsUnstreamed<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AllMapObjects<Pick>> {
+		const res = await this._getAllMapObjects(mapSlug, options);
+		return await res.json();
 	}
 
 	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {

@@ -681,7 +681,7 @@
         "details": "Details",
         "zoom-to-object-label": "Zur Auswahl zoomen"
     },
-    "map-id-edit": {
+    "map-slug-edit": {
         "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden.",
         "copy-tooltip": "Kartenlink in die Zwischenablage kopieren",
         "qr-tooltip": "QR-Code für Kartenlink anzeigen",

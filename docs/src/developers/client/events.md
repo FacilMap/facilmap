@@ -1,153 +1,119 @@
-# Events
+# Socket events
 
-The FacilMap server uses events to send information about objects on a collaborative map to the client. The events are fired when the client opens a map or a particular section of a map for the first time, and whenever an object is changed on the map (including when the change is made by the same instance of the client). The client has some listeners already attached to most events and uses them to persist and update the received objects in its [properties](./properties.md).
+The Socket API uses events to send information about objects on a collaborative map to the client. The events are fired when the client opens a map or a particular section of a map for the first time, and whenever an object is changed on the map (including when the change is made by the same instance of the client).
 
-Note that events are always fired _before_ the method causing them returns. For example, when updating a marker using the `editMarker()` method, a `marker` event with the updated marker is fired first (if the marker is within the current bbox), and only then the method returns the updated marker as well.
+Note that events are always fired _before_ the method causing them returns. For example, when updating a marker using the `updateMarker()` method, a `marker` event with the updated marker is fired first (if the marker is within the current bbox), and only then the method returns the updated marker as well.
 
-Subscribe to events using the [`on(eventName, function)`](./methods.md#on-eventname-function) method. Example:
+Subscribe to events using the [`on()`](./classes.md#on) method. When using raw Socket.IO, you can also use its [`on()`](https://socket.io/docs/v4/client-api/#socketoneventname-callback) method.
 
 ```js
-const client = new FacilMap.Client("https://facilmap.org/", "testMap");
-client.on("mapData", (mapData) => {
-	document.title = mapData.name;
+const client = new SocketClient("https://facilmap.org/");
+client.on("mapData", (mapSlug, mapData) => {
+	if (mapSlug === "mymap") {
+		document.title = mapData.name;
+	}
 });
+client.subscribeToMap("mymap");
 ```
-
-## `connect`, `disconnect`, `connect_error`, `error`, `reconnect`, `reconnect_attempt`, `reconnect_error`, `reconnect_failed`
-
-These events come from socket.io and are [documented there](https://socket.io/docs/v4/client-api/#events).
 
 ## `mapData`
 
-The settings of the map have changed or are retrieved for the first time.
+Parameters: `mapSlug: string, mapData: MapDataWithWritable` (see [`MapDataWithWritable`](./types.md#mapdatawithwritable))
 
-Note that when this event is fired, the read-only and/or the read-write ID of the map might have changed. The [`mapId`](./properties.md#mapid)
-property is updated automatically.
+The settings of a subscribed map have changed or are retrieved for the first time.
 
-_Type:_ [MapData](./types.md#mapdata)
+Note that when this event is fired, the map slug might change.
 
-## `serverError`
+## `mapSlugRename`
 
-[`setMapId()`](./methods.md#setmapid-mapid) failed and the map could not be opened.
+Parameters: `mapSlugs: Record<string, string>`
 
-_Type:_ Error
+If one or more map slugs of a map are changed, this event is emitted in addition to the `mapData` event for your convenience. The `mapSlugs` object maps maps the old slug(s) to the new slug(s). You can use this to update the map slug of your subscription if you have it documented anywhere.
 
-## `deletePad`
+## `deleteMap`
 
-The map has been deleted.
+Parameters: `mapSlug: string`
+
+A subscribed map has been deleted.
 
 ## `marker`
 
+Parameters: `mapSlug: string, marker: Marker` (see [Marker](./types.md#marker))
+
 An existing marker is retrieved for the first time, has been modified, or a new marker has been created in the current bbox.
 
-_Type:_ [Marker](./types.md#marker)
-
 ## `deleteMarker`
+
+Parameters: `mapSlug: string, marker: { id: number }`
 
 A marker has been removed. This event is emitted for all markers on the map, even if they are outside of the current bbox
 (in case that a marker outside of the current bbox is cached).
 
-_Type:_ `{ id: number }`
-
 ## `line`
+
+Parameters: `mapSlug: string, line: Line` (see [Line](./types.md#line))
 
 An existing line is retrieved for the first time, has been modified, or a new line has been created. Note that line
 objects only contain the line metadata, not its track points (those are handled separately as `linePoints`). This is why
 all line objects of the map are sent to the client, regardless of the current bbox.
 
-_Type:_ [Line](./types.md#line) (without trackPoints)
-
 ## `deleteLine`
+
+Parameters: `mapSlug: string, line: { id: number }`
 
 A line has been removed.
 
-_Type:_ `{ id: number }`
-
 ## `linePoints`
 
-New track points for an existing line are retrieved after a change of bbox (`reset == false`), or the line has been
-modified, so the new track points are retrieved (`reset == true`).
+Parameters: `mapSlug: string, data: { lineId: number; trackPoints: TrackPoint[]; reset: boolean }` (see [TrackPoint](./types.md#trackpoint))
 
-_Type:_ object with the following properties:
-* __id__ (number): The ID of the line that these track points belong to
-* __reset__ (boolean): Whether to remove all cached track points for this line (`true`) or to merge these track points
-  with the cached ones (`false`).
-* __trackPoints__ (Array<[TrackPoint](./types.md#trackpoint)>): The track points
+New track points for an existing line are retrieved after a change of bbox (`reset` is `false`, retrieved track points should be merged with existing ones), or the line has been modified, so the new track points are retrieved (`reset` is `true`, existing track points should be discarded).
 
 ## `view`
 
-A view is retrieved for the first time, has been modified, or a new view has been created.
+Parameters: `mapSlug: string, view: View` (see [View](./types.md#view))
 
-_Type:_ [View](./types.md#view)
+A view is retrieved for the first time, has been modified, or a new view has been created.
 
 ## `deleteView`
 
-A view has been removed.
+Parameters: `mapSlug: string, view: { id: number }`
 
-_Type:_ `{ id: number }`
+A view has been removed.
 
 ## `type`
 
-A type is retrieved for the first time, has been modified, or a new type has been created.
+Parameters: `mapSlug: string, type: Type` (see [Type](./types.md#type))
 
-_Type:_ [Type](./types.md#type)
+A type is retrieved for the first time, has been modified, or a new type has been created.
 
 ## `deleteType`
 
-A type has been removed.
+Parameters: `mapSlug: string, type: { id: number }`
 
-_Type:_ `{ id: number }`
+A type has been removed.
 
 ## `history`
 
-An entry of the modification history is retrieved for the first time, or a new entry has been created due to something
-being modified. Note that this event is only fired when the client has subscribed using [`listenToHistory()`](./methods.md#listentohistory).
+Parameters: `mapSlug: string, historyEntry: HistoryEntry` (see [HistoryEntry](./types.md#historyentry))
 
-_Type:_ [historyEntry](./types.md#historyentry)
+An entry of the modification history is retrieved for the first time, or a new entry has been created due to something being modified. Note that this event is only fired when the client has explicitly subscribed to the history in [`subscribeToMap()`](./methods.md#subscribetomap).
 
 ## `route`
 
-A new route has been set.
+Parameters: `routeKey: string, route: Route` (see [Route](./types.md#route))
 
-_Type:_ [Route](./types.md#route)> with trackpoints for the current bbox. The `routeId` property identifies the route (can be a string or undefined).
-
-## `clearRoute`
-
-A route has been cleared.
-
-_Type:_ `{ routeId: string | undefined }`
+A new route has been calculated. This event contains the metadata of the route, such as the distance and travel time.
 
 ## `routePoints`
 
-New track points for the default route (route that has been set using [`setRoute()`](./methods.md#setroute-data) without a `routeId`) are retrieved after a change of bbox.
+Parameters: `routeKey: string, data: { trackPoints: TrackPoint[]; reset: boolean }` (see [TrackPoint](./types.md#trackpoint))
 
-_Type:_ Array<[TrackPoint](./types.md#trackpoint)>
+New track points for an existing line are retrieved after a change of bbox (`reset` is `false`, retrieved track points should be merged with existing ones), or the line has been
+modified, so the new track points are retrieved (`reset` is `true`, existing track points should be discarded).
 
-## `routePointsWithId`
+New track points for a subscribed route are retrieved after a change of bbox (`reset` is `false`, retrieved track points should be merge with existing ones) or after the route parameters have been modified or the route created (`reset` is `true`, existing track points should be discarded).
 
-New track points for a route with a `routeId` are retrieved after a change of bbox.
+## `streamChunks`, `streamDone`, `streamError`
 
-_Type:_ object with the following properties:
-* **routeId** (string): The `routeId` that was passed when setting the route using [`setRoute()`](./methods.md#setroute-data)
-* **trackPoints** (`Array<[trackPoint](./types.md#trackpoint)>`): The additional track points for the route
-
-## `loadStart`, `loadEnd`
-
-This event is fired every time some request is sent to the server and when the response has arrived. It can be used to
-display a loading indicator to the user. Note that multiple things can be loading at the same time. Example code:
-
-```js
-let loading = 0;
-client.on("loadStart", () => {
-	++loading;
-	showLoadingIndicator();
-});
-client.on("loadEnd", () => {
-	if(--loading == 0)
-		hideLoadingIndicator();
-});
-```
-
-## `emit`, `emitResolve`, `emitReject`
-
-`emit` is emitted by the client whenever any request is sent to the server, and `emitResolve` or `emitReject` is emitted when the request is answered. These can be used to hook into the communication between the client and the server. All 3 events are called with two arguments, the first one being the request name and the second one being the request data, response data or error.
+These are used internally for transmitting streams over the socket. When using the socket client, you don’t need to worry about them. When using raw Socket.IO, find the details in the chapter about [streams](./advanced.md#streams).

@@ -56,15 +56,21 @@ export type AllMapObjectsTypes = {
 	linePoints: { type: "linePoints", data: AsyncIterable<LinePoints, void, undefined> };
 };
 
-export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = (
-	AllMapObjectsTypes[Pick]
-);
+export type AllAdminMapObjectsTypes = ReplaceProperties<AllMapObjectsTypes, {
+	mapData: { type: "mapData", data: Extract<MapDataWithWritable, { writable: Writable.ADMIN }> }
+}>;
 
-export type AllAdminMapObjectsItem<Pick extends AllMapObjectsPick> = (
-	ReplaceProperties<AllMapObjectsTypes, {
-		mapData: { type: "mapData", data: Extract<MapDataWithWritable, { writable: Writable.ADMIN }> }
-	}>[Pick]
-);
+export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = AllMapObjectsTypes[Pick];
+
+export type AllAdminMapObjectsItem<Pick extends AllMapObjectsPick> = AllAdminMapObjectsTypes[Pick];
+
+export type GenericAllMapObjects<T extends AllMapObjectsTypes, Pick extends AllMapObjectsPick> = {
+	[P in Pick as (["lines", "linesWithTrackPoints"] extends [P, Pick] ? never : T[P]["type"])]: T[P]["data"] extends AsyncIterable<infer I, any, any> ? I[] : T[P]["data"];
+};
+
+export type AllMapObjects<Pick extends AllMapObjectsPick> = GenericAllMapObjects<AllMapObjectsTypes, Pick>;
+
+export type AllAdminMapObjects<Pick extends AllMapObjectsPick> = GenericAllMapObjects<AllAdminMapObjectsTypes, Pick>;
 
 export const stringifiedBooleanValidator = z.enum(["0", "1", "false", "true"]).transform((v) => ["true", "1"].includes(v));
 

@@ -39,13 +39,13 @@ export const socketV3RequestValidators = {
 };
 
 export interface SocketV3Response {
-	createMapAndSubscribe: Promise<void>;
-	subscribeToMap: Promise<void>;
-	unsubscribeFromMap: Promise<void>;
-	subscribeToRoute: Promise<void>;
-	unsubscribeFromRoute: Promise<void>;
+	createMapAndSubscribe: void;
+	subscribeToMap: void;
+	unsubscribeFromMap: void;
+	subscribeToRoute: void;
+	unsubscribeFromRoute: void;
 	exportRoute: Awaited<ReturnType<ApiV3<true>["exportLine"]>>;
-	setBbox: Promise<void>;
+	setBbox: void;
 	setLanguage: void;
 	abortStream: void;
 }

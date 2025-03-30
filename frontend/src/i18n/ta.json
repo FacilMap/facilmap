@@ -761,7 +761,7 @@
         "details": "விவரங்கள்",
         "zoom-to-object-label": "தேர்வுக்கு பெரிதாக்கு"
     },
-    "map-id-edit": {
+    "map-slug-edit": {
         "unique-id-error": "வெவ்வேறு அணுகல் நிலைகளுக்கும் அதே இணைப்பைப் பயன்படுத்த முடியாது."
     },
     "pagination": {

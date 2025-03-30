@@ -95,13 +95,13 @@ export default defineUserConfig({
 					]
 				},
 				{
-					text: 'Client',
+					text: 'API / Client',
 					children: [
 						"/developers/client/",
-						"/developers/client/properties",
 						"/developers/client/events",
 						"/developers/client/methods",
 						"/developers/client/types",
+						"/developers/client/classes",
 						"/developers/client/advanced",
 						"/developers/client/changelog"
 					]

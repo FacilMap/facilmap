@@ -1,4 +1,4 @@
-import type { EventHandler, EventName, TrackPoint, TrackPoints } from "facilmap-types";
+import type { AllMapObjectsPick, AllMapObjectsTypes, EventHandler, EventName, GenericAllMapObjects, TrackPoint, TrackPoints } from "facilmap-types";
 
 export type IterableType<I extends AsyncIterable<any>> = I extends AsyncIterable<infer T> ? T : never;
 
@@ -55,4 +55,12 @@ export function mergeEventHandlers<Events extends Record<string, any[]>>(...hand
 			}
 		}
 	}]));
+}
+
+export async function unstreamMapObjects<T extends AllMapObjectsTypes, Pick extends AllMapObjectsPick>(mapObjects: AsyncIterable<T[Pick]>): Promise<GenericAllMapObjects<T, Pick>> {
+	const results: any = {};
+	for await (const item of mapObjects) {
+		results[item.type] = item.type === "mapData" ? item.data : await iterableToArray(item.data);
+	}
+	return results;
 }

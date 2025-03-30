@@ -98,11 +98,11 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.maps.deleteMap(mapData.id);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linePoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linesWithTrackPoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return this.getMapObjects(mapData, {
 			...options,
-			pick: options?.pick ?? ["mapData", "lines", "types", "views", ...options?.bbox ? ["markers", "linePoints"] : []] as Pick[]
+			pick: options?.pick ?? ["mapData", "types", "views", ...options?.bbox ? ["markers", "linesWithTrackPoints"] : ["lines"]] as Pick[]
 		});
 	}
 
@@ -347,8 +347,8 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 
 	createMap: apiImpl.post("/map", (req) => {
 		const { pick, bbox } = z.object({
-			pick: z.array(allMapObjectsPickValidator).optional(),
-			bbox: bboxWithZoomValidator.optional()
+			pick: stringArrayValidator.pipe(z.array(allMapObjectsPickValidator)).optional(),
+			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator).optional()
 		}).parse(req.query);
 		return [mapDataValidator.create.parse(req.body), { pick, bbox }];
 	}, (res, result) => {

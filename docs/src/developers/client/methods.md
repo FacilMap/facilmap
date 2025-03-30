@@ -1,32 +1,144 @@
 # Methods
 
-## `constructor(server, mapId, socketOptions)`
+## `findMaps()`
 
-Connects to the FacilMap server `server` and optionally opens the collaborative map with the ID `mapId`. If the map ID
-is not set, it can be set later using [`setMapId(mapId)`](#setmapid-mapid) or using [`createMap(data)`](#createmap-data).
+Client: `findMaps(query, { start?, limit? })`\
+Socket: `emit("findMaps", query, { start?, limit? }, callback)`\
+REST: `GET /map?query=<query>&start=<start?>&limit=<limit?>`
 
-The connection is established in the background, and a `connect` event is fired when it is successful. If a `mapId` is specified, a [`mapData`](./events.md#mapdata) or [`serverError`](./events.md#servererror) event will indicate when the map has been opened successfully or unsuccessfully. Note that you can already call methods immediately after constructing the client, causing them to be delayed until the connection is established.
+Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#mapdata) to `true`.
 
-If the connection to the server breaks down, a `disconnect` event will be emitted and socket.io will attempt to reconnect. On successful reconnection, a `reconnect` and `connect` event will be fired. During the interruption, you can still call methods, causing them to be delayed until the connection is reestablished.
+Parameters:
+* `query` (string): The search term
+* `start`, `limit` (number): See [paging](./types.md#paging)
 
-* `server` (string): The URL of the FacilMap server, for example `https://facilmap.org/`.
-* `mapId` (string, optional): The ID of the collaborative map to open.
-* `socketOptions` (object, optional): Any additional [Socket.io client options](https://socket.io/docs/v4/client-options/).
-* **Events:** Causes a `connect` event to be fired when the connection is established. If `mapId` is defined, causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map with `mapId` could not be opened, causes a [`serverError`](./events.md#servererror) event.
+Result: `PagedResults<Pick<MapData, "id" | "readId" | "name" | "description">>` (see [PagedResults](./types.md#pagedresults), [MapData](./types.md#mapdata))
 
-## `on(eventName, function)`
+## `getMap()`
 
-Registers a new [event](./events.md) handler.
+Client: `getMap(mapSlug)`\
+Socket: `emit("getMap", mapSlug, callback)`\
+REST: `GET /map/<mapSlug>`
 
-* `eventName` (string): The name of the event.
-* `function` (function): The function that should be executed when the event occurs. If the event emits an object, it will be passed to the function as the first parameter.
+Retrieves the settings of a single map by map slug. This can also be used to check if a map with a certain slug exists.
 
-## `removeListener(eventName, function)`
+Result: [`MapDataWithWritable`](./types.md#mapdatawithwritable)
 
-Unregisters an event handler previously assigned using `on(eventName, function)`.
+## `createMap()`
 
-* `eventName` (string): The name of the event.
-* `function` (function): The function that was passed to `on(eventName, function)` when registering the handler.
+Client (streamed): `createMap(data, { pick?, bbox? })`\
+Client (unstreamed): `createMapUnstreamed(data, { pick? })`\
+Socket: `emit("createMap", data, { pick? }, callback)`\
+REST: `POST /map?pick=<pick?>` (body: `data`)
+
+Creates a new map.
+
+Parameters:
+* `data` ([`MapData`](./types.md#mapdata)): The map data
+* `pick` (`Array<"mapData" | "types">`, REST: comma-delimited string): The types of map data to return. Defaults to `["mapData", "types"]`.
+
+The result is the result of [`getAllMapObjects()`](#getallmapobjects) for the newly created map, see there for details.
+
+## `updateMap()`
+
+Client: `updateMap(mapSlug, data)`\
+Socket: `emit("updateMap", mapSlug, data, callback)`\
+REST: `PUT /map/<mapSlug>` (body: `data`)
+
+Update the map settings of the current map.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map (this map slug must have admin permission on the map)
+* `data` ([`MapData`](./types.md#mapdata): The properties to change
+
+Result: [`MapDataWithWritable`](./types.md#mapdatawithwritable), the updated version of the map settings
+
+If this is called through the socket and the map is currently subscribed, causes a [`mapData`](./events.md#mapdata) event (and a [`mapSlugRename`](./events.md#mapslugrename) event if a map slug was changed) to be emitted before the promise is resolved.
+
+## `deleteMap()`
+
+Client: `deleteMap(mapSlug)`\
+Socket: `emit("deleteMap", mapSlug, callback)` \
+REST: `DELETE /map/<mapSlug>`
+
+Delete a map irrevocably.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map to delete (this map slug must have admin permission on the map)
+
+If this is called through the socket and the map is currently subscribed, causes a [`deleteMap`](./events.md#deletemap) event to be emitted before the promise is resolved.
+
+## `getAllMapObjects()`
+
+Client (streamed): `getAllMapObjects(mapSlug, { pick?, bbox? })`\
+Client (unstreamed): `getAllMapObjectsUnstreamed(mapSlug, { pick?, bbox? })`\
+Socket: `emit("getAllMapObjects", mapSlug, { pick?, bbox? }, callback)`\
+REST: `GET /map/<mapSlug>/all?pick=<pick?>&bbox=<bbox?>`
+
+Returns the whole map data (map settings, types, views, markers, lines).
+
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linesWithTrackPoints" | "linePoints">`, REST: comma-delimited string): The types of data to return. If `bbox` is set, defaults to `["mapData", "types", "views", "markers", "linesWihTrackPoints"]`, otherwise defaults to `["mapData", "types", "views", "lines"]`
+* `bbox` ([`Bbox`](./types.md#bbox), REST: JSON-stringified Bbox): Only return markers and line points for this bbox.
+
+The streamed version of this returns the following type:
+```typescript
+AsyncIterable<
+	{ type: "mapData"; data: MapDataWithWritable }
+	| { type: "types", data: AsyncIterable<Type> }
+	| { type: "views", data: AsyncIterable<View> }
+	| { type: "markers", data: AsyncIterable<Marker> }
+	| { type: "lines", data: AsyncIterable<Line & { trackPoints?: TrackPoint[] }> }
+	| { type: "linePoints", data: AsyncIterable<{ lineId: number; trackPoints: TrackPoint[] > }
+>
+```
+
+The unstreamed version returns the following type:
+```typescript
+{
+	mapData?: MapDataWithWritable;
+	types?: Type[];
+	views?: View[];
+	markers?: Marker[];
+	lines?: Array<Line & { trackPoints?: TrackPoint[] }> };
+	linePoints?: Array<{ lineId: number; trackPoints: TrackPoint[] > };
+}
+```
+
+The Socket API returns the streamed version as a stream ID, see [streams](./advanced.md#streams).
+
+The REST API returns the unstreamed version, but produces the JSON document in a streamed way. It is up to you whether you want to consume it in a streamed way or as a whole.
+
+findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
+getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<HistoryEntry[]> {
+revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {
+getMapMarkers(mapSlug: MapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
+getMarker(mapSlug: MapSlug, markerId: ID): Promise<Marker> {
+createMarker(mapSlug: MapSlug, data: Marker<CRU.CREATE>): Promise<Marker> {
+updateMarker(mapSlug: MapSlug, markerId: ID, data: Marker<CRU.UPDATE>): Promise<Marker> {
+deleteMarker(mapSlug: MapSlug, markerId: ID): Promise<void> {
+getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
+getLine(mapSlug: MapSlug, lineId: ID): Promise<Line> {
+getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithZoom & { except?: Bbox } }): Promise<StreamedResults<TrackPoint>> {
+createLine(mapSlug: MapSlug, data: Line<CRU.CREATE>): Promise<Line> {
+updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE>): Promise<Line> {
+deleteLine(mapSlug: MapSlug, lineId: ID): Promise<void> {
+exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
+getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {
+getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
+createType(mapSlug: MapSlug, data: Type<CRU.CREATE>): Promise<Type> {
+updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Type> {
+deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
+getMapViews(mapSlug: MapSlug): Promise<StreamedResults<View>> {
+getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
+createView(mapSlug: MapSlug, data: View<CRU.CREATE>): Promise<View> {
+updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
+find(query: string): Promise<SearchResult[]> {
+findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
+getRoute(data: RouteRequest): Promise<RouteInfo> {
+geoip(): Promise<Bbox | undefined> {
 
 ## `setMapId(mapId)`
 
@@ -60,55 +172,6 @@ Updates the bbox. This will cause all markers, line points and route points with
 * **Returns:** A promise that is resolved empty when all objects have been received.
 * **Events:** Causes events to be fired with the markers, line points and route points within the bbox.
 * **Availability:** Always.
-
-## `getMap(data)`
-
-Finds a collaborative map by ID. This can be used to check if a map with a certain ID exists.
-
-* `data`: An object with the following properties:
-	* `mapId`: The read-only, writable or admin ID of the map.
-* **Returns:** A promise that is resolved with undefined (if no map with that ID exists) or with an object with an `id` (read-only ID), `name` and `description` property.
-* **Events:** None.
-* **Availability:** Always.
-
-## `findMaps(data)`
-
-Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#mapdata) to `true`.
-
-* `data`: An object with the following properties:
-	* `query` (string): A search term. `*` can be used as a wildcard and `?` as a single-character wildcard.
-	* `start`, `limit` (number): If specified, can be used for paging.
-* **Returns:**: A promise that is resolved to an object with the following properties:
-	* `results`: An array of objects with an `id`, `name` and `description` property.
-	* `totalLength`: The total number of results. If paging is used, this number may be higher than the number of `results` returned.
-* **Events:** None.
-* **Availability:** Always.
-
-## `createMap(data)`
-
-Creates a new collaborative map and opens it.
-
-* `data` ([mapData](./types.md#mapdata)): The data of the new map, including the desired read-only, writable and admin ID.
-* **Returns:** A promise that is resolved with the new mapData when the map has been created.
-* **Events:** Causes a [`mapData`](./events.md#mapdata) event and other events for objects that have been created on the map (such as the default Marker and Line types).
-* **Availability:** Only if no collaborative map is opened yet.
-
-## `editMap(data)`
-
-Update the map settings of the current map.
-
-* `data` ([MapData](./types.md#mapdata)): The data of the map that should be modified. Fields that are not defined will not be modified. To change the default view, set the `defaultViewId` property. The `defaultView` property is ignored.
-* **Returns:** A promise that is resolved with the new mapData.
-* **Events:** Causes a [`mapData`](./events.md#mapdata) event.
-* **Availability:** Only if a collaborative map is opened through its admin ID.
-
-## `deleteMap()`
-
-Delete the current map irrevocably.
-
-* **Returns:** A promise that is resolved empty when the map has been deleted.
-* **Events:** Causes a [`deleteMap`](./events.md#deletemap) event.
-* **Availability:** Only if a collaborative map is opened through its admin ID.
 
 ## `listenToHistory()`
 

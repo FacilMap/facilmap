@@ -886,7 +886,7 @@
         "tab-label_many": "{{count}} PDIS",
         "tab-label_other": "{{count}} PDIS"
     },
-    "map-id-edit": {
+    "map-slug-edit": {
         "unique-id-error": "No se puede utilizar el mismo enlace para diferentes niveles de acceso."
     },
     "links": {

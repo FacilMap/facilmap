@@ -12,12 +12,14 @@ import {
 	type SubscribeToMapOptions,
 	ApiVersion,
 	type Api,
-	type ExportFormat
+	type ExportFormat,
+	type AllAdminMapObjects,
+	type AllMapObjects
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
 import { streamToIterable } from "json-stream-es";
-import { mapNestedIterable } from "./utils";
+import { mapNestedIterable, unstreamMapObjects } from "./utils";
 import { EventEmitter } from "./events";
 import { SocketClientCreateMapSubscription, SocketClientMapSubscription } from "./socket-client-map-subscription";
 import { SocketClientRouteSubscription } from "./socket-client-route-subscription";
@@ -51,7 +53,7 @@ export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterfa
 const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
 
 export enum ClientStateType {
-	/** The client has been set up and is not connected it. Usually this means that it is currently connecting (unless autoConnect was set to false). */
+	/** The client has been set up and is not connected yes. Usually this means that it is currently connecting (unless autoConnect was set to false). */
 	INITIAL = "initial",
 	/** The client is connected. */
 	CONNECTED = "connected",
@@ -338,6 +340,10 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllAdminMapObjectsItem<Pick>));
 	}
 
+	async createMapUnstreamed<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AllAdminMapObjects<Pick>> {
+		return await unstreamMapObjects(await this.createMap(data, options));
+	}
+
 	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
 		return await this._call("updateMap", mapSlug, data);
 	}
@@ -349,6 +355,10 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
 		const result = await this._call("getAllMapObjects", mapSlug, options);
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllMapObjectsItem<Pick>));
+	}
+
+	async getAllMapObjectsUnstreamed<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AllMapObjects<Pick>> {
+		return await unstreamMapObjects(await this.getAllMapObjects(mapSlug, options));
 	}
 
 	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {

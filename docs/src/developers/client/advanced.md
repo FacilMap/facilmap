@@ -1,66 +1,112 @@
 # Advanced configuration
 
+## Internationalization
+
+Most of the data returned by the API is user-generated and thus not internationalized. There are a few exceptions though, in particular error messages in case someting unexpected happens.
+
+By default, the FacilMap backend detects the user language based on the `Accept-Language` HTTP header. The detected language can be overridden by setting a `lang` cookie or query parameter. In addition, a `units` cookie or query parameter can be set to `metric` or `us_customary`.
+
+For the Socket API, the `Accept-Language` header, cookies and query parameters are sent during the socket.io handshake. If you want to force the socket to use a specific language, you can pass query parameters through the second parameter of the client constructor (or of the `io()` function if you are using raw Socket.IO):
+```js
+import { SocketClient } from "facilmap-client";
+
+const client = new SocketClient("https://facilmap.org/", {
+	query: {
+		lang: "en",
+		units: "us_customary"
+	}
+});
+```
+
+You can also update the internationalization settings for an existing socket connection at any point using [`setLanguage()`](./methods#setlanguage-settings).
+
+For the REST API, you can set the same second parameter for the `RestClient` constructor, or if uing the API manually, set those query parameters.
+
 ## Reactivity
 
-When the FacilMap server sends an event to the client that an object has been created, changed or deleted, the client emits the
-event and also persists it in its properties. So you have two ways to access the map data: By listening to the map events and
-persisting the data somewhere else, or by accessing the properties on the Client object.
+The various classes of the FacilMap client provide various properties that document the current state of the connection and of the subscribed maps and routes. The classes provide a universal way to subscribe to changes to these properties, so that you can use them in UI frameworks that rely on state change detection.
 
-If you are using a UI framework that relies on a change detection mechanism (such as Vue.js or Angular), facilmap-client provides
-a way to make its properties reactive. Internally, the client maintains a `state` object (for any properties related to the client
-itself) and a `data` object (for any received map objects). These two objects are stored as private properties on the client object.
-All public properties of the client object are just getters that return the data from the two private objects. The client modifies
-these two objects consistently in the following way:
-* When the client object is constructed, it constructs the private `state` and `data` objects by calling
-  `this.object = makeReactive(object)`.
-* When the client sets a property inside the `state` and `data` objects, it does so by calling `this._set(this.object, key, value)`.
-  This includes setting nested properties.
-* When the client deletes a property inside the `state` and `data` objects, it does so by calling `this._delete(this.object, key)`.
-  This includes deleting nested properties.
+The `SocketClient` and `SocketClientStorage` classes allow specifying a `reactiveObjectProvider` as part of the options passed as the second constructor parameter. This `reactiveObjectProvider` provides an abstraction to the various reactivity mechanisms used by different UI frameworks. By default, `DefaultReactiveObjectProvider` (exported by facilmap-client) is used. It can be accessed as `client.reactiveObjectProvider` or `storage.reactiveObjectProvider`. In its most simple form, you can subscribe to changes like this:
 
-You can override the `_makeReactive`, `_set` and `_delete` methods to make the private properties (and as a consequence the public
-getters) of facilmap-client reactive. This way your UI framework will detect changes to any properties on the client, and you can
-reference values like `client.mapData.name`, `client.disconnected` and `client.loading` in your UI components.
+```typescript
+const unsubscribe = client.reactiveObjectProvider.subscribe(() => {
+	console.log(client.state.type);
+});
+```
 
-Note that client always replaces whole objects rather than updating individual properties. For example, when a new version of the map settings arrives, `client.mapData` is replaced with a new object, or when a new marker arrives, `client.markers[markerId]` is replaced with a new object. This makes deep watches unnecessary in most cases.
+The `subscribe` method is called every time any reactive value in the client instance (including its subscriptions) is changed. This means that the above code would log the client state basically every time anything changes. To subscribe to changes to only one specific value, use the `select` method:
+
+```typescript
+const unsubscribe = client.reactiveObjectProvider.select(() => client.state.type, (type) => {
+	console.log(type);
+});
+```
+
+The `select` method retrieves the result of the first callback every time anything changes, and if the result is different than the previous time, the second callback is called with it. Optionally, you can specify an equality function as the third parameter.
+
+By default, every class instance creates its own reactive object provider, meaning that the provider only reacts to changes inside that particular instance.
+
+While one way to use this reactivity would be to subscribe to the desired data and copy it to a reactive object of your UI framework, another way is to specify your own implementation of the `ReactiveObjectProvider` interface (exported by facilmap-client) that make the class instances themselves reactive. The interface looks like this:
+```typescript
+interface ReactiveObjectProvider {
+	makeReactive: <T extends Record<any, any>>(object: T) => T;
+	makeUnreactive: <T extends Record<any, any>>(object: T) => T;
+	set: <T extends Record<any, any>, K extends WritableKeysOf<T>>(object: T, key: K, value: T[K]) => void;
+	delete: <T extends Record<any, any>>(object: T, key: DeletableKeysOf<T>) => void;
+	subscribe: (callback: ReactiveObjectSubscription) => () => void;
+	select<T>(selector: () => T, callback: (value: T) => void, isEqual?: (a: T, b: T) => boolean): () => void;
+}
+```
+
+For the exact details of these methods, check the FacilMap source code, but here are some example adaptations for different UI frameworks:
 
 ### Vue.js 3
 
-```javascript
-class ReactiveClient extends Client {
-	_makeReactive(object) {
-		return Vue.reactive(object);
+```typescript
+import { DefaultReactiveObjectProvider } from "facilmap-client";
+import { reactive } from "vue";
+
+class Vue3ReactiveObjectProvider extends DefaultReactiveObjectProvider {
+	override makeReactive<T extends Record<any, any>>(object: T): T {
+		return reactive(object);
 	}
 }
 ```
 
 ### Vue.js 2
 
-```javascript
-class ReactiveClient extends Client {
-	_set(object, key, value) {
+```typescript
+import { DefaultReactiveObjectProvider } from "facilmap-client";
+import Vue from "vue";
+
+class Vue2ReactiveObjectProvider extends DefaultReactiveObjectProvider {
+	set<T extends Record<any, any>, K extends WritableKeysOf<T>>(object: T, key: K, value: T[K]): void {
 		Vue.set(object, key, value);
+		this._notify({ action: "set", object, key, value });
 	}
 
-	_delete(object, key) {
+	delete<T extends Record<any, any>>(object: T, key: DeletableKeysOf<T>): void {
 		Vue.delete(object, key);
+		this._notify({ action: "delete", object, key });
 	}
 }
 ```
 
 ### Angular.js
 
-```javascript
-class ReactiveClient extends Client {
-	_set(object, key, value) {
+```typescript
+import { DefaultReactiveObjectProvider } from "facilmap-client";
+
+class AngularJsReactiveObjectProvider extends DefaultReactiveObjectProvider {
+	set<T extends Record<any, any>, K extends WritableKeysOf<T>>(object: T, key: K, value: T[K]): void {
 		$rootScope.$apply(() => {
-			object[key] = value;
+			super.set(object, key, value);
 		});
 	}
 
-	_delete(object, key) {
+	delete<T extends Record<any, any>>(object: T, key: DeletableKeysOf<T>): void {
 		$rootScope.$apply(() => {
-			delete object[key];
+			super.delete(object, key);
 		});
 	}
 }
@@ -69,42 +115,18 @@ class ReactiveClient extends Client {
 ### React
 
 ```javascript
-class ObservableClient extends Client {
-	_observers = new Set();
+import { useSyncExternalStore } from "react";
+import { ReactiveStorageProvider } from "facilmap-client";
 
-	subscribe(callback) {
-		this._observers.add(callback);
-		return () => {
-			this._observers.delete(callback);
-		};
-	}
-
-	_triggerObservers() {
-		for (const observer of this._observers) {
-			observer();
-		}
-	}
-
-	_set(object, key, value) {
-		object[key] = value;
-		this._triggerObservers();
-	}
-
-	_delete(object, key) {
-		delete object[key];
-		this._triggerObservers();
-	}
-}
-
-function useClientObserver(client, selector) {
-	React.useSyncExternalStore(
-		(callback) => client.subscribe(callback),
-		() => selector(client)
+function useFacilMapClientSelector(instance, selector) {
+	useSyncExternalStore(
+		(callback) => instance.reactiveStorageProvider.subscribe(callback),
+		() => selector()
 	);
 }
 
-const MarkerInfo = ({ client, markerId }) => {
-	const marker = useClientObserver(client, (client) => client.markers[markerId]);
+const MarkerInfo = ({ clientStorage, mapSlug, markerId }) => {
+	const marker = useFacilMapClientSelector(clientStorage, () => clientStorage.mapSubscriptions[mapSlug].markers[markerId]);
 	return (
 		<div>
 			Marker name: {marker?.name}
@@ -113,9 +135,18 @@ const MarkerInfo = ({ client, markerId }) => {
 }
 ```
 
-Keep in mind that React’s `useSyncExternalStore` will rerender the component if the resulting _object reference_ changes.
-This means one the one hand that you cannot use this example implementation on a higher up object of the client (such as
-`client` itself or `client.markers`), as their identity never changes, causing your component to never rerender. And on
-the other hand that you should avoid using it on objects created in the selector (such as returning
-`[client.mapData.id, client.mapData.name]` in order to get multiple values at once), as it will cause your component to
-rerender every time the selector is called.
+Keep in mind that React’s `useSyncExternalStore` will rerender the component if the resulting _object reference_ changes. This means one the one hand that you cannot use this example implementation on a higher up object of the client (such as `clientStorage` itself or `clientStorage.mapSubscriptions`), as their identity never changes, causing your component to never rerender. And on the other hand that you should avoid using it on objects created in the selector (such as returning `[clientStorage.mapSubscriptions[mapSlug].mapData.id, client.mapSubscriptions[mapSlug].mapData.name]` in order to get multiple values at once), as it will cause your component to rerender every time the selector is called.
+
+## Streams
+
+Some API methods return streamed data. This can be actual binary data, such as the file contents returned by `findUrl`, or a stream of objects, such as the one returned by `getAllMapObjects`.
+
+If you use the socket client, it will return streams of binary data as `ReadableStream<Uint8Array>` [web streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API). Depending on what you are planning to do with the data, the easiest way to consume it is to do `await new Response(stream).text()` (see alternative ways on [Stack Overflow](https://stackoverflow.com/a/72718732/242365)). For streams of objects, the client will return an [async iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_async_iterator_and_async_iterable_protocols). You can consume it using [`for await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). Keep in mind to cancel the stream/iterable using `stream.cancel()`, `reader.cancel()` or `iterable.return()` (the latter is called automatically when canceling a `for await...of` loop using `break`, `return` or `throw`) if you want to discard it in the middle of receiving it, to prevent further data from being sent.
+
+If you use the Socket API directly, you will have to handle the socket chunks sent as events manually. Streams are sent over the socket in the following way:
+* Where the result is a stream, a string is returned instead by the API. This string is a random ID that acts as a unique identifier for the stream.
+* Immediately after the stream ID is returned, the API starts sending `streamChunks` events, with the first parameter being the stream ID and the second parameter an array of chunks. Multiple chunks are aggregated on the server side and emitted as one event. For binary streams, the second parameter is an array of `Uint8Array`s; for object streams, it is an array of objects.
+* At some point, a `streamDone` or `streamError` event is emitted. The `streamDone` error only has one parameter, the stream ID. The `streamError` event has two parameters, the stream ID and the error object (serialized using [serialize-error](https://www.npmjs.com/package/serialize-error)).
+* You can abort the stream at any point by emitting a `streamAbort` event from the client side with the stream ID as the argument. If the abort event arrives on the server while the stream is still in progress, the server will emit a `streamError` event with an `AbortError`.
+
+In the REST API, binary streams are simply streamed over HTTP. Object streams are sent as part of a regular JSON document, but this JSON document is created on the fly and sent in a streaming way. In most use cases, there is no use in

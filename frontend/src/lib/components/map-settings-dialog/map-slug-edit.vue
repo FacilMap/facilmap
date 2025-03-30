@@ -27,7 +27,7 @@
 		"update:modelValue": [string];
 	}>();
 
-	const id = getUniqueId("fm-map-settings-map-id-edit");
+	const id = getUniqueId("fm-map-settings-map-slug-edit");
 
 	const value = computed({
 		get: () => props.modelValue,
@@ -36,9 +36,9 @@
 		}
 	});
 
-	function validateDistinctMapId(id: string) {
-		if (idProps.some((p) => p !== props.idProp && props.mapData[p] === id)) {
-			return i18n.t("map-id-edit.unique-id-error");
+	function validateDistinctMapSlug(slug: string) {
+		if (idProps.some((p) => p !== props.idProp && props.mapData[p] === slug)) {
+			return i18n.t("map-slug-edit.unique-id-error");
 		}
 	}
 </script>
@@ -50,21 +50,21 @@
 			<CopyToClipboardInput
 				v-model="value"
 				:prefix="context.baseUrl"
-				:copyTooltip="i18n.t('map-id-edit.copy-tooltip')"
-				:qrTooltip="i18n.t('map-id-edit.qr-tooltip')"
-				:copiedTitle="i18n.t('map-id-edit.copied-title')"
-				:copiedMessage="i18n.t('map-id-edit.copied-message')"
+				:copyTooltip="i18n.t('map-slug-edit.copy-tooltip')"
+				:qrTooltip="i18n.t('map-slug-edit.qr-tooltip')"
+				:copiedTitle="i18n.t('map-slug-edit.copied-title')"
+				:copiedMessage="i18n.t('map-slug-edit.copied-message')"
 				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
-				:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapId]"
+				:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapSlug]"
 			>
 				<template #after1>
 					<button
 						type="button"
 						class="btn btn-secondary"
 						@click="value = props.getRandom()"
-						v-tooltip="i18n.t('map-id-edit.random-tooltip')"
+						v-tooltip="i18n.t('map-slug-edit.random-tooltip')"
 					>
-						<Icon icon="shuffle" :alt="i18n.t('map-id-edit.random-alt')"></Icon>
+						<Icon icon="shuffle" :alt="i18n.t('map-slug-edit.random-alt')"></Icon>
 					</button>
 				</template>
 			</CopyToClipboardInput>
