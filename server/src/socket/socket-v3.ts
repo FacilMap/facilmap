@@ -321,6 +321,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						this.mapSubscriptions[mapData.id] = [];
 					}
 					this.mapSubscriptions[mapData.id].push({ pick, history, mapSlug, writable: mapData.writable });
+					this.registerDatabaseHandlers();
 				}
 
 				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
@@ -343,6 +344,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 							this.mapSubscriptions[obj.data.id] = [];
 						}
 						this.mapSubscriptions[obj.data.id].push({ pick, history, mapSlug: data.adminId, writable: obj.data.writable });
+						this.registerDatabaseHandlers();
 					}
 					return obj;
 				}));
@@ -357,6 +359,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						} else {
 							this.mapSubscriptions[mapId] = without;
 						}
+						this.registerDatabaseHandlers();
 						return;
 					}
 				}

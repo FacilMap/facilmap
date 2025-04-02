@@ -50,7 +50,9 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void, database: Database, remoteAddr: string) {
 		this.socketV3 = new SocketConnectionV3((...args) => {
 			if (args[0] === "streamChunks") {
-				this.streams[args[1]].write(args[2]).catch(() => undefined);
+				for (const chunk of args[2]) {
+					this.streams[args[1]].write(chunk).catch(() => undefined);
+				}
 			} else if (args[0] === "streamDone") {
 				this.streams[args[1]].close().catch(() => undefined);
 			} else if (args[0] === "streamError") {
@@ -165,7 +167,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				if (!events[args[0]]) {
 					events[args[0]] = [];
 				}
-				(events as any)[args[0]].push(args.slice(1));
+				(events as any)[args[0]].push(args[1]);
 				return true;
 			}
 		};
@@ -188,12 +190,20 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			]),
 
 			getPad: async (data) => {
-				const mapData = await socketHandlersV3.getMap(data.padId);
-				return mapData && {
-					id: mapData.readId,
-					name: mapData.name,
-					description: mapData.description
-				};
+				try {
+					const mapData = await socketHandlersV3.getMap(data.padId);
+					return {
+						id: mapData.readId,
+						name: mapData.name,
+						description: mapData.description
+					};
+				} catch (err: any) {
+					if (err.status === 404) {
+						return null;
+					} else {
+						throw err;
+					}
+				}
 			},
 
 			findPads: async ({ query, ...paging }) => {
@@ -209,10 +219,15 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.map-already-loaded-error"));
 				}
 
-				const multiple = await this.prepareAllMapObjects(await socketHandlersV3.createMap(legacyV2MapDataToCurrent(data)));
+				const multiple = await this.interceptEvents(["padData", "marker", "line", "linePoints", "type", "view"], async () => {
+					await socketHandlersV3.createMapAndSubscribe(legacyV2MapDataToCurrent(data));
+				});
+
+				console.log(multiple);
 
 				const mapData = multiple.padData![0];
 				this.mapSlug = getMapSlug(legacyV2MapDataToCurrent(mapData));
+				console.log("mapSlug", this.mapSlug, mapData, legacyV2MapDataToCurrent(mapData));
 				this.readId = mapData.id;
 				this.writable = mapData.writable;
 
@@ -224,7 +239,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				return currentMapDataToLegacyV2(await socketHandlersV3.updateMap(this.mapSlug, mapData));
+				return currentMapDataToLegacyV2(await socketHandlersV3.updateMap(this.mapSlug, legacyV2MapDataToCurrent(mapData)));
 			},
 
 			deletePad: async (data) => {

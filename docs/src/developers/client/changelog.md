@@ -25,8 +25,7 @@ For better support for larger maps, some API methods now return streams of objec
 * Some methods now accept more than one parameter. If you are using your own socket.io connection, this means that the last parameter (rather than always the second parameter) will now be considered to be the [acknowledgement callback](https://socket.io/docs/v4/emitting-events/#acknowledgements). If you are using facilmap-client, this change will not have any consequences, as it provides its own acknowledgement callback that resolves its returned promise.
 * A few method signatures have been changed:
 	* `findPads({ query, start, limit })` was changed to `findMaps(query, { start, limit })`
-	* `getPad({ padId })` was changed to `getMap(mapSlug)` and now returns the full map data
-	* `createPad(padData)` was changed to `createMap(padData, { pick?, bbox? })`. When using the raw Socket API, it now returns a `{ results: stream }` of map object tuples rather than an object of map events.
+	* `getPad({ padId })` was changed to `getMap(mapSlug)` and now returns the full map data. It now throws an error when trying to open a non-existent map rather than returning null.
 	* `find({ query, loadUrls? })` has been split up into `find(query)` and `findUrl(url)`. Use `parseUrlQuery(query)` from `facilmap-utils` to check whether a search query is a URL (if it returns a string, it is).
 	* `findOnMap({ query })` has been changed to `findOnMap(mapSlug, query)`.
 	* `exportRoute({ routeId, format })` has been changed into `exportRoute(routeKey, { format })`.
@@ -37,8 +36,8 @@ For better support for larger maps, some API methods now return streams of objec
 * In the `linePoints` socket event, `id` was renamed to `lineId`.
 * `setRoute` and `lineToRoute` have been united into `subscribeToRoute`, which accepts both types of objects. `clearRoute({ routeId })` has been changed into `unsubscribeFromRoute(routeKey)`. Specifying a route key is mandatory now, although you can just use an empty string.
 * `setPadId` has been removed. To subscribe to map live updates, use `subscribeToMap`. As a replacement for `PadNotFoundError`, an error with a `status: 404` property is thrown if the map is not found.
-* `listenToHistory()` has been merged into `subscribeToMapHistory(mapSlug, { history: true })` and does not return any history entries anymore. To retrieve those history entries, use `getHistory(mapSlug, paging)`. The current limit of maximum 50 history entries that are retained per map may be increased or removed in the future without further notice (hence the paging). `stopListeningToHistory()` has been changed into `unsubscribeFromMapHistory(mapSlug)`.
-* `createMap()` does not automatically subscribe to the map anymore. When using the raw Socket API, it now returns a stream of map objects rather than an object of map events.
+* `listenToHistory()` has been merged into `subscribeToMap(mapSlug, { history: true })` and does not return any history entries anymore. To retrieve those history entries, use `getHistory(mapSlug, paging)`. The current limit of maximum 50 history entries that are retained per map may be increased or removed in the future without further notice (hence the paging). `stopListeningToHistory()` has been merged into `subscribeToMap(mapSlug, { history: false })`.
+* `createPad()` was renamed to `createMapAndSubscribe()` and emits events rather than returning them. The new `createMap()` method creates the map without subscribing to it.
 * `updateBbox` has been renamed to `setBbox`. Rather than returing an object of map events, it now emits those events and returns an empty promise.
 
 ### Client changes

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMapV2, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClientV2, retry } from "../utils";
 import { SocketVersion } from "facilmap-types";
 import type { LegacyV2Marker } from "facilmap-types";
 
@@ -7,11 +7,11 @@ test("Socket v1 marker name", async () => {
 	// client1: Creates the marker and has it in its bbox
 	// client2: Has the marker in its bbox
 	// client3: Does not have the marker in its bbox
-	const client1 = await openClient(undefined, SocketVersion.V1);
+	const client1 = await openClientV2(undefined, SocketVersion.V1);
 
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.adminId, SocketVersion.V1);
-		const client3 = await openClient(mapData.adminId, SocketVersion.V1);
+		const client2 = await openClientV2(mapData.adminId, SocketVersion.V1);
+		const client3 = await openClientV2(mapData.adminId, SocketVersion.V1);
 
 		const onMarker1 = vi.fn();
 		client1.on("marker", onMarker1);

@@ -84,10 +84,17 @@ export default class Socket {
 			for (const i of Object.keys(socketHandlers) as Array<keyof SocketHandlers<SocketVersion>>) {
 				socket.on(i, async (...args: unknown[]): Promise<void> => {
 					const validatedCallback = (typeof args[args.length - 1] === "function" ? args.pop() as (...args: any) => any : undefined);
+					let validatedArgs;
+					try {
+						validatedArgs = socketRequestValidators[version][i].parse(args);
+					} catch (err: any) {
+						const outerErr = new Error(`Invalid arguments for socket method ${i}: ${err.message}`, { cause: err });
+						console.log(outerErr);
+						validatedCallback?.(serializeError(outerErr));
+						return;
+					}
 
 					try {
-						console.log(i, args);
-						const validatedArgs = socketRequestValidators[version][i].parse(args);
 						const res = await (socketHandlers[i] as any)(...validatedArgs);
 
 						if(!validatedCallback && res)
@@ -95,10 +102,8 @@ export default class Socket {
 
 						validatedCallback?.(null, res);
 					} catch (err: any) {
-						const outerErr = new Error(`Invalid arguments for socket method ${i}`, { cause: err });
-						console.log(outerErr);
-
-						validatedCallback?.(serializeError(outerErr));
+						console.log(err);
+						validatedCallback?.(serializeError(err));
 					}
 				});
 			}

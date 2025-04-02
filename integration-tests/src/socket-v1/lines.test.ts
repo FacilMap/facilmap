@@ -1,16 +1,16 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMapV2, openClient, retry } from "../utils";
+import { createTemporaryMapV2, openClientV2, retry } from "../utils";
 import { SocketVersion, type LegacyV2Line } from "facilmap-types";
 
 test("Socket v1 line name", async () => {
 	// client1: Creates the line and has it in its bbox
 	// client2: Has the line in its bbox
 	// client3: Does not have the line in its bbox
-	const client1 = await openClient(undefined, SocketVersion.V1);
+	const client1 = await openClientV2(undefined, SocketVersion.V1);
 
 	await createTemporaryMapV2(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.adminId, SocketVersion.V1);
-		const client3 = await openClient(mapData.adminId, SocketVersion.V1);
+		const client2 = await openClientV2(mapData.adminId, SocketVersion.V1);
+		const client3 = await openClientV2(mapData.adminId, SocketVersion.V1);
 
 		const onLine1 = vi.fn();
 		client1.on("line", onLine1);

@@ -83,6 +83,7 @@ export enum Units {
 export const unitsValidator = z.nativeEnum(Units);
 
 export type ReplaceProperties<T1 extends Record<keyof any, any>, T2 extends Partial<Record<keyof T1, any>>> = Omit<T1, keyof T2> & T2;
+export type ReplaceExistingProperties<T1 extends Record<keyof any, any>, T2 extends Record<keyof any, any>> = DistributiveOmit<T1, keyof T2> & DistributivePick<T2, keyof T1>;
 
 /** Deeply converts an interface to a type, see https://stackoverflow.com/a/78441681/242365 */
 export type InterfaceToType<T> = {
@@ -121,5 +122,5 @@ export type DeepMutable<T> = (
 );
 
 export type DistributiveKeyOf<T> = T extends any ? keyof T : never;
-export type DistributivePick<T, K extends DistributiveKeyOf<T>> = T extends any ? Pick<T, K & keyof T> : never;
-export type DistributiveOmit<T, K extends DistributiveKeyOf<T>> = T extends any ? Omit<T, K> : never;
+export type DistributivePick<T, K extends keyof any> = T extends any ? Pick<T, K & keyof T> : never;
+export type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;

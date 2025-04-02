@@ -100,7 +100,7 @@ export async function createTemporaryMap<V extends SocketVersion.V3, D extends P
 	}
 }
 
-export async function createTemporaryMapV2<V extends SocketVersion.V1 | SocketVersion.V2, D extends Partial<MapData<CRU.CREATE>>>(
+export async function createTemporaryMapV2<V extends SocketVersion.V1 | SocketVersion.V2, D extends Partial<LegacyV2MapData<CRU.CREATE>>>(
 	client: ClientInstance<V>,
 	data: D,
 	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: NonNullable<ClientInstance<V>["padData"]>, result: Awaited<ReturnType<ClientInstance<V>["createPad"]>>) => Promise<void>

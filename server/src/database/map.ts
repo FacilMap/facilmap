@@ -63,7 +63,7 @@ export default class DatabaseMaps {
 	// =====================================================================================================================
 
 	async mapSlugExists(mapSlug: MapSlug): Promise<boolean> {
-		const num = await this.MapModel.count({ where: { [Op.or]: [ { id: mapSlug }, { writeId: mapSlug }, { adminId: mapSlug } ] } });
+		const num = await this.MapModel.count({ where: { [Op.or]: [ { readId: mapSlug }, { writeId: mapSlug }, { adminId: mapSlug } ] } });
 		return num > 0;
 	}
 
@@ -73,7 +73,7 @@ export default class DatabaseMaps {
 	}
 
 	async getMapDataBySlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
-		const obj = await this.MapModel.findOne({ where: { [Op.or]: { id: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
+		const obj = await this.MapModel.findOne({ where: { [Op.or]: { readId: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
 		const mapData = obj ? fixMapData(obj.toJSON()) : undefined;
 
 		if (!mapData) {

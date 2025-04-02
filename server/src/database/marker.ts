@@ -97,6 +97,7 @@ export default class DatabaseMarkers {
 	}
 
 	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
+		console.log("createMarker", mapId, data);
 		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "marker") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: type.type }));

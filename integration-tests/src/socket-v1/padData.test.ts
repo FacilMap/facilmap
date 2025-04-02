@@ -1,9 +1,9 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMapV2, openClient } from "../utils";
+import { createTemporaryMapV2, openClientV2 } from "../utils";
 import { SocketVersion } from "facilmap-types";
 
 test("Socket v1 pad name", async () => {
-	const client = await openClient(undefined, SocketVersion.V1);
+	const client = await openClientV2(undefined, SocketVersion.V1);
 
 	const onPadData = vi.fn();
 	client.on("padData", onPadData);

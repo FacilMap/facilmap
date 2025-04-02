@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId, type ReplaceExistingProperties } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { EventName } from "../events.js";
@@ -20,15 +20,6 @@ import { routeParametersValidator, type Route } from "../route.js";
 //   `Type.fields[].options[].symbol`.
 // - “map” is called “pad” in events, types, methods
 // - "MapNotFoundError" is called "PadNotFoundError"
-
-export const legacyV2MapDataValidator = {
-	read: mapDataValidator.read.omit({ readId: true, id: true }).extend({ id: mapDataValidator.read.shape.readId }),
-	create: mapDataValidator.create.omit({ readId: true }).extend({ id: mapDataValidator.create.shape.readId }),
-	update: mapDataValidator.update.omit({ readId: true }).extend({ id: mapDataValidator.update.shape.readId }),
-};
-export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
-export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
-export type LegacyV2MapDataWithWritable = DistributiveOmit<MapDataWithWritable, "readId" | "id"> & { id: MapData["readId"] };
 
 export const legacyV2MarkerValidator = {
 	read: markerValidator.read.omit({ icon: true, mapId: true }).extend({ symbol: markerValidator.read.shape.icon, padId: mapSlugValidator }),
@@ -80,7 +71,7 @@ export const legacyV2TypeValidator = refineRawTypeValidator({
 	update: rawTypeValidator.update.omit({ defaultIcon: true, iconFixed: true }).extend({
 		defaultSymbol: rawTypeValidator.update.shape.defaultIcon,
 		symbolFixed: rawTypeValidator.update.shape.iconFixed,
-		fields: legacyV2FieldsValidator.update
+		fields: legacyV2FieldsValidator.update.optional()
 	})
 });
 export type LegacyV2Type<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2TypeValidator>;
@@ -91,6 +82,18 @@ export const legacyV2ViewValidator = {
 	update: viewValidator.update
 };
 export type LegacyV2View<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2ViewValidator>;
+
+export const legacyV2MapDataValidator = {
+	read: mapDataValidator.read.omit({ readId: true, id: true, defaultView: true }).extend({
+		id: mapDataValidator.read.shape.readId,
+		defaultView: legacyV2ViewValidator.read.or(z.null())
+	}),
+	create: mapDataValidator.create.omit({ readId: true }).extend({ id: mapDataValidator.create.shape.readId }),
+	update: mapDataValidator.update.omit({ readId: true }).extend({ id: mapDataValidator.update.shape.readId }),
+};
+export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
+export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
+export type LegacyV2MapDataWithWritable = DistributiveOmit<MapDataWithWritable, "readId" | "id" | "defaultView"> & { id: MapData["readId"]; defaultView: LegacyV2View | null };
 
 export type LegacyV2FindOnMapMarker = RenameProperty<FindOnMapMarker, "icon", "symbol", false>;
 export type LegacyV2FindOnMapResult = LegacyV2FindOnMapMarker | Exclude<FindOnMapResult, FindOnMapMarker>;
@@ -276,8 +279,13 @@ export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapDa
 	return renameProperty(mapData, "id", "readId");
 }
 
-export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapData: M): RenameProperty<M extends { id: any } ? Omit<M, "id"> : M, "readId", "id"> {
-	return renameProperty(omit(mapData, ["id"]), "readId", "id") as any;
+export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapData: M): ReplaceExistingProperties<RenameProperty<M extends { id: any } ? Omit<M, "id"> : M, "readId", "id">, { defaultView: LegacyV2View | null }> {
+	return {
+		...renameProperty(omit(mapData, ["id"]), "readId", "id"),
+		..."defaultView" in mapData ? {
+			defaultView: mapData.defaultView && currentViewToLegacyV2(mapData.defaultView, mapData.readId)
+		} : {}
+	} as any;
 }
 
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
