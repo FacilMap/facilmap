@@ -19,7 +19,7 @@ import {
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
 import { streamToIterable } from "json-stream-es";
-import { mapNestedIterable, unstreamMapObjects } from "./utils";
+import { mapNestedIterable, mergeObjectWithPromise, unstreamMapObjects, type BasicPromise } from "./utils";
 import { EventEmitter } from "./events";
 import { SocketClientCreateMapSubscription, SocketClientMapSubscription } from "./socket-client-map-subscription";
 import { SocketClientRouteSubscription } from "./socket-client-route-subscription";
@@ -503,7 +503,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("subscribeToMap", mapSlug, options);
 	}
 
-	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & Promise<SocketClientMapSubscription> {
+	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
 		if (this.data.mapSubscriptions[mapSlug]) {
 			throw new Error(`There is already a subscription to map ${mapSlug}.`);
 		}
@@ -513,14 +513,14 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			...options
 		});
 		this.reactiveObjectProvider.set(this.data.mapSubscriptions, mapSlug, this.reactiveObjectProvider.makeUnreactive(subscription));
-		return subscription;
+		return mergeObjectWithPromise(subscription, subscription.subscribePromise);
 	}
 
 	async _createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		await this._call("createMapAndSubscribe", data, options);
 	}
 
-	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & Promise<SocketClientMapSubscription> {
+	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
 		if (this.data.mapSubscriptions[data.adminId]) {
 			throw new Error(`There is already a subscription to map ${data.adminId}.`);
 		}
@@ -530,7 +530,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			...options
 		});
 		this.reactiveObjectProvider.set(this.data.mapSubscriptions, data.adminId, this.reactiveObjectProvider.makeUnreactive(subscription));
-		return subscription;
+		return mergeObjectWithPromise(subscription, subscription.subscribePromise);
 	}
 
 	async _unsubscribeFromMap(mapSlug: MapSlug): Promise<void> {
@@ -542,7 +542,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("subscribeToRoute", routeKey, params);
 	}
 
-	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription & Promise<SocketClientRouteSubscription> {
+	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription & BasicPromise<SocketClientRouteSubscription> {
 		if (this.data.routeSubscriptions[routeKey]) {
 			throw new Error(`There is already a subscription to route ${routeKey}.`);
 		}
@@ -552,7 +552,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			...params
 		});
 		this.reactiveObjectProvider.set(this.data.routeSubscriptions, routeKey, this.reactiveObjectProvider.makeUnreactive(subscription));
-		return subscription;
+		return mergeObjectWithPromise(subscription, subscription.subscribePromise);
 	}
 
 	async _unsubscribeFromRoute(routeKey: string): Promise<void> {

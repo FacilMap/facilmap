@@ -443,38 +443,3 @@ export function cloneDeep<T>(value: T): DeepMutable<T> {
 	// https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/70545
 	return originalCloneDeep(value) as DeepMutable<T>;
 }
-
-
-// type Type1 = { type: "a" };
-// type Type2 = { type: "b" };
-
-// function isType1(object: Type1 | Type2): object is Type1 {
-// 	return object.type === "a";
-// }
-
-// const mutable = { type: "a" } as Type1 | Type2;
-// if (isType1(mutable)) {
-// 	console.log(mutable);
-// }
-
-// const readonly = { type: "a" } as Readonly<Type1 | Type2>;
-// if (isType1(readonly)) {
-// 	console.log(readonly);
-// }
-
-// type Type1 = ["a"];
-// type Type2 = ["b"];
-
-// function isType1(object: Readonly<Type1 | Type2>): object is Readonly<Type1> {
-// 	return object[0] === "a";
-// }
-
-// const mutable = ["a"] as Type1 | Type2;
-// if (isType1(mutable)) {
-// 	console.log(mutable);
-// }
-
-// const readonly = ["a"] as Readonly<Type1 | Type2>;
-// if (isType1(readonly)) {
-// 	console.log(readonly);
-// }

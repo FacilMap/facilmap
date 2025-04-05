@@ -64,3 +64,17 @@ export async function unstreamMapObjects<T extends AllMapObjectsTypes, Pick exte
 	}
 	return results;
 }
+
+export type BasicPromise<T> = Pick<Promise<T>, "then" | "catch" | "finally">
+
+export function mergeObjectWithPromise<T extends {}, R>(object: T, promise: BasicPromise<R>): T & BasicPromise<R> {
+	const p = {
+		then: promise.then.bind(promise),
+		catch: promise.catch.bind(promise),
+		finally: promise.finally?.bind(promise)
+	};
+	return new Proxy(object, {
+		has: (target, key) => key in target || key in p,
+		get: (target, prop, receiver) => Reflect.get(prop in p && !(prop in target) ? p : target, prop, receiver)
+	}) as T & typeof p;
+}

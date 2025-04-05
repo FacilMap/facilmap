@@ -54,8 +54,16 @@ export abstract class SocketClientSubscription<Data extends { state: any }> {
 
 	protected async _subscribe(): Promise<void> {
 		this.reactiveObjectProvider.set(this.data as BasicSubscriptionData, "state", { type: SubscriptionStateType.SUBSCRIBING });
-		await this._doSubscribe();
-		this.reactiveObjectProvider.set(this.data as BasicSubscriptionData, "state", { type: SubscriptionStateType.SUBSCRIBED });
+		try {
+			await this._doSubscribe();
+			this.reactiveObjectProvider.set(this.data as BasicSubscriptionData, "state", { type: SubscriptionStateType.SUBSCRIBED });
+		} catch (error: any) {
+			this.reactiveObjectProvider.set(this.data as BasicSubscriptionData, "state", {
+				type: SubscriptionStateType.FATAL_ERROR,
+				error
+			});
+			throw error;
+		}
 	}
 
 	protected abstract _doSubscribe(): Promise<void>;

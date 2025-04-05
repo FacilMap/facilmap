@@ -101,17 +101,21 @@ Signature: `subscribeToMap(mapSlug: string, options?: SubscribeToMapOptions): So
 
 Like [`subscribeToMap`](./methods.md#subscribetomap), but returns a [`SocketClientMapSubscription`](#socketclientmapsubscription) object to further manage the subscription. Throws an error if the map slug is already subscribed.
 
+For your convenience, the `SocketClientMapSubscription` is returned merged with its [`subscribePromise`](#subscribepromise). This means that you can either call `subscribeToMap()` synchronously, which returns the subscription immediately so that you can observe the data as it comes in and the state as it eventually transitions to `SUBSCRIBED` or `FATAL_ERROR`, or you can call `await subscribeToMap()`, which returns a promise that is resolved with the subscription only once all the map objects have been received and the subscription has transitioned to `SUBSCRIBED`.
+
 #### `createMapAndSubscribe()`
 
 Signature: `createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription`
 
-Like [`createMapAndSubscribe`](./methods.md#createmap), but returns a [`SocketClientMapSubscription`](#socketclientmapsubscription) object to further manage the subscription.
+Like [`createMapAndSubscribe`](./methods.md#createmap), but returns a [`SocketClientMapSubscription`](#socketclientmapsubscription) object merged with its `subscribePromise` to further manage the subscription.
 
 #### `subscribeToRoute()`
 
 Signature: `subscribeToRoute(routeKey: string, params: RouteParameters | LineToRouteRequest): SocketClientRouteSubscription`
 
 Like [`subscribeToRoute`](./methods.md#subscribetoroute), but returns a [`SocketClientRouteSubscription`](#socketclientroutesubscription) to further manage the subscription. Throws an error if the route key is already subscribed.
+
+For your convenience, the `SocketClientRouteSubscription` is returned merged with its [`subscribePromise`](#subscribepromise-1). This means that you can either call `subscribeToRoute()` synchronously, which returns the subscription immediately so that you can observe the data as it comes in and the state as it eventually transitions to `SUBSCRIBED` or `FATAL_ERROR`, or you can call `await subscribeToRoute()`, which returns a promise that is resolved with the subscription only once the route has been received and the subscription has transitioned to `SUBSCRIBED`.
 
 #### `disconnect()`
 

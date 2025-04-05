@@ -54,7 +54,7 @@ export async function openClientStorage<V extends SocketVersion.V3 = SocketVersi
 	const client = await openClient(version);
 	const storage = Object.assign(new clientStorageConstructors[version](client), { _version: version }) as ClientStorageInstance<V>;
 	if (mapSlug) {
-		await client.subscribeToMap(mapSlug).subscribePromise;
+		await client.subscribeToMap(mapSlug);
 	}
 	return storage;
 }
@@ -97,7 +97,7 @@ export async function createTemporaryMap<V extends SocketVersion.V3, D extends P
 	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: DeepReadonly<Extract<MapDataWithWritable, { writable: Writable.ADMIN }>>, subscription: SocketClientMapSubscription) => Promise<void>
 ): Promise<void> {
 	const createMapData = getTemporaryMapData(storage._version, data);
-	const subscription = await storage.client.createMapAndSubscribe(createMapData).subscribePromise;
+	const subscription = await storage.client.createMapAndSubscribe(createMapData);
 	try {
 		await callback?.(createMapData, storage.maps[subscription.mapSlug].mapData as Extract<MapDataWithWritable, { writable: Writable.ADMIN }>, subscription);
 	} finally {

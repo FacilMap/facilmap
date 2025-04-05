@@ -193,7 +193,7 @@ test("Set default view", async () => {
 			defaultViewId: view2.id
 		});
 		expect(mapResult.defaultView).toEqual(view2);
-		expect(onMapData.mock.lastCall?.[0].defaultView).toEqual(view2);
+		expect(onMapData.mock.lastCall?.[1].defaultView).toEqual(view2);
 	});
 });
 

@@ -1,5 +1,6 @@
 import { Writable, type DeepReadonly, type DistributivePick, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
+import { cloneDeep } from "./utils.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
@@ -48,13 +49,13 @@ export function getMapSlug(mapData: DistributivePick<MapDataWithWritable, "writa
 	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.readId;
 }
 
-export function getMapDataWithWritable(mapData: MapData, writable: Writable): MapDataWithWritable {
+export function getMapDataWithWritable(mapData: DeepReadonly<MapData>, writable: Writable): MapDataWithWritable {
 	const { adminId, writeId, ...rest } = mapData;
 	if (writable === Writable.ADMIN) {
-		return { ...rest, adminId, writeId, writable };
+		return { ...cloneDeep(rest), adminId, writeId, writable };
 	} else if (writable === Writable.WRITE) {
-		return { ...rest, writeId, writable };
+		return { ...cloneDeep(rest), writeId, writable };
 	} else {
-		return { ...rest, writable };
+		return { ...cloneDeep(rest), writable };
 	}
 }

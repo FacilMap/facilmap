@@ -4,6 +4,7 @@ import { Writable, type MapData, CRU, type FindMapsResult, type PagedResults, So
 import { pick } from "lodash-es";
 import { SubscriptionStateType } from "facilmap-client/src/socket-client-subscription";
 import { MapSubscriptionStateType, type MapSubscriptionState } from "facilmap-client";
+import { getMapDataWithWritable } from "facilmap-utils";
 
 test("Create map (using default values)", async () => {
 	const storage = await openClientStorage();
@@ -84,26 +85,29 @@ test("Create map (ID already taken)", async () => {
 test("Create map (duplicate IDs)", async () => {
 	const storage = await openClientStorage();
 
-	const newId = generateTestMapSlug();
+	// Use different IDs for each test to avoid duplicate subscription errors
+	const newId1 = generateTestMapSlug();
+	const newId2 = generateTestMapSlug();
+	const newId3 = generateTestMapSlug();
 
 	await expect(async () => {
 		await createTemporaryMap(storage, {
-			readId: newId,
-			writeId: newId
+			readId: newId1,
+			writeId: newId1
 		});
 	}).rejects.toThrowError("have to be different");
 
 	await expect(async () => {
 		await createTemporaryMap(storage, {
-			readId: newId,
-			adminId: newId
+			readId: newId2,
+			adminId: newId2
 		});
 	}).rejects.toThrowError("have to be different");
 
 	await expect(async () => {
 		await createTemporaryMap(storage, {
-			writeId: newId,
-			adminId: newId
+			writeId: newId3,
+			adminId: newId3
 		});
 	}).rejects.toThrowError("have to be different");
 });
@@ -151,33 +155,39 @@ test("Rename map", async () => {
 	const onMapData = vi.fn();
 	storage.client.on("mapData", onMapData);
 
-	await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
+	const createMapData = getTemporaryMapData(storage._version, {});
+	let updatedMapData;
+	try {
+		await storage.client.createMapAndSubscribe(createMapData);
+
 		const update = {
 			readId: generateTestMapSlug(),
 			writeId: generateTestMapSlug(),
 			adminId: generateTestMapSlug()
 		} satisfies MapData<CRU.UPDATE>;
 
-		const updatedMapData = await storage.client.updateMap(createMapData.adminId, update);
+		updatedMapData = await storage.client.updateMap(createMapData.adminId, update) as Extract<MapDataWithWritable, { writable: Writable.ADMIN }>;
 
 		const expectedMapData = {
-			...mapData,
+			...storage.maps[createMapData.adminId].mapData!,
 			...update
 		} satisfies DeepReadonly<MapDataWithWritable>;
 
 		expect(updatedMapData).toEqual(expectedMapData);
 		expect(storage.maps[createMapData.adminId].mapData).toEqual(expectedMapData);
-		expect(onMapData).toHaveBeenLastCalledWith(expectedMapData);
-		expect(onMapSlugRename).toHaveBeenCalledWith(createMapData.adminId, expectedMapData.adminId);
+		expect(onMapData).toHaveBeenLastCalledWith(createMapData.adminId, expectedMapData);
+		expect(onMapSlugRename).toHaveBeenCalledWith({ [createMapData.adminId]: expectedMapData.adminId });
 
-		await expect(async () => await storage.client.getMap(createMapData.readId)).rejects.toThrow("This map does not exist.");
-		await expect(async () => await storage.client.getMap(createMapData.writeId)).rejects.toThrow("This map does not exist.");
-		await expect(async () => await storage.client.getMap(createMapData.adminId)).rejects.toThrow("This map does not exist.");
+		await expect(async () => await storage.client.getMap(createMapData.readId)).rejects.toThrow("could not be found");
+		await expect(async () => await storage.client.getMap(createMapData.writeId)).rejects.toThrow("could not be found");
+		await expect(async () => await storage.client.getMap(createMapData.adminId)).rejects.toThrow("could not be found");
 
-		expect(await storage.client.getMap(update.readId)).toEqual(pick(expectedMapData, ["id", "name", "description"]));
-		expect(await storage.client.getMap(update.writeId)).toEqual(pick(expectedMapData, ["id", "name", "description"]));
-		expect(await storage.client.getMap(update.adminId)).toEqual(pick(expectedMapData, ["id", "name", "description"]));
-	});
+		expect(await storage.client.getMap(update.readId)).toEqual(getMapDataWithWritable(expectedMapData, Writable.READ));
+		expect(await storage.client.getMap(update.writeId)).toEqual(getMapDataWithWritable(expectedMapData, Writable.WRITE));
+		expect(await storage.client.getMap(update.adminId)).toEqual(expectedMapData);
+	} finally {
+		await storage.client.deleteMap((updatedMapData ?? createMapData).adminId);
+	}
 });
 
 test("Rename map (ID already taken)", async () => {
@@ -187,19 +197,19 @@ test("Rename map (ID already taken)", async () => {
 	await createTemporaryMap(storage1, {}, async (createMapData1) => {
 		await createTemporaryMap(storage2, {}, async (createMapData2) => {
 			await expect(async () => {
-				await storage2.client.updateMap(createMapData1.adminId, {
+				await storage2.client.updateMap(createMapData2.adminId, {
 					readId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
-				await storage2.client.updateMap(createMapData1.adminId, {
+				await storage2.client.updateMap(createMapData2.adminId, {
 					writeId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
-				await storage2.client.updateMap(createMapData1.adminId, {
+				await storage2.client.updateMap(createMapData2.adminId, {
 					adminId: createMapData1.readId
 				});
 			}).rejects.toThrowError("already taken");
@@ -247,8 +257,7 @@ test("Delete map", async () => {
 
 	expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(MapSubscriptionStateType.DELETED);
 
-	const result = await storage.client.getMap(mapData.readId);
-	expect(result).toBeNull();
+	await expect(() => storage.client.getMap(mapData.readId)).rejects.toThrowError("could not be found");
 });
 
 test("Open existing map", async () => {
