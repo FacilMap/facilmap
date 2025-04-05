@@ -49,6 +49,8 @@ export const mapSubscriptionValidator = z.object({
 export const subscribeToMapPickValidator = allMapObjectsPickValidator.exclude(["linesWithTrackPoints"]);
 export type SubscribeToMapPick = z.infer<typeof subscribeToMapPickValidator>;
 
+export const subscribeToMapDefaultPick = ["mapData" as const, "markers" as const, "lines" as const, "linePoints" as const, "types" as const, "views" as const];
+
 export type SubscribeToMapItem = AllMapObjectsItem<Exclude<AllMapObjectsPick, "linesWithTrackPoints">>;
 
 export type RoutePoints = { trackPoints: TrackPoint[] };

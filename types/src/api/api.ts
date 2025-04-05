@@ -1,4 +1,4 @@
-import type { ApiV3 } from "./api-v3";
+import type { ApiV3 } from "./api-v3.js";
 
 export enum ApiVersion {
 	V3 = "v3"

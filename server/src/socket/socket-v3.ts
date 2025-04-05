@@ -4,7 +4,7 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
@@ -312,7 +312,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.api.geoip();
 			},
 
-			subscribeToMap: async (mapSlug, { pick = ["mapData" as const, "markers" as const, "lines" as const, "linePoints" as const, "types" as const, "views" as const], history = false } = {}) => {
+			subscribeToMap: async (mapSlug, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
 				const subscription = Object.values(this.mapSubscriptions).flat().find((s) => s.mapSlug === mapSlug);
 				const pickBefore = subscription?.pick;
 				if (!subscription) {
@@ -333,7 +333,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				await this.emitAllMapObjects(mapSlug, results);
 			},
 
-			createMapAndSubscribe: async (data, { pick = ["mapData" as const, "markers" as const, "lines" as const, "linePoints" as const, "types" as const, "views" as const], history = false } = {}) => {
+			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
 				const results = await this.api.createMap(data, {
 					pick: this.bbox ? pick : pick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox

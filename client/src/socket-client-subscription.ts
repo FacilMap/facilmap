@@ -48,7 +48,8 @@ export abstract class SocketClientSubscription<Data extends { state: any }> {
 
 		_defineDynamicGetters(this, this.data, this.reactiveObjectProvider);
 
-		this.subscribePromise = this._subscribe().then(() => this);
+		// Subscribe asynchronously to allow instance to be fully constructed
+		this.subscribePromise = Promise.resolve().then(() => this._subscribe()).then(() => this);
 	}
 
 	protected async _subscribe(): Promise<void> {

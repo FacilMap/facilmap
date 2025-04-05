@@ -1,10 +1,12 @@
-import type {
-	ID, Marker, LineWithTrackPoints, View, Type, HistoryEntry, EventName, EventHandler, MapDataWithWritable,
-	MapSlug, TrackPoints, Route, Line, LinePoints, RoutePoints, DeepReadonly
+import {
+	type ID, type Marker, type LineWithTrackPoints, type View, type Type, type HistoryEntry, type EventName,
+	type EventHandler, type MapDataWithWritable, type MapSlug, type Route, type Line, type LinePoints,
+	type RoutePoints, type DeepReadonly, fromEntries, entries, subscribeToMapDefaultPick, keys
 } from "facilmap-types";
 import { SocketClient, type ClientEvents } from "./socket-client";
 import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
 import { mergeTrackPoints } from "./utils";
+import type { RouteWithTrackPoints } from "./socket-client-route-subscription";
 
 export interface MapStorage {
 	mapData: DeepReadonly<MapDataWithWritable> | undefined;
@@ -14,8 +16,6 @@ export interface MapStorage {
 	types: Record<ID, DeepReadonly<Type>>;
 	history: Record<ID, DeepReadonly<HistoryEntry>>;
 };
-
-export type RouteWithTrackPoints = Route & { trackPoints: TrackPoints };
 
 export class SocketClientStorage {
 	reactiveObjectProvider: ReactiveObjectProvider;
@@ -131,8 +131,46 @@ export class SocketClientStorage {
 
 			emit: (...args) => {
 				switch (args[0]) {
-					case "subscribeToMap":
-						this.reactiveObjectProvider.set(this.maps, args[1].args[0], {
+					case "subscribeToMap": {
+						const mapSlug = args[1].args[0];
+						const pick = args[1].args[1]?.pick ?? subscribeToMapDefaultPick;
+						if (!this.maps[mapSlug]) {
+							this.reactiveObjectProvider.set(this.maps, mapSlug, {
+								mapData: undefined,
+								markers: {},
+								lines: {},
+								types: {},
+								views: {},
+								history: {}
+							});
+						}
+
+						// Gracefully re-aggregate objects in case of a reconnect: First receive objects and put them into
+						// the storage, and when all objects have arrived, delete the ones that are in the storage but were
+						// not received this time. This way we don’t need to clear the storage (causing them to temporarily
+						// disappear for the user on a reconnect), but still we catch deletions that happened while the
+						// connection was gone.
+						const getRecordedIds = recordReceivedIds(this.client, mapSlug);
+						args[1].result.then(() => {
+							const recordedIds = getRecordedIds();
+							for (const key of keys(this.maps[mapSlug])) {
+								if (key !== "mapData" && pick.includes(key)) {
+									for (const id of keys(this.maps[mapSlug][key])) {
+										if (!recordedIds[key].includes(Number(id))) {
+											this.reactiveObjectProvider.delete(this.maps[mapSlug][key], id);
+										}
+									}
+								}
+							}
+						}, () => {
+							// Remove listeners in case of error
+							getRecordedIds();
+						});
+						break;
+					}
+
+					case "createMapAndSubscribe":
+						this.reactiveObjectProvider.set(this.maps, args[1].args[0].adminId, {
 							mapData: undefined,
 							markers: {},
 							lines: {},
@@ -270,4 +308,25 @@ export class SocketClientStorage {
 		});
 	}
 
+}
+
+const recordTypesByEvent = { marker: "markers", line: "lines", type: "types", view: "views", history: "history" } as const;
+
+function recordReceivedIds(client: SocketClient, mapSlug: MapSlug): () => Record<typeof recordTypesByEvent[keyof typeof recordTypesByEvent], ID[]> {
+	const received = fromEntries(Object.values(recordTypesByEvent).map((t) => [t, [] as ID[]]));
+	const handlers = fromEntries(entries(recordTypesByEvent).map(([e, t]) => [e, (slug: MapSlug, obj: { id: ID }) => {
+		if (slug === mapSlug) {
+			received[t].push(obj.id);
+		}
+	}]));
+	for (const [t, handler] of entries(handlers)) {
+		client.on(t, handler);
+	}
+
+	return () => {
+		for (const [t, handler] of entries(handlers)) {
+			client.removeListener(t, handler);
+		}
+		return received;
+	};
 }

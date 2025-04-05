@@ -1,14 +1,14 @@
-import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData";
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base";
-import type { CRU } from "../cru";
-import { lineValidator, type Line, type TrackPoint } from "../line";
-import type { SearchResult } from "../searchResult";
-import { markerValidator, type Marker } from "../marker";
-import { routeRequestValidator, type RouteInfo } from "../route";
-import { typeValidator, type Type } from "../type";
-import { viewValidator, type View } from "../view";
-import type { HistoryEntry } from "../historyEntry";
-import { allMapObjectsPickValidator, bboxWithExceptValidator, optionalParam, pagingValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common";
+import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base.js";
+import type { CRU } from "../cru.js";
+import { lineValidator, type Line, type TrackPoint } from "../line.js";
+import type { SearchResult } from "../searchResult.js";
+import { markerValidator, type Marker } from "../marker.js";
+import { routeRequestValidator, type RouteInfo } from "../route.js";
+import { typeValidator, type Type } from "../type.js";
+import { viewValidator, type View } from "../view.js";
+import type { HistoryEntry } from "../historyEntry.js";
+import { allMapObjectsPickValidator, bboxWithExceptValidator, optionalParam, pagingValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common.js";
 import * as z from "zod";
 
 export const apiV3RequestValidators = {

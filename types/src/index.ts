@@ -16,5 +16,6 @@ export * from "./socket/socket-v2.js";
 export * from "./socket/socket-v3.js";
 export * from "./socket/socket.js";
 export * from "./type.js";
+export * from "./utility.js";
 export * from "./view.js";
 export * from "./geoJson.js";

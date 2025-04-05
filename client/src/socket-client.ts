@@ -503,7 +503,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("subscribeToMap", mapSlug, options);
 	}
 
-	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription {
+	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & Promise<SocketClientMapSubscription> {
 		if (this.data.mapSubscriptions[mapSlug]) {
 			throw new Error(`There is already a subscription to map ${mapSlug}.`);
 		}
@@ -520,7 +520,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("createMapAndSubscribe", data, options);
 	}
 
-	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription {
+	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & Promise<SocketClientMapSubscription> {
 		if (this.data.mapSubscriptions[data.adminId]) {
 			throw new Error(`There is already a subscription to map ${data.adminId}.`);
 		}
@@ -542,7 +542,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("subscribeToRoute", routeKey, params);
 	}
 
-	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription {
+	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription & Promise<SocketClientRouteSubscription> {
 		if (this.data.routeSubscriptions[routeKey]) {
 			throw new Error(`There is already a subscription to route ${routeKey}.`);
 		}

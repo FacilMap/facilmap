@@ -544,7 +544,8 @@
     "leaflet-map": {
         "open-full-size": "Open {{appName}} in full size",
         "loading": "Loading…",
-        "attribution-notice": "This app is based on map data from [OpenStreetMap](https://www.openstreetmap.org/copyright). Find out more in the “[About {{appName}}](#about-dialog)” dialog in the Help menu."
+        "attribution-notice": "This app is based on map data from [OpenStreetMap](https://www.openstreetmap.org/copyright). Find out more in the “[About {{appName}}](#about-dialog)” dialog in the Help menu.",
+        "locate-error-title": "Error getting your position"
     },
     "leaflet-map-components": {
         "pois-too-many-results": "Not all POIs are shown because there are too many results. Zoom in to show all results.",

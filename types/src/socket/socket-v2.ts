@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type DistributiveKeyOf, type DistributiveOmit, type ID, type MapSlug, type ObjectWithId, type ReplaceExistingProperties } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { EventName } from "../events.js";
@@ -14,6 +14,7 @@ import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type Paged
 import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
 import { routeParametersValidator, type Route } from "../route.js";
+import type { DistributiveKeyOf, DistributiveOmit, ReplaceExistingProperties } from "../utility.js";
 
 // Socket v2:
 // - “icon” is called “symbol” in `Marker.symbol`, `Type.defaultSymbol`, `Type.symbolFixed`, `Type.fields[].controlSymbol` and

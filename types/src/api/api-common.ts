@@ -1,10 +1,11 @@
 import * as z from "zod";
-import type { MapData, MapDataWithWritable, Writable } from "../mapData";
-import { bboxValidator, bboxWithZoomValidator, type ID, type ReplaceProperties } from "../base";
-import type { Line, TrackPoint } from "../line";
-import type { Marker } from "../marker";
-import type { Type } from "../type";
-import type { View } from "../view";
+import type { MapData, MapDataWithWritable, Writable } from "../mapData.js";
+import { bboxValidator, bboxWithZoomValidator, type ID } from "../base.js";
+import type { Line, TrackPoint } from "../line.js";
+import type { Marker } from "../marker.js";
+import type { Type } from "../type.js";
+import type { View } from "../view.js";
+import type { ReplaceProperties } from "../utility.js";
 
 export const pagingValidator = z.object({
 	start: z.coerce.number().int().min(0).default(() => 0),

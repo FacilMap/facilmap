@@ -1,33 +1,33 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMap, openClient, retry } from "../utils";
-import { CRU, type Marker, type FindOnMapMarker, type ID } from "facilmap-types";
+import { createTemporaryMap, openClientStorage, retry } from "../utils";
+import { CRU, type Marker, type FindOnMapMarker, SocketVersion } from "facilmap-types";
 import { cloneDeep } from "lodash-es";
 
 test("Create marker (using default values)", async () => {
-	// client1: Creates the marker and has it in its bbox
-	// client2: Has the marker in its bbox
-	// client3: Does not have the marker in its bbox
+	// storage1: Creates the marker and has it in its bbox
+	// storage2: Has the marker in its bbox
+	// storage3: Does not have the marker in its bbox
 
-	const client1 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.readId);
-		const client3 = await openClient(mapData.readId);
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		const storage2 = await openClientStorage(mapData.readId);
+		const storage3 = await openClientStorage(mapData.readId);
 
 		const onMarker1 = vi.fn();
-		client1.on("marker", onMarker1);
+		storage1.client.on("marker", onMarker1);
 		const onMarker2 = vi.fn();
-		client2.on("marker", onMarker2);
+		storage2.client.on("marker", onMarker2);
 		const onMarker3 = vi.fn();
-		client3.on("marker", onMarker3);
+		storage3.client.on("marker", onMarker3);
 
-		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+		const markerType = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
-		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+		await storage1.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage2.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage3.client.setBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
 
-		const marker = await client1.addMarker({
+		const marker = await storage1.client.createMarker(mapData.adminId, {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
@@ -57,21 +57,21 @@ test("Create marker (using default values)", async () => {
 			expect(onMarker3).toHaveBeenCalledTimes(0);
 		});
 
-		expect(onMarker1).toHaveBeenCalledWith(expectedMarker);
-		expect(onMarker2).toHaveBeenCalledWith(expectedMarker);
+		expect(onMarker1).toHaveBeenCalledWith(mapData.adminId, expectedMarker);
+		expect(onMarker2).toHaveBeenCalledWith(mapData.readId, expectedMarker);
 
 		const expectedMarkerRecord = { [expectedMarker.id]: expectedMarker };
-		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client3.markers)).toEqual({});
+		expect(cloneDeep(storage1.maps[mapData.adminId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage2.maps[mapData.readId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage3.maps[mapData.readId].markers)).toEqual({});
 	});
 });
 
 test("Create marker (using custom values)", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client, {}, async (createMapData, mapData) => {
-		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
+	await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
+		const markerType = Object.values(storage.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
 		const data: Marker<CRU.CREATE> = {
 			lat: 10,
@@ -88,7 +88,7 @@ test("Create marker (using custom values)", async () => {
 			ele: 200
 		};
 
-		const marker = await client.addMarker(data);
+		const marker = await storage.client.createMarker(mapData.adminId, data);
 
 		const expectedMarker = {
 			id: marker.id,
@@ -101,43 +101,42 @@ test("Create marker (using custom values)", async () => {
 });
 
 test("Edit marker", async () => {
-	// client1: Creates the marker and has it in its bbox
-	// client2: Has the marker in its bbox
-	// client3: Does not have the marker in its bbox
+	// storage1: Creates the marker and has it in its bbox
+	// storage2: Has the marker in its bbox
+	// storage3: Does not have the marker in its bbox
 
-	const client1 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.readId);
-		const client3 = await openClient(mapData.readId);
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		const storage2 = await openClientStorage(mapData.readId);
+		const storage3 = await openClientStorage(mapData.readId);
 
-		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+		const markerType = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
-		const createdMarker = await client1.addMarker({
+		const createdMarker = await storage1.client.createMarker(mapData.adminId, {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
 			ele: null
 		});
 
-		const secondType = await client1.addType({
+		const secondType = await storage1.client.createType(mapData.adminId, {
 			type: "marker",
 			name: "Second type"
 		});
 
-		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+		await storage1.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage2.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage3.client.setBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
 
 		const onMarker1 = vi.fn();
-		client1.on("marker", onMarker1);
+		storage1.client.on("marker", onMarker1);
 		const onMarker2 = vi.fn();
-		client2.on("marker", onMarker2);
+		storage2.client.on("marker", onMarker2);
 		const onMarker3 = vi.fn();
-		client3.on("marker", onMarker3);
+		storage3.client.on("marker", onMarker3);
 
-		const newData: Marker<CRU.UPDATE> & { id: ID } = {
-			id: createdMarker.id,
+		const newData: Marker<CRU.UPDATE> = {
 			lat: 10,
 			lon: 10,
 			typeId: secondType.id,
@@ -151,9 +150,10 @@ test("Edit marker", async () => {
 			},
 			ele: 200
 		};
-		const marker = await client1.editMarker(newData);
+		const marker = await storage1.client.updateMarker(mapData.adminId, createdMarker.id, newData);
 
 		const expectedMarker = {
+			id: createdMarker.id,
 			mapId: mapData.id,
 			...newData
 		};
@@ -166,34 +166,34 @@ test("Edit marker", async () => {
 			expect(onMarker3).toHaveBeenCalledTimes(0);
 		});
 
-		expect(onMarker1).toHaveBeenCalledWith(expectedMarker);
-		expect(onMarker2).toHaveBeenCalledWith(expectedMarker);
+		expect(onMarker1).toHaveBeenCalledWith(mapData.adminId, expectedMarker);
+		expect(onMarker2).toHaveBeenCalledWith(mapData.readId, expectedMarker);
 
-		const expectedMarkerRecord = { [expectedMarker.id]: expectedMarker };
-		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client3.markers)).toEqual({});
+		const expectedMarkerRecord = { [createdMarker.id]: expectedMarker };
+		expect(cloneDeep(storage1.maps[mapData.adminId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage2.maps[mapData.readId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage3.maps[mapData.readId].markers)).toEqual({});
 	});
 });
 
 test("Delete marker", async () => {
-	// client1: Creates the marker and has it in its bbox
-	// client2: Has the marker in its bbox
-	// client3: Does not have the marker in its bbox
+	// storage1: Creates the marker and has it in its bbox
+	// storage2: Has the marker in its bbox
+	// storage3: Does not have the marker in its bbox
 
-	const client1 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.readId);
-		const client3 = await openClient(mapData.readId);
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		const storage2 = await openClientStorage(mapData.readId);
+		const storage3 = await openClientStorage(mapData.readId);
 
-		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+		const markerType = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
-		await client1.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client2.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		await client3.updateBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
+		await storage1.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage2.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		await storage3.client.setBbox({ top: 5, bottom: 0, left: 0, right: 5, zoom: 1 });
 
-		const createdMarker = await client1.addMarker({
+		const createdMarker = await storage1.client.createMarker(mapData.adminId, {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
@@ -201,15 +201,13 @@ test("Delete marker", async () => {
 		});
 
 		const onDeleteMarker1 = vi.fn();
-		client1.on("deleteMarker", onDeleteMarker1);
+		storage1.client.on("deleteMarker", onDeleteMarker1);
 		const onDeleteMarker2 = vi.fn();
-		client2.on("deleteMarker", onDeleteMarker2);
+		storage2.client.on("deleteMarker", onDeleteMarker2);
 		const onDeleteMarker3 = vi.fn();
-		client3.on("deleteMarker", onDeleteMarker3);
+		storage3.client.on("deleteMarker", onDeleteMarker3);
 
-		const deletedMarker = await client1.deleteMarker({ id: createdMarker.id });
-
-		expect(deletedMarker).toEqual(createdMarker);
+		await storage1.client.deleteMarker(mapData.adminId, createdMarker.id);
 
 		await retry(() => {
 			expect(onDeleteMarker1).toHaveBeenCalledTimes(1);
@@ -217,26 +215,26 @@ test("Delete marker", async () => {
 			expect(onDeleteMarker3).toHaveBeenCalledTimes(1);
 		});
 
-		expect(onDeleteMarker1).toHaveBeenCalledWith({ id: deletedMarker.id });
-		expect(onDeleteMarker2).toHaveBeenCalledWith({ id: deletedMarker.id });
-		expect(onDeleteMarker3).toHaveBeenCalledWith({ id: deletedMarker.id });
+		expect(onDeleteMarker1).toHaveBeenCalledWith(mapData.adminId, { id: createdMarker.id });
+		expect(onDeleteMarker2).toHaveBeenCalledWith(mapData.readId, { id: createdMarker.id });
+		expect(onDeleteMarker3).toHaveBeenCalledWith(mapData.readId, { id: createdMarker.id });
 
 		const expectedMarkerRecord = { };
-		expect(cloneDeep(client1.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client2.markers)).toEqual(expectedMarkerRecord);
-		expect(cloneDeep(client3.markers)).toEqual({});
+		expect(cloneDeep(storage1.maps[mapData.adminId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage2.maps[mapData.readId].markers)).toEqual(expectedMarkerRecord);
+		expect(cloneDeep(storage3.maps[mapData.readId].markers)).toEqual({});
 	});
 });
 
 test("Get marker", async () => {
-	const client1 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.readId);
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		const storage2 = await openClientStorage(mapData.readId);
 
-		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+		const markerType = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
-		const marker = await client1.addMarker({
+		const marker = await storage1.client.createMarker(mapData.adminId, {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
@@ -258,19 +256,19 @@ test("Get marker", async () => {
 			ele: null
 		} satisfies Marker;
 
-		expect(await client2.getMarker({ id: marker.id })).toEqual(expectedMarker);
+		expect(await storage2.client.getMarker(mapData.readId, marker.id)).toEqual(expectedMarker);
 	});
 });
 
 test("Find marker", async () => {
-	const client1 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData, mapData) => {
-		const client2 = await openClient(mapData.readId);
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		const storage2 = await openClientStorage(mapData.readId);
 
-		const markerType = Object.values(client1.types).find((t) => t.type === "marker")!;
+		const markerType = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 
-		const marker = await client1.addMarker({
+		const marker = await storage1.client.createMarker(mapData.adminId, {
 			name: "Marker test",
 			lat: 10,
 			lon: 10,
@@ -290,41 +288,41 @@ test("Find marker", async () => {
 			icon: "a"
 		};
 
-		expect(await client2.findOnMap({ query: "Test" })).toEqual([{ ...expectedResult, similarity: 0.3333333333333333 }]);
-		expect(await client2.findOnMap({ query: "T_st" })).toEqual([{ ...expectedResult, similarity: 0.16666666666666666 }]);
-		expect(await client2.findOnMap({ query: "M%r" })).toEqual([{ ...expectedResult, similarity: 0 }]);
-		expect(await client2.findOnMap({ query: "Bla" })).toEqual([]);
+		expect(await storage2.client.findOnMap(mapData.readId, "Test")).toEqual([{ ...expectedResult, similarity: 0.3333333333333333 }]);
+		expect(await storage2.client.findOnMap(mapData.readId, "T_st")).toEqual([{ ...expectedResult, similarity: 0.16666666666666666 }]);
+		expect(await storage2.client.findOnMap(mapData.readId, "M%r")).toEqual([{ ...expectedResult, similarity: 0 }]);
+		expect(await storage2.client.findOnMap(mapData.readId, "Bla")).toEqual([]);
 	});
 });
 
 test("Try to create marker with line type", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client, {}, async (createMapData) => {
-		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+	await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
+		const lineType = Object.values(storage.maps[mapData.adminId].types).find((t) => t.type === "line")!;
 
 		await expect(async () => {
-			await client.addMarker({
+			await storage.client.createMarker(mapData.adminId, {
 				lat: 10,
 				lon: 10,
 				typeId: lineType.id
 			});
 		}).rejects.toThrowError("Cannot use line type for marker");
 
-		const client3 = await openClient(createMapData.adminId);
-		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		expect(cloneDeep(client3.markers)).toEqual({});
+		const storage3 = await openClientStorage(createMapData.adminId);
+		await storage3.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		expect(cloneDeep(storage3.maps[mapData.adminId].markers)).toEqual({});
 	});
 });
 
 test("Try to update marker with line type", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client, {}, async (createMapData) => {
-		const markerType = Object.values(client.types).find((t) => t.type === "marker")!;
-		const lineType = Object.values(client.types).find((t) => t.type === "line")!;
+	await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
+		const markerType = Object.values(storage.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
+		const lineType = Object.values(storage.maps[mapData.adminId].types).find((t) => t.type === "line")!;
 
-		const marker = await client.addMarker({
+		const marker = await storage.client.createMarker(mapData.adminId, {
 			lat: 10,
 			lon: 10,
 			typeId: markerType.id,
@@ -332,53 +330,52 @@ test("Try to update marker with line type", async () => {
 		});
 
 		await expect(async () => {
-			await client.editMarker({
-				id: marker.id,
+			await storage.client.updateMarker(mapData.adminId, marker.id, {
 				typeId: lineType.id
 			});
 		}).rejects.toThrowError("Cannot use line type for marker");
 
-		const client3 = await openClient(createMapData.adminId);
-		await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-		expect(cloneDeep(client3.markers)).toEqual({
+		const storage3 = await openClientStorage(createMapData.adminId);
+		await storage3.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+		expect(cloneDeep(storage3.maps[mapData.adminId].markers)).toEqual({
 			[marker.id]: marker
 		});
 	});
 });
 
 test("Try to create marker with marker type from other map", async () => {
-	const client1 = await openClient();
-	const client2 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
+	const storage2 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData) => {
-		await createTemporaryMap(client2, {}, async () => {
-			const markerType2 = Object.values(client2.types).find((t) => t.type === "marker")!;
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		await createTemporaryMap(storage2, {}, async (createMapData2, mapData2) => {
+			const markerType2 = Object.values(storage2.maps[mapData2.adminId].types).find((t) => t.type === "marker")!;
 
 			await expect(async () => {
-				await client1.addMarker({
+				await storage1.client.createMarker(mapData.adminId, {
 					lat: 10,
 					lon: 10,
 					typeId: markerType2.id
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createMapData.adminId);
-			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-			expect(cloneDeep(client3.markers)).toEqual({});
+			const storage3 = await openClientStorage(createMapData.adminId);
+			await storage3.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+			expect(cloneDeep(storage3.maps[createMapData.adminId].markers)).toEqual({});
 		});
 	});
 });
 
 test("Try to update marker with marker type from other map", async () => {
-	const client1 = await openClient();
-	const client2 = await openClient();
+	const storage1 = await openClientStorage(undefined, SocketVersion.V3);
+	const storage2 = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(client1, {}, async (createMapData) => {
-		await createTemporaryMap(client2, {}, async () => {
-			const markerType1 = Object.values(client1.types).find((t) => t.type === "marker")!;
-			const markerType2 = Object.values(client2.types).find((t) => t.type === "marker")!;
+	await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
+		await createTemporaryMap(storage2, {}, async (createMapData2, mapData2, subscription2) => {
+			const markerType1 = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
+			const markerType2 = Object.values(storage2.maps[mapData2.adminId].types).find((t) => t.type === "marker")!;
 
-			const marker = await client1.addMarker({
+			const marker = await storage1.client.createMarker(mapData.adminId, {
 				lat: 10,
 				lon: 10,
 				typeId: markerType1.id,
@@ -386,15 +383,14 @@ test("Try to update marker with marker type from other map", async () => {
 			});
 
 			await expect(async () => {
-				await client1.editMarker({
-					id: marker.id,
+				await storage1.client.updateMarker(mapData.adminId, marker.id, {
 					typeId: markerType2.id
 				});
 			}).rejects.toThrowError("could not be found");
 
-			const client3 = await openClient(createMapData.adminId);
-			await client3.updateBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
-			expect(cloneDeep(client3.markers)).toEqual({
+			const storage3 = await openClientStorage(createMapData.adminId);
+			await storage3.client.setBbox({ top: 20, bottom: 0, left: 0, right: 20, zoom: 1 });
+			expect(cloneDeep(storage3.maps[createMapData.adminId].markers)).toEqual({
 				[marker.id]: marker
 			});
 		});

@@ -16,11 +16,12 @@ import type { ClientContext } from "../facil-map-context-provider/client-context
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 import { type Optional } from "facilmap-utils";
-import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
+import { getI18n, i18nResourceChangeCounter, useI18n } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
+import { useToasts } from "../ui/toasts/toasts.vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -202,6 +203,9 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 		map,
 		() => {
 			if (context.settings.locate) {
+				const toasts = useToasts();
+				const i18n = useI18n();
+
 				if (!coreIconList.includes("screenshot")) {
 					console.warn(`Icon "screenshot" is not in core icons.`);
 				}
@@ -240,12 +244,18 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 						// After the control zoomed to the location on first activation, we keep the zoom level constant to not annoy
 						// the user. This is reset on the "locatedeactivate" event below.
 						this.options.keepCurrentZoomLevel = true;
+					},
+
+					onLocationError(err: Error) {
+						toasts.showErrorToast("fm-leaflet-map-components-locate-error", i18n.t("locate-error-title"), err);
 					}
 				}));
 			}
 		},
 		(locateControl, map) => {
 			if (locateControl) {
+				const toasts = useToasts();
+
 				watch(() => isNarrowBreakpoint(), (isNarrow) => {
 					locateControl.setPosition(isNarrow ? "bottomright" : "topleft");
 				}, { immediate: true });
@@ -255,10 +265,14 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 				const active = ref(false);
 				const handleActivate = () => {
 					active.value = true;
+					toasts.hideToast("fm-leaflet-map-components-locate-error");
 				};
 				const handleDeactivate = () => {
 					active.value = false;
 					locateControl.options.keepCurrentZoomLevel = false;
+
+					// locatedeactivate is also triggered in case of an error, but before onLocationError() is called
+					toasts.hideToast("fm-leaflet-map-components-locate-error");
 				};
 				map.on("locateactivate", handleActivate);
 				map.on("locatedeactivate", handleDeactivate);

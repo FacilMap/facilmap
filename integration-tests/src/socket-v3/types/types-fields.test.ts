@@ -1,11 +1,11 @@
 import { expect, test, vi } from "vitest";
-import { createTemporaryMap, openClient } from "../../utils";
+import { createTemporaryMap, openClientStorage } from "../../utils";
 
 test("Rename field (marker type)", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "marker",
 			fields: [
@@ -14,9 +14,9 @@ test("Rename field (marker type)", async () => {
 			]
 		});
 
-		await client.updateBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
+		await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
 
-		const marker = await client.addMarker({
+		const marker = await storage.client.createMarker(mapData.adminId, {
 			lat: 0,
 			lon: 0,
 			typeId: type.id,
@@ -27,10 +27,9 @@ test("Rename field (marker type)", async () => {
 		});
 
 		const onMarker = vi.fn();
-		client.on("marker", onMarker);
+		storage.client.on("marker", onMarker);
 
-		await client.editType({
-			id: type.id,
+		await storage.client.updateType(mapData.adminId, type.id, {
 			fields: [
 				{ oldName: "Field 1", name: "Field 1 new", type: "input" },
 				{ name: "Field 2", type: "input" }
@@ -39,7 +38,7 @@ test("Rename field (marker type)", async () => {
 
 		expect(onMarker).toBeCalledTimes(1);
 
-		expect(client.markers[marker.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].markers[marker.id].data).toEqual({
 			"Field 1 new": "value 1",
 			"Field 2": "value 2"
 		});
@@ -47,10 +46,10 @@ test("Rename field (marker type)", async () => {
 });
 
 test("Rename field (line type)", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "line",
 			fields: [
@@ -59,7 +58,7 @@ test("Rename field (line type)", async () => {
 			]
 		});
 
-		const line = await client.addLine({
+		const line = await storage.client.createLine(mapData.adminId, {
 			routePoints: [
 				{ lat: 0, lon: 0 },
 				{ lat: 1, lon: 1 }
@@ -72,10 +71,9 @@ test("Rename field (line type)", async () => {
 		});
 
 		const onLine = vi.fn();
-		client.on("line", onLine);
+		storage.client.on("line", onLine);
 
-		await client.editType({
-			id: type.id,
+		await storage.client.updateType(mapData.adminId, type.id, {
 			fields: [
 				{ oldName: "Field 1", name: "Field 1 new", type: "input" },
 				{ name: "Field 2", type: "input" }
@@ -84,7 +82,7 @@ test("Rename field (line type)", async () => {
 
 		expect(onLine).toBeCalledTimes(1);
 
-		expect(client.lines[line.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].lines[line.id].data).toEqual({
 			"Field 1 new": "value 1",
 			"Field 2": "value 2"
 		});
@@ -92,10 +90,10 @@ test("Rename field (line type)", async () => {
 });
 
 test("Rename dropdown option (marker type)", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "marker",
 			fields: [
@@ -103,9 +101,9 @@ test("Rename dropdown option (marker type)", async () => {
 			]
 		});
 
-		await client.updateBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
+		await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
 
-		const marker1 = await client.addMarker({
+		const marker1 = await storage.client.createMarker(mapData.adminId, {
 			lat: 0,
 			lon: 0,
 			typeId: type.id,
@@ -114,7 +112,7 @@ test("Rename dropdown option (marker type)", async () => {
 			}
 		});
 
-		const marker2 = await client.addMarker({
+		const marker2 = await storage.client.createMarker(mapData.adminId, {
 			lat: 0,
 			lon: 0,
 			typeId: type.id,
@@ -124,10 +122,9 @@ test("Rename dropdown option (marker type)", async () => {
 		});
 
 		const onMarker = vi.fn();
-		client.on("marker", onMarker);
+		storage.client.on("marker", onMarker);
 
-		await client.editType({
-			id: type.id,
+		await storage.client.updateType(mapData.adminId, type.id, {
 			fields: [
 				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
 			]
@@ -135,20 +132,20 @@ test("Rename dropdown option (marker type)", async () => {
 
 		expect(onMarker).toBeCalledTimes(1);
 
-		expect(client.markers[marker1.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].markers[marker1.id].data).toEqual({
 			"Dropdown": "Option 1"
 		});
-		expect(client.markers[marker2.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].markers[marker2.id].data).toEqual({
 			"Dropdown": "Option 2 new"
 		});
 	});
 });
 
 test("Rename dropdown option (line type)", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async (createMapData, mapData, result) => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "line",
 			fields: [
@@ -156,7 +153,7 @@ test("Rename dropdown option (line type)", async () => {
 			]
 		});
 
-		const line1 = await client.addLine({
+		const line1 = await storage.client.createLine(mapData.adminId, {
 			routePoints: [
 				{ lat: 0, lon: 0 },
 				{ lat: 1, lon: 1 }
@@ -167,7 +164,7 @@ test("Rename dropdown option (line type)", async () => {
 			}
 		});
 
-		const line2 = await client.addLine({
+		const line2 = await storage.client.createLine(mapData.adminId, {
 			routePoints: [
 				{ lat: 0, lon: 0 },
 				{ lat: 1, lon: 1 }
@@ -179,10 +176,9 @@ test("Rename dropdown option (line type)", async () => {
 		});
 
 		const onLine = vi.fn();
-		client.on("line", onLine);
+		storage.client.on("line", onLine);
 
-		await client.editType({
-			id: type.id,
+		await storage.client.updateType(mapData.adminId, type.id, {
 			fields: [
 				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
 			]
@@ -190,21 +186,21 @@ test("Rename dropdown option (line type)", async () => {
 
 		expect(onLine).toBeCalledTimes(1);
 
-		expect(client.lines[line1.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].lines[line1.id].data).toEqual({
 			"Dropdown": "Option 1"
 		});
-		expect(client.lines[line2.id].data).toEqual({
+		expect(storage.maps[mapData.adminId].lines[line2.id].data).toEqual({
 			"Dropdown": "Option 2 new"
 		});
 	});
 });
 
 test("Create type with duplicate fields", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
 		await expect(async () => {
-			await client.addType({
+			await storage.client.createType(mapData.adminId, {
 				name: "Test type",
 				type: "marker",
 				fields: [
@@ -217,10 +213,10 @@ test("Create type with duplicate fields", async () => {
 });
 
 test("Update type with duplicate fields", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "marker",
 			fields: [
@@ -230,8 +226,7 @@ test("Update type with duplicate fields", async () => {
 		});
 
 		await expect(async () => {
-			await client.editType({
-				id: type.id,
+			await storage.client.updateType(mapData.adminId, type.id, {
 				fields: [
 					{ name: "Field 1", type: "input" },
 					{ name: "Field 1", type: "textarea" }
@@ -242,11 +237,11 @@ test("Update type with duplicate fields", async () => {
 });
 
 test("Create type with duplicate dropdown values", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
 		await expect(async () => {
-			await client.addType({
+			await storage.client.createType(mapData.adminId, {
 				name: "Test type",
 				type: "marker",
 				fields: [
@@ -265,17 +260,16 @@ test("Create type with duplicate dropdown values", async () => {
 });
 
 test("Update type with duplicate dropdown values", async () => {
-	const client = await openClient();
+	const storage = await openClientStorage();
 
-	await createTemporaryMap(client, { createDefaultTypes: false }, async () => {
-		const type = await client.addType({
+	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+		const type = await storage.client.createType(mapData.adminId, {
 			name: "Test type",
 			type: "marker"
 		});
 
 		await expect(async () => {
-			await client.editType({
-				id: type.id,
+			await storage.client.updateType(mapData.adminId, type.id, {
 				fields: [
 					{
 						name: "Dropdown",

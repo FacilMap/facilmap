@@ -1,7 +1,9 @@
 // https://stackoverflow.com/a/49579497/242365
 type IfEquals<X, Y, A, B> = (<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2) ? A : B;
-export type WritableKeysOf<T> = { [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P, never> }[keyof T];
-export type DeletableKeysOf<T> = { [K in WritableKeysOf<T>]: {} extends Pick<T, K> ? K : never }[WritableKeysOf<T>];
+type RawWritableKeysOf<T> = { [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P, never> }[keyof T];
+type Key<K> = K | (K extends number ? `${K}` : never);
+export type WritableKeysOf<T> = Key<RawWritableKeysOf<T>>;
+export type DeletableKeysOf<T> = { [K in RawWritableKeysOf<T>]: {} extends Pick<T, K> ? Key<K> : never }[RawWritableKeysOf<T>];
 
 /**
  * Provides a generic reactivity implementation that should be adaptable to most reactivity frameworks (such as Vue and React).
