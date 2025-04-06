@@ -1,9 +1,11 @@
 import { ApiVersion } from "facilmap-types";
 import type Database from "../database/database";
-import { Router } from "express";
+import { Router, type ErrorRequestHandler } from "express";
 import { ApiV3Backend, apiV3Impl } from "./api-v3";
 import { arrayStream, serializeJsonValue } from "json-stream-es";
 import { writableToWeb } from "../utils/streams";
+import { serializeError } from "serialize-error";
+import bodyParser from "body-parser";
 
 const apiBackend = {
 	[ApiVersion.V3]: ApiV3Backend
@@ -15,6 +17,8 @@ const apiImpl = {
 
 function getSingleApiMiddleware(version: ApiVersion, database: Database): Router {
 	const router = Router();
+
+	router.use(bodyParser.json());
 
 	for (const [func, { method, route, getParams, sendResult }] of Object.entries(apiImpl[version])) {
 		router[method](route, async (req, res) => {
@@ -45,6 +49,23 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 			}
 		});
 	}
+
+	// Error handler, needs to be last
+	router.use(((err, req, res, next) => {
+		if (res.headersSent) {
+			return next(err);
+		}
+
+		res.set("Content-type", "text/plain; charset=utf-8");
+		if (err) {
+			res.set("X-FacilMap-Error", JSON.stringify(serializeError(err)));
+			res.status(err.status ?? err.statusCode ?? 500);
+			res.send(err.stack);
+		} else {
+			res.status(404);
+			res.send("Not found");
+		}
+	}) satisfies ErrorRequestHandler);
 
 	return router;
 }

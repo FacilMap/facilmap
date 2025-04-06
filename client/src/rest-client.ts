@@ -11,6 +11,7 @@ import {
 } from "json-stream-es";
 import { parse as parseContentDisposition } from "content-disposition";
 import { flatMapAsyncIterable } from "./utils";
+import { deserializeError } from "serialize-error";
 
 function parseStreamedResults<T>(res: Response): StreamedResults<T> {
 	return {
@@ -63,10 +64,10 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	fetchImpl: typeof fetch;
 	query: { lang?: string;  units?: Units } | undefined;
 
-	constructor(server: string, options: { fetch?: typeof fetch, query?: RestClient["query"] }) {
+	constructor(server: string, options?: { fetch?: typeof fetch, query?: RestClient["query"] }) {
 		this.baseUrl = `${server.endsWith("/") ? server.slice(0, -1) : server}/_api/${ApiVersion.V3}`;
-		this.fetchImpl = options.fetch ?? fetch;
-		this.query = options.query;
+		this.fetchImpl = options?.fetch ?? fetch;
+		this.query = options?.query;
 	}
 
 	protected async fetch(path: string, init?: Omit<RequestInit, "body"> & { query?: Record<string, string | number | undefined>; body?: BodyInit | object }): Promise<Response> {
@@ -79,9 +80,11 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		}).flatMap(([k, v]) => v != null ? [[k, `${v}`]] : [])))}`;
 		const url = `${urlWithoutQuery}${queryString ? `${urlWithoutQuery.includes("?") ? "&" : "?"}${queryString}` : ""}`;
 
-		const resolvedInit: RequestInit = { ...rest };
+		const resolvedInit: RequestInit & { headers: Headers } = {
+			...rest,
+			headers: new Headers(rest.headers)
+		};
 		if (body && body.constructor === Object) {
-			resolvedInit.headers = new Headers(resolvedInit.headers);
 			if (!resolvedInit.headers.has("Content-type")) {
 				resolvedInit.headers.set("Content-type", "application/json");
 			}
@@ -90,17 +93,26 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 			resolvedInit.body = body as BodyInit;
 		}
 
+		if (!resolvedInit.headers.has("Accept")) {
+			resolvedInit.headers.set("Accept", "application/*, text/csv"); // Do not accept HTML to get properly formatted error messages
+		}
+
 		const res = await this.fetchImpl(url, resolvedInit);
 
 		if (!res.ok) {
-			let responseBody: string | undefined = undefined;
-			try {
-				responseBody = await res.text();
-			} catch {
-				// Ignore
-			}
+			if (res.headers.has("X-FacilMap-Error")) {
+				const cause = deserializeError(JSON.parse(res.headers.get("X-FacilMap-Error")!));
+				throw new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status} (${cause.message})`, { cause });
+			} else {
+				let responseBody: string | undefined = undefined;
+				try {
+					responseBody = await res.text();
+				} catch {
+					// Ignore
+				}
 
-			throw new Error(`Request to ${url} failed with status ${res.status}${responseBody ? `\n${responseBody}`: ""}`);
+				throw new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status}${responseBody ? `\n${responseBody}`: ""}`);
+			}
 		}
 
 		return res;
