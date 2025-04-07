@@ -1,286 +1,296 @@
-import { expect, test, vi } from "vitest";
-import { createTemporaryMap, openClientStorage } from "../../utils";
+import { describe, expect, test, vi } from "vitest";
+import { createTemporaryMap, getRestClient, openClientStorage } from "../../utils";
+import { ApiVersion, SocketVersion } from "facilmap-types";
 
-test("Rename field (marker type)", async () => {
-	const storage = await openClientStorage();
+describe.for([
+	{ label: "Socket API", useSocket: true },
+	{ label: "REST API", useSocket: false }
+])("Type field tests ($label)", ({ useSocket }) => {
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			fields: [
-				{ name: "Field 1", type: "input" },
-				{ name: "Field 2", type: "input" }
-			]
-		});
+	const restClient = useSocket ? undefined : getRestClient(ApiVersion.V3);
 
-		await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
+	test("Rename field (marker type)", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-		const marker = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id,
-			data: {
-				"Field 1": "value 1",
-				"Field 2": "value 2"
-			}
-		});
-
-		const onMarker = vi.fn();
-		storage.client.on("marker", onMarker);
-
-		await storage.client.updateType(mapData.adminId, type.id, {
-			fields: [
-				{ oldName: "Field 1", name: "Field 1 new", type: "input" },
-				{ name: "Field 2", type: "input" }
-			]
-		});
-
-		expect(onMarker).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].markers[marker.id].data).toEqual({
-			"Field 1 new": "value 1",
-			"Field 2": "value 2"
-		});
-	});
-});
-
-test("Rename field (line type)", async () => {
-	const storage = await openClientStorage();
-
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line",
-			fields: [
-				{ name: "Field 1", type: "input" },
-				{ name: "Field 2", type: "input" }
-			]
-		});
-
-		const line = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id,
-			data: {
-				"Field 1": "value 1",
-				"Field 2": "value 2"
-			}
-		});
-
-		const onLine = vi.fn();
-		storage.client.on("line", onLine);
-
-		await storage.client.updateType(mapData.adminId, type.id, {
-			fields: [
-				{ oldName: "Field 1", name: "Field 1 new", type: "input" },
-				{ name: "Field 2", type: "input" }
-			]
-		});
-
-		expect(onLine).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].lines[line.id].data).toEqual({
-			"Field 1 new": "value 1",
-			"Field 2": "value 2"
-		});
-	});
-});
-
-test("Rename dropdown option (marker type)", async () => {
-	const storage = await openClientStorage();
-
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			fields: [
-				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { value: "Option 2" } ] },
-			]
-		});
-
-		await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
-
-		const marker1 = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id,
-			data: {
-				"Dropdown": "Option 1"
-			}
-		});
-
-		const marker2 = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id,
-			data: {
-				"Dropdown": "Option 2"
-			}
-		});
-
-		const onMarker = vi.fn();
-		storage.client.on("marker", onMarker);
-
-		await storage.client.updateType(mapData.adminId, type.id, {
-			fields: [
-				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
-			]
-		});
-
-		expect(onMarker).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].markers[marker1.id].data).toEqual({
-			"Dropdown": "Option 1"
-		});
-		expect(storage.maps[mapData.adminId].markers[marker2.id].data).toEqual({
-			"Dropdown": "Option 2 new"
-		});
-	});
-});
-
-test("Rename dropdown option (line type)", async () => {
-	const storage = await openClientStorage();
-
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line",
-			fields: [
-				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { value: "Option 2" } ] },
-			]
-		});
-
-		const line1 = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id,
-			data: {
-				"Dropdown": "Option 1"
-			}
-		});
-
-		const line2 = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id,
-			data: {
-				"Dropdown": "Option 2"
-			}
-		});
-
-		const onLine = vi.fn();
-		storage.client.on("line", onLine);
-
-		await storage.client.updateType(mapData.adminId, type.id, {
-			fields: [
-				{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
-			]
-		});
-
-		expect(onLine).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].lines[line1.id].data).toEqual({
-			"Dropdown": "Option 1"
-		});
-		expect(storage.maps[mapData.adminId].lines[line2.id].data).toEqual({
-			"Dropdown": "Option 2 new"
-		});
-	});
-});
-
-test("Create type with duplicate fields", async () => {
-	const storage = await openClientStorage();
-
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		await expect(async () => {
-			await storage.client.createType(mapData.adminId, {
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
 				name: "Test type",
 				type: "marker",
 				fields: [
 					{ name: "Field 1", type: "input" },
-					{ name: "Field 1", type: "textarea" }
+					{ name: "Field 2", type: "input" }
 				]
 			});
-		}).rejects.toThrowError("Field names must be unique.");
-	});
-});
 
-test("Update type with duplicate fields", async () => {
-	const storage = await openClientStorage();
+			await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			fields: [
-				{ name: "Field 1", type: "input" },
-				{ name: "Field 2", type: "textarea" }
-			]
+			const marker = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id,
+				data: {
+					"Field 1": "value 1",
+					"Field 2": "value 2"
+				}
+			});
+
+			const onMarker = vi.fn();
+			storage.client.on("marker", onMarker);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+				fields: [
+					{ oldName: "Field 1", name: "Field 1 new", type: "input" },
+					{ name: "Field 2", type: "input" }
+				]
+			});
+
+			expect(onMarker).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].markers[marker.id].data).toEqual({
+				"Field 1 new": "value 1",
+				"Field 2": "value 2"
+			});
 		});
+	});
 
-		await expect(async () => {
-			await storage.client.updateType(mapData.adminId, type.id, {
+	test("Rename field (line type)", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
 				fields: [
 					{ name: "Field 1", type: "input" },
-					{ name: "Field 1", type: "textarea" }
+					{ name: "Field 2", type: "input" }
 				]
 			});
-		}).rejects.toThrowError("Field names must be unique.");
+
+			const line = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id,
+				data: {
+					"Field 1": "value 1",
+					"Field 2": "value 2"
+				}
+			});
+
+			const onLine = vi.fn();
+			storage.client.on("line", onLine);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+				fields: [
+					{ oldName: "Field 1", name: "Field 1 new", type: "input" },
+					{ name: "Field 2", type: "input" }
+				]
+			});
+
+			expect(onLine).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].lines[line.id].data).toEqual({
+				"Field 1 new": "value 1",
+				"Field 2": "value 2"
+			});
+		});
 	});
-});
 
-test("Create type with duplicate dropdown values", async () => {
-	const storage = await openClientStorage();
+	test("Rename dropdown option (marker type)", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		await expect(async () => {
-			await storage.client.createType(mapData.adminId, {
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
 				name: "Test type",
 				type: "marker",
 				fields: [
-					{
-						name: "Dropdown",
-						type: "dropdown",
-						options: [
-							{ value: "Value 1" },
-							{ value: "Value 1" }
-						]
-					}
+					{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { value: "Option 2" } ] },
 				]
 			});
-		}).rejects.toThrowError("Dropdown option values must be unique.");
-	});
-});
 
-test("Update type with duplicate dropdown values", async () => {
-	const storage = await openClientStorage();
+			await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker"
-		});
+			const marker1 = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id,
+				data: {
+					"Dropdown": "Option 1"
+				}
+			});
 
-		await expect(async () => {
-			await storage.client.updateType(mapData.adminId, type.id, {
+			const marker2 = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id,
+				data: {
+					"Dropdown": "Option 2"
+				}
+			});
+
+			const onMarker = vi.fn();
+			storage.client.on("marker", onMarker);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
 				fields: [
-					{
-						name: "Dropdown",
-						type: "dropdown",
-						options: [
-							{ value: "Value 1" },
-							{ value: "Value 1" }
-						]
-					}
+					{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
 				]
 			});
-		}).rejects.toThrowError("Dropdown option values must be unique.");
+
+			expect(onMarker).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].markers[marker1.id].data).toEqual({
+				"Dropdown": "Option 1"
+			});
+			expect(storage.maps[mapData.adminId].markers[marker2.id].data).toEqual({
+				"Dropdown": "Option 2 new"
+			});
+		});
 	});
+
+	test("Rename dropdown option (line type)", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				fields: [
+					{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { value: "Option 2" } ] },
+				]
+			});
+
+			const line1 = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id,
+				data: {
+					"Dropdown": "Option 1"
+				}
+			});
+
+			const line2 = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id,
+				data: {
+					"Dropdown": "Option 2"
+				}
+			});
+
+			const onLine = vi.fn();
+			storage.client.on("line", onLine);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+				fields: [
+					{ name: "Dropdown", type: "dropdown", options: [ { value: "Option 1" }, { oldValue: "Option 2", value: "Option 2 new" } ] }
+				]
+			});
+
+			expect(onLine).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].lines[line1.id].data).toEqual({
+				"Dropdown": "Option 1"
+			});
+			expect(storage.maps[mapData.adminId].lines[line2.id].data).toEqual({
+				"Dropdown": "Option 2 new"
+			});
+		});
+	});
+
+	test("Create type with duplicate fields", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			await expect(async () => {
+				await (restClient ?? storage.client).createType(mapData.adminId, {
+					name: "Test type",
+					type: "marker",
+					fields: [
+						{ name: "Field 1", type: "input" },
+						{ name: "Field 1", type: "textarea" }
+					]
+				});
+			}).rejects.toThrowError("Field names must be unique.");
+		});
+	});
+
+	test("Update type with duplicate fields", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker",
+				fields: [
+					{ name: "Field 1", type: "input" },
+					{ name: "Field 2", type: "textarea" }
+				]
+			});
+
+			await expect(async () => {
+				await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+					fields: [
+						{ name: "Field 1", type: "input" },
+						{ name: "Field 1", type: "textarea" }
+					]
+				});
+			}).rejects.toThrowError("Field names must be unique.");
+		});
+	});
+
+	test("Create type with duplicate dropdown values", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			await expect(async () => {
+				await (restClient ?? storage.client).createType(mapData.adminId, {
+					name: "Test type",
+					type: "marker",
+					fields: [
+						{
+							name: "Dropdown",
+							type: "dropdown",
+							options: [
+								{ value: "Value 1" },
+								{ value: "Value 1" }
+							]
+						}
+					]
+				});
+			}).rejects.toThrowError("Dropdown option values must be unique.");
+		});
+	});
+
+	test("Update type with duplicate dropdown values", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker"
+			});
+
+			await expect(async () => {
+				await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+					fields: [
+						{
+							name: "Dropdown",
+							type: "dropdown",
+							options: [
+								{ value: "Value 1" },
+								{ value: "Value 1" }
+							]
+						}
+					]
+				});
+			}).rejects.toThrowError("Dropdown option values must be unique.");
+		});
+	});
+
 });

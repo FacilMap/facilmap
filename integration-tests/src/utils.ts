@@ -4,7 +4,6 @@ import ClientV3 from "facilmap-client-v3";
 import ClientV4 from "facilmap-client-v4";
 import { type CRU, type MapData, SocketVersion, type SocketClientToServerEvents, type SocketServerToClientEvents, type MapDataWithWritable, type DeepReadonly, type LegacyV2MapData, Writable, ApiVersion } from "facilmap-types";
 import { generateRandomMapSlug, sleep } from "facilmap-utils";
-import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
 
 export function getFacilMapUrl(): string {
 	if (!process.env.FACILMAP_URL) {
@@ -92,26 +91,37 @@ export function generateTestMapSlug(): string {
 	return `integration-test-${generateRandomMapSlug()}`;
 }
 
-export function getTemporaryMapData<V extends SocketVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & (V extends SocketVersion.V1 | SocketVersion.V2 ? Pick<LegacyV2MapData<CRU.CREATE>, "id" | "writeId" | "adminId"> : Pick<MapData<CRU.CREATE>, "readId" | "writeId" | "adminId">) {
+export function getTemporaryMapData<V extends SocketVersion | ApiVersion, D extends Partial<MapData<CRU.CREATE>>>(version: V, data: D): D & (V extends SocketVersion.V1 | SocketVersion.V2 ? Pick<LegacyV2MapData<CRU.CREATE>, "id" | "writeId" | "adminId"> : Pick<MapData<CRU.CREATE>, "readId" | "writeId" | "adminId">) {
 	return {
-		[[SocketVersion.V1, SocketVersion.V2].includes(version) ? "id" : "readId"]: generateTestMapSlug(),
+		[[SocketVersion.V1, SocketVersion.V2].includes(version as any) ? "id" : "readId"]: generateTestMapSlug(),
 		writeId: generateTestMapSlug(),
 		adminId: generateTestMapSlug(),
 		...data
-	};
+	} as any;
 }
 
-export async function createTemporaryMap<V extends SocketVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
-	storage: SocketClientStorageInstance<V>,
+export async function createTemporaryMap<V extends SocketVersion.V3 | ApiVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
+	storageOrClient: (V extends SocketVersion ? SocketClientStorageInstance<V> : never) | (V extends ApiVersion ? RestClientInstance<V> : never),
 	data: D,
-	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: DeepReadonly<Extract<MapDataWithWritable, { writable: Writable.ADMIN }>>, subscription: SocketClientMapSubscription) => Promise<void>
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: DeepReadonly<Extract<MapDataWithWritable, { writable: Writable.ADMIN }>>) => Promise<void>
 ): Promise<void> {
-	const createMapData = getTemporaryMapData(storage._version, data);
-	const subscription = await storage.client.createMapAndSubscribe(createMapData);
-	try {
-		await callback?.(createMapData, storage.maps[subscription.mapSlug].mapData as Extract<MapDataWithWritable, { writable: Writable.ADMIN }>, subscription);
-	} finally {
-		await storage.client.deleteMap(createMapData.adminId);
+	const createMapData = getTemporaryMapData(storageOrClient._version, data);
+	if ("client" in storageOrClient) {
+		await storageOrClient.client.createMapAndSubscribe(createMapData);
+
+		try {
+			await callback?.(createMapData, storageOrClient.maps[createMapData.adminId].mapData as Extract<MapDataWithWritable, { writable: Writable.ADMIN }>);
+		} finally {
+			await storageOrClient.client.deleteMap(createMapData.adminId);
+		}
+	} else {
+		const mapData = await storageOrClient.createMapUnstreamed(createMapData);
+
+		try {
+			await callback?.(createMapData, mapData.mapData);
+		} finally {
+			await storageOrClient.deleteMap(createMapData.adminId);
+		}
 	}
 }
 

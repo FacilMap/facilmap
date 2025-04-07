@@ -1,306 +1,316 @@
-import { expect, test, vi } from "vitest";
-import { createTemporaryMap, openClientStorage } from "../../utils";
+import { describe, expect, test, vi } from "vitest";
+import { createTemporaryMap, getRestClient, openClientStorage } from "../../utils";
+import { ApiVersion, SocketVersion } from "facilmap-types";
 
-test("New marker is created with default settings", async () => {
-	const storage = await openClientStorage();
+describe.for([
+	{ label: "Socket API", useSocket: true },
+	{ label: "REST API", useSocket: false }
+])("Type style tests ($label)", ({ useSocket }) => {
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			defaultColour: "00ff00",
-			defaultSize: 50,
-			defaultIcon: "a",
-			defaultShape: "circle"
-		});
+	const restClient = useSocket ? undefined : getRestClient(ApiVersion.V3);
 
-		const marker = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id
-		});
+	test("New marker is created with default settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-		expect(marker).toMatchObject({
-			colour: "00ff00",
-			size: 50,
-			icon: "a",
-			shape: "circle",
-		});
-	});
-});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker",
+				defaultColour: "00ff00",
+				defaultSize: 50,
+				defaultIcon: "a",
+				defaultShape: "circle"
+			});
 
-test("New line is created with default settings", async () => {
-	const storage = await openClientStorage();
+			const marker = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id
+			});
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line",
-			defaultColour: "00ff00",
-			defaultWidth: 10,
-			defaultStroke: "dotted",
-			defaultMode: "straight",
-		});
-
-		const line = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id
-		});
-
-		expect(line).toMatchObject({
-			colour: "00ff00",
-			width: 10,
-			stroke: "dotted",
-			mode: "straight"
+			expect(marker).toMatchObject({
+				colour: "00ff00",
+				size: 50,
+				icon: "a",
+				shape: "circle",
+			});
 		});
 	});
-});
 
-test("New marker is created with fixed settings", async () => {
-	const storage = await openClientStorage();
+	test("New line is created with default settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultSize: 50,
-			sizeFixed: true,
-			defaultIcon: "a",
-			iconFixed: true,
-			defaultShape: "circle",
-			shapeFixed: true
-		});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				defaultColour: "00ff00",
+				defaultWidth: 10,
+				defaultStroke: "dotted",
+				defaultMode: "straight",
+			});
 
-		const marker = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id,
-			colour: "ffffff",
-			size: 20,
-			icon: "b",
-			shape: "drop"
-		});
+			const line = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id
+			});
 
-		expect(marker).toMatchObject({
-			colour: "00ff00",
-			size: 50,
-			icon: "a",
-			shape: "circle",
+			expect(line).toMatchObject({
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "straight"
+			});
 		});
 	});
-});
 
-test("New line is created with fixed settings", async () => {
-	const storage = await openClientStorage();
+	test("New marker is created with fixed settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line",
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultWidth: 10,
-			widthFixed: true,
-			defaultStroke: "dotted",
-			strokeFixed: true,
-			defaultMode: "straight",
-			modeFixed: true
-		});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker",
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultSize: 50,
+				sizeFixed: true,
+				defaultIcon: "a",
+				iconFixed: true,
+				defaultShape: "circle",
+				shapeFixed: true
+			});
 
-		const line = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id,
-			colour: "ffffff",
-			width: 20,
-			stroke: "dashed",
-			mode: ""
-		});
+			const marker = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id,
+				colour: "ffffff",
+				size: 20,
+				icon: "b",
+				shape: "drop"
+			});
 
-		expect(line).toMatchObject({
-			colour: "00ff00",
-			width: 10,
-			stroke: "dotted",
-			mode: "straight"
+			expect(marker).toMatchObject({
+				colour: "00ff00",
+				size: 50,
+				icon: "a",
+				shape: "circle",
+			});
 		});
 	});
-});
 
-test("Marker update is overridden by fixed settings", async () => {
-	const storage = await openClientStorage();
+	test("New line is created with fixed settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker",
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultSize: 50,
-			sizeFixed: true,
-			defaultIcon: "a",
-			iconFixed: true,
-			defaultShape: "circle",
-			shapeFixed: true
-		});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultWidth: 10,
+				widthFixed: true,
+				defaultStroke: "dotted",
+				strokeFixed: true,
+				defaultMode: "straight",
+				modeFixed: true
+			});
 
-		const marker = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id
-		});
+			const line = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id,
+				colour: "ffffff",
+				width: 20,
+				stroke: "dashed",
+				mode: ""
+			});
 
-		const markerUpdate = await storage.client.updateMarker(mapData.adminId, marker.id, {
-			colour: "ffffff",
-			size: 20,
-			icon: "b",
-			shape: "drop"
-		});
-
-		expect(markerUpdate).toMatchObject({
-			colour: "00ff00",
-			size: 50,
-			icon: "a",
-			shape: "circle",
-		});
-	});
-});
-
-test("Line is overridden by fixed settings", async () => {
-	const storage = await openClientStorage();
-
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line",
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultWidth: 10,
-			widthFixed: true,
-			defaultStroke: "dotted",
-			strokeFixed: true,
-			defaultMode: "straight",
-			modeFixed: true
-		});
-
-		const line = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id
-		});
-
-		const lineUpdate = await storage.client.updateLine(mapData.adminId, line.id, {
-			colour: "ffffff",
-			width: 20,
-			stroke: "dashed",
-			mode: ""
-		});
-
-		expect(lineUpdate).toMatchObject({
-			colour: "00ff00",
-			width: 10,
-			stroke: "dotted",
-			mode: "straight"
+			expect(line).toMatchObject({
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "straight"
+			});
 		});
 	});
-});
 
-test("New fixed marker styles are applied to existing markers", async () => {
-	const storage = await openClientStorage();
+	test("Marker update is overridden by fixed settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "marker"
-		});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker",
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultSize: 50,
+				sizeFixed: true,
+				defaultIcon: "a",
+				iconFixed: true,
+				defaultShape: "circle",
+				shapeFixed: true
+			});
 
-		await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
+			const marker = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id
+			});
 
-		const marker = await storage.client.createMarker(mapData.adminId, {
-			lat: 0,
-			lon: 0,
-			typeId: type.id,
-			colour: "ffffff",
-			size: 20,
-			icon: "b",
-			shape: "drop"
-		});
+			const markerUpdate = await (restClient ?? storage.client).updateMarker(mapData.adminId, marker.id, {
+				colour: "ffffff",
+				size: 20,
+				icon: "b",
+				shape: "drop"
+			});
 
-		const onMarker = vi.fn();
-		storage.client.on("marker", onMarker);
-
-		await storage.client.updateType(mapData.adminId, type.id, {
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultSize: 50,
-			sizeFixed: true,
-			defaultIcon: "a",
-			iconFixed: true,
-			defaultShape: "circle",
-			shapeFixed: true
-		});
-
-		expect(onMarker).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].markers[marker.id]).toMatchObject({
-			colour: "00ff00",
-			size: 50,
-			icon: "a",
-			shape: "circle",
+			expect(markerUpdate).toMatchObject({
+				colour: "00ff00",
+				size: 50,
+				icon: "a",
+				shape: "circle",
+			});
 		});
 	});
-});
 
-test("New fixed line styles are applied to existing lines", async () => {
-	const storage = await openClientStorage();
+	test("Line is overridden by fixed settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-	await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
-		const type = await storage.client.createType(mapData.adminId, {
-			name: "Test type",
-			type: "line"
-		});
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultWidth: 10,
+				widthFixed: true,
+				defaultStroke: "dotted",
+				strokeFixed: true,
+				defaultMode: "straight",
+				modeFixed: true
+			});
 
-		const line = await storage.client.createLine(mapData.adminId, {
-			routePoints: [
-				{ lat: 0, lon: 0 },
-				{ lat: 1, lon: 1 }
-			],
-			typeId: type.id,
-			colour: "ffffff",
-			width: 20,
-			stroke: "dashed",
-			mode: ""
-		});
+			const line = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id
+			});
 
-		const onLine = vi.fn();
-		storage.client.on("line", onLine);
+			const lineUpdate = await (restClient ?? storage.client).updateLine(mapData.adminId, line.id, {
+				colour: "ffffff",
+				width: 20,
+				stroke: "dashed",
+				mode: ""
+			});
 
-		await storage.client.updateType(mapData.adminId, type.id, {
-			defaultColour: "00ff00",
-			colourFixed: true,
-			defaultWidth: 10,
-			widthFixed: true,
-			defaultStroke: "dotted",
-			strokeFixed: true,
-			defaultMode: "straight",
-			modeFixed: true
-		});
-
-		expect(onLine).toBeCalledTimes(1);
-
-		expect(storage.maps[mapData.adminId].lines[line.id]).toMatchObject({
-			colour: "00ff00",
-			width: 10,
-			stroke: "dotted",
-			mode: "straight"
+			expect(lineUpdate).toMatchObject({
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "straight"
+			});
 		});
 	});
+
+	test("New fixed marker styles are applied to existing markers", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "marker"
+			});
+
+			await storage.client.setBbox({ top: 1, right: 1, bottom: -1, left: -1, zoom: 0 }); // To have marker in bbox
+
+			const marker = await (restClient ?? storage.client).createMarker(mapData.adminId, {
+				lat: 0,
+				lon: 0,
+				typeId: type.id,
+				colour: "ffffff",
+				size: 20,
+				icon: "b",
+				shape: "drop"
+			});
+
+			const onMarker = vi.fn();
+			storage.client.on("marker", onMarker);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultSize: 50,
+				sizeFixed: true,
+				defaultIcon: "a",
+				iconFixed: true,
+				defaultShape: "circle",
+				shapeFixed: true
+			});
+
+			expect(onMarker).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].markers[marker.id]).toMatchObject({
+				colour: "00ff00",
+				size: 50,
+				icon: "a",
+				shape: "circle",
+			});
+		});
+	});
+
+	test("New fixed line styles are applied to existing lines", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line"
+			});
+
+			const line = await (restClient ?? storage.client).createLine(mapData.adminId, {
+				routePoints: [
+					{ lat: 0, lon: 0 },
+					{ lat: 1, lon: 1 }
+				],
+				typeId: type.id,
+				colour: "ffffff",
+				width: 20,
+				stroke: "dashed",
+				mode: ""
+			});
+
+			const onLine = vi.fn();
+			storage.client.on("line", onLine);
+
+			await (restClient ?? storage.client).updateType(mapData.adminId, type.id, {
+				defaultColour: "00ff00",
+				colourFixed: true,
+				defaultWidth: 10,
+				widthFixed: true,
+				defaultStroke: "dotted",
+				strokeFixed: true,
+				defaultMode: "straight",
+				modeFixed: true
+			});
+
+			expect(onLine).toBeCalledTimes(1);
+
+			expect(storage.maps[mapData.adminId].lines[line.id]).toMatchObject({
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "straight"
+			});
+		});
+	});
+
 });
