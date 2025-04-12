@@ -253,6 +253,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				};
 			},
 
+			getLineTemplate: async (mapSlug, options) => {
+				return await this.api.getLineTemplate(mapSlug, options);
+			},
+
 			getMapTypes: async (mapSlug) => {
 				return this.emitStreamedResults(await this.api.getMapTypes(mapSlug));
 			},
@@ -630,7 +634,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				},
 
-				addHistoryEntry: (mapId, data) => {
+				historyEntry: (mapId, data) => {
 					if (this.mapSubscriptions[mapId]) {
 						for (const sub of this.mapSubscriptions[mapId]) {
 							if (sub.history && (sub.writable === Writable.ADMIN || ["Marker", "Line"].includes(data.type))) {

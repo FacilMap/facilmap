@@ -94,6 +94,45 @@ describe.for([
 		});
 	});
 
+	test("Line template uses dropdown styles", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await (restClient ?? storage.client).createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				fields: [
+					{
+						name: "Dropdown",
+						type: "dropdown",
+						controlColour: true,
+						controlWidth: true,
+						controlStroke: true,
+						options: [
+							{ value: "Value 1", colour: "00ffff", width: 11, stroke: "dashed" },
+							{ value: "Value 2", colour: "00ff00", width: 10, stroke: "dotted" }
+						],
+						default: "Value 2"
+					}
+				]
+			});
+
+			const lineTemplate = await (restClient ?? storage.client).getLineTemplate(mapData.adminId, {
+				typeId: type.id
+			});
+
+			expect(lineTemplate).toEqual({
+				typeId: type.id,
+				name: "",
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "",
+				data: {}
+			});
+		});
+	});
+
 	test("Marker update is overridden by dropdown styles", async () => {
 		const storage = await openClientStorage(undefined, SocketVersion.V3);
 

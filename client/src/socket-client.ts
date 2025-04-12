@@ -14,7 +14,8 @@ import {
 	type Api,
 	type ExportFormat,
 	type AllAdminMapObjects,
-	type AllMapObjects
+	type AllMapObjects,
+	type LineTemplate
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
@@ -432,6 +433,10 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			...result,
 			data: this._handleStream(result.data)
 		};
+	}
+
+	async getLineTemplate(mapSlug: MapSlug, options: { typeId: ID }): Promise<LineTemplate> {
+		return await this._call("getLineTemplate", mapSlug, options);
 	}
 
 	async getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {

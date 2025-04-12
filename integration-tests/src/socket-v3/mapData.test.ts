@@ -67,21 +67,21 @@ describe.for([
 		const storage1 = await openClientStorage(undefined, SocketVersion.V3);
 		const storage2 = await openClientStorage(undefined, SocketVersion.V3);
 
-		await createTemporaryMap(storage1, {}, async (createMapData1) => {
+		await createTemporaryMap(restClient ?? storage1, {}, async (createMapData1) => {
 			await expect(async () => {
-				await createTemporaryMap(storage2, {
+				await createTemporaryMap(restClient ?? storage2, {
 					readId: createMapData1.readId
 				})
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
-				await createTemporaryMap(storage2, {
+				await createTemporaryMap(restClient ?? storage2, {
 					writeId: createMapData1.readId
 				})
 			}).rejects.toThrowError("already taken");
 
 			await expect(async () => {
-				await createTemporaryMap(storage2, {
+				await createTemporaryMap(restClient ?? storage2, {
 					adminId: createMapData1.readId
 				})
 			}).rejects.toThrowError("already taken");
@@ -97,21 +97,21 @@ describe.for([
 		const newId3 = generateTestMapSlug();
 
 		await expect(async () => {
-			await createTemporaryMap(storage, {
+			await createTemporaryMap(restClient ?? storage, {
 				readId: newId1,
 				writeId: newId1
 			});
 		}).rejects.toThrowError("have to be different");
 
 		await expect(async () => {
-			await createTemporaryMap(storage, {
+			await createTemporaryMap(restClient ?? storage, {
 				readId: newId2,
 				adminId: newId2
 			});
 		}).rejects.toThrowError("have to be different");
 
 		await expect(async () => {
-			await createTemporaryMap(storage, {
+			await createTemporaryMap(restClient ?? storage, {
 				writeId: newId3,
 				adminId: newId3
 			});
@@ -262,12 +262,14 @@ describe.for([
 		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
 		const mapData = getTemporaryMapData(SocketVersion.V3, {});
-		await createTemporaryMap(storage, mapData, async () => {
+		await createTemporaryMap(restClient ?? storage, mapData, async () => {
 			const result = await (restClient ?? storage.client).getMap(mapData.adminId);
 			expect(result).toBeTruthy();
 		});
 
-		expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(MapSubscriptionStateType.DELETED);
+		if (useStorage) {
+			expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(MapSubscriptionStateType.DELETED);
+		}
 
 		await expect(() => (restClient ?? storage.client).getMap(mapData.readId)).rejects.toThrowError("could not be found");
 	});

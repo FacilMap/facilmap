@@ -67,6 +67,35 @@ describe.for([
 		});
 	});
 
+	test("Line template uses default settings", async () => {
+		const storage = await openClientStorage(undefined, SocketVersion.V3);
+
+		await createTemporaryMap(storage, { createDefaultTypes: false }, async (createMapData, mapData) => {
+			const type = await storage.client.createType(mapData.adminId, {
+				name: "Test type",
+				type: "line",
+				defaultColour: "00ff00",
+				defaultWidth: 10,
+				defaultStroke: "dotted",
+				defaultMode: "straight",
+			});
+
+			const lineTemplate = await storage.client.getLineTemplate(mapData.adminId, {
+				typeId: type.id
+			});
+
+			expect(lineTemplate).toEqual({
+				typeId: type.id,
+				name: "",
+				colour: "00ff00",
+				width: 10,
+				stroke: "dotted",
+				mode: "straight",
+				data: {}
+			});
+		});
+	});
+
 	test("New marker is created with fixed settings", async () => {
 		const storage = await openClientStorage(undefined, SocketVersion.V3);
 

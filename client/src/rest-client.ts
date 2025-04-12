@@ -1,7 +1,7 @@
 import {
 	ApiVersion, CRU, Units, type AllAdminMapObjects, type AllAdminMapObjectsItem, type AllMapObjects, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox,
 	type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
-	type HistoryEntry, type ID, type Line, type LineWithTrackPoints, type MapData, type MapDataWithWritable,
+	type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData, type MapDataWithWritable,
 	type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest,
 	type SearchResult, type StreamedResults, type TrackPoint, type Type, type View
 } from "facilmap-types";
@@ -93,10 +93,6 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 			resolvedInit.body = body as BodyInit;
 		}
 
-		if (!resolvedInit.headers.has("Accept")) {
-			resolvedInit.headers.set("Accept", "application/*, text/csv"); // Do not accept HTML to get properly formatted error messages
-		}
-
 		const res = await this.fetchImpl(url, resolvedInit);
 
 		if (!res.ok) {
@@ -111,7 +107,9 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 					// Ignore
 				}
 
-				throw new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status}${responseBody ? `\n${responseBody}`: ""}`);
+				throw Object.assign(new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status}${responseBody ? `\n${responseBody}`: ""}`), {
+					status: res.status
+				});
 			}
 		}
 
@@ -218,7 +216,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 				} : {}
 			}
 		});
-		return await res.json();
+		return parseStreamedResults(res);
 	}
 
 	async getMarker(mapSlug: MapSlug, markerId: ID): Promise<Marker> {
@@ -268,7 +266,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithZoom & { except?: Bbox } }): Promise<StreamedResults<TrackPoint>> {
+	async getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithExcept }): Promise<StreamedResults<TrackPoint>> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/line/${encodeURIComponent(lineId)}/linePoints`, {
 			query: {
 				...options?.bbox ? {
@@ -312,6 +310,15 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 			filename: parseContentDisposition(res.headers.get("Content-disposition")!).parameters.filename,
 			data: res.body!
 		};
+	}
+
+	async getLineTemplate(mapSlug: MapSlug, options: { typeId: ID }): Promise<LineTemplate> {
+		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/line/template`, {
+			query: {
+				typeId: options.typeId
+			}
+		});
+		return await res.json();
 	}
 
 	async getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {

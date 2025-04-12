@@ -1,7 +1,7 @@
 import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
 import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base.js";
 import type { CRU } from "../cru.js";
-import { lineValidator, type Line, type TrackPoint } from "../line.js";
+import { lineValidator, type Line, type LineTemplate, type TrackPoint } from "../line.js";
 import type { SearchResult } from "../searchResult.js";
 import { markerValidator, type Marker } from "../marker.js";
 import { routeRequestValidator, type RouteInfo } from "../route.js";
@@ -60,6 +60,7 @@ export const apiV3RequestValidators = {
 	updateLine: z.tuple([mapSlugValidator, idValidator, lineValidator.update]),
 	deleteLine: z.tuple([mapSlugValidator, idValidator]),
 	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator })]),
+	getLineTemplate: z.tuple([mapSlugValidator, z.object({ typeId: idValidator })]),
 
 	getMapTypes: z.tuple([mapSlugValidator]),
 	getType: z.tuple([mapSlugValidator, idValidator]),
@@ -106,6 +107,7 @@ type ApiV3Response = {
 	updateLine: Line;
 	deleteLine: void;
 	exportLine: { type: string; filename: string; data: ReadableStream<Uint8Array> };
+	getLineTemplate: LineTemplate;
 
 	getMapTypes: StreamedResults<Type>;
 	getType: Type;

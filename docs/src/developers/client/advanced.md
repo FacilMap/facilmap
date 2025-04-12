@@ -22,6 +22,21 @@ You can also update the internationalization settings for an existing socket con
 
 For the REST API, you can set the same second parameter for the `RestClient` constructor, or if uing the API manually, set those query parameters.
 
+## Error handling and status codes
+
+The FacilMap REST API will respond with these HTTP status codes if the request is successful:
+* `200` (OK): The request was successful and the response contains a body
+* `204` (No Content): The request was successful and the response does not contain a body
+
+In case of an error, the following status codes are possible:
+* `400` (Bad Request): Some of the path, query or body parameters do not have the right format or are missing.
+* `403` (Forbidden): An operation is only allowed with the write/admin map slug, but a slug with less permissions was used.
+* `404` (Not Found): No map with the given slug or no object with the given ID exists.
+* `409` (Conflict): Tried to create or update a map with a map slug that is already in use.
+* `500` (Internal Server Error): All other errors, including unexpected errors.
+
+When using the FacilMap Client or Socket API, `Error` objects may have a `status` property containing the appropriate status code. The lack of a `status` property indicates a status code `500`.
+
 ## Reactivity
 
 The various classes of the FacilMap client provide various properties that document the current state of the connection and of the subscribed maps and routes. The classes provide a universal way to subscribe to changes to these properties, so that you can use them in UI frameworks that rely on state change detection.

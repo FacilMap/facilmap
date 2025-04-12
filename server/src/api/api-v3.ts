@@ -4,7 +4,7 @@ import {
 	routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator,
 	type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api,
 	type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
-	type HistoryEntry, type ID, type Line, type LinePoints, type LineWithTrackPoints, type MapData,
+	type HistoryEntry, type ID, type Line, type LinePoints, type LineTemplate, type LineWithTrackPoints, type MapData,
 	type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route,
 	type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type,
 	type View
@@ -13,7 +13,7 @@ import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
 import { apiImpl, stringArrayValidator, stringifiedJsonValidator, type ApiImpl } from "./api-common";
-import { getSafeFilename, normalizeLineName } from "facilmap-utils";
+import { getLineTemplate, getSafeFilename, normalizeLineName } from "facilmap-utils";
 import { exportLineToTrackGpx, exportLineToRouteGpx } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
@@ -164,7 +164,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.markers.deleteMarker(mapData.id, markerId, { notFound404: true });
 	}
 
-	async* _getMapLines<IncludeTrackPoints extends boolean = false>(mapData: MapDataWithWritable, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): AsyncIterable<IncludeTrackPoints extends true ? LineWithTrackPoints : Line> {
+	async* _getMapLines<IncludeTrackPoints extends boolean = false>(mapData: MapDataWithWritable, options?: { bbox?: BboxWithExcept; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): AsyncIterable<IncludeTrackPoints extends true ? LineWithTrackPoints : Line> {
 		for await (const line of options?.typeId ? this.database.lines.getMapLinesByType(mapData.id, options.typeId) : this.database.lines.getMapLines(mapData.id)) {
 			if (options?.includeTrackPoints) {
 				const trackPoints = await iterableToArray(this.database.lines.getLinePointsForLine(line.id, options?.bbox));
@@ -249,6 +249,12 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			default:
 				throw new Error(getI18n().t("api.unknown-format-error"));
 		}
+	}
+
+	async getLineTemplate(mapSlug: MapSlug, options: { typeId: ID }): Promise<LineTemplate> {
+		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
+		const type = await this.database.types.getType(mapData.id, options.typeId, { notFound404: true });
+		return getLineTemplate(type);
 	}
 
 	_getMapTypes(mapData: MapDataWithWritable): AsyncIterable<Type> {
@@ -432,6 +438,14 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}).parse(req.query);
 		return [req.params.mapSlug, { bbox, includeTrackPoints, typeId }];
 	}, "stream"),
+
+	// Above getLine because it has a matching signature
+	getLineTemplate: apiImpl.get("/map/:mapSlug/line/template", (req) => {
+		const { typeId } = z.object({
+			typeId: stringifiedIdValidator
+		}).parse(req.query);
+		return [req.params.mapSlug, { typeId }];
+	}, "json"),
 
 	getLine: apiImpl.get("/map/:mapSlug/line/:lineId", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);

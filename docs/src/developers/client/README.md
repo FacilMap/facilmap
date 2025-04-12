@@ -55,7 +55,8 @@ const socket: Socket<
 > = io("https://facilmap.org/v3");
 ```
 
-The Socket.IO [acknowledgement callback](https://socket.io/docs/v4/emitting-events/#acknowledgements) is used to indicate when an operation has succeeded/failed and possibly to return its result. If you use the client, it handles those callbacks for you and each method returns a promise instead. If you use the Socket API directly, you have to pass the callback as the last parameter. The callback has a Node.js style `(...args: [Error] | [null, Result]) => void` signature:
+The Socket.IO [acknowledgement callback](https://socket.io/docs/v4/emitting-events/#acknowledgements) is used to indicate when an operation has succeeded/failed and possibly to return its result. If you use the client, it handles those callbacks for you and each method returns a promise instead. If you use the Socket API directly, you have to pass the callback as the last parameter. The callback has a Node.js style `(...args: [Error] | [null, Result]) => void` signature. See the chapter about [error handling](./advanced.md#error-handling-and-status-codes) for some details about the possible error objects.
+
 ```typescript
 const result = await new Promise((resolve, reject) => {
 	socket.emit("updateMarker", "mymap", 123, { name: "New name" }, (err, result) => {
@@ -169,4 +170,4 @@ const client = new RestClient("https://facilmap.org/");
 const mapObjects = await client.getAllMapObjects("mymap");
 ```
 
-The API is hosted under `/_api/<version>/` (for example `/_api/v3/`) on the server. For example, to get map `mymap` with all its objects, you would make a `GET` request to `https://facilmap.org/_api/v3/map/mymap/all`. Have a look at the [API methods](./methods.md) to see which endpoints are available.
+The API is hosted under `/_api/<version>/` (for example `/_api/v3/`) on the server. For example, to get map `mymap` with all its objects, you would make a `GET` request to `https://facilmap.org/_api/v3/map/mymap/all`. Have a look at the [API methods](./methods.md) to see which endpoints are available. See [error handling](./advanced.md#error-handling-and-status-codes) for the possible HTTP status codes.

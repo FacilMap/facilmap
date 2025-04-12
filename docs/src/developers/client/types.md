@@ -16,6 +16,13 @@ A bounding box that describes which part of the map the user is currently viewin
 * `right` (number, min: -180, max: 180): The longitude of the east end of the box
 * `zoom` (number, min: 1, max: 20): The current zoom level. This is relevant for the density of track points that should be received.
 
+## `BboxWithExcept`
+
+A bounding box that may include another bounding box as “except”. This can be used when panning the map – the map objects for the new bbox should be retrieved, except map objects in the previous bbox, because they were already received in the previous request.
+
+* All properties of [`Bbox`](#bbox)
+* `except` ([`Bbox`](#bbox), optional): The bbox to exclude
+
 ## `Marker`
 
 * `id` (number, only read): The ID of this marker

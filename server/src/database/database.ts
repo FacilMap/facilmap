@@ -16,8 +16,7 @@ import { TypedEventEmitter } from "../utils/events.js";
 import type { HistoryEntry, ID, Line, Marker, ObjectWithId, MapData, TrackPoint, Type, View } from "facilmap-types";
 
 export interface DatabaseEventsInterface {
-	addHistoryEntry: [mapId: ID, newEntry: HistoryEntry];
-	historyChange: [mapId: ID];
+	historyEntry: [mapId: ID, newEntry: HistoryEntry];
 
 	line: [mapId: ID, newLine: Line];
 	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[]];

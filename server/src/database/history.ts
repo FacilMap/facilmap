@@ -1,9 +1,10 @@
-import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
+import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes, Op } from "sequelize";
 import Database from "./database.js";
 import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagingInput } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
+import { iterableToArray } from "../utils/streams.js";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
@@ -95,7 +96,7 @@ export default class DatabaseHistory {
 			oldEntryIds.length > 0 ? this.HistoryModel.destroy({ where: { mapId: mapId, id: oldEntryIds } }) : undefined
 		]);
 
-		this._db.emit("addHistoryEntry", mapId, newEntry);
+		this._db.emit("historyEntry", mapId, newEntry);
 
 		return newEntry;
 	}
@@ -195,8 +196,16 @@ export default class DatabaseHistory {
 					break;
 			}
 
-			await this.HistoryModel.update({ objectId: newObj.id }, { where: { mapId, type: entry.type, objectId: entry.objectId } });
-			this._db.emit("historyChange", mapId);
+			const affected = await iterableToArray(this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
+				where: {
+					type: entry.type,
+					objectId: entry.objectId
+				}
+			}));
+			await this.HistoryModel.update({ objectId: newObj.id }, { where: { id: { [Op.in]: affected.map((h) => h.id) } } });
+			for (const entry of affected) {
+				this._db.emit("historyEntry", mapId, { ...entry, objectId: newObj.id } as HistoryEntry);
+			}
 		}
 	}
 

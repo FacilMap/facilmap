@@ -92,11 +92,11 @@ export default class DatabaseMaps {
 
 	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<MapData> {
 		if(data.readId == data.writeId || data.readId == data.adminId || data.writeId == data.adminId)
-			throw new Error(getI18n().t("database.unique-map-ids-error"));
+			throw Object.assign(new Error(getI18n().t("database.unique-map-ids-error")), { status: 400 });
 
 		await Promise.all([data.readId, data.writeId, data.adminId].map(async (id) => {
 			if (await this.mapSlugExists(id))
-				throw new Error(getI18n().t("database.map-id-taken-error", { id }));
+				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id })), { status: 409 });
 		}));
 
 		const createdObj = await this.MapModel.create(data);
@@ -112,29 +112,29 @@ export default class DatabaseMaps {
 		const oldData = await this.getMapData(mapId);
 
 		if(!oldData)
-			throw new Error(getI18n().t("map-not-found-error", { mapId }));
+			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId })), { status: 404 });
 
 		if(data.readId != null && data.readId != oldData.readId) {
 			if (await this.mapSlugExists(data.readId))
-				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.readId }));
+				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.readId })), { status: 409 });
 		}
 
 		if(data.writeId != null && data.writeId != oldData.writeId) {
 			if(data.writeId == (data.readId != null ? data.readId : oldData.readId))
-				throw new Error(getI18n().t("database.unique-map-ids-read-write-error"));
+				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-read-write-error")), { status: 400 });
 
 			if (await this.mapSlugExists(data.writeId))
-				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.writeId }));
+				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.writeId })), { status: 409 });
 		}
 
 		if(data.adminId != null && data.adminId != oldData.adminId) {
 			if(data.adminId == (data.readId != null ? data.readId : oldData.readId))
-				throw new Error(getI18n().t("database.unique-map-ids-read-admin-error"));
+				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-read-admin-error")), { status: 400 });
 			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
-				throw new Error(getI18n().t("database.unique-map-ids-write-admin-error"));
+				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-write-admin-error")), { status: 400 });
 
 			if (await this.mapSlugExists(data.adminId))
-				throw new Error(getI18n().t("database.map-id-taken-error", { id: data.adminId }));
+				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.adminId })), { status: 409 });
 		}
 
 		await this.MapModel.update(data, { where: { id: mapId } });
@@ -159,7 +159,7 @@ export default class DatabaseMaps {
 		const mapData = await this.getMapData(mapId);
 
 		if (!mapData)
-			throw new Error(getI18n().t("map-not-found-error", { mapId }));
+			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId })), { status: 404 });
 
 		if (mapData.defaultViewId) {
 			await this.updateMapData(mapData.id, { defaultViewId: null });

@@ -32,7 +32,7 @@ For better support for larger maps, some API methods now return streams of objec
 * A few methods have been renamed:
 	* `add*` has been renamed to `create*` (`addMarker`, `addLine`, `addType`, `addView`)
 	* `edit*` has been renamed to `update*` (`editPad`, `editMarker`, `editLine`, `editType`, `editView`)
-* `getLineTemplate` has been removed. Use `getLineTemplate(type)` from `facilmap-utils` instead.
+* `getLineTemplate` is now also available as synchronous function `getLineTemplate(type)` exported by `facilmap-utils`. If possible, use that function instead of the API call.
 * In the `linePoints` socket event, `id` was renamed to `lineId`.
 * `setRoute` and `lineToRoute` have been united into `subscribeToRoute`, which accepts both types of objects. `clearRoute({ routeId })` has been changed into `unsubscribeFromRoute(routeKey)`. Specifying a route key is mandatory now, although you can just use an empty string.
 * `setPadId` has been removed. To subscribe to map live updates, use `subscribeToMap`. As a replacement for `PadNotFoundError`, an error with a `status: 404` property is thrown if the map is not found.
