@@ -28,7 +28,7 @@ Note that when this event is fired, the map slug might change.
 
 Parameters: `mapSlugs: Record<string, string>`
 
-If one or more map slugs of a map are changed, this event is emitted in addition to the `mapData` event for your convenience. The `mapSlugs` object maps maps the old slug(s) to the new slug(s). You can use this to update the map slug of your subscription if you have it documented anywhere.
+If one or more map slugs of a map are changed, this event is emitted in addition to the `mapData` event for your convenience. It is also emitted if you have not subscribed to `mapData` events. The `mapSlugs` object maps maps the old slug(s) to the new slug(s). You can use this to update the map slug of your subscription if you have it documented anywhere. The `mapSlugRename` event marks the exact point in time when the slug is changed – all events related to the map emitted before it use the old slug, and all events after use the new slug.
 
 ## `deleteMap`
 

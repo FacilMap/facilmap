@@ -26,7 +26,7 @@ export interface Route extends RouteParameters, RouteInfo {
 }
 
 export const routeRequestValidator = z.object({
-	destinations: z.array(pointValidator),
+	routePoints: z.array(pointValidator),
 	mode: routeModeValidator
 });
 export type RouteRequest = z.infer<typeof routeRequestValidator>;

@@ -46,6 +46,7 @@
         "already-listening-to-history-error": "Already listening to history.",
         "not-listening-to-history-error": "Not listening to history.",
         "admin-revert-error": "This kind of change can only be reverted in admin mode.",
+        "map-already-subscribed-error": "Already subscribed to a map with slug {{mapSlug}}.",
         "map-not-subscribed-error": "Not subscribed to map with slug {{mapSlug}}.",
         "route-not-subscribed-error": "Not subscribed to route with key {{routeKey}}."
     },

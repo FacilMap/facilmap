@@ -1,4 +1,4 @@
-# Advanced configuration
+# Advanced usage
 
 ## Internationalization
 

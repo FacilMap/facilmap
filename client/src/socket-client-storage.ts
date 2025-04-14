@@ -77,9 +77,9 @@ export class SocketClientStorage {
 				}
 			},
 
-			linePoints: (mapSlug, data) => {
+			linePoints: (mapSlug, { reset, ...linePoints }) => {
 				if (this.maps[mapSlug]) {
-					this.storeLinePoints(mapSlug, data, true);
+					this.storeLinePoints(mapSlug, linePoints, reset);
 				}
 			},
 

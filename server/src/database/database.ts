@@ -22,7 +22,7 @@ export interface DatabaseEventsInterface {
 	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[]];
 	deleteLine: [mapId: ID, data: ObjectWithId];
 
-	marker: [mapId: ID, newMarker: Marker];
+	marker: [mapId: ID, newMarker: Marker, oldMarker?: Marker];
 	deleteMarker: [mapId: ID, data: ObjectWithId];
 
 	mapData: [mapId: ID, mapData: MapData & Required<Pick<MapData, "writeId" | "adminId">>];

@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, pointValidator, routeModeValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
 import type { EventName } from "../events.js";
@@ -13,7 +13,7 @@ import { viewValidator } from "../view.js";
 import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
 import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
-import { routeParametersValidator, type Route } from "../route.js";
+import { routeParametersValidator, type Route, type RouteInfo, type RouteRequest } from "../route.js";
 import type { DistributiveKeyOf, DistributiveOmit, ReplaceExistingProperties } from "../utility.js";
 
 // Socket v2:
@@ -166,9 +166,14 @@ export type MultipleEvents<Events extends Record<string, any[]>> = {
 
 export type LegacyV2Route = Route & { routeId?: string };
 
+export const legacyV2RouteRequestValidator = z.object({
+	destinations: z.array(pointValidator),
+	mode: routeModeValidator
+});
+
 export const socketV2RequestValidators = {
 	...pick(socketV3RequestValidators, [
-		"getRoute", "geoip", "setLanguage"
+		"geoip", "setLanguage"
 	]),
 	getPad: z.tuple([legacyV2GetMapQueryValidator]),
 	findPads: z.tuple([legacyV2FindMapsQueryValidator]),
@@ -193,6 +198,7 @@ export const socketV2RequestValidators = {
 	editView: z.tuple([viewValidator.update.extend({ id: idValidator })]),
 	deleteView: z.tuple([objectWithIdValidator]),
 	find: z.tuple([legacyV2FindQueryValidator]),
+	getRoute: z.tuple([legacyV2RouteRequestValidator]),
 
 	setPadId: z.tuple([z.string()]),
 	updateBbox: z.tuple([bboxWithZoomValidator]),
@@ -229,6 +235,7 @@ type SocketV2Response = {
 	editView: LegacyV2View;
 	deleteView: LegacyV2View;
 	find: SearchResult[] | string;
+	getRoute: RouteInfo;
 
 	setPadId: MultipleEvents<MapEventsV2>;
 	updateBbox: MultipleEvents<MapEventsV2>;
@@ -242,7 +249,7 @@ type SocketV2Response = {
 };
 
 export type SocketApiV2<Validated extends boolean = false> = Pick<SocketApiV3<Validated>, (
-	| "getRoute" | "geoip" | "setLanguage"
+	| "geoip" | "setLanguage"
 )> & {
 	[K in keyof SocketV2Response]: (...args: Validated extends true ? z.infer<typeof socketV2RequestValidators[K]> : z.input<typeof socketV2RequestValidators[K]>) => Promise<SocketV2Response[K]>;
 };
@@ -392,4 +399,11 @@ export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId
 	} else {
 		return mapHistoryEntry(renamed, (obj) => obj);
 	}
+}
+
+export function legacyV2RouteRequestToCurrent(data: z.infer<typeof legacyV2RouteRequestValidator>): RouteRequest {
+	return {
+		routePoints: data.destinations,
+		mode: data.mode
+	};
 }

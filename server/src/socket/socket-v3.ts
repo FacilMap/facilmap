@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils.js";
 import { iterableToArray, mapAsyncIterable, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
-import { isEqual, omit } from "lodash-es";
+import { isEqual, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
 import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
@@ -21,8 +21,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	api: ApiV3Backend;
 
 	bbox: BboxWithZoom | undefined = undefined;
-	mapSubscriptions: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
-	routeSubscriptions: Record<string, Route & { routeId: string }> = { };
+	/** AbortControllers for all active map subscriptions. Set synchronously when subscribing. */
+	mapSubscriptionAbort: Record<MapSlug, AbortController> = Object.create(null);
+	/** Details about most active map subscriptions. Set asynchronously as soon as the map ID is known. */
+	mapSubscriptionDetails: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	/** AbortControllers for all active route subscriptions. Set synchronously when subscribing. */
+	routeSubscriptionAbort: Record<string, AbortController> = Object.create(null);
+	/** Details about most active route subscriptions. Set asynchronously as soon as the route is calculated. */
+	routeSubscriptionDetails: Record<string, Route & { routeId: string }> = Object.create(null);
 
 	streamAbort: Record<string, AbortController> = {};
 
@@ -38,10 +44,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	}
 
 	handleDisconnect(): void {
-		for (const routeKey of Object.keys(this.routeSubscriptions)) {
-			this.database.routes.deleteRoute(this.routeSubscriptions[routeKey].routeId).catch((err) => {
+		for (const routeKey of Object.keys(this.routeSubscriptionDetails)) {
+			this.database.routes.deleteRoute(this.routeSubscriptionDetails[routeKey].routeId).catch((err) => {
 				console.error("Error clearing route", err);
 			});
+		}
+
+		for (const abort of [...Object.values(this.mapSubscriptionAbort), ...Object.values(this.routeSubscriptionAbort)]) {
+			abort.abort();
 		}
 
 		this.unregisterDatabaseHandlers();
@@ -92,8 +102,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		};
 	}
 
-	async emitAllMapObjects(mapSlug: MapSlug, objects: AsyncIterable<AllMapObjectsItem<AllMapObjectsPick>>): Promise<void> {
+	async emitAllMapObjects(mapSlug: MapSlug, objects: AsyncIterable<AllMapObjectsItem<AllMapObjectsPick>>, signal: AbortSignal): Promise<void> {
 		for await (const obj of objects) {
+			if (signal?.aborted) {
+				return;
+			}
+
 			if (obj.type === "mapData") {
 				this.emit("mapData", mapSlug, obj.data);
 			} else if (obj.type === "markers") {
@@ -116,6 +130,21 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				for await (const view of obj.data) {
 					this.emit("view", mapSlug, view);
 				}
+			}
+		}
+	}
+
+	findMapSubscriptionData(mapSlug: MapSlug, remove: boolean): (typeof this.mapSubscriptionDetails[ID][number] & { mapId: ID }) | undefined {
+		for (const [mapId, subs] of numberEntries(this.mapSubscriptionDetails)) {
+			const sub = subs.find((s) => s.mapSlug === mapSlug);
+			if (sub) {
+				if (remove) {
+					pull(subs, sub);
+					if (subs.length === 0) {
+						delete this.mapSubscriptionDetails[mapId];
+					}
+				}
+				return { ...sub, mapId };
 			}
 		}
 	}
@@ -216,7 +245,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			createLine: async (mapSlug, data) => {
 				let fromRoute;
 				if (data.mode != "track") {
-					for (const route of Object.values(this.routeSubscriptions)) {
+					for (const route of Object.values(this.routeSubscriptionDetails)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
 							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
 							break;
@@ -230,7 +259,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			updateLine: async (mapSlug, lineId, data) => {
 				let fromRoute;
 				if (data.mode != "track") {
-					for (const route of Object.values(this.routeSubscriptions)) {
+					for (const route of Object.values(this.routeSubscriptionDetails)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
 							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
 							break;
@@ -317,15 +346,27 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			subscribeToMap: async (mapSlug, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
-				const subscription = Object.values(this.mapSubscriptions).flat().find((s) => s.mapSlug === mapSlug);
-				const pickBefore = subscription?.pick;
-				if (!subscription) {
+				const abort = this.mapSubscriptionAbort[mapSlug] = this.mapSubscriptionAbort[mapSlug] ?? new AbortController();
+
+				let existingSub = this.findMapSubscriptionData(mapSlug, false);
+				if (!existingSub) {
 					const mapData = await this.api.getMap(mapSlug);
-					if (!this.mapSubscriptions[mapData.id]) {
-						this.mapSubscriptions[mapData.id] = [];
+					if (abort.signal.aborted) { // Unsubscribed while fetching map data
+						return;
 					}
-					this.mapSubscriptions[mapData.id].push({ pick, history, mapSlug, writable: mapData.writable });
-					this.registerDatabaseHandlers();
+					existingSub = this.findMapSubscriptionData(mapSlug, false); // Another request might have created a subscription in the meantime
+					if (!existingSub) {
+						if (!this.mapSubscriptionDetails[mapData.id]) {
+							this.mapSubscriptionDetails[mapData.id] = [];
+						}
+						this.mapSubscriptionDetails[mapData.id].push({ pick, history, mapSlug, writable: mapData.writable });
+						this.registerDatabaseHandlers();
+					}
+				}
+
+				const pickBefore = existingSub?.pick;
+				if (existingSub) {
+					Object.assign(existingSub, { pick, history });
 				}
 
 				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
@@ -334,45 +375,48 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					bbox: this.bbox
 				});
 
-				await this.emitAllMapObjects(mapSlug, results);
+				await this.emitAllMapObjects(mapSlug, results, abort.signal);
 			},
 
 			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
+				if (this.mapSubscriptionAbort[data.adminId]) {
+					throw new Error(getI18n().t("socket.map-already-subscribed-error", { mapSlug: data.adminId }));
+				}
+				const abort = new AbortController();
+				this.mapSubscriptionAbort[data.adminId] = abort;
+
 				const results = await this.api.createMap(data, {
 					pick: this.bbox ? pick : pick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox
 				});
+
 				await this.emitAllMapObjects(data.adminId, mapAsyncIterable(results, (obj) => {
-					if (obj.type === "mapData") {
-						if (!this.mapSubscriptions[obj.data.id]) {
-							this.mapSubscriptions[obj.data.id] = [];
+					if (!abort.signal.aborted && obj.type === "mapData") {
+						if (!this.mapSubscriptionDetails[obj.data.id]) {
+							this.mapSubscriptionDetails[obj.data.id] = [];
 						}
-						this.mapSubscriptions[obj.data.id].push({ pick, history, mapSlug: data.adminId, writable: obj.data.writable });
+						this.mapSubscriptionDetails[obj.data.id].push({ pick, history, mapSlug: data.adminId, writable: obj.data.writable });
 						this.registerDatabaseHandlers();
 					}
 					return obj;
-				}));
+				}), abort.signal);
 			},
 
 			unsubscribeFromMap: async (mapSlug) => {
-				for (const [mapId, subs] of numberEntries(this.mapSubscriptions)) {
-					const without = subs.filter((s) => s.mapSlug !== mapSlug);
-					if (without.length !== subs.length) {
-						if (without.length === 0) {
-							delete this.mapSubscriptions[mapId];
-						} else {
-							this.mapSubscriptions[mapId] = without;
-						}
-						this.registerDatabaseHandlers();
-						return;
-					}
+				if (!this.mapSubscriptionAbort[mapSlug]) {
+					throw new Error(getI18n().t("socket.map-not-subscribed-error", { mapSlug }));
 				}
 
-				throw new Error(getI18n().t("socket.map-not-subscribed-error", { mapSlug }));
+				this.mapSubscriptionAbort[mapSlug].abort();
+				delete this.mapSubscriptionAbort[mapSlug];
+				this.findMapSubscriptionData(mapSlug, true);
+				this.registerDatabaseHandlers();
 			},
 
 			subscribeToRoute: async (routeKey, params) => {
-				const existingRoute = this.routeSubscriptions[routeKey];
+				const abort = this.routeSubscriptionAbort[routeKey] = this.routeSubscriptionAbort[routeKey] ?? new AbortController();
+
+				const existingRoute = this.routeSubscriptionDetails[routeKey];
 
 				let routeInfo;
 				if ("lineId" in params) {
@@ -384,13 +428,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					routeInfo = await this.database.routes.createRoute([...params.routePoints], params.mode);
 				}
 
-				if(!routeInfo) {
+				if(!routeInfo || abort.signal.aborted) {
 					// A newer submitted route has returned in the meantime
 					console.log("Ignoring outdated route");
 					return;
 				}
 
-				this.routeSubscriptions[routeKey] = omit(routeInfo, ["trackPoints"]);
+				this.routeSubscriptionDetails[routeKey] = omit(routeInfo, ["trackPoints"]);
 
 				this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
 
@@ -403,16 +447,21 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			unsubscribeFromRoute: async (routeKey) => {
-				if (!this.routeSubscriptions[routeKey]) {
+				if (!this.routeSubscriptionAbort[routeKey]) {
 					throw new Error(getI18n().t("socket.route-not-subscribed-error", { routeKey }));
 				}
 
-				await this.database.routes.deleteRoute(this.routeSubscriptions[routeKey].routeId);
-				delete this.routeSubscriptions[routeKey];
+				this.routeSubscriptionAbort[routeKey].abort();
+				delete this.routeSubscriptionAbort[routeKey];
+
+				if (this.routeSubscriptionDetails[routeKey]) {
+					await this.database.routes.deleteRoute(this.routeSubscriptionDetails[routeKey].routeId);
+					delete this.routeSubscriptionDetails[routeKey];
+				}
 			},
 
 			exportRoute: async (routeId, options) => {
-				const route = this.routeSubscriptions[routeId];
+				const route = this.routeSubscriptionDetails[routeId];
 				if (!route) {
 					throw new Error(getI18n().t("socket.route-not-available-error"));
 				}
@@ -456,7 +505,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				this.bbox = bbox;
 
-				for (const subs of Object.values(this.mapSubscriptions)) {
+				for (const subs of Object.values(this.mapSubscriptionDetails)) {
 					for (const sub of subs) {
 						const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
 						for await (const obj of markerObjs) {
@@ -474,7 +523,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				for (const [routeKey, sub] of Object.entries(this.routeSubscriptions)) {
+				for (const [routeKey, sub] of Object.entries(this.routeSubscriptionDetails)) {
 					const trackPoints = await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except);
 					this.emit("routePoints", routeKey, { trackPoints, reset: false });
 				}
@@ -497,16 +546,16 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	getDatabaseHandlers(): DatabaseHandlers {
 		return {
-			...(Object.keys(this.mapSubscriptions).length > 0 ? {
+			...(Object.keys(this.mapSubscriptionDetails).length > 0 ? {
 				mapData: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("mapData")) {
 								this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
 							}
 						}
 
-						const slugMap = Object.fromEntries(this.mapSubscriptions[mapId].flatMap((sub) => {
+						const slugMap = Object.fromEntries(this.mapSubscriptionDetails[mapId].flatMap((sub) => {
 							const oldSlug = sub.mapSlug;
 							const newSlug = getMapSlug({ ...data, writable: sub.writable });
 							if (oldSlug !== newSlug) {
@@ -522,26 +571,26 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						}
 
 						if (data.id !== mapId) {
-							this.mapSubscriptions[data.id] = [
-								...this.mapSubscriptions[data.id] ?? [],
-								...this.mapSubscriptions[mapId]
+							this.mapSubscriptionDetails[data.id] = [
+								...this.mapSubscriptionDetails[data.id] ?? [],
+								...this.mapSubscriptionDetails[mapId]
 							];
-							delete this.mapSubscriptions[mapId];
+							delete this.mapSubscriptionDetails[mapId];
 						}
 					}
 				},
 
 				deleteMap: (mapId) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							this.emit("deleteMap", sub.mapSlug);
 						}
 					}
 				},
 
-				marker: (mapId, marker) => {
-					if (this.mapSubscriptions[mapId] && this.bbox && isInBbox(marker, this.bbox)) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+				marker: (mapId, marker, oldMarker) => {
+					if (this.mapSubscriptionDetails[mapId] && this.bbox && (isInBbox(marker, this.bbox) || (oldMarker && isInBbox(oldMarker, this.bbox)))) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
 								this.emit("marker", sub.mapSlug, marker);
 							}
@@ -550,8 +599,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				deleteMarker: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
 								this.emit("deleteMarker", sub.mapSlug, data);
 							}
@@ -560,8 +609,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				line: (mapId, line) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
 								this.emit("line", sub.mapSlug, line);
 							}
@@ -570,8 +619,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				linePoints: (mapId, lineId, trackPoints) => {
-					if (this.mapSubscriptions[mapId] && this.bbox) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId] && this.bbox) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("linePoints")) {
 								this.emit("linePoints", sub.mapSlug, {
 									lineId,
@@ -585,8 +634,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				deleteLine: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
 								this.emit("deleteLine", sub.mapSlug, data);
 							}
@@ -595,8 +644,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				type: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("types")) {
 								this.emit("type", sub.mapSlug, data);
 							}
@@ -605,8 +654,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				deleteType: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("types")) {
 								this.emit("deleteType", sub.mapSlug, data);
 							}
@@ -615,8 +664,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				view: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("views")) {
 								this.emit("view", sub.mapSlug, data);
 							}
@@ -625,8 +674,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				deleteView: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("views")) {
 								this.emit("deleteView", sub.mapSlug, data);
 							}
@@ -635,8 +684,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				},
 
 				historyEntry: (mapId, data) => {
-					if (this.mapSubscriptions[mapId]) {
-						for (const sub of this.mapSubscriptions[mapId]) {
+					if (this.mapSubscriptionDetails[mapId]) {
+						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.history && (sub.writable === Writable.ADMIN || ["Marker", "Line"].includes(data.type))) {
 								this.emit("history", sub.mapSlug, data);
 							}

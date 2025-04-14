@@ -408,7 +408,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	async getRoute(data: RouteRequest): Promise<RouteInfo> {
 		const res = await this.fetch("/route", {
 			query: {
-				destinations: JSON.stringify(data.destinations),
+				destinations: JSON.stringify(data.routePoints),
 				mode: data.mode
 			}
 		});

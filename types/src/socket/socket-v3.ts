@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type DeepReadonly, type MapSlug, type ObjectWithId } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type MapSlug, type ObjectWithId } from "../base.js";
 import { mapDataValidator, type MapDataWithWritable } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line } from "../line.js";
@@ -10,8 +10,12 @@ import { setLanguageRequestValidator, type StreamId, subscribeToMapPickValidator
 import type { HistoryEntry } from "../historyEntry.js";
 import { apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
 import { optionalParam, type LinePoints } from "../api/api-common.js";
+import type { DeepReadonly } from "../utility.js";
 
-export const subscribeToMapOptionsValidator = z.object({ pick: z.array(subscribeToMapPickValidator).optional(), history: z.boolean().optional() });
+export const subscribeToMapOptionsValidator = z.object({
+	pick: z.array(subscribeToMapPickValidator).optional(),
+	history: z.boolean().optional()
+});
 export type SubscribeToMapOptions = z.infer<typeof subscribeToMapOptionsValidator>;
 
 export const subscribeToRouteOptionsValidator = z.union([routeParametersValidator, lineToRouteRequestValidator]);

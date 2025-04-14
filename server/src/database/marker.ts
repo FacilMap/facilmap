@@ -135,7 +135,7 @@ export default class DatabaseMarkers {
 		if (Object.keys(update).length > 0) {
 			const result = await this._db.helpers._updateMapObject<Marker>("Marker", originalMarker.mapId, originalMarker.id, update, options);
 
-			this._db.emit("marker", originalMarker.mapId, result);
+			this._db.emit("marker", originalMarker.mapId, result, originalMarker);
 
 			if (update.lat != null && update.lon != null && update.ele === undefined) {
 				getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {

@@ -1,4 +1,4 @@
-# Methods
+# API Methods
 
 ## `findMaps()`
 
@@ -6,27 +6,27 @@ Client: `findMaps(query, { start?, limit? })`\
 Socket: `emit("findMaps", query, { start?, limit? }, callback)`\
 REST: `GET /map?query=<query>&start=<start?>&limit=<limit?>`
 
-Finds collaborative maps by a search term. Only finds maps that have been made public by setting [`searchEngines`](./types.md#mapdata) to `true`.
+Finds collaborative maps by a search term. Only finds maps that have been made public by setting <code>[searchEngines](./types.md#mapdata)</code> to `true`.
 
 Parameters:
 * `query` (string): The search term
 * `start`, `limit` (number): See [paging](./types.md#paging)
 
-Result: `PagedResults<Pick<MapData, "id" | "readId" | "name" | "description">>` (see [PagedResults](./types.md#pagedresults), [MapData](./types.md#mapdata))
+Result: <code>[PagedResults](./types.md#pagedresults)&lt;Pick&lt;[MapData](./types.md#mapdata), &quot;id&quot; | &quot;readId&quot; | &quot;name&quot; | &quot;description&quot;&gt;&gt;</code>
 
 ## `getMap()`
 
-Client: `getMap(mapSlug)`\
+Client: `getMap(mapSlug)` or `mapSubscription.getMap()`\
 Socket: `emit("getMap", mapSlug, callback)`\
 REST: `GET /map/<mapSlug>`
 
 Retrieves the settings of a single map by map slug. This can also be used to check if a map with a certain slug exists.
 
-Result: [`MapDataWithWritable`](./types.md#mapdatawithwritable)
+Result: <code>[MapDataWithWritable](./types.md#mapdatawithwritable)</code>
 
 ## `createMap()`
 
-Client (streamed): `createMap(data, { pick?, bbox? })`\
+Client (streamed): `createMap(data, { pick? })`\
 Client (unstreamed): `createMapUnstreamed(data, { pick? })`\
 Socket: `emit("createMap", data, { pick? }, callback)`\
 REST: `POST /map?pick=<pick?>` (body: `data`)
@@ -34,14 +34,14 @@ REST: `POST /map?pick=<pick?>` (body: `data`)
 Creates a new map.
 
 Parameters:
-* `data` ([`MapData`](./types.md#mapdata)): The map data
+* `data` (<code>[MapData](./types.md#mapdata)</code>): The map data
 * `pick` (`Array<"mapData" | "types">`, REST: comma-delimited string): The types of map data to return. Defaults to `["mapData", "types"]`.
 
-The result is the result of [`getAllMapObjects()`](#getallmapobjects) for the newly created map, see there for details.
+The result is the result of <code>[getAllMapObjects()](#getallmapobjects)</code> for the newly created map, see there for details.
 
 ## `updateMap()`
 
-Client: `updateMap(mapSlug, data)`\
+Client: `updateMap(mapSlug, data)` or `mapSubscription.updateMap(data)`\
 Socket: `emit("updateMap", mapSlug, data, callback)`\
 REST: `PUT /map/<mapSlug>` (body: `data`)
 
@@ -49,15 +49,15 @@ Update the map settings of the current map.
 
 Parameters:
 * `mapSlug` (string): The map slug of the map (this map slug must have admin permission on the map)
-* `data` ([`MapData`](./types.md#mapdata): The properties to change
+* `data` (<code>[MapData](./types.md#mapdata)</code>): The properties to change
 
-Result: [`MapDataWithWritable`](./types.md#mapdatawithwritable), the updated version of the map settings
+Result: <code>[MapDataWithWritable](./types.md#mapdatawithwritable)</code>, the updated version of the map settings
 
-If this is called through the socket and the map is currently subscribed, causes a [`mapData`](./events.md#mapdata) event (and a [`mapSlugRename`](./events.md#mapslugrename) event if a map slug was changed) to be emitted before the promise is resolved.
+If this is called through the socket and the map is currently subscribed, causes a <code>[mapData](./events.md#mapdata)</code> event (and a <code>[mapSlugRename](./events.md#mapslugrename)</code> event if a map slug was changed) to be emitted before the promise is resolved.
 
 ## `deleteMap()`
 
-Client: `deleteMap(mapSlug)`\
+Client: `deleteMap(mapSlug)` or `mapSubscription.deleteMap()`\
 Socket: `emit("deleteMap", mapSlug, callback)` \
 REST: `DELETE /map/<mapSlug>`
 
@@ -66,12 +66,12 @@ Delete a map irrevocably.
 Parameters:
 * `mapSlug` (string): The map slug of the map to delete (this map slug must have admin permission on the map)
 
-If this is called through the socket and the map is currently subscribed, causes a [`deleteMap`](./events.md#deletemap) event to be emitted before the promise is resolved.
+If this is called through the socket and the map is currently subscribed, causes a <code>[deleteMap](./events.md#deletemap)</code> event to be emitted before the promise is resolved.
 
 ## `getAllMapObjects()`
 
-Client (streamed): `getAllMapObjects(mapSlug, { pick?, bbox? })`\
-Client (unstreamed): `getAllMapObjectsUnstreamed(mapSlug, { pick?, bbox? })`\
+Client (streamed): `getAllMapObjects(mapSlug, { pick?, bbox? })` or `mapSubscription.getAllMapObjects({ pick?, bbox? })`\
+Client (unstreamed): `getAllMapObjectsUnstreamed(mapSlug, { pick?, bbox? })` or `mapSubscription.getAllMapObjectsUnstreamed({ pick?, bbox? })`\
 Socket: `emit("getAllMapObjects", mapSlug, { pick?, bbox? }, callback)`\
 REST: `GET /map/<mapSlug>/all?pick=<pick?>&bbox=<bbox?>`
 
@@ -80,7 +80,7 @@ Returns the whole map data (map settings, types, views, markers, lines).
 Parameters:
 * `mapSlug` (string): The map slug of the map
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linesWithTrackPoints" | "linePoints">`, REST: comma-delimited string): The types of data to return. If `bbox` is set, defaults to `["mapData", "types", "views", "markers", "linesWihTrackPoints"]`, otherwise defaults to `["mapData", "types", "views", "lines"]`
-* `bbox` ([`Bbox`](./types.md#bbox), REST: JSON-stringified): Only return markers and line points for this bbox.
+* `bbox` (<code>[Bbox](./types.md#bbox)</code>, REST: JSON-stringified): Only return markers and line points for this bbox.
 
 The streamed version of this returns the following type:
 ```typescript
@@ -112,7 +112,7 @@ The REST API returns the unstreamed version, but produces the JSON document in a
 
 ## `findOnMap()`
 
-Client: `findOnMap(mapSlug, query)`\
+Client: `findOnMap(mapSlug, query)` or `mapSubscription.findOnMap(query)`\
 Socket: `emit("findOnMap", mapSlug, query, callback)`\
 REST: `GET /map/<mapSlug>/find?query=<query>`
 
@@ -122,7 +122,7 @@ Parameters:
 * `mapSlug` (string): The map slug of the map to search
 * `query` (string): The search term
 
-Result: `FindOnMapResult[]`:
+Result: `Array<FindOnMapResult>`, an array of stripped down <code>[Marker](./types.md#marker)</code> and <code>[Line](./types.md#line)</code> objects:
 
 ```typescript
 type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon"> & {
@@ -136,13 +136,11 @@ type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "rig
 type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 ```
 
-Returns an array of stripped down [`Marker`](./types.md#marker) and [`Line`](./types.md#line) objects.
-
-At the moment, the method returns markers/lines whose name contains the search term, although this might be improved in the future. The results are sorted by similarity – the `similary` property is a number between 0 and 1, with 1 meaning that the marker/line name is exactly identical with the search term.
+At the moment, the method returns markers/lines whose name contains the search term, although this might be extended in the future. The results are sorted by similarity – the `similarity` property is a number between 0 and 1, with 1 meaning that the marker/line name is exactly identical with the search term.
 
 ## `getHistory()`
 
-Client: `getHistory(mapSlug, { start?, limit? })`\
+Client: `getHistory(mapSlug, { start?, limit? })` or `mapSubscription.getHistory({ start?, limit? })`\
 Socket: `emit("getHistory", mapSlug, { start?, limit? }, callback)`\
 REST: `GET /map/<mapSlug>/history?start=<start?>&limit=<limit?>`
 
@@ -152,11 +150,11 @@ Parameters:
 * `mapSlug` (string): The map slug of the map
 * `start`, `limit` (number): See [paging](./types.md#paging)
 
-Result: `Array<`[`HistoryEntry`](./types.md#historyentry)`>`
+Result: <code>Array&lt;[HistoryEntry](./types.md#historyentry)&gt;</code>
 
 ## `revertHistoryEntry()`
 
-Client: `revertHistoryEntry(mapSlug, historyEntryId)`\
+Client: `revertHistoryEntry(mapSlug, historyEntryId)` or `mapSubscription.revertHistoryEntry(historyEntryId)`\
 Socket: `emit("revertHistoryEntry", mapSlug, historyEntryId)`\
 REST: `POST /map/<mapSlug>/history/<historyEntryId>/revert`
 
@@ -166,7 +164,7 @@ Parameters:
 * `mapSlug` (string): The map slug of the map
 * `historyEntryId` (number): The ID of the history entry to revert
 
-When using the socket, reverting a history entry on a subscribed map will emit an event to create/delete/update the respective object. It will also create a new history entry for the revert action itself. The events are guaranteed to be delivered before the returned promise is resolved.
+Reverting a history entry on a subscribed map will emit a socket event to create/delete/update the respective object. It will also create a new history entry for the revert action itself. Using the Socket Client/API, The events are guaranteed to be delivered before the returned promise is resolved.
 
 Reverting a history entry has the following effect:
 * `create` action: The object will be deleted
@@ -175,7 +173,7 @@ Reverting a history entry has the following effect:
 
 ## `getMapMarkers()`
 
-Client: `getMapMarkers(mapSlug, { bbox?, typeId? }`\
+Client: `getMapMarkers(mapSlug, { bbox?, typeId? }` or `mapSubscription.getMapMarkers({ bbox?, typeId? })`\
 Socket: `emit("getMapMarkers", mapSlug, { bbox?, typeId? }, callback)`\
 REST: `GET /map/<mapSlug>/marker?bbox=<bbox>&typeId=<typeId>`
 
@@ -186,14 +184,14 @@ Parameters:
 * `bbox` ([BboxWithExcept](./types.md#bboxwithexcept), REST: JSON-stringified): If specified, only retrieve markers wthin this bbox
 * `typeId` (number): If specified, only retrieve markers of this type.
 
-Result:\
-Client: `{ results: AsyncIterable<`[`Marker`](./types.md#marker)`> }`\
-Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))\
-REST: `{ results: Array<`[`Marker`](./types.md#marker)`> }`
+Result:
+* Client: <code>{ results: AsyncIterable&lt;[Marker](./types.md#marker)&gt; }</code>
+* Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))
+* REST: <code>{ results: Array&lt;[Marker](./types.md#marker)&gt; }</code>
 
 ## `getMarker()`
 
-Client: `getMarker(mapSlug, markerId)`\
+Client: `getMarker(mapSlug, markerId)` or `mapSubscription.getMarker(markerId)`\
 Socket: `emit("getMarker", mapSlug, markerId, callback)`\
 REST: `GET /map/<mapSlug>/marker/<markerId>`
 
@@ -203,11 +201,11 @@ Parameters:
 * `mapSlug` (string): The map slug of the map
 * `markerId` (number): The ID of the marker
 
-Result: [`Marker`](./types.md#marker)
+Result: <code>[Marker](./types.md#marker)</code>
 
 ## `createMarker()`
 
-Client: `createMarker(mapSlug, marker)`\
+Client: `createMarker(mapSlug, marker)` or `mapSubscription.createMarker(marker)`\
 Socket: `emit("createMarker", mapSlug, marker, callback)`\
 REST: `POST /map/<mapSlug>/marker` (body: `marker`)
 
@@ -215,13 +213,13 @@ Create a marker.
 
 Parameters:
 * `mapSlug` (string): The map slug of the map
-* `marker` ([`Marker`](./types.md#marker)): The marker to create
+* `marker` (<code>[Marker](./types.md#marker)</code>): The marker to create
 
-Result: [`Marker`](./types.md#marker), the created marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+Result: <code>[Marker](./types.md#marker)</code>, the created marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
 
 ## `updateMarker()`
 
-Client: `updateMarker(mapSlug, markerId, marker)`\
+Client: `updateMarker(mapSlug, markerId, marker)` or `mapSubscription.updateMarker(markerId, marker)`\
 Socket: `emit("updateMarker", mapSlug, markerId, marker, callback)`\
 REST: `PUT /map/<mapSlug>/marker/<markerId>` (body: `marker`)
 
@@ -230,13 +228,13 @@ Update an existing marker.
 Parameters:
 * `mapSlug` (string): The map slug of the map
 * `markerId` (number): The ID of the marker to update
-* `marker` ([`Marker`](./types.md#marker)): The marker properties to update
+* `marker` (<code>[Marker](./types.md#marker)</code>): The marker properties to update
 
-Result: [`Marker`](./types.md#marker), the updated marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+Result: <code>[Marker](./types.md#marker)</code>, the updated marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
 
 ## `deleteMarker()`
 
-Client: `deleteMarker(mapSlug, markerId)`\
+Client: `deleteMarker(mapSlug, markerId)` or `mapSubscription.deleteMarker(markerId)`\
 Socket: `emit("deleteMarker", mapSlug, markerId, callback)`\
 REST: `DELETE /map/<mapSlug>/marker/<markerId>`
 
@@ -248,7 +246,7 @@ Parameters:
 
 ## `getMapLines()`
 
-Client: `getMapLines(mapSlug, { bbox?, includeTrackPoints?, typeId? })`\
+Client: `getMapLines(mapSlug, { bbox?, includeTrackPoints?, typeId? })` or `mapSubscription.getMapLines({ bbox?, includeTrackPoints?, typeId? })`\
 Socket: `emit("getMapLines", mapSlug, { bbox?, includeTrackPoints?, typeId? }, callback)`\
 REST: `GET /map/<mapSlug>/line?bbox=<bbox?>&includeTrackPoints=<includeTrackPoints?>&typeId=<typeId?>`
 
@@ -257,17 +255,17 @@ Get the lines of a map.
 Parameters:
 * `mapSlug` (string): The map slug of the map
 * `bbox` ([BboxWithExcept](./types.md#bboxwithexcept), REST: JSON-stringified): If specified, only retrieve data wthin this bbox. Currently, this only affects the track points and all lines are always returned, but this might be adjusted in the future and only lines that overlap with the bbox are returned at all.
-* `includeTrackPoints` (boolean, REST: `true` or `false`): If set to `true`, the returned lines will have an additional `trackPoints` property (`Array<`[`TrackPoint`](./types.md#trackpoint)`>`) containing the track points of the line.
+* `includeTrackPoints` (boolean, REST: `true` or `false`): If set to `true`, the returned lines will have an additional `trackPoints` property (<code>Array&lt;[TrackPoint](./types.md#trackpoint)&gt;</code>) containing the track points of the line.
 * `typeId` (number): If specified, only return lines of this type.
 
-Result:\
-Client: `{ results: AsyncIterable<`[`Line`](./types.md#line)`> }`\
-Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))\
-REST: `{ results: Array<`[`Line`](./types.md#line)`> }`
+Result:
+* Client: <code>{ results: AsyncIterable&lt;[Line](./types.md#line)&gt; }</code>
+* Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))
+* REST: <code>{ results: Array&lt;[Line](./types.md#line)&gt; }</code>
 
 ## `getLine()`
 
-Client: `getLine(mapSlug, lineId)`\
+Client: `getLine(mapSlug, lineId)` or `mapSubscription.getLine(lineId)`\
 Socket: `emit("getLine", mapSlug, lineId, callback)`\
 REST: `GET /map/<mapSlug>/line/<lineId>`
 
@@ -277,11 +275,11 @@ Parameters:
 * `mapSlug` (string): The map slug of the map
 * `lineId` (number): The ID of the line
 
-Result: [`Line`](./types.md#line)
+Result: <code>[Line](./types.md#line)</code>
 
 ## `getLinePoints()`
 
-Client: `getLinePoints(mapSlug, lineId, { bbox? })`\
+Client: `getLinePoints(mapSlug, lineId, { bbox? })` or `mapSubscription.getLinePoints(lineId, { bbox? })`\
 Socket: `emit("getLinePoints", mapSlug, lineId, { bbox? }, callback)`\
 REST: `GET /map/<mapSlug>/line/<lineId>/linePoints?bbox=<bbox?>`
 
@@ -290,16 +288,32 @@ Returns the track points of a single line.
 Parameters:
 * `mapSlug` (string): The map slug of the map
 * `lineId` (number): The ID of the number
-* `bbox` ([`BboxWithExcept](./types.md#bboxwithexcept), REST: JSON-stringified): If specified, only return track points within this bbox.
+* `bbox` (<code>[BboxWithExcept](./types.md#bboxwithexcept)</code>, REST: JSON-stringified): If specified, only return track points within this bbox.
 
-Result:\
-Client: `{ results: AsyncIterable<`[`TrackPoint`](./types.md#trackpoint)`> }`\
-Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))\
-REST: `{ results: Array<`[`TrackPoint`](./types.md#trackpoint)`> }`
+Result:
+* Client: <code>{ results: AsyncIterable&lt;[TrackPoint](./types.md#trackpoint)&gt; }</code>
+* Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))
+* REST: <code>{ results: Array&lt;[TrackPoint](./types.md#trackpoint)&gt; }</code>
+
+## `getLineTemplate()`
+
+Client: `getLineTemplate(mapSlug, { typeId })` or `mapSubscription.getLineTemplate({ typeId })`\
+Socket: `emit("getLineTemplate", mapSlug, { typeId }, callback)`\
+REST: `GET /map/<mapSlug>/line/template?typeId=<typeId>`
+
+Get a mock line object for a line with the given type. This can be used so that while the user is drawing a new line, that line already has the right style.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `typeId` (number): The ID of the type that the line will have
+
+Result: <code>Pick&lt;[Line](./types.md#line), &quot;typeId&quot; | &quot;name&quot; | &quot;colour&quot; | &quot;data&quot; | &quot;mode&quot; | &quot;width&quot; | &quot;stroke&quot;</code>
+
+In a JavaScript/TypeScript app, it would be preferrable to call `getLineTemplate(type)` exported by `facilmap-utils`, as that can be called synchronously.
 
 ## `createLine()`
 
-Client: `createLine(mapSlug, line)`\
+Client: `createLine(mapSlug, line)` or `mapSubscription.createLine(line)`\
 Socket: `emit("createLine", mapSlug, line, callback)`\
 REST: `POST /map/<mapSlug>/line` (body: `line`)
 
@@ -307,13 +321,13 @@ Create a line.
 
 Parameters:
 * `mapSlug` (string): The map slug of the map
-* `line` ([`Line`](./types.md#line)): The line to create
+* `line` (<code>[Line](./types.md#line)</code>): The line to create
 
-Result: [`Line`](./types.md#line), the created line with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+Result: <code>[Line](./types.md#line)</code>, the created line with all its properties. Some style properties might be different than requested if the type enforces certain styles.
 
 ## `updateLine()`
 
-Client: `updateLine(mapSlug, lineId, line)`\
+Client: `updateLine(mapSlug, lineId, line)` or `mapSubscription.updateLine(lineId, line)`\
 Socket: `emit("updateLine", mapSlug, lineId, line, callback)`\
 REST: `PUT /map/<mapSlug>/line/<lineId>` (body: `line`)
 
@@ -322,13 +336,15 @@ Update an existing line.
 Parameters:
 * `mapSlug` (string): The map slug of the map
 * `lineId` (number): The ID of the line to update
-* `line` ([`Line`](./types.md#line)): The line properties to update
+* `line` (<code>[Line](./types.md#line)</code>): The line properties to update
 
-Result: [`Line`](./types.md#line), the updated line with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+Result: <code>[Line](./types.md#line)</code>, the updated line with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+
+If the `routePoints` and/or `mode` of the line are modified, causes the route to be recalculated and its track points to be replaced. If the `routePoints` and `mode` are equal to a currently subscribed route (see <code>[subscribeToRoute](#subscribetoroute)</code>), the track points of the route are copied to the line on the server rather than calculating the route again, which saves time.
 
 ## `deleteLine()`
 
-Client: `deleteLine(mapSlug, lineId)`\
+Client: `deleteLine(mapSlug, lineId)` or `mapSubscription.deleteLine(lineId)`\
 Socket: `emit("deleteLine", mapSlug, lineId, callback)`\
 REST: `DELETE /map/<mapSlug>/line/<lineId>`
 
@@ -340,7 +356,7 @@ Parameters:
 
 ## `exportLine()`
 
-Client: `exportLine(mapSlug, lineId, { format })`\
+Client: `exportLine(mapSlug, lineId, { format })` or `mapSubscription.exportLine(lineId, { format })`\
 Socket: `emit("exportLine", mapSlug, lineId, { format }, callback)`\
 REST: `GET /map/<mapSlug>/line/<lineId>/export?format=<format>`
 
@@ -351,14 +367,14 @@ Parameters:
 * `lineId` (number): The ID of the line to export
 * `format` (`"gpx-trk" | "gpx-rte" | "geojson"`): The desired export format. `"gpx-trk"` exports all the track points of the line, whereas `"gpx-rte"` only exports the route points.
 
-Result:\
-Client: `{ type: string; filename: string; data: ReadableStream<Uint8Array> }`\
-Socket: `{ type: string; filename: string; data: string }`, where `data` is a [stream ID](./advanced.md#streams)\
-REST: The response body is the exported file; the MIME type and the file name are sent as part of the `Content-Type` and `Content-Disposition` HTTP headers.
+Result:
+* Client: `{ type: string; filename: string; data: ReadableStream<Uint8Array> }`
+* Socket: `{ type: string; filename: string; data: string }`, where `data` is a [stream ID](./advanced.md#streams)
+* REST: The response body is the exported file; the MIME type and the file name are sent as part of the `Content-Type` and `Content-Disposition` HTTP headers.
 
 ## `getMapTypes()`
 
-Client: `getMapTypes(mapSlug)`\
+Client: `getMapTypes(mapSlug)` or `mapSubscription.getMapTypes()`\
 Socket: `emit("getMapTypes", mapSlug, callback)`\
 REST: `GET /map/<mapSlug>/type`
 
@@ -367,269 +383,309 @@ Returns all the types of the map.
 Parameters:
 * `mapSlug` (string): The map slug of the map
 
-Result:\
-Client: `{ results: AsyncIterable<`[`Type`](./types.md#type)`> }`\
-Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))\
-REST: `{ results: Array<`[`Type`](./types.md#type)`> }`
+Result:
+* Client: <code>{ results: AsyncIterable&lt;[Type](./types.md#type)&gt; }</code>
+* Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))
+* REST: <code>{ results: Array&lt;[Type](./types.md#type)&gt; }</code>
 
 ## `getType()`
 
-Client: `getType(mapSlug, typeId)`\
+Client: `getType(mapSlug, typeId)` or `mapSubscription.getType(typeId)`\
 Socket: `emit("getType", mapSlug, typeId, callback)`\
 REST: `GET /map/<mapSlug>/type/<typeId>`
 
-getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
+Get a single type of the map.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `typeId` (number): The ID of the type
+
+Result: <code>[Type](./types.md#type)</code>
 
 ## `createType()`
 
-createType(mapSlug: MapSlug, data: Type<CRU.CREATE>): Promise<Type> {
+Client: `createType(mapSlug, type)` or `mapSubscription.createType(type)`\
+Socket: `emit("createType", mapSlug, type, callback)`\
+REST: `POST /map/<mapSlug>/type` (body: `type`)
 
-	Create a type.
+Create a type.
 
-* `data` ([Type](./types.md#type)): The data of the type to create. An `id` will be assigned by the server.
-* **Returns:** A promise that is resolved with the created [Type](./types.md#type)>, with an `id` assigned.
-* **Events:** Causes a [`type`](./events.md#type) event.
-* **Availability:** Only if a collaborative map is opened using its admin link.
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `type` (<code>[Type](./types.md#type)</code>): The data of the type to create
 
+Result: <code>[Type](./types.md#type)</code>, the created type
 
 ## `updateType()`
 
-updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Type> {
+Client: `updateType(mapSlug, typeId, type)` or `mapSubscription.updateType(typeId, type)`\
+Socket: `emit("updateType", mapSlug, typeId, type, callback)`\
+REST: `PUT /map/<mapSlug>/type/<typeId>` (body: `type`)
 
-	Update an existing type.
+Update an existing type.
 
-* `data` ([type](./types.md#type)). The new type data. Fields that are not defined will not be unmodified. Only `id` needs to be defined. To rename a field, set the `oldName` property of the field object to the previous name and the `name` property to the new name. To rename a dropdown entry, set the `oldValue` property to the old value and the `value` property to the new value.
-* **Returns:** A promise that is resolved with the updated <[Type](./types.md#type)>.
-* **Events:** Causes a [`type`](./events.md#type) event. If the update causes the styles of existing markers or lines to change, events for those are triggered as well.
-* **Availability:** Only if a collaborative map is opened using its admin link.
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `typeId` (number): The ID of the type to update
+* `type` (<code>[Type](./types.md#type)</code>): The type properties to update
+
+Result: <code>[Type](./types.md#type)</code>, the updated type with all its properties
 
 
 ## `deleteType()`
 
-deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
+Client: `deleteType(mapSlug, typeId)` or `mapSubscription.deleteType(typeId)`\
+Socket: `emit("deleteType", mapSlug, typeId, callback)`\
+REST: `DELETE /map/<mapSlug>/type/<typeId>`
 
-	Delete an existing type
+Delete an existing type
 
-* `data` (`{id: <typeId>}`): An object that contains the ID of the type to be removed
-* **Returns:** A promise that is resolved with the deleted [Type](./types.md#type) when the operation has completed. If there are any objects on the map that still use this type, the promise rejects.
-* **Events:** Causes a [`deleteType`](./events.md#deletetype) event.
-* **Availability:** Only if a collaborative map is opened using its admin link.
-
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `typeId` (number): The ID of the type to delete.
 
 ## `getMapViews()`
 
-getMapViews(mapSlug: MapSlug): Promise<StreamedResults<View>> {
+Client: `getMapViews(mapSlug)` or `mapSubscription.getMapViews()`\
+Socket: `emit("getMapViews", mapSlug, callback)`\
+REST: `GET /map/<mapSlug>/view`
+
+Returns all the views of the map.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map
+
+Result:
+* Client: <code>{ results: AsyncIterable&lt;[View](./types.md#view)&gt; }</code>
+* Socket: `{ results: string }` (containing a [stream ID](./advanced.md#streams))
+* REST: <code>{ results: Array&lt;[View](./types.md#view)&gt; }</code>
 
 ## `getView()`
 
-getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
+Client: `getView(mapSlug, viewId)` or `mapSubscription.getView(viewId)`\
+Socket: `emit("getView", mapSlug, viewId, callback)`\
+REST: `GET /map/<mapSlug>/view/<viewId>`
+
+Get a single view of the map.
+
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `viewId` (number): The ID of the view
+
+Result: <code>[View](./types.md#view)</code>
 
 ## `createView()`
 
-createView(mapSlug: MapSlug, data: View<CRU.CREATE>): Promise<View> {
+Client: `createView(mapSlug, view)` or `mapSubscription.createView(view)`\
+Socket: `emit("createView", mapSlug, view, callback)`\
+REST: `POST /map/<mapSlug>/view` (body: `view`)
 
-	Create a view.
+Create a view.
 
-* `data` ([view](./types.md#view)): The data of the view to create. An `id` will be assigned by the server
-* **Returns:** A promise that is resolved with the created <[View](./types.md#view)>), with an `id` assigned.
-* **Events:** Causes a [`view`](./events.md#view) event.
-* **Availability:** Only if a collaborative map is opened using its admin link.
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `view` (<code>[View](./types.md#view)</code>): The data of the view to create
 
+Result: <code>[View](./types.md#view)</code>, the created view
 
 ## `updateView()`
 
-updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+Client: `updateView(mapSlug, viewId, view)` or `mapSubscription.updateView(viewId, view)`\
+Socket: `emit("updateView", mapSlug, viewId, view, callback)`\
+REST: `PUT /map/<mapSlug>/view/<viewId>` (body: `view`)
 
-	Update an existing view.
+Update an existing view.
 
-* `data` ([view](./types.md#view)). The new view data. Fields that are not defined will not be unmodified. Only `id` needs to be defined.
-* **Returns:** A promise that is resolved with the updated <[View](./types.md#view)>).
-* **Events:** Causes a [`view`](./events.md#view) event.
-* **Availability:** Only if a collaborative map is opened using its admin link.
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `viewId` (number): The ID of the view to update
+* `view` (<code>[View](./types.md#view)</code>): The view properties to update
+
+Result: <code>[View](./types.md#view)</code>, the updated view with all its properties
 
 
 ## `deleteView()`
 
-deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
+Client: `deleteView(mapSlug, viewId)` or `mapSubscription.deleteView(viewId)`\
+Socket: `emit("deleteView", mapSlug, viewId, callback)`\
+REST: `DELETE /map/<mapSlug>/view/<viewId>`
 
-	Delete an existing view
+Delete an existing view
 
-* `data` (`{id: <viewId>}`): An object that contains the ID of the view to be removed
-* **Returns:** A promise that is resolved when the operation has completed.
-* **Events:** Causes a [`deleteView`](./events.md#deleteview) event.
-* **Availability:** Only if a collaborative map is opened using its admin link.
+Parameters:
+* `mapSlug` (string): The map slug of the map
+* `viewId` (number): The ID of the view to delete.
 
 
 ## `find()`
 
-find(query: string): Promise<SearchResult[]> {
+Client: `find(query)`\
+Socket: `emit("find", query, callback)`\
+REST: `GET /find?query=<query>`
 
 Search for places. Does not persist anything on the server, simply serves as a proxy to the search service.
 
-* `data` (object): An object with the following properties:
-	* `query` (string): The query string
-	* `loadUrls` (boolean): Whether to return the file if `query` is a URL
-* **Returns:** A promise that is resolved with the following value:
-	* If `data.query` is a URL to a GPX/KML/OSM/GeoJSON file and `loadUrls` is `true`, a string with the content of the file.
-	* Otherwise an array of [SearchResults](./types.md#searchresult).
-* **Events:** None.
-* **Availability:** Always.
+Parameters:
+* `query` (string): The search term
+
+Result: <code>Array&lt;[SearchResult](./types.md#searchresult)&gt;</code>
 
 ## `findUrl()`
 
-findUrl(url: string): Promise<{ data: ReadableStream<Uint8Array> }> {
+Client: `findUrl(url)`\
+Socket: `emit("findUrl", url, callback)`\
+REST: `GET /find/url?url=<url>`
+
+Load a geographic file from a publicly accessible URL. Does not persist anything on the server, simply serves as a proxy to access the file without being limited by the Same-Origin Policy.
+
+Result:
+* Client: `{ data: ReadableStream<Uint8Array> }`
+* Socket: `{ data: string }`, where `data` is a [stream ID](./advanced.md#streams)
+* REST: The response body is the exported file.
 
 ## `getRoute()`
 
-getRoute(data: RouteRequest): Promise<RouteInfo> {
+Client: `getRoute({ routePoints, mode })`\
+Socket: `getRoute({ routePoints, mode }, callback)`\
+REST: `GET /route?routePoints=<routePoints>&mode=<mode>`
 
-	Calculate a route between two or more points. Does not persist anything on the server, simply serves as a proxy to the routing service.
+Calculate a route between two or more points. Does not persist anything on the server, simply serves as a proxy to the routing service.
 
-* `data` (object): An object with the following properties:
-	* `destinations` (array): An array of at least two route points (objects with a `lat` and `lon` property)
-	* `mode` ([RouteMode](./types.md#routemode)): the route mode
-* **Returns:** A promise that is resolved with a [Route](./types.md#route)>.
-* **Events:** None.
-* **Availability:** Always.
+Parameters:
+* `routePoints` (`Array<{ lat: number; lon: number }>`, REST: JSON-stringified): The list of destinations
+* `mode` (string, see [route mode](./types.md#route-mode)): The route mode
+
+Result: <code>[Route](./types.md#route)</code> without `routePoints` and `mode`
 
 ## `geoip()`
 
-geoip(): Promise<Bbox | undefined> {
+Client: `geoip()`\
+Socket: `emit("geoip", callback)`\
+REST: `GET /geoip`
 
-	Returns an approximate location for the IP address of the client.
+Returns an approximate location for the IP address of the client.
 
-* **Returns:** A promise that is resolved to a [bounding box](./types.md#bbox) (without zoom) that includes the location of the client. If no location can be determined, the promise is resolved with `undefined`.
-* **Events:** None.
-* **Availability:** Always.
+Result: <code>[Bbox](./types.md#bbox)</code> without `zoom`
 
 ## `subscribeToMap()`
 
-subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
+Client: `subscribeToMap(mapSlug, { pick?, history? })`\
+Socket: `emit("subscribeToMap", mapSlug, { pick?, history? }, callback)`\
+REST: _not available_
 
-	Opens the collaborative map with the ID `mapId`.
+Enables the reception of events for objects of the map and their changes.
 
-This method can only be called once, and only if no `mapId` was passed to the constructor. If you want to open a different map, you need to create a new instance of the client.
+Parameters:
+* `mapSlug` (string): The map slug of the map to subscribe to
+* `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
+* `history` (boolean): Whether to retrieve history entries. Defaults to `false`.
 
-Setting the mapId causes the server to send several objects, such as the map settings, all views, and all lines (just metadata, without line points). Each of these objects is sent as an individual [`event`](./events.md).
+When using the Client, a map subscription object will be returned, see <code>[SocketClient.subscribeToMap()](./classes.md#subscribetomap)</code>. Calling `subscribeToMap()` with a map slug that is already subscribed will throw an error. To update an existing subscription, use <code>[mapSubscription.updateSubscription()](./classes.md#updatesubscription)</code>. On the contrary, when using the Socket API directly, `subscribeToMap()` acts as a way to enable _and_ to update a subscription. When called with a map slug that is already subscribed, it updates the subscription.
 
-* `mapId` (string): The ID of the collaborative map to open. Can be a read-only ID, writable ID or admin ID of a map.
-* **Returns:** A promise that is resolved empty when all objects have been received.
-* **Events:** Causes events to be fired with the map settings, all views, all types and all lines (without line points) of the map. If the map could not be opened, causes a [`serverError`](./events.md#servererror) event.
-* **Availability:** Only available if no map is opened yet on this client instance.
+When `subscribeToMap()` is called to subscribe to a map, all the subscribed map objects of the map are emitted in their current version (with the exception of history entries, these have to be fetched separately). These events are guaranteed to arrive before the returned promise is resolved. While the subscription is active, events will be emitted about objects of the subscribed types being created, updated or deleted. All events emitted by the subscription will use the map slug with which you subscribed to the map, but keep in mind that the map slug might be edited (indicated by a <code>[mapSlugRename](./events.md#mapslugrename)</code> event).
 
-Start listening to the modification history of the map. Calling this will cause multiple `history` objects to be
-received (that describe the modification history until now), and new `history` objects will be received every time
-something is modified (in addition to the modified object).
+The subscription respects the bbox set by <code>[setBbox()](#setbbox)</code>. If you subscribe to the map when no bbox is set yet, no markers and line points are emitted, even if you subscribed to them. When you call `setBbox()`, the markers and line points for the new bbox are emitted.
 
-* **Returns:** A promise that is resolved empty when all history objects have been received.
-* **Events:** Causes multiple [`history`](./events.md#history) events.
-* **Availability:** Only if a collaborative map is opened through its admin ID.
+If you update an active map subscription, only newly subscribed object types are emitted as events as part of the update operation. For example, subscribing to a map using `const mapSubscription = await client.subscribeToMap("mymap", { pick: ["mapData"] })` will trigger a `mapData` event before the promise is resolved. Calling `await mapSubscription.updateSubscription({ pick: ["mapData", "types"] })` will trigger multiple `type` events (but no `mapData` event, as the map data was already sent the first time) before its promise is resolved. In addition, `mapData` events are emitted whenever the map data is changed while the subscription is active (whether before or after the `updateSubscription()` call).
 
-Stop listening to the modification history of the map.
-
-* **Returns:** A promise that is resolved empty when the command has completed.
-* **Events:** None.
-* **Availability:** Only if a collaborative map is opened through its admin ID and [`listenToHistory()`](#listentohistory) has been called before.
+Note that when the socket connection is interrupted, the server will forget about the subscription. The Client will automatically reestablish the subscription on reconnection, but when using the Socket API directly, you will have to do it manually (see [connection problems](./README.md#deal-with-connection-problems)).
 
 ## `createMapAndSubscribe()`
 
-createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
+Client: `createMapAndSubscribe(mapData, { pick?, history? })`\
+Socket: `emit("createMapAndSubscribe", mapData, { pick?, history? }, callback)`\
+REST: _not available_
+
+A combination of <code>[createMap()](#createmap)</code> and <code>[subscribeToMap()](#subscribetomap)</code> that creates a map, emits its initial data and subscribes to its changes.
+
+Parameters:
+* `mapData` (<code>[MapData](./types.md#mapdata)</code>): The data to create the map with
+* `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
+* `history` (boolean): Whether to retrieve history entries.
 
 ## `unsubscribeFromMap()`
 
-async _unsubscribeFromMap(mapSlug: MapSlug): Promise<void>
+Client: `mapSubscription.unsubscribe()`\
+Socket: `emit("unsubscribeFromMap", mapSlug, callback)`\
+REST: _not available_
+
+Stop receiving events for the given map slug.
+
+Parameters:
+* `mapSlug` (string): The map slug with which the map is subscribed.
 
 ## `subscribeToRoute()`
 
-subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription & BasicPromise<SocketClientRouteSubscription> {
+Client: `subscribeToRoute(routeKey, { routePoints, mode } | { mapSlug, lineId })`\
+Socket: `emit("subscribeToRoute", routeKey, { routePoints, mode } | { mapSlug, lineId }, callback)`\
+REST: _not available_
 
-	Calculate a route between two or more points, but but do not return the track points of the route but cache them on the server side and send them according to the client bbox. The route is not persisted on a collaborative map, but is temporarily persisted on the server in the scope one particular client connection only. As long as the route is active, the server will send [`routePoints`](./events.md#routepoints) events in response to [`updateBbox()`](#updatebbox-bbox) with the track points of the route simplified according to the bbox. The route will stay active until it is cleared using [`clearRoute()`](#clearroute-data) or the connection is closed.
+Calculate a route between two and more points and subscribe to its track points in response to <code>[setBbox()](#setbbox)</code> calls.
 
-Multiple routes can be active at the same time. They can be distinguished by their `routeId` property, which is a custom string that you can specify when activating a route. A `routeId` needs to be unique in the scope of this client instance, other clients are not affected by it. For backwards compatibility reasons, `undefined` is an acceptable value for `routeId`, but is considered a unique identifier nonetheless.
+Parameters:
+* `routeKey` (string): An arbitrary identifier for the route. Events for the route can be identified by this key. Needs to be unique within the scope of the individual socket connection. If you are not intending to subscribe to multiple routes at once, feel free to use an empty string as the route key.
+* `routePoints` (`Array<{ lat: number; lon: number }>`, at least 2): The way points along which to calculate the route
+* `mode` (string, see [route mode](./types.md#route-mode)): The route mode to use for calculating the route
+* `mapSlug` (string) and `lineId` (number): If these are specified, use the route points and mode of this line from a map instead. The server does not need to calculate the route again, but instead can directly return the track points of the line. This is useful for an “edit waypoints” feature where users can edit the route parameters and see the resulting route before finally saving them. (Calling <code>[updateLine()](#updateline)</code> with route parameters that are currently subscribed will copy the track points so that the server doesn’t have to calculate the route again.)
 
-Calling `setRoute()` with a `routeId` of a route that is already active will replace that route.
+Subscribing to a route will calculate the route on the server side and cache its track points temporarily until the route is unsubscribed again or the socket is disconnected. The route only exists within the scope of an individual socket connection, it cannot be accessed by other users. When subscribing to a route or updating a route subscription, the server will send a <code>[route](./events.md#route)</code> event with the route metadata, and, if a bbox is currently set, a <code>[routePoints](./events.md#routepoints)</code> event for the track points within the current bbox. While the route is subscribed, `routePoints` events will be emitted whenever the bbox is updated using <code>[setBbox](#setbbox)</code>.
 
-The metadata of a route whose `routeId` is `undefined` is persisted in the [`route`](./properties.md#route) property and its track points in `route.trackPoints`. The metadata of a route whose `routeId` is a string is persisted in the [`routes[routeId]`](./properties.md#routes) property and its track points in `routes[routeId].trackPoints`.
+When using the Client, this will return a route subscription object, see <code>[SocketClient.subscribeToRoute()](./classes.md#subscribetoroute)</code>. Calling `subscribeToRoute()` with a route key that is already used by an active route subscription in the same socket connection will throw an error. To change the parameters of an active route subscription, use <code>[routeSubscription.updateSubscription()](./classes.md#updatesubscription-1)</code> instead. On the contrary, when using the Socket API directly, `subscribeToRoute()` is used to update a route subscription when called with a route key that is already subscribed.
 
-* `data` (object): An object with the following properties:
-	* `routePoints` (array): An array of at least two route points (objects with a `lat` and `lon` property)
-	* `mode` ([RouteMode](./types.md#routemode)): the route mode
-	* `routeId` (string or undefined): the custom `routeId` to identify the route
-* **Returns:** A promise that is resolved with a [Route](./types.md#route)> object.
-* **Events:** Causes a [`route`](./events.md#route) and a [`routePoints`](./events.md#routepoints) event.
-* **Availability:** Always.
-
-
-Call [`setRoute()`](#setroute-data) with the parameters of an existing line. Saves time, as the route does not need to be recalculated. If a route with the same `routeId` is already active, it is replaced.
-
-* `data` (object): An object with the following properties:
-	* `id` (string): The ID of the line
-	* `routeId` (string or undefined): the custom `routeId` to identify the route
-* **Returns:** A promise that is resolved with a [Route](./types.md#route)> object.
-* **Events:** Causes a [`route`](./events.md#route) and a [`routePoints`](./events.md#routepoints) event.
-* **Availability:** Only if a collaborative map is opened.
-
+Note that when the socket connection is interrupted, the server will forget about the subscription. The Client will automatically reestablish the subscription on reconnection, but when using the Socket API directly, you will have to do it manually (see [connection problems](./README.md#deal-with-connection-problems)).
 
 ## `unsubscribeFromRoute()`
 
-async _unsubscribeFromRoute(routeKey: string): Promise<void> {
+Client: `routeSubscription.unsubscribe()`\
+Socket: `emit("unsubscribeFromRoute", routeKey, callback)`\
+REST: _not available_
 
-Clear a temporary route set via [`setRoute(data)`](#setroute-data).
+Stop receiving events for the route with the given key and clear its track points from the database on the server side.
 
-* `data` (object): An object with the following properties:
-	* `routeId` (string or undefined): the custom `routeId` to identify the route
-* **Returns:** A promise that is resolved empty when the route is cleared.
-* **Events:** Causes a [`clearRoute`](./events.md#clearroute) event.
-* **Availability:** If a route with the specified `routeId` is active.
+Parameters:
+* `routeKey` (string): The route key that was used to subscribe to the route.
 
 ## `exportRoute()`
 
-async exportRoute(routeKey: string, data: { format: ExportFormat }): ReturnType<ApiV3<true>["exportLine"]> {
+Client: `exportRoute(routeKey, { format })` or `routeSubscription.exportRoute({ format })`\
+Socket: `emit("exportRoute", routeKey, { format }, callback)`\
+REST: _not available_
 
-	Export the current route.
+Export a route that is subscribed.
 
-* `data` (object): An object with the following properties:
-	* `format` (string): One of the following:
-		* `gpx-trk`: GPX track (contains the whole course of the route)
-		* `gpx-rte`: GPX route (contains only the route points, and the navigation device will have to calculate the route)
-	* `routeId` (string or undefined): the custom `routeId` to identify the route
-* **Returns:** A promise that is resolved with a string with the file contents.
-* **Events:** None.
-* **Availability:** if a route with the specified `routeId` is active.
+Parameters:
+* `routeKey` (string): The route key that was used to subscribe to the route
+* `format` (`"gpx-trk" | "gpx-rte" | "geojson"`): The desired export format. `"gpx-trk"` exports all the track points of the route, whereas `"gpx-rte"` only exports the route points.
+
+Result:
+* Client: `{ type: string; filename: string; data: ReadableStream<Uint8Array> }`
+* Socket: `{ type: string; filename: string; data: string }`, where `data` is a [stream ID](./advanced.md#streams)
 
 ## `setBbox()`
 
-async setBbox(bbox: BboxWithZoom): Promise<void> {
+Client: `setBbox(bbox)`\
+Socket: `emit("setBbox", bbox, callback)`\
+REST: _not available_
 
-	Updates the bbox. This will cause all markers, line points and route points within the bbox (except the ones that were already in the previous bbox, if there was one) to be received as individual events.
+Update the bbox for this socket connection.
 
-* `bbox` ([Bbox](./types.md#bbox) with zoom): The bbox that objects should be received for.
-* **Returns:** A promise that is resolved empty when all objects have been received.
-* **Events:** Causes events to be fired with the markers, line points and route points within the bbox.
-* **Availability:** Always.
+Parameters:
+* `bbox` (<code>[Bbox](./types.md#bbox)</code>): The new bbox
+
+The bbox set by this will apply to all active map and route subscriptions that were made on the current socket connection using <code>[subscribeToMap()](#subscribetomap)</code>, <code>[createMapAndSubscribe()](#createmapandsubscribe)</code> or <code>[subscribeToRoute()](#subscribetoroute)</code>. Calling `setBbox()` will cause those subscriptions to emit `marker`, `linePoints` and `routePoints` events containing data within the bbox (data from the previous bbox is omitted to avoid unnecessary duplication); these events are guaranteed to arrive before the returned promise is resolved. When markers or line points are created, updated or deleted, events about this are sent to all the connected sockets in whose current bbox these objects reside.
+
+Note that when the socket connection is interrupted, the server will forget about the current bbox. The Client will automatically set the bbox again on reconnection, but when using the Socket API directly, you will have to do it manually (see [connection problems](./README.md#deal-with-connection-problems)).
 
 ## `setLanguage()`
 
-async setLanguage(language: SetLanguageRequest): Promise<void> {
+Client: `setLanguage({ lang?, units? })`\
+Socket: `emit("setLanguage", { lang?, units? }, callback)`\
+REST: _not available_
 
-Updates the language settings for the current socket connection. Usually this only needs to be called if the user changes their internationalization settings and you want to apply the new settings live in the UI. See [Internationalization](./#internationalization) for the details and how to set the language settings when opening a client.
+Update the language settings for the current socket connection.
 
-* `settings`: An object with the following properties:
-	* `lang` (optional): The language, for example `en` or `de`.
-	* `units` (optional): The units to use, either `metric` or `us_costomary`.
-* **Returns:** A promise tat is resolved empty when the settings have been applied.
-* **Events:** None.
-* **Availability:** Always.
+Parameters:
+* `lang` (string): The language code, such as `en`
+* `units` (`"metric" | "us_customary"`): The units to use
 
-
-
-
-## `getLineTemplate(data)`
-
-Get a mock line object for a line with the given type. This can be used so that while the user is drawing a new line,
-that line already has the right style.
-
-* `data` (`{ typeId: number }`): An object containing the type ID
-* **Returns:** A promise that is resolved with a mock [Line](./types.md#line) with the styles of this type.
-* **Events:** None.
-* **Availability:** Only if a collaborative map is opened.
+This method is meant for cases where a user changes the language settings while a socket connection is active. See the chapter about [internationalization](./advanced.md#internationalization) for other ways to apply language settings.

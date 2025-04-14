@@ -29,6 +29,7 @@ For better support for larger maps, some API methods now return streams of objec
 	* `find({ query, loadUrls? })` has been split up into `find(query)` and `findUrl(url)`. Use `parseUrlQuery(query)` from `facilmap-utils` to check whether a search query is a URL (if it returns a string, it is).
 	* `findOnMap({ query })` has been changed to `findOnMap(mapSlug, query)`.
 	* `exportRoute({ routeId, format })` has been changed into `exportRoute(routeKey, { format })`.
+	* `getRoute({ destinations, mode })` has been changed to `getRoute({ routePoints, mode })`.
 * A few methods have been renamed:
 	* `add*` has been renamed to `create*` (`addMarker`, `addLine`, `addType`, `addView`)
 	* `edit*` has been renamed to `update*` (`editPad`, `editMarker`, `editLine`, `editType`, `editView`)

@@ -329,7 +329,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	async getRoute(data: RouteRequest): Promise<RouteInfo> {
-		return await calculateRoute(data.destinations, data.mode);
+		return await calculateRoute(data.routePoints, data.mode);
 	}
 
 	async geoip(): Promise<Bbox | undefined> {
@@ -546,7 +546,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 			destinations: stringifiedJsonValidator.pipe(z.array(pointValidator)),
 			mode: routeModeValidator
 		}).parse(req.query);
-		return [{ destinations, mode }];
+		return [{ routePoints: destinations, mode }];
 	}, "json"),
 
 	geoip: apiImpl.get("/geoip", (req) => [], (res, result) => {
