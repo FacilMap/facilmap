@@ -61,7 +61,6 @@ export default tseslint.config({
 		"no-compare-neg-zero": ["error"],
 		"no-const-assign": ["error"],
 		"no-constant-condition": ["error"],
-		"no-control-regex": ["error"],
 		"no-debugger": ["error"],
 		"no-delete-var": ["error"],
 		"no-dupe-args": ["error"],

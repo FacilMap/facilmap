@@ -1,8 +1,8 @@
 import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIterables, flatMapAsyncIterable } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
-import type { Marker, MarkerFeature, TrackPoint, Line, InterfaceToType, LineFeature, ReplaceProperties, ID } from "facilmap-types";
+import { type Marker, type MarkerFeature, type TrackPoint, type Line, type InterfaceToType, type LineFeature, type ReplaceProperties, type ID, dataByFieldIdToDataByName, type Type } from "facilmap-types";
 import Database from "../database/database.js";
-import { cloneDeep, keyBy, mapValues, omit, pick } from "lodash-es";
+import { keyBy, mapValues, omit, pick } from "lodash-es";
 import { getI18n } from "../i18n.js";
 import { JsonStringifier, arrayStream, serializeJsonValue, type ArrayStream } from "json-stream-es";
 
@@ -33,14 +33,14 @@ export function exportGeoJson(database: Database, mapId: ID, filter?: string): R
 			features: () => arrayStream(concatAsyncIterables<InterfaceToType<MarkerFeature> | StreamedLineFeature>(
 				() => flatMapAsyncIterable(database.markers.getMapMarkers(mapId), (marker) => {
 					if (filterFunc(marker, types[marker.typeId])) {
-						return [markerToGeoJson(marker)];
+						return [markerToGeoJson(marker, types[marker.typeId])];
 					} else {
 						return [];
 					}
 				}),
 				() => flatMapAsyncIterable(database.lines.getMapLines(mapId), (line) => {
 					if (filterFunc(line, types[line.typeId])) {
-						return [lineToGeoJson(line, database.lines.getLinePointsForLine(line.id))];
+						return [lineToGeoJson(line, types[line.typeId], database.lines.getLinePointsForLine(line.id))];
 					} else {
 						return [];
 					}
@@ -50,7 +50,7 @@ export function exportGeoJson(database: Database, mapId: ID, filter?: string): R
 	})());
 }
 
-function markerToGeoJson(marker: Marker): InterfaceToType<MarkerFeature> {
+function markerToGeoJson(marker: Marker, type: Type): InterfaceToType<MarkerFeature> {
 	return {
 		type: "Feature",
 		geometry: {
@@ -63,7 +63,7 @@ function markerToGeoJson(marker: Marker): InterfaceToType<MarkerFeature> {
 			size: marker.size,
 			icon: marker.icon,
 			shape: marker.shape,
-			data: cloneDeep(marker.data),
+			data: dataByFieldIdToDataByName(marker.data, type),
 			typeId: marker.typeId
 		}
 	};
@@ -78,17 +78,20 @@ type StreamedLineFeature<L extends Partial<Line> = Line> = ReplaceProperties<Lin
 	}>;
 }>;
 
-function lineToGeoJson<L extends Partial<Line>>(line: L, trackPoints: AsyncIterable<TrackPoint>): StreamedLineFeature<L> {
+function lineToGeoJson<L extends Partial<Line>>(line: L, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): StreamedLineFeature<L> {
 	return {
 		type: "Feature",
 		geometry: {
 			type: "LineString",
 			coordinates: arrayStream(mapAsyncIterable(trackPoints, (trackPoint) => [trackPoint.lon, trackPoint.lat]))
 		},
-		properties: pick(line, lineProps) as Pick<LineFeature["properties"], keyof L & LineProp>
+		properties: {
+			...pick(line, lineProps) as Pick<LineFeature["properties"], keyof L & LineProp>,
+			...line.data && type ? { data: dataByFieldIdToDataByName(line.data, type) } : {}
+		}
 	};
 }
 
-export function exportLineToGeoJson(line: Partial<Line>, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
-	return serializeJsonValue(lineToGeoJson(line, trackPoints)).pipeThrough(new JsonStringifier());
+export function exportLineToGeoJson(line: Partial<Line>, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+	return serializeJsonValue(lineToGeoJson(line, type, trackPoints)).pipeThrough(new JsonStringifier());
 }

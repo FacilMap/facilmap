@@ -111,10 +111,10 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return await this.database.search.search(mapData.id, query);
 	}
 
-	async getHistory(mapSlug: MapSlug, paging = DEFAULT_PAGING): Promise<HistoryEntry[]> {
+	async getHistory(mapSlug: MapSlug, paging = DEFAULT_PAGING): Promise<PagedResults<HistoryEntry>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 
-		return await iterableToArray(this.database.history.getHistory(mapData.id, mapData.writable === Writable.ADMIN ? undefined : ["Marker", "Line"], paging));
+		return await this.database.history.getPagedHistory(mapData.id, mapData.writable === Writable.ADMIN ? undefined : ["Marker", "Line"], paging);
 	}
 
 	async revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {
@@ -201,7 +201,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
-		return await this.database.lines.createLine(mapData.id, data, trackPointsFromRoute);
+		return await this.database.lines.createLine(mapData.id, data, { trackPointsFromRoute });
 	}
 
 	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
@@ -244,7 +244,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 				return {
 					type: "application/geo+json",
 					filename: `${filename}.geojson`,
-					data: exportLineToGeoJson(line, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
+					data: exportLineToGeoJson(line, type, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
 				};
 			default:
 				throw new Error(getI18n().t("api.unknown-format-error"));

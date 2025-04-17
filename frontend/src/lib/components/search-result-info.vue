@@ -86,7 +86,7 @@
 
 			<template v-for="(value, key) in result.extratags" :key="key">
 				<dt class="text-break font-monospace">{{key}}</dt>
-				<dd class="text-break" v-html="renderOsmTag(key, value)"></dd>
+				<dd class="text-break" style="white-space: pre-line" v-html="renderOsmTag(key, value)"></dd>
 			</template>
 		</dl>
 

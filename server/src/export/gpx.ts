@@ -33,7 +33,7 @@ function dataToText(fields: Field[], data: Record<string, string>) {
 
 	const text = [ ];
 	for(let i=0; i<fields.length; i++) {
-		text.push(fields[i].name + ": " + (data[fields[i].name] || ""));
+		text.push(fields[i].name + ": " + (data[fields[i].id] || ""));
 	}
 	return text.join('\n\n');
 }

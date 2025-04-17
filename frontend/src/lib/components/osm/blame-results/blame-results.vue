@@ -9,8 +9,8 @@
 	import BlameSectionInfo from "./blame-section-info.vue";
 	import type { ResultsItem } from "../../ui/results.vue";
 	import Results from "../../ui/results.vue";
-import SelectionCarousel from "../../ui/selection-carousel.vue";
-import type { SelectedItem } from "../../../utils/selection";
+	import SelectionCarousel from "../../ui/selection-carousel.vue";
+	import type { SelectedItem } from "../../../utils/selection";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);

@@ -26,7 +26,7 @@
 	import { mapRef } from "../../utils/vue";
 	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
 	import type { RouteWithTrackPoints } from "facilmap-client";
-import type { SocketClientRouteSubscription } from "facilmap-client/src/socket-client-route-subscription";
+	import type { SocketClientRouteSubscription } from "facilmap-client/src/socket-client-route-subscription";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = MapResult & { kind: "marker" };

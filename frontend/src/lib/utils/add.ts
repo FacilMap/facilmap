@@ -89,15 +89,8 @@ export function overpassElementsToMarkersWithTags(elements: OverpassElement[]): 
  * non-letters). The resulting object can be used as "data" for a marker and line.
  */
 export function mapTagsToType(tags: Record<string, string>, type: DeepReadonly<Type>): Record<string, string> {
-	let keyMap = (keys: string[]) => {
-		let ret: Record<string, string> = Object.create(null);
-		for(let key of keys)
-			ret[key.replace(/[^a-z0-9]/gi, "").toLowerCase()] = key;
-		return ret;
-	};
-
-	let fieldKeys = keyMap(type.fields.map((field) => (field.name)));
-	let resultDataKeys = keyMap(Object.keys(tags));
+	let fieldKeys = Object.fromEntries(type.fields.map((field) => [field.name.replace(/[\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]/gi, "").toLowerCase(), field.id]));
+	let resultDataKeys = Object.fromEntries(Object.keys(tags).map((t) => [t.replace(/[\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]/gi, "").toLowerCase(), t]));
 
 	const ret: Record<string, string> = Object.create(null);
 	for(let key in resultDataKeys) {

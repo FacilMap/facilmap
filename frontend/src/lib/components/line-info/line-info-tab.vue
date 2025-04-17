@@ -3,11 +3,11 @@
 	import LineInfo from "./line-info.vue";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { useEventListener } from "../../utils/utils";
-	import { injectContextRequired, requireClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, getClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { normalizeLineName } from "facilmap-utils";
 
 	const context = injectContextRequired();
-	const clientSub = requireClientSub(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
@@ -21,7 +21,7 @@
 	});
 
 	const line = computed(() => {
-		return lineId.value != null ? clientSub.value.data.lines[lineId.value] : undefined;
+		return lineId.value != null ? clientSub.value?.data.lines[lineId.value] : undefined;
 	});
 
 	watch(line, () => {

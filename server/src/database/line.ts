@@ -1,7 +1,7 @@
-import { type CreationAttributes, type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
+import { type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
 import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LinePoints } from "facilmap-types";
 import Database from "./database.js";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, findAllStreamed, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import type { MapModel } from "./map.js";
@@ -34,6 +34,10 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	toJSON: () => Line;
 }
 
+export interface LineDataModel extends DataModel, Model<InferAttributes<LineDataModel>, InferCreationAttributes<LineDataModel>> {
+	lineId: ForeignKey<LineModel["id"]>;
+}
+
 export interface LinePointModel extends Model<InferAttributes<LinePointModel>, InferCreationAttributes<LinePointModel>> {
 	id: CreationOptional<ID>;
 	lineId: ForeignKey<LineModel["id"]>;
@@ -50,7 +54,7 @@ export default class DatabaseLines {
 
 	LineModel = createModel<LineModel>();
 	LinePointModel = createModel<LinePointModel>();
-	LineDataModel = createModel<DataModel>();
+	LineDataModel = createModel<LineDataModel>();
 
 	_db: Database;
 
@@ -194,7 +198,7 @@ export default class DatabaseLines {
 		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId, options);
 	}
 
-	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
+	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] } }): Promise<Line> {
 		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
@@ -202,9 +206,12 @@ export default class DatabaseLines {
 
 		const resolvedData = resolveCreateLine(data, type);
 
-		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, trackPointsFromRoute);
+		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, options?.trackPointsFromRoute);
 
-		const createdLine = await this._db.helpers._createMapObject<Line>("Line", mapId, omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */));
+		const createdLine = await this._db.helpers._createMapObject<Line>("Line", mapId, {
+			...omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */),
+			...options?.id ? { id: options.id } : {}
+		});
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
 		this._db.emit("line", mapId, createdLine);
@@ -297,24 +304,20 @@ export default class DatabaseLines {
 		}
 	}
 
-	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
-		const points = await this.LineModel.build({ id: lineId } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints({
+	getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
+		return findAllStreamed(this.LinePointModel, {
 			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]],
-			...bboxWithZoom ? {
-				where: {
+			where: {
+				lineId,
+				...bboxWithZoom ? {
 					[Op.and]: [
-						{
-							zoom: { [Op.lte]: bboxWithZoom.zoom },
-						},
+						{ zoom: { [Op.lte]: bboxWithZoom.zoom } },
 						this._db.helpers.makeBboxCondition(bboxWithZoom)
 					]
-				}
-			} : {}
+				} : {}
+			}
 		});
-		for (const point of points) {
-			yield omit(point.toJSON(), ["pos"]);
-		}
 	}
 
 }

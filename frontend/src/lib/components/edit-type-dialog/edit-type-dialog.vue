@@ -62,10 +62,6 @@
 			type = cloneDeep(originalType.value)!;
 		}
 
-		for(const field of type.fields) {
-			(field as any).oldName = field.name;
-		}
-
 		return type;
 	});
 
@@ -91,7 +87,7 @@
 	});
 
 	function createField(): void {
-		type.value.fields.push({ name: "", type: "input", "default": "" });
+		type.value.fields.push({ id: crypto.randomUUID(), name: "", type: "input", "default": "" });
 	}
 
 	async function deleteField(field: Field): Promise<void> {
@@ -111,11 +107,31 @@
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-edit-type-error`);
 
+		const newType = cloneDeep(type.value);
+		if (originalType.value) {
+			for (const field of newType.fields) {
+				if (!originalType.value.fields.some((f) => f.id === field.id)) {
+					// This field is newly created, let's see if we can recycle a historic ID
+					if (Object.hasOwn(newType.formerFieldIds, field.name)) {
+						field.id = newType.formerFieldIds[field.name];
+						delete newType.formerFieldIds[field.name];
+					}
+				}
+			}
+
+			for (const field of originalType.value.fields) {
+				if (!newType.fields.some((f) => f.id === field.id)) {
+					// This field was deleted. Add its ID to the former field IDs.
+					newType.formerFieldIds[field.name] = field.id;
+				}
+			}
+		}
+
 		try {
 			if (isCreate.value)
-				await clientContext.value.client.createType(clientSub.value.mapSlug, type.value);
+				await clientContext.value.client.createType(clientSub.value.mapSlug, newType);
 			else
-				await clientContext.value.client.updateType(clientSub.value.mapSlug, (type.value as Type).id, type.value as Type);
+				await clientContext.value.client.updateType(clientSub.value.mapSlug, (newType as Type).id, newType as Type);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {

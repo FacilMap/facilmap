@@ -87,12 +87,13 @@ export default class DatabaseViews {
 		return resolvedNewIdx;
 	}
 
-	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
+	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<View> {
 		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
 		const newData = await this._db.helpers._createMapObject<View>("View", mapId, {
 			...data,
-			idx
+			idx,
+			...options?.id ? { id: options.id } : {}
 		});
 
 		await this._db.history.addHistoryEntry(mapId, {

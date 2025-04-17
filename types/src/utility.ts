@@ -1,3 +1,5 @@
+import * as z from "zod";
+
 export type ReplaceProperties<T1 extends Record<keyof any, any>, T2 extends Partial<Record<keyof T1, any>>> = Omit<T1, keyof T2> & T2;
 export type ReplaceExistingProperties<T1 extends Record<keyof any, any>, T2 extends Record<keyof any, any>> = DistributiveOmit<T1, keyof T2> & DistributivePick<T2, keyof T1>;
 
@@ -53,4 +55,38 @@ export function entries<T extends object>(obj: T): { [K in keyof T]: K extends s
 
 export function keys<T extends object>(obj: T): { [K in keyof T]: K extends symbol ? never : K extends number ? `${K}` : K }[keyof T][] {
 	return Object.keys(obj) as any;
+}
+
+/**
+ * Transform the result of a zod scheme to another type and validates that type against another zod scheme.
+ * The result of this function basically equals inputSchema.transform((val) => outputSchema.parse(transformer(val))),
+ * but errors thrown during the transformation are handled gracefully (since at the moment, zod transformers
+ * do not natively support exceptions).
+ */
+export function transformValidator<Output, Input1, Input2, Input3>(inputSchema: z.ZodType<Input2, any, Input1>, transformer: (input: Input2) => Input3, outputSchema: z.ZodType<Output, any, Input3>): z.ZodEffects<z.ZodEffects<z.ZodType<Input2, any, Input1>, Input2>, Output> {
+	// For now we have to parse the schema twice, since transform() is not allowed to throw exceptions.
+	// See https://github.com/colinhacks/zod/pull/420
+	return inputSchema.superRefine((val, ctx) => {
+		try {
+			const result = outputSchema.safeParse(transformer(val));
+			if (!result.success) {
+				for (const issue of result.error.errors) {
+					ctx.addIssue(issue);
+				}
+			}
+		} catch (err: any) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: err.message,
+			});
+		}
+	}).transform((val) => outputSchema.parse(transformer(val)));
+}
+
+/**
+ * Returns a validator representing a Record<number, any>, picking only number keys from an object. zod does not support these
+ * out of the box, since a record key is always a string and thus cannot be validated with z.number().
+ */
+export function numberRecordValidator<Value extends z.ZodTypeAny>(valueType: Value): z.ZodRecord<z.ZodType<number, any, number>, Value> {
+	return transformValidator(z.record(z.any()), (value) => Object.fromEntries(Object.entries(value).filter(([key]) => !isNaN(Number(key)))), z.record(valueType)) as any;
 }

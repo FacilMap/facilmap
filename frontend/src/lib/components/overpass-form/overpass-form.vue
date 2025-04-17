@@ -4,7 +4,7 @@
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
-import { sortBy } from "lodash-es";
+	import { sortBy } from "lodash-es";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);

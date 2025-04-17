@@ -22,8 +22,9 @@ import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObje
 import { streamToIterable } from "json-stream-es";
 import { mapNestedIterable, mergeObjectWithPromise, unstreamMapObjects, type BasicPromise } from "./utils";
 import { EventEmitter } from "./events";
-import { SocketClientCreateMapSubscription, SocketClientMapSubscription } from "./socket-client-map-subscription";
+import { MapSubscriptionStateType, SocketClientCreateMapSubscription, SocketClientMapSubscription } from "./socket-client-map-subscription";
 import { SocketClientRouteSubscription } from "./socket-client-route-subscription";
+import { SubscriptionStateType } from "./socket-client-subscription";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 	connect: [];
@@ -109,8 +110,8 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 			state: { type: ClientStateType.INITIAL },
 			server,
 			bbox: undefined,
-			mapSubscriptions: {},
-			routeSubscriptions: {},
+			mapSubscriptions: Object.create(null),
+			routeSubscriptions: Object.create(null),
 			runningOperations: 0
 		});
 
@@ -237,6 +238,21 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("abortStream", streamId);
 	}
 
+	hasActiveMapSubscription(mapSlug: MapSlug): boolean {
+		return !!this.data.mapSubscriptions[mapSlug] && ![
+			SubscriptionStateType.UNSUBSCRIBED,
+			SubscriptionStateType.FATAL_ERROR,
+			MapSubscriptionStateType.DELETED
+		].includes(this.data.mapSubscriptions[mapSlug].state.type);
+	}
+
+	hasActiveRouteSubscription(routeKey: string): boolean {
+		return !!this.data.routeSubscriptions[routeKey] && ![
+			SubscriptionStateType.UNSUBSCRIBED,
+			SubscriptionStateType.FATAL_ERROR
+		].includes(this.data.routeSubscriptions[routeKey].state.type);
+	}
+
 	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
 		if (!this._hasListeners(eventName)) {
 			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
@@ -262,7 +278,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 				this.socket.emit(eventName as any, ...args, (err: any, data: any) => {
 					if(err) {
 						const cause = deserializeError(err);
-						reject(deserializeError({ ...serializeError(outerError), message: cause.message, cause }));
+						reject(deserializeError({ ...serializeError(outerError), message: cause.message, status: (cause as any).status, cause }));
 					} else {
 						const fixedData = this._fixResponseObject(eventName, data);
 						resolve(fixedData);
@@ -366,7 +382,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("findOnMap", mapSlug, query);
 	}
 
-	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<HistoryEntry[]> {
+	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<PagedResults<HistoryEntry>> {
 		return await this._call("getHistory", mapSlug, data);
 	}
 
@@ -509,7 +525,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	}
 
 	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
-		if (this.data.mapSubscriptions[mapSlug]) {
+		if (this.hasActiveMapSubscription(mapSlug)) {
 			throw new Error(`There is already a subscription to map ${mapSlug}.`);
 		}
 
@@ -526,7 +542,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	}
 
 	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
-		if (this.data.mapSubscriptions[data.adminId]) {
+		if (this.hasActiveMapSubscription(data.adminId)) {
 			throw new Error(`There is already a subscription to map ${data.adminId}.`);
 		}
 
@@ -548,7 +564,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 	}
 
 	subscribeToRoute(routeKey: string, params: DeepReadonly<RouteParameters | LineToRouteRequest>): SocketClientRouteSubscription & BasicPromise<SocketClientRouteSubscription> {
-		if (this.data.routeSubscriptions[routeKey]) {
+		if (this.hasActiveRouteSubscription(routeKey)) {
 			throw new Error(`There is already a subscription to route ${routeKey}.`);
 		}
 

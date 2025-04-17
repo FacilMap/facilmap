@@ -6,7 +6,7 @@ import type { Bbox, FindOnMapLine, FindOnMapMarker, Line, Marker, Point, SearchR
 import type { Geometry } from "geojson";
 import { isMapResult, type MapResult } from "./search";
 import { decodeLonLatUrl, decodeRouteQuery, encodeRouteQuery, normalizeLineName, normalizeMarkerName, parseRouteQuery, type ChangesetFeature, type OsmFeatureBlameSection, type ResolvedOsmFeature } from "facilmap-utils";
-import type { ClientContext } from "../components/facil-map-context-provider/client-context";
+import { ClientContextMapState, type ClientContext } from "../components/facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { getClientSub, requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { toRef, type DeepReadonly } from "vue";
@@ -233,6 +233,12 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	}
 
 	const markerId = Number(query.match(/^m(\d+)$/)?.[1]);
+	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
+
+	if ((markerId || lineId) && clientContext.value.map?.state === ClientContextMapState.OPENING) {
+		await clientContext.value.map.subscription.subscribePromise;
+	}
+
 	if (markerId && clientSub.value) {
 		let marker = clientSub.value.data.markers[markerId];
 		if (!marker) {
@@ -258,7 +264,6 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 		}
 	}
 
-	const lineId = Number(query.match(/^l(\d+)$/)?.[1]);
 	if (lineId && clientSub.value?.data.lines[lineId]) {
 		const line = clientSub.value.data.lines[lineId];
 

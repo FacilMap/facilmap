@@ -15,6 +15,7 @@ export interface LegendType {
 
 export interface LegendItem {
 	key: string;
+	fieldId: string | undefined;
 	value: string;
 	label?: string;
 	field?: string;
@@ -54,6 +55,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 		) {
 			const item: LegendItem = {
 				key: `legend-item-${type.id}`,
+				fieldId: undefined,
 				value: type.name,
 				label: formatTypeName(type.name),
 				filtered: true
@@ -88,11 +90,12 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 			)
 				continue;
 
-			fields[field.name] = [ ];
+			fields[field.id] = [ ];
 
 			(field.options || [ ]).forEach((option, idx) => {
 				const item: LegendItem = {
 					key: `legend-item-${type.id}-${field.name}-${option.value}`,
+					fieldId: field.id,
 					value: option.value,
 					label: option.value,
 					field: field.name,
@@ -147,13 +150,14 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 				}
 
 				items.push(item);
-				fields[field.name].push(item.value);
+				fields[field.id].push(item.value);
 			});
 		}
 
 		if(items.length == 0) {
 			const item: LegendItem = {
 				key: `legend-item-${type.id}`,
+				fieldId: undefined,
 				value: type.name,
 				label: formatTypeName(type.name),
 				filtered: true
@@ -184,10 +188,11 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 						item.filtered = false;
 				}
 
-				for(const i in data) {
+				for (const fieldId of Object.keys(data)) {
 					items.forEach(function(it) {
-						if(it.field == i && it.value == data[i])
+						if (it.fieldId == fieldId && it.value == data[fieldId]) {
 							it.filtered = false;
+						}
 					});
 				}
 			}

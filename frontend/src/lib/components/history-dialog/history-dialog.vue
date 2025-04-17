@@ -3,7 +3,7 @@
 	import type { HistoryEntry, ID } from "facilmap-types";
 	import { orderBy } from "lodash-es";
 	import Icon from "../ui/icon.vue";
-	import { computed, onBeforeUnmount, onMounted, reactive, ref, type DeepReadonly } from "vue";
+	import { computed, onBeforeUnmount, reactive, ref, watch, type DeepReadonly } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import { mapRef } from "../../utils/vue";
@@ -12,6 +12,7 @@
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
+	import Pagination from "../ui/pagination.vue";
 
 	type HistoryEntryWithLabels = HistoryEntry & {
 		labels: HistoryEntryLabels;
@@ -36,19 +37,43 @@
 
 	const id = getUniqueId("fm-history-dialog");
 
-	onMounted(async () => {
+	const PAGE_SIZE = 50;
+	const page = ref(0);
+	const pages = ref(0);
+
+	watch(page, async () => {
+		isLoading.value = true;
+
 		try {
-			await clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: true });
+			await Promise.all([
+				(async () => {
+					const enableHistorySub = page.value === 0;
+					if (!!clientSub.value.subscription.options.history !== enableHistorySub) {
+						clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: enableHistorySub });
+					}
+				})(),
+				(async () => {
+					clientContext.value.storage.clearHistory(clientSub.value.mapSlug);
+					const entries = await clientSub.value.subscription.getHistory({ start: page.value * PAGE_SIZE, limit: PAGE_SIZE });
+					pages.value = Math.ceil(entries.totalLength / PAGE_SIZE);
+					for (const entry of entries.results) {
+						clientContext.value.storage.storeHistoryEntry(clientSub.value.mapSlug, entry);
+					}
+				})()
+			]);
 		} catch (err) {
 			toasts.showErrorToast(`${id}-listen-error`, () => i18n.t("history-dialog.loading-error"), err);
 		} finally {
 			isLoading.value = false;
 		}
-	});
+	}, { immediate: true });
 
 	onBeforeUnmount(async () => {
 		try {
-			await clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: false });
+			clientContext.value.storage.clearHistory(clientSub.value.mapSlug);
+			if (clientSub.value.subscription.options.history) {
+				await clientSub.value.subscription.updateSubscription({ ...clientSub.value.subscription.options, history: false });
+			}
 		} catch (err) {
 			console.error("Error stopping listening to history", err);
 		}
@@ -176,6 +201,11 @@
 				</tr>
 			</tbody>
 		</table>
+		<Pagination
+			v-if="pages > 1"
+			:pages="pages"
+			v-model="page"
+		></Pagination>
 	</ModalDialog>
 </template>
 

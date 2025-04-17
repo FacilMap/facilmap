@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils.js";
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
 import type { BboxWithZoom, ID, Latitude, Longitude, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { type BboxWithExcept, createModel, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
+import { type BboxWithExcept, createModel, findAllStreamed, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { omit } from "lodash-es";
 import type { Point as GeoJsonPoint } from "geojson";
@@ -211,14 +211,11 @@ export default class DatabaseRoutes {
 		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
-	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
-		const points = await this.RoutePointModel.findAll({
+	getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
+		return findAllStreamed(this.RoutePointModel, {
 			where: { routeId },
 			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
 		});
-		for (const point of points) {
-			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
-		}
 	}
 
 }

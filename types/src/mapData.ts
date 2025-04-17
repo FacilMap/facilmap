@@ -2,6 +2,7 @@ import { viewValidator } from "./view.js";
 import { idValidator, mapSlugValidator } from "./base.js";
 import * as z from "zod";
 import { CRU, type CRUType, cruValidator, optionalUpdate, optionalCreate, onlyRead, onlyCreate } from "./cru.js";
+import { numberRecordValidator } from "./utility.js";
 
 export enum Writable {
 	READ = 0,
@@ -9,6 +10,33 @@ export enum Writable {
 	ADMIN = 2
 }
 export const writableValidator = z.nativeEnum(Writable);
+
+export const mapPermissionsValidator = cruValidator({
+	edit: z.boolean(),
+	settings: z.boolean(),
+	admin: z.boolean(),
+	types: numberRecordValidator(z.object({
+		read: z.boolean(),
+		update: z.boolean(),
+		delete: z.boolean(),
+		fields: z.record(z.object({
+			read: z.boolean(),
+			update: z.boolean()
+		}))
+	}))
+});
+
+export const mapLinkValidator = cruValidator({
+	id: onlyRead(idValidator),
+	mapId: onlyRead(idValidator),
+	slug: mapSlugValidator,
+	password: {
+		read: z.boolean(),
+		create: z.literal(false).or(z.string()),
+		update: z.literal(false).or(z.string())
+	},
+	permissions: mapPermissionsValidator
+});
 
 export const mapDataValidator = cruValidator({
 	id: onlyRead(idValidator),

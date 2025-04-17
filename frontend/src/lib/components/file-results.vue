@@ -7,9 +7,9 @@
 	import vTooltip from "../utils/tooltip";
 	import { computed, ref } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
-	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
+	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
-import { canCreateType, canCreateView } from "facilmap-utils";
+	import { canCreateType, canCreateView } from "facilmap-utils";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -17,7 +17,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const clientContext = requireClientContext(context);
-	const clientSub = requireClientSub(context);
+	const clientSub = getClientSub(context);
 	const toasts = useToasts();
 	const i18n = useI18n();
 
@@ -41,11 +41,11 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 	const hasTypes = computed(() => Object.keys(props.file.types).length > 0);
 
 	const existingViews = computed(() => {
-		return new Map(props.file.views.map((view) => [view, viewExists(clientSub.value.data, view)]));
+		return new Map(props.file.views.map((view) => [view, clientSub.value && viewExists(clientSub.value.data, view)]));
 	});
 
-	const canCreateViews = computed(() => canCreateView(clientSub.value.data.mapData));
-	const canCreateTypes = computed(() => canCreateType(clientSub.value.data.mapData));
+	const canCreateViews = computed(() => clientSub.value && canCreateView(clientSub.value.data.mapData));
+	const canCreateTypes = computed(() => clientSub.value && canCreateType(clientSub.value.data.mapData));
 
 	function showView(view: ViewImport): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
@@ -56,7 +56,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 		isAddingView.value.add(view);
 
 		try {
-			await clientContext.value.client.createView(clientSub.value.mapSlug, view);
+			await clientContext.value.client.createView(clientSub.value!.mapSlug, view);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-view-error"), err);
 		} finally {
@@ -65,7 +65,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 	};
 
 	const existingTypes = computed(() => {
-		return new Map(Object.values(props.file.types).map((type) => [type, typeExists(clientSub.value.data, type)]));
+		return new Map(Object.values(props.file.types).map((type) => [type, clientSub.value && typeExists(clientSub.value.data, type)]));
 	});
 
 	async function addType(type: TypeImport): Promise<void> {
@@ -73,7 +73,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 		isAddingType.value.add(type);
 
 		try {
-			await clientContext.value.client.createType(clientSub.value.mapSlug, type);
+			await clientContext.value.client.createType(clientSub.value!.mapSlug, type);
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-file-result-import-error`, () => i18n.t("file-results.import-type-error"), err);
 		} finally {
@@ -91,7 +91,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 			:union-zoom="unionZoom"
 			:custom-types="file.types"
 		>
-			<template #before>
+			<template #before v-if="clientSub">
 				<template v-if="hasViews">
 					<h3>{{i18n.t("file-results.views")}}</h3>
 					<ul class="list-group">
@@ -120,7 +120,7 @@ import { canCreateType, canCreateView } from "facilmap-utils";
 				<h3 v-if="hasViews || hasTypes">{{i18n.t("file-results.markers-lines")}}</h3>
 			</template>
 
-			<template #after>
+			<template #after v-if="clientSub">
 				<template v-if="hasTypes">
 					<h3>{{i18n.t("file-results.types")}}</h3>
 					<ul class="list-group">

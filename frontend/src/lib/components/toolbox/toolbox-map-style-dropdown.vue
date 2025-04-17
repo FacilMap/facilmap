@@ -5,7 +5,7 @@
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "../ui/icon.vue";
 	import { useI18n } from "../../utils/i18n";
-import { getExternalLinks } from "../../utils/external-links";
+	import { getExternalLinks } from "../../utils/external-links";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);

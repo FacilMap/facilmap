@@ -425,6 +425,12 @@ Signature: `clearHistoryEntry(mapSlug: string, historyEntryId: number): void`
 
 Manually remove a history entry from the store as if it had been deleted on the server.
 
+### `clearHistory()`
+
+Signature: `clearHistory(mapSlug: string): void`
+
+Remove all the history entries of the given map from the store.
+
 ### `storeRoute()`
 
 Signature: `storeRoute(routeKey: string, route: Route): void`

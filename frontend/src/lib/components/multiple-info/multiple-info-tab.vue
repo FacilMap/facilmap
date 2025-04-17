@@ -5,10 +5,10 @@
 	import { isLine, isMarker } from "facilmap-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
 	import { computed, type DeepReadonly } from "vue";
-	import { injectContextRequired, requireClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, getClientSub, requireMapContext, requireSearchBoxContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
 	const context = injectContextRequired();
-	const clientSub = requireClientSub(context);
+	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const searchBoxContext = requireSearchBoxContext(context);
 
@@ -16,9 +16,9 @@
 
 	const objects = computed(() => {
 		const objects = mapContext.value.selection.flatMap((item): Array<DeepReadonly<Marker | Line>> => {
-			if (item.type == "marker" && clientSub.value.data.markers[item.id])
+			if (item.type == "marker" && clientSub.value?.data.markers[item.id])
 				return [clientSub.value.data.markers[item.id]];
-			else if (item.type == "line" && clientSub.value.data.lines[item.id])
+			else if (item.type == "line" && clientSub.value?.data.lines[item.id])
 				return [clientSub.value.data.lines[item.id]];
 			else
 				return [];
@@ -33,7 +33,7 @@
 
 	const title = computed(() => objects.value ? `${objects.value.length} objects` : "");
 
-	function handleObjectClick(object: Marker | Line, toggle: boolean): void {
+	function handleObjectClick(object: DeepReadonly<Marker | Line>, toggle: boolean): void {
 		const item = mapContext.value.selection.find((it) => {
 			return (it.type == "marker" && isMarker(object) && it.id == object.id) || (it.type == "line" && isLine(object) && it.id == object.id);
 		});

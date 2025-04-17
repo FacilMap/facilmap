@@ -20,6 +20,7 @@ export interface MetaProperties {
 	fieldIconsMigrationCompleted: "1";
 	historyPadMigrationCompleted: "1";
 	mapIdMigrationCompleted: "1" | "2" | "3";
+	fieldIdMigrationCompleted: "1";
 }
 
 /** In a newly created database, the meta properties are set to this. */
@@ -35,7 +36,8 @@ const INITIAL_META: { [K in keyof MetaProperties]: MetaProperties[K] } = {
 	viewsIdxMigrationCompleted: "1",
 	fieldIconsMigrationCompleted: "1",
 	historyPadMigrationCompleted: "1",
-	mapIdMigrationCompleted: "3"
+	mapIdMigrationCompleted: "3",
+	fieldIdMigrationCompleted: "1"
 };
 
 export default class DatabaseMeta {

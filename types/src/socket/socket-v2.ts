@@ -1,6 +1,6 @@
 import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, pointValidator, routeModeValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
-import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields } from "../type.js";
+import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields, type Type, dataByFieldIdToDataByName } from "../type.js";
 import type { EventName } from "../events.js";
 import { nullOrUndefinedValidator, renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
 import { socketV3RequestValidators, type SocketApiV3 } from "./socket-v3.js";
@@ -296,16 +296,38 @@ export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapDa
 	} as any;
 }
 
-export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
-	return renameProperty(marker, "symbol", "icon", keepOld);
+export function currentDataToLegacyV2(data: Record<string, string>, type: Type, keepOld = false): Record<string, string> {
+	const oldData = dataByFieldIdToDataByName(data, type);
+	return keepOld ? Object.assign(oldData, data) : oldData;
 }
 
-export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<RenameProperty<M, "icon", "symbol", KeepOld>, KeepOld> {
-	return mapIdToLegacyV2(renameProperty(marker, "icon", "symbol", keepOld), readId, keepOld);
+export function legacyV2DataToCurrent(data: Record<string, string>, type: Type, keepOld = false): Record<string, string> {
+	const newData = dataByFieldIdToDataByName(data, type);
+	return keepOld ? Object.assign(newData, data) : newData;
 }
 
-export function currentLineToLegacyV2<L extends Record<keyof any, any>, KeepOld extends boolean = false>(line: L, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<L, KeepOld> {
-	return mapIdToLegacyV2(line, readId, keepOld);
+export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
+	const result = renameProperty(marker, "symbol", "icon", keepOld);
+	if (type && "data" in result) {
+		result.data = legacyV2DataToCurrent(result.data, type, keepOld);
+	}
+	return result;
+}
+
+export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<RenameProperty<M, "icon", "symbol", KeepOld>, KeepOld> {
+	const result = mapIdToLegacyV2(renameProperty(marker, "icon", "symbol", keepOld), readId, keepOld);
+	if (type && "data" in result) {
+		result.data = currentDataToLegacyV2(result.data, type, keepOld);
+	}
+	return result;
+}
+
+export function currentLineToLegacyV2<L extends Record<keyof any, any>, KeepOld extends boolean = false>(line: L, type: Type | undefined, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<L, KeepOld> {
+	const result = mapIdToLegacyV2(line, readId, keepOld);
+	if (type && "data" in result) {
+		result.data = currentDataToLegacyV2(result.data, type, keepOld);
+	}
+	return result;
 }
 
 type RenameNestedArrayProperty<T, Key extends keyof any, From extends keyof any, To extends keyof any, KeepOld extends boolean = false> = (
@@ -383,15 +405,27 @@ function mapHistoryEntry<Obj extends { objectBefore?: any; objectAfter?: any }, 
 	} as any;
 }
 
-export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId: MapSlug): LegacyV2HistoryEntry {
+export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId: MapSlug, getType: (id: ID) => Type | undefined): LegacyV2HistoryEntry;
+export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId: MapSlug, getType: (id: ID) => Promise<Type | undefined>): Promise<LegacyV2HistoryEntry>;
+export function currentHistoryEntryToLegacyV2(historyEntry: HistoryEntry, readId: MapSlug, getType: (id: ID) => Type | undefined | Promise<Type | undefined>): LegacyV2HistoryEntry | Promise<LegacyV2HistoryEntry> {
 	let renamed = mapIdToLegacyV2(historyEntry, readId);
 
 	if (renamed.type === "Map") {
 		return mapHistoryEntry(renamed, (obj) => obj && currentMapDataToLegacyV2(obj));
-		} else if (renamed.type === "Marker") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj, readId));
+	} else if (renamed.type === "Marker") {
+		const type = getType(renamed.objectId);
+		if (type && "then" in type) {
+			return type.then((t) => mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj, t, readId)));
+		} else {
+			return mapHistoryEntry(renamed, (obj) => obj && currentMarkerToLegacyV2(obj, type, readId));
+		}
 	} else if (renamed.type === "Line") {
-		return mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj, readId));
+		const type = getType(renamed.objectId);
+		if (type && "then" in type) {
+			return type.then((t) => mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj, t, readId)));
+		} else {
+			return mapHistoryEntry(renamed, (obj) => obj && currentLineToLegacyV2(obj, type, readId));
+		}
 	} else if (renamed.type === "Type") {
 		return mapHistoryEntry(renamed, (obj) => obj && currentTypeToLegacyV2(obj, readId));
 	} else if (renamed.type === "View") {

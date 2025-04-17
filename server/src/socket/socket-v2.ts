@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug, type BboxWithZoom, Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem, type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2MapDataToCurrent, legacyV2RouteRequestToCurrent } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug, type BboxWithZoom, Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem, type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2MapDataToCurrent, legacyV2RouteRequestToCurrent, type ID, type Type } from "facilmap-types";
 import { type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
@@ -8,9 +8,9 @@ import { getI18n } from "../i18n";
 import { getLineTemplate, getMapSlug, parseUrlQuery } from "facilmap-utils";
 import { deserializeError } from "serialize-error";
 
-function prepareMapResultOutput(result: FindOnMapResult, readId: MapSlug) {
+function prepareMapResultOutput(result: FindOnMapResult, type: Type, readId: MapSlug) {
 	if (result.kind === "marker") {
-		return currentMarkerToLegacyV2(result, readId);
+		return currentMarkerToLegacyV2(result, type, readId);
 	} else {
 		return result;
 	}
@@ -38,6 +38,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 	mapSlug: MapSlug | undefined = undefined;
 	readId: MapSlug | undefined = undefined;
 	bbox: BboxWithZoom | undefined = undefined;
+	/** Cached (v3) types of the subscribed map, needed for marker/line data conversion. */
+	types: Record<ID, Type> = {};
 	writable: Writable | undefined = undefined;
 	routes: Record<string, Route> = { };
 	listeningToHistory = false;
@@ -47,8 +49,14 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 	routeAborts: Record<string, AbortController> = {};
 
-	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void, database: Database, remoteAddr: string) {
-		this.socketV3 = new SocketConnectionV3((...args) => {
+	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void | Promise<void>, database: Database, remoteAddr: string) {
+		this.socketV3 = new SocketConnectionV3(async (...args) => {
+			if (args[0] === "type") {
+				this.types[args[2].id] = args[2];
+			} else if (args[0] === "deleteType") {
+				delete this.types[args[2].id];
+			}
+
 			if (args[0] === "streamChunks") {
 				for (const chunk of args[2]) {
 					this.streams[args[1]].write(chunk).catch(() => undefined);
@@ -60,20 +68,20 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			} else if (args[0] === "route") {
 				this.routes[args[1]] = args[2];
 			} else {
-				for (const ev of this.prepareEvent(...args)) {
+				for (const ev of await this.prepareEvent(...args)) {
 					if (!this.eventInterceptors.some((interceptor) => interceptor(...ev))) {
-						emit(...ev);
+						await emit(...ev);
 					}
 				}
 			}
 		}, database, remoteAddr);
 	}
 
-	prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Array<SocketServerToClientEmitArgs<SocketVersion.V2>> {
+	async prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Promise<Array<SocketServerToClientEmitArgs<SocketVersion.V2>>> {
 		if (args[0] === "marker") {
-			return [[args[0], currentMarkerToLegacyV2(args[2], this.readId!)]];
+			return [[args[0], currentMarkerToLegacyV2(args[2], this.types[args[2].typeId], this.readId!)]];
 		} else if (args[0] === "line") {
-			return [[args[0], currentLineToLegacyV2(args[2], this.readId!)]];
+			return [[args[0], currentLineToLegacyV2(args[2], this.types[args[2].typeId], this.readId!)]];
 		} else if (args[0] === "type") {
 			return [[args[0], currentTypeToLegacyV2(args[2], this.readId!)]];
 		} else if (args[0] === "view") {
@@ -83,7 +91,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				return [];
 			}
 
-			return [[args[0], currentHistoryEntryToLegacyV2(args[2], this.readId!)]];
+			return [[args[0], currentHistoryEntryToLegacyV2(args[2], this.readId!, (typeId) => this.types[typeId])]];
 		} else if (args[0] === "mapData") {
 			this.mapSlug = getMapSlug(args[2]);
 			this.readId = args[2].readId;
@@ -117,11 +125,11 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				events.push(["padData", currentMapDataToLegacyV2(obj.data)]);
 			} else if (obj.type === "markers") {
 				for await (const marker of streamToIterable(this.handleStream(obj.data))) {
-					events.push(["marker", currentMarkerToLegacyV2(marker, this.readId!)]);
+					events.push(["marker", currentMarkerToLegacyV2(marker, this.types[marker.typeId], this.readId!)]);
 				}
 			} else if (obj.type === "lines") {
 				for await (const line of streamToIterable(this.handleStream(obj.data))) {
-					events.push(["line", currentLineToLegacyV2(line, this.readId!)]);
+					events.push(["line", currentLineToLegacyV2(line, this.types[line.typeId], this.readId!)]);
 				}
 			} else if (obj.type === "linePoints") {
 				for await (const linePoints of streamToIterable(this.handleStream(obj.data))) {
@@ -256,7 +264,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				}
 
 				const results = await socketHandlersV3.findOnMap(this.mapSlug, data.query);
-				return results.map((result) => prepareMapResultOutput(result, this.readId!));
+				return results.map((result) => prepareMapResultOutput(result, this.types[result.typeId], this.readId!));
 			},
 
 			getMarker: async (data) => {
@@ -264,7 +272,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				return currentMarkerToLegacyV2(await socketHandlersV3.getMarker(this.mapSlug, data.id), this.readId);
+				const marker = await socketHandlersV3.getMarker(this.mapSlug, data.id);
+				return currentMarkerToLegacyV2(marker, this.types[marker.typeId], this.readId);
 			},
 
 			addMarker: async (marker) => {
@@ -272,7 +281,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				return currentMarkerToLegacyV2(await socketHandlersV3.createMarker(this.mapSlug, legacyV2MarkerToCurrent(marker)), this.readId);
+				const result = await socketHandlersV3.createMarker(this.mapSlug, legacyV2MarkerToCurrent(marker, this.types[marker.typeId]));
+				return currentMarkerToLegacyV2(result, this.types[result.typeId], this.readId);
 			},
 
 			editMarker: async (marker) => {

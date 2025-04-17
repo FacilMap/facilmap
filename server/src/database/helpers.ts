@@ -1,12 +1,13 @@
-import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic, type InferAttributes, type InferCreationAttributes, type CreationAttributes } from "sequelize";
+import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic } from "sequelize";
 import type { Line, Marker, ID, Type, Bbox } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
-import type { MapModel } from "./map.js";
 import { iterableToAsync } from "../utils/streams";
 import { getI18n } from "../i18n.js";
+import { makePaginateLazy, type PaginateOptions } from "sequelize-cursor-pagination";
 
-const ITEMS_PER_BATCH = 5000;
+const ITEMS_PER_CREATE_BATCH = 5000;
+const ITEMS_PER_READ_BATCH = 500;
 
 // Workaround for https://github.com/sequelize/sequelize/issues/15898
 export function createModel<ModelInstance extends Model<any, any>>(): ModelStatic<ModelInstance> {
@@ -84,16 +85,16 @@ export function getLonType(): ModelAttributeColumnOptions {
 	};
 }
 
-export interface DataModel extends Model<InferAttributes<DataModel>, InferCreationAttributes<DataModel>> {
+export interface DataModel {
 	id: ID;
-	name: string;
+	fieldId: string;
 	value: string;
 }
 
 export const dataDefinition = {
 	id: getDefaultIdType(),
-	"name" : { type: DataTypes.TEXT, allowNull: false },
-	"value" : { type: DataTypes.TEXT, allowNull: false }
+	fieldId: { type: DataTypes.TEXT, allowNull: false },
+	value: { type: DataTypes.TEXT, allowNull: false }
 };
 
 export function makeNotNullForeignKey(type: string, field: string, error = false): AssociationOptions {
@@ -105,9 +106,37 @@ export function makeNotNullForeignKey(type: string, field: string, error = false
 	}
 }
 
+export async function* findAllStreamed<ModelType extends Model>(
+	model: ModelStatic<ModelType>,
+	paginateOptions?: Omit<PaginateOptions<ModelType>, "after" | "limit">
+): AsyncIterable<ModelType> {
+	const paginate = makePaginateLazy(model);
+	let cursor;
+	while (true) {
+		const result = paginate({
+			...paginateOptions,
+			after: cursor,
+			limit: ITEMS_PER_READ_BATCH
+		});
+
+		const edges = await result.getEdges();
+
+		if (edges.length === 0) {
+			break;
+		}
+
+		for (const edge of edges) {
+			yield edge.node;
+		}
+
+		cursor = edges[edges.length - 1].cursor;
+	}
+}
+
 export interface BboxWithExcept extends Bbox {
 	except?: Bbox;
 }
+
 
 export default class DatabaseHelpers {
 
@@ -180,11 +209,16 @@ export default class DatabaseHelpers {
 			condition.include = [ ...(condition.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ];
 		}
 
-		const Map = this._db.maps.MapModel.build({ id: mapId } satisfies Partial<CreationAttributes<MapModel>> as any);
-		// eslint-disable-next-line @typescript-eslint/no-base-to-string
-		const objs: Array<Model> = await (Map as any)["get" + this._db._conn.model(type).getTableName()](condition);
-
-		for (const obj of objs) {
+		for await (const obj of findAllStreamed(this._db._conn.model(type), {
+			...condition,
+			...includeData ? {
+				include: [ ...(condition?.include ? (Array.isArray(condition.include) ? condition.include : [ condition.include ]) : [ ]), this._db._conn.model(type + "Data") ]
+			} : {},
+			where: {
+				...condition?.where,
+				mapId
+			}
+		})) {
 			const d: any = obj.toJSON();
 
 			if(includeData) {
@@ -263,20 +297,20 @@ export default class DatabaseHelpers {
 		return oldObject;
 	}
 
-	_dataToArr<T>(data: Record<string, string>, extend: T): Array<{ name: string; value: string } & T> {
-		const dataArr: Array<{ name: string; value: string } & T> = [ ];
+	_dataToArr<T>(data: Record<string, string>, extend: T): Array<{ fieldId: string; value: string } & T> {
+		const dataArr: Array<{ fieldId: string; value: string } & T> = [ ];
 		for(const i of Object.keys(data)) {
 			if(data[i] != null) {
-				dataArr.push({ name: i, value: data[i], ...extend });
+				dataArr.push({ fieldId: i, value: data[i], ...extend });
 			}
 		}
 		return dataArr;
 	}
 
-	_dataFromArr(dataArr: Array<{ name: string; value: string }>): Record<string, string> {
+	_dataFromArr(dataArr: Array<{ fieldId: string; value: string }>): Record<string, string> {
 		const data: Record<string, string> = Object.create(null);
 		for(let i=0; i<dataArr.length; i++)
-			data[dataArr[i].name] = dataArr[i].value;
+			data[dataArr[i].fieldId] = dataArr[i].value;
 		return data;
 	}
 
@@ -345,32 +379,26 @@ export default class DatabaseHelpers {
 		};
 	}
 
-	async renameObjectDataField(mapId: ID, typeId: ID, rename: Record<string, { name?: string; values?: Record<string, string> }>, isLine: boolean): Promise<void> {
+	async renameObjectDataValue(mapId: ID, typeId: ID, rename: Record<string, Record<string, string>>, isLine: boolean): Promise<void> {
 		const objectStream = (isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 
 		for await (const object of objectStream) {
 			const newData = cloneDeep(object.data);
-			const newNames: string[] = [ ];
 
-			for(const oldName in rename) {
-				if(rename[oldName].name && object.data[oldName] != null) {
-					newData[rename[oldName].name!] = object.data[oldName];
-					newNames.push(rename[oldName].name!);
-					if(!newNames.includes(oldName))
-						delete newData[oldName];
-				}
-
-				for(const oldValue in (rename[oldName].values || { })) {
-					if(object.data[oldName] == oldValue)
-						newData[rename[oldName].name || oldName] = rename[oldName].values![oldValue];
+			for (const id of Object.keys(rename)) {
+				for (const oldValue of Object.keys(rename[id])) {
+					if (object.data[id] === oldValue) {
+						newData[id] = rename[id][oldValue];
+					}
 				}
 			}
 
-			if(!isEqual(object.data, newData)) {
-				if(isLine)
+			if (!isEqual(object.data, newData)) {
+				if(isLine) {
 					await this._db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true });
-				else
+				} else {
 					await this._db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true });
+				}
 			}
 		}
 	}
@@ -385,7 +413,7 @@ export default class DatabaseHelpers {
 
 		for await (const item of data) {
 			slice.push(item);
-			if (slice.length >= ITEMS_PER_BATCH) {
+			if (slice.length >= ITEMS_PER_CREATE_BATCH) {
 				await createSlice();
 			}
 		}

@@ -1,5 +1,5 @@
 import compression from "compression";
-import express, { type Request, type Response } from "express";
+import express, { type ErrorRequestHandler, type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
 import { Writable, stringifiedIdValidator, type MapDataWithWritable } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
@@ -17,6 +17,7 @@ import cookieParser from "cookie-parser";
 import { i18nMiddleware } from "./i18n.js";
 import { getApiMiddleware } from "./api/api.js";
 import { readableFromWeb, writableToWeb } from "./utils/streams.js";
+import finalhandler from "finalhandler";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -243,6 +244,14 @@ export async function initWebserver(database: Database, port: number, host?: str
 		);
 		readableFromWeb(result).pipe(res);
 	});
+
+	// Log errors with details, see https://github.com/expressjs/express/issues/6462
+	app.use(((err, req, res, next) => {
+		finalhandler(req, res, {
+			env: app.get("env"),
+			onerror: (err) => { console.error(err); }
+		})(err);
+	}) satisfies ErrorRequestHandler);
 
 	const server = createServer(app);
 	await new Promise<void>((resolve) => {

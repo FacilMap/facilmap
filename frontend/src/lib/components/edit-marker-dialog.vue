@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { markerValidator, type ID } from "facilmap-types";
+	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, markerValidator, type ID, type Type } from "facilmap-types";
 	import { canControl, canEditType, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual } from "lodash-es";
@@ -9,7 +9,7 @@
 	import ShapePicker from "./ui/shape-picker.vue";
 	import FieldInput from "./ui/field-input.vue";
 	import SizePicker from "./ui/size-picker.vue";
-	import { computed, ref, toRef, watch } from "vue";
+	import { computed, ref, toRef, watch, type DeepReadonly } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -43,13 +43,15 @@
 
 	const types = computed(() => getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "marker"));
 
-	const resolvedCanControl = computed(() => canControl(clientSub.value.data.types[marker.value.typeId]));
+	const type = computed(() => clientSub.value.data.types[marker.value.typeId]);
+
+	const resolvedCanControl = computed(() => canControl(type.value));
 
 	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
 
-	const resolvedCanEditType = computed(() => clientSub.value.data.types[marker.value.typeId] && canEditType(clientSub.value.data.mapData, clientSub.value.data.types[marker.value.typeId]));
+	const resolvedCanEditType = computed(() => canEditType(clientSub.value.data.mapData, type.value));
 
 	watch(originalMarker, (newMarker, oldMarker) => {
 		if (!newMarker) {
@@ -59,6 +61,12 @@
 			mergeObject(oldMarker, newMarker, marker.value);
 		}
 	});
+
+	function setType(newType: DeepReadonly<Type>): void {
+		const oldType = type.value;
+		marker.value.typeId = newType.id
+		marker.value.data = dataByNameToDataByFieldId(dataByFieldIdToDataByName(marker.value.data, oldType), newType);
+	}
 
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-edit-marker-error`);
@@ -150,7 +158,7 @@
 							<FieldInput
 								:id="`${id}-${idx}-input`"
 								:field="field"
-								v-model="marker.data[field.name]"
+								v-model="marker.data[field.id]"
 							></FieldInput>
 						</div>
 					</div>
@@ -159,7 +167,7 @@
 					<FieldInput
 						:id="`${id}-${idx}-input`"
 						:field="field"
-						v-model="marker.data[field.name]"
+						v-model="marker.data[field.id]"
 						showCheckboxLabel
 					></FieldInput>
 				</template>
@@ -174,7 +182,7 @@
 							href="javascript:"
 							class="dropdown-item"
 							:class="{ active: type.id == marker.typeId }"
-							@click="marker.typeId = type.id"
+							@click="setType(type)"
 						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>

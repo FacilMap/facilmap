@@ -1,7 +1,7 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
 import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2, type DeepReadonly } from "facilmap-types";
-import { cloneDeep } from "lodash-es";
+import { cloneDeep, omit } from "lodash-es";
 import { normalizeFieldValue } from "./objects";
 
 export type FilterFunc = (obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>) => boolean;
@@ -111,13 +111,11 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
 }
 
 export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>): any {
-	const fixedObj: any = cloneDeep(obj);
+	const fixedObj: any = cloneDeep(omit(obj, ["data"]));
 
-	if (!fixedObj.data) {
-		fixedObj.data = Object.create(null) as {};
-	}
+	fixedObj.data = Object.create(null) as {};
 	for (const field of type.fields) {
-		fixedObj.data[field.name] = normalizeFieldValue(field, fixedObj.data[field.name]);
+		fixedObj.data[field.name] = normalizeFieldValue(field, obj.data?.[field.id]);
 	}
 
 	let ret = {

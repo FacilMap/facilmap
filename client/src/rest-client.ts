@@ -98,7 +98,9 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		if (!res.ok) {
 			if (res.headers.has("X-FacilMap-Error")) {
 				const cause = deserializeError(JSON.parse(res.headers.get("X-FacilMap-Error")!));
-				throw new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status} (${cause.message})`, { cause });
+				throw Object.assign(new Error(`${resolvedInit.method?.toUpperCase() ?? "GET"} ${url} failed with status ${res.status} (${cause.message})`, { cause }), {
+					status: (cause as any).status
+				});
 			} else {
 				let responseBody: string | undefined = undefined;
 				try {
@@ -192,7 +194,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<HistoryEntry[]> {
+	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<PagedResults<HistoryEntry>> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}/history`, {
 			query: data
 		});

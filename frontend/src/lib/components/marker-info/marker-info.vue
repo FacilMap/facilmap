@@ -103,7 +103,7 @@
 
 			<template v-for="field in type.fields" :key="field.name">
 				<dt>{{formatFieldName(field.name)}}</dt>
-				<dd v-html="formatFieldValue(field, marker.data[field.name], true)"></dd>
+				<dd v-html="formatFieldValue(field, marker.data[field.id], true)"></dd>
 			</template>
 		</dl>
 

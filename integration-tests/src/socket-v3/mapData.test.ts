@@ -12,43 +12,58 @@ describe.for([
 
 	const restClient = useSocket ? undefined : getRestClient(ApiVersion.V3);
 
+	const defaultMapProperties = {
+		name: "",
+		searchEngines: false,
+		description: "",
+		clusterMarkers: false,
+		legend1: "",
+		legend2: "",
+		defaultViewId: null,
+		defaultView: null,
+	} satisfies Partial<MapData>;
+
+	const customMapProperties = {
+		name: "Test map",
+		searchEngines: true,
+		description: "Test description",
+		clusterMarkers: true,
+		legend1: "Legend 1",
+		legend2: "Legend 1",
+		defaultViewId: null
+	} satisfies Partial<MapData<CRU.CREATE>>;
+
 	test("Create map (using default values)", async () => {
 		const storage = await openClientStorage(undefined, SocketVersion.V3);
+		const createMapData = getTemporaryMapData(useSocket ? SocketVersion.V3 : ApiVersion.V3, {});
 
-		await createTemporaryMap(storage, {}, async (createMapData, mapData) => {
+		const data = await (restClient ?? storage.client).createMapUnstreamed(createMapData);
+
+		try {
 			const expectedMapData: MapDataWithWritable = {
 				...createMapData,
-				id: mapData.id,
-				name: "",
-				searchEngines: false,
-				description: "",
-				clusterMarkers: false,
-				legend1: "",
-				legend2: "",
-				defaultViewId: null,
-				defaultView: null,
-				writable: Writable.ADMIN
+				id: data.mapData.id,
+				writable: Writable.ADMIN,
+				...defaultMapProperties
 			};
 
-			expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(SubscriptionStateType.SUBSCRIBED);
 			expect(mapData).toEqual(expectedMapData);
-			expect(storage.maps[createMapData.adminId].mapData).toEqual(expectedMapData);
+
+			if (useSocket) {
+				expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(SubscriptionStateType.SUBSCRIBED);
+				expect(storage.maps[createMapData.adminId].mapData).toEqual(expectedMapData);
+			}
+
 			expect(await (restClient ?? storage.client).getMap(createMapData.adminId)).toEqual(expectedMapData);
-		});
+		} finally {
+			await (restClient ?? storage.client).deleteMap(createMapData.adminId);
+		}
 	});
 
 	test("Create map (using custom values)", async () => {
 		const storage = await openClientStorage(undefined, SocketVersion.V3);
 
-		await createTemporaryMap(storage, {
-			name: "Test map",
-			searchEngines: true,
-			description: "Test description",
-			clusterMarkers: true,
-			legend1: "Legend 1",
-			legend2: "Legend 1",
-			defaultViewId: null
-		}, async (createMapData, mapData) => {
+		await createTemporaryMap(restClient ?? storage, customMapProperties, async (createMapData, mapData) => {
 			const expectedMapData: MapDataWithWritable = {
 				...createMapData,
 				id: mapData.id,
@@ -56,9 +71,13 @@ describe.for([
 				writable: Writable.ADMIN
 			};
 
-			expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(SubscriptionStateType.SUBSCRIBED);
 			expect(mapData).toEqual(expectedMapData);
-			expect(storage.maps[createMapData.adminId].mapData).toEqual(expectedMapData);
+
+			if (useSocket) {
+				expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(SubscriptionStateType.SUBSCRIBED);
+				expect(storage.maps[createMapData.adminId].mapData).toEqual(expectedMapData);
+			}
+
 			expect(await (restClient ?? storage.client).getMap(createMapData.adminId)).toEqual(expectedMapData);
 		});
 	});
@@ -267,7 +286,7 @@ describe.for([
 			expect(result).toBeTruthy();
 		});
 
-		if (useStorage) {
+		if (useSocket) {
 			expect(storage.client.mapSubscriptions[mapData.adminId].state.type).toBe(MapSubscriptionStateType.DELETED);
 		}
 

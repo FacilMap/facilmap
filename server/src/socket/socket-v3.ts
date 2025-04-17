@@ -9,13 +9,17 @@ import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries } from "facilmap-utils";
+import { getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
-	emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void;
+	/**
+	 * Emit an event to the client. Async because older socket versions might need to do some as async conversions.
+	 * The promise is resolved when the event has been sent. There is no confirmation about it being received.
+	 */
+	emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>;
 	database: Database;
 	remoteAddr: string;
 	api: ApiV3Backend;
@@ -34,7 +38,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	unregisterDatabaseHandlers = (): void => undefined;
 
-	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void, database: Database, remoteAddr: string) {
+	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>, database: Database, remoteAddr: string) {
 		this.emit = emit;
 		this.database = database;
 		this.remoteAddr = remoteAddr;
@@ -62,35 +66,37 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		void (async () => {
 			this.streamAbort[streamId] = new AbortController();
 			let chunks: any[] = [];
-			let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
-			let done = false;
+			let tickPromise: Promise<void> | undefined = undefined;
+			let tickScheduled = false;
 			try {
 				for await (const chunk of stream) {
 					this.streamAbort[streamId].signal.throwIfAborted();
 					chunks.push(chunk);
-					if (!timeout) {
-						timeout = setTimeout(() => {
-							this.emit("streamChunks", streamId, chunks);
-							chunks = [];
-							timeout = undefined;
-
-							if (done) {
-								this.emit("streamDone", streamId);
+					if (!tickScheduled) {
+						tickScheduled = true;
+						tickPromise = Promise.all([tickPromise, sleep(0)]).then(async () => {
+							if (this.streamAbort[streamId].signal.aborted) {
+								return;
 							}
+
+							const thisChunks = chunks;
+							chunks = [];
+							tickScheduled = false;
+
+							await this.emit("streamChunks", streamId, thisChunks);
 						});
 					}
 				}
-				done = true;
-				if (!timeout) {
-					this.emit("streamDone", streamId);
-				}
+
+				await tickPromise;
+				await this.emit("streamDone", streamId);
 			} catch (err: any) {
-				if (timeout) {
-					clearTimeout(timeout);
-				}
-				this.emit("streamError", streamId, serializeError(err));
+				this.streamAbort[streamId].abort();
+				await this.emit("streamError", streamId, serializeError(err));
 			} finally {
-				delete this.streamAbort[streamId];
+				await Promise.resolve(tickPromise).finally(() => {
+					delete this.streamAbort[streamId];
+				});
 			}
 		})();
 		return streamId;
@@ -109,26 +115,26 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			}
 
 			if (obj.type === "mapData") {
-				this.emit("mapData", mapSlug, obj.data);
+				await this.emit("mapData", mapSlug, obj.data);
 			} else if (obj.type === "markers") {
 				for await (const marker of obj.data) {
-					this.emit("marker", mapSlug, marker);
+					await this.emit("marker", mapSlug, marker);
 				}
 			} else if (obj.type === "lines") {
 				for await (const line of obj.data) {
-					this.emit("line", mapSlug, line);
+					await this.emit("line", mapSlug, line);
 				}
 			} else if (obj.type === "linePoints") {
 				for await (const linePoints of obj.data) {
-					this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
+					await this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
 				}
 			} else if (obj.type === "types") {
 				for await (const type of obj.data) {
-					this.emit("type", mapSlug, type);
+					await this.emit("type", mapSlug, type);
 				}
 			} else if (obj.type === "views") {
 				for await (const view of obj.data) {
-					this.emit("view", mapSlug, view);
+					await this.emit("view", mapSlug, view);
 				}
 			}
 		}
@@ -350,7 +356,17 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				let existingSub = this.findMapSubscriptionData(mapSlug, false);
 				if (!existingSub) {
-					const mapData = await this.api.getMap(mapSlug);
+					let mapData;
+					try {
+						mapData = await this.api.getMap(mapSlug);
+					} catch (err: any) {
+						if (err.status === 404 && !abort.signal.aborted && !this.findMapSubscriptionData(mapSlug, false)) {
+							// Map not found, clear subscription so that we can create it using createMapAndSubscribe
+							delete this.mapSubscriptionAbort[mapSlug];
+						}
+						throw err;
+					}
+
 					if (abort.signal.aborted) { // Unsubscribed while fetching map data
 						return;
 					}
@@ -436,10 +452,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				this.routeSubscriptionDetails[routeKey] = omit(routeInfo, ["trackPoints"]);
 
-				this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
+				await this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
 
 				if(this.bbox) {
-					this.emit("routePoints", routeKey, {
+					await this.emit("routePoints", routeKey, {
 						trackPoints: prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true),
 						reset: true
 					});
@@ -486,7 +502,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						return {
 							type: "application/geo+json",
 							filename: `${filename}.geojson`,
-							data: this.emitStream(streamToIterable(exportLineToGeoJson(routeInfo, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
+							data: this.emitStream(streamToIterable(exportLineToGeoJson(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
 						};
 					default:
 						throw new Error(getI18n().t("socket.unknown-format"));
@@ -510,14 +526,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
 						for await (const obj of markerObjs) {
 							for await (const marker of obj.data) {
-								this.emit("marker", sub.mapSlug, marker);
+								await this.emit("marker", sub.mapSlug, marker);
 							}
 						}
 
 						const lineObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["linePoints"], bbox: lineBboxWithExcept });
 						for await (const obj of lineObjs) {
 							for await (const linePoints of obj.data) {
-								this.emit("linePoints", sub.mapSlug, { ...linePoints, reset: false });
+								await this.emit("linePoints", sub.mapSlug, { ...linePoints, reset: false });
 							}
 						}
 					}
@@ -525,7 +541,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				for (const [routeKey, sub] of Object.entries(this.routeSubscriptionDetails)) {
 					const trackPoints = await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except);
-					this.emit("routePoints", routeKey, { trackPoints, reset: false });
+					await this.emit("routePoints", routeKey, { trackPoints, reset: false });
 				}
 			},
 
@@ -551,7 +567,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("mapData")) {
-								this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
+								void this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
 							}
 						}
 
@@ -567,7 +583,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						}));
 
 						if (Object.keys(slugMap).length > 0) {
-							this.emit("mapSlugRename", slugMap);
+							void this.emit("mapSlugRename", slugMap);
 						}
 
 						if (data.id !== mapId) {
@@ -583,7 +599,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				deleteMap: (mapId) => {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
-							this.emit("deleteMap", sub.mapSlug);
+							void this.emit("deleteMap", sub.mapSlug);
 						}
 					}
 				},
@@ -592,7 +608,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox && (isInBbox(marker, this.bbox) || (oldMarker && isInBbox(oldMarker, this.bbox)))) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								this.emit("marker", sub.mapSlug, marker);
+								void this.emit("marker", sub.mapSlug, marker);
 							}
 						}
 					}
@@ -602,7 +618,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								this.emit("deleteMarker", sub.mapSlug, data);
+								void this.emit("deleteMarker", sub.mapSlug, data);
 							}
 						}
 					}
@@ -612,7 +628,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								this.emit("line", sub.mapSlug, line);
+								void this.emit("line", sub.mapSlug, line);
 							}
 						}
 					}
@@ -622,7 +638,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("linePoints")) {
-								this.emit("linePoints", sub.mapSlug, {
+								void this.emit("linePoints", sub.mapSlug, {
 									lineId,
 									// Emit track points even if none are in the bbox so that client resets cached track points
 									trackPoints: prepareForBoundingBox(trackPoints, this.bbox),
@@ -637,7 +653,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								this.emit("deleteLine", sub.mapSlug, data);
+								void this.emit("deleteLine", sub.mapSlug, data);
 							}
 						}
 					}
@@ -647,7 +663,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("types")) {
-								this.emit("type", sub.mapSlug, data);
+								void this.emit("type", sub.mapSlug, data);
 							}
 						}
 					}
@@ -657,7 +673,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("types")) {
-								this.emit("deleteType", sub.mapSlug, data);
+								void this.emit("deleteType", sub.mapSlug, data);
 							}
 						}
 					}
@@ -667,7 +683,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("views")) {
-								this.emit("view", sub.mapSlug, data);
+								void this.emit("view", sub.mapSlug, data);
 							}
 						}
 					}
@@ -677,7 +693,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("views")) {
-								this.emit("deleteView", sub.mapSlug, data);
+								void this.emit("deleteView", sub.mapSlug, data);
 							}
 						}
 					}
@@ -687,7 +703,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.history && (sub.writable === Writable.ADMIN || ["Marker", "Line"].includes(data.type))) {
-								this.emit("history", sub.mapSlug, data);
+								void this.emit("history", sub.mapSlug, data);
 							}
 						}
 					}

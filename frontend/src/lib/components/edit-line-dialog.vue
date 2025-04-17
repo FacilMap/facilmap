@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { lineValidator, type ID } from "facilmap-types";
+	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, lineValidator, type ID, type Type } from "facilmap-types";
 	import { canControl, canEditType, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual, omit } from "lodash-es";
@@ -8,7 +8,7 @@
 	import FieldInput from "./ui/field-input.vue";
 	import RouteMode from "./ui/route-mode.vue";
 	import WidthPicker from "./ui/width-picker.vue";
-	import { computed, ref, toRef, watch } from "vue";
+	import { computed, ref, toRef, watch, type DeepReadonly } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -44,13 +44,15 @@
 
 	const types = computed(() => getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "line"));
 
-	const resolvedCanControl = computed(() => canControl(clientSub.value.data.types[line.value.typeId]));
+	const type = computed(() => clientSub.value.data.types[line.value.typeId]);
+
+	const resolvedCanControl = computed(() => canControl(type.value));
 
 	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
 
-	const resolvedCanEditType = computed(() => !!clientSub.value.data.types[line.value.typeId] && canEditType(clientSub.value.data.mapData, clientSub.value.data.types[line.value.typeId]));
+	const resolvedCanEditType = computed(() => canEditType(clientSub.value.data.mapData, type.value));
 
 	watch(originalLine, (newLine, oldLine) => {
 		if (!newLine) {
@@ -60,6 +62,12 @@
 			mergeObject(oldLine, newLine, line.value);
 		}
 	});
+
+	function setType(newType: DeepReadonly<Type>): void {
+		const oldType = type.value;
+		line.value.typeId = newType.id
+		line.value.data = dataByNameToDataByFieldId(dataByFieldIdToDataByName(line.value.data, oldType), newType);
+	}
 
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-edit-line-error`);
@@ -152,7 +160,7 @@
 							<FieldInput
 								:id="`${id}-${idx}-input`"
 								:field="field"
-								v-model="line.data[field.name]"
+								v-model="line.data[field.id]"
 							></FieldInput>
 						</div>
 					</div>
@@ -161,7 +169,7 @@
 					<FieldInput
 						:id="`${id}-${idx}-input`"
 						:field="field"
-						v-model="line.data[field.name]"
+						v-model="line.data[field.id]"
 						showCheckboxLabel
 					></FieldInput>
 				</template>
@@ -176,7 +184,7 @@
 							href="javascript:"
 							class="dropdown-item"
 							:class="{ active: type.id == line.typeId }"
-							@click="line.typeId = type.id"
+							@click="setType(type)"
 						>{{formatTypeName(type.name)}}</a>
 					</li>
 				</template>

@@ -1,4 +1,4 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
@@ -63,7 +63,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 
 	async updateSubscription(options: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		this.reactiveObjectProvider.set(this.data, "options", options);
-		await this._subscribe();
+		await this._doSubscribe();
 	}
 
 	protected override async _doUnsubscribe(): Promise<void> {
@@ -108,7 +108,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.findOnMap(this.data.mapSlug, query);
 	}
 
-	async getHistory(data?: PagingInput): Promise<HistoryEntry[]> {
+	async getHistory(data?: PagingInput): Promise<PagedResults<HistoryEntry>> {
 		return await this.client.getHistory(this.data.mapSlug, data);
 	}
 

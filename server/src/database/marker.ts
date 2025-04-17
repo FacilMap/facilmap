@@ -24,10 +24,14 @@ export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCr
 	toJSON: () => Marker;
 }
 
+export interface MarkerDataModel extends DataModel, Model<InferAttributes<MarkerDataModel>, InferCreationAttributes<MarkerDataModel>> {
+	markerId: ForeignKey<MarkerModel["id"]>;
+}
+
 export default class DatabaseMarkers {
 
 	MarkerModel = createModel<MarkerModel>();
-	MarkerDataModel = createModel<DataModel>();
+	MarkerDataModel = createModel<MarkerDataModel>();
 
 	_db: Database;
 
@@ -96,14 +100,16 @@ export default class DatabaseMarkers {
 		return this._db.helpers._getMapObject("Marker", mapId, markerId, options);
 	}
 
-	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
-		console.log("createMarker", mapId, data);
+	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<Marker> {
 		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "marker") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: type.type }));
 		}
 
-		const result = await this._db.helpers._createMapObject<Marker>("Marker", mapId, resolveCreateMarker(data, type));
+		const result = await this._db.helpers._createMapObject<Marker>("Marker", mapId, {
+			...resolveCreateMarker(data, type),
+			...options?.id ? { id: options.id } : {}
+		});
 		this._db.emit("marker", mapId, result);
 
 		if (data.ele === undefined) {

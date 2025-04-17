@@ -100,12 +100,12 @@ export function getTemporaryMapData<V extends SocketVersion | ApiVersion, D exte
 	} as any;
 }
 
-export async function createTemporaryMap<V extends SocketVersion.V3 | ApiVersion.V3, D extends Partial<MapData<CRU.CREATE>>>(
-	storageOrClient: (V extends SocketVersion ? SocketClientStorageInstance<V> : never) | (V extends ApiVersion ? RestClientInstance<V> : never),
+export async function createTemporaryMap<S extends SocketClientStorageInstance<SocketVersion.V3> | RestClientInstance<ApiVersion.V3>, D extends Partial<MapData<CRU.CREATE>>>(
+	storageOrClient: S,
 	data: D,
-	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<V, D>>, mapData: DeepReadonly<Extract<MapDataWithWritable, { writable: Writable.ADMIN }>>) => Promise<void>
+	callback?: (createMapData: ReturnType<typeof getTemporaryMapData<S["_version"], D>>, mapData: DeepReadonly<Extract<MapDataWithWritable, { writable: Writable.ADMIN }>>) => Promise<void>
 ): Promise<void> {
-	const createMapData = getTemporaryMapData(storageOrClient._version, data);
+	const createMapData = getTemporaryMapData<S["_version"], D>(storageOrClient._version, data);
 	if ("client" in storageOrClient) {
 		await storageOrClient.client.createMapAndSubscribe(createMapData);
 

@@ -1,4 +1,4 @@
-import type { AllMapObjectsPick, AllMapObjectsTypes, EventHandler, EventName, GenericAllMapObjects, TrackPoint, TrackPoints } from "facilmap-types";
+import type { AllMapObjectsPick, AllMapObjectsTypes, Bbox, EventHandler, EventName, GenericAllMapObjects, Point, TrackPoint, TrackPoints } from "facilmap-types";
 
 export type IterableType<I extends AsyncIterable<any>> = I extends AsyncIterable<infer T> ? T : never;
 
@@ -77,4 +77,8 @@ export function mergeObjectWithPromise<T extends {}, R>(object: T, promise: Basi
 		has: (target, key) => key in target || key in p,
 		get: (target, prop, receiver) => Reflect.get(prop in p && !(prop in target) ? p : target, prop, receiver)
 	}) as T & typeof p;
+}
+
+export function isInBbox(position: Point, bbox: Bbox): boolean {
+	return position.lat <= bbox.top && position.lat >= bbox.bottom && position.lon >= bbox.left && position.lon <= bbox.right;
 }

@@ -19,19 +19,12 @@ export default class MarkersLayer extends MarkerCluster {
 	/** The position of these markers will not be touched until they are unlocked again. */
 	protected lockedMarkerIds = new Set<ID>();
 
-	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
-
 	constructor(clientStorage: SocketClientStorage, mapSlug: MapSlug, options?: MarkersLayerOptions) {
 		super(clientStorage, mapSlug, options);
 	}
 
 	onAdd(map: LeafletMap): this {
 		super.onAdd(map);
-
-		this.unsubscribeStorageUpdate = this.clientStorage.reactiveObjectProvider.subscribe((update) => this.handleStorageUpdate(update));
-		// this.storage.on("marker", this.handleMarker);
-		// this.storage.on("deleteMarker", this.handleDeleteMarker);
-		// this.storage.on("type", this.handleType);
 
 		for (const marker of Object.values(this.clientStorage.maps[this.mapSlug]?.markers ?? {})) {
 			this.handleMarker(marker);
@@ -44,12 +37,6 @@ export default class MarkersLayer extends MarkerCluster {
 
 	onRemove(map: LeafletMap): this {
 		super.onRemove(map);
-
-		this.unsubscribeStorageUpdate?.();
-		this.unsubscribeStorageUpdate = undefined;
-		// this.storage.removeListener("marker", this.handleMarker);
-		// this.storage.removeListener("deleteMarker", this.handleDeleteMarker);
-		// this.storage.removeListener("type", this.handleType);
 
 		map.off("fmFilter", this.handleFilter);
 
@@ -65,6 +52,8 @@ export default class MarkersLayer extends MarkerCluster {
 	}
 
 	protected handleStorageUpdate(update: ReactiveObjectUpdate): void {
+		super.handleStorageUpdate(update);
+
 		if (!this.clientStorage.maps[this.mapSlug]) {
 			return;
 		}

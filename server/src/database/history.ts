@@ -1,10 +1,9 @@
-import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes, Op } from "sequelize";
+import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
-import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagingInput } from "facilmap-types";
+import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
-import { iterableToArray } from "../utils/streams.js";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
@@ -19,8 +18,6 @@ interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreatio
 }
 
 export default class DatabaseHistory {
-
-	HISTORY_ENTRIES = 50;
 
 	HistoryModel = createModel<HistoryModel>();
 
@@ -72,13 +69,6 @@ export default class DatabaseHistory {
 
 
 	async addHistoryEntry(mapId: ID, data: HistoryEntryCreate): Promise<HistoryEntry> {
-		const oldEntryIds = (await this.HistoryModel.findAll({
-			where: { mapId },
-			order: [[ "time", "DESC" ]],
-			offset: this.HISTORY_ENTRIES-1,
-			attributes: [ "id" ]
-		})).map(it => it.id);
-
 		const dataClone = cloneDeep(data);
 		if(dataClone.objectBefore) {
 			delete (dataClone.objectBefore as any).id;
@@ -91,10 +81,7 @@ export default class DatabaseHistory {
 			delete (dataClone.objectAfter as any).defaultView;
 		}
 
-		const [newEntry] = await Promise.all([
-			this._db.helpers._createMapObject<HistoryEntry>("History", mapId, dataClone),
-			oldEntryIds.length > 0 ? this.HistoryModel.destroy({ where: { mapId: mapId, id: oldEntryIds } }) : undefined
-		]);
+		const newEntry = await this._db.helpers._createMapObject<HistoryEntry>("History", mapId, dataClone);
 
 		this._db.emit("historyEntry", mapId, newEntry);
 
@@ -102,13 +89,31 @@ export default class DatabaseHistory {
 	}
 
 
-	getHistory(mapId: ID, types?: HistoryEntryType[], paging?: PagingInput): AsyncIterable<HistoryEntry> {
-		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
+	async getPagedHistory(mapId: ID, types: HistoryEntryType[] | undefined, paging: PagingInput): Promise<PagedResults<HistoryEntry>> {
+		const { count, rows } = await this.HistoryModel.findAndCountAll({
+			where: {
+				mapId: mapId,
+				...types ? {
+					where: { type: types }
+				} : {}
+			},
 			order: [[ "time", "DESC" ]],
 			offset: paging?.start ?? 0,
 			...paging?.limit != null ? {
 				limit: paging.limit
-			} : {},
+			} : {}
+		});
+
+		return {
+			results: rows.map((row) => row.toJSON()),
+			totalLength: count
+		};
+	}
+
+
+	getHistory(mapId: ID, types?: HistoryEntryType[]): AsyncIterable<HistoryEntry> {
+		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
+			order: [[ "time", "DESC" ]],
 			...types ? {
 				where: { type: types }
 			} : {}
@@ -176,35 +181,22 @@ export default class DatabaseHistory {
 					break;
 			}
 		} else {
-			let newObj;
-
 			switch (entry.type) {
 				case "Marker":
-					newObj = await this._db.markers.createMarker(mapId, entry.objectBefore);
+					await this._db.markers.createMarker(mapId, entry.objectBefore, { id: entry.objectId });
 					break;
 
 				case "Line":
-					newObj = await this._db.lines.createLine(mapId, entry.objectBefore);
+					await this._db.lines.createLine(mapId, entry.objectBefore, { id: entry.objectId });
 					break;
 
 				case "View":
-					newObj = await this._db.views.createView(mapId, entry.objectBefore);
+					await this._db.views.createView(mapId, entry.objectBefore, { id: entry.objectId });
 					break;
 
 				case "Type":
-					newObj = await this._db.types.createType(mapId, entry.objectBefore);
+					await this._db.types.createType(mapId, entry.objectBefore, { id: entry.objectId });
 					break;
-			}
-
-			const affected = await iterableToArray(this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
-				where: {
-					type: entry.type,
-					objectId: entry.objectId
-				}
-			}));
-			await this.HistoryModel.update({ objectId: newObj.id }, { where: { id: { [Op.in]: affected.map((h) => h.id) } } });
-			for (const entry of affected) {
-				this._db.emit("historyEntry", mapId, { ...entry, objectId: newObj.id } as HistoryEntry);
 			}
 		}
 	}

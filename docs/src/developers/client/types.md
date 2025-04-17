@@ -35,7 +35,7 @@ A bounding box that may include another bounding box as “except”. This can b
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
-* `data` (`Record<string, string>`): The filled out form fields of the marker, keyed by field name. A null-prototype object should always be used for this to avoid prototype pollution.
+* `data` (`Record<string, string>`): The filled out form fields of the marker, keyed by field ID. A null-prototype object should always be used for this to avoid prototype pollution.
 * `ele` (number or null): The elevation of this marker in metres (calculated by the server if not set)
 
 ## `Line`
@@ -60,7 +60,7 @@ Note that `Line` objects coming from the server don’t contain the `trackPoints
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
 * `stroke` (string): The stroke style of the line, an empty string for solid or `dashed` or `dotted`.
-* `data` (`Record<string, string>`): The filled out form fields of the line, keyed by field name. Null-prototype objects should always be used for this to avoid prototype pollution.
+* `data` (`Record<string, string>`): The filled out form fields of the line, keyed by field ID. Null-prototype objects should always be used for this to avoid prototype pollution.
 * `left`, `top`, `right`, `bottom` (number, only read): The bounding box of the line (set by the server)
 * `distance` (number, only read): The distance of the line in kilometers (set by the server)
 * `ascent`, `descent` (number or undefined, only read): The total ascent/descent of the line in metres (set by the server if enabled in route mode)
@@ -125,8 +125,8 @@ This is a variation of [`MapData`](#mapdata) with the following differences:
 * `colourFixed`, `sizeFixed`, `iconFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and cannot be changed for an individual object. Setting this to true will modify all the objects of this type and fix the value.
 * `showInLegend` (boolean): Whether this type should be shown in the map legend.
 * `fields` (Array): The form fields for this type. Each field has the following properties:
-	* `name` (string): The name of the field. This is at the same time the key in the `data` properties of markers and lines. The name must be unique, no two fields in the same type may have the same name. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
-	* `oldName` (string, only update): When renaming a field (using [`updateType()`](./methods.md#updatetype)), specify the former name here. Renaming a field will modify all the objects of this type to rename the field in their data.
+	* `id` (string): The unique immutable identifier of the field. This is also used as the key in the `data` properties of markers and lines. The FacilMap UI sets this to a UUIDv4 using <code>[crypto.randomUUID()](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID)</code>, it is recommended that you do the same.
+	* `name` (string): The name of the field. The name must be unique, no two fields in the same type may have the same name. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
 	* `controlColour`, `controlSize`, `controlIcon`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown or checkbox, whether the different options set a specific property on the object
 	* `showInLegend` (boolean): If this field is a dropdown or checkbox, whether items for its options should be shown in the legend. Only has an effect if the type itself is shown in the legend. If set to undefined, it is shown in the legend only if the field controls the colour, marker icon or shape, or line width or stroke.
@@ -135,6 +135,7 @@ This is a variation of [`MapData`](#mapdata) with the following differences:
 		* `value` (string): The value of this option.
 		* `oldValue` (string, only update): When renaming a dropdown option (using [`updateType()`](./methods.md#updatettype)), specify the former value here. Renaming a dropdown option will modify the objects of this type to rename the value.
 		* `colour`, `size`, `shape`, `icon`, `width`, `stroke` (string/number): The property value if this field controls that property
+* `formerFieldIds` (`Record<string, string>`): Maps the names of deleted fields to their IDs. The FacilMap UI uses this in a way that when you delete a field, it persists its name and ID in this property. When you create a field whose name is present in this property, it recycles its old ID. This way people can recover the field data if they accidentally deleted the field. It is recommended that you use the property in the same way when adding/deleting fields.
 
 ## HistoryEntry
 

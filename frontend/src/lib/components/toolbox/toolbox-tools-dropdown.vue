@@ -10,7 +10,7 @@
 	import UserPreferencesDialog from "../user-preferences-dialog/user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
 	import { Writable } from "facilmap-types";
-import { canEditMapData } from "facilmap-utils";
+	import { canEditMapData } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const clientSub = getClientSub(context);

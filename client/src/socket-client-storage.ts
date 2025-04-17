@@ -5,8 +5,9 @@ import {
 } from "facilmap-types";
 import { SocketClient, type ClientEvents } from "./socket-client";
 import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
-import { mergeTrackPoints } from "./utils";
+import { isInBbox, mergeTrackPoints } from "./utils";
 import type { RouteWithTrackPoints } from "./socket-client-route-subscription";
+import { SubscriptionStateType } from "./socket-client-subscription";
 
 export interface MapStorage {
 	mapData: DeepReadonly<MapDataWithWritable> | undefined;
@@ -27,8 +28,8 @@ export class SocketClientStorage {
 	constructor(client: SocketClient, options?: { reactiveObjectProvider?: ReactiveObjectProvider }) {
 		this.reactiveObjectProvider = options?.reactiveObjectProvider ?? new DefaultReactiveObjectProvider();
 		this.client = client;
-		this.maps = this.reactiveObjectProvider.makeReactive({});
-		this.routes = this.reactiveObjectProvider.makeReactive({});
+		this.maps = this.reactiveObjectProvider.makeReactive(Object.create(null));
+		this.routes = this.reactiveObjectProvider.makeReactive(Object.create(null));
 
 		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
 			this.client.on(i as any, handler as any);
@@ -55,7 +56,15 @@ export class SocketClientStorage {
 
 			marker: (mapSlug, data) => {
 				if (this.maps[mapSlug]) {
-					this.storeMarker(mapSlug, data);
+					if (!this.client.bbox || isInBbox(data, this.client.bbox)) {
+						this.storeMarker(mapSlug, data);
+					} else {
+						// The marker was moved out of the current bbox, clear it because we won’t receive updates for
+						// it anymore and don’t want to have an outdated object in the store. (If the marker stays
+						// in its new position, we will receive the newest version as soon as we pan there, but it might
+						// be moved again and we don’t hear about it.)
+						this.clearMarker(mapSlug, data.id);
+					}
 				}
 			},
 
@@ -145,27 +154,32 @@ export class SocketClientStorage {
 							});
 						}
 
-						// Gracefully re-aggregate objects in case of a reconnect: First receive objects and put them into
-						// the storage, and when all objects have arrived, delete the ones that are in the storage but were
-						// not received this time. This way we don’t need to clear the storage (causing them to temporarily
-						// disappear for the user on a reconnect), but still we catch deletions that happened while the
-						// connection was gone.
-						const getRecordedIds = recordReceivedIds(this.client, mapSlug);
-						args[1].result.then(() => {
-							const recordedIds = getRecordedIds();
-							for (const key of keys(this.maps[mapSlug])) {
-								if (key !== "mapData" && pick.includes(key)) {
-									for (const id of keys(this.maps[mapSlug][key])) {
-										if (!recordedIds[key].includes(Number(id))) {
-											this.reactiveObjectProvider.delete(this.maps[mapSlug][key], id);
+						if (
+							// Do not run when updating existing subscription
+							this.client.mapSubscriptions[mapSlug]?.state.type !== SubscriptionStateType.SUBSCRIBED
+						) {
+							// Gracefully re-aggregate objects in case of a reconnect: First receive objects and put them into
+							// the storage, and when all objects have arrived, delete the ones that are in the storage but were
+							// not received this time. This way we don’t need to clear the storage (causing them to temporarily
+							// disappear for the user on a reconnect), but still we catch deletions that happened while the
+							// connection was gone.
+							const getRecordedIds = recordReceivedIds(this.client, mapSlug);
+							args[1].result.then(() => {
+								const recordedIds = getRecordedIds();
+								for (const key of keys(this.maps[mapSlug])) {
+									if (key !== "mapData" && pick.includes(key as any)) {
+										for (const id of keys(this.maps[mapSlug][key])) {
+											if (!recordedIds[key].includes(Number(id))) {
+												this.reactiveObjectProvider.delete(this.maps[mapSlug][key], id);
+											}
 										}
 									}
 								}
-							}
-						}, () => {
-							// Remove listeners in case of error
-							getRecordedIds();
-						});
+							}, () => {
+								// Remove listeners in case of error
+								getRecordedIds();
+							});
+						}
 						break;
 					}
 
@@ -215,6 +229,22 @@ export class SocketClientStorage {
 								}
 							}).catch((err) => console.error(err));
 						}
+
+						if (this.client.bbox) {
+							for (const [mapSlug, mapStorage] of Object.entries(this.maps)) {
+								for (const marker of Object.values(mapStorage.markers)) {
+									if (!isInBbox(marker, this.client.bbox)) {
+										// The marker is outside the new bbox, clear it because we won’t receive updates for
+										// it anymore and don’t want to have an outdated object in the store. (If the marker stays
+										// in its position, we will receive the newest version as soon as we pan there again, but it
+										// might be moved and we don’t hear about it.)
+										this.clearMarker(mapSlug, marker.id);
+									}
+								}
+							}
+						}
+
+						break;
 				}
 			}
 		};
@@ -240,7 +270,7 @@ export class SocketClientStorage {
 		this.reactiveObjectProvider.delete(this.getMapStorage(mapSlug).markers, markerId);
 	}
 
-	storeLine(mapSlug: MapSlug, line: Line): void {
+	storeLine(mapSlug: MapSlug, line: DeepReadonly<Line>): void {
 		this.reactiveObjectProvider.set(this.getMapStorage(mapSlug).lines, line.id, {
 			...line,
 			trackPoints: this.maps[mapSlug].lines[line.id]?.trackPoints || { length: 0 }
@@ -282,11 +312,17 @@ export class SocketClientStorage {
 
 	storeHistoryEntry(mapSlug: MapSlug, historyEntry: HistoryEntry): void {
 		this.reactiveObjectProvider.set(this.getMapStorage(mapSlug).history, historyEntry.id, historyEntry);
-		// TODO: Limit to 50 entries
 	}
 
 	clearHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): void {
 		this.reactiveObjectProvider.delete(this.getMapStorage(mapSlug).history, historyEntryId);
+	}
+
+	clearHistory(mapSlug: MapSlug): void {
+		const mapStorage = this.getMapStorage(mapSlug);
+		for (const id of keys(mapStorage.history)) {
+			this.reactiveObjectProvider.delete(mapStorage.history, id);
+		}
 	}
 
 	storeRoute(routeKey: string, route: Route): void {

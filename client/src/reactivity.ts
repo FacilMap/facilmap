@@ -67,7 +67,12 @@ export type ReactiveObjectUpdate<T = any, K extends keyof T = keyof T> = {
 export type ReactiveObjectSubscription = (update: ReactiveObjectUpdate) => void;
 
 export class DefaultReactiveObjectProvider implements ReactiveObjectProvider {
-	protected _subscriptions: Array<ReactiveObjectSubscription> = [];
+	protected _subscriptions: Array<ReactiveObjectSubscription>;
+
+	constructor() {
+		// Make subscriptions unreactive, otherwise indexOf doesn't work in unsubscribe()
+		this._subscriptions = this.makeUnreactive([]);
+	}
 
 	protected _notify(update: ReactiveObjectUpdate): void {
 		for (const subscription of this._subscriptions) {

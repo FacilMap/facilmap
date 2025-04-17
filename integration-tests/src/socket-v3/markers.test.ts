@@ -378,7 +378,7 @@ describe.for([
 		const storage2 = await openClientStorage(undefined, SocketVersion.V3);
 
 		await createTemporaryMap(storage1, {}, async (createMapData, mapData) => {
-			await createTemporaryMap(storage2, {}, async (createMapData2, mapData2, subscription2) => {
+			await createTemporaryMap(storage2, {}, async (createMapData2, mapData2) => {
 				const markerType1 = Object.values(storage1.maps[mapData.adminId].types).find((t) => t.type === "marker")!;
 				const markerType2 = Object.values(storage2.maps[mapData2.adminId].types).find((t) => t.type === "marker")!;
 

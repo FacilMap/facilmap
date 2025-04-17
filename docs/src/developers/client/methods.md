@@ -169,7 +169,7 @@ Reverting a history entry on a subscribed map will emit a socket event to create
 Reverting a history entry has the following effect:
 * `create` action: The object will be deleted
 * `update` action: The version before the entry will be restored
-* `delete` action: The last version of the object before the entry will be recreated as a new object. The new object will have a different ID than it previously had. All the history entries related to the object will be updated to contain the new ID. This means that if the map is subscribed, various `historyEntry` events may be emitted to update the historic entries.
+* `delete` action: The last version of the object before the entry will be recreated as a new object. The new object will have the same ID that it used to have.
 
 ## `getMapMarkers()`
 
@@ -589,6 +589,8 @@ The subscription respects the bbox set by <code>[setBbox()](#setbbox)</code>. If
 If you update an active map subscription, only newly subscribed object types are emitted as events as part of the update operation. For example, subscribing to a map using `const mapSubscription = await client.subscribeToMap("mymap", { pick: ["mapData"] })` will trigger a `mapData` event before the promise is resolved. Calling `await mapSubscription.updateSubscription({ pick: ["mapData", "types"] })` will trigger multiple `type` events (but no `mapData` event, as the map data was already sent the first time) before its promise is resolved. In addition, `mapData` events are emitted whenever the map data is changed while the subscription is active (whether before or after the `updateSubscription()` call).
 
 Note that when the socket connection is interrupted, the server will forget about the subscription. The Client will automatically reestablish the subscription on reconnection, but when using the Socket API directly, you will have to do it manually (see [connection problems](./README.md#deal-with-connection-problems)).
+
+Trying to subscribe to a map that does not exist will throw an error that has a `status: 404` property. In this case (and _only_ in this case) the server will annul the subscription, meaning that `unsubscribeFromMap()` would throw an error, but you can call `createMapAndSubscribe()` to create the map.
 
 ## `createMapAndSubscribe()`
 

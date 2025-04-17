@@ -28,6 +28,7 @@ export interface TypeModel extends Model<InferAttributes<TypeModel>, InferCreati
 	modeFixed: boolean;
 	showInLegend: boolean;
 	fields: Field[];
+	formerFieldIds: Record<string, string>;
 	toJSON: () => Type;
 };
 
@@ -76,6 +77,18 @@ export default class DatabaseTypes {
 				set: function(this: TypeModel, v: Field[]) {
 					return this.setDataValue("fields", JSON.stringify(v) as any);
 				}
+			},
+
+			formerFieldIds: {
+				type: DataTypes.TEXT,
+				allowNull: false,
+				get: function(this: TypeModel) {
+					const formerFieldIds = this.getDataValue("formerFieldIds") as any as string; // https://github.com/sequelize/sequelize/issues/11558
+					return formerFieldIds ? JSON.parse(formerFieldIds) : {};
+				},
+				set: function(this: TypeModel, v: Record<string, string>) {
+					return this.setDataValue("formerFieldIds", JSON.stringify(v) as any);
+				}
 			}
 		}, {
 			sequelize: this._db._conn,
@@ -114,39 +127,30 @@ export default class DatabaseTypes {
 		return resolvedNewIdx;
 	}
 
-	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
+	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<Type> {
 		const idx = await this._freeTypeIdx(mapId, undefined, data.idx);
 
 		const createdType = await this._db.helpers._createMapObject<Type>("Type", mapId, {
 			...data,
-			idx
+			idx,
+			...options?.id ? { id: options.id } : {}
 		});
 		this._db.emit("type", createdType.mapId, createdType);
 		return createdType;
 	}
 
 	async updateType(mapId: ID, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Type> {
-		const rename: Record<string, { name?: string, values?: Record<string, string> }> = {};
+		const rename: Record<string, Record<string, string>> = {};
 		for(const field of (data.fields || [])) {
-			if(field.oldName && field.oldName != field.name)
-				rename[field.oldName] = { name: field.name };
-
-			if(field.options) {
-				for(const option of field.options) {
-					if(option.oldValue && option.oldValue != option.value) {
-						if(!rename[field.oldName || field.name])
-							rename[field.oldName || field.name] = { };
-						if(!rename[field.oldName || field.name].values)
-							rename[field.oldName || field.name].values = { };
-
-						rename[field.oldName || field.name].values![option.oldValue] = option.value;
-					}
-
-					delete option.oldValue;
+			for(const option of field.options ?? []) {
+				if(option.oldValue && option.oldValue != option.value) {
+					if(!rename[field.id])
+						rename[field.id] = { };
+					rename[field.id][option.oldValue] = option.value;
 				}
-			}
 
-			delete field.oldName;
+				delete option.oldValue;
+			}
 		}
 
 		if (data.idx != null) {
@@ -157,7 +161,7 @@ export default class DatabaseTypes {
 		this._db.emit("type", result.mapId, result);
 
 		if(Object.keys(rename).length > 0)
-			await this._db.helpers.renameObjectDataField(mapId, result.id, rename, result.type == "line");
+			await this._db.helpers.renameObjectDataValue(mapId, result.id, rename, result.type == "line");
 
 		await this.recalculateObjectStylesForType(result.mapId, typeId, result.type == "line");
 

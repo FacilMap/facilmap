@@ -78,13 +78,15 @@
 			mergeObject<MapDataWithWritable | MapData<CRU.CREATE>>(oldMapData, newMapData, mapData.value);
 	}, { deep: true });
 
+	const hasFavourite = computed(() => storage.favourites.some((f) => f.mapSlug === mapData.value.adminId));
+
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-map-settings-error`);
 
 		try {
 			if (props.isCreate) {
 				await clientContext.value.createAndOpenMap(mapData.value as MapData<CRU.CREATE>);
-				if (addFavourite.value) {
+				if (addFavourite.value && !hasFavourite.value) {
 					storage.favourites.push({ mapSlug: clientSub.value!.mapSlug, name: clientSub.value!.data.mapData.name, mapId: clientSub.value!.data.mapData.id });
 				}
 			} else {
@@ -299,7 +301,7 @@
 			</div>
 		</template>
 
-		<template #footer-left v-if="isCreate">
+		<template #footer-left v-if="isCreate && !hasFavourite">
 			<div class="form-check">
 				<input
 					:id="`${id}-add-favourite-input`"

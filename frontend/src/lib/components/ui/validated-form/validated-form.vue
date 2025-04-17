@@ -93,6 +93,14 @@
 			void data.submit();
 		});
 
+		useDomEventListener(formRef, "keydown", (e) => {
+			// Allow pressing Ctrl+Enter to submit from within text areas, select boxes etc.
+			if ((e.ctrlKey || e.metaKey) && e.code === "Enter") {
+				e.preventDefault();
+				void data.submit();
+			}
+		});
+
 		allForms.set(formRef, data);
 
 		onScopeDispose(() => {

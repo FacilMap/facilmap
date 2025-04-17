@@ -91,7 +91,7 @@ type ApiV3Response = {
 	//getAllMapObjects: generic, manual declaration in ApiV3 type
 	findOnMap: FindOnMapResult[];
 
-	getHistory: HistoryEntry[];
+	getHistory: PagedResults<HistoryEntry>;
 	revertHistoryEntry: void;
 
 	getMapMarkers: StreamedResults<Marker>;
