@@ -9,6 +9,7 @@ import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
 import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
+import { mapAsyncIterable } from "../utils/streams.js";
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
@@ -198,7 +199,7 @@ export default class DatabaseLines {
 		return this._db.helpers._getMapObject<Line>("Line", mapId, lineId, options);
 	}
 
-	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] } }): Promise<Line> {
+	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> } }): Promise<Line> {
 		const type = await this._db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
@@ -206,7 +207,7 @@ export default class DatabaseLines {
 
 		const resolvedData = resolveCreateLine(data, type);
 
-		const { trackPoints, ...routeInfo } = await calculateRouteForLine(resolvedData, options?.trackPointsFromRoute);
+		const { trackPoints, ...routeInfo } = options?.trackPointsFromRoute ?? await calculateRouteForLine(resolvedData);
 
 		const createdLine = await this._db.helpers._createMapObject<Line>("Line", mapId, {
 			...omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */),
@@ -221,22 +222,23 @@ export default class DatabaseLines {
 		return createdLine;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }; notFound404?: boolean }): Promise<Line> {
+	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }; notFound404?: boolean }): Promise<Line> {
 		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
 		const newType = await this._db.types.getType(mapId, data.typeId ?? originalLine.typeId);
 		return await this._updateLine(originalLine, data, newType, options);
 	}
 
-	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }; notFound404?: boolean }): Promise<Line> {
+	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: { noHistory?: boolean; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }; notFound404?: boolean }): Promise<Line> {
 		if (newType.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: newType.type }));
 		}
 
 		const update = resolveUpdateLine(originalLine, data, newType);
 
-		let routeInfo: (RouteInfo & { trackPoints: TrackPoint[] }) | undefined;
-		if((update.mode == "track" && update.trackPoints) || (update.routePoints && !isEqual(update.routePoints, originalLine.routePoints)) || (update.mode != null && update.mode != originalLine.mode))
-			routeInfo = await calculateRouteForLine({ ...originalLine, ...update }, options?.trackPointsFromRoute);
+		let routeInfo: (RouteInfo & { trackPoints: TrackPoint[] | AsyncIterable<TrackPoint> }) | undefined;
+		if ((update.mode == "track" && update.trackPoints) || (update.routePoints && !isEqual(update.routePoints, originalLine.routePoints)) || (update.mode != null && update.mode != originalLine.mode)) {
+			routeInfo = options?.trackPointsFromRoute ?? await calculateRouteForLine({ ...originalLine, ...update });
+		}
 
 		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
 		delete update.trackPoints; // They came if mode is track
@@ -246,8 +248,9 @@ export default class DatabaseLines {
 
 			this._db.emit("line", originalLine.mapId, newLine);
 
-			if(routeInfo)
+			if (routeInfo) {
 				await this._setLinePoints(originalLine.mapId, originalLine.id, routeInfo.trackPoints);
+			}
 
 			return newLine;
 		} else {
@@ -255,18 +258,31 @@ export default class DatabaseLines {
 		}
 	}
 
-	async _setLinePoints(mapId: ID, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
+	async _setLinePoints(mapId: ID, lineId: ID, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
 		await this.LinePointModel.destroy({ where: { lineId: lineId } });
 
-		const create = [ ];
-		for(let i=0; i<trackPoints.length; i++) {
-			create.push({ ...trackPoints[i], lineId: lineId });
+		let first = true;
+		await this._db.helpers._bulkCreateInBatches<TrackPoint>(
+			this.LinePointModel,
+			mapAsyncIterable(trackPoints, (t) => ({ ...t, lineId })),
+			(batch) => {
+				if (!_noEvent) {
+					this._db.emit("linePoints", mapId, lineId, batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), first);
+				}
+				first = false;
+			}
+		);
+
+		if(first && !_noEvent) {
+			this._db.emit("linePoints", mapId, lineId, [], true);
 		}
 
-		const points = await this._db.helpers._bulkCreateInBatches<TrackPoint>(this.LinePointModel, create);
+	}
 
-		if(!_noEvent)
-			this._db.emit("linePoints", mapId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
+	async _setLinePointsFromRoute(mapId: ID, lineId: ID, routeId: string, _noEvent?: boolean): Promise<void> {
+		await this.LinePointModel.destroy({ where: { lineId: lineId } });
+
+
 	}
 
 	async deleteLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
@@ -304,9 +320,9 @@ export default class DatabaseLines {
 		}
 	}
 
-	getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
-		return findAllStreamed(this.LinePointModel, {
-			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
+	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
+		for await (const linePoint of findAllStreamed(this.LinePointModel, {
+			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]],
 			where: {
 				lineId,
@@ -317,7 +333,9 @@ export default class DatabaseLines {
 					]
 				} : {}
 			}
-		});
+		})) {
+			yield omit(linePoint.toJSON(), ["id", "pos"]) as TrackPoint;
+		}
 	}
 
 }

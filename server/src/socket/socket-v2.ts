@@ -292,7 +292,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 				const { id, ...data } = marker;
 
-				return currentMarkerToLegacyV2(await socketHandlersV3.updateMarker(this.mapSlug, id, legacyV2MarkerToCurrent(data)), this.readId);
+				const type = this.types[data.typeId ?? (await socketHandlersV3.getMarker(this.mapSlug, id)).typeId];
+				return currentMarkerToLegacyV2(await socketHandlersV3.updateMarker(this.mapSlug, id, legacyV2MarkerToCurrent(data, type)), type, this.readId);
 			},
 
 			deleteMarker: async (data) => {
@@ -300,7 +301,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				const marker = currentMarkerToLegacyV2(await socketHandlersV3.getMarker(this.mapSlug, data.id), this.readId);
+				const markerV3 = await socketHandlersV3.getMarker(this.mapSlug, data.id);
+				const marker = currentMarkerToLegacyV2(markerV3, this.types[markerV3.typeId], this.readId);
 				await socketHandlersV3.deleteMarker(this.mapSlug, data.id);
 				return marker;
 			},
@@ -319,7 +321,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				return currentLineToLegacyV2(await socketHandlersV3.createLine(this.mapSlug, line), this.readId)
+				const result = await socketHandlersV3.createLine(this.mapSlug, line);
+				return currentLineToLegacyV2(result, this.types[result.typeId], this.readId)
 			},
 
 			editLine: async (line) => {
@@ -328,7 +331,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				}
 
 				const { id, ...data } = line;
-				return currentLineToLegacyV2(await socketHandlersV3.updateLine(this.mapSlug, id, data), this.readId);
+				const result = await socketHandlersV3.updateLine(this.mapSlug, id, data);
+				return currentLineToLegacyV2(result, this.types[result.typeId], this.readId);
 			},
 
 			deleteLine: async (data) => {
@@ -336,7 +340,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				const line = currentLineToLegacyV2(await socketHandlersV3.getLine(this.mapSlug, data.id), this.readId);
+				const lineV3 = await socketHandlersV3.getLine(this.mapSlug, data.id);
+				const line = currentLineToLegacyV2(lineV3, this.types[lineV3.typeId], this.readId);
 				await socketHandlersV3.deleteLine(this.mapSlug, data.id);
 				return line;
 			},
@@ -460,7 +465,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				await socketHandlersV3.subscribeToMap(this.mapSlug, { history: true });
 
 				return {
-					history: (await socketHandlersV3.getHistory(this.mapSlug)).map((h) => currentHistoryEntryToLegacyV2(h, this.readId!))
+					history: (await socketHandlersV3.getHistory(this.mapSlug)).results.map((h) => currentHistoryEntryToLegacyV2(h, this.readId!, (typeId) => this.types[typeId]))
 				};
 			},
 
@@ -496,7 +501,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				}
 
 				return {
-					history: (await socketHandlersV3.getHistory(this.mapSlug)).map((h) => currentHistoryEntryToLegacyV2(h, this.readId!))
+					history: (await socketHandlersV3.getHistory(this.mapSlug)).results.map((h) => currentHistoryEntryToLegacyV2(h, this.readId!, (typeId) => this.types[typeId]))
 				};
 			},
 

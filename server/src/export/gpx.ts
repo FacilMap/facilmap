@@ -1,4 +1,4 @@
-import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable } from "../utils/streams.js";
+import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import Database from "../database/database.js";
 import type { Field, Line, Marker, TrackPoint, Type, LineWithTrackPoints, ID } from "facilmap-types";
 import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
@@ -102,7 +102,7 @@ function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoint
 			`\t</trkseg>\n` +
 			`</trk>`
 		);
-	})());
+	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
 export function exportGpx(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<string> {
@@ -146,7 +146,7 @@ export function exportGpx(database: Database, mapId: ID, useTracks: boolean, fil
 		}
 
 		yield gpxFooter;
-	})());
+	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
 export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
@@ -181,7 +181,7 @@ export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, 
 				}
 
 				yield gpxFooter;
-			})())
+			})()).pipeThrough(new StringAggregationTransformStream())
 		};
 
 		yield {
@@ -253,7 +253,7 @@ export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined
 		}
 
 		yield gpxFooter;
-	})());
+	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
 export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined): ReadableStream<string> {
@@ -268,5 +268,5 @@ export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined
 		}
 
 		yield gpxFooter;
-	})());
+	})()).pipeThrough(new StringAggregationTransformStream());
 }

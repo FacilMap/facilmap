@@ -19,7 +19,7 @@ export interface DatabaseEventsInterface {
 	historyEntry: [mapId: ID, newEntry: HistoryEntry];
 
 	line: [mapId: ID, newLine: Line];
-	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[]];
+	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[], reset: boolean];
 	deleteLine: [mapId: ID, data: ObjectWithId];
 
 	marker: [mapId: ID, newMarker: Marker, oldMarker?: Marker];

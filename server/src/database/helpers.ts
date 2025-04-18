@@ -403,11 +403,11 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Iterable<Record<string, unknown>> | AsyncIterable<Record<string, unknown>>): Promise<Array<T>> {
-		const result: Array<any> = [];
+	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Iterable<Record<string, unknown>> | AsyncIterable<Record<string, unknown>>, onBatch?: (batch: T[]) => void): Promise<void> {
 		let slice: Array<Record<string, unknown>> = [];
 		const createSlice = async () => {
-			result.push(...(await model.bulkCreate(slice)).map((it) => it.toJSON()));
+			const result = (await model.bulkCreate(slice)).map((it) => it.toJSON());
+			onBatch?.(result);
 			slice = [];
 		};
 
@@ -420,7 +420,6 @@ export default class DatabaseHelpers {
 		if (slice.length > 0) {
 			await createSlice();
 		}
-		return result;
 	}
 
 }

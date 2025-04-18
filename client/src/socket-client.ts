@@ -212,7 +212,8 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 				}),
 				handleChunks: (chunks) => {
 					for (const chunk of chunks) {
-						writer.write(chunk).catch(() => undefined);
+						// Uint8Arrays sent over Socket.IO arrive as ArrayBuffers
+						writer.write(chunk instanceof ArrayBuffer ? new Uint8Array(chunk) : chunk).catch(() => undefined);
 					}
 				},
 				handleDone: () => {

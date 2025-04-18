@@ -1,5 +1,5 @@
 import { generateRandomId } from "../utils/utils.js";
-import { iterableToArray, mapAsyncIterable, streamToIterable } from "../utils/streams.js";
+import { mapAsyncIterable, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit, pull } from "lodash-es";
@@ -74,7 +74,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					chunks.push(chunk);
 					if (!tickScheduled) {
 						tickScheduled = true;
-						tickPromise = Promise.all([tickPromise, sleep(0)]).then(async () => {
+						tickPromise = Promise.all([tickPromise, sleep(20)]).then(async () => {
 							if (this.streamAbort[streamId].signal.aborted) {
 								return;
 							}
@@ -253,7 +253,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (data.mode != "track") {
 					for (const route of Object.values(this.routeSubscriptionDetails)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
+							fromRoute = { ...route, trackPoints: this.database.routes.getAllRoutePoints(route.routeId) };
 							break;
 						}
 					}
@@ -267,7 +267,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (data.mode != "track") {
 					for (const route of Object.values(this.routeSubscriptionDetails)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: await iterableToArray(this.database.routes.getAllRoutePoints(route.routeId)) };
+							fromRoute = { ...route, trackPoints: this.database.routes.getAllRoutePoints(route.routeId) };
 							break;
 						}
 					}
@@ -634,7 +634,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				},
 
-				linePoints: (mapId, lineId, trackPoints) => {
+				linePoints: (mapId, lineId, trackPoints, reset) => {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("linePoints")) {
@@ -642,7 +642,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 									lineId,
 									// Emit track points even if none are in the bbox so that client resets cached track points
 									trackPoints: prepareForBoundingBox(trackPoints, this.bbox),
-									reset: true
+									reset
 								});
 							}
 						}

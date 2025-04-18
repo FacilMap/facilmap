@@ -199,12 +199,12 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
+	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.lines.createLine(mapData.id, data, { trackPointsFromRoute });
 	}
 
-	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: TrackPoint[] }): Promise<Line> {
+	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.lines.updateLine(mapData.id, lineId, data, { notFound404: true, trackPointsFromRoute });
 	}

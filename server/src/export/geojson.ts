@@ -1,4 +1,4 @@
-import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIterables, flatMapAsyncIterable } from "../utils/streams.js";
+import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIterables, flatMapAsyncIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import { compileExpression } from "facilmap-utils";
 import { type Marker, type MarkerFeature, type TrackPoint, type Line, type InterfaceToType, type LineFeature, type ReplaceProperties, type ID, dataByFieldIdToDataByName, type Type } from "facilmap-types";
 import Database from "../database/database.js";
@@ -46,7 +46,7 @@ export function exportGeoJson(database: Database, mapId: ID, filter?: string): R
 					}
 				})
 			))
-		}).pipeThrough(new JsonStringifier());
+		}).pipeThrough(new JsonStringifier()).pipeThrough(new StringAggregationTransformStream());
 	})());
 }
 
@@ -93,5 +93,5 @@ function lineToGeoJson<L extends Partial<Line>>(line: L, type: Type | undefined,
 }
 
 export function exportLineToGeoJson(line: Partial<Line>, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
-	return serializeJsonValue(lineToGeoJson(line, type, trackPoints)).pipeThrough(new JsonStringifier());
+	return serializeJsonValue(lineToGeoJson(line, type, trackPoints)).pipeThrough(new JsonStringifier()).pipeThrough(new StringAggregationTransformStream());
 }

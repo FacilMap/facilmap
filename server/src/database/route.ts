@@ -211,11 +211,13 @@ export default class DatabaseRoutes {
 		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
 	}
 
-	getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
-		return findAllStreamed(this.RoutePointModel, {
+	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
+		for await (const routePoint of findAllStreamed(this.RoutePointModel, {
 			where: { routeId },
-			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
-		});
+			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "idx", "ele", "zoom"]
+		})) {
+			yield omit(routePoint.toJSON(), ["id", "pos"]) as TrackPoint;
+		}
 	}
 
 }

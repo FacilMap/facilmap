@@ -767,7 +767,6 @@
 
 					<ExportDropdown
 						:getExport="getExport"
-						:formats="['gpx-trk', 'gpx-rte']"
 						size="sm"
 					></ExportDropdown>
 				</div>

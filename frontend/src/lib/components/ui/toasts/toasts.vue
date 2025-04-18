@@ -70,7 +70,7 @@
 		const result: ToastContext = {
 			showErrorToast: async (id, title, err, options) => {
 				if (err.stack)
-					console.error(err.stack);
+					console.error(err);
 
 				await result.showToast(id, title, err.message || err, {
 					variant: "danger",

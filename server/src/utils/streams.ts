@@ -22,15 +22,15 @@ export async function* iterableToAsync<T>(iterable: Iterable<T>): AsyncIterable<
 	}
 }
 
-export function mapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O | Promise<O>)): AsyncIterable<O> {
+export function mapAsyncIterable<T, O>(iterable: Iterable<T> | AsyncIterable<T>, mapper: (it: T) => (O | Promise<O>)): AsyncIterable<O> {
 	return flatMapAsyncIterable(iterable, async (it) => [await mapper(it)]);
 }
 
-export function filterAsyncIterable<T>(iterable: AsyncIterable<T>, filter: (it: T) => (boolean | Promise<boolean>)): AsyncIterable<T> {
+export function filterAsyncIterable<T>(iterable: Iterable<T> | AsyncIterable<T>, filter: (it: T) => (boolean | Promise<boolean>)): AsyncIterable<T> {
 	return flatMapAsyncIterable(iterable, async (it) => (await filter(it)) ? [it] : []);
 }
 
-export async function* flatMapAsyncIterable<T, O>(iterable: AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
+export async function* flatMapAsyncIterable<T, O>(iterable: Iterable<T> | AsyncIterable<T>, mapper: (it: T) => (O[] | Promise<O[]>)): AsyncIterable<O> {
 	for await (const it of iterable) {
 		for (const o of await mapper(it)) {
 			yield o;
@@ -335,4 +335,54 @@ export function transformToWeb<T>(stream: Duplex): TransformStream<T> {
 
 export function transformFromWeb(stream: TransformStream): Duplex {
 	return Transform.fromWeb(stream as any);
+}
+
+/**
+ * A transform stream that aggregates all chunks that arrive within a tick and emits them as one concatenated chunk.
+ */
+class AggregationTransformStream<T, R> extends TransformStream<T, R> {
+	constructor(
+		concat: (chunks: T[]) => R,
+		writableStrategy?: QueuingStrategy<T>,
+		readableStrategy?: QueuingStrategy<R>
+	) {
+		let chunks: T[] = [];
+		let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+
+		const flush = (controller: TransformStreamDefaultController<R>) => {
+			controller.enqueue(concat(chunks));
+			chunks = [];
+			timeout = undefined;
+		};
+
+		super({
+			transform(chunk, controller) {
+				chunks.push(chunk);
+				if (!timeout) {
+					timeout = setTimeout(() => {
+						flush(controller);
+					}, 0);
+				}
+			},
+
+			flush(controller) {
+				if (timeout) {
+					clearTimeout(timeout);
+				}
+				flush(controller);
+			}
+		}, writableStrategy, readableStrategy);
+	}
+}
+
+/**
+ * A transform stream that aggregates all string chunks that arrive within a tick and emits them as one concatenated string chunk.
+ */
+export class StringAggregationTransformStream extends AggregationTransformStream<string, string> {
+	constructor(
+		writableStrategy?: QueuingStrategy<string>,
+		readableStrategy?: QueuingStrategy<string>
+	) {
+		super((chunks) => chunks.join(""), writableStrategy, readableStrategy);
+	}
 }

@@ -2,7 +2,7 @@ import type { ID } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
 import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
-import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable } from "../utils/streams.js";
+import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import { getTabularData } from "./tabular.js";
 import { getI18n } from "../i18n.js";
 
@@ -88,7 +88,7 @@ export function createSingleTable(
 				yield after;
 			}
 		}
-	})());
+	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
 export function createTable(database: Database, mapId: ID, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {

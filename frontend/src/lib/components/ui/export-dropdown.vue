@@ -33,7 +33,7 @@
 		try {
 			const result = await props.getExport(format as F);
 			const content = concatArrayBuffers(await streamToArray(result.data));
-			saveAs(new Blob([content], { type: result.type }), `${result.filename}.gpx`);
+			saveAs(new Blob([content], { type: result.type }), result.filename);
 		} catch(err: any) {
 			toasts.showErrorToast(`fm${context.id}-export-dropdown-error`, () => i18n.t("export-dropdown.export-error"), err);
 		} finally {
