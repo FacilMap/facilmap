@@ -1,7 +1,7 @@
 import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
 import Database from "./database.js";
 import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
-import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
+import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./helpers.js";
 import { cloneDeep } from "lodash-es";
 import { getI18n } from "../i18n.js";
 
@@ -32,31 +32,14 @@ export default class DatabaseHistory {
 			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Map"), allowNull: false },
 			action: { type: DataTypes.ENUM("create", "update", "delete"), allowNull: false },
 			objectId: { type: DataTypes.INTEGER(), allowNull: true }, // Is null when type is map
-			objectBefore: {
-				type: DataTypes.TEXT,
-				allowNull: true,
-				get(this: HistoryModel) {
-					const obj = this.getDataValue("objectBefore");
-					return obj == null ? null : JSON.parse(obj as any);
-				},
-				set(this: HistoryModel, v) {
-					this.setDataValue("objectBefore", (v == null ? null : JSON.stringify(v)) as any);
-				}
-			},
-			objectAfter: {
-				type: DataTypes.TEXT,
-				allowNull: true,
-				get: function(this: HistoryModel) {
-					const obj = this.getDataValue("objectAfter");
-					return obj == null ? null : JSON.parse(obj as any);
-				},
-				set: function(this: HistoryModel, v) {
-					this.setDataValue("objectAfter", (v == null ? null : JSON.stringify(v)) as any);
-				}
-			}
+			objectBefore: getJsonType("objectBefore", { allowNull: true }),
+			objectAfter: getJsonType("objectAfter", { allowNull: true })
 		}, {
 			sequelize: this._db._conn,
 			modelName: "History",
+			indexes: [
+				{ fields: [ "type", "objectId" ] }
+			],
 			freezeTableName: true // Do not call it Histories
 		});
 	}

@@ -1,7 +1,7 @@
-import { colourValidator, idValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator } from "./base.js";
-import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead, type CRUValidator } from "./cru.js";
+import { colourValidator, idValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator, type ID } from "./base.js";
+import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead, type CRUValidator, exceptCreate } from "./cru.js";
 import * as z from "zod";
-import type { DeepReadonly } from "./utility.js";
+import { entries, type DeepReadonly } from "./utility.js";
 
 export const objectTypeValidator = z.enum(["marker", "line"]);
 export type ObjectType = z.infer<typeof objectTypeValidator>;
@@ -62,7 +62,7 @@ export const fieldOptionsValidator = refineRawFieldOptionsValidator({
 });
 
 export const fieldValidator = cruValidator({
-	id: z.string(),
+	id: exceptCreate(idValidator),
 	name: z.string().trim().min(1),
 	type: fieldTypeValidator,
 	default: z.string().optional(),
@@ -88,20 +88,25 @@ const noDuplicateFields = (fields: Array<Field<CRU>>, ctx: z.RefinementCtx) => {
 	const fieldIds: Record<string, number> = {};
 	const fieldNames: Record<string, number> = {};
 	for (const field of fields) {
-		fieldIds[field.id] = (fieldIds[field.id] ?? 0) + 1;
+		if ("id" in field) {
+			fieldIds[field.id] = (fieldIds[field.id] ?? 0) + 1;
+		}
 		fieldNames[field.name] = (fieldNames[field.name] ?? 0) + 1;
 	}
 
 	for (let i = 0; i < fields.length; i++) {
-		if (fieldIds[fields[i].id] > 1) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: "Field IDs must be unique.",
-				path: [i, "id"]
-			});
+		const field = fields[i];
+		if ("id" in field) {
+			if (fieldIds[field.id] > 1) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					message: "Field IDs must be unique.",
+					path: [i, "id"]
+				});
+			}
 		}
 
-		if (fieldNames[fields[i].name] > 1) {
+		if (fieldNames[field.name] > 1) {
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message: "Field names must be unique.",
@@ -132,7 +137,7 @@ export const fieldsValidator = refineRawFieldsValidator({
 	update: z.array(fieldValidator.update)
 });
 
-export const defaultFields = (): Field[] => [{ id: crypto.randomUUID(), name: "Description", type: "textarea" as const } ];
+export const defaultFields = (): Field<CRU.CREATE>[] => [{ name: "Description", type: "textarea" as const } ];
 
 /** The type validator without the defaultColour default value applied. */
 export const rawTypeValidator = cruValidator({
@@ -166,7 +171,7 @@ export const rawTypeValidator = cruValidator({
 	},
 
 	/** Field ID by name of deleted fields. Key: field name, value: field ID */
-	formerFieldIds: z.record(z.string()).default(() => ({}))
+	formerFieldIds: z.record(idValidator).default(() => ({}))
 });
 /** Applies the defaultColour default value to the given typeValidator */
 export function refineRawTypeValidator<
@@ -195,7 +200,7 @@ export type Type<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof typeValidat
  * Converts a string record that maps field names to field values to a record that maps field names to field
  * values (as in the data property of markers and lines).
  */
-export function dataByNameToDataByFieldId(data: Record<string, string>, type: DeepReadonly<Type>): Record<string, string> {
+export function dataByNameToDataByFieldId(data: Record<string, string>, type: DeepReadonly<Type>): Record<ID, string> {
 	const fieldIds = new Map([
 		...Object.entries(type.formerFieldIds),
 		...type.fields.map((f) => [f.name, f.id] as const)
@@ -209,12 +214,12 @@ export function dataByNameToDataByFieldId(data: Record<string, string>, type: De
  * Converts a string record that maps field IDs to field values (as in the data property of markers and lines) to
  * a record that maps field names to field values.
  */
-export function dataByFieldIdToDataByName(data: Record<string, string>, type: DeepReadonly<Type>): Record<string, string> {
+export function dataByFieldIdToDataByName(data: Record<ID, string>, type: DeepReadonly<Type>): Record<string, string> {
 	const fieldNames = new Map([
-		...Object.entries(type.formerFieldIds).map(([name, fieldId]) => [fieldId, name] as const),
-		...type.fields.map((f) => [f.id, f.name] as const)
+		...Object.entries(type.formerFieldIds).map(([name, fieldId]) => [`${fieldId}`, name] as const),
+		...type.fields.map((f) => [`${f.id}`, f.name] as const)
 	]);
-	return Object.assign(new Object(null), Object.fromEntries(Object.entries(data).map(([fieldId, value]) => (
+	return Object.assign(new Object(null), Object.fromEntries(entries(data).map(([fieldId, value]) => (
 		fieldNames.has(fieldId) ? [fieldNames.get(fieldId)!, value] : [fieldId, value]
 	))));
 }

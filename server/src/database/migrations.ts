@@ -4,10 +4,11 @@ import { cloneDeep, isEqual, omit } from "lodash-es";
 import Database from "./database.js";
 import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
-import { getElevationForPoint } from "facilmap-utils";
+import { forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
-import type { Line, MapId, Marker, Type } from "facilmap-types";
+import type { ID, Line, MapId, MapPermissions, Marker, Type } from "facilmap-types";
 import { streamToIterable } from "../utils/streams.js";
+import { createJwtSecret, createSalt, getTokenHash } from "../utils/crypt.js";
 
 export default class DatabaseMigrations {
 
@@ -25,7 +26,6 @@ export default class DatabaseMigrations {
 		await this._renameColMigrations();
 		await this._changeColMigrations();
 		await this._addColMigrations();
-		await this._dropdownKeyMigration();
 		await this._legendMigration();
 		await this._bboxMigration();
 		await this._spatialMigration();
@@ -38,6 +38,8 @@ export default class DatabaseMigrations {
 		await this._historyPadMigration();
 		await this._mapIdMigration();
 		await this._fieldIdMigration();
+		await this._dropdownKeyMigration(); // This is very old, but now it only works after migrating to field IDs
+		await this._mapLinkMigration();
 
 		(async () => {
 			await this._elevationMigration();
@@ -79,15 +81,6 @@ export default class DatabaseMigrations {
 		}
 
 
-		const markerDataAttrs = await queryInterface.describeTable('MarkerData');
-
-		// Rename MarkerData.name to MarkerData.fieldId. Values are migrated separately in fieldIdMigration.
-		if (markerDataAttrs.name) {
-			console.log("DB migration: Rename MarkerData.name to MarkerData.fieldId");
-			await queryInterface.renameColumn("MarkerData", "name", "fieldId");
-		}
-
-
 		const lineAttrs = await queryInterface.describeTable('Lines');
 
 		// Rename Line.points to Line.routePoints
@@ -106,15 +99,6 @@ export default class DatabaseMigrations {
 		if (lineAttrs.padId) {
 			console.log("DB migration: Rename Lines.padId to Lines.mapId");
 			await queryInterface.renameColumn("Lines", "padId", "mapId");
-		}
-
-
-		const lineDataAttrs = await queryInterface.describeTable('LineData');
-
-		// Rename LineData.name to LineData.fieldId. Values are migrated separately in fieldIdMigration.
-		if (lineDataAttrs.name) {
-			console.log("DB migration: Rename LineData.name to LineData.fieldId");
-			await queryInterface.renameColumn("LineData", "name", "fieldId");
 		}
 
 
@@ -411,7 +395,7 @@ export default class DatabaseMigrations {
 			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
 		];
 
-		for (const table of [ 'Map', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
+		for (const table of [ 'Map', 'MapLink', 'Marker', 'MarkerData', 'Type', 'View', 'Line', 'LineData', 'LinePoint' ]) {
 			const model = this._db._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			const rawAttributes = model.getAttributes();
@@ -443,11 +427,11 @@ export default class DatabaseMigrations {
 				for await (const object of objectStream) {
 					const newData = cloneDeep(object.data);
 					for(const dropdown of dropdowns) {
-						const newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.name])[0];
+						const newVal = (dropdown.options || []).filter((option: any) => option.key == newData[dropdown.id])[0];
 						if(newVal)
-							newData[dropdown.name] = newVal.value;
-						else if(newData[dropdown.name])
-							console.log(`DB migration: Warning: Dropdown key ${newData[dropdown.name]} for field ${dropdown.name} of type ${type.name} of map ${type.mapId} does not exist.`);
+							newData[dropdown.id] = newVal.value;
+						else if(newData[dropdown.id])
+							console.log(`DB migration: Warning: Dropdown key ${newData[dropdown.id]} for field ${dropdown.name} of type ${type.name} of map ${type.mapId} does not exist.`);
 					}
 
 					if(!isEqual(newData, object.data))
@@ -905,95 +889,186 @@ export default class DatabaseMigrations {
 	}
 
 
-	/** */
+	/** Change marker/line data key from field name to field ID */
 	async _fieldIdMigration(): Promise<void> {
-		if (await this._db.meta.getMeta("fieldIdMigrationCompleted") === "1") {
+		const queryInterface = this._db._conn.getQueryInterface();
+		const markerDataAttrs = await queryInterface.describeTable(this._db.markers.MarkerDataModel.getTableName());
+		const lineDataAttrs = await queryInterface.describeTable(this._db.lines.LineDataModel.getTableName());
+
+		if (!markerDataAttrs.name && !lineDataAttrs.name) {
 			return;
 		}
 
 		console.log("DB migration: Introduce field IDs");
 
-		const allTypes = await this._db.types.TypeModel.findAll({
-			attributes: ["id", "type", "fields"]
-		});
+		if (markerDataAttrs.name && lineDataAttrs.name) {
+			const nextFieldId: Record<ID, ID> = {};
 
-		for (let i = 0; i < allTypes.length; i++) {
-			if ((i + 1) % 100 === 0) {
-				console.log(`DB migration: Introduce field IDs (${i + 1} / ${allTypes.length})`);
+			const allTypes = await this._db.types.TypeModel.findAll({
+				attributes: ["id", "mapId", "type", "fields"]
+			});
+
+			for (let i = 0; i < allTypes.length; i++) {
+				if ((i + 1) % 500 === 0) {
+					console.log(`DB migration: Introduce field IDs (${i + 1} / ${allTypes.length})`);
+				}
+
+				const type = allTypes[i];
+				const fields = type.fields;
+				const fieldMap: Record<string, ID> = Object.create(null);
+				let fieldsChanged = false;
+				for (const field of fields) {
+					if (field.id) { // Field ID was already set in a previous migration attempt
+						nextFieldId[type.mapId] = nextFieldId[type.mapId] ? Math.max(nextFieldId[type.mapId], field.id) : field.id;
+					} else {
+						field.id = nextFieldId[type.mapId] ?? 1;
+						nextFieldId[type.mapId] = field.id + 1;
+						fieldsChanged = true;
+					}
+					fieldMap[field.name] = field.id;
+				}
+
+				if (fieldsChanged) {
+					await type.update({ fields });
+				}
+
+				for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Type", objectId: type.id } })) {
+					let entryChanged = false;
+					for (const field of [...(historyEntry.objectBefore as Type | undefined)?.fields ?? [], ...(historyEntry.objectAfter as Type | undefined)?.fields ?? []]) {
+						if (fieldMap[field.name]) {
+							if (field.id !== fieldMap[field.name]) {
+								field.id = fieldMap[field.name];
+								entryChanged = true;
+							}
+						} else {
+							if (field.id) {
+								nextFieldId[type.mapId] = nextFieldId[type.mapId] ? Math.max(nextFieldId[type.mapId], field.id) : field.id;
+							} else {
+								field.id = nextFieldId[type.mapId] ?? 1;
+								nextFieldId[type.mapId] = field.id + 1;
+								entryChanged = true;
+							}
+							fieldMap[field.name] = field.id;
+						}
+					}
+					if (entryChanged) {
+						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
+					}
+				}
+
+				if (type.type === "marker") {
+					const markerIds = (await this._db.markers.MarkerModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((m) => m.id);
+
+					for (const [name, id] of Object.entries(fieldMap)) {
+						await this._db.markers.MarkerDataModel.update({ fieldId: id }, { where: { markerId: { [Op.in]: markerIds }, ["name" as any]: name } });
+					}
+
+					for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Marker", objectId: { [Op.in]: markerIds } } })) {
+						if (historyEntry.objectBefore) {
+							historyEntry.objectBefore = { // Must overwrite whole objectBefore property, as it is stringified
+								...historyEntry.objectBefore,
+								data: Object.fromEntries(Object.entries((historyEntry.objectBefore as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
+							};
+						}
+						if (historyEntry.objectAfter) {
+							historyEntry.objectAfter = { // Must overwrite whole objectAfter property, as it is stringified
+								...historyEntry.objectAfter,
+								data: Object.fromEntries(Object.entries((historyEntry.objectAfter as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
+							};
+						}
+						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
+					}
+				} else if (type.type === "line") {
+					const lineIds = (await this._db.lines.LineModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((l) => l.id);
+
+					for (const [name, id] of Object.entries(fieldMap)) {
+						await this._db.lines.LineDataModel.update({ fieldId: id }, { where: { lineId: { [Op.in]: lineIds }, ["name" as any]: name } });
+					}
+
+					for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Line", objectId: { [Op.in]: lineIds } } })) {
+						if (historyEntry.objectBefore) {
+							(historyEntry.objectBefore as Line).data = Object.fromEntries(Object.entries((historyEntry.objectBefore as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
+						}
+						if (historyEntry.objectAfter) {
+							(historyEntry.objectAfter as Line).data = Object.fromEntries(Object.entries((historyEntry.objectAfter as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
+						}
+						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
+					}
+				}
 			}
 
-			const type = allTypes[i];
-			const fields = type.fields;
-			const fieldMap: Record<string, string> = Object.create(null);
-			let fieldsChanged = false;
-			for (const field of fields) {
-				if (!field.id) {
-					field.id = crypto.randomUUID();
-					fieldsChanged = true;
-				}
-				fieldMap[field.name] = field.id;
-			}
 
-			if (fieldsChanged) {
-				await type.update({ fields });
-			}
-
-			for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Type", objectId: type.id } })) {
-				let entryChanged = false;
-				for (const field of [...(historyEntry.objectBefore as Type | undefined)?.fields ?? [], ...(historyEntry.objectAfter as Type | undefined)?.fields ?? []]) {
-					if (!field.id) {
-						field.id = fieldMap[field.name] ?? (fieldMap[field.name] = crypto.randomUUID());
-						entryChanged = true;
-					}
-				}
-				if (entryChanged) {
-					await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
-				}
-			}
-
-			if (type.type === "marker") {
-				const markerIds = (await this._db.markers.MarkerModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((m) => m.id);
-
-				for (const [name, id] of Object.entries(fieldMap)) {
-					await this._db.markers.MarkerDataModel.update({ fieldId: id }, { where: { markerId: { [Op.in]: markerIds }, fieldId: name } });
-				}
-
-				for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Marker", objectId: { [Op.in]: markerIds } } })) {
-					if (historyEntry.objectBefore) {
-						historyEntry.objectBefore = { // Must overwrite whole objectBefore property, as it is stringified
-							...historyEntry.objectBefore,
-							data: Object.fromEntries(Object.entries((historyEntry.objectBefore as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
-						};
-					}
-					if (historyEntry.objectAfter) {
-						historyEntry.objectAfter = { // Must overwrite whole objectAfter property, as it is stringified
-							...historyEntry.objectAfter,
-							data: Object.fromEntries(Object.entries((historyEntry.objectAfter as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
-						};
-					}
-					await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
-				}
-			} else if (type.type === "line") {
-				const lineIds = (await this._db.lines.LineModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((l) => l.id);
-
-				for (const [name, id] of Object.entries(fieldMap)) {
-					await this._db.lines.LineDataModel.update({ fieldId: id }, { where: { lineId: { [Op.in]: lineIds }, fieldId: name } });
-				}
-
-				for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Line", objectId: { [Op.in]: lineIds } } })) {
-					if (historyEntry.objectBefore) {
-						(historyEntry.objectBefore as Line).data = Object.fromEntries(Object.entries((historyEntry.objectBefore as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
-					}
-					if (historyEntry.objectAfter) {
-						(historyEntry.objectAfter as Line).data = Object.fromEntries(Object.entries((historyEntry.objectAfter as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
-					}
-					await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
-				}
+			const allMaps = await this._db.maps.MapModel.findAll({ attributes: ["id"] });
+			for (const map of allMaps) {
+				await map.update({
+					nextFieldId: nextFieldId[map.id] ?? 1
+				});
 			}
 		}
 
-		await this._db.meta.setMeta("fieldIdMigrationCompleted", "1");
+		await queryInterface.removeColumn(this._db.markers.MarkerDataModel.getTableName(), "name");
+		await queryInterface.removeColumn(this._db.lines.LineDataModel.getTableName(), "name");
+
 		console.log("DB migration: Introduce field IDs finished");
+	}
+
+
+	async _mapLinkMigration(): Promise<void> {
+		const queryInterface = this._db._conn.getQueryInterface();
+		const attrs = await queryInterface.describeTable(this._db.maps.MapModel.getTableName());
+
+		if (!attrs["readId"] && !attrs["writeId"] && !attrs["adminId"]) {
+			return;
+		}
+
+		console.log("DB migration: Create map link table");
+
+		// If some ID columns are already missing, the previous migration attempt aborted while deleting columns. This means
+		// that the MapLinks table is already ready.
+		if (attrs["readId"] && attrs["writeId"] && attrs["adminId"]) {
+			const allMaps = await this._db.maps.MapModel.findAll({
+				attributes: ["id", "salt", "jwtSecret", "readId", "writeId", "adminId"]
+			});
+
+			for (const map of allMaps) {
+				if (!map.salt || !map.jwtSecret) {
+					await map.update({
+						...!map.salt ? {
+							salt: createSalt()
+						} : {},
+						...!map.jwtSecret ? {
+							jwtSecret: createJwtSecret()
+						} : {}
+					});
+				}
+			}
+
+			const existingMapLinks = new Set((await this._db.maps.MapLinkModel.findAll({ attributes: ["slug"] })).map((l) => l.slug));
+
+			await forEachAsync(allMaps, async (map, i) => {
+				if ((i + 1) % 100 === 0) {
+					console.log(`DB migration: Create map link table (${i + 1} / ${allMaps.length})`);
+				}
+
+				for (const [idProp, permissions] of [
+					["adminId", { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
+					["writeId", { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
+					["readId", { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
+				] as const) {
+					if (!existingMapLinks.has(map[idProp])) {
+						await this._db.maps.MapLinkModel.build({
+							mapId: map.id,
+							slug: map[idProp],
+							password: null,
+							tokenHash: await getTokenHash(map[idProp], map.salt, null),
+							permissions
+						}).save();
+					}
+				}
+			}, 8); // Default concurrency is 4, can be increased through UV_THREADPOOL_SIZE, see https://nodejs.org/dist/latest-v16.x/docs/api/cli.html#uv_threadpool_sizesize
+		}
+
+		console.log("DB migration: Create map link table finished");
 	}
 
 }

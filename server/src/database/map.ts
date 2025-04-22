@@ -1,10 +1,11 @@
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional } from "sequelize";
-import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput, type ID } from "facilmap-types";
+import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput, type ID, type MapPermissions } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType } from "./helpers.js";
+import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./helpers.js";
 import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
 import { getMapDataWithWritable, getWritable } from "facilmap-utils";
+import { createSalt, createJwtSecret } from "../utils/crypt.js";
 
 type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
 
@@ -14,14 +15,34 @@ export interface MapModel extends Model<InferAttributes<MapModel>, InferCreation
 	readId: MapSlug;
 	writeId: MapSlug;
 	adminId: MapSlug;
+	/**
+	 * The salt that is used for the map link password hashes. The same salt is used for all passwords within
+	 * the scope of a map and it never changes. This is because the validity of JWT tokens is determined by
+	 * the map slug and password, so if the map slug and/or password are changed, the tokens become invalid,
+	 * but if they are changed back, the tokens become valid again.
+	 */
+	salt: Buffer;
+	jwtSecret: Buffer;
 	searchEngines: boolean;
 	description: string;
 	clusterMarkers: boolean;
 	legend1: string;
 	legend2: string;
-	defaultViewId: ForeignKey<ViewModel["id"]> | null
+	defaultViewId: ForeignKey<ViewModel["id"]> | null;
+	/** The ID of the next field that will be created */
+	nextFieldId: ID;
 	toJSON: () => RawMapData;
 };
+
+export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, InferCreationAttributes<MapLinkModel>> {
+	id: CreationOptional<ID>;
+	mapId: ForeignKey<MapModel["id"]>;
+	slug: MapSlug;
+	password: Buffer | null;
+	/** Derived from slug and password, used in map tokens */
+	tokenHash: string;
+	permissions: MapPermissions | null;
+}
 
 function fixMapData(rawMapData: RawMapData): MapData {
 	return {
@@ -33,6 +54,7 @@ function fixMapData(rawMapData: RawMapData): MapData {
 export default class DatabaseMaps {
 
 	MapModel = createModel<MapModel>();
+	MapLinkModel = createModel<MapLinkModel>();
 
 	_db: Database;
 
@@ -45,19 +67,36 @@ export default class DatabaseMaps {
 			readId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
 			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
+			salt: { type: DataTypes.BLOB, allowNull: false },
+			jwtSecret: { type: DataTypes.BLOB, allowNull: false },
 			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 			description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" }
+			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
+			nextFieldId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false }
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Map"
+		});
+
+		this.MapLinkModel.init({
+			id: getDefaultIdType(),
+			slug: { type: DataTypes.TEXT, allowNull: false },
+			password: { type: DataTypes.BLOB, allowNull: true },
+			tokenHash: { type: DataTypes.TEXT, allowNull: false },
+			permissions: getJsonType("permissions", { allowNull: true })
+		}, {
+			sequelize: this._db._conn,
+			modelName: "MapLink"
 		});
 	}
 
 	afterInit(): void {
 		this.MapModel.belongsTo(this._db.views.ViewModel, { as: "defaultView", foreignKey: "defaultViewId", constraints: false });
+
+		this.MapLinkModel.belongsTo(this.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this.MapModel.hasMany(this.MapLinkModel, { foreignKey: "mapId" });
 	}
 
 	// =====================================================================================================================
@@ -99,7 +138,12 @@ export default class DatabaseMaps {
 				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id })), { status: 409 });
 		}));
 
-		const createdObj = await this.MapModel.create(data);
+		const createdObj = await this.MapModel.create({
+			...data,
+			salt: createSalt(),
+			jwtSecret: createJwtSecret(),
+			nextFieldId: 1
+		});
 
 		if (data.createDefaultTypes) {
 			await this._db.types.createDefaultTypes(createdObj.id);

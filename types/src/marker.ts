@@ -1,6 +1,7 @@
 import { colourValidator, idValidator, pointValidator, shapeValidator, sizeValidator, iconValidator } from "./base.js";
 import { CRU, type CRUType, cruValidator, onlyRead, optionalUpdate, mapValues, optionalCreate } from "./cru.js";
 import * as z from "zod";
+import { numberRecordValidator } from "./utility.js";
 
 export const markerValidator = cruValidator({
 	id: onlyRead(idValidator),
@@ -12,7 +13,7 @@ export const markerValidator = cruValidator({
 	shape: optionalCreate(shapeValidator), // defaults to type.defaultShape
 	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
 	size: optionalCreate(sizeValidator), // defaults to type.defaultSize
-	data: optionalCreate(z.record(z.string())),
+	data: optionalCreate(numberRecordValidator(z.string())),
 	ele: optionalCreate(z.number().or(z.null()))
 });
 export type Marker<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof markerValidator>;

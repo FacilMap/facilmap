@@ -1,5 +1,5 @@
-import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type ModelCtor, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic } from "sequelize";
-import type { Line, Marker, ID, Type, Bbox } from "facilmap-types";
+import { type AssociationOptions, Model, type ModelAttributeColumnOptions, type WhereOptions, DataTypes, type FindOptions, Op, Sequelize, type ModelStatic } from "sequelize";
+import { type Line, type Marker, type ID, type Type, type Bbox, keys } from "facilmap-types";
 import Database from "./database.js";
 import { cloneDeep, isEqual } from "lodash-es";
 import { iterableToAsync } from "../utils/streams";
@@ -85,15 +85,44 @@ export function getLonType(): ModelAttributeColumnOptions {
 	};
 }
 
+export function getJsonType<T>(key: string, options: {
+	allowNull: unknown extends T ? boolean : null extends T ? true : false;
+	get?: (val: T | null) => T,
+	set?: (val: T) => T,
+	validate?: Record<string, (val: T) => void>;
+}): ModelAttributeColumnOptions {
+	return {
+		type: DataTypes.TEXT,
+		allowNull: options.allowNull,
+		get: function(this: Model) {
+			// rawVal is marked as type T but is actually a string, see https://github.com/sequelize/sequelize/issues/11558.
+			// Here it does not matter, since we use Model<any>
+			const rawVal = this.getDataValue(key);
+			const val = rawVal == null || rawVal === "" ? null : JSON.parse(rawVal);
+			return options.get ? options.get(val) : val;
+		},
+		set: function(this: Model, v: any) {
+			const val = options.set ? options.set(v) : v;
+			return this.setDataValue(key, val == null ? val : JSON.stringify(val));
+		},
+		...options.validate ? {
+			validate: Object.fromEntries(Object.entries(options.validate).map(([k, validate]) => [k, (v: any) => {
+				const val = v == null ? v : JSON.parse(v);
+				validate(val);
+			}]))
+		} : {}
+	};
+}
+
 export interface DataModel {
 	id: ID;
-	fieldId: string;
+	fieldId: ID;
 	value: string;
 }
 
 export const dataDefinition = {
 	id: getDefaultIdType(),
-	fieldId: { type: DataTypes.TEXT, allowNull: false },
+	fieldId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 	value: { type: DataTypes.TEXT, allowNull: false }
 };
 
@@ -379,13 +408,13 @@ export default class DatabaseHelpers {
 		};
 	}
 
-	async renameObjectDataValue(mapId: ID, typeId: ID, rename: Record<string, Record<string, string>>, isLine: boolean): Promise<void> {
+	async renameObjectDataValue(mapId: ID, typeId: ID, rename: Record<ID, Record<string, string>>, isLine: boolean): Promise<void> {
 		const objectStream = (isLine ? this._db.lines.getMapLinesByType(mapId, typeId) : this._db.markers.getMapMarkersByType(mapId, typeId));
 
 		for await (const object of objectStream) {
 			const newData = cloneDeep(object.data);
 
-			for (const id of Object.keys(rename)) {
+			for (const id of keys(rename)) {
 				for (const oldValue of Object.keys(rename[id])) {
 					if (object.data[id] === oldValue) {
 						newData[id] = rename[id][oldValue];
@@ -403,7 +432,7 @@ export default class DatabaseHelpers {
 		}
 	}
 
-	async _bulkCreateInBatches<T>(model: ModelCtor<Model>, data: Iterable<Record<string, unknown>> | AsyncIterable<Record<string, unknown>>, onBatch?: (batch: T[]) => void): Promise<void> {
+	async _bulkCreateInBatches<T>(model: ModelStatic<Model>, data: Iterable<Record<string, unknown>> | AsyncIterable<Record<string, unknown>>, onBatch?: (batch: T[]) => void): Promise<void> {
 		let slice: Array<Record<string, unknown>> = [];
 		const createSlice = async () => {
 			const result = (await model.bulkCreate(slice)).map((it) => it.toJSON());

@@ -83,10 +83,12 @@ export function transformValidator<Output, Input1, Input2, Input3>(inputSchema: 
 	}).transform((val) => outputSchema.parse(transformer(val)));
 }
 
+export const numberStringValidator = z.string().refine((v): v is `${number}` => !isNaN(Number(v)), { message: "Must be numeric." });
+
 /**
- * Returns a validator representing a Record<number, any>, picking only number keys from an object. zod does not support these
+ * Returns a validator representing a Record<number, any>, accepting only number keys from an object. zod does not support these
  * out of the box, since a record key is always a string and thus cannot be validated with z.number().
  */
-export function numberRecordValidator<Value extends z.ZodTypeAny>(valueType: Value): z.ZodRecord<z.ZodType<number, any, number>, Value> {
-	return transformValidator(z.record(z.any()), (value) => Object.fromEntries(Object.entries(value).filter(([key]) => !isNaN(Number(key)))), z.record(valueType)) as any;
+export function numberRecordValidator<Value extends z.ZodTypeAny>(valueType: Value): z.ZodRecord<z.ZodType<number | `${number}`, any, number | string>, Value> {
+	return z.record(z.number().or(numberStringValidator), valueType);
 }

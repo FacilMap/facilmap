@@ -39,3 +39,7 @@ export async function fileExists(filename: string): Promise<boolean> {
 		}
 	}
 }
+
+export function encodeBase64Url(data: Buffer): string {
+	return data.toString("base64").replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_")
+}

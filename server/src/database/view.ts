@@ -1,7 +1,7 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
 import type { CRU, ID, Latitude, Longitude, View } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
+import { createModel, getDefaultIdType, getJsonType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
 import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
@@ -35,17 +35,7 @@ export default class DatabaseViews {
 			name : { type: DataTypes.TEXT, allowNull: false },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
 			baseLayer : { type: DataTypes.TEXT, allowNull: false },
-			layers : {
-				type: DataTypes.TEXT,
-				allowNull: false,
-				get: function(this: ViewModel) {
-					const layers = this.getDataValue("layers") as any as string; // https://github.com/sequelize/sequelize/issues/11558
-					return layers == null ? [] : JSON.parse(layers);
-				},
-				set: function(this: ViewModel, v) {
-					this.setDataValue("layers", JSON.stringify(v) as any);
-				}
-			},
+			layers : getJsonType("layers", { allowNull: false, get: (v) => v ?? [] }),
 			top : getLatType(),
 			bottom : getLatType(),
 			left : getLonType(),

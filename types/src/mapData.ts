@@ -11,32 +11,42 @@ export enum Writable {
 }
 export const writableValidator = z.nativeEnum(Writable);
 
+export const mapPermissionTypeValidator = z.boolean().or(z.enum(["own"]));
+export type MapPermissionType = z.infer<typeof mapPermissionTypeValidator>;
+
 export const mapPermissionsValidator = cruValidator({
-	edit: z.boolean(),
+	read: z.boolean().or(z.enum(["own"])),
+	update: z.boolean().or(z.enum(["own"])),
 	settings: z.boolean(),
 	admin: z.boolean(),
 	types: numberRecordValidator(z.object({
-		read: z.boolean(),
-		update: z.boolean(),
-		delete: z.boolean(),
-		fields: z.record(z.object({
-			read: z.boolean(),
-			update: z.boolean()
-		}))
-	}))
+		read: z.boolean().or(z.enum(["own"])),
+		update: z.boolean().or(z.enum(["own"])),
+		fields: numberRecordValidator(z.object({
+			read: z.boolean().or(z.enum(["own"])),
+			update: z.boolean().or(z.enum(["own"]))
+		})).optional()
+	})).optional()
 });
+export type MapPermissions<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapPermissionsValidator>;
 
 export const mapLinkValidator = cruValidator({
 	id: onlyRead(idValidator),
 	mapId: onlyRead(idValidator),
-	slug: mapSlugValidator,
+	slug: optionalUpdate(mapSlugValidator),
+	readSlug: onlyRead(mapSlugValidator),
 	password: {
 		read: z.boolean(),
 		create: z.literal(false).or(z.string()),
-		update: z.literal(false).or(z.string())
+		update: z.literal(false).or(z.string()).optional()
 	},
-	permissions: mapPermissionsValidator
+	permissions: {
+		read: mapPermissionsValidator.read,
+		create: mapPermissionsValidator.create,
+		update: mapPermissionsValidator.update.optional()
+	}
 });
+export type MapLink<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapLinkValidator>;
 
 export const mapDataValidator = cruValidator({
 	id: onlyRead(idValidator),

@@ -1,7 +1,7 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
 import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LinePoints } from "facilmap-types";
 import Database from "./database.js";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, findAllStreamed, getDefaultIdType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
+import { type BboxWithExcept, createModel, dataDefinition, type DataModel, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
 import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import type { MapModel } from "./map.js";
@@ -64,30 +64,22 @@ export default class DatabaseLines {
 
 		this.LineModel.init({
 			id: getDefaultIdType(),
-			routePoints : {
-				type: DataTypes.TEXT,
+			routePoints : getJsonType<Point[]>("routePoints", {
 				allowNull: false,
-				get: function(this: LineModel) {
-					const routePoints = this.getDataValue("routePoints") as any as string; // https://github.com/sequelize/sequelize/issues/11558
-					return routePoints != null ? JSON.parse(routePoints) : routePoints;
-				},
-				set: function(this: LineModel, v: Point[]) {
-					for(let i=0; i<v.length; i++) {
-						v[i].lat = Number(v[i].lat.toFixed(6));
-						v[i].lon = Number(v[i].lon.toFixed(6));
-					}
-					this.setDataValue("routePoints", JSON.stringify(v) as any);
-				},
+				set: (v) => v.map((p) => ({
+					...p,
+					lat: Number(p.lat.toFixed(6)),
+					lon: Number(p.lon.toFixed(6))
+				})),
 				validate: {
-					minTwo: function(val: string) {
-						const routePoints = JSON.parse(val);
+					minTwo: (routePoints) => {
 						if(!Array.isArray(routePoints))
 							throw new Error(getI18n().t("database.route-points-not-an-array-error"));
 						if(routePoints.length < 2)
 							throw new Error(getI18n().t("database.route-points-less-than-two-points-error"));
 					}
 				}
-			},
+			}),
 			mode : { type: DataTypes.TEXT, allowNull: false },
 			colour : { type: DataTypes.STRING(6), allowNull: false },
 			width : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
@@ -125,18 +117,7 @@ export default class DatabaseLines {
 			bottom: getLatType(),
 			left: getLonType(),
 			right: getLonType(),
-			extraInfo: {
-				type: DataTypes.TEXT,
-				allowNull: true,
-				get: function(this: LineModel) {
-					const extraInfo = this.getDataValue("extraInfo") as any as string; // https://github.com/sequelize/sequelize/issues/11558
-					return extraInfo != null ? JSON.parse(extraInfo) : extraInfo;
-				},
-				set: function(this: LineModel, v: ExtraInfo) {
-					this.setDataValue("extraInfo", v != null ? JSON.stringify(v) as any : v);
-				},
-				defaultValue: null
-			}
+			extraInfo: getJsonType("extraInfo", { allowNull: true })
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Line"

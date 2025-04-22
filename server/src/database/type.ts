@@ -1,7 +1,7 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
 import { typeValidator, type CRU, type Field, type ID, type Type, type Colour, type Size, type Icon, type Shape, type Width, type Stroke, type RouteMode } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./helpers.js";
+import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./helpers.js";
 import type { MapModel } from "./map.js";
 import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
@@ -66,30 +66,8 @@ export default class DatabaseTypes {
 			defaultMode: { type: DataTypes.TEXT, allowNull: false },
 			modeFixed: { type: DataTypes.BOOLEAN, allowNull: false },
 			showInLegend: { type: DataTypes.BOOLEAN, allowNull: false },
-
-			fields: {
-				type: DataTypes.TEXT,
-				allowNull: false,
-				get: function(this: TypeModel) {
-					const fields = this.getDataValue("fields") as any as string; // https://github.com/sequelize/sequelize/issues/11558
-					return fields == null ? [] : JSON.parse(fields);
-				},
-				set: function(this: TypeModel, v: Field[]) {
-					return this.setDataValue("fields", JSON.stringify(v) as any);
-				}
-			},
-
-			formerFieldIds: {
-				type: DataTypes.TEXT,
-				allowNull: false,
-				get: function(this: TypeModel) {
-					const formerFieldIds = this.getDataValue("formerFieldIds") as any as string; // https://github.com/sequelize/sequelize/issues/11558
-					return formerFieldIds ? JSON.parse(formerFieldIds) : {};
-				},
-				set: function(this: TypeModel, v: Record<string, string>) {
-					return this.setDataValue("formerFieldIds", JSON.stringify(v) as any);
-				}
-			}
+			fields: getJsonType<Field[]>("fields", { allowNull: false, get: (v) => v ?? [] }),
+			formerFieldIds: getJsonType<Record<string, string>>("formerFieldIds", { allowNull: false, get: (v) => v ?? {} })
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Type"

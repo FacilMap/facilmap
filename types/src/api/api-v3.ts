@@ -1,4 +1,4 @@
-import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
+import { mapDataValidator, mapPermissionsValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
 import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base.js";
 import type { CRU } from "../cru.js";
 import { lineValidator, type Line, type LineTemplate, type TrackPoint } from "../line.js";
@@ -31,6 +31,11 @@ export const apiV3RequestValidators = {
 		z.tuple([mapSlugValidator, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithExceptValidator.optional() }))])
 	]),
 	findOnMap: z.tuple([mapSlugValidator, /** query */ z.string()]),
+	getMapToken: z.union([
+		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
+		z.tuple([mapSlugValidator]),
+		z.tuple([mapSlugValidator, mapPermissionsValidator.create])
+	]),
 
 	getHistory: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
@@ -90,6 +95,7 @@ type ApiV3Response = {
 	deleteMap: void;
 	//getAllMapObjects: generic, manual declaration in ApiV3 type
 	findOnMap: FindOnMapResult[];
+	getMapToken: { token: string };
 
 	getHistory: PagedResults<HistoryEntry>;
 	revertHistoryEntry: void;

@@ -33,6 +33,8 @@ services:
         command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
         healthcheck:
             test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+        volumes:
+            - ../facilmap.sql:/var/lib/mysql
         ports:
             - "127.0.0.1:40830:3306"
 

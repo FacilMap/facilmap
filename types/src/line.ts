@@ -1,6 +1,7 @@
 import { bboxValidator, colourValidator, idValidator, pointValidator, routeModeValidator, strokeValidator, zoomLevelValidator, type Bbox } from "./base.js";
 import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, optionalUpdate, mapValues, exceptRead } from "./cru.js";
 import * as z from "zod";
+import { numberRecordValidator } from "./utility.js";
 
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));
 export type ExtraInfo = z.infer<typeof extraInfoValidator>;
@@ -22,7 +23,7 @@ export const lineValidator = cruValidator({
 	colour: optionalCreate(colourValidator), // defaults to type.defaultColour
 	width: optionalCreate(z.number()), // defaults to type.defaultWidth
 	stroke: optionalCreate(strokeValidator), // defaults to type.defaultStroke
-	data: optionalCreate(z.record(z.string())),
+	data: optionalCreate(numberRecordValidator(z.string())),
 	extraInfo: optionalCreate(extraInfoValidator.or(z.null()), null),
 
 	...mapValues(bboxValidator.shape, onlyRead),

@@ -443,3 +443,41 @@ export function cloneDeep<T>(value: T): DeepMutable<T> {
 	// https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/70545
 	return originalCloneDeep(value) as DeepMutable<T>;
 }
+
+export function forEachAsync<T>(array: T[], callback: (item: T, idx: number) => Promise<void>, concurrency = 1): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
+		let i = 0;
+		let running = 0;
+		let rejected = false;
+		const schedule = () => {
+			if (!rejected) {
+				for (; i < array.length && running < concurrency; i++) {
+					running++;
+					const idx = i;
+					Promise.resolve().then(() => callback(array[idx], idx)).then(() => {
+						running--;
+						schedule();
+					}).catch((err) => {
+						reject(err);
+						rejected = true;
+					});
+				}
+				if (running === 0) {
+					resolve();
+				}
+			}
+		};
+		schedule();
+	});
+}
+
+const base64UrlChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+// https://stackoverflow.com/a/64072170/242365
+export function numberToBase64(number: number): string {
+	return number.toString(2).split(/(?=(?:.{6})+(?!.))/g).map((v) => base64UrlChars[parseInt(v,2)]).join("");
+}
+
+export function base64ToNumber(base64: string): number {
+	return base64.split("").reduce((s, v) => s * 64 + base64UrlChars.indexOf(v), 0);
+}
