@@ -80,16 +80,16 @@ function binaryToPermission<Own extends boolean = true>(binary: number, own: Own
 
 export function serializeMapPermissions(permissions: MapPermissions): string {
 	return numberToBase64(
-		(permissionToBinary(permissions.read)) &
-		(permissionToBinary(permissions.update) << 2) &
-		(permissionToBinary(permissions.settings) << 4) &
+		(permissionToBinary(permissions.read)) |
+		(permissionToBinary(permissions.update) << 2) |
+		(permissionToBinary(permissions.settings) << 4) |
 		(permissionToBinary(permissions.admin) << 5)
 	) + entries(permissions.types ?? {}).map(([typeId, p]) => (
 		";" +
 		numberToBase64(Number(typeId)) +
 		":" +
 		numberToBase64(
-			(permissionToBinary(p.read)) &
+			(permissionToBinary(p.read)) |
 			(permissionToBinary(p.update) << 2)
 		) +
 		entries(p.fields ?? {}).map(([fieldId, p]) => (
@@ -97,7 +97,7 @@ export function serializeMapPermissions(permissions: MapPermissions): string {
 			numberToBase64(Number(fieldId)) +
 			":" +
 			numberToBase64(
-				(permissionToBinary(p.read)) &
+				(permissionToBinary(p.read)) |
 				(permissionToBinary(p.update) << 2)
 			)
 		)).join("")

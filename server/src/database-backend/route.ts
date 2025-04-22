@@ -1,6 +1,6 @@
 import { generateRandomId } from "../utils/utils.js";
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
-import Database from "./database.js";
+import DatabaseBackend from "./database.js";
 import type { BboxWithZoom, ID, Latitude, Longitude, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { type BboxWithExcept, createModel, findAllStreamed, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
 import { calculateRouteForLine } from "../routing/routing.js";
@@ -25,9 +25,9 @@ export default class DatabaseRoutes {
 
 	private RoutePointModel = createModel<RoutePointModel>();
 
-	_db: Database;
+	_db: DatabaseBackend;
 
-	constructor(database: Database) {
+	constructor(database: DatabaseBackend) {
 		this._db = database;
 
 		this.RoutePointModel.init({
@@ -53,6 +53,10 @@ export default class DatabaseRoutes {
 			],
 			modelName: "RoutePoint"
 		});
+	}
+
+	async truncateRoutePoints(): Promise<void> {
+		await this.RoutePointModel.truncate();
 	}
 
 	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false): Promise<TrackPoint[]> {

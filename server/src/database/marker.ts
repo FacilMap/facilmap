@@ -1,103 +1,33 @@
-import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { CRU, Colour, ID, Latitude, Longitude, Marker, Shape, Size, Icon, Type } from "facilmap-types";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
+import type { CRU, ID, Marker, BboxWithExcept } from "facilmap-types";
 import Database from "./database.js";
 import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
-import type { MapModel } from "./map.js";
-import type { Point as GeoJsonPoint } from "geojson";
-import type { TypeModel } from "./type.js";
 import { getI18n } from "../i18n.js";
 
-export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
-	id: CreationOptional<ID>;
-	mapId: ForeignKey<MapModel["id"]>;
-	pos: GeoJsonPoint;
-	lat: Latitude;
-	lon: Longitude;
-	name: string;
-	typeId: ForeignKey<TypeModel["id"]>;
-	colour: Colour;
-	size: Size;
-	icon: Icon;
-	shape: Shape;
-	ele: number | null;
-	toJSON: () => Marker;
-}
-
-export interface MarkerDataModel extends DataModel, Model<InferAttributes<MarkerDataModel>, InferCreationAttributes<MarkerDataModel>> {
-	markerId: ForeignKey<MarkerModel["id"]>;
-}
-
 export default class DatabaseMarkers {
-
-	MarkerModel = createModel<MarkerModel>();
-	MarkerDataModel = createModel<MarkerDataModel>();
 
 	_db: Database;
 
 	constructor(database: Database) {
 		this._db = database;
-
-		this.MarkerModel.init({
-			id: getDefaultIdType(),
-			lat: getVirtualLatType(),
-			lon: getVirtualLonType(),
-			pos: getPosType(),
-			name : { type: DataTypes.TEXT, allowNull: false },
-			colour : { type: DataTypes.STRING(6), allowNull: false },
-			size : { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			icon : { type: DataTypes.TEXT, allowNull: false },
-			shape : { type: DataTypes.TEXT, allowNull: false },
-			ele: {
-				type: DataTypes.INTEGER,
-				allowNull: true,
-				set: function(this: MarkerModel, v: number | null) {
-					// Round number to avoid integer column error in Postgres
-					this.setDataValue("ele", v != null ? Math.round(v) : v);
-				},
-				defaultValue: null
-			}
-		}, {
-			sequelize: this._db._conn,
-			// pos index is created in migration
-			modelName: "Marker"
-		});
-
-		this.MarkerDataModel.init(dataDefinition, {
-			sequelize: this._db._conn,
-			modelName: "MarkerData"
-		});
-	}
-
-	afterInit(): void {
-		const MapModel = this._db.maps.MapModel;
-		const TypeModel = this._db.types.TypeModel;
-
-		MapModel.hasMany(this.MarkerModel, makeNotNullForeignKey("Markers", "mapId"));
-		this.MarkerModel.belongsTo(MapModel, makeNotNullForeignKey("map", "mapId"));
-		this.MarkerModel.belongsTo(TypeModel, makeNotNullForeignKey("type", "typeId", true));
-
-		this.MarkerDataModel.belongsTo(this.MarkerModel, makeNotNullForeignKey("marker", "markerId"));
-		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
 	getMapMarkers(mapId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
-		return this._db.helpers._getMapObjects<Marker>("Marker", mapId, { where: this._db.helpers.makeBboxCondition(bbox) });
+		return this._db._backend.markers.getMapMarkers(mapId, bbox);
 	}
 
 	getMapMarkersByType(mapId: ID, typeId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
-		return this._db.helpers._getMapObjects<Marker>("Marker", mapId, {
-			where: {
-				[Op.and]: [
-					{ typeId: typeId },
-					this._db.helpers.makeBboxCondition(bbox)
-				]
-			}
-		});
+		return this._db._backend.markers.getMapMarkersByType(mapId, typeId, bbox);
 	}
 
-	getMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
-		return this._db.helpers._getMapObject("Marker", mapId, markerId, options);
+	async getMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
+		const marker = await this._db._backend.markers.getMarker(mapId, markerId);
+		if (!marker) {
+			throw Object.assign(
+				new Error(getI18n().t("database.object-not-found-in-map-error", { type: "Marker", id: markerId, mapId })),
+				options?.notFound404 ? { status: 404 } : {}
+			);
+		}
+		return marker;
 	}
 
 	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<Marker> {
@@ -106,16 +36,18 @@ export default class DatabaseMarkers {
 			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: type.type }));
 		}
 
-		const result = await this._db.helpers._createMapObject<Marker>("Marker", mapId, {
+		const result = await this._db._backend.markers.createMarker(mapId, {
 			...resolveCreateMarker(data, type),
 			...options?.id ? { id: options.id } : {}
 		});
 		this._db.emit("marker", mapId, result);
 
+		await this._db.history.addHistoryEntry(mapId, { type: type as any, action: "create", objectId: result.id, objectAfter: result });
+
 		if (data.ele === undefined) {
 			getElevationForPoint(data).then(async (ele) => {
 				if (ele != null) {
-					await this.updateMarker(mapId, result.id, { ele }, { noHistory: true });
+					await this._db._backend.markers.updateMarker(mapId, result.id, { ele });
 				}
 			}).catch((err) => {
 				console.warn("Error updating marker elevation", err);
@@ -125,13 +57,10 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(mapId: ID, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean, noHistory?: boolean }): Promise<Marker> {
+	async updateMarker(mapId: ID, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Marker> {
 		const originalMarker = await this.getMarker(mapId, markerId, { notFound404: options?.notFound404 });
-		const newType = await this._db.types.getType(mapId, data.typeId ?? originalMarker.typeId);
-		return await this._updateMarker(originalMarker, data, newType, options);
-	}
 
-	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, options?: { notFound404?: boolean, noHistory?: boolean }): Promise<Marker> {
+		const newType = await this._db.types.getType(mapId, data.typeId ?? originalMarker.typeId);
 		if (newType.type !== "marker") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: newType.type }));
 		}
@@ -139,14 +68,17 @@ export default class DatabaseMarkers {
 		const update = resolveUpdateMarker(originalMarker, data, newType);
 
 		if (Object.keys(update).length > 0) {
-			const result = await this._db.helpers._updateMapObject<Marker>("Marker", originalMarker.mapId, originalMarker.id, update, options);
+			await this._db._backend.markers.updateMarker(originalMarker.mapId, originalMarker.id, update);
+
+			const result = await this.getMarker(mapId, markerId);
+			await this._db.history.addHistoryEntry(mapId, { type: "Marker", action: "update", objectId: markerId, objectBefore: originalMarker, objectAfter: result });
 
 			this._db.emit("marker", originalMarker.mapId, result, originalMarker);
 
 			if (update.lat != null && update.lon != null && update.ele === undefined) {
 				getElevationForPoint({ lat: update.lat, lon: update.lon }).then(async (ele) => {
 					if (ele != null) {
-						await this.updateMarker(originalMarker.mapId, originalMarker.id, { ele }, { noHistory: true });
+						await this._db._backend.markers.updateMarker(mapId, markerId, { ele });
 					}
 				}).catch((err) => {
 					console.warn("Error updating marker elevation", err);
@@ -160,9 +92,11 @@ export default class DatabaseMarkers {
 	}
 
 	async deleteMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
-		const result = await this._db.helpers._deleteMapObject<Marker>("Marker", mapId, markerId, options);
-		this._db.emit("deleteMarker", mapId, { id: result.id });
-		return result;
+		const oldMarker = await this.getMarker(mapId, markerId, options);
+		await this._db._backend.markers.deleteMarker(mapId, markerId);
+		this._db.emit("deleteMarker", mapId, { id: markerId });
+		await this._db.history.addHistoryEntry(mapId, { type: "Marker", action: "delete", objectId: markerId, objectBefore: oldMarker });
+		return oldMarker;
 	}
 
 }

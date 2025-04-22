@@ -69,7 +69,7 @@ export function applyMarkerStyles(marker: DeepReadonly<Marker<CRU.READ | CRU.CRE
 
 	for(const field of type.fields) {
 		if(field.controlColour || field.controlSize || field.controlIcon || field.controlShape) {
-			const option = getSelectedOption(field, marker.data?.[field.name]);
+			const option = getSelectedOption(field, marker.data?.[field.id]);
 
 			if(option) {
 				if(field.controlColour && marker.colour != (option.colour ?? type.defaultColour))
@@ -87,9 +87,9 @@ export function applyMarkerStyles(marker: DeepReadonly<Marker<CRU.READ | CRU.CRE
 	return update;
 }
 
-export function resolveCreateMarker(marker: DeepReadonly<Marker<CRU.CREATE>>, type: DeepReadonly<Type>): Marker<CRU.CREATE_VALIDATED> {
+export function resolveCreateMarker(marker: DeepReadonly<Marker<CRU.CREATE>>, type: DeepReadonly<Type>): Marker<CRU.CREATE_VALIDATED> & Required<Pick<Marker<CRU.CREATE_VALIDATED>, "colour" | "size" | "icon" | "shape">> {
 	const parsed = markerValidator.create.parse(marker);
-	const result: Marker<CRU.CREATE_VALIDATED> = {
+	const result: Marker<CRU.CREATE_VALIDATED> & Required<Pick<Marker<CRU.CREATE_VALIDATED>, "colour" | "size" | "icon" | "shape">> = {
 		...parsed,
 		colour: parsed.colour ?? type.defaultColour,
 		size: parsed.size ?? type.defaultSize,
@@ -126,7 +126,7 @@ export function applyLineStyles(line: DeepReadonly<Line<CRU.READ | CRU.CREATE_VA
 
 	for(const field of type.fields) {
 		if(field.controlColour || field.controlWidth || field.controlStroke) {
-			const option = getSelectedOption(field, line.data?.[field.name]);
+			const option = getSelectedOption(field, line.data?.[field.id]);
 
 			if(option) {
 				if(field.controlColour && line.colour != (option.colour ?? type.defaultColour)) {
@@ -145,9 +145,9 @@ export function applyLineStyles(line: DeepReadonly<Line<CRU.READ | CRU.CREATE_VA
 	return update;
 }
 
-export function resolveCreateLine(line: DeepReadonly<Line<CRU.CREATE>>, type: DeepReadonly<Type>): Line<CRU.CREATE_VALIDATED> {
+export function resolveCreateLine(line: DeepReadonly<Line<CRU.CREATE>>, type: DeepReadonly<Type>): Line<CRU.CREATE_VALIDATED> & Required<Pick<Line<CRU.CREATE_VALIDATED>, "mode" | "colour" | "width" | "stroke">> {
 	const parsed = lineValidator.create.parse(line);
-	const result: Line<CRU.CREATE_VALIDATED> = {
+	const result: Line<CRU.CREATE_VALIDATED> & Required<Pick<Line<CRU.CREATE_VALIDATED>, "mode" | "colour" | "width" | "stroke">> = {
 		...parsed,
 		colour: line.colour ?? type.defaultColour,
 		width: line.width ?? type.defaultWidth,
