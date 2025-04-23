@@ -1,30 +1,29 @@
-import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes } from "sequelize";
-import DatabaseBackend from "./database.js";
-import type { HistoryEntry, HistoryEntryAction, HistoryEntryCreate, HistoryEntryObject, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
-import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./helpers.js";
-import { cloneDeep } from "lodash-es";
-import { getI18n } from "../i18n.js";
+import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes, type Optional } from "sequelize";
+import DatabaseBackend from "./database-backend.js";
+import type { HistoryEntryAction, HistoryEntryObject, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
+import { createModel, findAllStreamed, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./utils.js";
+import { omit } from "lodash-es";
+import type { RawHistoryEntry, RawHistoryEntryMapData } from "../utils/permissions.js";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
-	time: Date;
+	time: CreationOptional<Date>;
 	type: HistoryEntryType;
 	action: HistoryEntryAction;
-	objectId: ID;
-	objectBefore: HistoryEntryObject<HistoryEntryType> | null;
-	objectAfter: HistoryEntryObject<HistoryEntryType> | null;
+	objectId: ID | null;
+	objectBefore: HistoryEntryObject<Exclude<HistoryEntryType, "Map">> | RawHistoryEntryMapData | null;
+	objectAfter: HistoryEntryObject<Exclude<HistoryEntryType, "Map">> | RawHistoryEntryMapData | null;
 	mapId: ForeignKey<MapData["id"]>;
-	toJSON: () => HistoryEntry;
 }
 
-export default class DatabaseHistory {
+export default class DatabaseHistoryBackend {
 
 	HistoryModel = createModel<HistoryModel>();
 
-	_db: DatabaseBackend;
+	protected backend: DatabaseBackend;
 
-	constructor(database: DatabaseBackend) {
-		this._db = database;
+	constructor(backend: DatabaseBackend) {
+		this.backend = backend;
 
 		this.HistoryModel.init({
 			id: getDefaultIdType(),
@@ -35,7 +34,7 @@ export default class DatabaseHistory {
 			objectBefore: getJsonType("objectBefore", { allowNull: true }),
 			objectAfter: getJsonType("objectAfter", { allowNull: true })
 		}, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			modelName: "History",
 			indexes: [
 				{ fields: [ "type", "objectId" ] }
@@ -46,33 +45,38 @@ export default class DatabaseHistory {
 
 
 	afterInit(): void {
-		this._db.maps.MapModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "mapId"));
-		this.HistoryModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this.backend.maps.MapModel.hasMany(this.HistoryModel, makeNotNullForeignKey("History", "mapId"));
+		this.HistoryModel.belongsTo(this.backend.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
 	}
 
 
-	async addHistoryEntry(mapId: ID, data: HistoryEntryCreate): Promise<HistoryEntry> {
-		const dataClone = cloneDeep(data);
-		if(dataClone.objectBefore) {
-			delete (dataClone.objectBefore as any).id;
-			delete (dataClone.objectBefore as any).mapId;
-			delete (dataClone.objectBefore as any).defaultView;
-		}
-		if(dataClone.objectAfter) {
-			delete (dataClone.objectAfter as any).id;
-			delete (dataClone.objectAfter as any).mapId;
-			delete (dataClone.objectAfter as any).defaultView;
-		}
-
-		const newEntry = await this._db.helpers._createMapObject<HistoryEntry>("History", mapId, dataClone);
-
-		this._db.emit("historyEntry", mapId, newEntry);
-
-		return newEntry;
+	protected prepareHistoryEntry(historyEntry: HistoryModel): RawHistoryEntry {
+		const data = historyEntry.toJSON();
+		return {
+			...data,
+			time: data.time.toISOString()
+		} as RawHistoryEntry;
 	}
 
 
-	async getPagedHistory(mapId: ID, types: HistoryEntryType[] | undefined, paging: PagingInput): Promise<PagedResults<HistoryEntry>> {
+	async addHistoryEntry(mapId: ID, data: Optional<Omit<RawHistoryEntry, "mapId">, "id" | "time">): Promise<RawHistoryEntry> {
+		return this.prepareHistoryEntry(await this.HistoryModel.create({
+			...omit(data, ["time"]),
+			...data.time ? { time: new Date(data.time) } : {},
+			mapId
+		}));
+	}
+
+
+	async updateHistoryEntry(mapId: ID, historyEntryId: ID, data: Partial<Omit<RawHistoryEntry, "mapId" | "id">>): Promise<void> {
+		await this.HistoryModel.update({
+			...omit(data, ["time"]),
+			...data.time ? { time: new Date(data.time) } : {}
+		}, { where: { id: historyEntryId, mapId } });
+	}
+
+
+	async getPagedHistory(mapId: ID, types: HistoryEntryType[] | undefined, paging: PagingInput): Promise<PagedResults<RawHistoryEntry>> {
 		const { count, rows } = await this.HistoryModel.findAndCountAll({
 			where: {
 				mapId: mapId,
@@ -88,100 +92,30 @@ export default class DatabaseHistory {
 		});
 
 		return {
-			results: rows.map((row) => row.toJSON()),
+			results: rows.map((row) => this.prepareHistoryEntry(row)),
 			totalLength: count
 		};
 	}
 
 
-	getHistory(mapId: ID, types?: HistoryEntryType[]): AsyncIterable<HistoryEntry> {
-		return this._db.helpers._getMapObjects<HistoryEntry>("History", mapId, {
+	async* getHistory(mapId: ID, types?: HistoryEntryType[]): AsyncIterable<RawHistoryEntry> {
+		for await (const obj of findAllStreamed(this.HistoryModel, {
 			order: [[ "time", "DESC" ]],
-			...types ? {
-				where: { type: types }
-			} : {}
+			where: {
+				...types ? { type: types } : {},
+				mapId
+			}
+		})) {
+			yield this.prepareHistoryEntry(obj);
+		}
+	}
+
+
+	async getHistoryEntry(mapId: ID, entryId: ID, options?: { notFound404?: boolean }): Promise<RawHistoryEntry | undefined> {
+		const entry = await this.HistoryModel.findOne({
+			where: { id: entryId, mapId }
 		});
-	}
-
-
-	async getHistoryEntry(mapId: ID, entryId: ID, options?: { notFound404?: boolean }): Promise<HistoryEntry> {
-		return await this._db.helpers._getMapObject<HistoryEntry>("History", mapId, entryId, options);
-	}
-
-
-	async revertHistoryEntry(mapId: ID, id: ID): Promise<void> {
-		const entry = await this.getHistoryEntry(mapId, id);
-
-		if(entry.type == "Map") {
-			if (!entry.objectBefore) {
-				throw new Error(getI18n().t("database.old-map-data-not-available-error"));
-			}
-			await this._db.maps.updateMapData(mapId, entry.objectBefore);
-			return;
-		} else if (!["Marker", "Line", "View", "Type"].includes(entry.type)) {
-			throw new Error(getI18n().t("database.unknown-type-error", { type: entry.type }));
-		}
-
-		const existsNow = await this._db.helpers._mapObjectExists(entry.type, mapId, entry.objectId);
-
-		if(entry.action == "create") {
-			if (!existsNow)
-				return;
-
-			switch (entry.type) {
-				case "Marker":
-					await this._db.markers.deleteMarker(mapId, entry.objectId);
-					break;
-
-				case "Line":
-					await this._db.lines.deleteLine(mapId, entry.objectId);
-					break;
-
-				case "View":
-					await this._db.views.deleteView(mapId, entry.objectId);
-					break;
-
-				case "Type":
-					await this._db.types.deleteType(mapId, entry.objectId);
-					break;
-			}
-		} else if(existsNow) {
-			switch (entry.type) {
-				case "Marker":
-					await this._db.markers.updateMarker(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "Line":
-					await this._db.lines.updateLine(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "View":
-					await this._db.views.updateView(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "Type":
-					await this._db.types.updateType(mapId, entry.objectId, entry.objectBefore);
-					break;
-			}
-		} else {
-			switch (entry.type) {
-				case "Marker":
-					await this._db.markers.createMarker(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "Line":
-					await this._db.lines.createLine(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "View":
-					await this._db.views.createView(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "Type":
-					await this._db.types.createType(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-			}
-		}
+		return entry ? this.prepareHistoryEntry(entry) : undefined;
 	}
 
 

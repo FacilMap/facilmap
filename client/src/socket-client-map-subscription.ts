@@ -1,17 +1,11 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapDataWithWritable, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, ApiV3MapMethods, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
 import { SocketClientSubscription, type SubscriptionState } from "./socket-client-subscription";
 
 type SocketClientMapSubscriptionInterface = {
-	[K in (
-		| "getMap" | "updateMap" | "deleteMap" | "getAllMapObjects" | "findOnMap" | "getHistory"
-		| "revertHistoryEntry" | "getMapMarkers" | "getMarker" | "createMarker" | "updateMarker" | "deleteMarker"
-		| "getMapLines" | "getLine" | "getLinePoints" | "getLineTemplate" | "createLine" | "updateLine" | "deleteLine"
-		| "exportLine" | "getMapTypes" | "getType" | "createType" | "updateType" | "deleteType" | "getMapViews"
-		| "getView" | "createView" | "updateView" | "deleteView"
-	)]: SocketApi<SocketVersion.V3, false>[K] extends (...args: infer Args) => infer Result ? (Args extends [MapSlug, ...infer Rest] ? (...args: Rest) => Result : never) : never;
+	[K in ApiV3MapMethods]: SocketApi<SocketVersion.V3, false>[K] extends (...args: infer Args) => infer Result ? (Args extends [MapSlug, ...infer Rest] ? (...args: Rest) => Result : never) : never;
 
 	// This would be simpler:
 	// SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => (...args: Args) => Result : never;
@@ -88,11 +82,11 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		});
 	};
 
-	async getMap(): Promise<MapDataWithWritable> {
+	async getMap(): Promise<MapData> {
 		return await this.client.getMap(this.data.mapSlug);
 	}
 
-	async updateMap(data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
+	async updateMap(data: MapData<CRU.UPDATE>): Promise<MapData> {
 		return await this.client.updateMap(this.data.mapSlug, data);
 	}
 

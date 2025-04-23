@@ -10,7 +10,7 @@
 	import UserPreferencesDialog from "../user-preferences-dialog/user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
 	import { Writable } from "facilmap-types";
-	import { canEditMapData } from "facilmap-utils";
+	import { canConfigureMap } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const clientSub = getClientSub(context);
@@ -84,7 +84,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.filter")}}</a>
 		</li>
 
-		<li v-if="clientSub && canEditMapData(clientSub.data.mapData)">
+		<li v-if="clientSub && canConfigureMap(clientSub.data.mapData)">
 			<a
 				class="dropdown-item"
 				href="javascript:"

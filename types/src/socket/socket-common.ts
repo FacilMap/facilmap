@@ -1,4 +1,4 @@
-import { mapSlugValidator, unitsValidator, type MapSlug } from "../base.js";
+import { unitsValidator, type MapSlug } from "../base.js";
 import { type TrackPoint } from "../line.js";
 import * as z from "zod";
 import { allMapObjectsPickValidator, type AllMapObjectsItem, type AllMapObjectsPick } from "../api/api-common.js";
@@ -40,11 +40,6 @@ export type StreamToStreamId<T> = (
 	T extends {} ? { [K in keyof T]: StreamToStreamId<T[K]> } :
 	T
 );
-
-export const mapSubscriptionValidator = z.object({
-	mapSlug: mapSlugValidator,
-
-});
 
 export const subscribeToMapPickValidator = allMapObjectsPickValidator.exclude(["linesWithTrackPoints"]);
 export type SubscribeToMapPick = z.infer<typeof subscribeToMapPickValidator>;

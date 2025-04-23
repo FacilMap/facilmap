@@ -8,7 +8,7 @@
 	import { showConfirm } from "../ui/alert.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { canDeleteObject, formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
+	import { canUpdateObject, formatTypeName, isLine, isMarker, normalizeLineName, normalizeMarkerName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
@@ -68,7 +68,7 @@
 
 	const canDelete = computed(() => props.objects.some((object) => {
 		const type = clientSub.value.data.types[object.typeId];
-		return !!type && canDeleteObject(clientSub.value.data.mapData, type, object);
+		return !!type && canUpdateObject(clientSub.value.data.mapData, type, object);
 	}));
 
 	async function deleteObjects(): Promise<void> {

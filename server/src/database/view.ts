@@ -1,63 +1,37 @@
-import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { CRU, ID, Latitude, Longitude, View } from "facilmap-types";
+import type { CRU, ID, View } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType, getJsonType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
-import type { MapModel } from "./map.js";
 import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
-
-export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
-	id: CreationOptional<ID>;
-	mapId: ForeignKey<MapModel["id"]>;
-	name: string;
-	idx: number;
-	baseLayer: string;
-	layers: string[];
-	top: Latitude;
-	bottom: Latitude;
-	left: Longitude;
-	right: Longitude;
-	filter: string | null;
-	toJSON: () => View;
-}
+import type DatabaseViewsBackend from "../database-backend/view.js";
+import { getI18n } from "../i18n.js";
 
 export default class DatabaseViews {
 
-	ViewModel = createModel<ViewModel>();
-
-	_db: Database;
+	protected db: Database;
+	protected backend: DatabaseViewsBackend;
 
 	constructor(database: Database) {
-		this._db = database;
-
-		this.ViewModel.init({
-			id: getDefaultIdType(),
-			name : { type: DataTypes.TEXT, allowNull: false },
-			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			baseLayer : { type: DataTypes.TEXT, allowNull: false },
-			layers : getJsonType("layers", { allowNull: false, get: (v) => v ?? [] }),
-			top : getLatType(),
-			bottom : getLatType(),
-			left : getLonType(),
-			right : getLonType(),
-			filter: { type: DataTypes.TEXT, allowNull: true }
-		}, {
-			sequelize: this._db._conn,
-			modelName: "View"
-		});
-	}
-
-	afterInit(): void {
-		this.ViewModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
-		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "mapId" });
+		this.db = database;
+		this.backend = database.backend.views;
 	}
 
 	getViews(mapId: ID): AsyncIterable<View> {
-		return this._db.helpers._getMapObjects<View>("View", mapId);
+		return this.backend.getViews(mapId);
 	}
 
-	getView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
-		return this._db.helpers._getMapObject<View>("View", mapId, viewId, options);
+	async viewExists(mapId: ID, viewId: ID): Promise<boolean> {
+		return await this.backend.viewExists(mapId, viewId);
+	}
+
+	async getView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+		const result = await this.backend.getView(mapId, viewId);
+		if (!result) {
+			throw Object.assign(
+				new Error(getI18n().t("database.object-not-found-in-map-error", { type: "View", id: viewId, mapId })),
+				options?.notFound404 ? { status: 404 } : {}
+			);
+		}
+		return result;
 	}
 
 	async _freeViewIdx(mapId: ID, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
@@ -69,8 +43,9 @@ export default class DatabaseViews {
 
 		for (const obj of newIndexes) {
 			if ((viewId == null || obj.id !== viewId) && obj.oldIdx !== obj.newIdx) {
-				const newData = await this._db.helpers._updateMapObject<View>("View", mapId, obj.id, { idx: obj.newIdx }, { noHistory: true });
-				this._db.emit("view", mapId, newData);
+				await this.backend.updateView(mapId, obj.id, { idx: obj.newIdx });
+				const newData = await this.getView(mapId, obj.id);
+				this.db.emit("view", mapId, newData);
 			}
 		}
 
@@ -80,20 +55,21 @@ export default class DatabaseViews {
 	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<View> {
 		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
-		const newData = await this._db.helpers._createMapObject<View>("View", mapId, {
+		const newData = await this.backend.createView(mapId, {
 			...data,
 			idx,
 			...options?.id ? { id: options.id } : {}
 		});
 
-		await this._db.history.addHistoryEntry(mapId, {
+		this.db.emit("view", mapId, newData);
+
+		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "create",
 			objectId: newData.id,
 			objectAfter: newData
 		});
 
-		this._db.emit("view", mapId, newData);
 		return newData;
 	}
 
@@ -102,16 +78,32 @@ export default class DatabaseViews {
 			await this._freeViewIdx(mapId, viewId, data.idx);
 		}
 
-		const newData = await this._db.helpers._updateMapObject<View>("View", mapId, viewId, data, options);
+		const viewBefore = await this.getView(mapId, viewId, options);
+		await this.backend.updateView(mapId, viewId, data);
+		const viewAfter = await this.getView(mapId, viewId, options);
+		this.db.emit("view", mapId, viewAfter);
 
-		this._db.emit("view", mapId, newData);
-		return newData;
+		await this.db.history.addHistoryEntry(mapId, {
+			type: "View",
+			action: "update",
+			objectId: viewId,
+			objectBefore: viewBefore,
+			objectAfter: viewAfter
+		});
+
+		return viewAfter;
 	}
 
 	async deleteView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
-		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId, options);
-
-		this._db.emit("deleteView", mapId, { id: data.id });
-		return data;
+		const oldView = await this.getView(mapId, viewId, options);
+		await this.backend.deleteView(mapId, viewId);
+		this.db.emit("deleteView", mapId, { id: viewId });
+		await this.db.history.addHistoryEntry(mapId, {
+			type: "View",
+			action: "delete",
+			objectId: viewId,
+			objectBefore: oldView
+		});
+		return oldView;
 	}
 }

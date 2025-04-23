@@ -1,23 +1,18 @@
-import { Sequelize } from "sequelize";
-import debug from "debug";
-import DatabaseHelpers from "./helpers.js";
 import DatabaseHistory from "./history.js";
-import type { DbConfig } from "../config.js";
 import DatabaseMaps from "./map.js";
 import DatabaseViews from "./view.js";
 import DatabaseLines from "./line.js";
 import DatabaseTypes from "./type.js";
 import DatabaseMarkers from "./marker.js";
-import DatabaseMeta from "./meta.js";
 import DatabaseSearch from "./search.js";
 import DatabaseRoutes from "./route.js";
-import DatabaseMigrations from "./migrations.js";
 import { TypedEventEmitter } from "../utils/events.js";
-import type { HistoryEntry, ID, Line, Marker, ObjectWithId, MapData, TrackPoint, Type, View } from "facilmap-types";
-import type DatabaseBackend from "../database-backend/database.js";
+import type { ID, Line, Marker, ObjectWithId, TrackPoint, Type, View } from "facilmap-types";
+import type DatabaseBackend from "../database-backend/database-backend.js";
+import type { RawHistoryEntry, RawMapData } from "../utils/permissions.js";
 
 export interface DatabaseEventsInterface {
-	historyEntry: [mapId: ID, newEntry: HistoryEntry];
+	historyEntry: [mapId: ID, newEntry: RawHistoryEntry];
 
 	line: [mapId: ID, newLine: Line];
 	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[], reset: boolean];
@@ -26,7 +21,7 @@ export interface DatabaseEventsInterface {
 	marker: [mapId: ID, newMarker: Marker, oldMarker?: Marker];
 	deleteMarker: [mapId: ID, data: ObjectWithId];
 
-	mapData: [mapId: ID, mapData: MapData & Required<Pick<MapData, "writeId" | "adminId">>];
+	mapData: [mapId: ID, mapData: RawMapData];
 	deleteMap: [mapId: ID];
 
 	type: [mapId: ID, newType: Type];
@@ -40,37 +35,28 @@ export type DatabaseEvents = Pick<DatabaseEventsInterface, keyof DatabaseEventsI
 
 export default class Database extends TypedEventEmitter<DatabaseEvents> {
 
-	_backend: DatabaseBackend;
-	helpers: DatabaseHelpers;
+	backend: DatabaseBackend;
 	history: DatabaseHistory;
 	maps: DatabaseMaps;
 	views: DatabaseViews;
 	markers: DatabaseMarkers;
 	lines: DatabaseLines;
 	types: DatabaseTypes;
-	meta: DatabaseMeta;
 	search: DatabaseSearch;
 	routes: DatabaseRoutes;
-	migrations: DatabaseMigrations;
 
 	constructor(backend: DatabaseBackend) {
 		super();
 
-		this._backend = backend;
+		this.backend = backend;
 
-		this.helpers = new DatabaseHelpers(this);
 		this.history = new DatabaseHistory(this);
 		this.maps = new DatabaseMaps(this);
 		this.views = new DatabaseViews(this);
 		this.markers = new DatabaseMarkers(this);
 		this.lines = new DatabaseLines(this);
 		this.types = new DatabaseTypes(this);
-		this.meta = new DatabaseMeta(this);
 		this.search = new DatabaseSearch(this);
 		this.routes = new DatabaseRoutes(this);
-		this.migrations = new DatabaseMigrations(this);
-
-		// Delete all route points, clients will have to reconnect and recalculate their routes anyways
-		backend.routes.truncateRoutePoints();
 	}
 }

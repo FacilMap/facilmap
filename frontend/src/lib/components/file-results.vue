@@ -9,7 +9,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
-	import { canCreateType, canCreateView } from "facilmap-utils";
+	import { canConfigureMap, canConfigureMap } from "facilmap-utils";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -44,8 +44,8 @@
 		return new Map(props.file.views.map((view) => [view, clientSub.value && viewExists(clientSub.value.data, view)]));
 	});
 
-	const canCreateViews = computed(() => clientSub.value && canCreateView(clientSub.value.data.mapData));
-	const canCreateTypes = computed(() => clientSub.value && canCreateType(clientSub.value.data.mapData));
+	const canCreateViews = computed(() => clientSub.value && canConfigureMap(clientSub.value.data.mapData));
+	const canCreateTypes = computed(() => clientSub.value && canConfigureMap(clientSub.value.data.mapData));
 
 	function showView(view: ViewImport): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });

@@ -1,33 +1,35 @@
-import { type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LinePoints } from "facilmap-types";
+import { type ID, type Line, type Point, type Route, type TrackPoint, type CRU, type RouteInfo, type LinePoints, type BboxWithExcept, entries, type Type } from "facilmap-types";
 import Database from "./database.js";
-import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
+import { groupBy, isEqual, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
-import type { MapModel } from "./map.js";
-import type { Point as GeoJsonPoint } from "geojson";
-import type { TypeModel } from "./type";
 import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
-import { mapAsyncIterable } from "../utils/streams.js";
+import type DatabaseLinesBackend from "../database-backend/line.js";
 
 export default class DatabaseLines {
 
-	_db: Database;
+	protected db: Database;
+	protected backend: DatabaseLinesBackend;
 
 	constructor(database: Database) {
-		this._db = database;
+		this.db = database;
+		this.backend = database.backend.lines;
 	}
 
 	getMapLines(mapId: ID, fields?: Array<keyof Line>): AsyncIterable<Line> {
-		return this._db._backend.lines.getMapLines(mapId, fields);
+		return this.backend.getMapLines(mapId, fields);
 	}
 
 	getMapLinesByType(mapId: ID, typeId: ID): AsyncIterable<Line> {
-		return this._db._backend.lines.getMapLinesByType(mapId, typeId);
+		return this.backend.getMapLinesByType(mapId, typeId);
+	}
+
+	async lineExists(mapId: ID, lineId: ID): Promise<boolean> {
+		return await this.backend.lineExists(mapId, lineId);
 	}
 
 	async getLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
-		const line = await this._db._backend.lines.getLine(mapId, lineId);
+		const line = await this.backend.getLine(mapId, lineId);
 		if (!line) {
 			throw Object.assign(
 				new Error(getI18n().t("database.object-not-found-in-map-error", { type: "Line", id: lineId, mapId })),
@@ -38,7 +40,7 @@ export default class DatabaseLines {
 	}
 
 	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> } }): Promise<Line> {
-		const type = await this._db.types.getType(mapId, data.typeId);
+		const type = await this.db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
 		}
@@ -47,23 +49,39 @@ export default class DatabaseLines {
 
 		const { trackPoints, ...routeInfo } = options?.trackPointsFromRoute ?? await calculateRouteForLine(resolvedData);
 
-		const createdLine = await this._db._backend.lines.createLine(mapId, {
+		const createdLine = await this.backend.createLine(mapId, {
 			...omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */),
 			...options?.id ? { id: options.id } : {}
 		});
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
-		this._db.emit("line", mapId, createdLine);
+		this.db.emit("line", mapId, createdLine);
 
-		await this.setLinePoints(mapId, createdLine.id, trackPoints);
+		await Promise.all([
+			this.db.history.addHistoryEntry(mapId, { type: "Line", action: "create", objectId: createdLine.id, objectAfter: createdLine }),
+			this.setLinePoints(mapId, createdLine.id, trackPoints)
+		]);
 
 		return createdLine;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: { trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }; notFound404?: boolean }): Promise<Line> {
+	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: {
+		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
+		notFound404?: boolean;
+		noHistory?: boolean;
+	}): Promise<Line> {
 		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
+		const newType = await this.db.types.getType(mapId, data.typeId ?? originalLine.typeId);
+		return await this._updateLine(originalLine, data, newType, options);
+	}
 
-		const newType = await this._db.types.getType(mapId, data.typeId ?? originalLine.typeId);
+	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: {
+		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
+		notFound404?: boolean;
+		noHistory?: boolean;
+	}): Promise<Line> {
+		const { mapId, id: lineId } = originalLine;
+
 		if (newType.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: newType.type }));
 		}
@@ -75,16 +93,17 @@ export default class DatabaseLines {
 			routeInfo = options?.trackPointsFromRoute ?? await calculateRouteForLine({ ...originalLine, ...update });
 		}
 
-		Object.assign(update, mapValues(routeInfo, (val) => val == null ? null : val)); // Use null instead of undefined
 		delete update.trackPoints; // They came if mode is track
 
 		if (Object.keys(update).length > 0) {
-			await this._db._backend.lines.updateLine(mapId, lineId, update);
+			await this.backend.updateLine(mapId, lineId, update);
 
 			const newLine = await this.getLine(mapId, lineId);
-			await this._db.history.addHistoryEntry(mapId, { type: "Line", action: "update", objectId: lineId, objectBefore: originalLine, objectAfter: newLine });
+			if (!options?.noHistory) {
+				await this.db.history.addHistoryEntry(mapId, { type: "Line", action: "update", objectId: lineId, objectBefore: originalLine, objectAfter: newLine });
+			}
 
-			this._db.emit("line", originalLine.mapId, newLine);
+			this.db.emit("line", mapId, newLine);
 
 			if (routeInfo) {
 				await this.setLinePoints(mapId, lineId, routeInfo.trackPoints);
@@ -98,71 +117,42 @@ export default class DatabaseLines {
 
 	protected async setLinePoints(mapId: ID, lineId: ID, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
 		let first = true;
-		await this._db._backend.lines.setLinePoints(mapId, lineId, trackPoints, (batch) => {
+		await this.backend.setLinePoints(mapId, lineId, trackPoints, (batch) => {
 			if (!_noEvent) {
-				this._db.emit("linePoints", mapId, lineId, batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), first);
+				this.db.emit("linePoints", mapId, lineId, batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), first);
 			}
 			first = false;
 		});
 
 		if(first && !_noEvent) {
-			this._db.emit("linePoints", mapId, lineId, [], true);
+			this.db.emit("linePoints", mapId, lineId, [], true);
 		}
 	}
 
 	async deleteLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
 		const oldLine = await this.getLine(mapId, lineId, options);
 		await this.setLinePoints(mapId, lineId, [ ], true);
-		await this._db._backend.lines.deleteLine(mapId, lineId);
-		this._db.emit("deleteLine", mapId, { id: lineId });
-		await this._db.history.addHistoryEntry(mapId, { type: "Line", action: "delete", objectId: lineId, objectBefore: oldLine });
+		await this.backend.deleteLine(mapId, lineId);
+		this.db.emit("deleteLine", mapId, { id: lineId });
+		await this.db.history.addHistoryEntry(mapId, { type: "Line", action: "delete", objectId: lineId, objectBefore: oldLine });
 		return oldLine;
 	}
 
-	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<LinePoints> {
-		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
-		const chunks = chunk(lines.map((line) => line.id), 50000);
-		for (const lineIds of chunks) {
-			const linePoints = await this.LinePointModel.findAll({
-				where: {
-					[Op.and]: [
-						{
-							...bboxWithZoom ? {
-								zoom: { [Op.lte]: bboxWithZoom.zoom }
-							} : {},
-							lineId: { [Op.in]: lineIds }
-						},
-						this._db.helpers.makeBboxCondition(bboxWithZoom)
-					]
-				},
-				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
-			});
-
-			for (const [key, val] of Object.entries(groupBy(linePoints, "lineId"))) {
+	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { typeId: ID }> {
+		for await (const chunk of this.backend.getLinePointsForMap(mapId, bboxWithZoom)) {
+			const typeIds = await this.backend.getTypeIdsForLines(mapId, chunk.map((c) => c.lineId));
+			for (const [key, val] of entries(groupBy(chunk, "lineId"))) {
 				yield {
 					lineId: Number(key),
-					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId", "pos"]))
+					typeId: typeIds[key as `${number}`],
+					trackPoints: val.map((p) => omit(p, ["lineId"]))
 				};
 			}
 		}
 	}
 
-	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
-		for await (const linePoint of findAllStreamed(this.LinePointModel, {
-			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "ele", "zoom", "idx" ],
-			order: [["idx", "ASC"]],
-			where: {
-				lineId,
-				...bboxWithZoom ? {
-					[Op.and]: [
-						{ zoom: { [Op.lte]: bboxWithZoom.zoom } },
-						this._db.helpers.makeBboxCondition(bboxWithZoom)
-					]
-				} : {}
-			}
-		})) {
-			yield omit(linePoint.toJSON(), ["id", "pos"]) as TrackPoint;
-		}
+	getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<TrackPoint> {
+		return this.backend.getLinePointsForLine(lineId, bboxWithZoom);
 	}
 
 }

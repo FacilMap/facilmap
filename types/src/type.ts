@@ -171,7 +171,7 @@ export const rawTypeValidator = cruValidator({
 	},
 
 	/** Field ID by name of deleted fields. Key: field name, value: field ID */
-	formerFieldIds: z.record(idValidator).default(() => ({}))
+	formerFieldIds: onlyRead(z.record(idValidator))
 });
 /** Applies the defaultColour default value to the given typeValidator */
 export function refineRawTypeValidator<

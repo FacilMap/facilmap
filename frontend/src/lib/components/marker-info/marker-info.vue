@@ -5,7 +5,7 @@
 	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import Coordinates from "../ui/coordinates.vue";
-	import { canDeleteObject, canEditObject, formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
+	import { canUpdateObject, canUpdateObject, formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -42,8 +42,8 @@
 	const marker = computed(() => clientContext.value.map!.data!.markers[props.markerId]);
 	const type = computed(() => clientContext.value.map!.data!.types[marker.value.typeId]);
 
-	const canEdit = computed(() => canEditObject(clientSub.value.data.mapData, type.value, marker.value));
-	const canDelete = computed(() => canDeleteObject(clientSub.value.data.mapData, type.value, marker.value));
+	const canEdit = computed(() => canUpdateObject(clientSub.value.data.mapData, type.value, marker.value));
+	const canDelete = computed(() => canUpdateObject(clientSub.value.data.mapData, type.value, marker.value));
 
 	const typeName = computed(() => formatTypeName(type.value.name));
 	const showTypeName = computed(() => Object.values(clientContext.value.map!.data!.types).filter((t) => t.type === 'marker').length > 1);

@@ -1,44 +1,57 @@
-import { entries, keys, Writable, type DeepReadonly, type Line, type MapDataWithWritable, type MapPermissions, type Marker, type Type, type View } from "facilmap-types";
+import { entries, keys, type ID, type MapPermissions } from "facilmap-types";
 import { base64ToNumber, numberToBase64 } from "./utils";
+import { getI18n } from "./i18n";
 
-export function canEditMapData(mapData: DeepReadonly<MapDataWithWritable>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canConfigureMap(permissions: MapPermissions): boolean {
+	return permissions.settings;
 }
 
-export function canCreateType(mapData: DeepReadonly<MapDataWithWritable>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function checkConfigureMap(permissions: MapPermissions): void {
+	if (!canConfigureMap(permissions)) {
+		throw Object.assign(new Error(getI18n().t("permissions.configure-map-permission-needed")), { status: 403 });
+	}
 }
 
-export function canEditType(mapData: DeepReadonly<MapDataWithWritable>, type: DeepReadonly<Type>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canAdministrateMap(permissions: MapPermissions): boolean {
+	return permissions.admin;
 }
 
-export function canDeleteType(mapData: DeepReadonly<MapDataWithWritable>, type: DeepReadonly<Type>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function checkAdministrateMap(permissions: MapPermissions): void {
+	if (!canAdministrateMap(permissions)) {
+		throw Object.assign(new Error(getI18n().t("permissions.administrate-map-permission-needed")), { status: 403 });
+	}
 }
 
-export function canCreateView(mapData: DeepReadonly<MapDataWithWritable>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canReadObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): boolean {
+	const permission = permissions.types?.[typeId]?.read ?? permissions.read;
+	return permission === "own" ? isOwn : permission;
 }
 
-export function canEditView(mapData: DeepReadonly<MapDataWithWritable>, view: DeepReadonly<View>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function checkReadObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): void {
+	if (!canReadObject(permissions, typeId, isOwn)) {
+		throw Object.assign(new Error(getI18n().t("permissions.read-type-permission-needed", { typeId })), { status: 403 });
+	}
 }
 
-export function canDeleteView(mapData: DeepReadonly<MapDataWithWritable>, view: DeepReadonly<View>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canUpdateObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): boolean {
+	const permission = permissions.types?.[typeId]?.update ?? permissions.update;
+	return permission === "own" ? isOwn : permission;
 }
 
-export function canCreateObject(mapData: DeepReadonly<MapDataWithWritable>, type: DeepReadonly<Type>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function checkUpdateObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): void {
+	if (!canUpdateObject(permissions, typeId, isOwn)) {
+		throw Object.assign(new Error(getI18n().t("permissions.update-type-permission-needed", { typeId })), { status: 403 });
+	}
 }
 
-export function canEditObject(mapData: DeepReadonly<MapDataWithWritable>, type: DeepReadonly<Type>, object: DeepReadonly<Marker | Line>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canReadField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): boolean {
+	const permission = permissions.types?.[typeId]?.fields?.[fieldId]?.read ?? canReadObject(permissions, typeId, isOwn);
+	return permission === "own" ? isOwn : permission;
 }
 
-export function canDeleteObject(mapData: DeepReadonly<MapDataWithWritable>, type: DeepReadonly<Type>, object: DeepReadonly<Marker | Line>): boolean {
-	return mapData.writable === Writable.ADMIN;
+export function canUpdateField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): boolean {
+	const permission = permissions.types?.[typeId]?.fields?.[fieldId]?.update ?? canUpdateObject(permissions, typeId, isOwn);
+	return permission === "own" ? isOwn : permission;
 }
 
 export function getSmallestMapPermission<T extends boolean | "own">(permissions: T[]): T {

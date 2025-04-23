@@ -1,5 +1,5 @@
-import { mapDataValidator, mapPermissionsValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base.js";
+import { mapDataValidator, mapPermissionsValidator, type MapData } from "../mapData.js";
+import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugOrJwtValidator, type Bbox, type BboxWithZoom, type ID, type MapSlug } from "../base.js";
 import type { CRU } from "../cru.js";
 import { lineValidator, type Line, type LineTemplate, type TrackPoint } from "../line.js";
 import type { SearchResult } from "../searchResult.js";
@@ -11,73 +11,80 @@ import type { HistoryEntry } from "../historyEntry.js";
 import { allMapObjectsPickValidator, bboxWithExceptValidator, optionalParam, pagingValidator, type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common.js";
 import * as z from "zod";
 
+export const anyMapSlugValidator = mapSlugOrJwtValidator.or(z.object({
+	mapSlug: mapSlugOrJwtValidator,
+	password: z.string().optional()
+}));
+export type AnyMapSlug = z.infer<typeof anyMapSlugValidator>;
+
+
 export const apiV3RequestValidators = {
 	findMaps: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
 		z.tuple([/** query */ z.string()]),
 		z.tuple([/** query */ z.string(), optionalParam(pagingValidator)])
 	]),
-	getMap: z.tuple([z.string()]),
+	getMap: z.tuple([anyMapSlugValidator]),
 	createMap: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
 		z.tuple([mapDataValidator.create]),
 		z.tuple([mapDataValidator.create, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithZoomValidator.optional() }))])
 	]),
-	updateMap: z.tuple([mapSlugValidator, mapDataValidator.update]),
-	deleteMap: z.tuple([mapSlugValidator]),
+	updateMap: z.tuple([anyMapSlugValidator, mapDataValidator.update]),
+	deleteMap: z.tuple([anyMapSlugValidator]),
 	getAllMapObjects: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithExceptValidator.optional() }))])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithExceptValidator.optional() }))])
 	]),
-	findOnMap: z.tuple([mapSlugValidator, /** query */ z.string()]),
+	findOnMap: z.tuple([anyMapSlugValidator, /** query */ z.string()]),
 	getMapToken: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, mapPermissionsValidator.create])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, mapPermissionsValidator.create])
 	]),
 
 	getHistory: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, optionalParam(pagingValidator)])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, optionalParam(pagingValidator)])
 	]),
-	revertHistoryEntry: z.tuple([mapSlugValidator, idValidator]),
+	revertHistoryEntry: z.tuple([anyMapSlugValidator, idValidator]),
 
 	getMapMarkers: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, optionalParam(z.object({ bbox: bboxWithExceptValidator.optional(), typeId: idValidator.optional() }))])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, optionalParam(z.object({ bbox: bboxWithExceptValidator.optional(), typeId: idValidator.optional() }))])
 	]),
-	getMarker: z.tuple([mapSlugValidator, idValidator]),
-	createMarker: z.tuple([mapSlugValidator, markerValidator.create]),
-	updateMarker: z.tuple([mapSlugValidator, idValidator, markerValidator.update]),
-	deleteMarker: z.tuple([mapSlugValidator, idValidator]),
+	getMarker: z.tuple([anyMapSlugValidator, idValidator]),
+	createMarker: z.tuple([anyMapSlugValidator, markerValidator.create]),
+	updateMarker: z.tuple([anyMapSlugValidator, idValidator, markerValidator.update]),
+	deleteMarker: z.tuple([anyMapSlugValidator, idValidator]),
 
 	getMapLines: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, optionalParam(z.object({ bbox: bboxWithZoomValidator.optional(), includeTrackPoints: z.boolean().optional(), typeId: idValidator.optional() }))])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, optionalParam(z.object({ bbox: bboxWithZoomValidator.optional(), includeTrackPoints: z.boolean().optional(), typeId: idValidator.optional() }))])
 	]),
-	getLine: z.tuple([mapSlugValidator, idValidator]),
-	getLinePoints: z.tuple([mapSlugValidator, idValidator, z.object({ bbox: bboxWithExceptValidator.optional() }).optional()]),
-	createLine: z.tuple([mapSlugValidator, lineValidator.create]),
-	updateLine: z.tuple([mapSlugValidator, idValidator, lineValidator.update]),
-	deleteLine: z.tuple([mapSlugValidator, idValidator]),
-	exportLine: z.tuple([mapSlugValidator, idValidator, z.object({ format: exportFormatValidator })]),
-	getLineTemplate: z.tuple([mapSlugValidator, z.object({ typeId: idValidator })]),
+	getLine: z.tuple([anyMapSlugValidator, idValidator]),
+	getLinePoints: z.tuple([anyMapSlugValidator, idValidator, z.object({ bbox: bboxWithExceptValidator.optional() }).optional()]),
+	createLine: z.tuple([anyMapSlugValidator, lineValidator.create]),
+	updateLine: z.tuple([anyMapSlugValidator, idValidator, lineValidator.update]),
+	deleteLine: z.tuple([anyMapSlugValidator, idValidator]),
+	exportLine: z.tuple([anyMapSlugValidator, idValidator, z.object({ format: exportFormatValidator })]),
+	getLineTemplate: z.tuple([anyMapSlugValidator, z.object({ typeId: idValidator })]),
 
-	getMapTypes: z.tuple([mapSlugValidator]),
-	getType: z.tuple([mapSlugValidator, idValidator]),
-	createType: z.tuple([mapSlugValidator, typeValidator.create]),
-	updateType: z.tuple([mapSlugValidator, idValidator, typeValidator.update]),
-	deleteType: z.tuple([mapSlugValidator, idValidator]),
+	getMapTypes: z.tuple([anyMapSlugValidator]),
+	getType: z.tuple([anyMapSlugValidator, idValidator]),
+	createType: z.tuple([anyMapSlugValidator, typeValidator.create]),
+	updateType: z.tuple([anyMapSlugValidator, idValidator, typeValidator.update]),
+	deleteType: z.tuple([anyMapSlugValidator, idValidator]),
 
-	getMapViews: z.tuple([mapSlugValidator]),
-	getView: z.tuple([mapSlugValidator, idValidator]),
-	createView: z.tuple([mapSlugValidator, viewValidator.create]),
-	updateView: z.tuple([mapSlugValidator, idValidator, viewValidator.update]),
-	deleteView: z.tuple([mapSlugValidator, idValidator]),
+	getMapViews: z.tuple([anyMapSlugValidator]),
+	getView: z.tuple([anyMapSlugValidator, idValidator]),
+	createView: z.tuple([anyMapSlugValidator, viewValidator.create]),
+	updateView: z.tuple([anyMapSlugValidator, idValidator, viewValidator.update]),
+	deleteView: z.tuple([anyMapSlugValidator, idValidator]),
 
 	find: z.tuple([/** query */ z.string()]),
 	findUrl: z.tuple([/** url */ z.string()]),
@@ -89,9 +96,9 @@ export const apiV3RequestValidators = {
 type ApiV3Response = {
 	findMaps: PagedResults<FindMapsResult>;
 
-	getMap: MapDataWithWritable;
+	getMap: MapData;
 	//createMap: generic, manual declaration in ApiV3 type
-	updateMap: MapDataWithWritable;
+	updateMap: MapData;
 	deleteMap: void;
 	//getAllMapObjects: generic, manual declaration in ApiV3 type
 	findOnMap: FindOnMapResult[];
@@ -133,6 +140,15 @@ type ApiV3Response = {
 
 	geoip: Bbox | undefined;
 };
+
+/** A list of all methods whos first parameter is a map slug. */
+export type ApiV3MapMethods = (
+	| "getMap" | "updateMap" | "deleteMap" | "getAllMapObjects" | "findOnMap" | "getHistory"
+	| "revertHistoryEntry" | "getMapMarkers" | "getMarker" | "createMarker" | "updateMarker" | "deleteMarker"
+	| "getMapLines" | "getLine" | "getLinePoints" | "getLineTemplate" | "createLine" | "updateLine" | "deleteLine"
+	| "exportLine" | "getMapTypes" | "getType" | "createType" | "updateType" | "deleteType" | "getMapViews"
+	| "getView" | "createView" | "updateView" | "deleteView"
+);
 
 export type ApiV3<Validated extends boolean = false> = {
 	[K in keyof ApiV3Response]: (...args: Validated extends true ? z.infer<typeof apiV3RequestValidators[K]> : z.input<typeof apiV3RequestValidators[K]>) => Promise<ApiV3Response[K]>;

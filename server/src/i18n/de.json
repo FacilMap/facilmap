@@ -9,14 +9,8 @@
         "route-points-less-than-two-points-error": "Eine Linie kann nicht weniger als zwei Routenpunkte haben.",
         "cannot-use-type-for-line-error": "Typ der Art „{{type}}“ kann nicht für Linien benutzt werden.",
         "cannot-use-type-for-marker-error": "Typ der Art „{{type}}“ kann nicht für Marker benutzt werden.",
-        "unique-map-ids-error": "Lese-ID, Schreib-ID und Admin-ID müssen unterschiedlich sein.",
-        "unique-map-ids-read-write-error": "Lese-ID und Schreib-ID müssen unterschiedlich sein.",
-        "unique-map-ids-read-admin-error": "Lese-ID und Admin-ID müssen unterschiedlich sein.",
-        "unique-map-ids-write-admin-error": "Schreib-ID und Admin-ID müssen unterschiedlich sein.",
-        "map-id-taken-error": "ID „{{id}}“ ist bereits vergeben.",
-        "map-disappeared-error": "Karte wurde während des Abspeicherns gelöscht.",
-        "only-in-admin-error": "Nur im Admin-Modus verfügbar.",
-        "only-in-write-error": "Nur im Schreib-Modus verfügbar."
+        "map-slug-taken-error": "Der Slug „{{mapSlug}}“ ist bereits vergeben.",
+        "map-disappeared-error": "Karte wurde während des Abspeicherns gelöscht."
     },
     "frontend": {
         "requires-javascript": "{{appName}} benötigt JavaScript.",

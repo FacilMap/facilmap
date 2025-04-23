@@ -32,16 +32,15 @@ export const stringifiedIdValidator = z.coerce.number().int().transform(Number);
 export const idValidator = z.number().int();
 export type ID = z.infer<typeof idValidator>;
 
-export const mapSlugValidator = z.string()
+export const mapSlugOrJwtValidator = z.string()
 	.min(1)
 	.max(100)
 	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
+	.refine((val) => !val.includes("\n"), { message: "May not contain a newline." })
 	.refine((val) => !val.startsWith("_"), { message: "May not start with an underscore." })
 	.refine((val) => !val.startsWith("."), { message: "May not start with a period." });
+export const mapSlugValidator = mapSlugOrJwtValidator.refine((val) => !isMapToken(val), { message: "May not be a JWT." });
 export type MapSlug = z.infer<typeof mapSlugValidator>;
-
-export const mapIdValidator = mapSlugValidator;
-export type MapId = MapSlug; // Will be changed later
 
 export const routeModeValidator = z.string();
 export type RouteMode = z.infer<typeof routeModeValidator>;
@@ -81,3 +80,11 @@ export enum Units {
 	US_CUSTOMARY = "us_customary"
 }
 export const unitsValidator = z.nativeEnum(Units);
+
+export function isMapToken(mapSlug: string): boolean {
+	try {
+		return JSON.parse(atob(mapSlug.split(".")[0].replaceAll("-", "+").replaceAll("_", "/"))).typ === "JWT";
+	} catch {
+		return false;
+	}
+}

@@ -1,10 +1,9 @@
 import { type CreationOptional, DataTypes, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import type { CRU, ID, Latitude, Longitude, View } from "facilmap-types";
-import DatabaseBackend from "./database.js";
-import { createModel, getDefaultIdType, getJsonType, getLatType, getLonType, makeNotNullForeignKey } from "./helpers.js";
+import type { ID, Latitude, Longitude, View } from "facilmap-types";
+import DatabaseBackend from "./database-backend.js";
+import { createModel, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, makeNotNullForeignKey } from "./utils.js";
 import type { MapModel } from "./map.js";
-import { iterableToArray } from "../utils/streams.js";
-import { insertIdx } from "facilmap-utils";
+import type { Optional } from "facilmap-utils";
 
 export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreationAttributes<ViewModel>> {
 	id: CreationOptional<ID>;
@@ -18,17 +17,16 @@ export interface ViewModel extends Model<InferAttributes<ViewModel>, InferCreati
 	left: Longitude;
 	right: Longitude;
 	filter: string | null;
-	toJSON: () => View;
 }
 
-export default class DatabaseViews {
+export default class DatabaseViewsBackend {
 
 	ViewModel = createModel<ViewModel>();
 
-	_db: DatabaseBackend;
+	backend: DatabaseBackend;
 
-	constructor(database: DatabaseBackend) {
-		this._db = database;
+	constructor(backend: DatabaseBackend) {
+		this.backend = backend;
 
 		this.ViewModel.init({
 			id: getDefaultIdType(),
@@ -42,76 +40,48 @@ export default class DatabaseViews {
 			right : getLonType(),
 			filter: { type: DataTypes.TEXT, allowNull: true }
 		}, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			modelName: "View"
 		});
 	}
 
 	afterInit(): void {
-		this.ViewModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
-		this._db.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "mapId" });
+		this.ViewModel.belongsTo(this.backend.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this.backend.maps.MapModel.hasMany(this.ViewModel, { foreignKey: "mapId" });
 	}
 
-	getViews(mapId: ID): AsyncIterable<View> {
-		return this._db.helpers._getMapObjects<View>("View", mapId);
+	protected prepareView(view: ViewModel): View {
+		return view.toJSON();
 	}
 
-	getView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
-		return this._db.helpers._getMapObject<View>("View", mapId, viewId, options);
-	}
-
-	async _freeViewIdx(mapId: ID, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {
-		const existingViews = await iterableToArray(this.getViews(mapId));
-
-		const resolvedNewIdx = newIdx ?? (existingViews.length > 0 ? existingViews[existingViews.length - 1].idx + 1 : 0);
-
-		const newIndexes = insertIdx(existingViews, viewId, resolvedNewIdx).reverse();
-
-		for (const obj of newIndexes) {
-			if ((viewId == null || obj.id !== viewId) && obj.oldIdx !== obj.newIdx) {
-				const newData = await this._db.helpers._updateMapObject<View>("View", mapId, obj.id, { idx: obj.newIdx }, { noHistory: true });
-				this._db.emit("view", mapId, newData);
-			}
+	async* getViews(mapId: ID): AsyncIterable<View> {
+		for await (const obj of findAllStreamed(this.ViewModel, { where: { mapId } })) {
+			yield this.prepareView(obj);
 		}
-
-		return resolvedNewIdx;
 	}
 
-	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<View> {
-		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
+	async viewExists(mapId: ID, viewId: ID): Promise<boolean> {
+		return !!await this.ViewModel.findOne({ where: { mapId, id: viewId }, attributes: ["id"] });
+	}
 
-		const newData = await this._db.helpers._createMapObject<View>("View", mapId, {
-			...data,
-			idx,
-			...options?.id ? { id: options.id } : {}
+	async getView(mapId: ID, viewId: ID): Promise<View | undefined> {
+		const result = await this.ViewModel.findOne({
+			where: { id: viewId, mapId }
 		});
-
-		await this._db.history.addHistoryEntry(mapId, {
-			type: "View",
-			action: "create",
-			objectId: newData.id,
-			objectAfter: newData
-		});
-
-		this._db.emit("view", mapId, newData);
-		return newData;
+		return result ? this.prepareView(result) : undefined;
 	}
 
-	async updateView(mapId: ID, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<View> {
-		if (data.idx != null) {
-			await this._freeViewIdx(mapId, viewId, data.idx);
-		}
-
-		const newData = await this._db.helpers._updateMapObject<View>("View", mapId, viewId, data, options);
-
-		this._db.emit("view", mapId, newData);
-		return newData;
+	async createView(mapId: ID, data: Optional<Omit<View, "mapId">, "id">): Promise<View> {
+		return this.prepareView(await this.ViewModel.create({ ...data, mapId }));
 	}
 
-	async deleteView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
-		const data = await this._db.helpers._deleteMapObject<View>("View", mapId, viewId, options);
+	async updateView(mapId: ID, viewId: ID, data: Partial<Omit<View, "mapId" | "id">>): Promise<void> {
+		// We don’t return the update object since we cannot rely on the return value of the update() method.
+		// On some platforms it returns 0 even if the object was found (but no fields were changed).
+		await this.ViewModel.update(data, { where: { id: viewId, mapId } });
+	}
 
-		this._db.emit("deleteView", mapId, { id: data.id });
-		return data;
+	async deleteView(mapId: ID, viewId: ID): Promise<void> {
+		await this.ViewModel.destroy({ where: { id: viewId, mapId } });
 	}
 }

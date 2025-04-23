@@ -1,5 +1,5 @@
 import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type MapSlug, type ObjectWithId } from "../base.js";
-import { mapDataValidator, type MapDataWithWritable } from "../mapData.js";
+import { mapDataValidator, type MapData } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line } from "../line.js";
 import { lineToRouteRequestValidator, routeParametersValidator, type Route } from "../route.js";
@@ -8,7 +8,7 @@ import { type View } from "../view.js";
 import * as z from "zod";
 import { setLanguageRequestValidator, type StreamId, subscribeToMapPickValidator, type RoutePoints } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
-import { apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
+import { anyMapSlugValidator, apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
 import { optionalParam, type LinePoints } from "../api/api-common.js";
 import type { DeepReadonly } from "../utility.js";
 
@@ -26,8 +26,8 @@ export const socketV3RequestValidators = {
 
 	subscribeToMap: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([mapSlugValidator]),
-		z.tuple([mapSlugValidator, optionalParam(subscribeToMapOptionsValidator)])
+		z.tuple([anyMapSlugValidator]),
+		z.tuple([anyMapSlugValidator, optionalParam(subscribeToMapOptionsValidator)])
 	]),
 	createMapAndSubscribe: z.union([
 		z.tuple([mapDataValidator.create,]),
@@ -60,7 +60,7 @@ export type SocketApiV3<Validated extends boolean = false> = ApiV3<Validated> & 
 };
 
 export interface MapEventsV3Interface {
-	mapData: [MapSlug, MapDataWithWritable];
+	mapData: [MapSlug, MapData];
 	mapSlugRename: [Record<MapSlug, MapSlug>];
 	deleteMap: [MapSlug];
 	marker: [MapSlug, Marker];

@@ -1,7 +1,7 @@
 import {
 	ApiVersion, CRU, Units, type AllAdminMapObjects, type AllAdminMapObjectsItem, type AllMapObjects, type AllMapObjectsItem, type AllMapObjectsPick, type Api, type Bbox,
 	type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
-	type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData, type MapDataWithWritable,
+	type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData,
 	type MapSlug, type Marker, type PagedResults, type PagingInput, type RouteInfo, type RouteRequest,
 	type SearchResult, type StreamedResults, type TrackPoint, type Type, type View
 } from "facilmap-types";
@@ -123,7 +123,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async getMap(mapSlug: MapSlug): Promise<MapDataWithWritable> {
+	async getMap(mapSlug: MapSlug): Promise<MapData> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}`);
 		return await res.json();
 	}
@@ -149,7 +149,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return await res.json();
 	}
 
-	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
+	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapData> {
 		const res = await this.fetch(`/map/${encodeURIComponent(mapSlug)}`, {
 			method: "PUT",
 			body: data

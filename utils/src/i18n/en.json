@@ -66,5 +66,11 @@
         "feature-with-name-role": "{{feature}} ({{name}}, role: {{role}})",
         "feature-with-name": "{{feature}} ({{name}})",
         "feature-with-role": "{{feature}} (role: {{role}})"
+    },
+    "permissions": {
+        "configure-map-permission-needed": "No permission to change map settings.",
+        "administrate-map-permission-needed": "No permission to administrate map.",
+        "read-type-permission-needed": "No permission to access objects of type {{typeId}}.",
+        "update-type-permission-needed": "No permission to edit objects of type {{typeId}}."
     }
 }

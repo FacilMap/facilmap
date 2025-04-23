@@ -3,7 +3,9 @@
     "api": {
         "map-not-exist-error": "This map does not exist.",
         "unknown-format-error": "Unknown format",
-        "admin-revert-error": "This kind of change can only be reverted in admin mode."
+        "admin-revert-error": "This kind of change can only be reverted in admin mode.",
+        "password-required": "Map password required.",
+        "wrong-password": "Wrong map password."
     },
     "database": {
         "type-not-found-error": "Type {{typeId}} does not exist.",
@@ -14,14 +16,10 @@
         "route-points-less-than-two-points-error": "A line cannot have less than two route points.",
         "cannot-use-type-for-line-error": "Cannot use {{type}} type for line.",
         "cannot-use-type-for-marker-error": "Cannot use {{type}} type for marker.",
-        "unique-map-ids-error": "Read-only, read-write and admin ID have to be different from each other.",
-        "unique-map-ids-read-write-error": "Read-only and read-write ID cannot be the same.",
-        "unique-map-ids-read-admin-error": "Read-only and admin ID cannot be the same.",
-        "unique-map-ids-write-admin-error": "Read-write and admin ID cannot be the same.",
-        "map-id-taken-error": "ID '{{id}}' is already taken.",
+        "map-slug-taken-error": "Map slug '{{slug}}' is already taken.",
         "map-disappeared-error": "Map has disappeared after updating.",
-        "only-in-admin-error": "Only available in admin mode.",
-        "only-in-write-error": "Only available in write mode."
+        "map-slug-not-found-error": "No map link with the slug {{mapSlug}} could be found.",
+        "map-link-by-hash-not-found-error": "The map link of this token does not exist anymore. This means that the map link has been removed or its slug or password has been changed."
     },
     "frontend": {
         "requires-javascript": "{{appName}} requires JavaScript to work.",

@@ -1,6 +1,6 @@
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model } from "sequelize";
-import DatabaseBackend from "./database.js";
-import { createModel } from "./helpers.js";
+import DatabaseBackend from "./database-backend.js";
+import { createModel } from "./utils.js";
 
 interface MetaModel extends Model<InferAttributes<MetaModel>, InferCreationAttributes<MetaModel>> {
 	key: string;
@@ -38,20 +38,20 @@ const INITIAL_META: { [K in keyof MetaProperties]: MetaProperties[K] } = {
 	mapIdMigrationCompleted: "3"
 };
 
-export default class DatabaseMeta {
+export default class DatabaseMetaBackend {
 
 	MetaModel = createModel<MetaModel>();
 
-	_db: DatabaseBackend;
+	protected backend: DatabaseBackend;
 
-	constructor(database: DatabaseBackend) {
-		this._db = database;
+	constructor(backend: DatabaseBackend) {
+		this.backend = backend;
 
 		this.MetaModel.init({
 			key: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
 			value: { type: DataTypes.TEXT, allowNull: false }
 		}, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			modelName: "Meta"
 		});
 	}

@@ -44,8 +44,8 @@ export function verifyMapToken(token: string, secret: Buffer): MapTokenPayload {
 	return verify(token, secret) as any;
 }
 
-export async function getTokenHash(mapSlug: string, salt: Buffer, password: string | null): Promise<string> {
-	const pwd = `${mapSlug}${password ? `\n${password}` : ""}`;
+export async function getTokenHash(mapSlug: string, salt: Buffer, passwordHash: Buffer | null): Promise<string> {
+	const pwd = `${mapSlug}${passwordHash ? `\n${encodeBase64Url(passwordHash)}` : ""}`;
 	const hash = await scrypt(pwd.normalize(), salt, 12);
 	return encodeBase64Url(hash);
 }

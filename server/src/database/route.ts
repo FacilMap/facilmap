@@ -1,78 +1,24 @@
 import { generateRandomId } from "../utils/utils.js";
-import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, type WhereOptions } from "sequelize";
 import Database from "./database.js";
-import type { BboxWithZoom, ID, Latitude, Longitude, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
-import { type BboxWithExcept, createModel, findAllStreamed, getPosType, getVirtualLatType, getVirtualLonType } from "./helpers.js";
+import type { BboxWithExcept, BboxWithZoom, ID, Point, Route, RouteMode, TrackPoint } from "facilmap-types";
 import { calculateRouteForLine } from "../routing/routing.js";
-import { omit } from "lodash-es";
-import type { Point as GeoJsonPoint } from "geojson";
 import { iterableToArray } from "../utils/streams.js";
+import type DatabaseRoutesBackend from "../database-backend/route.js";
 
-const updateTimes: Record<string, number> = {};
-
-interface RoutePointModel extends Model<InferAttributes<RoutePointModel>, InferCreationAttributes<RoutePointModel>> {
-	routeId: string;
-	lat: Latitude;
-	lon: Longitude;
-	pos: GeoJsonPoint;
-	zoom: number;
-	idx: number;
-	ele: number | null;
-	toJSON: () => TrackPoint;
-}
+const routeAbort: Record<string, AbortController> = {};
 
 export default class DatabaseRoutes {
 
-	private RoutePointModel = createModel<RoutePointModel>();
-
-	_db: Database;
+	protected db: Database;
+	protected backend: DatabaseRoutesBackend;
 
 	constructor(database: Database) {
-		this._db = database;
-
-		this.RoutePointModel.init({
-			routeId: { type: DataTypes.STRING, allowNull: false },
-			lat: getVirtualLatType(),
-			lon: getVirtualLonType(),
-			pos: getPosType(),
-			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
-			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-			ele: {
-				type: DataTypes.INTEGER,
-				allowNull: true,
-				set: function(this: RoutePointModel, v: number | null) {
-					// Round number to avoid integer column error in Postgres
-					this.setDataValue("ele", v != null ? Math.round(v) : v);
-				}
-			}
-		}, {
-			sequelize: this._db._conn,
-			indexes: [
-				{ fields: [ "routeId", "zoom" ] }
-				// pos index is created in migration
-			],
-			modelName: "RoutePoint"
-		});
+		this.db = database;
+		this.backend = database.backend.routes;
 	}
 
 	async getRoutePoints(routeId: string, bboxWithZoom?: BboxWithZoom & BboxWithExcept, getCompleteBasicRoute = false): Promise<TrackPoint[]> {
-		const cond: WhereOptions = {
-			routeId,
-			...(!bboxWithZoom ? {} : {
-				[Op.or]: [
-					{ [Op.and]: [ this._db.helpers.makeBboxCondition(bboxWithZoom), { zoom: { [Op.lte]: bboxWithZoom.zoom } } ] },
-					...(!getCompleteBasicRoute ? [] : [
-						{ zoom: { [Op.lte]: 5 } }
-					])
-				]
-			})
-		};
-
-		return (await this.RoutePointModel.findAll({
-			where: cond,
-			attributes: [ "pos", "lat", "lon", "idx", "ele"],
-			order: [[ "idx", "ASC" ]]
-		})).map((point) => omit(point.toJSON(), ["pos"]) as TrackPoint);
+		return await this.backend.getRoutePoints(routeId, bboxWithZoom, getCompleteBasicRoute);
 	}
 
 	async generateRouteId(): Promise<string> {
@@ -80,94 +26,67 @@ export default class DatabaseRoutes {
 		return generateRandomId(20);
 	}
 
-	async createRoute(routePoints: Point[], mode: RouteMode): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
+	async createRoute(routePoints: Point[], mode: RouteMode): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] })> {
 		const routeId = await this.generateRouteId();
 		return await this.updateRoute(routeId, routePoints, mode, true);
 	}
 
-	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
-		const thisTime = Date.now();
-		updateTimes[routeId] = thisTime;
+	async updateRoute(routeId: string, routePoints: Point[], mode: RouteMode, _noClear = false): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] })> {
+		routeAbort[routeId]?.abort();
+		const abort = routeAbort[routeId] = new AbortController();
 
-		const routeInfoP = calculateRouteForLine({ mode, routePoints });
-		routeInfoP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
+		try {
+			const routeInfo = await calculateRouteForLine({ mode, routePoints });
 
-		if(!_noClear)
-			await this.deleteRoute(routeId, true);
+			abort.signal.throwIfAborted();
 
-		if(thisTime != updateTimes[routeId])
-			return;
+			await this.backend.setRoutePoints(routeId, routeInfo.trackPoints, { noClear: _noClear, signal: abort.signal });
 
-		await this.RoutePointModel.destroy({
-			where: { routeId }
-		});
+			abort.signal.throwIfAborted();
 
-		if(thisTime != updateTimes[routeId])
-			return;
-
-		const routeInfo = await routeInfoP;
-
-		if(thisTime != updateTimes[routeId])
-			return;
-
-		const create = [ ];
-		for(const trackPoint of routeInfo.trackPoints) {
-			create.push({ ...trackPoint, routeId: routeId });
+			return {
+				routeId,
+				routePoints,
+				mode,
+				...routeInfo
+			};
+		} finally {
+			if (routeAbort[routeId] === abort) {
+				delete routeAbort[routeId];
+			}
 		}
-
-		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, create);
-
-		if(thisTime != updateTimes[routeId])
-			return;
-
-		return {
-			routeId,
-			routePoints,
-			mode,
-			...routeInfo
-		};
 	}
 
 	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
-		const clear = !!routeId;
+		const noClear = !routeId;
 
 		if (!routeId)
 			routeId = await this.generateRouteId();
 
-		const thisTime = Date.now();
-		updateTimes[routeId] = thisTime;
+		routeAbort[routeId]?.abort();
+		const abort = routeAbort[routeId] = new AbortController();
 
-		if(clear) {
-			await this.RoutePointModel.destroy({
-				where: { routeId }
-			});
-		}
+		const [line, linePoints] = await Promise.all([
+			await this.db.lines.getLine(mapId, lineId),
+			iterableToArray((async function*(this: DatabaseRoutes) {
+				for await (const linePoint of this.db.lines.getLinePointsForLine(lineId)) {
+					yield {
+						routeId,
+						lat: linePoint.lat,
+						lon: linePoint.lon,
+						ele: linePoint.ele,
+						zoom: linePoint.zoom,
+						idx: linePoint.idx
+					};
+				}
+			}).call(this))
+		]);
 
-		if(thisTime != updateTimes[routeId])
-			return;
+		abort.signal.throwIfAborted();
 
-		const line = await this._db.lines.getLine(mapId, lineId);
-		const linePointsIt = this._db.lines.getLinePointsForLine(lineId);
-		const linePoints = await iterableToArray((async function*() {
-			for await (const linePoint of linePointsIt) {
-				yield {
-					routeId,
-					lat: linePoint.lat,
-					lon: linePoint.lon,
-					ele: linePoint.ele,
-					zoom: linePoint.zoom,
-					idx: linePoint.idx
-				};
-			}
-		})());
+		await this.backend.setRoutePoints(routeId, linePoints, { noClear, signal: abort.signal });
 
-		if(thisTime != updateTimes[routeId])
-			return;
-
-		await this._db.helpers._bulkCreateInBatches(this.RoutePointModel, linePoints);
-
-		if(thisTime != updateTimes[routeId])
-			return;
+		abort.signal.throwIfAborted();
 
 		return {
 			routeId,
@@ -175,10 +94,10 @@ export default class DatabaseRoutes {
 			routePoints: line.routePoints,
 			trackPoints: linePoints,
 			distance: line.distance,
-			time: line.time ?? undefined,
-			ascent: line.ascent ?? undefined,
-			descent: line.descent ?? undefined,
-			extraInfo: line.extraInfo ?? undefined,
+			time: line.time,
+			ascent: line.ascent,
+			descent: line.descent,
+			extraInfo: line.extraInfo,
 			top: line.top,
 			left: line.left,
 			bottom: line.bottom,
@@ -186,33 +105,17 @@ export default class DatabaseRoutes {
 		};
 	}
 
-	async deleteRoute(routeId: string, _noConcurrencyCheck = false): Promise<void> {
-		if (!_noConcurrencyCheck)
-			updateTimes[routeId] = Date.now();
-
-		await this.RoutePointModel.destroy({
-			where: {
-				routeId
-			}
-		});
+	async deleteRoute(routeId: string): Promise<void> {
+		routeAbort[routeId]?.abort();
+		await this.backend.deleteRoute(routeId);
 	}
 
 	async getRoutePointsByIdx(routeId: string, indexes: number[]): Promise<TrackPoint[]> {
-		const data = await this.RoutePointModel.findAll({
-			where: { routeId, idx: indexes },
-			attributes: [ "pos", "lat", "lon", "idx", "ele" ],
-			order: [[ "idx", "ASC" ]]
-		});
-		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
+		return await this.backend.getRoutePointsByIdx(routeId, indexes);
 	}
 
-	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
-		for await (const routePoint of findAllStreamed(this.RoutePointModel, {
-			where: { routeId },
-			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "idx", "ele", "zoom"]
-		})) {
-			yield omit(routePoint.toJSON(), ["id", "pos"]) as TrackPoint;
-		}
+	getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
+		return this.backend.getAllRoutePoints(routeId);
 	}
 
 }

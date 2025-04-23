@@ -49,7 +49,10 @@ export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simpl
 	const ret: RawRouteInfo = {
 		trackPoints: [],
 		distance: 0,
-		time: 0
+		time: 0,
+		ascent: null,
+		descent: null,
+		extraInfo: null
 	};
 
 	for(const body of results) {

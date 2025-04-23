@@ -217,6 +217,8 @@ Parameters:
 
 Result: <code>[Marker](./types.md#marker)</code>, the created marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
 
+If you don’t set the elevation of the marker, it will be determined on the server asynchronously. This means that the `ele` property of the returned marker will be `null`, but if you fetch the marker again a few seconds later, it will contain a number. When using the Socket API, you will receive this update in the form of a `marker` event.
+
 ## `updateMarker()`
 
 Client: `updateMarker(mapSlug, markerId, marker)` or `mapSubscription.updateMarker(markerId, marker)`\
@@ -231,6 +233,8 @@ Parameters:
 * `marker` (<code>[Marker](./types.md#marker)</code>): The marker properties to update
 
 Result: <code>[Marker](./types.md#marker)</code>, the updated marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
+
+If you update the marker position but don’t set an elevation as part of the update, the elevation will be determined on the server asynchronously. This means that the `ele` property of the returned marker will be `null`, but if you fetch the marker again a few seconds later, it will contain a number. When using the Socket API, you will receive this update in the form of a `marker` event.
 
 ## `deleteMarker()`
 

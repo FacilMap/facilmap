@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, lineValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, canEditType, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
+	import { canControl, canConfigureMap, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -52,7 +52,7 @@
 
 	const showEditTypeDialog = ref<ID>();
 
-	const resolvedCanEditType = computed(() => canEditType(clientSub.value.data.mapData, type.value));
+	const resolvedCanEditType = computed(() => canConfigureMap(clientSub.value.data.mapData, type.value));
 
 	watch(originalLine, (newLine, oldLine) => {
 		if (!newLine) {

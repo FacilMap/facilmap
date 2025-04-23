@@ -1,11 +1,11 @@
 import {
-	ApiVersion, CRU, DEFAULT_PAGING, Writable, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator,
-	exportFormatValidator, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator,
+	ApiVersion, CRU, DEFAULT_PAGING, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator,
+	exportFormatValidator, isMapToken, lineValidator, mapDataValidator, markerValidator, pagingValidator, pointValidator,
 	routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator,
-	type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type Api,
+	type AllAdminMapObjectsItem, type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type AnyMapSlug, type Api,
 	type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
 	type HistoryEntry, type ID, type Line, type LinePoints, type LineTemplate, type LineWithTrackPoints, type MapData,
-	type MapDataWithWritable, type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route,
+	type MapSlug, type Marker, type PagedResults, type ReplaceProperties, type Route,
 	type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults, type TrackPoint, type Type,
 	type View
 } from "facilmap-types";
@@ -13,14 +13,17 @@ import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
 import { apiImpl, stringArrayValidator, stringifiedJsonValidator, type ApiImpl } from "./api-common";
-import { getLineTemplate, getSafeFilename, normalizeLineName } from "facilmap-utils";
+import { canAdministrateMap, canConfigureMap, checkAdministrateMap, checkConfigureMap, getLineTemplate, getSafeFilename, mergeMapPermissions, normalizeLineName } from "facilmap-utils";
 import { exportLineToTrackGpx, exportLineToRouteGpx } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
 import { findQuery, findUrl } from "../search";
-import { iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
+import { flatMapAsyncIterable, iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
 import { arrayStream, stringifyJsonStream, objectStream, type SerializableJsonValue } from "json-stream-es";
 import { exportLineToGeoJson } from "../export/geojson";
+import { decodeMapTokenUnverified, getPasswordHash, verifyMapToken } from "../utils/crypt";
+import { stripLine, stripLinePoints, stripMapData, stripMarker, stripType, stripView, type RawMapLink } from "../utils/permissions";
+import { omit } from "lodash-es";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected database: Database;
@@ -31,32 +34,73 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		this.remoteAddr = remoteAddr;
 	}
 
-	protected async resolveMapSlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
-		return await this.database.maps.getMapDataBySlug(mapSlug, minimumPermissions);
+	protected async resolveMapSlug(anyMapSlug: AnyMapSlug | RawMapLink): Promise<MapData> {
+		if (typeof anyMapSlug === "object" && "mapId" in anyMapSlug) {
+			const rawMapData = await this.database.maps.getMapData(anyMapSlug.mapId, { notFound404: true });
+			return stripMapData(anyMapSlug, rawMapData);
+		} else {
+			const { mapSlug, password } = typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug;
+			let rawMapLink;
+			let rawMapData;
+			if (isMapToken(mapSlug)) {
+				const tokenUnverified = decodeMapTokenUnverified(mapSlug);
+				const unstrippedMapLink = await this.database.maps.getMapLinkByHash(tokenUnverified.mapId, tokenUnverified.tokenHash, { notFound404: true });
+				rawMapData = await this.database.maps.getMapData(unstrippedMapLink.mapId, { notFound404: true });
+				const token = verifyMapToken(mapSlug, rawMapData.jwtSecret);
+				rawMapLink = {
+					...unstrippedMapLink,
+					permissions: mergeMapPermissions(unstrippedMapLink.permissions, token.permissions)
+				};
+			} else {
+				rawMapLink = await this.database.maps.getMapLinkBySlug(mapSlug, { notFound404: true });
+				rawMapData = await this.database.maps.getMapData(rawMapLink.mapId, { notFound404: true });
+
+				if (rawMapLink.password) {
+					if (password == null) {
+						throw Object.assign(new Error(getI18n().t("api.password-required")), { status: 401 });
+					} else if (await getPasswordHash(password, rawMapData.salt) !== rawMapLink.password) {
+						throw Object.assign(new Error(getI18n().t("api.wrong-password")), { status: 401 });
+					}
+				}
+			}
+			return stripMapData(rawMapLink, rawMapData);
+		}
 	}
 
-	protected async* getMapObjectsUntyped<M extends MapDataWithWritable = MapDataWithWritable>(
-		mapData: M,
+	protected async* getMapObjectsUntyped(
+		mapData: MapData,
 		{ pick, bbox }: { pick: ReadonlyArray<AllMapObjectsPick>; bbox?: BboxWithZoom }
-	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[AllMapObjectsPick]> {
+	): AsyncIterable<AllMapObjectsTypes[AllMapObjectsPick]> {
 		if (pick.includes("mapData")) {
 			yield { type: "mapData", data: mapData };
 		}
 
 		if (pick.includes("types")) {
-			yield { type: "types", data: this._getMapTypes(mapData) };
+			yield { type: "types", data: flatMapAsyncIterable(this._getMapTypes(mapData), (type) => {
+				const result = stripType(mapData.activeLink, type);
+				return result ? [result] : [];
+			}) };
 		}
 
 		if (pick.includes("views")) {
-			yield { type: "views", data: this._getMapViews(mapData) };
+			yield { type: "views", data: flatMapAsyncIterable(this._getMapViews(mapData), (view) => {
+				const result = stripView(mapData.activeLink, view);
+				return result ? [result] : [];
+			}) };
 		}
 
 		if (pick.includes("markers")) {
-			yield { type: "markers", data: this._getMapMarkers(mapData, { bbox }) };
+			yield { type: "markers", data: flatMapAsyncIterable(this._getMapMarkers(mapData, { bbox }), (marker) => {
+				const result = stripMarker(mapData.activeLink, marker, false);
+				return result ? [result] : [];
+			}) };
 		}
 
 		if (pick.includes("lines") || pick.includes("linesWithTrackPoints")) {
-			yield { type: "lines", data: this._getMapLines(mapData, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox }) };
+			yield { type: "lines", data: flatMapAsyncIterable(this._getMapLines(mapData, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox }), (line) => {
+				const result = stripLine(mapData.activeLink, line, false);
+				return result ? [result] : [];
+			}) };
 		}
 
 		if (pick.includes("linePoints")) {
@@ -64,60 +108,63 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	protected getMapObjects<Pick extends AllMapObjectsPick, M extends MapDataWithWritable = MapDataWithWritable>(
-		mapData: M,
+	protected getMapObjects<Pick extends AllMapObjectsPick>(
+		mapData: MapData,
 		{ pick, bbox }: { readonly pick: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }
-	): AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]> {
-		return this.getMapObjectsUntyped(mapData, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<ReplaceProperties<AllMapObjectsTypes, { mapData: { type: "mapData", data: M } }>[Pick]>;
+	): AsyncIterable<AllMapObjectsTypes[Pick]> {
+		return this.getMapObjectsUntyped(mapData, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<AllMapObjectsTypes[Pick]>;
 	}
 
 	async findMaps(query: string, paging = DEFAULT_PAGING): Promise<PagedResults<FindMapsResult>> {
 		return await this.database.maps.findMaps(query, paging);
 	}
 
-	async getMap(mapSlug: string): Promise<MapDataWithWritable> {
-		return await this.resolveMapSlug(mapSlug, Writable.READ);
+	async getMap(mapSlug: AnyMapSlug | RawMapLink): Promise<MapData> {
+		return await this.resolveMapSlug(mapSlug);
 	}
 
 	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { readonly pick?: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>>> {
 		const mapData = await this.database.maps.createMap(data);
-		return this.getMapObjects({ ...mapData, writable: Writable.ADMIN }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
+		return this.getMapObjects(mapData, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
 	}
 
-	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapDataWithWritable> {
-		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
+	async updateMap(mapSlug: AnyMapSlug | RawMapLink, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapData> {
+		const mapData = await this.resolveMapSlug(mapSlug);
 
-		return {
-			...await this.database.maps.updateMapData(mapData.id, data),
-			writable: mapData.writable
-		};
+		checkConfigureMap(mapData.activeLink.permissions);
+
+		const resolvedData = canAdministrateMap(mapData.activeLink.permissions) ? data : omit(data, ["mapLinks"]);
+
+		return await this.database.maps.updateMapData(mapData.id, resolvedData);
 	}
 
-	async deleteMap(mapSlug: MapSlug): Promise<void> {
-		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
+	async deleteMap(mapSlug: AnyMapSlug | RawMapLink): Promise<void> {
+		const mapData = await this.resolveMapSlug(mapSlug);
+		checkAdministrateMap(mapData.activeLink.permissions);
+
 		await this.database.maps.deleteMap(mapData.id);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linesWithTrackPoints" | "types" | "views">(mapSlug: MapSlug, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
-		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
+	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linesWithTrackPoints" | "types" | "views">(mapSlug: AnyMapSlug | RawMapLink, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+		const mapData = await this.resolveMapSlug(mapSlug);
 		return this.getMapObjects(mapData, {
 			...options,
 			pick: options?.pick ?? ["mapData", "types", "views", ...options?.bbox ? ["markers", "linesWithTrackPoints"] : ["lines"]] as Pick[]
 		});
 	}
 
-	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
+	async findOnMap(mapSlug: AnyMapSlug | RawMapLink, query: string): Promise<FindOnMapResult[]> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return await this.database.search.search(mapData.id, query);
 	}
 
-	async getHistory(mapSlug: MapSlug, paging = DEFAULT_PAGING): Promise<PagedResults<HistoryEntry>> {
+	async getHistory(mapSlug: AnyMapSlug | RawMapLink, paging = DEFAULT_PAGING): Promise<PagedResults<HistoryEntry>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 
 		return await this.database.history.getPagedHistory(mapData.id, mapData.writable === Writable.ADMIN ? undefined : ["Marker", "Line"], paging);
 	}
 
-	async revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {
+	async revertHistoryEntry(mapSlug: AnyMapSlug | RawMapLink, historyEntryId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 
 		const historyEntry = await this.database.history.getHistoryEntry(mapData.id, historyEntryId, { notFound404: true });
@@ -136,7 +183,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	async getMapMarkers(mapSlug: MapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
+	async getMapMarkers(mapSlug: AnyMapSlug | RawMapLink, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 
 		return {
@@ -144,22 +191,22 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async getMarker(mapSlug: MapSlug, markerId: ID): Promise<Marker> {
+	async getMarker(mapSlug: AnyMapSlug | RawMapLink, markerId: ID): Promise<Marker> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
 	}
 
-	async createMarker(mapSlug: MapSlug, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
+	async createMarker(mapSlug: AnyMapSlug | RawMapLink, data: Marker<CRU.CREATE_VALIDATED>): Promise<Marker> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.markers.createMarker(mapData.id, data);
 	}
 
-	async updateMarker(mapSlug: MapSlug, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>): Promise<Marker> {
+	async updateMarker(mapSlug: AnyMapSlug | RawMapLink, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>): Promise<Marker> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.markers.updateMarker(mapData.id, markerId, data, { notFound404: true });
 	}
 
-	async deleteMarker(mapSlug: MapSlug, markerId: ID): Promise<void> {
+	async deleteMarker(mapSlug: AnyMapSlug | RawMapLink, markerId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		await this.database.markers.deleteMarker(mapData.id, markerId, { notFound404: true });
 	}
@@ -175,23 +222,26 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	_getMapLinePoints(mapData: MapDataWithWritable, options?: { bbox?: BboxWithZoom }): AsyncIterable<LinePoints> {
-		return this.database.lines.getLinePointsForMap(mapData.id, options?.bbox);
+	_getMapLinePoints(mapData: MapData, options?: { bbox?: BboxWithZoom }): AsyncIterable<LinePoints> {
+		return flatMapAsyncIterable(this.database.lines.getLinePointsForMap(mapData.id, options?.bbox), async (linePoints) => {
+			const result = stripLinePoints(mapData.activeLink, linePoints, false);
+			return result ? [result] : [];
+		});
 	}
 
-	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
+	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: AnyMapSlug | RawMapLink, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return {
 			results: this._getMapLines(mapData, options)
 		};
 	}
 
-	async getLine(mapSlug: MapSlug, lineId: ID): Promise<Line> {
+	async getLine(mapSlug: AnyMapSlug | RawMapLink, lineId: ID): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 	}
 
-	async getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithZoom }): Promise<StreamedResults<TrackPoint>> {
+	async getLinePoints(mapSlug: AnyMapSlug | RawMapLink, lineId: ID, options?: { bbox?: BboxWithZoom }): Promise<StreamedResults<TrackPoint>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		const line = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 		return {
@@ -199,22 +249,22 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async createLine(mapSlug: MapSlug, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
+	async createLine(mapSlug: AnyMapSlug | RawMapLink, data: Line<CRU.CREATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.lines.createLine(mapData.id, data, { trackPointsFromRoute });
 	}
 
-	async updateLine(mapSlug: MapSlug, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
+	async updateLine(mapSlug: AnyMapSlug | RawMapLink, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Line> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		return await this.database.lines.updateLine(mapData.id, lineId, data, { notFound404: true, trackPointsFromRoute });
 	}
 
-	async deleteLine(mapSlug: MapSlug, lineId: ID): Promise<void> {
+	async deleteLine(mapSlug: AnyMapSlug | RawMapLink, lineId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.WRITE);
 		await this.database.lines.deleteLine(mapData.id, lineId, { notFound404: true });
 	}
 
-	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
+	async exportLine(mapSlug: AnyMapSlug | RawMapLink, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 
 		const lineP = this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
@@ -251,7 +301,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	async getLineTemplate(mapSlug: MapSlug, options: { typeId: ID }): Promise<LineTemplate> {
+	async getLineTemplate(mapSlug: AnyMapSlug | RawMapLink, options: { typeId: ID }): Promise<LineTemplate> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		const type = await this.database.types.getType(mapData.id, options.typeId, { notFound404: true });
 		return getLineTemplate(type);
@@ -261,29 +311,29 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return this.database.types.getTypes(mapData.id);
 	}
 
-	async getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {
+	async getMapTypes(mapSlug: AnyMapSlug | RawMapLink): Promise<StreamedResults<Type>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return {
 			results: this._getMapTypes(mapData)
 		};
 	}
 
-	async getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
+	async getType(mapSlug: AnyMapSlug | RawMapLink, typeId: ID): Promise<Type> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return await this.database.types.getType(mapData.id, typeId, { notFound404: true });
 	}
 
-	async createType(mapSlug: MapSlug, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
+	async createType(mapSlug: AnyMapSlug | RawMapLink, data: Type<CRU.CREATE_VALIDATED>): Promise<Type> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		return await this.database.types.createType(mapData.id, data);
 	}
 
-	async updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
+	async updateType(mapSlug: AnyMapSlug | RawMapLink, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Type> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		return await this.database.types.updateType(mapData.id, typeId, data, { notFound404: true });
 	}
 
-	async deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
+	async deleteType(mapSlug: AnyMapSlug | RawMapLink, typeId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		await this.database.types.deleteType(mapData.id, typeId, { notFound404: true });
 	}
@@ -292,29 +342,29 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return this.database.views.getViews(mapData.id);
 	}
 
-	async getMapViews(mapSlug: MapSlug): Promise<StreamedResults<View>> {
+	async getMapViews(mapSlug: AnyMapSlug | RawMapLink): Promise<StreamedResults<View>> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return {
 			results: this._getMapViews(mapData)
 		};
 	}
 
-	async getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
+	async getView(mapSlug: AnyMapSlug | RawMapLink, viewId: ID): Promise<View> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.READ);
 		return await this.database.views.getView(mapData.id, viewId, { notFound404: true });
 	}
 
-	async createView(mapSlug: MapSlug, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
+	async createView(mapSlug: AnyMapSlug | RawMapLink, data: View<CRU.CREATE_VALIDATED>): Promise<View> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		return await this.database.views.createView(mapData.id, data);
 	}
 
-	async updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
+	async updateView(mapSlug: AnyMapSlug | RawMapLink, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<View> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		return await this.database.views.updateView(mapData.id, viewId, data, { notFound404: true });
 	}
 
-	async deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
+	async deleteView(mapSlug: AnyMapSlug | RawMapLink, viewId: ID): Promise<void> {
 		const mapData = await this.resolveMapSlug(mapSlug, Writable.ADMIN);
 		await this.database.views.deleteView(mapData.id, viewId, { notFound404: true });
 	}

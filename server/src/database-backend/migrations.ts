@@ -1,21 +1,21 @@
 import { generateRandomId, promiseProps } from "../utils/utils.js";
 import { DataTypes, Op, Utils, col, fn } from "sequelize";
 import { cloneDeep, isEqual, omit } from "lodash-es";
-import DatabaseBackend from "./database.js";
+import DatabaseBackend from "./database-backend.js";
 import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
 import { forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
-import type { ID, Line, MapId, MapPermissions, Marker, Type } from "facilmap-types";
+import type { ID, Line, MapPermissions, Marker, Type } from "facilmap-types";
 import { streamToIterable } from "../utils/streams.js";
 import { createJwtSecret, createSalt, getTokenHash } from "../utils/crypt.js";
 
-export default class DatabaseMigrations {
+export default class DatabaseBackendMigrations {
 
-	_db: DatabaseBackend;
+	backend: DatabaseBackend;
 
-	constructor(database: DatabaseBackend) {
-		this._db = database;
+	constructor(backend: DatabaseBackend) {
+		this.backend = backend;
 	}
 
 	async _runMigrationsBeforeSync(): Promise<void> {
@@ -52,7 +52,7 @@ export default class DatabaseMigrations {
 
 	/** Rename Pads table to Maps */
 	async _renamePadsTableMigration(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
 		if (await queryInterface.tableExists("Pads") && !await queryInterface.tableExists("Maps")) {
 			console.log("DB migration: Rename Pads table to Maps");
@@ -63,7 +63,7 @@ export default class DatabaseMigrations {
 
 	/** Run any migrations that rename columns */
 	async _renameColMigrations(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
 
 		const markerAttrs = await queryInterface.describeTable('Markers');
@@ -92,7 +92,7 @@ export default class DatabaseMigrations {
 		// Change routing type "shortest" / "fastest" to "car", add type "track"
 		if(lineAttrs.mode.type.indexOf("shortest") != -1) {
 			console.log("DB migration: Change \"shortest\"/\"fastest\" route mode to \"car\"");
-			await this._db.lines.LineModel.update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } });
+			await this.backend.lines.LineModel.update({ mode: "car" }, { where: { mode: { [Op.in]: [ "fastest", "shortest" ] } } });
 		}
 
 		// Rename Line.padId to Line.mapId
@@ -137,7 +137,7 @@ export default class DatabaseMigrations {
 		// Rename writeId to adminId
 		if(!mapAttrs.adminId) {
 			console.log("DB migration: Rename map writeId to adminId");
-			const MapModel = this._db.maps.MapModel;
+			const MapModel = this.backend.maps.MapModel;
 			await queryInterface.renameColumn('Maps', 'writeId', 'adminId');
 			await queryInterface.addColumn('Maps', 'writeId', MapModel.rawAttributes.writeId);
 
@@ -146,7 +146,7 @@ export default class DatabaseMigrations {
 				let writeId;
 				do {
 					writeId = generateRandomId(14);
-				} while (await this._db.maps.mapSlugExists(writeId));
+				} while (await this.backend.maps.mapSlugExists(writeId));
 
 				await MapModel.update({writeId}, { where: { id: map.id } });
 			}
@@ -165,7 +165,7 @@ export default class DatabaseMigrations {
 
 	/** Run any migrations that change column types */
 	async _changeColMigrations(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
 		//////////
 		// Maps //
@@ -176,26 +176,26 @@ export default class DatabaseMigrations {
 		// Forbid null map name
 		if (mapsAttributes.name.allowNull) {
 			console.log("DB migration: Change null map names to \"\"");
-			await this._db.maps.MapModel.update({ name: "" }, { where: { name: null as any } });
-			await queryInterface.changeColumn("Maps", "name", this._db.maps.MapModel.getAttributes().name);
+			await this.backend.maps.MapModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Maps", "name", this.backend.maps.MapModel.getAttributes().name);
 		}
 
 		// Change description type from STRING to TEXT
 		if (mapsAttributes.description.type !== "TEXT") {
 			console.log("DB migration: Change Maps.description from STRING to TEXT");
-			await queryInterface.changeColumn("Maps", "description", this._db.maps.MapModel.getAttributes().description);
+			await queryInterface.changeColumn("Maps", "description", this.backend.maps.MapModel.getAttributes().description);
 		}
 
 		// Change legend1 type from STRING to TEXT
 		if (mapsAttributes.legend1.type !== "TEXT") {
 			console.log("DB migration: Change Maps.legend1 from STRING to TEXT");
-			await queryInterface.changeColumn("Maps", "legend1", this._db.maps.MapModel.getAttributes().legend1);
+			await queryInterface.changeColumn("Maps", "legend1", this.backend.maps.MapModel.getAttributes().legend1);
 		}
 
 		// Change legend2 type from STRING to TEXT
 		if (mapsAttributes.legend2.type !== "TEXT") {
 			console.log("DB migration: Change Maps.legend2 from STRING to TEXT");
-			await queryInterface.changeColumn("Maps", "legend2", this._db.maps.MapModel.getAttributes().legend2);
+			await queryInterface.changeColumn("Maps", "legend2", this.backend.maps.MapModel.getAttributes().legend2);
 		}
 
 
@@ -208,34 +208,34 @@ export default class DatabaseMigrations {
 		// Forbid null marker name
 		if (markersAttributes.name.allowNull) {
 			console.log("DB migration: Change null marker names to \"\"");
-			await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: null as any } });
-			await queryInterface.changeColumn("Markers", "name", this._db.markers.MarkerModel.getAttributes().name);
+			await this.backend.markers.MarkerModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Markers", "name", this.backend.markers.MarkerModel.getAttributes().name);
 		}
 
 		// Remove marker colour default value
 		if (markersAttributes.colour.defaultValue) {
 			console.log("DB migration: Remove defaultValue from Markers.colour");
-			await queryInterface.changeColumn("Markers", "colour", this._db.markers.MarkerModel.getAttributes().colour);
+			await queryInterface.changeColumn("Markers", "colour", this.backend.markers.MarkerModel.getAttributes().colour);
 		}
 
 		// Remove marker size default value
 		if (markersAttributes.size.defaultValue) {
 			console.log("DB migration: Remove defaultValue from Markers.size");
-			await queryInterface.changeColumn("Markers", "size", this._db.markers.MarkerModel.getAttributes().size);
+			await queryInterface.changeColumn("Markers", "size", this.backend.markers.MarkerModel.getAttributes().size);
 		}
 
 		// Forbid null marker icon
 		if (markersAttributes.icon.allowNull) {
 			console.log("DB migration: Remove defaultValue from Markers.icon");
-			await this._db.markers.MarkerModel.update({ icon: "" }, { where: { icon: null as any } });
-			await queryInterface.changeColumn("Markers", "icon", this._db.markers.MarkerModel.getAttributes().icon);
+			await this.backend.markers.MarkerModel.update({ icon: "" }, { where: { icon: null as any } });
+			await queryInterface.changeColumn("Markers", "icon", this.backend.markers.MarkerModel.getAttributes().icon);
 		}
 
 		// Forbid null marker shape
 		if (markersAttributes.shape.allowNull) {
 			console.log("DB migration: Remove defaultValue from Markers.shape");
-			await this._db.markers.MarkerModel.update({ shape: "" }, { where: { shape: null as any } });
-			await queryInterface.changeColumn("Markers", "shape", this._db.markers.MarkerModel.getAttributes().shape);
+			await this.backend.markers.MarkerModel.update({ shape: "" }, { where: { shape: null as any } });
+			await queryInterface.changeColumn("Markers", "shape", this.backend.markers.MarkerModel.getAttributes().shape);
 		}
 
 
@@ -248,27 +248,27 @@ export default class DatabaseMigrations {
 		// Forbid null line name
 		if (linesAttributes.name.allowNull) {
 			console.log("DB migration: Change null line names to \"\"");
-			await this._db.lines.LineModel.update({ name: "" }, { where: { name: null as any } });
-			await queryInterface.changeColumn("Lines", "name", this._db.lines.LineModel.getAttributes().name);
+			await this.backend.lines.LineModel.update({ name: "" }, { where: { name: null as any } });
+			await queryInterface.changeColumn("Lines", "name", this.backend.lines.LineModel.getAttributes().name);
 		}
 
 		// Change line mode field from ENUM to TEXT
 		// Remove line mode default value
 		if (linesAttributes.mode.type != "TEXT" || linesAttributes.mode.defaultValue) {
 			console.log("DB migration: Change Lines.mode from ENUM to TEXT");
-			await queryInterface.changeColumn("Lines", "mode", this._db.lines.LineModel.getAttributes().mode);
+			await queryInterface.changeColumn("Lines", "mode", this.backend.lines.LineModel.getAttributes().mode);
 		}
 
 		// Remove line width default value
 		if (linesAttributes.width.defaultValue) {
 			console.log("DB migration: Remove defaultValue from Lines.width");
-			await queryInterface.changeColumn("Lines", "width", this._db.lines.LineModel.getAttributes().width);
+			await queryInterface.changeColumn("Lines", "width", this.backend.lines.LineModel.getAttributes().width);
 		}
 
 		// Remove line colour default value
 		if (linesAttributes.colour.defaultValue) {
 			console.log("DB migration: Remove defaultValue from Lines.colour");
-			await queryInterface.changeColumn("Lines", "colour", this._db.lines.LineModel.getAttributes().colour);
+			await queryInterface.changeColumn("Lines", "colour", this.backend.lines.LineModel.getAttributes().colour);
 		}
 
 
@@ -281,83 +281,83 @@ export default class DatabaseMigrations {
 		// Forbid null defaultColour
 		if (typesAttributes.defaultColour.allowNull) {
 			console.log("DB migration: Set default colour for types");
-			await this._db.types.TypeModel.update({ defaultColour: "ff0000" }, {
+			await this.backend.types.TypeModel.update({ defaultColour: "ff0000" }, {
 				where: {
 					defaultColour: null as any,
 					type: "marker"
 				}
 			});
-			await this._db.types.TypeModel.update({ defaultColour: "0000ff" }, {
+			await this.backend.types.TypeModel.update({ defaultColour: "0000ff" }, {
 				where: {
 					defaultColour: null as any,
 					type: "line"
 				}
 			});
-			await queryInterface.changeColumn("Types", "defaultColour", this._db.types.TypeModel.getAttributes().defaultColour);
+			await queryInterface.changeColumn("Types", "defaultColour", this.backend.types.TypeModel.getAttributes().defaultColour);
 		}
 
 		// Forbid null colourFixed
 		if (typesAttributes.colourFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.colourFixed");
-			await this._db.types.TypeModel.update({ colourFixed: false }, { where: { colourFixed: null as any } });
-			await queryInterface.changeColumn("Types", "colourFixed", this._db.types.TypeModel.getAttributes().colourFixed);
+			await this.backend.types.TypeModel.update({ colourFixed: false }, { where: { colourFixed: null as any } });
+			await queryInterface.changeColumn("Types", "colourFixed", this.backend.types.TypeModel.getAttributes().colourFixed);
 		}
 
 		// Forbid null defaultSize
 		if (typesAttributes.defaultSize.allowNull) {
 			console.log("DB migration: Disallow null for Types.defaultSize");
 			// 25 is the old default size, now it is 30
-			await this._db.types.TypeModel.update({ defaultSize: 25 }, { where: { defaultSize: null as any } });
-			await queryInterface.changeColumn("Types", "defaultSize", this._db.types.TypeModel.getAttributes().defaultSize);
+			await this.backend.types.TypeModel.update({ defaultSize: 25 }, { where: { defaultSize: null as any } });
+			await queryInterface.changeColumn("Types", "defaultSize", this.backend.types.TypeModel.getAttributes().defaultSize);
 		}
 
 		// Forbid null sizeFixed
 		if (typesAttributes.sizeFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.sizeFixed");
-			await this._db.types.TypeModel.update({ sizeFixed: false }, { where: { sizeFixed: null as any } });
-			await queryInterface.changeColumn("Types", "sizeFixed", this._db.types.TypeModel.getAttributes().sizeFixed);
+			await this.backend.types.TypeModel.update({ sizeFixed: false }, { where: { sizeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "sizeFixed", this.backend.types.TypeModel.getAttributes().sizeFixed);
 		}
 
 		// Forbid null defaultIcon
 		if (typesAttributes.defaultIcon.allowNull) {
 			console.log("DB migration: Disallow null for Types.defaultIcon");
-			await this._db.types.TypeModel.update({ defaultIcon: "" }, { where: { defaultIcon: null as any } });
-			await queryInterface.changeColumn("Types", "defaultIcon", this._db.types.TypeModel.getAttributes().defaultIcon);
+			await this.backend.types.TypeModel.update({ defaultIcon: "" }, { where: { defaultIcon: null as any } });
+			await queryInterface.changeColumn("Types", "defaultIcon", this.backend.types.TypeModel.getAttributes().defaultIcon);
 		}
 
 		// Forbid null iconFixed
 		if (typesAttributes.iconFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.iconFixed");
-			await this._db.types.TypeModel.update({ iconFixed: false }, { where: { iconFixed: null as any } });
-			await queryInterface.changeColumn("Types", "iconFixed", this._db.types.TypeModel.getAttributes().iconFixed);
+			await this.backend.types.TypeModel.update({ iconFixed: false }, { where: { iconFixed: null as any } });
+			await queryInterface.changeColumn("Types", "iconFixed", this.backend.types.TypeModel.getAttributes().iconFixed);
 		}
 
 		// Forbid null defaultShape
 		if (typesAttributes.defaultShape.allowNull) {
 			console.log("DB migration: Disallow null for Types.defaultShape");
-			await this._db.types.TypeModel.update({ defaultShape: "" }, { where: { defaultShape: null as any } });
-			await queryInterface.changeColumn("Types", "defaultShape", this._db.types.TypeModel.getAttributes().defaultShape);
+			await this.backend.types.TypeModel.update({ defaultShape: "" }, { where: { defaultShape: null as any } });
+			await queryInterface.changeColumn("Types", "defaultShape", this.backend.types.TypeModel.getAttributes().defaultShape);
 		}
 
 		// Forbid null shapeFixed
 		if (typesAttributes.shapeFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.shapeFixed");
-			await this._db.types.TypeModel.update({ shapeFixed: false }, { where: { shapeFixed: null as any } });
-			await queryInterface.changeColumn("Types", "shapeFixed", this._db.types.TypeModel.getAttributes().shapeFixed);
+			await this.backend.types.TypeModel.update({ shapeFixed: false }, { where: { shapeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "shapeFixed", this.backend.types.TypeModel.getAttributes().shapeFixed);
 		}
 
 		// Forbid null defaultWidth
 		if (typesAttributes.defaultWidth.allowNull) {
 			console.log("DB migration: Disallow null for Types.defaultWidth");
-			await this._db.types.TypeModel.update({ defaultWidth: 4 }, { where: { defaultWidth: null as any } });
-			await queryInterface.changeColumn("Types", "defaultWidth", this._db.types.TypeModel.getAttributes().defaultWidth);
+			await this.backend.types.TypeModel.update({ defaultWidth: 4 }, { where: { defaultWidth: null as any } });
+			await queryInterface.changeColumn("Types", "defaultWidth", this.backend.types.TypeModel.getAttributes().defaultWidth);
 		}
 
 		// Forbid null widthFixed
 		if (typesAttributes.widthFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.widthFixed");
-			await this._db.types.TypeModel.update({ widthFixed: false }, { where: { widthFixed: null as any } });
-			await queryInterface.changeColumn("Types", "widthFixed", this._db.types.TypeModel.getAttributes().widthFixed);
+			await this.backend.types.TypeModel.update({ widthFixed: false }, { where: { widthFixed: null as any } });
+			await queryInterface.changeColumn("Types", "widthFixed", this.backend.types.TypeModel.getAttributes().widthFixed);
 		}
 
 		// Change defaultMode from ENUM to TEXT
@@ -365,38 +365,38 @@ export default class DatabaseMigrations {
 		if (typesAttributes.defaultMode.type != "TEXT" || typesAttributes.defaultMode.allowNull) {
 			if (typesAttributes.defaultMode.allowNull) {
 				console.log("DB migration: Disallow null for Types.defaultMode");
-				await this._db.types.TypeModel.update({ defaultMode: "" }, { where: { defaultMode: null as any } });
+				await this.backend.types.TypeModel.update({ defaultMode: "" }, { where: { defaultMode: null as any } });
 			}
 			console.log("DB migration: Change Types.defaultMode from ENUM to TEXT");
-			await queryInterface.changeColumn("Types", "defaultMode", this._db.types.TypeModel.getAttributes().defaultMode);
+			await queryInterface.changeColumn("Types", "defaultMode", this.backend.types.TypeModel.getAttributes().defaultMode);
 		}
 
 		// Forbid null modeFixed
 		if (typesAttributes.modeFixed.allowNull) {
 			console.log("DB migration: Disallow null for Types.modeFixed");
-			await this._db.types.TypeModel.update({ modeFixed: false }, { where: { modeFixed: null as any } });
-			await queryInterface.changeColumn("Types", "modeFixed", this._db.types.TypeModel.getAttributes().modeFixed);
+			await this.backend.types.TypeModel.update({ modeFixed: false }, { where: { modeFixed: null as any } });
+			await queryInterface.changeColumn("Types", "modeFixed", this.backend.types.TypeModel.getAttributes().modeFixed);
 		}
 
 		// Forbid null showInLegend
 		if (typesAttributes.showInLegend.allowNull) {
 			console.log("DB migration: Disallow null for Types.showInLegend");
-			await this._db.types.TypeModel.update({ showInLegend: false }, { where: { showInLegend: null as any } });
-			await queryInterface.changeColumn("Types", "showInLegend", this._db.types.TypeModel.getAttributes().showInLegend);
+			await this.backend.types.TypeModel.update({ showInLegend: false }, { where: { showInLegend: null as any } });
+			await queryInterface.changeColumn("Types", "showInLegend", this.backend.types.TypeModel.getAttributes().showInLegend);
 		}
 	}
 
 
 	/** Add all missing columns */
 	async _addColMigrations(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 		const exempt = [
 			// These are added in another migration below
 			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
 		];
 
 		for (const table of [ 'Map', 'MapLink', 'Marker', 'MarkerData', 'Type', 'View', 'Line', 'LineData', 'LinePoint' ]) {
-			const model = this._db._conn.model(table);
+			const model = this.backend._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			const rawAttributes = model.getAttributes();
 			for(const attribute in rawAttributes) {
@@ -411,18 +411,18 @@ export default class DatabaseMigrations {
 
 	/** Get rid of the dropdown key, save the value in the data instead */
 	async _dropdownKeyMigration(): Promise<void> {
-		const dropdownKeysMigrated = await this._db.meta.getMeta("dropdownKeysMigrated");
+		const dropdownKeysMigrated = await this.backend.meta.getMeta("dropdownKeysMigrated");
 		if(dropdownKeysMigrated == "1")
 			return;
 
 		console.log("DB migration: Change dropdown keys to dropdown values");
 
-		const types = await this._db.types.TypeModel.findAll();
+		const types = await this.backend.types.TypeModel.findAll();
 		for(const type of types) {
 			const newFields = type.fields; // type.fields is a getter, we cannot modify the object directly
 			const dropdowns = newFields.filter((field) => field.type == "dropdown");
 			if(dropdowns.length > 0) {
-				const objectStream = (type.type == "line" ? this._db.lines.getMapLinesByType(type.mapId, type.id) : this._db.markers.getMapMarkersByType(type.mapId, type.id));
+				const objectStream = (type.type == "line" ? this.backend.lines.getMapLinesByType(type.mapId, type.id) : this.backend.markers.getMapMarkersByType(type.mapId, type.id));
 
 				for await (const object of objectStream) {
 					const newData = cloneDeep(object.data);
@@ -434,8 +434,13 @@ export default class DatabaseMigrations {
 							console.log(`DB migration: Warning: Dropdown key ${newData[dropdown.id]} for field ${dropdown.name} of type ${type.name} of map ${type.mapId} does not exist.`);
 					}
 
-					if(!isEqual(newData, object.data))
-						return this._db.helpers._updateMapObject(type.type == "line" ? "Line" : "Marker", object.mapId, object.id, {data: newData}, { noHistory: true });
+					if (!isEqual(newData, object.data)) {
+						if (type.type === "line") {
+							await this.backend.lines.updateLine(object.mapId, object.id, { data: newData });
+						} else {
+							await this.backend.markers.updateMarker(object.mapId, object.id, { data: newData });
+						}
+					}
 				}
 
 				dropdowns.forEach((dropdown) => {
@@ -452,24 +457,24 @@ export default class DatabaseMigrations {
 					});
 				});
 
-				await this._db.helpers._updateMapObject("Type", type.mapId, type.id, {fields: newFields}, { noHistory: true });
+				await this.backend.types.updateType(type.mapId, type.id, { fields: newFields });
 			}
 		}
 
-		await this._db.meta.setMeta("dropdownKeysMigrated", "1");
+		await this.backend.meta.setMeta("dropdownKeysMigrated", "1");
 	}
 
 
 	/* Get elevation data for all lines/markers that don't have any yet */
 	async _elevationMigration(): Promise<void> {
 		try {
-			const hasElevation = await this._db.meta.getMeta("hasElevation");
+			const hasElevation = await this.backend.meta.getMeta("hasElevation");
 			if(hasElevation == "2")
 				return;
 
 			console.log("DB migration: Get marker elevations in background");
 
-			const markers = await this._db.markers.MarkerModel.findAll({ where: { ele: null } });
+			const markers = await this.backend.markers.MarkerModel.findAll({ where: { ele: null } });
 
 			let anyError = false;
 			const stream = new ReadableStream<{ marker: MarkerModel; ele: number | undefined }>({
@@ -490,7 +495,7 @@ export default class DatabaseMigrations {
 
 			let i = 0;
 			for await (const { marker, ele } of streamToIterable(stream)) {
-				await this._db.helpers._updateMapObject("Marker", marker.mapId, marker.id, { ele }, { noHistory: true });
+				await this.backend.markers.updateMarker(marker.mapId, marker.id, { ele });
 
 				if (++i % 1000 === 0) {
 					console.log(`DB migration: Elevation migration ${i}/${markers.length}`);
@@ -501,7 +506,7 @@ export default class DatabaseMigrations {
 				console.warn("DB migration: There were errors, not marking elevation migration as completed.");
 			} else {
 				console.log("DB migration: Elevation migration completed");
-				await this._db.meta.setMeta("hasElevation", "2");
+				await this.backend.meta.setMeta("hasElevation", "2");
 			}
 		} catch (err: any) {
 			console.error("DB migration: Elevation migration crashed", err);
@@ -511,13 +516,13 @@ export default class DatabaseMigrations {
 
 	/* Add showInLegend field to types */
 	async _legendMigration(): Promise<void> {
-		const hasLegendOption = await this._db.meta.getMeta("hasLegendOption");
+		const hasLegendOption = await this.backend.meta.getMeta("hasLegendOption");
 		if(hasLegendOption == "1")
 			return;
 
 		console.log("DB migration: Add Types.showInLegend");
 
-		const types = await this._db.types.TypeModel.findAll();
+		const types = await this.backend.types.TypeModel.findAll();
 		for(const type of types) {
 			let showInLegend = false;
 
@@ -533,23 +538,23 @@ export default class DatabaseMigrations {
 				}
 			}
 
-			await this._db.helpers._updateMapObject("Type", type.mapId, type.id, { showInLegend }, { noHistory: true });
+			await this.backend.types.updateType(type.mapId, type.id, { showInLegend });
 		}
 
-		await this._db.meta.setMeta("hasLegendOption", "1");
+		await this.backend.meta.setMeta("hasLegendOption", "1");
 	}
 
 
 	/* Calculate bounding box for lines */
 	async _bboxMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("hasBboxes") == "1")
+		if(await this.backend.meta.getMeta("hasBboxes") == "1")
 			return;
 
 		console.log("DB migration: Add line bboxes");
 
-		const LinePoint = this._db.lines.LinePointModel;
+		const LinePoint = this.backend.lines.LinePointModel;
 
-		for(const line of await this._db.lines.LineModel.findAll()) {
+		for(const line of await this.backend.lines.LineModel.findAll()) {
 			const bbox = await promiseProps({
 				top: LinePoint.min<number, LinePointModel>("lat", { where: { lineId: line.id } }),
 				bottom: LinePoint.max<number, LinePointModel>("lat", { where: { lineId: line.id } }),
@@ -558,22 +563,22 @@ export default class DatabaseMigrations {
 			});
 
 			if(isNaN(bbox.top) || isNaN(bbox.left) || isNaN(bbox.bottom) || isNaN(bbox.right)) // This is a broken line without track points
-				await this._db.helpers._deleteMapObject("Line", line.mapId, line.id);
+				await this.backend.lines.deleteLine(line.mapId, line.id);
 			else
-				await this._db.helpers._updateMapObject("Line", line.mapId, line.id, bbox, { noHistory: true });
+				await this.backend.lines.updateLine(line.mapId, line.id, bbox);
 		}
 
-		await this._db.meta.setMeta("hasBboxes", "1");
+		await this.backend.meta.setMeta("hasBboxes", "1");
 	}
 
 
 	/** Change lat/lon types into spatial points */
 	async _spatialMigration(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
 		for (const modelName of ["Marker", "LinePoint", "RoutePoint"]) {
 			// Add 'pos' column
-			const model = this._db._conn.model(modelName);
+			const model = this.backend._conn.model(modelName);
 			const table = model.getTableName() as string;
 			const attrs = await queryInterface.describeTable(table);
 			if(!attrs.pos) {
@@ -601,26 +606,26 @@ export default class DatabaseMigrations {
 
 	/** Clear "Untitled marker", "Untitled line" and "New FacilMap" names. These are now rendered in the frontend instead. */
 	async _untitledMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("untitledMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("untitledMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Empty name for unnamed markers/lines/maps");
 
-		await this._db.markers.MarkerModel.update({ name: "" }, { where: { name: "Untitled marker" } });
-		await this._db.lines.LineModel.update({ name: "" }, { where: { name: "Untitled line" } });
-		await this._db.maps.MapModel.update({ name: "" }, { where: { name: "New FacilMap" } });
+		await this.backend.markers.MarkerModel.update({ name: "" }, { where: { name: "Untitled marker" } });
+		await this.backend.lines.LineModel.update({ name: "" }, { where: { name: "Untitled line" } });
+		await this.backend.maps.MapModel.update({ name: "" }, { where: { name: "New FacilMap" } });
 
-		await this._db.meta.setMeta("untitledMigrationCompleted", "1");
+		await this.backend.meta.setMeta("untitledMigrationCompleted", "1");
 	}
 
 	/** Remove various null values from type fields. */
 	async _fieldsNullMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("fieldsNullMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("fieldsNullMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Normalize null values for field properties");
 
-		const allTypes = await this._db.types.TypeModel.findAll({
+		const allTypes = await this.backend.types.TypeModel.findAll({
 			attributes: ["id", "fields"]
 		});
 
@@ -652,18 +657,18 @@ export default class DatabaseMigrations {
 			}
 		}
 
-		await this._db.meta.setMeta("fieldsNullMigrationCompleted", "1");
+		await this.backend.meta.setMeta("fieldsNullMigrationCompleted", "1");
 	}
 
 
 	/** Convert "null" to null for extraInfo */
 	async _extraInfoNullMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("extraInfoNullMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("extraInfoNullMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Change Lines.extraInfo from \"null\"/\"{}\" to null");
 
-		await this._db.lines.LineModel.update({
+		await this.backend.lines.LineModel.update({
 			extraInfo: null
 		}, {
 			where: {
@@ -673,21 +678,21 @@ export default class DatabaseMigrations {
 			}
 		});
 
-		await this._db.meta.setMeta("extraInfoNullMigrationCompleted", "1");
+		await this.backend.meta.setMeta("extraInfoNullMigrationCompleted", "1");
 	}
 
 	/** Add Types.idx */
 	async _typesIdxMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("typesIdxMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("typesIdxMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Set initial values for Types.idx");
 
-		const allTypes = await this._db.types.TypeModel.findAll({
+		const allTypes = await this.backend.types.TypeModel.findAll({
 			attributes: ["id", "mapId"]
 		});
 
-		let lastIndex: Record<MapId, number> = Object.create(null);
+		let lastIndex: Record<ID, number> = Object.create(null);
 
 		for (const type of allTypes) {
 			if (!Object.prototype.hasOwnProperty.call(lastIndex, type.mapId)) {
@@ -697,21 +702,21 @@ export default class DatabaseMigrations {
 			await type.update({ idx: ++lastIndex[type.mapId] });
 		}
 
-		await this._db.meta.setMeta("typesIdxMigrationCompleted", "1");
+		await this.backend.meta.setMeta("typesIdxMigrationCompleted", "1");
 	}
 
 	/** Add Views.idx */
 	async _viewsIdxMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("viewsIdxMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("viewsIdxMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Set initial values for Views.idx");
 
-		const allViews = await this._db.views.ViewModel.findAll({
+		const allViews = await this.backend.views.ViewModel.findAll({
 			attributes: ["id", "mapId"]
 		});
 
-		let lastIndex: Record<MapId, number> = Object.create(null);
+		let lastIndex: Record<ID, number> = Object.create(null);
 
 		for (const view of allViews) {
 			if (!Object.prototype.hasOwnProperty.call(lastIndex, view.mapId)) {
@@ -721,17 +726,17 @@ export default class DatabaseMigrations {
 			await view.update({ idx: ++lastIndex[view.mapId] });
 		}
 
-		await this._db.meta.setMeta("viewsIdxMigrationCompleted", "1");
+		await this.backend.meta.setMeta("viewsIdxMigrationCompleted", "1");
 	}
 
 	/** Rename Field.controlSymbol to Field.controlIcon and FieldOption.symbol to FieldOption.icon */
 	async _fieldIconsMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("fieldIconsMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("fieldIconsMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Rename Field.controlSymbol to Field.controlIcon and FieldOption.symbol to FieldOption.icon");
 
-		const allTypes = await this._db.types.TypeModel.findAll({
+		const allTypes = await this.backend.types.TypeModel.findAll({
 			attributes: ["id", "fields"]
 		});
 
@@ -760,32 +765,32 @@ export default class DatabaseMigrations {
 			}
 		}
 
-		await this._db.meta.setMeta("fieldIconsMigrationCompleted", "1");
+		await this.backend.meta.setMeta("fieldIconsMigrationCompleted", "1");
 	}
 
 	/** Rename Pad to Map in History.type */
 	async _historyPadMigration(): Promise<void> {
-		if(await this._db.meta.getMeta("historyPadMigrationCompleted") == "1")
+		if(await this.backend.meta.getMeta("historyPadMigrationCompleted") == "1")
 			return;
 
 		console.log("DB migration: Rename Pad to Map in History.type");
 
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
 		await queryInterface.changeColumn("History", "type", DataTypes.TEXT);
 
-		await this._db.history.HistoryModel.update({ type: "Map" }, { where: { type: "Pad" } });
+		await this.backend.history.HistoryModel.update({ type: "Map" }, { where: { type: "Pad" } });
 
-		await queryInterface.changeColumn("History", "type", this._db.history.HistoryModel.getAttributes().type);
+		await queryInterface.changeColumn("History", "type", this.backend.history.HistoryModel.getAttributes().type);
 
-		await this._db.meta.setMeta("historyPadMigrationCompleted", "1");
+		await this.backend.meta.setMeta("historyPadMigrationCompleted", "1");
 	}
 
 	/** Rename Map.id to Map.readId and create Map.id */
 	async _mapIdMigration(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
+		const queryInterface = this.backend._conn.getQueryInterface();
 
-		let mapIdMigrationCompleted = await this._db.meta.getMeta("mapIdMigrationCompleted");
+		let mapIdMigrationCompleted = await this.backend.meta.getMeta("mapIdMigrationCompleted");
 
 		if (mapIdMigrationCompleted == null) {
 			console.log("DB migration: Copy values of Map.id to Map.readId");
@@ -795,7 +800,7 @@ export default class DatabaseMigrations {
 
 			// We store this completion separately so that if the migration aborts later while generating new IDs, we don't copy
 			// those new IDs to readId on the next run.
-			await this._db.meta.setMeta("mapIdMigrationCompleted", "1");
+			await this.backend.meta.setMeta("mapIdMigrationCompleted", "1");
 			mapIdMigrationCompleted = "1";
 		}
 
@@ -806,13 +811,13 @@ export default class DatabaseMigrations {
 			// primary keys).
 			await queryInterface.bulkUpdate("Maps", { id: col("readId") }, {});
 
-			const maps = await this._db.maps.MapModel.findAll({
+			const maps = await this.backend.maps.MapModel.findAll({
 				attributes: ["id"]
 			});
 
 			// First generate increasing ID numbers as strings in the existing column
 			for (let i = 0; i < maps.length; i++) {
-				await this._db.maps.MapModel.update({
+				await this.backend.maps.MapModel.update({
 					id: `${i + 1}` as any
 				}, {
 					where: {
@@ -821,7 +826,7 @@ export default class DatabaseMigrations {
 				});
 			}
 
-			await this._db.meta.setMeta("mapIdMigrationCompleted", "2");
+			await this.backend.meta.setMeta("mapIdMigrationCompleted", "2");
 			mapIdMigrationCompleted = "2";
 		}
 
@@ -840,7 +845,7 @@ export default class DatabaseMigrations {
 			// Then convert the ID field to an integer. We need to omit the primary key field here, as the field is already the
 			// primary key, and adding the statement again will lead to "ERROR 1068 (42000): Multiple primary key defined".
 			console.log("DB migration: Change Map.id to integer");
-			await queryInterface.changeColumn("Maps", "id", omit(this._db.maps.MapModel.getAttributes().id, ["primaryKey"]));
+			await queryInterface.changeColumn("Maps", "id", omit(this.backend.maps.MapModel.getAttributes().id, ["primaryKey"]));
 
 			console.log("DB migration: Add back mapId foreign keys");
 			for (const tableName of ["Markers", "Lines", "Types", "Views", "History"]) {
@@ -861,7 +866,7 @@ export default class DatabaseMigrations {
 			}
 
 			console.log("DB migration: Rename Map.id to Map.readId in history");
-			const historyEntries = await this._db.history.HistoryModel.findAll({
+			const historyEntries = await this.backend.history.HistoryModel.findAll({
 				where: { type: "Map" },
 				attributes: ["id", "objectBefore", "objectAfter"]
 			});
@@ -883,7 +888,7 @@ export default class DatabaseMigrations {
 				await historyEntry.save();
 			}
 
-			await this._db.meta.setMeta("mapIdMigrationCompleted", "3");
+			await this.backend.meta.setMeta("mapIdMigrationCompleted", "3");
 			mapIdMigrationCompleted = "3";
 		}
 	}
@@ -891,9 +896,9 @@ export default class DatabaseMigrations {
 
 	/** Change marker/line data key from field name to field ID */
 	async _fieldIdMigration(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
-		const markerDataAttrs = await queryInterface.describeTable(this._db.markers.MarkerDataModel.getTableName());
-		const lineDataAttrs = await queryInterface.describeTable(this._db.lines.LineDataModel.getTableName());
+		const queryInterface = this.backend._conn.getQueryInterface();
+		const markerDataAttrs = await queryInterface.describeTable(this.backend.markers.MarkerDataModel.getTableName());
+		const lineDataAttrs = await queryInterface.describeTable(this.backend.lines.LineDataModel.getTableName());
 
 		if (!markerDataAttrs.name && !lineDataAttrs.name) {
 			return;
@@ -904,7 +909,7 @@ export default class DatabaseMigrations {
 		if (markerDataAttrs.name && lineDataAttrs.name) {
 			const nextFieldId: Record<ID, ID> = {};
 
-			const allTypes = await this._db.types.TypeModel.findAll({
+			const allTypes = await this.backend.types.TypeModel.findAll({
 				attributes: ["id", "mapId", "type", "fields"]
 			});
 
@@ -932,7 +937,7 @@ export default class DatabaseMigrations {
 					await type.update({ fields });
 				}
 
-				for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Type", objectId: type.id } })) {
+				for (const historyEntry of await this.backend.history.HistoryModel.findAll({ where: { type: "Type", objectId: type.id } })) {
 					let entryChanged = false;
 					for (const field of [...(historyEntry.objectBefore as Type | undefined)?.fields ?? [], ...(historyEntry.objectAfter as Type | undefined)?.fields ?? []]) {
 						if (fieldMap[field.name]) {
@@ -957,13 +962,13 @@ export default class DatabaseMigrations {
 				}
 
 				if (type.type === "marker") {
-					const markerIds = (await this._db.markers.MarkerModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((m) => m.id);
+					const markerIds = (await this.backend.markers.MarkerModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((m) => m.id);
 
 					for (const [name, id] of Object.entries(fieldMap)) {
-						await this._db.markers.MarkerDataModel.update({ fieldId: id }, { where: { markerId: { [Op.in]: markerIds }, ["name" as any]: name } });
+						await this.backend.markers.MarkerDataModel.update({ fieldId: id }, { where: { markerId: { [Op.in]: markerIds }, ["name" as any]: name } });
 					}
 
-					for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Marker", objectId: { [Op.in]: markerIds } } })) {
+					for (const historyEntry of await this.backend.history.HistoryModel.findAll({ where: { type: "Marker", objectId: { [Op.in]: markerIds } } })) {
 						if (historyEntry.objectBefore) {
 							historyEntry.objectBefore = { // Must overwrite whole objectBefore property, as it is stringified
 								...historyEntry.objectBefore,
@@ -979,13 +984,13 @@ export default class DatabaseMigrations {
 						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
 					}
 				} else if (type.type === "line") {
-					const lineIds = (await this._db.lines.LineModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((l) => l.id);
+					const lineIds = (await this.backend.lines.LineModel.findAll({ where: { typeId: type.id }, attributes: ["id"] })).map((l) => l.id);
 
 					for (const [name, id] of Object.entries(fieldMap)) {
-						await this._db.lines.LineDataModel.update({ fieldId: id }, { where: { lineId: { [Op.in]: lineIds }, ["name" as any]: name } });
+						await this.backend.lines.LineDataModel.update({ fieldId: id }, { where: { lineId: { [Op.in]: lineIds }, ["name" as any]: name } });
 					}
 
-					for (const historyEntry of await this._db.history.HistoryModel.findAll({ where: { type: "Line", objectId: { [Op.in]: lineIds } } })) {
+					for (const historyEntry of await this.backend.history.HistoryModel.findAll({ where: { type: "Line", objectId: { [Op.in]: lineIds } } })) {
 						if (historyEntry.objectBefore) {
 							(historyEntry.objectBefore as Line).data = Object.fromEntries(Object.entries((historyEntry.objectBefore as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
 						}
@@ -998,7 +1003,7 @@ export default class DatabaseMigrations {
 			}
 
 
-			const allMaps = await this._db.maps.MapModel.findAll({ attributes: ["id"] });
+			const allMaps = await this.backend.maps.MapModel.findAll({ attributes: ["id"] });
 			for (const map of allMaps) {
 				await map.update({
 					nextFieldId: nextFieldId[map.id] ?? 1
@@ -1006,16 +1011,16 @@ export default class DatabaseMigrations {
 			}
 		}
 
-		await queryInterface.removeColumn(this._db.markers.MarkerDataModel.getTableName(), "name");
-		await queryInterface.removeColumn(this._db.lines.LineDataModel.getTableName(), "name");
+		await queryInterface.removeColumn(this.backend.markers.MarkerDataModel.getTableName(), "name");
+		await queryInterface.removeColumn(this.backend.lines.LineDataModel.getTableName(), "name");
 
 		console.log("DB migration: Introduce field IDs finished");
 	}
 
 
 	async _mapLinkMigration(): Promise<void> {
-		const queryInterface = this._db._conn.getQueryInterface();
-		const attrs = await queryInterface.describeTable(this._db.maps.MapModel.getTableName());
+		const queryInterface = this.backend._conn.getQueryInterface();
+		const attrs = await queryInterface.describeTable(this.backend.maps.MapModel.getTableName());
 
 		if (!attrs["readId"] && !attrs["writeId"] && !attrs["adminId"]) {
 			return;
@@ -1026,7 +1031,7 @@ export default class DatabaseMigrations {
 		// If some ID columns are already missing, the previous migration attempt aborted while deleting columns. This means
 		// that the MapLinks table is already ready.
 		if (attrs["readId"] && attrs["writeId"] && attrs["adminId"]) {
-			const allMaps = await this._db.maps.MapModel.findAll({
+			const allMaps = await this.backend.maps.MapModel.findAll({
 				attributes: ["id", "salt", "jwtSecret", "readId", "writeId", "adminId"]
 			});
 
@@ -1043,7 +1048,7 @@ export default class DatabaseMigrations {
 				}
 			}
 
-			const existingMapLinks = new Set((await this._db.maps.MapLinkModel.findAll({ attributes: ["slug"] })).map((l) => l.slug));
+			const existingMapLinks = new Set((await this.backend.maps.MapLinkModel.findAll({ attributes: ["slug"] })).map((l) => l.slug));
 
 			await forEachAsync(allMaps, async (map, i) => {
 				if ((i + 1) % 100 === 0) {
@@ -1056,13 +1061,13 @@ export default class DatabaseMigrations {
 					["readId", { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
 				] as const) {
 					if (!existingMapLinks.has(map[idProp])) {
-						await this._db.maps.MapLinkModel.build({
+						await this.backend.maps.MapLinkModel.create({
 							mapId: map.id,
 							slug: map[idProp],
 							password: null,
 							tokenHash: await getTokenHash(map[idProp], map.salt, null),
 							permissions
-						}).save();
+						});
 					}
 				}
 			}, 8); // Default concurrency is 4, can be increased through UV_THREADPOOL_SIZE, see https://nodejs.org/dist/latest-v16.x/docs/api/cli.html#uv_threadpool_sizesize

@@ -434,31 +434,37 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				const existingRoute = this.routeSubscriptionDetails[routeKey];
 
-				let routeInfo;
-				if ("lineId" in params) {
-					const mapData = await this.api.getMap(params.mapSlug);
-					routeInfo = await this.database.routes.lineToRoute(existingRoute?.routeId, mapData.id, params.lineId);
-				} else if (existingRoute) {
-					routeInfo = await this.database.routes.updateRoute(existingRoute.routeId, [...params.routePoints], params.mode);
-				} else {
-					routeInfo = await this.database.routes.createRoute([...params.routePoints], params.mode);
-				}
+				try {
+					let routeInfo;
+					if ("lineId" in params) {
+						const mapData = await this.api.getMap(params.mapSlug);
+						routeInfo = await this.database.routes.lineToRoute(existingRoute?.routeId, mapData.id, params.lineId);
+					} else if (existingRoute) {
+						routeInfo = await this.database.routes.updateRoute(existingRoute.routeId, [...params.routePoints], params.mode);
+					} else {
+						routeInfo = await this.database.routes.createRoute([...params.routePoints], params.mode);
+					}
 
-				if(!routeInfo || abort.signal.aborted) {
-					// A newer submitted route has returned in the meantime
-					console.log("Ignoring outdated route");
-					return;
-				}
+					abort.signal.throwIfAborted();
 
-				this.routeSubscriptionDetails[routeKey] = omit(routeInfo, ["trackPoints"]);
+					this.routeSubscriptionDetails[routeKey] = omit(routeInfo, ["trackPoints"]);
 
-				await this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
+					await this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
 
-				if(this.bbox) {
-					await this.emit("routePoints", routeKey, {
-						trackPoints: prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true),
-						reset: true
-					});
+					if(this.bbox) {
+						await this.emit("routePoints", routeKey, {
+							trackPoints: prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true),
+							reset: true
+						});
+					}
+				} catch (err: any) {
+					if (err.name === "AbortError") {
+						// A newer submitted route has returned in the meantime (AbortError thrown by database)
+						// or the route has been unsubscribed in the meantime (AbortError thrown by socket)
+						console.log("Ignoring outdated route");
+					} else {
+						throw err;
+					}
 				}
 			},
 

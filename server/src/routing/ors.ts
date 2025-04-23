@@ -91,9 +91,9 @@ export async function calculateORSRoute(points: Point[], decodedMode: DecodedRou
 		trackPoints: [] as Array<Point & { ele?: number }>,
 		distance: 0,
 		time: 0,
-		ascent: decodedMode.details ? 0 : undefined,
-		descent: decodedMode.details ? 0 : undefined,
-		extraInfo: decodedMode.details ? {} as ExtraInfo : undefined
+		ascent: decodedMode.details ? 0 : null,
+		descent: decodedMode.details ? 0 : null,
+		extraInfo: decodedMode.details ? {} as ExtraInfo : null
 	};
 
 	for(const body of results) {

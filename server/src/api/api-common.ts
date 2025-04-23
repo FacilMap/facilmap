@@ -7,7 +7,11 @@ export const stringifiedJsonValidator = z.string().transform((str) => JSON.parse
 
 export const stringArrayValidator = z.string().transform((str) => str ? str.split(",") : []);
 
-type ApiFunc<Version extends ApiVersion, Func extends keyof Api<Version>> = Api<Version>[Func] extends (...args: any) => any ? Api<Version>[Func] : never;
+type ApiFunc<Version extends ApiVersion, Func extends keyof Api<Version>> = (
+	Api<Version>[Func] extends (...args: any) => any ? (
+		Func extends Api<Version>[Func]
+	) : never
+);
 
 type Method = "get" | "post" | "put" | "delete";
 

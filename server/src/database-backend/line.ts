@@ -1,13 +1,12 @@
-import { type CreationOptional, DataTypes, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, Route, TrackPoint, CRU, RouteInfo, Stroke, Colour, RouteMode, Width, Type, LinePoints } from "facilmap-types";
-import DatabaseBackend from "./database.js";
-import { type BboxWithExcept, createModel, dataDefinition, type DataModel, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeNotNullForeignKey } from "./helpers.js";
-import { chunk, groupBy, isEqual, mapValues, omit } from "lodash-es";
-import { calculateRouteForLine } from "../routing/routing.js";
+import { and, col, type CreationOptional, DataTypes, fn, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op, where } from "sequelize";
+import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept } from "facilmap-types";
+import DatabaseBackend from "./database-backend.js";
+import { bulkCreateInBatches, createModel, dataDefinition, dataFromArr, type DataModel, dataToArr, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./utils.js";
+import { chunk, isEqual, pick } from "lodash-es";
 import type { MapModel } from "./map.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
-import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
+import { type Optional } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import { mapAsyncIterable } from "../utils/streams.js";
 
@@ -32,7 +31,6 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	extraInfo: CreationOptional<ExtraInfo | null>;
 
 	getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
-	toJSON: () => Line;
 }
 
 export interface LineDataModel extends DataModel, Model<InferAttributes<LineDataModel>, InferCreationAttributes<LineDataModel>> {
@@ -48,19 +46,18 @@ export interface LinePointModel extends Model<InferAttributes<LinePointModel>, I
 	zoom: number;
 	idx: number;
 	ele: number | null;
-	toJSON: () => TrackPoint & { lineId: ID; pos: GeoJsonPoint };
 }
 
-export default class DatabaseLines {
+export default class DatabaseLinesBackend {
 
 	LineModel = createModel<LineModel>();
 	LinePointModel = createModel<LinePointModel>();
 	LineDataModel = createModel<LineDataModel>();
 
-	_db: DatabaseBackend;
+	backend: DatabaseBackend;
 
-	constructor(database: DatabaseBackend) {
-		this._db = database;
+	constructor(backend: DatabaseBackend) {
+		this.backend = backend;
 
 		this.LineModel.init({
 			id: getDefaultIdType(),
@@ -119,7 +116,7 @@ export default class DatabaseLines {
 			right: getLonType(),
 			extraInfo: getJsonType("extraInfo", { allowNull: true })
 		}, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			modelName: "Line"
 		});
 
@@ -139,7 +136,7 @@ export default class DatabaseLines {
 				}
 			}
 		}, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			indexes: [
 				{ fields: [ "lineId", "zoom" ] }
 				// pos index is created in migration
@@ -148,17 +145,17 @@ export default class DatabaseLines {
 		});
 
 		this.LineDataModel.init(dataDefinition, {
-			sequelize: this._db._conn,
+			sequelize: this.backend._conn,
 			modelName: "LineData"
 		});
 	}
 
 	afterInit(): void {
-		this.LineModel.belongsTo(this._db.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
-		this._db.maps.MapModel.hasMany(this.LineModel, { foreignKey: "mapId" });
+		this.LineModel.belongsTo(this.backend.maps.MapModel, makeNotNullForeignKey("map", "mapId"));
+		this.backend.maps.MapModel.hasMany(this.LineModel, { foreignKey: "mapId" });
 
 		// TODO: Cascade
-		this.LineModel.belongsTo(this._db.types.TypeModel, makeNotNullForeignKey("type", "typeId", true));
+		this.LineModel.belongsTo(this.backend.types.TypeModel, makeNotNullForeignKey("type", "typeId", true));
 
 		this.LinePointModel.belongsTo(this.LineModel, makeNotNullForeignKey("line", "lineId"));
 		this.LineModel.hasMany(this.LinePointModel, { foreignKey: "lineId" });
@@ -169,7 +166,7 @@ export default class DatabaseLines {
 
 	protected prepareLine(line: LineModel): Line {
 		const data = line.toJSON() as any;
-		data.data = this._db.helpers._dataFromArr(data.lineData);
+		data.data = dataFromArr(data.lineData);
 		delete data.lineData;
 		return data;
 	}
@@ -198,6 +195,14 @@ export default class DatabaseLines {
 		}
 	}
 
+	async isTypeUsed(mapId: ID, typeId: ID): Promise<boolean> {
+		return !!await this.LineModel.findOne({ where: { mapId, typeId }, attributes: ["id"] });
+	}
+
+	async lineExists(mapId: ID, lineId: ID): Promise<boolean> {
+		return !!await this.LineModel.findOne({ where: { mapId, id: lineId }, attributes: ["id"] });
+	}
+
 	async getLine(mapId: ID, lineId: ID): Promise<Line | undefined> {
 		const entry = await this.LineModel.findOne({
 			where: { id: lineId, mapId },
@@ -208,18 +213,28 @@ export default class DatabaseLines {
 		return entry ? this.prepareLine(entry) : undefined;
 	}
 
+	async searchLines(mapId: ID, searchText: string): Promise<Line[]> {
+		const objs = await this.LineModel.findAll({
+			where: and(
+				{ mapId },
+				where(fn("lower", col(`Line.name`)), {[Op.like]: `%${searchText.toLowerCase()}%`})
+			)
+		});
+		return objs.map((obj) => this.prepareLine(obj));
+	}
+
 	protected async setLineData(lineId: ID, data: Record<ID, string>, options?: { noClear?: boolean }): Promise<void> {
 		if (!options?.noClear) {
 			await this.LineDataModel.destroy({ where: { lineId } });
 		}
-		await this.LineDataModel.bulkCreate(this._db.helpers._dataToArr(data, { lineId }));
+		await this.LineDataModel.bulkCreate(dataToArr(data, { lineId }));
 	}
 
-	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED> & Required<Pick<Line<CRU.CREATE_VALIDATED>, "mode" | "colour" | "width" | "stroke">> & Pick<Line, "top" | "right" | "bottom" | "left"> & { id?: ID }): Promise<Line> {
-		const obj = this.LineModel.build({ ...data, mapId });
-
-		const result: any = (await obj.save()).toJSON();
-		result.data = data.data ?? {};
+	async createLine(mapId: ID, data: Optional<Omit<Line, "mapId">, "id">): Promise<Line> {
+		const result = {
+			...(await this.LineModel.create({ ...data, mapId })).toJSON() as any,
+			data: data.data ?? {}
+		};
 		if (data.data) {
 			await this.setLineData(result.id, data.data, { noClear: true });
 		}
@@ -227,7 +242,7 @@ export default class DatabaseLines {
 		return result;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>): Promise<void> {
+	async updateLine(mapId: ID, lineId: ID, data: Partial<Omit<Line, "id" | "mapId">>): Promise<void> {
 		if (Object.keys(data).length > 0 && !isEqual(Object.keys(data), ["data"])) {
 			// We don’t return the update object since we cannot rely on the return value of the update() method.
 			// On some platforms it returns 0 even if the object was found (but no fields were changed).
@@ -241,10 +256,10 @@ export default class DatabaseLines {
 
 	async setLinePoints(mapId: ID, lineId: ID, trackPoints: Point[] | AsyncIterable<Point>, onBatch?: (batch: TrackPoint[]) => void): Promise<void> {
 		await this.LinePointModel.destroy({ where: { lineId } });
-		await this._db.helpers._bulkCreateInBatches<TrackPoint>(
+		await bulkCreateInBatches<TrackPoint>(
 			this.LinePointModel,
 			mapAsyncIterable(trackPoints, (t) => ({ ...t, lineId })),
-			onBatch
+			{ onBatch }
 		);
 	}
 
@@ -252,7 +267,7 @@ export default class DatabaseLines {
 		await this.LineModel.destroy({ where: { id: lineId, mapId } });
 	}
 
-	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<LinePoints> {
+	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<Array<Pick<InferAttributes<LinePointModel>, "lat" | "lon" | "ele" | "zoom" | "idx" | "lineId">>> {
 		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
 		for (const lineIds of chunks) {
@@ -265,22 +280,16 @@ export default class DatabaseLines {
 							} : {},
 							lineId: { [Op.in]: lineIds }
 						},
-						this._db.helpers.makeBboxCondition(bboxWithZoom)
+						makeBboxCondition(this.backend, bboxWithZoom)
 					]
 				},
 				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
 			});
-
-			for (const [key, val] of Object.entries(groupBy(linePoints, "lineId"))) {
-				yield {
-					lineId: Number(key),
-					trackPoints: val.map((p) => omit(p.toJSON(), ["lineId", "pos"]))
-				};
-			}
+			yield linePoints.map((p) => pick(p.toJSON(), ["lat", "lon", "ele", "zoom", "idx", "lineId"]));
 		}
 	}
 
-	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<TrackPoint> {
+	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<Pick<InferAttributes<LinePointModel>, "lat" | "lon" | "ele" | "zoom" | "idx">> {
 		for await (const linePoint of findAllStreamed(this.LinePointModel, {
 			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "ele", "zoom", "idx" ],
 			order: [["idx", "ASC"]],
@@ -289,13 +298,18 @@ export default class DatabaseLines {
 				...bboxWithZoom ? {
 					[Op.and]: [
 						{ zoom: { [Op.lte]: bboxWithZoom.zoom } },
-						this._db.helpers.makeBboxCondition(bboxWithZoom)
+						makeBboxCondition(this.backend, bboxWithZoom)
 					]
 				} : {}
 			}
 		})) {
-			yield omit(linePoint.toJSON(), ["id", "pos"]) as TrackPoint;
+			yield pick(linePoint.toJSON(), ["lat", "lon", "ele", "zoom", "idx"]);
 		}
+	}
+
+	async getTypeIdsForLines(mapId: ID, lineIds: ID[]): Promise<Record<ID, ID>> {
+		const results = await this.LineModel.findAll({ where: { mapId, id: lineIds }, attributes: ["id", "typeId"] });
+		return Object.fromEntries(results.map((result) => [result.id, result.typeId]));
 	}
 
 }

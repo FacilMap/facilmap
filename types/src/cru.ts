@@ -139,7 +139,7 @@ export function exceptUpdate<T extends z.ZodTypeAny>(validator: T): { read: T; c
  * Create a CRU validator where the property is required in read mode but optional in create and update mode.
  * @param defaultValue If specified, this default value is applied in create mode (not in update mode!)
  */
-export function optionalCreate<T extends z.ZodTypeAny, D extends z.infer<T> | undefined = undefined>(validator: T, defaultValue?: D): { read: T; create: D extends undefined ? z.ZodOptional<T> : z.ZodDefault<T>; update: z.ZodOptional<T>; } {
+export function optionalCreate<T extends z.ZodTypeAny, D extends z.infer<T> | undefined = undefined>(validator: T, defaultValue?: D | (() => D)): { read: T; create: D extends undefined ? z.ZodOptional<T> : z.ZodDefault<T>; update: z.ZodOptional<T>; } {
 	return {
 		read: validator,
 		create: defaultValue !== undefined ? validator.default(defaultValue) : validator.optional() as any,

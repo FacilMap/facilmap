@@ -1,255 +1,177 @@
-import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional } from "sequelize";
-import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput, type ID, type MapPermissions } from "facilmap-types";
+import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID } from "facilmap-types";
 import Database from "./database.js";
-import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./helpers.js";
-import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
-import { getMapDataWithWritable, getWritable } from "facilmap-utils";
-import { createSalt, createJwtSecret } from "../utils/crypt.js";
-
-type RawMapData = Omit<MapData, "defaultView"> & { defaultView?: NonNullable<MapData["defaultView"]> };
-
-export interface MapModel extends Model<InferAttributes<MapModel>, InferCreationAttributes<MapModel>> {
-	id: CreationOptional<ID>;
-	name: string;
-	readId: MapSlug;
-	writeId: MapSlug;
-	adminId: MapSlug;
-	/**
-	 * The salt that is used for the map link password hashes. The same salt is used for all passwords within
-	 * the scope of a map and it never changes. This is because the validity of JWT tokens is determined by
-	 * the map slug and password, so if the map slug and/or password are changed, the tokens become invalid,
-	 * but if they are changed back, the tokens become valid again.
-	 */
-	salt: Buffer;
-	jwtSecret: Buffer;
-	searchEngines: boolean;
-	description: string;
-	clusterMarkers: boolean;
-	legend1: string;
-	legend2: string;
-	defaultViewId: ForeignKey<ViewModel["id"]> | null;
-	/** The ID of the next field that will be created */
-	nextFieldId: ID;
-	toJSON: () => RawMapData;
-};
-
-export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, InferCreationAttributes<MapLinkModel>> {
-	id: CreationOptional<ID>;
-	mapId: ForeignKey<MapModel["id"]>;
-	slug: MapSlug;
-	password: Buffer | null;
-	/** Derived from slug and password, used in map tokens */
-	tokenHash: string;
-	permissions: MapPermissions | null;
-}
-
-function fixMapData(rawMapData: RawMapData): MapData {
-	return {
-		...rawMapData,
-		defaultView: rawMapData.defaultView ?? null
-	};
-}
+import { createSalt, createJwtSecret, getPasswordHash, getTokenHash } from "../utils/crypt.js";
+import type DatabaseMapsBackend from "../database-backend/map.js";
+import { type RawMapData, type RawMapLink } from "../utils/permissions.js";
+import { omit } from "lodash-es";
 
 export default class DatabaseMaps {
 
-	MapModel = createModel<MapModel>();
-	MapLinkModel = createModel<MapLinkModel>();
-
-	_db: Database;
+	protected db: Database;
+	protected backend: DatabaseMapsBackend;
 
 	constructor(database: Database) {
-		this._db = database;
-
-		this.MapModel.init({
-			id: getDefaultIdType(),
-			name: { type: DataTypes.TEXT, allowNull: false },
-			readId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
-			writeId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
-			adminId: { type: DataTypes.STRING, allowNull: false, validate: { is: /^.+$/ } },
-			salt: { type: DataTypes.BLOB, allowNull: false },
-			jwtSecret: { type: DataTypes.BLOB, allowNull: false },
-			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
-			nextFieldId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false }
-		}, {
-			sequelize: this._db._conn,
-			modelName: "Map"
-		});
-
-		this.MapLinkModel.init({
-			id: getDefaultIdType(),
-			slug: { type: DataTypes.TEXT, allowNull: false },
-			password: { type: DataTypes.BLOB, allowNull: true },
-			tokenHash: { type: DataTypes.TEXT, allowNull: false },
-			permissions: getJsonType("permissions", { allowNull: true })
-		}, {
-			sequelize: this._db._conn,
-			modelName: "MapLink"
-		});
+		this.db = database;
+		this.backend = database.backend.maps;
 	}
-
-	afterInit(): void {
-		this.MapModel.belongsTo(this._db.views.ViewModel, { as: "defaultView", foreignKey: "defaultViewId", constraints: false });
-
-		this.MapLinkModel.belongsTo(this.MapModel, makeNotNullForeignKey("map", "mapId"));
-		this.MapModel.hasMany(this.MapLinkModel, { foreignKey: "mapId" });
-	}
-
-	// =====================================================================================================================
 
 	async mapSlugExists(mapSlug: MapSlug): Promise<boolean> {
-		const num = await this.MapModel.count({ where: { [Op.or]: [ { readId: mapSlug }, { writeId: mapSlug }, { adminId: mapSlug } ] } });
-		return num > 0;
+		return await this.backend.mapSlugExists(mapSlug);
 	}
 
-	async getMapData(mapId: ID): Promise<MapData | undefined> {
-		const obj = await this.MapModel.findOne({ where: { id: mapId }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ]});
-		return obj ? fixMapData(obj.toJSON()) : undefined;
-	}
-
-	async getMapDataBySlug(mapSlug: MapSlug, minimumPermissions: Writable): Promise<MapDataWithWritable> {
-		const obj = await this.MapModel.findOne({ where: { [Op.or]: { readId: mapSlug, writeId: mapSlug, adminId: mapSlug } }, include: [ { model: this._db.views.ViewModel, as: "defaultView" } ] });
-		const mapData = obj ? fixMapData(obj.toJSON()) : undefined;
-
-		if (!mapData) {
-			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId: mapSlug })), { status: 404 });
+	async getMapData(mapId: ID, options?: { notFound404?: boolean }): Promise<RawMapData> {
+		const result = await this.backend.getMapData(mapId);
+		if (!result) {
+			throw Object.assign(
+				new Error(getI18n().t("map-not-found-error", { mapId })),
+				options?.notFound404 ? { status: 404 } : {}
+			);
 		}
-
-		const writable = getWritable(mapData, mapSlug);
-
-		if (minimumPermissions === Writable.ADMIN && ![Writable.ADMIN].includes(writable))
-			throw Object.assign(new Error(getI18n().t("api.only-in-admin-error")), { status: 403 });
-		else if (minimumPermissions === Writable.WRITE && ![Writable.ADMIN, Writable.WRITE].includes(writable))
-			throw Object.assign(new Error(getI18n().t("api.only-in-write-error")), { status: 403 });
-
-		return getMapDataWithWritable(mapData, writable);
+		return result;
 	}
 
-	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<MapData> {
-		if(data.readId == data.writeId || data.readId == data.adminId || data.writeId == data.adminId)
-			throw Object.assign(new Error(getI18n().t("database.unique-map-ids-error")), { status: 400 });
+	async getMapLinkBySlug(mapSlug: MapSlug, options?: { notFound404?: boolean }): Promise<RawMapLink> {
+		const result = await this.backend.getMapLinkBySlug(mapSlug);
+		if (!result) {
+			throw Object.assign(
+				new Error(getI18n().t("database.map-slug-not-found-error", { mapSlug })),
+				options?.notFound404 ? { status: 404 } : {}
+			);
+		}
+		return result;
+	}
 
-		await Promise.all([data.readId, data.writeId, data.adminId].map(async (id) => {
-			if (await this.mapSlugExists(id))
-				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id })), { status: 409 });
+	async getMapLinkByHash(mapId: ID, tokenHash: string, options?: { notFound404?: boolean }): Promise<RawMapLink> {
+		const result = await this.backend.getMapLinkByHash(mapId, tokenHash);
+		if (!result) {
+			throw Object.assign(
+				new Error(getI18n().t("database.map-link-by-hash-not-found-error")),
+				options?.notFound404 ? { status: 404 } : {}
+			);
+		}
+		return result;
+	}
+
+	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<RawMapData> {
+		await Promise.all([...new Set(data.links.map((l) => l.slug))].map(async (mapSlug) => {
+			if (await this.mapSlugExists(mapSlug)) {
+				throw Object.assign(new Error(getI18n().t("database.map-slug-taken-error", { mapSlug })), { status: 409 });
+			}
 		}));
 
-		const createdObj = await this.MapModel.create({
+		const salt = createSalt();
+
+		const links = await Promise.all(data.links.map(async (link) => {
+			const password = link.password !== false ? await getPasswordHash(link.password, salt) : null;
+			return {
+				...link,
+				password,
+				tokenHash: await getTokenHash(link.slug, salt, password)
+			};
+		}));
+
+		const result = await this.backend.createMap({
 			...data,
-			salt: createSalt(),
+			links,
+			salt,
 			jwtSecret: createJwtSecret(),
 			nextFieldId: 1
 		});
 
 		if (data.createDefaultTypes) {
-			await this._db.types.createDefaultTypes(createdObj.id);
+			await this.db.types.createDefaultTypes(result.id);
 		}
 
-		return fixMapData(createdObj.toJSON());
+		return result;
 	}
 
-	async updateMapData(mapId: ID, data: MapData<CRU.UPDATE_VALIDATED>): Promise<MapData> {
+	async updateMapData(mapId: ID, data: MapData<CRU.UPDATE_VALIDATED>): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
 
-		if(!oldData)
+		if (!oldData) {
 			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId })), { status: 404 });
-
-		if(data.readId != null && data.readId != oldData.readId) {
-			if (await this.mapSlugExists(data.readId))
-				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.readId })), { status: 409 });
 		}
 
-		if(data.writeId != null && data.writeId != oldData.writeId) {
-			if(data.writeId == (data.readId != null ? data.readId : oldData.readId))
-				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-read-write-error")), { status: 400 });
+		const links = data.links && await Promise.all(data.links.map(async (link) => {
+			const oldLink = link.id && oldData.links.find((l) => l.id === link.id);
+			const password = link.password == null && oldLink ? oldLink.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
 
-			if (await this.mapSlugExists(data.writeId))
-				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.writeId })), { status: 409 });
-		}
+			// TODO: Check existence of new link
 
-		if(data.adminId != null && data.adminId != oldData.adminId) {
-			if(data.adminId == (data.readId != null ? data.readId : oldData.readId))
-				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-read-admin-error")), { status: 400 });
-			if(data.adminId == (data.writeId != null ? data.writeId : oldData.writeId))
-				throw Object.assign(new Error(getI18n().t("database.unique-map-ids-write-admin-error")), { status: 400 });
+			return {
+				...omit(link, ["id"]),
+				...oldLink ? { id: link.id } : {},
+				password,
+				tokenHash: await getTokenHash(link.slug, oldData.salt, password)
+			};
+		}));
 
-			if (await this.mapSlugExists(data.adminId))
-				throw Object.assign(new Error(getI18n().t("database.map-id-taken-error", { id: data.adminId })), { status: 409 });
-		}
+		// TODO: Validate links array with create validator
 
-		await this.MapModel.update(data, { where: { id: mapId } });
+		await this.backend.updateMapData(mapId, { ...data, links });
 
 		const newData = await this.getMapData(mapId);
 
-		if (!newData)
+		if (!newData) {
 			throw new Error(getI18n().t("database.map-disappeared-error"));
+		}
 
-		await this._db.history.addHistoryEntry(mapId, {
+		await this.db.history.addHistoryEntry(mapId, {
 			type: "Map",
 			action: "update",
-			objectBefore: oldData,
-			objectAfter: newData
+			objectBefore: omit(oldData, ["salt", "jwtSecret", "nextFieldId"]),
+			objectAfter: omit(newData, ["salt", "jwtSecret", "nextFieldId"])
 		});
 
-		this._db.emit("mapData", mapId, newData);
+		this.db.emit("mapData", mapId, newData);
 		return newData;
 	}
 
 	async deleteMap(mapId: ID): Promise<void> {
 		const mapData = await this.getMapData(mapId);
 
-		if (!mapData)
+		if (!mapData) {
 			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId })), { status: 404 });
+		}
 
 		if (mapData.defaultViewId) {
 			await this.updateMapData(mapData.id, { defaultViewId: null });
 		}
 
-		for await (const marker of this._db.markers.getMapMarkers(mapData.id)) {
-			await this._db.markers.deleteMarker(mapData.id, marker.id);
+		for await (const marker of this.db.markers.getMapMarkers(mapData.id)) {
+			await this.db.markers.deleteMarker(mapData.id, marker.id);
 		}
 
-		for await (const line of this._db.lines.getMapLines(mapData.id, ['id'])) {
-			await this._db.lines.deleteLine(mapData.id, line.id);
+		for await (const line of this.db.lines.getMapLines(mapData.id, ['id'])) {
+			await this.db.lines.deleteLine(mapData.id, line.id);
 		}
 
-		for await (const type of this._db.types.getTypes(mapData.id)) {
-			await this._db.types.deleteType(mapData.id, type.id);
+		for await (const type of this.db.types.getTypes(mapData.id)) {
+			await this.db.types.deleteType(mapData.id, type.id);
 		}
 
-		for await (const view of this._db.views.getViews(mapData.id)) {
-			await this._db.views.deleteView(mapData.id, view.id);
+		for await (const view of this.db.views.getViews(mapData.id)) {
+			await this.db.views.deleteView(mapData.id, view.id);
 		}
 
-		await this._db.history.clearHistory(mapData.id);
+		await this.db.history.clearHistory(mapData.id);
 
-		await this.MapModel.destroy({ where: { id: mapData.id } });
+		await this.backend.deleteMap(mapData.id);
 
-		this._db.emit("deleteMap", mapId);
+		this.db.emit("deleteMap", mapId);
 	}
 
 	async findMaps(query: string, paging?: PagingInput): Promise<PagedResults<FindMapsResult>> {
-		const like = query.toLowerCase().replace(/[%_\\]/g, "\\$&").replace(/[*]/g, "%").replace(/[?]/g, "_");
-		const { count, rows } = await this.MapModel.findAndCountAll({
-			where: Sequelize.and(
-				{ searchEngines: true },
-				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Map.name`)), {[Op.like]: `%${like}%`})
-			),
-			offset: paging?.start ?? 0,
-			...paging?.limit != null ? {
-				limit: paging.limit
-			} : {},
-			attributes: ["id", "readId", "name", "description"]
-		});
+		return await this.backend.findMaps(query, paging);
+	}
 
-		return {
-			results: rows.map((row) => row.toJSON()),
-			totalLength: count
-		};
+	async getNextFieldId(mapId: ID, increase: number): Promise<number> {
+		const mapData = await this.getMapData(mapId);
+		if (increase > 0) {
+			await this.backend.updateMapData(mapId, { nextFieldId: mapData.nextFieldId + increase });
+		}
+		return mapData.nextFieldId;
 	}
 
 	/*function copyPad(fromPadId, toPadId, callback) {

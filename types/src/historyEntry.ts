@@ -1,4 +1,4 @@
-import type { ID, MapId } from "./base.js";
+import type { ID } from "./base.js";
 import type { Marker } from "./marker.js";
 import type { Line } from "./line.js";
 import type { View } from "./view.js";
@@ -8,7 +8,7 @@ import type { Type } from "./type.js";
 export type HistoryEntryAction = "create" | "update" | "delete";
 
 export type HistoryEntryObjectTypes = {
-	"Map": Omit<MapData, "id" | "defaultView">;
+	"Map": Omit<MapData, "id" | "defaultView" | "activeLink">;
 	"Marker": Omit<Marker, "id" | "mapId">;
 	"Line": Omit<Line, "id" | "mapId">;
 	"View": Omit<View, "id" | "mapId">;
@@ -25,7 +25,7 @@ export type GenericHistoryEntry<ObjectTypes extends Record<HistoryEntryType, any
 			time: string;
 			type: Type;
 			action: Action;
-			mapId: MapId;
+			mapId: ID;
 		} & (Action extends "create" ? {
 			objectBefore?: undefined;
 		} : {
