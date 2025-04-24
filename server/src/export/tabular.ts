@@ -1,8 +1,9 @@
 import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { ID } from "facilmap-types";
-import Database from "../database/database.js";
 import { getI18n } from "../i18n.js";
+import type { RawMapLink } from "../utils/permissions.js";
+import type { ApiV3Backend } from "../api/api-v3.js";
 
 export type TabularData = {
 	fields: string[];
@@ -11,8 +12,8 @@ export type TabularData = {
 };
 
 export async function getTabularData(
-	database: Database,
-	mapId: ID,
+	api: ApiV3Backend,
+	mapLink: RawMapLink,
 	typeId: ID,
 	html: boolean,
 	filter?: string,
@@ -20,11 +21,7 @@ export async function getTabularData(
 ): Promise<TabularData> {
 	const i18n = getI18n();
 
-	const mapData = await database.maps.getMapData(mapId);
-	if (!mapData)
-		throw new Error(i18n.t("map-not-found-error", { mapId }));
-
-	const type = await database.types.getType(mapData.id, typeId);
+	const type = await api.getType(mapLink, typeId);
 
 	const filterFunc = compileExpression(filter);
 
@@ -41,7 +38,7 @@ export async function getTabularData(
 		...type.fields.map((f) => [f.name, formatFieldName(f.name)])
 	];
 
-	const objects = type.type === "marker" ? flatMapStream(iterableToStream(database.markers.getMapMarkersByType(mapId, typeId)), (marker): Array<Array<() => string>> => {
+	const objects = type.type === "marker" ? flatMapStream(iterableToStream((await api.getMapMarkers(mapLink, { typeId })).results), (marker): Array<Array<() => string>> => {
 		if (!filterFunc(marker, type)) {
 			return [];
 		}
@@ -51,7 +48,7 @@ export async function getTabularData(
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
 			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.id], html).trim())
 		]];
-	}) : flatMapStream(iterableToStream(database.lines.getMapLinesByType(mapId, typeId)), (line): Array<Array<() => string>> => {
+	}) : flatMapStream(iterableToStream((await api.getMapLines(mapLink, { typeId })).results), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
 			return [];
 		}

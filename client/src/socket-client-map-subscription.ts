@@ -1,11 +1,11 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, ApiV3MapMethods, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import type { AllMapObjectsItem, AllMapObjectsPick, AnyMapSlug, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
 import { SocketClientSubscription, type SubscriptionState } from "./socket-client-subscription";
 
 type SocketClientMapSubscriptionInterface = {
-	[K in ApiV3MapMethods]: SocketApi<SocketVersion.V3, false>[K] extends (...args: infer Args) => infer Result ? (Args extends [MapSlug, ...infer Rest] ? (...args: Rest) => Result : never) : never;
+	[K in keyof SocketApi<SocketVersion.V3, false>]: SocketApi<SocketVersion.V3, false>[K] extends (...args: infer Args) => infer Result ? (Args extends [AnyMapSlug, ...infer Rest] ? (...args: Rest) => Result : never) : never;
 
 	// This would be simpler:
 	// SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => (...args: Args) => Result : never;

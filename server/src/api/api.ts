@@ -60,6 +60,9 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 		if (err) {
 			res.set("X-FacilMap-Error", JSON.stringify(serializeError(err)));
 			res.status(err.status ?? err.statusCode ?? 500);
+			if (err.headers) {
+				res.setHeaders(err.headers);
+			}
 			res.send(err.stack);
 		} else {
 			res.status(404);

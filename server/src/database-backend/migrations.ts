@@ -148,7 +148,7 @@ export default class DatabaseBackendMigrations {
 					writeId = generateRandomId(14);
 				} while (await this.backend.maps.mapSlugExists(writeId));
 
-				await MapModel.update({writeId}, { where: { id: map.id } });
+				await MapModel.update({ writeId }, { where: { id: map.id } });
 			}
 		}
 
@@ -1032,7 +1032,7 @@ export default class DatabaseBackendMigrations {
 		// that the MapLinks table is already ready.
 		if (attrs["readId"] && attrs["writeId"] && attrs["adminId"]) {
 			const allMaps = await this.backend.maps.MapModel.findAll({
-				attributes: ["id", "salt", "jwtSecret", "readId", "writeId", "adminId"]
+				attributes: ["id", "salt", "jwtSecret", "readId", "writeId", "adminId", "searchEngines"]
 			});
 
 			for (const map of allMaps) {
@@ -1055,22 +1055,23 @@ export default class DatabaseBackendMigrations {
 					console.log(`DB migration: Create map link table (${i + 1} / ${allMaps.length})`);
 				}
 
-				for (const [idProp, permissions] of [
-					["adminId", { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
-					["writeId", { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
-					["readId", { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
+				for (const [slug, searchEngines, permissions] of [
+					[(map as any).adminId, false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
+					[(map as any).writeId, false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
+					[(map as any).readId, (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
 				] as const) {
-					if (!existingMapLinks.has(map[idProp])) {
+					if (!existingMapLinks.has(slug)) {
 						await this.backend.maps.MapLinkModel.create({
 							mapId: map.id,
-							slug: map[idProp],
+							slug,
 							password: null,
-							tokenHash: await getTokenHash(map[idProp], map.salt, null),
-							permissions
+							tokenHash: await getTokenHash(slug, map.salt, null),
+							permissions,
+							searchEngines
 						});
 					}
 				}
-			}, 8); // Default concurrency is 4, can be increased through UV_THREADPOOL_SIZE, see https://nodejs.org/dist/latest-v16.x/docs/api/cli.html#uv_threadpool_sizesize
+			}, 8); // Maximum concurrency is 4 by default, can be increased through UV_THREADPOOL_SIZE, see https://nodejs.org/dist/latest-v16.x/docs/api/cli.html#uv_threadpool_sizesize
 		}
 
 		console.log("DB migration: Create map link table finished");

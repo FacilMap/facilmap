@@ -84,7 +84,6 @@ export default class DatabaseMarkers {
 	}
 
 	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, options?: {
-		notFound404?: boolean;
 		noHistory?: boolean;
 	}): Promise<Marker> {
 		const { mapId, id: markerId } = originalMarker;
@@ -126,10 +125,14 @@ export default class DatabaseMarkers {
 
 	async deleteMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
 		const oldMarker = await this.getMarker(mapId, markerId, options);
-		await this.backend.deleteMarker(mapId, markerId);
-		this.db.emit("deleteMarker", mapId, { id: markerId });
-		await this.db.history.addHistoryEntry(mapId, { type: "Marker", action: "delete", objectId: markerId, objectBefore: oldMarker });
+		await this._deleteMarker(oldMarker);
 		return oldMarker;
+	}
+
+	async _deleteMarker(marker: Marker): Promise<void> {
+		await this.backend.deleteMarker(marker.mapId, marker.id);
+		this.db.emit("deleteMarker", marker.mapId, { id: marker.id });
+		await this.db.history.addHistoryEntry(marker.mapId, { type: "Marker", action: "delete", objectId: marker.id, objectBefore: marker });
 	}
 
 }

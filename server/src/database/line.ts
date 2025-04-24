@@ -138,6 +138,13 @@ export default class DatabaseLines {
 		return oldLine;
 	}
 
+	async _deleteLine(line: Line): Promise<void> {
+		await this.setLinePoints(line.mapId, line.id, [ ], true);
+		await this.backend.deleteLine(line.mapId, line.id);
+		this.db.emit("deleteLine", line.mapId, { id: line.id });
+		await this.db.history.addHistoryEntry(line.mapId, { type: "Line", action: "delete", objectId: line.id, objectBefore: line });
+	}
+
 	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { typeId: ID }> {
 		for await (const chunk of this.backend.getLinePointsForMap(mapId, bboxWithZoom)) {
 			const typeIds = await this.backend.getTypeIdsForLines(mapId, chunk.map((c) => c.lineId));

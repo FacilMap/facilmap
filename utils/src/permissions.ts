@@ -1,6 +1,19 @@
-import { entries, keys, type ID, type MapPermissions } from "facilmap-types";
+import { entries, keys, type HistoryEntry, type ID, type MapPermissions } from "facilmap-types";
 import { base64ToNumber, numberToBase64 } from "./utils";
 import { getI18n } from "./i18n";
+
+export function hasPermission(checkPermission: () => void): boolean {
+	try {
+		checkPermission();
+		return true;
+	} catch (err: any) {
+		if (err.status === 403) {
+			return false;
+		} else {
+			throw err;
+		}
+	}
+}
 
 export function canConfigureMap(permissions: MapPermissions): boolean {
 	return permissions.settings;
@@ -33,14 +46,41 @@ export function checkReadObject(permissions: MapPermissions, typeId: ID, isOwn: 
 	}
 }
 
+/**
+ * Returns true if the user has permission to edit the general properties of objects of the given type, meaning for example
+ * the marker position, style attributes etc. For data fields, the permission must be checked separately using canUpdateField().
+ */
 export function canUpdateObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): boolean {
 	const permission = permissions.types?.[typeId]?.update ?? permissions.update;
 	return permission === "own" ? isOwn : permission;
 }
 
+/**
+ * Throws an exception if the user does not have permission to edit the general properties of objects of the given type, meaning
+ * such as the marker position, style attributes etc. For data fields, the permission must be checked separately using checkUpdateField().
+ */
 export function checkUpdateObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): void {
 	if (!canUpdateObject(permissions, typeId, isOwn)) {
 		throw Object.assign(new Error(getI18n().t("permissions.update-type-permission-needed", { typeId })), { status: 403 });
+	}
+}
+
+/**
+ * Returns true if the user has permission to update the object and all its fields. This is a prerequisite for editing the object
+ * type and for deleting the object.
+ */
+export function canManageObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): boolean {
+	return hasPermission(() => checkManageObject(permissions, typeId, isOwn));
+}
+
+/**
+ * Throws an exception if the user doesn’t have permission to update the object and all its fields. That is a prerequisite for
+ * editing the object type and for deleting the object.
+ */
+export function checkManageObject(permissions: MapPermissions, typeId: ID, isOwn: boolean): void {
+	checkUpdateObject(permissions, typeId, isOwn);
+	for (const fieldId of keys(permissions.types?.[typeId]?.fields ?? {})) {
+		checkUpdateField(permissions, typeId, fieldId, isOwn);
 	}
 }
 
@@ -52,6 +92,33 @@ export function canReadField(permissions: MapPermissions, typeId: ID, fieldId: I
 export function canUpdateField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): boolean {
 	const permission = permissions.types?.[typeId]?.fields?.[fieldId]?.update ?? canUpdateObject(permissions, typeId, isOwn);
 	return permission === "own" ? isOwn : permission;
+}
+
+export function checkUpdateField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): void {
+	if (!canUpdateField(permissions, typeId, fieldId, isOwn)) {
+		throw Object.assign(new Error(getI18n().t("permissions.update-field-permission-needed", { typeId, fieldId })), { status: 403 });
+	}
+}
+
+export function canRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwn: boolean): boolean {
+	return hasPermission(() => checkRevertHistoryEntry(permissions, entry, isOwn));
+}
+
+export function checkRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwn: boolean): void {
+	switch (entry.type) {
+		case "Map": case "Type": case "View":
+			checkConfigureMap(permissions);
+			break;
+
+		case "Marker": case "Line":
+			if (entry.objectBefore) {
+				checkUpdateObject(permissions, entry.objectBefore.typeId, isOwn);
+			}
+			if (entry.objectAfter) {
+				checkUpdateObject(permissions, entry.objectAfter.typeId, isOwn);
+			}
+			break;
+	}
 }
 
 export function getSmallestMapPermission<T extends boolean | "own">(permissions: T[]): T {
@@ -145,4 +212,8 @@ export function deserializeMapPermissions(permissions: string): MapPermissions {
 		admin: binaryToPermission((mapCode >> 5) & 0b1, false),
 		...types.length > 0 ? { types: Object.fromEntries(types) } : {}
 	};
+}
+
+export function getMainAdminLink<L extends { permissions: MapPermissions }>(mapLinks: L[]): L {
+	return mapLinks.find((l) => l.permissions.admin)!;
 }

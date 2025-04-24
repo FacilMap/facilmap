@@ -11,7 +11,7 @@ import { omit, pick } from "lodash-es";
 import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
 import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
-import { mapDataValidator, type MapData, type MapDataWithWritable } from "../mapData.js";
+import { mapDataValidator, type MapData } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
 import { routeParametersValidator, type Route, type RouteInfo, type RouteRequest } from "../route.js";
 import type { DistributiveKeyOf, DistributiveOmit, ReplaceExistingProperties } from "../utility.js";
@@ -85,16 +85,34 @@ export const legacyV2ViewValidator = {
 export type LegacyV2View<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2ViewValidator>;
 
 export const legacyV2MapDataValidator = {
-	read: mapDataValidator.read.omit({ readId: true, id: true, defaultView: true }).extend({
-		id: mapDataValidator.read.shape.readId,
+	read: mapDataValidator.read.omit({ links: true, activeLink: true, id: true, defaultView: true }).extend({
+		id: mapSlugValidator,
+		writeId: mapSlugValidator,
+		adminId: mapSlugValidator,
+		searchEngines: z.boolean(),
 		defaultView: legacyV2ViewValidator.read.or(z.null())
 	}),
-	create: mapDataValidator.create.omit({ readId: true }).extend({ id: mapDataValidator.create.shape.readId }),
-	update: mapDataValidator.update.omit({ readId: true }).extend({ id: mapDataValidator.update.shape.readId }),
+	create: mapDataValidator.create.omit({ links: true }).extend({
+		id: mapSlugValidator,
+		writeId: mapSlugValidator,
+		adminId: mapSlugValidator,
+		searchEngines: z.boolean().default(false)
+	}),
+	update: mapDataValidator.update.omit({ links: true }).extend({
+		id: mapSlugValidator,
+		writeId: mapSlugValidator,
+		adminId: mapSlugValidator,
+		searchEngines: z.boolean().optional()
+	}),
 };
+export enum LegacyV2Writable { READ = 0, WRITE = 1, ADMIN = 2 };
 export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
 export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
-export type LegacyV2MapDataWithWritable = DistributiveOmit<MapDataWithWritable, "readId" | "id" | "defaultView"> & { id: MapData["readId"]; defaultView: LegacyV2View | null };
+export type LegacyV2MapDataWithWritable = (
+	| ({ writable: LegacyV2Writable.ADMIN } & MapData)
+	| ({ writable: LegacyV2Writable.WRITE } & Omit<MapData, "adminId"> )
+	| ({ writable: LegacyV2Writable.READ } & Omit<MapData, "adminId" | "writeId"> )
+);
 
 export type LegacyV2FindOnMapMarker = RenameProperty<FindOnMapMarker, "icon", "symbol", false>;
 export type LegacyV2FindOnMapResult = LegacyV2FindOnMapMarker | Exclude<FindOnMapResult, FindOnMapMarker>;

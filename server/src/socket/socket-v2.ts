@@ -1,4 +1,4 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug, type BboxWithZoom, Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem, type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2MapDataToCurrent, legacyV2RouteRequestToCurrent, type ID, type Type } from "facilmap-types";
+import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug, type BboxWithZoom, LegacyV2Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem, type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2MapDataToCurrent, legacyV2RouteRequestToCurrent, type ID, type Type } from "facilmap-types";
 import { type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
@@ -40,7 +40,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 	bbox: BboxWithZoom | undefined = undefined;
 	/** Cached (v3) types of the subscribed map, needed for marker/line data conversion. */
 	types: Record<ID, Type> = {};
-	writable: Writable | undefined = undefined;
+	writable: LegacyV2Writable | undefined = undefined;
 	routes: Record<string, Route> = { };
 	listeningToHistory = false;
 	pauseHistoryListener = 0;

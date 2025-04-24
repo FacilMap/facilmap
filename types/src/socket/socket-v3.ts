@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type MapSlug, type ObjectWithId } from "../base.js";
+import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type MapSlug, type ObjectWithId, type Stripped } from "../base.js";
 import { mapDataValidator, type MapData } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line } from "../line.js";
@@ -60,19 +60,19 @@ export type SocketApiV3<Validated extends boolean = false> = ApiV3<Validated> & 
 };
 
 export interface MapEventsV3Interface {
-	mapData: [MapSlug, MapData];
+	mapData: [MapSlug, Stripped<MapData>];
 	mapSlugRename: [Record<MapSlug, MapSlug>];
 	deleteMap: [MapSlug];
-	marker: [MapSlug, Marker];
+	marker: [MapSlug, Stripped<Marker>];
 	deleteMarker: [MapSlug, ObjectWithId];
-	line: [MapSlug, Line];
+	line: [MapSlug, Stripped<Line>];
 	deleteLine: [MapSlug, ObjectWithId];
 	linePoints: [MapSlug, LinePoints & { reset: boolean }];
-	view: [MapSlug, View];
+	view: [MapSlug, Stripped<View>];
 	deleteView: [MapSlug, ObjectWithId];
-	type: [MapSlug, Type];
+	type: [MapSlug, Stripped<Type>];
 	deleteType: [MapSlug, ObjectWithId];
-	history: [MapSlug, HistoryEntry];
+	history: [MapSlug, Stripped<HistoryEntry>];
 
 	route: [string, Route];
 	routePoints: [string, RoutePoints & { reset: boolean }];

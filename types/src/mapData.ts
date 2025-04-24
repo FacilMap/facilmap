@@ -54,48 +54,20 @@ export const mapLinkValidator = cruValidator({
 		create: z.literal(false).or(z.string()),
 		update: z.literal(false).or(z.string()).optional() // Undefined will keep existing password
 	},
-	permissions: mapPermissionsValidator
+	permissions: mapPermissionsValidator,
+	searchEngines: z.boolean()
 });
 export type MapLink<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapLinkValidator>;
 
 export const mapLinksValidator = {
 	read: z.array(mapLinkValidator.read),
-	create: z.array(mapLinkValidator.create).superRefine((links, ctx) => {
-		if (!links.some((link) => link.permissions.admin)) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: "At least one map link must have admin permission."
-			});
-		}
-
-		for (let i = 0; i < links.length; i++) {
-			const link = links[i];
-			if (links.some((l, j) => i !== j && link.slug === l.slug && (!link.password || link.password === l.password))) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Different map links can only share the same slug if they have different passwords.",
-					path: [i, "slug"]
-				});
-			}
-		}
-	}),
-	update: z.array(mapLinkValidator.update).superRefine((links, ctx) => {
-		if (!links.some((link) => link.permissions.admin)) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message: "At least one map link must have admin permission."
-			});
-		}
-
-		// Cannot validate duplicate slugs here since we don't have access to all passwords.
-		// Instead, we manually validate the links using the create validator in DatabaseMaps.
-	})
+	create: z.array(mapLinkValidator.create),
+	update: z.array(mapLinkValidator.update)
 };
 
 export const mapDataValidator = cruValidator({
 	id: onlyRead(idValidator),
 	name: optionalCreate(z.string().max(100), ""),
-	searchEngines: optionalCreate(z.boolean(), false),
 	description: optionalCreate(z.string(), ""),
 	clusterMarkers: optionalCreate(z.boolean(), false),
 	legend1: optionalCreate(z.string(), ""),

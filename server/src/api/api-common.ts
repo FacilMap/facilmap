@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import type { Api, ApiVersion, StreamedResults } from "facilmap-types";
+import type { AnyMapSlug, Api, ApiVersion, StreamedResults } from "facilmap-types";
 import * as z from "zod";
 import type { RouteParameters } from "express-serve-static-core";
 
@@ -8,9 +8,7 @@ export const stringifiedJsonValidator = z.string().transform((str) => JSON.parse
 export const stringArrayValidator = z.string().transform((str) => str ? str.split(",") : []);
 
 type ApiFunc<Version extends ApiVersion, Func extends keyof Api<Version>> = (
-	Api<Version>[Func] extends (...args: any) => any ? (
-		Func extends Api<Version>[Func]
-	) : never
+	Api<Version>[Func] extends (...args: any) => any ? Api<Version>[Func] : never
 );
 
 type Method = "get" | "post" | "put" | "delete";
@@ -48,3 +46,17 @@ export const apiImpl = {
 	put: getApiImpl("put"),
 	del: getApiImpl("delete")
 };
+
+export function getRequestMapSlug(req: Request<{ mapSlug: string }>): AnyMapSlug {
+	const auth = req.get("Authorization");
+	if (auth) {
+		const m = auth.match(/^Basic (.*)$/);
+		if (m) {
+			const decoded = atob(m[1]).split(":", 2);
+			if (decoded.length >= 2) {
+				return { mapSlug: req.params.mapSlug, password: decoded[1] };
+			}
+		}
+	}
+	return req.params.mapSlug;
+}

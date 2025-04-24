@@ -38,9 +38,9 @@ export async function* flatMapAsyncIterable<T, O>(iterable: Iterable<T> | AsyncI
 	}
 }
 
-export async function* concatAsyncIterables<T>(...iterables: Array<AsyncIterable<T> | (() => AsyncIterable<T>)>): AsyncIterable<T> {
+export async function* concatAsyncIterables<T>(...iterables: Array<AsyncIterable<T> | (() => AsyncIterable<T> | Promise<AsyncIterable<T>>)>): AsyncIterable<T> {
 	for (const iterable of iterables) {
-		for await (const it of typeof iterable === "function" ? iterable() : iterable) {
+		for await (const it of typeof iterable === "function" ? await iterable() : iterable) {
 			yield it;
 		}
 	}

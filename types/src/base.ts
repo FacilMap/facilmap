@@ -88,3 +88,16 @@ export function isMapToken(mapSlug: string): boolean {
 		return false;
 	}
 }
+
+declare const strippedObjectMarker: unique symbol;
+/**
+ * An object that is marked as "stripped", meaning that properties have been removed from it that the user is not supposed
+ * to see. This is a safety mechanism used in the API implementation to make sure that no unstripped data is sent by accident.
+ * It is a pure TypeScript mechanism, the actual underlying objects are not modified.
+ */
+export type Stripped<T> = T & {
+	[strippedObjectMarker]: true
+};
+export function markStripped<T>(object: T): Stripped<T> {
+	return object as any;
+}

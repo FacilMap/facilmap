@@ -1,11 +1,10 @@
 import * as z from "zod";
-import type { MapData, MapDataWithWritable, Writable } from "../mapData.js";
-import { bboxValidator, bboxWithZoomValidator, type ID } from "../base.js";
+import type { MapData } from "../mapData.js";
+import { bboxValidator, bboxWithZoomValidator, type ID, type MapSlug, type Stripped } from "../base.js";
 import type { Line, TrackPoint } from "../line.js";
 import type { Marker } from "../marker.js";
 import type { Type } from "../type.js";
 import type { View } from "../view.js";
-import type { ReplaceProperties } from "../utility.js";
 
 export const pagingValidator = z.object({
 	start: z.coerce.number().int().min(0).default(() => 0),
@@ -15,7 +14,7 @@ export type PagingInput = z.input<typeof pagingValidator>;
 export type Paging = z.infer<typeof pagingValidator>;
 export const DEFAULT_PAGING = pagingValidator.parse({});
 
-export type FindMapsResult = Pick<MapData, "id" | "readId" | "name" | "description">;
+export type FindMapsResult = Pick<MapData, "id" | "name" | "description"> & { slug: MapSlug };
 
 export interface PagedResults<T> {
 	results: T[];
@@ -48,30 +47,22 @@ export const allMapObjectsPickValidator = z.enum(["mapData", "types", "views", "
 export type AllMapObjectsPick = z.infer<typeof allMapObjectsPickValidator>;
 
 export type AllMapObjectsTypes = {
-	mapData: { type: "mapData"; data: MapDataWithWritable };
-	types: { type: "types", data: AsyncIterable<Type, void, undefined> };
-	views: { type: "views", data: AsyncIterable<View, void, undefined> };
-	markers: { type: "markers", data: AsyncIterable<Marker, void, undefined> };
-	lines: { type: "lines", data: AsyncIterable<Line, void, undefined> };
-	linesWithTrackPoints: { type: "lines", data: AsyncIterable<LineWithTrackPoints, void, undefined> };
-	linePoints: { type: "linePoints", data: AsyncIterable<LinePoints, void, undefined> };
+	mapData: { type: "mapData"; data: Stripped<MapData> };
+	types: { type: "types", data: AsyncIterable<Stripped<Type>, void, undefined> };
+	views: { type: "views", data: AsyncIterable<Stripped<View>, void, undefined> };
+	markers: { type: "markers", data: AsyncIterable<Stripped<Marker>, void, undefined> };
+	lines: { type: "lines", data: AsyncIterable<Stripped<Line>, void, undefined> };
+	linesWithTrackPoints: { type: "lines", data: AsyncIterable<Stripped<LineWithTrackPoints>, void, undefined> };
+	linePoints: { type: "linePoints", data: AsyncIterable<Stripped<LinePoints>, void, undefined> };
 };
 
-export type AllAdminMapObjectsTypes = ReplaceProperties<AllMapObjectsTypes, {
-	mapData: { type: "mapData", data: Extract<MapDataWithWritable, { writable: Writable.ADMIN }> }
-}>;
-
 export type AllMapObjectsItem<Pick extends AllMapObjectsPick> = AllMapObjectsTypes[Pick];
-
-export type AllAdminMapObjectsItem<Pick extends AllMapObjectsPick> = AllAdminMapObjectsTypes[Pick];
 
 export type GenericAllMapObjects<T extends AllMapObjectsTypes, Pick extends AllMapObjectsPick> = {
 	[P in Pick as (["lines", "linesWithTrackPoints"] extends [P, Pick] ? never : T[P]["type"])]: T[P]["data"] extends AsyncIterable<infer I, any, any> ? I[] : T[P]["data"];
 };
 
 export type AllMapObjects<Pick extends AllMapObjectsPick> = GenericAllMapObjects<AllMapObjectsTypes, Pick>;
-
-export type AllAdminMapObjects<Pick extends AllMapObjectsPick> = GenericAllMapObjects<AllAdminMapObjectsTypes, Pick>;
 
 export const stringifiedBooleanValidator = z.enum(["0", "1", "false", "true"]).transform((v) => ["true", "1"].includes(v));
 

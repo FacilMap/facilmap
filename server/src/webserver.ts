@@ -1,7 +1,7 @@
 import compression from "compression";
 import express, { type ErrorRequestHandler, type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { Writable, stringifiedIdValidator, type MapDataWithWritable } from "facilmap-types";
+import { LegacyV2Writable, stringifiedIdValidator, type MapDataWithWritable } from "facilmap-types";
 import { createSingleTable, createTable } from "./export/table.js";
 import Database from "./database/database";
 import { exportGeoJson } from "./export/geojson.js";
@@ -30,7 +30,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		let params: RenderMapParams;
 		if(req.params?.mapSlug) {
 			try {
-				const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+				const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 				params = {
 					mapData: {
 						searchEngines: mapData.searchEngines,
@@ -124,7 +124,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		} else {
 			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				mapData = await database.maps.getMapDataBySlug(parsed.mapSlug, Writable.READ);
+				mapData = await database.maps.getMapDataBySlug(parsed.mapSlug, LegacyV2Writable.READ);
 			} else {
 				res.status(404).send();
 				return;
@@ -149,7 +149,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.set("Content-type", "application/gpx+xml");
 		res.attachment(`${getSafeFilename(normalizeMapName(mapData.name))}.gpx`);
@@ -162,7 +162,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.set("Content-type", "application/zip");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".zip");
@@ -176,7 +176,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}).parse(req.query);
 		const baseUrl = getBaseUrl(req);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
@@ -196,7 +196,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			hide: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.type("html");
 		res.setHeader("Referrer-Policy", "origin");
@@ -214,7 +214,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			filter: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.set("Content-type", "application/geo+json");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".geojson");
@@ -230,7 +230,7 @@ export async function initWebserver(database: Database, port: number, host?: str
 			hide: z.string().optional()
 		}).parse(req.query);
 
-		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, Writable.READ);
+		const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
 
 		res.set("Content-type", "text/csv");
 		res.attachment(mapData.name.replace(/[\\/:*?"<>|]+/g, '_') + ".csv");

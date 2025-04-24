@@ -71,6 +71,7 @@
         "configure-map-permission-needed": "No permission to change map settings.",
         "administrate-map-permission-needed": "No permission to administrate map.",
         "read-type-permission-needed": "No permission to access objects of type {{typeId}}.",
-        "update-type-permission-needed": "No permission to edit objects of type {{typeId}}."
+        "update-type-permission-needed": "No permission to edit objects of type {{typeId}}.",
+        "update-field-permission-needed": "No permission to edit field {{fieldId}} of type {{typeId}}."
     }
 }

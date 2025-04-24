@@ -19,7 +19,9 @@
         "map-slug-taken-error": "Map slug '{{slug}}' is already taken.",
         "map-disappeared-error": "Map has disappeared after updating.",
         "map-slug-not-found-error": "No map link with the slug {{mapSlug}} could be found.",
-        "map-link-by-hash-not-found-error": "The map link of this token does not exist anymore. This means that the map link has been removed or its slug or password has been changed."
+        "map-link-by-hash-not-found-error": "The map link of this token does not exist anymore. This means that the map link has been removed or its slug or password has been changed.",
+        "duplicate-map-link-error": "Different map links can only share the same slug if they have different passwords.",
+        "no-admin-link-error": "At least one map link must have admin permission."
     },
     "frontend": {
         "requires-javascript": "{{appName}} requires JavaScript to work.",
@@ -43,7 +45,6 @@
         "route-name": "FacilMap route",
         "already-listening-to-history-error": "Already listening to history.",
         "not-listening-to-history-error": "Not listening to history.",
-        "admin-revert-error": "This kind of change can only be reverted in admin mode.",
         "map-already-subscribed-error": "Already subscribed to a map with slug {{mapSlug}}.",
         "map-not-subscribed-error": "Not subscribed to map with slug {{mapSlug}}.",
         "route-not-subscribed-error": "Not subscribed to route with key {{routeKey}}."

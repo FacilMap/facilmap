@@ -1,7 +1,7 @@
-import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional, type NonAttribute } from "sequelize";
-import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type MapDataWithWritable, Writable, type PagingInput, type ID, type MapPermissions, type View, type MapLink } from "facilmap-types";
+import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional } from "sequelize";
+import { type FindMapsResult, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions } from "facilmap-types";
 import DatabaseBackend from "./database-backend.js";
-import { createModel, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./utils.js";
+import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./utils.js";
 import type { ViewModel } from "./view.js";
 import { getI18n } from "../i18n.js";
 import type { RawMapData, RawMapLink } from "../utils/permissions.js";
@@ -19,7 +19,6 @@ export interface MapModel extends Model<InferAttributes<MapModel>, InferCreation
 	 */
 	salt: Buffer;
 	jwtSecret: Buffer;
-	searchEngines: boolean;
 	description: string;
 	clusterMarkers: boolean;
 	legend1: string;
@@ -39,6 +38,7 @@ export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, Infer
 	/** Derived from slug and password, used in map tokens */
 	tokenHash: string;
 	permissions: MapPermissions;
+	searchEngines: boolean;
 }
 
 export default class DatabaseMapsBackend {
@@ -56,7 +56,6 @@ export default class DatabaseMapsBackend {
 			name: { type: DataTypes.TEXT, allowNull: false },
 			salt: { type: DataTypes.BLOB, allowNull: false },
 			jwtSecret: { type: DataTypes.BLOB, allowNull: false },
-			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 			description: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
@@ -81,7 +80,8 @@ export default class DatabaseMapsBackend {
 				set: function(this: Model, p: MapPermissions) {
 					this.setDataValue("permissions", serializeMapPermissions(p));
 				}
-			}
+			},
+			searchEngines: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }
 		}, {
 			sequelize: this.backend._conn,
 			modelName: "MapLink",
@@ -101,8 +101,25 @@ export default class DatabaseMapsBackend {
 
 	// =====================================================================================================================
 
-	async mapSlugExists(mapSlug: MapSlug): Promise<boolean> {
-		return !!await this.MapLinkModel.findOne({ where: { slug: mapSlug }, attributes: ["id"] });
+	async mapSlugExists(mapSlug: MapSlug, options?: { ignoreMapId?: ID }): Promise<boolean> {
+		return !!await this.MapLinkModel.findOne({
+			where: {
+				slug: mapSlug,
+				...options?.ignoreMapId != null ? { mapId: { [Op.ne]: options.ignoreMapId } } : {}
+			},
+			attributes: ["id"]
+		});
+	}
+
+	async mapSlugsExist(mapSlugs: MapSlug[], options?: { ignoreMapId?: ID }): Promise<MapSlug[]> {
+		const links = await this.MapLinkModel.findAll({
+			where: {
+				slug: mapSlugs,
+				...options?.ignoreMapId != null ? { mapId: { [Op.ne]: options.ignoreMapId } } : {}
+			},
+			attributes: ["slug"]
+		});
+		return links.map((link) => link.slug);
 	}
 
 	protected prepareMapData(mapData: MapModel): RawMapData {
@@ -169,7 +186,7 @@ export default class DatabaseMapsBackend {
 
 	async findMaps(query: string, paging?: PagingInput): Promise<PagedResults<FindMapsResult>> {
 		const like = query.toLowerCase().replace(/[%_\\]/g, "\\$&").replace(/[*]/g, "%").replace(/[?]/g, "_");
-		const { count, rows } = await this.MapModel.findAndCountAll({
+		const { count, rows } = await this.MapLinkModel.findAndCountAll({
 			where: Sequelize.and(
 				{ searchEngines: true },
 				Sequelize.where(Sequelize.fn("lower", Sequelize.col(`Map.name`)), {[Op.like]: `%${like}%`})
@@ -178,11 +195,24 @@ export default class DatabaseMapsBackend {
 			...paging?.limit != null ? {
 				limit: paging.limit
 			} : {},
-			attributes: ["id", "readId", "name", "description"]
+			include: [
+				{
+					model: this.MapModel,
+					through: {
+						attributes: ["name", "description"]
+					}
+				}
+			],
+			attributes: ["mapId", "slug"]
 		});
 
 		return {
-			results: rows.map((row) => row.toJSON()),
+			results: rows.map((row) => ({
+				id: row.mapId,
+				slug: row.slug,
+				name: (row as any).map.name,
+				description: (row as any).map.description
+			})),
 			totalLength: count
 		};
 	}

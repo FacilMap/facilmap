@@ -46,8 +46,8 @@ export default class DatabaseHistory {
 	}
 
 
-	async getPagedHistory(mapId: ID, types: HistoryEntryType[] | undefined, paging: PagingInput): Promise<PagedResults<RawHistoryEntry>> {
-		return await this.backend.getPagedHistory(mapId, types, paging);
+	async getPagedHistory(mapId: ID, paging: PagingInput): Promise<PagedResults<RawHistoryEntry>> {
+		return await this.backend.getPagedHistory(mapId, paging);
 	}
 
 
@@ -65,87 +65,6 @@ export default class DatabaseHistory {
 			);
 		}
 		return result;
-	}
-
-
-	async revertHistoryEntry(mapId: ID, id: ID): Promise<void> {
-		const entry = await this.getHistoryEntry(mapId, id);
-
-		if(entry.type == "Map") {
-			if (!entry.objectBefore) {
-				throw new Error(getI18n().t("database.old-map-data-not-available-error"));
-			}
-			await this.db.maps.updateMapData(mapId, entry.objectBefore);
-			return;
-		} else if (!["Marker", "Line", "View", "Type"].includes(entry.type)) {
-			throw new Error(getI18n().t("database.unknown-type-error", { type: entry.type }));
-		}
-
-		const existsNow = (
-			entry.type === "Marker" ? await this.db.markers.markerExists(mapId, entry.objectId) :
-			entry.type === "Line" ? await this.db.lines.lineExists(mapId, entry.objectId) :
-			entry.type === "Type" ? await this.db.types.typeExists(mapId, entry.objectId) :
-			await this.db.views.viewExists(mapId, entry.objectId)
-		);
-
-		if(entry.action == "create") {
-			if (!existsNow)
-				return;
-
-			switch (entry.type) {
-				case "Marker":
-					await this.db.markers.deleteMarker(mapId, entry.objectId);
-					break;
-
-				case "Line":
-					await this.db.lines.deleteLine(mapId, entry.objectId);
-					break;
-
-				case "View":
-					await this.db.views.deleteView(mapId, entry.objectId);
-					break;
-
-				case "Type":
-					await this.db.types.deleteType(mapId, entry.objectId);
-					break;
-			}
-		} else if(existsNow) {
-			switch (entry.type) {
-				case "Marker":
-					await this.db.markers.updateMarker(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "Line":
-					await this.db.lines.updateLine(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "View":
-					await this.db.views.updateView(mapId, entry.objectId, entry.objectBefore);
-					break;
-
-				case "Type":
-					await this.db.types.updateType(mapId, entry.objectId, entry.objectBefore);
-					break;
-			}
-		} else {
-			switch (entry.type) {
-				case "Marker":
-					await this.db.markers.createMarker(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "Line":
-					await this.db.lines.createLine(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "View":
-					await this.db.views.createView(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-
-				case "Type":
-					await this.db.types.createType(mapId, entry.objectBefore, { id: entry.objectId });
-					break;
-			}
-		}
 	}
 
 

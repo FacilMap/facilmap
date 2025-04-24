@@ -1,10 +1,30 @@
-import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID } from "facilmap-types";
+import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type ReplaceProperties, type MapLink } from "facilmap-types";
 import Database from "./database.js";
 import { getI18n } from "../i18n.js";
 import { createSalt, createJwtSecret, getPasswordHash, getTokenHash } from "../utils/crypt.js";
 import type DatabaseMapsBackend from "../database-backend/map.js";
 import { type RawMapData, type RawMapLink } from "../utils/permissions.js";
 import { omit } from "lodash-es";
+
+function isPasswordEqual(password1: Buffer | string | null, password2: Buffer | string | null): boolean {
+	return (
+		(password1 == null && password2 == null)
+		|| (typeof password1 === "string" && typeof password2 === "string" && password1 === password2)
+		|| (password1 instanceof Buffer && password2 instanceof Buffer && password1.equals(password2))
+	);
+}
+
+function validateMapLinks(links: Array<{ slug: string; password: string | Buffer | null; permissions: MapPermissions }>): void {
+	if (!links.some((link) => link.permissions.admin)) {
+		throw Object.assign(new Error(getI18n().t("database.no-admin-link-error")), { status: 400 });
+	}
+
+	for (let i = 0; i < links.length; i++) {
+		if (links.slice(i + 1).some((l) => links[i].slug === l.slug && isPasswordEqual(links[i].password, l.password))) {
+			throw Object.assign(new Error(getI18n().t("database.duplicate-map-link-error")), { status: 400 });
+		}
+	}
+}
 
 export default class DatabaseMaps {
 
@@ -16,8 +36,12 @@ export default class DatabaseMaps {
 		this.backend = database.backend.maps;
 	}
 
-	async mapSlugExists(mapSlug: MapSlug): Promise<boolean> {
-		return await this.backend.mapSlugExists(mapSlug);
+	async mapSlugExists(mapSlug: MapSlug, options?: { ignoreMapId?: ID }): Promise<boolean> {
+		return await this.backend.mapSlugExists(mapSlug, options);
+	}
+
+	async mapSlugsExist(mapSlugs: MapSlug[], options?: { ignoreMapId?: ID }): Promise<MapSlug[]> {
+		return await this.backend.mapSlugsExist(mapSlugs, options);
 	}
 
 	async getMapData(mapId: ID, options?: { notFound404?: boolean }): Promise<RawMapData> {
@@ -54,20 +78,24 @@ export default class DatabaseMaps {
 	}
 
 	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<RawMapData> {
-		await Promise.all([...new Set(data.links.map((l) => l.slug))].map(async (mapSlug) => {
-			if (await this.mapSlugExists(mapSlug)) {
-				throw Object.assign(new Error(getI18n().t("database.map-slug-taken-error", { mapSlug })), { status: 409 });
-			}
-		}));
+		validateMapLinks(data.links.map((l) => ({ ...l, password: l.password !== false ? l.password : null })));
+
+		const exists = await this.mapSlugsExist([...new Set(data.links.map((l) => l.slug))]);
+		if (exists.length > 0) {
+			throw Object.assign(new Error(getI18n().t("database.map-slug-taken-error", { mapSlug: exists.join(", ") })), { status: 409 });
+		}
 
 		const salt = createSalt();
 
 		const links = await Promise.all(data.links.map(async (link) => {
-			const password = link.password !== false ? await getPasswordHash(link.password, salt) : null;
+			const [password, tokenHash] = await Promise.all([
+				link.password !== false ? getPasswordHash(link.password, salt) : null,
+				getTokenHash(link.slug, salt)
+			]);
 			return {
 				...link,
 				password,
-				tokenHash: await getTokenHash(link.slug, salt, password)
+				tokenHash
 			};
 		}));
 
@@ -86,30 +114,51 @@ export default class DatabaseMaps {
 		return result;
 	}
 
-	async updateMapData(mapId: ID, data: MapData<CRU.UPDATE_VALIDATED>): Promise<RawMapData> {
+	async updateMapData(mapId: ID, data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
 
 		if (!oldData) {
 			throw Object.assign(new Error(getI18n().t("map-not-found-error", { mapId })), { status: 404 });
 		}
 
-		const links = data.links && await Promise.all(data.links.map(async (link) => {
-			const oldLink = link.id && oldData.links.find((l) => l.id === link.id);
-			const password = link.password == null && oldLink ? oldLink.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
+		const update: Parameters<typeof this.backend.updateMapData>[1] = omit(data, ["links"]);
 
-			// TODO: Check existence of new link
+		if (data.links) {
+			const changedSlugs = data.links.flatMap((link) => {
+				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
+				return oldLink && oldLink.slug === link.slug ? [] : [link.slug];
+			});
+			if (changedSlugs.length > 0) {
+				const exists = await this.mapSlugsExist(changedSlugs);
+				if (exists.length > 0) {
+					throw Object.assign(new Error(getI18n().t("database.map-slug-taken-error", { mapSlug: exists.join(", ") })), { status: 409 });
+				}
+			}
 
-			return {
-				...omit(link, ["id"]),
-				...oldLink ? { id: link.id } : {},
-				password,
-				tokenHash: await getTokenHash(link.slug, oldData.salt, password)
-			};
-		}));
+			const resolvedLinks = await Promise.all(data.links.map(async (link) => {
+				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
+				const password = typeof link.password === "undefined" && oldLink ? oldLink.password : typeof link.password === "object" ? link.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
+				const tokenHash = oldLink && link.slug === oldLink.slug ? oldLink.tokenHash : undefined;
 
-		// TODO: Validate links array with create validator
+				return {
+					...omit(link, ["id"]),
+					...oldLink ? { id: link.id } : {},
+					password,
+					tokenHash
+				};
+			}));
 
-		await this.backend.updateMapData(mapId, { ...data, links });
+			validateMapLinks(resolvedLinks);
+
+			update.links = await Promise.all(resolvedLinks.map(async (link) => {
+				return {
+					...link,
+					tokenHash: link.tokenHash ?? await getTokenHash(link.slug, oldData.salt)
+				};
+			}));
+		}
+
+		await this.backend.updateMapData(mapId, update);
 
 		const newData = await this.getMapData(mapId);
 

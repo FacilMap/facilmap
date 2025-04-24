@@ -1,9 +1,9 @@
 import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
-import Database from "../database/database.js";
-import type { Field, Line, Marker, TrackPoint, Type, LineWithTrackPoints, ID } from "facilmap-types";
+import type { Field, Line, Marker, TrackPoint, Type, LineWithTrackPoints, Stripped } from "facilmap-types";
 import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
 import { keyBy } from "lodash-es";
-import { getI18n } from "../i18n.js";
+import type { RawMapLink } from "../utils/permissions.js";
+import type { ApiV3Backend } from "../api/api-v3.js";
 
 const gpxHeader = (
 	`<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -61,7 +61,7 @@ function getMetadataGpx(data: { name: string; extensions?: Record<string, string
 	);
 }
 
-function getMarkerGpx(marker: Marker, type: Type): ReadableStream<string> {
+function getMarkerGpx(marker: Marker, type: Stripped<Type>): ReadableStream<string> {
 	const osmandBackground = markerShapeToOsmand[marker.shape || "drop"];
 	return stringToStream(
 		`<wpt lat="${quoteHtml(marker.lat)}" lon="${quoteHtml(marker.lon)}"${marker.ele != null ? ` ele="${quoteHtml(marker.ele)}"` : ""}>\n` +
@@ -75,7 +75,7 @@ function getMarkerGpx(marker: Marker, type: Type): ReadableStream<string> {
 	);
 }
 
-function getLineRouteGpx(line: LineForExport, type: Type | undefined): ReadableStream<string> {
+function getLineRouteGpx(line: LineForExport, type: Stripped<Type> | undefined): ReadableStream<string> {
 	return stringToStream(
 		`<rte>\n` +
 		`\t<name>${quoteHtml(normalizeLineName(line.name))}</name>\n` +
@@ -87,7 +87,7 @@ function getLineRouteGpx(line: LineForExport, type: Type | undefined): ReadableS
 	);
 }
 
-function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+function getLineTrackGpx(line: LineForExport, type: Stripped<Type> | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
 	return iterableToStream((async function*() {
 		yield (
 			`<trk>\n` +
@@ -105,24 +105,21 @@ function getLineTrackGpx(line: LineForExport, type: Type | undefined, trackPoint
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function exportGpx(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<string> {
+export function exportGpx(api: ApiV3Backend, mapLink: RawMapLink, useTracks: boolean, filter?: string): ReadableStream<string> {
 	return iterableToStream((async function* () {
 		const filterFunc = compileExpression(filter);
 
 		const [mapData, types] = await Promise.all([
-			database.maps.getMapData(mapId),
-			iterableToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
+			api.getMap(mapLink),
+			iterableToArray((await api.getMapTypes(mapLink)).results).then((types) => keyBy(types, 'id'))
 		]);
-
-		if (!mapData)
-			throw new Error(getI18n().t("map-not-found-error", { mapId }));
 
 		yield (
 			`${gpxHeader}\n` +
 			`\t${getMetadataGpx({ name: normalizeMapName(mapData.name) }).replaceAll("\n", "\n\t")}\n`
 		);
 
-		for await (const marker of database.markers.getMapMarkers(mapId)) {
+		for await (const marker of (await api.getMapMarkers(mapLink)).results) {
 			if (filterFunc(marker, types[marker.typeId])) {
 				for await (const chunk of streamToIterable(getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 					yield chunk;
@@ -130,10 +127,10 @@ export function exportGpx(database: Database, mapId: ID, useTracks: boolean, fil
 			}
 		}
 
-		for await (const line of database.lines.getMapLines(mapId)) {
+		for await (const line of (await api.getMapLines(mapLink)).results) {
 			if (filterFunc(line, types[line.typeId])) {
 				if (useTracks || line.mode == "track") {
-					const trackPoints = database.lines.getLinePointsForLine(line.id);
+					const trackPoints = (await api.getLinePoints(mapLink, line.id)).results;
 					for await (const chunk of streamToIterable(getLineTrackGpx(line, types[line.typeId], trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 						yield chunk;
 					}
@@ -149,20 +146,16 @@ export function exportGpx(database: Database, mapId: ID, useTracks: boolean, fil
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
+export function exportGpxZip(api: ApiV3Backend, mapLink: RawMapLink, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
 	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
 		const filterFunc = compileExpression(filter);
 
 		const [mapData, types] = await Promise.all([
-			database.maps.getMapData(mapId),
-			iterableToArray(database.types.getTypes(mapId)).then((types) => keyBy(types, 'id'))
+			api.getMap(mapLink),
+			iterableToArray((await api.getMapTypes(mapLink)).results).then((types) => keyBy(types, 'id'))
 		]);
-
-		if (!mapData) {
-			throw new Error(getI18n().t("map-not-found-error", { mapId }));
-		}
 
 		yield {
 			filename: "markers.gpx",
@@ -172,7 +165,7 @@ export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, 
 					`\t${getMetadataGpx({ name: normalizeMapName(mapData.name) }).replaceAll("\n", "\n\t")}\n`
 				);
 
-				for await (const marker of database.markers.getMapMarkers(mapId)) {
+				for await (const marker of (await api.getMapMarkers(mapLink)).results) {
 					if (filterFunc(marker, types[marker.typeId])) {
 						for await (const chunk of streamToIterable(getMarkerGpx(marker, types[marker.typeId]).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 							yield chunk;
@@ -191,7 +184,7 @@ export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, 
 
 		const names = new Set<string>();
 
-		for await (const line of database.lines.getMapLines(mapId)) {
+		for await (const line of (await api.getMapLines(mapLink)).results) {
 			if (filterFunc(line, types[line.typeId])) {
 				const lineName = normalizeLineName(line.name);
 				let name = lineName;
@@ -203,7 +196,7 @@ export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, 
 				const filename = `lines/${getSafeFilename(name)}.gpx`;
 
 				if (useTracks || line.mode == "track") {
-					const trackPoints = database.lines.getLinePointsForLine(line.id);
+					const trackPoints = (await api.getLinePoints(mapLink, line.id)).results;
 					yield {
 						filename,
 						data: exportLineToTrackGpx(line, types[line.typeId], trackPoints)
@@ -221,9 +214,9 @@ export function exportGpxZip(database: Database, mapId: ID, useTracks: boolean, 
 	return encodeZipStream.readable;
 }
 
-type LineForExport = Pick<LineWithTrackPoints, "name" | "data" | "mode" | "routePoints"> & Partial<Pick<Line, "colour" | "width">>;
+type LineForExport = Stripped<Pick<LineWithTrackPoints, "name" | "data" | "mode" | "routePoints"> & Partial<Pick<Line, "colour" | "width">>>;
 
-function getLineMetadataGpx(line: LineForExport, type: Type | undefined): string {
+function getLineMetadataGpx(line: LineForExport, type: Stripped<Type> | undefined): string {
 	return getMetadataGpx({
 		name: normalizeLineName(line.name),
 		extensions: {
@@ -241,7 +234,7 @@ function getLineMetadataGpx(line: LineForExport, type: Type | undefined): string
 	});
 }
 
-export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
+export function exportLineToTrackGpx(line: LineForExport, type: Stripped<Type> | undefined, trackPoints: AsyncIterable<TrackPoint>): ReadableStream<string> {
 	return iterableToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +
@@ -256,7 +249,7 @@ export function exportLineToTrackGpx(line: LineForExport, type: Type | undefined
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function exportLineToRouteGpx(line: LineForExport, type: Type | undefined): ReadableStream<string> {
+export function exportLineToRouteGpx(line: LineForExport, type: Stripped<Type> | undefined): ReadableStream<string> {
 	return iterableToStream((async function*() {
 		yield (
 			`${gpxHeader}\n` +

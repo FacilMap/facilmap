@@ -76,13 +76,10 @@ export default class DatabaseHistoryBackend {
 	}
 
 
-	async getPagedHistory(mapId: ID, types: HistoryEntryType[] | undefined, paging: PagingInput): Promise<PagedResults<RawHistoryEntry>> {
+	async getPagedHistory(mapId: ID, paging: PagingInput): Promise<PagedResults<RawHistoryEntry>> {
 		const { count, rows } = await this.HistoryModel.findAndCountAll({
 			where: {
-				mapId: mapId,
-				...types ? {
-					where: { type: types }
-				} : {}
+				mapId: mapId
 			},
 			order: [[ "time", "DESC" ]],
 			offset: paging?.start ?? 0,

@@ -2,7 +2,7 @@ import * as z from "zod";
 import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3.js";
 import { socketV1RequestValidators, type MapEventsV1, type SocketApiV1 } from "./socket-v1.js";
 import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2.js";
-import type { StreamToStreamId } from "./socket-common";
+import type { StreamToStreamId } from "./socket-common.js";
 
 export * from "./socket-common.js";
 

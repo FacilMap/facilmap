@@ -1,18 +1,19 @@
 import { readableToWeb, streamPromiseToStream, writableToWeb } from "../utils/streams.js";
 import type { ID } from "facilmap-types";
-import Database from "../database/database.js";
 import { stringify } from "csv-stringify";
 import { getTabularData } from "./tabular.js";
+import type { RawMapLink } from "../utils/permissions.js";
+import type { ApiV3Backend } from "../api/api-v3.js";
 
 export function exportCsv(
-	database: Database,
-	mapId: ID,
+	api: ApiV3Backend,
+	mapLink: RawMapLink,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = []
 ): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
-		const tabular = await getTabularData(database, mapId, typeId, false, filter, hide);
+		const tabular = await getTabularData(api, mapLink, typeId, false, filter, hide);
 
 		const stringifier = stringify();
 		stringifier.write(tabular.fieldNames);

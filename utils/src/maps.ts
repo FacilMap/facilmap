@@ -1,4 +1,4 @@
-import { Writable, type DeepReadonly, type DistributivePick, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
+import { LegacyV2Writable, type DeepReadonly, type DistributivePick, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 import { cloneDeep } from "./utils.js";
 
@@ -35,25 +35,25 @@ export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, De
 	return viewArr.sort((a, b) => a.idx - b.idx);
 }
 
-export function getWritable(mapData: MapDataWithWritable | MapData, mapSlug: MapSlug): Writable {
+export function getWritable(mapData: MapDataWithWritable | MapData, mapSlug: MapSlug): LegacyV2Writable {
 	if ("adminId" in mapData && mapData.adminId === mapSlug) {
-		return Writable.ADMIN;
+		return LegacyV2Writable.ADMIN;
 	} else if ("writeId" in mapData && mapData.writeId === mapSlug) {
-		return Writable.WRITE;
+		return LegacyV2Writable.WRITE;
 	} else {
-		return Writable.READ;
+		return LegacyV2Writable.READ;
 	}
 }
 
 export function getMapSlug(mapData: DistributivePick<MapDataWithWritable, "writable" | "adminId" | "writeId" | "readId">): MapSlug {
-	return mapData.writable === Writable.ADMIN ? mapData.adminId : mapData.writable === Writable.WRITE ? mapData.writeId : mapData.readId;
+	return mapData.writable === LegacyV2Writable.ADMIN ? mapData.adminId : mapData.writable === LegacyV2Writable.WRITE ? mapData.writeId : mapData.readId;
 }
 
-export function getMapDataWithWritable(mapData: DeepReadonly<MapData>, writable: Writable): MapDataWithWritable {
+export function getMapDataWithWritable(mapData: DeepReadonly<MapData>, writable: LegacyV2Writable): MapDataWithWritable {
 	const { adminId, writeId, ...rest } = mapData;
-	if (writable === Writable.ADMIN) {
+	if (writable === LegacyV2Writable.ADMIN) {
 		return { ...cloneDeep(rest), adminId, writeId, writable };
-	} else if (writable === Writable.WRITE) {
+	} else if (writable === LegacyV2Writable.WRITE) {
 		return { ...cloneDeep(rest), writeId, writable };
 	} else {
 		return { ...cloneDeep(rest), writable };

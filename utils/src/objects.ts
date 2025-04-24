@@ -167,13 +167,10 @@ export function resolveUpdateLine(line: DeepReadonly<Line>, update: DeepReadonly
 }
 
 export function getLineTemplate(type: DeepReadonly<Type>): LineTemplate {
-	return {
-		data: {},
-		...omit(resolveCreateLine({
-			typeId: type.id,
-			routePoints: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0 }]
-		}, type), ["routePoints", "extraInfo", "trackPoints"]),
-	} as LineTemplate;
+	return omit(resolveCreateLine({
+		typeId: type.id,
+		routePoints: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0 }]
+	}, type), ["routePoints", "extraInfo", "trackPoints"]);
 }
 
 export function normalizeMarkerName(name: string | undefined): string {

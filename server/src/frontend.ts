@@ -1,7 +1,7 @@
 import type { Manifest } from "vite";
 import { paths, serve } from "facilmap-frontend/build.js";
 import { readFile } from "node:fs/promises";
-import type { ID, MapData, MapDataWithWritable, Type } from "facilmap-types";
+import type { ID, MapData, Stripped, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
@@ -102,8 +102,8 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 }
 
 export function renderTable({ mapData, types, renderSingleTable, url }: {
-	mapData: MapData;
-	types: Type[];
+	mapData: Stripped<MapData>;
+	types: Array<Stripped<Type>>;
 	renderSingleTable: (typeId: ID, params: TableParams) => ReadableStream<string>;
 	url: string;
 }): ReadableStream<string> {
@@ -172,7 +172,7 @@ export async function getOpensearchXml(baseUrl: string): Promise<string> {
 	});
 }
 
-export function getOembedJson(baseUrl: string, mapData: MapDataWithWritable | undefined, params: { url: string; maxwidth?: number; maxheight?: number }): string {
+export function getOembedJson(baseUrl: string, mapData: Stripped<MapData> | undefined, params: { url: string; maxwidth?: number; maxheight?: number }): string {
 	const width = params.maxwidth ?? 800;
 	const height = params.maxheight ?? 500;
 

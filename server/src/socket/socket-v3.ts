@@ -4,14 +4,15 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, Writable, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
+import { getMainAdminLink, getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
+import type { RawMapLink } from "../utils/permissions.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -28,7 +29,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	/** AbortControllers for all active map subscriptions. Set synchronously when subscribing. */
 	mapSubscriptionAbort: Record<MapSlug, AbortController> = Object.create(null);
 	/** Details about most active map subscriptions. Set asynchronously as soon as the map ID is known. */
-	mapSubscriptionDetails: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; writable: Writable }>> = {};
+	mapSubscriptionDetails: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; mapLink: RawMapLink }>> = {};
 	/** AbortControllers for all active route subscriptions. Set synchronously when subscribing. */
 	routeSubscriptionAbort: Record<string, AbortController> = Object.create(null);
 	/** Details about most active route subscriptions. Set asynchronously as soon as the route is calculated. */
@@ -171,7 +172,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			getMap: async (mapSlug) => {
-				return await this.database.maps.getMapDataBySlug(mapSlug, Writable.READ);
+				return await this.api.getMap(mapSlug);
 			},
 
 			createMap: async (data, options = {}) => {
@@ -206,6 +207,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 			findOnMap: async (mapSlug, query) => {
 				return await this.api.findOnMap(mapSlug, query);
+			},
+
+			getMapToken: async (mapSlug, permissions) => {
+				return await this.api.getMapToken(mapSlug, permissions);
 			},
 
 			getHistory: async (mapSlug, paging = DEFAULT_PAGING) => {
@@ -249,17 +254,17 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			createLine: async (mapSlug, data) => {
-				let fromRoute;
+				let trackPointsFromRoute;
 				if (data.mode != "track") {
 					for (const route of Object.values(this.routeSubscriptionDetails)) {
 						if(isEqual(route.routePoints, data.routePoints) && data.mode == route.mode) {
-							fromRoute = { ...route, trackPoints: this.database.routes.getAllRoutePoints(route.routeId) };
+							trackPointsFromRoute = { ...route, trackPoints: this.database.routes.getAllRoutePoints(route.routeId) };
 							break;
 						}
 					}
 				}
 
-				return await this.api.createLine(mapSlug, data, fromRoute);
+				return await this.api.createLine(mapSlug, data, { trackPointsFromRoute });
 			},
 
 			updateLine: async (mapSlug, lineId, data) => {
@@ -351,17 +356,19 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.api.geoip();
 			},
 
-			subscribeToMap: async (mapSlug, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
+			subscribeToMap: async (anyMapSlug, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
+				const { mapSlug } = typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug;
 				const abort = this.mapSubscriptionAbort[mapSlug] = this.mapSubscriptionAbort[mapSlug] ?? new AbortController();
 
-				let existingSub = this.findMapSubscriptionData(mapSlug, false);
-				if (!existingSub) {
-					let mapData;
+				let sub = this.findMapSubscriptionData(mapSlug, false);
+				let resolved;
+				if (!sub) {
 					try {
-						mapData = await this.api.getMap(mapSlug);
+						resolved = await this.api.resolveMapSlug(anyMapSlug);
 					} catch (err: any) {
-						if (err.status === 404 && !abort.signal.aborted && !this.findMapSubscriptionData(mapSlug, false)) {
+						if ([401, 404].includes(err.status) && !abort.signal.aborted && !this.findMapSubscriptionData(mapSlug, false)) {
 							// Map not found, clear subscription so that we can create it using createMapAndSubscribe
+							// No/wrong password, clear subscription so that we can reauthenticate
 							delete this.mapSubscriptionAbort[mapSlug];
 						}
 						throw err;
@@ -370,23 +377,24 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (abort.signal.aborted) { // Unsubscribed while fetching map data
 						return;
 					}
-					existingSub = this.findMapSubscriptionData(mapSlug, false); // Another request might have created a subscription in the meantime
-					if (!existingSub) {
-						if (!this.mapSubscriptionDetails[mapData.id]) {
-							this.mapSubscriptionDetails[mapData.id] = [];
-						}
-						this.mapSubscriptionDetails[mapData.id].push({ pick, history, mapSlug, writable: mapData.writable });
-						this.registerDatabaseHandlers();
-					}
+					sub = this.findMapSubscriptionData(mapSlug, false); // Another request might have created a subscription in the meantime
 				}
 
-				const pickBefore = existingSub?.pick;
-				if (existingSub) {
-					Object.assign(existingSub, { pick, history });
+				const pickBefore = sub?.pick;
+				if (sub) {
+					Object.assign(sub, { pick, history });
+				} else {
+					if (!this.mapSubscriptionDetails[resolved!.mapData.id]) {
+						this.mapSubscriptionDetails[resolved!.mapData.id] = [];
+					}
+					const newSub = { pick, history, mapSlug, mapLink: resolved!.activeLink };
+					sub = { ...newSub, mapId: resolved!.mapData.id };
+					this.mapSubscriptionDetails[resolved!.mapData.id].push(newSub);
+					this.registerDatabaseHandlers();
 				}
 
 				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
-				const results = await this.api.getAllMapObjects(mapSlug, {
+				const results = await this.api.getAllMapObjects(sub.mapLink, {
 					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox
 				});
@@ -395,7 +403,8 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
-				if (this.mapSubscriptionAbort[data.adminId]) {
+				const mainLink = getMainAdminLink(data.links);
+				if (this.mapSubscriptionAbort[mainLink.slug]) {
 					throw new Error(getI18n().t("socket.map-already-subscribed-error", { mapSlug: data.adminId }));
 				}
 				const abort = new AbortController();
@@ -488,7 +497,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					throw new Error(getI18n().t("socket.route-not-available-error"));
 				}
 
-				const routeInfo = { ...route, name: getI18n().t("socket.route-name"), data: {} };
+				const routeInfo = markStripped({ ...route, name: getI18n().t("socket.route-name"), data: {} });
 				const filename = getSafeFilename(routeInfo.name);
 
 				switch(options.format) {

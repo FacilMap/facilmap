@@ -1,10 +1,10 @@
 import type { ID } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
-import Database from "../database/database.js";
 import { renderTable } from "../frontend.js";
 import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import { getTabularData } from "./tabular.js";
-import { getI18n } from "../i18n.js";
+import type { RawMapLink } from "../utils/permissions.js";
+import type { ApiV3Backend } from "../api/api-v3.js";
 
 export type TableParams = {
 	indent?: string;
@@ -19,8 +19,8 @@ export type TableParams = {
 };
 
 export function createSingleTable(
-	database: Database,
-	mapId: ID,
+	api: ApiV3Backend,
+	mapLink: RawMapLink,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = [],
@@ -31,7 +31,7 @@ export function createSingleTable(
 			return Object.entries(a).map(([k, v]) => ` ${quoteHtml(k)}="${quoteHtml(v)}"`).join("");
 		}
 
-		const tabular = await getTabularData(database, mapId, typeId, true, filter, hide);
+		const tabular = await getTabularData(api, mapLink, typeId, true, filter, hide);
 
 		function* generateBefore() {
 			if (before) {
@@ -91,21 +91,17 @@ export function createSingleTable(
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function createTable(database: Database, mapId: ID, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
+export function createTable(api: ApiV3Backend, mapLink: RawMapLink, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const [mapData, types] = await Promise.all([
-			database.maps.getMapData(mapId),
-			iterableToArray(database.types.getTypes(mapId))
+			api.getMap(mapLink),
+			iterableToArray((await api.getMapTypes(mapLink)).results)
 		]);
-
-		if (!mapData) {
-			throw new Error(getI18n().t("map-not-found-error", { mapId }));
-		}
 
 		return renderTable({
 			mapData,
 			types,
-			renderSingleTable: (typeId, params) => createSingleTable(database, mapId, typeId, filter, hide, params),
+			renderSingleTable: (typeId, params) => createSingleTable(api, mapLink, typeId, filter, hide, params),
 			url
 		});
 	})());
