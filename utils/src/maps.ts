@@ -1,6 +1,5 @@
-import { LegacyV2Writable, type DeepReadonly, type DistributivePick, type ID, type MapData, type MapDataWithWritable, type MapSlug, type Type, type View } from "facilmap-types";
+import { type DeepReadonly, type ID, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
-import { cloneDeep } from "./utils.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const LENGTH = 12;
@@ -33,29 +32,4 @@ export function getOrderedTypes(types: Array<DeepReadonly<Type>> | Record<ID, De
 export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, DeepReadonly<View>> | undefined): Array<DeepReadonly<View>> {
 	const viewArr = !views ? [] : Array.isArray(views) ? [...views] : Object.values(views);
 	return viewArr.sort((a, b) => a.idx - b.idx);
-}
-
-export function getWritable(mapData: MapDataWithWritable | MapData, mapSlug: MapSlug): LegacyV2Writable {
-	if ("adminId" in mapData && mapData.adminId === mapSlug) {
-		return LegacyV2Writable.ADMIN;
-	} else if ("writeId" in mapData && mapData.writeId === mapSlug) {
-		return LegacyV2Writable.WRITE;
-	} else {
-		return LegacyV2Writable.READ;
-	}
-}
-
-export function getMapSlug(mapData: DistributivePick<MapDataWithWritable, "writable" | "adminId" | "writeId" | "readId">): MapSlug {
-	return mapData.writable === LegacyV2Writable.ADMIN ? mapData.adminId : mapData.writable === LegacyV2Writable.WRITE ? mapData.writeId : mapData.readId;
-}
-
-export function getMapDataWithWritable(mapData: DeepReadonly<MapData>, writable: LegacyV2Writable): MapDataWithWritable {
-	const { adminId, writeId, ...rest } = mapData;
-	if (writable === LegacyV2Writable.ADMIN) {
-		return { ...cloneDeep(rest), adminId, writeId, writable };
-	} else if (writable === LegacyV2Writable.WRITE) {
-		return { ...cloneDeep(rest), writeId, writable };
-	} else {
-		return { ...cloneDeep(rest), writable };
-	}
 }

@@ -3,7 +3,7 @@ import {
 	exportFormatValidator, isMapToken, lineValidator, mapDataValidator, mapPermissionsValidator, markerValidator, pagingValidator, pointValidator,
 	routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator,
 	type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type AnyMapSlug, type Api,
-	type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult, type FindOnMapResult,
+	type Bbox, type BboxWithExcept, type BboxWithZoom, type DeepReadonly, type ExportFormat, type FindMapsResult, type FindOnMapResult,
 	type HistoryEntry, type ID, type Line, type LinePoints, type LineTemplate, type LineWithTrackPoints, type MapData,
 	type MapPermissions,
 	type Marker, type PagedResults, type Route, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults,
@@ -57,9 +57,13 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 				rawMapData = await this.database.maps.getMapData(unstrippedMapLink.mapId, { notFound404: true });
 				const token = verifyMapToken(mapSlug, rawMapData.jwtSecret);
 				rawMapLink = {
-					...unstrippedMapLink,
+					mapId: unstrippedMapLink.mapId,
+					slug: mapSlug,
+					password: unstrippedMapLink.password,
+					tokenHash: unstrippedMapLink.tokenHash,
+					searchEngines: false,
 					permissions: mergeMapPermissions(unstrippedMapLink.permissions, token.permissions)
-				};
+				} satisfies RawMapLink;
 			} else {
 				rawMapLink = await this.database.maps.getMapLinkBySlug(mapSlug, { notFound404: true });
 				rawMapData = await this.database.maps.getMapData(rawMapLink.mapId, { notFound404: true });
@@ -136,11 +140,22 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return mapData;
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE_VALIDATED>, options?: { readonly pick?: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: DeepReadonly<MapData<CRU.CREATE_VALIDATED>>, options?: { readonly pick?: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
+		const { results } = await this._createMap(data, options);
+		return results;
+	}
+
+	async _createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: DeepReadonly<MapData<CRU.CREATE_VALIDATED>>, options?: { readonly pick?: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }): Promise<{
+		rawMapData: RawMapData;
+		mapData: MapData;
+		activeLink: RawMapLink;
+		results: AsyncIterable<AllMapObjectsItem<Pick>>;
+	}> {
 		const rawMapData = await this.database.maps.createMap(data);
 		const activeLink = getMainAdminLink(rawMapData.links);
 		const mapData = stripMapData(activeLink, rawMapData);
-		return this.getMapObjects(mapData, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
+		const results = this.getMapObjects(mapData, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
+		return { rawMapData, activeLink, mapData, results };
 	}
 
 	async updateMap(mapSlug: AnyMapSlug | RawMapLink, data: MapData<CRU.UPDATE_VALIDATED>): Promise<Stripped<MapData>> {

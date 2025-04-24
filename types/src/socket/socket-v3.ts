@@ -64,10 +64,10 @@ export interface MapEventsV3Interface {
 	mapSlugRename: [Record<MapSlug, MapSlug>];
 	deleteMap: [MapSlug];
 	marker: [MapSlug, Stripped<Marker>];
-	deleteMarker: [MapSlug, ObjectWithId];
+	deleteMarker: [MapSlug, Stripped<ObjectWithId>];
 	line: [MapSlug, Stripped<Line>];
-	deleteLine: [MapSlug, ObjectWithId];
-	linePoints: [MapSlug, LinePoints & { reset: boolean }];
+	deleteLine: [MapSlug, Stripped<ObjectWithId>];
+	linePoints: [MapSlug, Stripped<LinePoints & { reset: boolean }>];
 	view: [MapSlug, Stripped<View>];
 	deleteView: [MapSlug, ObjectWithId];
 	type: [MapSlug, Stripped<Type>];

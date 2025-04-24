@@ -78,7 +78,7 @@ export const mapDataValidator = cruValidator({
 		read: z.array(mapLinkValidator.read),
 		update: z.array(mapLinkValidator.update).optional()
 	},
-	activeLink: onlyRead(mapLinkValidator.read),
+	activeLink: onlyRead(mapLinkValidator.read.omit({ id: true }).extend({ id: mapLinkValidator.read.shape.id.optional() })),
 
 	createDefaultTypes: onlyCreate(z.boolean().default(true)),
 

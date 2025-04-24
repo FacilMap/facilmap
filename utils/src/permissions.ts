@@ -1,4 +1,4 @@
-import { entries, keys, type HistoryEntry, type ID, type MapPermissions } from "facilmap-types";
+import { entries, keys, type DeepReadonly, type HistoryEntry, type ID, type MapPermissions } from "facilmap-types";
 import { base64ToNumber, numberToBase64 } from "./utils";
 import { getI18n } from "./i18n";
 
@@ -214,6 +214,6 @@ export function deserializeMapPermissions(permissions: string): MapPermissions {
 	};
 }
 
-export function getMainAdminLink<L extends { permissions: MapPermissions }>(mapLinks: L[]): L {
+export function getMainAdminLink<L extends DeepReadonly<{ permissions: MapPermissions }>>(mapLinks: ReadonlyArray<L>): L {
 	return mapLinks.find((l) => l.permissions.admin)!;
 }

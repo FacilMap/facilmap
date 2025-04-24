@@ -15,11 +15,11 @@ export interface DatabaseEventsInterface {
 	historyEntry: [mapId: ID, newEntry: RawHistoryEntry];
 
 	line: [mapId: ID, newLine: Line];
-	linePoints: [mapId: ID, lineId: ID, points: TrackPoint[], reset: boolean];
-	deleteLine: [mapId: ID, data: ObjectWithId];
+	linePoints: [mapId: ID, data: { lineId: ID; typeId: number; trackPoints: TrackPoint[]; reset: boolean }];
+	deleteLine: [mapId: ID, data: ObjectWithId & { typeId: number }];
 
 	marker: [mapId: ID, newMarker: Marker, oldMarker?: Marker];
-	deleteMarker: [mapId: ID, data: ObjectWithId];
+	deleteMarker: [mapId: ID, data: ObjectWithId & { typeId: number }];
 
 	mapData: [mapId: ID, mapData: RawMapData];
 	deleteMap: [mapId: ID];

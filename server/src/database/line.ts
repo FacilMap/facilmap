@@ -59,7 +59,7 @@ export default class DatabaseLines {
 
 		await Promise.all([
 			this.db.history.addHistoryEntry(mapId, { type: "Line", action: "create", objectId: createdLine.id, objectAfter: createdLine }),
-			this.setLinePoints(mapId, createdLine.id, trackPoints)
+			this.setLinePoints(mapId, createdLine.id, createdLine.typeId, trackPoints)
 		]);
 
 		return createdLine;
@@ -106,7 +106,7 @@ export default class DatabaseLines {
 			this.db.emit("line", mapId, newLine);
 
 			if (routeInfo) {
-				await this.setLinePoints(mapId, lineId, routeInfo.trackPoints);
+				await this.setLinePoints(mapId, lineId, newType.id, routeInfo.trackPoints);
 			}
 
 			return newLine;
@@ -115,33 +115,30 @@ export default class DatabaseLines {
 		}
 	}
 
-	protected async setLinePoints(mapId: ID, lineId: ID, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
+	protected async setLinePoints(mapId: ID, lineId: ID, typeId: ID, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
 		let first = true;
 		await this.backend.setLinePoints(mapId, lineId, trackPoints, (batch) => {
 			if (!_noEvent) {
-				this.db.emit("linePoints", mapId, lineId, batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), first);
+				this.db.emit("linePoints", mapId, { lineId, typeId, trackPoints: batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), reset: first });
 			}
 			first = false;
 		});
 
 		if(first && !_noEvent) {
-			this.db.emit("linePoints", mapId, lineId, [], true);
+			this.db.emit("linePoints", mapId, { lineId, typeId, trackPoints: [], reset: true });
 		}
 	}
 
 	async deleteLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
 		const oldLine = await this.getLine(mapId, lineId, options);
-		await this.setLinePoints(mapId, lineId, [ ], true);
-		await this.backend.deleteLine(mapId, lineId);
-		this.db.emit("deleteLine", mapId, { id: lineId });
-		await this.db.history.addHistoryEntry(mapId, { type: "Line", action: "delete", objectId: lineId, objectBefore: oldLine });
+		await this._deleteLine(oldLine);
 		return oldLine;
 	}
 
 	async _deleteLine(line: Line): Promise<void> {
-		await this.setLinePoints(line.mapId, line.id, [ ], true);
+		await this.setLinePoints(line.mapId, line.id, line.typeId, [ ], true);
 		await this.backend.deleteLine(line.mapId, line.id);
-		this.db.emit("deleteLine", line.mapId, { id: line.id });
+		this.db.emit("deleteLine", line.mapId, { id: line.id, typeId: line.typeId });
 		await this.db.history.addHistoryEntry(line.mapId, { type: "Line", action: "delete", objectId: line.id, objectBefore: line });
 	}
 

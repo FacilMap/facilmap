@@ -9,10 +9,10 @@ import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { getMainAdminLink, getMapDataWithWritable, getMapSlug, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
+import { canReadObject, getMainAdminLink, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
-import type { RawMapLink } from "../utils/permissions.js";
+import { stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawMapLink } from "../utils/permissions.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -405,26 +405,27 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
 				const mainLink = getMainAdminLink(data.links);
 				if (this.mapSubscriptionAbort[mainLink.slug]) {
-					throw new Error(getI18n().t("socket.map-already-subscribed-error", { mapSlug: data.adminId }));
+					throw new Error(getI18n().t("socket.map-already-subscribed-error", { mapSlug: mainLink.slug }));
 				}
 				const abort = new AbortController();
-				this.mapSubscriptionAbort[data.adminId] = abort;
+				this.mapSubscriptionAbort[mainLink.slug] = abort;
 
-				const results = await this.api.createMap(data, {
+				const { activeLink, results } = await this.api._createMap(data, {
 					pick: this.bbox ? pick : pick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox
 				});
 
-				await this.emitAllMapObjects(data.adminId, mapAsyncIterable(results, (obj) => {
-					if (!abort.signal.aborted && obj.type === "mapData") {
-						if (!this.mapSubscriptionDetails[obj.data.id]) {
-							this.mapSubscriptionDetails[obj.data.id] = [];
-						}
-						this.mapSubscriptionDetails[obj.data.id].push({ pick, history, mapSlug: data.adminId, writable: obj.data.writable });
-						this.registerDatabaseHandlers();
-					}
-					return obj;
-				}), abort.signal);
+				if (abort.signal.aborted) {
+					return;
+				}
+
+				if (!this.mapSubscriptionDetails[activeLink.mapId]) {
+					this.mapSubscriptionDetails[activeLink.mapId] = [];
+				}
+				this.mapSubscriptionDetails[activeLink.mapId].push({ pick, history, mapSlug: activeLink.slug, mapLink: activeLink });
+				this.registerDatabaseHandlers();
+
+				await this.emitAllMapObjects(activeLink.slug, results, abort.signal);
 			},
 
 			unsubscribeFromMap: async (mapSlug) => {
@@ -582,24 +583,29 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("mapData")) {
-								void this.emit("mapData", sub.mapSlug, getMapDataWithWritable(data, sub.writable));
+								void this.emit("mapData", sub.mapSlug, stripMapData(sub.mapLink, data));
 							}
 						}
 
 						const slugMap = Object.fromEntries(this.mapSubscriptionDetails[mapId].flatMap((sub) => {
 							const oldSlug = sub.mapSlug;
-							const newSlug = getMapSlug({ ...data, writable: sub.writable });
-							if (oldSlug !== newSlug) {
-								sub.mapSlug = newSlug;
-								return [[oldSlug, newSlug]];
-							} else {
-								return [];
+							const newLink = sub.mapLink.id != null ? data.links.find((l) => l.id === sub.mapLink.id) : undefined;
+							if (newLink) {
+								sub.mapLink = newLink;
+								// TODO: Update permissions of token map link as well
+								if (newLink.slug !== oldSlug) {
+									sub.mapSlug = newLink.slug;
+									return [[oldSlug, newLink.slug]];
+								}
 							}
+							return [];
 						}));
 
 						if (Object.keys(slugMap).length > 0) {
 							void this.emit("mapSlugRename", slugMap);
 						}
+
+						// TODO: Somehow deal with permission change that makes existing markers/lines visible/invisible
 
 						if (data.id !== mapId) {
 							this.mapSubscriptionDetails[data.id] = [
@@ -623,7 +629,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox && (isInBbox(marker, this.bbox) || (oldMarker && isInBbox(oldMarker, this.bbox)))) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								void this.emit("marker", sub.mapSlug, marker);
+								const stripped = stripMarker(sub.mapLink, marker, false);
+								if (stripped) {
+									void this.emit("marker", sub.mapSlug, stripped);
+								}
 							}
 						}
 					}
@@ -633,7 +642,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								void this.emit("deleteMarker", sub.mapSlug, data);
+								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+									void this.emit("deleteMarker", sub.mapSlug, markStripped({
+										id: data.id
+									}));
+								}
 							}
 						}
 					}
@@ -643,22 +656,27 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								void this.emit("line", sub.mapSlug, line);
+								const stripped = stripLine(sub.mapLink, line, false);
+								if (stripped) {
+									void this.emit("line", sub.mapSlug, stripped);
+								}
 							}
 						}
 					}
 				},
 
-				linePoints: (mapId, lineId, trackPoints, reset) => {
+				linePoints: (mapId, data) => {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("linePoints")) {
-								void this.emit("linePoints", sub.mapSlug, {
-									lineId,
-									// Emit track points even if none are in the bbox so that client resets cached track points
-									trackPoints: prepareForBoundingBox(trackPoints, this.bbox),
-									reset
-								});
+								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+									void this.emit("linePoints", sub.mapSlug, markStripped({
+										lineId: data.lineId,
+										// Emit track points even if none are in the bbox so that client resets cached track points
+										trackPoints: prepareForBoundingBox(data.trackPoints, this.bbox),
+										reset: data.reset
+									}));
+								}
 							}
 						}
 					}
@@ -668,7 +686,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								void this.emit("deleteLine", sub.mapSlug, data);
+								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+									void this.emit("deleteLine", sub.mapSlug, markStripped({
+										id: data.id
+									}));
+								}
 							}
 						}
 					}
@@ -678,7 +700,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("types")) {
-								void this.emit("type", sub.mapSlug, data);
+								const stripped = stripType(sub.mapLink, data);
+								if (stripped) {
+									void this.emit("type", sub.mapSlug, stripped);
+								}
 							}
 						}
 					}
@@ -698,7 +723,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("views")) {
-								void this.emit("view", sub.mapSlug, data);
+								const stripped = stripView(sub.mapLink, data);
+								if (stripped) {
+									void this.emit("view", sub.mapSlug, stripped);
+								}
 							}
 						}
 					}
@@ -717,8 +745,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				historyEntry: (mapId, data) => {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
-							if (sub.history && (sub.writable === Writable.ADMIN || ["Marker", "Line"].includes(data.type))) {
-								void this.emit("history", sub.mapSlug, data);
+							if (sub.history) {
+								const stripped = stripHistoryEntry(sub.mapLink, data, false);
+								if (stripped) {
+									void this.emit("history", sub.mapSlug, stripped);
+								}
 							}
 						}
 					}

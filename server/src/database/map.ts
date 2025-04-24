@@ -1,4 +1,4 @@
-import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type ReplaceProperties, type MapLink } from "facilmap-types";
+import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type ReplaceProperties, type MapLink, type DeepReadonly } from "facilmap-types";
 import Database from "./database.js";
 import { getI18n } from "../i18n.js";
 import { createSalt, createJwtSecret, getPasswordHash, getTokenHash } from "../utils/crypt.js";
@@ -77,7 +77,7 @@ export default class DatabaseMaps {
 		return result;
 	}
 
-	async createMap(data: MapData<CRU.CREATE_VALIDATED>): Promise<RawMapData> {
+	async createMap(data: DeepReadonly<MapData<CRU.CREATE_VALIDATED>>): Promise<RawMapData> {
 		validateMapLinks(data.links.map((l) => ({ ...l, password: l.password !== false ? l.password : null })));
 
 		const exists = await this.mapSlugsExist([...new Set(data.links.map((l) => l.slug))]);

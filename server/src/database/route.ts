@@ -57,7 +57,7 @@ export default class DatabaseRoutes {
 		}
 	}
 
-	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] }) | undefined> {
+	async lineToRoute(routeId: string | undefined, mapId: ID, lineId: ID): Promise<(Route & { routeId: string; trackPoints: TrackPoint[] })> {
 		const noClear = !routeId;
 
 		if (!routeId)

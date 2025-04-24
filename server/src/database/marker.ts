@@ -131,7 +131,7 @@ export default class DatabaseMarkers {
 
 	async _deleteMarker(marker: Marker): Promise<void> {
 		await this.backend.deleteMarker(marker.mapId, marker.id);
-		this.db.emit("deleteMarker", marker.mapId, { id: marker.id });
+		this.db.emit("deleteMarker", marker.mapId, { id: marker.id, typeId: marker.typeId });
 		await this.db.history.addHistoryEntry(marker.mapId, { type: "Marker", action: "delete", objectId: marker.id, objectBefore: marker });
 	}
 
