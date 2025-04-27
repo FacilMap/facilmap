@@ -3,10 +3,10 @@ import { compileExpression } from "facilmap-utils";
 import { type Marker, type MarkerFeature, type TrackPoint, type Line, type InterfaceToType, type LineFeature, type ReplaceProperties, dataByFieldIdToDataByName, type Type, type Stripped } from "facilmap-types";
 import { keyBy, mapValues, omit, pick } from "lodash-es";
 import { JsonStringifier, arrayStream, serializeJsonValue, type ArrayStream } from "json-stream-es";
-import type { RawMapLink } from "../utils/permissions.js";
+import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
 
-export function exportGeoJson(api: ApiV3Backend, mapLink: RawMapLink, filter?: string): ReadableStream<string> {
+export function exportGeoJson(api: ApiV3Backend, mapLink: RawActiveMapLink, filter?: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const mapData = await api.getMap(mapLink);
 

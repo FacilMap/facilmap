@@ -8,7 +8,7 @@ import { forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
 import type { ID, Line, MapPermissions, Marker, Type } from "facilmap-types";
 import { streamToIterable } from "../utils/streams.js";
-import { createJwtSecret, createSalt, getTokenHash } from "../utils/crypt.js";
+import { createJwtSecret, createSalt, getSlugHash } from "../utils/crypt.js";
 
 export default class DatabaseBackendMigrations {
 
@@ -1065,7 +1065,7 @@ export default class DatabaseBackendMigrations {
 							mapId: map.id,
 							slug,
 							password: null,
-							tokenHash: await getTokenHash(slug, map.salt, null),
+							tokenHash: await getSlugHash(slug, map.salt, null),
 							permissions,
 							searchEngines
 						});

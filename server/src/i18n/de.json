@@ -33,8 +33,7 @@
         "route-not-available-error": "Route nicht verfügbar.",
         "route-name": "FacilMap-Route",
         "already-listening-to-history-error": "Änderungsgeschichte bereits abonniert.",
-        "not-listening-to-history-error": "Änderungsgeschichte nicht abonniert.",
-        "admin-revert-error": "Diese Änderung kann nur im Admin-Modus rückgängig gemacht werden."
+        "not-listening-to-history-error": "Änderungsgeschichte nicht abonniert."
     },
     "search": {
         "url-request-error": "Laden von „{{url}}“ fehlgeschlagen (Status: {{status}}).",

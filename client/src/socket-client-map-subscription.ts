@@ -1,17 +1,19 @@
-import type { AllMapObjectsItem, AllMapObjectsPick, AnyMapSlug, Bbox, BboxWithExcept, BboxWithZoom, CRU, DeepReadonly, EventHandler, EventName, ExportFormat, FindOnMapResult, HistoryEntry, ID, Line, LineTemplate, LineWithTrackPoints, MapData, MapSlug, Marker, PagedResults, PagingInput, SocketApi, SocketVersion, StreamedResults, SubscribeToMapOptions, TrackPoint, Type, View } from "facilmap-types";
+import { getMainAdminLink, type AllMapObjectsItem, type AllMapObjectsPick, type AnyMapSlug, type Bbox, type BboxWithExcept, type BboxWithZoom, type CRU, type DeepReadonly, type EventHandler, type EventName, type ExportFormat, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData, type MapPermissions, type MapSlug, type Marker, type PagedResults, type PagingInput, type SocketApi, type SocketVersion, type StreamedResults, type Stripped, type SubscribeToMapOptions, type TrackPoint, type Type, type View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
 import { SocketClientSubscription, type SubscriptionState } from "./socket-client-subscription";
 
-type SocketClientMapSubscriptionInterface = {
-	[K in keyof SocketApi<SocketVersion.V3, false>]: SocketApi<SocketVersion.V3, false>[K] extends (...args: infer Args) => infer Result ? (Args extends [AnyMapSlug, ...infer Rest] ? (...args: Rest) => Result : never) : never;
+type SocketClientMapSubscriptionInterface = Omit<{
+	[K in keyof SocketApi<SocketVersion.V3, false> as AnyMapSlug extends Parameters<SocketApi<SocketVersion.V3, false>[K]>[0] ? K : never]: (
+		Parameters<SocketApi<SocketVersion.V3, false>[K]> extends [any, ...infer Rest] ? (...args: Rest) => ReturnType<SocketApi<SocketVersion.V3, false>[K]> : never
 
-	// This would be simpler:
-	// SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => (...args: Args) => Result : never;
-	// but it does not work and infers Args to never if it is a union.
-	// This seems to be a TypeScript bug, reported here: https://github.com/microsoft/TypeScript/issues/48663#issuecomment-2187713647
-};
+		// This would be simpler:
+		// SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => (...args: Args) => Result : never;
+		// but it does not work and infers Args to never if it is a union.
+		// This seems to be a TypeScript bug, reported here: https://github.com/microsoft/TypeScript/issues/48663#issuecomment-2187713647
+	)
+}, "subscribeToMap">;
 
 declare const write: unique symbol;
 declare global {
@@ -22,15 +24,19 @@ declare global {
 
 export enum MapSubscriptionStateType {
 	/** The map has been deleted. */
-	DELETED = "deleted"
+	DELETED = "deleted",
+	/** The server has canceled the subscription because the map link was deleted or its slug/password modified. */
+	CANCELED = "canceled"
 };
 
 export type MapSubscriptionState = SubscriptionState
-	| { type: MapSubscriptionStateType.DELETED };
+	| { type: MapSubscriptionStateType.DELETED }
+	| { type: MapSubscriptionStateType.CANCELED; error: Error & { status?: number } };
 
 export interface MapSubscriptionData {
-	state: DeepReadonly<MapSubscriptionState>,
+	state: DeepReadonly<MapSubscriptionState>;
 	mapSlug: MapSlug;
+	anyMapSlug: AnyMapSlug;
 	options: DeepReadonly<SubscribeToMapOptions>;
 };
 
@@ -39,20 +45,23 @@ export interface SocketClientMapSubscription extends Readonly<MapSubscriptionDat
 }
 
 export class SocketClientMapSubscription extends SocketClientSubscription<MapSubscriptionData> implements SocketClientMapSubscriptionInterface {
-	constructor(client: SocketClient, mapSlug: MapSlug, options?: SubscribeToMapOptions & {
+	protected upcomingPasswordChanges: Array<{ mapLinkId: ID; password: string | false }> = [];
+
+	constructor(client: SocketClient, mapSlug: AnyMapSlug, options?: SubscribeToMapOptions & {
 		reactiveObjectProvider?: ReactiveObjectProvider;
 	}) {
 		const { reactiveObjectProvider, ...mapOptions } = options ?? {};
 
 		super(client, {
 			reactiveObjectProvider,
-			mapSlug,
+			mapSlug: typeof mapSlug === "string" ? mapSlug : mapSlug.mapSlug,
+			anyMapSlug: mapSlug,
 			options: mapOptions
 		});
 	}
 
 	protected override async _doSubscribe(): Promise<void> {
-		await this.client._subscribeToMap(this.mapSlug, this.data.options);
+		await this.client._subscribeToMap(this.anyMapSlug, this.data.options);
 	}
 
 	async updateSubscription(options: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
@@ -67,10 +76,22 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 	protected _getEventHandlers(): {
 		[E in EventName<ClientEvents>]?: EventHandler<ClientEvents, E>
 	} {
-		return mergeEventHandlers(super._getEventHandlers(), {
-			mapSlugRename: (slugMap) => {
-				if (slugMap[this.data.mapSlug]) {
-					this.data.mapSlug = slugMap[this.data.mapSlug];
+		return mergeEventHandlers<ClientEvents>(super._getEventHandlers(), {
+			mapData: (mapSlug, mapData) => {
+				if (mapSlug === this.data.mapSlug && mapData.activeLink && mapData.activeLink.slug !== this.data.mapSlug) {
+					const passwordChange = mapData.activeLink.id != null ? this.upcomingPasswordChanges.find((c) => c.mapLinkId === mapData.activeLink.id) : undefined;
+					this.reactiveObjectProvider.set(this.data, "mapSlug", mapData.activeLink.slug);
+					if (passwordChange) {
+						this.reactiveObjectProvider.set(this.data, "anyMapSlug", (
+							passwordChange.password === false ? mapData.activeLink.slug :
+							{ mapSlug: mapData.activeLink.slug, password: passwordChange.password }
+						));
+					} else {
+						this.reactiveObjectProvider.set(this.data, "anyMapSlug", (
+							typeof this.anyMapSlug === "string" ? mapData.activeLink.slug :
+							{ ...this.anyMapSlug, mapSlug: mapData.activeLink.slug }
+						));
+					}
 				}
 			},
 
@@ -78,15 +99,35 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 				if (mapSlug === this.data.mapSlug) {
 					this.reactiveObjectProvider.set(this.data, "state", { type: MapSubscriptionStateType.DELETED });
 				}
+			},
+
+			cancelMapSubscription: (mapSlug, error) => {
+				if (mapSlug === this.data.mapSlug) {
+					this.reactiveObjectProvider.set(this.data, "state", { type: MapSubscriptionStateType.CANCELED, error });
+				}
+			},
+
+			emit: (...args) => {
+				if (args[0] === "updateMap") {
+					const updates = args[1].args[1].links?.flatMap((l) => "id" in l && l.password != null ? [{ mapLinkId: l.id, password: l.password }] : []) ?? [];
+					this.upcomingPasswordChanges.push(...updates);
+					void args[1].result.finally(() => {
+						for (let i = 0; i < this.upcomingPasswordChanges.length; i++) {
+							if (updates.includes(this.upcomingPasswordChanges[i])) {
+								this.upcomingPasswordChanges.splice(i--, 1);
+							}
+						}
+					});
+				}
 			}
 		});
 	};
 
-	async getMap(): Promise<MapData> {
+	async getMap(): Promise<Stripped<MapData>> {
 		return await this.client.getMap(this.data.mapSlug);
 	}
 
-	async updateMap(data: MapData<CRU.UPDATE>): Promise<MapData> {
+	async updateMap(data: MapData<CRU.UPDATE>): Promise<Stripped<MapData>> {
 		return await this.client.updateMap(this.data.mapSlug, data);
 	}
 
@@ -98,11 +139,15 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.getAllMapObjects(this.data.mapSlug, options);
 	}
 
-	async findOnMap(query: string): Promise<FindOnMapResult[]> {
+	async findOnMap(query: string): Promise<Array<Stripped<FindOnMapResult>>> {
 		return await this.client.findOnMap(this.data.mapSlug, query);
 	}
 
-	async getHistory(data?: PagingInput): Promise<PagedResults<HistoryEntry>> {
+	async getMapToken(permissions: MapPermissions): Promise<{ token: string }> {
+		return await this.client.getMapToken(this.data.mapSlug, permissions);
+	}
+
+	async getHistory(data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
 		return await this.client.getHistory(this.data.mapSlug, data);
 	}
 
@@ -110,19 +155,19 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.revertHistoryEntry(this.data.mapSlug, historyEntryId);
 	}
 
-	async getMapMarkers(options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
+	async getMapMarkers(options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Stripped<Marker>>> {
 		return await this.client.getMapMarkers(this.data.mapSlug, options);
 	}
 
-	async getMarker(markerId: ID): Promise<Marker> {
+	async getMarker(markerId: ID): Promise<Stripped<Marker>> {
 		return await this.client.getMarker(this.data.mapSlug, markerId);
 	}
 
-	async createMarker(data: Marker<CRU.CREATE>): Promise<Marker> {
+	async createMarker(data: Marker<CRU.CREATE>): Promise<Stripped<Marker>> {
 		return await this.client.createMarker(this.data.mapSlug, data);
 	}
 
-	async updateMarker(markerId: ID, data: Marker<CRU.UPDATE>): Promise<Marker> {
+	async updateMarker(markerId: ID, data: Marker<CRU.UPDATE>): Promise<Stripped<Marker>> {
 		return await this.client.updateMarker(this.data.mapSlug, markerId, data);
 	}
 
@@ -130,11 +175,11 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.deleteMarker(this.data.mapSlug, markerId);
 	}
 
-	async getMapLines<IncludeTrackPoints extends boolean = false>(options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
+	async getMapLines<IncludeTrackPoints extends boolean = false>(options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>>> {
 		return await this.client.getMapLines(this.data.mapSlug, options);
 	}
 
-	async getLine(lineId: ID): Promise<Line> {
+	async getLine(lineId: ID): Promise<Stripped<Line>> {
 		return await this.client.getLine(this.data.mapSlug, lineId);
 	}
 
@@ -146,11 +191,11 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.getLineTemplate(this.data.mapSlug, options);
 	}
 
-	async createLine(data: Line<CRU.CREATE>): Promise<Line> {
+	async createLine(data: Line<CRU.CREATE>): Promise<Stripped<Line>> {
 		return await this.client.createLine(this.data.mapSlug, data);
 	}
 
-	async updateLine(lineId: ID, data: Line<CRU.UPDATE>): Promise<Line> {
+	async updateLine(lineId: ID, data: Line<CRU.UPDATE>): Promise<Stripped<Line>> {
 		return await this.client.updateLine(this.data.mapSlug, lineId, data);
 	}
 
@@ -162,19 +207,19 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.exportLine(this.data.mapSlug, lineId, options);
 	}
 
-	async getMapTypes(): Promise<StreamedResults<Type>> {
+	async getMapTypes(): Promise<StreamedResults<Stripped<Type>>> {
 		return await this.client.getMapTypes(this.data.mapSlug);
 	}
 
-	async getType(typeId: ID): Promise<Type> {
+	async getType(typeId: ID): Promise<Stripped<Type>> {
 		return await this.client.getType(this.data.mapSlug, typeId);
 	}
 
-	async createType(data: Type<CRU.CREATE>): Promise<Type> {
+	async createType(data: Type<CRU.CREATE>): Promise<Stripped<Type>> {
 		return await this.client.createType(this.data.mapSlug, data);
 	}
 
-	async updateType(typeId: ID, data: Type<CRU.UPDATE>): Promise<Type> {
+	async updateType(typeId: ID, data: Type<CRU.UPDATE>): Promise<Stripped<Type>> {
 		return await this.client.updateType(this.data.mapSlug, typeId, data);
 	}
 
@@ -182,19 +227,19 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.deleteType(this.data.mapSlug, typeId);
 	}
 
-	async getMapViews(): Promise<StreamedResults<View>> {
+	async getMapViews(): Promise<StreamedResults<Stripped<View>>> {
 		return await this.client.getMapViews(this.data.mapSlug);
 	}
 
-	async getView(viewId: ID): Promise<View> {
+	async getView(viewId: ID): Promise<Stripped<View>> {
 		return await this.client.getView(this.data.mapSlug, viewId);
 	}
 
-	async createView(data: View<CRU.CREATE>): Promise<View> {
+	async createView(data: View<CRU.CREATE>): Promise<Stripped<View>> {
 		return await this.client.createView(this.data.mapSlug, data);
 	}
 
-	async updateView(viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+	async updateView(viewId: ID, data: View<CRU.UPDATE>): Promise<Stripped<View>> {
 		return await this.client.updateView(this.data.mapSlug, viewId, data);
 	}
 
@@ -210,7 +255,9 @@ export class SocketClientCreateMapSubscription extends SocketClientMapSubscripti
 	constructor(client: SocketClient, data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions & {
 		reactiveObjectProvider?: ReactiveObjectProvider;
 	}) {
-		super(client, data.adminId, options);
+		const mainAdminLink = getMainAdminLink(data.links);
+		const anyMapSlug = mainAdminLink.password !== false ? { mapSlug: mainAdminLink.slug, password: mainAdminLink.password } : mainAdminLink.slug;
+		super(client, anyMapSlug, options);
 
 		this.createMapData = data;
 	}

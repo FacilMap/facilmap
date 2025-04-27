@@ -22,19 +22,19 @@ Parameters: `mapSlug: string, mapData: MapDataWithWritable` (see [`MapDataWithWr
 
 The settings of a subscribed map have changed or are retrieved for the first time.
 
-Note that when this event is fired, the map slug might change.
-
-## `mapSlugRename`
-
-Parameters: `mapSlugs: Record<string, string>`
-
-If one or more map slugs of a map are changed, this event is emitted in addition to the `mapData` event for your convenience. It is also emitted if you have not subscribed to `mapData` events. The `mapSlugs` object maps maps the old slug(s) to the new slug(s). You can use this to update the map slug of your subscription if you have it documented anywhere. The `mapSlugRename` event marks the exact point in time when the slug is changed – all events related to the map emitted before it use the old slug, and all events after use the new slug.
-
 ## `deleteMap`
 
 Parameters: `mapSlug: string`
 
 A subscribed map has been deleted.
+
+## `mapUnsubscribed`
+
+Parameters: `mapSlug: MapSlug, error: Error & { status?: number }`
+
+The active map subscription has been canceled by the server. There are two expected cases where this happens:
+* `error.status` is `401`: The password of the active map link was changed. You can subscribe to the map again using the same slug and new password.
+* `error.status` is `404`: The map slug of the active map link was changed. You can subscribe to the map again using the new slug.
 
 ## `marker`
 

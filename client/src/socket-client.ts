@@ -1,21 +1,15 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
 import {
-	type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindMapsResult, type ID, type Line, type SocketEvents,
-	type Marker, type MapData, type MapSlug, type PagedResults, type RouteInfo, type RouteRequest,
-	type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type SocketClientToServerEvents,
-	type SocketServerToClientEvents, type SetLanguageRequest, type PagingInput, type MapDataWithWritable,
-	type AllMapObjectsPick, type StreamedResults, type BboxWithExcept, type AllMapObjectsItem, type SocketApi, type StreamId,
-	type FindOnMapResult, type HistoryEntry, type StreamToStreamId,
-	type RouteParameters, type LineToRouteRequest, type ApiV3, type AllAdminMapObjectsItem,
-	type LineWithTrackPoints,
-	type DeepReadonly,
-	type SubscribeToMapOptions,
-	ApiVersion,
-	type Api,
-	type ExportFormat,
-	type AllAdminMapObjects,
-	type AllMapObjects,
-	type LineTemplate
+	type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindMapsResult, type ID,
+	type Line, type SocketEvents, type Marker, type MapData, type MapSlug, type PagedResults, type RouteInfo,
+	type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View,
+	type SocketClientToServerEvents, type SocketServerToClientEvents, type SetLanguageRequest, type PagingInput,
+	type AllMapObjectsPick, type StreamedResults, type BboxWithExcept, type AllMapObjectsItem, type SocketApi,
+	type StreamId, type FindOnMapResult, type HistoryEntry, type StreamToStreamId, type RouteParameters,
+	type LineToRouteRequest, type ApiV3, type LineWithTrackPoints, type DeepReadonly, type SubscribeToMapOptions,
+	ApiVersion, type Api, type ExportFormat, type AllMapObjects, type LineTemplate, type AnyMapSlug, type Stripped,
+	getMainAdminLink,
+	type MapPermissions
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
@@ -349,102 +343,106 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("findMaps", query, paging);
 	}
 
-	async getMap(mapSlug: string): Promise<MapDataWithWritable> {
+	async getMap(mapSlug: AnyMapSlug): Promise<Stripped<MapData>> {
 		return await this._call("getMap", mapSlug);
 	}
 
-	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllAdminMapObjectsItem<Pick>, void, undefined>> {
+	async createMap<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
 		const result = await this._call("createMap", data, options);
-		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllAdminMapObjectsItem<Pick>));
+		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllMapObjectsItem<Pick>));
 	}
 
-	async createMapUnstreamed<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AllAdminMapObjects<Pick>> {
+	async createMapUnstreamed<Pick extends AllMapObjectsPick = "mapData" | "types">(data: MapData<CRU.CREATE>, options?: { pick?: Pick[]; bbox?: BboxWithZoom }): Promise<AllMapObjects<Pick>> {
 		return await unstreamMapObjects(await this.createMap(data, options));
 	}
 
-	async updateMap(mapSlug: MapSlug, data: MapData<CRU.UPDATE>): Promise<MapDataWithWritable> {
+	async updateMap(mapSlug: AnyMapSlug, data: MapData<CRU.UPDATE>): Promise<Stripped<MapData>> {
 		return await this._call("updateMap", mapSlug, data);
 	}
 
-	async deleteMap(mapSlug: MapSlug): Promise<void> {
+	async deleteMap(mapSlug: AnyMapSlug): Promise<void> {
 		await this._call("deleteMap", mapSlug);
 	}
 
-	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
+	async getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: AnyMapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AsyncIterable<AllMapObjectsItem<Pick>, void, undefined>> {
 		const result = await this._call("getAllMapObjects", mapSlug, options);
 		return mapNestedIterable(this._handleIterable(result), (obj) => ({ ...obj, data: this._handleIterable<any>(obj.data) } as AllMapObjectsItem<Pick>));
 	}
 
-	async getAllMapObjectsUnstreamed<Pick extends AllMapObjectsPick>(mapSlug: MapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AllMapObjects<Pick>> {
+	async getAllMapObjectsUnstreamed<Pick extends AllMapObjectsPick>(mapSlug: AnyMapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<AllMapObjects<Pick>> {
 		return await unstreamMapObjects(await this.getAllMapObjects(mapSlug, options));
 	}
 
-	async findOnMap(mapSlug: MapSlug, query: string): Promise<FindOnMapResult[]> {
+	async findOnMap(mapSlug: AnyMapSlug, query: string): Promise<Array<Stripped<FindOnMapResult>>> {
 		return await this._call("findOnMap", mapSlug, query);
 	}
 
-	async getHistory(mapSlug: MapSlug, data?: PagingInput): Promise<PagedResults<HistoryEntry>> {
+	async getMapToken(mapSlug: AnyMapSlug, permissions: MapPermissions): Promise<{ token: string }> {
+		return await this._call("getMapToken", mapSlug, permissions);
+	}
+
+	async getHistory(mapSlug: AnyMapSlug, data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
 		return await this._call("getHistory", mapSlug, data);
 	}
 
-	async revertHistoryEntry(mapSlug: MapSlug, historyEntryId: ID): Promise<void> {
+	async revertHistoryEntry(mapSlug: AnyMapSlug, historyEntryId: ID): Promise<void> {
 		await this._call("revertHistoryEntry", mapSlug, historyEntryId);
 	}
 
-	async getMapMarkers(mapSlug: MapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Marker>> {
+	async getMapMarkers(mapSlug: AnyMapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Stripped<Marker>>> {
 		const result = await this._call("getMapMarkers", mapSlug, options);
 		return {
 			results: this._handleIterable(result.results)
 		};
 	}
 
-	async getMarker(mapSlug: MapSlug, markerId: ID): Promise<Marker> {
+	async getMarker(mapSlug: AnyMapSlug, markerId: ID): Promise<Stripped<Marker>> {
 		return await this._call("getMarker", mapSlug, markerId);
 	}
 
-	async createMarker(mapSlug: MapSlug, data: Marker<CRU.CREATE>): Promise<Marker> {
+	async createMarker(mapSlug: AnyMapSlug, data: Marker<CRU.CREATE>): Promise<Stripped<Marker>> {
 		return await this._call("createMarker", mapSlug, data);
 	}
 
-	async updateMarker(mapSlug: MapSlug, markerId: ID, data: Marker<CRU.UPDATE>): Promise<Marker> {
+	async updateMarker(mapSlug: AnyMapSlug, markerId: ID, data: Marker<CRU.UPDATE>): Promise<Stripped<Marker>> {
 		return await this._call("updateMarker", mapSlug, markerId, data);
 	}
 
-	async deleteMarker(mapSlug: MapSlug, markerId: ID): Promise<void> {
+	async deleteMarker(mapSlug: AnyMapSlug, markerId: ID): Promise<void> {
 		await this._call("deleteMarker", mapSlug, markerId);
 	}
 
-	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: MapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? LineWithTrackPoints : Line>> {
+	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: AnyMapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>>> {
 		const result = await this._call("getMapLines", mapSlug, options);
 		return {
-			results: this._handleIterable(result.results) as AsyncIterable<IncludeTrackPoints extends true ? LineWithTrackPoints : Line, void, undefined>
+			results: this._handleIterable(result.results) as AsyncIterable<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>, void, undefined>
 		};
 	}
 
-	async getLine(mapSlug: MapSlug, lineId: ID): Promise<Line> {
+	async getLine(mapSlug: AnyMapSlug, lineId: ID): Promise<Stripped<Line>> {
 		return await this._call("getLine", mapSlug, lineId);
 	}
 
-	async getLinePoints(mapSlug: MapSlug, lineId: ID, options?: { bbox?: BboxWithZoom & { except?: Bbox } }): Promise<StreamedResults<TrackPoint>> {
+	async getLinePoints(mapSlug: AnyMapSlug, lineId: ID, options?: { bbox?: BboxWithZoom & { except?: Bbox } }): Promise<StreamedResults<TrackPoint>> {
 		const result = await this._call("getLinePoints", mapSlug, lineId, options);
 		return {
 			results: this._handleIterable(result.results)
 		};
 	}
 
-	async createLine(mapSlug: MapSlug, data: DeepReadonly<Line<CRU.CREATE>>): Promise<Line> {
+	async createLine(mapSlug: AnyMapSlug, data: DeepReadonly<Line<CRU.CREATE>>): Promise<Stripped<Line>> {
 		return await this._call("createLine", mapSlug, data);
 	}
 
-	async updateLine(mapSlug: MapSlug, lineId: ID, data: DeepReadonly<Line<CRU.UPDATE>>): Promise<Line> {
+	async updateLine(mapSlug: AnyMapSlug, lineId: ID, data: DeepReadonly<Line<CRU.UPDATE>>): Promise<Stripped<Line>> {
 		return await this._call("updateLine", mapSlug, lineId, data);
 	}
 
-	async deleteLine(mapSlug: MapSlug, lineId: ID): Promise<void> {
+	async deleteLine(mapSlug: AnyMapSlug, lineId: ID): Promise<void> {
 		await this._call("deleteLine", mapSlug, lineId);
 	}
 
-	async exportLine(mapSlug: MapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
+	async exportLine(mapSlug: AnyMapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
 		const result = await this._call("exportLine", mapSlug, lineId, options);
 		return {
 			...result,
@@ -452,53 +450,53 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		};
 	}
 
-	async getLineTemplate(mapSlug: MapSlug, options: { typeId: ID }): Promise<LineTemplate> {
+	async getLineTemplate(mapSlug: AnyMapSlug, options: { typeId: ID }): Promise<LineTemplate> {
 		return await this._call("getLineTemplate", mapSlug, options);
 	}
 
-	async getMapTypes(mapSlug: MapSlug): Promise<StreamedResults<Type>> {
+	async getMapTypes(mapSlug: AnyMapSlug): Promise<StreamedResults<Stripped<Type>>> {
 		const result = await this._call("getMapTypes", mapSlug);
 		return {
 			results: this._handleIterable(result.results)
 		};
 	}
 
-	async getType(mapSlug: MapSlug, typeId: ID): Promise<Type> {
+	async getType(mapSlug: AnyMapSlug, typeId: ID): Promise<Stripped<Type>> {
 		return await this._call("getType", mapSlug, typeId);
 	}
 
-	async createType(mapSlug: MapSlug, data: Type<CRU.CREATE>): Promise<Type> {
+	async createType(mapSlug: AnyMapSlug, data: Type<CRU.CREATE>): Promise<Stripped<Type>> {
 		return await this._call("createType", mapSlug, data);
 	}
 
-	async updateType(mapSlug: MapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Type> {
+	async updateType(mapSlug: AnyMapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Stripped<Type>> {
 		return await this._call("updateType", mapSlug, typeId, data);
 	}
 
-	async deleteType(mapSlug: MapSlug, typeId: ID): Promise<void> {
+	async deleteType(mapSlug: AnyMapSlug, typeId: ID): Promise<void> {
 		await this._call("deleteType", mapSlug, typeId);
 	}
 
-	async getMapViews(mapSlug: MapSlug): Promise<StreamedResults<View>> {
+	async getMapViews(mapSlug: AnyMapSlug): Promise<StreamedResults<Stripped<View>>> {
 		const result = await this._call("getMapViews", mapSlug);
 		return {
 			results: this._handleIterable(result.results)
 		};
 	}
 
-	async getView(mapSlug: MapSlug, viewId: ID): Promise<View> {
+	async getView(mapSlug: AnyMapSlug, viewId: ID): Promise<Stripped<View>> {
 		return await this._call("getView", mapSlug, viewId);
 	}
 
-	async createView(mapSlug: MapSlug, data: View<CRU.CREATE>): Promise<View> {
+	async createView(mapSlug: AnyMapSlug, data: View<CRU.CREATE>): Promise<Stripped<View>> {
 		return await this._call("createView", mapSlug, data);
 	}
 
-	async updateView(mapSlug: MapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<View> {
+	async updateView(mapSlug: AnyMapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<Stripped<View>> {
 		return await this._call("updateView", mapSlug, viewId, data);
 	}
 
-	async deleteView(mapSlug: MapSlug, viewId: ID): Promise<void> {
+	async deleteView(mapSlug: AnyMapSlug, viewId: ID): Promise<void> {
 		await this._call("deleteView", mapSlug, viewId);
 	}
 
@@ -521,16 +519,17 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return (await this._call("geoip")) ?? undefined;
 	}
 
-	async _subscribeToMap(mapSlug: MapSlug, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
+	async _subscribeToMap(mapSlug: AnyMapSlug, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		await this._call("subscribeToMap", mapSlug, options);
 	}
 
-	subscribeToMap(mapSlug: MapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
+	subscribeToMap(anyMapSlug: AnyMapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
+		const mapSlug = typeof anyMapSlug === "string" ? anyMapSlug : anyMapSlug.mapSlug;
 		if (this.hasActiveMapSubscription(mapSlug)) {
 			throw new Error(`There is already a subscription to map ${mapSlug}.`);
 		}
 
-		const subscription = new SocketClientMapSubscription(this, mapSlug, {
+		const subscription = new SocketClientMapSubscription(this, anyMapSlug, {
 			reactiveObjectProvider: this.reactiveObjectProvider,
 			...options
 		});
@@ -538,20 +537,21 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return mergeObjectWithPromise(subscription, subscription.subscribePromise);
 	}
 
-	async _createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
+	async _createMapAndSubscribe(data: DeepReadonly<MapData<CRU.CREATE>>, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		await this._call("createMapAndSubscribe", data, options);
 	}
 
 	createMapAndSubscribe(data: MapData<CRU.CREATE>, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
-		if (this.hasActiveMapSubscription(data.adminId)) {
-			throw new Error(`There is already a subscription to map ${data.adminId}.`);
+		const mainAdminLink = getMainAdminLink(data.links);
+		if (this.hasActiveMapSubscription(mainAdminLink.slug)) {
+			throw new Error(`There is already a subscription to map ${mainAdminLink.slug}.`);
 		}
 
 		const subscription = new SocketClientCreateMapSubscription(this, data, {
 			reactiveObjectProvider: this.reactiveObjectProvider,
 			...options
 		});
-		this.reactiveObjectProvider.set(this.data.mapSubscriptions, data.adminId, this.reactiveObjectProvider.makeUnreactive(subscription));
+		this.reactiveObjectProvider.set(this.data.mapSubscriptions, mainAdminLink.slug, this.reactiveObjectProvider.makeUnreactive(subscription));
 		return mergeObjectWithPromise(subscription, subscription.subscribePromise);
 	}
 

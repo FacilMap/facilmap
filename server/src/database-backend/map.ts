@@ -35,8 +35,6 @@ export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, Infer
 	mapId: ForeignKey<MapModel["id"]>;
 	slug: MapSlug;
 	password: Buffer | null;
-	/** Derived from slug and password, used in map tokens */
-	tokenHash: string;
 	permissions: MapPermissions;
 	searchEngines: boolean;
 }
@@ -70,7 +68,6 @@ export default class DatabaseMapsBackend {
 			id: getDefaultIdType(),
 			slug: { type: DataTypes.TEXT, allowNull: false },
 			password: { type: DataTypes.BLOB, allowNull: true },
-			tokenHash: { type: DataTypes.TEXT, allowNull: false },
 			permissions: {
 				type: DataTypes.TEXT,
 				allowNull: false,
@@ -139,20 +136,19 @@ export default class DatabaseMapsBackend {
 		const obj = await this.MapModel.findOne({
 			where: { id: mapId },
 			include: [
-				{ model: this.backend.views.ViewModel, as: "defaultView" }
+				{ model: this.backend.views.ViewModel, as: "defaultView" },
+				{ model: this.MapLinkModel, as: "links" }
 			]
 		});
 		return obj ? this.prepareMapData(obj) : undefined;
 	}
 
-	async getMapLinkBySlug(mapSlug: MapSlug): Promise<RawMapLink | undefined> {
-		const obj = await this.MapLinkModel.findOne({ where: { slug: mapSlug } });
-		return obj ? this.prepareMapLink(obj) : undefined;
-	}
-
-	async getMapLinkByHash(mapId: ID, tokenHash: string): Promise<RawMapLink | undefined> {
-		const obj = await this.MapLinkModel.findOne({ where: { mapId, tokenHash } });
-		return obj ? this.prepareMapLink(obj) : undefined;
+	async getMapDataBySlug(mapSlug: MapSlug): Promise<RawMapData | undefined> {
+		const obj = await this.MapLinkModel.findOne({
+			where: { slug: mapSlug },
+			attributes: ["mapId"]
+		});
+		return obj ? await this.getMapData(obj.mapId) : undefined;
 	}
 
 	protected async setMapLinks(mapId: ID, links: Array<Optional<Omit<RawMapLink, "mapId">, "id">>, options?: { noClear?: boolean }): Promise<void> {

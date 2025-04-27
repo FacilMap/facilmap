@@ -61,8 +61,8 @@ export type SocketApiV3<Validated extends boolean = false> = ApiV3<Validated> & 
 
 export interface MapEventsV3Interface {
 	mapData: [MapSlug, Stripped<MapData>];
-	mapSlugRename: [Record<MapSlug, MapSlug>];
 	deleteMap: [MapSlug];
+	cancelMapSubscription: [MapSlug, Error & { status?: number }];
 	marker: [MapSlug, Stripped<Marker>];
 	deleteMarker: [MapSlug, Stripped<ObjectWithId>];
 	line: [MapSlug, Stripped<Line>];

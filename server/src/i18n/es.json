@@ -29,7 +29,6 @@
         "no-map-open-error": "No se abrió ningún mapa.",
         "unknown-format-error": "Formato desconocido",
         "route-not-available-error": "Ruta no disponible.",
-        "admin-revert-error": "Este tipo de modificación solo se puede revertir en el modo administrativo.",
         "route-name": "Ruta de FacilMap",
         "already-listening-to-history-error": "Historial de cambios ya suscrito.",
         "not-listening-to-history-error": "Historial de cambios no suscrito."

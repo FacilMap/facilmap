@@ -13,7 +13,8 @@ import * as z from "zod";
 
 export const anyMapSlugValidator = mapSlugOrJwtValidator.or(z.object({
 	mapSlug: mapSlugOrJwtValidator,
-	password: z.string().optional()
+	password: z.string().optional(),
+	identity: z.string().optional()
 }));
 export type AnyMapSlug = z.infer<typeof anyMapSlugValidator>;
 
@@ -38,7 +39,10 @@ export const apiV3RequestValidators = {
 		z.tuple([anyMapSlugValidator, optionalParam(z.object({ pick: z.array(allMapObjectsPickValidator).optional(), bbox: bboxWithExceptValidator.optional() }))])
 	]),
 	findOnMap: z.tuple([anyMapSlugValidator, /** query */ z.string()]),
-	getMapToken: z.tuple([anyMapSlugValidator, mapPermissionsValidator]),
+	getMapToken: z.tuple([anyMapSlugValidator, z.object({
+		permissions: mapPermissionsValidator,
+		noPassword: z.boolean().default(false)
+	})]),
 
 	getHistory: z.union([
 		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149

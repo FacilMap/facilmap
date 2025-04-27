@@ -2,7 +2,7 @@ import { viewValidator } from "./view.js";
 import { idValidator, mapSlugValidator } from "./base.js";
 import * as z from "zod";
 import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, onlyCreate, exceptCreate } from "./cru.js";
-import { keys, numberRecordValidator } from "./utility.js";
+import { keys, numberRecordValidator, type DeepReadonly } from "./utility.js";
 
 export const mapPermissionTypeValidator = z.boolean().or(z.enum(["own"]));
 export type MapPermissionType = z.infer<typeof mapPermissionTypeValidator>;
@@ -59,10 +59,15 @@ export const mapLinkValidator = cruValidator({
 });
 export type MapLink<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapLinkValidator>;
 
+export const activeMapLinkValidator = mapLinkValidator.read.omit({ id: true }).extend({
+	id: mapLinkValidator.read.shape.id.optional()
+});
+export type ActiveMapLink = z.infer<typeof activeMapLinkValidator>;
+
 export const mapLinksValidator = {
 	read: z.array(mapLinkValidator.read),
 	create: z.array(mapLinkValidator.create),
-	update: z.array(mapLinkValidator.update)
+	update: z.array(mapLinkValidator.update.or(mapLinkValidator.create))
 };
 
 export const mapDataValidator = cruValidator({
@@ -74,11 +79,11 @@ export const mapDataValidator = cruValidator({
 	legend2: optionalCreate(z.string(), ""),
 	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
 	links: {
-		create: z.array(mapLinkValidator.create),
-		read: z.array(mapLinkValidator.read),
-		update: z.array(mapLinkValidator.update).optional()
+		create: mapLinksValidator.create,
+		read: mapLinksValidator.read,
+		update: mapLinksValidator.update.optional()
 	},
-	activeLink: onlyRead(mapLinkValidator.read.omit({ id: true }).extend({ id: mapLinkValidator.read.shape.id.optional() })),
+	activeLink: onlyRead(activeMapLinkValidator),
 
 	createDefaultTypes: onlyCreate(z.boolean().default(true)),
 
@@ -86,3 +91,7 @@ export const mapDataValidator = cruValidator({
 });
 
 export type MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapDataValidator>;
+
+export function getMainAdminLink<L extends DeepReadonly<{ permissions: MapPermissions }>>(mapLinks: ReadonlyArray<L>): L {
+	return mapLinks.find((l) => l.permissions.admin)!;
+}

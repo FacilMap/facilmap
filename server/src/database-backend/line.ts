@@ -1,5 +1,5 @@
 import { and, col, type CreationOptional, DataTypes, fn, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op, where } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, Line, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept } from "facilmap-types";
 import DatabaseBackend from "./database-backend.js";
 import { bulkCreateInBatches, createModel, dataDefinition, dataFromArr, type DataModel, dataToArr, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./utils.js";
 import { chunk, isEqual, pick } from "lodash-es";
@@ -9,6 +9,7 @@ import type { TypeModel } from "./type.js";
 import { type Optional } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import { mapAsyncIterable } from "../utils/streams.js";
+import type { RawLine } from "../utils/permissions.js";
 
 export interface LineModel extends Model<InferAttributes<LineModel>, InferCreationAttributes<LineModel>> {
 	id: CreationOptional<ID>;
@@ -29,6 +30,7 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	left: Longitude;
 	right: Longitude;
 	extraInfo: CreationOptional<ExtraInfo | null>;
+	identity: Buffer | null;
 
 	getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
 }
@@ -114,7 +116,8 @@ export default class DatabaseLinesBackend {
 			bottom: getLatType(),
 			left: getLonType(),
 			right: getLonType(),
-			extraInfo: getJsonType("extraInfo", { allowNull: true })
+			extraInfo: getJsonType("extraInfo", { allowNull: true }),
+			identity: { type: DataTypes.BLOB, allowNull: true }
 		}, {
 			sequelize: this.backend._conn,
 			modelName: "Line"
@@ -164,14 +167,14 @@ export default class DatabaseLinesBackend {
 		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
 	}
 
-	protected prepareLine(line: LineModel): Line {
+	protected prepareLine(line: LineModel): RawLine {
 		const data = line.toJSON() as any;
 		data.data = dataFromArr(data.lineData);
 		delete data.lineData;
 		return data;
 	}
 
-	async* getMapLines(mapId: ID, fields?: Array<keyof Line>): AsyncIterable<Line> {
+	async* getMapLines(mapId: ID, fields?: Array<keyof RawLine>): AsyncIterable<RawLine> {
 		for await (const obj of findAllStreamed(this.LineModel, {
 			where: {
 				mapId
@@ -183,7 +186,7 @@ export default class DatabaseLinesBackend {
 		}
 	}
 
-	async* getMapLinesByType(mapId: ID, typeId: ID): AsyncIterable<Line> {
+	async* getMapLinesByType(mapId: ID, typeId: ID): AsyncIterable<RawLine> {
 		for await (const obj of findAllStreamed(this.LineModel, {
 			where: {
 				mapId,
@@ -203,7 +206,7 @@ export default class DatabaseLinesBackend {
 		return !!await this.LineModel.findOne({ where: { mapId, id: lineId }, attributes: ["id"] });
 	}
 
-	async getLine(mapId: ID, lineId: ID): Promise<Line | undefined> {
+	async getLine(mapId: ID, lineId: ID): Promise<RawLine | undefined> {
 		const entry = await this.LineModel.findOne({
 			where: { id: lineId, mapId },
 			include: [this.LineDataModel],
@@ -213,7 +216,7 @@ export default class DatabaseLinesBackend {
 		return entry ? this.prepareLine(entry) : undefined;
 	}
 
-	async searchLines(mapId: ID, searchText: string): Promise<Line[]> {
+	async searchLines(mapId: ID, searchText: string): Promise<RawLine[]> {
 		const objs = await this.LineModel.findAll({
 			where: and(
 				{ mapId },
@@ -230,7 +233,7 @@ export default class DatabaseLinesBackend {
 		await this.LineDataModel.bulkCreate(dataToArr(data, { lineId }));
 	}
 
-	async createLine(mapId: ID, data: Optional<Omit<Line, "mapId">, "id">): Promise<Line> {
+	async createLine(mapId: ID, data: Optional<Omit<RawLine, "mapId">, "id">): Promise<RawLine> {
 		const result = {
 			...(await this.LineModel.create({ ...data, mapId })).toJSON() as any,
 			data: data.data ?? {}
@@ -242,7 +245,7 @@ export default class DatabaseLinesBackend {
 		return result;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Partial<Omit<Line, "id" | "mapId">>): Promise<void> {
+	async updateLine(mapId: ID, lineId: ID, data: Partial<Omit<RawLine, "id" | "mapId">>): Promise<void> {
 		if (Object.keys(data).length > 0 && !isEqual(Object.keys(data), ["data"])) {
 			// We don’t return the update object since we cannot rely on the return value of the update() method.
 			// On some platforms it returns 0 even if the object was found (but no fields were changed).

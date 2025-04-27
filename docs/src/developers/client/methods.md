@@ -48,12 +48,16 @@ REST: `PUT /map/<mapSlug>` (body: `data`)
 Update the map settings of the current map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map (this map slug must have admin permission on the map)
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map (this map slug must have admin permission on the map)
 * `data` (<code>[MapData](./types.md#mapdata)</code>): The properties to change
 
 Result: <code>[MapDataWithWritable](./types.md#mapdatawithwritable)</code>, the updated version of the map settings
 
-If this is called through the socket and the map is currently subscribed, causes a <code>[mapData](./events.md#mapdata)</code> event (and a <code>[mapSlugRename](./events.md#mapslugrename)</code> event if a map slug was changed) to be emitted before the promise is resolved.
+If this is called through the socket and the map is currently subscribed, causes a <code>[mapData](./events.md#mapdata)</code> event to be emitted before the promise is resolved.
+
+If the used map slug is changed as part of this request, the resulting `MapData` object will already contain the new slug. The `mapData` event sent by the socket if the map is subscribed will contain a `MapData` event with the updated map (containing the new slug), but the `mapSlug` parameter of the event will still be the old map slug so that clients can react to the change. Any future events will use the new `mapSlug`.
+
+Changing a map slug will make everyone who is using that slug lose access to the map, even if they have it in their favourites or if they have the map currently open. Changing a map password will make those who have the map currently open have to reenter the password.
 
 ## `deleteMap()`
 
@@ -64,7 +68,7 @@ REST: `DELETE /map/<mapSlug>`
 Delete a map irrevocably.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map to delete (this map slug must have admin permission on the map)
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map to delete (this map slug must have admin permission on the map)
 
 If this is called through the socket and the map is currently subscribed, causes a <code>[deleteMap](./events.md#deletemap)</code> event to be emitted before the promise is resolved.
 
@@ -78,7 +82,7 @@ REST: `GET /map/<mapSlug>/all?pick=<pick?>&bbox=<bbox?>`
 Returns the whole map data (map settings, types, views, markers, lines).
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linesWithTrackPoints" | "linePoints">`, REST: comma-delimited string): The types of data to return. If `bbox` is set, defaults to `["mapData", "types", "views", "markers", "linesWihTrackPoints"]`, otherwise defaults to `["mapData", "types", "views", "lines"]`
 * `bbox` (<code>[Bbox](./types.md#bbox)</code>, REST: JSON-stringified): Only return markers and line points for this bbox.
 
@@ -119,7 +123,7 @@ REST: `GET /map/<mapSlug>/find?query=<query>`
 Search for markers and lines inside the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map to search
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map to search
 * `query` (string): The search term
 
 Result: `Array<FindOnMapResult>`, an array of stripped down <code>[Marker](./types.md#marker)</code> and <code>[Line](./types.md#line)</code> objects:
@@ -138,6 +142,23 @@ type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
 At the moment, the method returns markers/lines whose name contains the search term, although this might be extended in the future. The results are sorted by similarity – the `similarity` property is a number between 0 and 1, with 1 meaning that the marker/line name is exactly identical with the search term.
 
+## `getMapToken()`
+
+Client: `getMapToken(mapSlug, { permissions, noPassword? })` or `mapSubscription.getMapToken({ permissions, noPassword? })`\
+Socket: `emit("getMapToken", mapSlug, { permissions, noPassword? }, callback)`\
+REST: `GET /map/<mapSlug>/token?permissions=<permissions>&noPassword=<noPassword?>`
+
+Creates a token that can be used as a map slug for API calls. This allows creating read-only or password-less equivalents for map links. More details can be found under [map slugs and tokens](./advanced.md#map-slugs-tokens-and-passwords).
+
+Map tokens have no expiration date, but they are directly associated with the map link that they are created for. This means that changing a map link affects map tokens previously created for it. A map token references its associated map link by map ID and slug. This means that when a map slug is changed, tokens created for it become invalid, but when the slug is changed back, the token become valid again. Tokens generated with `noPassword` are also associated to the map link password. If the password is changed, such tokens become invalid, but if the password is changed back, they become valid again.
+
+Parameters:
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug for which to generate a token
+* `permissions` (<code>[MapPermissions](./types.md#mappermissions)</code>, REST: JSON-stringified): The permissions that the token should have. `admin` permission is not allowed. Other permissions are ignored if they are higher level than the permissions of the map slug.
+* `noPassword` (boolean): If this is set to `true`, the token can be used without a password, even if a password is required for its associated map link. The token will be associated with the existing password, so if the password of the map link is changed, the token will stop working.
+
+Result: `{ token: string }`
+
 ## `getHistory()`
 
 Client: `getHistory(mapSlug, { start?, limit? })` or `mapSubscription.getHistory({ start?, limit? })`\
@@ -147,7 +168,7 @@ REST: `GET /map/<mapSlug>/history?start=<start?>&limit=<limit?>`
 Returns a list of changes that have been made on the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `start`, `limit` (number): See [paging](./types.md#paging)
 
 Result: <code>Array&lt;[HistoryEntry](./types.md#historyentry)&gt;</code>
@@ -161,7 +182,7 @@ REST: `POST /map/<mapSlug>/history/<historyEntryId>/revert`
 Undo a modification on the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `historyEntryId` (number): The ID of the history entry to revert
 
 Reverting a history entry on a subscribed map will emit a socket event to create/delete/update the respective object. It will also create a new history entry for the revert action itself. Using the Socket Client/API, The events are guaranteed to be delivered before the returned promise is resolved.
@@ -180,7 +201,7 @@ REST: `GET /map/<mapSlug>/marker?bbox=<bbox>&typeId=<typeId>`
 Returns all the markers on the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `bbox` ([BboxWithExcept](./types.md#bboxwithexcept), REST: JSON-stringified): If specified, only retrieve markers wthin this bbox
 * `typeId` (number): If specified, only retrieve markers of this type.
 
@@ -198,7 +219,7 @@ REST: `GET /map/<mapSlug>/marker/<markerId>`
 Return a single marker from the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `markerId` (number): The ID of the marker
 
 Result: <code>[Marker](./types.md#marker)</code>
@@ -212,7 +233,7 @@ REST: `POST /map/<mapSlug>/marker` (body: `marker`)
 Create a marker.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `marker` (<code>[Marker](./types.md#marker)</code>): The marker to create
 
 Result: <code>[Marker](./types.md#marker)</code>, the created marker with all its properties. Some style properties might be different than requested if the type enforces certain styles.
@@ -228,7 +249,7 @@ REST: `PUT /map/<mapSlug>/marker/<markerId>` (body: `marker`)
 Update an existing marker.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `markerId` (number): The ID of the marker to update
 * `marker` (<code>[Marker](./types.md#marker)</code>): The marker properties to update
 
@@ -245,7 +266,7 @@ REST: `DELETE /map/<mapSlug>/marker/<markerId>`
 Delete an existing marker
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `markerId` (number): The ID of the marker to delete
 
 ## `getMapLines()`
@@ -257,7 +278,7 @@ REST: `GET /map/<mapSlug>/line?bbox=<bbox?>&includeTrackPoints=<includeTrackPoin
 Get the lines of a map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `bbox` ([BboxWithExcept](./types.md#bboxwithexcept), REST: JSON-stringified): If specified, only retrieve data wthin this bbox. Currently, this only affects the track points and all lines are always returned, but this might be adjusted in the future and only lines that overlap with the bbox are returned at all.
 * `includeTrackPoints` (boolean, REST: `true` or `false`): If set to `true`, the returned lines will have an additional `trackPoints` property (<code>Array&lt;[TrackPoint](./types.md#trackpoint)&gt;</code>) containing the track points of the line.
 * `typeId` (number): If specified, only return lines of this type.
@@ -276,7 +297,7 @@ REST: `GET /map/<mapSlug>/line/<lineId>`
 Get a single line on the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `lineId` (number): The ID of the line
 
 Result: <code>[Line](./types.md#line)</code>
@@ -290,7 +311,7 @@ REST: `GET /map/<mapSlug>/line/<lineId>/linePoints?bbox=<bbox?>`
 Returns the track points of a single line.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `lineId` (number): The ID of the number
 * `bbox` (<code>[BboxWithExcept](./types.md#bboxwithexcept)</code>, REST: JSON-stringified): If specified, only return track points within this bbox.
 
@@ -308,7 +329,7 @@ REST: `GET /map/<mapSlug>/line/template?typeId=<typeId>`
 Get a mock line object for a line with the given type. This can be used so that while the user is drawing a new line, that line already has the right style.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `typeId` (number): The ID of the type that the line will have
 
 Result: <code>Pick&lt;[Line](./types.md#line), &quot;typeId&quot; | &quot;name&quot; | &quot;colour&quot; | &quot;data&quot; | &quot;mode&quot; | &quot;width&quot; | &quot;stroke&quot;</code>
@@ -324,7 +345,7 @@ REST: `POST /map/<mapSlug>/line` (body: `line`)
 Create a line.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `line` (<code>[Line](./types.md#line)</code>): The line to create
 
 Result: <code>[Line](./types.md#line)</code>, the created line with all its properties. Some style properties might be different than requested if the type enforces certain styles.
@@ -338,7 +359,7 @@ REST: `PUT /map/<mapSlug>/line/<lineId>` (body: `line`)
 Update an existing line.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `lineId` (number): The ID of the line to update
 * `line` (<code>[Line](./types.md#line)</code>): The line properties to update
 
@@ -355,7 +376,7 @@ REST: `DELETE /map/<mapSlug>/line/<lineId>`
 Delete an existing line
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `lineId` (number): The ID of the line to delete
 
 ## `exportLine()`
@@ -367,7 +388,7 @@ REST: `GET /map/<mapSlug>/line/<lineId>/export?format=<format>`
 Export a single line from a map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `lineId` (number): The ID of the line to export
 * `format` (`"gpx-trk" | "gpx-rte" | "geojson"`): The desired export format. `"gpx-trk"` exports all the track points of the line, whereas `"gpx-rte"` only exports the route points.
 
@@ -385,7 +406,7 @@ REST: `GET /map/<mapSlug>/type`
 Returns all the types of the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 
 Result:
 * Client: <code>{ results: AsyncIterable&lt;[Type](./types.md#type)&gt; }</code>
@@ -401,7 +422,7 @@ REST: `GET /map/<mapSlug>/type/<typeId>`
 Get a single type of the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `typeId` (number): The ID of the type
 
 Result: <code>[Type](./types.md#type)</code>
@@ -415,7 +436,7 @@ REST: `POST /map/<mapSlug>/type` (body: `type`)
 Create a type.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `type` (<code>[Type](./types.md#type)</code>): The data of the type to create
 
 Result: <code>[Type](./types.md#type)</code>, the created type
@@ -429,7 +450,7 @@ REST: `PUT /map/<mapSlug>/type/<typeId>` (body: `type`)
 Update an existing type.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `typeId` (number): The ID of the type to update
 * `type` (<code>[Type](./types.md#type)</code>): The type properties to update
 
@@ -445,7 +466,7 @@ REST: `DELETE /map/<mapSlug>/type/<typeId>`
 Delete an existing type
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `typeId` (number): The ID of the type to delete.
 
 ## `getMapViews()`
@@ -457,7 +478,7 @@ REST: `GET /map/<mapSlug>/view`
 Returns all the views of the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 
 Result:
 * Client: <code>{ results: AsyncIterable&lt;[View](./types.md#view)&gt; }</code>
@@ -473,7 +494,7 @@ REST: `GET /map/<mapSlug>/view/<viewId>`
 Get a single view of the map.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `viewId` (number): The ID of the view
 
 Result: <code>[View](./types.md#view)</code>
@@ -487,7 +508,7 @@ REST: `POST /map/<mapSlug>/view` (body: `view`)
 Create a view.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `view` (<code>[View](./types.md#view)</code>): The data of the view to create
 
 Result: <code>[View](./types.md#view)</code>, the created view
@@ -501,7 +522,7 @@ REST: `PUT /map/<mapSlug>/view/<viewId>` (body: `view`)
 Update an existing view.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `viewId` (number): The ID of the view to update
 * `view` (<code>[View](./types.md#view)</code>): The view properties to update
 
@@ -517,7 +538,7 @@ REST: `DELETE /map/<mapSlug>/view/<viewId>`
 Delete an existing view
 
 Parameters:
-* `mapSlug` (string): The map slug of the map
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map
 * `viewId` (number): The ID of the view to delete.
 
 
@@ -580,7 +601,7 @@ REST: _not available_
 Enables the reception of events for objects of the map and their changes.
 
 Parameters:
-* `mapSlug` (string): The map slug of the map to subscribe to
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map to subscribe to
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
 * `history` (boolean): Whether to retrieve history entries. Defaults to `false`.
 
@@ -618,7 +639,7 @@ REST: _not available_
 Stop receiving events for the given map slug.
 
 Parameters:
-* `mapSlug` (string): The map slug with which the map is subscribed.
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug with which the map is subscribed.
 
 ## `subscribeToRoute()`
 
@@ -632,7 +653,7 @@ Parameters:
 * `routeKey` (string): An arbitrary identifier for the route. Events for the route can be identified by this key. Needs to be unique within the scope of the individual socket connection. If you are not intending to subscribe to multiple routes at once, feel free to use an empty string as the route key.
 * `routePoints` (`Array<{ lat: number; lon: number }>`, at least 2): The way points along which to calculate the route
 * `mode` (string, see [route mode](./types.md#route-mode)): The route mode to use for calculating the route
-* `mapSlug` (string) and `lineId` (number): If these are specified, use the route points and mode of this line from a map instead. The server does not need to calculate the route again, but instead can directly return the track points of the line. This is useful for an “edit waypoints” feature where users can edit the route parameters and see the resulting route before finally saving them. (Calling <code>[updateLine()](#updateline)</code> with route parameters that are currently subscribed will copy the track points so that the server doesn’t have to calculate the route again.)
+* `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>) and `lineId` (number): If these are specified, use the route points and mode of this line from a map instead. The server does not need to calculate the route again, but instead can directly return the track points of the line. This is useful for an “edit waypoints” feature where users can edit the route parameters and see the resulting route before finally saving them. (Calling <code>[updateLine()](#updateline)</code> with route parameters that are currently subscribed will copy the track points so that the server doesn’t have to calculate the route again.)
 
 Subscribing to a route will calculate the route on the server side and cache its track points temporarily until the route is unsubscribed again or the socket is disconnected. The route only exists within the scope of an individual socket connection, it cannot be accessed by other users. When subscribing to a route or updating a route subscription, the server will send a <code>[route](./events.md#route)</code> event with the route metadata, and, if a bbox is currently set, a <code>[routePoints](./events.md#routepoints)</code> event for the track points within the current bbox. While the route is subscribed, `routePoints` events will be emitted whenever the bbox is updated using <code>[setBbox](#setbbox)</code>.
 

@@ -1,7 +1,8 @@
 import {
 	type ID, type Marker, type LineWithTrackPoints, type View, type Type, type HistoryEntry, type EventName,
-	type EventHandler, type MapDataWithWritable, type MapSlug, type Route, type Line, type LinePoints,
-	type RoutePoints, type DeepReadonly, fromEntries, entries, subscribeToMapDefaultPick, keys
+	type EventHandler, type MapSlug, type Route, type Line, type LinePoints, type MapData,
+	type RoutePoints, type DeepReadonly, fromEntries, entries, subscribeToMapDefaultPick, keys,
+	getMainAdminLink
 } from "facilmap-types";
 import { SocketClient, type ClientEvents } from "./socket-client";
 import { DefaultReactiveObjectProvider, type ReactiveObjectProvider } from "./reactivity";
@@ -10,7 +11,7 @@ import type { RouteWithTrackPoints } from "./socket-client-route-subscription";
 import { SubscriptionStateType } from "./socket-client-subscription";
 
 export interface MapStorage {
-	mapData: DeepReadonly<MapDataWithWritable> | undefined;
+	mapData: DeepReadonly<MapData> | undefined;
 	markers: Record<ID, DeepReadonly<Marker>>;
 	lines: Record<ID, DeepReadonly<LineWithTrackPoints>>;
 	views: Record<ID, DeepReadonly<View>>;
@@ -141,7 +142,8 @@ export class SocketClientStorage {
 			emit: (...args) => {
 				switch (args[0]) {
 					case "subscribeToMap": {
-						const mapSlug = args[1].args[0];
+						const anyMapSlug = args[1].args[0];
+						const mapSlug = typeof anyMapSlug === "string" ? anyMapSlug : anyMapSlug.mapSlug;
 						const pick = args[1].args[1]?.pick ?? subscribeToMapDefaultPick;
 						if (!this.maps[mapSlug]) {
 							this.reactiveObjectProvider.set(this.maps, mapSlug, {
@@ -183,8 +185,9 @@ export class SocketClientStorage {
 						break;
 					}
 
-					case "createMapAndSubscribe":
-						this.reactiveObjectProvider.set(this.maps, args[1].args[0].adminId, {
+					case "createMapAndSubscribe": {
+						const mainAdminLink = getMainAdminLink(args[1].args[0].links);
+						this.reactiveObjectProvider.set(this.maps, mainAdminLink.slug, {
 							mapData: undefined,
 							markers: {},
 							lines: {},
@@ -193,6 +196,7 @@ export class SocketClientStorage {
 							history: {}
 						});
 						break;
+					}
 
 					case "unsubscribeFromMap":
 						this.reactiveObjectProvider.delete(this.maps, args[1].args[0]);
@@ -258,8 +262,18 @@ export class SocketClientStorage {
 		return this.maps[mapSlug];
 	}
 
-	storeMapData(mapSlug: MapSlug, mapData: MapDataWithWritable): void {
+	storeMapData(mapSlug: MapSlug, mapData: DeepReadonly<MapData>): void {
 		this.reactiveObjectProvider.set(this.getMapStorage(mapSlug), "mapData", mapData);
+		if (mapData.activeLink.slug !== mapSlug) {
+			this.renameMapSlug(mapSlug, mapData.activeLink.slug);
+		}
+	}
+
+	renameMapSlug(oldMapSlug: MapSlug, newMapSlug: MapSlug): void {
+		if (newMapSlug !== oldMapSlug) {
+			this.reactiveObjectProvider.set(this.maps, newMapSlug, this.getMapStorage(oldMapSlug));
+			this.reactiveObjectProvider.delete(this.maps, oldMapSlug);
+		}
 	}
 
 	storeMarker(mapSlug: MapSlug, marker: Marker): void {

@@ -4,15 +4,15 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { canReadObject, getMainAdminLink, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
+import { canReadObject, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
-import { stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawMapLink } from "../utils/permissions.js";
+import { resolveMapLink, stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawActiveMapLink } from "../utils/permissions.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -29,7 +29,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	/** AbortControllers for all active map subscriptions. Set synchronously when subscribing. */
 	mapSubscriptionAbort: Record<MapSlug, AbortController> = Object.create(null);
 	/** Details about most active map subscriptions. Set asynchronously as soon as the map ID is known. */
-	mapSubscriptionDetails: Record<ID, Array<{ pick: ReadonlyArray<SubscribeToMapPick>; history: boolean; mapSlug: MapSlug; mapLink: RawMapLink }>> = {};
+	mapSubscriptionDetails: Record<ID, Array<{
+		pick: ReadonlyArray<SubscribeToMapPick>;
+		history: boolean;
+		mapSlug: MapSlug;
+		mapLink: RawActiveMapLink;
+	}>> = {};
 	/** AbortControllers for all active route subscriptions. Set synchronously when subscribing. */
 	routeSubscriptionAbort: Record<string, AbortController> = Object.create(null);
 	/** Details about most active route subscriptions. Set asynchronously as soon as the route is calculated. */
@@ -39,7 +44,11 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 	unregisterDatabaseHandlers = (): void => undefined;
 
-	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>, database: Database, remoteAddr: string) {
+	constructor(
+		emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>,
+		database: Database,
+		remoteAddr: string
+	) {
 		this.emit = emit;
 		this.database = database;
 		this.remoteAddr = remoteAddr;
@@ -156,6 +165,17 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		}
 	}
 
+	resolveMapSlug(anyMapSlug: AnyMapSlug): AnyMapSlug | RawActiveMapLink {
+		const { mapSlug, password, identity } = typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug;
+		if (password == null && identity == null) {
+			const sub = this.findMapSubscriptionData(mapSlug, false);
+			if (sub) {
+				return sub.mapLink;
+			}
+		}
+		return anyMapSlug;
+	}
+
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
 		return {
 			setLanguage: async (settings) => {
@@ -172,7 +192,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			getMap: async (mapSlug) => {
-				return await this.api.getMap(mapSlug);
+				return await this.api.getMap(this.resolveMapSlug(mapSlug));
 			},
 
 			createMap: async (data, options = {}) => {
@@ -187,15 +207,22 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			updateMap: async (mapSlug, data) => {
-				return await this.api.updateMap(mapSlug, data);
+				const result = await this.api.updateMap(this.resolveMapSlug(mapSlug), data);
+				const sub = this.findMapSubscriptionData(typeof mapSlug === "string" ? mapSlug : mapSlug.mapSlug, false);
+				if (sub) {
+					// Set sub.mapSlug to the new mapSlug (but not sub.mapLink.slug)
+					// This will make the mapData database handler below recognize the map rename.
+					sub.mapSlug = result.activeLink.slug;
+				}
+				return result;
 			},
 
 			deleteMap: async (mapSlug) => {
-				await this.api.deleteMap(mapSlug);
+				await this.api.deleteMap(this.resolveMapSlug(mapSlug));
 			},
 
 			getAllMapObjects: async (mapSlug, options) => {
-				const results = await this.api.getAllMapObjects(mapSlug, options);
+				const results = await this.api.getAllMapObjects(this.resolveMapSlug(mapSlug), options);
 				return this.emitStream(mapAsyncIterable(results, (obj) => {
 					if (obj.type === "mapData") {
 						return obj;
@@ -206,51 +233,51 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			findOnMap: async (mapSlug, query) => {
-				return await this.api.findOnMap(mapSlug, query);
+				return await this.api.findOnMap(this.resolveMapSlug(mapSlug), query);
 			},
 
 			getMapToken: async (mapSlug, permissions) => {
-				return await this.api.getMapToken(mapSlug, permissions);
+				return await this.api.getMapToken(this.resolveMapSlug(mapSlug), permissions);
 			},
 
 			getHistory: async (mapSlug, paging = DEFAULT_PAGING) => {
-				return await this.api.getHistory(mapSlug, paging);
+				return await this.api.getHistory(this.resolveMapSlug(mapSlug), paging);
 			},
 
 			revertHistoryEntry: async (mapSlug, historyEntryId) => {
-				await this.api.revertHistoryEntry(mapSlug, historyEntryId);
+				await this.api.revertHistoryEntry(this.resolveMapSlug(mapSlug), historyEntryId);
 			},
 
 			getMapMarkers: async (mapSlug, options = {}) => {
-				return this.emitStreamedResults(await this.api.getMapMarkers(mapSlug, options));
+				return this.emitStreamedResults(await this.api.getMapMarkers(this.resolveMapSlug(mapSlug), options));
 			},
 
 			getMarker: async (mapSlug, markerId) => {
-				return await this.api.getMarker(mapSlug, markerId);
+				return await this.api.getMarker(this.resolveMapSlug(mapSlug), markerId);
 			},
 
 			createMarker: async (mapSlug, data) => {
-				return await this.api.createMarker(mapSlug, data);
+				return await this.api.createMarker(this.resolveMapSlug(mapSlug), data);
 			},
 
 			updateMarker: async (mapSlug, markerId, data) => {
-				return await this.api.updateMarker(mapSlug, markerId, data);
+				return await this.api.updateMarker(this.resolveMapSlug(mapSlug), markerId, data);
 			},
 
 			deleteMarker: async (mapSlug, markerId) => {
-				await this.api.deleteMarker(mapSlug, markerId);
+				await this.api.deleteMarker(this.resolveMapSlug(mapSlug), markerId);
 			},
 
 			getMapLines: async (mapSlug, options) => {
-				return this.emitStreamedResults(await this.api.getMapLines(mapSlug, options));
+				return this.emitStreamedResults(await this.api.getMapLines(this.resolveMapSlug(mapSlug), options));
 			},
 
 			getLine: async (mapSlug, lineId) => {
-				return await this.api.getLine(mapSlug, lineId);
+				return await this.api.getLine(this.resolveMapSlug(mapSlug), lineId);
 			},
 
 			getLinePoints: async (mapSlug, lineId, options) => {
-				return this.emitStreamedResults(await this.api.getLinePoints(mapSlug, lineId, options));
+				return this.emitStreamedResults(await this.api.getLinePoints(this.resolveMapSlug(mapSlug), lineId, options));
 			},
 
 			createLine: async (mapSlug, data) => {
@@ -264,7 +291,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.api.createLine(mapSlug, data, { trackPointsFromRoute });
+				return await this.api.createLine(this.resolveMapSlug(mapSlug), data, { trackPointsFromRoute });
 			},
 
 			updateLine: async (mapSlug, lineId, data) => {
@@ -278,15 +305,15 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					}
 				}
 
-				return await this.api.updateLine(mapSlug, lineId, data, fromRoute);
+				return await this.api.updateLine(this.resolveMapSlug(mapSlug), lineId, data, fromRoute);
 			},
 
 			deleteLine: async (mapSlug, lineId) => {
-				await this.api.deleteLine(mapSlug, lineId);
+				await this.api.deleteLine(this.resolveMapSlug(mapSlug), lineId);
 			},
 
 			exportLine: async (mapSlug, lineId, options) => {
-				const result = await this.api.exportLine(mapSlug, lineId, options);
+				const result = await this.api.exportLine(this.resolveMapSlug(mapSlug), lineId, options);
 				return {
 					...result,
 					data: this.emitStream(streamToIterable(result.data))
@@ -294,47 +321,47 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			},
 
 			getLineTemplate: async (mapSlug, options) => {
-				return await this.api.getLineTemplate(mapSlug, options);
+				return await this.api.getLineTemplate(this.resolveMapSlug(mapSlug), options);
 			},
 
 			getMapTypes: async (mapSlug) => {
-				return this.emitStreamedResults(await this.api.getMapTypes(mapSlug));
+				return this.emitStreamedResults(await this.api.getMapTypes(this.resolveMapSlug(mapSlug)));
 			},
 
 			getType: async (mapSlug, id) => {
-				return await this.api.getType(mapSlug, id);
+				return await this.api.getType(this.resolveMapSlug(mapSlug), id);
 			},
 
 			createType: async (mapSlug, data) => {
-				return await this.api.createType(mapSlug, data);
+				return await this.api.createType(this.resolveMapSlug(mapSlug), data);
 			},
 
 			updateType: async (mapSlug, typeId, data) => {
-				return await this.api.updateType(mapSlug, typeId, data);
+				return await this.api.updateType(this.resolveMapSlug(mapSlug), typeId, data);
 			},
 
 			deleteType: async (mapSlug, typeId) => {
-				await this.api.deleteType(mapSlug, typeId);
+				await this.api.deleteType(this.resolveMapSlug(mapSlug), typeId);
 			},
 
 			getMapViews: async (mapSlug) => {
-				return this.emitStreamedResults(await this.api.getMapViews(mapSlug));
+				return this.emitStreamedResults(await this.api.getMapViews(this.resolveMapSlug(mapSlug)));
 			},
 
 			getView: async (mapSlug, viewId) => {
-				return await this.api.getView(mapSlug, viewId);
+				return await this.api.getView(this.resolveMapSlug(mapSlug), viewId);
 			},
 
 			createView: async (mapSlug, data) => {
-				return await this.api.createView(mapSlug, data);
+				return await this.api.createView(this.resolveMapSlug(mapSlug), data);
 			},
 
 			updateView: async (mapSlug, viewId, data) => {
-				return await this.api.updateView(mapSlug, viewId, data);
+				return await this.api.updateView(this.resolveMapSlug(mapSlug), viewId, data);
 			},
 
 			deleteView: async (mapSlug, viewId) => {
-				await this.api.deleteView(mapSlug, viewId);
+				await this.api.deleteView(this.resolveMapSlug(mapSlug), viewId);
 			},
 
 			find: async (query) => {
@@ -579,40 +606,86 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	getDatabaseHandlers(): DatabaseHandlers {
 		return {
 			...(Object.keys(this.mapSubscriptionDetails).length > 0 ? {
-				mapData: (mapId, data) => {
+				mapData: async (mapId, data) => {
 					if (this.mapSubscriptionDetails[mapId]) {
+						const unsubscribe: MapSlug[] = [];
+						const reemit: Array<[RawActiveMapLink, RawActiveMapLink, AbortController]> = [];
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
+							const oldLink = sub.mapLink;
+							try {
+								// If this socket connection caused the change, sub.mapSlug was updated in
+								// updateMap() to the new map slug, so we can find it here. If another socket
+								// connection caused the change, we unsubscribe here if the old map slug does
+								// not exist anymore.
+								sub.mapLink = resolveMapLink(sub.mapSlug, sub.mapLink.password, sub.mapLink.identity, data);
+							} catch (err: any) {
+								void this.emit("cancelMapSubscription", sub.mapSlug, err);
+								unsubscribe.push(sub.mapSlug);
+								continue;
+							}
+
+							if (!isEqual(oldLink.permissions, sub.mapLink.permissions)) {
+								reemit.push([oldLink, sub.mapLink, this.mapSubscriptionAbort[sub.mapSlug]]);
+							}
+
 							if (sub.pick.includes("mapData")) {
-								void this.emit("mapData", sub.mapSlug, stripMapData(sub.mapLink, data));
+								// Emit with the old slug so that clients can react to the change
+								void this.emit("mapData", oldLink.slug, stripMapData(sub.mapLink, data));
 							}
 						}
 
-						const slugMap = Object.fromEntries(this.mapSubscriptionDetails[mapId].flatMap((sub) => {
-							const oldSlug = sub.mapSlug;
-							const newLink = sub.mapLink.id != null ? data.links.find((l) => l.id === sub.mapLink.id) : undefined;
-							if (newLink) {
-								sub.mapLink = newLink;
-								// TODO: Update permissions of token map link as well
-								if (newLink.slug !== oldSlug) {
-									sub.mapSlug = newLink.slug;
-									return [[oldSlug, newLink.slug]];
+						// Unsubscribe now so that we don't change the subscription array while iterating over it
+						if (unsubscribe.length > 0) {
+							for (const mapSlug of unsubscribe) {
+								this.mapSubscriptionAbort[mapSlug].abort();
+								delete this.mapSubscriptionAbort[mapSlug];
+								this.findMapSubscriptionData(mapSlug, true);
+							}
+							this.registerDatabaseHandlers();
+						}
+
+						for (const [oldLink, newLink, abort] of reemit) {
+							const oldResults = await this.api.getAllMapObjects(oldLink, {
+								pick: ["types", "lines", ...this.bbox ? ["markers" as const] : []],
+								bbox: this.bbox
+							});
+							const oldIds = { types: new Set<ID>(), lines: new Set<ID>(), markers: new Set<ID>() };
+							for await (const oldResult of oldResults) {
+								for await (const result of oldResult.data) {
+									oldIds[oldResult.type].add(result.id);
 								}
 							}
-							return [];
-						}));
 
-						if (Object.keys(slugMap).length > 0) {
-							void this.emit("mapSlugRename", slugMap);
-						}
+							if (abort.signal.aborted) {
+								continue;
+							}
 
-						// TODO: Somehow deal with permission change that makes existing markers/lines visible/invisible
+							const newResults = await this.api.getAllMapObjects(newLink, {
+								pick: ["types", "lines", ...this.bbox ? ["markers" as const] : []],
+								bbox: this.bbox
+							});
 
-						if (data.id !== mapId) {
-							this.mapSubscriptionDetails[data.id] = [
-								...this.mapSubscriptionDetails[data.id] ?? [],
-								...this.mapSubscriptionDetails[mapId]
-							];
-							delete this.mapSubscriptionDetails[mapId];
+							await this.emitAllMapObjects(newLink.slug, mapAsyncIterable(newResults, (newResult) => ({
+								type: newResult.type,
+								data: mapAsyncIterable(newResult.data, (result: Stripped<Marker | Line | Type>) => {
+									oldIds[newResult.type].delete(result.id);
+									return result;
+								})
+							} as typeof newResult)), abort.signal);
+
+							if (abort.signal.aborted) {
+								continue;
+							}
+
+							for (const id of oldIds.markers) {
+								void this.emit("deleteMarker", newLink.slug, markStripped({ id }));
+							}
+							for (const id of oldIds.lines) {
+								void this.emit("deleteLine", newLink.slug, markStripped({ id }));
+							}
+							for (const id of oldIds.types) {
+								void this.emit("deleteType", newLink.slug, markStripped({ id }));
+							}
 						}
 					}
 				},

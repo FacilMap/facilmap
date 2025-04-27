@@ -2,12 +2,12 @@ import { readableToWeb, streamPromiseToStream, writableToWeb } from "../utils/st
 import type { ID } from "facilmap-types";
 import { stringify } from "csv-stringify";
 import { getTabularData } from "./tabular.js";
-import type { RawMapLink } from "../utils/permissions.js";
+import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
 
 export function exportCsv(
 	api: ApiV3Backend,
-	mapLink: RawMapLink,
+	mapLink: RawActiveMapLink,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = []

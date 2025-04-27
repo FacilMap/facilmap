@@ -30,12 +30,40 @@ The FacilMap REST API will respond with these HTTP status codes if the request i
 
 In case of an error, the following status codes are possible:
 * `400` (Bad Request): Some of the path, query or body parameters do not have the right format or are missing.
-* `403` (Forbidden): An operation is only allowed with the write/admin map slug, but a slug with less permissions was used.
+* `401` (Unauthorized)`: The map slug that you were trying to open requires a password. Either you didn’t specify a password or the password was wrong. See [map slugs, tokens and passwords](#map-slugs-tokens-and-passwords).
+* `403` (Forbidden): The map slug lacks the necessary permissions for an operation. For example, you tried to change the map settings with a map slug that does not have the `settings` permission.
 * `404` (Not Found): No map with the given slug or no object with the given ID exists.
 * `409` (Conflict): Tried to create or update a map with a map slug that is already in use.
 * `500` (Internal Server Error): All other errors, including unexpected errors.
 
 When using the FacilMap Client or Socket API, `Error` objects may have a `status` property containing the appropriate status code. The lack of a `status` property indicates a status code `500`.
+
+## Map slugs, tokens and passwords
+
+Each map can have one or more [map links](./types.md#maplink) configured. A map link consists of the following data:
+* A _map slug_ is the last part of the URL under which the map can be opened, and it also must be provided in all API requests that access map data.
+* A password can be optionally specified, which needs to be provided whenever the map is accessed.
+* A set of [map permissions](./types.md#mappermissions) determines what the user is allowed to do whan they opened the map through this link.
+
+Each map must have at least one link with full permissions (including admin). A map can have multiple links sharing the same slug if they all use a password and those passwords are all different. (Note that over the socket you can subscribe to only one of those identical slugs at at a time.)
+
+### Password-protected maps
+
+All API calls that access a map require a map slug to be provided. When accessing a map that requires a password without providing the right password, the API will respond with a `401` error. For the REST API, this will be the HTTP status code; for the Socket API and the REST/Socket Client, an error will be thrown that has a `status: 401` property. You can provide the password in the following way:
+* For the REST/Socket Client and for the Socket API, instead of passing a `string` as `mapSlug`, you can pass an object of the shape `{ mapSlug: string; password: string }`. While you are subscribed to a map using `subscribeToMap({ mapSlug, password })`, you _should_ omit the password from any API requests to that map slug through the socket, as that will avoid calculating a password hash on the server side.
+* For the REST API, you can use Basic HTTP Authentication, providing any username and the map password. You can send the base64-encoded string `:${password}` as the `Authorization` header.
+
+**Performance note:** When you send authorize yourself by sending a map password to the server, the server needs to calculate the password hash in order to check the password. This calculation is relatively expensive. Because of this, if you are planning to make a lot of subsequent requests to a password-protected map, please use one of the following mechanisms to avoid unnecessary load on the server:
+* Either [subscribe to the map](./methods.md#subscribetomap) using the Socket Client or Socket API and make the requests using the map slug without password while you are subscribed. If you are not interested in receiving any map events, you can specify `pick: []` for the subscription.
+* Or create a password-less [map token](#map-tokens) and use that instead of the map slug.
+
+### Map tokens
+
+Sometimes you may want to create a link to a map that has restricted permissions. For example, you may want to share a link that exports specific parts of your map to a GPX file. But users should not be able to infer the map slug from this link and use it to get full access to the map.
+
+A map token is a derived version of a map slug that shares the configuration of its corresponding map link but might have its permissions restricted. You can create a map token using the <code>[getMapToken](./methods.md#getmaptoken)</code> method. A map token is a string and can be used in place of a map slug in all API methods. When you use the API using a map token, this map token is used a the map slug also in data received from the API, for example in socket events. When using the API with a map token, the API never reveals the original map slug, as this would be a security hole. Map tokens are valid indefinitely, but they are derived directly from a map slug, meaning that they only work when the map slug of the map is the same as it was when the token was created.
+
+When a map token is derived from a map slug that requires a password, that password also has to be provided when accessing the map using the token, except for password-less map tokens created using `noPassword: true`. Password-less map tokens don’t require a password to access the map, but they are also directly associated with the password that was configured when the token was created. This means that when the password of the associated map link is changed, password-less tokens previously created for it become invalid.
 
 ## Reactivity
 

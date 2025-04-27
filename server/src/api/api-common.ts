@@ -48,15 +48,27 @@ export const apiImpl = {
 };
 
 export function getRequestMapSlug(req: Request<{ mapSlug: string }>): AnyMapSlug {
+	let password;
 	const auth = req.get("Authorization");
 	if (auth) {
 		const m = auth.match(/^Basic (.*)$/);
 		if (m) {
 			const decoded = atob(m[1]).split(":", 2);
 			if (decoded.length >= 2) {
-				return { mapSlug: req.params.mapSlug, password: decoded[1] };
+				password = decoded[1];
 			}
 		}
 	}
-	return req.params.mapSlug;
+
+	const { identity } = z.object({ identity: z.string().optional() }).parse(req.query);
+
+	if (password != null || identity != null) {
+		return {
+			mapSlug: req.params.mapSlug,
+			password,
+			identity
+		};
+	} else {
+		return req.params.mapSlug;
+	}
 }

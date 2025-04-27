@@ -1,18 +1,19 @@
 import { Model, DataTypes, type InferAttributes, type CreationOptional, type ForeignKey, type InferCreationAttributes, type Optional } from "sequelize";
 import DatabaseBackend from "./database-backend.js";
-import type { HistoryEntryAction, HistoryEntryObject, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
+import type { HistoryEntryAction, HistoryEntryType, ID, MapData, PagedResults, PagingInput } from "facilmap-types";
 import { createModel, findAllStreamed, getDefaultIdType, getJsonType, makeNotNullForeignKey } from "./utils.js";
 import { omit } from "lodash-es";
-import type { RawHistoryEntry, RawHistoryEntryMapData } from "../utils/permissions.js";
+import type { RawHistoryEntry, RawHistoryEntryObject } from "../utils/permissions.js";
 
 interface HistoryModel extends Model<InferAttributes<HistoryModel>, InferCreationAttributes<HistoryModel>> {
 	id: CreationOptional<ID>;
 	time: CreationOptional<Date>;
 	type: HistoryEntryType;
 	action: HistoryEntryAction;
+	identity: Buffer | null;
 	objectId: ID | null;
-	objectBefore: HistoryEntryObject<Exclude<HistoryEntryType, "Map">> | RawHistoryEntryMapData | null;
-	objectAfter: HistoryEntryObject<Exclude<HistoryEntryType, "Map">> | RawHistoryEntryMapData | null;
+	objectBefore: RawHistoryEntryObject<HistoryEntryType> | null;
+	objectAfter: RawHistoryEntryObject<HistoryEntryType> | null;
 	mapId: ForeignKey<MapData["id"]>;
 }
 
@@ -30,6 +31,7 @@ export default class DatabaseHistoryBackend {
 			time: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 			type: { type: DataTypes.ENUM("Marker", "Line", "View", "Type", "Map"), allowNull: false },
 			action: { type: DataTypes.ENUM("create", "update", "delete"), allowNull: false },
+			identity: { type: DataTypes.BLOB, allowNull: true },
 			objectId: { type: DataTypes.INTEGER(), allowNull: true }, // Is null when type is map
 			objectBefore: getJsonType("objectBefore", { allowNull: true }),
 			objectAfter: getJsonType("objectAfter", { allowNull: true })

@@ -3,7 +3,7 @@ import { quoteHtml } from "facilmap-utils";
 import { renderTable } from "../frontend.js";
 import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import { getTabularData } from "./tabular.js";
-import type { RawMapLink } from "../utils/permissions.js";
+import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
 
 export type TableParams = {
@@ -20,7 +20,7 @@ export type TableParams = {
 
 export function createSingleTable(
 	api: ApiV3Backend,
-	mapLink: RawMapLink,
+	mapLink: RawActiveMapLink,
 	typeId: ID,
 	filter?: string,
 	hide: string[] = [],
@@ -91,7 +91,7 @@ export function createSingleTable(
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function createTable(api: ApiV3Backend, mapLink: RawMapLink, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
+export function createTable(api: ApiV3Backend, mapLink: RawActiveMapLink, filter: string | undefined, hide: string[], url: string): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
 		const [mapData, types] = await Promise.all([
 			api.getMap(mapLink),

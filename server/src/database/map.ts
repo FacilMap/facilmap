@@ -1,9 +1,9 @@
 import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type ReplaceProperties, type MapLink, type DeepReadonly } from "facilmap-types";
 import Database from "./database.js";
 import { getI18n } from "../i18n.js";
-import { createSalt, createJwtSecret, getPasswordHash, getTokenHash } from "../utils/crypt.js";
+import { createSalt, createJwtSecret, getPasswordHash } from "../utils/crypt.js";
 import type DatabaseMapsBackend from "../database-backend/map.js";
-import { type RawMapData, type RawMapLink } from "../utils/permissions.js";
+import { type RawMapData } from "../utils/permissions.js";
 import { omit } from "lodash-es";
 
 function isPasswordEqual(password1: Buffer | string | null, password2: Buffer | string | null): boolean {
@@ -55,22 +55,11 @@ export default class DatabaseMaps {
 		return result;
 	}
 
-	async getMapLinkBySlug(mapSlug: MapSlug, options?: { notFound404?: boolean }): Promise<RawMapLink> {
-		const result = await this.backend.getMapLinkBySlug(mapSlug);
+	async getMapDataBySlug(mapSlug: MapSlug, options?: { notFound404?: boolean }): Promise<RawMapData> {
+		const result = await this.backend.getMapDataBySlug(mapSlug);
 		if (!result) {
 			throw Object.assign(
-				new Error(getI18n().t("database.map-slug-not-found-error", { mapSlug })),
-				options?.notFound404 ? { status: 404 } : {}
-			);
-		}
-		return result;
-	}
-
-	async getMapLinkByHash(mapId: ID, tokenHash: string, options?: { notFound404?: boolean }): Promise<RawMapLink> {
-		const result = await this.backend.getMapLinkByHash(mapId, tokenHash);
-		if (!result) {
-			throw Object.assign(
-				new Error(getI18n().t("database.map-link-by-hash-not-found-error")),
+				new Error(getI18n().t("map-not-found-error", { mapId: mapSlug })),
 				options?.notFound404 ? { status: 404 } : {}
 			);
 		}
@@ -88,14 +77,10 @@ export default class DatabaseMaps {
 		const salt = createSalt();
 
 		const links = await Promise.all(data.links.map(async (link) => {
-			const [password, tokenHash] = await Promise.all([
-				link.password !== false ? getPasswordHash(link.password, salt) : null,
-				getTokenHash(link.slug, salt)
-			]);
+			const password = link.password !== false ? await getPasswordHash(link.password, salt) : null;
 			return {
 				...link,
-				password,
-				tokenHash
+				password
 			};
 		}));
 
@@ -114,7 +99,11 @@ export default class DatabaseMaps {
 		return result;
 	}
 
-	async updateMapData(mapId: ID, data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>): Promise<RawMapData> {
+	async updateMapData(
+		mapId: ID,
+		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>,
+		options: { identity: Buffer | undefined }
+	): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
 
 		if (!oldData) {
@@ -135,27 +124,18 @@ export default class DatabaseMaps {
 				}
 			}
 
-			const resolvedLinks = await Promise.all(data.links.map(async (link) => {
+			update.links = await Promise.all(data.links.map(async (link) => {
 				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
 				const password = typeof link.password === "undefined" && oldLink ? oldLink.password : typeof link.password === "object" ? link.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
-				const tokenHash = oldLink && link.slug === oldLink.slug ? oldLink.tokenHash : undefined;
 
 				return {
 					...omit(link, ["id"]),
 					...oldLink ? { id: link.id } : {},
-					password,
-					tokenHash
+					password
 				};
 			}));
 
-			validateMapLinks(resolvedLinks);
-
-			update.links = await Promise.all(resolvedLinks.map(async (link) => {
-				return {
-					...link,
-					tokenHash: link.tokenHash ?? await getTokenHash(link.slug, oldData.salt)
-				};
-			}));
+			validateMapLinks(update.links);
 		}
 
 		await this.backend.updateMapData(mapId, update);
@@ -169,6 +149,7 @@ export default class DatabaseMaps {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "Map",
 			action: "update",
+			identity: options.identity ?? null,
 			objectBefore: omit(oldData, ["salt", "jwtSecret", "nextFieldId"]),
 			objectAfter: omit(newData, ["salt", "jwtSecret", "nextFieldId"])
 		});
@@ -177,7 +158,7 @@ export default class DatabaseMaps {
 		return newData;
 	}
 
-	async deleteMap(mapId: ID): Promise<void> {
+	async deleteMap(mapId: ID, options: { identity: Buffer | undefined }): Promise<void> {
 		const mapData = await this.getMapData(mapId);
 
 		if (!mapData) {
@@ -185,23 +166,23 @@ export default class DatabaseMaps {
 		}
 
 		if (mapData.defaultViewId) {
-			await this.updateMapData(mapData.id, { defaultViewId: null });
+			await this.updateMapData(mapData.id, { defaultViewId: null }, options);
 		}
 
 		for await (const marker of this.db.markers.getMapMarkers(mapData.id)) {
-			await this.db.markers.deleteMarker(mapData.id, marker.id);
+			await this.db.markers.deleteMarker(mapData.id, marker.id, options);
 		}
 
 		for await (const line of this.db.lines.getMapLines(mapData.id, ['id'])) {
-			await this.db.lines.deleteLine(mapData.id, line.id);
+			await this.db.lines.deleteLine(mapData.id, line.id, options);
 		}
 
 		for await (const type of this.db.types.getTypes(mapData.id)) {
-			await this.db.types.deleteType(mapData.id, type.id);
+			await this.db.types.deleteType(mapData.id, type.id, options);
 		}
 
 		for await (const view of this.db.views.getViews(mapData.id)) {
-			await this.db.views.deleteView(mapData.id, view.id);
+			await this.db.views.deleteView(mapData.id, view.id, options);
 		}
 
 		await this.db.history.clearHistory(mapData.id);

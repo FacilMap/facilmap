@@ -52,7 +52,10 @@ export default class DatabaseViews {
 		return resolvedNewIdx;
 	}
 
-	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<View> {
+	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options: {
+		id?: ID;
+		identity: Buffer | undefined;
+	}): Promise<View> {
 		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
 		const newData = await this.backend.createView(mapId, {
@@ -66,6 +69,7 @@ export default class DatabaseViews {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "create",
+			identity: options.identity ?? null,
 			objectId: newData.id,
 			objectAfter: newData
 		});
@@ -73,7 +77,10 @@ export default class DatabaseViews {
 		return newData;
 	}
 
-	async updateView(mapId: ID, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<View> {
+	async updateView(mapId: ID, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options: {
+		notFound404?: boolean;
+		identity: Buffer | undefined;
+	}): Promise<View> {
 		if (data.idx != null) {
 			await this._freeViewIdx(mapId, viewId, data.idx);
 		}
@@ -86,6 +93,7 @@ export default class DatabaseViews {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "update",
+			identity: options.identity ?? null,
 			objectId: viewId,
 			objectBefore: viewBefore,
 			objectAfter: viewAfter
@@ -94,13 +102,17 @@ export default class DatabaseViews {
 		return viewAfter;
 	}
 
-	async deleteView(mapId: ID, viewId: ID, options?: { notFound404?: boolean }): Promise<View> {
+	async deleteView(mapId: ID, viewId: ID, options: {
+		notFound404?: boolean;
+		identity: Buffer | undefined;
+	}): Promise<View> {
 		const oldView = await this.getView(mapId, viewId, options);
 		await this.backend.deleteView(mapId, viewId);
 		this.db.emit("deleteView", mapId, { id: viewId });
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "delete",
+			identity: options.identity ?? null,
 			objectId: viewId,
 			objectBefore: oldView
 		});

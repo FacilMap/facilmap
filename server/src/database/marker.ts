@@ -3,6 +3,7 @@ import Database from "./database.js";
 import { getElevationForPoint, resolveCreateMarker, resolveUpdateMarker } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import type DatabaseMarkersBackend from "../database-backend/marker.js";
+import type { RawMarker } from "../utils/permissions.js";
 
 export default class DatabaseMarkers {
 
@@ -14,11 +15,11 @@ export default class DatabaseMarkers {
 		this.backend = database.backend.markers;
 	}
 
-	getMapMarkers(mapId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
+	getMapMarkers(mapId: ID, bbox?: BboxWithExcept): AsyncIterable<RawMarker> {
 		return this.backend.getMapMarkers(mapId, bbox);
 	}
 
-	getMapMarkersByType(mapId: ID, typeId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
+	getMapMarkersByType(mapId: ID, typeId: ID, bbox?: BboxWithExcept): AsyncIterable<RawMarker> {
 		return this.backend.getMapMarkersByType(mapId, typeId, bbox);
 	}
 
@@ -26,7 +27,7 @@ export default class DatabaseMarkers {
 		return await this.backend.markerExists(mapId, markerId);
 	}
 
-	async getMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
+	async getMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<RawMarker> {
 		const marker = await this.backend.getMarker(mapId, markerId);
 		if (!marker) {
 			throw Object.assign(
@@ -37,7 +38,7 @@ export default class DatabaseMarkers {
 		return marker;
 	}
 
-	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<Marker> {
+	async createMarker(mapId: ID, data: Marker<CRU.CREATE_VALIDATED>, options: { id?: ID; identity: Buffer | undefined }): Promise<RawMarker> {
 		const type = await this.db.types.getType(mapId, data.typeId);
 		if (type.type !== "marker") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-marker-error", { type: type.type }));
@@ -49,11 +50,18 @@ export default class DatabaseMarkers {
 		};
 		const result = await this.backend.createMarker(mapId, {
 			...resolvedData,
-			ele: resolvedData.ele ?? null // Set asynchronously below
+			ele: resolvedData.ele ?? null, // Set asynchronously below
+			identity: options.identity ?? null
 		});
 		this.db.emit("marker", mapId, result);
 
-		await this.db.history.addHistoryEntry(mapId, { type: "Marker", action: "create", objectId: result.id, objectAfter: result });
+		await this.db.history.addHistoryEntry(mapId, {
+			type: "Marker",
+			action: "create",
+			identity: options.identity ?? null,
+			objectId: result.id,
+			objectAfter: result
+		});
 
 		if (resolvedData.ele === undefined) {
 			getElevationForPoint(resolvedData).then(async (ele) => {
@@ -71,11 +79,11 @@ export default class DatabaseMarkers {
 		return result;
 	}
 
-	async updateMarker(mapId: ID, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, options?: {
-
+	async updateMarker(mapId: ID, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>, options: {
+		identity: Buffer | undefined;
 		notFound404?: boolean;
 		noHistory?: boolean;
-	}): Promise<Marker> {
+	}): Promise<RawMarker> {
 		const originalMarker = await this.getMarker(mapId, markerId, { notFound404: options?.notFound404 });
 
 		const newType = await this.db.types.getType(mapId, data.typeId ?? originalMarker.typeId);
@@ -83,9 +91,10 @@ export default class DatabaseMarkers {
 		return await this._updateMarker(originalMarker, data, newType, options);
 	}
 
-	async _updateMarker(originalMarker: Marker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, options?: {
+	async _updateMarker(originalMarker: RawMarker, data: Marker<CRU.UPDATE_VALIDATED>, newType: Type, options: {
+		identity: Buffer | undefined;
 		noHistory?: boolean;
-	}): Promise<Marker> {
+	}): Promise<RawMarker> {
 		const { mapId, id: markerId } = originalMarker;
 
 		if (newType.type !== "marker") {
@@ -99,7 +108,14 @@ export default class DatabaseMarkers {
 
 			const result = await this.getMarker(mapId, markerId);
 			if (!options?.noHistory) {
-				await this.db.history.addHistoryEntry(mapId, { type: "Marker", action: "update", objectId: markerId, objectBefore: originalMarker, objectAfter: result });
+				await this.db.history.addHistoryEntry(mapId, {
+					type: "Marker",
+					action: "update",
+					identity: options.identity ?? null,
+					objectId: markerId,
+					objectBefore: originalMarker,
+					objectAfter: result
+				});
 			}
 
 			this.db.emit("marker", originalMarker.mapId, result, originalMarker);
@@ -123,16 +139,22 @@ export default class DatabaseMarkers {
 		}
 	}
 
-	async deleteMarker(mapId: ID, markerId: ID, options?: { notFound404?: boolean }): Promise<Marker> {
-		const oldMarker = await this.getMarker(mapId, markerId, options);
-		await this._deleteMarker(oldMarker);
+	async deleteMarker(mapId: ID, markerId: ID, options: { notFound404?: boolean; identity: Buffer | undefined }): Promise<RawMarker> {
+		const oldMarker = await this.getMarker(mapId, markerId, { notFound404: options.notFound404 });
+		await this._deleteMarker(oldMarker, { identity: options.identity });
 		return oldMarker;
 	}
 
-	async _deleteMarker(marker: Marker): Promise<void> {
+	async _deleteMarker(marker: RawMarker, options: { identity: Buffer | undefined }): Promise<void> {
 		await this.backend.deleteMarker(marker.mapId, marker.id);
 		this.db.emit("deleteMarker", marker.mapId, { id: marker.id, typeId: marker.typeId });
-		await this.db.history.addHistoryEntry(marker.mapId, { type: "Marker", action: "delete", objectId: marker.id, objectBefore: marker });
+		await this.db.history.addHistoryEntry(marker.mapId, {
+			type: "Marker",
+			action: "delete",
+			identity: options.identity ?? null,
+			objectId: marker.id,
+			objectBefore: marker
+		});
 	}
 
 }

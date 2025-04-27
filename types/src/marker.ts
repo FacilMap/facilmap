@@ -6,6 +6,7 @@ import { numberRecordValidator } from "./utility.js";
 export const markerValidator = cruValidator({
 	id: onlyRead(idValidator),
 	mapId: onlyRead(idValidator),
+	own: onlyRead(z.boolean()),
 	...mapValues(pointValidator.shape, optionalUpdate),
 	typeId: optionalUpdate(idValidator),
 	name: optionalCreate(z.string().trim().max(100), ""),

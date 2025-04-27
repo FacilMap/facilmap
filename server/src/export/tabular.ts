@@ -2,7 +2,7 @@ import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js"
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { ID } from "facilmap-types";
 import { getI18n } from "../i18n.js";
-import type { RawMapLink } from "../utils/permissions.js";
+import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
 
 export type TabularData = {
@@ -13,7 +13,7 @@ export type TabularData = {
 
 export async function getTabularData(
 	api: ApiV3Backend,
-	mapLink: RawMapLink,
+	mapLink: RawActiveMapLink,
 	typeId: ID,
 	html: boolean,
 	filter?: string,

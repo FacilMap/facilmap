@@ -27,6 +27,7 @@ A bounding box that may include another bounding box as “except”. This can b
 
 * `id` (number, only read): The ID of this marker
 * `mapId` (number, only read): The ID of the map the marker belongs to
+* `own` (boolean, only read): Whether the marker was created by your identity (see [MapSlug](#mapslug))
 * `lat` (number, min: -90, max: 90): The latitude of this marker
 * `lon` (number, min: -180, max: 180): The longitude of this marker
 * `typeId` (number): The ID of the type of this marker
@@ -53,11 +54,12 @@ Note that `Line` objects coming from the server don’t contain the `trackPoints
 
 * `id` (number, only read): The ID of this line
 * `mapId` (number, only read): The ID of the map that the line belongs to
+* `own` (boolean, only read): Whether the line was created by your identity (see [MapSlug](#mapslug))
 * `routePoints` (`Array<{ lat: number; lon: number }>`, minimum length 2): The route points
 * `typeId` (number): The ID of the type of this line
 * `name` (string): The name of the line
 * `mode` (string): The routing mode, see [route mode](#route-mode)
-* `colour` (string): The colour of this marker as a 6-digit hex value, for example `0000ff`
+* `colour` (string): The colour of this line as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
 * `stroke` (string): The stroke style of the line, an empty string for solid or `dashed` or `dotted`.
 * `data` (`Record<string, string>`): The filled out form fields of the line, keyed by field ID. Null-prototype objects should always be used for this to avoid prototype pollution.
@@ -81,27 +83,55 @@ their `idx` property.
 * `zoom` (number, min: 1, max: 20): The miminum zoom level from which this track point makes sense to show
 * `ele` (number or undefined): The elevation of this track point in metres.
 
+## MapSlug
+
+Where an API method expects a map slug as a parameter, this can be a `string` or an object of the shape `{ mapSlug: string; password?: string; identity?: string }`. The map slug string can be a slug that is configured for a [map link](#maplink) or a [map token](./advanced.md#map-slugs-tokens-and-passwords).
+
+For the REST API, the password must be provided instead using basic authentication (see [password-protected maps](./advanced.md#password-protected-maps)), and the identity as the `identity` query parameter.
+
+Where an API method returns a map slug or a socket event contains one, it is always a string that represents the map slug that was used to access the map, which can either be the slug of a map link or a map token.
+
+Attempting to access a password-protected map link without providing a or the right password will result in an error that has a `status: 401` property (or in HTTP status 401 when using the REST API).
+
+The `identity` property identifies you as the creator of a map object or history entry. When you provide it, will be persisted on all markers, lines and history entries that you create, and markers and lines whose creator identity matches yours will be returned with an `own: true` property. Some map links may be configured to only see or modify your markers/lines created by you. To interact with such markers/lines, providing an `identity` is required. What string you use as `identity` is up to you, but one suggestion is to create it using <code>[crypto.randomUUID()](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID)</code> and to persist (for example in local storage) it as soon as the first change to the map is made.
+
 ## MapData
 
 * `id` (number, only read): The ID of this map. This is used as an internal immutable identifier of the map. You cannot find a map using its ID, only using one of its map slugs.
-* `readId` (string): The read-only map slug of this map
-* `writeId` (string): The read-write map slug of this map
-* `adminId` (string): The admin map slug of this map
 * `name` (string): The name of this map
-* `searchEngines` (boolean): Whether search engines may index the read-only version of this map
 * `description` (string): The description for search engines
 * `clusterMarkers` (boolean): Whether many markers close to each other should be grouped together
 * `legend1`, `legend2` (string): Markdown free text to be shown above and below the legend
+* `links` (<code>Array&lt;[MapLink](#maplink)&gt;</code>): The map links configured for this map. At least one link with `admin` permissions needs to be configured. Map links with higher permissions than the map link through which the map was opened are hidden. If the map was opened through a [map token](./advanced.md#map-slugs-tokens-and-passwords), the `links` array is empty.
+* `activeLink` (<code>[MapLink](#maplink)</code>, only read): The map link through which the map was opened. If the map was opened using a [map token](./advanced.md#map-slugs-tokens-and-passwords), this contains a virtual map link that does not have an ID and is not present in the `links` property.
 * `defaultViewId` (number): The ID of the default view (if any)
 * `defaultView` ([View](#view), only read): A copy of the default view object (set by the server)
 * `createDefaultTypes` (boolean, only create): On creation of a map, set this to false to not create one marker and one line type.
 
-## MapDataWithWritable
+## MapLink
 
-This is a variation of [`MapData`](#mapdata) with the following differences:
-* `writeId` is only set if the map was opened with its write slug or admin slug
-* `adminId` is only set if the map was opened with its admin slug
-* `writable` (`Writable`, only read): `Writable.READ` (`0`) if the map was opened using its read-only slug, `Writable.WRITE` (`1`) if it was opened using its read-write slug, `Writable.ADMIN` (`2`) if it was opened using its admin slug.
+Represents a URL through which a map can be opened. Each map can have one or more links configured. At least one of them must have the `admin` permission.
+
+* `id` (number, only read/update): The internal ID of the map link. This is automatically created when the map link is first created. When changing an existing map link, keep its ID so that the server can identify which map link you have changed. On `mapData.mapLink`, this property is absent when the map was opened using a map token rather than a map slug.
+* `slug` (string): The map slug of the map link. This is the last part of the URL that can be used to open the map, and it is also used in the API to reference the map. The map slug must be unique to a specific map. However, one map may have multiple links with the same slug if they all have a password and those passwords are all different.
+* `password` (create/update: `string | false`, read: `boolean`): Set this to a password to require this password when opening the map through this link. Set it to `false` to require no password. When reading the map data of a map, `true` indicates that a password is set. Then updating a map, the `password` property is optional; ommitting it will keep the password that is currently configured.
+* `permissions` (<code>[MapPermissions](#mappermissions)</code>): The permissions that will be given when opening the map through this link.
+* `searchEngines` (boolean): If this is true, this map link will be published and search engines (such as Google) will be allowed to index it. It will also be findable through the “Open map” dialog.
+
+## MapPermissions
+
+* `read` (`boolean | "own"`): Whether users can see types, markers and lines that are not explicitly listed in the `types` property. If set to `"own"`, users can see all types, but see only markers and lines that they have personally created.
+* `update` (`boolean | "own"`): Whether users can create/edit/delete markers and lines whose types are not explicitly listed in the `types` property. if set to `"own"`, users can only edit/delete markers and lines that they have personally created.
+* `settings` (boolean): Whether users can edit the map settings (except map links) and create/edit/delete types and views, with the exception of types that they cannot see because they are hidden by the `types` property or some of whose fields they cannot read or update.
+* `admin` (boolean): Whether users can edit the map links and delete the map.
+* `types` (object, optional): An object that overrides the `read` and `update` permission for individual types. It is a record that maps the type ID to an object of the following shape:
+	* `read` (`boolean | "own"`): Whether users can see the type itself and markers/lines of the type. If set to `"own"`, users can see the type but only see markers/lines that they have personally created. The visibility of individual fields can be overridden using the `fields` property, but this permission always applies to marker/line attributes such as position, route mode and style.
+	* `update` (`boolean | "own"`): Whether users can create/edit/delete markers/lines of this type. If set to `"own"`, they can only edit/delete markers/lines that they have personally created. The editability of individual fields can be overridden using the `fields` property, but this permission always applies to marker/line attributes such as position, route mode and style.
+	* `fields` (object, optional): An object that overrides the `read` and `update` permission for individual fields. This only applies to custom data fields, not to data attributes such as the marker position, route mode or object style. A record that maps the field ID to an object of the following shape:
+		* `read` (`boolean | "own"`): Whether users can see this field for markers/lines of this type. If set to `"own"`, they can only see it on markers/lines that they have personally created.
+		* `update` (`boolean | "own"`): Whether users can edit this field for markers/lines of this type. If set to `"own"`, they can only edit it on markers/lines that they have personally created.
+
+Within the hierarchy of `admin` &gt; `settings` &gt; `update` &gt; `read` and `true` &gt; `"own"` &gt; `false`, permissions of a lower level must always be given if a higher level permission is given. For example, it is not possible to give update permission without giving read permission. The only exception is that the `types` object can apply more restrictive permissions to individual types than what the general permissions allow, and the `field` object can apply more restrictive permissions to individual fields than the type permissions allow.
 
 ## View
 

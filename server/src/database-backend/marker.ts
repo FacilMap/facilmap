@@ -1,5 +1,5 @@
 import { and, col, type CreationOptional, DataTypes, fn, type ForeignKey, type InferAttributes, type InferCreationAttributes, Model, Op, where } from "sequelize";
-import type { Colour, ID, Latitude, Longitude, Marker, Shape, Size, Icon, BboxWithExcept } from "facilmap-types";
+import type { Colour, ID, Latitude, Longitude, Shape, Size, Icon, BboxWithExcept } from "facilmap-types";
 import { createModel, dataDefinition, dataFromArr, type DataModel, dataToArr, findAllStreamed, getDefaultIdType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./utils.js";
 import DatabaseBackend from "./database-backend.js";
 import type { MapModel } from "./map.js";
@@ -7,6 +7,7 @@ import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
 import { isEqual } from "lodash-es";
 import type { Optional } from "facilmap-utils";
+import type { RawMarker } from "../utils/permissions.js";
 
 export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCreationAttributes<MarkerModel>> {
 	id: CreationOptional<ID>;
@@ -21,6 +22,7 @@ export interface MarkerModel extends Model<InferAttributes<MarkerModel>, InferCr
 	icon: Icon;
 	shape: Shape;
 	ele: number | null;
+	identity: Buffer | null;
 }
 
 export interface MarkerDataModel extends DataModel, Model<InferAttributes<MarkerDataModel>, InferCreationAttributes<MarkerDataModel>> {
@@ -55,7 +57,8 @@ export default class DatabaseMarkersBackend {
 					this.setDataValue("ele", v != null ? Math.round(v) : v);
 				},
 				defaultValue: null
-			}
+			},
+			identity: { type: DataTypes.BLOB, allowNull: true }
 		}, {
 			sequelize: this.backend._conn,
 			// pos index is created in migration
@@ -80,14 +83,14 @@ export default class DatabaseMarkersBackend {
 		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
 	}
 
-	protected prepareMarker(marker: MarkerModel): Marker {
+	protected prepareMarker(marker: MarkerModel): RawMarker {
 		const data = marker.toJSON() as any;
 		data.data = dataFromArr(data.markerData);
 		delete data.markerData;
 		return data;
 	}
 
-	async* getMapMarkers(mapId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
+	async* getMapMarkers(mapId: ID, bbox?: BboxWithExcept): AsyncIterable<RawMarker> {
 		for await (const obj of findAllStreamed(this.MarkerModel, {
 			where: {
 				...makeBboxCondition(this.backend, bbox),
@@ -99,7 +102,7 @@ export default class DatabaseMarkersBackend {
 		}
 	}
 
-	async* getMapMarkersByType(mapId: ID, typeId: ID, bbox?: BboxWithExcept): AsyncIterable<Marker> {
+	async* getMapMarkersByType(mapId: ID, typeId: ID, bbox?: BboxWithExcept): AsyncIterable<RawMarker> {
 		for await (const obj of findAllStreamed(this.MarkerModel, {
 			where: {
 				...makeBboxCondition(this.backend, bbox),
@@ -120,7 +123,7 @@ export default class DatabaseMarkersBackend {
 		return !!await this.MarkerModel.findOne({ where: { mapId, id: markerId }, attributes: ["id"] });
 	}
 
-	async getMarker(mapId: ID, markerId: ID): Promise<Marker | undefined> {
+	async getMarker(mapId: ID, markerId: ID): Promise<RawMarker | undefined> {
 		const entry = await this.MarkerModel.findOne({
 			where: { id: markerId, mapId },
 			include: [this.MarkerDataModel],
@@ -130,7 +133,7 @@ export default class DatabaseMarkersBackend {
 		return entry ? this.prepareMarker(entry) : undefined;
 	}
 
-	async searchMarkers(mapId: ID, searchText: string): Promise<Marker[]> {
+	async searchMarkers(mapId: ID, searchText: string): Promise<RawMarker[]> {
 		const objs = await this.MarkerModel.findAll({
 			where: and(
 				{ mapId },
@@ -148,7 +151,7 @@ export default class DatabaseMarkersBackend {
 		await this.MarkerDataModel.bulkCreate(dataToArr(data, { markerId }));
 	}
 
-	async createMarker(mapId: ID, data: Optional<Omit<Marker, "mapId">, "id">): Promise<Marker> {
+	async createMarker(mapId: ID, data: Optional<Omit<RawMarker, "mapId">, "id">): Promise<RawMarker> {
 		const result = {
 			...(await this.MarkerModel.create({ ...data, mapId })).toJSON(),
 			data: data.data ?? {}
@@ -160,7 +163,7 @@ export default class DatabaseMarkersBackend {
 		return result;
 	}
 
-	async updateMarker(mapId: ID, markerId: ID, data: Partial<Omit<Marker, "mapId" | "id">>): Promise<void> {
+	async updateMarker(mapId: ID, markerId: ID, data: Partial<Omit<RawMarker, "mapId" | "id">>): Promise<void> {
 		if (Object.keys(data).length > 0 && !isEqual(Object.keys(data), ["data"])) {
 			// We don’t return the update object since we cannot rely on the return value of the update() method.
 			// On some platforms it returns 0 even if the object was found (but no fields were changed).

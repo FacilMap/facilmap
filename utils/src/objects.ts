@@ -100,7 +100,7 @@ export function resolveCreateMarker(marker: DeepReadonly<Marker<CRU.CREATE>>, ty
 	return result;
 }
 
-export function resolveUpdateMarker(marker: DeepReadonly<Marker>, update: DeepReadonly<Marker<CRU.UPDATE>>, newType: DeepReadonly<Type>): Marker<CRU.UPDATE_VALIDATED> {
+export function resolveUpdateMarker(marker: DeepReadonly<Omit<Marker, "own">>, update: DeepReadonly<Marker<CRU.UPDATE>>, newType: DeepReadonly<Type>): Marker<CRU.UPDATE_VALIDATED> {
 	const resolvedUpdate = markerValidator.update.parse(update);
 	return {
 		...resolvedUpdate,
@@ -158,7 +158,7 @@ export function resolveCreateLine(line: DeepReadonly<Line<CRU.CREATE>>, type: De
 	return result;
 }
 
-export function resolveUpdateLine(line: DeepReadonly<Line>, update: DeepReadonly<Line<CRU.UPDATE>>, newType: DeepReadonly<Type>): Line<CRU.UPDATE_VALIDATED> {
+export function resolveUpdateLine(line: DeepReadonly<Omit<Line, "own">>, update: DeepReadonly<Line<CRU.UPDATE>>, newType: DeepReadonly<Type>): Line<CRU.UPDATE_VALIDATED> {
 	const resolvedUpdate = lineValidator.update.parse(update);
 	return {
 		...resolvedUpdate,

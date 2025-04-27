@@ -58,7 +58,11 @@ export default class DatabaseTypes {
 		return resolvedNewIdx;
 	}
 
-	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>, options?: { id?: ID }): Promise<Type> {
+	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>, options: {
+		id?: ID;
+		identity: Buffer | undefined;
+		noHistory?: boolean;
+	}): Promise<Type> {
 		const [idx, nextFieldId] = await Promise.all([
 			this._freeTypeIdx(mapId, undefined, data.idx),
 			this.db.maps.getNextFieldId(mapId, data.fields.length)
@@ -76,17 +80,23 @@ export default class DatabaseTypes {
 		});
 		this.db.emit("type", createdType.mapId, createdType);
 
-		await this.db.history.addHistoryEntry(mapId, {
-			type: "Type",
-			action: "create",
-			objectId: createdType.id,
-			objectAfter: createdType
-		});
+		if (!options.noHistory) {
+			await this.db.history.addHistoryEntry(mapId, {
+				type: "Type",
+				action: "create",
+				identity: options.identity ?? null,
+				objectId: createdType.id,
+				objectAfter: createdType
+			});
+		}
 
 		return createdType;
 	}
 
-	async updateType(mapId: ID, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options?: { notFound404?: boolean }): Promise<Type> {
+	async updateType(mapId: ID, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options: {
+		notFound404?: boolean;
+		identity: Buffer | undefined;
+	}): Promise<Type> {
 		const rename: Record<string, Record<string, string>> = {};
 		for (const field of (data.fields || [])) {
 			for (const option of field.options ?? []) {
@@ -143,6 +153,7 @@ export default class DatabaseTypes {
 			await this.db.history.addHistoryEntry(mapId, {
 				type: "Type",
 				action: "update",
+				identity: options.identity ?? null,
 				objectId: typeId,
 				objectBefore: typeBefore,
 				objectAfter: typeAfter
@@ -154,11 +165,11 @@ export default class DatabaseTypes {
 
 				if (typeAfter.type === "marker") {
 					for await (const marker of this.db.markers.getMapMarkersByType(mapId, typeId)) {
-						await this.db.markers._updateMarker(marker, {}, typeAfter, { noHistory: true });
+						await this.db.markers._updateMarker(marker, {}, typeAfter, { noHistory: true, identity: options.identity });
 					}
 				} else if (typeAfter.type === "line") {
 					for await (const line of this.db.lines.getMapLinesByType(mapId, typeId)) {
-						await this.db.lines._updateLine(line, {}, typeAfter, { noHistory: true });
+						await this.db.lines._updateLine(line, {}, typeAfter, { noHistory: true, identity: options.identity });
 					}
 				}
 			})()
@@ -183,9 +194,9 @@ export default class DatabaseTypes {
 
 			if (!isEqual(object.data, newData)) {
 				if(isLine) {
-					await this.db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true });
+					await this.db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true, identity: undefined });
 				} else {
-					await this.db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true });
+					await this.db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true, identity: undefined });
 				}
 			}
 		}
@@ -199,7 +210,7 @@ export default class DatabaseTypes {
 		return markerUsed || lineUsed;
 	}
 
-	async deleteType(mapId: ID, typeId: ID, options?: { notFound404?: boolean }): Promise<Type> {
+	async deleteType(mapId: ID, typeId: ID, options: { notFound404?: boolean; identity: Buffer | undefined }): Promise<Type> {
 		if (await this.isTypeUsed(mapId, typeId)) {
 			throw new Error("This type is in use.");
 		}
@@ -211,6 +222,7 @@ export default class DatabaseTypes {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "Type",
 			action: "delete",
+			identity: options.identity ?? null,
 			objectId: typeId,
 			objectBefore: oldType
 		});
@@ -221,7 +233,7 @@ export default class DatabaseTypes {
 	async createDefaultTypes(mapId: ID): Promise<Type[]> {
 		const result: Type[] = [];
 		for (const type of DEFAULT_TYPES) {
-			result.push(await this.createType(mapId, type));
+			result.push(await this.createType(mapId, type, { noHistory: true, identity: undefined }));
 		}
 		return result;
 	}

@@ -32,9 +32,10 @@ export const lineValidator = cruValidator({
 	descent: onlyRead(z.number().or(z.null())),
 	time: onlyRead(z.number().or(z.null())),
 	mapId: onlyRead(idValidator),
+	own: onlyRead(z.boolean()),
 
 	trackPoints: exceptRead(z.array(trackPointValidator.create).optional())
 });
 export type Line<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof lineValidator>;
 
-export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId">;
+export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId" | "own">;

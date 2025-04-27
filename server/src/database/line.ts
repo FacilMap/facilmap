@@ -1,10 +1,11 @@
-import { type ID, type Line, type Point, type Route, type TrackPoint, type CRU, type RouteInfo, type LinePoints, type BboxWithExcept, entries, type Type } from "facilmap-types";
+import { type ID, type Point, type Route, type TrackPoint, type CRU, type RouteInfo, type LinePoints, type BboxWithExcept, entries, type Type, type Line } from "facilmap-types";
 import Database from "./database.js";
 import { groupBy, isEqual, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import type DatabaseLinesBackend from "../database-backend/line.js";
+import type { RawLine } from "../utils/permissions.js";
 
 export default class DatabaseLines {
 
@@ -16,11 +17,11 @@ export default class DatabaseLines {
 		this.backend = database.backend.lines;
 	}
 
-	getMapLines(mapId: ID, fields?: Array<keyof Line>): AsyncIterable<Line> {
+	getMapLines(mapId: ID, fields?: Array<keyof RawLine>): AsyncIterable<RawLine> {
 		return this.backend.getMapLines(mapId, fields);
 	}
 
-	getMapLinesByType(mapId: ID, typeId: ID): AsyncIterable<Line> {
+	getMapLinesByType(mapId: ID, typeId: ID): AsyncIterable<RawLine> {
 		return this.backend.getMapLinesByType(mapId, typeId);
 	}
 
@@ -28,7 +29,7 @@ export default class DatabaseLines {
 		return await this.backend.lineExists(mapId, lineId);
 	}
 
-	async getLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
+	async getLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<RawLine> {
 		const line = await this.backend.getLine(mapId, lineId);
 		if (!line) {
 			throw Object.assign(
@@ -39,7 +40,11 @@ export default class DatabaseLines {
 		return line;
 	}
 
-	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> } }): Promise<Line> {
+	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options: {
+		id?: ID;
+		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
+		identity: Buffer | undefined;
+	}): Promise<RawLine> {
 		const type = await this.db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
 			throw new Error(getI18n().t("database.cannot-use-type-for-line-error", { type: type.type }));
@@ -51,35 +56,44 @@ export default class DatabaseLines {
 
 		const createdLine = await this.backend.createLine(mapId, {
 			...omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */),
-			...options?.id ? { id: options.id } : {}
+			...options?.id ? { id: options.id } : {},
+			identity: options.identity ?? null
 		});
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
 		this.db.emit("line", mapId, createdLine);
 
 		await Promise.all([
-			this.db.history.addHistoryEntry(mapId, { type: "Line", action: "create", objectId: createdLine.id, objectAfter: createdLine }),
+			this.db.history.addHistoryEntry(mapId, {
+				type: "Line",
+				action: "create",
+				identity: options.identity ?? null,
+				objectId: createdLine.id,
+				objectAfter: createdLine
+			}),
 			this.setLinePoints(mapId, createdLine.id, createdLine.typeId, trackPoints)
 		]);
 
 		return createdLine;
 	}
 
-	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options?: {
+	async updateLine(mapId: ID, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, options: {
 		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
 		notFound404?: boolean;
 		noHistory?: boolean;
-	}): Promise<Line> {
+		identity: Buffer | undefined;
+	}): Promise<RawLine> {
 		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
 		const newType = await this.db.types.getType(mapId, data.typeId ?? originalLine.typeId);
 		return await this._updateLine(originalLine, data, newType, options);
 	}
 
-	async _updateLine(originalLine: Line, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options?: {
+	async _updateLine(originalLine: RawLine, data: Line<CRU.UPDATE_VALIDATED>, newType: Type, options: {
 		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
 		notFound404?: boolean;
 		noHistory?: boolean;
-	}): Promise<Line> {
+		identity: Buffer | undefined;
+	}): Promise<RawLine> {
 		const { mapId, id: lineId } = originalLine;
 
 		if (newType.type !== "line") {
@@ -100,7 +114,14 @@ export default class DatabaseLines {
 
 			const newLine = await this.getLine(mapId, lineId);
 			if (!options?.noHistory) {
-				await this.db.history.addHistoryEntry(mapId, { type: "Line", action: "update", objectId: lineId, objectBefore: originalLine, objectAfter: newLine });
+				await this.db.history.addHistoryEntry(mapId, {
+					type: "Line",
+					action: "update",
+					identity: options.identity ?? null,
+					objectId: lineId,
+					objectBefore: originalLine,
+					objectAfter: newLine
+				});
 			}
 
 			this.db.emit("line", mapId, newLine);
@@ -129,17 +150,26 @@ export default class DatabaseLines {
 		}
 	}
 
-	async deleteLine(mapId: ID, lineId: ID, options?: { notFound404?: boolean }): Promise<Line> {
+	async deleteLine(mapId: ID, lineId: ID, options: {
+		notFound404?: boolean;
+		identity: Buffer | undefined;
+	}): Promise<RawLine> {
 		const oldLine = await this.getLine(mapId, lineId, options);
-		await this._deleteLine(oldLine);
+		await this._deleteLine(oldLine, options);
 		return oldLine;
 	}
 
-	async _deleteLine(line: Line): Promise<void> {
+	async _deleteLine(line: RawLine, options: { identity: Buffer | undefined }): Promise<void> {
 		await this.setLinePoints(line.mapId, line.id, line.typeId, [ ], true);
 		await this.backend.deleteLine(line.mapId, line.id);
 		this.db.emit("deleteLine", line.mapId, { id: line.id, typeId: line.typeId });
-		await this.db.history.addHistoryEntry(line.mapId, { type: "Line", action: "delete", objectId: line.id, objectBefore: line });
+		await this.db.history.addHistoryEntry(line.mapId, {
+			type: "Line",
+			action: "delete",
+			identity: options.identity ?? null,
+			objectId: line.id,
+			objectBefore: line
+		});
 	}
 
 	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { typeId: ID }> {
