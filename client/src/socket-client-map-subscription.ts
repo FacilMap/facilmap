@@ -143,8 +143,8 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.findOnMap(this.data.mapSlug, query);
 	}
 
-	async getMapToken(permissions: MapPermissions): Promise<{ token: string }> {
-		return await this.client.getMapToken(this.data.mapSlug, permissions);
+	async getMapToken(options: { permissions: MapPermissions; noPassword?: boolean }): Promise<{ token: string }> {
+		return await this.client.getMapToken(this.data.mapSlug, options);
 	}
 
 	async getHistory(data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {

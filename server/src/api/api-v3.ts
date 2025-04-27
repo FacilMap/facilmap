@@ -67,39 +67,39 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	protected async* getMapObjectsUntyped(
-		mapData: Stripped<MapData>,
+		{ activeLink, rawMapData }: { activeLink: RawActiveMapLink; rawMapData: RawMapData },
 		{ pick, bbox }: { pick: ReadonlyArray<AllMapObjectsPick>; bbox?: BboxWithZoom }
 	): AsyncIterable<AllMapObjectsTypes[AllMapObjectsPick]> {
 		if (pick.includes("mapData")) {
-			yield { type: "mapData", data: mapData };
+			yield { type: "mapData", data: stripMapData(activeLink, rawMapData) };
 		}
 
 		if (pick.includes("types")) {
-			yield { type: "types", data: this._getMapTypes(mapData) };
+			yield { type: "types", data: this._getMapTypes(activeLink) };
 		}
 
 		if (pick.includes("views")) {
-			yield { type: "views", data: this._getMapViews(mapData) };
+			yield { type: "views", data: this._getMapViews(activeLink) };
 		}
 
 		if (pick.includes("markers")) {
-			yield { type: "markers", data: this._getMapMarkers(mapData, { bbox }) };
+			yield { type: "markers", data: this._getMapMarkers(activeLink, { bbox }) };
 		}
 
 		if (pick.includes("lines") || pick.includes("linesWithTrackPoints")) {
-			yield { type: "lines", data: this._getMapLines(mapData, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox }) };
+			yield { type: "lines", data: this._getMapLines(activeLink, { includeTrackPoints: pick.includes("linesWithTrackPoints"), bbox }) };
 		}
 
 		if (pick.includes("linePoints")) {
-			yield { type: "linePoints", data: this._getMapLinePoints(mapData, { bbox }) };
+			yield { type: "linePoints", data: this._getMapLinePoints(activeLink, { bbox }) };
 		}
 	}
 
 	protected getMapObjects<Pick extends AllMapObjectsPick>(
-		mapData: Stripped<MapData>,
+		{ activeLink, rawMapData }: { activeLink: RawActiveMapLink; rawMapData: RawMapData },
 		{ pick, bbox }: { readonly pick: ReadonlyArray<Pick>; readonly bbox?: Readonly<BboxWithZoom> }
 	): AsyncIterable<AllMapObjectsTypes[Pick]> {
-		return this.getMapObjectsUntyped(mapData, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<AllMapObjectsTypes[Pick]>;
+		return this.getMapObjectsUntyped({ activeLink, rawMapData }, { pick: pick as ReadonlyArray<AllMapObjectsPick>, bbox }) as AsyncIterable<AllMapObjectsTypes[Pick]>;
 	}
 
 	async findMaps(query: string, paging = DEFAULT_PAGING): Promise<PagedResults<FindMapsResult>> {
@@ -125,7 +125,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const rawMapData = await this.database.maps.createMap(data);
 		const activeLink = getMainAdminLink(rawMapData.links);
 		const mapData = stripMapData(activeLink, rawMapData);
-		const results = this.getMapObjects(mapData, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
+		const results = this.getMapObjects({ rawMapData, activeLink }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
 		return { rawMapData, activeLink, mapData, results };
 	}
 
@@ -138,7 +138,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 		if (activeLink.id != null && canAdministrateMap(activeLink.permissions)) {
 			if (data.links) {
-				const currentLink = data.links.find((l) => l.id === activeLink.id);
+				const currentLink = data.links.find((l) => "id" in l && l.id === activeLink.id);
 				if (!currentLink) {
 					throw Object.assign(new Error(getI18n().t("api.delete-current-link-error")), { status: 400 });
 				} else if (!currentLink.permissions.admin) {
@@ -163,8 +163,8 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linesWithTrackPoints" | "types" | "views">(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
-		const { mapData } = await this.resolveMapSlug(mapSlug);
-		return this.getMapObjects(mapData, {
+		const { rawMapData, activeLink } = await this.resolveMapSlug(mapSlug);
+		return this.getMapObjects({ rawMapData, activeLink }, {
 			...options,
 			pick: options?.pick ?? ["mapData", "types", "views", ...options?.bbox ? ["markers", "linesWithTrackPoints"] : ["lines"]] as Pick[]
 		});
@@ -264,22 +264,22 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	protected _getMapMarkers(mapData: MapData, options?: { bbox?: BboxWithExcept; typeId?: ID }): AsyncIterable<Stripped<Marker>> {
+	protected _getMapMarkers(activeLink: RawActiveMapLink, options?: { bbox?: BboxWithExcept; typeId?: ID }): AsyncIterable<Stripped<Marker>> {
 		const results = (
-			options?.typeId ? this.database.markers.getMapMarkersByType(mapData.id, options.typeId, options?.bbox) :
-			this.database.markers.getMapMarkers(mapData.id, options?.bbox)
+			options?.typeId ? this.database.markers.getMapMarkersByType(activeLink.mapId, options.typeId, options?.bbox) :
+			this.database.markers.getMapMarkers(activeLink.mapId, options?.bbox)
 		);
 		return flatMapAsyncIterable(results, (unstrippedMarker) => {
-			const stripped = stripMarker(mapData.activeLink, unstrippedMarker, false);
+			const stripped = stripMarker(activeLink, unstrippedMarker, false);
 			return stripped ? [stripped] : [];
 		});
 	}
 
 	async getMapMarkers(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Stripped<Marker>>> {
-		const { mapData } = await this.resolveMapSlug(mapSlug);
+		const { activeLink } = await this.resolveMapSlug(mapSlug);
 
 		return {
-			results: this._getMapMarkers(mapData, options)
+			results: this._getMapMarkers(activeLink, options)
 		};
 	}
 
@@ -301,35 +301,39 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	async updateMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>): Promise<Stripped<Marker>> {
-		const { activeLink } = await this.resolveMapSlug(mapSlug);
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 
-		const originalMarker = await this.getMarker(activeLink, markerId);
+		const originalRawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
 
-		checkUpdateObject(activeLink.permissions, originalMarker.typeId, false);
-		if (data.typeId != null && data.typeId !== originalMarker.typeId) {
+		checkUpdateObject(activeLink.permissions, originalRawMarker.typeId, false);
+		if (data.typeId != null && data.typeId !== originalRawMarker.typeId) {
 			checkUpdateObject(activeLink.permissions, data.typeId, false);
 		}
 
-		const newType = await this.getType(activeLink, data.typeId ?? originalMarker.typeId);
+		const newType = await this.getType(activeLink, data.typeId ?? originalRawMarker.typeId);
 
 		const update = {
 			...data,
 			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, false) } : {}
 		};
-		const result = await this.database.markers._updateMarker(originalMarker, update, newType, { identity: activeLink.identity });
+		const result = await this.database.markers._updateMarker(originalRawMarker, update, newType, { identity: activeLink.identity });
 		return stripMarkerOrThrow(activeLink, result, false);
 	}
 
 	async deleteMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID): Promise<void> {
-		const { activeLink } = await this.resolveMapSlug(mapSlug);
-		const marker = await this.getMarker(activeLink, markerId);
-		checkManageObject(activeLink.permissions, marker.typeId, false);
-		await this.database.markers._deleteMarker(marker, { identity: activeLink.identity });
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		const rawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
+		checkManageObject(activeLink.permissions, rawMarker.typeId, false);
+		await this.database.markers._deleteMarker(rawMarker, { identity: activeLink.identity });
 	}
 
-	async* _getMapLines<IncludeTrackPoints extends boolean = false>(mapData: MapData, options?: { bbox?: BboxWithExcept; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): AsyncIterable<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>> {
-		for await (const line of options?.typeId ? this.database.lines.getMapLinesByType(mapData.id, options.typeId) : this.database.lines.getMapLines(mapData.id)) {
-			const stripped = stripLine(mapData.activeLink, line, false);
+	async* _getMapLines<IncludeTrackPoints extends boolean = false>(activeLink: RawActiveMapLink, options?: {
+		bbox?: BboxWithExcept;
+		includeTrackPoints?: IncludeTrackPoints;
+		typeId?: ID;
+	}): AsyncIterable<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>> {
+		for await (const line of options?.typeId ? this.database.lines.getMapLinesByType(activeLink.mapId, options.typeId) : this.database.lines.getMapLines(activeLink.mapId)) {
+			const stripped = stripLine(activeLink, line, false);
 			if (stripped) {
 				if (options?.includeTrackPoints) {
 					const trackPoints = await iterableToArray(this.database.lines.getLinePointsForLine(line.id, options?.bbox));
@@ -341,17 +345,17 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		}
 	}
 
-	_getMapLinePoints(mapData: MapData, options?: { bbox?: BboxWithZoom }): AsyncIterable<Stripped<LinePoints>> {
-		return flatMapAsyncIterable(this.database.lines.getLinePointsForMap(mapData.id, options?.bbox), async (linePoints) => {
-			const result = stripLinePoints(mapData.activeLink, linePoints, false);
+	_getMapLinePoints(activeLink: RawActiveMapLink, options?: { bbox?: BboxWithZoom }): AsyncIterable<Stripped<LinePoints>> {
+		return flatMapAsyncIterable(this.database.lines.getLinePointsForMap(activeLink.mapId, options?.bbox), async (linePoints) => {
+			const result = stripLinePoints(activeLink, linePoints, false);
 			return result ? [result] : [];
 		});
 	}
 
 	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>>> {
-		const { mapData } = await this.resolveMapSlug(mapSlug);
+		const { activeLink } = await this.resolveMapSlug(mapSlug);
 		return {
-			results: this._getMapLines(mapData, options)
+			results: this._getMapLines(activeLink, options)
 		};
 	}
 
@@ -385,22 +389,22 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	async updateLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Stripped<Line>> {
-		const { activeLink } = await this.resolveMapSlug(mapSlug);
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 
-		const originalLine = await this.getLine(activeLink, lineId);
+		const originalRawLine = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 
-		checkUpdateObject(activeLink.permissions, originalLine.typeId, false);
-		if (data.typeId != null && data.typeId !== originalLine.typeId) {
+		checkUpdateObject(activeLink.permissions, originalRawLine.typeId, false);
+		if (data.typeId != null && data.typeId !== originalRawLine.typeId) {
 			checkUpdateObject(activeLink.permissions, data.typeId, false);
 		}
 
-		const newType = await this.getType(activeLink, data.typeId ?? originalLine.typeId);
+		const newType = await this.getType(activeLink, data.typeId ?? originalRawLine.typeId);
 
 		const update = {
 			...data,
 			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, false) } : {}
 		};
-		const result = await this.database.lines._updateLine(originalLine, update, newType, {
+		const result = await this.database.lines._updateLine(originalRawLine, update, newType, {
 			trackPointsFromRoute,
 			identity: activeLink.identity
 		});
@@ -408,10 +412,10 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	}
 
 	async deleteLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<void> {
-		const { activeLink } = await this.resolveMapSlug(mapSlug);
-		const line = await this.getLine(activeLink, lineId);
-		checkManageObject(activeLink.permissions, line.typeId, false);
-		await this.database.lines._deleteLine(line, { identity: activeLink.identity });
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		const rawLine = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
+		checkManageObject(activeLink.permissions, rawLine.typeId, false);
+		await this.database.lines._deleteLine(rawLine, { identity: activeLink.identity });
 	}
 
 	async exportLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
@@ -461,17 +465,17 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return getLineTemplate(type);
 	}
 
-	_getMapTypes(mapData: MapData): AsyncIterable<Stripped<Type>> {
-		return flatMapAsyncIterable(this.database.types.getTypes(mapData.id), (type) => {
-			const result = stripType(mapData.activeLink, type);
+	_getMapTypes(activeLink: RawActiveMapLink): AsyncIterable<Stripped<Type>> {
+		return flatMapAsyncIterable(this.database.types.getTypes(activeLink.mapId), (type) => {
+			const result = stripType(activeLink, type);
 			return result ? [result] : [];
 		});
 	}
 
 	async getMapTypes(mapSlug: AnyMapSlug | RawActiveMapLink): Promise<StreamedResults<Stripped<Type>>> {
-		const { mapData } = await this.resolveMapSlug(mapSlug);
+		const { activeLink } = await this.resolveMapSlug(mapSlug);
 		return {
-			results: this._getMapTypes(mapData)
+			results: this._getMapTypes(activeLink)
 		};
 	}
 
@@ -512,17 +516,17 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		});
 	}
 
-	_getMapViews(mapData: MapData): AsyncIterable<Stripped<View>> {
-		return flatMapAsyncIterable(this.database.views.getViews(mapData.id), (view) => {
-			const result = stripView(mapData.activeLink, view);
+	_getMapViews(activeLink: RawActiveMapLink): AsyncIterable<Stripped<View>> {
+		return flatMapAsyncIterable(this.database.views.getViews(activeLink.mapId), (view) => {
+			const result = stripView(activeLink, view);
 			return result ? [result] : [];
 		});
 	}
 
 	async getMapViews(mapSlug: AnyMapSlug | RawActiveMapLink): Promise<StreamedResults<Stripped<View>>> {
-		const { mapData } = await this.resolveMapSlug(mapSlug);
+		const { activeLink } = await this.resolveMapSlug(mapSlug);
 		return {
-			results: this._getMapViews(mapData)
+			results: this._getMapViews(activeLink)
 		};
 	}
 

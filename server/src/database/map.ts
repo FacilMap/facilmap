@@ -101,7 +101,7 @@ export default class DatabaseMaps {
 
 	async updateMapData(
 		mapId: ID,
-		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>,
+		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.CREATE_VALIDATED | CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>,
 		options: { identity: Buffer | undefined }
 	): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
@@ -114,7 +114,7 @@ export default class DatabaseMaps {
 
 		if (data.links) {
 			const changedSlugs = data.links.flatMap((link) => {
-				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
+				const oldLink = "id" in link && link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
 				return oldLink && oldLink.slug === link.slug ? [] : [link.slug];
 			});
 			if (changedSlugs.length > 0) {
@@ -124,7 +124,8 @@ export default class DatabaseMaps {
 				}
 			}
 
-			update.links = await Promise.all(data.links.map(async (link) => {
+			update.links = await Promise.all(data.links.map(async (link_) => {
+				const link = { id: undefined, ...link_ }; // To allow TypeScript access to link.id
 				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
 				const password = typeof link.password === "undefined" && oldLink ? oldLink.password : typeof link.password === "object" ? link.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
 

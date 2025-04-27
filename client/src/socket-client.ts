@@ -377,8 +377,8 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("findOnMap", mapSlug, query);
 	}
 
-	async getMapToken(mapSlug: AnyMapSlug, permissions: MapPermissions): Promise<{ token: string }> {
-		return await this._call("getMapToken", mapSlug, permissions);
+	async getMapToken(mapSlug: AnyMapSlug, options: { permissions: MapPermissions; noPassword?: boolean }): Promise<{ token: string }> {
+		return await this._call("getMapToken", mapSlug, options);
 	}
 
 	async getHistory(mapSlug: AnyMapSlug, data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {

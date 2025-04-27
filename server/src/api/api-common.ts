@@ -53,7 +53,7 @@ export function getRequestMapSlug(req: Request<{ mapSlug: string }>): AnyMapSlug
 	if (auth) {
 		const m = auth.match(/^Basic (.*)$/);
 		if (m) {
-			const decoded = atob(m[1]).split(":", 2);
+			const decoded = Buffer.from(m[1], "base64").toString().split(":", 2);
 			if (decoded.length >= 2) {
 				password = decoded[1];
 			}
