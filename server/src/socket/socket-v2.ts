@@ -1,11 +1,18 @@
-import { SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs, legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent, currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug, type BboxWithZoom, LegacyV2Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem, type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2MapDataToCurrent, legacyV2RouteRequestToCurrent, type ID, type Type } from "facilmap-types";
+import {
+	SocketVersion, type SocketEvents, type MultipleEvents, type FindOnMapResult, type SocketServerToClientEmitArgs,
+	legacyV2MarkerToCurrent, currentMarkerToLegacyV2, currentTypeToLegacyV2, legacyV2TypeToCurrent,
+	currentLineToLegacyV2, currentViewToLegacyV2, currentHistoryEntryToLegacyV2, type StreamId, type MapSlug,
+	type BboxWithZoom, LegacyV2Writable, type Route, type AllMapObjectsPick, type AllMapObjectsItem,
+	type StreamToStreamId, type SetBboxItem, currentMapDataToLegacyV2, legacyV2RouteRequestToCurrent,
+	type ID, type Type, getMainAdminLink, legacyV2LineToCurrent, legacyV2MapDataToCurrent
+} from "facilmap-types";
 import { type SocketConnection, type SocketHandlers } from "./socket-common";
 import { SocketConnectionV3 } from "./socket-v3";
 import type Database from "../database/database";
 import { pick } from "lodash-es";
 import { streamToIterable, streamToString } from "../utils/streams";
 import { getI18n } from "../i18n";
-import { getLineTemplate, getMapSlug, parseUrlQuery } from "facilmap-utils";
+import { getLineTemplate, parseUrlQuery } from "facilmap-utils";
 import { deserializeError } from "serialize-error";
 
 function prepareMapResultOutput(result: FindOnMapResult, type: Type, readId: MapSlug) {
@@ -93,9 +100,10 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 			return [[args[0], currentHistoryEntryToLegacyV2(args[2], this.readId!, (typeId) => this.types[typeId])]];
 		} else if (args[0] === "mapData") {
-			this.mapSlug = getMapSlug(args[2]);
-			this.readId = args[2].readId;
-			return [["padData", currentMapDataToLegacyV2(args[2])]];
+			this.mapSlug = args[2].activeLink.slug;
+			const padData = currentMapDataToLegacyV2(args[2]);
+			this.readId = padData.id;
+			return [["padData", padData]];
 		} else if (args[0] === "deleteMap") {
 			return [["deletePad"]];
 		} else if (args[0] === "linePoints") {
@@ -200,11 +208,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			getPad: async (data) => {
 				try {
 					const mapData = await socketHandlersV3.getMap(data.padId);
-					return {
-						id: mapData.readId,
-						name: mapData.name,
-						description: mapData.description
-					};
+					const padData = currentMapDataToLegacyV2(mapData);
+					return pick(padData, ["id", "name", "description"]);
 				} catch (err: any) {
 					if (err.status === 404) {
 						return null;
@@ -218,7 +223,11 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				const result = await socketHandlersV3.findMaps(query, paging);
 				return {
 					...result,
-					results: result.results.map((r) => currentMapDataToLegacyV2(r))
+					results: result.results.map((r) => ({
+						id: r.slug,
+						name: r.name,
+						description: r.description
+					}))
 				};
 			},
 
@@ -227,15 +236,13 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.map-already-loaded-error"));
 				}
 
+				const create = legacyV2MapDataToCurrent(data);
 				const multiple = await this.interceptEvents(["padData", "marker", "line", "linePoints", "type", "view"], async () => {
-					await socketHandlersV3.createMapAndSubscribe(legacyV2MapDataToCurrent(data));
+					await socketHandlersV3.createMapAndSubscribe(create);
 				});
 
-				console.log(multiple);
-
 				const mapData = multiple.padData![0];
-				this.mapSlug = getMapSlug(legacyV2MapDataToCurrent(mapData));
-				console.log("mapSlug", this.mapSlug, mapData, legacyV2MapDataToCurrent(mapData));
+				this.mapSlug = getMainAdminLink(create.links).slug;
 				this.readId = mapData.id;
 				this.writable = mapData.writable;
 
@@ -247,7 +254,9 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				return currentMapDataToLegacyV2(await socketHandlersV3.updateMap(this.mapSlug, legacyV2MapDataToCurrent(mapData)));
+				const currentMapData = await socketHandlersV3.getMap(this.mapSlug);
+				const update = legacyV2MapDataToCurrent(mapData, currentMapData.links);
+				return currentMapDataToLegacyV2(await socketHandlersV3.updateMap(this.mapSlug, update));
 			},
 
 			deletePad: async (data) => {
@@ -321,7 +330,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				const result = await socketHandlersV3.createLine(this.mapSlug, line);
+				const result = await socketHandlersV3.createLine(this.mapSlug, legacyV2LineToCurrent(line, this.types[line.typeId]));
 				return currentLineToLegacyV2(result, this.types[result.typeId], this.readId)
 			},
 
@@ -330,7 +339,8 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
 
-				const { id, ...data } = line;
+				const typeId = line.typeId ?? (await socketHandlersV3.getLine(this.mapSlug, line.id)).typeId;
+				const { id, ...data } = legacyV2LineToCurrent(line, this.types[typeId]);
 				const result = await socketHandlersV3.updateLine(this.mapSlug, id, data);
 				return currentLineToLegacyV2(result, this.types[result.typeId], this.readId);
 			},

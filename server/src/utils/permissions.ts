@@ -1,4 +1,4 @@
-import { entries, isMapToken, markStripped, type ActiveMapLink, type FindOnMapResult, type GenericHistoryEntry, type HistoryEntry, type HistoryEntryObjectTypes, type HistoryEntryType, type ID, type Line, type LinePoints, type MapData, type MapLink, type MapSlug, type Marker, type ReplaceProperties, type Stripped, type Type, type View } from "facilmap-types";
+import { entries, isMapToken, markStripped, type ActiveMapLink, type DistributiveOmit, type FindOnMapResult, type GenericHistoryEntry, type HistoryEntry, type HistoryEntryObjectTypes, type HistoryEntryType, type ID, type Line, type LinePoints, type MapData, type MapLink, type MapSlug, type Marker, type ReplaceProperties, type Stripped, type Type, type View } from "facilmap-types";
 import { isEqual, omit, pick } from "lodash-es";
 import { canAdministrateMap, canReadField, canReadObject, canUpdateField, checkReadObject, hasPermission, mergeMapPermissions, type Optional } from "facilmap-utils";
 import { getIdentityHash, getMapIdFromMapTokenUnverified, getPasswordHash, getPasswordHashHash, getSlugHash, verifyMapToken } from "./crypt";
@@ -39,6 +39,8 @@ export type RawHistoryEntry = GenericHistoryEntry<RawHistoryEntryObjectTypes> & 
 	identity: Buffer | null;
 };
 export type RawHistoryEntryObject<T extends HistoryEntryType> = RawHistoryEntryObjectTypes[T];
+
+export type RawFindOnMapResult = DistributiveOmit<FindOnMapResult, "own"> & { identity: Buffer | null };
 
 function stripOrUndefined<T>(strip: () => T): T | undefined {
 	let result;
@@ -170,9 +172,12 @@ export function stripDataUpdate(link: RawActiveMapLink | Optional<MapLink, "id">
 	return Object.fromEntries(entries(data).filter(([fieldId, value]) => canUpdateField(link.permissions, typeId, fieldId, isOwn)));
 }
 
-export function stripMapResult(link: RawActiveMapLink | Optional<MapLink, "id">, result: FindOnMapResult, isOwn: boolean): Stripped<FindOnMapResult> | undefined {
+export function stripMapResult(link: RawActiveMapLink | Optional<MapLink, "id">, result: RawFindOnMapResult, isOwn: boolean): Stripped<FindOnMapResult> | undefined {
 	if (canReadObject(link.permissions, result.typeId, isOwn)) {
-		return markStripped(result);
+		return markStripped({
+			...omit(result, ["identity"]),
+			own: isOwn
+		});
 	} else {
 		return undefined;
 	}
@@ -301,4 +306,8 @@ export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identi
 		...activeLink,
 		identity
 	};
+}
+
+export function isOwn(link: RawActiveMapLink, object: { identity: Buffer | null }): boolean {
+	return link.identity != null && object.identity != null && link.identity.equals(object.identity);
 }

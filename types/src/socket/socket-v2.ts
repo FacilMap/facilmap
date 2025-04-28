@@ -1,6 +1,6 @@
 import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, pointValidator, routeModeValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
-import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields, type Type, dataByFieldIdToDataByName } from "../type.js";
+import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields, type Type, dataByFieldIdToDataByName, dataByNameToDataByFieldId } from "../type.js";
 import type { EventName } from "../events.js";
 import { nullOrUndefinedValidator, renameProperty, type RenameProperty, type ReplaceProperty } from "./socket-common.js";
 import { socketV3RequestValidators, type SocketApiV3 } from "./socket-v3.js";
@@ -11,7 +11,7 @@ import { omit, pick } from "lodash-es";
 import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
 import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
-import { mapDataValidator, type MapData } from "../mapData.js";
+import { getMainAdminLink, mapDataValidator, type ActiveMapLink, type MapLink } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
 import { routeParametersValidator, type Route, type RouteInfo, type RouteRequest } from "../route.js";
 import type { DistributiveKeyOf, DistributiveOmit, ReplaceExistingProperties } from "../utility.js";
@@ -109,9 +109,9 @@ export enum LegacyV2Writable { READ = 0, WRITE = 1, ADMIN = 2 };
 export type LegacyV2MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof legacyV2MapDataValidator>;
 export type LegacyV2FindMapsResult = Pick<LegacyV2MapData, "id" | "name" | "description">;
 export type LegacyV2MapDataWithWritable = (
-	| ({ writable: LegacyV2Writable.ADMIN } & MapData)
-	| ({ writable: LegacyV2Writable.WRITE } & Omit<MapData, "adminId"> )
-	| ({ writable: LegacyV2Writable.READ } & Omit<MapData, "adminId" | "writeId"> )
+	| ({ writable: LegacyV2Writable.ADMIN } & LegacyV2MapData)
+	| ({ writable: LegacyV2Writable.WRITE } & Omit<LegacyV2MapData, "adminId"> )
+	| ({ writable: LegacyV2Writable.READ } & Omit<LegacyV2MapData, "adminId" | "writeId"> )
 );
 
 export type LegacyV2FindOnMapMarker = RenameProperty<FindOnMapMarker, "icon", "symbol", false>;
@@ -301,41 +301,122 @@ function mapIdToLegacyV2<T extends Record<keyof any, any>, KeepOld extends boole
 	}
 }
 
-export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapData: M): RenameProperty<M, "id", "readId"> {
-	return renameProperty(mapData, "id", "readId");
+export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapData: M): (
+	Omit<M, "id" | "writeId" | "adminId" | "searchEngines"> &
+	(Extract<keyof M, "readId" | "writeId" | "adminId"> extends "readId" | "writeId" | "adminId" ? { links: Array<MapLink<CRU.CREATE>> } : {})
+);
+export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapData: M, currentMapLinks: MapLink[]): (
+	Omit<M, "id" | "writeId" | "adminId" | "searchEngines"> &
+	(Extract<keyof M, "readId" | "writeId" | "adminId"> extends "readId" | "writeId" | "adminId" ? { links: Array<MapLink<CRU.UPDATE>> } : {})
+);
+export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapData: M, currentMapLinks?: MapLink[]): (
+	Omit<M, "id" | "writeId" | "adminId" | "searchEngines"> &
+	(Extract<keyof M, "readId" | "writeId" | "adminId"> extends "readId" | "writeId" | "adminId" ? { links: Array<MapLink<CRU.CREATE | CRU.UPDATE>> } : {})
+) {
+	let links: Array<MapLink<CRU.CREATE | CRU.UPDATE>>;
+	if (currentMapLinks) {
+		links = currentMapLinks.map((l) => omit(l, ["password"]));
+		const readLink = links.find((l) => !l.permissions.admin && !l.permissions.settings && !l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0);
+		const writeLink = links.find((l) => !l.permissions.admin && !l.permissions.settings && l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0);
+		const adminLink = links.find((l) => l.permissions.admin && Object.keys(l.permissions.types ?? {}).length === 0);
+		if (links.length !== 3 || !readLink || !writeLink || !adminLink) {
+			throw new Error("The map link configuration of this map is not compatible with API v1/v2.");
+		}
+		readLink.slug = mapData.id;
+		writeLink.slug = mapData.writeId;
+		adminLink.slug = mapData.adminId;
+		if (mapData.searchEngines != null) {
+			readLink.searchEngines = mapData.searchEngines;
+		}
+	} else {
+		links = [
+			{ slug: mapData.adminId, password: false, permissions: { admin: true, settings: true, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.writeId, password: false, permissions: { admin: false, settings: false, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.id, password: false, permissions: { admin: false, settings: false, update: false, read: true }, searchEngines: mapData.searchEngines ?? false }
+		];
+	}
+	return {
+		...omit(mapData, ["id", "writeId", "adminId", "searchEngines"]),
+		...links ? { links } : {}
+	} as any;
 }
 
-export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapData: M): ReplaceExistingProperties<RenameProperty<M extends { id: any } ? Omit<M, "id"> : M, "readId", "id">, { defaultView: LegacyV2View | null }> {
+export function currentMapDataToLegacyV2<M extends Record<keyof any, any>>(mapData: M): ReplaceExistingProperties<
+	Omit<M, "id" | "links"> & (
+		M extends { links: MapLink[] } ? Pick<LegacyV2MapData, "id" | "writeId" | "adminId" | "searchEngines"> : {}
+	) & (
+		M extends { activeLink: ActiveMapLink } ? { writable: LegacyV2Writable } : {}
+	), {
+		defaultView: LegacyV2View | null
+	}
+> {
+	const links = mapData.links as MapLink[] | undefined;
+	const activeLink = mapData.activeLink as ActiveMapLink | undefined;
+	const legacyLinks = links && {
+		read: (
+			links.find((l) => !l.permissions.admin && !l.permissions.settings && !l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0)
+			?? links.find((l) => !l.permissions.admin && !l.permissions.settings && !l.permissions.update)
+			?? links.find((l) => !l.permissions.admin && !l.permissions.settings)
+			?? links.find((l) => !l.permissions.admin)
+			?? links[0]
+		),
+		write: (
+			links.find((l) => !l.permissions.admin && !l.permissions.settings && l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0)
+			?? links.find((l) => !l.permissions.admin && !l.permissions.settings && l.permissions.update)
+			?? links.find((l) => !l.permissions.admin && !l.permissions.settings)
+			?? links.find((l) => !l.permissions.admin)
+			?? links[0]
+		),
+		admin: getMainAdminLink(links)
+	};
+
 	return {
-		...renameProperty(omit(mapData, ["id"]), "readId", "id"),
+		...omit(mapData, ["id", "links"]),
+		...legacyLinks ? {
+			id: legacyLinks.read.slug,
+			writeId: legacyLinks.write.slug,
+			adminId: legacyLinks.admin.slug,
+			searchEngines: legacyLinks.read.searchEngines
+		} : {},
+		...activeLink ? {
+			writable: activeLink.permissions.admin ? LegacyV2Writable.ADMIN : activeLink.permissions.update ? LegacyV2Writable.WRITE : LegacyV2Writable.READ
+		} : {},
 		..."defaultView" in mapData ? {
 			defaultView: mapData.defaultView && currentViewToLegacyV2(mapData.defaultView, mapData.readId)
 		} : {}
 	} as any;
 }
 
-export function currentDataToLegacyV2(data: Record<string, string>, type: Type, keepOld = false): Record<string, string> {
+export function currentDataToLegacyV2(data: Record<ID, string>, type: Type, keepOld = false): Record<string, string> {
 	const oldData = dataByFieldIdToDataByName(data, type);
 	return keepOld ? Object.assign(oldData, data) : oldData;
 }
 
-export function legacyV2DataToCurrent(data: Record<string, string>, type: Type, keepOld = false): Record<string, string> {
-	const newData = dataByFieldIdToDataByName(data, type);
-	return keepOld ? Object.assign(newData, data) : newData;
+export function legacyV2DataToCurrent<KeepOld extends boolean = false>(data: Record<string, string>, type: Type, keepOld: KeepOld = false as KeepOld): Record<ID | (KeepOld extends true ? string : never), string> {
+	const newData = dataByNameToDataByFieldId(data, type);
+	return keepOld ? Object.assign(newData, data) : newData as any;
 }
 
-export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
+export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, keepOld?: KeepOld): ReplaceExistingProperties<RenameProperty<M, "symbol", "icon", KeepOld>, { data: Record<ID | (KeepOld extends true ? string : never), string> }> {
 	const result = renameProperty(marker, "symbol", "icon", keepOld);
 	if (type && "data" in result) {
 		result.data = legacyV2DataToCurrent(result.data, type, keepOld);
 	}
-	return result;
+	return result as any;
 }
 
-export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, readId: MapSlug, keepOld?: KeepOld): MapIdToLegacyV2<RenameProperty<M, "icon", "symbol", KeepOld>, KeepOld> {
+export function currentMarkerToLegacyV2<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, readId: MapSlug, keepOld?: KeepOld): ReplaceExistingProperties<MapIdToLegacyV2<RenameProperty<M, "icon", "symbol", KeepOld>, KeepOld>, { data: Record<string, string> }> {
 	const result = mapIdToLegacyV2(renameProperty(marker, "icon", "symbol", keepOld), readId, keepOld);
 	if (type && "data" in result) {
 		result.data = currentDataToLegacyV2(result.data, type, keepOld);
+	}
+	return result as any;
+}
+
+export function legacyV2LineToCurrent<L extends Record<keyof any, any>, KeepOld extends boolean = false>(line: L, type: Type | undefined, keepOld?: KeepOld): ReplaceExistingProperties<L, { data: Record<ID | (KeepOld extends true ? string : never), string> }> {
+	const result = { ...line } as any;
+	if (type && "data" in result) {
+		result.data = legacyV2DataToCurrent(result.data, type, keepOld);
 	}
 	return result;
 }

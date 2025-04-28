@@ -71,7 +71,7 @@ export default class DatabaseLines {
 				objectId: createdLine.id,
 				objectAfter: createdLine
 			}),
-			this.setLinePoints(mapId, createdLine.id, createdLine.typeId, trackPoints)
+			this.setLinePoints(mapId, createdLine, trackPoints)
 		]);
 
 		return createdLine;
@@ -127,7 +127,7 @@ export default class DatabaseLines {
 			this.db.emit("line", mapId, newLine);
 
 			if (routeInfo) {
-				await this.setLinePoints(mapId, lineId, newType.id, routeInfo.trackPoints);
+				await this.setLinePoints(mapId, newLine, routeInfo.trackPoints);
 			}
 
 			return newLine;
@@ -136,17 +136,17 @@ export default class DatabaseLines {
 		}
 	}
 
-	protected async setLinePoints(mapId: ID, lineId: ID, typeId: ID, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
+	protected async setLinePoints(mapId: ID, line: RawLine, trackPoints: Point[] | AsyncIterable<Point>, _noEvent?: boolean): Promise<void> {
 		let first = true;
-		await this.backend.setLinePoints(mapId, lineId, trackPoints, (batch) => {
+		await this.backend.setLinePoints(mapId, line.id, trackPoints, (batch) => {
 			if (!_noEvent) {
-				this.db.emit("linePoints", mapId, { lineId, typeId, trackPoints: batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), reset: first });
+				this.db.emit("linePoints", mapId, { line, trackPoints: batch.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint), reset: first });
 			}
 			first = false;
 		});
 
 		if(first && !_noEvent) {
-			this.db.emit("linePoints", mapId, { lineId, typeId, trackPoints: [], reset: true });
+			this.db.emit("linePoints", mapId, { line, trackPoints: [], reset: true });
 		}
 	}
 
@@ -160,9 +160,9 @@ export default class DatabaseLines {
 	}
 
 	async _deleteLine(line: RawLine, options: { identity: Buffer | undefined }): Promise<void> {
-		await this.setLinePoints(line.mapId, line.id, line.typeId, [ ], true);
+		await this.setLinePoints(line.mapId, line, [ ], true);
 		await this.backend.deleteLine(line.mapId, line.id);
-		this.db.emit("deleteLine", line.mapId, { id: line.id, typeId: line.typeId });
+		this.db.emit("deleteLine", line.mapId, line);
 		await this.db.history.addHistoryEntry(line.mapId, {
 			type: "Line",
 			action: "delete",
@@ -173,6 +173,10 @@ export default class DatabaseLines {
 	}
 
 	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { typeId: ID }> {
+		for await (const line of this.getMapLines(mapId)) {
+
+		}
+
 		for await (const chunk of this.backend.getLinePointsForMap(mapId, bboxWithZoom)) {
 			const typeIds = await this.backend.getTypeIdsForLines(mapId, chunk.map((c) => c.lineId));
 			for (const [key, val] of entries(groupBy(chunk, "lineId"))) {

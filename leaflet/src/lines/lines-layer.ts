@@ -227,7 +227,8 @@ export default class LinesLayer extends FeatureGroup {
 				...lineTemplate,
 				routePoints: [],
 				trackPoints: [],
-				extraInfo: {}
+				extraInfo: {},
+				own: true
 			};
 			line.trackPoints = line.routePoints;
 

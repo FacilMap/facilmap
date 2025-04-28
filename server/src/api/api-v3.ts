@@ -23,7 +23,7 @@ import { flatMapAsyncIterable, iterableToArray, mapAsyncIterable, writableToWeb 
 import { arrayStream, stringifyJsonStream, objectStream, type SerializableJsonValue } from "json-stream-es";
 import { exportLineToGeoJson } from "../export/geojson";
 import { createMapToken, getPasswordHashHash, getSlugHash } from "../utils/crypt";
-import { resolveMapLinkAsync, stripDataUpdate, stripHistoryEntry, stripLine, stripLineOrThrow, stripLinePoints, stripMapData, stripMapResult, stripMarker, stripMarkerOrThrow, stripType, stripTypeOrThrow, stripView, stripViewOrThrow, type RawMapData, type RawActiveMapLink } from "../utils/permissions";
+import { resolveMapLinkAsync, stripDataUpdate, stripHistoryEntry, stripLine, stripLineOrThrow, stripLinePoints, stripMapData, stripMapResult, stripMarker, stripMarkerOrThrow, stripType, stripTypeOrThrow, stripView, stripViewOrThrow, type RawMapData, type RawActiveMapLink, isOwn } from "../utils/permissions";
 import { omit } from "lodash-es";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
@@ -174,7 +174,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const results = await this.database.search.search(mapData.id, query);
 		return results.flatMap((result) => {
-			const stripped = stripMapResult(activeLink, result, false);
+			const stripped = stripMapResult(activeLink, result, isOwn(activeLink, result));
 			return stripped ? [stripped] : [];
 		});
 	}
@@ -208,7 +208,10 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 		const entry = await this.database.history.getHistoryEntry(mapData.id, historyEntryId, { notFound404: true });
 
-		checkRevertHistoryEntry(activeLink.permissions, entry as HistoryEntry, false);
+		checkRevertHistoryEntry(activeLink.permissions, entry as HistoryEntry, (
+			(!entry.objectBefore || ("identity" in entry.objectBefore && isOwn(activeLink, entry.objectBefore))) &&
+			(!entry.objectAfter || ("identity" in entry.objectAfter && isOwn(activeLink, entry.objectAfter)))
+		));
 
 		if(entry.type == "Map") {
 			if (!entry.objectBefore) {
@@ -269,8 +272,8 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			options?.typeId ? this.database.markers.getMapMarkersByType(activeLink.mapId, options.typeId, options?.bbox) :
 			this.database.markers.getMapMarkers(activeLink.mapId, options?.bbox)
 		);
-		return flatMapAsyncIterable(results, (unstrippedMarker) => {
-			const stripped = stripMarker(activeLink, unstrippedMarker, false);
+		return flatMapAsyncIterable(results, (rawMarker) => {
+			const stripped = stripMarker(activeLink, rawMarker, isOwn(activeLink, rawMarker));
 			return stripped ? [stripped] : [];
 		});
 	}
@@ -285,19 +288,19 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async getMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID): Promise<Stripped<Marker>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		const unstrippedMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
-		return stripMarkerOrThrow(activeLink, unstrippedMarker, false);
+		const rawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
+		return stripMarkerOrThrow(activeLink, rawMarker, isOwn(activeLink, rawMarker));
 	}
 
 	async createMarker(mapSlug: AnyMapSlug | RawActiveMapLink, data: Marker<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID }): Promise<Stripped<Marker>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkUpdateObject(activeLink.permissions, data.typeId, false);
+		checkUpdateObject(activeLink.permissions, data.typeId, !!activeLink.identity);
 		const create = {
 			...data,
-			data: stripDataUpdate(activeLink, data.typeId, data.data, false)
+			data: stripDataUpdate(activeLink, data.typeId, data.data, !!activeLink.identity)
 		};
 		const result = await this.database.markers.createMarker(mapData.id, create, { identity: activeLink.identity, ...internalOptions });
-		return stripMarkerOrThrow(activeLink, result, false);
+		return stripMarkerOrThrow(activeLink, result, isOwn(activeLink, result));
 	}
 
 	async updateMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>): Promise<Stripped<Marker>> {
@@ -305,25 +308,25 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 		const originalRawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
 
-		checkUpdateObject(activeLink.permissions, originalRawMarker.typeId, false);
+		checkUpdateObject(activeLink.permissions, originalRawMarker.typeId, isOwn(activeLink, originalRawMarker));
 		if (data.typeId != null && data.typeId !== originalRawMarker.typeId) {
-			checkUpdateObject(activeLink.permissions, data.typeId, false);
+			checkUpdateObject(activeLink.permissions, data.typeId, isOwn(activeLink, originalRawMarker));
 		}
 
 		const newType = await this.getType(activeLink, data.typeId ?? originalRawMarker.typeId);
 
 		const update = {
 			...data,
-			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, false) } : {}
+			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, isOwn(activeLink, originalRawMarker)) } : {}
 		};
 		const result = await this.database.markers._updateMarker(originalRawMarker, update, newType, { identity: activeLink.identity });
-		return stripMarkerOrThrow(activeLink, result, false);
+		return stripMarkerOrThrow(activeLink, result, isOwn(activeLink, result));
 	}
 
 	async deleteMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID): Promise<void> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const rawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
-		checkManageObject(activeLink.permissions, rawMarker.typeId, false);
+		checkManageObject(activeLink.permissions, rawMarker.typeId, isOwn(activeLink, rawMarker));
 		await this.database.markers._deleteMarker(rawMarker, { identity: activeLink.identity });
 	}
 
@@ -333,7 +336,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		typeId?: ID;
 	}): AsyncIterable<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>> {
 		for await (const line of options?.typeId ? this.database.lines.getMapLinesByType(activeLink.mapId, options.typeId) : this.database.lines.getMapLines(activeLink.mapId)) {
-			const stripped = stripLine(activeLink, line, false);
+			const stripped = stripLine(activeLink, line, isOwn(activeLink, line));
 			if (stripped) {
 				if (options?.includeTrackPoints) {
 					const trackPoints = await iterableToArray(this.database.lines.getLinePointsForLine(line.id, options?.bbox));
@@ -347,7 +350,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	_getMapLinePoints(activeLink: RawActiveMapLink, options?: { bbox?: BboxWithZoom }): AsyncIterable<Stripped<LinePoints>> {
 		return flatMapAsyncIterable(this.database.lines.getLinePointsForMap(activeLink.mapId, options?.bbox), async (linePoints) => {
-			const result = stripLinePoints(activeLink, linePoints, false);
+			const result = stripLinePoints(activeLink, linePoints, isOwn(activeLink, linePoints.line));
 			return result ? [result] : [];
 		});
 	}
@@ -362,13 +365,13 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	async getLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<Stripped<Line>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const line = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
-		return stripLineOrThrow(activeLink, line, false);
+		return stripLineOrThrow(activeLink, line, isOwn(activeLink, line));
 	}
 
 	async getLinePoints(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { bbox?: BboxWithZoom }): Promise<StreamedResults<TrackPoint>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const line = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
-		checkReadObject(activeLink.permissions, line.typeId, false);
+		checkReadObject(activeLink.permissions, line.typeId, isOwn(activeLink, line));
 		return {
 			results: this.database.lines.getLinePointsForLine(line.id, options?.bbox)
 		};
@@ -376,16 +379,16 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async createLine(mapSlug: AnyMapSlug | RawActiveMapLink, data: Line<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> } }): Promise<Stripped<Line>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkUpdateObject(activeLink.permissions, data.typeId, false);
+		checkUpdateObject(activeLink.permissions, data.typeId, activeLink.identity != null);
 		const create = {
 			...data,
-			data: stripDataUpdate(activeLink, data.typeId, data.data, false)
+			data: stripDataUpdate(activeLink, data.typeId, data.data, activeLink.identity != null)
 		};
 		const result = await this.database.lines.createLine(mapData.id, create, {
 			...internalOptions,
 			identity: activeLink.identity
 		});
-		return stripLineOrThrow(activeLink, result, false);
+		return stripLineOrThrow(activeLink, result, isOwn(activeLink, result));
 	}
 
 	async updateLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Stripped<Line>> {
@@ -393,28 +396,28 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 		const originalRawLine = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 
-		checkUpdateObject(activeLink.permissions, originalRawLine.typeId, false);
+		checkUpdateObject(activeLink.permissions, originalRawLine.typeId, isOwn(activeLink, originalRawLine));
 		if (data.typeId != null && data.typeId !== originalRawLine.typeId) {
-			checkUpdateObject(activeLink.permissions, data.typeId, false);
+			checkUpdateObject(activeLink.permissions, data.typeId, isOwn(activeLink, originalRawLine));
 		}
 
 		const newType = await this.getType(activeLink, data.typeId ?? originalRawLine.typeId);
 
 		const update = {
 			...data,
-			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, false) } : {}
+			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, isOwn(activeLink, originalRawLine)) } : {}
 		};
 		const result = await this.database.lines._updateLine(originalRawLine, update, newType, {
 			trackPointsFromRoute,
 			identity: activeLink.identity
 		});
-		return stripLineOrThrow(activeLink, result, false);
+		return stripLineOrThrow(activeLink, result, isOwn(activeLink, result));
 	}
 
 	async deleteLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<void> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const rawLine = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
-		checkManageObject(activeLink.permissions, rawLine.typeId, false);
+		checkManageObject(activeLink.permissions, rawLine.typeId, isOwn(activeLink, rawLine));
 		await this.database.lines._deleteLine(rawLine, { identity: activeLink.identity });
 	}
 
@@ -424,13 +427,13 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const lineP = this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 		lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
 
-		const [lineUnstripped, typeUnstripped] = await Promise.all([
+		const [rawLine, rawType] = await Promise.all([
 			lineP,
 			lineP.then((line) => this.database.types.getType(mapData.id, line.typeId))
 		]);
 
-		const line = stripLineOrThrow(activeLink, lineUnstripped, false);
-		const type = stripTypeOrThrow(activeLink, typeUnstripped);
+		const line = stripLineOrThrow(activeLink, rawLine, isOwn(activeLink, rawLine));
+		const type = stripTypeOrThrow(activeLink, rawType);
 
 		const filename = getSafeFilename(normalizeLineName(line.name));
 
@@ -460,8 +463,8 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async getLineTemplate(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID }): Promise<LineTemplate> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		const typeUnstripped = await this.database.types.getType(mapData.id, options.typeId, { notFound404: true });
-		const type = stripTypeOrThrow(activeLink, typeUnstripped);
+		const rawType = await this.database.types.getType(mapData.id, options.typeId, { notFound404: true });
+		const type = stripTypeOrThrow(activeLink, rawType);
 		return getLineTemplate(type);
 	}
 
@@ -481,29 +484,29 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async getType(mapSlug: AnyMapSlug | RawActiveMapLink, typeId: ID): Promise<Stripped<Type>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		const typeUnstripped = await this.database.types.getType(mapData.id, typeId, { notFound404: true });
-		return stripTypeOrThrow(activeLink, typeUnstripped);
+		const rawType = await this.database.types.getType(mapData.id, typeId, { notFound404: true });
+		return stripTypeOrThrow(activeLink, rawType);
 	}
 
 	async createType(mapSlug: AnyMapSlug | RawActiveMapLink, data: Type<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID }): Promise<Stripped<Type>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		checkConfigureMap(activeLink.permissions);
-		const typeUnstripped = await this.database.types.createType(mapData.id, data, {
+		const rawType = await this.database.types.createType(mapData.id, data, {
 			...internalOptions,
 			identity: activeLink.identity
 		});
-		return stripTypeOrThrow(activeLink, typeUnstripped);
+		return stripTypeOrThrow(activeLink, rawType);
 	}
 
 	async updateType(mapSlug: AnyMapSlug | RawActiveMapLink, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Stripped<Type>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		checkConfigureMap(activeLink.permissions);
 		checkManageObject(activeLink.permissions, typeId, false);
-		const typeUnstripped = await this.database.types.updateType(mapData.id, typeId, data, {
+		const rawType = await this.database.types.updateType(mapData.id, typeId, data, {
 			notFound404: true,
 			identity: activeLink.identity
 		});
-		return stripTypeOrThrow(activeLink, typeUnstripped);
+		return stripTypeOrThrow(activeLink, rawType);
 	}
 
 	async deleteType(mapSlug: AnyMapSlug | RawActiveMapLink, typeId: ID): Promise<void> {
@@ -532,28 +535,28 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async getView(mapSlug: AnyMapSlug | RawActiveMapLink, viewId: ID): Promise<Stripped<View>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		const viewUnstripped = await this.database.views.getView(mapData.id, viewId, { notFound404: true });
-		return stripViewOrThrow(activeLink, viewUnstripped);
+		const rawView = await this.database.views.getView(mapData.id, viewId, { notFound404: true });
+		return stripViewOrThrow(activeLink, rawView);
 	}
 
 	async createView(mapSlug: AnyMapSlug | RawActiveMapLink, data: View<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID }): Promise<Stripped<View>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		checkConfigureMap(activeLink.permissions);
-		const viewUnstripped = await this.database.views.createView(mapData.id, data, {
+		const rawView = await this.database.views.createView(mapData.id, data, {
 			...internalOptions,
 			identity: activeLink.identity
 		});
-		return stripViewOrThrow(activeLink, viewUnstripped);
+		return stripViewOrThrow(activeLink, rawView);
 	}
 
 	async updateView(mapSlug: AnyMapSlug | RawActiveMapLink, viewId: ID, data: View<CRU.UPDATE_VALIDATED>): Promise<Stripped<View>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		checkConfigureMap(activeLink.permissions);
-		const viewUnstripped = await this.database.views.updateView(mapData.id, viewId, data, {
+		const rawView = await this.database.views.updateView(mapData.id, viewId, data, {
 			notFound404: true,
 			identity: activeLink.identity
 		});
-		return stripViewOrThrow(activeLink, viewUnstripped);
+		return stripViewOrThrow(activeLink, rawView);
 	}
 
 	async deleteView(mapSlug: AnyMapSlug | RawActiveMapLink, viewId: ID): Promise<void> {

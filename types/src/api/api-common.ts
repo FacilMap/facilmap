@@ -25,8 +25,8 @@ export type StreamedResults<T> = {
 	results: AsyncIterable<T, void, undefined>;
 };
 
-export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon"> & { kind: "marker"; similarity: number };
-export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom"> & { kind: "line"; similarity: number };
+export type FindOnMapMarker = Pick<Marker, "id" | "name" | "typeId" | "lat" | "lon" | "icon" | "own"> & { kind: "marker"; similarity: number };
+export type FindOnMapLine = Pick<Line, "id" | "name" | "typeId" | "left" | "top" | "right" | "bottom" | "own"> & { kind: "line"; similarity: number };
 export type FindOnMapResult = FindOnMapMarker | FindOnMapLine;
 
 export type TrackPoints = {

@@ -12,7 +12,7 @@ import { ApiV3Backend } from "../api/api-v3.js";
 import { canReadObject, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
-import { resolveMapLink, stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawActiveMapLink } from "../utils/permissions.js";
+import { isOwn, resolveMapLink, stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawActiveMapLink } from "../utils/permissions.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -702,7 +702,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox && (isInBbox(marker, this.bbox) || (oldMarker && isInBbox(oldMarker, this.bbox)))) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								const stripped = stripMarker(sub.mapLink, marker, false);
+								const stripped = stripMarker(sub.mapLink, marker, isOwn(sub.mapLink, marker));
 								if (stripped) {
 									void this.emit("marker", sub.mapSlug, stripped);
 								}
@@ -715,7 +715,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+								if (canReadObject(sub.mapLink.permissions, data.typeId, isOwn(sub.mapLink, data))) {
 									void this.emit("deleteMarker", sub.mapSlug, markStripped({
 										id: data.id
 									}));
@@ -729,7 +729,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								const stripped = stripLine(sub.mapLink, line, false);
+								const stripped = stripLine(sub.mapLink, line, isOwn(sub.mapLink, line));
 								if (stripped) {
 									void this.emit("line", sub.mapSlug, stripped);
 								}
@@ -742,9 +742,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("linePoints")) {
-								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+								if (canReadObject(sub.mapLink.permissions, data.line.typeId, isOwn(sub.mapLink, data.line))) {
 									void this.emit("linePoints", sub.mapSlug, markStripped({
-										lineId: data.lineId,
+										lineId: data.line.id,
 										// Emit track points even if none are in the bbox so that client resets cached track points
 										trackPoints: prepareForBoundingBox(data.trackPoints, this.bbox),
 										reset: data.reset
@@ -759,7 +759,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								if (canReadObject(sub.mapLink.permissions, data.typeId, false)) {
+								if (canReadObject(sub.mapLink.permissions, data.typeId, isOwn(sub.mapLink, data))) {
 									void this.emit("deleteLine", sub.mapSlug, markStripped({
 										id: data.id
 									}));
