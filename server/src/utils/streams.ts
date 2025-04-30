@@ -3,7 +3,7 @@ import { type QueuingStrategy } from "stream/web";
 import Packer from "zip-stream";
 import bz2 from "unbzip2-stream";
 import zlib from "zlib";
-import { PipeableTransformStream } from "json-stream-es";
+import { iterableToStream, PipeableTransformStream, streamToIterable } from "json-stream-es";
 import { concatArrayBuffers } from "facilmap-utils";
 
 export { iterableToStream, PipeableTransformStream, streamToIterable, streamToArray, stringToStream, streamToString } from "json-stream-es";
@@ -46,6 +46,10 @@ export async function* concatAsyncIterables<T>(...iterables: Array<AsyncIterable
 	}
 }
 
+export function queueAsyncIterable<T>(iterable: AsyncIterable<T>, queueSize: number): AsyncIterable<T> {
+	return streamToIterable(iterableToStream(iterable).pipeThrough(new TransformStream({}, { highWaterMark: queueSize })));
+}
+
 export function streamPromiseToStream<T>(streamPromise: Promise<ReadableStream<T>>): ReadableStream<T> {
 	const transform = new TransformStream({
 		async start() {
@@ -56,24 +60,37 @@ export function streamPromiseToStream<T>(streamPromise: Promise<ReadableStream<T
 	return transform.readable;
 }
 
-export function mapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) => O): ReadableStream<O> {
-	return flatMapStream(stream, (it) => [mapper(it)]);
+export function mapStream<I, O>(
+	stream: ReadableStream<I>,
+	mapper: (it: I) => O,
+	writableStrategy?: QueuingStrategy<I>,
+	readableStrategy?: QueuingStrategy<O>
+): ReadableStream<O> {
+	return flatMapStream(stream, (it) => [mapper(it)], writableStrategy, readableStrategy);
 }
 
-export function filterStream<T>(stream: ReadableStream<T>, filter: (it: T) => boolean): ReadableStream<T> {
-	return flatMapStream(stream, (it) => filter(it) ? [it] : []);
+export function filterStream<T>(
+	stream: ReadableStream<T>,
+	filter: (it: T) => boolean,
+	writableStrategy?: QueuingStrategy<T>,
+	readableStrategy?: QueuingStrategy<T>
+): ReadableStream<T> {
+	return flatMapStream(stream, (it) => filter(it) ? [it] : [], writableStrategy, readableStrategy);
 }
 
-export function flatMapStream<T, O>(stream: ReadableStream<T>, mapper: (it: T) => O[]): ReadableStream<O> {
-	const transform = new TransformStream<T>({
+export function flatMapStream<I, O>(
+	stream: ReadableStream<I>,
+	mapper: (it: I) => O[],
+	writableStrategy?: QueuingStrategy<I>,
+	readableStrategy?: QueuingStrategy<O>
+): ReadableStream<O> {
+	return stream.pipeThrough(new TransformStream<I, O>({
 		async transform(chunk, controller) {
 			for (const result of mapper(chunk)) {
 				controller.enqueue(result);
 			}
 		}
-	});
-	void stream.pipeTo(transform.writable);
-	return transform.readable;
+	}, writableStrategy, readableStrategy));
 }
 
 /**
@@ -384,5 +401,14 @@ export class StringAggregationTransformStream extends AggregationTransformStream
 		readableStrategy?: QueuingStrategy<string>
 	) {
 		super((chunks) => chunks.join(""), writableStrategy, readableStrategy);
+	}
+}
+
+export class ChunkAggregationTransformStream<T> extends AggregationTransformStream<T, T[]> {
+	constructor(
+		writableStrategy?: QueuingStrategy<T>,
+		readableStrategy?: QueuingStrategy<T[]>
+	) {
+		super((chunks) => chunks, writableStrategy, readableStrategy);
 	}
 }

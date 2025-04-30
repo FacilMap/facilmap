@@ -43,6 +43,12 @@ export type LinePoints = {
 	trackPoints: TrackPoint[];
 }
 
+export type ExportResult = {
+	type: string;
+	filename: string;
+	data: ReadableStream<Uint8Array>;
+};
+
 export const allMapObjectsPickValidator = z.enum(["mapData", "types", "views", "markers", "lines", "linesWithTrackPoints", "linePoints"]);
 export type AllMapObjectsPick = z.infer<typeof allMapObjectsPickValidator>;
 

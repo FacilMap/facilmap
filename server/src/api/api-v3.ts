@@ -1,30 +1,30 @@
 import {
 	ApiVersion, CRU, DEFAULT_PAGING, allMapObjectsPickValidator, bboxWithExceptValidator, bboxWithZoomValidator,
-	exportFormatValidator, getMainAdminLink, lineValidator, mapDataValidator, mapPermissionsValidator, markerValidator, pagingValidator, pointValidator,
+	getMainAdminLink, lineValidator, mapDataValidator, mapPermissionsValidator, markerValidator, pagingValidator, pointValidator,
 	routeModeValidator, stringifiedBooleanValidator, stringifiedIdValidator, typeValidator, viewValidator,
 	type AllMapObjectsItem, type AllMapObjectsPick, type AllMapObjectsTypes, type AnyMapSlug, type Api,
-	type Bbox, type BboxWithExcept, type BboxWithZoom, type DeepReadonly, type ExportFormat, type FindMapsResult, type FindOnMapResult,
+	type Bbox, type BboxWithExcept, type BboxWithZoom, type DeepReadonly, type ExportResult, type FindMapsResult, type FindOnMapResult,
 	type HistoryEntry, type ID, type Line, type LinePoints, type LineTemplate, type LineWithTrackPoints, type MapData,
-	type MapPermissions,
-	type Marker, type PagedResults, type Route, type RouteInfo, type RouteRequest, type SearchResult, type StreamedResults,
-	type Stripped,
-	type TrackPoint, type Type, type View
+	type MapPermissions, type Marker, type PagedResults, type Route, type RouteInfo, type RouteRequest, type SearchResult,
+	type StreamedResults, type Stripped, type TrackPoint, type Type, type View
 } from "facilmap-types";
 import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
 import { apiImpl, getRequestMapSlug, stringArrayValidator, stringifiedJsonValidator, type ApiImpl } from "./api-common";
-import { canAdministrateMap, checkAdministrateMap, checkConfigureMap, checkManageObject, checkReadObject, checkRevertHistoryEntry, checkUpdateObject, getLineTemplate, getSafeFilename, normalizeLineName } from "facilmap-utils";
-import { exportLineToTrackGpx, exportLineToRouteGpx } from "../export/gpx";
+import { canAdministrateMap, checkAdministrateMap, checkConfigureMap, checkManageObject, checkReadObject, checkRevertHistoryEntry, checkUpdateObject, getLineTemplate, getSafeFilename, normalizeLineName, normalizeMapName } from "facilmap-utils";
+import { exportLineToTrackGpx, exportLineToRouteGpx, exportGpx, exportGpxZip } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
 import { findQuery, findUrl } from "../search";
 import { flatMapAsyncIterable, iterableToArray, mapAsyncIterable, writableToWeb } from "../utils/streams";
 import { arrayStream, stringifyJsonStream, objectStream, type SerializableJsonValue } from "json-stream-es";
-import { exportLineToGeoJson } from "../export/geojson";
+import { exportGeoJson, exportLineToGeoJson } from "../export/geojson";
 import { createMapToken, getPasswordHashHash, getSlugHash } from "../utils/crypt";
 import { resolveMapLinkAsync, stripDataUpdate, stripHistoryEntry, stripLine, stripLineOrThrow, stripLinePoints, stripMapData, stripMapResult, stripMarker, stripMarkerOrThrow, stripType, stripTypeOrThrow, stripView, stripViewOrThrow, type RawMapData, type RawActiveMapLink, isOwn } from "../utils/permissions";
 import { omit } from "lodash-es";
+import { createSingleTable } from "../export/table";
+import { exportCsv } from "../export/csv";
 
 export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	protected database: Database;
@@ -174,7 +174,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const results = await this.database.search.search(mapData.id, query);
 		return results.flatMap((result) => {
-			const stripped = stripMapResult(activeLink, result, isOwn(activeLink, result));
+			const stripped = stripMapResult(activeLink, result);
 			return stripped ? [stripped] : [];
 		});
 	}
@@ -190,13 +190,72 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return { token };
 	}
 
+	async exportMapGpx(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		return {
+			type: "application/gpx+xml",
+			filename: `${getSafeFilename(normalizeMapName(mapData.name))}.gpx`,
+			data: exportGpx(this, activeLink, !!options?.rte, options?.filter).pipeThrough(new TextEncoderStream())
+		};
+	}
+
+	async exportMapGpxZip(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		return {
+			type: "application/zip",
+			filename: `${getSafeFilename(normalizeMapName(mapData.name))}.zip`,
+			data: exportGpxZip(this, activeLink, !!options?.rte, options?.filter)
+		};
+	}
+
+	async exportMapGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { filter?: string }): Promise<ExportResult> {
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		return {
+			type: "application/geo+json",
+			filename: `${getSafeFilename(normalizeMapName(mapData.name))}.geojson`,
+			data: exportGeoJson(this, activeLink, options?.filter).pipeThrough(new TextEncoderStream())
+		};
+	}
+
+	async exportMapTable(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		const type = await this.getType(activeLink, options.typeId);
+		return {
+			type: "text/html",
+			filename: `${getSafeFilename(normalizeMapName(mapData.name))} - ${getSafeFilename(type.name)}.html`,
+			data: createSingleTable(
+				this,
+				activeLink,
+				type,
+				options.filter,
+				options.hide
+			).pipeThrough(new TextEncoderStream())
+		};
+	}
+
+	async exportMapCsv(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
+		const type = await this.getType(activeLink, options.typeId);
+		return {
+			type: "text/csv",
+			filename: `${getSafeFilename(normalizeMapName(mapData.name))} - ${getSafeFilename(type.name)}.csv`,
+			data: exportCsv(
+				this,
+				activeLink,
+				type,
+				options.filter,
+				options.hide
+			).pipeThrough(new TextEncoderStream())
+		};
+	}
+
 	async getHistory(mapSlug: AnyMapSlug | RawActiveMapLink, paging = DEFAULT_PAGING): Promise<PagedResults<Stripped<HistoryEntry>>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 
 		const results = await this.database.history.getPagedHistory(mapData.id, paging);
 		return {
 			results: results.results.flatMap((entry) => {
-				const stripped = stripHistoryEntry(activeLink, entry, false);
+				const stripped = stripHistoryEntry(activeLink, entry);
 				return stripped ? [stripped] : [];
 			}),
 			totalLength: results.totalLength
@@ -208,10 +267,12 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 		const entry = await this.database.history.getHistoryEntry(mapData.id, historyEntryId, { notFound404: true });
 
-		checkRevertHistoryEntry(activeLink.permissions, entry as HistoryEntry, (
-			(!entry.objectBefore || ("identity" in entry.objectBefore && isOwn(activeLink, entry.objectBefore))) &&
-			(!entry.objectAfter || ("identity" in entry.objectAfter && isOwn(activeLink, entry.objectAfter)))
-		));
+		checkRevertHistoryEntry(
+			activeLink.permissions,
+			entry as HistoryEntry,
+			!!(entry.objectBefore && "identity" in entry.objectBefore && isOwn(activeLink, entry.objectBefore)),
+			!!(entry.objectAfter && "identity" in entry.objectAfter && isOwn(activeLink, entry.objectAfter))
+		);
 
 		if(entry.type == "Map") {
 			if (!entry.objectBefore) {
@@ -273,7 +334,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			this.database.markers.getMapMarkers(activeLink.mapId, options?.bbox)
 		);
 		return flatMapAsyncIterable(results, (rawMarker) => {
-			const stripped = stripMarker(activeLink, rawMarker, isOwn(activeLink, rawMarker));
+			const stripped = stripMarker(activeLink, rawMarker);
 			return stripped ? [stripped] : [];
 		});
 	}
@@ -289,7 +350,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	async getMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID): Promise<Stripped<Marker>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const rawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
-		return stripMarkerOrThrow(activeLink, rawMarker, isOwn(activeLink, rawMarker));
+		return stripMarkerOrThrow(activeLink, rawMarker);
 	}
 
 	async createMarker(mapSlug: AnyMapSlug | RawActiveMapLink, data: Marker<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID }): Promise<Stripped<Marker>> {
@@ -300,7 +361,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			data: stripDataUpdate(activeLink, data.typeId, data.data, !!activeLink.identity)
 		};
 		const result = await this.database.markers.createMarker(mapData.id, create, { identity: activeLink.identity, ...internalOptions });
-		return stripMarkerOrThrow(activeLink, result, isOwn(activeLink, result));
+		return stripMarkerOrThrow(activeLink, result);
 	}
 
 	async updateMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID, data: Marker<CRU.UPDATE_VALIDATED>): Promise<Stripped<Marker>> {
@@ -320,7 +381,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, isOwn(activeLink, originalRawMarker)) } : {}
 		};
 		const result = await this.database.markers._updateMarker(originalRawMarker, update, newType, { identity: activeLink.identity });
-		return stripMarkerOrThrow(activeLink, result, isOwn(activeLink, result));
+		return stripMarkerOrThrow(activeLink, result);
 	}
 
 	async deleteMarker(mapSlug: AnyMapSlug | RawActiveMapLink, markerId: ID): Promise<void> {
@@ -336,7 +397,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		typeId?: ID;
 	}): AsyncIterable<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>> {
 		for await (const line of options?.typeId ? this.database.lines.getMapLinesByType(activeLink.mapId, options.typeId) : this.database.lines.getMapLines(activeLink.mapId)) {
-			const stripped = stripLine(activeLink, line, isOwn(activeLink, line));
+			const stripped = stripLine(activeLink, line);
 			if (stripped) {
 				if (options?.includeTrackPoints) {
 					const trackPoints = await iterableToArray(this.database.lines.getLinePointsForLine(line.id, options?.bbox));
@@ -350,7 +411,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	_getMapLinePoints(activeLink: RawActiveMapLink, options?: { bbox?: BboxWithZoom }): AsyncIterable<Stripped<LinePoints>> {
 		return flatMapAsyncIterable(this.database.lines.getLinePointsForMap(activeLink.mapId, options?.bbox), async (linePoints) => {
-			const result = stripLinePoints(activeLink, linePoints, isOwn(activeLink, linePoints.line));
+			const result = stripLinePoints(activeLink, linePoints);
 			return result ? [result] : [];
 		});
 	}
@@ -365,7 +426,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 	async getLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<Stripped<Line>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		const line = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
-		return stripLineOrThrow(activeLink, line, isOwn(activeLink, line));
+		return stripLineOrThrow(activeLink, line);
 	}
 
 	async getLinePoints(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { bbox?: BboxWithZoom }): Promise<StreamedResults<TrackPoint>> {
@@ -388,7 +449,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			...internalOptions,
 			identity: activeLink.identity
 		});
-		return stripLineOrThrow(activeLink, result, isOwn(activeLink, result));
+		return stripLineOrThrow(activeLink, result);
 	}
 
 	async updateLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, data: Line<CRU.UPDATE_VALIDATED>, trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> }): Promise<Stripped<Line>> {
@@ -411,7 +472,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			trackPointsFromRoute,
 			identity: activeLink.identity
 		});
-		return stripLineOrThrow(activeLink, result, isOwn(activeLink, result));
+		return stripLineOrThrow(activeLink, result);
 	}
 
 	async deleteLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<void> {
@@ -421,44 +482,39 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.lines._deleteLine(rawLine, { identity: activeLink.identity });
 	}
 
-	async exportLine(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
+	async exportLineGpx(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 
-		const lineP = this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
-		lineP.catch(() => null); // Avoid unhandled promise error (https://stackoverflow.com/a/59062117/242365)
-
-		const [rawLine, rawType] = await Promise.all([
-			lineP,
-			lineP.then((line) => this.database.types.getType(mapData.id, line.typeId))
-		]);
-
-		const line = stripLineOrThrow(activeLink, rawLine, isOwn(activeLink, rawLine));
-		const type = stripTypeOrThrow(activeLink, rawType);
+		const line = stripLineOrThrow(activeLink, await this.database.lines.getLine(mapData.id, lineId, { notFound404: true }));
+		const type = stripTypeOrThrow(activeLink, await this.database.types.getType(mapData.id, line.typeId));
 
 		const filename = getSafeFilename(normalizeLineName(line.name));
+		const data = (
+			options?.rte ? exportLineToRouteGpx(line, type) :
+			exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id))
+		);
 
-		switch(options.format) {
-			case "gpx-trk":
-				return {
-					type: "application/gpx+xml",
-					filename: `${filename}.gpx`,
-					data: exportLineToTrackGpx(line, type, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
-				};
-			case "gpx-rte":
-				return {
-					type: "application/gpx+xml",
-					filename: `${filename}.gpx`,
-					data: exportLineToRouteGpx(line, type).pipeThrough(new TextEncoderStream())
-				};
-			case "geojson":
-				return {
-					type: "application/geo+json",
-					filename: `${filename}.geojson`,
-					data: exportLineToGeoJson(line, type, this.database.lines.getLinePointsForLine(line.id)).pipeThrough(new TextEncoderStream())
-				};
-			default:
-				throw new Error(getI18n().t("api.unknown-format-error"));
-		}
+		return {
+			type: "application/gpx+xml",
+			filename: `${filename}.gpx`,
+			data: data.pipeThrough(new TextEncoderStream())
+		};
+	}
+
+	async exportLineGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<ExportResult> {
+		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
+
+		const line = stripLineOrThrow(activeLink, await this.database.lines.getLine(mapData.id, lineId, { notFound404: true }));
+		const type = stripTypeOrThrow(activeLink, await this.database.types.getType(mapData.id, line.typeId));
+
+		const filename = getSafeFilename(normalizeLineName(line.name));
+		const data = exportLineToGeoJson(line, type, this.database.lines.getLinePointsForLine(line.id));
+
+		return {
+			type: "application/geo+json",
+			filename: `${filename}.geojson`,
+			data: data.pipeThrough(new TextEncoderStream())
+		};
 	}
 
 	async getLineTemplate(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID }): Promise<LineTemplate> {
@@ -649,6 +705,47 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { permissions, noPassword }];
 	}, "json"),
 
+	exportMapGpx: apiImpl.get("/map/:mapSlug/gpx", (req) => {
+		const { rte, filter } = z.object({
+			rte: stringifiedBooleanValidator.optional(),
+			filter: z.string().optional()
+		}).parse(req.query);
+		return [getRequestMapSlug(req), { rte, filter }];
+	}, "export"),
+
+	exportMapGpxZip: apiImpl.get("/map/:mapSlug/gpx/zip", (req) => {
+		const { rte, filter } = z.object({
+			rte: stringifiedBooleanValidator.optional(),
+			filter: z.string().optional()
+		}).parse(req.query);
+		return [getRequestMapSlug(req), { rte, filter }];
+	}, "export"),
+
+	exportMapGeoJson: apiImpl.get("/map/:mapSlug/geojson", (req) => {
+		const { filter } = z.object({
+			filter: z.string().optional()
+		}).parse(req.query);
+		return [getRequestMapSlug(req), { filter }];
+	}, "export"),
+
+	exportMapTable: apiImpl.get("/map/:mapSlug/table", (req) => {
+		const { typeId, filter, hide } = z.object({
+			typeId: stringifiedIdValidator,
+			filter: z.string().optional(),
+			hide: z.string().optional()
+		}).parse(req.query);
+		return [getRequestMapSlug(req), { typeId, filter, hide: hide ? hide.split(",") : undefined }];
+	}, "export"),
+
+	exportMapCsv: apiImpl.get("/map/:mapSlug/csv", (req) => {
+		const { typeId, filter, hide } = z.object({
+			typeId: stringifiedIdValidator,
+			filter: z.string().optional(),
+			hide: z.string().optional()
+		}).parse(req.query);
+		return [getRequestMapSlug(req), { typeId, filter, hide: hide ? hide.split(",") : undefined }];
+	}, "export"),
+
 	getHistory: apiImpl.get("/map/:mapSlug/history", (req) => {
 		const paging = pagingValidator.parse(req.query);
 		return [getRequestMapSlug(req), paging];
@@ -728,17 +825,18 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), lineId];
 	}, "empty"),
 
-	exportLine: apiImpl.get("/map/:mapSlug/line/:lineId/export", (req) => {
+	exportLineGpx: apiImpl.get("/map/:mapSlug/line/:lineId/gpx", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
-		const { format } = z.object({
-			format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"])
+		const { rte } = z.object({
+			rte: stringifiedBooleanValidator.optional()
 		}).parse(req.query);
-		return [getRequestMapSlug(req), lineId, { format }];
-	}, (res, result) => {
-		res.set("Content-type", result.type);
-		res.attachment(result.filename);
-		void result.data.pipeTo(writableToWeb(res));
-	}),
+		return [getRequestMapSlug(req), lineId, { rte }];
+	}, "export"),
+
+	exportLineGeoJson: apiImpl.get("/map/:mapSlug/line/:lineId/geojson", (req) => {
+		const lineId = stringifiedIdValidator.parse(req.params.lineId);
+		return [getRequestMapSlug(req), lineId];
+	}, "export"),
 
 	getMapTypes: apiImpl.get("/map/:mapSlug/type", (req) => [getRequestMapSlug(req)], "stream"),
 

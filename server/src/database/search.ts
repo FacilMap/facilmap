@@ -1,7 +1,8 @@
-import type { FindOnMapResult, ID } from "facilmap-types";
+import type { ID } from "facilmap-types";
 import Database from "./database.js";
 import { compareTwoStrings } from "string-similarity";
 import { pick } from "lodash-es";
+import type { RawFindOnMapResult } from "../utils/permissions.js";
 
 export default class DatabaseSearch {
 
@@ -11,7 +12,7 @@ export default class DatabaseSearch {
 		this.db = database;
 	}
 
-	async search(mapId: ID, searchText: string): Promise<Array<FindOnMapResult>> {
+	async search(mapId: ID, searchText: string): Promise<Array<RawFindOnMapResult>> {
 		const [markers, lines] = await Promise.all([
 			this.db.backend.markers.searchMarkers(mapId, searchText),
 			this.db.backend.lines.searchLines(mapId, searchText)
@@ -19,11 +20,11 @@ export default class DatabaseSearch {
 
 		const objects = [
 			...markers.map((marker) => ({
-				...pick(marker, ["id", "name", "typeId", "lat", "lon", "icon"]),
+				...pick(marker, ["id", "name", "typeId", "lat", "lon", "icon", "identity"]),
 				kind: "marker" as const
 			})),
 			...lines.map((line) => ({
-				...pick(line, ["id", "name", "typeId", "top", "left", "bottom", "right"]),
+				...pick(line, ["id", "name", "typeId", "top", "left", "bottom", "right", "identity"]),
 				kind: "line" as const
 			}))
 		].map((obj) => ({

@@ -6,9 +6,10 @@ import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
 import { forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
-import type { ID, Line, MapPermissions, Marker, Type } from "facilmap-types";
+import type { ID, MapPermissions, Type } from "facilmap-types";
 import { streamToIterable } from "../utils/streams.js";
-import { createJwtSecret, createSalt, getSlugHash } from "../utils/crypt.js";
+import { createJwtSecret, createSalt } from "../utils/crypt.js";
+import type { RawLine, RawMarker } from "../utils/permissions.js";
 
 export default class DatabaseBackendMigrations {
 
@@ -135,7 +136,7 @@ export default class DatabaseBackendMigrations {
 		const mapAttrs = await queryInterface.describeTable('Maps');
 
 		// Rename writeId to adminId
-		if(!mapAttrs.adminId) {
+		if(mapAttrs.writeId && !mapAttrs.adminId) {
 			console.log("DB migration: Rename map writeId to adminId");
 			const MapModel = this.backend.maps.MapModel;
 			await queryInterface.renameColumn('Maps', 'writeId', 'adminId');
@@ -148,7 +149,7 @@ export default class DatabaseBackendMigrations {
 					writeId = generateRandomId(14);
 				} while (await this.backend.maps.mapSlugExists(writeId));
 
-				await MapModel.update({ writeId }, { where: { id: map.id } });
+				await MapModel.update({ writeId } as any, { where: { id: map.id } });
 			}
 		}
 
@@ -972,13 +973,13 @@ export default class DatabaseBackendMigrations {
 						if (historyEntry.objectBefore) {
 							historyEntry.objectBefore = { // Must overwrite whole objectBefore property, as it is stringified
 								...historyEntry.objectBefore,
-								data: Object.fromEntries(Object.entries((historyEntry.objectBefore as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
+								data: Object.fromEntries(Object.entries((historyEntry.objectBefore as RawMarker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
 							};
 						}
 						if (historyEntry.objectAfter) {
 							historyEntry.objectAfter = { // Must overwrite whole objectAfter property, as it is stringified
 								...historyEntry.objectAfter,
-								data: Object.fromEntries(Object.entries((historyEntry.objectAfter as Marker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
+								data: Object.fromEntries(Object.entries((historyEntry.objectAfter as RawMarker).data).map(([k, v]) => [fieldMap[k] ?? k, v]))
 							};
 						}
 						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
@@ -992,10 +993,10 @@ export default class DatabaseBackendMigrations {
 
 					for (const historyEntry of await this.backend.history.HistoryModel.findAll({ where: { type: "Line", objectId: { [Op.in]: lineIds } } })) {
 						if (historyEntry.objectBefore) {
-							(historyEntry.objectBefore as Line).data = Object.fromEntries(Object.entries((historyEntry.objectBefore as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
+							(historyEntry.objectBefore as RawLine).data = Object.fromEntries(Object.entries((historyEntry.objectBefore as RawLine).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
 						}
 						if (historyEntry.objectAfter) {
-							(historyEntry.objectAfter as Line).data = Object.fromEntries(Object.entries((historyEntry.objectAfter as Line).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
+							(historyEntry.objectAfter as RawLine).data = Object.fromEntries(Object.entries((historyEntry.objectAfter as RawLine).data).map(([k, v]) => [fieldMap[k] ?? k, v]));
 						}
 						await historyEntry.update({ objectBefore: historyEntry.objectBefore, objectAfter: historyEntry.objectAfter });
 					}
@@ -1055,17 +1056,17 @@ export default class DatabaseBackendMigrations {
 					console.log(`DB migration: Create map link table (${i + 1} / ${allMaps.length})`);
 				}
 
-				for (const [slug, searchEngines, permissions] of [
-					[(map as any).adminId, false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
-					[(map as any).writeId, false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
-					[(map as any).readId, (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
+				for (const [slug, comment, searchEngines, permissions] of [
+					[(map as any).adminId, "Admin link", false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
+					[(map as any).writeId, "Read-write link", false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
+					[(map as any).readId, "Read-only link", (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
 				] as const) {
 					if (!existingMapLinks.has(slug)) {
 						await this.backend.maps.MapLinkModel.create({
 							mapId: map.id,
 							slug,
+							comment,
 							password: null,
-							tokenHash: await getSlugHash(slug, map.salt, null),
 							permissions,
 							searchEngines
 						});

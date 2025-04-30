@@ -4409,6 +4409,7 @@ __metadata:
     vite: ^6.2.0
     vite-plugin-dts: 4.5.0
     zod: ^3.24.2
+    zod-tuple-with-optional: ^1.0.2
   languageName: unknown
   linkType: soft
 
@@ -9483,6 +9484,15 @@ __metadata:
     normalize-path: ^3.0.0
     readable-stream: ^4.0.0
   checksum: 058493b1bb0b972f035d57a1964b2557740dcb2839ee29eaffd190d9660479ad4ed330e33e788ebdec89d40a49feb82d903340b11f30a26a34a26b8f4a4f10f0
+  languageName: node
+  linkType: hard
+
+"zod-tuple-with-optional@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "zod-tuple-with-optional@npm:1.0.2"
+  peerDependencies:
+    zod: ^3.10.3
+  checksum: 1f0899d9f395292c76c8520389a6dd56c62a4a9ec84aa58fc0ee44bf5899f2e9f93a22906d1e2e8f0bbb84add21203289c704984d4161b94a77f1e46e6f0de5f
   languageName: node
   linkType: hard
 

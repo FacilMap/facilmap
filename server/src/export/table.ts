@@ -1,4 +1,4 @@
-import type { ID } from "facilmap-types";
+import type { Type } from "facilmap-types";
 import { quoteHtml } from "facilmap-utils";
 import { renderTable } from "../frontend.js";
 import { iterableToArray, iterableToStream, streamPromiseToStream, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
@@ -21,7 +21,7 @@ export type TableParams = {
 export function createSingleTable(
 	api: ApiV3Backend,
 	mapLink: RawActiveMapLink,
-	typeId: ID,
+	type: Type,
 	filter?: string,
 	hide: string[] = [],
 	{ indent = "", tableAttrs, getThAttrs, before, after, leaveEmpty }: TableParams = {}
@@ -31,7 +31,7 @@ export function createSingleTable(
 			return Object.entries(a).map(([k, v]) => ` ${quoteHtml(k)}="${quoteHtml(v)}"`).join("");
 		}
 
-		const tabular = await getTabularData(api, mapLink, typeId, true, filter, hide);
+		const tabular = await getTabularData(api, mapLink, type, true, filter, hide);
 
 		function* generateBefore() {
 			if (before) {
@@ -101,7 +101,7 @@ export function createTable(api: ApiV3Backend, mapLink: RawActiveMapLink, filter
 		return renderTable({
 			mapData,
 			types,
-			renderSingleTable: (typeId, params) => createSingleTable(api, mapLink, typeId, filter, hide, params),
+			renderSingleTable: (type, params) => createSingleTable(api, mapLink, type, filter, hide, params),
 			url
 		});
 	})());

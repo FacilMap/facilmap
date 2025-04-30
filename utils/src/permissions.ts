@@ -100,11 +100,11 @@ export function checkUpdateField(permissions: MapPermissions, typeId: ID, fieldI
 	}
 }
 
-export function canRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwn: boolean): boolean {
-	return hasPermission(() => checkRevertHistoryEntry(permissions, entry, isOwn));
+export function canRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwnBefore: boolean, isOwnAfter: boolean): boolean {
+	return hasPermission(() => checkRevertHistoryEntry(permissions, entry, isOwnBefore, isOwnAfter));
 }
 
-export function checkRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwn: boolean): void {
+export function checkRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwnBefore: boolean, isOwnAfter: boolean): void {
 	switch (entry.type) {
 		case "Map": case "Type": case "View":
 			checkConfigureMap(permissions);
@@ -112,10 +112,10 @@ export function checkRevertHistoryEntry(permissions: MapPermissions, entry: Hist
 
 		case "Marker": case "Line":
 			if (entry.objectBefore) {
-				checkUpdateObject(permissions, entry.objectBefore.typeId, isOwn);
+				checkUpdateObject(permissions, entry.objectBefore.typeId, isOwnBefore);
 			}
 			if (entry.objectAfter) {
-				checkUpdateObject(permissions, entry.objectAfter.typeId, isOwn);
+				checkUpdateObject(permissions, entry.objectAfter.typeId, isOwnAfter);
 			}
 			break;
 	}

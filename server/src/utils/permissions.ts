@@ -90,7 +90,7 @@ export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "mapId"
 		)
 	) {
 		return markStripped({
-			...pick(mapLink, ["slug", "permissions", "searchEngines"]),
+			...pick(mapLink, ["slug", "permissions", "searchEngines", "comment"]),
 			password: !!mapLink.password,
 			...mapLink.id != null ? { id: mapLink.id } : {} as { id: L["id"] }
 		});
@@ -101,13 +101,13 @@ export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "mapId"
 
 export function stripMapLink(link: RawActiveMapLink): Stripped<ActiveMapLink> {
 	return markStripped({
-		...pick(link, ["slug", "permissions", "searchEngines"]),
+		...pick(link, ["slug", "permissions", "searchEngines", "comment"]),
 		password: !!link.password,
 		...link.id != null ? { id: link.id } : {}
 	});
 }
 
-export function stripTypeOrThrow<T extends Optional<Type, "mapId">>(link: RawActiveMapLink | Optional<MapLink, "id">, type: T): Stripped<T> {
+export function stripTypeOrThrow<T extends Optional<Type, "mapId">>(link: RawActiveMapLink, type: T): Stripped<T> {
 	checkReadObject(link.permissions, type.id, true);
 
 	return markStripped({
@@ -116,74 +116,77 @@ export function stripTypeOrThrow<T extends Optional<Type, "mapId">>(link: RawAct
 	});
 }
 
-export function stripType<T extends Optional<Type, "mapId">>(link: RawActiveMapLink | Optional<MapLink, "id">, type: T): Stripped<T> | undefined {
+export function stripType<T extends Optional<Type, "mapId">>(link: RawActiveMapLink, type: T): Stripped<T> | undefined {
 	return stripOrUndefined(() => stripTypeOrThrow(link, type));
 }
 
-export function stripViewOrThrow<V extends Optional<View, "id" | "mapId">>(link: RawActiveMapLink | Optional<MapLink, "id">, view: V): Stripped<V> {
+export function stripViewOrThrow<V extends Optional<View, "id" | "mapId">>(link: RawActiveMapLink, view: V): Stripped<V> {
 	return markStripped(view);
 }
 
-export function stripView<V extends Optional<View, "id" | "mapId">>(link: RawActiveMapLink | Optional<MapLink, "id">, view: V): Stripped<V> | undefined {
+export function stripView<V extends Optional<View, "id" | "mapId">>(link: RawActiveMapLink, view: V): Stripped<V> | undefined {
 	return stripOrUndefined(() => stripViewOrThrow(link, view));
 }
 
-export function stripMarkerOrThrow<M extends Optional<RawMarker, "id" | "mapId">>(link: RawActiveMapLink, marker: M, isOwn: boolean): Stripped<Omit<Marker, "id" | "mapId"> & Pick<M, "id" | "mapId">> {
-	checkReadObject(link.permissions, marker.typeId, isOwn);
+export function stripMarkerOrThrow<M extends Optional<RawMarker, "id" | "mapId">>(link: RawActiveMapLink, marker: M): Stripped<Omit<Marker, "id" | "mapId"> & Pick<M, "id" | "mapId">> {
+	const own = isOwn(link, marker);
+	checkReadObject(link.permissions, marker.typeId, own);
 
 	return markStripped({
 		...omit(marker, ["identity"]),
-		data: stripData(link, marker.typeId, marker.data, isOwn),
+		data: stripData(link, marker.typeId, marker.data, own),
 		own: link.identity != null && marker.identity != null && link.identity.equals(marker.identity)
 	});
 }
 
-export function stripMarker<M extends Optional<RawMarker, "id" | "mapId">>(link: RawActiveMapLink, marker: M, isOwn: boolean): Stripped<Omit<Marker, "id" | "mapId"> & Pick<M, "id" | "mapId">> | undefined {
-	return stripOrUndefined(() => stripMarkerOrThrow(link, marker, isOwn));
+export function stripMarker<M extends Optional<RawMarker, "id" | "mapId">>(link: RawActiveMapLink, marker: M): Stripped<Omit<Marker, "id" | "mapId"> & Pick<M, "id" | "mapId">> | undefined {
+	return stripOrUndefined(() => stripMarkerOrThrow(link, marker));
 }
 
-export function stripLineOrThrow<L extends Optional<RawLine, "id" | "mapId">>(link: RawActiveMapLink, line: L, isOwn: boolean): Stripped<Omit<Line, "id" | "mapId"> & Pick<L, "id" | "mapId">> {
-	checkReadObject(link.permissions, line.typeId, isOwn);
+export function stripLineOrThrow<L extends Optional<RawLine, "id" | "mapId">>(link: RawActiveMapLink, line: L): Stripped<Omit<Line, "id" | "mapId"> & Pick<L, "id" | "mapId">> {
+	const own = isOwn(link, line);
+	checkReadObject(link.permissions, line.typeId, own);
 
 	return markStripped({
 		...omit(line, ["identity"]),
-		data: stripData(link, line.typeId, line.data, isOwn),
+		data: stripData(link, line.typeId, line.data, own),
 		own: link.identity != null && line.identity != null && link.identity.equals(line.identity)
 	});
 }
 
-export function stripLine<L extends Optional<RawLine, "id" | "mapId">>(link: RawActiveMapLink, line: L, isOwn: boolean): Stripped<Omit<Line, "id" | "mapId"> & Pick<L, "id" | "mapId">> | undefined {
-	return stripOrUndefined(() => stripLineOrThrow(link, line, isOwn));
+export function stripLine<L extends Optional<RawLine, "id" | "mapId">>(link: RawActiveMapLink, line: L): Stripped<Omit<Line, "id" | "mapId"> & Pick<L, "id" | "mapId">> | undefined {
+	return stripOrUndefined(() => stripLineOrThrow(link, line));
 }
 
-export function stripLinePoints(link: RawActiveMapLink | Optional<MapLink, "id">, linePoints: LinePoints & { typeId: ID }, isOwn: boolean): (Stripped<LinePoints & { typeId: ID }>) | undefined {
-	if (canReadObject(link.permissions, linePoints.typeId, isOwn)) {
-		return markStripped(linePoints);
+export function stripLinePoints(link: RawActiveMapLink, linePoints: LinePoints & { line: RawLine }): (Stripped<LinePoints>) | undefined {
+	if (canReadObject(link.permissions, linePoints.line.typeId, isOwn(link, linePoints.line))) {
+		return markStripped(omit(linePoints, ["line"]));
 	} else {
 		return undefined;
 	}
 }
 
-export function stripData(link: RawActiveMapLink | Optional<MapLink, "id">, typeId: ID, data: Record<ID, string>, isOwn: boolean): Record<ID, string> {
+export function stripData(link: RawActiveMapLink, typeId: ID, data: Record<ID, string>, isOwn: boolean): Record<ID, string> {
 	return Object.fromEntries(entries(data).filter(([fieldId, value]) => canReadField(link.permissions, typeId, fieldId, isOwn)));
 }
 
-export function stripDataUpdate(link: RawActiveMapLink | Optional<MapLink, "id">, typeId: ID, data: Record<ID, string>, isOwn: boolean): Record<ID, string> {
+export function stripDataUpdate(link: RawActiveMapLink, typeId: ID, data: Record<ID, string>, isOwn: boolean): Record<ID, string> {
 	return Object.fromEntries(entries(data).filter(([fieldId, value]) => canUpdateField(link.permissions, typeId, fieldId, isOwn)));
 }
 
-export function stripMapResult(link: RawActiveMapLink | Optional<MapLink, "id">, result: RawFindOnMapResult, isOwn: boolean): Stripped<FindOnMapResult> | undefined {
-	if (canReadObject(link.permissions, result.typeId, isOwn)) {
+export function stripMapResult(link: RawActiveMapLink, result: RawFindOnMapResult): Stripped<FindOnMapResult> | undefined {
+	const own = isOwn(link, result);
+	if (canReadObject(link.permissions, result.typeId, own)) {
 		return markStripped({
-			...omit(result, ["identity"]),
-			own: isOwn
+			...omit(result, ["identity"]) as DistributiveOmit<typeof result, "identity">,
+			own
 		});
 	} else {
 		return undefined;
 	}
 }
 
-export function stripHistoryEntry(link: RawActiveMapLink, entry: RawHistoryEntry, isOwn: boolean): Stripped<HistoryEntry> | undefined {
+export function stripHistoryEntry(link: RawActiveMapLink, entry: RawHistoryEntry): Stripped<HistoryEntry> | undefined {
 	if (entry.type === "Map") {
 		return markStripped({
 			...entry,
@@ -208,26 +211,26 @@ export function stripHistoryEntry(link: RawActiveMapLink, entry: RawHistoryEntry
 		});
 	} else if (entry.type === "Marker") {
 		if (
-			(!entry.objectBefore || canReadObject(link.permissions, entry.objectBefore.typeId, isOwn))
-			|| (!entry.objectAfter || canReadObject(link.permissions, entry.objectAfter.typeId, isOwn))
+			(!entry.objectBefore || canReadObject(link.permissions, entry.objectBefore.typeId, isOwn(link, entry.objectBefore)))
+			|| (!entry.objectAfter || canReadObject(link.permissions, entry.objectAfter.typeId, isOwn(link, entry.objectAfter)))
 		) {
 			return markStripped({
 				...entry,
-				objectBefore: entry.objectBefore && stripMarker(link, entry.objectBefore, isOwn)! satisfies HistoryEntryObjectTypes["Marker"] as any,
-				objectAfter: entry.objectAfter && stripMarker(link, entry.objectAfter, isOwn)! satisfies HistoryEntryObjectTypes["Marker"] as any
+				objectBefore: entry.objectBefore && stripMarker(link, entry.objectBefore)! satisfies HistoryEntryObjectTypes["Marker"] as any,
+				objectAfter: entry.objectAfter && stripMarker(link, entry.objectAfter)! satisfies HistoryEntryObjectTypes["Marker"] as any
 			});
 		} else {
 			return undefined;
 		}
 	} else if (entry.type === "Line") {
 		if (
-			(!entry.objectBefore || canReadObject(link.permissions, entry.objectBefore.typeId, isOwn))
-			|| (!entry.objectAfter || canReadObject(link.permissions, entry.objectAfter.typeId, isOwn))
+			(!entry.objectBefore || canReadObject(link.permissions, entry.objectBefore.typeId, isOwn(link, entry.objectBefore)))
+			|| (!entry.objectAfter || canReadObject(link.permissions, entry.objectAfter.typeId, isOwn(link, entry.objectAfter)))
 		) {
 			return markStripped({
 				...entry,
-				objectBefore: entry.objectBefore && stripLine(link, entry.objectBefore, isOwn)! satisfies HistoryEntryObjectTypes["Line"] as any,
-				objectAfter: entry.objectAfter && stripLine(link, entry.objectAfter, isOwn)! satisfies HistoryEntryObjectTypes["Line"] as any
+				objectBefore: entry.objectBefore && stripLine(link, entry.objectBefore)! satisfies HistoryEntryObjectTypes["Line"] as any,
+				objectAfter: entry.objectAfter && stripLine(link, entry.objectAfter)! satisfies HistoryEntryObjectTypes["Line"] as any
 			});
 		} else {
 			return undefined;
@@ -274,6 +277,7 @@ export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identi
 				return [{
 					mapId: link.mapId,
 					slug: mapSlug,
+					comment: "",
 					password: token.passwordHash ? null : link.password,
 					searchEngines: false,
 					permissions: mergeMapPermissions(link.permissions, token.permissions)

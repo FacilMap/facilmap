@@ -1,11 +1,13 @@
-import { type ID, type Point, type Route, type TrackPoint, type CRU, type RouteInfo, type LinePoints, type BboxWithExcept, entries, type Type, type Line } from "facilmap-types";
+import { type ID, type Point, type Route, type TrackPoint, type CRU, type RouteInfo, type LinePoints, type BboxWithExcept, type Type, type Line } from "facilmap-types";
 import Database from "./database.js";
-import { groupBy, isEqual, omit } from "lodash-es";
+import { isEqual, omit } from "lodash-es";
 import { calculateRouteForLine } from "../routing/routing.js";
 import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import type DatabaseLinesBackend from "../database-backend/line.js";
 import type { RawLine } from "../utils/permissions.js";
+import { iterableToStream, streamToIterable } from "json-stream-es";
+import { ChunkAggregationTransformStream, queueAsyncIterable } from "../utils/streams.js";
 
 export default class DatabaseLines {
 
@@ -172,18 +174,16 @@ export default class DatabaseLines {
 		});
 	}
 
-	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { typeId: ID }> {
-		for await (const line of this.getMapLines(mapId)) {
-
-		}
-
-		for await (const chunk of this.backend.getLinePointsForMap(mapId, bboxWithZoom)) {
-			const typeIds = await this.backend.getTypeIdsForLines(mapId, chunk.map((c) => c.lineId));
-			for (const [key, val] of entries(groupBy(chunk, "lineId"))) {
+	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<LinePoints & { line: RawLine }> {
+		for await (const line of queueAsyncIterable(this.getMapLines(mapId), 5)) {
+			for await (const chunk of streamToIterable(
+				iterableToStream(this.getLinePointsForLine(line.id, bboxWithZoom))
+					.pipeThrough(new ChunkAggregationTransformStream())
+			)) {
 				yield {
-					lineId: Number(key),
-					typeId: typeIds[key as `${number}`],
-					trackPoints: val.map((p) => omit(p, ["lineId"]))
+					lineId: line.id,
+					line,
+					trackPoints: chunk
 				};
 			}
 		}

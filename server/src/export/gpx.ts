@@ -105,7 +105,7 @@ function getLineTrackGpx(line: LineForExport, type: Stripped<Type> | undefined, 
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, useTracks: boolean, filter?: string): ReadableStream<string> {
+export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: boolean, filter?: string): ReadableStream<string> {
 	return iterableToStream((async function* () {
 		const filterFunc = compileExpression(filter);
 
@@ -129,7 +129,7 @@ export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, useTrack
 
 		for await (const line of (await api.getMapLines(mapLink)).results) {
 			if (filterFunc(line, types[line.typeId])) {
-				if (useTracks || line.mode == "track") {
+				if (line.mode == "track" || !rte) {
 					const trackPoints = (await api.getLinePoints(mapLink, line.id)).results;
 					for await (const chunk of streamToIterable(getLineTrackGpx(line, types[line.typeId], trackPoints).pipeThrough(indentStream({ indent: "\t", indentFirst: true, addNewline: true })))) {
 						yield chunk;
@@ -146,7 +146,7 @@ export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, useTrack
 	})()).pipeThrough(new StringAggregationTransformStream());
 }
 
-export function exportGpxZip(api: ApiV3Backend, mapLink: RawActiveMapLink, useTracks: boolean, filter?: string): ReadableStream<Uint8Array> {
+export function exportGpxZip(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: boolean, filter?: string): ReadableStream<Uint8Array> {
 	const encodeZipStream = getZipEncodeStream();
 
 	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
@@ -195,7 +195,7 @@ export function exportGpxZip(api: ApiV3Backend, mapLink: RawActiveMapLink, useTr
 
 				const filename = `lines/${getSafeFilename(name)}.gpx`;
 
-				if (useTracks || line.mode == "track") {
+				if (line.mode == "track" || !rte) {
 					const trackPoints = (await api.getLinePoints(mapLink, line.id)).results;
 					yield {
 						filename,

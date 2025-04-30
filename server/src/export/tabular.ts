@@ -1,6 +1,6 @@
 import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
 import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
-import type { ID } from "facilmap-types";
+import type { Type } from "facilmap-types";
 import { getI18n } from "../i18n.js";
 import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
@@ -14,14 +14,12 @@ export type TabularData = {
 export async function getTabularData(
 	api: ApiV3Backend,
 	mapLink: RawActiveMapLink,
-	typeId: ID,
+	type: Type,
 	html: boolean,
 	filter?: string,
 	hide: string[] = []
 ): Promise<TabularData> {
 	const i18n = getI18n();
-
-	const type = await api.getType(mapLink, typeId);
 
 	const filterFunc = compileExpression(filter);
 
@@ -38,7 +36,7 @@ export async function getTabularData(
 		...type.fields.map((f) => [f.name, formatFieldName(f.name)])
 	];
 
-	const objects = type.type === "marker" ? flatMapStream(iterableToStream((await api.getMapMarkers(mapLink, { typeId })).results), (marker): Array<Array<() => string>> => {
+	const objects = type.type === "marker" ? flatMapStream(iterableToStream((await api.getMapMarkers(mapLink, { typeId: type.id })).results), (marker): Array<Array<() => string>> => {
 		if (!filterFunc(marker, type)) {
 			return [];
 		}
@@ -48,7 +46,7 @@ export async function getTabularData(
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
 			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.id], html).trim())
 		]];
-	}) : flatMapStream(iterableToStream((await api.getMapLines(mapLink, { typeId })).results), (line): Array<Array<() => string>> => {
+	}) : flatMapStream(iterableToStream((await api.getMapLines(mapLink, { typeId: type.id })).results), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
 			return [];
 		}

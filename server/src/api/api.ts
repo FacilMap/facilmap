@@ -44,6 +44,11 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 				void serializeJsonValue({
 					results: arrayStream(result.results)
 				}, "\t").pipeTo(writableToWeb(res));
+			} else if (sendResult === "export") {
+				res.setHeader("Referrer-Policy", "origin"); // For exports opened in the browser, such as table
+				res.set("Content-type", result.type);
+				res.attachment(result.filename);
+				void result.data.pipeTo(writableToWeb(res));
 			} else {
 				sendResult(res, result);
 			}

@@ -49,6 +49,7 @@ export type MapPermissions = z.infer<typeof mapPermissionsValidator>;
 export const mapLinkValidator = cruValidator({
 	id: exceptCreate(idValidator),
 	slug: mapSlugValidator,
+	comment: z.string(),
 	password: {
 		read: z.boolean(),
 		create: z.literal(false).or(z.string()),

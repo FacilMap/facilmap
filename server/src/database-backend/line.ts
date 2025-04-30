@@ -2,7 +2,7 @@ import { and, col, type CreationOptional, DataTypes, fn, type ForeignKey, type H
 import type { BboxWithZoom, ID, Latitude, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept } from "facilmap-types";
 import DatabaseBackend from "./database-backend.js";
 import { bulkCreateInBatches, createModel, dataDefinition, dataFromArr, type DataModel, dataToArr, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./utils.js";
-import { chunk, isEqual, pick } from "lodash-es";
+import { isEqual, pick } from "lodash-es";
 import type { MapModel } from "./map.js";
 import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type.js";
@@ -270,28 +270,6 @@ export default class DatabaseLinesBackend {
 		await this.LineModel.destroy({ where: { id: lineId, mapId } });
 	}
 
-	async* getLinePointsForMap(mapId: ID, bboxWithZoom?: BboxWithExcept): AsyncIterable<Array<Pick<InferAttributes<LinePointModel>, "lat" | "lon" | "ele" | "zoom" | "idx" | "lineId">>> {
-		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
-		const chunks = chunk(lines.map((line) => line.id), 50000);
-		for (const lineIds of chunks) {
-			const linePoints = await this.LinePointModel.findAll({
-				where: {
-					[Op.and]: [
-						{
-							...bboxWithZoom ? {
-								zoom: { [Op.lte]: bboxWithZoom.zoom }
-							} : {},
-							lineId: { [Op.in]: lineIds }
-						},
-						makeBboxCondition(this.backend, bboxWithZoom)
-					]
-				},
-				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
-			});
-			yield linePoints.map((p) => pick(p.toJSON(), ["lat", "lon", "ele", "zoom", "idx", "lineId"]));
-		}
-	}
-
 	async* getLinePointsForLine(lineId: ID, bboxWithZoom?: BboxWithZoom & BboxWithExcept): AsyncIterable<Pick<InferAttributes<LinePointModel>, "lat" | "lon" | "ele" | "zoom" | "idx">> {
 		for await (const linePoint of findAllStreamed(this.LinePointModel, {
 			attributes: [ /* Needed for findAllStreamed */ "id", "pos", "lat", "lon", "ele", "zoom", "idx" ],
@@ -308,11 +286,6 @@ export default class DatabaseLinesBackend {
 		})) {
 			yield pick(linePoint.toJSON(), ["lat", "lon", "ele", "zoom", "idx"]);
 		}
-	}
-
-	async getTypeIdsForLines(mapId: ID, lineIds: ID[]): Promise<Record<ID, ID>> {
-		const results = await this.LineModel.findAll({ where: { mapId, id: lineIds }, attributes: ["id", "typeId"] });
-		return Object.fromEntries(results.map((result) => [result.id, result.typeId]));
 	}
 
 }

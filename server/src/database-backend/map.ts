@@ -34,6 +34,7 @@ export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, Infer
 	id: CreationOptional<ID>;
 	mapId: ForeignKey<MapModel["id"]>;
 	slug: MapSlug;
+	comment: string;
 	password: Buffer | null;
 	permissions: MapPermissions;
 	searchEngines: boolean;
@@ -67,6 +68,7 @@ export default class DatabaseMapsBackend {
 		this.MapLinkModel.init({
 			id: getDefaultIdType(),
 			slug: { type: DataTypes.TEXT, allowNull: false },
+			comment: { type: DataTypes.TEXT, allowNull: false },
 			password: { type: DataTypes.BLOB, allowNull: true },
 			permissions: {
 				type: DataTypes.TEXT,

@@ -1,7 +1,7 @@
 import type { Manifest } from "vite";
 import { paths, serve } from "facilmap-frontend/build.js";
 import { readFile } from "node:fs/promises";
-import type { ID, MapData, Stripped, Type } from "facilmap-types";
+import type { MapData, Stripped, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
@@ -104,7 +104,7 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 export function renderTable({ mapData, types, renderSingleTable, url }: {
 	mapData: Stripped<MapData>;
 	types: Array<Stripped<Type>>;
-	renderSingleTable: (typeId: ID, params: TableParams) => ReadableStream<string>;
+	renderSingleTable: (type: Type, params: TableParams) => ReadableStream<string>;
 	url: string;
 }): ReadableStream<string> {
 	return streamPromiseToStream((async () => {
@@ -124,9 +124,9 @@ export function renderTable({ mapData, types, renderSingleTable, url }: {
 			normalizePageDescription,
 			formatTypeName,
 			quoteHtml,
-			renderSingleTable: (typeId: ID, params: TableParams) => {
+			renderSingleTable: (type: Type, params: TableParams) => {
 				const placeholder = `%${generateRandomId(32)}%`;
-				replace[placeholder] = renderSingleTable(typeId, params);
+				replace[placeholder] = renderSingleTable(type, params);
 				return placeholder;
 			},
 			mapData,

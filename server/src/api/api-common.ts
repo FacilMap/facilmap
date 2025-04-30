@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import type { AnyMapSlug, Api, ApiVersion, StreamedResults } from "facilmap-types";
+import type { AnyMapSlug, Api, ApiVersion, ExportResult, StreamedResults } from "facilmap-types";
 import * as z from "zod";
 import type { RouteParameters } from "express-serve-static-core";
 
@@ -21,6 +21,8 @@ export type ApiImplObj<Version extends ApiVersion, Func extends keyof Api<Versio
 		"empty" | ((res: Response) => void)
 	) : Awaited<ReturnType<ApiFunc<Version, Func>>> extends StreamedResults<any> ? (
 		"stream" | ((res: Response, result: Awaited<ReturnType<ApiFunc<Version, Func>>>) => void)
+	) : Awaited<ReturnType<ApiFunc<Version, Func>>> extends ExportResult ? (
+		"export" | ((res: Response, result: Awaited<ReturnType<ApiFunc<Version, Func>>>) => void)
 	) : (
 		"json" | ((res: Response, result: Awaited<ReturnType<ApiFunc<Version, Func>>>) => void)
 	)
