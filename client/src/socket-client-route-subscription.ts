@@ -1,4 +1,4 @@
-import type { ApiV3, DeepReadonly, EventHandler, EventName, ExportFormat, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoints } from "facilmap-types";
+import type { ApiV3, DeepReadonly, EventHandler, EventName, ExportResult, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoints } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
@@ -6,7 +6,7 @@ import { SocketClientSubscription, type BasicSubscriptionData } from "./socket-c
 
 type SocketClientRouteSubscriptionInterface = {
 	[K in (
-		"exportRoute"
+		"exportRouteAsGpx" | "exportRouteAsGeoJson"
 	)]: SocketApi<SocketVersion.V3, false>[K] extends (routeKey: string, ...args: infer Args) => infer Result ? (...args: Args) => Result : never;
 };
 
@@ -54,8 +54,12 @@ export class SocketClientRouteSubscription extends SocketClientSubscription<Rout
 		return mergeEventHandlers(super._getEventHandlers(), {});
 	};
 
-	async exportRoute(data: { format: ExportFormat }): ReturnType<ApiV3<true>["exportLine"]> {
-		return await this.client.exportRoute(this.data.routeKey, data);
+	async exportRouteAsGpx(options?: { rte?: boolean }): Promise<ExportResult> {
+		return await this.client.exportRouteAsGpx(this.data.routeKey, options);
+	}
+
+	async exportRouteAsGeoJson(): Promise<ExportResult> {
+		return await this.client.exportRouteAsGeoJson(this.data.routeKey);
 	}
 
 }

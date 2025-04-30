@@ -5,8 +5,8 @@ import type { ID } from "./base.js";
 import type { Marker } from "./marker.js";
 import type { Line } from "./line.js";
 
-export type MarkerFeature = Feature<Point, Omit<Marker, "id" | "mapId" | "lat" | "lon" | "ele">>;
-export type LineFeature = Feature<LineString, Omit<Line, "id" | "mapId" | "top" | "left" | "right" | "bottom" | "extraInfo" | "ascent" | "descent">>;
+export type MarkerFeature = Feature<Point, Omit<Marker, "id" | "mapId" | "lat" | "lon" | "ele" | "own">>;
+export type LineFeature = Feature<LineString, Omit<Line, "id" | "mapId" | "top" | "left" | "right" | "bottom" | "extraInfo" | "ascent" | "descent" | "own">>;
 
 export interface GeoJsonExtensions {
 	name: string;

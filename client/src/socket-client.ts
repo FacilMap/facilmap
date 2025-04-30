@@ -6,10 +6,9 @@ import {
 	type SocketClientToServerEvents, type SocketServerToClientEvents, type SetLanguageRequest, type PagingInput,
 	type AllMapObjectsPick, type StreamedResults, type BboxWithExcept, type AllMapObjectsItem, type SocketApi,
 	type StreamId, type FindOnMapResult, type HistoryEntry, type StreamToStreamId, type RouteParameters,
-	type LineToRouteRequest, type ApiV3, type LineWithTrackPoints, type DeepReadonly, type SubscribeToMapOptions,
-	ApiVersion, type Api, type ExportFormat, type AllMapObjects, type LineTemplate, type AnyMapSlug, type Stripped,
-	getMainAdminLink,
-	type MapPermissions
+	type LineToRouteRequest, type LineWithTrackPoints, type DeepReadonly, type SubscribeToMapOptions,
+	ApiVersion, type Api, type AllMapObjects, type LineTemplate, type AnyMapSlug, type Stripped,
+	getMainAdminLink, type MapPermissions, type ExportResult
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
@@ -229,6 +228,13 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return streamToIterable(this._handleStream(streamId));
 	}
 
+	protected _handleExportResult(result: Omit<ExportResult, "data"> & { data: StreamId<Uint8Array> }): ExportResult {
+		return {
+			...result,
+			data: this._handleStream(result.data)
+		};
+	}
+
 	protected async _abortStream(streamId: StreamId<any>): Promise<void> {
 		await this._call("abortStream", streamId);
 	}
@@ -381,6 +387,26 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return await this._call("getMapToken", mapSlug, options);
 	}
 
+	async exportMapAsGpx(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportMapAsGpx", mapSlug, options));
+	}
+
+	async exportMapAsGpxZip(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportMapAsGpxZip", mapSlug, options));
+	}
+
+	async exportMapAsGeoJson(mapSlug: AnyMapSlug, options?: { filter?: string }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportMapAsGeoJson", mapSlug, options));
+	}
+
+	async exportMapAsTable(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportMapAsTable", mapSlug, options));
+	}
+
+	async exportMapAsCsv(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportMapAsCsv", mapSlug, options));
+	}
+
 	async getHistory(mapSlug: AnyMapSlug, data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
 		return await this._call("getHistory", mapSlug, data);
 	}
@@ -442,12 +468,12 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("deleteLine", mapSlug, lineId);
 	}
 
-	async exportLine(mapSlug: AnyMapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
-		const result = await this._call("exportLine", mapSlug, lineId, options);
-		return {
-			...result,
-			data: this._handleStream(result.data)
-		};
+	async exportLineAsGpx(mapSlug: AnyMapSlug, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportLineAsGpx", mapSlug, lineId, options));
+	}
+
+	async exportLineAsGeoJson(mapSlug: AnyMapSlug, lineId: ID): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportLineAsGeoJson", mapSlug, lineId));
 	}
 
 	async getLineTemplate(mapSlug: AnyMapSlug, options: { typeId: ID }): Promise<LineTemplate> {
@@ -582,12 +608,12 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		await this._call("unsubscribeFromRoute", routeKey);
 	}
 
-	async exportRoute(routeKey: string, data: { format: ExportFormat }): ReturnType<ApiV3<true>["exportLine"]> {
-		const result = await this._call("exportRoute", routeKey, data);
-		return {
-			...result,
-			data: this._handleStream(result.data)
-		};
+	async exportRouteAsGpx(routeKey: string, data?: { rte?: boolean }): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportRouteAsGpx", routeKey, data));
+	}
+
+	async exportRouteAsGeoJson(routeKey: string): Promise<ExportResult> {
+		return this._handleExportResult(await this._call("exportRouteAsGeoJson", routeKey));
 	}
 
 	async setBbox(bbox: BboxWithZoom): Promise<void> {

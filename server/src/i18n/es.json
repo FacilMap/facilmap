@@ -27,7 +27,6 @@
         "map-not-exist-error": "Este mapa no existe.",
         "map-already-loaded-error": "Ya se cargó el mapa.",
         "no-map-open-error": "No se abrió ningún mapa.",
-        "unknown-format-error": "Formato desconocido",
         "route-not-available-error": "Ruta no disponible.",
         "route-name": "Ruta de FacilMap",
         "already-listening-to-history-error": "Historial de cambios ya suscrito.",

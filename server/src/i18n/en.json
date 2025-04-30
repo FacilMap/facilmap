@@ -4,7 +4,6 @@
     "wrong-password": "Wrong map password.",
     "api": {
         "map-not-exist-error": "This map does not exist.",
-        "unknown-format-error": "Unknown format",
         "delete-current-link-error": "Cannot delete the current map link.",
         "revoke-current-link-error": "Cannot revoke admin rights for the current map link.",
         "admin-token-error": "Map tokens may not have admin permissions."
@@ -40,7 +39,6 @@
         "map-not-exist-error": "This map does not exist.",
         "map-already-loaded-error": "Map already loaded.",
         "no-map-open-error": "No map opened.",
-        "unknown-format-error": "Unknown format",
         "route-not-available-error": "Route not available.",
         "route-name": "FacilMap route",
         "already-listening-to-history-error": "Already listening to history.",

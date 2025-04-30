@@ -1,6 +1,6 @@
 import {
 	ApiVersion, CRU, Units, type AllMapObjects, type AllMapObjectsItem, type AllMapObjectsPick, type AnyMapSlug,
-	type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportFormat, type FindMapsResult,
+	type Api, type Bbox, type BboxWithExcept, type BboxWithZoom, type ExportResult, type FindMapsResult,
 	type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints,
 	type MapData, type MapPermissions, type Marker, type PagedResults, type PagingInput, type RouteInfo,
 	type RouteRequest, type SearchResult, type StreamedResults, type Stripped, type TrackPoint, type Type, type View
@@ -138,6 +138,14 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
+	protected getExportResult(res: Response): ExportResult {
+		return {
+			type: res.headers.get("Content-type")!,
+			filename: parseContentDisposition(res.headers.get("Content-disposition")!).parameters.filename,
+			data: res.body!
+		};
+	}
+
 	async findMaps(query: string, data?: PagingInput): Promise<PagedResults<FindMapsResult>> {
 		const res = await this.fetch("/map", { query: { query, ...data } });
 		return await res.json();
@@ -217,6 +225,56 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	async getMapToken(mapSlug: AnyMapSlug, options: { permissions: MapPermissions, noPassword?: boolean }): Promise<{ token: string }> {
 		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/token`);
 		return await res.json();
+	}
+
+	async exportMapAsGpx(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx`, {
+			query: {
+				...options?.rte != null ? {
+					rte: `${options.rte}`,
+				} : {},
+				filter: options?.filter
+			}
+		}));
+	}
+
+	async exportMapAsGpxZip(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx/zip`, {
+			query: {
+				...options?.rte != null ? {
+					rte: `${options.rte}`,
+				} : {},
+				filter: options?.filter
+			}
+		}));
+	}
+
+	async exportMapAsGeoJson(mapSlug: AnyMapSlug, options?: { filter?: string }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx`, {
+			query: {
+				filter: options?.filter
+			}
+		}));
+	}
+
+	async exportMapAsTable(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/table`, {
+			query: {
+				typeId: options.typeId,
+				filter: options.filter,
+				hide: options.hide?.join(",")
+			}
+		}));
+	}
+
+	async exportMapAsCsv(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/csv`, {
+			query: {
+				typeId: options.typeId,
+				filter: options.filter,
+				hide: options.hide?.join(",")
+			}
+		}));
 	}
 
 	async getHistory(mapSlug: AnyMapSlug, data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
@@ -326,17 +384,18 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		});
 	}
 
-	async exportLine(mapSlug: AnyMapSlug, lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/export`, {
+	async exportLineAsGpx(mapSlug: AnyMapSlug, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/gpx`, {
 			query: {
-				format: options.format
+				...options?.rte != null ? {
+					rte: `${options.rte}`
+				} : {}
 			}
-		});
-		return {
-			type: res.headers.get("Content-type")!,
-			filename: parseContentDisposition(res.headers.get("Content-disposition")!).parameters.filename,
-			data: res.body!
-		};
+		}));
+	}
+
+	async exportLineAsGeoJson(mapSlug: AnyMapSlug, lineId: ID): Promise<ExportResult> {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/geojson`));
 	}
 
 	async getLineTemplate(mapSlug: AnyMapSlug, options: { typeId: ID }): Promise<LineTemplate> {

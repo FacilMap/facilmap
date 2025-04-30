@@ -77,7 +77,6 @@ function getInjectedConfig(): InjectedConfig {
 
 export interface RenderMapParams {
 	mapData: { name: string | undefined; description: string | undefined; searchEngines: boolean } | undefined;
-	isReadOnly: boolean;
 	url: string;
 }
 

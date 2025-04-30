@@ -1,22 +1,19 @@
 import compression from "compression";
 import express, { type ErrorRequestHandler, type Request, type Response } from "express";
 import { createServer, type Server as HttpServer } from "http";
-import { ApiVersion, LegacyV2Writable, stringifiedIdValidator, type MapDataWithWritable } from "facilmap-types";
-import { createSingleTable, createTable } from "./export/table.js";
+import { ApiVersion, type MapData, type Stripped } from "facilmap-types";
+import { createTable } from "./export/table.js";
 import Database from "./database/database";
-import { exportGeoJson } from "./export/geojson.js";
-import { exportGpx, exportGpxZip } from "./export/gpx.js";
 import domainMiddleware from "express-domain-middleware";
 import { getOembedJson, getOpensearchXml, getPwaManifest, getStaticFrontendMiddleware, renderMap, type RenderMapParams } from "./frontend";
-import { getSafeFilename, normalizeMapName, parseMapUrl } from "facilmap-utils";
+import { normalizeMapName, parseMapUrl } from "facilmap-utils";
 import { paths } from "facilmap-frontend/build.js";
 import config from "./config";
-import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
 import { i18nMiddleware } from "./i18n.js";
 import { getApiMiddleware } from "./api/api.js";
-import { readableFromWeb, writableToWeb } from "./utils/streams.js";
+import { writableToWeb } from "./utils/streams.js";
 import finalhandler from "finalhandler";
 import { ApiV3Backend } from "./api/api-v3.js";
 
@@ -31,26 +28,27 @@ export async function initWebserver(database: Database, port: number, host?: str
 		let params: RenderMapParams;
 		if(req.params?.mapSlug) {
 			try {
-				const mapData = await database.maps.getMapDataBySlug(req.params.mapSlug, LegacyV2Writable.READ);
+				const api = new ApiV3Backend(database, req.ip);
+				const { mapData, activeLink } = await api.resolveMapSlug(req.params.mapSlug);
 				params = {
 					mapData: {
-						searchEngines: mapData.searchEngines,
+						searchEngines: activeLink.searchEngines,
 						name: normalizeMapName(mapData.name),
 						description: mapData.description
 					},
-					isReadOnly: mapData.readId === req.params.mapSlug,
 					url: `${baseUrl}${encodeURIComponent(req.params.mapSlug)}`
 				};
 			} catch (err: any) {
-				if (err.status === 404) {
-					res.status(404);
+				if (err.status === 401 || err.status === 404) {
+					if (err.status === 404) {
+						res.status(404);
+					}
 					params = {
 						mapData: {
 							searchEngines: false,
 							name: undefined,
 							description: undefined
 						},
-						isReadOnly: true,
 						url: `${baseUrl}${encodeURIComponent(req.params.mapSlug)}`
 					};
 				} else {
@@ -60,7 +58,6 @@ export async function initWebserver(database: Database, port: number, host?: str
 		} else {
 			params = {
 				mapData: undefined,
-				isReadOnly: true,
 				url: baseUrl
 			};
 		}
@@ -118,14 +115,16 @@ export async function initWebserver(database: Database, port: number, host?: str
 			return;
 		}
 
+		const api = new ApiV3Backend(database, req.ip);
+
 		const baseUrl = getBaseUrl(req);
-		let mapData: MapDataWithWritable | undefined;
+		let mapData: Stripped<MapData> | undefined;
 		if (query.url === baseUrl || `${query.url}/` === baseUrl) {
 			mapData = undefined;
 		} else {
 			const parsed = parseMapUrl(query.url, baseUrl);
 			if (parsed) {
-				mapData = await database.maps.getMapDataBySlug(parsed.mapSlug, LegacyV2Writable.READ);
+				mapData = await api.getMap(parsed.mapSlug);
 			} else {
 				res.status(404).send();
 				return;
@@ -216,7 +215,6 @@ export async function initWebserver(database: Database, port: number, host?: str
 	});
 
 	app.get("/:mapSlug/csv/:typeId", async (req, res) => {
-		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const query = z.object({
 			filter: z.string().optional(),
 			hide: z.string().optional()

@@ -1,4 +1,4 @@
-import { getMainAdminLink, type AllMapObjectsItem, type AllMapObjectsPick, type AnyMapSlug, type Bbox, type BboxWithExcept, type BboxWithZoom, type CRU, type DeepReadonly, type EventHandler, type EventName, type ExportFormat, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData, type MapPermissions, type MapSlug, type Marker, type PagedResults, type PagingInput, type SocketApi, type SocketVersion, type StreamedResults, type Stripped, type SubscribeToMapOptions, type TrackPoint, type Type, type View } from "facilmap-types";
+import { getMainAdminLink, type AllMapObjectsItem, type AllMapObjectsPick, type AnyMapSlug, type Bbox, type BboxWithExcept, type BboxWithZoom, type CRU, type DeepReadonly, type EventHandler, type EventName, type ExportResult, type FindOnMapResult, type HistoryEntry, type ID, type Line, type LineTemplate, type LineWithTrackPoints, type MapData, type MapPermissions, type MapSlug, type Marker, type PagedResults, type PagingInput, type SocketApi, type SocketVersion, type StreamedResults, type Stripped, type SubscribeToMapOptions, type TrackPoint, type Type, type View } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
@@ -147,6 +147,26 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		return await this.client.getMapToken(this.data.mapSlug, options);
 	}
 
+	async exportMapAsGpx(options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return await this.client.exportMapAsGpx(this.data.mapSlug, options);
+	}
+
+	async exportMapAsGpxZip(options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+		return await this.client.exportMapAsGpxZip(this.data.mapSlug, options);
+	}
+
+	async exportMapAsGeoJson(options?: { filter?: string }): Promise<ExportResult> {
+		return await this.client.exportMapAsGeoJson(this.data.mapSlug, options);
+	}
+
+	async exportMapAsTable(options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return await this.client.exportMapAsTable(this.data.mapSlug, options);
+	}
+
+	async exportMapAsCsv(options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+		return await this.client.exportMapAsCsv(this.data.mapSlug, options);
+	}
+
 	async getHistory(data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
 		return await this.client.getHistory(this.data.mapSlug, data);
 	}
@@ -203,8 +223,12 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client.deleteLine(this.data.mapSlug, lineId);
 	}
 
-	async exportLine(lineId: ID, options: { format: ExportFormat }): Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }> {
-		return await this.client.exportLine(this.data.mapSlug, lineId, options);
+	async exportLineAsGpx(lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
+		return await this.client.exportLineAsGpx(this.data.mapSlug, lineId, options);
+	}
+
+	async exportLineAsGeoJson(lineId: ID): Promise<ExportResult> {
+		return await this.client.exportLineAsGeoJson(this.data.mapSlug, lineId);
 	}
 
 	async getMapTypes(): Promise<StreamedResults<Stripped<Type>>> {

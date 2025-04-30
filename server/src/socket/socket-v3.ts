@@ -4,7 +4,7 @@ import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink, type ExportResult, type ReplaceProperties } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
@@ -115,6 +115,13 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	emitStreamedResults<T>(results: StreamedResults<T>): StreamToStreamId<StreamedResults<T>> {
 		return {
 			results: this.emitStream<any>(results.results)
+		};
+	}
+
+	emitExportResult(result: ExportResult): ReplaceProperties<ExportResult, { data: StreamId<Uint8Array> }> {
+		return {
+			...result,
+			data: this.emitStream(streamToIterable(result.data))
 		};
 	}
 
@@ -240,6 +247,26 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.api.getMapToken(this.resolveMapSlug(mapSlug), permissions);
 			},
 
+			exportMapAsGpx: async (mapSlug, options) => {
+				return this.emitExportResult(await this.api.exportMapAsGpx(mapSlug, options));
+			},
+
+			exportMapAsGpxZip: async (mapSlug, options) => {
+				return this.emitExportResult(await this.api.exportMapAsGpxZip(mapSlug, options));
+			},
+
+			exportMapAsGeoJson: async (mapSlug, options) => {
+				return this.emitExportResult(await this.api.exportMapAsGeoJson(mapSlug, options));
+			},
+
+			exportMapAsTable: async (mapSlug, options) => {
+				return this.emitExportResult(await this.api.exportMapAsTable(mapSlug, options));
+			},
+
+			exportMapAsCsv: async (mapSlug, options) => {
+				return this.emitExportResult(await this.api.exportMapAsCsv(mapSlug, options));
+			},
+
 			getHistory: async (mapSlug, paging = DEFAULT_PAGING) => {
 				return await this.api.getHistory(this.resolveMapSlug(mapSlug), paging);
 			},
@@ -312,12 +339,12 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				await this.api.deleteLine(this.resolveMapSlug(mapSlug), lineId);
 			},
 
-			exportLine: async (mapSlug, lineId, options) => {
-				const result = await this.api.exportLine(this.resolveMapSlug(mapSlug), lineId, options);
-				return {
-					...result,
-					data: this.emitStream(streamToIterable(result.data))
-				};
+			exportLineAsGpx: async (mapSlug, lineId, options) => {
+				return this.emitExportResult(await this.api.exportLineAsGpx(this.resolveMapSlug(mapSlug), lineId, options));
+			},
+
+			exportLineAsGeoJson: async (mapSlug, lineId) => {
+				return this.emitExportResult(await this.api.exportLineAsGeoJson(this.resolveMapSlug(mapSlug), lineId));
 			},
 
 			getLineTemplate: async (mapSlug, options) => {
@@ -519,37 +546,38 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				}
 			},
 
-			exportRoute: async (routeId, options) => {
+			exportRouteAsGpx: async (routeId, options) => {
 				const route = this.routeSubscriptionDetails[routeId];
 				if (!route) {
 					throw new Error(getI18n().t("socket.route-not-available-error"));
 				}
 
 				const routeInfo = markStripped({ ...route, name: getI18n().t("socket.route-name"), data: {} });
-				const filename = getSafeFilename(routeInfo.name);
+				const data = (
+					options?.rte ? exportLineToRouteGpx(routeInfo, undefined) :
+					exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId))
+				);
 
-				switch(options.format) {
-					case "gpx-trk":
-						return {
-							type: "application/gpx+xml",
-							filename: `${filename}.gpx`,
-							data: this.emitStream(streamToIterable(exportLineToTrackGpx(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
-						};
-					case "gpx-rte":
-						return {
-							type: "application/gpx+xml",
-							filename: `${filename}.gpx`,
-							data: this.emitStream(streamToIterable(exportLineToRouteGpx(routeInfo, undefined).pipeThrough(new TextEncoderStream())))
-						};
-					case "geojson":
-						return {
-							type: "application/geo+json",
-							filename: `${filename}.geojson`,
-							data: this.emitStream(streamToIterable(exportLineToGeoJson(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
-						};
-					default:
-						throw new Error(getI18n().t("socket.unknown-format"));
+				return {
+					type: "application/gpx+xml",
+					filename: `${getSafeFilename(routeInfo.name)}.gpx`,
+					data: this.emitStream(streamToIterable(data.pipeThrough(new TextEncoderStream())))
+				};
+			},
+
+			exportRouteAsGeoJson: async (routeId) => {
+				const route = this.routeSubscriptionDetails[routeId];
+				if (!route) {
+					throw new Error(getI18n().t("socket.route-not-available-error"));
 				}
+
+				const routeInfo = markStripped({ ...route, name: getI18n().t("socket.route-name"), data: {} });
+
+				return {
+					type: "application/geo+json",
+					filename: `${getSafeFilename(routeInfo.name)}.geojson`,
+					data: this.emitStream(streamToIterable(exportLineToGeoJson(routeInfo, undefined, this.database.routes.getAllRoutePoints(route.routeId)).pipeThrough(new TextEncoderStream())))
+				};
 			},
 
 			setBbox: async (bbox) => {
@@ -702,7 +730,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId] && this.bbox && (isInBbox(marker, this.bbox) || (oldMarker && isInBbox(oldMarker, this.bbox)))) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("markers")) {
-								const stripped = stripMarker(sub.mapLink, marker, isOwn(sub.mapLink, marker));
+								const stripped = stripMarker(sub.mapLink, marker);
 								if (stripped) {
 									void this.emit("marker", sub.mapSlug, stripped);
 								}
@@ -729,7 +757,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.pick.includes("lines")) {
-								const stripped = stripLine(sub.mapLink, line, isOwn(sub.mapLink, line));
+								const stripped = stripLine(sub.mapLink, line);
 								if (stripped) {
 									void this.emit("line", sub.mapSlug, stripped);
 								}
@@ -819,7 +847,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					if (this.mapSubscriptionDetails[mapId]) {
 						for (const sub of this.mapSubscriptionDetails[mapId]) {
 							if (sub.history) {
-								const stripped = stripHistoryEntry(sub.mapLink, data, false);
+								const stripped = stripHistoryEntry(sub.mapLink, data);
 								if (stripped) {
 									void this.emit("history", sub.mapSlug, stripped);
 								}

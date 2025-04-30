@@ -190,7 +190,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		return { token };
 	}
 
-	async exportMapGpx(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+	async exportMapAsGpx(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		return {
 			type: "application/gpx+xml",
@@ -199,7 +199,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async exportMapGpxZip(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
+	async exportMapAsGpxZip(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		return {
 			type: "application/zip",
@@ -208,7 +208,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async exportMapGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { filter?: string }): Promise<ExportResult> {
+	async exportMapAsGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { filter?: string }): Promise<ExportResult> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		return {
 			type: "application/geo+json",
@@ -217,7 +217,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async exportMapTable(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+	async exportMapAsTable(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const type = await this.getType(activeLink, options.typeId);
 		return {
@@ -233,7 +233,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async exportMapCsv(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
+	async exportMapAsCsv(mapSlug: AnyMapSlug | RawActiveMapLink, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const type = await this.getType(activeLink, options.typeId);
 		return {
@@ -482,7 +482,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		await this.database.lines._deleteLine(rawLine, { identity: activeLink.identity });
 	}
 
-	async exportLineGpx(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
+	async exportLineAsGpx(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 
 		const line = stripLineOrThrow(activeLink, await this.database.lines.getLine(mapData.id, lineId, { notFound404: true }));
@@ -501,7 +501,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 	}
 
-	async exportLineGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<ExportResult> {
+	async exportLineAsGeoJson(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID): Promise<ExportResult> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 
 		const line = stripLineOrThrow(activeLink, await this.database.lines.getLine(mapData.id, lineId, { notFound404: true }));
@@ -705,7 +705,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { permissions, noPassword }];
 	}, "json"),
 
-	exportMapGpx: apiImpl.get("/map/:mapSlug/gpx", (req) => {
+	exportMapAsGpx: apiImpl.get("/map/:mapSlug/gpx", (req) => {
 		const { rte, filter } = z.object({
 			rte: stringifiedBooleanValidator.optional(),
 			filter: z.string().optional()
@@ -713,7 +713,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { rte, filter }];
 	}, "export"),
 
-	exportMapGpxZip: apiImpl.get("/map/:mapSlug/gpx/zip", (req) => {
+	exportMapAsGpxZip: apiImpl.get("/map/:mapSlug/gpx/zip", (req) => {
 		const { rte, filter } = z.object({
 			rte: stringifiedBooleanValidator.optional(),
 			filter: z.string().optional()
@@ -721,14 +721,14 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { rte, filter }];
 	}, "export"),
 
-	exportMapGeoJson: apiImpl.get("/map/:mapSlug/geojson", (req) => {
+	exportMapAsGeoJson: apiImpl.get("/map/:mapSlug/geojson", (req) => {
 		const { filter } = z.object({
 			filter: z.string().optional()
 		}).parse(req.query);
 		return [getRequestMapSlug(req), { filter }];
 	}, "export"),
 
-	exportMapTable: apiImpl.get("/map/:mapSlug/table", (req) => {
+	exportMapAsTable: apiImpl.get("/map/:mapSlug/table", (req) => {
 		const { typeId, filter, hide } = z.object({
 			typeId: stringifiedIdValidator,
 			filter: z.string().optional(),
@@ -737,7 +737,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { typeId, filter, hide: hide ? hide.split(",") : undefined }];
 	}, "export"),
 
-	exportMapCsv: apiImpl.get("/map/:mapSlug/csv", (req) => {
+	exportMapAsCsv: apiImpl.get("/map/:mapSlug/csv", (req) => {
 		const { typeId, filter, hide } = z.object({
 			typeId: stringifiedIdValidator,
 			filter: z.string().optional(),
@@ -825,7 +825,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), lineId];
 	}, "empty"),
 
-	exportLineGpx: apiImpl.get("/map/:mapSlug/line/:lineId/gpx", (req) => {
+	exportLineAsGpx: apiImpl.get("/map/:mapSlug/line/:lineId/gpx", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		const { rte } = z.object({
 			rte: stringifiedBooleanValidator.optional()
@@ -833,7 +833,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), lineId, { rte }];
 	}, "export"),
 
-	exportLineGeoJson: apiImpl.get("/map/:mapSlug/line/:lineId/geojson", (req) => {
+	exportLineAsGeoJson: apiImpl.get("/map/:mapSlug/line/:lineId/geojson", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		return [getRequestMapSlug(req), lineId];
 	}, "export"),

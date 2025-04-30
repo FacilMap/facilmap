@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, idValidator, mapSlugValidator, objectWithIdValidator, pointValidator, routeModeValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
+import { bboxWithZoomValidator, idValidator, mapSlugValidator, objectWithIdValidator, pointValidator, routeModeValidator, type ID, type MapSlug, type ObjectWithId } from "../base.js";
 import { markerValidator } from "../marker.js";
 import { refineRawTypeValidator, rawTypeValidator, fieldOptionValidator, refineRawFieldOptionsValidator, fieldValidator, refineRawFieldsValidator, defaultFields, type Type, dataByFieldIdToDataByName, dataByNameToDataByFieldId } from "../type.js";
 import type { EventName } from "../events.js";
@@ -141,7 +141,7 @@ export const legacyV2LineTemplateRequestValidator = z.object({
 
 export const legacyV2LineExportRequestValidator = z.object({
 	id: idValidator,
-	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"])
+	format: z.enum(["gpx-trk", "gpx-rte"])
 });
 
 export const legacyV2FindQueryValidator = z.object({
@@ -164,7 +164,7 @@ export const legacyV2LineToRouteCreateValidator = z.object({
 });
 
 export const legacyV2RouteExportRequestValidator = z.object({
-	format: exportFormatValidator.extract(["gpx-trk", "gpx-rte"]),
+	format: z.enum(["gpx-trk", "gpx-rte"]),
 	routeId: z.string().optional()
 });
 
@@ -330,9 +330,9 @@ export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapDa
 		}
 	} else {
 		links = [
-			{ slug: mapData.adminId, password: false, permissions: { admin: true, settings: true, update: true, read: true }, searchEngines: false },
-			{ slug: mapData.writeId, password: false, permissions: { admin: false, settings: false, update: true, read: true }, searchEngines: false },
-			{ slug: mapData.id, password: false, permissions: { admin: false, settings: false, update: false, read: true }, searchEngines: mapData.searchEngines ?? false }
+			{ slug: mapData.adminId, comment: "Admin link", password: false, permissions: { admin: true, settings: true, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.writeId, comment: "Read-write link", password: false, permissions: { admin: false, settings: false, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.id, comment: "Read-only link", password: false, permissions: { admin: false, settings: false, update: false, read: true }, searchEngines: mapData.searchEngines ?? false }
 		];
 	}
 	return {

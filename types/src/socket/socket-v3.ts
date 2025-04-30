@@ -1,4 +1,4 @@
-import { bboxWithZoomValidator, exportFormatValidator, mapSlugValidator, type MapSlug, type ObjectWithId, type Stripped } from "../base.js";
+import { bboxWithZoomValidator, mapSlugValidator, type MapSlug, type ObjectWithId, type Stripped } from "../base.js";
 import { mapDataValidator, type MapData } from "../mapData.js";
 import { type Marker } from "../marker.js";
 import { type Line } from "../line.js";
@@ -9,8 +9,9 @@ import * as z from "zod";
 import { setLanguageRequestValidator, type StreamId, subscribeToMapPickValidator, type RoutePoints } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
 import { anyMapSlugValidator, apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
-import { optionalParam, type LinePoints } from "../api/api-common.js";
+import { optionalParam, type ExportResult, type LinePoints } from "../api/api-common.js";
 import type { DeepReadonly } from "../utility.js";
+import { tupleWithOptional } from "zod-tuple-with-optional";
 
 export const subscribeToMapOptionsValidator = z.object({
 	pick: z.array(subscribeToMapPickValidator).optional(),
@@ -24,19 +25,13 @@ export type SubscribeToRouteOptions = z.infer<typeof subscribeToRouteOptionsVali
 export const socketV3RequestValidators = {
 	...apiV3RequestValidators,
 
-	subscribeToMap: z.union([
-		// Optional tuple parameters are not supported in zod yet, see https://github.com/colinhacks/zod/issues/149
-		z.tuple([anyMapSlugValidator]),
-		z.tuple([anyMapSlugValidator, optionalParam(subscribeToMapOptionsValidator)])
-	]),
-	createMapAndSubscribe: z.union([
-		z.tuple([mapDataValidator.create,]),
-		z.tuple([mapDataValidator.create, optionalParam(subscribeToMapOptionsValidator)])
-	]),
+	subscribeToMap: tupleWithOptional([anyMapSlugValidator, optionalParam(subscribeToMapOptionsValidator)]),
+	createMapAndSubscribe: tupleWithOptional([mapDataValidator.create, optionalParam(subscribeToMapOptionsValidator)]),
 	unsubscribeFromMap: z.tuple([mapSlugValidator]),
 	subscribeToRoute: z.tuple([z.string(), subscribeToRouteOptionsValidator]),
 	unsubscribeFromRoute: z.tuple([z.string()]),
-	exportRoute: z.tuple([z.string(), z.object({ format: exportFormatValidator })]),
+	exportRouteAsGpx: tupleWithOptional([z.string(), optionalParam(z.object({ rte: z.boolean().optional() }))]),
+	exportRouteAsGeoJson: tupleWithOptional([z.string()]),
 	setBbox: z.tuple([bboxWithZoomValidator]),
 	setLanguage: z.tuple([setLanguageRequestValidator]),
 	abortStream: z.tuple([z.string()])
@@ -48,7 +43,8 @@ export interface SocketV3Response {
 	unsubscribeFromMap: void;
 	subscribeToRoute: void;
 	unsubscribeFromRoute: void;
-	exportRoute: Awaited<ReturnType<ApiV3<true>["exportLine"]>>;
+	exportRouteAsGpx: ExportResult;
+	exportRouteAsGeoJson: ExportResult;
 	setBbox: void;
 	setLanguage: void;
 	abortStream: void;

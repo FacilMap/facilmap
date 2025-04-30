@@ -121,11 +121,11 @@ type ApiV3Response = {
 	findOnMap: Array<Stripped<FindOnMapResult>>;
 	getMapToken: { token: string };
 
-	exportMapGpx: ExportResult;
-	exportMapGpxZip: ExportResult;
-	exportMapGeoJson: ExportResult;
-	exportMapTable: ExportResult;
-	exportMapCsv: ExportResult;
+	exportMapAsGpx: ExportResult;
+	exportMapAsGpxZip: ExportResult;
+	exportMapAsGeoJson: ExportResult;
+	exportMapAsTable: ExportResult;
+	exportMapAsCsv: ExportResult;
 
 	getHistory: PagedResults<Stripped<HistoryEntry>>;
 	revertHistoryEntry: void;
@@ -142,8 +142,8 @@ type ApiV3Response = {
 	createLine: Stripped<Line>;
 	updateLine: Stripped<Line>;
 	deleteLine: void;
-	exportLineGpx: ExportResult;
-	exportLineGeoJson: ExportResult;
+	exportLineAsGpx: ExportResult;
+	exportLineAsGeoJson: ExportResult;
 
 	getLineTemplate: LineTemplate;
 

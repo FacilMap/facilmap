@@ -360,7 +360,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 				if (!this.mapSlug) {
 					throw new Error(getI18n().t("socket.no-map-open-error"));
 				}
-				const result = await socketHandlersV3.exportLine(this.mapSlug, data.id, { format: data.format });
+				const result = await socketHandlersV3.exportLineAsGpx(this.mapSlug, data.id, { rte: data.format === "gpx-rte" });
 				return await streamToString(this.handleStream(result.data).pipeThrough(new TextDecoderStream()));
 			},
 
@@ -560,7 +560,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 			exportRoute: async (data) => {
 				const { routeId, format } = data;
-				const result = await socketHandlersV3.exportRoute(routeId ?? "", { format });
+				const result = await socketHandlersV3.exportRouteAsGpx(routeId ?? "", { rte: format === "gpx-rte" });
 				return await streamToString(this.handleStream(result.data).pipeThrough(new TextDecoderStream()));
 			}
 

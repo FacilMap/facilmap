@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title><%=normalizePageTitle(mapData?.name != null ? normalizeMapName(mapData.name) : undefined, appName)%></title>
 		<meta name="description" content="<%=normalizePageDescription(mapData?.description)%>" />
-<% if(!mapData || (isReadOnly && mapData.searchEngines)) { -%>
+<% if(!mapData || mapData.searchEngines) { -%>
 		<meta name="robots" content="index,nofollow" />
 <% } else { -%>
 		<meta name="robots" content="noindex,nofollow" />
