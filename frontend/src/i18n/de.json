@@ -682,7 +682,7 @@
         "zoom-to-object-label": "Zur Auswahl zoomen"
     },
     "map-slug-edit": {
-        "unique-id-error": "Die selbe ID kann nicht für unterschiedliche Zugangsrechte verwendet werden.",
+        "unique-slug-error": "Der selbe Slug kann nur für unterschiedliche Kartenlinks verwendet werden, wenn diese unterschiedliche Passwörter verwenden.",
         "copy-tooltip": "Kartenlink in die Zwischenablage kopieren",
         "qr-tooltip": "QR-Code für Kartenlink anzeigen",
         "copied-title": "Kartenlink kopiert",
@@ -764,9 +764,6 @@
         "no-shapes-error": "Es konnten keine Formen gefunden werden."
     },
     "share-dialog": {
-        "type-admin": "Admin-Link",
-        "type-write": "Schreib-Link",
-        "type-read": "Lese-Link",
         "title": "Teilen",
         "settings": "Einstellungen",
         "include-view": "Aktuelle Ansicht einschließen (Mittelpunkt: {{centre}}; Zoomstufe: {{zoom}}; Kartenstil: {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
@@ -782,7 +779,7 @@
         "show-pois": "POI-Tab",
         "show-legend": "Legende",
         "show-locate": "Standort",
-        "link-type": "Berechtigungen",
+        "map-link": "Kartenlink",
         "share-link": "Link teilen",
         "embed": "Karte einbetten",
         "link-copied-title": "Link kopiert",

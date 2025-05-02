@@ -34,6 +34,7 @@ export interface MapLinkModel extends Model<InferAttributes<MapLinkModel>, Infer
 	id: CreationOptional<ID>;
 	mapId: ForeignKey<MapModel["id"]>;
 	slug: MapSlug;
+	readToken: MapSlug;
 	comment: string;
 	password: Buffer | null;
 	permissions: MapPermissions;
@@ -68,6 +69,7 @@ export default class DatabaseMapsBackend {
 		this.MapLinkModel.init({
 			id: getDefaultIdType(),
 			slug: { type: DataTypes.TEXT, allowNull: false },
+			readToken: { type: DataTypes.TEXT, allowNull: false },
 			comment: { type: DataTypes.TEXT, allowNull: false },
 			password: { type: DataTypes.BLOB, allowNull: true },
 			permissions: {
@@ -160,9 +162,10 @@ export default class DatabaseMapsBackend {
 		await this.MapLinkModel.bulkCreate(links.map((l) => ({ ...l, mapId })));
 	}
 
-	async createMap(data: Optional<Omit<RawMapData, "defaultView" | "links">, "id"> & { links: Array<Optional<Omit<RawMapLink, "mapId">, "id">> }): Promise<RawMapData> {
+	async createMap(data: Optional<Omit<RawMapData, "defaultView" | "links">, "id"> & { links: Array<Optional<Omit<RawMapLink, "mapId">, "id">> | ((mapId: ID) => Promise<Array<Optional<Omit<RawMapLink, "mapId">, "id">>>) }): Promise<RawMapData> {
 		const createdObj = await this.MapModel.create(omit(data, ["links"]));
-		await this.setMapLinks(createdObj.id, data.links, { noClear: true });
+		const links = typeof data.links === "function" ? await data.links(createdObj.id) : data.links;
+		await this.setMapLinks(createdObj.id, links, { noClear: true });
 		const result = await this.getMapData(createdObj.id);
 		if (!result) {
 			throw new Error(getI18n().t("database.map-disappeared-error"));

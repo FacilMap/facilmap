@@ -32,7 +32,10 @@
     "maps": {
         "unnamed-map": "Unnamed map",
         "page-title": "{{mapName}} – {{appName}}",
-        "fallback-page-description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration."
+        "fallback-page-description": "A fully-featured OpenStreetMap-based map where markers and lines can be added with live collaboration.",
+        "admin-link-comment": "Admin link",
+        "write-link-comment": "Editable link",
+        "read-link-comment": "Read-only link"
     },
     "routing": {
         "format-by-hgv": "by HGV",

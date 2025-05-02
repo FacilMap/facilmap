@@ -608,15 +608,12 @@
         "embed-explanation-interpolation-learnMore": "Más información",
         "embed": "Incrustar",
         "share-link": "Compartir enlace",
-        "link-type": "Tipo de enlace",
         "show-locate": "Ubicación",
         "include-view-interpolation-conditionalPois": ", PDI: {{pois}}",
         "settings": "Configuración",
         "title": "Compartir",
-        "type-read": "De solo lectura",
         "include-view": "Incluir vista de mapa actual (centro: {{centre}}; nivel de zum: {{zoom}}; capa(s): {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
         "embed-copied-message": "El código para incrustar {{appName}} se copió en el portapapeles.",
-        "type-write": "Editable",
         "show-route": "Pestaña Ruta",
         "show-pois": "Pestaña PDI",
         "include-view-interpolation-conditionalPois-interpolation-pois-joiner": ", ",
@@ -625,7 +622,6 @@
         "include-view-interpolation-conditionalFilter": "; filtro: {{filter}}",
         "link-copied-title": "Enlace del mapa copiado",
         "embed-explanation": "Añade este código HTML a una página web para incrustar {{appName}}. {{learnMore}}",
-        "type-admin": "Admin",
         "link-copied-message": "El enlace del mapa se ha copiado en el portapapeles.",
         "embed-copied-title": "Código de inserción copiado"
     },
@@ -885,9 +881,6 @@
         "tab-label_one": "{{count}} PDI",
         "tab-label_many": "{{count}} PDIS",
         "tab-label_other": "{{count}} PDIS"
-    },
-    "map-slug-edit": {
-        "unique-id-error": "No se puede utilizar el mismo enlace para diferentes niveles de acceso."
     },
     "links": {
         "bing-maps": "Mapas de Bing",

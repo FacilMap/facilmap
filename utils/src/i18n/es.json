@@ -56,6 +56,9 @@
     "maps": {
         "unnamed-map": "Mapa sin nombre",
         "fallback-page-description": "Un completo mapa basado en OpenStreetMap donde se pueden añadir colaborativamente indicadores y líneas en tiempo real.",
-        "page-title": "{{mapName}}. {{appName}}"
+        "page-title": "{{mapName}}. {{appName}}",
+        "admin-link-comment": "Enlace administrativo",
+        "write-link-comment": "Enlace editable",
+        "read-link-comment": "Enlace de solo lectura"
     }
 }

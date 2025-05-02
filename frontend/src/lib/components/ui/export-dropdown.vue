@@ -1,30 +1,35 @@
-<script setup lang="ts" generic="F extends ExportFormat = ExportFormat">
+<script lang="ts">
 	import { computed, ref } from "vue";
 	import type { ButtonSize } from "../../utils/bootstrap";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import DropdownMenu from "./dropdown-menu.vue";
-	import { exportFormatValidator, type ExportFormat } from "facilmap-types";
 	import { useToasts } from "./toasts/toasts.vue";
 	import { saveAs } from "file-saver";
 	import vTooltip from "../../utils/tooltip";
 	import { concatArrayBuffers } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 	import { streamToArray } from "json-stream-es";
+import type { ExportResult } from "facilmap-types";
 
+	const exportFormats = ["gpx-trk", "gpx-rte", "geojson"] as const;
+	export type ExportFormat = typeof exportFormats[number];
+</script>
+
+<script setup lang="ts" generic="F extends ExportFormat = ExportFormat">
 	const context = injectContextRequired();
 	const toasts = useToasts();
 	const i18n = useI18n();
 
 	const props = defineProps<{
 		formats?: F[];
-		getExport: (format: NoInfer<F>) => Promise<{ type: string; filename: string; data: ReadableStream<Uint8Array> }>;
+		getExport: (format: NoInfer<F>) => Promise<ExportResult>;
 		isDisabled?: boolean;
 		size?: ButtonSize;
 	}>();
 
 	const isExporting = ref(false);
 
-	const formats = computed(() => props.formats as ExportFormat[] ?? exportFormatValidator.options);
+	const formats = computed(() => props.formats as ExportFormat[] ?? exportFormats);
 
 	async function doExport(format: ExportFormat): Promise<void> {
 		toasts.hideToast(`fm${context.id}-export-dropdown-error`);

@@ -16,9 +16,19 @@ export type RawMapLink = Omit<MapLink, "password"> & {
 	password: Buffer | null;
 };
 
-export type RawActiveMapLink = Optional<RawMapLink, "id"> & {
-	identity?: Buffer;
-};
+export type RawActiveMapLink = (
+	(
+		| RawMapLink
+		| (Omit<RawMapLink, "id" | "readToken"> & {
+			id?: undefined;
+			readToken?: undefined;
+			parent: RawMapLink;
+			slugHash: string;
+		})
+	) & {
+		identity?: Buffer;
+	}
+);
 
 export type RawMarker = Omit<Marker, "own"> & {
 	identity: Buffer | null;
@@ -56,7 +66,7 @@ function stripOrUndefined<T>(strip: () => T): T | undefined {
 export function stripMapData(link: RawActiveMapLink, mapData: RawMapData): Stripped<MapData> {
 	return markStripped({
 		...pick(mapData, ["id", "name", "description", "clusterMarkers", "legend1", "legend2", "defaultViewId"]),
-		activeLink: stripStoredMapLink(link, link)!,
+		activeLink: stripMapLink(link),
 		links: stripStoredMapLinks(link, mapData.links),
 		defaultView: mapData.defaultView && (stripView(link, mapData.defaultView) ?? null)
 	});
@@ -81,7 +91,7 @@ export function stripStoredMapLinks<L extends Optional<RawMapLink, "id" | "mapId
 	});
 }
 
-export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "mapId">>(link: RawActiveMapLink, mapLink: L): Stripped<Omit<MapLink, "id"> & { id: L["id"] }> | undefined {
+export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "readToken" | "mapId">>(link: RawActiveMapLink, mapLink: L): Stripped<Omit<MapLink, "id" | "readToken"> & { id: L["id"]; readToken: L["readToken"] }> | undefined {
 	if (
 		canAdministrateMap(link.permissions)
 		|| (
@@ -92,7 +102,8 @@ export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "mapId"
 		return markStripped({
 			...pick(mapLink, ["slug", "permissions", "searchEngines", "comment"]),
 			password: !!mapLink.password,
-			...mapLink.id != null ? { id: mapLink.id } : {} as { id: L["id"] }
+			...mapLink.id != null ? { id: mapLink.id } : {} as { id: L["id"] },
+			...mapLink.readToken != null ? { readToken: mapLink.readToken } : {} as { readToken: L["readToken"] }
 		});
 	} else {
 		return undefined;
@@ -103,7 +114,10 @@ export function stripMapLink(link: RawActiveMapLink): Stripped<ActiveMapLink> {
 	return markStripped({
 		...pick(link, ["slug", "permissions", "searchEngines", "comment"]),
 		password: !!link.password,
-		...link.id != null ? { id: link.id } : {}
+		...link.id != null ? {
+			id: link.id,
+			readToken: link.readToken
+		} : {}
 	});
 }
 
@@ -280,8 +294,10 @@ export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identi
 					comment: "",
 					password: token.passwordHash ? null : link.password,
 					searchEngines: false,
-					permissions: mergeMapPermissions(link.permissions, token.permissions)
-				}];
+					permissions: mergeMapPermissions(link.permissions, token.permissions),
+					slugHash: token.slugHash,
+					parent: link
+				}] satisfies RawActiveMapLink[];
 			} else {
 				return [];
 			}

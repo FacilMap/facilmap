@@ -7,7 +7,7 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import DropdownMenu from "./ui/dropdown-menu.vue";
-	import { formatTypeName, getOrderedTypes } from "facilmap-utils";
+	import { canUpdateType, formatTypeName, getOrderedTypes } from "facilmap-utils";
 	import Draggable from "vuedraggable";
 	import Icon from "./ui/icon.vue";
 	import { useI18n } from "../utils/i18n";
@@ -105,12 +105,14 @@
 						</td>
 						<td class="td-buttons">
 							<button
+								v-if="canUpdateType(clientSub.activeLink.permissions, type.id)"
 								type="button"
 								class="btn btn-secondary"
 								:disabled="isDeleting[type.id]"
 								@click="editDialogTypeId = type.id"
 							>{{i18n.t("manage-types-dialog.edit-button")}}</button>
 							<button
+								v-if="canUpdateType(clientSub.activeLink.permissions, type.id)"
 								type="button"
 								@click="deleteType(type)"
 								class="btn btn-secondary"
@@ -120,6 +122,7 @@
 								{{i18n.t("manage-types-dialog.delete-button")}}
 							</button>
 							<button
+								v-if="canUpdateType(clientSub.activeLink.permissions, type.id)"
 								type="button"
 								class="btn btn-secondary fm-drag-handle"
 								:disabled="isDeleting[type.id] || isMoving != null"

@@ -330,7 +330,7 @@ The client instance that this storage was created for.
 
 ```typescript
 Record<string, {
-	mapData: DeepReadonly<MapDataWithWritable> | undefined;
+	mapData: DeepReadonly<MapData> | undefined;
 	markers: Record<ID, DeepReadonly<Marker>>;
 	lines: Record<ID, DeepReadonly<LineWithTrackPoints>>;
 	views: Record<ID, DeepReadonly<View>>;
@@ -351,7 +351,7 @@ All the route data (by route key) that has been received from the server for eac
 
 ### `storeMapData()`
 
-Signature: `storeMapData(mapSlug: string, mapData: MapDataWithWritable): void`
+Signature: `storeMapData(mapSlug: string, mapData: MapData): void`
 
 Manually add map data to the store as if it had been received from the server.
 

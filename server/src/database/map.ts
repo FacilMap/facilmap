@@ -1,7 +1,7 @@
 import { type CRU, type FindMapsResult, type MapData, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type ReplaceProperties, type MapLink, type DeepReadonly } from "facilmap-types";
 import Database from "./database.js";
 import { getI18n } from "../i18n.js";
-import { createSalt, createJwtSecret, getPasswordHash } from "../utils/crypt.js";
+import { createSalt, createJwtSecret, getPasswordHash, createMapToken, getSlugHash } from "../utils/crypt.js";
 import type DatabaseMapsBackend from "../database-backend/map.js";
 import { type RawMapData } from "../utils/permissions.js";
 import { omit } from "lodash-es";
@@ -75,11 +75,16 @@ export default class DatabaseMaps {
 		}
 
 		const salt = createSalt();
+		const jwtSecret = createJwtSecret();
 
-		const links = await Promise.all(data.links.map(async (link) => {
-			const password = link.password !== false ? await getPasswordHash(link.password, salt) : null;
+		const links = async (mapId: ID) => await Promise.all(data.links.map(async (link) => {
+			const [password, readToken] = await Promise.all([
+				link.password !== false ? await getPasswordHash(link.password, salt) : null,
+				await createMapToken({ mapId, slugHash: getSlugHash(link.slug, salt), permissions: { read: true, update: false, settings: false, admin: false } }, jwtSecret)
+			]);
 			return {
 				...link,
+				readToken,
 				password
 			};
 		}));
@@ -88,7 +93,7 @@ export default class DatabaseMaps {
 			...data,
 			links,
 			salt,
-			jwtSecret: createJwtSecret(),
+			jwtSecret,
 			nextFieldId: 1
 		});
 
@@ -101,7 +106,7 @@ export default class DatabaseMaps {
 
 	async updateMapData(
 		mapId: ID,
-		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.CREATE_VALIDATED | CRU.UPDATE_VALIDATED>, { password?: string | false | Buffer | null }>> }>,
+		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.CREATE_VALIDATED | CRU.UPDATE_VALIDATED>, { password: string | boolean | Buffer }>> }>,
 		options: { identity: Buffer | undefined }
 	): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
@@ -124,14 +129,25 @@ export default class DatabaseMaps {
 				}
 			}
 
-			update.links = await Promise.all(data.links.map(async (link_) => {
+			update.links = await Promise.all(data.links.map(async (link_, i) => {
 				const link = { id: undefined, ...link_ }; // To allow TypeScript access to link.id
 				const oldLink = link.id != null ? oldData.links.find((l) => l.id === link.id) : undefined;
-				const password = typeof link.password === "undefined" && oldLink ? oldLink.password : typeof link.password === "object" ? link.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null;
+				if (link.password === true) {
+					if (!oldLink) {
+						throw new Error(`links[${i}].password is true but existing map link could not be found.`);
+					} else if (oldLink.password == null) {
+						throw new Error(`links[${i}].password is true but existing map link has no password set.`);
+					}
+				}
+				const [password, readToken] = await Promise.all([
+					link.password === true ? oldLink!.password : typeof link.password === "object" ? link.password : typeof link.password === "string" ? await getPasswordHash(link.password, oldData.salt) : null,
+					oldLink && link.slug === oldLink.slug ? oldLink.readToken : await createMapToken({ mapId, slugHash: getSlugHash(link.slug, oldData.salt), permissions: { read: true, update: false, settings: false, admin: false } }, oldData.salt)
+				]);
 
 				return {
 					...omit(link, ["id"]),
 					...oldLink ? { id: link.id } : {},
+					readToken,
 					password
 				};
 			}));

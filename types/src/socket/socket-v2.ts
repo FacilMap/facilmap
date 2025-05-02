@@ -11,7 +11,7 @@ import { omit, pick } from "lodash-es";
 import { lineValidator, type LineTemplate, type TrackPoint } from "../line.js";
 import { viewValidator } from "../view.js";
 import { pagingValidator, type FindOnMapMarker, type FindOnMapResult, type PagedResults } from "../api/api-common.js";
-import { getMainAdminLink, mapDataValidator, type ActiveMapLink, type MapLink } from "../mapData.js";
+import { ADMIN_LINK_COMMENT, getMainAdminLink, mapDataValidator, READ_LINK_COMMENT, WRITE_LINK_COMMENT, type ActiveMapLink, type MapLink } from "../mapData.js";
 import type { SearchResult } from "../searchResult.js";
 import { routeParametersValidator, type Route, type RouteInfo, type RouteRequest } from "../route.js";
 import type { DistributiveKeyOf, DistributiveOmit, ReplaceExistingProperties } from "../utility.js";
@@ -315,7 +315,7 @@ export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapDa
 ) {
 	let links: Array<MapLink<CRU.CREATE | CRU.UPDATE>>;
 	if (currentMapLinks) {
-		links = currentMapLinks.map((l) => omit(l, ["password"]));
+		links = currentMapLinks.map((l) => ({ ...l }));
 		const readLink = links.find((l) => !l.permissions.admin && !l.permissions.settings && !l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0);
 		const writeLink = links.find((l) => !l.permissions.admin && !l.permissions.settings && l.permissions.update && Object.keys(l.permissions.types ?? {}).length === 0);
 		const adminLink = links.find((l) => l.permissions.admin && Object.keys(l.permissions.types ?? {}).length === 0);
@@ -330,9 +330,9 @@ export function legacyV2MapDataToCurrent<M extends Record<keyof any, any>>(mapDa
 		}
 	} else {
 		links = [
-			{ slug: mapData.adminId, comment: "Admin link", password: false, permissions: { admin: true, settings: true, update: true, read: true }, searchEngines: false },
-			{ slug: mapData.writeId, comment: "Read-write link", password: false, permissions: { admin: false, settings: false, update: true, read: true }, searchEngines: false },
-			{ slug: mapData.id, comment: "Read-only link", password: false, permissions: { admin: false, settings: false, update: false, read: true }, searchEngines: mapData.searchEngines ?? false }
+			{ slug: mapData.adminId, comment: ADMIN_LINK_COMMENT, password: false, permissions: { admin: true, settings: true, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.writeId, comment: WRITE_LINK_COMMENT, password: false, permissions: { admin: false, settings: false, update: true, read: true }, searchEngines: false },
+			{ slug: mapData.id, comment: READ_LINK_COMMENT, password: false, permissions: { admin: false, settings: false, update: false, read: true }, searchEngines: mapData.searchEngines ?? false }
 		];
 	}
 	return {
@@ -397,8 +397,12 @@ export function legacyV2DataToCurrent<KeepOld extends boolean = false>(data: Rec
 	return keepOld ? Object.assign(newData, data) : newData as any;
 }
 
+export function legacyV2MarkerToCurrentWithoutData<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, keepOld?: KeepOld): RenameProperty<M, "symbol", "icon", KeepOld> {
+	return renameProperty(marker, "symbol", "icon", keepOld);
+}
+
 export function legacyV2MarkerToCurrent<M extends Record<keyof any, any>, KeepOld extends boolean = false>(marker: M, type: Type | undefined, keepOld?: KeepOld): ReplaceExistingProperties<RenameProperty<M, "symbol", "icon", KeepOld>, { data: Record<ID | (KeepOld extends true ? string : never), string> }> {
-	const result = renameProperty(marker, "symbol", "icon", keepOld);
+	const result = legacyV2MarkerToCurrentWithoutData(marker, keepOld);
 	if (type && "data" in result) {
 		result.data = legacyV2DataToCurrent(result.data, type, keepOld);
 	}

@@ -134,7 +134,7 @@ export function refineRawFieldsValidator<
 export const fieldsValidator = refineRawFieldsValidator({
 	read: z.array(fieldValidator.read),
 	create: z.array(fieldValidator.create),
-	update: z.array(fieldValidator.update)
+	update: z.array(fieldValidator.create.or(fieldValidator.update))
 });
 
 export const defaultFields = (): Field<CRU.CREATE>[] => [{ name: "Description", type: "textarea" as const } ];

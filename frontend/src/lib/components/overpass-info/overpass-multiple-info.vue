@@ -4,18 +4,16 @@
 	import type { OverpassElement } from "facilmap-leaflet";
 	import { computed, ref } from "vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { getClientSub, injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { overpassElementsToMarkersWithTags } from "../../utils/add";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import { formatPOIName } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
-	import { Writable } from "facilmap-types";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
 
 	const context = injectContextRequired();
-	const clientSub = getClientSub(context);
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
@@ -76,12 +74,10 @@
 							:destination="zoomDestination"
 						></ZoomToObjectButton>
 
-						<template v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ">
-							<AddToMapDropdown
-								:markers="markersWithTags"
-								size="sm"
-							></AddToMapDropdown>
-						</template>
+						<AddToMapDropdown
+							:markers="markersWithTags"
+							size="sm"
+						></AddToMapDropdown>
 					</div>
 				</CarouselTab>
 

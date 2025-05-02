@@ -33,6 +33,10 @@ export const mapPermissionsValidator = z.object({
 	checkPermissionOrder(p, ["read", "update", "settings", "admin"], [], ctx);
 
 	if (p.types) {
+		if (p.admin) {
+			ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["types"], message: "An admin link cannot have restricted access to types/fields." });
+		}
+
 		for (const type of keys(p.types)) {
 			checkPermissionOrder(p.types[type], ["read", "update"], ["types", type], ctx);
 
@@ -49,20 +53,22 @@ export type MapPermissions = z.infer<typeof mapPermissionsValidator>;
 export const mapLinkValidator = cruValidator({
 	id: exceptCreate(idValidator),
 	slug: mapSlugValidator,
+	readToken: onlyRead(mapSlugValidator),
 	comment: z.string(),
 	password: {
 		read: z.boolean(),
 		create: z.literal(false).or(z.string()),
-		update: z.literal(false).or(z.string()).optional() // Undefined will keep existing password
+		update: z.boolean().or(z.string())
 	},
 	permissions: mapPermissionsValidator,
 	searchEngines: z.boolean()
 });
 export type MapLink<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapLinkValidator>;
 
-export const activeMapLinkValidator = mapLinkValidator.read.omit({ id: true }).extend({
-	id: mapLinkValidator.read.shape.id.optional()
-});
+export const activeMapLinkValidator = mapLinkValidator.read.or(mapLinkValidator.read.omit({ id: true, readToken: true }).extend({
+	id: z.undefined().optional(),
+	readToken: z.undefined().optional()
+}));
 export type ActiveMapLink = z.infer<typeof activeMapLinkValidator>;
 
 export const mapLinksValidator = {
@@ -93,6 +99,14 @@ export const mapDataValidator = cruValidator({
 
 export type MapData<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof mapDataValidator>;
 
+export function getMainAdminLinkCandidates<L extends DeepReadonly<{ permissions: MapPermissions }>>(mapLinks: ReadonlyArray<L>): L[] {
+	return mapLinks.filter((l) => l.permissions.admin)!;
+}
+
 export function getMainAdminLink<L extends DeepReadonly<{ permissions: MapPermissions }>>(mapLinks: ReadonlyArray<L>): L {
 	return mapLinks.find((l) => l.permissions.admin)!;
 }
+
+export const ADMIN_LINK_COMMENT = "Admin link";
+export const WRITE_LINK_COMMENT = "Editable link";
+export const READ_LINK_COMMENT = "Read-only link";

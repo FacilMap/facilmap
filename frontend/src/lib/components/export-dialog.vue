@@ -11,8 +11,9 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import copyToClipboard from "copy-to-clipboard";
 	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
-	import { formatFieldName, formatTypeName, getOrderedTypes } from "facilmap-utils";
+	import { formatFieldName, formatTypeName, getOrderedTypes, mergeMapPermissions } from "facilmap-utils";
 	import { T, useI18n } from "../utils/i18n";
+import { isEqual } from "lodash-es";
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -86,6 +87,18 @@
 	const canSelectHide = computed(() => ["table", "csv"].includes(format.value));
 	const validateImmediate = computed(() => method.value === "link"); // No submit button
 
+	const exportMapSlug = computed(() => {
+		const equivalentReadLink = [clientSub.value.activeLink, ...clientSub.value.data.mapData.links].find((link) => (
+			link.password === false
+			&& isEqual(link.permissions, mergeMapPermissions(link.permissions, { read: true, update: false, settings: false, admin: false }))
+		));
+		if (equivalentReadLink) {
+			return equivalentReadLink.slug;
+		} else {
+			return clientSub.value.activeLink.readToken ?? clientSub.value.activeLink.slug;
+		}
+	});
+
 	function validateTypeId(typeId: ID | undefined) {
 		if (mustSelectType.value && resolveTypeId(typeId) == null) {
 			return i18n.t("export-dialog.select-type-error");
@@ -113,7 +126,7 @@
 					}
 					return (
 						context.baseUrl
-							+ clientSub.value.data.mapData.readId
+							+ encodeURIComponent(exportMapSlug.value)
 							+ `/rawTable`
 							+ `/${resolvedTypeId.value}`
 							+ (paramsStr ? `?${paramsStr}` : '')
@@ -121,7 +134,7 @@
 				} else {
 					return (
 						context.baseUrl
-							+ clientSub.value.data.mapData.readId
+							+ encodeURIComponent(exportMapSlug.value)
 							+ `/table`
 							+ (paramsStr ? `?${paramsStr}` : '')
 					);
@@ -134,7 +147,7 @@
 				}
 				return (
 					context.baseUrl
-						+ clientSub.value.data.mapData.readId
+						+ encodeURIComponent(exportMapSlug.value)
 						+ `/csv`
 						+ `/${resolvedTypeId.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -144,7 +157,7 @@
 			case "gpx": {
 				return (
 					context.baseUrl
-						+ clientSub.value.data.mapData.readId
+						+ encodeURIComponent(exportMapSlug.value)
 						+ `/${format.value}`
 						+ (routeType.value === "zip" ? `/zip` : "")
 						+ (paramsStr ? `?${paramsStr}` : '')
@@ -154,7 +167,7 @@
 			default: {
 				return (
 					context.baseUrl
-						+ clientSub.value.data.mapData.readId
+						+ encodeURIComponent(exportMapSlug.value)
 						+ `/${format.value}`
 						+ (paramsStr ? `?${paramsStr}` : '')
 				);

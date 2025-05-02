@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import { Writable, type SearchResult } from "facilmap-types";
+	import { type SearchResult } from "facilmap-types";
 	import SearchResultInfo from "../search-result-info.vue";
 	import type { SelectedItem } from "../../utils/selection";
 	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult, type MapResult } from "../../utils/search";
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../../utils/add";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
-	import { computed, ref, toRef } from "vue";
+	import { type ComponentInstance, computed, ref, toRef } from "vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
 	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
@@ -39,6 +39,8 @@
 	});
 
 	const customImport = ref(false);
+
+	const addToMapRef = ref<ComponentInstance<typeof AddToMapDropdown>>();
 
 	const activeResults = computed(() => {
 		return [
@@ -191,7 +193,7 @@
 					<slot name="after"></slot>
 				</div>
 
-				<div v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
+				<div v-show="addToMapRef?.isVisible && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
 					<button
 						type="button"
 						class="btn btn-secondary btn-sm"
@@ -200,6 +202,7 @@
 					>{{i18n.t("search-results.select-all")}}</button>
 
 					<AddToMapDropdown
+						ref="addToMapRef"
 						:label="i18n.t('search-results.add-to-map-label', { count: activeSearchResults.length })"
 						:markers="activeMarkersWithTags"
 						:lines="activeLinesWithTags"

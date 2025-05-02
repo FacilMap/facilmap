@@ -36,7 +36,7 @@ A bounding box that may include another bounding box as “except”. This can b
 * `shape` (string): The shape name for the marker. Default is an empty string (equivalent to `"drop"`).
 * `colour` (string): The colour of this marker as a 6-digit hex value, for example `ff0000`
 * `size` (number, min: 15): The height of the marker in pixels
-* `data` (`Record<string, string>`): The filled out form fields of the marker, keyed by field ID. A null-prototype object should always be used for this to avoid prototype pollution.
+* `data` (`Record<number, string>`): The filled out form fields of the marker, keyed by field ID.
 * `ele` (number or null): The elevation of this marker in metres (calculated by the server if not set)
 
 ## `Line`
@@ -62,7 +62,7 @@ Note that `Line` objects coming from the server don’t contain the `trackPoints
 * `colour` (string): The colour of this line as a 6-digit hex value, for example `0000ff`
 * `width` (number, min: 1): The width of the line
 * `stroke` (string): The stroke style of the line, an empty string for solid or `dashed` or `dotted`.
-* `data` (`Record<string, string>`): The filled out form fields of the line, keyed by field ID. Null-prototype objects should always be used for this to avoid prototype pollution.
+* `data` (`Record<number, string>`): The filled out form fields of the line, keyed by field ID.
 * `left`, `top`, `right`, `bottom` (number, only read): The bounding box of the line (set by the server)
 * `distance` (number, only read): The distance of the line in kilometers (set by the server)
 * `ascent`, `descent` (number or undefined, only read): The total ascent/descent of the line in metres (set by the server if enabled in route mode)
@@ -114,7 +114,7 @@ Represents a URL through which a map can be opened. Each map can have one or mor
 
 * `id` (number, only read/update): The internal ID of the map link. This is automatically created when the map link is first created. When changing an existing map link, keep its ID so that the server can identify which map link you have changed. On `mapData.mapLink`, this property is absent when the map was opened using a map token rather than a map slug.
 * `slug` (string): The map slug of the map link. This is the last part of the URL that can be used to open the map, and it is also used in the API to reference the map. The map slug must be unique to a specific map. However, one map may have multiple links with the same slug if they all have a password and those passwords are all different.
-* `password` (create/update: `string | false`, read: `boolean`): Set this to a password to require this password when opening the map through this link. Set it to `false` to require no password. When reading the map data of a map, `true` indicates that a password is set. Then updating a map, the `password` property is optional; ommitting it will keep the password that is currently configured.
+* `password` (create: `false | string`, read: `boolean`, update: `boolean | string`): Set this to a password to require this password when opening the map through this link. Set it to `false` to require no password. When reading the map data of a map, `true` indicates that a password is set. Then updating a map, `true` indicates that the existing password will keep the existing password unchanged (will fail if there is no existing password).
 * `permissions` (<code>[MapPermissions](#mappermissions)</code>): The permissions that will be given when opening the map through this link.
 * `searchEngines` (boolean): If this is true, this map link will be published and search engines (such as Google) will be allowed to index it. It will also be findable through the “Open map” dialog.
 
@@ -131,7 +131,7 @@ Represents a URL through which a map can be opened. Each map can have one or mor
 		* `read` (`boolean | "own"`): Whether users can see this field for markers/lines of this type. If set to `"own"`, they can only see it on markers/lines that they have personally created.
 		* `update` (`boolean | "own"`): Whether users can edit this field for markers/lines of this type. If set to `"own"`, they can only edit it on markers/lines that they have personally created.
 
-Within the hierarchy of `admin` &gt; `settings` &gt; `update` &gt; `read` and `true` &gt; `"own"` &gt; `false`, permissions of a lower level must always be given if a higher level permission is given. For example, it is not possible to give update permission without giving read permission. The only exception is that the `types` object can apply more restrictive permissions to individual types than what the general permissions allow, and the `field` object can apply more restrictive permissions to individual fields than the type permissions allow.
+Within the hierarchy of `admin` &gt; `settings` &gt; `update` &gt; `read` and `true` &gt; `"own"` &gt; `false`, permissions of a lower level must always be given if a higher level permission is given. For example, it is not possible to give update permission without giving read permission. The only exception is that the `types` object can apply more restrictive permissions to individual types than what the general permissions allow, and the `field` object can apply more restrictive permissions to individual fields than the type permissions allow. If `admin` permission is given, no `types` must be present.
 
 ## View
 
@@ -155,7 +155,7 @@ Within the hierarchy of `admin` &gt; `settings` &gt; `update` &gt; `read` and `t
 * `colourFixed`, `sizeFixed`, `iconFixed`, `shapeFixed`, `widthFixed`, `strokeFixed`, `modeFixed` (boolean): Whether those values are fixed and cannot be changed for an individual object. Setting this to true will modify all the objects of this type and fix the value.
 * `showInLegend` (boolean): Whether this type should be shown in the map legend.
 * `fields` (Array): The form fields for this type. Each field has the following properties:
-	* `id` (string): The unique immutable identifier of the field. This is also used as the key in the `data` properties of markers and lines. The FacilMap UI sets this to a UUIDv4 using <code>[crypto.randomUUID()](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID)</code>, it is recommended that you do the same.
+	* `id` (number, only read/update): The unique immutable identifier of the field. This is also used as the key in the `data` properties of markers and lines. When you update a type, omit this to create a new field (the server will assign an ID) or specify it to update an existing field. If an ID is not present anymore in the list of fields, that field will be deleted.
 	* `name` (string): The name of the field. The name must be unique, no two fields in the same type may have the same name. Note that the if the name is "Description", the FacilMap UI will translate the name to other languages even though the underlying name is in English.
 	* `type` (string): The type of field, one of `textarea`, `dropdown`, `checkbox`, `input`
 	* `controlColour`, `controlSize`, `controlIcon`, `controlShape`, `controlWidth`, `controlStroke` (boolean): If this field is a dropdown or checkbox, whether the different options set a specific property on the object
@@ -165,7 +165,6 @@ Within the hierarchy of `admin` &gt; `settings` &gt; `update` &gt; `read` and `t
 		* `value` (string): The value of this option.
 		* `oldValue` (string, only update): When renaming a dropdown option (using [`updateType()`](./methods.md#updatettype)), specify the former value here. Renaming a dropdown option will modify the objects of this type to rename the value.
 		* `colour`, `size`, `shape`, `icon`, `width`, `stroke` (string/number): The property value if this field controls that property
-* `formerFieldIds` (`Record<string, string>`): Maps the names of deleted fields to their IDs. The FacilMap UI uses this in a way that when you delete a field, it persists its name and ID in this property. When you create a field whose name is present in this property, it recycles its old ID. This way people can recover the field data if they accidentally deleted the field. It is recommended that you use the property in the same way when adding/deleting fields.
 
 ## HistoryEntry
 

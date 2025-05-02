@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Sidebar from "../ui/sidebar.vue";
 	import Icon from "../ui/icon.vue";
-	import { ref, toRef, useCssModule, watchEffect } from "vue";
+	import { computed, ref, toRef, useCssModule, watchEffect } from "vue";
 	import ToolboxAddDropdown from "./toolbox-add-dropdown.vue";
 	import ToolboxCollabMapsDropdown from "./toolbox-collab-maps-dropdown.vue";
 	import ToolboxHelpDropdown from "./toolbox-help-dropdown.vue";
@@ -12,7 +12,7 @@
 	import { isNarrowBreakpoint } from "../../utils/bootstrap";
 	import { fixOnCleanup } from "../../utils/vue";
 	import { Control, DomUtil, type Map } from "leaflet";
-	import { Writable } from "facilmap-types";
+	import { canConfigureMap, getCreatableTypes } from "facilmap-utils";
 
 	class CustomControl extends Control {
 		override onAdd(map: Map) {
@@ -37,6 +37,11 @@
 	const sidebarVisible = ref(false);
 
 	const menuButtonContainerRef = ref<HTMLElement>();
+
+	const canAdd = computed(() => clientSub.value && (
+		clientSub.value.activeLink.permissions.settings ||
+		getCreatableTypes(clientSub.value.activeLink.permissions, Object.values(clientSub.value.data.types), true).length > 0
+	));
 
 	watchEffect((onCleanup_) => {
 		const onCleanup = fixOnCleanup(onCleanup_);
@@ -74,12 +79,12 @@
 				></ToolboxCollabMapsDropdown>
 
 				<ToolboxAddDropdown
-					v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ"
+					v-if="canAdd"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxAddDropdown>
 
 				<ToolboxViewsDropdown
-					v-if="clientSub && (clientSub.data.mapData.writable !== Writable.READ || Object.keys(clientSub.data.views).length > 0)"
+					v-if="clientSub && (canConfigureMap(clientSub.activeLink.permissions) || Object.keys(clientSub.data.views).length > 0)"
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxViewsDropdown>
 

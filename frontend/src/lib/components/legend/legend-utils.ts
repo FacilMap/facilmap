@@ -1,6 +1,6 @@
 import type { ID, Shape, Stroke, Icon, Type } from "facilmap-types";
 import { iconList } from "facilmap-leaflet";
-import { formatTypeName, getDefaultFieldShowInLegend, getOrderedTypes, isBright } from "facilmap-utils";
+import { formatTypeName, getDefaultFieldShowInLegend, getOrderedTypes, isBright, numberKeys } from "facilmap-utils";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { getClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 
@@ -15,7 +15,7 @@ export interface LegendType {
 
 export interface LegendItem {
 	key: string;
-	fieldId: string | undefined;
+	fieldId: number | undefined;
 	value: string;
 	label?: string;
 	field?: string;
@@ -188,7 +188,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 						item.filtered = false;
 				}
 
-				for (const fieldId of Object.keys(data)) {
+				for (const fieldId of numberKeys(data)) {
 					items.forEach(function(it) {
 						if (it.fieldId == fieldId && it.value == data[fieldId]) {
 							it.filtered = false;

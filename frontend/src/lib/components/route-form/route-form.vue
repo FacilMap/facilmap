@@ -3,7 +3,7 @@
 	import Icon from "../ui/icon.vue";
 	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { ExportFormat, SearchResult } from "facilmap-types";
+	import type { SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
 	import { latLng, type LatLng } from "leaflet";
@@ -21,7 +21,7 @@
 	import { UseAsType, type RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
-	import ExportDropdown from "../ui/export-dropdown.vue";
+	import ExportDropdown, { type ExportFormat } from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import { mapRef } from "../../utils/vue";
 	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
@@ -527,7 +527,11 @@
 	}]);
 
 	async function getExport(format: ExportFormat) {
-		return await clientContext.value.client.exportRoute(props.routeKey, { format });
+		if (format === "geojson") {
+			return await clientContext.value.client.exportRouteAsGeoJson(props.routeKey);
+		} else {
+			return await clientContext.value.client.exportRouteAsGpx(props.routeKey, { rte: format === "gpx-rte" });
+		}
 	}
 
 	function setQuery(query: string, zoom = true, smooth = true): void {

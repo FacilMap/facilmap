@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import { displayView } from "facilmap-leaflet";
-	import { Writable, type DeepReadonly, type View } from "facilmap-types";
+	import { type DeepReadonly, type View } from "facilmap-types";
 	import SaveViewDialog from "../save-view-dialog.vue";
 	import ManageViewsDialog from "../manage-views-dialog.vue";
 	import { computed, ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { getOrderedViews } from "facilmap-utils";
+	import { canConfigureMap, getOrderedViews } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
@@ -48,7 +48,7 @@
 			>{{view.name}}</a>
 		</li>
 
-		<template v-if="clientSub.data.mapData.writable == Writable.ADMIN">
+		<template v-if="canConfigureMap(clientSub.activeLink.permissions)">
 			<li v-if="orderedViews.length > 0">
 				<hr class="dropdown-divider">
 			</li>

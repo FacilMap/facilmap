@@ -32,7 +32,10 @@
     "maps": {
         "unnamed-map": "Unbenannte Karte",
         "page-title": "{{mapName}} – {{appName}}",
-        "fallback-page-description": "Eine vielseitige Karte auf OpenStreetMap-Basis, auf der Marker und Linien mit Live-Kollaboration gesetzt werden können."
+        "fallback-page-description": "Eine vielseitige Karte auf OpenStreetMap-Basis, auf der Marker und Linien mit Live-Kollaboration gesetzt werden können.",
+        "admin-link-comment": "Admin-Link",
+        "write-link-comment": "Schreib-Link",
+        "read-link-comment": "Lese-Link"
     },
     "routing": {
         "format-by-hgv": "mit dem LKW",

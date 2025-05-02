@@ -66,10 +66,9 @@
 		return openedObject && props.objects.includes(openedObject) ? openedObject : undefined;
 	});
 
-	const canDelete = computed(() => props.objects.some((object) => {
-		const type = clientSub.value.data.types[object.typeId];
-		return !!type && canUpdateObject(clientSub.value.data.mapData, type, object);
-	}));
+	const canDelete = computed(() => props.objects.some((object) => (
+		canUpdateObject(clientSub.value.activeLink.permissions, object.typeId, object.own)
+	)));
 
 	async function deleteObjects(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-multiple-info-delete`);

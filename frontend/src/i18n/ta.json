@@ -391,11 +391,8 @@
         "zoom-to-result-label": "தேடல் முடிவுக்கு பெரிதாக்கு"
     },
     "share-dialog": {
-        "type-admin": "நிர்வாகி",
         "include-view": "தற்போதைய வரைபடக் காட்சியைச் சேர் (மையம்: {{centre}}; சூம் நிலை: {{zoom}}; அடுக்கு(கள்): {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
         "embed-explanation": "{{appName}} உட்பொதிக்க இந்த உஉகுமொ குறியீட்டை ஒரு வலைப்பக்கத்தில் சேர்க்கவும். {{learnMore}}",
-        "type-write": "எழுதக்கூடியது",
-        "type-read": "படிக்க மட்டும்",
         "title": "பங்கு",
         "settings": "அமைப்புகள்",
         "include-view-interpolation-layers-joiner": "அருவடிக்கு ",
@@ -410,7 +407,6 @@
         "show-pois": "பின்னர் தாவல்",
         "show-legend": "புராணக்கதை",
         "show-locate": "இடம்",
-        "link-type": "இணைப்பு வகை",
         "embed-explanation-interpolation-learnMore": "மேலும் அறிக",
         "share-link": "இணைப்பைப் பகிரவும்",
         "embed": "உட்பொதிக்கப்பட்டது",
@@ -760,9 +756,6 @@
         "show-details": "விவரங்களைக் காட்டு",
         "details": "விவரங்கள்",
         "zoom-to-object-label": "தேர்வுக்கு பெரிதாக்கு"
-    },
-    "map-slug-edit": {
-        "unique-id-error": "வெவ்வேறு அணுகல் நிலைகளுக்கும் அதே இணைப்பைப் பயன்படுத்த முடியாது."
     },
     "pagination": {
         "first-label": "முதல்",

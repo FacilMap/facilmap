@@ -65,7 +65,7 @@
 	}
 
 	function openResult(result: FindMapsResult): void {
-		clientContext.value.openMap(result.readId);
+		clientContext.value.openMap(result.slug);
 		modalRef.value!.modal.hide();
 
 		setTimeout(() => {
@@ -207,7 +207,7 @@
 							<td class="td-buttons">
 								<a
 									class="btn btn-secondary"
-									:href="context.baseUrl + encodeURIComponent(result.readId)"
+									:href="context.baseUrl + encodeURIComponent(result.slug)"
 									@click.exact.prevent="openResult(result)"
 								>{{i18n.t("open-map-dialog.open-map-by-search-button")}}</a>
 							</td>

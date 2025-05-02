@@ -12,7 +12,7 @@ import * as z from "zod";
 import type Database from "../database/database";
 import { getI18n } from "../i18n";
 import { apiImpl, getRequestMapSlug, stringArrayValidator, stringifiedJsonValidator, type ApiImpl } from "./api-common";
-import { canAdministrateMap, checkAdministrateMap, checkConfigureMap, checkManageObject, checkReadObject, checkRevertHistoryEntry, checkUpdateObject, getLineTemplate, getSafeFilename, normalizeLineName, normalizeMapName } from "facilmap-utils";
+import { canAdministrateMap, checkAdministrateMap, checkConfigureMap, checkManageObject, checkReadObject, checkRevertHistoryEntry, checkUpdateObject, checkUpdateType, getLineTemplate, getSafeFilename, mergeMapPermissions, normalizeLineName, normalizeMapName } from "facilmap-utils";
 import { exportLineToTrackGpx, exportLineToRouteGpx, exportGpx, exportGpxZip } from "../export/gpx";
 import { geoipLookup } from "../geoip";
 import { calculateRoute } from "../routing/routing";
@@ -183,9 +183,9 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const { activeLink, rawMapData } = await this.resolveMapSlug(mapSlug);
 		const token = await createMapToken({
 			mapId: activeLink.mapId,
-			slugHash: getSlugHash(activeLink.slug, rawMapData.salt),
+			slugHash: activeLink.id == null ? activeLink.slugHash : getSlugHash(activeLink.slug, rawMapData.salt),
 			passwordHash: options.noPassword && activeLink.password ? getPasswordHashHash(activeLink.password, rawMapData.salt) : undefined,
-			permissions: options.permissions
+			permissions: activeLink.id == null ? mergeMapPermissions(options.permissions, activeLink.permissions) : options.permissions
 		}, rawMapData.jwtSecret);
 		return { token };
 	}
@@ -556,8 +556,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async updateType(mapSlug: AnyMapSlug | RawActiveMapLink, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>): Promise<Stripped<Type>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkConfigureMap(activeLink.permissions);
-		checkManageObject(activeLink.permissions, typeId, false);
+		checkUpdateType(activeLink.permissions, typeId);
 		const rawType = await this.database.types.updateType(mapData.id, typeId, data, {
 			notFound404: true,
 			identity: activeLink.identity
@@ -567,8 +566,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async deleteType(mapSlug: AnyMapSlug | RawActiveMapLink, typeId: ID): Promise<void> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkConfigureMap(activeLink.permissions);
-		checkManageObject(activeLink.permissions, typeId, false);
+		checkUpdateType(activeLink.permissions, typeId);
 		await this.database.types.deleteType(mapData.id, typeId, {
 			notFound404: true,
 			identity: activeLink.identity

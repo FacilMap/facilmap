@@ -686,7 +686,7 @@
         "zoom-to-object-label": "Zoom to selection"
     },
     "map-slug-edit": {
-        "unique-id-error": "The same link cannot be used for different access levels.",
+        "unique-slug-error": "The same slug can only be used for different map links if they have different passwords.",
         "copy-tooltip": "Copy map link to clipboard",
         "qr-tooltip": "Show QR code for map link",
         "copied-title": "Map link copied",
@@ -704,6 +704,9 @@
         "title-create": "Create collaborative map",
         "title-edit": "Map settings",
         "create-button": "Create",
+        "tab-general": "General",
+        "tab-map-links": "Map links",
+        "tab-delete-map": "Delete map",
         "admin-link-label": "Admin link",
         "admin-link-description": "When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views.",
         "write-link-label": "Editable link",
@@ -768,9 +771,6 @@
         "no-shapes-error": "No shapes could be found."
     },
     "share-dialog": {
-        "type-admin": "Admin",
-        "type-write": "Writable",
-        "type-read": "Read-only",
         "title": "Share",
         "settings": "Settings",
         "include-view": "Include current map view (centre: {{centre}}; zoom level: {{zoom}}; layer(s): {{layers}}{{conditionalPois}}{{conditionalSelection}}{{conditionalFilter}})",
@@ -786,7 +786,8 @@
         "show-pois": "POI tab",
         "show-legend": "Legend",
         "show-locate": "Location",
-        "link-type": "Link type",
+        "map-link": "Map link",
+        "map-link-with-comment": "{{mapSlug}} ({{comment}})",
         "share-link": "Share link",
         "embed": "Embed",
         "link-copied-title": "Map link copied",

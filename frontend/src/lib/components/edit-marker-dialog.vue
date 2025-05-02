@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, markerValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, canConfigureMap, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject } from "facilmap-utils";
+	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -51,7 +51,7 @@
 
 	const showEditTypeDialog = ref<ID>();
 
-	const resolvedCanEditType = computed(() => canConfigureMap(clientSub.value.data.mapData, type.value));
+	const canEditType = computed(() => canUpdateType(clientSub.value.activeLink.permissions, marker.value.typeId));
 
 	watch(originalMarker, (newMarker, oldMarker) => {
 		if (!newMarker) {
@@ -175,7 +175,7 @@
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1 || resolvedCanEditType" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
+			<DropdownMenu v-if="types.length > 1 || canEditType" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
 				<template v-for="type in types" :key="type.id">
 					<li>
 						<a
@@ -187,7 +187,7 @@
 					</li>
 				</template>
 
-				<template v-if="resolvedCanEditType">
+				<template v-if="canEditType">
 					<li><hr class="dropdown-divider"></li>
 					<li>
 						<a

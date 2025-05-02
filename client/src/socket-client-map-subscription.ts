@@ -109,7 +109,7 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 
 			emit: (...args) => {
 				if (args[0] === "updateMap") {
-					const updates = args[1].args[1].links?.flatMap((l) => "id" in l && l.password != null ? [{ mapLinkId: l.id, password: l.password }] : []) ?? [];
+					const updates = args[1].args[1].links?.flatMap((l) => "id" in l && l.password != null && l.password !== true ? [{ mapLinkId: l.id, password: l.password }] : []) ?? [];
 					this.upcomingPasswordChanges.push(...updates);
 					void args[1].result.finally(() => {
 						for (let i = 0; i < this.upcomingPasswordChanges.length; i++) {

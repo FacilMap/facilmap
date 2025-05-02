@@ -11,7 +11,7 @@
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 	import { VueReactiveObjectProvider, computedWithDeps } from "../utils/vue";
 	import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
-	import type { CRU, MapData } from "facilmap-types";
+	import { getMainAdminLink, type CRU, type MapData } from "facilmap-types";
 
 	function isMapNotFoundError(fatalError: Error): boolean {
 		return (fatalError as any).status === 404;
@@ -65,6 +65,9 @@
 					get data() {
 						return undefined;
 					},
+					get activeLink() {
+						return undefined;
+					},
 					state: ClientContextMapState.DELETED
 				}) as ClientContextMap;
 			}
@@ -88,26 +91,21 @@
 		clientContext.value.map?.subscription.unsubscribe().catch(() => undefined);
 	});
 
-	watch(() => clientContext.value.map?.data?.mapData, (mapData, oldMapData) => {
+	watch(() => clientContext.value.map?.data?.mapData, (mapData) => {
 		if (mapData) {
-			// Update map name and set mapId on legacy favourites that don't have it set yet
 			for (const favourite of storage.favourites) {
-				if (favourite.mapSlug === mapData.readId || ("writeId" in mapData && favourite.mapSlug === mapData.writeId) || ("adminId" in mapData && favourite.mapSlug === mapData.adminId)) {
+				// Update map name and set mapId on legacy favourites that don't have it set yet
+				const mapLinkBySlug = mapData.links.find((l) => l.slug === favourite.mapSlug);
+				if (mapLinkBySlug) {
 					favourite.mapId = mapData.id;
+					favourite.linkId = mapLinkBySlug.id;
 					favourite.name = mapData.name;
 				}
-			}
-		}
 
-		if (mapData && oldMapData && oldMapData.id === mapData.id) {
-			// If map slug was changed, update it in favourites
-			for (const favourite of storage.favourites) {
-				if (favourite.mapSlug === oldMapData.readId) {
-					favourite.mapSlug = mapData.readId;
-				} else if ("writeId" in oldMapData && favourite.mapSlug === oldMapData.writeId && "writeId" in mapData) {
-					favourite.mapSlug = mapData.writeId;
-				} else if ("adminId" in oldMapData && favourite.mapSlug === oldMapData.adminId && "adminId" in mapData) {
-					favourite.mapSlug = mapData.adminId;
+				// If map slug was changed, update it in favourites
+				const mapLinkById = mapData.links.find((l) => favourite.linkId != null && favourite.linkId === l.id);
+				if (mapLinkById) {
+					favourite.mapSlug = mapLinkById.slug;
 				}
 			}
 		}
@@ -124,6 +122,9 @@
 			mapSlug: subscription.mapSlug,
 			get data() {
 				return clientContext.value.storage.maps[subscription.mapSlug];
+			},
+			get activeLink() {
+				return clientContext.value.storage.maps[subscription.mapSlug].mapData?.activeLink;
 			},
 			state: ClientContextMapState.OPENING,
 			subscription
@@ -146,7 +147,7 @@
 
 	async function createAndOpenMap(data: MapData<CRU.CREATE>) {
 		const promise = setSubscription(clientContext.value.client.createMapAndSubscribe(data));
-		emit("update:mapSlug", data.adminId);
+		emit("update:mapSlug", getMainAdminLink(data.links).slug);
 		await promise;
 	}
 

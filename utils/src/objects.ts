@@ -10,7 +10,9 @@ export function isLine<Mode extends CRU.READ | CRU.CREATE>(object: DeepReadonly<
 	return "routePoints" in object && object.routePoints != null;
 }
 
-export function canControl<T extends Marker | Line = Marker | Line>(type: DeepReadonly<Type<CRU.READ | CRU.CREATE_VALIDATED>>, ignoreField?: DeepReadonly<Field> | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
+export type CreateOrUpdateType = Type<CRU.CREATE_VALIDATED> | (Required<Type<CRU.UPDATE>> & Pick<Type, "id" | "type">);
+
+export function canControl<T extends Marker | Line = Marker | Line>(type: DeepReadonly<CreateOrUpdateType>, ignoreField?: DeepReadonly<Field> | null): Array<T extends any ? keyof T : never /* https://stackoverflow.com/a/62085569/242365 */> {
 	const props: string[] = type.type == "marker" ? ["colour", "size", "icon", "shape"] : type.type == "line" ? ["colour", "width", "stroke", "mode"] : [];
 	return props.filter((prop) => {
 		if((type as any)[prop+"Fixed"] && ignoreField !== null)

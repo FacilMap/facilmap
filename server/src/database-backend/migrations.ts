@@ -6,9 +6,9 @@ import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
 import { forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
-import type { ID, MapPermissions, Type } from "facilmap-types";
+import { ADMIN_LINK_COMMENT, READ_LINK_COMMENT, WRITE_LINK_COMMENT, type ID, type MapPermissions, type Type } from "facilmap-types";
 import { streamToIterable } from "../utils/streams.js";
-import { createJwtSecret, createSalt } from "../utils/crypt.js";
+import { createJwtSecret, createMapToken, createSalt, getSlugHash } from "../utils/crypt.js";
 import type { RawLine, RawMarker } from "../utils/permissions.js";
 
 export default class DatabaseBackendMigrations {
@@ -1057,14 +1057,19 @@ export default class DatabaseBackendMigrations {
 				}
 
 				for (const [slug, comment, searchEngines, permissions] of [
-					[(map as any).adminId, "Admin link", false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
-					[(map as any).writeId, "Read-write link", false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
-					[(map as any).readId, "Read-only link", (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
+					[(map as any).adminId, ADMIN_LINK_COMMENT, false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
+					[(map as any).writeId, WRITE_LINK_COMMENT, false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
+					[(map as any).readId, READ_LINK_COMMENT, (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
 				] as const) {
 					if (!existingMapLinks.has(slug)) {
 						await this.backend.maps.MapLinkModel.create({
 							mapId: map.id,
 							slug,
+							readToken: await createMapToken({
+								mapId: map.id,
+								slugHash: getSlugHash(slug, map.salt),
+								permissions: { read: true, update: false, settings: false, admin: false }
+							}, map.jwtSecret),
 							comment,
 							password: null,
 							permissions,

@@ -1,44 +1,30 @@
 <script setup lang="ts">
 	import { mapSlugValidator, type CRU, type MapData } from "facilmap-types";
-	import { computed } from "vue";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
 	import { useI18n } from "../../utils/i18n";
 	import vTooltip from "../../utils/tooltip";
 	import Icon from "../ui/icon.vue";
-
-	const idProps = ["readId", "writeId", "adminId"] as const;
-	type IdProp = typeof idProps[number];
+	import { generateRandomMapSlug } from "facilmap-utils";
 
 	const context = injectContextRequired();
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE>;
-		idProp: IdProp;
-		modelValue: string;
+		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
 		label: string;
 		description: string;
-		getRandom: () => string;
-	}>();
-
-	const emit = defineEmits<{
-		"update:modelValue": [string];
 	}>();
 
 	const id = getUniqueId("fm-map-settings-map-slug-edit");
 
-	const value = computed({
-		get: () => props.modelValue,
-		set: (val) => {
-			emit("update:modelValue", val);
-		}
-	});
+	const value = defineModel<string>({ required: true });
 
 	function validateDistinctMapSlug(slug: string) {
-		if (idProps.some((p) => p !== props.idProp && props.mapData[p] === slug)) {
-			return i18n.t("map-slug-edit.unique-id-error");
+		const links = props.mapData.links.filter((l) => l.slug === slug);
+		if (links.length >= 2 && links.some((l) => l.password === false)) {
+			return i18n.t("map-slug-edit.unique-slug-error");
 		}
 	}
 </script>
@@ -61,7 +47,7 @@
 					<button
 						type="button"
 						class="btn btn-secondary"
-						@click="value = props.getRandom()"
+						@click="value = generateRandomMapSlug(16)"
 						v-tooltip="i18n.t('map-slug-edit.random-tooltip')"
 					>
 						<Icon icon="shuffle" :alt="i18n.t('map-slug-edit.random-alt')"></Icon>

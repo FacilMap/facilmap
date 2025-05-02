@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Writable, type DeepReadonly, type Type } from "facilmap-types";
+	import { type DeepReadonly, type Type } from "facilmap-types";
 	import { drawLine, drawMarker } from "../../utils/draw";
 	import { computed, ref } from "vue";
 	import ManageTypesDialog from "../manage-types-dialog.vue";
@@ -7,7 +7,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { formatTypeName, getOrderedTypes, sleep } from "facilmap-utils";
+	import { canConfigureMap, formatTypeName, getCreatableTypes, getOrderedTypes, sleep } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const emit = defineEmits<{
@@ -33,7 +33,7 @@
 		}
 	}
 
-	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data.types));
+	const creatableTypes = computed(() => getCreatableTypes(clientSub.value.activeLink.permissions, getOrderedTypes(clientSub.value.data.types), true));
 </script>
 
 <template>
@@ -46,7 +46,7 @@
 		menuClass="dropdown-menu-end"
 		:label="i18n.t('toolbox-add-dropdown.label')"
 	>
-		<li v-for="type in orderedTypes" :key="type.id">
+		<li v-for="type in creatableTypes" :key="type.id">
 			<a
 				class="dropdown-item"
 				v-link-disabled="mapContext.interaction"
@@ -56,11 +56,11 @@
 			>{{formatTypeName(type.name)}}</a>
 		</li>
 
-		<li v-if="clientSub.data.mapData.writable == Writable.ADMIN">
+		<li v-if="canConfigureMap(clientSub.activeLink.permissions)">
 			<hr class="dropdown-divider">
 		</li>
 
-		<li v-if="clientSub.data.mapData.writable == Writable.ADMIN">
+		<li v-if="canConfigureMap(clientSub.activeLink.permissions)">
 			<a
 				class="dropdown-item"
 				v-link-disabled="!!mapContext.interaction"

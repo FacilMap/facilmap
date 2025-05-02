@@ -1,19 +1,19 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { mapDataValidator, type CRU, type MapData, type MapDataWithWritable } from "facilmap-types";
-	import { generateRandomMapSlug, mergeObject } from "facilmap-utils";
-	import { getUniqueId, getZodValidator } from "../../utils/utils";
+	import { ADMIN_LINK_COMMENT, getMainAdminLink, type CRU, type MapData } from "facilmap-types";
+	import { deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments, mergeObject } from "facilmap-utils";
+	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { showConfirm } from "../ui/alert.vue";
-	import MapSlugEdit from "./map-slug-edit.vue";
 	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import ValidatedField from "../ui/validated-form/validated-field.vue";
-	import { T, useI18n } from "../../utils/i18n";
+	import { useI18n } from "../../utils/i18n";
 	import storage, { storagePersisted } from "../../utils/storage";
 	import vTooltip from "../../utils/tooltip";
 	import Icon from "../ui/icon.vue";
+	import MapSettingsGeneral from "./map-settings-general.vue";
+	import MapSettingsLinks from "./map-settings-links.vue";
+	import MapSettingsDelete from "./map-settings-delete.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -35,33 +35,41 @@
 
 	const id = getUniqueId("fm-map-settings");
 	const isDeleting = ref(false);
-	const deleteConfirmation = ref("");
-	const expectedDeleteConfirmation = computed(() => i18n.t('map-settings-dialog.delete-code'));
+	const activeTab = ref(0);
 
 	const addFavourite = ref(true);
 
-	function random(id: "admin" | "write" | "read") {
-		return generateRandomMapSlug(id === "admin" ? 16 : id === "write" ? 14 : 12);
-	}
-
 	const initialMapData: MapData<CRU.CREATE> | undefined = props.isCreate ? {
 		name: "",
-		searchEngines: false,
 		description: "",
 		clusterMarkers: false,
-		adminId: (props.proposedAdminId || random("admin")),
-		writeId: random("write"),
-		readId: random("read"),
+		links: i18nMapLinkComments([
+			{
+				slug: generateRandomMapSlug(16),
+				comment: ADMIN_LINK_COMMENT,
+				password: false,
+				searchEngines: false,
+				permissions: {
+					read: true,
+					update: true,
+					settings: true,
+					admin: true
+				}
+			}
+		]),
 		legend1: "",
 		legend2: "",
 		defaultViewId: null
 	} : undefined;
 
-	const originalMapData = computed(() => {
+	const originalMapData = computed<MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>>(() => {
 		if (props.isCreate) {
 			return initialMapData!;
 		} else if (clientSub.value) {
-			return clientSub.value.data.mapData as MapData<CRU.CREATE>;
+			return {
+				...clientSub.value.data.mapData,
+				links: i18nMapLinkComments(clientSub.value.data.mapData.links)
+			};
 		} else {
 			throw new Error("No map is currently open.");
 		}
@@ -69,56 +77,40 @@
 
 	const mapData = ref(cloneDeep(originalMapData.value));
 
+	const adminLink = computed(() => getMainAdminLink(mapData.value.links));
+
+	const canDelete = computed(() => !props.isCreate && !!clientSub.value?.data.mapData.activeLink.permissions.admin);
+
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
 	const isModified = computed(() => !isEqual(mapData.value, originalMapData.value));
 
 	watch(originalMapData, (newMapData, oldMapData) => {
 		if (mapData.value && newMapData)
-			mergeObject<MapDataWithWritable | MapData<CRU.CREATE>>(oldMapData, newMapData, mapData.value);
+			mergeObject(oldMapData, newMapData, mapData.value);
 	}, { deep: true });
 
-	const hasFavourite = computed(() => storage.favourites.some((f) => f.mapSlug === mapData.value.adminId));
+	const hasFavourite = computed(() => storage.favourites.some((f) => f.mapSlug === adminLink.value.slug));
 
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-map-settings-error`);
 
 		try {
+			const data = {
+				...mapData.value,
+				links: deI18nMapLinkComments(mapData.value.links)
+			};
 			if (props.isCreate) {
-				await clientContext.value.createAndOpenMap(mapData.value as MapData<CRU.CREATE>);
+				await clientContext.value.createAndOpenMap(data as MapData<CRU.CREATE>);
 				if (addFavourite.value && !hasFavourite.value) {
 					storage.favourites.push({ mapSlug: clientSub.value!.mapSlug, name: clientSub.value!.data.mapData.name, mapId: clientSub.value!.data.mapData.id });
 				}
 			} else {
-				await clientContext.value.client.updateMap(clientSub.value!.mapSlug, mapData.value);
+				await clientContext.value.client.updateMap(clientSub.value!.mapSlug, data);
 			}
 			modalRef.value?.modal.hide();
 		} catch (err) {
 			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => (props.isCreate ? i18n.t("map-settings-dialog.create-map-error") : i18n.t("map-settings-dialog.save-map-error")), err);
-		}
-	};
-
-	async function deleteMap(): Promise<void> {
-		toasts.hideToast(`fm${context.id}-map-settings-error`);
-
-		if (!await showConfirm({
-			title: i18n.t("map-settings-dialog.delete-map-title"),
-			message: i18n.t("map-settings-dialog.delete-map-message", { name: mapData.value.name }),
-			variant: "danger",
-			okLabel: i18n.t("map-settings-dialog.delete-map-ok")
-		})) {
-			return;
-		}
-
-		isDeleting.value = true;
-
-		try {
-			await clientContext.value.client.deleteMap(clientSub.value!.mapSlug);
-			modalRef.value?.modal.hide();
-		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-map-settings-error`, () => i18n.t("map-settings-dialog.delete-map-error"), err);
-		} finally {
-			isDeleting.value = false;
 		}
 	};
 </script>
@@ -138,170 +130,49 @@
 		@hidden="emit('hidden')"
 	>
 		<template v-if="mapData">
-			<MapSlugEdit
-				:mapData="mapData"
-				idProp="adminId"
-				v-model="mapData.adminId"
-				:label="i18n.t('map-settings-dialog.admin-link-label')"
-				:description="i18n.t('map-settings-dialog.admin-link-description')"
-				:getRandom="() => random('admin')"
-			></MapSlugEdit>
+			<ul class="nav nav-tabs mb-2">
+				<li class="nav-item">
+					<a class="nav-link" :class="{ active: activeTab === 0 }" aria-current="page" href="javascript:" @click="activeTab = 0">
+						{{i18n.t("map-settings-dialog.tab-general")}}
+					</a>
+				</li>
 
-			<MapSlugEdit
-				:mapData="mapData"
-				idProp="writeId"
-				v-model="mapData.writeId"
-				:label="i18n.t('map-settings-dialog.write-link-label')"
-				:description="i18n.t('map-settings-dialog.write-link-description')"
-				:getRandom="() => random('write')"
-			></MapSlugEdit>
+				<li class="nav-item">
+					<a class="nav-link" :class="{ active: activeTab === 1 }" aria-current="page" href="javascript:" @click="activeTab = 1">
+						{{i18n.t("map-settings-dialog.tab-map-link")}}
+					</a>
+				</li>
 
-			<MapSlugEdit
-				:mapData="mapData"
-				idProp="readId"
-				v-model="mapData.readId"
-				:label="i18n.t('map-settings-dialog.read-link-label')"
-				:description="i18n.t('map-settings-dialog.read-link-description')"
-				:getRandom="() => random('read')"
-			></MapSlugEdit>
+				<li v-if="canDelete" class="nav-item">
+					<a class="nav-link" :class="{ active: activeTab === 2 }" aria-current="page" href="javascript:" @click="activeTab = 2">
+						{{i18n.t("map-settings-dialog.tab-delete-map")}}
+					</a>
+				</li>
+			</ul>
 
-			<ValidatedField
-				class="row mb-3"
-				:value="mapData.name"
-				:validators="[getZodValidator(mapDataValidator.update.shape.name)]"
-			>
-				<template #default="slotProps">
-					<label :for="`${id}-map-name-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.map-name")}}</label>
-					<div class="col-sm-9 position-relative">
-						<input
-							:id="`${id}-map-name-input`"
-							class="form-control"
-							type="text"
-							v-model="mapData.name"
-							:ref="slotProps.inputRef"
-						/>
-						<div class="invalid-tooltip">
-							{{slotProps.validationError}}
-						</div>
-					</div>
-				</template>
-			</ValidatedField>
+			<template v-if="activeTab === 0">
+				<MapSettingsGeneral
+					:mapData="mapData"
+				></MapSettingsGeneral>
+			</template>
 
-			<div class="row mb-3">
-				<label :for="`${id}-search-engines-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.search-engines")}}</label>
-				<div class="col-sm-9">
-					<div class="form-check fm-form-check-with-label">
-						<input
-							:id="`${id}-search-engines-input`"
-							class="form-check-input"
-							type="checkbox"
-							v-model="mapData.searchEngines"
-						/>
-						<label :for="`${id}-search-engines-input`" class="form-check-label">
-							{{i18n.t("map-settings-dialog.search-engines-label")}}
-						</label>
-					</div>
-					<div class="form-text">
-						{{i18n.t("map-settings-dialog.search-engines-description")}}
-					</div>
-				</div>
-			</div>
+			<template v-if="activeTab === 1">
+				<MapSettingsLinks
+					:mapData="mapData"
+				></MapSettingsLinks>
+			</template>
 
-			<div class="row mb-3">
-				<label :for="`${id}-description-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.map-description")}}</label>
-				<div class="col-sm-9">
-					<input
-						:id="`${id}-description-input`"
-						class="form-control"
-						type="text"
-						v-model="mapData.description"
-					/>
-					<div class="form-text">
-						{{i18n.t("map-settings-dialog.map-description-description")}}
-					</div>
-				</div>
-			</div>
-
-			<div class="row mb-3">
-				<label :for="`${id}-cluster-markers-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.cluster-markers")}}</label>
-				<div class="col-sm-9">
-					<div class="form-check fm-form-check-with-label">
-						<input
-							:id="`${id}-cluster-markers-input`"
-							class="form-check-input"
-							type="checkbox"
-							v-model="mapData.clusterMarkers"
-						/>
-						<label :for="`${id}-cluster-markers-input`" class="form-check-label">
-							{{i18n.t("map-settings-dialog.cluster-markers-label")}}
-						</label>
-					</div>
-					<div class="form-text">
-						{{i18n.t("map-settings-dialog.cluster-markers-description")}}
-					</div>
-				</div>
-			</div>
-
-			<div class="row mb-3">
-				<label :for="`${id}-legend1-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.legend-text")}}</label>
-				<div class="col-sm-9">
-					<textarea
-						:id="`${id}-legend1-input`"
-						class="form-control"
-						v-model="mapData.legend1"
-					></textarea>
-					<textarea
-						:id="`${id}-legend2-input`"
-						class="form-control mt-1"
-						v-model="mapData.legend2"
-					></textarea>
-					<div class="form-text">
-						<T k="map-settings-dialog.legend-text-description">
-							<template #markdown>
-								<a href="http://commonmark.org/help/" target="_blank">{{i18n.t("map-settings-dialog.legend-text-description-interpolation-markdown")}}</a>
-							</template>
-						</T>
-					</div>
-				</div>
-			</div>
+			<template v-if="activeTab === 2">
+				<MapSettingsDelete
+					:mapData="mapData"
+					:isSubmitting="modalRef?.formData?.isSubmitting"
+					@update:isDeleting="isDeleting = $event"
+					@deleted="modalRef?.modal.hide()"
+				></MapSettingsDelete>
+			</template>
 		</template>
 
-		<template v-if="mapData && !props.isCreate">
-			<hr/>
-
-			<div class="row mb-3">
-				<label :for="`${id}-delete-input`" class="col-sm-3 col-form-label">{{i18n.t("map-settings-dialog.delete-map")}}</label>
-				<div class="col-sm-9">
-					<div class="input-group">
-						<input
-							:form="`${id}-delete-form`"
-							:id="`${id}-delete-input`"
-							class="form-control"
-							type="text"
-							v-model="deleteConfirmation"
-						/>
-						<button
-							:form="`${id}-delete-form`"
-							class="btn btn-danger"
-							type="submit"
-							:disabled="isDeleting || modalRef?.formData?.isSubmitting || deleteConfirmation != expectedDeleteConfirmation"
-						>
-							<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
-							{{i18n.t("map-settings-dialog.delete-map-button")}}
-						</button>
-					</div>
-					<div class="form-text">
-						<T k="map-settings-dialog.delete-description">
-							<template #code>
-								<code>{{expectedDeleteConfirmation}}</code>
-							</template>
-						</T>
-					</div>
-				</div>
-			</div>
-		</template>
-
-		<template #footer-left v-if="isCreate && !hasFavourite">
+		<template #footer-left v-if="props.isCreate && !hasFavourite">
 			<div class="form-check">
 				<input
 					:id="`${id}-add-favourite-input`"
@@ -317,7 +188,4 @@
 			</div>
 		</template>
 	</ModalDialog>
-
-	<form :id="`${id}-delete-form`" @submit.prevent="deleteConfirmation == expectedDeleteConfirmation && deleteMap()">
-	</form>
 </template>

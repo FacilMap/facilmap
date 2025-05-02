@@ -69,9 +69,7 @@ const result = await new Promise((resolve, reject) => {
 });
 ```
 
-Note that Socket.IO transmits regular JavaScript values as JSON, with the following side-effects:
-* Where `undefined` is sent as a value, `null` arrives. Where `undefined` is sent as an object property, the object will arrive without the property.
-* The `data` property of markers and lines arrives as a regular object, making it vulnerable to prototype pollution.
+Note that Socket.IO transmits regular JavaScript values as JSON, with the side-effect that where `undefined` is sent as a value, `null` arrives. Where `undefined` is sent as an object property, the object will arrive without the property.
 
 The socket client handles these cases for you, but if you use the Socket API directly, you need to keep them in mind.
 

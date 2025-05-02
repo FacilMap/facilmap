@@ -9,7 +9,7 @@
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import { getClientSub, injectContextRequired, requireClientContext, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../utils/i18n";
-	import { canConfigureMap, canConfigureMap } from "facilmap-utils";
+	import { canConfigureMap } from "facilmap-utils";
 
 	type ViewImport = FileResultObject["views"][0];
 	type TypeImport = FileResultObject["types"][0];
@@ -44,8 +44,7 @@
 		return new Map(props.file.views.map((view) => [view, clientSub.value && viewExists(clientSub.value.data, view)]));
 	});
 
-	const canCreateViews = computed(() => clientSub.value && canConfigureMap(clientSub.value.data.mapData));
-	const canCreateTypes = computed(() => clientSub.value && canConfigureMap(clientSub.value.data.mapData));
+	const canConfigure = computed(() => clientSub.value && canConfigureMap(clientSub.value.activeLink.permissions));
 
 	function showView(view: ViewImport): void {
 		displayView(mapContext.value.components.map, view, { overpassLayer: mapContext.value.components.overpassLayer });
@@ -105,7 +104,7 @@
 							<template v-if="isAddingView.has(view)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="canCreateViews && !existingViews.get(view)">
+							<template v-else-if="canConfigure && !existingViews.get(view)">
 								<a
 									href="javascript:"
 									@click="addView(view)"
@@ -134,7 +133,7 @@
 							<template v-if="isAddingType.has(type)">
 								<div class="spinner-border spinner-border-sm"></div>
 							</template>
-							<template v-else-if="canCreateTypes && !existingTypes.get(type)">
+							<template v-else-if="canConfigure && !existingTypes.get(type)">
 								<a
 									href="javascript:"
 									@click="addType(type)"

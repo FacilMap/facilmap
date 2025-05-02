@@ -1,7 +1,6 @@
 <script setup lang="ts">
 	import { getLayers } from "facilmap-leaflet";
 	import { getLegendItems } from "./legend/legend-utils";
-	import { Writable } from "facilmap-types";
 	import { formatCoordinates, quoteHtml } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -9,6 +8,7 @@
 	import { getClientSub, injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 	import { T, useI18n } from "../utils/i18n";
+	import type { ActiveMapLink, MapLink } from "facilmap-types";
 
 	const context = injectContextRequired();
 	const clientSub = getClientSub(context);
@@ -28,8 +28,13 @@
 	const showPois = ref(true);
 	const showLegend = ref(true);
 	const showLocate = ref(true);
-	const mapSlugType = ref<Writable>(2);
+	const mapLink = ref<MapLink | ActiveMapLink | undefined>(clientSub.value?.activeLink);
 	const activeShareTab = ref(0);
+
+	const mapLinks = computed(() => clientSub.value ? [
+		clientSub.value.activeLink,
+		...clientSub.value.data.mapData.links.filter((l) => clientSub.value!.activeLink.id == null || l.id !== clientSub.value!.activeLink.id)
+	] : []);
 
 	const layers = computed(() => {
 		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
@@ -41,14 +46,6 @@
 
 	const hasLegend = computed(() => {
 		return !!clientSub.value && getLegendItems(context).length > 0;
-	});
-
-	const mapSlugTypes = computed(() => {
-		return [
-			{ value: 2, text: i18n.t("share-dialog.type-admin") },
-			{ value: 1, text: i18n.t("share-dialog.type-write") },
-			{ value: 0, text: i18n.t("share-dialog.type-read") }
-		].filter((option) => clientSub.value && option.value <= clientSub.value.data.mapData.writable);
 	});
 
 	const url = computed(() => {
@@ -75,12 +72,7 @@
 		const paramsStr = params.toString();
 
 		return context.baseUrl
-			+ (clientSub.value ? encodeURIComponent(
-				mapSlugType.value == 2 && clientSub.value.data.mapData.writable === Writable.ADMIN ? clientSub.value.data.mapData.adminId :
-				mapSlugType.value == 1 && clientSub.value.data.mapData.writable !== Writable.READ ? clientSub.value.data.mapData.writeId :
-				mapSlugType.value == 0 ? clientSub.value.data.mapData.readId
-				: ""
-			) : "")
+			+ (clientSub.value ? encodeURIComponent((mapLink.value ?? clientSub.value.activeLink).slug) : "")
 			+ (paramsStr ? `?${paramsStr}` : '')
 			+ (includeMapView.value && mapContext.value.hash ? `#${mapContext.value.hash}` : '');
 	});
@@ -237,10 +229,10 @@
 
 		<template v-if="clientSub">
 			<div class="row mb-3">
-				<label :for="`${id}-mapSlugType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.link-type")}}</label>
+				<label :for="`${id}-mapSlugType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.map-link")}}</label>
 				<div class="col-sm-9">
-					<select :id="`${id}-mapSlugType-input`" class="form-select" v-model="mapSlugType">
-						<option v-for="type in mapSlugTypes" :key="type.value" :value="type.value">{{type.text}}</option>
+					<select :id="`${id}-mapSlugType-input`" class="form-select" v-model="mapLink">
+						<option v-for="link in mapLinks" :key="link.slug" :value="link">{{link.comment ? i18n.t("share-dialog.map-link-with-comment", { mapSlug: link.slug, comment: link.comment }) : link.slug}}</option>
 					</select>
 				</div>
 			</div>

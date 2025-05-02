@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Writable, type Type } from 'facilmap-types';
+	import { type Type } from 'facilmap-types';
 	import { computed, ref, toRef, watch, type DeepReadonly } from 'vue';
 	import { getClientSub, injectContextRequired } from '../facil-map-context-provider/facil-map-context-provider.vue';
 	import { useToasts } from './toasts/toasts.vue';
@@ -7,7 +7,7 @@
 	import { type LineWithTags, type MarkerWithTags, addToMap } from '../../utils/add';
 	import type { ButtonSize } from '../../utils/bootstrap';
 	import DropdownMenu from "./dropdown-menu.vue";
-	import { formatTypeName, getOrderedTypes } from 'facilmap-utils';
+	import { formatTypeName, getCreatableTypes, getOrderedTypes } from 'facilmap-utils';
 	import { useI18n } from '../../utils/i18n';
 
 	const context = injectContextRequired();
@@ -35,14 +35,14 @@
 		emit("update:isAdding", isAdding.value);
 	});
 
-	const orderedTypes = computed(() => clientSub.value ? getOrderedTypes(clientSub.value.data.types) : []);
+	const creatableTypes = computed(() => clientSub.value ? getCreatableTypes(clientSub.value.activeLink.permissions, getOrderedTypes(clientSub.value.data.types), true) : []);
 
 	const markerTypes = computed(() => {
-		return orderedTypes.value.filter((type) => type.type == "marker");
+		return creatableTypes.value.filter((type) => type.type == "marker");
 	});
 
 	const lineTypes = computed(() => {
-		return orderedTypes.value.filter((type) => type.type == "line");
+		return creatableTypes.value.filter((type) => type.type == "line");
 	});
 
 	async function add(callback: () => Promise<SelectedItem[]>): Promise<void> {
@@ -71,11 +71,14 @@
 			return await addToMap(context, (props.lines ?? []).map((line) => ({ line, type })));
 		});
 	}
+
+	const isVisible = computed(() => !!clientSub && ((!!props.markers && markerTypes.value.length > 0) || (!!props.lines && lineTypes.value.length > 0)));
+	defineExpose({ isVisible });
 </script>
 
 <template>
 	<DropdownMenu
-		v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ && ((props.markers && markerTypes.length > 0) || (props.lines && lineTypes.length > 0))"
+		v-if="isVisible"
 		:label="props.label ?? i18n.t('add-to-map-dropdown.fallback-label')"
 		:isDisabled="(props.markers ?? []).length === 0 && (props.lines ?? []).length === 0"
 		:isBusy="isAdding"

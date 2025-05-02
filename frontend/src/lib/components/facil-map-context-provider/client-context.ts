@@ -1,6 +1,6 @@
 import type { MapStorage, SocketClient, SocketClientStorage } from "facilmap-client";
 import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
-import type { CRU, MapData, MapSlug } from "facilmap-types";
+import type { ActiveMapLink, CRU, MapData, MapSlug } from "facilmap-types";
 
 export enum ClientContextMapState {
 	OPENING = "opening",
@@ -14,9 +14,9 @@ export type ClientContextMap = {
 	mapSlug: MapSlug;
 	subscription: SocketClientMapSubscription;
 } & (
-	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; error?: undefined }
-	| { state: ClientContextMapState.OPEN; get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> }; error?: undefined }
-	| { state: ClientContextMapState.ERROR; get data(): MapStorage | undefined; error: Error }
+	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; get activeLink(): ActiveMapLink | undefined; error?: undefined }
+	| { state: ClientContextMapState.OPEN; get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> }; get activeLink(): ActiveMapLink; error?: undefined }
+	| { state: ClientContextMapState.ERROR; get data(): MapStorage | undefined; get activeLink(): ActiveMapLink | undefined; error: Error }
 );
 
 export type ClientContext = {

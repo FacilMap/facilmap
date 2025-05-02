@@ -1,5 +1,5 @@
 import type { Feature, Geometry } from "geojson";
-import { legacyV2MarkerToCurrent, legacyV2TypeToCurrent, type GeoJsonExport, type LineFeature, type MarkerFeature, type SearchResult } from "facilmap-types";
+import { legacyV2MarkerToCurrentWithoutData, legacyV2TypeToCurrent, type GeoJsonExport, type LineFeature, type MarkerFeature, type SearchResult } from "facilmap-types";
 import { flattenObject } from "facilmap-utils";
 import { getI18n } from "./i18n";
 import type { Changeset } from "osm-api";
@@ -152,7 +152,7 @@ export async function parseFiles(files: Uint8Array[]): Promise<FileResultObject>
 			if(geojson.facilmap) {
 				if(feature.properties.typeId && typeMapping[feature.properties.typeId])
 					f.fmTypeId = typeMapping[feature.properties.typeId];
-				f.fmProperties = legacyV2MarkerToCurrent(feature.properties);
+				f.fmProperties = legacyV2MarkerToCurrentWithoutData(feature.properties);
 			}
 
 			ret.features.push(f);

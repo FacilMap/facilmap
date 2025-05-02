@@ -32,6 +32,8 @@ export const favouriteValidator = z.record(z.any()).transform((val) => ({
 	mapSlug: mapSlugValidator,
 	/** ID of the map */
 	mapId: idValidator.optional(),
+	/** ID of the map link */
+	linkId: idValidator.optional(),
 	/** Last known name of the map */
 	name: z.string(),
 	/** If this is defined, it is shown instead of the map name. */

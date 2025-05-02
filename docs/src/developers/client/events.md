@@ -18,7 +18,7 @@ client.subscribeToMap("mymap");
 
 ## `mapData`
 
-Parameters: `mapSlug: string, mapData: MapDataWithWritable` (see [`MapDataWithWritable`](./types.md#mapdatawithwritable))
+Parameters: `mapSlug: string, mapData: MapData` (see [`MapData`](./types.md#mapdata))
 
 The settings of a subscribed map have changed or are retrieved for the first time.
 

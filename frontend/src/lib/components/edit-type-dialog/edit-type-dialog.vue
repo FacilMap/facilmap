@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { typeValidator, type Field, type ID, type Type, type CRU } from "facilmap-types";
-	import { canControl, cloneDeep, formatFieldName } from "facilmap-utils";
+	import { canControl, cloneDeep, formatFieldName, type CreateOrUpdateType } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
 	import { mergeTypeObject } from "./edit-type-utils";
 	import { isEqual } from "lodash-es";
@@ -46,7 +46,7 @@
 		return typeof props.typeId === "number" ? clientSub.value.data.types[props.typeId] : undefined;
 	});
 
-	const initialType = computed<Type<CRU.CREATE_VALIDATED | CRU.READ>>(() => {
+	const initialType = computed<CreateOrUpdateType>(() => {
 		let type: Type<CRU.CREATE_VALIDATED | CRU.READ>;
 		if (props.typeId === "createMarkerType") {
 			type = {
@@ -87,7 +87,7 @@
 	});
 
 	function createField(): void {
-		type.value.fields.push({ id: crypto.randomUUID(), name: "", type: "input", "default": "" });
+		type.value.fields.push({ name: "", type: "input", "default": "" });
 	}
 
 	async function deleteField(field: Field): Promise<void> {
@@ -107,31 +107,11 @@
 	async function save(): Promise<void> {
 		toasts.hideToast(`fm${context.id}-edit-type-error`);
 
-		const newType = cloneDeep(type.value);
-		if (originalType.value) {
-			for (const field of newType.fields) {
-				if (!originalType.value.fields.some((f) => f.id === field.id)) {
-					// This field is newly created, let's see if we can recycle a historic ID
-					if (Object.hasOwn(newType.formerFieldIds, field.name)) {
-						field.id = newType.formerFieldIds[field.name];
-						delete newType.formerFieldIds[field.name];
-					}
-				}
-			}
-
-			for (const field of originalType.value.fields) {
-				if (!newType.fields.some((f) => f.id === field.id)) {
-					// This field was deleted. Add its ID to the former field IDs.
-					newType.formerFieldIds[field.name] = field.id;
-				}
-			}
-		}
-
 		try {
 			if (isCreate.value)
-				await clientContext.value.client.createType(clientSub.value.mapSlug, newType);
+				await clientContext.value.client.createType(clientSub.value.mapSlug, type.value);
 			else
-				await clientContext.value.client.updateType(clientSub.value.mapSlug, (newType as Type).id, newType as Type);
+				await clientContext.value.client.updateType(clientSub.value.mapSlug, (type.value as Type).id, type.value);
 
 			modalRef.value?.modal.hide();
 		} catch (err) {

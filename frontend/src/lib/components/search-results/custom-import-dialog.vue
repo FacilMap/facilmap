@@ -9,7 +9,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { type LineWithTags, type MarkerWithTags, addToMap, searchResultToLineWithTags, searchResultToMarkerWithTags } from "../../utils/add";
-	import { canConfigureMap, formatTypeName, getOrderedTypes } from "facilmap-utils";
+	import { canConfigureMap, formatTypeName, getCreatableTypes, getOrderedTypes } from "facilmap-utils";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
@@ -38,18 +38,18 @@
 
 	type Option = { key: string; value: string | false; text: string; disabled?: boolean };
 
-	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data.types));
+	const creatableTypes = computed(() => getCreatableTypes(clientSub.value.activeLink.permissions, getOrderedTypes(clientSub.value.data.types), true));
 
 	const customMappingOptions = computed(() => {
 		return mapValues(pickBy(props.customTypes, (customType, customTypeId) => activeFileResultsByType.value[customTypeId as any].length > 0), (customType, customTypeId): Option[] => {
 			const recommendedOptions: Option[] = [];
 
-			for (const type of orderedTypes.value) {
+			for (const type of creatableTypes.value) {
 				if (type.name == customType.name && type.type == customType.type)
 					recommendedOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: i18n.t("custom-import-dialog.existing-type", { name: formatTypeName(type.name) }) });
 			}
 
-			if (canConfigureMap(clientSub.value.data.mapData) && !typeExists(clientSub.value.data, customType))
+			if (canConfigureMap(clientSub.value.activeLink.permissions) && !typeExists(clientSub.value.data, customType))
 				recommendedOptions.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 
 			recommendedOptions.push({ key: "false1", value: false, text: i18n.t("custom-import-dialog.no-import") });
@@ -57,13 +57,13 @@
 
 			const otherOptions: Option[] = [];
 
-			for (const type of orderedTypes.value) {
+			for (const type of creatableTypes.value) {
 				if (type.name != customType.name && type.type == customType.type)
 					otherOptions.push({ key: `e${type.id}`, value: `e${type.id}`, text: i18n.t("custom-import-dialog.existing-type", { name: formatTypeName(type.name) }) });
 			}
 
 			for (const [customTypeId2, customType2] of Object.entries(props.customTypes)) {
-				if (canConfigureMap(clientSub.value.data.mapData) && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(clientSub.value.data, customType2))
+				if (canConfigureMap(clientSub.value.activeLink.permissions) && customType2.type == customType.type && customTypeId2 != customTypeId && !typeExists(clientSub.value.data, customType2))
 					otherOptions.push({ key: `i${customTypeId2}`, value: `i${customTypeId2}`, text: i18n.t("custom-import-dialog.import-type", { name: customType2.name }) });
 			}
 
@@ -96,11 +96,11 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (canConfigureMap(clientSub.value.data.mapData) && customType.type == "marker" && !typeExists(clientSub.value.data, customType))
+			if (canConfigureMap(clientSub.value.activeLink.permissions) && customType.type == "marker" && !typeExists(clientSub.value.data, customType))
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 		}
 
-		for (const type of orderedTypes.value) {
+		for (const type of creatableTypes.value) {
 			if (type.type == "marker")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: i18n.t("custom-import-dialog.existing-type", { name: formatTypeName(type.name) }) });
 		}
@@ -114,11 +114,11 @@
 
 		for (const customTypeId of Object.keys(props.customTypes)) {
 			const customType = props.customTypes[customTypeId as any];
-			if (canConfigureMap(clientSub.value.data.mapData) && customType.type == "line")
+			if (canConfigureMap(clientSub.value.activeLink.permissions) && customType.type == "line")
 				options.push({ key: `i${customTypeId}`, value: `i${customTypeId}`, text: i18n.t("custom-import-dialog.import-type", { name: customType.name }) });
 		}
 
-		for (const type of orderedTypes.value) {
+		for (const type of creatableTypes.value) {
 			if (type.type == "line")
 				options.push({ key: `e${type.id}`, value: `e${type.id}`, text: i18n.t("custom-import-dialog.existing-type", { name: formatTypeName(type.name) }) });
 		}

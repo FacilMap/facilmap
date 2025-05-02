@@ -22,7 +22,7 @@ REST: `GET /map/<mapSlug>`
 
 Retrieves the settings of a single map by map slug. This can also be used to check if a map with a certain slug exists.
 
-Result: <code>[MapDataWithWritable](./types.md#mapdatawithwritable)</code>
+Result: <code>[MapData](./types.md#mapdata)</code>
 
 ## `createMap()`
 
@@ -51,7 +51,7 @@ Parameters:
 * `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map (this map slug must have admin permission on the map)
 * `data` (<code>[MapData](./types.md#mapdata)</code>): The properties to change
 
-Result: <code>[MapDataWithWritable](./types.md#mapdatawithwritable)</code>, the updated version of the map settings
+Result: <code>[MapData](./types.md#mapdata)</code>, the updated version of the map settings
 
 If this is called through the socket and the map is currently subscribed, causes a <code>[mapData](./events.md#mapdata)</code> event to be emitted before the promise is resolved.
 
@@ -89,7 +89,7 @@ Parameters:
 The streamed version of this returns the following type:
 ```typescript
 AsyncIterable<
-	{ type: "mapData"; data: MapDataWithWritable }
+	{ type: "mapData"; data: MapData }
 	| { type: "types", data: AsyncIterable<Type> }
 	| { type: "views", data: AsyncIterable<View> }
 	| { type: "markers", data: AsyncIterable<Marker> }
@@ -101,7 +101,7 @@ AsyncIterable<
 The unstreamed version returns the following type:
 ```typescript
 {
-	mapData?: MapDataWithWritable;
+	mapData?: MapData;
 	types?: Type[];
 	views?: View[];
 	markers?: Marker[];

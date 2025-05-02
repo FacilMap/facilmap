@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { Writable, type ExportFormat, type ID } from "facilmap-types";
+	import { type ExportResult, type ID } from "facilmap-types";
 	import EditLineDialog from "../edit-line-dialog.vue";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
@@ -7,13 +7,13 @@
 	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
+	import { canManageObject, canUpdateAnyField, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
 	import { computed, reactive, ref, toRef } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import ExportDropdown from "../ui/export-dropdown.vue";
+	import ExportDropdown, { type ExportFormat } from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 
@@ -44,8 +44,12 @@
 	const isMoving = ref(false);
 
 	const line = computed(() => clientSub.value.data.lines[props.lineId]);
+	const type = computed(() => clientContext.value.map!.data!.types[line.value.typeId]);
 
-	const typeName = computed(() => formatTypeName(clientSub.value.data.types[line.value.typeId].name));
+	const canEdit = computed(() => canUpdateAnyField(clientSub.value.activeLink.permissions, line.value.typeId, line.value.own));
+	const canDelete = computed(() => canManageObject(clientSub.value.activeLink.permissions, line.value.typeId, line.value.own));
+
+	const typeName = computed(() => formatTypeName(type.value.name));
 	const showTypeName = computed(() => Object.values(clientSub.value.data.types).filter((t) => t.type === 'line').length > 1);
 
 	async function deleteLine(): Promise<void> {
@@ -70,8 +74,12 @@
 		}
 	}
 
-	async function getExport(format: ExportFormat) {
-		return await clientContext.value.client.exportLine(clientSub.value.mapSlug, line.value.id, { format });
+	async function getExport(format: ExportFormat): Promise<ExportResult> {
+		if (format === "geojson") {
+			return await clientContext.value.client.exportLineAsGeoJson(clientSub.value.mapSlug, line.value.id);
+		} else {
+			return await clientContext.value.client.exportLineAsGpx(clientSub.value.mapSlug, line.value.id, { rte: format === "gpx-rte" });
+		}
 	}
 
 	async function moveLine(): Promise<void> {
@@ -211,7 +219,7 @@
 			></ExportDropdown>
 
 			<button
-				v-if="clientSub.data.mapData.writable !== Writable.READ"
+				v-if="canEdit"
 				type="button"
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
@@ -219,13 +227,13 @@
 			>{{i18n.t("line-info.edit-data")}}</button>
 
 			<DropdownMenu
-				v-if="clientSub.data.mapData.writable !== Writable.READ"
+				v-if="canEdit || canDelete"
 				size="sm"
 				:label="i18n.t('line-info.actions')"
 				:isBusy="isDeleting"
 				:isDisabled="mapContext.interaction"
 			>
-				<li>
+				<li v-if="canEdit">
 					<a
 						v-if="line.mode != 'track'"
 						href="javascript:"
@@ -234,7 +242,7 @@
 					>{{i18n.t("line-info.edit-waypoints")}}</a>
 				</li>
 
-				<li>
+				<li v-if="canDelete">
 					<a
 						href="javascript:"
 						class="dropdown-item"

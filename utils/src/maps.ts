@@ -1,4 +1,4 @@
-import { type DeepReadonly, type ID, type MapSlug, type Type, type View } from "facilmap-types";
+import { ADMIN_LINK_COMMENT, CRU, READ_LINK_COMMENT, WRITE_LINK_COMMENT, type DeepReadonly, type ID, type MapLink, type MapSlug, type Type, type View } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -32,4 +32,30 @@ export function getOrderedTypes(types: Array<DeepReadonly<Type>> | Record<ID, De
 export function getOrderedViews(views: Array<DeepReadonly<View>> | Record<ID, DeepReadonly<View>> | undefined): Array<DeepReadonly<View>> {
 	const viewArr = !views ? [] : Array.isArray(views) ? [...views] : Object.values(views);
 	return viewArr.sort((a, b) => a.idx - b.idx);
+}
+
+export function i18nMapLinkComments<T extends DeepReadonly<MapLink<CRU>>>(links: ReadonlyArray<T>): T[] {
+	const i18n = getI18n();
+	return links.map((link) => ({
+		...link,
+		comment: (
+			link.comment === ADMIN_LINK_COMMENT ? i18n.t("maps.admin-link-comment") :
+			link.comment === WRITE_LINK_COMMENT ? i18n.t("maps.write-link-comment") :
+			link.comment === READ_LINK_COMMENT ? i18n.t("maps.read-link-comment") :
+			link.comment
+		)
+	}));
+}
+
+export function deI18nMapLinkComments<T extends DeepReadonly<MapLink<CRU>>>(links: ReadonlyArray<T>): T[] {
+	const i18n = getI18n();
+	return links.map((link) => ({
+		...link,
+		comment: (
+			link.comment === i18n.t("maps.admin-link-comment") ? ADMIN_LINK_COMMENT :
+			link.comment === i18n.t("maps.write-link-comment") ? WRITE_LINK_COMMENT :
+			link.comment === i18n.t("maps.read-link-comment") ? READ_LINK_COMMENT :
+			link.comment
+		)
+	}));
 }

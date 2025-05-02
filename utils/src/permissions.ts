@@ -1,4 +1,4 @@
-import { entries, keys, type HistoryEntry, type ID, type MapPermissions } from "facilmap-types";
+import { entries, keys, type DeepReadonly, type HistoryEntry, type ID, type MapPermissions, type Type } from "facilmap-types";
 import { base64ToNumber, numberToBase64 } from "./utils";
 import { getI18n } from "./i18n";
 
@@ -65,6 +65,10 @@ export function checkUpdateObject(permissions: MapPermissions, typeId: ID, isOwn
 	}
 }
 
+export function getCreatableTypes<T extends DeepReadonly<Type>>(permissions: MapPermissions, types: ReadonlyArray<T>, hasIdentity: boolean): T[] {
+	return types.filter((type) => canUpdateObject(permissions, type.id, hasIdentity));
+}
+
 /**
  * Returns true if the user has permission to update the object and all its fields. This is a prerequisite for editing the object
  * type and for deleting the object.
@@ -84,6 +88,21 @@ export function checkManageObject(permissions: MapPermissions, typeId: ID, isOwn
 	}
 }
 
+/**
+ * Returns true if the user has permission to update and delete the type with the given ID.
+ */
+export function canUpdateType(permissions: MapPermissions, typeId: ID): boolean {
+	return hasPermission(() => checkUpdateType(permissions, typeId));
+}
+
+/**
+ * Throws an exception if the user does not have permission to update and delete the type with the given ID.
+ */
+export function checkUpdateType(permissions: MapPermissions, typeId: ID): void {
+	checkConfigureMap(permissions);
+	checkUpdateType(permissions, typeId);
+}
+
 export function canReadField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): boolean {
 	const permission = permissions.types?.[typeId]?.fields?.[fieldId]?.read ?? canReadObject(permissions, typeId, isOwn);
 	return permission === "own" ? isOwn : permission;
@@ -98,6 +117,16 @@ export function checkUpdateField(permissions: MapPermissions, typeId: ID, fieldI
 	if (!canUpdateField(permissions, typeId, fieldId, isOwn)) {
 		throw Object.assign(new Error(getI18n().t("permissions.update-field-permission-needed", { typeId, fieldId })), { status: 403 });
 	}
+}
+
+export function canUpdateAnyField(permissions: MapPermissions, typeId: ID, isOwn: boolean): boolean {
+	return (
+		canUpdateObject(permissions, typeId, isOwn)
+		|| (
+			!!permissions.types?.[typeId]?.fields
+			&& keys(permissions.types[typeId].fields).some((fieldId) => canUpdateField(permissions, typeId, fieldId, isOwn))
+		)
+	);
 }
 
 export function canRevertHistoryEntry(permissions: MapPermissions, entry: HistoryEntry, isOwnBefore: boolean, isOwnAfter: boolean): boolean {

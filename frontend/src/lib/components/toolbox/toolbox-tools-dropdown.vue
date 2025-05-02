@@ -9,7 +9,6 @@
 	import ExportDialog from "../export-dialog.vue";
 	import UserPreferencesDialog from "../user-preferences-dialog/user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
-	import { Writable } from "facilmap-types";
 	import { canConfigureMap } from "facilmap-utils";
 
 	const context = injectContextRequired();
@@ -84,7 +83,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.filter")}}</a>
 		</li>
 
-		<li v-if="clientSub && canConfigureMap(clientSub.data.mapData)">
+		<li v-if="clientSub && canConfigureMap(clientSub.activeLink.permissions)">
 			<a
 				class="dropdown-item"
 				href="javascript:"
@@ -93,7 +92,7 @@
 			>{{i18n.t("toolbox-tools-dropdown.settings")}}</a>
 		</li>
 
-		<li v-if="clientSub && clientSub.data.mapData.writable !== Writable.READ">
+		<li v-if="clientSub">
 			<a
 				class="dropdown-item"
 				href="javascript:"
