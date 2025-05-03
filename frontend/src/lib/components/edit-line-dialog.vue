@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, lineValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType } from "facilmap-utils";
+	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, canUpdateField, getCreatableTypes, canUpdateObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -42,7 +42,7 @@
 
 	const isModified = computed(() => !isEqual(line.value, originalLine.value));
 
-	const types = computed(() => getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "line"));
+	const creatableTypes = computed(() => getCreatableTypes(clientSub.value.activeLink.permissions, getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "line"), line.value.own));
 
 	const type = computed(() => clientSub.value.data.types[line.value.typeId]);
 
@@ -51,6 +51,8 @@
 	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
+
+	const canEdit = computed(() => canUpdateObject(clientSub.value.activeLink.permissions, line.value.typeId, line.value.own));
 
 	const canEditType = computed(() => canUpdateType(clientSub.value.activeLink.permissions, line.value.typeId));
 
@@ -99,7 +101,13 @@
 					class="col-sm-9 position-relative"
 				>
 					<template #default="slotProps">
-						<input class="form-control" :id="`${id}-name-input`" v-model="line.name" :ref="slotProps.inputRef" />
+						<input
+							class="form-control"
+							:id="`${id}-name-input`"
+							v-model="line.name"
+							:ref="slotProps.inputRef"
+							:disabled="!canEdit"
+						/>
 						<div class="invalid-tooltip">
 							{{slotProps.validationError}}
 						</div>
@@ -107,14 +115,14 @@
 				</ValidatedField>
 			</div>
 
-			<div v-if="resolvedCanControl.includes('mode') && line.mode !== 'track' && context.settings.routing" class="row mb-3">
+			<div v-if="canEdit && resolvedCanControl.includes('mode') && line.mode !== 'track' && context.settings.routing" class="row mb-3">
 				<label class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.routing-mode")}}</label>
 				<div class="col-sm-9">
 					<RouteMode v-model="line.mode"></RouteMode>
 				</div>
 			</div>
 
-			<template v-if="resolvedCanControl.includes('colour')">
+			<template v-if="canEdit && resolvedCanControl.includes('colour')">
 				<div class="row mb-3">
 					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.colour")}}</label>
 					<div class="col-sm-9">
@@ -127,7 +135,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('width')">
+			<template v-if="canEdit && resolvedCanControl.includes('width')">
 				<div class="row mb-3">
 					<label :for="`${id}-width-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.width")}}</label>
 					<div class="col-sm-9">
@@ -140,7 +148,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('stroke')">
+			<template v-if="canEdit && resolvedCanControl.includes('stroke')">
 				<div class="row mb-3">
 					<label :for="`${id}-stroke-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-line-dialog.stroke")}}</label>
 					<div class="col-sm-9">
@@ -153,40 +161,44 @@
 			</template>
 
 			<template v-for="(field, idx) in clientSub.data.types[line.typeId].fields" :key="field.name">
-				<template v-if="field.type !== 'checkbox' || !isXs">
-					<div class="row mb-3">
-						<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
-						<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
-							<FieldInput
-								:id="`${id}-${idx}-input`"
-								:field="field"
-								v-model="line.data[field.id]"
-							></FieldInput>
+				<template v-if="canUpdateField(clientSub.activeLink.permissions, line.typeId, field.id, line.own)">
+					<template v-if="field.type !== 'checkbox' || !isXs">
+						<div class="row mb-3">
+							<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
+							<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
+								<FieldInput
+									:id="`${id}-${idx}-input`"
+									:field="field"
+									v-model="line.data[field.id]"
+								></FieldInput>
+							</div>
 						</div>
-					</div>
-				</template>
-				<template v-else>
-					<FieldInput
-						:id="`${id}-${idx}-input`"
-						:field="field"
-						v-model="line.data[field.id]"
-						showCheckboxLabel
-					></FieldInput>
+					</template>
+					<template v-else>
+						<FieldInput
+							:id="`${id}-${idx}-input`"
+							:field="field"
+							v-model="line.data[field.id]"
+							showCheckboxLabel
+						></FieldInput>
+					</template>
 				</template>
 			</template>
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1 || canEditType" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
-				<template v-for="type in types" :key="type.id">
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							:class="{ active: type.id == line.typeId }"
-							@click="setType(type)"
-						>{{formatTypeName(type.name)}}</a>
-					</li>
+			<DropdownMenu v-if="(canEdit && creatableTypes.length > 1) || canEditType" class="dropup" :label="i18n.t('edit-line-dialog.change-type')">
+				<template v-if="canEdit">
+					<template v-for="type in creatableTypes" :key="type.id">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								:class="{ active: type.id == line.typeId }"
+								@click="setType(type)"
+							>{{formatTypeName(type.name)}}</a>
+						</li>
+					</template>
 				</template>
 
 				<template v-if="canEditType">

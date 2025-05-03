@@ -32,14 +32,16 @@ export const stringifiedIdValidator = z.coerce.number().int().transform(Number);
 export const idValidator = z.number().int();
 export type ID = z.infer<typeof idValidator>;
 
+export const forbiddenMapSlugs = ["robots.txt", "favicon.ico"];
 export const mapSlugOrJwtValidator = z.string()
 	.min(1)
 	.max(100)
 	.refine((val) => !val.includes("/"), { message: "May not contain a slash." })
 	.refine((val) => !val.includes("\n"), { message: "May not contain a newline." })
 	.refine((val) => !val.startsWith("_"), { message: "May not start with an underscore." })
-	.refine((val) => !val.startsWith("."), { message: "May not start with a period." });
-export const mapSlugValidator = mapSlugOrJwtValidator.refine((val) => !isMapToken(val), { message: "May not be a JWT." });
+	.refine((val) => !val.startsWith("."), { message: "May not start with a period." })
+	.refine((val) => !forbiddenMapSlugs.includes(val), { message: "This map slug is not permitted." });
+export const mapSlugValidator = mapSlugOrJwtValidator.refine((val) => !isMapToken(val), { message: "May not be a map token." });
 export type MapSlug = z.infer<typeof mapSlugValidator>;
 
 export const routeModeValidator = z.string();
@@ -79,11 +81,7 @@ export enum Units {
 export const unitsValidator = z.nativeEnum(Units);
 
 export function isMapToken(mapSlug: string): boolean {
-	try {
-		return JSON.parse(atob(mapSlug.split(".")[0].replaceAll("-", "+").replaceAll("_", "/"))).typ === "JWT";
-	} catch {
-		return false;
-	}
+	return !!mapSlug.match(/^[-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+){3,4}$/);
 }
 
 declare const strippedObjectMarker: unique symbol;

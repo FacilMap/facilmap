@@ -8,14 +8,15 @@ import { type View } from "../view.js";
 import * as z from "zod";
 import { setLanguageRequestValidator, type StreamId, subscribeToMapPickValidator, type RoutePoints } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
-import { anyMapSlugValidator, apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
-import { optionalParam, type ExportResult, type LinePoints } from "../api/api-common.js";
+import { apiV3RequestValidators, type ApiV3 } from "../api/api-v3.js";
+import { anyMapSlugWithoutIdentityValidator, optionalParam, type ExportResult, type LinePoints } from "../api/api-common.js";
 import type { DeepReadonly } from "../utility.js";
 import { tupleWithOptional } from "zod-tuple-with-optional";
 
 export const subscribeToMapOptionsValidator = z.object({
 	pick: z.array(subscribeToMapPickValidator).optional(),
-	history: z.boolean().optional()
+	history: z.boolean().optional(),
+	identity: z.string().optional()
 });
 export type SubscribeToMapOptions = z.infer<typeof subscribeToMapOptionsValidator>;
 
@@ -25,7 +26,7 @@ export type SubscribeToRouteOptions = z.infer<typeof subscribeToRouteOptionsVali
 export const socketV3RequestValidators = {
 	...apiV3RequestValidators,
 
-	subscribeToMap: tupleWithOptional([anyMapSlugValidator, optionalParam(subscribeToMapOptionsValidator)]),
+	subscribeToMap: tupleWithOptional([anyMapSlugWithoutIdentityValidator, optionalParam(subscribeToMapOptionsValidator)]),
 	createMapAndSubscribe: tupleWithOptional([mapDataValidator.create, optionalParam(subscribeToMapOptionsValidator)]),
 	unsubscribeFromMap: z.tuple([mapSlugValidator]),
 	subscribeToRoute: z.tuple([z.string(), subscribeToRouteOptionsValidator]),

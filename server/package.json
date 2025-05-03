@@ -78,7 +78,8 @@
     "unbzip2-stream": "^1.4.3",
     "unzipper": "^0.12.3",
     "zip-stream": "^7.0.2",
-    "zod": "^3.24.2"
+    "zod": "^3.24.3",
+    "zod-tuple-with-optional": "^1.0.2"
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",

@@ -709,10 +709,6 @@
         "tab-delete-map": "Delete map",
         "admin-link-label": "Admin link",
         "admin-link-description": "When opening the map through this link, all parts of the map can be edited, including the map settings, object types and views.",
-        "write-link-label": "Editable link",
-        "write-link-description": "When opening the map through this link, markers and lines can be added, changed and deleted, but the map settings, object types and views cannot be modified.",
-        "read-link-label": "Read-only link",
-        "read-link-description": "When opening the map through this link, markers, lines and views can be seen, but nothing can be changed.",
         "map-name": "Map name",
         "search-engines": "Search engines",
         "search-engines-label": "Accessible for search engines",
@@ -731,7 +727,17 @@
         "delete-code": "DELETE",
         "add-favourite": "Add map to favourites",
         "add-favourite-persist": "Add map to favourites (browser will ask for persistent storage permission)",
-        "add-favourite-tooltip": "Favourites are available in the “Collaborative maps” menu, allowing you to quickly open them without having to remember their link. They are saved in the local storage of your browser."
+        "add-favourite-tooltip": "Favourites are available in the “Collaborative maps” menu, allowing you to quickly open them without having to remember their link. They are saved in the local storage of your browser.",
+        "link-url": "URL",
+        "link-comment": "Comment",
+        "link-update-error": "Error updating map link",
+        "link-disappeared-error": "The map link cannot be found on the type anymore.",
+        "edit-link": "Edit"
+    },
+    "map-settings-edit-link-dialog" : {
+        "title": "Edit map link",
+        "url": "URL",
+        "comment": "Comment"
     },
     "pagination": {
         "first-label": "First",

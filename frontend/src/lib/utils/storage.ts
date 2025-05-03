@@ -60,7 +60,8 @@ const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(va
 	presetLinks: z.record(z.object({
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
-	})).optional()
+	})).optional(),
+	identities: z.record(z.string()).optional()
 }));
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 

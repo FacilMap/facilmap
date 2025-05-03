@@ -1,5 +1,5 @@
 import { mapDataValidator, mapPermissionsValidator, type MapData } from "../mapData.js";
-import { bboxWithZoomValidator, idValidator, mapSlugOrJwtValidator, type Bbox, type BboxWithZoom, type ID, type Stripped } from "../base.js";
+import { bboxWithZoomValidator, idValidator, type Bbox, type BboxWithZoom, type ID, type Stripped } from "../base.js";
 import type { CRU } from "../cru.js";
 import { lineValidator, type Line, type LineTemplate, type TrackPoint } from "../line.js";
 import type { SearchResult } from "../searchResult.js";
@@ -8,17 +8,9 @@ import { routeRequestValidator, type RouteInfo } from "../route.js";
 import { typeValidator, type Type } from "../type.js";
 import { viewValidator, type View } from "../view.js";
 import type { HistoryEntry } from "../historyEntry.js";
-import { allMapObjectsPickValidator, bboxWithExceptValidator, optionalParam, pagingValidator, type AllMapObjectsItem, type AllMapObjectsPick, type BboxWithExcept, type ExportResult, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common.js";
+import { allMapObjectsPickValidator, anyMapSlugValidator, bboxWithExceptValidator, optionalParam, pagingValidator, type AllMapObjectsItem, type AllMapObjectsPick, type AnyMapSlug, type BboxWithExcept, type ExportResult, type FindMapsResult, type FindOnMapResult, type LineWithTrackPoints, type PagedResults, type StreamedResults } from "./api-common.js";
 import * as z from "zod";
 import { tupleWithOptional } from "zod-tuple-with-optional";
-
-export const anyMapSlugValidator = mapSlugOrJwtValidator.or(z.object({
-	mapSlug: mapSlugOrJwtValidator,
-	password: z.string().optional(),
-	identity: z.string().optional()
-}));
-export type AnyMapSlug = z.infer<typeof anyMapSlugValidator>;
-
 
 export const apiV3RequestValidators = {
 	findMaps: tupleWithOptional([/** query */ z.string(), optionalParam(pagingValidator)]),

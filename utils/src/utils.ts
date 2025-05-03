@@ -3,6 +3,7 @@ import decodeURIComponent from "decode-uri-component";
 import type { Colour, DeepMutable, DeepReadonly } from "facilmap-types";
 import type { OsmFeatureType } from "osm-api";
 import { getI18n } from "./i18n";
+import * as z from "zod";
 
 export function quoteHtml(str: string | number): string {
 	return `${str}`
@@ -165,10 +166,13 @@ export function mergeObject<T extends Record<keyof any, any>>(oldObject: NoInfer
 
 /**
  * Performs a 3-way merge. Takes the difference between oldArray and newArray and applies it directly to targetArray.
+ * @param getKey Returns a key for an array item. Each array item is matched up across the arrays using this key. If this returns
+ *     undefined, the item is considered unique, meaning that it will not match any item in the other arrays. This only makes
+ *     sense in newArray and targetArray, not in oldArray.
  */
-export function mergeArray<T extends Record<keyof any, any>, K>(oldArray: DeepReadonly<Array<NoInfer<T>>> | undefined, newArray: DeepReadonly<Array<NoInfer<T>>>, targetArray: T[], getKey: (item: DeepReadonly<T> | T) => K): void {
+export function mergeArray<T extends Record<keyof any, any>, K>(oldArray: DeepReadonly<Array<NoInfer<T>>> | undefined, newArray: DeepReadonly<Array<NoInfer<T>>>, targetArray: T[], getKey: (item: DeepReadonly<T> | T) => K | undefined): void {
 	const getItems = (arr: ReadonlyArray<T | DeepReadonly<T>>) => {
-		const result = new Map<K, Array<{ idx: number; obj: T | DeepReadonly<T> }>>();
+		const result = new Map<K | undefined, Array<{ idx: number; obj: T | DeepReadonly<T> }>>();
 		for (let i = 0; i < arr.length; i++) {
 			const key = getKey(arr[i]);
 			const item = { idx: i, obj: arr[i] };
@@ -178,10 +182,10 @@ export function mergeArray<T extends Record<keyof any, any>, K>(oldArray: DeepRe
 				result.get(key)!.push(item);
 			}
 		}
-		return [...result.entries()].flatMap(([key, items]) => items.map((item, i) => ({ ...item, key: [key, i] as const })));
+		return [...result.entries()].flatMap(([key, items]) => items.map((item, i) => ({ ...item, key: key == null ? undefined : [key, i] as const })));
 	};
 
-	const isKey = (a: { key: readonly [K, number] }) => (b: { key: readonly [K, number] }) => a.key[0] === b.key[0] && a.key[1] === b.key[1];
+	const isKey = (a: { key: readonly [K, number] | undefined }) => (b: { key: readonly [K, number] | undefined }) => a.key != null && b.key != null && a.key[0] === b.key[0] && a.key[1] === b.key[1];
 
 	const oldItems = oldArray ? getItems(oldArray) : [];
 	const newItems = getItems(newArray);
@@ -193,7 +197,7 @@ export function mergeArray<T extends Record<keyof any, any>, K>(oldArray: DeepRe
 	for (const oldItem of keptItemsOld) {
 		const targetItem = targetItems.find(isKey(oldItem));
 		if (targetItem) {
-			const newItem = newItems.find((newItem) => oldItem.key[0] === newItem.key[0] && oldItem.key[1] === newItem.key[1])!;
+			const newItem = newItems.find(isKey(oldItem))!;
 			// This already sets the new properties in the obj, but that's okay
 			mergeObject(oldItem, newItem, targetItem);
 		}
@@ -472,6 +476,8 @@ export function forEachAsync<T>(array: T[], callback: (item: T, idx: number) => 
 }
 
 const base64UrlChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+export const base64UrlValidator = z.string().regex(/^[-_a-zA-Z0-9]*$/);
 
 // https://stackoverflow.com/a/64072170/242365
 export function numberToBase64(number: number): string {

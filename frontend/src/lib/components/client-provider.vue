@@ -83,7 +83,10 @@
 		}
 
 		if (mapSlug && (!clientContext.value.map || clientContext.value.map.mapSlug !== mapSlug)) {
-			await setSubscription(clientContext.value.client.subscribeToMap(mapSlug));
+			await setSubscription(clientContext.value.client.subscribeToMap({
+				mapSlug,
+				// identity: storage.identities?.[mapSlug]
+			}));
 		}
 	}, { immediate: true });
 

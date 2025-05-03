@@ -48,7 +48,8 @@
     "marked": "^15.0.7",
     "osm-api": "^2.4.0",
     "p-throttle": "^7.0.0",
-    "parse-gps-coordinates": "^1.0.0"
+    "parse-gps-coordinates": "^1.0.0",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/dompurify": "^3.2.0",

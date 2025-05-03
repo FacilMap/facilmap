@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { useI18n } from "../../utils/i18n";
+	import { T, useI18n } from "../../utils/i18n";
 	import { getUniqueId } from "../../utils/utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";

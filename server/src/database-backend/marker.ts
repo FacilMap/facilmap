@@ -80,13 +80,12 @@ export default class DatabaseMarkersBackend {
 		this.MarkerModel.belongsTo(TypeModel, makeNotNullForeignKey("type", "typeId", true));
 
 		this.MarkerDataModel.belongsTo(this.MarkerModel, makeNotNullForeignKey("marker", "markerId"));
-		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId" });
+		this.MarkerModel.hasMany(this.MarkerDataModel, { foreignKey: "markerId", as: "data" });
 	}
 
 	protected prepareMarker(marker: MarkerModel): RawMarker {
 		const data = marker.toJSON() as any;
-		data.data = dataFromArr(data.markerData);
-		delete data.markerData;
+		data.data = dataFromArr(data.data);
 		return data;
 	}
 
@@ -96,7 +95,7 @@ export default class DatabaseMarkersBackend {
 				...makeBboxCondition(this.backend, bbox),
 				mapId
 			},
-			include: [this.MarkerDataModel]
+			include: [{ model: this.MarkerDataModel, as: "data" }]
 		})) {
 			yield this.prepareMarker(obj);
 		}
@@ -109,7 +108,7 @@ export default class DatabaseMarkersBackend {
 				mapId,
 				typeId
 			},
-			include: [this.MarkerDataModel]
+			include: [{ model: this.MarkerDataModel, as: "data" }]
 		})) {
 			yield this.prepareMarker(obj);
 		}
@@ -126,7 +125,7 @@ export default class DatabaseMarkersBackend {
 	async getMarker(mapId: ID, markerId: ID): Promise<RawMarker | undefined> {
 		const entry = await this.MarkerModel.findOne({
 			where: { id: markerId, mapId },
-			include: [this.MarkerDataModel],
+			include: [{ model: this.MarkerDataModel, as: "data" }],
 			nest: true
 		});
 

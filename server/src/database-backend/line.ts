@@ -164,13 +164,12 @@ export default class DatabaseLinesBackend {
 		this.LineModel.hasMany(this.LinePointModel, { foreignKey: "lineId" });
 
 		this.LineDataModel.belongsTo(this.LineModel, makeNotNullForeignKey("line", "lineId"));
-		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId" });
+		this.LineModel.hasMany(this.LineDataModel, { foreignKey: "lineId", as: "data" });
 	}
 
 	protected prepareLine(line: LineModel): RawLine {
 		const data = line.toJSON() as any;
-		data.data = dataFromArr(data.lineData);
-		delete data.lineData;
+		data.data = dataFromArr(data.data);
 		return data;
 	}
 
@@ -179,7 +178,7 @@ export default class DatabaseLinesBackend {
 			where: {
 				mapId
 			},
-			include: [this.LineDataModel],
+			include: [{ model: this.LineDataModel, as: "data" }],
 			...fields ? { attributes: fields } : {}
 		})) {
 			yield this.prepareLine(obj);
@@ -192,7 +191,7 @@ export default class DatabaseLinesBackend {
 				mapId,
 				typeId
 			},
-			include: [this.LineDataModel],
+			include: [{ model: this.LineDataModel, as: "data" }],
 		})) {
 			yield this.prepareLine(obj);
 		}
@@ -209,7 +208,7 @@ export default class DatabaseLinesBackend {
 	async getLine(mapId: ID, lineId: ID): Promise<RawLine | undefined> {
 		const entry = await this.LineModel.findOne({
 			where: { id: lineId, mapId },
-			include: [this.LineDataModel],
+			include: [{ model: this.LineDataModel, as: "data" }],
 			nest: true
 		});
 

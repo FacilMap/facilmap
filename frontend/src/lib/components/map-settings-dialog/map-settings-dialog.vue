@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
 	import { ADMIN_LINK_COMMENT, getMainAdminLink, type CRU, type MapData } from "facilmap-types";
-	import { deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments, mergeObject } from "facilmap-utils";
+	import { deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
@@ -14,6 +14,7 @@
 	import MapSettingsGeneral from "./map-settings-general.vue";
 	import MapSettingsLinks from "./map-settings-links.vue";
 	import MapSettingsDelete from "./map-settings-delete.vue";
+import { mergeMapData } from "./map-settings-utils";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -87,7 +88,7 @@
 
 	watch(originalMapData, (newMapData, oldMapData) => {
 		if (mapData.value && newMapData)
-			mergeObject(oldMapData, newMapData, mapData.value);
+			mergeMapData(oldMapData, newMapData, mapData.value);
 	}, { deep: true });
 
 	const hasFavourite = computed(() => storage.favourites.some((f) => f.mapSlug === adminLink.value.slug));
@@ -139,7 +140,7 @@
 
 				<li class="nav-item">
 					<a class="nav-link" :class="{ active: activeTab === 1 }" aria-current="page" href="javascript:" @click="activeTab = 1">
-						{{i18n.t("map-settings-dialog.tab-map-link")}}
+						{{i18n.t("map-settings-dialog.tab-map-links")}}
 					</a>
 				</li>
 

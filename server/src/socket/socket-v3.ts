@@ -13,6 +13,7 @@ import { canReadObject, getSafeFilename, numberEntries, sleep } from "facilmap-u
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
 import { isOwn, resolveMapLink, stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawActiveMapLink } from "../utils/permissions.js";
+import { getIdentityHash } from "../utils/crypt.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
@@ -456,7 +457,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				await this.emitAllMapObjects(mapSlug, results, abort.signal);
 			},
 
-			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
+			createMapAndSubscribe: async (data, { pick = subscribeToMapDefaultPick, history = false, identity } = {}) => {
 				const mainLink = getMainAdminLink(data.links);
 				if (this.mapSubscriptionAbort[mainLink.slug]) {
 					throw new Error(getI18n().t("socket.map-already-subscribed-error", { mapSlug: mainLink.slug }));
@@ -464,7 +465,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				const abort = new AbortController();
 				this.mapSubscriptionAbort[mainLink.slug] = abort;
 
-				const { activeLink, results } = await this.api._createMap(data, {
+				const { activeLink, results, rawMapData } = await this.api._createMap(data, {
 					pick: this.bbox ? pick : pick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox
 				});
@@ -476,7 +477,15 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (!this.mapSubscriptionDetails[activeLink.mapId]) {
 					this.mapSubscriptionDetails[activeLink.mapId] = [];
 				}
-				this.mapSubscriptionDetails[activeLink.mapId].push({ pick, history, mapSlug: activeLink.slug, mapLink: activeLink });
+				this.mapSubscriptionDetails[activeLink.mapId].push({
+					pick,
+					history,
+					mapSlug: activeLink.slug,
+					mapLink: {
+						...activeLink,
+						identity: identity != null ? getIdentityHash(identity, rawMapData.salt) : undefined
+					}
+				});
 				this.registerDatabaseHandlers();
 
 				await this.emitAllMapObjects(activeLink.slug, results, abort.signal);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, markerValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType } from "facilmap-utils";
+	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, canUpdateField, canUpdateObject, getCreatableTypes } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
@@ -41,7 +41,7 @@
 
 	const isModified = computed(() => !isEqual(marker.value, originalMarker.value));
 
-	const types = computed(() => getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "marker"));
+	const creatableTypes = computed(() => getCreatableTypes(clientSub.value.activeLink.permissions, getOrderedTypes(clientSub.value.data.types).filter((type) => type.type === "marker"), marker.value.own));
 
 	const type = computed(() => clientSub.value.data.types[marker.value.typeId]);
 
@@ -50,6 +50,8 @@
 	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
+
+	const canEdit = computed(() => canUpdateObject(clientSub.value.activeLink.permissions, marker.value.typeId, marker.value.own));
 
 	const canEditType = computed(() => canUpdateType(clientSub.value.activeLink.permissions, marker.value.typeId));
 
@@ -98,7 +100,13 @@
 					class="col-sm-9 position-relative"
 				>
 					<template #default="slotProps">
-						<input class="form-control" :id="`${id}-name-input`" v-model="marker.name" :ref="slotProps.inputRef" />
+						<input
+							class="form-control"
+							:id="`${id}-name-input`"
+							v-model="marker.name"
+							:ref="slotProps.inputRef"
+							:disabled="!canEdit"
+						/>
 						<div class="invalid-tooltip">
 							{{slotProps.validationError}}
 						</div>
@@ -106,7 +114,7 @@
 				</ValidatedField>
 			</div>
 
-			<template v-if="resolvedCanControl.includes('colour')">
+			<template v-if="canEdit && resolvedCanControl.includes('colour')">
 				<div class="row mb-3">
 					<label :for="`${id}-colour-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.colour")}}</label>
 					<div class="col-sm-9">
@@ -119,7 +127,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('size')">
+			<template v-if="canEdit && resolvedCanControl.includes('size')">
 				<div class="row mb-3">
 					<label :for="`${id}-size-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.size")}}</label>
 					<div class="col-sm-9">
@@ -132,7 +140,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('icon')">
+			<template v-if="canEdit && resolvedCanControl.includes('icon')">
 				<div class="row mb-3">
 					<label :for="`${id}-icon-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.icon")}}</label>
 					<div class="col-sm-9">
@@ -141,7 +149,7 @@
 				</div>
 			</template>
 
-			<template v-if="resolvedCanControl.includes('shape')">
+			<template v-if="canEdit && resolvedCanControl.includes('shape')">
 				<div class="row mb-3">
 					<label :for="`${id}-shape-input`" class="col-sm-3 col-form-label">{{i18n.t("edit-marker-dialog.shape")}}</label>
 					<div class="col-sm-9">
@@ -150,41 +158,45 @@
 				</div>
 			</template>
 
-			<template v-for="(field, idx) in clientSub.data.types[marker.typeId].fields" :key="field.name">
-				<template v-if="field.type !== 'checkbox' || !isXs">
-					<div class="row mb-3">
-						<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
-						<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
-							<FieldInput
-								:id="`${id}-${idx}-input`"
-								:field="field"
-								v-model="marker.data[field.id]"
-							></FieldInput>
+			<template v-for="(field, idx) in clientSub.data.types[marker.typeId].fields" :key="field.id">
+				<template v-if="canUpdateField(clientSub.activeLink.permissions, marker.typeId, field.id, marker.own)">
+					<template v-if="field.type !== 'checkbox' || !isXs">
+						<div class="row mb-3">
+							<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
+							<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
+								<FieldInput
+									:id="`${id}-${idx}-input`"
+									:field="field"
+									v-model="marker.data[field.id]"
+								></FieldInput>
+							</div>
 						</div>
-					</div>
-				</template>
-				<template v-else>
-					<FieldInput
-						:id="`${id}-${idx}-input`"
-						:field="field"
-						v-model="marker.data[field.id]"
-						showCheckboxLabel
-					></FieldInput>
+					</template>
+					<template v-else>
+						<FieldInput
+							:id="`${id}-${idx}-input`"
+							:field="field"
+							v-model="marker.data[field.id]"
+							showCheckboxLabel
+						></FieldInput>
+					</template>
 				</template>
 			</template>
 		</template>
 
 		<template #footer-left>
-			<DropdownMenu v-if="types.length > 1 || canEditType" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
-				<template v-for="type in types" :key="type.id">
-					<li>
-						<a
-							href="javascript:"
-							class="dropdown-item"
-							:class="{ active: type.id == marker.typeId }"
-							@click="setType(type)"
-						>{{formatTypeName(type.name)}}</a>
-					</li>
+			<DropdownMenu v-if="(canEdit && creatableTypes.length > 1) || canEditType" class="dropup" :label="i18n.t('edit-marker-dialog.change-type')">
+				<template v-if="canEdit">
+					<template v-for="type in creatableTypes" :key="type.id">
+						<li>
+							<a
+								href="javascript:"
+								class="dropdown-item"
+								:class="{ active: type.id == marker.typeId }"
+								@click="setType(type)"
+							>{{formatTypeName(type.name)}}</a>
+						</li>
+					</template>
 				</template>
 
 				<template v-if="canEditType">

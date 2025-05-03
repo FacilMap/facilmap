@@ -40,6 +40,26 @@ export async function fileExists(filename: string): Promise<boolean> {
 	}
 }
 
-export function encodeBase64Url(data: Buffer): string {
-	return data.toString("base64").replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_")
+export function encodeBase64Url(data: Buffer | string): string {
+	return (typeof data === "string" ? Buffer.from(data) : data).toString("base64").replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_")
+}
+
+export function decodeBase64Url(data: string): Buffer {
+	return Buffer.from(data.replaceAll("-", "+").replaceAll("_", "/"), "base64");
+}
+
+/**
+ * Like encodeURIComponent() with a custom escape character instead of %.
+ */
+export function encodeUrlSafe(data: string, encodeChar: "." | "_" | "-"): string {
+	return encodeURIComponent(data)
+		.replaceAll(encodeChar, `%${encodeChar.charCodeAt(0).toString(16).padStart(2, "0")}`)
+		.replaceAll("%", encodeChar);
+}
+
+/**
+ * Like decodeURIComponent() with a custom escape character instead of %.
+ */
+export function decodeUrlSafe(data: string, encodeChar: "." | "_" | "-"): string {
+	return decodeURIComponent(data.replaceAll(encodeChar, "%"));
 }

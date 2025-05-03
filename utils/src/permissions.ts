@@ -100,7 +100,7 @@ export function canUpdateType(permissions: MapPermissions, typeId: ID): boolean 
  */
 export function checkUpdateType(permissions: MapPermissions, typeId: ID): void {
 	checkConfigureMap(permissions);
-	checkUpdateType(permissions, typeId);
+	checkManageObject(permissions, typeId, false);
 }
 
 export function canReadField(permissions: MapPermissions, typeId: ID, fieldId: ID | `${number}`, isOwn: boolean): boolean {

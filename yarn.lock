@@ -4224,7 +4224,7 @@ __metadata:
     vue-component-type-helpers: ^2.2.8
     vue-tsc: ^2.2.4
     vuedraggable: ^4.1.0
-    zod: ^3.24.2
+    zod: ^3.24.3
   languageName: unknown
   linkType: soft
 
@@ -4375,7 +4375,8 @@ __metadata:
     vite-tsconfig-paths: ^5.1.4
     vitest: ^3.0.7
     zip-stream: ^7.0.2
-    zod: ^3.24.2
+    zod: ^3.24.3
+    zod-tuple-with-optional: ^1.0.2
   languageName: unknown
   linkType: soft
 
@@ -4408,7 +4409,7 @@ __metadata:
     typescript: ^5.7.3
     vite: ^6.2.0
     vite-plugin-dts: 4.5.0
-    zod: ^3.24.2
+    zod: ^3.24.3
     zod-tuple-with-optional: ^1.0.2
   languageName: unknown
   linkType: soft
@@ -4444,6 +4445,7 @@ __metadata:
     vite-plugin-dts: ^4.5.0
     vite-tsconfig-paths: ^5.1.4
     vitest: ^3.0.7
+    zod: ^3.24.3
   languageName: unknown
   linkType: soft
 
@@ -9496,9 +9498,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.4, zod@npm:^3.24.2":
+"zod@npm:^3.22.4":
   version: 3.24.2
   resolution: "zod@npm:3.24.2"
   checksum: c02455c09678c5055c636d64f9fcda2424fea0aa46ac7d9681e7f41990bc55f488bcd84b9d7cfef0f6e906f51f55b245239d92a9f726248aa74c5b84edf00c2d
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.24.3":
+  version: 3.24.3
+  resolution: "zod@npm:3.24.3"
+  checksum: 9c3976e61cec25908f3405502abdf28ab1893afd5182c6739a30375c5c6bf4b9b6ea7e78735324e5ac63571c160ce607ebe320ff389b044223c357ccc2f8c94c
   languageName: node
   linkType: hard

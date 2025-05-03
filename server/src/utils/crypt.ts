@@ -1,10 +1,10 @@
 import { createHash, randomBytes, scrypt as scryptRaw, type BinaryLike, type ScryptOptions } from "node:crypto";
 import { promisify } from "node:util";
-import { decode, sign, verify } from "jsonwebtoken";
-import { idValidator, type ID, type MapPermissions } from "facilmap-types";
+import { sign, verify } from "jsonwebtoken";
+import { type ID, type MapPermissions } from "facilmap-types";
 import { encodeBase64Url } from "./utils";
-import { deserializeMapPermissions, serializeMapPermissions } from "facilmap-utils";
-import * as z from "zod";
+import { base64ToNumber, base64UrlValidator, deserializeMapPermissions, numberToBase64, serializeMapPermissions } from "facilmap-utils";
+import { tupleWithOptional } from "zod-tuple-with-optional";
 
 const scrypt = promisify(scryptRaw) as (password: BinaryLike, salt: BinaryLike, keylen: number, options?: ScryptOptions) => Promise<Buffer>;
 
@@ -29,26 +29,56 @@ export async function createMapToken(data: MapTokenPayload, secret: Buffer): Pro
 		throw Object.assign(new Error("api.admin-token-error"), { status: 400 });
 	}
 
-	return sign({
-		i: data.mapId,
-		s: data.slugHash,
-		h: data.passwordHash,
-		p: serializeMapPermissions(data.permissions)
-	}, secret);
+	const permissions = serializeMapPermissions(data.permissions);
+
+	const jwt = sign({
+		mapId: data.mapId,
+		slugHash: data.slugHash,
+		passwordHash: data.passwordHash,
+		permissions
+	}, secret, {
+		noTimestamp: true
+	}).split(".");
+
+	return [
+		jwt[2],
+		numberToBase64(data.mapId),
+		data.slugHash,
+		permissions,
+		...data.passwordHash != null ? [data.passwordHash] : []
+	].join(".");
 }
 
 export function getMapIdFromMapTokenUnverified(token: string): ID {
-	const decoded = z.object({ i: idValidator }).parse(decode(token, { json: true }));
-	return decoded.i;
+	return base64ToNumber(base64UrlValidator.parse(token.split(".")[1]));
 }
 
 export function verifyMapToken(token: string, secret: Buffer): MapTokenPayload {
-	const verified = verify(token, secret) as any;
+	const spl = tupleWithOptional([
+		base64UrlValidator,
+		base64UrlValidator,
+		base64UrlValidator,
+		base64UrlValidator,
+		base64UrlValidator.optional()
+	]).parse(token.split("."));
+
+	const jwt = [
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+		encodeBase64Url(JSON.stringify({
+			mapId: base64ToNumber(spl[1]),
+			slugHash: spl[2],
+			passwordHash: spl[4] ?? undefined,
+			permissions: spl[3]
+		})),
+		spl[0]
+	].join(".");
+
+	const verified = verify(jwt, secret) as any;
 	return {
-		mapId: verified.i,
-		slugHash: verified.s,
-		passwordHash: verified.h,
-		permissions: deserializeMapPermissions(verified.p)
+		mapId: verified.mapId,
+		slugHash: verified.slugHash,
+		passwordHash: verified.passwordHash,
+		permissions: deserializeMapPermissions(verified.permissions)
 	};
 }
 
@@ -65,5 +95,5 @@ export async function getPasswordHash(password: string, salt: Buffer): Promise<B
 }
 
 export function getIdentityHash(identity: string, salt: Buffer): Buffer {
-	return createHash("sha256").update(`${identity}${salt}`).digest();
+	return createHash("sha256").update(Buffer.concat([Buffer.from(identity.normalize()), salt])).digest();
 }

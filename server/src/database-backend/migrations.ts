@@ -1052,14 +1052,14 @@ export default class DatabaseBackendMigrations {
 			const existingMapLinks = new Set((await this.backend.maps.MapLinkModel.findAll({ attributes: ["slug"] })).map((l) => l.slug));
 
 			await forEachAsync(allMaps, async (map, i) => {
-				if ((i + 1) % 100 === 0) {
+				if ((i + 1) % 1000 === 0) {
 					console.log(`DB migration: Create map link table (${i + 1} / ${allMaps.length})`);
 				}
 
 				for (const [slug, comment, searchEngines, permissions] of [
-					[(map as any).adminId, ADMIN_LINK_COMMENT, false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
-					[(map as any).writeId, WRITE_LINK_COMMENT, false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
-					[(map as any).readId, READ_LINK_COMMENT, (map as any).searchEngines, { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
+					[map.getDataValue("adminId" as any), ADMIN_LINK_COMMENT, false, { read: true, update: true, settings: true, admin: true } satisfies MapPermissions],
+					[map.getDataValue("writeId" as any), WRITE_LINK_COMMENT, false, { read: true, update: true, settings: false, admin: false } satisfies MapPermissions],
+					[map.getDataValue("readId" as any), READ_LINK_COMMENT, !!map.getDataValue("searchEngines" as any), { read: true, update: false, settings: false, admin: false } satisfies MapPermissions]
 				] as const) {
 					if (!existingMapLinks.has(slug)) {
 						await this.backend.maps.MapLinkModel.create({

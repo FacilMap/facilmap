@@ -3,7 +3,7 @@
 	import MapSlugEdit from './map-slug-edit.vue';
 	import ValidatedField from '../ui/validated-form/validated-field.vue';
 	import { getUniqueId, getZodValidator } from '../../utils/utils';
-	import { useI18n } from '../../utils/i18n';
+	import { T, useI18n } from '../../utils/i18n';
 	import { computed } from 'vue';
 
 	const i18n = useI18n();
@@ -19,12 +19,18 @@
 
 <template>
 	<!-- eslint-disable vue/no-mutating-props -->
-	<MapSlugEdit
-		:mapData="props.mapData"
-		v-model="adminLink.slug"
-		:label="i18n.t('map-settings-dialog.admin-link-label')"
-		:description="i18n.t('map-settings-dialog.admin-link-description')"
-	></MapSlugEdit>
+	<div class="row mb-3">
+		<label :for="`${id}-slug-input`" class="col-sm-3 col-form-label text-break">{{i18n.t('map-settings-dialog.admin-link-label')}}</label>
+		<div class="col-sm-9 position-relative">
+			<MapSlugEdit
+				:mapData="props.mapData"
+				v-model="adminLink.slug"
+			></MapSlugEdit>
+			<div class="form-text">
+				{{i18n.t('map-settings-dialog.admin-link-description')}}
+			</div>
+		</div>
+	</div>
 
 	<ValidatedField
 		class="row mb-3"

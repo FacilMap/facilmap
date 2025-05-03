@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { mapSlugValidator, type CRU, type MapData } from "facilmap-types";
-	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
+	import { getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
 	import { useI18n } from "../../utils/i18n";
@@ -13,11 +13,8 @@
 
 	const props = defineProps<{
 		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
-		label: string;
-		description: string;
+		readonly?: boolean;
 	}>();
-
-	const id = getUniqueId("fm-map-settings-map-slug-edit");
 
 	const value = defineModel<string>({ required: true });
 
@@ -30,34 +27,26 @@
 </script>
 
 <template>
-	<div class="row mb-3">
-		<label :for="`${id}-input`" class="col-sm-3 col-form-label">{{props.label}}</label>
-		<div class="col-sm-9 position-relative">
-			<CopyToClipboardInput
-				v-model="value"
-				:prefix="context.baseUrl"
-				:copyTooltip="i18n.t('map-slug-edit.copy-tooltip')"
-				:qrTooltip="i18n.t('map-slug-edit.qr-tooltip')"
-				:copiedTitle="i18n.t('map-slug-edit.copied-title')"
-				:copiedMessage="i18n.t('map-slug-edit.copied-message')"
-				:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
-				:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapSlug]"
+	<CopyToClipboardInput
+		v-model="value"
+		:prefix="context.baseUrl"
+		:copyTooltip="i18n.t('map-slug-edit.copy-tooltip')"
+		:qrTooltip="i18n.t('map-slug-edit.qr-tooltip')"
+		:copiedTitle="i18n.t('map-slug-edit.copied-title')"
+		:copiedMessage="i18n.t('map-slug-edit.copied-message')"
+		:fullUrl="`${context.baseUrl}${encodeURIComponent(value)}`"
+		:validators="[validateRequired, getZodValidator(mapSlugValidator), validateDistinctMapSlug]"
+		:readonly="props.readonly"
+	>
+		<template #after1 v-if="!props.readonly">
+			<button
+				type="button"
+				class="btn btn-secondary"
+				@click="value = generateRandomMapSlug(16)"
+				v-tooltip="i18n.t('map-slug-edit.random-tooltip')"
 			>
-				<template #after1>
-					<button
-						type="button"
-						class="btn btn-secondary"
-						@click="value = generateRandomMapSlug(16)"
-						v-tooltip="i18n.t('map-slug-edit.random-tooltip')"
-					>
-						<Icon icon="shuffle" :alt="i18n.t('map-slug-edit.random-alt')"></Icon>
-					</button>
-				</template>
-			</CopyToClipboardInput>
-
-			<div class="form-text">
-				{{props.description}}
-			</div>
-		</div>
-	</div>
+				<Icon icon="shuffle" :alt="i18n.t('map-slug-edit.random-alt')"></Icon>
+			</button>
+		</template>
+	</CopyToClipboardInput>
 </template>

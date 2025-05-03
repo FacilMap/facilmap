@@ -1,10 +1,23 @@
 import * as z from "zod";
 import type { MapData } from "../mapData.js";
-import { bboxValidator, bboxWithZoomValidator, type ID, type MapSlug, type Stripped } from "../base.js";
+import { bboxValidator, bboxWithZoomValidator, mapSlugOrJwtValidator, type ID, type MapSlug, type Stripped } from "../base.js";
 import type { Line, TrackPoint } from "../line.js";
 import type { Marker } from "../marker.js";
 import type { Type } from "../type.js";
 import type { View } from "../view.js";
+
+export const anyMapSlugWithoutIdentityValidator = mapSlugOrJwtValidator.or(z.object({
+	mapSlug: mapSlugOrJwtValidator,
+	password: z.string().optional()
+}));
+export type AnyMapSlugWithoutIdentity = z.infer<typeof anyMapSlugWithoutIdentityValidator>;
+
+export const anyMapSlugValidator = mapSlugOrJwtValidator.or(z.object({
+	mapSlug: mapSlugOrJwtValidator,
+	password: z.string().optional(),
+	identity: z.string().optional()
+}));
+export type AnyMapSlug = z.infer<typeof anyMapSlugValidator>;
 
 export const pagingValidator = z.object({
 	start: z.coerce.number().int().min(0).default(() => 0),

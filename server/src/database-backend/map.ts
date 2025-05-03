@@ -76,7 +76,7 @@ export default class DatabaseMapsBackend {
 				type: DataTypes.TEXT,
 				allowNull: false,
 				get: function(this: Model) {
-					return deserializeMapPermissions(this.getDataValue("permisions"));
+					return deserializeMapPermissions(this.getDataValue("permissions"));
 				},
 				set: function(this: Model, p: MapPermissions) {
 					this.setDataValue("permissions", serializeMapPermissions(p));
@@ -87,8 +87,7 @@ export default class DatabaseMapsBackend {
 			sequelize: this.backend._conn,
 			modelName: "MapLink",
 			indexes: [
-				{ fields: [ "id", "tokenHash" ] },
-				{ fields: [ "slug" ] }
+				{ fields: [ { name: "slug", length: 16 } ] }
 			]
 		});
 	}
@@ -124,11 +123,10 @@ export default class DatabaseMapsBackend {
 	}
 
 	protected prepareMapData(mapData: MapModel): RawMapData {
-		const result = mapData.toJSON();
 		return {
-			...result,
-			defaultView: result.defaultView ? this.backend.views["prepareView"](result.defaultView) : null,
-			links: result.links ? result.links.map((l) => this.prepareMapLink(l)) : []
+			...mapData.toJSON(),
+			defaultView: mapData.defaultView ? this.backend.views["prepareView"](mapData.defaultView) : null,
+			links: mapData.links ? mapData.links.map((l) => this.prepareMapLink(l)) : []
 		};
 	}
 
