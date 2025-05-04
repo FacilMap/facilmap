@@ -1,18 +1,16 @@
 <script setup lang="ts">
 	import { getLabelsForHistoryEntry, type HistoryEntryLabels } from "./history-utils";
-	import type { HistoryEntry, ID } from "facilmap-types";
+	import type { HistoryEntry } from "facilmap-types";
 	import { orderBy } from "lodash-es";
-	import Icon from "../ui/icon.vue";
-	import { computed, onBeforeUnmount, reactive, ref, watch, type DeepReadonly } from "vue";
+	import { computed, onBeforeUnmount, ref, watch, type DeepReadonly } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import { mapRef } from "../../utils/vue";
 	import { getUniqueId } from "../../utils/utils";
-	import Popover from "../ui/popover.vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 	import Pagination from "../ui/pagination.vue";
+	import InfoPopover from "../ui/info-popover.vue";
 
 	type HistoryEntryWithLabels = HistoryEntry & {
 		labels: HistoryEntryLabels;
@@ -31,9 +29,6 @@
 
 	const isLoading = ref(true);
 	const isReverting = ref<DeepReadonly<HistoryEntryWithLabels>>();
-	const activeDiffPopoverId = ref<ID>();
-
-	const diffButtonRefs = reactive(new Map<ID, HTMLElement>());
 
 	const id = getUniqueId("fm-history-dialog");
 
@@ -112,14 +107,6 @@
 			["desc"]
 		);
 	});
-
-	function toggleDiffPopover(entryId: ID, force?: boolean): void {
-		const isShown = activeDiffPopoverId.value === entryId;
-		const show = force ?? (activeDiffPopoverId.value !== entryId);
-		if (isShown !== show) {
-			activeDiffPopoverId.value = show ? entryId : undefined;
-		}
-	}
 </script>
 
 <template>
@@ -150,21 +137,12 @@
 						{{entry.labels.description}}
 					</td>
 					<td class="td-buttons">
-						<button
+						<InfoPopover
 							v-if="entry.labels.diff"
+							tag="button"
 							type="button"
 							class="btn btn-secondary"
-							@click="toggleDiffPopover(entry.id)"
-							:ref="mapRef(diffButtonRefs, entry.id)"
-						>
-							<Icon icon="info-sign"></Icon>
-						</button>
-						<Popover
-							:element="diffButtonRefs.get(entry.id)"
-							placement="bottom"
-							class="fm-history-popover"
-							:show="activeDiffPopoverId === entry.id"
-							@update:show="toggleDiffPopover(entry.id, $event)"
+							popoverClass="fm-history-popover"
 						>
 							<table class="table table-hover table-sm">
 								<thead>
@@ -182,7 +160,7 @@
 									</tr>
 								</tbody>
 							</table>
-						</Popover>
+						</InfoPopover>
 					</td>
 					<td class="td-buttons">
 						<div class="d-grid">

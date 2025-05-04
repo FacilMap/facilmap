@@ -26,6 +26,17 @@
 	width: 1.5rem;
 }
 
+.fm-form-check-large.fm-form-check-large {
+	padding-left: 2em;
+
+	.form-check-input {
+		margin-left: -2em;
+		margin-top: 0;
+		height: 1.5em;
+		width: 1.5em;
+	}
+}
+
 /**
  * Should be applied to custom-range elements that have a horizontal form label, in order to be correctly
  * aligned with that label.

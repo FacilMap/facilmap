@@ -737,7 +737,25 @@
     "map-settings-edit-link-dialog" : {
         "title": "Edit map link",
         "url": "URL",
-        "comment": "Comment"
+        "comment": "Comment",
+        "password": "Password",
+        "password-required": "Password required",
+        "password-change": "Change password",
+        "password-reset-alt": "Reset",
+        "password-reset-tooltip": "Reset password changes",
+        "permissions": "Permissions",
+        "read": "Read",
+        "read-description": "When the map is opened through this link, it can only be viewed, but nothing can be edited. If set to **only own**, each user can only see the markers/lines that they have created.",
+        "edit": "Edit",
+        "edit-description": "When the map is opened through this link, markers and lines can be created, edited and deleted, but the map settings, types and views cannot be changed. If set to **only own**, each user can only edit the markers/lines that they have created.",
+        "configure": "Configure",
+        "configure-description": "When the map is opened through this link, markers, lines, types and views can be created, edited and deleted and the map settings (except map links) can be changed.",
+        "administrate": "Administrate",
+        "administrate-description": "When the map is opened through this link, everything can be changed, including the map links, and the map can be deleted irrevocably.",
+        "all": "All",
+        "own": "Only own",
+        "edit-own": "Read all, edit only own",
+        "read-own": "Read and edit only own"
     },
     "pagination": {
         "first-label": "First",

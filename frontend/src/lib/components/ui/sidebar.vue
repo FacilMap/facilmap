@@ -6,15 +6,8 @@
 
 	const context = injectContextRequired();
 
-	const props = withDefaults(defineProps<{
-		visible?: boolean;
+	const props = defineProps<{
 		id?: string;
-	}>(), {
-		visible: undefined
-	});
-
-	const emit = defineEmits<{
-		"update:visible": [visible: boolean];
 	}>();
 
 	const innerSidebarRef = ref<HTMLElement>();
@@ -25,9 +18,8 @@
 		isMounted.value = true;
 	});
 
-	const sidebarVisible = useRefWithOverride(false, () => props.visible, (visible) => {
-		emit("update:visible", visible);
-	});
+	const visibleModel = defineModel<boolean>("visible");
+	const sidebarVisible = useRefWithOverride(false, visibleModel);
 
 	const drag = useDrag(innerSidebarRef, {
 		onDrag: ({ deltaX }) => {

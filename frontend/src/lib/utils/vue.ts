@@ -47,16 +47,15 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
  * @param onUpdate Should emit the change event. Called when the value changes, in addition to updating the internal state.
  * @returns A computed ref with a setter.
  */
-export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
-	const internalValue = ref(getProp() ?? fallbackValue);
+export function useRefWithOverride<Value>(fallbackValue: Value, override: Ref<Value | undefined>): Ref<Value> {
+	const internalValue = ref(override.value ?? fallbackValue);
 	return computed({
 		get: (): Value => {
-			const propValue = getProp();
-			return propValue !== undefined ? propValue : internalValue.value as Value;
+			return override.value !== undefined ? override.value : internalValue.value as Value;
 		},
 		set: (val: Value) => {
 			internalValue.value = val as any;
-			onUpdate(val);
+			override.value = val;
 		}
 	});
 }

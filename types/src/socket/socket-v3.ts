@@ -16,7 +16,7 @@ import { tupleWithOptional } from "zod-tuple-with-optional";
 export const subscribeToMapOptionsValidator = z.object({
 	pick: z.array(subscribeToMapPickValidator).optional(),
 	history: z.boolean().optional(),
-	identity: z.string().optional()
+	identity: z.string().or(z.null()).optional()
 });
 export type SubscribeToMapOptions = z.infer<typeof subscribeToMapOptionsValidator>;
 

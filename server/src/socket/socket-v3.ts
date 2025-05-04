@@ -411,7 +411,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.api.geoip();
 			},
 
-			subscribeToMap: async (anyMapSlug, { pick = subscribeToMapDefaultPick, history = false } = {}) => {
+			subscribeToMap: async (anyMapSlug, { pick = subscribeToMapDefaultPick, history = false, identity } = {}) => {
 				const { mapSlug } = typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug;
 				const abort = this.mapSubscriptionAbort[mapSlug] = this.mapSubscriptionAbort[mapSlug] ?? new AbortController();
 
@@ -419,7 +419,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				let resolved;
 				if (!sub) {
 					try {
-						resolved = await this.api.resolveMapSlug(anyMapSlug);
+						resolved = await this.api.resolveMapSlug({
+							...typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug,
+							...identity != null ? { identity } : {}
+						});
 					} catch (err: any) {
 						if ([401, 404].includes(err.status) && !abort.signal.aborted && !this.findMapSubscriptionData(mapSlug, false)) {
 							// Map not found, clear subscription so that we can create it using createMapAndSubscribe
@@ -435,9 +438,18 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					sub = this.findMapSubscriptionData(mapSlug, false); // Another request might have created a subscription in the meantime
 				}
 
+				const identityBefore = sub ? sub.mapLink.identity : undefined;
 				const pickBefore = sub?.pick;
 				if (sub) {
 					Object.assign(sub, { pick, history });
+					if (typeof identity !== "undefined") {
+						if (identity == null) {
+							sub.mapLink.identity = undefined;
+						} else {
+							const { rawMapData } = await this.api.resolveMapSlug(sub.mapLink);
+							sub.mapLink.identity = getIdentityHash(identity, rawMapData.salt);
+						}
+					}
 				} else {
 					if (!this.mapSubscriptionDetails[resolved!.mapData.id]) {
 						this.mapSubscriptionDetails[resolved!.mapData.id] = [];
@@ -448,7 +460,9 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					this.registerDatabaseHandlers();
 				}
 
-				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p)) : pick;
+				const identityChanged = (identityBefore == null) !== (sub.mapLink.identity == null) || (identityBefore != null && sub.mapLink.identity != null && !identityBefore.equals(sub.mapLink.identity));
+
+				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p) || (identityChanged && ["markers", "lines"].includes(p))) : pick;
 				const results = await this.api.getAllMapObjects(sub.mapLink, {
 					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox

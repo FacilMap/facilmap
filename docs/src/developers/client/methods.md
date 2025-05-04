@@ -604,7 +604,7 @@ Parameters:
 * `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map to subscribe to. In this case, the `identity` cannot be provided as part of the `mapSlug` but instead passed as a separate property.
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
 * `history` (boolean): Whether to retrieve history entries. Defaults to `false`.
-* `identity` (string): The identity, see <code>[MapSlug](./types.md#mapslug)</code>.
+* `identity` (`string | null`): The identity, see <code>[MapSlug](./types.md#mapslug)</code>. When updating an existing map subscription, omitting the `identity` will keep the current one, while setting it to `null` will clear the current identity.
 
 When using the Client, a map subscription object will be returned, see <code>[SocketClient.subscribeToMap()](./classes.md#subscribetomap)</code>. Calling `subscribeToMap()` with a map slug that is already subscribed will throw an error. To update an existing subscription, use <code>[mapSubscription.updateSubscription()](./classes.md#updatesubscription)</code>. On the contrary, when using the Socket API directly, `subscribeToMap()` acts as a way to enable _and_ to update a subscription. When called with a map slug that is already subscribed, it updates the subscription.
 
@@ -614,7 +614,7 @@ The subscription respects the bbox set by <code>[setBbox()](#setbbox)</code>. If
 
 If you update an active map subscription, only newly subscribed object types are emitted as events as part of the update operation. For example, subscribing to a map using `const mapSubscription = await client.subscribeToMap("mymap", { pick: ["mapData"] })` will trigger a `mapData` event before the promise is resolved. Calling `await mapSubscription.updateSubscription({ pick: ["mapData", "types"] })` will trigger multiple `type` events (but no `mapData` event, as the map data was already sent the first time) before its promise is resolved. In addition, `mapData` events are emitted whenever the map data is changed while the subscription is active (whether before or after the `updateSubscription()` call).
 
-If you update the identity of an active map subscription, those markers/lines whose `own` property is now different will be emitted again.
+If you update the identity of an active map subscription, markers/lines are reemitted (if they are subscribed to), since their visibility and the visibility of their fields might changed depending on whether the new identity owns them. Markers/lines that were previously emitted but aren’t now are not visible to the new identity and no updates will be received for them.
 
 Note that when the socket connection is interrupted, the server will forget about the subscription. The Client will automatically reestablish the subscription on reconnection, but when using the Socket API directly, you will have to do it manually (see [connection problems](./README.md#deal-with-connection-problems)).
 

@@ -396,7 +396,7 @@ export default class DatabaseBackendMigrations {
 			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
 		];
 
-		for (const table of [ 'Map', 'MapLink', 'Marker', 'MarkerData', 'Type', 'View', 'Line', 'LineData', 'LinePoint' ]) {
+		for (const table of [ 'Map', 'MapLink', 'Marker', 'MarkerData', 'Type', 'View', 'Line', 'LineData', 'LinePoint', 'History' ]) {
 			const model = this.backend._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			const rawAttributes = model.getAttributes();

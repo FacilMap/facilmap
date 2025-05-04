@@ -18,28 +18,23 @@
 <script setup lang="ts">
 	const i18n = useI18n();
 
-	const props = withDefaults(defineProps<{
-		show?: boolean;
+	const props = defineProps<{
 		title?: string;
 		customClass?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 		/** If true, a click of the reference element will not toggle the popover. */
 		ignoreClick?: boolean;
-	}>(), {
-		show: undefined
-	});
+	}>();
 
 	const emit = defineEmits<{
-		"update:show": [show: boolean];
 		shown: [];
 		hide: [];
 		hidden: [];
 	}>();
 
-	const show = useRefWithOverride(false, () => props.show, (show) => {
-		emit("update:show", show);
-	});
+	const showModel = defineModel<boolean>("show");
+	const show = useRefWithOverride(false, showModel);
 	const showModal = ref(false);
 	const showPopover = ref(false);
 

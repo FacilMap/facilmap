@@ -182,6 +182,9 @@ export class SocketClientStorage {
 								getRecordedIds();
 							});
 						}
+
+						// TODO: Re-aggretate markers/lines in case of identity change
+
 						break;
 					}
 

@@ -9,7 +9,7 @@
 	import { ref } from "vue";
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>
+		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
 	}>();
 
 	const i18n = useI18n();
@@ -17,10 +17,10 @@
 
 	const context = injectContextRequired();
 
-	const editLink = ref<MapLink>();
+	const editLink = ref<MapLink<CRU.CREATE | CRU.UPDATE>>();
 
-	function handleUpdateLink(link: MapLink) {
-		const idx = props.mapData.fields.indexOf(editLink.value!);
+	function handleUpdateLink(link: MapLink<CRU.CREATE | CRU.UPDATE>) {
+		const idx = props.mapData.links.indexOf(editLink.value!);
 		if (idx === -1) {
 			toasts.showErrorToast(
 				`fm${context.id}-map-settings-links-error`,
@@ -28,7 +28,8 @@
 				() => i18n.t("map-settings-dialog.link-disappeared-error")
 			);
 		}
-		type.value.fields[idx] = field;
+		props.mapData.links[idx] = link;
+		editLink.value = link;
 	}
 </script>
 
@@ -45,7 +46,7 @@
 		<tbody>
 			<!-- eslint-disable-next-line vue/require-v-for-key -->
 			<tr v-for="link in props.mapData.links">
-				<td class="align-middle">
+				<td class="align-middle text-break">
 					{{link.comment}}
 				</td>
 				<td>
@@ -55,7 +56,7 @@
 						readonly
 					></MapSlugEdit>
 				</td>
-				<td>
+				<td class="td-buttons text-right">
 					<button type="button" class="btn btn-secondary" @click="editLink = link">{{i18n.t("map-settings-dialog.edit-link")}}</button>
 				</td>
 			</tr>
@@ -66,7 +67,7 @@
 		v-if="editLink"
 		:mapData="mapData"
 		:mapLink="editLink"
-		@update:mapLink="overwriteObject($event, editLink)"
-		@hidden=""
-	></MapSettings>
+		@update:mapLink="(link) => handleUpdateLink(link)"
+		@hidden="editLink = undefined"
+	></MapSettingsEditLinkDialog>
 </template>

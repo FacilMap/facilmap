@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const coreIcons = [
 	"arrow-left", "arrow-right", "car", "check", "chevron-right", "circle-info", "cog", "copy",
 	"info-sign", "menu-hamburger", "minus", "new-window", "person-biking", "person-walking",
-	"plus", "question-sign", "qrcode", "remove", "resize-horizontal", "resize-vertical",
+	"plus", "question-sign", "qrcode", "remove", "resize-horizontal", "resize-vertical", "rotate-left",
 	"screenshot", "search", "slash", "shuffle", "square", "square-plus", "square-minus", "trash",
 	"triangle-bottom", "triangle-top", "unchecked", "zoom-in"
 ];
@@ -31,7 +31,7 @@ async function getIconFilenames(): Promise<Record<string, Record<string, string>
 	icons["fontawesome"] = {};
 	for (const name of [
 		"arrow-left", "arrow-right", "person-biking", "car", "chart-line", "copy", "circle-info", "slash", "person-walking",
-		"shuffle", "square", "square-plus", "square-minus", "trash"
+		"rotate-left", "shuffle", "square", "square-plus", "square-minus", "trash"
 	]) {
 		icons["fontawesome"][name] = require.resolve(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
 	}
