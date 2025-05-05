@@ -20,7 +20,7 @@
 	const id = getUniqueId("fm-map-permissions-edit");
 
 	const orderedTypes = computed(() => getOrderedTypes(clientSub.value.data?.types));
-	const addableTypes = computed(() => orderedTypes.value.filter((t) => !permissions.value.types![t.id]));
+	const addableTypes = computed(() => orderedTypes.value.filter((t) => !permissions.value.types?.[t.id]));
 
 	watchEffect(() => {
 		console.log(orderedTypes.value, permissions.value.types, addableTypes.value);

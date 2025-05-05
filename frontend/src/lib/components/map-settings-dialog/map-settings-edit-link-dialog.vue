@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { computed, ref, watch } from "vue";
+	import { computed, ref, watch, watchEffect } from "vue";
 	import { type CRU, type MapData, type MapLink } from "facilmap-types";
 	import { mergeObject } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
@@ -46,6 +46,10 @@
 		mapLinkModel.value = cloneDeep(mapLink.value);
 		modalRef.value?.modal.hide();
 	}
+
+	watchEffect(() => {
+		console.log("a", mapLink.value.password);
+	});
 </script>
 
 <template>

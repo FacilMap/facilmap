@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { ref, watchEffect } from "vue";
 	import { useI18n } from "../../utils/i18n";
 	import vTooltip from "../../utils/tooltip";
 	import Icon from "../ui/icon.vue";
@@ -13,6 +13,9 @@
 	}>();
 
 	const password = defineModel<boolean | string>("password", { required: true });
+	watchEffect(() => {
+		console.log("b", password.value);
+	});
 	const password2 = ref("");
 
 	const id = getUniqueId("fm-map-password-edit");
