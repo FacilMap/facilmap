@@ -28,6 +28,9 @@
 
 .fm-form-check-large.fm-form-check-large {
 	padding-left: 2em;
+	padding-top: calc(0.375rem + var(--bs-border-width));
+	padding-bottom: calc(0.375rem + var(--bs-border-width));
+	margin-bottom: 0;
 
 	.form-check-input {
 		margin-left: -2em;

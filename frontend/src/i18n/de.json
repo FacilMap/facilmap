@@ -701,7 +701,7 @@
         "title-edit": "Karteneigenschaften",
         "create-button": "Erstellen",
         "admin-link-label": "Admin-Link",
-        "admin-link-description": "Wenn die Karte über diesen Link geöffnet wird, können alle Aspekte der Karte bearbeitet werden, inklusive der Einstellungen, Objekttypen und Ansichten.",
+        "admin-link-description": "Wenn die Karte über diesen Link geöffnet wird, können alle Aspekte der Karte bearbeitet werden, inklusive der Einstellungen, Objekttypen und Ansichten, und die Karte kann unwiderruflich gelöscht werden.",
         "map-name": "Name der Karte",
         "search-engines": "Suchmaschinen",
         "search-engines-label": "Suchmaschinenzugriff erlauben",

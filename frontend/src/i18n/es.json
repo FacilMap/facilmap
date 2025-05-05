@@ -587,7 +587,6 @@
         "delete-map-title": "Eliminar mapa",
         "save-map-error": "Error al guardar la configuración del mapa",
         "create-map-error": "Error al crear el mapa",
-        "admin-link-description": "Al abrir el mapa a través de este enlace, se pueden editar todas las partes del mapa, incluidos los ajustes del mapa, los tipos de objetos y las vistas.",
         "cluster-markers-description": "Si se activa, cuando haya muchos marcadores en un área, se sustituirán por un marcador de posición en niveles bajos de zoom. Esto mejora el rendimiento en mapas con muchos marcadores.",
         "delete-description": "Para eliminar este mapa, escriba {{code}} en el campo y haga clic en el botón \"Eliminar mapa\"."
     },
